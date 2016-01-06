@@ -1,0 +1,14 @@
+r_regionkey	group_concat(r_name)
+0	AFRICA
+1	AMERICA
+2	ASIA
+3	EUROPE
+4	MIDDLE EAST
+group_concat(r_name)
+AFRICA,AMERICA,ASIA,EUROPE,MIDDLE EAST
+r_name	group_concat(r_comment)
+AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+AMERICA	hs use ironic, even requests. s
+ASIA	ges. thinly even pinto beans ca
+EUROPE	ly final courts cajole furiously final excuse
+MIDDLE EAST	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl

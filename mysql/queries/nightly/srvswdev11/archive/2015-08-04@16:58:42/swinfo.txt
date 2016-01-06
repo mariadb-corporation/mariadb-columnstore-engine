@@ -1,0 +1,16 @@
+getcalpontsoftwareinfo   Tue Aug  4 17:02:51 2015
+
+Name        : infinidb-platform            Relocations: (not relocatable)
+Version     : 4.6.6                             Vendor: MariaDB, Inc.
+Release     : 2                             Build Date: Thu 30 Jul 2015 01:40:11 PM CDT
+Install Date: Mon 03 Aug 2015 12:12:59 PM CDT      Build Host: srvbuilder.mariadb.com
+Group       : Applications                  Source RPM: infinidb-4.6.6-2.src.rpm
+Size        : 24814226                         License: Copyright (c) 2014 InfiniDB, Inc., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.
+Signature   : (none)
+Packager    : support@mariadb.com
+URL         : http://www.mariadb.com/
+Summary     : InfiniDB software binaries
+Description :
+InfiniDB binary files
+Build Flags: -g0 -O3 -fno-strict-aliasing -fno-tree-vectorize -flto
+

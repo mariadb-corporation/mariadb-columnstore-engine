@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/genii/mysql/!svn/ver/2675/trunk/queries/working_tpch1/view
+END
+view.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/1853/trunk/queries/working_tpch1/view/view.sql.ref.log
+END
+view_sp.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/1853/trunk/queries/working_tpch1/view/view_sp.sql.ref.log
+END
+view_prepare.sql
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/1853/trunk/queries/working_tpch1/view/view_prepare.sql
+END
+view.sql
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/genii/mysql/!svn/ver/1853/trunk/queries/working_tpch1/view/view.sql
+END
+view_sp.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2675/trunk/queries/working_tpch1/view/view_sp.sql
+END
+view_prepare.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/1853/trunk/queries/working_tpch1/view/view_prepare.sql.ref.log
+END

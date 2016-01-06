@@ -1,0 +1,34 @@
+count(lo_orderkey)	min(lo_orderkey)	max(lo_orderkey)	sum(lo_orderkey)	avg(lo_orderkey)
+600037902	1	600000000	180016377016331847	300008343.5002
+count(lo_linenumber)	min(lo_linenumber)	max(lo_linenumber)	sum(lo_linenumber)	avg(lo_linenumber)
+600037902	1	7	1800152937	3.0001
+count(lo_custkey)	min(lo_custkey)	max(lo_custkey)	sum(lo_custkey)	avg(lo_custkey)
+600037902	1	2999999	900100029690229	1500071.9566
+count(lo_partkey)	min(lo_partkey)	max(lo_partkey)	sum(lo_partkey)	avg(lo_partkey)
+600037902	1	1000000	300021444265405	500004.1552
+count(lo_suppkey)	min(lo_suppkey)	max(lo_suppkey)	sum(lo_suppkey)	avg(lo_suppkey)
+600037902	1	1000000	300022883935951	500006.5545
+count(lo_orderdate)	min(lo_orderdate)	max(lo_orderdate)
+600037902	19920101	19980802
+count(lo_orderpriority)
+600037902
+count(lo_shippriority)	min(lo_shippriority)	max(lo_shippriority)
+600037902	0	0
+count(lo_quantity)	min(lo_quantity)	max(lo_quantity)	sum(lo_quantity)	avg(lo_quantity)
+600037902	1.00	50.00	15300829209.00	25.499771
+count(lo_extendedprice)	min(lo_extendedprice)	max(lo_extendedprice)	sum(lo_extendedprice)	avg(lo_extendedprice)
+600037902	90096.00	10494950.00	2294366482986221.00	3823702.595017
+count(lo_ordtotalprice)	min(lo_ordtotalprice)	max(lo_ordtotalprice)	sum(lo_ordtotalprice)	avg(lo_ordtotalprice)
+600037902	81806.00	60690215.00	11334475151445536.00	18889598.663128
+count(lo_discount)	min(lo_discount)	max(lo_discount)	sum(lo_discount)	avg(lo_discount)
+600037902	0.00	10.00	3000163644.00	4.999957
+count(lo_revenue)	min(lo_revenue)	max(lo_revenue)	sum(lo_revenue)	avg(lo_revenue)
+600037902	81087.00	10494950.00	2179648621601639.00	3632518.236492
+count(lo_supplycost)	min(lo_supplycost)	max(lo_supplycost)	sum(lo_supplycost)	avg(lo_supplycost)
+600037902	54057.00	125939.00	53985243260338.00	89969.722047
+count(lo_tax)	min(lo_tax)	max(lo_tax)	sum(lo_tax)	avg(lo_tax)
+600037902	0.00	8.00	2400211972.00	4.000101
+count(lo_commitdate)	min(lo_commitdate)	max(lo_commitdate)	sum(lo_commitdate)	avg(lo_commitdate)
+600037902	19920131	19981031	11970919088742258	19950271.5559
+count(lo_shipmode)
+600037902

@@ -1,0 +1,755 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/3547/trunk/queries/working_ssb_compareLogOnly/sub
+END
+q5.3.1.negative.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1970/trunk/queries/working_ssb_compareLogOnly/sub/q5.3.1.negative.sql.ref.log
+END
+q3.5.1.negative.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.5.1.negative.sql.ref.log
+END
+q2.3.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.3.1.sql
+END
+order_limit_sub.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1395/trunk/queries/working_ssb_compareLogOnly/sub/order_limit_sub.sql
+END
+q3.3.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.3.1.sql
+END
+q2.3.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.3.2.sql
+END
+q3.3.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.3.2.sql
+END
+q6.1.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.1.sql
+END
+q2.5.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.5.1.sql
+END
+q4.3.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.3.1.sql
+END
+q4.3.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.3.2.sql
+END
+q3.6.1.sql.orig
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.6.1.sql.orig
+END
+complex_semijoin.ssb.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/complex_semijoin.ssb.sql.ref.log
+END
+q6.1.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.2.sql
+END
+q7.1.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.1.1.sql
+END
+q8.1.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q8.1.1.sql
+END
+q6.1.3.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.3.sql
+END
+q7.1.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.1.2.sql
+END
+q2.7.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.7.1.sql
+END
+q4.5.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.5.1.sql
+END
+q6.sql
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.sql
+END
+q7.1.3.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.1.3.sql
+END
+q7.sql
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.sql
+END
+q3.7.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.7.1.sql
+END
+q9.1.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q9.1.1.sql
+END
+q8.1.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1343/trunk/queries/working_ssb_compareLogOnly/sub/q8.1.2.sql
+END
+bug2922.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1434/trunk/queries/working_ssb_compareLogOnly/sub/bug2922.sql.ref.log
+END
+q2.9.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.9.1.sql
+END
+q9.1.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q9.1.2.sql
+END
+q9.1.3.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q9.1.3.sql
+END
+q3.9.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.9.1.sql
+END
+bug2924.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1441/trunk/queries/working_ssb_compareLogOnly/sub/bug2924.sql.ref.log
+END
+q10.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/1302/trunk/queries/working_ssb_compareLogOnly/sub/q10.1.sql
+END
+simple_scalar.ssb.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1398/trunk/queries/working_ssb_compareLogOnly/sub/simple_scalar.ssb.sql
+END
+q2.2.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.2.1.sql.ref.log
+END
+nested_sub.ssb.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1396/trunk/queries/working_ssb_compareLogOnly/sub/nested_sub.ssb.sql.ref.log
+END
+q3.2.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.2.1.sql.ref.log
+END
+q4.2.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.2.1.sql.ref.log
+END
+q2.4.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.4.1.sql.ref.log
+END
+q2.4.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.4.2.sql.ref.log
+END
+q4.2.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.2.2.sql.ref.log
+END
+q3.4.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.4.1.sql.ref.log
+END
+q5.2.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q5.2.1.sql.ref.log
+END
+non_distributed_from.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/non_distributed_from.sql
+END
+q5.2.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q5.2.2.sql.ref.log
+END
+q2.6.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.6.1.sql.ref.log
+END
+q3.4.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.4.2.sql.ref.log
+END
+q4.4.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.4.1.sql.ref.log
+END
+q4.4.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.4.2.sql.ref.log
+END
+q3.6.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.6.1.sql.ref.log
+END
+q2.6.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.6.2.sql.ref.log
+END
+wsub01.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/wsub01.sql
+END
+q2.8.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.8.1.sql.ref.log
+END
+q3.8.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.8.1.sql.ref.log
+END
+standard_from.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/standard_from.sql
+END
+having_sub.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/having_sub.sql
+END
+q3.5.1.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.5.1.negative.sql
+END
+q5.3.1.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q5.3.1.negative.sql
+END
+complex_semijoin.ssb.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/complex_semijoin.ssb.sql
+END
+correlated_scalar.ssb.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/correlated_scalar.ssb.sql.ref.log
+END
+bug2922.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1433/trunk/queries/working_ssb_compareLogOnly/sub/bug2922.sql
+END
+bug2924.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1440/trunk/queries/working_ssb_compareLogOnly/sub/bug2924.sql
+END
+q6.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.sql.ref.log
+END
+nested_sub.ssb.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1396/trunk/queries/working_ssb_compareLogOnly/sub/nested_sub.ssb.sql
+END
+q2.2.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.2.1.sql
+END
+q3.2.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.2.1.sql
+END
+q4.2.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.2.1.sql
+END
+q2.4.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.4.1.sql
+END
+q5.2.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q5.2.1.sql
+END
+q7b.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7b.sql.ref.log
+END
+q3.4.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.4.1.sql
+END
+q2.4.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.4.2.sql
+END
+q4.2.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.2.2.sql
+END
+q5.2.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q5.2.2.sql
+END
+q3.4.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.4.2.sql
+END
+q4.4.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.4.1.sql
+END
+q2.6.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.6.1.sql
+END
+q2.6.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.6.2.sql
+END
+q3.6.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.6.1.sql
+END
+q4.4.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.4.2.sql
+END
+q2.8.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.8.1.sql
+END
+q3.8.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.8.1.sql
+END
+bug2907.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1453/trunk/queries/working_ssb_compareLogOnly/sub/bug2907.sql.ref.log
+END
+q2.10.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.10.1.sql.ref.log
+END
+bug2909.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1419/trunk/queries/working_ssb_compareLogOnly/sub/bug2909.sql.ref.log
+END
+q2.10.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.10.2.sql.ref.log
+END
+correlated_scalar.ssb.sql
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/correlated_scalar.ssb.sql
+END
+q2.3.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.3.1.sql.ref.log
+END
+order_limit_sub.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1395/trunk/queries/working_ssb_compareLogOnly/sub/order_limit_sub.sql.ref.log
+END
+q2.3.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.3.2.sql.ref.log
+END
+q3.3.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.3.1.sql.ref.log
+END
+q6.1.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.1.sql.ref.log
+END
+q3.3.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.3.2.sql.ref.log
+END
+q4.3.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.3.1.sql.ref.log
+END
+q2.5.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.5.1.sql.ref.log
+END
+q4.3.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.3.2.sql.ref.log
+END
+q6.1.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.2.sql.ref.log
+END
+q7.1.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.1.1.sql.ref.log
+END
+q6.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.sql.ref.log
+END
+q4.5.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q4.5.1.sql.ref.log
+END
+q7.1.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.1.2.sql.ref.log
+END
+q6.1.3.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.3.sql.ref.log
+END
+q2.7.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.7.1.sql.ref.log
+END
+q8.1.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q8.1.1.sql.ref.log
+END
+q9.1.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q9.1.1.sql.ref.log
+END
+q7.1.3.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.1.3.sql.ref.log
+END
+q7.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7.sql.ref.log
+END
+q8.1.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1343/trunk/queries/working_ssb_compareLogOnly/sub/q8.1.2.sql.ref.log
+END
+q3.7.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.7.1.sql.ref.log
+END
+q2.9.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.9.1.sql.ref.log
+END
+q9.1.2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q9.1.2.sql.ref.log
+END
+q3.9.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q3.9.1.sql.ref.log
+END
+q9.1.3.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1304/trunk/queries/working_ssb_compareLogOnly/sub/q9.1.3.sql.ref.log
+END
+q6.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q6.1.sql
+END
+q7b.sql
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/1240/trunk/queries/working_ssb_compareLogOnly/sub/q7b.sql
+END
+q10.1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1302/trunk/queries/working_ssb_compareLogOnly/sub/q10.1.sql.ref.log
+END
+simple_scalar.ssb.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/1398/trunk/queries/working_ssb_compareLogOnly/sub/simple_scalar.ssb.sql.ref.log
+END
+bug2907.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1452/trunk/queries/working_ssb_compareLogOnly/sub/bug2907.sql
+END
+q2.10.1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.10.1.sql
+END
+q2.10.2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/q2.10.2.sql
+END
+bug2909.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1420/trunk/queries/working_ssb_compareLogOnly/sub/bug2909.sql
+END
+non_distributed_from.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/non_distributed_from.sql.ref.log
+END
+wsub01.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/sub/wsub01.sql.ref.log
+END
+standard_from.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/standard_from.sql.ref.log
+END
+having_sub.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1393/trunk/queries/working_ssb_compareLogOnly/sub/having_sub.sql.ref.log
+END

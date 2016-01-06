@@ -1,0 +1,137 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/genii/mysql/!svn/ver/3332/trunk/queries/nightly/srvswdev11/test011/tables
+END
+bug4089enclosedCharBadFile.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/genii/mysql/!svn/ver/3146/trunk/queries/nightly/srvswdev11/test011/tables/bug4089enclosedCharBadFile.tbl
+END
+generateBin.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/3332/trunk/queries/nightly/srvswdev11/test011/tables/generateBin.cpp
+END
+bug4231.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2762/trunk/queries/nightly/srvswdev11/test011/tables/bug4231.tbl
+END
+enclosedby.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2885/trunk/queries/nightly/srvswdev11/test011/tables/enclosedby.tbl
+END
+bug3801.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2414/trunk/queries/nightly/srvswdev11/test011/tables/bug3801.tbl
+END
+saturation.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2414/trunk/queries/nightly/srvswdev11/test011/tables/saturation.tbl
+END
+bug3810.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2417/trunk/queries/nightly/srvswdev11/test011/tables/bug3810.tbl
+END
+bug4342a.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/3170/trunk/queries/nightly/srvswdev11/test011/tables/bug4342a.tbl
+END
+bug4171a.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/3076/trunk/queries/nightly/srvswdev11/test011/tables/bug4171a.tbl
+END
+bug4171b.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/3076/trunk/queries/nightly/srvswdev11/test011/tables/bug4171b.tbl
+END
+bug4342b.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/3170/trunk/queries/nightly/srvswdev11/test011/tables/bug4342b.tbl
+END
+binary1signed.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/3324/trunk/queries/nightly/srvswdev11/test011/tables/binary1signed.tbl
+END
+bug4916enclosedbdry.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/3161/trunk/queries/nightly/srvswdev11/test011/tables/bug4916enclosedbdry.tbl
+END
+binary2signed.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/3324/trunk/queries/nightly/srvswdev11/test011/tables/binary2signed.tbl
+END
+autoinc.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2414/trunk/queries/nightly/srvswdev11/test011/tables/autoinc.tbl
+END
+binary1unsigned.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/3324/trunk/queries/nightly/srvswdev11/test011/tables/binary1unsigned.tbl
+END
+binary1char.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/3332/trunk/queries/nightly/srvswdev11/test011/tables/binary1char.tbl
+END
+binary2unsigned.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/3324/trunk/queries/nightly/srvswdev11/test011/tables/binary2unsigned.tbl
+END
+binarytxtnum.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/3324/trunk/queries/nightly/srvswdev11/test011/tables/binarytxtnum.tbl
+END
+binary2char.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/3332/trunk/queries/nightly/srvswdev11/test011/tables/binary2char.tbl
+END
+bug2828notnull.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2833/trunk/queries/nightly/srvswdev11/test011/tables/bug2828notnull.tbl
+END
+binarytxtchar.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/3332/trunk/queries/nightly/srvswdev11/test011/tables/binarytxtchar.tbl
+END

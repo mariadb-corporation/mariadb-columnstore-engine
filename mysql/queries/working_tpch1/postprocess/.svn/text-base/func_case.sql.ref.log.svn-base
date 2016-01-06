@@ -1,0 +1,6 @@
+r_name	func_case
+AFRICA	zero
+AMERICA	one
+ASIA	two
+EUROPE	else
+MIDDLE EAST	else

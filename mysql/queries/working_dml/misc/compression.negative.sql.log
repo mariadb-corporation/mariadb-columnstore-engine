@@ -1,0 +1,35 @@
+ERROR 138 (HY000) at line 54: IDB-4007: The provided compression type is not supported.
+ERROR 138 (HY000) at line 55: IDB-4007: The provided compression type is not supported.
+columnname	compressiontype
+u1	0
+u2	0
+columnname	compressiontype
+c1	2
+c2	2
+columnname	compressiontype
+u1	0
+u2	0
+columnname	compressiontype
+c1	2
+u1	0
+columnname	compressiontype
+c1	2
+c2	2
+columnname	compressiontype
+u1	0
+u2	0
+columnname	compressiontype
+c1	2
+c2	2
+columnname	compressiontype
+u1	0
+u2	0
+columnname	compressiontype
+c1	2
+c2	2
+columnname	compressiontype
+c1	2
+c2	2
+columnname	compressiontype
+u1	0
+u2	0

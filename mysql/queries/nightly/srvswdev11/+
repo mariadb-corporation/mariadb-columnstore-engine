@@ -1,0 +1,7 @@
+(Exception msgs are probably OK)
+ - checking Extent Map semaphore
+ - checking Extent Map free list semaphore
+ - checking VBBM semaphore
+ - checking VSS semaphore
+ - checking CL semaphore
+OK.

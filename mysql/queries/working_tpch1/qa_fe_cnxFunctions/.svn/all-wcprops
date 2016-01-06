@@ -1,0 +1,2123 @@
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/genii/mysql/!svn/ver/3749/trunk/queries/working_tpch1/qa_fe_cnxFunctions
+END
+bug3788.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/3575/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3788.sql.win.ref.log
+END
+bug2589.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2725/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug2589.sql.ref.log
+END
+conv.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/3346/trunk/queries/working_tpch1/qa_fe_cnxFunctions/conv.sql.ref.log
+END
+MINUTE.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MINUTE.DS.sql.ref.log
+END
+SQRT.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SQRT.NS.sql.ref.log
+END
+subtime.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2222/trunk/queries/working_tpch1/qa_fe_cnxFunctions/subtime.sql.ref.log
+END
+YEAR.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/YEAR.DS.sql
+END
+unix_timestamp.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2358/trunk/queries/working_tpch1/qa_fe_cnxFunctions/unix_timestamp.sql
+END
+reserve.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2234/trunk/queries/working_tpch1/qa_fe_cnxFunctions/reserve.sql.ref.log
+END
+MICROSECOND.DT.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2203/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MICROSECOND.DT.sql.ref.log
+END
+bug3788.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2459/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3788.sql
+END
+SECOND.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SECOND.DS.sql.ref.log
+END
+inet_aton.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2251/trunk/queries/working_tpch1/qa_fe_cnxFunctions/inet_aton.sql.ref.log
+END
+INSTR.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/INSTR.SL.sql
+END
+YEARWEEK.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/YEARWEEK.DS.sql.ref.log
+END
+bug3334_ceil.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3334_ceil.sql.win.ref.log
+END
+POSITION.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/POSITION.SM.sql.ref.log
+END
+LOG2.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOG2.NS.sql.ref.log
+END
+concat_ws.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2246/trunk/queries/working_tpch1/qa_fe_cnxFunctions/concat_ws.sql
+END
+inet_ntoa.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2303/trunk/queries/working_tpch1/qa_fe_cnxFunctions/inet_ntoa.sql
+END
+md5.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2147/trunk/queries/working_tpch1/qa_fe_cnxFunctions/md5.sql.ref.log
+END
+get_format.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/2255/trunk/queries/working_tpch1/qa_fe_cnxFunctions/get_format.sql.ref.log
+END
+HOUR.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1447/trunk/queries/working_tpch1/qa_fe_cnxFunctions/HOUR.DS.sql
+END
+ascii.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/2179/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ascii.sql.ref.log
+END
+CAST.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.sql.ref.log
+END
+LOG.NS.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOG.NS.sql.win.ref.log
+END
+MOD.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/1451/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MOD.NM.sql
+END
+ATAN.NS.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ATAN.NS.sql.win.ref.log
+END
+WEEKDAY.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/2194/trunk/queries/working_tpch1/qa_fe_cnxFunctions/WEEKDAY.DS.sql.ref.log
+END
+MONTHNAME.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/2192/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MONTHNAME.DS.sql
+END
+FORMAT.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FORMAT.NM.sql.ref.log
+END
+TRUNCATE.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TRUNCATE.NL.sql
+END
+SUBSTRING.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTRING.SL.sql
+END
+CONVERT.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.SM.sql
+END
+DATEDIFF.DL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATEDIFF.DL.sql.ref.log
+END
+conv.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/3346/trunk/queries/working_tpch1/qa_fe_cnxFunctions/conv.sql
+END
+bug2589.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2725/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug2589.sql
+END
+xor.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2327/trunk/queries/working_tpch1/qa_fe_cnxFunctions/xor.sql
+END
+CAST.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.SM.sql
+END
+MICROSECOND.DT.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2203/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MICROSECOND.DT.sql
+END
+reserve.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2234/trunk/queries/working_tpch1/qa_fe_cnxFunctions/reserve.sql
+END
+div.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2169/trunk/queries/working_tpch1/qa_fe_cnxFunctions/div.sql.ref.log
+END
+CONVERT.DL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.DL.sql
+END
+LEAST.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEAST.NL.sql
+END
+GREATEST.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/GREATEST.NL.sql.ref.log
+END
+YEARWEEK.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/YEARWEEK.DS.sql
+END
+NULLIF.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2306/trunk/queries/working_tpch1/qa_fe_cnxFunctions/NULLIF.DM.sql.ref.log
+END
+md5.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2147/trunk/queries/working_tpch1/qa_fe_cnxFunctions/md5.sql
+END
+DATE_ADD.DT.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_ADD.DT.sql.ref.log
+END
+get_format.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/2255/trunk/queries/working_tpch1/qa_fe_cnxFunctions/get_format.sql
+END
+CASE2.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE2.DM.sql.ref.log
+END
+CAST.DL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.DL.sql
+END
+WEEK.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/WEEK.DS.sql.ref.log
+END
+timestampdiff.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/2893/trunk/queries/working_tpch1/qa_fe_cnxFunctions/timestampdiff.sql
+END
+LPAD.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LPAD.SM.sql
+END
+LENGTH.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LENGTH.SS.sql.ref.log
+END
+MATHEXPR.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MATHEXPR.NL.sql
+END
+FLOOR.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FLOOR.NS.sql
+END
+FORMAT.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FORMAT.NM.sql
+END
+STR_TO_DATE.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/2350/trunk/queries/working_tpch1/qa_fe_cnxFunctions/STR_TO_DATE.sql.ref.log
+END
+LEFT.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEFT.SL.sql.ref.log
+END
+IFNULL.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/IFNULL.NS.sql.ref.log
+END
+hex.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/3586/trunk/queries/working_tpch1/qa_fe_cnxFunctions/hex.sql.win.ref.log
+END
+bug3506.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2081/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3506.sql.ref.log
+END
+TIMEDIFF.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIMEDIFF.DM.sql
+END
+CASE1.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE1.DM.sql.ref.log
+END
+GREATEST.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/GREATEST.SL.sql.ref.log
+END
+WEEK.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/WEEK.DM.sql
+END
+RIGHT.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RIGHT.SL.sql
+END
+DATE_ADD.DT.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_ADD.DT.sql
+END
+bug3584.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2167/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3584.sql.ref.log
+END
+SUBSTRING_INDEX.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/2232/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTRING_INDEX.sql.ref.log
+END
+IF.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/IF.NM.sql.ref.log
+END
+ASIN.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ASIN.NS.sql.ref.log
+END
+LENGTH.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LENGTH.SS.sql
+END
+LEFT.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEFT.SL.sql
+END
+STR_TO_DATE.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2349/trunk/queries/working_tpch1/qa_fe_cnxFunctions/STR_TO_DATE.sql
+END
+REGEXP.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1489/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REGEXP.SM.sql
+END
+IFNULL.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/IFNULL.SS.sql.ref.log
+END
+LOWER.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOWER.SS.sql
+END
+CONCAT.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONCAT.SM.sql.ref.log
+END
+bug3334_ceil.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/2451/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3334_ceil.sql.ref.log
+END
+bug3334_overflow_error.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/genii/mysql/!svn/ver/1860/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3334_overflow_error.sql.ref.log
+END
+maketime.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/maketime.sql.win.ref.log
+END
+CEILING.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CEILING.NS.sql.ref.log
+END
+TIME_TO_SEC.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_TO_SEC.DM.sql.ref.log
+END
+DATE_FORMAT.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2205/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_FORMAT.DM.sql
+END
+DATE_SUB.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_SUB.sql
+END
+ROUND.NM.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ROUND.NM.sql.win.ref.log
+END
+CONVERT.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.NL.sql
+END
+MONTH.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MONTH.DS.sql
+END
+bug3506.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2080/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3506.sql
+END
+GREATEST.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/GREATEST.SL.sql
+END
+CASE1.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE1.DM.sql
+END
+ATAN.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ATAN.NS.sql.ref.log
+END
+bug3792.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2402/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3792.sql.ref.log
+END
+NULLIF.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2306/trunk/queries/working_tpch1/qa_fe_cnxFunctions/NULLIF.NM.sql.ref.log
+END
+CASE2.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE2.NM.sql.ref.log
+END
+bug3584.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2167/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3584.sql
+END
+bug2577.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug2577.sql
+END
+CAST.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.NL.sql
+END
+strcmp.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2223/trunk/queries/working_tpch1/qa_fe_cnxFunctions/strcmp.sql.ref.log
+END
+LTRIM.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LTRIM.SS.sql.ref.log
+END
+SUBSTRING_INDEX.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2232/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTRING_INDEX.sql
+END
+IF.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/IF.NM.sql
+END
+char.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1859/trunk/queries/working_tpch1/qa_fe_cnxFunctions/char.sql.ref.log
+END
+ASIN.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ASIN.NS.sql
+END
+extract.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/3058/trunk/queries/working_tpch1/qa_fe_cnxFunctions/extract.sql
+END
+CONVERT.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.DM.sql.ref.log
+END
+repeat.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2277/trunk/queries/working_tpch1/qa_fe_cnxFunctions/repeat.sql.ref.log
+END
+POSITION.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/POSITION.SL.sql.ref.log
+END
+ROUND.NM.SEL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ROUND.NM.SEL.sql.ref.log
+END
+IFNULL.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/IFNULL.SS.sql
+END
+degrees.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2260/trunk/queries/working_tpch1/qa_fe_cnxFunctions/degrees.sql
+END
+DAYNAME.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/2188/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYNAME.DS.sql.ref.log
+END
+coalesce.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2226/trunk/queries/working_tpch1/qa_fe_cnxFunctions/coalesce.sql
+END
+from_unixtime.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/2247/trunk/queries/working_tpch1/qa_fe_cnxFunctions/from_unixtime.sql.ref.log
+END
+CAST.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.DM.sql.ref.log
+END
+CONCAT.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONCAT.SM.sql
+END
+CEILING.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CEILING.NS.sql
+END
+TIME_TO_SEC.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_TO_SEC.DM.sql
+END
+SUBSTR.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTR.SL.sql.ref.log
+END
+FORMAT.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FORMAT.NL.sql.ref.log
+END
+TRUNCATE.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TRUNCATE.NM.sql
+END
+SUBSTRING.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTRING.SM.sql
+END
+RPAD.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RPAD.SM.sql.ref.log
+END
+LOG.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOG.NS.sql
+END
+NULLIF.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2306/trunk/queries/working_tpch1/qa_fe_cnxFunctions/NULLIF.SM.sql.ref.log
+END
+CASE2.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE2.SM.sql.ref.log
+END
+DAYOFMONTH.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYOFMONTH.DS.sql.ref.log
+END
+SIN.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SIN.NS.sql
+END
+LTRIM.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LTRIM.SS.sql
+END
+crc32.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/2214/trunk/queries/working_tpch1/qa_fe_cnxFunctions/crc32.sql
+END
+char.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1759/trunk/queries/working_tpch1/qa_fe_cnxFunctions/char.sql
+END
+CONVERT.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.DM.sql
+END
+POSITION.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/POSITION.SL.sql
+END
+DAYNAME.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/2187/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYNAME.DS.sql
+END
+from_unixtime.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/2247/trunk/queries/working_tpch1/qa_fe_cnxFunctions/from_unixtime.sql
+END
+RIGHT.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RIGHT.SM.sql.ref.log
+END
+MID.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/2204/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MID.SL.sql
+END
+QUARTER.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1855/trunk/queries/working_tpch1/qa_fe_cnxFunctions/QUARTER.DS.sql
+END
+bug3338.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1858/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3338.sql.ref.log
+END
+CAST.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.DM.sql
+END
+LAST_DAY.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/2199/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LAST_DAY.DM.sql.ref.log
+END
+RADIANS.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RADIANS.NS.sql.ref.log
+END
+CHAR_LENGTH.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CHAR_LENGTH.SS.sql.ref.log
+END
+TIME.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME.DS.sql.ref.log
+END
+SUBSTR.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTR.SL.sql
+END
+insert.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2237/trunk/queries/working_tpch1/qa_fe_cnxFunctions/insert.sql.ref.log
+END
+CASE1.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE1.SM.sql.ref.log
+END
+NULLIF.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2306/trunk/queries/working_tpch1/qa_fe_cnxFunctions/NULLIF.SM.sql
+END
+CASE2.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE2.SM.sql
+END
+RTRIM.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RTRIM.SS.sql.ref.log
+END
+find_in_set.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/2348/trunk/queries/working_tpch1/qa_fe_cnxFunctions/find_in_set.sql.ref.log
+END
+DAYOFMONTH.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYOFMONTH.DS.sql
+END
+TIMEDIFF.DM.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIMEDIFF.DM.sql.win.ref.log
+END
+round.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/2725/trunk/queries/working_tpch1/qa_fe_cnxFunctions/round.sql.ref.log
+END
+DATE.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1264/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE.DS.sql
+END
+DAYOFYEAR.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYOFYEAR.DS.sql.ref.log
+END
+DATE_ADD.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_ADD.DM.sql
+END
+REGEXP.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REGEXP.DM.sql.ref.log
+END
+hex.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2283/trunk/queries/working_tpch1/qa_fe_cnxFunctions/hex.sql
+END
+CONVERT.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.NM.sql.ref.log
+END
+REPLACE.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REPLACE.SM.sql.ref.log
+END
+nullif.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2320/trunk/queries/working_tpch1/qa_fe_cnxFunctions/nullif.sql.ref.log
+END
+DATE_SUB.DT.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_SUB.DT.sql.ref.log
+END
+RIGHT.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RIGHT.SM.sql
+END
+CAST.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.NM.sql.ref.log
+END
+LAST_DAY.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2199/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LAST_DAY.DM.sql
+END
+unix_timestamp.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2358/trunk/queries/working_tpch1/qa_fe_cnxFunctions/unix_timestamp.sql.ref.log
+END
+TIME.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME.DS.sql
+END
+ACOS.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ACOS.NS.sql
+END
+TIME_FORMAT.DL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2205/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_FORMAT.DL.sql
+END
+INSTR.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/INSTR.SL.sql.ref.log
+END
+LEFT.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEFT.SM.sql
+END
+concat_ws.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2246/trunk/queries/working_tpch1/qa_fe_cnxFunctions/concat_ws.sql.ref.log
+END
+inet_ntoa.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2303/trunk/queries/working_tpch1/qa_fe_cnxFunctions/inet_ntoa.sql.ref.log
+END
+HOUR.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/HOUR.DS.sql.ref.log
+END
+CONVERT.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1487/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.sql
+END
+find_in_set.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2347/trunk/queries/working_tpch1/qa_fe_cnxFunctions/find_in_set.sql
+END
+RTRIM.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RTRIM.SS.sql
+END
+PERIOD_ADD_DIFF.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2219/trunk/queries/working_tpch1/qa_fe_cnxFunctions/PERIOD_ADD_DIFF.sql
+END
+MOD.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MOD.NM.sql.ref.log
+END
+elt.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2260/trunk/queries/working_tpch1/qa_fe_cnxFunctions/elt.sql
+END
+round.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/2725/trunk/queries/working_tpch1/qa_fe_cnxFunctions/round.sql
+END
+nullif.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/2306/trunk/queries/working_tpch1/qa_fe_cnxFunctions/nullif.sql
+END
+CONVERT.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.SM.sql.ref.log
+END
+REPLACE.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REPLACE.SM.sql
+END
+CONVERT.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.NM.sql
+END
+REGEXP.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1489/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REGEXP.DM.sql
+END
+maketime.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2258/trunk/queries/working_tpch1/qa_fe_cnxFunctions/maketime.sql
+END
+ROUND.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ROUND.NM.sql
+END
+bug3585.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2124/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3585.sql
+END
+xor.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2327/trunk/queries/working_tpch1/qa_fe_cnxFunctions/xor.sql.ref.log
+END
+CAST.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.NM.sql
+END
+CAST.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.SM.sql.ref.log
+END
+EXTRACT.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/EXTRACT.DM.sql.ref.log
+END
+degrees.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/degrees.sql.win.ref.log
+END
+LCASE.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LCASE.SS.sql.ref.log
+END
+YEARWEEK.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/YEARWEEK.DM.sql.ref.log
+END
+CONVERT.DL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.DL.sql.ref.log
+END
+LEAST.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEAST.NL.sql.ref.log
+END
+DATE_ADD.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_ADD.sql.ref.log
+END
+DAY.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAY.DS.sql
+END
+MID.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2204/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MID.SM.sql.ref.log
+END
+CAST.DL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.DL.sql.ref.log
+END
+timestampdiff.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/2893/trunk/queries/working_tpch1/qa_fe_cnxFunctions/timestampdiff.sql.ref.log
+END
+LPAD.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LPAD.SM.sql.ref.log
+END
+SEC_TO_TIME.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2207/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SEC_TO_TIME.sql
+END
+FLOOR.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FLOOR.NS.sql.ref.log
+END
+MATHEXPR.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MATHEXPR.NL.sql.ref.log
+END
+LOG10.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOG10.NS.sql.ref.log
+END
+REGEXP.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REGEXP.NM.sql.ref.log
+END
+bug3671.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2281/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3671.sql
+END
+RPAD.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RPAD.SL.sql.ref.log
+END
+FORMAT.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FORMAT.NS.sql.ref.log
+END
+MINUTE.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MINUTE.DS.sql
+END
+makedate.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/2402/trunk/queries/working_tpch1/qa_fe_cnxFunctions/makedate.sql.ref.log
+END
+SQRT.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SQRT.NS.sql
+END
+subtime.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2222/trunk/queries/working_tpch1/qa_fe_cnxFunctions/subtime.sql
+END
+EXTRACT.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/EXTRACT.DM.sql
+END
+YEARWEEK.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/YEARWEEK.DM.sql
+END
+LCASE.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LCASE.SS.sql
+END
+DAYOFWEEK.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYOFWEEK.DS.sql.ref.log
+END
+inet_aton.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2251/trunk/queries/working_tpch1/qa_fe_cnxFunctions/inet_aton.sql
+END
+SECOND.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1447/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SECOND.DS.sql
+END
+LEAST.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEAST.SL.sql.ref.log
+END
+TIMEDIFF.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIMEDIFF.DM.sql.ref.log
+END
+POSITION.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/POSITION.SM.sql
+END
+LOG2.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOG2.NS.sql
+END
+bug3333.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2598/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3333.sql.ref.log
+END
+DATE_ADD.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_ADD.sql
+END
+RIGHT.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RIGHT.SL.sql.ref.log
+END
+WEEK.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/WEEK.DM.sql.ref.log
+END
+space.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/space.sql.ref.log
+END
+bug4703.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/3056/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug4703.sql.ref.log
+END
+MID.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/2204/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MID.SM.sql
+END
+ascii.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/2179/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ascii.sql
+END
+CAST.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1487/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.sql
+END
+WEEKDAY.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/2194/trunk/queries/working_tpch1/qa_fe_cnxFunctions/WEEKDAY.DS.sql
+END
+TIME_FORMAT.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_FORMAT.DM.sql.ref.log
+END
+LOG10.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOG10.NS.sql
+END
+makedate.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/makedate.sql.win.ref.log
+END
+addtime.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2222/trunk/queries/working_tpch1/qa_fe_cnxFunctions/addtime.sql.ref.log
+END
+REGEXP.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REGEXP.SM.sql.ref.log
+END
+RPAD.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RPAD.SL.sql
+END
+REGEXP.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1489/trunk/queries/working_tpch1/qa_fe_cnxFunctions/REGEXP.NM.sql
+END
+DATEDIFF.DL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATEDIFF.DL.sql
+END
+sha.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2338/trunk/queries/working_tpch1/qa_fe_cnxFunctions/sha.sql.ref.log
+END
+FORMAT.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1498/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FORMAT.NS.sql
+END
+LOWER.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOWER.SS.sql.ref.log
+END
+makedate.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2402/trunk/queries/working_tpch1/qa_fe_cnxFunctions/makedate.sql
+END
+CHARACTER_LENGTH.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CHARACTER_LENGTH.SS.sql.ref.log
+END
+DATE_FORMAT.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_FORMAT.DM.sql.ref.log
+END
+DATE_SUB.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_SUB.sql.ref.log
+END
+div.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2169/trunk/queries/working_tpch1/qa_fe_cnxFunctions/div.sql
+END
+DAYOFWEEK.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1456/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYOFWEEK.DS.sql
+END
+CONVERT.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.NL.sql.ref.log
+END
+LEAST.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEAST.SL.sql
+END
+MONTH.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MONTH.DS.sql.ref.log
+END
+CEIL.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CEIL.NS.sql.ref.log
+END
+GREATEST.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/GREATEST.NL.sql
+END
+RADIANS.NS.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RADIANS.NS.sql.win.ref.log
+END
+NULLIF.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2306/trunk/queries/working_tpch1/qa_fe_cnxFunctions/NULLIF.DM.sql
+END
+bug3333.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2598/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3333.sql
+END
+TRIM.SS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TRIM.SS.sql.ref.log
+END
+bug4703.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/3056/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug4703.sql
+END
+space.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/space.sql
+END
+BITAND.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/BITAND.sql.ref.log
+END
+CASE2.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE2.DM.sql
+END
+bug2577.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug2577.sql.ref.log
+END
+CAST.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.NL.sql.ref.log
+END
+WEEK.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/WEEK.DS.sql
+END
+extract.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/3058/trunk/queries/working_tpch1/qa_fe_cnxFunctions/extract.sql.ref.log
+END
+TIME_FORMAT.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2205/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_FORMAT.DM.sql
+END
+addtime.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2174/trunk/queries/working_tpch1/qa_fe_cnxFunctions/addtime.sql
+END
+IFNULL.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/IFNULL.NS.sql
+END
+degrees.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2260/trunk/queries/working_tpch1/qa_fe_cnxFunctions/degrees.sql.ref.log
+END
+coalesce.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/2226/trunk/queries/working_tpch1/qa_fe_cnxFunctions/coalesce.sql.ref.log
+END
+sha.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2338/trunk/queries/working_tpch1/qa_fe_cnxFunctions/sha.sql
+END
+CHARACTER_LENGTH.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CHARACTER_LENGTH.SS.sql
+END
+CONVERT.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.SL.sql.ref.log
+END
+SUBSTRING.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTRING.SM.sql.ref.log
+END
+TRUNCATE.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TRUNCATE.NM.sql.ref.log
+END
+TIME_TO_SEC.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_TO_SEC.DS.sql.ref.log
+END
+CEIL.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CEIL.NS.sql
+END
+LOG.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LOG.NS.sql.ref.log
+END
+TRIM.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TRIM.SS.sql
+END
+BITAND.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/1300/trunk/queries/working_tpch1/qa_fe_cnxFunctions/BITAND.sql
+END
+CAST.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.SL.sql.ref.log
+END
+SIN.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SIN.NS.sql.ref.log
+END
+trim.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1906/trunk/queries/working_tpch1/qa_fe_cnxFunctions/trim.sql.ref.log
+END
+crc32.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/2214/trunk/queries/working_tpch1/qa_fe_cnxFunctions/crc32.sql.ref.log
+END
+MID.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2204/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MID.SL.sql.ref.log
+END
+unhex.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/2165/trunk/queries/working_tpch1/qa_fe_cnxFunctions/unhex.sql.ref.log
+END
+QUARTER.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1855/trunk/queries/working_tpch1/qa_fe_cnxFunctions/QUARTER.DS.sql.ref.log
+END
+bug3334_ceil.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1880/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3334_ceil.sql
+END
+bug3334_overflow_error.sql
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2016/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3334_overflow_error.sql
+END
+LPAD.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LPAD.SL.sql.ref.log
+END
+CONVERT.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.SL.sql
+END
+TIME_TO_SEC.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_TO_SEC.DS.sql
+END
+DATEDIFF.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATEDIFF.DM.sql.ref.log
+END
+ATAN.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ATAN.NS.sql
+END
+bug3792.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2402/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3792.sql
+END
+NULLIF.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2306/trunk/queries/working_tpch1/qa_fe_cnxFunctions/NULLIF.NM.sql
+END
+CASE2.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE2.NM.sql
+END
+CAST.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1483/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CAST.SL.sql
+END
+strcmp.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/2223/trunk/queries/working_tpch1/qa_fe_cnxFunctions/strcmp.sql
+END
+trim.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1905/trunk/queries/working_tpch1/qa_fe_cnxFunctions/trim.sql
+END
+from_unixtime.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/from_unixtime.sql.win.ref.log
+END
+DATE.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE.DS.sql.ref.log
+END
+DATE_ADD.DM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_ADD.DM.sql.ref.log
+END
+hex.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2283/trunk/queries/working_tpch1/qa_fe_cnxFunctions/hex.sql.ref.log
+END
+TIMEDIFF.DL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIMEDIFF.DL.sql.ref.log
+END
+repeat.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/2277/trunk/queries/working_tpch1/qa_fe_cnxFunctions/repeat.sql
+END
+ROUND.NM.SEL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ROUND.NM.SEL.sql
+END
+unhex.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/2165/trunk/queries/working_tpch1/qa_fe_cnxFunctions/unhex.sql
+END
+LPAD.SL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LPAD.SL.sql
+END
+ACOS.NS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ACOS.NS.sql.ref.log
+END
+TIME_FORMAT.DL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIME_FORMAT.DL.sql.ref.log
+END
+FORMAT.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1690/trunk/queries/working_tpch1/qa_fe_cnxFunctions/FORMAT.NL.sql
+END
+TO_DAYS.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TO_DAYS.DS.sql.ref.log
+END
+LEFT.SM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/LEFT.SM.sql.ref.log
+END
+RPAD.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RPAD.SM.sql
+END
+DATEDIFF.DM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATEDIFF.DM.sql
+END
+CONVERT.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CONVERT.sql.ref.log
+END
+PERIOD_ADD_DIFF.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/2219/trunk/queries/working_tpch1/qa_fe_cnxFunctions/PERIOD_ADD_DIFF.sql.ref.log
+END
+from_days.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2180/trunk/queries/working_tpch1/qa_fe_cnxFunctions/from_days.sql.ref.log
+END
+DATE_FORMAT.DL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/2206/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_FORMAT.DL.sql.ref.log
+END
+elt.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/2260/trunk/queries/working_tpch1/qa_fe_cnxFunctions/elt.sql.ref.log
+END
+TIMEDIFF.DL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TIMEDIFF.DL.sql
+END
+maketime.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/2258/trunk/queries/working_tpch1/qa_fe_cnxFunctions/maketime.sql.ref.log
+END
+ROUND.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/ROUND.NM.sql.ref.log
+END
+bug3585.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2124/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3585.sql.ref.log
+END
+bug3338.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1858/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3338.sql
+END
+RADIANS.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1705/trunk/queries/working_tpch1/qa_fe_cnxFunctions/RADIANS.NS.sql
+END
+YEAR.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/YEAR.DS.sql.ref.log
+END
+CHAR_LENGTH.SS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CHAR_LENGTH.SS.sql
+END
+bug3788.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2459/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3788.sql.ref.log
+END
+insert.sql
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/genii/mysql/!svn/ver/2237/trunk/queries/working_tpch1/qa_fe_cnxFunctions/insert.sql
+END
+TO_DAYS.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TO_DAYS.DS.sql
+END
+CASE1.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/CASE1.SM.sql
+END
+DAY.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAY.DS.sql.ref.log
+END
+nullif.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxFunctions/nullif.sql.win.ref.log
+END
+DATE_FORMAT.DL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/2205/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_FORMAT.DL.sql
+END
+from_days.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2180/trunk/queries/working_tpch1/qa_fe_cnxFunctions/from_days.sql
+END
+SEC_TO_TIME.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/2208/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SEC_TO_TIME.sql.ref.log
+END
+MONTHNAME.DS.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/2192/trunk/queries/working_tpch1/qa_fe_cnxFunctions/MONTHNAME.DS.sql.ref.log
+END
+TRUNCATE.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/TRUNCATE.NL.sql.ref.log
+END
+SUBSTRING.SL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxFunctions/SUBSTRING.SL.sql.ref.log
+END
+DAYOFYEAR.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1457/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DAYOFYEAR.DS.sql
+END
+bug3671.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2281/trunk/queries/working_tpch1/qa_fe_cnxFunctions/bug3671.sql.ref.log
+END
+DATE_SUB.DT.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxFunctions/DATE_SUB.DT.sql
+END

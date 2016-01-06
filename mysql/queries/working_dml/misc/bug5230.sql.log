@@ -1,0 +1,7 @@
+ERROR 138 (HY000) at line 2: Cannot execute the statement. DBRM is read only!
+ERROR 122 (HY000) at line 9: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 10: Lost connection to DMLProc [2]
+ERROR 1146 (42S02) at line 11: Table 'dmlc.region1' doesn't exist
+ERROR 122 (HY000) at line 13: The system is not yet ready to accept queries
+ERROR 1146 (42S02) at line 15: Table 'dmlc.region1' doesn't exist
+ERROR 1051 (42S02) at line 16: Unknown table 'region1'

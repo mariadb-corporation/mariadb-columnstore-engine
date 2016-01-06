@@ -1,0 +1,204 @@
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',-5)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	NULL
+11	NULL	NULL
+substring_index(r_comment,'.',-5)
+lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',-4)
+lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',-3)
+ blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',-2)
+ regular waters are final requests. regular accounts are according to 
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',-1)
+ regular accounts are according to 
+ s
+ thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+ carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',0)
+NULL
+NULL
+NULL
+NULL
+NULL
+substring_index(r_comment,'.',1)
+lar deposits
+hs use ironic, even requests
+ges
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests
+substring_index(r_comment,'.',2)
+lar deposits. blithely final packages cajole
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',3)
+lar deposits. blithely final packages cajole. regular waters are final requests
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',4)
+lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+substring_index(r_comment,'.',5)
+lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+hs use ironic, even requests. s
+ges. thinly even pinto beans ca
+ly final courts cajole furiously final excuse
+uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',5)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	zzz
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',4)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	zzz
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',3)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	zz
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',2)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	z
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',1)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	NULL
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',0)
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',-1)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	NULL
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',-2)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	z
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',-3)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	zz
+11	NULL	NULL
+cidx	CCHAR3	SUBSTRING_INDEX(CCHAR3,'z',-5)
+1	aaa	aaa
+2	c	c
+3	cc	cc
+4	ccc	ccc
+5	ccc	ccc
+6	xxx	xxx
+7	xxx	xxx
+8	xxx	xxx
+9	xxx	xxx
+10	zzz	NULL
+11	NULL	NULL
+r_comment
+ges. thinly even pinto beans ca
+SUBSTRING_INDEX('www.mysql.com', '.', 2)
+www.mysql
+SUBSTRING_INDEX('www.mysql.com', '.', -2)
+mysql.com

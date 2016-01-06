@@ -1,0 +1,11 @@
+c1	c2
+1	1
+2	1
+1	2
+2	2
+OrderNum	OrderLine	ShippingAmount	ShippingOrderAmount	ShippingTotalAmount	ShippingDiscountAmount	ShippingDiscountOrderAmount	ShippingDiscountTotalAmount	IF( s.OrderLine = t.MinOrderLine, 1, 0 )
+2357203684	352338	0.00	0.00	0.00	0.00	0.00	0.00	1
+OrderNum	OrderLine	ShippingAmount	ShippingOrderAmount	ShippingTotalAmount	ShippingDiscountAmount	ShippingDiscountOrderAmount	ShippingDiscountTotalAmount	IF( s.OrderLine = t.MinOrderLine, 1, 0 )
+2357203684	352338	0.00	0.00	0.00	0.00	0.00	0.00	1
+user_id	fullname	email	country	state	contact	affiliate_name	affiliate_email	start_date	end_date	status	product	created	Last Log In	login_count	milestone_level	class_level
+NULL	NULL	NULL	NULL	NULL	No Number	No Affiliate	No Affiliate	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL

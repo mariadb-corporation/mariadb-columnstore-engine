@@ -1,0 +1,5 @@
+ERROR 138 (HY000) at line 5: Table is not empty. New column has to have a default value if NOT NULL required.
+id	newcol1	newcol2
+1	2	10
+id	newcol1	newcol2	newcol3
+1	2	10	11

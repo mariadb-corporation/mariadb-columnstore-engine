@@ -1,0 +1,20 @@
+count(o_orderkey)	min(o_orderkey)	max(o_orderkey)	sum(o_orderkey)	avg(o_orderkey)
+150000000	1	600000000	44999998725000000	299999991.5000
+count(o_custkey)	min(o_custkey)	max(o_custkey)	sum(o_custkey)	avg(o_custkey)
+150000000	1	14999999	1125067411545495	7500449.4103
+count(o_orderstatus)	min(o_orderstatus)	max(o_orderstatus)
+150000000	F	P
+count(o_totalprice)	min(o_totalprice)	max(o_totalprice)	sum(o_totalprice)	avg(o_totalprice)
+150000000	811.73	591036.15	22668168442418.61	151121.122949
+count(o_orderdate)	min(o_orderdate)	max(o_orderdate)
+150000000	1992-01-01	1998-08-02
+count(o_orderpriority)	min(o_orderpriority)	max(o_orderpriority)
+150000000	1-URGENT	5-LOW
+count(o_clerk)	min(o_clerk)	max(o_clerk)
+150000000	Clerk#000000001	Clerk#000100000
+count(o_shippriority)	min(o_shippriority)	max(o_shippriority)
+150000000	0	0
+count(o_comment)	min(o_comment)	max(o_comment)
+150000000	 Tiresias about the	zzle? unusual requests w
+count(*)
+150000000

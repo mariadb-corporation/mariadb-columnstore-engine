@@ -1,0 +1,3 @@
+-g0 -O3 -fno-strict-aliasing -fno-tree-vectorize -DDBUG_OFF
+#-ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC
+#-ggdb3 -fno-tree-vectorize -DSAFE_MUTEX

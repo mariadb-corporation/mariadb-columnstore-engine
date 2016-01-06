@@ -1,0 +1,11 @@
+git add build/infinidb.spec.in
+git add oam/etc/ConsoleCmds.xml
+git add oam/install_scripts/Makefile
+git add oam/install_scripts/pre-uninstall
+git add oam/oamcpp/liboamcpp.cpp
+git add oam/oamcpp/liboamcpp.h
+git add oamapps/calpontConsole/calpontConsole.cpp
+git add procmgr/processmanager.cpp
+git add procmgr/processmanager.h
+git add procmon/processmonitor.cpp
+git add procmon/processmonitor.h

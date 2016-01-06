@@ -1,0 +1,20 @@
+ERROR 138 (HY000) at line 53: IDB-1012: This version of InfiniDB supports update of only one table at a time.
+ERROR 138 (HY000) at line 54: IDB-1012: This version of InfiniDB supports update of only one table at a time.
+q1	taa_p_id	a_id	date_id	amount
+q1	2	20	100	100000
+q2	paa_p_id	a_id	date_id
+q2	1	10	100
+q2	2	20	100
+q3	taa_p_id	a_id	date_id	amount
+q3	2	20	100	100001
+q4	paa_p_id	a_id	date_id
+q4	1	10	100
+q4	2	20	100
+q5	taa_p_id	a_id	date_id	amount
+q5	2	20	100	100002
+q7	paa_p_id	a_id	date_id
+q7	1	10	100
+q7	2	20	3
+q9	paa_p_id	a_id	date_id
+q9	1	10	100
+q9	2	20	3

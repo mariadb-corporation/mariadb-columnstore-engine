@@ -1,0 +1,176 @@
+n_name	c_custname
+ITALY	Cust_Italy
+JAPAN	Cust_Japan
+UNITED STATES	Cust_US
+n_name	c_custname
+UNITED STATES	Cust_US
+n_name	count(c.c_id)
+ITALY	1
+JAPAN	1
+UNITED STATES	1
+n_name	c_custname
+CANADA	NULL
+CHINA	NULL
+GERMANY	NULL
+ITALY	Cust_Italy
+JAPAN	Cust_Japan
+UNITED STATES	Cust_US
+n_name	c_custname
+CANADA	NULL
+CHINA	NULL
+GERMANY	NULL
+ITALY	Cust_Italy
+JAPAN	Cust_Japan
+UNITED STATES	Cust_US
+n_name	count(c.c_id)
+CANADA	0
+CHINA	0
+GERMANY	0
+ITALY	1
+JAPAN	1
+UNITED STATES	1
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+ASIA	JAPAN	Cust_Japan
+EUROPE	ITALY	Cust_Italy
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+ASIA	JAPAN	Cust_Japan
+EUROPE	ITALY	Cust_Italy
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+ASIA	CHINA	NULL
+ASIA	JAPAN	Cust_Japan
+EUROPE	GERMANY	NULL
+EUROPE	ITALY	Cust_Italy
+r_name	n_name	c_custname
+AMERICA	UNITED STATES	Cust_US
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+r_name	n_name	c_custname
+AMERICA	CANADA	NULL
+AMERICA	UNITED STATES	Cust_US
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+AMERICA	UNITED STATES	Cust_US	Order_US#1
+AMERICA	UNITED STATES	Cust_US	Order_US#2
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+r_name	n_name	c_custname	o_name
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+r_name	n_name	c_custname	o_name
+EUROPE	ITALY	Cust_Italy	NULL
+r_name	n_name	c_custname	o_name
+ASIA	JAPAN	Cust_Japan	Order_Japan#1
+r_name	n_name	c_custname	o_name
+EUROPE	ITALY	Cust_Italy	NULL

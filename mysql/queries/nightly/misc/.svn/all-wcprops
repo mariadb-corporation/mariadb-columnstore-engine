@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/genii/mysql/!svn/ver/3500/trunk/queries/nightly/misc
+END
+bug4963.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/3281/trunk/queries/nightly/misc/bug4963.sh
+END

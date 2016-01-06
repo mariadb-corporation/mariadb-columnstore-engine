@@ -1,0 +1,59 @@
+ERROR 138 (HY000) at line 18: IDB-4011: The specified starting autoincrement value is too large.
+ERROR 138 (HY000) at line 19: IDB-4008: Autoincrement column must be an integral data type.
+ERROR 138 (HY000) at line 20: IDB-4009: Only one column in the table may be specified as autoincrement.
+ERROR 138 (HY000) at line 21: IDB-4011: The specified starting autoincrement value is too large.
+ERROR 138 (HY000) at line 22: IDB-4008: Autoincrement column must be an integral data type.
+ERROR 138 (HY000) at line 23: IDB-4009: Only one column in the table may be specified as autoincrement.
+ERROR 122 (HY000) at line 26: CAL0001: Insert Failed:  IDB-4012: The maximum allowed value has been exceeded for the autoincrement column data type.  
+ERROR 138 (HY000) at line 46: IDB-3009: Unknown column 'NO'.
+ai	col1	col2
+1	1	a
+2	2	b
+3	3	c
+4	4	d
+5	6	f
+6	5	e
+callastinsertid('foo')
+5
+ai	col1	col2
+6	1	a
+7	2	b
+8	3	c
+9	4	d
+10	5	e
+11	6	f
+callastinsertid('foo')
+11
+ai	col1	col2
+12	1	a
+13	2	b
+14	3	c
+15	4	d
+16	5	e
+17	6	f
+callastinsertid('foo')
+17
+ai	col1	col2
+10	1	a
+10	2	b
+10	3	c
+10	4	d
+10	5	e
+10	6	f
+callastinsertid('foo')
+17
+ai	col1	col2
+127	1	first
+127	1	first
+callastinsertid('foo')
+127
+min(newcol)	max(newcol)
+1	200
+callastinsertid('foo')
+200
+min(newcol)	max(newcol)	min(col1)	max(col1)
+0	200	1	201
+min(newcol)	max(newcol)	min(col1)	max(col1)
+0	200	1	202
+callastinsertid('foo')
+1

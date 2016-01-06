@@ -1,0 +1,2 @@
+count(*)/count(distinct n_regionkey)
+5.0000

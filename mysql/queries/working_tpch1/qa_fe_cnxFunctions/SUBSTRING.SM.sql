@@ -1,0 +1,16 @@
+select cidx, CCHAR1, SUBSTRING(CCHAR1,1) from datatypetestm;
+select cidx, CCHAR7, SUBSTRING(CCHAR7,1) from datatypetestm;
+select cidx, CCHAR8, SUBSTRING(CCHAR8,1) from datatypetestm;
+select cidx, CCHAR9, SUBSTRING(CCHAR9,1) from datatypetestm;
+select cidx, CCHAR9, SUBSTRING(CCHAR9 FROM 1) from datatypetestm;
+select cidx, CCHAR255, SUBSTRING(CCHAR255,1) from datatypetestm;
+select cidx, CVCHAR1, SUBSTRING(CVCHAR1,1) from datatypetestm;
+select cidx, CVCHAR6, SUBSTRING(CVCHAR6,1) from datatypetestm;
+select cidx, CVCHAR255, SUBSTRING(CVCHAR255 FROM 1) from datatypetestm;
+select cidx, CVCHAR255, SUBSTRING(CVCHAR255,1,1) from datatypetestm;
+select cidx, CCHAR1 from datatypetestm order by SUBSTRING(CCHAR1,1), cidx;
+select cidx, CCHAR5 from datatypetestm order by SUBSTRING(CCHAR5,1), cidx;
+select cidx, CCHAR9 from datatypetestm order by SUBSTRING(CCHAR9,1,1), cidx;
+select cidx, CCHAR9 from datatypetestm order by SUBSTRING(CCHAR9 FROM 1 FOR 2), cidx;
+select cidx, CCHAR9 from datatypetestm order by SUBSTRING(CCHAR9 FROM 1 FOR 3), cidx;
+select cidx, CCHAR255 from datatypetestm order by SUBSTRING(CCHAR255,1), cidx;

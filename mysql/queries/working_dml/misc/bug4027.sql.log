@@ -1,0 +1,9 @@
+ERROR 138 (HY000) at line 4: Cannot execute the statement. DBRM is read only!
+ERROR 138 (HY000) at line 6: Cannot execute the statement. DBRM is read only!
+ERROR 1146 (42S02) at line 16: Table 'dmlc.product_tag' doesn't exist
+ERROR 1146 (42S02) at line 17: Table 'dmlc.product' doesn't exist
+ERROR 1146 (42S02) at line 18: Table 'dmlc.product' doesn't exist
+ERROR 1146 (42S02) at line 20: Table 'dmlc.product' doesn't exist
+ERROR 1146 (42S02) at line 26: Table 'dmlc.product' doesn't exist
+ERROR 1051 (42S02) at line 27: Unknown table 'product'
+ERROR 1051 (42S02) at line 28: Unknown table 'product_tag'

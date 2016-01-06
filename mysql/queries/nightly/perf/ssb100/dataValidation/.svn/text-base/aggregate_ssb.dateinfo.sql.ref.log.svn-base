@@ -1,0 +1,34 @@
+count(d_datekey)	min(d_datekey)	max(d_datekey)	sum(d_datekey)	avg(d_datekey)
+2556	19920101	19981230	50993856793	19950648.1976
+count(d_date)	min(d_date)	max(d_date)
+2556	April 1, 1992	September 9, 1998
+count(d_dayofweek)	min(d_dayofweek)	max(d_dayofweek)
+2556	Friday	Wednesda
+count(d_month)	min(d_month)	max(d_month)
+2556	April	September
+count(d_year)	min(d_year)	max(d_year)	sum(d_year)	avg(d_year)
+2556	1992	1998	5099215	1994.9980
+count(d_yearmonthnum)	min(d_yearmonthnum)	max(d_yearmonthnum)	sum(d_yearmonthnum)	avg(d_yearmonthnum)
+2556	199201	199812	509938166	199506.3247
+count(d_yearmonth)	min(d_yearmonth)	max(d_yearmonth)
+2556	Apr1992	Sep1998
+count(d_daynuminweek)	min(d_daynuminweek)	max(d_daynuminweek)	sum(d_daynuminweek)	avg(d_daynuminweek)
+2556	1	7	10225	4.0004
+count(d_daynuminmonth)	min(d_daynuminmonth)	max(d_daynuminmonth)	sum(d_daynuminmonth)	avg(d_daynuminmonth)
+2556	1	31	40193	15.7250
+count(d_daynuminyear)	min(d_daynuminyear)	max(d_daynuminyear)	sum(d_daynuminyear)	avg(d_daynuminyear)
+2556	1	366	467932	183.0720
+count(d_monthnuminyear)	min(d_monthnuminyear)	max(d_monthnuminyear)	sum(d_monthnuminyear)	avg(d_monthnuminyear)
+2556	1	12	16666	6.5203
+count(d_weeknuminyear)	min(d_weeknuminyear)	max(d_weeknuminyear)	sum(d_weeknuminyear)	avg(d_weeknuminyear)
+2556	1	53	68310	26.7254
+count(d_sellingseason)	min(d_sellingseason)	max(d_sellingseason)
+2556	Christmas	Winter
+count(d_lastdayinweekfl)	min(d_lastdayinweekfl)	max(d_lastdayinweekfl)	sum(d_lastdayinweekfl)	avg(d_lastdayinweekfl)
+2556	0	1	365	0.1428
+count(d_lastdayinmonthfl)	min(d_lastdayinmonthfl)	max(d_lastdayinmonthfl)	sum(d_lastdayinmonthfl)	avg(d_lastdayinmonthfl)
+2556	0	1	2473	0.9675
+count(d_holidayfl)	min(d_holidayfl)	max(d_holidayfl)	sum(d_holidayfl)	avg(d_holidayfl)
+2556	0	1	70	0.0274
+count(d_weekdayfl)	min(d_weekdayfl)	max(d_weekdayfl)	sum(d_weekdayfl)	avg(d_weekdayfl)
+2556	0	1	1826	0.7144

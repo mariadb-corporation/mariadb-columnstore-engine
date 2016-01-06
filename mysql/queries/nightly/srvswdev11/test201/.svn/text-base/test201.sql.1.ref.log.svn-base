@@ -1,0 +1,161 @@
+--------------
+update test201 set c2=1, c3=1 where c1 between 1 and 25000000 and c1%1000=1
+--------------
+
+Query OK, 25000 rows affected (32.77 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count1 from test201 where c1 between 1 and 25000000 and c1%1000=1 and c2=1 and c3=1
+--------------
+
++--------+
+| count1 |
++--------+
+|  25000 |
++--------+
+1 row in set (4.24 sec)
+
+--------------
+update test201 set c2=2, c3=2 where c1 between 25000001 and 50000000 and c1%1000=2
+--------------
+
+Query OK, 25000 rows affected (34.28 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count2 from test201 where c1 between 25000001 and 50000000 and c1%1000=2 and c2=2 and c3=2
+--------------
+
++--------+
+| count2 |
++--------+
+|  25000 |
++--------+
+1 row in set (15.32 sec)
+
+--------------
+update test201 set c2=3, c3=3 where c1 between 50000001 and 75000000 and c1%1000=3
+--------------
+
+Query OK, 25000 rows affected (36.29 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count3 from test201 where c1 between 50000001 and 75000000 and c1%1000=3 and c2=3 and c3=3
+--------------
+
++--------+
+| count3 |
++--------+
+|  25000 |
++--------+
+1 row in set (8.58 sec)
+
+--------------
+update test201 set c2=4, c3=4 where c1 between 1 and 25000000 and c1%1000=4
+--------------
+
+Query OK, 25000 rows affected (36.79 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count4 from test201 where c1 between 1 and 25000000 and c1%1000=4 and c2=4 and c3=4
+--------------
+
++--------+
+| count4 |
++--------+
+|  25000 |
++--------+
+1 row in set (4.72 sec)
+
+--------------
+update test201 set c2=5, c3=5 where c1 between 25000001 and 50000000 and c1%1000=5
+--------------
+
+Query OK, 25000 rows affected (35.88 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count5 from test201 where c1 between 25000001 and 50000000 and c1%1000=5 and c2=5 and c3=5
+--------------
+
++--------+
+| count5 |
++--------+
+|  25000 |
++--------+
+1 row in set (17.98 sec)
+
+--------------
+update test201 set c2=6, c3=6 where c1 between 50000001 and 75000000 and c1%1000=6
+--------------
+
+Query OK, 25000 rows affected (33.98 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count6 from test201 where c1 between 50000001 and 75000000 and c1%1000=6 and c2=6 and c3=6
+--------------
+
++--------+
+| count6 |
++--------+
+|  25000 |
++--------+
+1 row in set (7.96 sec)
+
+ERROR 122 (HY000) at line 23: CAL0002: Update Failed:  IDB-2008: The version buffer overflowed. Increase VersionBufferFileSize or limit the rows to be processed.
+--------------
+update test201 set c2=7, c3=7 where c1%1000=7
+--------------
+
+--------------
+select count(*) count7 from test201 where c1%1000=7 and c2=7 and c3=7
+--------------
+
++--------+
+| count7 |
++--------+
+|      1 |
++--------+
+1 row in set (6.94 sec)
+
+--------------
+update test201 set c2=8 where c1%1000=8
+--------------
+
+Query OK, 75000 rows affected (1 min 15.07 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count8 from test201 where c1%1000=8 and c2=8
+--------------
+
++--------+
+| count8 |
++--------+
+|  75000 |
++--------+
+1 row in set (6.41 sec)
+
+--------------
+update test201 set c3=9 where c1%1000=9
+--------------
+
+Query OK, 75000 rows affected (54.57 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count9 from test201 where c1%1000=9 and c3=9
+--------------
+
++--------+
+| count9 |
++--------+
+|  75000 |
++--------+
+1 row in set (6.45 sec)
+
+Bye

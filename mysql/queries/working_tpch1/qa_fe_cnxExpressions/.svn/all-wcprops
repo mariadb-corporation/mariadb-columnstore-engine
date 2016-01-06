@@ -1,0 +1,191 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxExpressions
+END
+expWhereBothSides.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expWhereBothSides.sql.ref.log
+END
+MATHEXPR7.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR7.NM.sql
+END
+MATHEXPR9.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR9.NM.sql
+END
+expMultiFunctions.sql
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expMultiFunctions.sql
+END
+MATHEXPR10.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR10.NM.sql
+END
+expSingleFunction.sql
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expSingleFunction.sql
+END
+expBetween.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expBetween.sql
+END
+MATHEXPR18.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR18.NM.sql
+END
+MATHEXPR1.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR1.NL.sql.ref.log
+END
+expIn.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2774/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expIn.sql.ref.log
+END
+expAndOrTest.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expAndOrTest.sql
+END
+MATHEXPR2.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR2.NL.sql
+END
+MATHEXPR7.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR7.NM.sql.ref.log
+END
+MATHEXPR4.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR4.NM.sql
+END
+MATHEXPR9.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR9.NM.sql.ref.log
+END
+expAggrFunctions.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expAggrFunctions.sql
+END
+MATHEXPR6.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR6.NM.sql
+END
+expMultiFunctions.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expMultiFunctions.sql.ref.log
+END
+expWhereBothSides.sql
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expWhereBothSides.sql
+END
+MATHEXPR10.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR10.NM.sql.ref.log
+END
+expSingleFunction.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expSingleFunction.sql.ref.log
+END
+expBetween.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expBetween.sql.ref.log
+END
+MATHEXPR18.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR18.NM.sql.ref.log
+END
+expIn.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/3404/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expIn.sql.win.ref.log
+END
+expAndOrTest.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expAndOrTest.sql.ref.log
+END
+MATHEXPR2.NL.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR2.NL.sql.ref.log
+END
+MATHEXPR4.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR4.NM.sql.ref.log
+END
+expAggrFunctions.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expAggrFunctions.sql.ref.log
+END
+MATHEXPR1.NL.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR1.NL.sql
+END
+MATHEXPR6.NM.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/qa_fe_cnxExpressions/MATHEXPR6.NM.sql.ref.log
+END
+expIn.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2774/trunk/queries/working_tpch1/qa_fe_cnxExpressions/expIn.sql
+END

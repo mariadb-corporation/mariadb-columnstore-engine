@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test511
+END
+unions.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/2035/trunk/queries/nightly/demo/test511/unions.sql.ref.log
+END
+go511.sh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test511/go511.sh
+END
+unions.sql
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/genii/mysql/!svn/ver/2035/trunk/queries/nightly/demo/test511/unions.sql
+END

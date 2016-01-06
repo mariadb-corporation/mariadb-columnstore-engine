@@ -1,0 +1,17 @@
+drop table if exists period;
+create table period (col1 int) engine=infinidb;
+insert into period values (201101),(201112),(1101),(1112);
+select col1 , period_add(col1,2) from period;
+select col1 , period_add(col1,12) from period;
+select col1 , period_add(col1,-1) from period;
+select col1 , period_add(col1,-20) from period;
+select col1 from period where period_add(col1,1) = 201102;
+select col1 , period_diff(col1,201101) from period;
+select col1 , period_diff(col1,201201) from period;
+select col1 , period_diff(col1,1101) from period;
+select col1 , period_diff(col1,1201) from period;
+select col1 , period_diff(col1,301101) from period;
+select col1 , period_diff(col1,100000) from period;
+select col1 from period where period_diff(col1,201111) = 1;
+select col1 from period where period_diff(col1,1111) = 1;
+drop table period;

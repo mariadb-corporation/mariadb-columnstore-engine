@@ -1,0 +1,83 @@
+cidx	CCHAR5	ELT(4,cbigint,1,2,10)
+1	aaaaa	10
+2	e	10
+3	ee	10
+4	eee	10
+5	eeee	10
+6	vvvvv	10
+7	vvvvv	10
+8	vvvvv	10
+9	vvvvv	10
+10	zzzzz	10
+11	NULL	10
+cidx	CCHAR1	ELT(1,CCHAR1)
+1	a	a
+2	a	a
+3	a	a
+4	a	a
+5	a	a
+6	z	z
+7	z	z
+8	z	z
+9	z	z
+10	z	z
+11	NULL	NULL
+cidx	CCHAR2	ELT(10,CCHAR2,CCHAR4)
+1	aa	NULL
+2	b	NULL
+3	bb	NULL
+4	bb	NULL
+5	bb	NULL
+6	yy	NULL
+7	yy	NULL
+8	yy	NULL
+9	yy	NULL
+10	zz	NULL
+11	NULL	NULL
+cidx	CCHAR3	ELT(0,CCHAR3)
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CCHAR4	ELT(-1,CCHAR4,CCHAR4)
+1	aaaa	NULL
+2	d	NULL
+3	dd	NULL
+4	ddd	NULL
+5	dddd	NULL
+6	wwww	NULL
+7	wwww	NULL
+8	wwww	NULL
+9	wwww	NULL
+10	zzzz	NULL
+11	NULL	NULL
+cidx	CCHAR5	ELT(4,CCHAR5,CVCHAR255,'s',CVCHAR5)
+1	aaaaa	aaaaa
+2	e	e
+3	ee	ee
+4	eee	eee
+5	eeee	eeee
+6	vvvvv	vvvvv
+7	vvvvv	vvvvv
+8	vvvvv	vvvvv
+9	vvvvv	vvvvv
+10	zzzzz	zzzzz
+11	NULL	NULL
+cidx	CCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+6	z
+7	z
+8	z
+9	z
+10	z

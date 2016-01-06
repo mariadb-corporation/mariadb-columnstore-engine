@@ -1,0 +1,1368 @@
+cidx	CCHAR1	CaseCol
+1	a	NULL
+2	a	NULL
+3	a	NULL
+4	a	NULL
+5	a	NULL
+6	z	NULL
+7	z	NULL
+8	z	NULL
+9	z	NULL
+10	z	NULL
+11	NULL	NULL
+cidx	CCHAR1	CaseCol
+1	a	Y
+2	a	Y
+3	a	Y
+4	a	Y
+5	a	Y
+6	z	NULL
+7	z	NULL
+8	z	NULL
+9	z	NULL
+10	z	NULL
+11	NULL	NULL
+cidx	CCHAR1	CaseCol
+1	a	NULL
+2	a	NULL
+3	a	NULL
+4	a	NULL
+5	a	NULL
+6	z	NULL
+7	z	NULL
+8	z	NULL
+9	z	NULL
+10	z	NULL
+11	NULL	NULL
+cidx	CCHAR2	CaseCol
+1	aa	NULL
+2	b	NULL
+3	bb	NULL
+4	bb	NULL
+5	bb	NULL
+6	yy	NULL
+7	yy	NULL
+8	yy	NULL
+9	yy	NULL
+10	zz	NULL
+11	NULL	NULL
+cidx	CCHAR2	CaseCol
+1	aa	NULL
+2	b	NULL
+3	bb	NULL
+4	bb	NULL
+5	bb	NULL
+6	yy	NULL
+7	yy	NULL
+8	yy	NULL
+9	yy	NULL
+10	zz	NULL
+11	NULL	NULL
+cidx	CCHAR2	CaseCol
+1	aa	NULL
+2	b	NULL
+3	bb	NULL
+4	bb	NULL
+5	bb	NULL
+6	yy	NULL
+7	yy	NULL
+8	yy	NULL
+9	yy	NULL
+10	zz	NULL
+11	NULL	NULL
+cidx	CCHAR3	CaseCol
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CCHAR3	CaseCol
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CCHAR3	CaseCol
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CCHAR4	CaseCol
+1	aaaa	Y
+2	d	NULL
+3	dd	NULL
+4	ddd	NULL
+5	dddd	NULL
+6	wwww	NULL
+7	wwww	NULL
+8	wwww	NULL
+9	wwww	NULL
+10	zzzz	NULL
+11	NULL	NULL
+cidx	CCHAR4	CaseCol
+1	aaaa	NULL
+2	d	NULL
+3	dd	NULL
+4	ddd	NULL
+5	dddd	NULL
+6	wwww	NULL
+7	wwww	NULL
+8	wwww	NULL
+9	wwww	NULL
+10	zzzz	NULL
+11	NULL	NULL
+cidx	CCHAR4	CaseCol
+1	aaaa	NULL
+2	d	NULL
+3	dd	NULL
+4	ddd	NULL
+5	dddd	NULL
+6	wwww	NULL
+7	wwww	NULL
+8	wwww	NULL
+9	wwww	NULL
+10	zzzz	NULL
+11	NULL	NULL
+cidx	CCHAR5	CaseCol
+1	aaaaa	NULL
+2	e	NULL
+3	ee	NULL
+4	eee	NULL
+5	eeee	NULL
+6	vvvvv	NULL
+7	vvvvv	NULL
+8	vvvvv	NULL
+9	vvvvv	NULL
+10	zzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR5	CaseCol
+1	aaaaa	NULL
+2	e	NULL
+3	ee	NULL
+4	eee	NULL
+5	eeee	NULL
+6	vvvvv	NULL
+7	vvvvv	NULL
+8	vvvvv	NULL
+9	vvvvv	NULL
+10	zzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR5	CaseCol
+1	aaaaa	NULL
+2	e	NULL
+3	ee	NULL
+4	eee	NULL
+5	eeee	NULL
+6	vvvvv	NULL
+7	vvvvv	NULL
+8	vvvvv	NULL
+9	vvvvv	NULL
+10	zzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR6	CaseCol
+1	aaaaaa	NULL
+2	f	NULL
+3	ff	NULL
+4	fff	NULL
+5	ffff	NULL
+6	uuuuuu	NULL
+7	uuuuuu	NULL
+8	uuuuuu	NULL
+9	uuuuuu	NULL
+10	zzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR6	CaseCol
+1	aaaaaa	NULL
+2	f	NULL
+3	ff	NULL
+4	fff	NULL
+5	ffff	NULL
+6	uuuuuu	NULL
+7	uuuuuu	NULL
+8	uuuuuu	NULL
+9	uuuuuu	NULL
+10	zzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR6	CaseCol
+1	aaaaaa	NULL
+2	f	NULL
+3	ff	NULL
+4	fff	NULL
+5	ffff	NULL
+6	uuuuuu	NULL
+7	uuuuuu	NULL
+8	uuuuuu	NULL
+9	uuuuuu	NULL
+10	zzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR7	CaseCol
+1	aaaaaaa	NULL
+2	g	NULL
+3	gg	NULL
+4	ggg	NULL
+5	gggg	NULL
+6	ttttttt	NULL
+7	ttttttt	NULL
+8	ttttttt	NULL
+9	ttttttt	NULL
+10	zzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR7	CaseCol
+1	aaaaaaa	NULL
+2	g	NULL
+3	gg	NULL
+4	ggg	NULL
+5	gggg	NULL
+6	ttttttt	NULL
+7	ttttttt	NULL
+8	ttttttt	NULL
+9	ttttttt	NULL
+10	zzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR7	CaseCol
+1	aaaaaaa	NULL
+2	g	NULL
+3	gg	NULL
+4	ggg	NULL
+5	gggg	NULL
+6	ttttttt	NULL
+7	ttttttt	NULL
+8	ttttttt	NULL
+9	ttttttt	NULL
+10	zzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR8	CaseCol
+1	aaaaaaaa	NULL
+2	h	NULL
+3	hh	NULL
+4	hhh	NULL
+5	hhhh	NULL
+6	sssssss	NULL
+7	ssssssss	NULL
+8	ssssssss	NULL
+9	ssssssss	NULL
+10	zzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR8	CaseCol
+1	aaaaaaaa	NULL
+2	h	NULL
+3	hh	NULL
+4	hhh	NULL
+5	hhhh	NULL
+6	sssssss	NULL
+7	ssssssss	NULL
+8	ssssssss	NULL
+9	ssssssss	NULL
+10	zzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR8	CaseCol
+1	aaaaaaaa	NULL
+2	h	NULL
+3	hh	NULL
+4	hhh	NULL
+5	hhhh	NULL
+6	sssssss	NULL
+7	ssssssss	NULL
+8	ssssssss	NULL
+9	ssssssss	NULL
+10	zzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR9	CaseCol
+1	aaaaaaaaa	NULL
+2	i	NULL
+3	ii	NULL
+4	iii	NULL
+5	iiii	NULL
+6	rrrrrrr	NULL
+7	rrrrrrrr	NULL
+8	rrrrrrrrr	NULL
+9	rrrrrrrrr	NULL
+10	zzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR9	CaseCol
+1	aaaaaaaaa	NULL
+2	i	NULL
+3	ii	NULL
+4	iii	NULL
+5	iiii	NULL
+6	rrrrrrr	NULL
+7	rrrrrrrr	NULL
+8	rrrrrrrrr	NULL
+9	rrrrrrrrr	NULL
+10	zzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR9	CaseCol
+1	aaaaaaaaa	NULL
+2	i	NULL
+3	ii	NULL
+4	iii	NULL
+5	iiii	NULL
+6	rrrrrrr	NULL
+7	rrrrrrrr	NULL
+8	rrrrrrrrr	NULL
+9	rrrrrrrrr	NULL
+10	zzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+2	j	NULL
+3	jj	NULL
+4	jjj	NULL
+5	jjjj	NULL
+6	qqqqqqq	NULL
+7	qqqqqqqq	NULL
+8	qqqqqqqqq	NULL
+9	qqqqqqqqqq	NULL
+10	zzzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+2	j	NULL
+3	jj	NULL
+4	jjj	NULL
+5	jjjj	NULL
+6	qqqqqqq	NULL
+7	qqqqqqqq	NULL
+8	qqqqqqqqq	NULL
+9	qqqqqqqqqq	NULL
+10	zzzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR255	CaseCol
+1	aaaaaaaaaa	Y
+2	j	NULL
+3	jj	NULL
+4	jjj	NULL
+5	jjjj	NULL
+6	qqqqqqq	NULL
+7	qqqqqqqq	NULL
+8	qqqqqqqqq	NULL
+9	qqqqqqqqqq	NULL
+10	zzzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR1	CaseCol
+1	a	NULL
+2	a	NULL
+3	a	NULL
+4	a	NULL
+5	a	NULL
+6	z	NULL
+7	z	NULL
+8	z	NULL
+9	z	NULL
+10	z	NULL
+11	NULL	NULL
+cidx	CVCHAR1	CaseCol
+1	a	Y
+2	a	Y
+3	a	Y
+4	a	Y
+5	a	Y
+6	z	NULL
+7	z	NULL
+8	z	NULL
+9	z	NULL
+10	z	NULL
+11	NULL	NULL
+cidx	CVCHAR1	CaseCol
+1	a	NULL
+2	a	NULL
+3	a	NULL
+4	a	NULL
+5	a	NULL
+6	z	NULL
+7	z	NULL
+8	z	NULL
+9	z	NULL
+10	z	NULL
+11	NULL	NULL
+cidx	CVCHAR2	CaseCol
+1	aa	NULL
+2	b	NULL
+3	bb	NULL
+4	bb	NULL
+5	bb	NULL
+6	yy	NULL
+7	yy	NULL
+8	yy	NULL
+9	yy	NULL
+10	zz	NULL
+11	NULL	NULL
+cidx	CVCHAR2	CaseCol
+1	aa	NULL
+2	b	NULL
+3	bb	NULL
+4	bb	NULL
+5	bb	NULL
+6	yy	NULL
+7	yy	NULL
+8	yy	NULL
+9	yy	NULL
+10	zz	NULL
+11	NULL	NULL
+cidx	CVCHAR2	CaseCol
+1	aa	NULL
+2	b	NULL
+3	bb	NULL
+4	bb	NULL
+5	bb	NULL
+6	yy	NULL
+7	yy	NULL
+8	yy	NULL
+9	yy	NULL
+10	zz	NULL
+11	NULL	NULL
+cidx	CVCHAR3	CaseCol
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CVCHAR3	CaseCol
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CVCHAR3	CaseCol
+1	aaa	NULL
+2	c	NULL
+3	cc	NULL
+4	ccc	NULL
+5	ccc	NULL
+6	xxx	NULL
+7	xxx	NULL
+8	xxx	NULL
+9	xxx	NULL
+10	zzz	NULL
+11	NULL	NULL
+cidx	CVCHAR4	CaseCol
+1	aaaa	Y
+2	d	NULL
+3	dd	NULL
+4	ddd	NULL
+5	dddd	NULL
+6	wwww	NULL
+7	wwww	NULL
+8	wwww	NULL
+9	wwww	NULL
+10	zzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR4	CaseCol
+1	aaaa	NULL
+2	d	NULL
+3	dd	NULL
+4	ddd	NULL
+5	dddd	NULL
+6	wwww	NULL
+7	wwww	NULL
+8	wwww	NULL
+9	wwww	NULL
+10	zzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR4	CaseCol
+1	aaaa	NULL
+2	d	NULL
+3	dd	NULL
+4	ddd	NULL
+5	dddd	NULL
+6	wwww	NULL
+7	wwww	NULL
+8	wwww	NULL
+9	wwww	NULL
+10	zzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR5	CaseCol
+1	aaaaa	NULL
+2	e	NULL
+3	ee	NULL
+4	eee	NULL
+5	eeee	NULL
+6	vvvvv	NULL
+7	vvvvv	NULL
+8	vvvvv	NULL
+9	vvvvv	NULL
+10	zzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR5	CaseCol
+1	aaaaa	NULL
+2	e	NULL
+3	ee	NULL
+4	eee	NULL
+5	eeee	NULL
+6	vvvvv	NULL
+7	vvvvv	NULL
+8	vvvvv	NULL
+9	vvvvv	NULL
+10	zzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR5	CaseCol
+1	aaaaa	NULL
+2	e	NULL
+3	ee	NULL
+4	eee	NULL
+5	eeee	NULL
+6	vvvvv	NULL
+7	vvvvv	NULL
+8	vvvvv	NULL
+9	vvvvv	NULL
+10	zzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR6	CaseCol
+1	aaaaaa	NULL
+2	f	NULL
+3	ff	NULL
+4	fff	NULL
+5	ffff	NULL
+6	uuuuuu	NULL
+7	uuuuuu	NULL
+8	uuuuuu	NULL
+9	uuuuuu	NULL
+10	zzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR6	CaseCol
+1	aaaaaa	NULL
+2	f	NULL
+3	ff	NULL
+4	fff	NULL
+5	ffff	NULL
+6	uuuuuu	NULL
+7	uuuuuu	NULL
+8	uuuuuu	NULL
+9	uuuuuu	NULL
+10	zzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR6	CaseCol
+1	aaaaaa	NULL
+2	f	NULL
+3	ff	NULL
+4	fff	NULL
+5	ffff	NULL
+6	uuuuuu	NULL
+7	uuuuuu	NULL
+8	uuuuuu	NULL
+9	uuuuuu	NULL
+10	zzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR7	CaseCol
+1	aaaaaaa	NULL
+2	g	NULL
+3	gg	NULL
+4	ggg	NULL
+5	gggg	NULL
+6	ttttttt	NULL
+7	ttttttt	NULL
+8	ttttttt	NULL
+9	ttttttt	NULL
+10	zzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR7	CaseCol
+1	aaaaaaa	NULL
+2	g	NULL
+3	gg	NULL
+4	ggg	NULL
+5	gggg	NULL
+6	ttttttt	NULL
+7	ttttttt	NULL
+8	ttttttt	NULL
+9	ttttttt	NULL
+10	zzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR7	CaseCol
+1	aaaaaaa	NULL
+2	g	NULL
+3	gg	NULL
+4	ggg	NULL
+5	gggg	NULL
+6	ttttttt	NULL
+7	ttttttt	NULL
+8	ttttttt	NULL
+9	ttttttt	NULL
+10	zzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR8	CaseCol
+1	aaaaaaaa	NULL
+2	h	NULL
+3	hh	NULL
+4	hhh	NULL
+5	hhhh	NULL
+6	sssssss	NULL
+7	ssssssss	NULL
+8	ssssssss	NULL
+9	ssssssss	NULL
+10	zzzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR8	CaseCol
+1	aaaaaaaa	NULL
+2	h	NULL
+3	hh	NULL
+4	hhh	NULL
+5	hhhh	NULL
+6	sssssss	NULL
+7	ssssssss	NULL
+8	ssssssss	NULL
+9	ssssssss	NULL
+10	zzzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR8	CaseCol
+1	aaaaaaaa	NULL
+2	h	NULL
+3	hh	NULL
+4	hhh	NULL
+5	hhhh	NULL
+6	sssssss	NULL
+7	ssssssss	NULL
+8	ssssssss	NULL
+9	ssssssss	NULL
+10	zzzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+2	j	NULL
+3	jj	NULL
+4	jjj	NULL
+5	jjjj	NULL
+6	qqqqqqq	NULL
+7	qqqqqqqq	NULL
+8	qqqqqqqqq	NULL
+9	qqqqqqqqqq	NULL
+10	zzzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR255	CaseCol
+1	aaaaaaaaaa	NULL
+2	j	NULL
+3	jj	NULL
+4	jjj	NULL
+5	jjjj	NULL
+6	qqqqqqq	NULL
+7	qqqqqqqq	NULL
+8	qqqqqqqqq	NULL
+9	qqqqqqqqqq	NULL
+10	zzzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CVCHAR255	CaseCol
+1	aaaaaaaaaa	Y
+2	j	NULL
+3	jj	NULL
+4	jjj	NULL
+5	jjjj	NULL
+6	qqqqqqq	NULL
+7	qqqqqqqq	NULL
+8	qqqqqqqqq	NULL
+9	qqqqqqqqqq	NULL
+10	zzzzzzzzzz	NULL
+11	NULL	NULL
+cidx	CCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+6	z
+7	z
+8	z
+9	z
+10	z
+11	NULL
+cidx	CCHAR1
+6	z
+7	z
+8	z
+9	z
+10	z
+11	NULL
+1	a
+2	a
+3	a
+4	a
+5	a
+cidx	CCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+6	z
+7	z
+8	z
+9	z
+10	z
+11	NULL
+cidx	CCHAR2
+1	aa
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+11	NULL
+cidx	CCHAR2
+1	aa
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+11	NULL
+cidx	CCHAR2
+1	aa
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+11	NULL
+cidx	CCHAR3
+1	aaa
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+11	NULL
+cidx	CCHAR3
+1	aaa
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+11	NULL
+cidx	CCHAR3
+1	aaa
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+11	NULL
+cidx	CCHAR4
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+11	NULL
+1	aaaa
+cidx	CCHAR4
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+11	NULL
+cidx	CCHAR4
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+11	NULL
+cidx	CCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+11	NULL
+cidx	CCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+11	NULL
+cidx	CCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+11	NULL
+cidx	CCHAR6
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+11	NULL
+cidx	CCHAR6
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+11	NULL
+cidx	CCHAR6
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+11	NULL
+cidx	CCHAR7
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+11	NULL
+cidx	CCHAR7
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+11	NULL
+cidx	CCHAR7
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+11	NULL
+cidx	CCHAR8
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+11	NULL
+cidx	CCHAR8
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+11	NULL
+cidx	CCHAR8
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+11	NULL
+cidx	CCHAR9
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+11	NULL
+cidx	CCHAR9
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+11	NULL
+cidx	CCHAR9
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+11	NULL
+cidx	CCHAR255
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+11	NULL
+cidx	CCHAR255
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+11	NULL
+cidx	CCHAR255
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+11	NULL
+1	aaaaaaaaaa
+cidx	CVCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+6	z
+7	z
+8	z
+9	z
+10	z
+11	NULL
+cidx	CVCHAR1
+6	z
+7	z
+8	z
+9	z
+10	z
+11	NULL
+1	a
+2	a
+3	a
+4	a
+5	a
+cidx	CVCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+6	z
+7	z
+8	z
+9	z
+10	z
+11	NULL
+cidx	CVCHAR2
+1	aa
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+11	NULL
+cidx	CVCHAR2
+1	aa
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+11	NULL
+cidx	CVCHAR2
+1	aa
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+11	NULL
+cidx	CVCHAR3
+1	aaa
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+11	NULL
+cidx	CVCHAR3
+1	aaa
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+11	NULL
+cidx	CVCHAR3
+1	aaa
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+11	NULL
+cidx	CVCHAR4
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+11	NULL
+1	aaaa
+cidx	CVCHAR4
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+11	NULL
+cidx	CVCHAR4
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+11	NULL
+cidx	CVCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+11	NULL
+cidx	CVCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+11	NULL
+cidx	CVCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+11	NULL
+cidx	CVCHAR6
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+11	NULL
+cidx	CVCHAR6
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+11	NULL
+cidx	CVCHAR6
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+11	NULL
+cidx	CVCHAR7
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+11	NULL
+cidx	CVCHAR7
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+11	NULL
+cidx	CVCHAR7
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+11	NULL
+cidx	CVCHAR8
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+11	NULL
+cidx	CVCHAR8
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+11	NULL
+cidx	CVCHAR8
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+11	NULL
+cidx	CVCHAR255
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+11	NULL
+cidx	CVCHAR255
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+11	NULL
+cidx	CVCHAR255
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+11	NULL
+1	aaaaaaaaaa

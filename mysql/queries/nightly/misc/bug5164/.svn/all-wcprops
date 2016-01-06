@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/3388/trunk/queries/nightly/misc/bug5164
+END
+go.sh
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/3388/trunk/queries/nightly/misc/bug5164/go.sh
+END

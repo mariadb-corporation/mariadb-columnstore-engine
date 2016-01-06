@@ -1,0 +1,26 @@
+count(distinct p_mfgr)	sum(p_partkey)	avg(distinct p_partkey)
+5	20000100000	100000.5000
+count(distinct p_type)	count(distinct p_brand)	count(p_partkey)
+150	25	200000
+count(p_partkey)	count(distinct p_type)	count(distinct p_brand)	count(p_size)
+200000	150	25	200000
+count(p_partkey)	count(distinct p_type)	count(distinct p_brand)
+200000	150	25
+count(distinct p_type)	count(distinct p_brand)
+150	25
+count(distinct p_type)	count(distinct p_brand)	count(p_brand)	count(p_type)
+150	25	200000	200000
+count(p_brand)	count(p_type)	count(distinct p_type)	count(distinct p_brand)
+200000	200000	150	25
+count(distinct p_size)	avg(distinct p_size)	sum(distinct p_size)
+50	25.5000	1275
+count(distinct p_container)	sum(distinct p_partkey)
+40	20000100000
+count(p_container)	sum(p_partkey)	count(*)
+200000	20000100000	200000
+sum(p_partkey)	count(distinct p_container)	sum(distinct p_partkey)	count(p_container)
+20000100000	40	20000100000	200000
+count(distinct p_type)	sum(distinct p_size)
+150	1275
+count(distinct p_name)
+199996

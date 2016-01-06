@@ -1,0 +1,850 @@
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T205956_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 20:59:56 (29512) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T205956_Job_62397.xml
+2015-01-15 20:59:56 (29512) INFO : Job file loaded, run time for this step : 0.193639 seconds
+2015-01-15 20:59:56 (29512) INFO : PreProcessing check starts
+2015-01-15 20:59:56 (29512) INFO : PreProcessing check completed
+2015-01-15 20:59:56 (29512) INFO : preProcess completed, run time for this step : 0.038044 seconds
+2015-01-15 20:59:56 (29512) INFO : No of Read Threads Spawned = 1
+2015-01-15 20:59:56 (29512) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 20:59:56 (29512) INFO : No of Parse Threads Spawned = 3
+2015-01-15 20:59:56 (29512) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 20:59:57 (29512) INFO : Bulk load completed, total run time : 1.55906 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T205959_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 20:59:59 (29637) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T205959_Job_62397.xml
+2015-01-15 20:59:59 (29637) INFO : Job file loaded, run time for this step : 0.183059 seconds
+2015-01-15 20:59:59 (29637) INFO : PreProcessing check starts
+2015-01-15 20:59:59 (29637) INFO : PreProcessing check completed
+2015-01-15 20:59:59 (29637) INFO : preProcess completed, run time for this step : 0.042634 seconds
+2015-01-15 20:59:59 (29637) INFO : No of Read Threads Spawned = 1
+2015-01-15 20:59:59 (29637) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 20:59:59 (29637) INFO : No of Parse Threads Spawned = 3
+2015-01-15 20:59:59 (29637) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:00 (29637) INFO : Bulk load completed, total run time : 1.24593 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210001_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:01 (29756) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210001_Job_62397.xml
+2015-01-15 21:00:01 (29756) INFO : Job file loaded, run time for this step : 0.194823 seconds
+2015-01-15 21:00:01 (29756) INFO : PreProcessing check starts
+2015-01-15 21:00:01 (29756) INFO : PreProcessing check completed
+2015-01-15 21:00:01 (29756) INFO : preProcess completed, run time for this step : 0.048542 seconds
+2015-01-15 21:00:01 (29756) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:01 (29756) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:01 (29756) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:01 (29756) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:02 (29756) INFO : Bulk load completed, total run time : 1.26686 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210004_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:04 (29897) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210004_Job_62397.xml
+2015-01-15 21:00:04 (29897) INFO : Job file loaded, run time for this step : 1.0181 seconds
+2015-01-15 21:00:04 (29897) INFO : PreProcessing check starts
+2015-01-15 21:00:04 (29897) INFO : PreProcessing check completed
+2015-01-15 21:00:04 (29897) INFO : preProcess completed, run time for this step : 0.0369971 seconds
+2015-01-15 21:00:04 (29897) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:04 (29897) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:04 (29897) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:05 (29897) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:05 (29897) INFO : Bulk load completed, total run time : 2.07012 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210006_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:06 (30055) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210006_Job_62397.xml
+2015-01-15 21:00:06 (30055) INFO : Job file loaded, run time for this step : 0.186247 seconds
+2015-01-15 21:00:06 (30055) INFO : PreProcessing check starts
+2015-01-15 21:00:06 (30055) INFO : PreProcessing check completed
+2015-01-15 21:00:06 (30055) INFO : preProcess completed, run time for this step : 0.422514 seconds
+2015-01-15 21:00:06 (30055) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:06 (30055) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:06 (30055) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:07 (30055) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:07 (30055) INFO : Bulk load completed, total run time : 1.62434 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210008_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:08 (30137) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210008_Job_62397.xml
+2015-01-15 21:00:08 (30137) INFO : Job file loaded, run time for this step : 0.190423 seconds
+2015-01-15 21:00:08 (30137) INFO : PreProcessing check starts
+2015-01-15 21:00:08 (30137) INFO : PreProcessing check completed
+2015-01-15 21:00:08 (30137) INFO : preProcess completed, run time for this step : 0.061142 seconds
+2015-01-15 21:00:08 (30137) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:08 (30137) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:08 (30137) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:08 (30137) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:09 (30137) INFO : Bulk load completed, total run time : 1.26698 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210010_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:10 (30257) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210010_Job_62397.xml
+2015-01-15 21:00:10 (30257) INFO : Job file loaded, run time for this step : 0.180168 seconds
+2015-01-15 21:00:10 (30257) INFO : PreProcessing check starts
+2015-01-15 21:00:10 (30257) INFO : PreProcessing check completed
+2015-01-15 21:00:10 (30257) INFO : preProcess completed, run time for this step : 0.0689609 seconds
+2015-01-15 21:00:10 (30257) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:10 (30257) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:10 (30257) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:11 (30257) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:11 (30257) INFO : Bulk load completed, total run time : 1.26449 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210012_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:12 (30376) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210012_Job_62397.xml
+2015-01-15 21:00:12 (30376) INFO : Job file loaded, run time for this step : 0.183689 seconds
+2015-01-15 21:00:12 (30376) INFO : PreProcessing check starts
+2015-01-15 21:00:12 (30376) INFO : PreProcessing check completed
+2015-01-15 21:00:12 (30376) INFO : preProcess completed, run time for this step : 0.045176 seconds
+2015-01-15 21:00:12 (30376) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:12 (30376) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:12 (30376) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:12 (30376) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:13 (30376) INFO : Bulk load completed, total run time : 1.24802 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210015_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:15 (30458) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210015_Job_62397.xml
+2015-01-15 21:00:15 (30458) INFO : Job file loaded, run time for this step : 1.17864 seconds
+2015-01-15 21:00:15 (30458) INFO : PreProcessing check starts
+2015-01-15 21:00:15 (30458) INFO : PreProcessing check completed
+2015-01-15 21:00:15 (30458) INFO : preProcess completed, run time for this step : 0.044868 seconds
+2015-01-15 21:00:15 (30458) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:15 (30458) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:15 (30458) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:15 (30458) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:16 (30458) INFO : Bulk load completed, total run time : 2.2391 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210016_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:16 (30635) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210016_Job_62397.xml
+2015-01-15 21:00:16 (30635) INFO : Job file loaded, run time for this step : 0.186949 seconds
+2015-01-15 21:00:16 (30635) INFO : PreProcessing check starts
+2015-01-15 21:00:16 (30635) INFO : PreProcessing check completed
+2015-01-15 21:00:16 (30635) INFO : preProcess completed, run time for this step : 0.0446129 seconds
+2015-01-15 21:00:16 (30635) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:16 (30635) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:16 (30635) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:17 (30635) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:17 (30635) INFO : Bulk load completed, total run time : 1.24732 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210018_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:19 (30743) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210018_Job_62397.xml
+2015-01-15 21:00:19 (30743) INFO : Job file loaded, run time for this step : 0.197386 seconds
+2015-01-15 21:00:19 (30743) INFO : PreProcessing check starts
+2015-01-15 21:00:19 (30743) INFO : PreProcessing check completed
+2015-01-15 21:00:19 (30743) INFO : preProcess completed, run time for this step : 0.046638 seconds
+2015-01-15 21:00:19 (30743) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:19 (30743) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:19 (30743) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:19 (30743) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:20 (30743) INFO : Bulk load completed, total run time : 1.25944 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210021_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:21 (30862) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210021_Job_62397.xml
+2015-01-15 21:00:21 (30862) INFO : Job file loaded, run time for this step : 0.191355 seconds
+2015-01-15 21:00:21 (30862) INFO : PreProcessing check starts
+2015-01-15 21:00:21 (30862) INFO : PreProcessing check completed
+2015-01-15 21:00:21 (30862) INFO : preProcess completed, run time for this step : 0.0684369 seconds
+2015-01-15 21:00:21 (30862) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:21 (30862) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:21 (30862) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:21 (30862) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:22 (30862) INFO : Bulk load completed, total run time : 1.27646 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210023_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:23 (30986) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210023_Job_62397.xml
+2015-01-15 21:00:23 (30986) INFO : Job file loaded, run time for this step : 0.189031 seconds
+2015-01-15 21:00:23 (30986) INFO : PreProcessing check starts
+2015-01-15 21:00:23 (30986) INFO : PreProcessing check completed
+2015-01-15 21:00:23 (30986) INFO : preProcess completed, run time for this step : 0.048552 seconds
+2015-01-15 21:00:23 (30986) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:23 (30986) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:23 (30986) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:23 (30986) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:24 (30986) INFO : Bulk load completed, total run time : 1.25273 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210025_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:25 (31112) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210025_Job_62397.xml
+2015-01-15 21:00:25 (31112) INFO : Job file loaded, run time for this step : 0.199749 seconds
+2015-01-15 21:00:25 (31112) INFO : PreProcessing check starts
+2015-01-15 21:00:25 (31112) INFO : PreProcessing check completed
+2015-01-15 21:00:25 (31112) INFO : preProcess completed, run time for this step : 0.062124 seconds
+2015-01-15 21:00:25 (31112) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:25 (31112) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:25 (31112) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:25 (31112) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:26 (31112) INFO : Bulk load completed, total run time : 1.27917 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210028_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:28 (31250) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210028_Job_62397.xml
+2015-01-15 21:00:28 (31250) INFO : Job file loaded, run time for this step : 1.26029 seconds
+2015-01-15 21:00:28 (31250) INFO : PreProcessing check starts
+2015-01-15 21:00:28 (31250) INFO : PreProcessing check completed
+2015-01-15 21:00:28 (31250) INFO : preProcess completed, run time for this step : 0.033309 seconds
+2015-01-15 21:00:28 (31250) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:28 (31250) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:28 (31250) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:28 (31250) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:29 (31250) INFO : Bulk load completed, total run time : 2.31656 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210030_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:30 (31371) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210030_Job_62397.xml
+2015-01-15 21:00:30 (31371) INFO : Job file loaded, run time for this step : 0.209025 seconds
+2015-01-15 21:00:30 (31371) INFO : PreProcessing check starts
+2015-01-15 21:00:30 (31371) INFO : PreProcessing check completed
+2015-01-15 21:00:30 (31371) INFO : preProcess completed, run time for this step : 0.051265 seconds
+2015-01-15 21:00:30 (31371) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:30 (31371) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:30 (31371) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:30 (31371) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:31 (31371) INFO : Bulk load completed, total run time : 1.28072 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210032_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:32 (31491) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210032_Job_62397.xml
+2015-01-15 21:00:32 (31491) INFO : Job file loaded, run time for this step : 0.194368 seconds
+2015-01-15 21:00:32 (31491) INFO : PreProcessing check starts
+2015-01-15 21:00:32 (31491) INFO : PreProcessing check completed
+2015-01-15 21:00:32 (31491) INFO : preProcess completed, run time for this step : 0.0386591 seconds
+2015-01-15 21:00:32 (31491) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:32 (31491) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:32 (31491) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:32 (31491) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:33 (31491) INFO : Bulk load completed, total run time : 1.23968 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210034_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:34 (31589) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210034_Job_62397.xml
+2015-01-15 21:00:34 (31589) INFO : Job file loaded, run time for this step : 0.449255 seconds
+2015-01-15 21:00:34 (31589) INFO : PreProcessing check starts
+2015-01-15 21:00:34 (31589) INFO : PreProcessing check completed
+2015-01-15 21:00:34 (31589) INFO : preProcess completed, run time for this step : 0.0556221 seconds
+2015-01-15 21:00:34 (31589) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:34 (31589) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:34 (31589) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:34 (31589) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:35 (31589) INFO : Bulk load completed, total run time : 1.52103 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210036_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:36 (31729) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210036_Job_62397.xml
+2015-01-15 21:00:36 (31729) INFO : Job file loaded, run time for this step : 0.188087 seconds
+2015-01-15 21:00:36 (31729) INFO : PreProcessing check starts
+2015-01-15 21:00:36 (31729) INFO : PreProcessing check completed
+2015-01-15 21:00:36 (31729) INFO : preProcess completed, run time for this step : 0.0531261 seconds
+2015-01-15 21:00:36 (31729) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:36 (31729) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:36 (31729) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:36 (31729) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:37 (31729) INFO : Bulk load completed, total run time : 1.25815 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210038_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:38 (31822) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210038_Job_62397.xml
+2015-01-15 21:00:38 (31822) INFO : Job file loaded, run time for this step : 0.192078 seconds
+2015-01-15 21:00:38 (31822) INFO : PreProcessing check starts
+2015-01-15 21:00:38 (31822) INFO : PreProcessing check completed
+2015-01-15 21:00:38 (31822) INFO : preProcess completed, run time for this step : 0.056721 seconds
+2015-01-15 21:00:38 (31822) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:38 (31822) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:38 (31822) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:38 (31822) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:39 (31822) INFO : Bulk load completed, total run time : 1.26389 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210041_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:41 (31958) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210041_Job_62397.xml
+2015-01-15 21:00:41 (31958) INFO : Job file loaded, run time for this step : 0.191164 seconds
+2015-01-15 21:00:41 (31958) INFO : PreProcessing check starts
+2015-01-15 21:00:41 (31958) INFO : PreProcessing check completed
+2015-01-15 21:00:41 (31958) INFO : preProcess completed, run time for this step : 0.0585451 seconds
+2015-01-15 21:00:41 (31958) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:41 (31958) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:41 (31958) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:41 (31958) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:42 (31958) INFO : Bulk load completed, total run time : 1.26587 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210042_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:42 (32108) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210042_Job_62397.xml
+2015-01-15 21:00:42 (32108) INFO : Job file loaded, run time for this step : 0.187508 seconds
+2015-01-15 21:00:42 (32108) INFO : PreProcessing check starts
+2015-01-15 21:00:42 (32108) INFO : PreProcessing check completed
+2015-01-15 21:00:42 (32108) INFO : preProcess completed, run time for this step : 0.0432742 seconds
+2015-01-15 21:00:42 (32108) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:42 (32108) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:42 (32108) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:42 (32108) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:43 (32108) INFO : Bulk load completed, total run time : 1.24582 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210044_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:44 (32190) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210044_Job_62397.xml
+2015-01-15 21:00:44 (32190) INFO : Job file loaded, run time for this step : 0.190538 seconds
+2015-01-15 21:00:44 (32190) INFO : PreProcessing check starts
+2015-01-15 21:00:44 (32190) INFO : PreProcessing check completed
+2015-01-15 21:00:44 (32190) INFO : preProcess completed, run time for this step : 0.0493228 seconds
+2015-01-15 21:00:44 (32190) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:44 (32190) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:44 (32190) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:44 (32190) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:45 (32190) INFO : Bulk load completed, total run time : 1.26385 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210046_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:46 (32309) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210046_Job_62397.xml
+2015-01-15 21:00:46 (32309) INFO : Job file loaded, run time for this step : 0.1851 seconds
+2015-01-15 21:00:46 (32309) INFO : PreProcessing check starts
+2015-01-15 21:00:46 (32309) INFO : PreProcessing check completed
+2015-01-15 21:00:46 (32309) INFO : preProcess completed, run time for this step : 0.0504909 seconds
+2015-01-15 21:00:46 (32309) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:46 (32309) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:46 (32309) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:47 (32309) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:47 (32309) INFO : Bulk load completed, total run time : 1.25854 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210048_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:48 (32428) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210048_Job_62397.xml
+2015-01-15 21:00:48 (32428) INFO : Job file loaded, run time for this step : 0.188754 seconds
+2015-01-15 21:00:48 (32428) INFO : PreProcessing check starts
+2015-01-15 21:00:48 (32428) INFO : PreProcessing check completed
+2015-01-15 21:00:48 (32428) INFO : preProcess completed, run time for this step : 0.0458362 seconds
+2015-01-15 21:00:48 (32428) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:48 (32428) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:48 (32428) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:48 (32428) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:49 (32428) INFO : Bulk load completed, total run time : 1.25887 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210049_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:49 (32529) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210049_Job_62397.xml
+2015-01-15 21:00:49 (32529) INFO : Job file loaded, run time for this step : 0.205777 seconds
+2015-01-15 21:00:49 (32529) INFO : PreProcessing check starts
+2015-01-15 21:00:49 (32529) INFO : PreProcessing check completed
+2015-01-15 21:00:49 (32529) INFO : preProcess completed, run time for this step : 0.0489221 seconds
+2015-01-15 21:00:49 (32529) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:49 (32529) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:49 (32529) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:50 (32529) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:50 (32529) INFO : Bulk load completed, total run time : 1.27013 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210052_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:52 (32650) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210052_Job_62397.xml
+2015-01-15 21:00:52 (32650) INFO : Job file loaded, run time for this step : 0.187388 seconds
+2015-01-15 21:00:52 (32650) INFO : PreProcessing check starts
+2015-01-15 21:00:52 (32650) INFO : PreProcessing check completed
+2015-01-15 21:00:52 (32650) INFO : preProcess completed, run time for this step : 0.0549948 seconds
+2015-01-15 21:00:52 (32650) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:52 (32650) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:52 (32650) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:52 (32650) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:53 (32650) INFO : Bulk load completed, total run time : 1.25739 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210054_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:54 (32769) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210054_Job_62397.xml
+2015-01-15 21:00:54 (32769) INFO : Job file loaded, run time for this step : 0.21271 seconds
+2015-01-15 21:00:54 (32769) INFO : PreProcessing check starts
+2015-01-15 21:00:54 (32769) INFO : PreProcessing check completed
+2015-01-15 21:00:54 (32769) INFO : preProcess completed, run time for this step : 0.0761909 seconds
+2015-01-15 21:00:54 (32769) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:54 (32769) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:54 (32769) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:54 (32769) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:55 (32769) INFO : Bulk load completed, total run time : 1.30774 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210056_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:56 (32889) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210056_Job_62397.xml
+2015-01-15 21:00:56 (32889) INFO : Job file loaded, run time for this step : 0.195004 seconds
+2015-01-15 21:00:56 (32889) INFO : PreProcessing check starts
+2015-01-15 21:00:56 (32889) INFO : PreProcessing check completed
+2015-01-15 21:00:56 (32889) INFO : preProcess completed, run time for this step : 0.0430532 seconds
+2015-01-15 21:00:56 (32889) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:56 (32889) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:56 (32889) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:56 (32889) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:57 (32889) INFO : Bulk load completed, total run time : 1.2533 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210058_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:00:58 (33022) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210058_Job_62397.xml
+2015-01-15 21:00:58 (33022) INFO : Job file loaded, run time for this step : 0.19063 seconds
+2015-01-15 21:00:58 (33022) INFO : PreProcessing check starts
+2015-01-15 21:00:58 (33022) INFO : PreProcessing check completed
+2015-01-15 21:00:58 (33022) INFO : preProcess completed, run time for this step : 0.0391469 seconds
+2015-01-15 21:00:58 (33022) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:00:58 (33022) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:00:58 (33022) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:00:58 (33022) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:00:59 (33022) INFO : Bulk load completed, total run time : 1.24396 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210100_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:00 (33160) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210100_Job_62397.xml
+2015-01-15 21:01:00 (33160) INFO : Job file loaded, run time for this step : 0.201615 seconds
+2015-01-15 21:01:00 (33160) INFO : PreProcessing check starts
+2015-01-15 21:01:00 (33160) INFO : PreProcessing check completed
+2015-01-15 21:01:00 (33160) INFO : preProcess completed, run time for this step : 0.0477791 seconds
+2015-01-15 21:01:00 (33160) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:00 (33160) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:00 (33160) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:01 (33160) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:01 (33160) INFO : Bulk load completed, total run time : 1.26642 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210102_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:02 (33293) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210102_Job_62397.xml
+2015-01-15 21:01:02 (33293) INFO : Job file loaded, run time for this step : 0.203123 seconds
+2015-01-15 21:01:02 (33293) INFO : PreProcessing check starts
+2015-01-15 21:01:02 (33293) INFO : PreProcessing check completed
+2015-01-15 21:01:02 (33293) INFO : preProcess completed, run time for this step : 0.0584791 seconds
+2015-01-15 21:01:02 (33293) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:02 (33293) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:02 (33293) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:02 (33293) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:03 (33293) INFO : Bulk load completed, total run time : 1.27123 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210104_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:04 (33375) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210104_Job_62397.xml
+2015-01-15 21:01:04 (33375) INFO : Job file loaded, run time for this step : 0.19213 seconds
+2015-01-15 21:01:04 (33375) INFO : PreProcessing check starts
+2015-01-15 21:01:04 (33375) INFO : PreProcessing check completed
+2015-01-15 21:01:04 (33375) INFO : preProcess completed, run time for this step : 0.0585561 seconds
+2015-01-15 21:01:04 (33375) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:04 (33375) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:04 (33375) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:04 (33375) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:05 (33375) INFO : Bulk load completed, total run time : 1.27639 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210106_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:06 (33494) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210106_Job_62397.xml
+2015-01-15 21:01:06 (33494) INFO : Job file loaded, run time for this step : 0.190173 seconds
+2015-01-15 21:01:06 (33494) INFO : PreProcessing check starts
+2015-01-15 21:01:06 (33494) INFO : PreProcessing check completed
+2015-01-15 21:01:06 (33494) INFO : preProcess completed, run time for this step : 0.05883 seconds
+2015-01-15 21:01:06 (33494) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:06 (33494) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:06 (33494) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:06 (33494) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:07 (33494) INFO : Bulk load completed, total run time : 1.27205 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210109_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:09 (33614) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210109_Job_62397.xml
+2015-01-15 21:01:09 (33614) INFO : Job file loaded, run time for this step : 0.184889 seconds
+2015-01-15 21:01:09 (33614) INFO : PreProcessing check starts
+2015-01-15 21:01:09 (33614) INFO : PreProcessing check completed
+2015-01-15 21:01:09 (33614) INFO : preProcess completed, run time for this step : 0.058166 seconds
+2015-01-15 21:01:09 (33614) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:09 (33614) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:09 (33614) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:09 (33614) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:10 (33614) INFO : Bulk load completed, total run time : 1.26341 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210110_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:10 (33744) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210110_Job_62397.xml
+2015-01-15 21:01:10 (33744) INFO : Job file loaded, run time for this step : 0.207865 seconds
+2015-01-15 21:01:10 (33744) INFO : PreProcessing check starts
+2015-01-15 21:01:10 (33744) INFO : PreProcessing check completed
+2015-01-15 21:01:10 (33744) INFO : preProcess completed, run time for this step : 0.0448921 seconds
+2015-01-15 21:01:10 (33744) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:10 (33744) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:10 (33744) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:10 (33744) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:11 (33744) INFO : Bulk load completed, total run time : 1.2769 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210112_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:13 (33884) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210112_Job_62397.xml
+2015-01-15 21:01:13 (33884) INFO : Job file loaded, run time for this step : 0.19247 seconds
+2015-01-15 21:01:13 (33884) INFO : PreProcessing check starts
+2015-01-15 21:01:13 (33884) INFO : PreProcessing check completed
+2015-01-15 21:01:13 (33884) INFO : preProcess completed, run time for this step : 0.0432119 seconds
+2015-01-15 21:01:13 (33884) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:13 (33884) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:13 (33884) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:13 (33884) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:14 (33884) INFO : Bulk load completed, total run time : 1.25249 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210115_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:15 (34003) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210115_Job_62397.xml
+2015-01-15 21:01:15 (34003) INFO : Job file loaded, run time for this step : 0.187776 seconds
+2015-01-15 21:01:15 (34003) INFO : PreProcessing check starts
+2015-01-15 21:01:15 (34003) INFO : PreProcessing check completed
+2015-01-15 21:01:15 (34003) INFO : preProcess completed, run time for this step : 0.0512681 seconds
+2015-01-15 21:01:15 (34003) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:15 (34003) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:15 (34003) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:15 (34003) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:16 (34003) INFO : Bulk load completed, total run time : 1.25378 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210117_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:17 (34122) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210117_Job_62397.xml
+2015-01-15 21:01:17 (34122) INFO : Job file loaded, run time for this step : 0.191404 seconds
+2015-01-15 21:01:17 (34122) INFO : PreProcessing check starts
+2015-01-15 21:01:17 (34122) INFO : PreProcessing check completed
+2015-01-15 21:01:17 (34122) INFO : preProcess completed, run time for this step : 0.0510311 seconds
+2015-01-15 21:01:17 (34122) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:17 (34122) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:17 (34122) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:17 (34122) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:18 (34122) INFO : Bulk load completed, total run time : 1.25821 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210119_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:19 (34241) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210119_Job_62397.xml
+2015-01-15 21:01:19 (34241) INFO : Job file loaded, run time for this step : 0.186869 seconds
+2015-01-15 21:01:19 (34241) INFO : PreProcessing check starts
+2015-01-15 21:01:19 (34241) INFO : PreProcessing check completed
+2015-01-15 21:01:19 (34241) INFO : preProcess completed, run time for this step : 0.0548918 seconds
+2015-01-15 21:01:19 (34241) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:19 (34241) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:19 (34241) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:19 (34241) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:20 (34241) INFO : Bulk load completed, total run time : 1.25676 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210121_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:21 (34360) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210121_Job_62397.xml
+2015-01-15 21:01:21 (34360) INFO : Job file loaded, run time for this step : 0.196164 seconds
+2015-01-15 21:01:21 (34360) INFO : PreProcessing check starts
+2015-01-15 21:01:21 (34360) INFO : PreProcessing check completed
+2015-01-15 21:01:21 (34360) INFO : preProcess completed, run time for this step : 0.0563259 seconds
+2015-01-15 21:01:21 (34360) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:21 (34360) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:21 (34360) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:21 (34360) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:22 (34360) INFO : Bulk load completed, total run time : 1.26728 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210123_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:23 (34442) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210123_Job_62397.xml
+2015-01-15 21:01:23 (34442) INFO : Job file loaded, run time for this step : 0.426887 seconds
+2015-01-15 21:01:23 (34442) INFO : PreProcessing check starts
+2015-01-15 21:01:23 (34442) INFO : PreProcessing check completed
+2015-01-15 21:01:23 (34442) INFO : preProcess completed, run time for this step : 0.0515659 seconds
+2015-01-15 21:01:23 (34442) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:23 (34442) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:23 (34442) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:23 (34442) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:24 (34442) INFO : Bulk load completed, total run time : 1.49256 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210125_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:25 (34582) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210125_Job_62397.xml
+2015-01-15 21:01:25 (34582) INFO : Job file loaded, run time for this step : 0.194488 seconds
+2015-01-15 21:01:25 (34582) INFO : PreProcessing check starts
+2015-01-15 21:01:25 (34582) INFO : PreProcessing check completed
+2015-01-15 21:01:25 (34582) INFO : preProcess completed, run time for this step : 0.0484378 seconds
+2015-01-15 21:01:25 (34582) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:25 (34582) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:25 (34582) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:25 (34582) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:26 (34582) INFO : Bulk load completed, total run time : 1.26903 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210127_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:27 (34702) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210127_Job_62397.xml
+2015-01-15 21:01:27 (34702) INFO : Job file loaded, run time for this step : 0.18019 seconds
+2015-01-15 21:01:27 (34702) INFO : PreProcessing check starts
+2015-01-15 21:01:27 (34702) INFO : PreProcessing check completed
+2015-01-15 21:01:27 (34702) INFO : preProcess completed, run time for this step : 0.0465071 seconds
+2015-01-15 21:01:27 (34702) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:27 (34702) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:27 (34702) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:27 (34702) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:28 (34702) INFO : Bulk load completed, total run time : 1.24163 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210129_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:29 (34821) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210129_Job_62397.xml
+2015-01-15 21:01:29 (34821) INFO : Job file loaded, run time for this step : 0.186896 seconds
+2015-01-15 21:01:29 (34821) INFO : PreProcessing check starts
+2015-01-15 21:01:29 (34821) INFO : PreProcessing check completed
+2015-01-15 21:01:29 (34821) INFO : preProcess completed, run time for this step : 0.061955 seconds
+2015-01-15 21:01:29 (34821) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:29 (34821) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:29 (34821) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:30 (34821) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:30 (34821) INFO : Bulk load completed, total run time : 1.27197 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210131_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:31 (34940) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210131_Job_62397.xml
+2015-01-15 21:01:31 (34940) INFO : Job file loaded, run time for this step : 0.186923 seconds
+2015-01-15 21:01:31 (34940) INFO : PreProcessing check starts
+2015-01-15 21:01:32 (34940) INFO : PreProcessing check completed
+2015-01-15 21:01:32 (34940) INFO : preProcess completed, run time for this step : 0.0508749 seconds
+2015-01-15 21:01:32 (34940) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:32 (34940) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:32 (34940) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:32 (34940) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:33 (34940) INFO : Bulk load completed, total run time : 1.25864 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210134_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:34 (35078) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210134_Job_62397.xml
+2015-01-15 21:01:34 (35078) INFO : Job file loaded, run time for this step : 1.01051 seconds
+2015-01-15 21:01:34 (35078) INFO : PreProcessing check starts
+2015-01-15 21:01:35 (35078) INFO : PreProcessing check completed
+2015-01-15 21:01:35 (35078) INFO : preProcess completed, run time for this step : 0.054652 seconds
+2015-01-15 21:01:35 (35078) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:35 (35078) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:35 (35078) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:35 (35078) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:36 (35078) INFO : Bulk load completed, total run time : 2.08076 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210137_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:37 (35237) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210137_Job_62397.xml
+2015-01-15 21:01:37 (35237) INFO : Job file loaded, run time for this step : 0.183385 seconds
+2015-01-15 21:01:37 (35237) INFO : PreProcessing check starts
+2015-01-15 21:01:37 (35237) INFO : PreProcessing check completed
+2015-01-15 21:01:37 (35237) INFO : preProcess completed, run time for this step : 0.0557129 seconds
+2015-01-15 21:01:37 (35237) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:37 (35237) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:37 (35237) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:37 (35237) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:38 (35237) INFO : Bulk load completed, total run time : 1.25775 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210139_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:39 (35356) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210139_Job_62397.xml
+2015-01-15 21:01:39 (35356) INFO : Job file loaded, run time for this step : 0.199388 seconds
+2015-01-15 21:01:39 (35356) INFO : PreProcessing check starts
+2015-01-15 21:01:39 (35356) INFO : PreProcessing check completed
+2015-01-15 21:01:39 (35356) INFO : preProcess completed, run time for this step : 0.0526531 seconds
+2015-01-15 21:01:39 (35356) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:39 (35356) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:39 (35356) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:39 (35356) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:40 (35356) INFO : Bulk load completed, total run time : 1.26776 seconds
+
+Locale is : C
+
+Using table OID 62397 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210141_Job_62397.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62397.log
+2015-01-15 21:01:41 (35475) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62397_D20150115_T210141_Job_62397.xml
+2015-01-15 21:01:41 (35475) INFO : Job file loaded, run time for this step : 0.43557 seconds
+2015-01-15 21:01:41 (35475) INFO : PreProcessing check starts
+2015-01-15 21:01:41 (35475) INFO : PreProcessing check completed
+2015-01-15 21:01:41 (35475) INFO : preProcess completed, run time for this step : 0.0510521 seconds
+2015-01-15 21:01:41 (35475) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:01:41 (35475) INFO : [0;1mReading input from STDIN to import into table dmlc.test009...[0;39m
+2015-01-15 21:01:41 (35475) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:01:42 (35475) INFO : For table dmlc.test009: 75000 rows processed and 75000 rows inserted.
+2015-01-15 21:01:42 (35475) INFO : Bulk load completed, total run time : 1.50628 seconds
+

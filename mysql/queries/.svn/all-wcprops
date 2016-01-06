@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/genii/mysql/!svn/ver/4190/trunk/queries
+END
+run_all.sh
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/run_all.sh
+END
+run_working_tpch1_compareLogOnly.sh
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/1683/trunk/queries/run_working_tpch1_compareLogOnly.sh
+END
+run_all_compressed.sh
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/genii/mysql/!svn/ver/1677/trunk/queries/run_all_compressed.sh
+END
+run_working_dml.sh
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/genii/mysql/!svn/ver/1564/trunk/queries/run_working_dml.sh
+END
+run_working_tpch1.sh
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/run_working_tpch1.sh
+END
+run_working_dml_compressed.sh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/2613/trunk/queries/run_working_dml_compressed.sh
+END
+run_windowFunctionTests.sh
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/3747/trunk/queries/run_windowFunctionTests.sh
+END
+queryTester.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/genii/mysql/!svn/ver/3403/trunk/queries/queryTester.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/genii/mysql/!svn/ver/2773/trunk/queries/Makefile
+END
+run_working_ssb_compareLogOnly.sh
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/genii/mysql/!svn/ver/1677/trunk/queries/run_working_ssb_compareLogOnly.sh
+END
+run_working_tpch1_calpontOnly.sh
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/genii/mysql/!svn/ver/1683/trunk/queries/run_working_tpch1_calpontOnly.sh
+END

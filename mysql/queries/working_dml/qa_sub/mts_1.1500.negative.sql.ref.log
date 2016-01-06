@@ -1,0 +1,9 @@
+ERROR 138 (HY000) at line 23: IDB-3022: Scalar subquery within a function is currently not supported.
+sum(a)
+1
+a	b
+1	1
+1	2
+1	3
+count(*)
+0

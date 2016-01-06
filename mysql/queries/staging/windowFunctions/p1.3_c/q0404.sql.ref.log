@@ -1,0 +1,16 @@
+select depname, empno, enroll_date, median(enroll_date) over (partition by depname) from empsalary order by depname, empno;
+DEPNAME                   EMPNO ENROLL_DA MEDIAN(EN
+-------------------- ---------- --------- ---------
+develop                       7 01-JAN-08 23-OCT-07
+develop                       8 01-OCT-06 23-OCT-07
+develop                       9 01-JAN-08 23-OCT-07
+develop                      10 01-AUG-07 23-OCT-07
+develop                      11 15-AUG-07 23-OCT-07
+develop                      12 09-AUG-08 23-OCT-07
+personnel                     2 23-DEC-06 17-JUN-07
+personnel                     5 10-DEC-07 17-JUN-07
+sales                         1 01-OCT-06 01-AUG-07
+sales                         3 01-AUG-07 01-AUG-07
+sales                         4 08-AUG-07 01-AUG-07
+11 rows selected.
+

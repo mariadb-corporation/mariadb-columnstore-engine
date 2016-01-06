@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions
+END
+AVG.NC.sql
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/AVG.NC.sql
+END
+REPEAT.SM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/REPEAT.SM.sql
+END
+TAN.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/TAN.NS.sql
+END
+MATHEXPR.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/MATHEXPR.NM.sql
+END
+NOW.SN.sql
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/NOW.SN.sql
+END
+COS.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/COS.NS.sql
+END
+RAND.SO.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/RAND.SO.sql
+END
+COT.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/COT.NS.sql
+END
+VERSION.SN.sql
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/VERSION.SN.sql
+END
+LOCALTIME.SN.sql
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/LOCALTIME.SN.sql
+END
+SIN.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/SIN.NS.sql
+END
+EXP.NS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/EXP.NS.sql
+END
+UNIX_TIMESTAMP.DS.sql
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/PostProcessedFunctions/UNIX_TIMESTAMP.DS.sql
+END

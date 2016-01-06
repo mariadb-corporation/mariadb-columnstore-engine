@@ -1,0 +1,84 @@
+count(n_nationkey)	min(n_nationkey)	max(n_nationkey)	sum(n_nationkey)	avg(n_nationkey)
+25	0	24	300	12.0000
+count(n_name)	min(n_name)	max(n_name)
+25	ALGERIA	VIETNAM
+count(n_regionkey)	min(n_regionkey)	max(n_regionkey)	sum(n_regionkey)	avg(n_regionkey)
+25	0	4	50	2.0000
+count(n_comment)	min(n_comment)	max(n_comment)
+25	 haggle. carefully final deposits detect slyly agai	y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be
+count(*)
+25
+count(r_regionkey)	min(r_regionkey)	max(r_regionkey)	sum(r_regionkey)	avg(r_regionkey)
+5	0	4	10	2.0000
+count(r_name)	min(r_name)	max(r_name)
+5	AFRICA	MIDDLE EAST
+count(r_comment)	min(r_comment)	max(r_comment)
+5	ges. thinly even pinto beans ca	uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl
+count(*)
+5
+count(c_custkey)	min(c_custkey)	max(c_custkey)	sum(c_custkey)	avg(c_custkey)
+15000000	1	15000000	112500007500000	7500000.5000
+count(c_name)	min(c_name)	max(c_name)
+15000000	Customer#000000001	Customer#015000000
+count(c_address)	min(c_address)	max(c_address)
+15000000	    v7 V,XPwu	zzzzkdzae5mNwP
+count(c_nationkey)	min(c_nationkey)	max(c_nationkey)	sum(c_nationkey)	avg(c_nationkey)
+15000000	0	24	179954759	11.9970
+count(c_phone)	min(c_phone)	max(c_phone)
+15000000	10-100-102-7006	34-999-998-5763
+count(c_acctbal)	min(c_acctbal)	max(c_acctbal)	sum(c_acctbal)	avg(c_acctbal)
+15000000	-999.99	9999.99	67478278960.64	4498.551931
+count(c_mktsegment)	min(c_mktsegment)	max(c_mktsegment)
+15000000	AUTOMOBILE	MACHINERY
+count(c_comment)	min(c_comment)	max(c_comment)
+15000000	 Tiresias about the carefully even packages thrash quickly even instructi	zzle? furiously regular pinto 
+count(*)
+15000000
+count(s_suppkey)	min(s_suppkey)	max(s_suppkey)	sum(s_suppkey)	avg(s_suppkey)
+1000000	1	1000000	500000500000	500000.5000
+count(s_name)	min(s_name)	max(s_name)
+1000000	Supplier#000000001	Supplier#001000000
+count(s_address)	min(s_address)	max(s_address)
+1000000	   BG60YdunyyeyE5Ffo8YGQSQGZEO,hCcl	zzzthSsa D9XtPL3Yp
+count(s_nationkey)	min(s_nationkey)	max(s_nationkey)	sum(s_nationkey)	avg(s_nationkey)
+1000000	0	24	11996906	11.9969
+count(s_phone)	min(s_phone)	max(s_phone)
+1000000	10-100-121-2154	34-999-987-5257
+count(s_acctbal)	min(s_acctbal)	max(s_acctbal)
+1000000	-999.99	9999.98
+count(s_comment)	min(s_comment)	max(s_comment)
+1000000	 Customer  blithe requesComplaints	zzle. sometimes bold pinto beans cajole at the slyly final tithes. closely regular foxes among t
+count(*)
+1000000
+count(ps_partkey)	min(ps_partkey)	max(ps_partkey)	sum(ps_partkey)	avg(ps_partkey)
+80000000	1	20000000	800000040000000	10000000.5000
+count(ps_suppkey)	min(ps_suppkey)	max(ps_suppkey)	sum(ps_suppkey)	avg(ps_suppkey)
+80000000	1	1000000	40000040000000	500000.5000
+count(ps_availqty)	min(ps_availqty)	max(ps_availqty)	sum(ps_availqty)	avg(ps_availqty)
+80000000	1	9999	400019802068	5000.2475
+count(ps_supplycost)	min(ps_supplycost)	max(ps_supplycost)	sum(ps_supplycost)	avg(ps_supplycost)
+80000000	1.00	1000.00	40037950356.36	500.474379
+count(ps_comment)	min(ps_comment)	max(ps_comment)
+80000000	 Tiresias about the accounts detect quickly final foxes. instructions about the blithely unusual theodolites use blithely f	zzle? theodolites against the express packages impress slyly patterns. accou
+count(*)
+80000000
+count(p_partkey)	min(p_partkey)	max(p_partkey)	sum(p_partkey)	avg(p_partkey)
+20000000	1	20000000	200000010000000	10000000.5000
+count(p_name)	min(p_name)	max(p_name)
+20000000	almond antique aquamarine beige peru	yellow white wheat spring drab
+count(p_mfgr)	min(p_mfgr)	max(p_mfgr)
+20000000	Manufacturer#1	Manufacturer#5
+count(p_brand)	min(p_brand)	max(p_brand)
+20000000	Brand#11	Brand#55
+count(p_type)	min(p_type)	max(p_type)
+20000000	ECONOMY ANODIZED BRASS	STANDARD POLISHED TIN
+count(p_size)	min(p_size)	max(p_size)	sum(p_size)	avg(p_size)
+20000000	1	50	509945185	25.4973
+count(p_container)	min(p_container)	max(p_container)
+20000000	JUMBO BAG	WRAP PKG
+count(p_retailprice)	min(p_retailprice)	max(p_retailprice)	sum(p_retailprice)	avg(p_retailprice)
+20000000	900.01	2098.99	29989900694.01	1499.495035
+count(p_comment)	min(p_comment)	max(p_comment)
+20000000	 Tire	zzle? speci
+count(*)
+20000000

@@ -1,0 +1,16 @@
+c1	c2	c3
+abc	cde	abc
+cde	abc	cde
+c1	c2	c3
+abc	cde	abc
+c1	c2	c3
+cde	abc	cde
+c1	c2	c3
+abc	cde	abc
+cde	abc	cde
+c1	c2	c3
+abc	cde	abc
+cde	abc	cde
+concat('abc ', c2)	concat('cde ', c3)
+abc cde	cde abc
+abc abc	cde cde

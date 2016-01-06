@@ -1,0 +1,13 @@
+--------------
+drop table if exists test201
+--------------
+
+Query OK, 0 rows affected (2.02 sec)
+
+--------------
+create table test201(c1 int, c2 bigint, c3 bigint)engine=infinidb
+--------------
+
+Query OK, 0 rows affected (0.38 sec)
+
+Bye

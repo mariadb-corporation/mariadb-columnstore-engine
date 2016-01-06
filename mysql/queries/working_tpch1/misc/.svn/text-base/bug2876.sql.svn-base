@@ -1,0 +1,13 @@
+drop table if exists bug2876;
+create table bug2876(c1 int, c2 varchar(117))engine=infinidb;
+insert into bug2876 values (1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3);
+insert into bug2876 values (1, null), (2, null), (3, null), (null, 1), (null, 2), (null, 3), (null, null);
+select * from bug2876 where c1 = c2 order by 1, 2;
+select * from bug2876 where c1 != c2 order by 1, 2;
+select * from bug2876 where c1 < c2 order by 1, 2;
+select * from bug2876 where c1 > c2 order by 1, 2;
+select * from bug2876 where c1 <= c2 order by 1, 2;
+select * from bug2876 where c1 >= c2 order by 1, 2;
+delete from bug2876 where c1 = c2;
+select * from bug2876 order by 1, 2;
+drop table bug2876;

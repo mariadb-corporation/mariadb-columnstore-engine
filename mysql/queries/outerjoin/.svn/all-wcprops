@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/genii/mysql/!svn/ver/2613/trunk/queries/outerjoin
+END
+mkquery.sh
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/2540/trunk/queries/outerjoin/mkquery.sh
+END
+create.sql
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/2613/trunk/queries/outerjoin/create.sql
+END

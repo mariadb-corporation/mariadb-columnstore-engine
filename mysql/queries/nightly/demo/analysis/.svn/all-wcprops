@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/genii/mysql/!svn/ver/1667/trunk/queries/nightly/demo/analysis
+END
+q05-lastsix.sql
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1667/trunk/queries/nightly/demo/analysis/q05-lastsix.sql
+END
+q04-avgQueryTimeFor2DateRanges.sql
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/nightly/demo/analysis/q04-avgQueryTimeFor2DateRanges.sql
+END
+queries.sql
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/nightly/demo/analysis/queries.sql
+END
+createTables.sql
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/1352/trunk/queries/nightly/demo/analysis/createTables.sql
+END
+q03-avgSrreamTimeFor3Ranges.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/nightly/demo/analysis/q03-avgSrreamTimeFor3Ranges.sql
+END
+q01-streamruntimes.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/nightly/demo/analysis/q01-streamruntimes.sql
+END
+gensql.sh
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/genii/mysql/!svn/ver/1667/trunk/queries/nightly/demo/analysis/gensql.sh
+END
+q02-streamAvgRunTimeByWeek.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/nightly/demo/analysis/q02-streamAvgRunTimeByWeek.sql
+END

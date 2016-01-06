@@ -1,0 +1,161 @@
+--------------
+update test201 set c2=1, c3=1 where c1 between 1 and 100000000 and c1%1000=1
+--------------
+
+Query OK, 100000 rows affected (1 min 31.76 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count1 from test201 where c1 between 1 and 100000000 and c1%1000=1 and c2=1 and c3=1
+--------------
+
++--------+
+| count1 |
++--------+
+| 100000 |
++--------+
+1 row in set (14.05 sec)
+
+--------------
+update test201 set c2=2, c3=2 where c1 between 100000001 and 200000000 and c1%1000=2
+--------------
+
+Query OK, 100000 rows affected (1 min 33.72 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count2 from test201 where c1 between 100000001 and 200000000 and c1%1000=2 and c2=2 and c3=2
+--------------
+
++--------+
+| count2 |
++--------+
+| 100000 |
++--------+
+1 row in set (13.15 sec)
+
+--------------
+update test201 set c2=3, c3=3 where c1 between 200000001 and 300000000 and c1%1000=3
+--------------
+
+Query OK, 100000 rows affected (1 min 41.90 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count3 from test201 where c1 between 200000001 and 300000000 and c1%1000=3 and c2=3 and c3=3
+--------------
+
++--------+
+| count3 |
++--------+
+| 100000 |
++--------+
+1 row in set (14.63 sec)
+
+--------------
+update test201 set c2=4, c3=4 where c1 between 1 and 100000000 and c1%1000=4
+--------------
+
+Query OK, 100000 rows affected (1 min 42.58 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count4 from test201 where c1 between 1 and 100000000 and c1%1000=4 and c2=4 and c3=4
+--------------
+
++--------+
+| count4 |
++--------+
+| 100000 |
++--------+
+1 row in set (13.92 sec)
+
+--------------
+update test201 set c2=5, c3=5 where c1 between 100000001 and 200000000 and c1%1000=5
+--------------
+
+Query OK, 100000 rows affected (1 min 43.52 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count5 from test201 where c1 between 100000001 and 200000000 and c1%1000=5 and c2=5 and c3=5
+--------------
+
++--------+
+| count5 |
++--------+
+| 100000 |
++--------+
+1 row in set (13.91 sec)
+
+--------------
+update test201 set c2=6, c3=6 where c1 between 200000001 and 300000000 and c1%1000=6
+--------------
+
+Query OK, 100000 rows affected (1 min 47.14 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count6 from test201 where c1 between 200000001 and 300000000 and c1%1000=6 and c2=6 and c3=6
+--------------
+
++--------+
+| count6 |
++--------+
+| 100000 |
++--------+
+1 row in set (13.50 sec)
+
+ERROR 122 (HY000) at line 23: CAL0002: Update Failed:  IDB-2008: The version buffer overflowed. Increase VersionBufferFileSize or limit the rows to be processed.
+--------------
+update test201 set c2=7, c3=7 where c1%1000=7
+--------------
+
+--------------
+select count(*) count7 from test201 where c1%1000=7 and c2=7 and c3=7
+--------------
+
++--------+
+| count7 |
++--------+
+|      1 |
++--------+
+1 row in set (15.43 sec)
+
+--------------
+update test201 set c2=8 where c1%1000=8
+--------------
+
+Query OK, 300000 rows affected (2 min 30.46 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count8 from test201 where c1%1000=8 and c2=8
+--------------
+
++--------+
+| count8 |
++--------+
+| 300000 |
++--------+
+1 row in set (20.36 sec)
+
+--------------
+update test201 set c3=9 where c1%1000=9
+--------------
+
+Query OK, 300000 rows affected (2 min 41.65 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(*) count9 from test201 where c1%1000=9 and c3=9
+--------------
+
++--------+
+| count9 |
++--------+
+| 300000 |
++--------+
+1 row in set (19.20 sec)
+
+Bye

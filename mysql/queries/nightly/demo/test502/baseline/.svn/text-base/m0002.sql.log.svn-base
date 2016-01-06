@@ -1,0 +1,146 @@
+--------------
+update orders2 set o_orderpriority=concat('upd-', o_orderkey), o_custkey=-1 where o_orderdate <= '1992-01-31'
+--------------
+
+Query OK, 1932789 rows affected (44.88 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select count(distinct o_orderpriority) from orders2 where o_orderdate <= '1992-01-31'
+--------------
+
++---------------------------------+
+| count(distinct o_orderpriority) |
++---------------------------------+
+|                         1932789 |
++---------------------------------+
+1 row in set (0.89 sec)
+
+--------------
+select count(*) from orders2 where o_custkey = -1
+--------------
+
++----------+
+| count(*) |
++----------+
+|  1932789 |
++----------+
+1 row in set (0.65 sec)
+
+--------------
+delete from orders2 where o_orderdate <= '1992-01-31'
+--------------
+
+Query OK, 1932789 rows affected (12.72 sec)
+
+--------------
+select count(*) from orders2
+--------------
+
++----------+
+| count(*) |
++----------+
+| 20877570 |
++----------+
+1 row in set (0.18 sec)
+
+--------------
+select count(o_orderkey) from orders2
+--------------
+
++-------------------+
+| count(o_orderkey) |
++-------------------+
+|          20877570 |
++-------------------+
+1 row in set (0.78 sec)
+
+--------------
+select count(o_custkey) from orders2
+--------------
+
++------------------+
+| count(o_custkey) |
++------------------+
+|         20877570 |
++------------------+
+1 row in set (0.86 sec)
+
+--------------
+select count(o_orderstatus) from orders2
+--------------
+
++----------------------+
+| count(o_orderstatus) |
++----------------------+
+|             20877570 |
++----------------------+
+1 row in set (0.15 sec)
+
+--------------
+select count(o_totalprice) from orders2
+--------------
+
++---------------------+
+| count(o_totalprice) |
++---------------------+
+|            20877570 |
++---------------------+
+1 row in set (1.32 sec)
+
+--------------
+select count(o_orderdate) from orders2
+--------------
+
++--------------------+
+| count(o_orderdate) |
++--------------------+
+|           20877570 |
++--------------------+
+1 row in set (0.34 sec)
+
+--------------
+select count(o_orderpriority) from orders2
+--------------
+
++------------------------+
+| count(o_orderpriority) |
++------------------------+
+|               20877570 |
++------------------------+
+1 row in set (0.43 sec)
+
+--------------
+select count(o_clerk) from orders2
+--------------
+
++----------------+
+| count(o_clerk) |
++----------------+
+|       20877570 |
++----------------+
+1 row in set (0.86 sec)
+
+--------------
+select count(o_shippriority) from orders2
+--------------
+
++-----------------------+
+| count(o_shippriority) |
++-----------------------+
+|              20877570 |
++-----------------------+
+1 row in set (0.28 sec)
+
+--------------
+select count(o_comment) from orders2
+--------------
+
++------------------+
+| count(o_comment) |
++------------------+
+|         20877570 |
++------------------+
+1 row in set (0.92 sec)
+
+Bye

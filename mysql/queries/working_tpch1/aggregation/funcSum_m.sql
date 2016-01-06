@@ -1,0 +1,16 @@
+-- Commented out overflow queries as these are expected to error off for iteration 17.
+
+-- SELECT SUM(CBIGINT) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL1) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL4) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL4_2) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL5) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL9) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL9_2) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL10) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL18) FROM DataTypeTestm;
+SELECT SUM(CDECIMAL18_2) FROM DataTypeTestm;
+SELECT SUM(CINTEGER) FROM DataTypeTestm;
+SELECT SUM(CSMALLINT) FROM DataTypeTestm;
+SELECT SUM(CTINYINT) FROM DataTypeTestm;
+

@@ -1,0 +1,895 @@
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 2: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 3: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 4: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 5: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 6: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 7: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 8: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 9: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 10: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 11: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 12: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 13: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 14: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 15: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 16: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 17: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 18: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 19: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 20: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 21: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 22: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 23: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 24: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 25: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 26: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 27: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 28: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 29: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 30: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 31: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 32: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 33: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 34: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 35: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 36: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 37: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 38: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 39: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 40: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 41: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 42: The system is not yet ready to accept queries
+ERROR 122 (HY000) at line 43: The system is not yet ready to accept queries
+cidx	CVCHAR5	IF(CVCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+2	e	Yes
+3	ee	Yes
+4	eee	Yes
+5	eeee	Yes
+6	vvvvv	Yes
+7	vvvvv	Yes
+8	vvvvv	Yes
+9	vvvvv	Yes
+10	zzzzz	Yes
+11	NULL	No
+cidx	CVCHAR5	IF(CVCHAR5>'aaa','Yes','No')
+1	aaaaa	Yes
+2	e	Yes
+3	ee	Yes
+4	eee	Yes
+5	eeee	Yes
+6	vvvvv	Yes
+7	vvvvv	Yes
+8	vvvvv	Yes
+9	vvvvv	Yes
+10	zzzzz	Yes
+11	NULL	No
+cidx	CVCHAR6	IF(CVCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+2	f	Yes
+3	ff	Yes
+4	fff	Yes
+5	ffff	Yes
+6	uuuuuu	Yes
+7	uuuuuu	Yes
+8	uuuuuu	Yes
+9	uuuuuu	Yes
+10	zzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR6	IF(CVCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+2	f	Yes
+3	ff	Yes
+4	fff	Yes
+5	ffff	Yes
+6	uuuuuu	Yes
+7	uuuuuu	Yes
+8	uuuuuu	Yes
+9	uuuuuu	Yes
+10	zzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR6	IF(CVCHAR6>'aaa','Yes','No')
+1	aaaaaa	Yes
+2	f	Yes
+3	ff	Yes
+4	fff	Yes
+5	ffff	Yes
+6	uuuuuu	Yes
+7	uuuuuu	Yes
+8	uuuuuu	Yes
+9	uuuuuu	Yes
+10	zzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR7	IF(CVCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+2	g	Yes
+3	gg	Yes
+4	ggg	Yes
+5	gggg	Yes
+6	ttttttt	Yes
+7	ttttttt	Yes
+8	ttttttt	Yes
+9	ttttttt	Yes
+10	zzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR7	IF(CVCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+2	g	Yes
+3	gg	Yes
+4	ggg	Yes
+5	gggg	Yes
+6	ttttttt	Yes
+7	ttttttt	Yes
+8	ttttttt	Yes
+9	ttttttt	Yes
+10	zzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR7	IF(CVCHAR7>'aaa','Yes','No')
+1	aaaaaaa	Yes
+2	g	Yes
+3	gg	Yes
+4	ggg	Yes
+5	gggg	Yes
+6	ttttttt	Yes
+7	ttttttt	Yes
+8	ttttttt	Yes
+9	ttttttt	Yes
+10	zzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR8	IF(CVCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+2	h	Yes
+3	hh	Yes
+4	hhh	Yes
+5	hhhh	Yes
+6	sssssss	Yes
+7	ssssssss	Yes
+8	ssssssss	Yes
+9	ssssssss	Yes
+10	zzzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR8	IF(CVCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+2	h	Yes
+3	hh	Yes
+4	hhh	Yes
+5	hhhh	Yes
+6	sssssss	Yes
+7	ssssssss	Yes
+8	ssssssss	Yes
+9	ssssssss	Yes
+10	zzzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR8	IF(CVCHAR8>'aaa','Yes','No')
+1	aaaaaaaa	Yes
+2	h	Yes
+3	hh	Yes
+4	hhh	Yes
+5	hhhh	Yes
+6	sssssss	Yes
+7	ssssssss	Yes
+8	ssssssss	Yes
+9	ssssssss	Yes
+10	zzzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR255	IF(CVCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+2	j	Yes
+3	jj	Yes
+4	jjj	Yes
+5	jjjj	Yes
+6	qqqqqqq	Yes
+7	qqqqqqqq	Yes
+8	qqqqqqqqq	Yes
+9	qqqqqqqqqq	Yes
+10	zzzzzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR255	IF(CVCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+2	j	Yes
+3	jj	Yes
+4	jjj	Yes
+5	jjjj	Yes
+6	qqqqqqq	Yes
+7	qqqqqqqq	Yes
+8	qqqqqqqqq	Yes
+9	qqqqqqqqqq	Yes
+10	zzzzzzzzzz	Yes
+11	NULL	No
+cidx	CVCHAR255	IF(CVCHAR255>'aaa','Yes','No')
+1	aaaaaaaaaa	Yes
+2	j	Yes
+3	jj	Yes
+4	jjj	Yes
+5	jjjj	Yes
+6	qqqqqqq	Yes
+7	qqqqqqqq	Yes
+8	qqqqqqqqq	Yes
+9	qqqqqqqqqq	Yes
+10	zzzzzzzzzz	Yes
+11	NULL	No
+cidx	CCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+11	NULL
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+11	NULL
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+11	NULL
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CCHAR2
+1	aa
+11	NULL
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+cidx	CCHAR2
+1	aa
+11	NULL
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+cidx	CCHAR2
+1	aa
+11	NULL
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+cidx	CCHAR3
+1	aaa
+11	NULL
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+cidx	CCHAR3
+1	aaa
+11	NULL
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+cidx	CCHAR3
+1	aaa
+11	NULL
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+cidx	CCHAR4
+11	NULL
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+cidx	CCHAR4
+11	NULL
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+cidx	CCHAR4
+11	NULL
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+cidx	CCHAR5
+11	NULL
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CCHAR5
+11	NULL
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CCHAR5
+11	NULL
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CCHAR6
+11	NULL
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+cidx	CCHAR6
+11	NULL
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+cidx	CCHAR6
+11	NULL
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+cidx	CCHAR7
+11	NULL
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+cidx	CCHAR7
+11	NULL
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+cidx	CCHAR7
+11	NULL
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+cidx	CCHAR8
+11	NULL
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+cidx	CCHAR8
+11	NULL
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+cidx	CCHAR8
+11	NULL
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+cidx	CCHAR9
+11	NULL
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+cidx	CCHAR9
+11	NULL
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+cidx	CCHAR9
+11	NULL
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+cidx	CCHAR255
+11	NULL
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+cidx	CCHAR255
+11	NULL
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+cidx	CCHAR255
+11	NULL
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+cidx	CVCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+11	NULL
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CVCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+11	NULL
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CVCHAR1
+1	a
+2	a
+3	a
+4	a
+5	a
+11	NULL
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CVCHAR2
+1	aa
+11	NULL
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+cidx	CVCHAR2
+1	aa
+11	NULL
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+cidx	CVCHAR2
+1	aa
+11	NULL
+2	b
+3	bb
+4	bb
+5	bb
+6	yy
+7	yy
+8	yy
+9	yy
+10	zz
+cidx	CVCHAR3
+1	aaa
+11	NULL
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+cidx	CVCHAR3
+1	aaa
+11	NULL
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+cidx	CVCHAR3
+1	aaa
+11	NULL
+2	c
+3	cc
+4	ccc
+5	ccc
+6	xxx
+7	xxx
+8	xxx
+9	xxx
+10	zzz
+cidx	CVCHAR4
+11	NULL
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+cidx	CVCHAR4
+11	NULL
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+cidx	CVCHAR4
+11	NULL
+1	aaaa
+2	d
+3	dd
+4	ddd
+5	dddd
+6	wwww
+7	wwww
+8	wwww
+9	wwww
+10	zzzz
+cidx	CVCHAR5
+11	NULL
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CVCHAR5
+11	NULL
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CVCHAR5
+11	NULL
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CVCHAR6
+11	NULL
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+cidx	CVCHAR6
+11	NULL
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+cidx	CVCHAR6
+11	NULL
+1	aaaaaa
+2	f
+3	ff
+4	fff
+5	ffff
+6	uuuuuu
+7	uuuuuu
+8	uuuuuu
+9	uuuuuu
+10	zzzzzz
+cidx	CVCHAR7
+11	NULL
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+cidx	CVCHAR7
+11	NULL
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+cidx	CVCHAR7
+11	NULL
+1	aaaaaaa
+2	g
+3	gg
+4	ggg
+5	gggg
+6	ttttttt
+7	ttttttt
+8	ttttttt
+9	ttttttt
+10	zzzzzzz
+cidx	CVCHAR8
+11	NULL
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+cidx	CVCHAR8
+11	NULL
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+cidx	CVCHAR8
+11	NULL
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh
+6	sssssss
+7	ssssssss
+8	ssssssss
+9	ssssssss
+10	zzzzzzzz
+cidx	CVCHAR255
+11	NULL
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+cidx	CVCHAR255
+11	NULL
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+cidx	CVCHAR255
+11	NULL
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz

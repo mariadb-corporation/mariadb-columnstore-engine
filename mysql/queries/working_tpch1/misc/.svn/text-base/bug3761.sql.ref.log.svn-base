@@ -1,0 +1,20 @@
+5	sum(r_regionkey)
+5	10
+abc	sum(r_regionkey)
+abc	10
+5	3	r_regionkey	sum(4)
+5	3	0	4
+5	3	1	4
+5	3	2	4
+5	3	3	4
+5	3	4	4
+a	sum(b)
+5	10
+a	sum(b)
+5	10
+a	sum(b)
+AFRICA	0
+AMERICA	1
+ASIA	2
+EUROPE	3
+MIDDLE EAST	4

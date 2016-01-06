@@ -1,0 +1,4 @@
+PeriodDesc	Spend	PeriodDesc	MonthCount
+YTDCurrentYear	111096.00	YTDCurrentYear	6
+PeriodDesc	MonthCount	PeriodDesc	Spend
+YTDCurrentYear	6	YTDCurrentYear	111096.00

@@ -1,0 +1,5 @@
+--------------
+drop table if exists test008
+--------------
+
+Bye

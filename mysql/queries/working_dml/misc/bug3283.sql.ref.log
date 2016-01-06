@@ -1,0 +1,4 @@
+caldroppartitions('lineitem', '4.1.1')
+No partitions are dropped
+caldisablepartitions('lineitem', '4.1.1')
+No partitions are disabled

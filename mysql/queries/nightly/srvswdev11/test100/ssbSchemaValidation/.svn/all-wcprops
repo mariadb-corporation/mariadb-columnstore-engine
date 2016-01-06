@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2905/trunk/queries/nightly/srvswdev11/test000/ssbSchemaValidation
+END
+ssbValidation.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/genii/mysql/!svn/ver/2905/trunk/queries/nightly/srvswdev11/test000/ssbSchemaValidation/ssbValidation.sql.ref.log
+END
+ssbValidation.sql
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/genii/mysql/!svn/ver/2905/trunk/queries/nightly/srvswdev11/test000/ssbSchemaValidation/ssbValidation.sql
+END

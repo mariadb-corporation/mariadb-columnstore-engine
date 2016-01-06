@@ -1,0 +1,2 @@
+n_regionkey+n_nationkey	n_regionkey-n_nationkey	n_regionkey*n_nationkey	n_regionkey/n_nationkey
+3	-1	2	0.5000

@@ -1,0 +1,239 @@
+n_name	REVERSE(n_name)
+ALGERIA	AIREGLA
+ARGENTINA	ANITNEGRA
+BRAZIL	LIZARB
+CANADA	ADANAC
+EGYPT	TPYGE
+ETHIOPIA	AIPOIHTE
+FRANCE	ECNARF
+GERMANY	YNAMREG
+INDIA	AIDNI
+INDONESIA	AISENODNI
+IRAN	NARI
+IRAQ	QARI
+JAPAN	NAPAJ
+JORDAN	NADROJ
+KENYA	AYNEK
+MOROCCO	OCCOROM
+MOZAMBIQUE	EUQIBMAZOM
+PERU	UREP
+CHINA	ANIHC
+ROMANIA	AINAMOR
+SAUDI ARABIA	AIBARA IDUAS
+VIETNAM	MANTEIV
+RUSSIA	AISSUR
+UNITED KINGDOM	MODGNIK DETINU
+UNITED STATES	SETATS DETINU
+n_comment	REVERSE(n_comment)
+ haggle. carefully final deposits detect slyly agai	iaga ylyls tceted stisoped lanif ylluferac .elggah 
+al foxes promise slyly according to the regular accounts. bold requests alon	nola stseuqer dlob .stnuocca raluger eht ot gnidrocca ylyls esimorp sexof la
+y alongside of the pending deposits. carefully special packages are about the ironic forges. slyly special 	 laiceps ylyls .segrof cinori eht tuoba era segakcap laiceps ylluferac .stisoped gnidnep eht fo edisgnola y
+eas hang ironic, silent packages. slyly regular packages are furiously over the tithes. fluffily bold	dlob yliffulf .sehtit eht revo ylsuoiruf era segakcap raluger ylyls .segakcap tnelis ,cinori gnah sae
+y above the carefully unusual theodolites. final dugouts are quickly across the furiously regular d	d raluger ylsuoiruf eht ssorca ylkciuq era stuogud lanif .setilodoeht lausunu ylluferac eht evoba y
+ven packages wake quickly. regu	uger .ylkciuq ekaw segakcap nev
+refully final requests. regular, ironi	inori ,raluger .stseuqer lanif yllufer
+l platelets. regular accounts x-ray: unusual, regular acco	occa raluger ,lausunu :yar-x stnuocca raluger .steletalp l
+ss excuses cajole slyly across the packages. deposits print aroun	nuora tnirp stisoped .segakcap eht ssorca ylyls elojac sesucxe ss
+ slyly express asymptotes. regular deposits haggle slyly. carefully ironic hockey players sleep blithely. carefull	lluferac .ylehtilb peels sreyalp yekcoh cinori ylluferac .ylyls elggah stisoped raluger .setotpmysa sserpxe ylyls 
+efully alongside of the slyly final dependencies. 	 .seicnedneped lanif ylyls eht fo edisgnola yllufe
+nic deposits boost atop the quickly final requests? quickly regula	aluger ylkciuq ?stseuqer lanif ylkciuq eht pota tsoob stisoped cin
+ously. final, express gifts cajole a	a elojac stfig sserpxe ,lanif .ylsuo
+ic deposits are blithely about the carefully regular pa	ap raluger ylluferac eht tuoba ylehtilb era stisoped ci
+ pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t	t tsap yliffulf ekaw snaeb otnip sserpxe ,gnidnep .stisoped ylsuoiruf elggah sesucxe gnidnep 
+rns. blithely bold courts among the closely regular packages use furiously bold platelets?	?steletalp dlob ylsuoiruf esu segakcap raluger ylesolc eht gnoma struoc dlob ylehtilb .snr
+s. ironic, unusual asymptotes wake blithely r	r ylehtilb ekaw setotpmysa lausunu ,cinori .s
+platelets. blithely pending dependencies use fluffily across the even pinto beans. carefully silent accoun	nuocca tnelis ylluferac .snaeb otnip neve eht ssorca yliffulf esu seicnedneped gnidnep ylehtilb .steletalp
+c dependencies. furiously express notornis sleep slyly regular accounts. ideas sleep. depos	soped .peels saedi .stnuocca raluger ylyls peels sinroton sserpxe ylsuoiruf .seicnedneped c
+ular asymptotes are about the furious multipliers. express dependencies nag above the ironically ironic account	tnuocca cinori yllacinori eht evoba gan seicnedneped sserpxe .sreilpitlum suoiruf eht tuoba era setotpmysa ralu
+ts. silent requests haggle. closely express packages sleep across the blithely	ylehtilb eht ssorca peels segakcap sserpxe ylesolc .elggah stseuqer tnelis .st
+hely enticingly express accounts. even, final 	 lanif ,neve .stnuocca sserpxe ylgnicitne yleh
+ requests against the platelets use never according to the quickly regular pint	tnip raluger ylkciuq eht ot gnidrocca reven esu steletalp eht tsniaga stseuqer 
+eans boost carefully special requests. accounts are. carefull	lluferac .era stnuocca .stseuqer laiceps ylluferac tsoob snae
+y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be	eb otnip lausunu .stnuocca cinori hcaerb steletalp tnelis ylkciuq .ylkciuq elojac sexof wols .segakcap lanif y
+cidx	CCHAR1	REVERSE(CCHAR1)
+1	a	a
+2	a	a
+3	a	a
+4	a	a
+5	a	a
+6	z	z
+7	z	z
+8	z	z
+9	z	z
+10	z	z
+11	NULL	NULL
+cidx	CCHAR7	REVERSE(CCHAR7)
+1	aaaaaaa	aaaaaaa
+2	g	g
+3	gg	gg
+4	ggg	ggg
+5	gggg	gggg
+6	ttttttt	ttttttt
+7	ttttttt	ttttttt
+8	ttttttt	ttttttt
+9	ttttttt	ttttttt
+10	zzzzzzz	zzzzzzz
+11	NULL	NULL
+cidx	CCHAR8	REVERSE(CCHAR8)
+1	aaaaaaaa	aaaaaaaa
+2	h	h
+3	hh	hh
+4	hhh	hhh
+5	hhhh	hhhh
+6	sssssss	sssssss
+7	ssssssss	ssssssss
+8	ssssssss	ssssssss
+9	ssssssss	ssssssss
+10	zzzzzzzz	zzzzzzzz
+11	NULL	NULL
+cidx	CCHAR9	REVERSE(CCHAR9)
+1	aaaaaaaaa	aaaaaaaaa
+2	i	i
+3	ii	ii
+4	iii	iii
+5	iiii	iiii
+6	rrrrrrr	rrrrrrr
+7	rrrrrrrr	rrrrrrrr
+8	rrrrrrrrr	rrrrrrrrr
+9	rrrrrrrrr	rrrrrrrrr
+10	zzzzzzzzz	zzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR255	REVERSE(CCHAR255)
+1	aaaaaaaaaa	aaaaaaaaaa
+2	j	j
+3	jj	jj
+4	jjj	jjj
+5	jjjj	jjjj
+6	qqqqqqq	qqqqqqq
+7	qqqqqqqq	qqqqqqqq
+8	qqqqqqqqq	qqqqqqqqq
+9	qqqqqqqqqq	qqqqqqqqqq
+10	zzzzzzzzzz	zzzzzzzzzz
+11	NULL	NULL
+cidx	CVCHAR1	REVERSE(CVCHAR1)
+1	a	a
+2	a	a
+3	a	a
+4	a	a
+5	a	a
+6	z	z
+7	z	z
+8	z	z
+9	z	z
+10	z	z
+11	NULL	NULL
+cidx	CVCHAR6	REVERSE(CVCHAR6)
+1	aaaaaa	aaaaaa
+2	f	f
+3	ff	ff
+4	fff	fff
+5	ffff	ffff
+6	uuuuuu	uuuuuu
+7	uuuuuu	uuuuuu
+8	uuuuuu	uuuuuu
+9	uuuuuu	uuuuuu
+10	zzzzzz	zzzzzz
+11	NULL	NULL
+cidx	CVCHAR255	REVERSE(CVCHAR255)
+1	aaaaaaaaaa	aaaaaaaaaa
+2	j	j
+3	jj	jj
+4	jjj	jjj
+5	jjjj	jjjj
+6	qqqqqqq	qqqqqqq
+7	qqqqqqqq	qqqqqqqq
+8	qqqqqqqqq	qqqqqqqqq
+9	qqqqqqqqqq	qqqqqqqqqq
+10	zzzzzzzzzz	zzzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR1
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CCHAR9
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+cidx	CCHAR255
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+n_name	REVERSE(n_name)
+ALGERIA	AIREGLA
+ARGENTINA	ANITNEGRA
+BRAZIL	LIZARB
+CANADA	ADANAC
+EGYPT	TPYGE
+ETHIOPIA	AIPOIHTE
+FRANCE	ECNARF
+GERMANY	YNAMREG
+INDIA	AIDNI
+INDONESIA	AISENODNI
+IRAN	NARI
+IRAQ	QARI
+JAPAN	NAPAJ
+JORDAN	NADROJ
+KENYA	AYNEK
+MOROCCO	OCCOROM
+MOZAMBIQUE	EUQIBMAZOM
+PERU	UREP
+CHINA	ANIHC
+ROMANIA	AINAMOR
+SAUDI ARABIA	AIBARA IDUAS
+VIETNAM	MANTEIV
+RUSSIA	AISSUR
+UNITED KINGDOM	MODGNIK DETINU
+UNITED STATES	SETATS DETINU
+n_comment	REVERSE(n_comment)
+ haggle. carefully final deposits detect slyly agai	iaga ylyls tceted stisoped lanif ylluferac .elggah 
+al foxes promise slyly according to the regular accounts. bold requests alon	nola stseuqer dlob .stnuocca raluger eht ot gnidrocca ylyls esimorp sexof la
+y alongside of the pending deposits. carefully special packages are about the ironic forges. slyly special 	 laiceps ylyls .segrof cinori eht tuoba era segakcap laiceps ylluferac .stisoped gnidnep eht fo edisgnola y
+eas hang ironic, silent packages. slyly regular packages are furiously over the tithes. fluffily bold	dlob yliffulf .sehtit eht revo ylsuoiruf era segakcap raluger ylyls .segakcap tnelis ,cinori gnah sae
+y above the carefully unusual theodolites. final dugouts are quickly across the furiously regular d	d raluger ylsuoiruf eht ssorca ylkciuq era stuogud lanif .setilodoeht lausunu ylluferac eht evoba y
+ven packages wake quickly. regu	uger .ylkciuq ekaw segakcap nev
+refully final requests. regular, ironi	inori ,raluger .stseuqer lanif yllufer
+l platelets. regular accounts x-ray: unusual, regular acco	occa raluger ,lausunu :yar-x stnuocca raluger .steletalp l
+ss excuses cajole slyly across the packages. deposits print aroun	nuora tnirp stisoped .segakcap eht ssorca ylyls elojac sesucxe ss
+ slyly express asymptotes. regular deposits haggle slyly. carefully ironic hockey players sleep blithely. carefull	lluferac .ylehtilb peels sreyalp yekcoh cinori ylluferac .ylyls elggah stisoped raluger .setotpmysa sserpxe ylyls 
+efully alongside of the slyly final dependencies. 	 .seicnedneped lanif ylyls eht fo edisgnola yllufe
+nic deposits boost atop the quickly final requests? quickly regula	aluger ylkciuq ?stseuqer lanif ylkciuq eht pota tsoob stisoped cin
+ously. final, express gifts cajole a	a elojac stfig sserpxe ,lanif .ylsuo
+ic deposits are blithely about the carefully regular pa	ap raluger ylluferac eht tuoba ylehtilb era stisoped ci
+ pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t	t tsap yliffulf ekaw snaeb otnip sserpxe ,gnidnep .stisoped ylsuoiruf elggah sesucxe gnidnep 
+rns. blithely bold courts among the closely regular packages use furiously bold platelets?	?steletalp dlob ylsuoiruf esu segakcap raluger ylesolc eht gnoma struoc dlob ylehtilb .snr
+s. ironic, unusual asymptotes wake blithely r	r ylehtilb ekaw setotpmysa lausunu ,cinori .s
+platelets. blithely pending dependencies use fluffily across the even pinto beans. carefully silent accoun	nuocca tnelis ylluferac .snaeb otnip neve eht ssorca yliffulf esu seicnedneped gnidnep ylehtilb .steletalp
+c dependencies. furiously express notornis sleep slyly regular accounts. ideas sleep. depos	soped .peels saedi .stnuocca raluger ylyls peels sinroton sserpxe ylsuoiruf .seicnedneped c
+ular asymptotes are about the furious multipliers. express dependencies nag above the ironically ironic account	tnuocca cinori yllacinori eht evoba gan seicnedneped sserpxe .sreilpitlum suoiruf eht tuoba era setotpmysa ralu
+ts. silent requests haggle. closely express packages sleep across the blithely	ylehtilb eht ssorca peels segakcap sserpxe ylesolc .elggah stseuqer tnelis .st
+hely enticingly express accounts. even, final 	 lanif ,neve .stnuocca sserpxe ylgnicitne yleh
+ requests against the platelets use never according to the quickly regular pint	tnip raluger ylkciuq eht ot gnidrocca reven esu steletalp eht tsniaga stseuqer 
+eans boost carefully special requests. accounts are. carefull	lluferac .era stnuocca .stseuqer laiceps ylluferac tsoob snae
+y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be	eb otnip lausunu .stnuocca cinori hcaerb steletalp tnelis ylkciuq .ylkciuq elojac sexof wols .segakcap lanif y

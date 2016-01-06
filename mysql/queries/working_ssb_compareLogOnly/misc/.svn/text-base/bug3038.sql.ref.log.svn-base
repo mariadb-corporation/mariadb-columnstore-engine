@@ -1,0 +1,29 @@
+c1
+28
+c2
+4
+c3
+8
+d_year	c4
+1992	366
+1993	365
+1994	313
+1995	313
+1996	366
+1997	365
+1998	364
+d_year	c5
+1994	52
+1995	52
+d_year	c6
+1994	52
+1995	52
+d_dayofweek	c7
+Monday	59
+Wednesda	66
+c8
+4755
+c10	s_suppkey	s_name	s_address	s_city	s_nation	s_region	s_phone
+c10	10	Supplier#000000010	Saygah3gYWM	UNITED ST9	UNITED STATES	AMERICA	34-741-346-9870
+c11
+9999

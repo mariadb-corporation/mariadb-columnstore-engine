@@ -1,0 +1,16 @@
+select cidx, CDATE, CDATE REGEXP '(1997)+' from datatypetestm;
+select cidx, CDATE, CDATE REGEXP '01$' from datatypetestm;
+select cidx, CDATE, CDATE REGEXP '(59)+' from datatypetestm;
+select cidx, CDATE, CDATE REGEXP '(09-12-)+' from datatypetestm;
+select cidx, CDATETIME, CDATETIME REGEXP '(1997)+' from datatypetestm;
+select cidx, CDATETIME, CDATETIME REGEXP '01$' from datatypetestm;
+select cidx, CDATETIME, CDATETIME REGEXP '(59)+' from datatypetestm;
+select cidx, CDATETIME, CDATETIME REGEXP '(09-12-)+' from datatypetestm;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(1997)+' <> CDATE;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '01$' <> CDATE;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(59)+' <> CDATE;
+select cidx, CDATE from datatypetestm where CDATE REGEXP '(09-12-)+' <> CDATE;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(1997)+' <> CDATETIME;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '01$' <> CDATETIME;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(59)+' <> CDATETIME;
+select cidx, CDATETIME from datatypetestm where CDATETIME REGEXP '(09-12-)+' <> CDATETIME;

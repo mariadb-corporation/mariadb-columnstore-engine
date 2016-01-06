@@ -1,0 +1,54 @@
+cidx	strcmp('hi','Hello')
+1	1
+2	1
+3	1
+4	1
+5	1
+6	1
+7	1
+8	1
+9	1
+10	1
+11	1
+cidx	strcmp('WORLD','mahimahi')
+1	1
+2	1
+3	1
+4	1
+5	1
+6	1
+7	1
+8	1
+9	1
+10	1
+11	1
+cidx	cchar8	strcmp(cchar8,'mahimahi')
+1	aaaaaaaa	-1
+2	h	-1
+3	hh	-1
+4	hhh	-1
+5	hhhh	-1
+6	sssssss	1
+7	ssssssss	1
+8	ssssssss	1
+9	ssssssss	1
+10	zzzzzzzz	1
+11	NULL	NULL
+cidx	cchar8	strcmp(cchar8,'h')
+1	aaaaaaaa	-1
+2	h	0
+3	hh	1
+4	hhh	1
+5	hhhh	1
+6	sssssss	1
+7	ssssssss	1
+8	ssssssss	1
+9	ssssssss	1
+10	zzzzzzzz	1
+11	NULL	NULL
+cidx	cchar8
+1	aaaaaaaa
+2	h
+3	hh
+4	hhh
+5	hhhh

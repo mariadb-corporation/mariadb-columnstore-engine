@@ -1,0 +1,10 @@
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;
+select sum(c2), (case sum(c2) when 50000 then 'good' when 0 then 'good' else 'bad' end) as result from test007;

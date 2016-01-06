@@ -1,0 +1,10 @@
+ERROR 122 (HY000) at line 11: CAL0001: Alter table Failed:  IDB-2009: Unable to perform the operation because DMLProc with PID 38391 is currently holding the table lock for session 29.  
+ERROR 1054 (42S22) at line 13: Unknown column 'c1' in 'field list'
+ERROR 1054 (42S22) at line 14: Unknown column 'c1' in 'where clause'
+ERROR 1054 (42S22) at line 15: Unknown column 'c1' in 'where clause'
+ERROR 1054 (42S22) at line 16: Unknown column 'c1' in 'where clause'
+ERROR 1091 (42000) at line 18: Can't DROP 'c1'; check that column/key exists
+count1
+0
+count2
+0

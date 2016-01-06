@@ -1,0 +1,16 @@
+daypart	count(*)
+NULL	60
+L	20
+M	20
+daypart	count(*)
+L	20
+M	20
+Z	60
+substr(dtm,12,2)	daypart	count(*)
+06	L	20
+07	NULL	60
+08	M	20
+substr(dtm,12,2)	daypart	count(*)
+06	L	20
+07	Z	60
+08	M	20

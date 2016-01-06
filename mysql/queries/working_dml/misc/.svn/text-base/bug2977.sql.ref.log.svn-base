@@ -1,0 +1,2 @@
+OrderNum	OrderLine	ShippingAmount	ShippingOrderAmount	ShippingTotalAmount	ShippingDiscountAmount	ShippingDiscountOrderAmount	ShippingDiscountTotalAmount	IF( s.OrderLine = MIN(t.OrderLine), 1, 0 )
+2357203684	352338	0.00	0.00	0.00	0.00	0.00	0.00	1

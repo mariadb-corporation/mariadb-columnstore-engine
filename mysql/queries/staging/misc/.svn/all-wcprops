@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/genii/mysql/!svn/ver/2346/trunk/queries/staging/misc
+END
+2.2_time_dtype_conversion.sql
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/2256/trunk/queries/staging/misc/2.2_time_dtype_conversion.sql
+END
+2.2_time_dtype_conversion.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/2346/trunk/queries/staging/misc/2.2_time_dtype_conversion.sql.ref.log
+END

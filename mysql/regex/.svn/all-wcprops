@@ -1,0 +1,167 @@
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/genii/mysql/!svn/ver/912/trunk/regex
+END
+regex.7
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regex.7
+END
+regex2.h
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regex2.h
+END
+reginit.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/genii/mysql/!svn/ver/59/trunk/regex/reginit.c
+END
+main.ih
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/main.ih
+END
+debug.ih
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/genii/mysql/!svn/ver/59/trunk/regex/debug.ih
+END
+engine.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/genii/mysql/!svn/ver/59/trunk/regex/engine.c
+END
+utils.h
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/utils.h
+END
+regerror.ih
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regerror.ih
+END
+regcomp.ih
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regcomp.ih
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/genii/mysql/!svn/ver/59/trunk/regex/README
+END
+cclass.h
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/genii/mysql/!svn/ver/59/trunk/regex/cclass.h
+END
+regfree.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regfree.c
+END
+WHATSNEW
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/genii/mysql/!svn/ver/59/trunk/regex/WHATSNEW
+END
+tests
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/genii/mysql/!svn/ver/59/trunk/regex/tests
+END
+regexec.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regexec.c
+END
+engine.ih
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/genii/mysql/!svn/ver/59/trunk/regex/engine.ih
+END
+my_regex.h
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/genii/mysql/!svn/ver/59/trunk/regex/my_regex.h
+END
+main.c
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/genii/mysql/!svn/ver/59/trunk/regex/main.c
+END
+debug.c
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/debug.c
+END
+regerror.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regerror.c
+END
+CHANGES
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/CHANGES
+END
+COPYRIGHT
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/genii/mysql/!svn/ver/59/trunk/regex/COPYRIGHT
+END
+cname.h
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/cname.h
+END
+regexp.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regexp.c
+END
+regex.3
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/regex.3
+END
+split.c
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/genii/mysql/!svn/ver/59/trunk/regex/split.c
+END
+regcomp.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/genii/mysql/!svn/ver/771/trunk/regex/regcomp.c
+END

@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/genii/mysql/!svn/ver/4054/trunk/queries/nightly/srvalpha2
+END
+go.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/4044/trunk/queries/nightly/srvalpha2/go.sh
+END
+test800.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4038/trunk/queries/nightly/srvalpha2/test800.sh
+END
+test810.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4038/trunk/queries/nightly/srvalpha2/test810.sh
+END
+test801.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4038/trunk/queries/nightly/srvalpha2/test801.sh
+END
+test811.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4038/trunk/queries/nightly/srvalpha2/test811.sh
+END
+test802.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4039/trunk/queries/nightly/srvalpha2/test802.sh
+END
+test812.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4039/trunk/queries/nightly/srvalpha2/test812.sh
+END
+test803.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4044/trunk/queries/nightly/srvalpha2/test803.sh
+END
+test813.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4051/trunk/queries/nightly/srvalpha2/test813.sh
+END
+test804.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4044/trunk/queries/nightly/srvalpha2/test804.sh
+END
+editem_cp.log_ref
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/3582/trunk/queries/nightly/srvalpha2/editem_cp.log_ref
+END
+test814.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4054/trunk/queries/nightly/srvalpha2/test814.sh
+END
+ssb100_import_test.sh
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/4054/trunk/queries/nightly/srvalpha2/ssb100_import_test.sh
+END
+trackMem.sh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/2119/trunk/queries/nightly/srvalpha2/trackMem.sh
+END

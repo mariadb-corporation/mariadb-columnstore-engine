@@ -1,0 +1,6 @@
+select * from region where (r_regionkey+4) in (select min(n_regionkey) over(partition by n_regionkey) + max(n_regionkey) over(partition by n_regionkey) c from nation where r_regionkey=n_regionkey);
+ r_regionkey |          r_name           |                                                  r_comment                                                   | dummy 
+-------------+---------------------------+--------------------------------------------------------------------------------------------------------------+-------
+           4 | MIDDLE EAST               | uickly special accounts cajole carefully blithely close requests. carefully final asymptotes haggle furiousl |     0
+(1 row)
+

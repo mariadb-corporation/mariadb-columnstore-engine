@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2699/trunk/queries/nightly/srvswdev11/test000/dmlSchemaValidation
+END
+tpchValidation.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/genii/mysql/!svn/ver/2699/trunk/queries/nightly/srvswdev11/test000/dmlSchemaValidation/tpchValidation.sql.ref.log
+END
+tpchValidation.sql
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/genii/mysql/!svn/ver/2699/trunk/queries/nightly/srvswdev11/test000/dmlSchemaValidation/tpchValidation.sql
+END

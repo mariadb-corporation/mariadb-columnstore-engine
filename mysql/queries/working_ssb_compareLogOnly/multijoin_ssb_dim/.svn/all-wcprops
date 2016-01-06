@@ -1,0 +1,149 @@
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim
+END
+ssb_dim01.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim01.sql.ref.log
+END
+ssb_dim10.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim10.sql.ref.log
+END
+ssb_dim11.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim11.sql.ref.log
+END
+ssb_dim02.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim02.sql.ref.log
+END
+ssb_dim03.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim03.sql.ref.log
+END
+ssb_dim12.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim12.sql.ref.log
+END
+ssb_dim04.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim04.sql.ref.log
+END
+ssb_dim05.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim05.sql.ref.log
+END
+ssb_dim10.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim10.sql
+END
+ssb_dim01.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim01.sql
+END
+ssb_dim06.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim06.sql.ref.log
+END
+ssb_dim02.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim02.sql
+END
+ssb_dim11.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim11.sql
+END
+ssb_dim07.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim07.sql.ref.log
+END
+ssb_dim03.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim03.sql
+END
+ssb_dim08.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim08.sql.ref.log
+END
+ssb_dim12.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim12.sql
+END
+ssb_dim04.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim04.sql
+END
+ssb_dim09.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim09.sql.ref.log
+END
+ssb_dim05.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim05.sql
+END
+ssb_dim06.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim06.sql
+END
+ssb_dim07.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim07.sql
+END
+ssb_dim08.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim08.sql
+END
+ssb_dim09.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_ssb_compareLogOnly/multijoin_ssb_dim/ssb_dim09.sql
+END

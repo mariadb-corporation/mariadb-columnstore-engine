@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/Bug1625
+END
+q0004.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/Bug1625/q0004.sql.ref.log
+END
+q0005.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/Bug1625/q0005.sql.ref.log
+END
+q0006.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/Bug1625/q0006.sql.ref.log
+END
+q0007.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/Bug1625/q0007.sql.ref.log
+END
+q0004.sql
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/Bug1625/q0004.sql
+END
+q0005.sql
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/Bug1625/q0005.sql
+END
+q0006.sql
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/Bug1625/q0006.sql
+END
+q0007.sql
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/Bug1625/q0007.sql
+END

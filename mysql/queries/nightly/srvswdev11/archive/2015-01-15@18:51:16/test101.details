@@ -1,0 +1,26 @@
+Working Folder UM Join Test Details:
+
+Working Folder Test scripts that failed:
+Compare failed - working_tpch1/misc/rename.negative.sql
+
+Details from queryTester:
+Total Local Passed   = 627
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Fef Failed     = 0
+Total Compare Passed = 594
+Total Compare Failed = 1
+Total Selects        = 18505
+Total Inserts        = 403
+Total Updates        = 30
+Total Deletes        = 11
+Total Creates        = 219
+Total Drops          = 302
+
+Changed this Calpont.xml setting:
+		<PmMaxMemorySmallSide>1</PmMaxMemorySmallSide><!-- divide by 48 to get element count -->
+
+df -h output:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       185G   81G   96G  46% /
+tmpfs           3.9G   18M  3.9G   1% /dev/shm

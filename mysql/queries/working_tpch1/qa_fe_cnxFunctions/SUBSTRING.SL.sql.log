@@ -1,0 +1,36 @@
+cidx	SUBSTRING('Kalakawa',7)
+1	wa
+2	wa
+3	wa
+4	wa
+5	wa
+6	wa
+7	wa
+8	wa
+9	wa
+10	wa
+11	wa
+cidx	SUBSTRING('Kalakawa' FROM 5)
+1	kawa
+2	kawa
+3	kawa
+4	kawa
+5	kawa
+6	kawa
+7	kawa
+8	kawa
+9	kawa
+10	kawa
+11	kawa
+cidx	SUBSTRING('Kalakawa' FROM 5 FOR 3)
+1	kaw
+2	kaw
+3	kaw
+4	kaw
+5	kaw
+6	kaw
+7	kaw
+8	kaw
+9	kaw
+10	kaw
+11	kaw

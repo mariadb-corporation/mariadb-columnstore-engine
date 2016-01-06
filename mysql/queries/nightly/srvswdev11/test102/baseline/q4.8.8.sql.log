@@ -1,0 +1,2 @@
+o_shippriority	sum(o_totalprice)	avg(o_totalprice)	count(*)
+0	37837807526.82	151351.835515	249999

@@ -1,0 +1,45 @@
+
+ ###################################################################
+              Running query test on user 'dml'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_dml/misc'
+
+Run time in seconds: 131
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      51             0           0          0            51              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_dml/qa_sub'
+
+Run time in seconds: 187
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      25             0           0          0            24              1
+
+***** TEST FAILED 'working_dml/qa_sub' *****
+
+Compare failed - working_dml/qa_sub/mts_1.1600.negative.sql
+================================================================================
+
+
+Totals:
+Total Local Passed   = 76
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 75
+Total Compare Failed = 1
+
+
+QUERYTESTER RUN COMPLETED

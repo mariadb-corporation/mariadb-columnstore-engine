@@ -1,0 +1,58 @@
+drop table if exists paa;
+drop table if exists dates;
+drop table if exists taa;
+
+create table paa (
+    paa_p_id int,
+    a_id int,
+    date_id int
+) ENGINE=InfiniDB DEFAULT CHARSET=latin1;
+
+insert into paa values
+    (1, 10, 100),
+    (2, 20, 100);
+
+create table dates (
+    date_id int,
+    dates date
+) ENGINE=InfiniDB DEFAULT CHARSET=latin1;
+
+insert into dates values
+    (100, '2010-09-01');
+
+create table taa (
+    taa_p_id int,
+    a_id int,
+    date_id int,
+    amount int
+) ENGINE=InfiniDB DEFAULT CHARSET=latin1;
+
+insert into taa values
+    (2, 20, 100, 99999);
+
+update taa t1 join paa t2 on t1.taa_p_id=t2.paa_p_id set t1.amount=t1.amount+1 where t2.paa_p_id=2; 
+select 'q1', taa.* from taa;
+select 'q2', paa.* from paa;
+update taa t1, paa t2 set t1.amount=t1.amount+1 where t1.taa_p_id=t2.paa_p_id and t2.paa_p_id=2;
+select 'q3', taa.* from taa;
+select 'q4', paa.* from paa;
+update taa join paa on taa.taa_p_id=paa.paa_p_id set taa.amount=taa.amount+1 where paa.paa_p_id=2;  
+select 'q5', taa.* from taa;
+update taa set taa.amount=taa.amount+1 where taa_p_id in (select paa_p_id from paa where paa_p_id=2);
+update paa set paa.date_id=3 where paa_p_id=2;
+delete taa from taa join paa on taa.taa_p_id=paa.paa_p_id;
+select 'q6', taa.* from taa;
+select 'q7', paa.* from paa;
+insert into taa values
+    (2, 20, 100, 99999);
+delete taa from taa join paa on taa.taa_p_id=paa.paa_p_id where paa.paa_p_id=2;
+select 'q8', taa.* from taa;
+select 'q9', paa.* from paa;
+
+# Next two are negative tests, not supported syntax.
+update taa join paa on taa.taa_p_id=paa.paa_p_id set taa.amount=taa.amount+1, paa.date_id=3 where paa.paa_p_id=2;
+update taa, paa set taa.amount=taa.amount-1, paa.date_id=3 where taa.taa_p_id=paa.paa_p_id and paa.paa_p_id=2; 
+
+drop table if exists paa;
+drop table if exists dates;
+drop table if exists taa;

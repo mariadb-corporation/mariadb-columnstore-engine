@@ -1,0 +1,149 @@
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries
+END
+1a-www.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/1a-www.sql
+END
+1b-www.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/1b-www.sql
+END
+2a-www.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2a-www.sql
+END
+1c-www.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/1c-www.sql
+END
+q4.3.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/q4.3.sql
+END
+3b-CZH.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3b-CZH.sql
+END
+1d-www.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/1d-www.sql
+END
+3a-Zhixuan.sql
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3a-Zhixuan.sql
+END
+2e-CZH.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2e-CZH.sql
+END
+3b-Zhixuan.sql
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3b-Zhixuan.sql
+END
+3a-xlou.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3a-xlou.sql
+END
+3b-xlou.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3b-xlou.sql
+END
+2f-CZH.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2f-CZH.sql
+END
+3a-patrick.sql
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3a-patrick.sql
+END
+3b-patrick.sql
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3b-patrick.sql
+END
+q3a-jer.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/q3a-jer.sql
+END
+now.sql
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/now.sql
+END
+q3b-jer.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/q3b-jer.sql
+END
+2h-1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2h-1.sql
+END
+2g-dmc.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2g-dmc.sql
+END
+2b-bw.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2b-bw.sql
+END
+2c-bw.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2c-bw.sql
+END
+3b-bw.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/3b-bw.sql
+END
+2d-bw.sql
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1_calpontonly/iter17Queries/2d-bw.sql
+END

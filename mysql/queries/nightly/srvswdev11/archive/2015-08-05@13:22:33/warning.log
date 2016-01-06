@@ -1,0 +1,38 @@
+Aug  5 12:56:14 srvhall03 dmlpackageproc[16158]: 14.356435 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'cdecimal9' 
+Aug  5 12:56:15 srvhall03 dmlpackageproc[16158]: 15.001211 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'CDECIMAL10' 
+Aug  5 12:56:15 srvhall03 dmlpackageproc[16158]: 15.537415 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'CDECIMAL18' 
+Aug  5 12:56:17 srvhall03 dmlpackageproc[16158]: 17.367938 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'CINTEGER' 
+Aug  5 12:56:19 srvhall03 dmlpackageproc[16158]: 19.544067 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'c2' 
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.634491 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.659656 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.685395 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 20 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.710993 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.739809 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 20 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.763250 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 21 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.785420 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.813622 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 20 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.837258 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 21 is beyond supported scale#012         
+Aug  5 12:59:49 srvhall03 PrimProc[15934]: 49.860483 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 22 is beyond supported scale#012         
+Aug  5 13:03:06 srvhall03 dmlpackageproc[16158]: 06.703391 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'c2' 
+Aug  5 13:03:06 srvhall03 dmlpackageproc[16158]: 06.806442 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'c2' 
+Aug  5 13:37:29 srvhall03 dmlpackageproc[659]: 29.600028 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'cdecimal9' 
+Aug  5 13:37:30 srvhall03 dmlpackageproc[659]: 30.134758 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'CDECIMAL10' 
+Aug  5 13:37:30 srvhall03 dmlpackageproc[659]: 30.555690 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'CDECIMAL18' 
+Aug  5 13:37:31 srvhall03 dmlpackageproc[659]: 31.371213 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'CINTEGER' 
+Aug  5 13:37:34 srvhall03 dmlpackageproc[659]: 34.027421 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'c2' 
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.500123 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.522634 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.544490 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 20 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.568745 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.593173 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 20 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.614438 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 21 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.639147 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 19 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.662619 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 20 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.685027 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 21 is beyond supported scale#012         
+Aug  5 13:40:53 srvhall03 PrimProc[456]: 53.719050 |0|0|0| W 28 CAL0000: ceil: datatype of decimal with scale 22 is beyond supported scale#012         
+Aug  5 13:41:58 srvhall03 PrimProc[456]: 58.911832 |0|0|0| W 28 CAL0000: PrimProc AsyncLoader caught error:  thr_popper: Error building filename for OID 0; fileOp.getFileName failed        
+Aug  5 13:41:58 srvhall03 PrimProc[456]: 58.922547 |0|0|0| W 28 CAL0000: PrimProc AsyncLoader caught error:  thr_popper: Error building filename for OID 0; fileOp.getFileName failed        
+Aug  5 13:41:58 srvhall03 PrimProc[456]: 58.933087 |0|0|0| W 28 CAL0000: PrimProc AsyncLoader caught error:  thr_popper: Error building filename for OID 0; fileOp.getFileName failed        
+Aug  5 13:42:35 srvhall03 PrimProc[456]: 35.279803 |0|0|0| W 28 CAL0000: PrimProc AsyncLoader caught error:  thr_popper: Error building filename for OID 0; fileOp.getFileName failed        
+Aug  5 13:43:58 srvhall03 dmlpackageproc[659]: 58.007731 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'c2' 
+Aug  5 13:43:58 srvhall03 dmlpackageproc[659]: 58.097695 |0|0|0| W 21 CAL0002: IDB-2025: Data truncated for column 'c2' 

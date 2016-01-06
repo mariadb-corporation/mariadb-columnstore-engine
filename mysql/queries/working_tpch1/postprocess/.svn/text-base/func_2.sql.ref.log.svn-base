@@ -1,0 +1,2 @@
+func_concat	concat(r_name, n_name)	greatest(r_name, n_name)	least(r_name, n_name)	lcase(n_name)	func_left	length(n_name)	locate('HI', n_name)	lower(n_name)	func_lpad	position('HI' in n_name)	func_replace	func_right	func_rpad	func_space	func_substr
+ARGENTINA,AMERICA	AMERICAARGENTINA	ARGENTINA	AMERICA	argentina	ARGENT	9	0	argentina	ARGENTIN	0	ARGENTINA	ARGENT	ARGENTIN	 	L FOXE

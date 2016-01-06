@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/4151/trunk/queries/nightly/demo/rebuild
+END
+importAll.sh
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/genii/mysql/!svn/ver/4151/trunk/queries/nightly/demo/rebuild/importAll.sh
+END

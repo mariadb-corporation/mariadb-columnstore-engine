@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative
+END
+qreqdoc.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative/qreqdoc.negative.sql
+END
+q2.3.10.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative/q2.3.10.negative.sql
+END
+q3.2.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative/q3.2.negative.sql
+END
+q2.3.12.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative/q2.3.12.negative.sql
+END
+q3.3.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative/q3.3.negative.sql
+END
+q3.4.negative.sql
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative/q3.4.negative.sql
+END
+q3.6.sql
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/subselect/negative/q3.6.sql
+END

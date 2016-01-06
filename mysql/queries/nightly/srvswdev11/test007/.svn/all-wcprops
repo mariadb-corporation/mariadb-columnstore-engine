@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/3447/trunk/queries/nightly/srvswdev11/test007
+END
+counts.sh
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3426/trunk/queries/nightly/srvswdev11/test007/counts.sh
+END
+go7.sh
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/genii/mysql/!svn/ver/3447/trunk/queries/nightly/srvswdev11/test007/go7.sh
+END
+load.sql
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/1428/trunk/queries/nightly/srvswdev11/test007/load.sql
+END
+update.sql
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1428/trunk/queries/nightly/srvswdev11/test007/update.sql
+END
+create.sql
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1677/trunk/queries/nightly/srvswdev11/test007/create.sql
+END

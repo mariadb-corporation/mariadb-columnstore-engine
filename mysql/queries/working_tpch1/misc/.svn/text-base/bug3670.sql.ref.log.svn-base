@@ -1,0 +1,3 @@
+ERROR 138 (HY000) at line 4: IDB-1001: Function 'set_user_var' can only be used in the outermost select or order by clause and cannot be used in conjunction with an aggregate function.
+id	month	season
+1	Jan	Winter

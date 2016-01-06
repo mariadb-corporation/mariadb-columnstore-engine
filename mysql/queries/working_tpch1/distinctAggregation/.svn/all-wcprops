@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/distinctAggregation
+END
+distinctlineitem1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/distinctAggregation/distinctlineitem1.sql
+END
+distinctNation1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/distinctAggregation/distinctNation1.sql
+END
+distinctorders.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/distinctAggregation/distinctorders.sql.ref.log
+END
+distinctorders.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/distinctAggregation/distinctorders.sql
+END
+distinctpart.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/distinctAggregation/distinctpart.sql.ref.log
+END
+distinctlineitem1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/distinctAggregation/distinctlineitem1.sql.ref.log
+END
+distinctNation1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/genii/mysql/!svn/ver/1808/trunk/queries/working_tpch1/distinctAggregation/distinctNation1.sql.ref.log
+END
+distinctpart.sql
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/distinctAggregation/distinctpart.sql
+END

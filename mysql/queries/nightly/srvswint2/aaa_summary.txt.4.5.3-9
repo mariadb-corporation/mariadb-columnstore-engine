@@ -1,0 +1,22 @@
+Query Status:  Green
+DDL/DML Status:  Green
+
+Query Time In Seconds
+---------------------------------------
+Total 71.22
+
+Blocks Touched
+---------------------------------------
+Total 5962280
+
+Blocks Read From Disk
+---------------------------------------
+Total 5350064
+
+Casual Partitioning Blocks Eliminated
+---------------------------------------
+Total 185289
+
+DDL/DML Time In Seconds
+---------------------------------------
+Total 

@@ -1,0 +1,13 @@
+select count(distinct p_mfgr), sum(p_partkey), avg(distinct p_partkey) from part;
+select count(distinct p_type), count(distinct p_brand), count(p_partkey) from part;
+select count(p_partkey), count(distinct p_type), count(distinct p_brand), count(p_size) from part;
+select count(p_partkey), count(distinct p_type), count(distinct p_brand) from part;
+select count(distinct p_type), count(distinct p_brand) from part;
+select count(distinct p_type), count(distinct p_brand), count(p_brand), count(p_type) from part;
+select count(p_brand), count(p_type), count(distinct p_type), count(distinct p_brand) from part;
+select count(distinct p_size), avg(distinct p_size), sum(distinct p_size) from part;
+select count(distinct p_container), sum(distinct p_partkey) from part;
+select count(p_container), sum(p_partkey), count(*) from part;
+select sum(p_partkey), count(distinct p_container), sum(distinct p_partkey), count(p_container) from part;
+select count(distinct p_type), sum(distinct p_size) from part;
+select count(distinct p_name) from part;

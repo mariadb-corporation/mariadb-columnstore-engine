@@ -1,0 +1,1 @@
+select col1%75000 from (select count(r_regionkey) col1 from region) xxx;

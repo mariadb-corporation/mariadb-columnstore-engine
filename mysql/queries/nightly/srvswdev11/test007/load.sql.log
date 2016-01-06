@@ -1,0 +1,8 @@
+--------------
+load data infile '/tmp/test007.tbl' into table test007 fields terminated by '|'
+--------------
+
+Query OK, 50000 rows affected (3.35 sec)
+Records: 50000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye

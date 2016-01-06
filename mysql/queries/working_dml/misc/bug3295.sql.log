@@ -1,0 +1,17 @@
+ERROR 138 (HY000) at line 3: Cannot execute the statement. DBRM is read only!
+ERROR 138 (HY000) at line 4: Cannot execute the statement. DBRM is read only!
+ERROR 1146 (42S02) at line 6: Table 'dmlc.visit' doesn't exist
+ERROR 1146 (42S02) at line 7: Table 'dmlc.visit' doesn't exist
+ERROR 1146 (42S02) at line 8: Table 'dmlc.visit' doesn't exist
+ERROR 1146 (42S02) at line 9: Table 'dmlc.visit' doesn't exist
+ERROR 1146 (42S02) at line 10: Table 'dmlc.visit' doesn't exist
+ERROR 1146 (42S02) at line 11: Table 'dmlc.client' doesn't exist
+ERROR 1146 (42S02) at line 12: Table 'dmlc.client' doesn't exist
+ERROR 1146 (42S02) at line 13: Table 'dmlc.client' doesn't exist
+ERROR 1146 (42S02) at line 14: Table 'dmlc.client' doesn't exist
+ERROR 1146 (42S02) at line 15: Table 'dmlc.client' doesn't exist
+ERROR 1146 (42S02) at line 16: Table 'dmlc.client' doesn't exist
+ERROR 1146 (42S02) at line 17: Table 'dmlc.client' doesn't exist
+ERROR 1146 (42S02) at line 19: Table 'dmlc.visit' doesn't exist
+ERROR 1146 (42S02) at line 36: Table 'dmlc.visit' doesn't exist
+ERROR 1146 (42S02) at line 56: Table 'dmlc.visit' doesn't exist

@@ -1,0 +1,1 @@
+ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/usr/local/Calpont/mysql/lib/mysql/mysql.sock' (111)

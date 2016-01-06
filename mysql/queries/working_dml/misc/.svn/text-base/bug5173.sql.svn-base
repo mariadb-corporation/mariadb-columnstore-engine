@@ -1,0 +1,10 @@
+drop table if exists qadefaulttest;
+create table qadefaulttest (cidx int) engine=infinidb;
+ALTER TABLE qadefaulttest ADD column MYDOUBLE2 DOUBLE not null DEFAULT -88.88;
+insert into qadefaulttest values (1, -88.88);
+select * from qadefaulttest;
+ALTER TABLE qadefaulttest ADD column MYFLOAT3 FLOAT not null DEFAULT -88.88;
+select * from qadefaulttest;
+ALTER TABLE qadefaulttest ADD column MYDECIMAL2 DECIMAL(4,2) not null DEFAULT -88.88;
+select * from qadefaulttest;
+drop table qadefaulttest;

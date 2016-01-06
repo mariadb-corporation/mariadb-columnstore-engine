@@ -1,0 +1,16 @@
+select cidx, CCHAR1, MID(CCHAR1,1) from datatypetestm;
+select cidx, CCHAR7, MID(CCHAR7,1) from datatypetestm;
+select cidx, CCHAR8, MID(CCHAR8,1) from datatypetestm;
+select cidx, CCHAR9, MID(CCHAR9,1) from datatypetestm;
+select cidx, CCHAR9, MID(CCHAR9 FROM 1) from datatypetestm;
+select cidx, CCHAR255, MID(CCHAR255,1) from datatypetestm;
+select cidx, CVCHAR1, MID(CVCHAR1,1) from datatypetestm;
+select cidx, CVCHAR6, MID(CVCHAR6,1) from datatypetestm;
+select cidx, CVCHAR255, MID(CVCHAR255 FROM 1) from datatypetestm;
+select cidx, CVCHAR255, MID(CVCHAR255,1,1) from datatypetestm;
+select cidx, CCHAR1 from datatypetestm order by MID(CCHAR1,1), cidx;
+select cidx, CCHAR5 from datatypetestm order by MID(CCHAR5,1), cidx;
+select cidx, CCHAR9 from datatypetestm order by MID(CCHAR9,1,1), cidx;
+select cidx, CCHAR9 from datatypetestm order by MID(CCHAR9 FROM 1 FOR 2), cidx;
+select cidx, CCHAR9 from datatypetestm order by MID(CCHAR9 FROM 1 FOR 3), cidx;
+select cidx, CCHAR255 from datatypetestm order by MID(CCHAR255,1), cidx;

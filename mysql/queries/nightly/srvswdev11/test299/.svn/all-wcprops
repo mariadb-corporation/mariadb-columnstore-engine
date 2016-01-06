@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/4155/trunk/queries/nightly/srvswdev11/test299
+END
+idbstrcoll.csv
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/4137/trunk/queries/nightly/srvswdev11/test299/idbstrcoll.csv
+END
+go299.sh
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/4142/trunk/queries/nightly/srvswdev11/test299/go299.sh
+END
+create_idbstrcoll.sql
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/4137/trunk/queries/nightly/srvswdev11/test299/create_idbstrcoll.sql
+END

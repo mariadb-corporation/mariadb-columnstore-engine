@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/genii/mysql/!svn/ver/3629/trunk/queries/staging/analyticFunctions
+END
+window.expected.out
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/3344/trunk/queries/staging/analyticFunctions/window.expected.out
+END
+READ-ME-windows_function_regression.test
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/genii/mysql/!svn/ver/3344/trunk/queries/staging/analyticFunctions/READ-ME-windows_function_regression.test
+END
+window.sql
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3344/trunk/queries/staging/analyticFunctions/window.sql
+END
+create_table.sql.log
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/3344/trunk/queries/staging/analyticFunctions/create_table.sql.log
+END

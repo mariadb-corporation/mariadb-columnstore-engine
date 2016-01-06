@@ -1,0 +1,27 @@
+SELECT DATE_FORMAT('2003-10-03',GET_FORMAT(DATE,'EUR'));
+SELECT STR_TO_DATE('10.31.2003',GET_FORMAT(DATE,'USA'));
+SELECT DATE_FORMAT(cdate,GET_FORMAT(DATE,'EUR')) from datatypetestm;
+SELECT DATE_FORMAT(cdate,GET_FORMAT(DATE,'eur')) from datatypetestm;
+SELECT DATE_FORMAT(cdate,GET_FORMAT(DATE,'USA')) from datatypetestm;
+SELECT DATE_FORMAT(cdate,GET_FORMAT(DATE,'usa')) from datatypetestm;
+SELECT DATE_FORMAT(cdate,GET_FORMAT(DATE,'ISO')) from datatypetestm;
+SELECT DATE_FORMAT(cdate,GET_FORMAT(DATE,'JIS')) from datatypetestm;
+SELECT DATE_FORMAT(cdate,GET_FORMAT(DATE,'INTERNAL')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'EUR')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'eur')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'USA')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'usa')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'ISO')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'JIS')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'INTERNAL')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(time,'EUR')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(time,'eur')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(time,'USA')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(time,'usa')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(time,'ISO')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(time,'JIS')) from datatypetestm;
+SELECT DATE_FORMAT(cdatetime,GET_FORMAT(time,'INTERNAL')) from datatypetestm;
+SELECT cdate from datatypetestm where DATE_FORMAT(cdate,GET_FORMAT(DATE,'EUR')) <> 's';
+SELECT cdatetime from datatypetestm where DATE_FORMAT(cdatetime,GET_FORMAT(DATEtime,'usa')) <> 's';
+SELECT cdatetime from datatypetestm where DATE_FORMAT(cdatetime,GET_FORMAT(time,'jis')) <> 's';
+

@@ -1,0 +1,41 @@
+Creating tables...
+Generating import file...
+Import into staging table...
+Locale is : C
+
+Using table OID 62420 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62420_D20150115_T211001_Job_62420.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62420.log
+2015-01-15 21:10:01 (32119) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62420_D20150115_T211001_Job_62420.xml
+2015-01-15 21:10:01 (32119) INFO : Job file loaded, run time for this step : 0.999958 seconds
+2015-01-15 21:10:01 (32119) INFO : PreProcessing check starts
+2015-01-15 21:10:01 (32119) INFO : PreProcessing check completed
+2015-01-15 21:10:01 (32119) INFO : preProcess completed, run time for this step : 0.0115581 seconds
+2015-01-15 21:10:01 (32119) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:10:01 (32119) INFO : [0;1mReading input from STDIN to import into table dmlc.test012_staging...[0;39m
+2015-01-15 21:10:01 (32119) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:10:09 (32119) INFO : For table dmlc.test012_staging: 1000000 rows processed and 1000000 rows inserted.
+2015-01-15 21:10:09 (32119) INFO : Bulk load completed, total run time : 9.16405 seconds
+
+Import into fact table...
+Locale is : C
+
+Using table OID 62412 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/62412_D20150115_T211009_Job_62412.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_62412.log
+2015-01-15 21:10:09 (32523) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/62412_D20150115_T211009_Job_62412.xml
+2015-01-15 21:10:09 (32523) INFO : Job file loaded, run time for this step : 0.19247 seconds
+2015-01-15 21:10:09 (32523) INFO : PreProcessing check starts
+2015-01-15 21:10:10 (32523) INFO : PreProcessing check completed
+2015-01-15 21:10:10 (32523) INFO : preProcess completed, run time for this step : 0.0436308 seconds
+2015-01-15 21:10:10 (32523) INFO : No of Read Threads Spawned = 1
+2015-01-15 21:10:10 (32523) INFO : [0;1mReading input from STDIN to import into table dmlc.test012_fact...[0;39m
+2015-01-15 21:10:10 (32523) INFO : No of Parse Threads Spawned = 3
+2015-01-15 21:10:10 (32523) INFO : For table dmlc.test012_fact: 1000000 rows processed and 1000000 rows inserted.
+2015-01-15 21:10:11 (32523) INFO : Bulk load completed, total run time : 1.26241 seconds
+
+Running DML and DDL script...
+Running validation queries...
+All done.

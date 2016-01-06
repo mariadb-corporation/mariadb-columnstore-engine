@@ -1,0 +1,409 @@
+Creating tpch tables in tpch1.
+Creating tpch tables in dml.
+Running create_datatypetestm.sql.
+Running create_datatypetestm1.sql.
+Running create_datatypetestm2.sql.
+Running create_datatypetestm3.sql.
+Running create_dtypes.
+Running create_simple_subselect.sql.
+Running create_simple_outer.sql.
+Running create_table0_char.sql.
+Running create_table100_char.sql.
+Running create_table10_char.sql.
+Running create_table1_char.sql.
+Running create_wide_tables.sql.
+
+Creating / importing into ssb tables.
+Creating ssb.customer using engine infinidb.
+Locale is : ja_JP.UTF-8
+
+Using table OID 95075 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/95075_D20150804_T175715_S221287_Job_95075.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_95075.log
+2015-08-04 17:57:15 (49507) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/95075_D20150804_T175715_S221287_Job_95075.xml
+2015-08-04 17:57:15 (49507) INFO : Job file loaded, run time for this step : 0.303565 seconds
+2015-08-04 17:57:15 (49507) INFO : PreProcessing check starts
+2015-08-04 17:57:15 (49507) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/ssb/1G/customer.tbl
+2015-08-04 17:57:15 (49507) INFO : PreProcessing check completed
+2015-08-04 17:57:15 (49507) INFO : preProcess completed, run time for this step : 0.0206239 seconds
+2015-08-04 17:57:15 (49507) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:57:15 (49507) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:57:15 (49507) INFO : For table ssb.customer: 30000 rows processed and 30000 rows inserted.
+2015-08-04 17:57:16 (49507) INFO : Bulk load completed, total run time : 1.33593 seconds
+
+Creating ssb.lineorder using engine infinidb.
+Locale is : ja_JP.UTF-8
+
+Using table OID 95091 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/95091_D20150804_T175717_S289611_Job_95091.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_95091.log
+2015-08-04 17:57:17 (49760) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/95091_D20150804_T175717_S289611_Job_95091.xml
+2015-08-04 17:57:17 (49760) INFO : Job file loaded, run time for this step : 0.255453 seconds
+2015-08-04 17:57:17 (49760) INFO : PreProcessing check starts
+2015-08-04 17:57:17 (49760) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/ssb/1G/lineorder.tbl
+2015-08-04 17:57:17 (49760) INFO : PreProcessing check completed
+2015-08-04 17:57:17 (49760) INFO : preProcess completed, run time for this step : 0.0153742 seconds
+2015-08-04 17:57:17 (49760) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:57:17 (49760) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:57:37 (49760) INFO : For table ssb.lineorder: 6001215 rows processed and 6001215 rows inserted.
+2015-08-04 17:57:38 (49760) INFO : Bulk load completed, total run time : 21.3143 seconds
+
+Creating ssb.part using engine infinidb.
+Locale is : ja_JP.UTF-8
+
+Using table OID 95111 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/95111_D20150804_T175747_S139386_Job_95111.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_95111.log
+2015-08-04 17:57:47 (50859) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/95111_D20150804_T175747_S139386_Job_95111.xml
+2015-08-04 17:57:47 (50859) INFO : Job file loaded, run time for this step : 0.256044 seconds
+2015-08-04 17:57:47 (50859) INFO : PreProcessing check starts
+2015-08-04 17:57:47 (50859) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/ssb/1G/part.tbl
+2015-08-04 17:57:47 (50859) INFO : PreProcessing check completed
+2015-08-04 17:57:47 (50859) INFO : preProcess completed, run time for this step : 0.0116341 seconds
+2015-08-04 17:57:47 (50859) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:57:47 (50859) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:57:48 (50859) INFO : For table ssb.part: 200000 rows processed and 200000 rows inserted.
+2015-08-04 17:57:48 (50859) INFO : Bulk load completed, total run time : 1.43014 seconds
+
+Creating ssb.supplier using engine infinidb.
+Locale is : ja_JP.UTF-8
+
+Using table OID 95126 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/95126_D20150804_T175750_S172004_Job_95126.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_95126.log
+2015-08-04 17:57:50 (51331) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/95126_D20150804_T175750_S172004_Job_95126.xml
+2015-08-04 17:57:50 (51331) INFO : Job file loaded, run time for this step : 0.266015 seconds
+2015-08-04 17:57:50 (51331) INFO : PreProcessing check starts
+2015-08-04 17:57:50 (51331) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/ssb/1G/supplier.tbl
+2015-08-04 17:57:50 (51331) INFO : PreProcessing check completed
+2015-08-04 17:57:50 (51331) INFO : preProcess completed, run time for this step : 0.0119538 seconds
+2015-08-04 17:57:50 (51331) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:57:50 (51331) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:57:50 (51331) INFO : For table ssb.supplier: 10000 rows processed and 10000 rows inserted.
+2015-08-04 17:57:51 (51331) INFO : Bulk load completed, total run time : 1.35979 seconds
+
+Creating ssb.dateinfo using engine myisam.
+Loading data into ssb.dateinfo using load data infile.
+
+Importing rows into tpch1.wide.
+Locale is : ja_JP.UTF-8
+
+Using table OID 94973 as the default JOB ID
+Input file(s) will be read from : STDIN
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94973_D20150804_T175751_S874711_Job_94973.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94973.log
+2015-08-04 17:57:51 (51481) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94973_D20150804_T175751_S874711_Job_94973.xml
+2015-08-04 17:57:51 (51481) INFO : Job file loaded, run time for this step : 0.266263 seconds
+2015-08-04 17:57:51 (51481) INFO : PreProcessing check starts
+2015-08-04 17:57:52 (51481) INFO : PreProcessing check completed
+2015-08-04 17:57:52 (51481) INFO : preProcess completed, run time for this step : 0.21172 seconds
+2015-08-04 17:57:52 (51481) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:57:52 (51481) INFO : [0;1mReading input from STDIN to import into table tpch1.wide...[0;39m
+2015-08-04 17:57:52 (51481) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:57:53 (51481) INFO : For table tpch1.wide: 100000 rows processed and 100000 rows inserted.
+2015-08-04 17:57:54 (51481) INFO : Bulk load completed, total run time : 2.51127 seconds
+
+
+Importing into tpch1 tables.
+
+Running colxml with the following parameters:
+2015-08-04 17:57:54 (51605) INFO : 
+	Schema:	tpch1
+	Tables:	region  nation  customer  part  supplier  partsupp  orders  lineitem  
+	Load Files: 
+	-C	\
+	-b	0
+	-c	1048576
+	-d	|
+	-e	10
+	-j	299
+	-n	
+	-p	/usr/local/Calpont/data/bulk/job
+	-r	5
+	-s	
+	-u	
+	-w	10485760
+	-x	tbl
+
+Creating job description file: /usr/local/Calpont/data/bulk/job/Job_299.xml
+File completed for tables:
+	tpch1.region
+	tpch1.nation
+	tpch1.customer
+	tpch1.part
+	tpch1.supplier
+	tpch1.partsupp
+	tpch1.orders
+	tpch1.lineitem
+	
+Normal exit.
+Locale is : ja_JP.UTF-8
+
+Input file(s) will be read from : /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/
+Job description file : /usr/local/Calpont/data/bulk/job/Job_299.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_299.log
+2015-08-04 17:57:55 (51765) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/job/Job_299.xml
+2015-08-04 17:57:55 (51765) INFO : Job file loaded, run time for this step : 0.559485 seconds
+2015-08-04 17:57:55 (51765) INFO : PreProcessing check starts
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/region.tbl
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/nation.tbl
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/customer.tbl
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/part.tbl
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/supplier.tbl
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/partsupp.tbl
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/orders.tbl
+2015-08-04 17:57:55 (51765) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/lineitem.tbl
+2015-08-04 17:57:56 (51765) INFO : PreProcessing check completed
+2015-08-04 17:57:56 (51765) INFO : preProcess completed, run time for this step : 1.44722 seconds
+2015-08-04 17:57:56 (51765) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:57:56 (51765) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:57:56 (51765) INFO : For table tpch1.region: 5 rows processed and 5 rows inserted.
+2015-08-04 17:57:57 (51765) INFO : For table tpch1.nation: 25 rows processed and 25 rows inserted.
+2015-08-04 17:58:00 (51765) INFO : For table tpch1.customer: 150000 rows processed and 150000 rows inserted.
+2015-08-04 17:58:03 (51765) INFO : For table tpch1.part: 200000 rows processed and 200000 rows inserted.
+2015-08-04 17:58:03 (51765) INFO : For table tpch1.supplier: 10000 rows processed and 10000 rows inserted.
+2015-08-04 17:58:10 (51765) INFO : For table tpch1.partsupp: 800000 rows processed and 800000 rows inserted.
+2015-08-04 17:58:21 (51765) INFO : For table tpch1.orders: 1500000 rows processed and 1500000 rows inserted.
+2015-08-04 17:59:14 (51765) INFO : For table tpch1.lineitem: 6001215 rows processed and 6001215 rows inserted.
+2015-08-04 17:59:15 (51765) INFO : Bulk load completed, total run time : 80.0406 seconds
+
+
+Running create_datatypetestm.sql against dml.
+Running create_simple_subselect.sql against dml.
+
+Importing into dml tables.
+Locale is : ja_JP.UTF-8
+
+Using table OID 94403 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94403_D20150804_T175923_S244051_Job_94403.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94403.log
+2015-08-04 17:59:23 (56256) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94403_D20150804_T175923_S244051_Job_94403.xml
+2015-08-04 17:59:23 (56256) INFO : Job file loaded, run time for this step : 0.312558 seconds
+2015-08-04 17:59:23 (56256) INFO : PreProcessing check starts
+2015-08-04 17:59:23 (56256) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/region.tbl
+2015-08-04 17:59:23 (56256) INFO : PreProcessing check completed
+2015-08-04 17:59:23 (56256) INFO : preProcess completed, run time for this step : 0.107262 seconds
+2015-08-04 17:59:23 (56256) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:23 (56256) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:59:23 (56256) INFO : For table dml.region: 5 rows processed and 5 rows inserted.
+2015-08-04 17:59:24 (56256) INFO : Bulk load completed, total run time : 1.42554 seconds
+
+Locale is : ja_JP.UTF-8
+
+Using table OID 94396 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94396_D20150804_T175924_S800636_Job_94396.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94396.log
+2015-08-04 17:59:24 (56393) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94396_D20150804_T175924_S800636_Job_94396.xml
+2015-08-04 17:59:24 (56393) INFO : Job file loaded, run time for this step : 0.246039 seconds
+2015-08-04 17:59:24 (56393) INFO : PreProcessing check starts
+2015-08-04 17:59:24 (56393) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/nation.tbl
+2015-08-04 17:59:24 (56393) INFO : PreProcessing check completed
+2015-08-04 17:59:24 (56393) INFO : preProcess completed, run time for this step : 0.109411 seconds
+2015-08-04 17:59:24 (56393) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:24 (56393) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:59:24 (56393) INFO : For table dml.nation: 25 rows processed and 25 rows inserted.
+2015-08-04 17:59:26 (56393) INFO : Bulk load completed, total run time : 2.30527 seconds
+
+Locale is : ja_JP.UTF-8
+
+Using table OID 94409 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94409_D20150804_T175927_S264483_Job_94409.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94409.log
+2015-08-04 17:59:27 (56505) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94409_D20150804_T175927_S264483_Job_94409.xml
+2015-08-04 17:59:27 (56505) INFO : Job file loaded, run time for this step : 0.256786 seconds
+2015-08-04 17:59:27 (56505) INFO : PreProcessing check starts
+2015-08-04 17:59:27 (56505) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/customer.tbl
+2015-08-04 17:59:27 (56505) INFO : PreProcessing check completed
+2015-08-04 17:59:27 (56505) INFO : preProcess completed, run time for this step : 0.32936 seconds
+2015-08-04 17:59:27 (56505) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:27 (56505) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:59:30 (56505) INFO : For table dml.customer: 150000 rows processed and 150000 rows inserted.
+2015-08-04 17:59:31 (56505) INFO : Bulk load completed, total run time : 4.59972 seconds
+
+Locale is : ja_JP.UTF-8
+
+Using table OID 94455 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94455_D20150804_T175932_S029703_Job_94455.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94455.log
+2015-08-04 17:59:32 (56707) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94455_D20150804_T175932_S029703_Job_94455.xml
+2015-08-04 17:59:32 (56707) INFO : Job file loaded, run time for this step : 0.253352 seconds
+2015-08-04 17:59:32 (56707) INFO : PreProcessing check starts
+2015-08-04 17:59:32 (56707) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/part.tbl
+2015-08-04 17:59:32 (56707) INFO : PreProcessing check completed
+2015-08-04 17:59:32 (56707) INFO : preProcess completed, run time for this step : 0.335783 seconds
+2015-08-04 17:59:32 (56707) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:32 (56707) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:59:35 (56707) INFO : For table dml.part: 200000 rows processed and 200000 rows inserted.
+2015-08-04 17:59:36 (56707) INFO : Bulk load completed, total run time : 4.63905 seconds
+
+Locale is : ja_JP.UTF-8
+
+Using table OID 94436 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94436_D20150804_T175936_S814286_Job_94436.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94436.log
+2015-08-04 17:59:36 (56926) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94436_D20150804_T175936_S814286_Job_94436.xml
+2015-08-04 17:59:36 (56926) INFO : Job file loaded, run time for this step : 0.253098 seconds
+2015-08-04 17:59:36 (56926) INFO : PreProcessing check starts
+2015-08-04 17:59:36 (56926) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/supplier.tbl
+2015-08-04 17:59:37 (56926) INFO : PreProcessing check completed
+2015-08-04 17:59:37 (56926) INFO : preProcess completed, run time for this step : 0.1652 seconds
+2015-08-04 17:59:37 (56926) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:37 (56926) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:59:37 (56926) INFO : For table dml.supplier: 10000 rows processed and 10000 rows inserted.
+2015-08-04 17:59:38 (56926) INFO : Bulk load completed, total run time : 1.44879 seconds
+
+Locale is : ja_JP.UTF-8
+
+Using table OID 94448 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94448_D20150804_T175938_S405838_Job_94448.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94448.log
+2015-08-04 17:59:38 (57012) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94448_D20150804_T175938_S405838_Job_94448.xml
+2015-08-04 17:59:38 (57012) INFO : Job file loaded, run time for this step : 0.244389 seconds
+2015-08-04 17:59:38 (57012) INFO : PreProcessing check starts
+2015-08-04 17:59:38 (57012) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/partsupp.tbl
+2015-08-04 17:59:38 (57012) INFO : PreProcessing check completed
+2015-08-04 17:59:38 (57012) INFO : preProcess completed, run time for this step : 0.0741889 seconds
+2015-08-04 17:59:38 (57012) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:38 (57012) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:59:43 (57012) INFO : For table dml.partsupp: 800000 rows processed and 800000 rows inserted.
+2015-08-04 17:59:44 (57012) INFO : Bulk load completed, total run time : 6.43366 seconds
+
+Locale is : ja_JP.UTF-8
+
+Using table OID 94423 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94423_D20150804_T175945_S107002_Job_94423.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94423.log
+2015-08-04 17:59:45 (57274) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94423_D20150804_T175945_S107002_Job_94423.xml
+2015-08-04 17:59:45 (57274) INFO : Job file loaded, run time for this step : 0.246732 seconds
+2015-08-04 17:59:45 (57274) INFO : PreProcessing check starts
+2015-08-04 17:59:45 (57274) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/orders.tbl
+2015-08-04 17:59:45 (57274) INFO : PreProcessing check completed
+2015-08-04 17:59:45 (57274) INFO : preProcess completed, run time for this step : 0.214984 seconds
+2015-08-04 17:59:45 (57274) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:45 (57274) INFO : No of Parse Threads Spawned = 3
+2015-08-04 17:59:56 (57274) INFO : For table dml.orders: 1500000 rows processed and 1500000 rows inserted.
+2015-08-04 17:59:56 (57274) INFO : Bulk load completed, total run time : 11.8709 seconds
+
+Locale is : ja_JP.UTF-8
+
+Using table OID 94471 as the default JOB ID
+Input file(s) will be read from : /home/calpont/genii/mysql/queries/nightly/srvswdev11/test000
+Job description file : /usr/local/Calpont/data/bulk/tmpjob/94471_D20150804_T175957_S284869_Job_94471.xml
+Log file for this job: /usr/local/Calpont/data/bulk/log/Job_94471.log
+2015-08-04 17:59:57 (57756) INFO : successfully loaded job file /usr/local/Calpont/data/bulk/tmpjob/94471_D20150804_T175957_S284869_Job_94471.xml
+2015-08-04 17:59:57 (57756) INFO : Job file loaded, run time for this step : 0.262116 seconds
+2015-08-04 17:59:57 (57756) INFO : PreProcessing check starts
+2015-08-04 17:59:57 (57756) INFO : input data file /usr/local/Calpont/data/bulk/data/import_local/tpch/1g/lineitem.tbl
+2015-08-04 17:59:57 (57756) INFO : PreProcessing check completed
+2015-08-04 17:59:57 (57756) INFO : preProcess completed, run time for this step : 0.283668 seconds
+2015-08-04 17:59:57 (57756) INFO : No of Read Threads Spawned = 1
+2015-08-04 17:59:57 (57756) INFO : No of Parse Threads Spawned = 3
+2015-08-04 18:00:44 (57756) INFO : For table dml.lineitem: 6001215 rows processed and 6001215 rows inserted.
+2015-08-04 18:00:45 (57756) INFO : Bulk load completed, total run time : 48.0299 seconds
+
+
+All done.
+
+ ###################################################################
+              Running query test on user 'dml'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'test000/dmlSchemaValidation'
+
+Run time in seconds: 39
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       1             0           0          0             1              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+
+Totals:
+Total Local Passed   = 1
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 1
+Total Compare Failed = 0
+
+
+QUERYTESTER RUN COMPLETED
+
+ ###################################################################
+              Running query test on user 'ssb'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'test000/ssbSchemaValidation'
+
+Run time in seconds: 18
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       1             0           0          0             1              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+
+Totals:
+Total Local Passed   = 1
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 1
+Total Compare Failed = 0
+
+
+QUERYTESTER RUN COMPLETED
+
+ ###################################################################
+              Running query test on user 'tpch1'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'test000/tpchSchemaValidation'
+
+Run time in seconds: 55
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      20             0           0          0            20              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+
+Totals:
+Total Local Passed   = 20
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 20
+Total Compare Failed = 0
+
+
+QUERYTESTER RUN COMPLETED

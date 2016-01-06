@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test510
+END
+go510.sh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test510/go510.sh
+END
+joins.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/2009/trunk/queries/nightly/demo/test510/joins.sql.ref.log
+END
+joins.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2009/trunk/queries/nightly/demo/test510/joins.sql
+END

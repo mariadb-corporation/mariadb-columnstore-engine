@@ -1,0 +1,2 @@
+max(from_days(l_orderkey%1000 + 735000))
+2015-02-05

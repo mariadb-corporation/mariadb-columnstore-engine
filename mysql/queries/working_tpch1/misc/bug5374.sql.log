@@ -1,0 +1,15 @@
+r_name	n_name
+AFRICA	NULL
+AMERICA	NULL
+ASIA	NULL
+EUROPE	NULL
+MIDDLE EAST	NULL
+n_nationkey	r_regionkey
+0	0
+1	1
+n_nationkey
+0
+1
+n_nationkey	r_regionkey
+0	0
+1	1

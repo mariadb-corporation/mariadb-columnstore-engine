@@ -1,0 +1,6 @@
+c1	c2
+1	x
+caldroppartitionsbyvalue('bug5324','c1','1','1')
+Partitions are dropped successfully
+c1	c2
+2	y

@@ -1,0 +1,46 @@
+10
+
+dir
+4190
+http://srvengcm1.calpont.com/svn/genii/mysql/trunk/queries/working_ssb_compareLogOnly
+http://srvengcm1.calpont.com/svn/genii/mysql
+
+
+
+2013-04-01T18:55:38.668925Z
+3547
+xlou
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+16e96af4-720f-0410-9b53-db7f65d65aaa
+
+multijoin_ssb_dim_2colgrp
+dir
+
+ssb
+dir
+
+sub
+dir
+
+multijoin_ssb_dim
+dir
+
+misc
+dir
+
+ssb_dim_mixed_outer_2colgrp
+dir
+

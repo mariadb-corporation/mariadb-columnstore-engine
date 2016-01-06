@@ -1,0 +1,2 @@
+extract(hour from c1)	extract(year from c2)	extract(month from c3)	extract(minute from c4)
+10	2000	11	22

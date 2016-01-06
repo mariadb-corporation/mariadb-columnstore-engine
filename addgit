@@ -1,0 +1,10 @@
+git add oam/oamcpp/liboamcpp.cpp
+git add oamapps/postConfigure/postConfigure.cpp
+git add oamapps/traphandler/trapHandler.cpp
+git add procmgr/processmanager.cpp
+git add procmon/processmonitor.cpp
+git add snmpd/snmpmanager/snmpmanager.cpp
+git add utils/libxml/nanohttp.c
+git add versioning/BRM/oidserver.cpp
+git add versioning/BRM/sessionmanagerserver.cpp
+git add versioning/BRM/slavecomm.cpp

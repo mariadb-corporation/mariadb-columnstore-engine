@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test501
+END
+q0007.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0007.sql
+END
+getsummary.sh
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/getsummary.sh
+END
+q0008.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0008.sql
+END
+q0009.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0009.sql
+END
+q0001.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0001.sql
+END
+q0010.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0010.sql
+END
+q0011.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0011.sql
+END
+q0002.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0002.sql
+END
+diff.sh
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/diff.sh
+END
+q0003.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0003.sql
+END
+q0004.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0004.sql
+END
+q0005.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0005.sql
+END
+q0006.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2006/trunk/queries/nightly/demo/test501/q0006.sql
+END
+go501.sh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test501/go501.sh
+END

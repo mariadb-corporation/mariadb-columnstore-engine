@@ -1,0 +1,6 @@
+timediff(edate,sdate)
+01:00:00
+00:30:00
+time_to_sec(timediff(edate,sdate))
+3600
+1800

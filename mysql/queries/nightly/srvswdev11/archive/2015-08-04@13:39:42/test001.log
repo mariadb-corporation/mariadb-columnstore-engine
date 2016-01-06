@@ -1,0 +1,416 @@
+
+ ###################################################################
+              Running query test on user 'ssb'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_ssb_compareLogOnly/misc'
+
+Run time in seconds: 50
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      10             0           0          0            10              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_ssb_compareLogOnly/multijoin_ssb_dim'
+
+Run time in seconds: 101
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      12             0           0          0            12              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_ssb_compareLogOnly/multijoin_ssb_dim_2colgrp'
+
+Run time in seconds: 102
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      11             0           0          0            11              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_ssb_compareLogOnly/ssb'
+
+Run time in seconds: 4
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      13             0           0          0            13              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_ssb_compareLogOnly/ssb_dim_mixed_outer_2colgrp'
+
+Run time in seconds: 141
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      11             0           0          0            11              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_ssb_compareLogOnly/sub'
+
+Run time in seconds: 39
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      62             0           0          0            62              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+
+Totals:
+Total Local Passed   = 119
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 119
+Total Compare Failed = 0
+
+
+QUERYTESTER RUN COMPLETED
+
+ ###################################################################
+              Running query test on user 'tpch1'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/aggregation'
+
+Run time in seconds: 6
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      14             0           0          0            14              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/Bug1625'
+
+Run time in seconds: 2
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       4             0           0          0             4              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/distinct'
+
+Run time in seconds: 9
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       7             0           0          0             7              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/distinctAggregation'
+
+Run time in seconds: 26
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       4             0           0          0             4              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/dml'
+
+Run time in seconds: 4
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       4             0           0          0             4              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/group'
+
+Run time in seconds: 10
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      38             0           0          0            38              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/misc'
+
+Run time in seconds: 189
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+     103             0           0          0           102              1
+
+***** TEST FAILED 'working_tpch1/misc' *****
+
+Compare failed - working_tpch1/misc/rename.negative.sql
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/or'
+
+Run time in seconds: 2
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      10             0           0          0            10              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/postprocess'
+
+Run time in seconds: 6
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      18             0           0          0            18              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/qa_fe_cnxExpressions'
+
+Run time in seconds: 31
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      15             0           0          0            15              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/qa_fe_cnxFunctions'
+
+Run time in seconds: 96
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+     170             0           0          0           161              9
+
+***** TEST FAILED 'working_tpch1/qa_fe_cnxFunctions' *****
+
+Compare failed - working_tpch1/qa_fe_cnxFunctions/extract.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/REGEXP.SM.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/repeat.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/REPLACE.SM.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/reserve.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/RIGHT.SL.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/RIGHT.SM.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/ROUND.NM.SEL.sql
+Compare failed - working_tpch1/qa_fe_cnxFunctions/ROUND.NM.sql
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/qa_fe_postProcessedFunctions'
+
+Run time in seconds: 34
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      79             0           0          0            49             30
+
+***** TEST FAILED 'working_tpch1/qa_fe_postProcessedFunctions' *****
+
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/CASE1.SM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/CASE2.DM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/CASE2.NM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/LEFT.SM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/LENGTH.SS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/RIGHT.SM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/ROUND.NL.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/ROUND.NM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/RPAD.SL.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/RPAD.SM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SECOND.DS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SEC_TO_TIME.NS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SIGN.NS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SPACE.SL.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SQRT.NS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SUBSTRING.SM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SUBTIME.DL.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SUBTIME.DM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/SUM.NC.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/TIMEDIFF.DL.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/TIMEDIFF.DM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/TIME_TO_SEC.DS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/TO_DAYS.DS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/TRUNCATE.NL.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/TRUNCATE.NM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/WEEKDAY.DS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/WEEK.DM.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/WEEK.DS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/WEEKOFYEAR.DS.sql
+Compare failed - working_tpch1/qa_fe_postProcessedFunctions/YEARWEEK.DM.sql
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/union'
+
+Run time in seconds: 21
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       7             0           0          0             7              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1/view'
+
+Run time in seconds: 1
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       3             0           0          0             3              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+
+Totals:
+Total Local Passed   = 476
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 436
+Total Compare Failed = 40
+
+
+QUERYTESTER RUN COMPLETED
+
+ ###################################################################
+              Running query test on user 'tpch1'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1_calpontonly/iter17Queries'
+
+Run time in seconds: 45
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+      24             0           0          0             0              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+================================================================================
+  RUNNING QUERIES OUT OF DIRECTORY 'working_tpch1_calpontonly/misc'
+
+Run time in seconds: 10
+
+Local Passed  Local Failed  Ref Passed Ref Failed  Compare Passed Compare Failed
+------------  ------------  ---------- ----------  -------------- --------------
+       8             0           0          0             0              0
+
+***** ALL TEST PASSED *****
+================================================================================
+
+
+Totals:
+Total Local Passed   = 32
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 0
+Total Compare Failed = 0
+
+
+QUERYTESTER RUN COMPLETED
+
+ ###################################################################
+              Running query test on user 'tpch1'
+          Running against Local Database(s)
+
+ ###################################################################
+
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/dataValidation' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/functionsAndExpressions' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/misc' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/onClauseJoins' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/qa' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/stddev' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/sub' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/unsigned' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/view' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/wide' directory %%%%%
+
+
+%%%%% No query files in 'working_tpch1_compareLogOnly/windowFunctions' directory %%%%%
+
+
+Totals:
+Total Local Passed   = 0
+Total Local Failed   = 0
+Total Ref Passed     = 0
+Total Ref Failed     = 0
+Total Compare Passed = 0
+Total Compare Failed = 0
+
+
+QUERYTESTER RUN COMPLETED

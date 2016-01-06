@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/genii/mysql/!svn/ver/2363/trunk/queries/nightly/calbench/global_tmp
+END
+calbench_sleep_until.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/2363/trunk/queries/nightly/calbench/global_tmp/calbench_sleep_until.sql
+END
+calbench_start_execute_end.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/2363/trunk/queries/nightly/calbench/global_tmp/calbench_start_execute_end.sql
+END
+load_calbench_metrics1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/genii/mysql/!svn/ver/2363/trunk/queries/nightly/calbench/global_tmp/load_calbench_metrics1.sql
+END

@@ -1,0 +1,187 @@
+Aug  5 13:41:58 srvhall03 PrimProc[456]: 58.867106 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 13:41:58 srvhall03 controllernode[456]: 58.911602 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 13:41:58 srvhall03 PrimProc[456]: 58.911714 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 13:41:58 srvhall03 controllernode[456]: 58.922340 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 13:41:58 srvhall03 PrimProc[456]: 58.922444 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 13:41:58 srvhall03 controllernode[456]: 58.932869 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 13:41:58 srvhall03 PrimProc[456]: 58.932962 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 13:42:35 srvhall03 PrimProc[456]: 35.264952 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 13:42:35 srvhall03 controllernode[456]: 35.279621 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 13:42:35 srvhall03 PrimProc[456]: 35.279702 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.047133 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.099215 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.099402 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.110598 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.110665 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.167731 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.167848 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.222064 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.237538 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.237652 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.247567 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.247652 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.287580 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.287680 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.335867 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.346593 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.346721 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.356481 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.356575 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.398315 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.398410 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.449430 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.459950 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.460077 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.470701 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.470811 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 controllernode[47389]: 32.510604 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.510684 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:32 srvhall03 PrimProc[47389]: 32.563351 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.394736 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:59 srvhall03 joblist[47472]: 59.396845 |2438|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:03:59 srvhall03 controllernode[47389]: 59.414309 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.414423 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.507594 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:59 srvhall03 joblist[47472]: 59.508017 |2438|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:03:59 srvhall03 controllernode[47389]: 59.518118 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.518218 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.617465 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:59 srvhall03 joblist[47472]: 59.618543 |2438|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.679517 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:59 srvhall03 joblist[47472]: 59.681642 |2438|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.743979 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:59 srvhall03 joblist[47472]: 59.746118 |2438|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:03:59 srvhall03 controllernode[47389]: 59.757704 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.757815 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.882433 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:03:59 srvhall03 joblist[47472]: 59.884704 |2438|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:03:59 srvhall03 controllernode[47389]: 59.893490 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:03:59 srvhall03 PrimProc[47389]: 59.893586 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.023693 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.025738 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.037637 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.037770 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.136546 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.136982 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.150492 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.150607 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.249012 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.251109 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.261883 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.262094 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.366007 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.366824 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.383070 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.383208 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.479046 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.481595 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.489369 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.489480 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.594188 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.596580 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.606013 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.606152 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.706930 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.708980 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.717389 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.717505 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.819722 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.822172 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.830464 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.830550 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.933123 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:00 srvhall03 joblist[47472]: 00.935383 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:00 srvhall03 controllernode[47389]: 00.943977 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:00 srvhall03 PrimProc[47389]: 00.944067 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.047851 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.049956 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.063246 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.063328 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.161512 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.163616 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.172984 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.173108 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.274576 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.276473 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.285180 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.285262 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.387083 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.387413 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.399345 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.399422 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.498692 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.499645 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.515674 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.515761 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.610704 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.612814 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.623892 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.623992 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.726940 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.729556 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.739968 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.740075 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.842848 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.844984 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.853928 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.854006 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.957381 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:01 srvhall03 joblist[47472]: 01.958312 |2439|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:01 srvhall03 controllernode[47389]: 01.980199 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:01 srvhall03 PrimProc[47389]: 01.980292 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.068953 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:02 srvhall03 controllernode[47389]: 02.086162 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.086240 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.181392 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:02 srvhall03 controllernode[47389]: 02.193202 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.193300 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.304209 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:02 srvhall03 controllernode[47389]: 02.323177 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.323290 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.416186 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:02 srvhall03 controllernode[47389]: 02.426789 |0|0|0| C 29 CAL0000: DBRM: OIDManager::getDBRootOfVBOID(): network error         
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.426901 |0|0|0| C 28 CAL0053: PrimProc could not open file for OID 0; fileOp.getFileName failed
+Aug  5 15:04:02 srvhall03 PrimProc[47389]: 02.528695 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.086593 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.226607 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.368370 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.461957 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.561722 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.669515 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.768896 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.874162 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:13 srvhall03 PrimProc[47389]: 13.979611 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:14 srvhall03 PrimProc[47389]: 14.168005 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:14 srvhall03 PrimProc[47389]: 14.275228 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:14 srvhall03 PrimProc[47389]: 14.377022 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.308320 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.420412 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.487306 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.554723 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.665559 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.776284 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.834104 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.891264 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:15 srvhall03 PrimProc[47389]: 15.947944 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.003920 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.061807 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.172911 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.227085 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.281917 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.395162 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.504392 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.615863 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.689777 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.756522 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.869101 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:16 srvhall03 PrimProc[47389]: 16.976303 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:17 srvhall03 PrimProc[47389]: 17.079808 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:17 srvhall03 joblist[47472]: 17.080862 |2457|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:17 srvhall03 PrimProc[47389]: 17.180520 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:17 srvhall03 joblist[47472]: 17.182755 |2457|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:17 srvhall03 PrimProc[47389]: 17.286980 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:17 srvhall03 joblist[47472]: 17.289137 |2457|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:17 srvhall03 PrimProc[47389]: 17.392969 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:17 srvhall03 joblist[47472]: 17.395355 |2457|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         
+Aug  5 15:04:17 srvhall03 PrimProc[47389]: 17.504151 |0|0|0| C 28 CAL0000: Snapshot too old#012         
+Aug  5 15:04:17 srvhall03 joblist[47472]: 17.506310 |2457|0|0| C 05 CAL0000: st: 0 TupleBPS::receiveMultiPrimitiveMessages() caught an exception: IDB-2035: An internal error occurred.  Check the error log file & contact support.#012         

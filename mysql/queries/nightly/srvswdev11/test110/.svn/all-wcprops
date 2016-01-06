@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/3748/trunk/queries/nightly/srvswdev11/test010
+END
+partitions.sql
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/3746/trunk/queries/nightly/srvswdev11/test010/partitions.sql
+END
+bug5237a.sql
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/3748/trunk/queries/nightly/srvswdev11/test010/bug5237a.sql
+END
+bug5237b.sql
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/3748/trunk/queries/nightly/srvswdev11/test010/bug5237b.sql
+END
+go10.sh
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/genii/mysql/!svn/ver/3746/trunk/queries/nightly/srvswdev11/test010/go10.sh
+END
+bug5237c.sql
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/3748/trunk/queries/nightly/srvswdev11/test010/bug5237c.sql
+END
+bug3838.sql
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/3084/trunk/queries/nightly/srvswdev11/test010/bug3838.sql
+END
+create.sql
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/3748/trunk/queries/nightly/srvswdev11/test010/create.sql
+END

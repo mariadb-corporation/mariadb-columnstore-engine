@@ -1,0 +1,2643 @@
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.39 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.36 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.40 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.25 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.36 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.36 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.35 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.15 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.23 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.42 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.51 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.38 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.37 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.34 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.46 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.23 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.43 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.38 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.24 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.15 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.37 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.93 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.39 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.34 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.23 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.62 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.36 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.35 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.34 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.34 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.42 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.35 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.37 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.35 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.57 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.23 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.38 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.33 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.36 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.21 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.35 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.48 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.36 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.17 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.39 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.19 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.16 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.18 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+Bye
+ERROR 122 (HY000) at line 5: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.41 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Query OK, 50000 rows affected (0.20 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=1
+--------------
+
+Query OK, 50000 rows affected (0.22 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye
+ERROR 122 (HY000) at line 1: The system is not yet ready to accept queries
+--------------
+update test007 set c2=0
+--------------
+
+Bye

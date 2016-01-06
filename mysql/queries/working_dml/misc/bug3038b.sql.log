@@ -1,0 +1,5 @@
+ERROR 138 (HY000) at line 6: Cannot execute the statement. DBRM is read only!
+ERROR 138 (HY000) at line 18: Cannot execute the statement. DBRM is read only!
+ERROR 1146 (42S02) at line 46: Table 'dmlc.agg_fact_pageview' doesn't exist
+ERROR 1146 (42S02) at line 249: Table 'dmlc.dim_date' doesn't exist
+ERROR 1146 (42S02) at line 487: Table 'dmlc.dim_date' doesn't exist

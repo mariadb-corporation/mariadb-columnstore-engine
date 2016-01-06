@@ -1,0 +1,13 @@
+Select 'Release     : trunk                         Build Date: Tue Jul 12 22:43:33 2011' colname into @sw_ver_var;
+Select 4 into @pm_count_var;
+Select 1 into @um_count_var;
+Select '13' colname into @max_outstanding_var;
+Select '640M' colname into @pm_max_var;
+Select '' colname into @um_max_var;
+Select '128' colname into @proc_thresh_var;
+Select '2' colname into @conn_per_prim_var;
+Select 'y' colname into @rotating_dest_var;
+Select '' colname into @numthreads_var;
+Select '' colname into @numblockspct_var;
+select 1 into @concurrent_var;
+select 5 into @execs_var;

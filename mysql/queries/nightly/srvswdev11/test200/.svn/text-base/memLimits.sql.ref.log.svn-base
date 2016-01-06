@@ -1,0 +1,49 @@
+count1
+130000000
+count2
+130000000
+sleep(30)
+0
+ERROR 122 (HY000) at line 10: IDB-2003: Aggregation/Distinct memory limit is exceeded.
+sleep(30)
+0
+count4
+100761020
+count5
+100761020
+sleep(30)
+0
+ERROR 122 (HY000) at line 19: IDB-2001: Join or subselect exceeds memory limit.
+sleep(30)
+0
+count7
+88907548
+count8
+88907548
+sleep(30)
+0
+ERROR 122 (HY000) at line 28: IDB-2001: Join or subselect exceeds memory limit.
+sleep(30)
+0
+count10
+136000000
+count11
+136000000
+sleep(30)
+0
+ERROR 122 (HY000) at line 37: IDB-2002: Union memory limit exceeded.
+sleep(60)
+0
+count13
+68000000
+F	count14
+1	68000000
+sleep(30)
+0
+ERROR 122 (HY000) at line 47: IDB-2003: Aggregation/Distinct memory limit is exceeded.
+sleep(30)
+0
+ERROR 122 (HY000) at line 55: CAL0002: Update Failed:  IDB-2001: Join or subselect exceeds memory limit.
+count16
+51372630
+ERROR 122 (HY000) at line 61: IDB-2001: Join or subselect exceeds memory limit.

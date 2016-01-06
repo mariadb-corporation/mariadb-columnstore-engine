@@ -1,0 +1,20 @@
+trim(leading 'A' from r_name)
+FRICA
+MERICA
+SIA
+EUROPE
+MIDDLE EAST
+trim(trailing 'A' from r_name)
+AFRIC
+AMERIC
+ASI
+EUROPE
+MIDDLE EAST
+trim(both 'A' from r_name)
+FRIC
+MERIC
+SI
+EUROPE
+MIDDLE EAST
+r_name
+ASIA

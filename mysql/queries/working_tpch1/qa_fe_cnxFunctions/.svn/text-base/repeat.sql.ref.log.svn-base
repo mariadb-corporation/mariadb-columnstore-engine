@@ -1,0 +1,241 @@
+cidx	CCHAR1	REPEAT(CCHAR1,1)
+1	a	a
+2	a	a
+3	a	a
+4	a	a
+5	a	a
+6	z	z
+7	z	z
+8	z	z
+9	z	z
+10	z	z
+11	NULL	NULL
+cidx	CCHAR1	REPEAT(CCHAR1,0)
+1	a	NULL
+2	a	NULL
+3	a	NULL
+4	a	NULL
+5	a	NULL
+6	z	NULL
+7	z	NULL
+8	z	NULL
+9	z	NULL
+10	z	NULL
+11	NULL	NULL
+cidx	CCHAR1	REPEAT(CCHAR1,1)
+1	a	a
+2	a	a
+3	a	a
+4	a	a
+5	a	a
+6	z	z
+7	z	z
+8	z	z
+9	z	z
+10	z	z
+11	NULL	NULL
+cidx	CCHAR1	REPEAT(CCHAR1,100)
+1	a	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+2	a	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+3	a	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+4	a	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+5	a	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+6	z	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+7	z	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+8	z	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+9	z	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+10	z	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR7	REPEAT(CCHAR7,2)
+1	aaaaaaa	aaaaaaaaaaaaaa
+2	g	gg
+3	gg	gggg
+4	ggg	gggggg
+5	gggg	gggggggg
+6	ttttttt	tttttttttttttt
+7	ttttttt	tttttttttttttt
+8	ttttttt	tttttttttttttt
+9	ttttttt	tttttttttttttt
+10	zzzzzzz	zzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR8	REPEAT(CCHAR8,7)
+1	aaaaaaaa	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+2	h	hhhhhhh
+3	hh	hhhhhhhhhhhhhh
+4	hhh	hhhhhhhhhhhhhhhhhhhhh
+5	hhhh	hhhhhhhhhhhhhhhhhhhhhhhhhhhh
+6	sssssss	sssssssssssssssssssssssssssssssssssssssssssssssss
+7	ssssssss	ssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+8	ssssssss	ssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+9	ssssssss	ssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+10	zzzzzzzz	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR9	REPEAT(CCHAR9,4)
+1	aaaaaaaaa	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+2	i	iiii
+3	ii	iiiiiiii
+4	iii	iiiiiiiiiiii
+5	iiii	iiiiiiiiiiiiiiii
+6	rrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrr
+7	rrrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+8	rrrrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+9	rrrrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+10	zzzzzzzzz	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR9	REPEAT(CCHAR9,10)
+1	aaaaaaaaa	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+2	i	iiiiiiiiii
+3	ii	iiiiiiiiiiiiiiiiiiii
+4	iii	iiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+5	iiii	iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+6	rrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+7	rrrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+8	rrrrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+9	rrrrrrrrr	rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+10	zzzzzzzzz	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR255	REPEAT(CCHAR255,2)
+1	aaaaaaaaaa	aaaaaaaaaaaaaaaaaaaa
+2	j	jj
+3	jj	jjjj
+4	jjj	jjjjjj
+5	jjjj	jjjjjjjj
+6	qqqqqqq	qqqqqqqqqqqqqq
+7	qqqqqqqq	qqqqqqqqqqqqqqqq
+8	qqqqqqqqq	qqqqqqqqqqqqqqqqqq
+9	qqqqqqqqqq	qqqqqqqqqqqqqqqqqqqq
+10	zzzzzzzzzz	zzzzzzzzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CVCHAR1	REPEAT(CVCHAR1,6)
+1	a	aaaaaa
+2	a	aaaaaa
+3	a	aaaaaa
+4	a	aaaaaa
+5	a	aaaaaa
+6	z	zzzzzz
+7	z	zzzzzz
+8	z	zzzzzz
+9	z	zzzzzz
+10	z	zzzzzz
+11	NULL	NULL
+cidx	CVCHAR6	REPEAT(CVCHAR6,9)
+1	aaaaaa	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+2	f	fffffffff
+3	ff	ffffffffffffffffff
+4	fff	fffffffffffffffffffffffffff
+5	ffff	ffffffffffffffffffffffffffffffffffff
+6	uuuuuu	uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+7	uuuuuu	uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+8	uuuuuu	uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+9	uuuuuu	uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+10	zzzzzz	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CVCHAR255	REPEAT(CVCHAR255,6)
+1	aaaaaaaaaa	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+2	j	jjjjjj
+3	jj	jjjjjjjjjjjj
+4	jjj	jjjjjjjjjjjjjjjjjj
+5	jjjj	jjjjjjjjjjjjjjjjjjjjjjjj
+6	qqqqqqq	qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+7	qqqqqqqq	qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+8	qqqqqqqqq	qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+9	qqqqqqqqqq	qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+10	zzzzzzzzzz	zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+11	NULL	NULL
+cidx	CVCHAR255	REPEAT(CVCHAR255,1)
+1	aaaaaaaaaa	aaaaaaaaaa
+2	j	j
+3	jj	jj
+4	jjj	jjj
+5	jjjj	jjjj
+6	qqqqqqq	qqqqqqq
+7	qqqqqqqq	qqqqqqqq
+8	qqqqqqqqq	qqqqqqqqq
+9	qqqqqqqqqq	qqqqqqqqqq
+10	zzzzzzzzzz	zzzzzzzzzz
+11	NULL	NULL
+cidx	CCHAR1
+6	z
+7	z
+8	z
+9	z
+10	z
+cidx	CCHAR5
+1	aaaaa
+2	e
+3	ee
+4	eee
+5	eeee
+6	vvvvv
+7	vvvvv
+8	vvvvv
+9	vvvvv
+10	zzzzz
+cidx	CCHAR9
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+cidx	CCHAR9
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+cidx	CCHAR9
+1	aaaaaaaaa
+2	i
+3	ii
+4	iii
+5	iiii
+6	rrrrrrr
+7	rrrrrrrr
+8	rrrrrrrrr
+9	rrrrrrrrr
+10	zzzzzzzzz
+cidx	CCHAR255
+1	aaaaaaaaaa
+2	j
+3	jj
+4	jjj
+5	jjjj
+6	qqqqqqq
+7	qqqqqqqq
+8	qqqqqqqqq
+9	qqqqqqqqqq
+10	zzzzzzzzzz
+cidx	CBIGINT	REPEAT(CBIGINT,-5)
+1	-72036854775806	NULL
+2	-72036854775805	NULL
+3	-72036854775804	NULL
+4	-72036854775803	NULL
+5	-72036854775802	NULL
+6	72036854775803	NULL
+7	72036854775804	NULL
+8	72036854775805	NULL
+9	72036854775806	NULL
+10	72036854775807	NULL
+11	0	NULL
+repeat(cchar8, cidx)
+NULL
+aaaaaaaa
+hh
+hhhhhh
+hhhhhhhhhhhh
+hhhhhhhhhhhhhhhhhhhh
+ssssssssssssssssssssssssssssssssssssssssss
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/4190/trunk/queries/nightly/srvswdev11/test200
+END
+go200.sh
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/4139/trunk/queries/nightly/srvswdev11/test200/go200.sh
+END
+memLimits.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/4190/trunk/queries/nightly/srvswdev11/test200/memLimits.sql.win.ref.log
+END
+findLimit.sh
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/genii/mysql/!svn/ver/4159/trunk/queries/nightly/srvswdev11/test200/findLimit.sh
+END
+memLimits.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/genii/mysql/!svn/ver/4159/trunk/queries/nightly/srvswdev11/test200/memLimits.sql.ref.log
+END
+memLimits.sql.win
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/4190/trunk/queries/nightly/srvswdev11/test200/memLimits.sql.win
+END
+memLimits.sql
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/4160/trunk/queries/nightly/srvswdev11/test200/memLimits.sql
+END

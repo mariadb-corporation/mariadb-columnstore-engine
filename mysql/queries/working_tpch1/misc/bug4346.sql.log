@@ -1,0 +1,3 @@
+STR_TO_DATE(CONCAT(YEARWEEK(displayDate,2),'-01'),'%X%V-%w')
+2012-01-01
+2012-01-29

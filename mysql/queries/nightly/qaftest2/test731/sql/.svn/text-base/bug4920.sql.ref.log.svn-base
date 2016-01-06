@@ -1,0 +1,2 @@
+max(adddate(l_shipdate, interval 10 year))
+2002-07-31

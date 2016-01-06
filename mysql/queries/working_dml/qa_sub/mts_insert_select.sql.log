@@ -1,0 +1,243 @@
+payoutID
+1
+4
+6
+9
+10
+12
+payoutID
+1
+4
+6
+9
+10
+11
+12
+14
+16
+16
+19
+20
+22
+22
+payoutID
+1
+4
+6
+9
+10
+11
+11
+12
+14
+14
+16
+16
+16
+16
+19
+19
+20
+20
+22
+22
+22
+22
+numeropost	icone	numreponse	contenu	pseudo	date1	ip	signature
+9	1	56	test	joce	2001-07-25 13:50:53	3649052399	0
+numeropost	icone	numreponse	contenu	pseudo	date1	ip	signature
+1618	1	NULL	test	joce	2001-07-25 13:50:53	3649052399	0
+numeropost	icone	numreponse	contenu	pseudo	date1	ip	signature
+1618	1	NULL	test	joce	2001-07-25 13:50:53	3649052399	0
+1718	1	NULL	test	joce	2001-07-25 13:50:53	3649052399	0
+a
+1
+1
+2
+2
+3
+3
+4
+4
+5
+5
+a
+1
+1
+1
+1
+2
+2
+2
+2
+3
+3
+3
+3
+4
+4
+4
+4
+5
+5
+5
+5
+a
+1
+1
+1
+1
+2
+2
+2
+2
+3
+3
+3
+3
+4
+4
+4
+4
+5
+5
+5
+5
+a
+1
+1
+1
+1
+1
+1
+1
+1
+2
+2
+2
+2
+2
+2
+2
+2
+3
+3
+3
+3
+3
+3
+3
+3
+4
+4
+4
+4
+4
+4
+4
+4
+5
+5
+5
+5
+5
+5
+5
+5
+USID	ServerID	State	SessionID	User1	NASAddr	NASPort	NASPortType	ConnectSpeed	CarrierType	CallingStationID	CalledStationID	AssignedAddr	SessionTime	PacketsIn	OctetsIn	PacketsOut	OctetsOut	TerminateCause	UnauthTime	AccessRequestTime	AcctStartTime	AcctLastTime	LastModification
+39	42	Access-Granted	46	491721000045	2130706433	17690	NULL	NULL	Localnet	491721000045	49172200000	754974766	NULL	NULL	NULL	NULL	NULL	NULL	NULL	2003-07-18 00:11:21	NULL	NULL	2003-07-18 00:11:21
+ff1	ff2
+1	NULL
+1	NULL
+2	NULL
+a
+1
+2
+a
+1
+2
+3
+a
+1
+2
+3
+4
+a
+1
+2
+3
+4
+5
+7
+a
+1
+2
+3
+3
+4
+5
+7
+f1
+2000
+f1
+2000
+2001
+f1
+2000
+2001
+2002
+x	z
+5	6
+x	y
+5	6
+a
+1
+2
+3
+x	y
+1	2
+3	4
+z	y
+1	2
+5	2
+6	3
+a	b
+1	2
+f1	f2
+1	1
+2	2
+10	10
+f1	f2
+1	1
+2	2
+10	10
+f1	f2
+1	1
+1	1
+2	2
+10	10
+(SELECT SUM(LENGTH(c)) FROM t1 WHERE c='13_characters')
+13
+13
+d
+13
+13
+d
+13
+13
+7
+7
+d
+13
+13
+20
+20
+7
+7
+id	label
+abc	def
+id	label
+abc	def
+id	label
+abc	def
+abc	def

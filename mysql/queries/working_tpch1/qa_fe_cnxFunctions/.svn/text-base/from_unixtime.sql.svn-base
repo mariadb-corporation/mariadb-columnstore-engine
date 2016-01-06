@@ -1,0 +1,44 @@
+select CIDX        , from_unixtime(CIDX         ) from datatypetestm;
+select CBIGINT     , from_unixtime(CBIGINT      ) from datatypetestm;
+select CDECIMAL1   , from_unixtime(CDECIMAL1    ) from datatypetestm;
+select CDECIMAL4   , from_unixtime(CDECIMAL4    ) from datatypetestm;
+select CDECIMAL4_2 , from_unixtime(CDECIMAL4_2  ) from datatypetestm;
+select CDECIMAL5   , from_unixtime(CDECIMAL5    ) from datatypetestm;
+select CDECIMAL9   , from_unixtime(CDECIMAL9    ) from datatypetestm;
+select CDECIMAL9_2 , from_unixtime(CDECIMAL9_2  ) from datatypetestm;
+select CDECIMAL10  , from_unixtime(CDECIMAL10   ) from datatypetestm;
+select CDECIMAL18  , from_unixtime(CDECIMAL18   ) from datatypetestm;
+select CDECIMAL18_2, from_unixtime(CDECIMAL18_2 ) from datatypetestm;
+select CINTEGER    , from_unixtime(CINTEGER     ) from datatypetestm;
+select CSMALLINT   , from_unixtime(CSMALLINT    ) from datatypetestm;
+select CTINYINT    , from_unixtime(CTINYINT     ) from datatypetestm;
+select CDOUBLE     , from_unixtime(CDOUBLE      ) from datatypetestm;
+select CFLOAT      , from_unixtime(CFLOAT       ) from datatypetestm;
+select CDATETIME   , from_unixtime(CDATETIME    ) from datatypetestm;
+select CCHAR1      , from_unixtime(CCHAR1       ) from datatypetestm;
+select CCHAR2      , from_unixtime(CCHAR2       ) from datatypetestm;
+select CCHAR3      , from_unixtime(CCHAR3       ) from datatypetestm;
+select CCHAR4      , from_unixtime(CCHAR4       ) from datatypetestm;
+select CCHAR5      , from_unixtime(CCHAR5       ) from datatypetestm;
+select CCHAR6      , from_unixtime(CCHAR6       ) from datatypetestm;
+select CCHAR7      , from_unixtime(CCHAR7       ) from datatypetestm;
+select CCHAR8      , from_unixtime(CCHAR8       ) from datatypetestm;
+select CCHAR9      , from_unixtime(CCHAR9       ) from datatypetestm;
+select CCHAR255    , from_unixtime(CCHAR255     ) from datatypetestm;
+select CVCHAR1     , from_unixtime(CVCHAR1      ) from datatypetestm;
+select CVCHAR2     , from_unixtime(CVCHAR2      ) from datatypetestm;
+select CVCHAR3     , from_unixtime(CVCHAR3      ) from datatypetestm;
+select CVCHAR4     , from_unixtime(CVCHAR4      ) from datatypetestm;
+select CVCHAR5     , from_unixtime(CVCHAR5      ) from datatypetestm;
+select CVCHAR6     , from_unixtime(CVCHAR6      ) from datatypetestm;
+select CVCHAR7     , from_unixtime(CVCHAR7      ) from datatypetestm;
+select CVCHAR8     , from_unixtime(CVCHAR8      ) from datatypetestm;
+select CVCHAR255   , from_unixtime(CVCHAR255    ) from datatypetestm;
+
+select cdate from datatypetestm where cdate > from_unixtime(cinteger);
+select from_unixtime(csmallint) + cdecimal1 from datatypetestm;
+select from_unixtime(cidx, '%D %y %a %d %m %b %j') from datatypetestm order by 1;
+select from_unixtime(ctinyint, '%H:%i:%s') + ctinyint from datatypetestm;
+select from_unixtime(cdecimal4_2), count(*) from datatypetestm group by 1 order by 1;
+
+

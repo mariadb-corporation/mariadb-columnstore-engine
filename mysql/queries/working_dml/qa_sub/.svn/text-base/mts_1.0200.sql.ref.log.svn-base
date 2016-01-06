@@ -1,0 +1,58 @@
+a2	a1
+2	NULL
+a1	a2
+NULL	1
+2	2
+a1	a2
+NULL	1
+NULL	2
+a1	a2	(select 1)
+2	1	1
+2	2	1
+(select a from t3)	a
+NULL	1
+NULL	2
+a	b
+2	7
+a	b
+1	7
+2	7
+a	b
+1	7
+2	7
+3	8
+a	b
+1	7
+2	7
+3	8
+4	8
+a1	a2
+7	2
+a
+2
+a
+7
+a
+6
+3
+a
+7
+a
+3
+6
+patient_uq	clinic_uq
+1	1
+1	2
+2	2
+a	b
+W	1732-02-22
+a	b
+W	1
+a	b
+W	a
+pseudo
+joce
+pseudo
+joce
+joce1
+2joce1

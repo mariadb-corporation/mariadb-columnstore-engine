@@ -1,0 +1,800 @@
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.33 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.70 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.35 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.43 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.82 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.41 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.46 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.81 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.80 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.48 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.40 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.42 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.63 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.53 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.42 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.88 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.51 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.56 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.99 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.46 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.58 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.99 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.50 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.50 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.58 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.50 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.57 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.98 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.11 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.33 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.54 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.52 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.64 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.57 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.46 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.53 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.78 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.54 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.58 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.49 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.63 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.70 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.62 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.62 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.60 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.80 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.83 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.58 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.56 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.51 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.97 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.30 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.59 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.93 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.55 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.60 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.28 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.47 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.44 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.51 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.90 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.78 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.44 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.88 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.37 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.64 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.24 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.59 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.69 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.54 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.71 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.68 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.68 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.50 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.90 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (5.58 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.92 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.52 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.96 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.80 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.73 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.63 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.77 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.59 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.08 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (6.33 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.08 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.76 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.71 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.54 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.78 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.59 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.63 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.74 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.76 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.91 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.62 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.56 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (3.70 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye
+--------------
+load data infile '/tmp/test006.tbl' into table test006 fields terminated by '|'
+--------------
+
+Query OK, 25000 rows affected (4.66 sec)
+Records: 25000  Deleted: 0  Skipped: 0  Warnings: 0
+
+Bye

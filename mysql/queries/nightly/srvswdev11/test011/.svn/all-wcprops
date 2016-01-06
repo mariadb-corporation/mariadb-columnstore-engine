@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/3645/trunk/queries/nightly/srvswdev11/test011
+END
+rebuild.sh
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/3642/trunk/queries/nightly/srvswdev11/test011/rebuild.sh
+END
+go011.sh
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/3531/trunk/queries/nightly/srvswdev11/test011/go011.sh
+END
+create_tables.sql
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/3373/trunk/queries/nightly/srvswdev11/test011/create_tables.sql
+END

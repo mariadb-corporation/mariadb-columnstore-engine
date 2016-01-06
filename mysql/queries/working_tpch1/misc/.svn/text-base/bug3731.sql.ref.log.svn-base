@@ -1,0 +1,80 @@
+n_nationkey	n_name	n_regionkey	n_comment
+0	ALGERIA	0	 haggle. carefully final deposits detect slyly agai
+5	ETHIOPIA	0	ven packages wake quickly. regu
+14	KENYA	0	 pending excuses haggle furiously deposits. pending, express pinto beans wake fluffily past t
+15	MOROCCO	0	rns. blithely bold courts among the closely regular packages use furiously bold platelets?
+16	MOZAMBIQUE	0	s. ironic, unusual asymptotes wake blithely r
+n_nationkey	n_name	n_regionkey	n_comment
+0	ALGERIA	0	 haggle. carefully final deposits detect slyly agai
+n_regionkey
+0
+0
+0
+0
+0
+n_nationkey
+5
+14
+15
+16
+n_nationkey
+5
+14
+15
+16
+n_nationkey
+0
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+r_regionkey	r_name	r_comment
+0	AFRICA	lar deposits. blithely final packages cajole. regular waters are final requests. regular accounts are according to 
+1	AMERICA	hs use ironic, even requests. s
+2	ASIA	ges. thinly even pinto beans ca
+n_nationkey
+0
+4
+5
+10
+11
+13
+14
+15
+16
+20
+n_nationkey
+0
+5
+14
+15
+16
+if (not r_regionkey, 'no', 'yes')
+no
+yes
+yes
+yes
+yes
+if (not r_regionkey < 2, 'no', 'yes')
+yes
+yes
+no
+no
+no

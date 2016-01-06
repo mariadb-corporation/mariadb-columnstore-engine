@@ -1,0 +1,16 @@
+a	d	s
+1	2013-02-21	first
+2	2013-02-21	second
+a	d	s
+0	2010-01-05	NULL
+0	2010-03-05	NULL
+1	2010-02-05	NULL
+a	d	s
+1	2010-02-05	first
+2	2013-02-21	second
+a	d	s
+1	2010-03-05	first
+2	2010-03-05	second
+a	d	s
+1	2010-04-05	first
+2	2010-03-05	second

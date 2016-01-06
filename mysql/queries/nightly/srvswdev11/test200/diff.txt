@@ -1,0 +1,15 @@
+16c16,17
+< ERROR 122 (HY000) at line 19: IDB-2001: Join or subselect exceeds memory limit.
+---
+> count6
+> 100761023
+25c26,27
+< ERROR 122 (HY000) at line 28: IDB-2001: Join or subselect exceeds memory limit.
+---
+> count9
+> 88907551
+49c51,52
+< ERROR 122 (HY000) at line 61: IDB-2001: Join or subselect exceeds memory limit.
+---
+> count16
+> 51372632

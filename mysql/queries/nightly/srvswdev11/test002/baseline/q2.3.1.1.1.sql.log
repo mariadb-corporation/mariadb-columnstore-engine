@@ -1,0 +1,2 @@
+max(l_shipdate)	min(l_orderkey)	sum(l_partkey)
+1998-12-01	1	100037861209

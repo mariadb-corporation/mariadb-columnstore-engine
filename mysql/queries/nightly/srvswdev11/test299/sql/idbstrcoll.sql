@@ -1,0 +1,9 @@
+set max_length_for_sort_data = 4096;
+select hex(max(sak_mei)) from idbstrcoll where sak_bunc=11;
+select hex(sak_mei) from idbstrcoll where sak_bunc=11 order by sak_mei desc limit 1;
+select hex(min(sak_mei)) from idbstrcoll where sak_bunc=11;
+select hex(sak_mei) from idbstrcoll where sak_bunc=11 order by sak_mei asc limit 1;
+select max(sak_mei) from idbstrcoll where sak_bunc=11;
+select sak_mei from idbstrcoll where sak_bunc=11 order by sak_mei desc limit 1;
+select sak_mei from idbstrcoll where sak_bunc=11 order by sak_mei asc limit 1;
+select min(sak_mei) from idbstrcoll where sak_bunc=11;

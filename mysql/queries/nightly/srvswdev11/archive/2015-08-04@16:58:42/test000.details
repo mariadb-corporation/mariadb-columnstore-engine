@@ -1,0 +1,5 @@
+test000 validation scripts that failed:
+Compare failed - test000/dmlSchemaValidation/tpchValidation.sql
+Compare failed - test000/ssbSchemaValidation/ssbValidation.sql
+Compare failed - test000/tpchSchemaValidation/tpchValidation.sql
+Compare failed - test000/tpchSchemaValidation/wide.sql

@@ -1,0 +1,436 @@
+calshowpartitions('dtypes', 'id')
+Part#     Min                           Max                           Status\n  0.0.1     1                             100                           Enabled
+calshowpartitions('dtypes', 'dt')
+Part#     Min                           Max                           Status\n  0.0.1     2008-12-15                    2010-11-08                    Enabled
+calshowpartitions('dtypes', 'dtm')
+Part#     Min                           Max                           Status\n  0.0.1     2008-12-15 06:40:22           2010-11-08 08:19:22           Enabled
+calshowpartitions('dtypes', 'f')
+Part#     Min                           Max                           Status\n  0.0.1     N/A                           N/A                           Enabled
+calshowpartitions('dtypes', 'db')
+Part#     Min                           Max                           Status\n  0.0.1     N/A                           N/A                           Enabled
+calshowpartitions('dtypes', 'ti')
+Part#     Min                           Max                           Status\n  0.0.1     -126                          127                           Enabled
+calshowpartitions('dtypes', 'si')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         32767                         Enabled
+calshowpartitions('dtypes', 'i')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'bi')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'c1')
+Part#     Min                           Max                           Status\n  0.0.1     -                             9                             Enabled
+calshowpartitions('dtypes', 'c2')
+Part#     Min                           Max                           Status\n  0.0.1     -0                            9.                            Enabled
+calshowpartitions('dtypes', 'c3')
+Part#     Min                           Max                           Status\n  0.0.1     -0.                           9.8                           Enabled
+calshowpartitions('dtypes', 'c4')
+Part#     Min                           Max                           Status\n  0.0.1     -0.0                          9.88                          Enabled
+calshowpartitions('dtypes', 'c5')
+Part#     Min                           Max                           Status\n  0.0.1     -0.00                         9.887                         Enabled
+calshowpartitions('dtypes', 'c6')
+Part#     Min                           Max                           Status\n  0.0.1     -0.000                        9.8871                        Enabled
+calshowpartitions('dtypes', 'c7')
+Part#     Min                           Max                           Status\n  0.0.1     -0.0003                       9.8871                        Enabled
+calshowpartitions('dtypes', 'c8')
+Part#     Min                           Max                           Status\n  0.0.1     -0.0003                       9.8871                        Enabled
+calshowpartitions('dtypes', 'c9')
+Part#     Min                           Max                           Status\n  0.0.1     N/A                           N/A                           Enabled
+calshowpartitions('dtypes', 'c255')
+Part#     Min                           Max                           Status\n  0.0.1     N/A                           N/A                           Enabled
+calshowpartitions('dtypes', 'vc1')
+Part#     Min                           Max                           Status\n  0.0.1     -                             9                             Enabled
+calshowpartitions('dtypes', 'vc2')
+Part#     Min                           Max                           Status\n  0.0.1     -0                            9.                            Enabled
+calshowpartitions('dtypes', 'vc3')
+Part#     Min                           Max                           Status\n  0.0.1     -0.                           9.8                           Enabled
+calshowpartitions('dtypes', 'vc4')
+Part#     Min                           Max                           Status\n  0.0.1     -0.0                          9.88                          Enabled
+calshowpartitions('dtypes', 'vc5')
+Part#     Min                           Max                           Status\n  0.0.1     -0.00                         9.887                         Enabled
+calshowpartitions('dtypes', 'vc6')
+Part#     Min                           Max                           Status\n  0.0.1     -0.000                        9.8871                        Enabled
+calshowpartitions('dtypes', 'vc7')
+Part#     Min                           Max                           Status\n  0.0.1     -0.0003                       9.8871                        Enabled
+calshowpartitions('dtypes', 'vc8')
+Part#     Min                           Max                           Status\n  0.0.1     N/A                           N/A                           Enabled
+calshowpartitions('dtypes', 'vc255')
+Part#     Min                           Max                           Status\n  0.0.1     N/A                           N/A                           Enabled
+calshowpartitions('dtypes', 'd1')
+Part#     Min                           Max                           Status\n  0.0.1     -9                            9                             Enabled
+calshowpartitions('dtypes', 'd2')
+Part#     Min                           Max                           Status\n  0.0.1     -0.9                          0.9                           Enabled
+calshowpartitions('dtypes', 'd3')
+Part#     Min                           Max                           Status\n  0.0.1     -99                           99                            Enabled
+calshowpartitions('dtypes', 'd4')
+Part#     Min                           Max                           Status\n  0.0.1     -9.9                          9.9                           Enabled
+calshowpartitions('dtypes', 'd5')
+Part#     Min                           Max                           Status\n  0.0.1     -0.99                         0.99                          Enabled
+calshowpartitions('dtypes', 'd6')
+Part#     Min                           Max                           Status\n  0.0.1     -999                          999                           Enabled
+calshowpartitions('dtypes', 'd7')
+Part#     Min                           Max                           Status\n  0.0.1     -99.9                         99.9                          Enabled
+calshowpartitions('dtypes', 'd8')
+Part#     Min                           Max                           Status\n  0.0.1     -9.99                         9.99                          Enabled
+calshowpartitions('dtypes', 'd9')
+Part#     Min                           Max                           Status\n  0.0.1     -0.999                        0.999                         Enabled
+calshowpartitions('dtypes', 'd10')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         9999                          Enabled
+calshowpartitions('dtypes', 'd11')
+Part#     Min                           Max                           Status\n  0.0.1     -999.9                        999.9                         Enabled
+calshowpartitions('dtypes', 'd12')
+Part#     Min                           Max                           Status\n  0.0.1     -99.99                        99.99                         Enabled
+calshowpartitions('dtypes', 'd13')
+Part#     Min                           Max                           Status\n  0.0.1     -9.999                        9.999                         Enabled
+calshowpartitions('dtypes', 'd14')
+Part#     Min                           Max                           Status\n  0.0.1     -0.9999                       0.9999                        Enabled
+calshowpartitions('dtypes', 'd15')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         99999                         Enabled
+calshowpartitions('dtypes', 'd16')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       9999.9                        Enabled
+calshowpartitions('dtypes', 'd17')
+Part#     Min                           Max                           Status\n  0.0.1     -999.99                       999.99                        Enabled
+calshowpartitions('dtypes', 'd18')
+Part#     Min                           Max                           Status\n  0.0.1     -99.999                       99.999                        Enabled
+calshowpartitions('dtypes', 'd19')
+Part#     Min                           Max                           Status\n  0.0.1     -9.9999                       9.9999                        Enabled
+calshowpartitions('dtypes', 'd20')
+Part#     Min                           Max                           Status\n  0.0.1     -0.99999                      0.99999                       Enabled
+calshowpartitions('dtypes', 'd21')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         999999                        Enabled
+calshowpartitions('dtypes', 'd22')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       99999.9                       Enabled
+calshowpartitions('dtypes', 'd23')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      9999.99                       Enabled
+calshowpartitions('dtypes', 'd24')
+Part#     Min                           Max                           Status\n  0.0.1     -999.999                      999.999                       Enabled
+calshowpartitions('dtypes', 'd25')
+Part#     Min                           Max                           Status\n  0.0.1     -99.9999                      99.9999                       Enabled
+calshowpartitions('dtypes', 'd26')
+Part#     Min                           Max                           Status\n  0.0.1     -9.99999                      9.99999                       Enabled
+calshowpartitions('dtypes', 'd27')
+Part#     Min                           Max                           Status\n  0.0.1     -0.999999                     0.999999                      Enabled
+calshowpartitions('dtypes', 'd28')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd29')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       999999.9                      Enabled
+calshowpartitions('dtypes', 'd30')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      99999.99                      Enabled
+calshowpartitions('dtypes', 'd31')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     9999.999                      Enabled
+calshowpartitions('dtypes', 'd32')
+Part#     Min                           Max                           Status\n  0.0.1     -999.9999                     999.9999                      Enabled
+calshowpartitions('dtypes', 'd33')
+Part#     Min                           Max                           Status\n  0.0.1     -99.99999                     99.99999                      Enabled
+calshowpartitions('dtypes', 'd34')
+Part#     Min                           Max                           Status\n  0.0.1     -9.999999                     9.999999                      Enabled
+calshowpartitions('dtypes', 'd35')
+Part#     Min                           Max                           Status\n  0.0.1     -0.9999999                    0.9999999                     Enabled
+calshowpartitions('dtypes', 'd36')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd37')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd38')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      999999.99                     Enabled
+calshowpartitions('dtypes', 'd39')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     99999.999                     Enabled
+calshowpartitions('dtypes', 'd40')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    9999.9999                     Enabled
+calshowpartitions('dtypes', 'd41')
+Part#     Min                           Max                           Status\n  0.0.1     -999.99999                    999.99999                     Enabled
+calshowpartitions('dtypes', 'd42')
+Part#     Min                           Max                           Status\n  0.0.1     -99.999999                    99.999999                     Enabled
+calshowpartitions('dtypes', 'd43')
+Part#     Min                           Max                           Status\n  0.0.1     -9.9999999                    9.9999999                     Enabled
+calshowpartitions('dtypes', 'd44')
+Part#     Min                           Max                           Status\n  0.0.1     -0.99999999                   0.99999999                    Enabled
+calshowpartitions('dtypes', 'd45')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd46')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd47')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd48')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     999999.999                    Enabled
+calshowpartitions('dtypes', 'd49')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    99999.9999                    Enabled
+calshowpartitions('dtypes', 'd50')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   9999.99999                    Enabled
+calshowpartitions('dtypes', 'd51')
+Part#     Min                           Max                           Status\n  0.0.1     -999.999999                   999.999999                    Enabled
+calshowpartitions('dtypes', 'd52')
+Part#     Min                           Max                           Status\n  0.0.1     -99.9999999                   99.9999999                    Enabled
+calshowpartitions('dtypes', 'd53')
+Part#     Min                           Max                           Status\n  0.0.1     -9.99999999                   9.99999999                    Enabled
+calshowpartitions('dtypes', 'd54')
+Part#     Min                           Max                           Status\n  0.0.1     -0.999999999                  0.999999999                   Enabled
+calshowpartitions('dtypes', 'd55')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd56')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd57')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd58')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd59')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    999999.9999                   Enabled
+calshowpartitions('dtypes', 'd60')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   99999.99999                   Enabled
+calshowpartitions('dtypes', 'd61')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  9999.999999                   Enabled
+calshowpartitions('dtypes', 'd62')
+Part#     Min                           Max                           Status\n  0.0.1     -999.9999999                  999.9999999                   Enabled
+calshowpartitions('dtypes', 'd63')
+Part#     Min                           Max                           Status\n  0.0.1     -99.99999999                  99.99999999                   Enabled
+calshowpartitions('dtypes', 'd64')
+Part#     Min                           Max                           Status\n  0.0.1     -9.999999999                  9.999999999                   Enabled
+calshowpartitions('dtypes', 'd65')
+Part#     Min                           Max                           Status\n  0.0.1     -0.9999999999                 0.9999999999                  Enabled
+calshowpartitions('dtypes', 'd66')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd67')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd68')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd69')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd70')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd71')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   999999.99999                  Enabled
+calshowpartitions('dtypes', 'd72')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  99999.999999                  Enabled
+calshowpartitions('dtypes', 'd73')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 9999.9999999                  Enabled
+calshowpartitions('dtypes', 'd74')
+Part#     Min                           Max                           Status\n  0.0.1     -999.99999999                 999.99999999                  Enabled
+calshowpartitions('dtypes', 'd75')
+Part#     Min                           Max                           Status\n  0.0.1     -99.999999999                 99.999999999                  Enabled
+calshowpartitions('dtypes', 'd76')
+Part#     Min                           Max                           Status\n  0.0.1     -9.9999999999                 9.9999999999                  Enabled
+calshowpartitions('dtypes', 'd77')
+Part#     Min                           Max                           Status\n  0.0.1     -0.99999999999                0.99999999999                 Enabled
+calshowpartitions('dtypes', 'd78')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd79')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd80')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd81')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd82')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd83')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   5860520.59916                 Enabled
+calshowpartitions('dtypes', 'd84')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  999999.999999                 Enabled
+calshowpartitions('dtypes', 'd85')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 99999.9999999                 Enabled
+calshowpartitions('dtypes', 'd86')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000                9999.99999999                 Enabled
+calshowpartitions('dtypes', 'd87')
+Part#     Min                           Max                           Status\n  0.0.1     -999.999999999                999.999999999                 Enabled
+calshowpartitions('dtypes', 'd88')
+Part#     Min                           Max                           Status\n  0.0.1     -99.9999999999                99.9999999999                 Enabled
+calshowpartitions('dtypes', 'd89')
+Part#     Min                           Max                           Status\n  0.0.1     -9.99999999999                9.99999999999                 Enabled
+calshowpartitions('dtypes', 'd90')
+Part#     Min                           Max                           Status\n  0.0.1     -0.999999999999               0.999999999999                Enabled
+calshowpartitions('dtypes', 'd91')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd92')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd93')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd94')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd95')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd96')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   5860520.59916                 Enabled
+calshowpartitions('dtypes', 'd97')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  5860520.599163                Enabled
+calshowpartitions('dtypes', 'd98')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 999999.9999999                Enabled
+calshowpartitions('dtypes', 'd99')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000                99999.99999999                Enabled
+calshowpartitions('dtypes', 'd100')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000               9999.999999999                Enabled
+calshowpartitions('dtypes', 'd101')
+Part#     Min                           Max                           Status\n  0.0.1     -999.9999999999               999.9999999999                Enabled
+calshowpartitions('dtypes', 'd102')
+Part#     Min                           Max                           Status\n  0.0.1     -99.99999999999               99.99999999999                Enabled
+calshowpartitions('dtypes', 'd103')
+Part#     Min                           Max                           Status\n  0.0.1     -9.999999999999               9.999999999999                Enabled
+calshowpartitions('dtypes', 'd104')
+Part#     Min                           Max                           Status\n  0.0.1     -0.9999999999999              0.9999999999999               Enabled
+calshowpartitions('dtypes', 'd105')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd106')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd107')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd108')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd109')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd110')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   5860520.59916                 Enabled
+calshowpartitions('dtypes', 'd111')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  5860520.599163                Enabled
+calshowpartitions('dtypes', 'd112')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 5860520.5991630               Enabled
+calshowpartitions('dtypes', 'd113')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000                999999.99999999               Enabled
+calshowpartitions('dtypes', 'd114')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000               99999.999999999               Enabled
+calshowpartitions('dtypes', 'd115')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000000              9999.9999999999               Enabled
+calshowpartitions('dtypes', 'd116')
+Part#     Min                           Max                           Status\n  0.0.1     -999.99999999999              999.99999999999               Enabled
+calshowpartitions('dtypes', 'd117')
+Part#     Min                           Max                           Status\n  0.0.1     -99.999999999999              99.999999999999               Enabled
+calshowpartitions('dtypes', 'd118')
+Part#     Min                           Max                           Status\n  0.0.1     -9.9999999999999              9.9999999999999               Enabled
+calshowpartitions('dtypes', 'd119')
+Part#     Min                           Max                           Status\n  0.0.1     -0.99999999999999             0.99999999999999              Enabled
+calshowpartitions('dtypes', 'd120')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd121')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd122')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd123')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd124')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd125')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   5860520.59916                 Enabled
+calshowpartitions('dtypes', 'd126')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  5860520.599163                Enabled
+calshowpartitions('dtypes', 'd127')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 5860520.5991630               Enabled
+calshowpartitions('dtypes', 'd128')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000                5860520.59916300              Enabled
+calshowpartitions('dtypes', 'd129')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000               999999.999999999              Enabled
+calshowpartitions('dtypes', 'd130')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000000              99999.9999999999              Enabled
+calshowpartitions('dtypes', 'd131')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000000             9999.99999999999              Enabled
+calshowpartitions('dtypes', 'd132')
+Part#     Min                           Max                           Status\n  0.0.1     -999.999999999999             999.999999999999              Enabled
+calshowpartitions('dtypes', 'd133')
+Part#     Min                           Max                           Status\n  0.0.1     -99.9999999999999             99.9999999999999              Enabled
+calshowpartitions('dtypes', 'd134')
+Part#     Min                           Max                           Status\n  0.0.1     -9.99999999999999             9.99999999999999              Enabled
+calshowpartitions('dtypes', 'd135')
+Part#     Min                           Max                           Status\n  0.0.1     -0.999999999999999            0.999999999999999             Enabled
+calshowpartitions('dtypes', 'd136')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd137')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd138')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd139')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd140')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd141')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   5860520.59916                 Enabled
+calshowpartitions('dtypes', 'd142')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  5860520.599163                Enabled
+calshowpartitions('dtypes', 'd143')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 5860520.5991630               Enabled
+calshowpartitions('dtypes', 'd144')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000                5860520.59916300              Enabled
+calshowpartitions('dtypes', 'd145')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000               5860520.599163000             Enabled
+calshowpartitions('dtypes', 'd146')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000000              1000000.0000000000            Enabled
+calshowpartitions('dtypes', 'd147')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000000             100000.00000000000            Enabled
+calshowpartitions('dtypes', 'd148')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000000            10000.000000000000            Enabled
+calshowpartitions('dtypes', 'd149')
+Part#     Min                           Max                           Status\n  0.0.1     -1000.0000000000000           1000.0000000000000            Enabled
+calshowpartitions('dtypes', 'd150')
+Part#     Min                           Max                           Status\n  0.0.1     -100.00000000000000           100.00000000000000            Enabled
+calshowpartitions('dtypes', 'd151')
+Part#     Min                           Max                           Status\n  0.0.1     -10.000000000000000           10.000000000000000            Enabled
+calshowpartitions('dtypes', 'd152')
+Part#     Min                           Max                           Status\n  0.0.1     -1.0000000000000000           1.0000000000000000            Enabled
+calshowpartitions('dtypes', 'd153')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd154')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd155')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd156')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd157')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd158')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   5860520.59916                 Enabled
+calshowpartitions('dtypes', 'd159')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  5860520.599163                Enabled
+calshowpartitions('dtypes', 'd160')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 5860520.5991630               Enabled
+calshowpartitions('dtypes', 'd161')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000                5860520.59916300              Enabled
+calshowpartitions('dtypes', 'd162')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000               5860520.599163000             Enabled
+calshowpartitions('dtypes', 'd163')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000000              5860520.5991629995            Enabled
+calshowpartitions('dtypes', 'd164')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000000             1000000.00000000000           Enabled
+calshowpartitions('dtypes', 'd165')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000000            100000.000000000000           Enabled
+calshowpartitions('dtypes', 'd166')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000000000           10000.0000000000000           Enabled
+calshowpartitions('dtypes', 'd167')
+Part#     Min                           Max                           Status\n  0.0.1     -1000.00000000000000          1000.00000000000000           Enabled
+calshowpartitions('dtypes', 'd168')
+Part#     Min                           Max                           Status\n  0.0.1     -100.000000000000000          100.000000000000000           Enabled
+calshowpartitions('dtypes', 'd169')
+Part#     Min                           Max                           Status\n  0.0.1     -10.0000000000000000          10.0000000000000000           Enabled
+calshowpartitions('dtypes', 'd170')
+Part#     Min                           Max                           Status\n  0.0.1     -1.00000000000000000          1.00000000000000000           Enabled
+calshowpartitions('dtypes', 'd171')
+Part#     Min                           Max                           Status\n  0.0.1     -2233                         5860521                       Enabled
+calshowpartitions('dtypes', 'd172')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0                       5860520.6                     Enabled
+calshowpartitions('dtypes', 'd173')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00                      5860520.60                    Enabled
+calshowpartitions('dtypes', 'd174')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000                     5860520.599                   Enabled
+calshowpartitions('dtypes', 'd175')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000                    5860520.5992                  Enabled
+calshowpartitions('dtypes', 'd176')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000                   5860520.59916                 Enabled
+calshowpartitions('dtypes', 'd177')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000                  5860520.599163                Enabled
+calshowpartitions('dtypes', 'd178')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000                 5860520.5991630               Enabled
+calshowpartitions('dtypes', 'd179')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000                5860520.59916300              Enabled
+calshowpartitions('dtypes', 'd180')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000               5860520.599163000             Enabled
+calshowpartitions('dtypes', 'd181')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000000              5860520.5991629995            Enabled
+calshowpartitions('dtypes', 'd182')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000000             5860520.59916300047           Enabled
+calshowpartitions('dtypes', 'd183')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.000000000000            1000000.000000000000          Enabled
+calshowpartitions('dtypes', 'd184')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.0000000000000           100000.0000000000000          Enabled
+calshowpartitions('dtypes', 'd185')
+Part#     Min                           Max                           Status\n  0.0.1     -2233.00000000000000          10000.00000000000000          Enabled
+calshowpartitions('dtypes', 'd186')
+Part#     Min                           Max                           Status\n  0.0.1     -1000.000000000000000         1000.000000000000000          Enabled
+calshowpartitions('dtypes', 'd187')
+Part#     Min                           Max                           Status\n  0.0.1     -100.0000000000000000         100.0000000000000000          Enabled
+calshowpartitions('dtypes', 'd188')
+Part#     Min                           Max                           Status\n  0.0.1     -10.00000000000000000         10.00000000000000000          Enabled
+calshowpartitions('dtypes', 'd189')
+Part#     Min                           Max                           Status\n  0.0.1     -1.000000000000000000         1.000000000000000000          Enabled
+calshowpartitions('dtypes', 'vc30')
+Part#     Min                           Max                           Status\n  0.0.1     N/A                           N/A                           Enabled

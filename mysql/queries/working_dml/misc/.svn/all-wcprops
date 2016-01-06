@@ -1,0 +1,647 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/genii/mysql/!svn/ver/4181/trunk/queries/working_dml/misc
+END
+notnullconstraint.sql
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/2856/trunk/queries/working_dml/misc/notnullconstraint.sql
+END
+bug5375.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4127/trunk/queries/working_dml/misc/bug5375.sql
+END
+bug4925.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4181/trunk/queries/working_dml/misc/bug4925.sql
+END
+bug5096.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3323/trunk/queries/working_dml/misc/bug5096.sql
+END
+compression.sql
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/genii/mysql/!svn/ver/2994/trunk/queries/working_dml/misc/compression.sql
+END
+bug3279.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1802/trunk/queries/working_dml/misc/bug3279.sql
+END
+bug3997.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/2781/trunk/queries/working_dml/misc/bug3997.sql
+END
+multiupdate_delete_crossengine.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/genii/mysql/!svn/ver/3296/trunk/queries/working_dml/misc/multiupdate_delete_crossengine.sql.ref.log
+END
+bug3998.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/2781/trunk/queries/working_dml/misc/bug3998.sql
+END
+multiupdate_001.sql
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2559/trunk/queries/working_dml/misc/multiupdate_001.sql
+END
+multiupdate_002.sql
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2559/trunk/queries/working_dml/misc/multiupdate_002.sql
+END
+bug3012.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3012.sql.ref.log
+END
+subupd001.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/1463/trunk/queries/working_dml/misc/subupd001.sql.ref.log
+END
+subupd002.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/1463/trunk/queries/working_dml/misc/subupd002.sql.ref.log
+END
+vc8000.sql
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/genii/mysql/!svn/ver/2993/trunk/queries/working_dml/misc/vc8000.sql
+END
+bug3040a.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040a.sql.ref.log
+END
+subupd003.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/1465/trunk/queries/working_dml/misc/subupd003.sql.ref.log
+END
+bug3040b.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040b.sql.ref.log
+END
+bug3051.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3051.sql.ref.log
+END
+bug3040c.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040c.sql.ref.log
+END
+bug5230.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/4027/trunk/queries/working_dml/misc/bug5230.sql.ref.log
+END
+bug3040d.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040d.sql.ref.log
+END
+bug5312.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3959/trunk/queries/working_dml/misc/bug5312.sql.ref.log
+END
+diff.sh
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/genii/mysql/!svn/ver/1345/trunk/queries/working_dml/misc/diff.sh
+END
+bug3203.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1733/trunk/queries/working_dml/misc/bug3203.sql
+END
+bug4027.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2993/trunk/queries/working_dml/misc/bug4027.sql.ref.log
+END
+bug5222.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3573/trunk/queries/working_dml/misc/bug5222.sql
+END
+bug5143.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3377/trunk/queries/working_dml/misc/bug5143.sql
+END
+bug5274.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/4145/trunk/queries/working_dml/misc/bug5274.sql.ref.log
+END
+bug3295.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1874/trunk/queries/working_dml/misc/bug3295.sql.ref.log
+END
+bug3326.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1867/trunk/queries/working_dml/misc/bug3326.sql
+END
+bug3129.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1763/trunk/queries/working_dml/misc/bug3129.sql
+END
+bug3283.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3085/trunk/queries/working_dml/misc/bug3283.sql
+END
+bug3326b.sql
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/1869/trunk/queries/working_dml/misc/bug3326b.sql
+END
+bug2790.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1372/trunk/queries/working_dml/misc/bug2790.sql
+END
+bug3565.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3512/trunk/queries/working_dml/misc/bug3565.sql
+END
+bug2873.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug2873.sql
+END
+multiupdate_delete_crossengine.sql
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/genii/mysql/!svn/ver/3296/trunk/queries/working_dml/misc/multiupdate_delete_crossengine.sql
+END
+bug3012.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3012.sql
+END
+subupd001.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/1463/trunk/queries/working_dml/misc/subupd001.sql
+END
+subupd002.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/1463/trunk/queries/working_dml/misc/subupd002.sql
+END
+bug3040a.sql
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040a.sql
+END
+subupd003.sql
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/1465/trunk/queries/working_dml/misc/subupd003.sql
+END
+bug3040b.sql
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040b.sql
+END
+bug5324.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/4088/trunk/queries/working_dml/misc/bug5324.sql.ref.log
+END
+bug3051.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3051.sql
+END
+bug4074.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2752/trunk/queries/working_dml/misc/bug4074.sql.ref.log
+END
+bug5230.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4027/trunk/queries/working_dml/misc/bug5230.sql
+END
+bug3040c.sql
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040c.sql
+END
+bug5312.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3959/trunk/queries/working_dml/misc/bug5312.sql
+END
+bug3040d.sql
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/2785/trunk/queries/working_dml/misc/bug3040d.sql
+END
+bug4391.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2861/trunk/queries/working_dml/misc/bug4391.sql.ref.log
+END
+varchar8000.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2993/trunk/queries/working_dml/misc/varchar8000.sql.ref.log
+END
+bug5328.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/4085/trunk/queries/working_dml/misc/bug5328.sql.ref.log
+END
+bug4027.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/2993/trunk/queries/working_dml/misc/bug4027.sql
+END
+bug3582.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2703/trunk/queries/working_dml/misc/bug3582.sql.ref.log
+END
+bug4394.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3030/trunk/queries/working_dml/misc/bug4394.sql.ref.log
+END
+bug5274.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4145/trunk/queries/working_dml/misc/bug5274.sql
+END
+bug3295.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1874/trunk/queries/working_dml/misc/bug3295.sql
+END
+bug2977.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug2977.sql.ref.log
+END
+autoincrement.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/genii/mysql/!svn/ver/3316/trunk/queries/working_dml/misc/autoincrement.sql.ref.log
+END
+bug3312.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1871/trunk/queries/working_dml/misc/bug3312.sql.ref.log
+END
+vtabledmlcol2col.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/genii/mysql/!svn/ver/2773/trunk/queries/working_dml/misc/vtabledmlcol2col.sql.ref.log
+END
+bug3350.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1899/trunk/queries/working_dml/misc/bug3350.sql.ref.log
+END
+bug2741.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1370/trunk/queries/working_dml/misc/bug2741.sql.ref.log
+END
+bug5173.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3519/trunk/queries/working_dml/misc/bug5173.sql.ref.log
+END
+bug3038b.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3038b.sql.ref.log
+END
+bug3038c.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3038c.sql.ref.log
+END
+bug5324.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4088/trunk/queries/working_dml/misc/bug5324.sql
+END
+notnullconstraint.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/2857/trunk/queries/working_dml/misc/notnullconstraint.sql.ref.log
+END
+bug5096.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3323/trunk/queries/working_dml/misc/bug5096.sql.ref.log
+END
+bug4074.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/2752/trunk/queries/working_dml/misc/bug4074.sql
+END
+bug4925.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3190/trunk/queries/working_dml/misc/bug4925.sql.ref.log
+END
+compression.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/3187/trunk/queries/working_dml/misc/compression.sql.ref.log
+END
+bug5375.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/4128/trunk/queries/working_dml/misc/bug5375.sql.ref.log
+END
+bug3279.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1802/trunk/queries/working_dml/misc/bug3279.sql.ref.log
+END
+varchar8000.sql
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/genii/mysql/!svn/ver/2993/trunk/queries/working_dml/misc/varchar8000.sql
+END
+bug4391.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/2861/trunk/queries/working_dml/misc/bug4391.sql
+END
+bug3582.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/2703/trunk/queries/working_dml/misc/bug3582.sql
+END
+bug5328.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/4085/trunk/queries/working_dml/misc/bug5328.sql
+END
+bug4394.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3030/trunk/queries/working_dml/misc/bug4394.sql
+END
+bug3997.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2779/trunk/queries/working_dml/misc/bug3997.sql.ref.log
+END
+bug3998.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2781/trunk/queries/working_dml/misc/bug3998.sql.ref.log
+END
+bug2977.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug2977.sql
+END
+multiupdate_001.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2559/trunk/queries/working_dml/misc/multiupdate_001.sql.ref.log
+END
+multiupdate_002.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/genii/mysql/!svn/ver/2559/trunk/queries/working_dml/misc/multiupdate_002.sql.ref.log
+END
+vc8000.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/2993/trunk/queries/working_dml/misc/vc8000.sql.ref.log
+END
+autoincrement.sql
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/genii/mysql/!svn/ver/3316/trunk/queries/working_dml/misc/autoincrement.sql
+END
+bug3350.sql.win.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/3511/trunk/queries/working_dml/misc/bug3350.sql.win.ref.log
+END
+bug3203.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1733/trunk/queries/working_dml/misc/bug3203.sql.ref.log
+END
+bug2790.tbl
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1372/trunk/queries/working_dml/misc/bug2790.tbl
+END
+bug5222.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3574/trunk/queries/working_dml/misc/bug5222.sql.ref.log
+END
+bug5143.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3376/trunk/queries/working_dml/misc/bug5143.sql.ref.log
+END
+bug3326.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2084/trunk/queries/working_dml/misc/bug3326.sql.ref.log
+END
+bug3312.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1871/trunk/queries/working_dml/misc/bug3312.sql
+END
+bug3129.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1763/trunk/queries/working_dml/misc/bug3129.sql.ref.log
+END
+bug3350.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1895/trunk/queries/working_dml/misc/bug3350.sql
+END
+bug3283.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/3155/trunk/queries/working_dml/misc/bug3283.sql.ref.log
+END
+bug3326b.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/2773/trunk/queries/working_dml/misc/bug3326b.sql.ref.log
+END
+vtabledmlcol2col.sql
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/genii/mysql/!svn/ver/1461/trunk/queries/working_dml/misc/vtabledmlcol2col.sql
+END
+bug2790.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2236/trunk/queries/working_dml/misc/bug2790.sql.ref.log
+END
+bug3565.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/2098/trunk/queries/working_dml/misc/bug3565.sql.ref.log
+END
+bug2741.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/1370/trunk/queries/working_dml/misc/bug2741.sql
+END
+bug2873.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug2873.sql.ref.log
+END
+bug5173.sql
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/genii/mysql/!svn/ver/3522/trunk/queries/working_dml/misc/bug5173.sql
+END
+bug3038b.sql
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3038b.sql
+END
+bug3038c.sql
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/1712/trunk/queries/working_dml/misc/bug3038c.sql
+END

@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions
+END
+MATHEXPR11.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR11.NM.sql
+END
+MATHEXPR3.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR3.NM.sql
+END
+MATHEXPR12.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR12.NM.sql
+END
+MATHEXPR13.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR13.NM.sql
+END
+MATHEXPR5.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR5.NM.sql
+END
+MATHEXPR14.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR14.NM.sql
+END
+MATHEXPR15.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR15.NM.sql
+END
+expNestedFunctions.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/expNestedFunctions.sql
+END
+MATHEXPR16.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR16.NM.sql
+END
+MATHEXPR8.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR8.NM.sql
+END
+expInFunction.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/expInFunction.sql
+END
+MATHEXPR17.NM.sql
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/MATHEXPR17.NM.sql
+END
+expNotInFunction.sql
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/expNotInFunction.sql
+END
+expDatatypeConversion.sql
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/functionsAndExpressions/Expressions/expDatatypeConversion.sql
+END

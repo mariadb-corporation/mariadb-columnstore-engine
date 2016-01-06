@@ -1,0 +1,66 @@
+n_regionkey
+0
+1
+2
+3
+4
+n_nationkey
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+avg(distinct n_nationkey)
+12.0000
+count(distinct n_name)
+25
+count(distinct n_regionkey)
+5
+count(distinct n_nationkey)	count(distinct n_regionkey)
+25	5
+avg(distinct n_nationkey)	avg(distinct n_regionkey)
+12.0000	2.0000
+count(n_nationkey)	count(n_regionkey)
+25	25
+count(distinct n_name)	avg(distinct n_nationkey)
+25	12.0000
+count(distinct n_nationkey)	count(distinct n_name)	count(distinct n_regionkey)	count(distinct n_comment)
+25	25	5	25
+sum(distinct n_nationkey)	count(distinct n_name)	avg(n_regionkey)	sum(distinct n_regionkey)	max(distinct n_comment)	max(n_comment)
+300	25	2.0000	10	y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be	y final packages. slow foxes cajole quickly. quickly silent platelets breach ironic accounts. unusual pinto be
+count(distinct n_comment)
+25
+count(distinct n_nationkey)
+0
+count(distinct n_nationkey)
+10
+count(distinct n_name)
+10
+count(distinct n_regionkey)
+5
+count(distinct n_nationkey)	count(distinct n_regionkey)
+10	5
+count(distinct n_name)	count(distinct n_nationkey)
+10	10
+count(distinct n_nationkey)	count(distinct n_name)	count(distinct n_regionkey)	count(distinct n_comment)
+10	10	5	10

@@ -1,0 +1,4 @@
+ERROR 138 (HY000) at line 2: Cannot execute the statement. DBRM is read only!
+ERROR 1146 (42S02) at line 3: Table 'dmlc.bug3203' doesn't exist
+Ctrl-C -- sending "KILL QUERY 20" to server ...
+Ctrl-C -- query aborted.

@@ -1,0 +1,12 @@
+count(get_format(date, 'USA'))
+5
+count(date_format('2011-06-16', '%y:%m:%d'))
+5
+count(abs(3))
+5
+count(date_format('2011-06-16', '%y:%m:%d'))
+1
+1
+1
+1
+1

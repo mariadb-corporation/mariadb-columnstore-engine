@@ -1,0 +1,18 @@
+getcalpontsoftwareinfo   Wed Nov 19 16:28:58 2014
+
+Name        : infinidb-platform            Relocations: (not relocatable)
+Version     : 4.5.2                             Vendor: InfiniDB, Inc.
+Release     : 1                             Build Date: Wed 23 Jul 2014 09:54:37 AM CDT
+Install Date: Wed 19 Nov 2014 04:26:39 PM CST      Build Host: srvperf1.calpont.com
+Group       : Applications                  Source RPM: infinidb-4.5.2-1.src.rpm
+Size        : 25126090                         License: Copyright (c) 2014 InfiniDB, Inc., all rights reserved
+Signature   : (none)
+Packager    : nightly <nightly@calpont.com>
+URL         : http://www.calpont.com/
+Summary     : InfiniDB software binaries
+Description :
+InfiniDB binary files
+Build Flags: -O3 -fno-strict-aliasing -fno-tree-vectorize -g0 -O3 -fno-strict-aliasing -fno-tree-vectorize -flto
+commit 4af02660732269865a4f931bcda71d907f990241
+Date: Wed Jul 23 09:09:00 2014 -0500
+

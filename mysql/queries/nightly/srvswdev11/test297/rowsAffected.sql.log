@@ -1,0 +1,60 @@
+--------------
+drop table if exists a
+--------------
+
+Query OK, 0 rows affected, 1 warning
+
+--------------
+create table a (a char(20)) engine=infinidb
+--------------
+
+Query OK, 0 rows affected
+
+--------------
+insert into a values ('x')
+--------------
+
+Query OK, 1 row affected
+
+--------------
+select * from a
+--------------
+
+a
+x
+1 row in set
+
+--------------
+update a join a y on a.a = y.a set a.a='99'
+--------------
+
+Query OK, 1 row affected
+Rows matched: 0  Changed: 0  Warnings: 0
+
+--------------
+select * from a
+--------------
+
+a
+99
+1 row in set
+
+--------------
+delete from a where a in (select x.a from (select a from a) x)
+--------------
+
+Query OK, 1 row affected
+
+--------------
+select * from a
+--------------
+
+Empty set
+
+--------------
+drop table a
+--------------
+
+Query OK, 0 rows affected
+
+Bye

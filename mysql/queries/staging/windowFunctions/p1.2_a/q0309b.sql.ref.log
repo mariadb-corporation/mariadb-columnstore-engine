@@ -1,0 +1,16 @@
+SELECT LEAD(salary, 2, 0) OVER (PARTITION BY depname ORDER BY salary NULLS LAST, empno), salary, empno, depname from empsalary where empno < 10000;
+ lead | salary | empno |  depname
+------+--------+-------+-----------
+ 5200 |   4200 |     7 | develop
+ 5200 |   4500 |     9 | develop
+ 6000 |   5200 |    10 | develop
+      |   5200 |    11 | develop
+    0 |   6000 |     8 | develop
+    0 |        |    12 | develop
+    0 |   3500 |     5 | personnel
+    0 |   3900 |     2 | personnel
+ 5000 |   4800 |     3 | sales
+    0 |   4800 |     4 | sales
+    0 |   5000 |     1 | sales
+(11 rows)
+

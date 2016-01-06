@@ -1,0 +1,1 @@
+ERROR 122 (HY000) at line 1: IDB-9002: Missing ORDER BY expression in the window specification.

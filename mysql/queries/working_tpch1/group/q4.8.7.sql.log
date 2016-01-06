@@ -1,0 +1,6 @@
+o_orderpriority	min(o_orderstatus)	max(o_orderstatus)
+1-URGENT	F	P
+2-HIGH	F	P
+3-MEDIUM	F	P
+4-NOT SPECIFIED	F	P
+5-LOW	F	P

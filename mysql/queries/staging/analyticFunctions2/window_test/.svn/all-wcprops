@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/genii/mysql/!svn/ver/3629/trunk/queries/staging/analyticFunctions2/window_test
+END
+window_test1.out
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test1.out
+END
+window_test2.out
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test2.out
+END
+window_test3.out
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test3.out
+END
+window_test4.out
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test4.out
+END
+window_testExpr.sql
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_testExpr.sql
+END
+window_test1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test1.sql
+END
+window_test2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test2.sql
+END
+window_test3.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test3.sql
+END
+window_test4.sql
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test4.sql
+END
+window_test1.out.save.1
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test1.out.save.1
+END
+window_test1.out.save
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_test1.out.save
+END
+window_testExpr.out
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/window_testExpr.out
+END
+avg.sql
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/genii/mysql/!svn/ver/3560/trunk/queries/staging/analyticFunctions2/window_test/avg.sql
+END

@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/genii/mysql/!svn/ver/1760/trunk/queries/working_tpch1/dml
+END
+dml1.sql
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/1760/trunk/queries/working_tpch1/dml/dml1.sql
+END
+dml2.sql
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/1760/trunk/queries/working_tpch1/dml/dml2.sql
+END
+dml3.sql
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/genii/mysql/!svn/ver/1760/trunk/queries/working_tpch1/dml/dml3.sql
+END
+stability01.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/dml/stability01.sql.ref.log
+END
+stability01.sql
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/genii/mysql/!svn/ver/1636/trunk/queries/working_tpch1/dml/stability01.sql
+END
+dml1.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/dml/dml1.sql.ref.log
+END
+dml2.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/dml/dml2.sql.ref.log
+END
+dml3.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/genii/mysql/!svn/ver/1202/trunk/queries/working_tpch1/dml/dml3.sql.ref.log
+END

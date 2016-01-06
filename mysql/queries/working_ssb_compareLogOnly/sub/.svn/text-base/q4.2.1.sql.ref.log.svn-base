@@ -1,0 +1,4 @@
+lo_orderkey	lo_linenumber	lo_custkey	lo_partkey	lo_suppkey	lo_orderdate	lo_orderpriority	lo_shippriority	lo_quantity	lo_extendedprice	lo_ordtotalprice	lo_discount	lo_revenue	lo_supplycost	lo_tax	lo_commitdate	lo_shipmode
+323	1	7828	163628	9273	19940326	1-URGENT	0	50.00	8458100.00	11943207.00	5.00	8035195.00	101497.00	4.00	19940425	REG AIR
+323	2	7828	95136	3676	19940326	1-URGENT	0	18.00	2036034.00	11943207.00	6.00	1913871.00	67867.00	7.00	19940602	TRUCK
+323	3	7828	142725	630	19940326	1-URGENT	0	9.00	1590948.00	11943207.00	7.00	1479581.00	106063.00	4.00	19940610	TRUCK

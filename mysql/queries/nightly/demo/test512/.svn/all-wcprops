@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test512
+END
+groupby.sql.ref.log
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/genii/mysql/!svn/ver/2033/trunk/queries/nightly/demo/test512/groupby.sql.ref.log
+END
+groupby.sql
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/genii/mysql/!svn/ver/2012/trunk/queries/nightly/demo/test512/groupby.sql
+END
+go512.sh
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/genii/mysql/!svn/ver/3019/trunk/queries/nightly/demo/test512/go512.sh
+END

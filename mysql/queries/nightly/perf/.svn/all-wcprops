@@ -1,0 +1,143 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/genii/mysql/!svn/ver/4081/trunk/queries/nightly/perf
+END
+remote_command.sh
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/genii/mysql/!svn/ver/2845/trunk/queries/nightly/perf/remote_command.sh
+END
+go.sh
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/genii/mysql/!svn/ver/4081/trunk/queries/nightly/perf/go.sh
+END
+test601.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test601.sh
+END
+test610.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2797/trunk/queries/nightly/perf/test610.sh
+END
+test611.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2888/trunk/queries/nightly/perf/test611.sh
+END
+test602.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test602.sh
+END
+test620.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/3108/trunk/queries/nightly/perf/test620.sh
+END
+test612.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/4063/trunk/queries/nightly/perf/test612.sh
+END
+test603.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test603.sh
+END
+test604.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test604.sh
+END
+test613.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test613.sh
+END
+test614.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test614.sh
+END
+test605.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test605.sh
+END
+test615.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/3105/trunk/queries/nightly/perf/test615.sh
+END
+test606.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/4063/trunk/queries/nightly/perf/test606.sh
+END
+test607.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test607.sh
+END
+test616.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test616.sh
+END
+test608.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2888/trunk/queries/nightly/perf/test608.sh
+END
+test617.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/2880/trunk/queries/nightly/perf/test617.sh
+END
+test609.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/4063/trunk/queries/nightly/perf/test609.sh
+END
+clearOut.sh
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/genii/mysql/!svn/ver/2895/trunk/queries/nightly/perf/clearOut.sh
+END
+test618.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/4075/trunk/queries/nightly/perf/test618.sh
+END
+test619.sh
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/genii/mysql/!svn/ver/3107/trunk/queries/nightly/perf/test619.sh
+END
