@@ -1,0 +1,301 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+	Version="10.0"
+	VendorName="SlickEdit"
+	TemplateName="GNU C/C++"
+	WorkingDir=".">
+	<Config
+		Name="Debug"
+		Type="gnuc"
+		DebugCallbackName="gdb"
+		Version="1"
+		OutputFile="%bdcpimport.bin"
+		CompilerConfigName="Latest Version"
+		Defines=""
+		ObjectDir="/home/dhall/genii/writeengine/bulk/">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				Dialog="_gnuc_options_form Compile"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				OutputExts="*.o"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ -c %xup %defd -g -o "%bd%n%oe" %i %f'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link"
+				ShowOnMenu="Never"
+				Dialog="_gnuc_options_form Link"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ %xup -g -o "%o" %objs'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1"
+				DependsRef="Debug">
+				<Exec CmdLine="make -fMakefile; make -fMakefile install_bulk"/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1"
+				DependsRef="Debug">
+				<Exec CmdLine="make -fMakefile clean; make -fMakefile; make -fMakefile install_bulk"/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				Dialog="_gnuc_options_form Run/Debug"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveNone"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1">
+				<Exec
+					CmdLine='vsdebugio -prog "%o" %~other'
+					OtherOptions="davidtest t1 /home/dhall/t1.tbl -w1 -d2 -i"/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				Dialog="_gnuc_options_form Run/Debug"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1">
+				<Exec
+					CmdLine='"%o" %~other'
+					OtherOptions="davidtest t1 /home/dhall/t1.tbl -w1 -d2 -i"/>
+			</Target>
+			<Target
+				Name="dash"
+				MenuCaption="-"
+				Deletable="0">
+				<Exec/>
+			</Target>
+			<Target
+				Name="GNU C Options"
+				MenuCaption="GNU C &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0"
+				SaveOption="SaveNone">
+				<Exec
+					CmdLine="gnucoptions"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<List Name="GNUC Options">
+			<Item
+				Name="LinkerOutputType"
+				Value="Executable"/>
+		</List>
+		<Dependencies Name="Debug">
+			<Dependency Project="../server/WriteEngineServer.vpj"/>
+			<Dependency Project="../wrapper/wrapper.vpj"/>
+			<Dependency Project="../../versioning/BRM/brm.vpj"/>
+		</Dependencies>
+		<Includes/>
+		<Libs PreObjects="0"/>
+	</Config>
+	<Config
+		Name="Release"
+		Type="gnuc"
+		DebugCallbackName="gdb"
+		Version="1"
+		OutputFile="%bdcpimport.bin"
+		CompilerConfigName="Latest Version"
+		Defines=""
+		ObjectDir="/home/dhall/genii/writeengine/bulk/">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				Dialog="_gnuc_options_form Compile"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				OutputExts="*.o"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ -c %xup %defd -o "%bd%n%oe" %i %f'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link"
+				ShowOnMenu="Never"
+				Dialog="_gnuc_options_form Link"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ %xup -o "%o" %objs'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1"
+				DependsRef="Release">
+				<Exec CmdLine="make -fMakefile; make -fMakefile install_bulk"/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1"
+				DependsRef="Release">
+				<Exec CmdLine="make -fMakefile clean; make -fMakefile; make -fMakefile install_bulk"/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				Dialog="_gnuc_options_form Run/Debug"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveNone"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1">
+				<Exec
+					CmdLine='vsdebugio -prog "%o" %~other'
+					OtherOptions="davidtest t1 /home/dhall/t1.tbl -w1 -d2 -i"/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				Dialog="_gnuc_options_form Run/Debug"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="/home/dhall/genii/writeengine/bulk/"
+				ClearProcessBuffer="1">
+				<Exec
+					CmdLine='"%o" %~other'
+					OtherOptions="davidtest t1 /home/dhall/t1.tbl -w1 -d2 -i"/>
+			</Target>
+			<Target
+				Name="dash"
+				MenuCaption="-"
+				Deletable="0">
+				<Exec/>
+			</Target>
+			<Target
+				Name="GNU C Options"
+				MenuCaption="GNU C &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0"
+				SaveOption="SaveNone">
+				<Exec
+					CmdLine="gnucoptions"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<List Name="GNUC Options">
+			<Item
+				Name="LinkerOutputType"
+				Value="Executable"/>
+		</List>
+		<Dependencies Name="Release">
+			<Dependency Project="../server/WriteEngineServer.vpj"/>
+			<Dependency Project="../wrapper/wrapper.vpj"/>
+			<Dependency Project="../../versioning/BRM/brm.vpj"/>
+		</Dependencies>
+		<Includes/>
+		<Libs PreObjects="0"/>
+	</Config>
+	<Files>
+		<Folder
+			Name="Source Files"
+			Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+			<F N="bulkload.py"/>
+			<F N="checkidx.py"/>
+			<F N="cpimport.cpp"/>
+			<F N="parsetest.cpp"/>
+			<F N="qa-bulkload.py"/>
+			<F N="we_brmreporter.cpp"/>
+			<F N="we_bulkload.cpp"/>
+			<F N="we_bulkloadbuffer.cpp"/>
+			<F N="we_bulkstatus.cpp"/>
+			<F N="we_colbuf.cpp"/>
+			<F N="we_colbufcompressed.cpp"/>
+			<F N="we_colbufmgr.cpp"/>
+			<F N="we_colbufmgrdctnry.cpp"/>
+			<F N="we_colbufsec.cpp"/>
+			<F N="we_colextinf.cpp"/>
+			<F N="we_colopbulk.cpp"/>
+			<F N="we_columnautoinc.cpp"/>
+			<F N="we_columninfo.cpp"/>
+			<F N="we_columninfocompressed.cpp"/>
+			<F N="we_tableinfo.cpp"/>
+			<F N="we_tempxmlgendata.cpp"/>
+			<F N="we_workers.cpp"/>
+		</Folder>
+		<Folder
+			Name="Header Files"
+			Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+			<F N="bulkload.sh"/>
+			<F N="bulkloadp.sh"/>
+			<F N="cleanup.sh"/>
+			<F N="cpimport.sh"/>
+			<F N="dbbuilder.sh"/>
+			<F N="dbload.sh"/>
+			<F N="dbload_tmplate.sh"/>
+			<F N="dbloadp.sh"/>
+			<F N="dbreset.sh"/>
+			<F N="dbstart.sh"/>
+			<F N="dbstop.sh"/>
+			<F N="we_brmreporter.h"/>
+			<F N="we_bulkload.h"/>
+			<F N="we_bulkloadbuffer.h"/>
+			<F N="we_bulkstatus.h"/>
+			<F N="we_colbuf.h"/>
+			<F N="we_colbufcompressed.h"/>
+			<F N="we_colbufmgr.h"/>
+			<F N="we_colbufsec.h"/>
+			<F N="we_colextinf.h"/>
+			<F N="we_colopbulk.h"/>
+			<F N="we_columnautoinc.h"/>
+			<F N="we_columninfo.h"/>
+			<F N="we_columninfocompressed.h"/>
+			<F N="we_tableinfo.h"/>
+			<F N="we_tempxmlgendata.h"/>
+		</Folder>
+		<Folder
+			Name="Resource Files"
+			Filters="*.ico;*.cur;*.dlg"/>
+		<Folder
+			Name="Bitmaps"
+			Filters="*.bmp"/>
+		<Folder
+			Name="Other Files"
+			Filters="">
+			<F
+				N="Makefile"
+				Type="Makefile"/>
+			<F
+				N="Makefile.am"
+				Type="Makefile"/>
+		</Folder>
+	</Files>
+</Project>

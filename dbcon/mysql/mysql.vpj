@@ -1,0 +1,427 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+    Version="10.0"
+    VendorName="SlickEdit"
+    TemplateName="GNU C/C++"
+    WorkingDir=".">
+    <Config
+        Name="Debug"
+        Type="gnuc"
+        DebugCallbackName="gdb"
+        Version="1"
+        OutputFile="%bdcalmysql.so"
+        CompilerConfigName="Latest Version"
+        ObjectDir="/home/dhall/genii/dbcon/mysql/">
+        <Menu>
+            <Target
+                Name="Compile"
+                MenuCaption="&amp;Compile"
+                Dialog="_gnuc_options_form Compile"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                OutputExts="*.o"
+                SaveOption="SaveCurrent"
+                RunFromDir="%rw">
+                <Exec CmdLine='g++ -c %xup  %defd -g -o "%bd%n%oe" %i "%f"'/>
+            </Target>
+            <Target
+                Name="Link"
+                MenuCaption="&amp;Link"
+                ShowOnMenu="Never"
+                Dialog="_gnuc_options_form Link"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveCurrent"
+                RunFromDir="%rw">
+                <Exec CmdLine='g++ %xup -g -o "%o" %f %libs -shared -fPIC'/>
+            </Target>
+            <Target
+                Name="Build"
+                MenuCaption="&amp;Build"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw"
+                ClearProcessBuffer="1">
+                <Exec CmdLine="make install"/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                MenuCaption="&amp;Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                Dialog="_gnuc_options_form Run/Debug"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveNone"
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
+            </Target>
+            <Target
+                Name="Execute"
+                MenuCaption="E&amp;xecute"
+                Dialog="_gnuc_options_form Run/Debug"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
+            </Target>
+            <Target
+                Name="dash"
+                MenuCaption="-"
+                Deletable="0">
+                <Exec/>
+            </Target>
+            <Target
+                Name="GNU C Options"
+                MenuCaption="GNU C &amp;Options..."
+                ShowOnMenu="HideIfNoCmdLine"
+                Deletable="0"
+                SaveOption="SaveNone">
+                <Exec
+                    CmdLine="gnucoptions"
+                    Type="Slick-C"/>
+            </Target>
+        </Menu>
+        <List Name="GNUC Options">
+            <Item
+                Name="LinkerOutputType"
+                Value="SharedLibrary"/>
+        </List>
+    </Config>
+    <Config
+        Name="Release"
+        Type="gnuc"
+        DebugCallbackName="gdb"
+        Version="1"
+        OutputFile="%bdcalmysql.so"
+        CompilerConfigName="Latest Version">
+        <Menu>
+            <Target
+                Name="Compile"
+                MenuCaption="&amp;Compile"
+                Dialog="_gnuc_options_form Compile"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                OutputExts="*.o"
+                SaveOption="SaveCurrent"
+                RunFromDir="%rw">
+                <Exec CmdLine='g++ -c %xup %defd -o "%bd%n%oe" %i "%f"'/>
+            </Target>
+            <Target
+                Name="Link"
+                MenuCaption="&amp;Link"
+                ShowOnMenu="Never"
+                Dialog="_gnuc_options_form Link"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveCurrent"
+                RunFromDir="%rw">
+                <Exec CmdLine='g++ %xup -o "%o" %f %libs -shared -fPIC'/>
+            </Target>
+            <Target
+                Name="Build"
+                MenuCaption="&amp;Build"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw"
+                ClearProcessBuffer="1">
+                <Exec CmdLine="make install"/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                MenuCaption="&amp;Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                Dialog="_gnuc_options_form Run/Debug"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveNone"
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
+            </Target>
+            <Target
+                Name="Execute"
+                MenuCaption="E&amp;xecute"
+                Dialog="_gnuc_options_form Run/Debug"
+                BuildFirst="1"
+                CaptureOutputWith="ProcessBuffer"
+                Deletable="0"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine=""/>
+            </Target>
+            <Target
+                Name="dash"
+                MenuCaption="-"
+                Deletable="0">
+                <Exec/>
+            </Target>
+            <Target
+                Name="GNU C Options"
+                MenuCaption="GNU C &amp;Options..."
+                ShowOnMenu="HideIfNoCmdLine"
+                Deletable="0"
+                SaveOption="SaveNone">
+                <Exec
+                    CmdLine="gnucoptions"
+                    Type="Slick-C"/>
+            </Target>
+        </Menu>
+        <List Name="GNUC Options">
+            <Item
+                Name="LinkerOutputType"
+                Value="SharedLibrary"/>
+        </List>
+    </Config>
+    <Files>
+        <Folder
+            Name="Source Files"
+            Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+            <F N="ha_autoi.cpp"/>
+            <F N="ha_calpont.cpp"/>
+            <F N="ha_calpont_ddl.cpp"/>
+            <F N="ha_calpont_dml.cpp"/>
+            <F N="ha_calpont_execplan.cpp"/>
+            <F N="ha_calpont_impl.cpp"/>
+            <F N="ha_calpont_partition.cpp"/>
+            <F N="ha_calpont_udf.cpp"/>
+            <F N="ha_exists_sub.cpp"/>
+            <F N="ha_from_sub.cpp"/>
+            <F N="ha_in_sub.cpp"/>
+            <F N="ha_pseudocolumn.cpp"/>
+            <F N="ha_scalar_sub.cpp"/>
+            <F N="ha_select_sub.cpp"/>
+            <F N="ha_view.cpp"/>
+            <F N="ha_window_function.cpp"/>
+            <F N="sm.cpp"/>
+        </Folder>
+        <Folder
+            Name="Header Files"
+            Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+            <F N="../../../mariadb/sql/authors.h"/>
+            <F N="../../../mariadb/sql/bounded_queue.h"/>
+            <F N="../../../mariadb/sql/client_settings.h"/>
+            <F N="../../../mariadb/sql/compat56.h"/>
+            <F N="../../../mariadb/sql/contributors.h"/>
+            <F N="../../../mariadb/sql/create_options.h"/>
+            <F N="../../../mariadb/sql/custom_conf.h"/>
+            <F N="../../../mariadb/sql/datadict.h"/>
+            <F N="../../../mariadb/sql/debug_sync.h"/>
+            <F N="../../../mariadb/sql/derror.h"/>
+            <F N="../../../mariadb/sql/des_key_file.h"/>
+            <F N="../../../mariadb/sql/discover.h"/>
+            <F N="../../../mariadb/sql/errorids.h"/>
+            <F N="../../../mariadb/sql/event_data_objects.h"/>
+            <F N="../../../mariadb/sql/event_db_repository.h"/>
+            <F N="../../../mariadb/sql/event_parse_data.h"/>
+            <F N="../../../mariadb/sql/event_queue.h"/>
+            <F N="../../../mariadb/sql/event_scheduler.h"/>
+            <F N="../../../mariadb/sql/events.h"/>
+            <F N="../../../mariadb/sql/field.h"/>
+            <F N="../../../mariadb/sql/filesort.h"/>
+            <F N="../../../mariadb/sql/filesort_utils.h"/>
+            <F N="../../../mariadb/sql/gcalc_slicescan.h"/>
+            <F N="../../../mariadb/sql/gcalc_tools.h"/>
+            <F N="../../../mariadb/sql/group_by_handler.h"/>
+            <F N="../../../mariadb/sql/gstream.h"/>
+            <F N="../../../mariadb/sql/ha_partition.h"/>
+            <F N="../../../mariadb/sql/handler.h"/>
+            <F N="../../../mariadb/sql/hash_filo.h"/>
+            <F N="../../../mariadb/sql/hostname.h"/>
+            <F N="../../../mariadb/sql/init.h"/>
+            <F N="../../../mariadb/sql/innodb_priv.h"/>
+            <F N="../../../mariadb/sql/item.h"/>
+            <F N="../../../mariadb/sql/item_cmpfunc.h"/>
+            <F N="../../../mariadb/sql/item_create.h"/>
+            <F N="../../../mariadb/sql/item_create_window_function.h"/>
+            <F N="../../../mariadb/sql/item_func.h"/>
+            <F N="../../../mariadb/sql/item_geofunc.h"/>
+            <F N="../../../mariadb/sql/item_inetfunc.h"/>
+            <F N="../../../mariadb/sql/item_row.h"/>
+            <F N="../../../mariadb/sql/item_strfunc.h"/>
+            <F N="../../../mariadb/sql/item_subselect.h"/>
+            <F N="../../../mariadb/sql/item_sum.h"/>
+            <F N="../../../mariadb/sql/item_timefunc.h"/>
+            <F N="../../../mariadb/sql/item_window_function.h"/>
+            <F N="../../../mariadb/sql/item_xmlfunc.h"/>
+            <F N="../../../mariadb/sql/key.h"/>
+            <F N="../../../mariadb/sql/keycaches.h"/>
+            <F N="../../../mariadb/sql/lex.h"/>
+            <F N="../../../mariadb/sql/lex_hash.h"/>
+            <F N="../../../mariadb/sql/lex_symbol.h"/>
+            <F N="../../../mariadb/sql/lex_token.h"/>
+            <F N="../../../mariadb/sql/lock.h"/>
+            <F N="../../../mariadb/sql/log.h"/>
+            <F N="../../../mariadb/sql/log_event.h"/>
+            <F N="../../../mariadb/sql/log_event_old.h"/>
+            <F N="../../../mariadb/sql/log_slow.h"/>
+            <F N="../../../mariadb/sql/mdl.h"/>
+            <F N="../../../mariadb/sql/mem_root_array.h"/>
+            <F N="../../../mariadb/sql/message.h"/>
+            <F N="../../../mariadb/sql/multi_range_read.h"/>
+            <F N="../../../mariadb/sql/my_apc.h"/>
+            <F N="../../../mariadb/sql/my_decimal.h"/>
+            <F N="../../../mariadb/sql/my_json_writer.h"/>
+            <F N="../../../mariadb/sql/mysqld.h"/>
+            <F N="../../../mariadb/sql/mysqld_suffix.h"/>
+            <F N="../../../mariadb/sql/nt_servc.h"/>
+            <F N="../../../mariadb/sql/opt_range.h"/>
+            <F N="../../../mariadb/sql/opt_subselect.h"/>
+            <F N="../../../mariadb/sql/parse_file.h"/>
+            <F N="../../../mariadb/sql/partition_element.h"/>
+            <F N="../../../mariadb/sql/partition_info.h"/>
+            <F N="../../../mariadb/sql/procedure.h"/>
+            <F N="../../../mariadb/sql/protocol.h"/>
+            <F N="../../../mariadb/sql/records.h"/>
+            <F N="../../../mariadb/sql/repl_failsafe.h"/>
+            <F N="../../../mariadb/sql/replication.h"/>
+            <F N="../../../mariadb/sql/rpl_constants.h"/>
+            <F N="../../../mariadb/sql/rpl_filter.h"/>
+            <F N="../../../mariadb/sql/rpl_gtid.h"/>
+            <F N="../../../mariadb/sql/rpl_handler.h"/>
+            <F N="../../../mariadb/sql/rpl_injector.h"/>
+            <F N="../../../mariadb/sql/rpl_mi.h"/>
+            <F N="../../../mariadb/sql/rpl_parallel.h"/>
+            <F N="../../../mariadb/sql/rpl_record.h"/>
+            <F N="../../../mariadb/sql/rpl_record_old.h"/>
+            <F N="../../../mariadb/sql/rpl_reporting.h"/>
+            <F N="../../../mariadb/sql/rpl_rli.h"/>
+            <F N="../../../mariadb/sql/rpl_tblmap.h"/>
+            <F N="../../../mariadb/sql/rpl_utility.h"/>
+            <F N="../../../mariadb/sql/scheduler.h"/>
+            <F N="../../../mariadb/sql/set_var.h"/>
+            <F N="../../../mariadb/sql/slave.h"/>
+            <F N="../../../mariadb/sql/sp.h"/>
+            <F N="../../../mariadb/sql/sp_cache.h"/>
+            <F N="../../../mariadb/sql/sp_head.h"/>
+            <F N="../../../mariadb/sql/sp_pcontext.h"/>
+            <F N="../../../mariadb/sql/sp_rcontext.h"/>
+            <F N="../../../mariadb/sql/spatial.h"/>
+            <F N="../../../mariadb/sql/sql_acl.h"/>
+            <F N="../../../mariadb/sql/sql_admin.h"/>
+            <F N="../../../mariadb/sql/sql_alter.h"/>
+            <F N="../../../mariadb/sql/sql_analyse.h"/>
+            <F N="../../../mariadb/sql/sql_analyze_stmt.h"/>
+            <F N="../../../mariadb/sql/sql_array.h"/>
+            <F N="../../../mariadb/sql/sql_audit.h"/>
+            <F N="../../../mariadb/sql/sql_base.h"/>
+            <F N="../../../mariadb/sql/sql_binlog.h"/>
+            <F N="../../../mariadb/sql/sql_bitmap.h"/>
+            <F N="../../../mariadb/sql/sql_bootstrap.h"/>
+            <F N="../../../mariadb/sql/sql_cache.h"/>
+            <F N="../../../mariadb/sql/sql_callback.h"/>
+            <F N="../../../mariadb/sql/sql_class.h"/>
+            <F N="../../../mariadb/sql/sql_cmd.h"/>
+            <F N="../../../mariadb/sql/sql_connect.h"/>
+            <F N="../../../mariadb/sql/sql_const.h"/>
+            <F N="../../../mariadb/sql/sql_crypt.h"/>
+            <F N="../../../mariadb/sql/sql_cursor.h"/>
+            <F N="../../../mariadb/sql/sql_db.h"/>
+            <F N="../../../mariadb/sql/sql_delete.h"/>
+            <F N="../../../mariadb/sql/sql_derived.h"/>
+            <F N="../../../mariadb/sql/sql_digest.h"/>
+            <F N="../../../mariadb/sql/sql_digest_stream.h"/>
+            <F N="../../../mariadb/sql/sql_do.h"/>
+            <F N="../../../mariadb/sql/sql_error.h"/>
+            <F N="../../../mariadb/sql/sql_explain.h"/>
+            <F N="../../../mariadb/sql/sql_expression_cache.h"/>
+            <F N="../../../mariadb/sql/sql_get_diagnostics.h"/>
+            <F N="../../../mariadb/sql/sql_handler.h"/>
+            <F N="../../../mariadb/sql/sql_help.h"/>
+            <F N="../../../mariadb/sql/sql_hset.h"/>
+            <F N="../../../mariadb/sql/sql_insert.h"/>
+            <F N="../../../mariadb/sql/sql_join_cache.h"/>
+            <F N="../../../mariadb/sql/sql_lex.h"/>
+            <F N="../../../mariadb/sql/sql_lifo_buffer.h"/>
+            <F N="../../../mariadb/sql/sql_list.h"/>
+            <F N="../../../mariadb/sql/sql_load.h"/>
+            <F N="../../../mariadb/sql/sql_locale.h"/>
+            <F N="../../../mariadb/sql/sql_manager.h"/>
+            <F N="../../../mariadb/sql/sql_parse.h"/>
+            <F N="../../../mariadb/sql/sql_partition.h"/>
+            <F N="../../../mariadb/sql/sql_partition_admin.h"/>
+            <F N="../../../mariadb/sql/sql_plist.h"/>
+            <F N="../../../mariadb/sql/sql_plugin.h"/>
+            <F N="../../../mariadb/sql/sql_plugin_compat.h"/>
+            <F N="../../../mariadb/sql/sql_prepare.h"/>
+            <F N="../../../mariadb/sql/sql_priv.h"/>
+            <F N="../../../mariadb/sql/sql_profile.h"/>
+            <F N="../../../mariadb/sql/sql_reload.h"/>
+            <F N="../../../mariadb/sql/sql_rename.h"/>
+            <F N="../../../mariadb/sql/sql_repl.h"/>
+            <F N="../../../mariadb/sql/sql_select.h"/>
+            <F N="../../../mariadb/sql/sql_servers.h"/>
+            <F N="../../../mariadb/sql/sql_show.h"/>
+            <F N="../../../mariadb/sql/sql_signal.h"/>
+            <F N="../../../mariadb/sql/sql_sort.h"/>
+            <F N="../../../mariadb/sql/sql_statistics.h"/>
+            <F N="../../../mariadb/sql/sql_string.h"/>
+            <F N="../../../mariadb/sql/sql_table.h"/>
+            <F N="../../../mariadb/sql/sql_tablespace.h"/>
+            <F N="../../../mariadb/sql/sql_test.h"/>
+            <F N="../../../mariadb/sql/sql_time.h"/>
+            <F N="../../../mariadb/sql/sql_trigger.h"/>
+            <F N="../../../mariadb/sql/sql_truncate.h"/>
+            <F N="../../../mariadb/sql/sql_type.h"/>
+            <F N="../../../mariadb/sql/sql_udf.h"/>
+            <F N="../../../mariadb/sql/sql_union.h"/>
+            <F N="../../../mariadb/sql/sql_update.h"/>
+            <F N="../../../mariadb/sql/sql_view.h"/>
+            <F N="../../../mariadb/sql/sql_yacc.h"/>
+            <F N="../../../mariadb/sql/strfunc.h"/>
+            <F N="../../../mariadb/sql/structs.h"/>
+            <F N="../../../mariadb/sql/sys_vars_shared.h"/>
+            <F N="../../../mariadb/sql/table.h"/>
+            <F N="../../../mariadb/sql/table_cache.h"/>
+            <F N="../../../mariadb/sql/thr_malloc.h"/>
+            <F N="../../../mariadb/sql/threadpool.h"/>
+            <F N="../../../mariadb/sql/transaction.h"/>
+            <F N="../../../mariadb/sql/tzfile.h"/>
+            <F N="../../../mariadb/sql/tztime.h"/>
+            <F N="../../../mariadb/sql/unireg.h"/>
+            <F N="../../../mariadb/sql/winservice.h"/>
+            <F N="../../../mariadb/sql/wsrep_applier.h"/>
+            <F N="../../../mariadb/sql/wsrep_binlog.h"/>
+            <F N="../../../mariadb/sql/wsrep_mysqld.h"/>
+            <F N="../../../mariadb/sql/wsrep_priv.h"/>
+            <F N="../../../mariadb/sql/wsrep_sst.h"/>
+            <F N="../../../mariadb/sql/wsrep_thd.h"/>
+            <F N="../../../mariadb/sql/wsrep_utils.h"/>
+            <F N="../../../mariadb/sql/wsrep_var.h"/>
+            <F N="../../../mariadb/sql/wsrep_xid.h"/>
+        </Folder>
+        <Folder
+            Name="Resource Files"
+            Filters="*.ico;*.cur;*.dlg"/>
+        <Folder
+            Name="Bitmaps"
+            Filters="*.bmp"/>
+        <Folder
+            Name="Other Files"
+            Filters="">
+            <F
+                N="Makefile"
+                Type="Makefile"/>
+        </Folder>
+    </Files>
+</Project>
