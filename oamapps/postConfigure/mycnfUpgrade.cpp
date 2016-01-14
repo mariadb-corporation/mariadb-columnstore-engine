@@ -115,22 +115,25 @@ int main(int argc, char *argv[])
 			oldbuf = line;
 			string::size_type pos = oldbuf.find(includeArg,0);
 			if ( pos != string::npos ) {
-				//check if this is commented out
+				//found in my.cnf.rpmsave, check if this is commented out
 				if ( line[0] != '#' ) 
 				{
-					// no, find in my.cnf and replace
+					// no, check in my.cnf and replace if exist or add if it doesn't
 
 					ifstream mycnffile (mycnfFile.c_str());
 					vector <string> lines;
 					char line1[200];
 					string newbuf;
+					bool updated = false;
 					while (mycnffile.getline(line1, 200))
 					{
 						newbuf = line1;
 						string::size_type pos = newbuf.find(includeArg,0);
-						if ( pos != string::npos )
+						if ( pos != string::npos ) {
 							newbuf = oldbuf;
-
+							cout << "Updated argument: " << includeArg << endl;
+							updated = true;
+						}
 						//output to temp file
 						lines.push_back(newbuf);
 					}
@@ -147,12 +150,48 @@ int main(int argc, char *argv[])
 					newFile.close();
 					
 					close(fd);
+
+					if (!updated)
+					{	//not found, so add
+						ifstream mycnffile (mycnfFile.c_str());
+						vector <string> lines;
+						char line1[200];
+						string newbuf;
+						while (mycnffile.getline(line1, 200))
+						{
+							newbuf = line1;
+							string::size_type pos = newbuf.find("[mysqld]",0);
+							if ( pos != string::npos ) {
+								lines.push_back(newbuf);
+								newbuf = oldbuf;
+								cout << "Added argument: " << includeArg << endl;
+							}
+							//output to temp file
+							lines.push_back(newbuf);
+						}
+
+						//write out a new my.cnf
+						mycnffile.close();
+						unlink (mycnfFile.c_str());
+						ofstream newFile (mycnfFile.c_str());	
+						
+						//create new file
+						int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0666);
+						
+						copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+						newFile.close();
+						
+						close(fd);
+					}
 				}
 
 				break;
 			}
 		}
 	}
+
+	string cmd = "chown mysql:mysql " + mycnfFile;
+	system(cmd.c_str());
 
 	exit (0);
 }

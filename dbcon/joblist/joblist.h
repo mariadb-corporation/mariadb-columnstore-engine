@@ -123,13 +123,19 @@ public:
 	// @bug4848, enhance and unify limit handling.
 	EXPORT virtual void abortOnLimit(JobStep* js);
 
+	static void setPMsConfigured(int pms) {fPmsConfigured = pms;}
+
 protected:
 	//defaults okay
 	//JobList(const JobList& rhs);
 	//JobList& operator=(const JobList& rhs);
 	bool fIsRunning;
 	bool fIsExeMgr;
-	bool fPmConnected;
+	int  fPmsConnected;
+	
+	// Dirty pool kludge. Contains the number of PMs configured in Calpont.xml.
+	// This kludge reduces the number of calls needed to config.Config, which are expensive.
+	static int  fPmsConfigured;
 
 	DeliveredTableMap fDeliveredTables;
 	execplan::CalpontSystemCatalog::OID projectingTableOID; //DeliveryWSDLs get a reference to this

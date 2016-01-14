@@ -431,6 +431,17 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	// run my.cnf upgrade script
+	if ( reuseConfig == "y" )
+	{
+		cmd = installDir + "/bin/mycnfUpgrade  > /tmp/mycnfUpgrade.log 2>&1";
+		int rtnCode = system(cmd.c_str());
+		if (WEXITSTATUS(rtnCode) != 0)
+			cout << "Error: Problem upgrade my.cnf, check /tmp/mycnfUpgrade.log" << endl;
+		else
+			cout << cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
+	}
+
 	//check mysql port changes
 	string MySQLPort;
 	try {
@@ -2975,18 +2986,6 @@ int main(int argc, char *argv[])
 					cout << endl;
 				}
 			}
-			else
-			{
-				// run my.cnf upgrade script
-				if ( reuseConfig == "y" && MySQLRep == "y" && 
-					IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
-				{
-					cmd = installDir + "/bin/mycnfUpgrade  > /tmp/mycnfUpgrade.log 2>&1";
-					int rtnCode = system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0)
-						cout << "Error: Problem upgrade my.cnf, check /tmp/mycnfUpgrade.log" << endl;
-				}
-			}
 
 			cout << endl;
 			cout << "Next step is to enter the password to access the other Servers." << endl;
@@ -3039,15 +3038,6 @@ int main(int argc, char *argv[])
 				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 			{
 				cout << endl << "===== Running the InfiniDB MySQL setup scripts =====" << endl << endl;
-
-				// run my.cnf upgrade script
-				if ( reuseConfig == "y" && MySQLRep == "y" )
-				{
-					cmd = installDir + "/bin/mycnfUpgrade  > /tmp/mycnfUpgrade.log 2>&1";
-					int rtnCode = system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0)
-						cout << "Error: Problem upgrade my.cnf, check /tmp/mycnfUpgrade.log" << endl;
-				}
 
 				// call the mysql setup scripts
 				mysqlSetup();
@@ -3606,7 +3596,7 @@ int main(int argc, char *argv[])
 			cout.flush();
 
 			//send message to procmon's to run upgrade script
-			int status = sendReplicationRequest(IserverTypeInstall, password, mysqlPort);
+			int status = sendReplicationRequest(IserverTypeInstall, password, mysqlPort, pmwithum);
 
 			if ( status != 0 ) {
 				cout << endl << " InfiniDB Install Failed" << endl << endl;
@@ -4835,32 +4825,34 @@ bool storageSetup(string cloud)
 		cout << endl;
 		while(true)
 		{
-			pcommand = callReadline("Do you want to enable Non-OAM-Parent-PM EBS failover support? [y,n] (" + AmazonPMFailover + ") > ");
+			pcommand = callReadline("Do you want to enable Instance failover support? [y,n] (" + AmazonPMFailover + ") > ");
 			if (pcommand)
 			{
-				if (strlen(pcommand) > 0)
-				{
-					AmazonPMFailover = pcommand;
-				}
-				else
-				{
-					if ( noPrompting )
-						continue;
-					else
-					{
-						cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-						if ( noPrompting )
-							exit(1);
-						continue;
-					}
-				}
-	
+				if (strlen(pcommand) > 0) AmazonPMFailover = pcommand;
 				callFree(pcommand);
 			}
+
+			if ( AmazonPMFailover == "y" || AmazonPMFailover == "n" ) {
+				cout << endl;
+				break;
+			}
+			else
+				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+			if ( noPrompting )
+				exit(1);
 		}
 
 		try {
 			sysConfig->setConfig(InstallSection, "AmazonPMFailover", AmazonPMFailover);
+		}
+		catch(...)
+		{}
+	}
+
+	if( DBRootStorageType == "internal" && cloud == "amazon" )
+	{	//set AmazonPMFailover
+		try {
+			sysConfig->setConfig(InstallSection, "AmazonPMFailover", "n");
 		}
 		catch(...)
 		{}

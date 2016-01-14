@@ -1026,6 +1026,7 @@ void BatchPrimitiveProcessor::execute()
 								   sessionID,
 								   &counterLock,
 								   &busyLoaderCount,
+								   sendThread,
 								   &vssCache);
 					asyncLoaded[p] = true;
 				}
@@ -2012,6 +2013,7 @@ void BatchPrimitiveProcessor::asyncLoadProjectColumns()
 							   sessionID,
 							   &counterLock,
 							   &busyLoaderCount,
+							   sendThread,
 							   &vssCache);
 				asyncLoaded[i] = true;
 			}

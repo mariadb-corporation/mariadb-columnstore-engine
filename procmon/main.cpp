@@ -214,7 +214,8 @@ int main(int argc, char **argv)
 
 	//check if currently configured as Parent OAM Module on startup
 	if ( gOAMParentModuleFlag ) {
-		if ( config.OAMStandbyName() != oam::UnassignedName ) {
+		if ( ( config.OAMStandbyName() != oam::UnassignedName ) &&
+			DBRootStorageType != "internal" ) {
 			//try for 20 minutes checking if the standby node is up
 			string parentOAMModule; 
 			log.writeLog(__LINE__, "starting has parent, double check. checking with old Standby Module", LOG_TYPE_DEBUG);
@@ -600,10 +601,15 @@ int main(int argc, char **argv)
 		log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
 
 	//mysql status monitor thread
-	pthread_t mysqlThread;
-	ret = pthread_create (&mysqlThread, NULL, (void*(*)(void*)) &mysqlMonitorThread, NULL);
-	if ( ret != 0 )
-		log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
+	if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+		(PMwithUM == "y") )
+	{
+
+		pthread_t mysqlThread;
+		ret = pthread_create (&mysqlThread, NULL, (void*(*)(void*)) &mysqlMonitorThread, NULL);
+		if ( ret != 0 )
+			log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
+	}
 
 	//update syslog file priviledges
 	aMonitor.changeModLog();
@@ -1086,16 +1092,6 @@ static void chldHandleThread(MonitorConfig config)
 			processRestartPeriod = 120;
 		}
 
-		try
-		{
-			oam.getProcessStatus(systemprocessstatus);
-		}
-		catch(...)
-		{
-			sleep(5);
-			continue;
-		}
-
 		listPtr = aPtr->begin();
 		for (; listPtr != aPtr->end(); ++listPtr)
 		{
@@ -1104,112 +1100,121 @@ static void chldHandleThread(MonitorConfig config)
 			// Update internal process state when in INIT and System is ACTIVE/FAILED
 			// Updated System process state when AOS and different from internal
 			int outOfSyncCount = 0;
-			if ( delayCount == 10 ) {
+			if ( delayCount == 2 ) {
 				while(true)
 				{
 					int state = (*listPtr).state;	//set as default
 					int PID = (*listPtr).processID;	//set as default
+					try {
+						ProcessStatus procstat;
+						oam.getProcessStatus((*listPtr).ProcessName, config.moduleName(), procstat);
+						state = procstat.ProcessOpState;
+						PID = procstat.ProcessID;
+	
+						if (state == oam::BUSY_INIT ) {
+							// updated local state ot BUSY_INIT
+							(*listPtr).state = state;
+							break;
+						}
 
-					for( unsigned int j = 0 ; j < systemprocessstatus.processstatus.size(); j++)
+						if ( (state == oam::AUTO_INIT && (*listPtr).state == oam::AUTO_INIT) ||
+								(state == oam::MAN_INIT && (*listPtr).state == oam::MAN_INIT) ) {
+							// get current time in seconds
+							time_t cal;
+							time (&cal);
+		
+							if ( (cal - (*listPtr).currentTime) > 20 ) {
+								// issue ALARM and update status to FAILED
+								aMonitor.sendAlarm((*listPtr).ProcessName, PROCESS_INIT_FAILURE, SET);
+//								(*listPtr).state = oam::FAILED;
+//								aMonitor.updateProcessInfo((*listPtr).ProcessName, oam::FAILED, (*listPtr).processID);
+
+								//force restart the un-initted process
+								log.writeLog(__LINE__, (*listPtr).ProcessName + "/" + oam.itoa((*listPtr).processID) + " failed to init in 20 seconds, force killing it so it can restart", LOG_TYPE_CRITICAL);
+								//skip killing 0 or 1
+								if ( (*listPtr).processID > 1 )
+									kill((*listPtr).processID, SIGKILL);
+								break;
+							}
+							break;
+						}
+					}
+					catch (exception& ex)
 					{
-						if ( systemprocessstatus.processstatus[j].ProcessName == (*listPtr).ProcessName
-							&&  systemprocessstatus.processstatus[j].Module.find(config.moduleName(),0) != string::npos) {
-
-							state = systemprocessstatus.processstatus[j].ProcessOpState;
-							PID = systemprocessstatus.processstatus[j].ProcessID;
-
-							if (state == oam::BUSY_INIT ) {
-								// updated local state ot BUSY_INIT
+						string error = ex.what();
+//						log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
+						break;
+					}
+					catch(...)
+					{
+//						log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
+						break;
+					}
+	
+					if (state != (*listPtr).state || PID != (*listPtr).processID) {
+						if ( state == oam::STANDBY && (*listPtr).state == oam::ACTIVE )
+							break;
+						else
+						{
+							if ( (state == oam::ACTIVE && (*listPtr).state == oam::AUTO_INIT) ||
+									(state == oam::ACTIVE && (*listPtr).state == oam::MAN_INIT) ||
+									(state == oam::ACTIVE && (*listPtr).state == oam::STANDBY) ||
+									(state == oam::ACTIVE && (*listPtr).state == oam::INITIAL) ||
+									(state == oam::ACTIVE && (*listPtr).state == oam::STANDBY_INIT) ||
+									(state == oam::ACTIVE && (*listPtr).state == oam::BUSY_INIT) ||
+									(state == oam::STANDBY && (*listPtr).state == oam::AUTO_INIT) ||
+									(state == oam::STANDBY && (*listPtr).state == oam::MAN_INIT) ||
+									(state == oam::STANDBY && (*listPtr).state == oam::INITIAL) ||
+									(state == oam::STANDBY && (*listPtr).state == oam::BUSY_INIT) ||
+									(state == oam::STANDBY && (*listPtr).state == oam::STANDBY_INIT) ) {
+								// updated local state to ACTIVE
 								(*listPtr).state = state;
 								break;
 							}
-		
-							if ( (state == oam::AUTO_INIT && (*listPtr).state == oam::AUTO_INIT) ||
-									(state == oam::MAN_INIT && (*listPtr).state == oam::MAN_INIT) ) {
-								// get current time in seconds
-								time_t cal;
-								time (&cal);
-			
-								if ( (cal - (*listPtr).currentTime) > 20 ) {
-									// issue ALARM and update status to FAILED
-									aMonitor.sendAlarm((*listPtr).ProcessName, PROCESS_INIT_FAILURE, SET);
-		
-									//force restart the un-initted process
-									log.writeLog(__LINE__, (*listPtr).ProcessName + "/" + oam.itoa((*listPtr).processID) + " failed to init in 20 seconds, force killing it so it can restart", LOG_TYPE_CRITICAL);
-									//skip killing 0 or 1
-									if ( (*listPtr).processID > 1 )
-										kill((*listPtr).processID, SIGKILL);
-									break;
-								}
-								break;
-							}
-						}
+							if ( (state == oam::FAILED && (*listPtr).state == oam::AUTO_INIT) ||
+								(state == oam::FAILED && (*listPtr).state == oam::BUSY_INIT) ||
+								(state == oam::FAILED && (*listPtr).state == oam::MAN_INIT) ) {
+								// issue ALARM and update local status to FAILED
+								log.writeLog(__LINE__, (*listPtr).ProcessName + " failed initialization", LOG_TYPE_WARNING);
+								aMonitor.sendAlarm((*listPtr).ProcessName, PROCESS_INIT_FAILURE, SET);
+								(*listPtr).state = state;
 
-						if (state != (*listPtr).state || PID != (*listPtr).processID) {
-							if ( state == oam::STANDBY && (*listPtr).state == oam::ACTIVE )
+								//setModule status to failed
+								try{
+									oam.setModuleStatus(config.moduleName(), oam::FAILED);
+								}
+								catch (exception& ex)
+								{
+									string error = ex.what();
+//									log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: " + error, LOG_TYPE_ERROR);
+								}
+								catch(...)
+								{
+//									log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: Caught unknown exception!", LOG_TYPE_ERROR);
+								}
+
 								break;
-							else
-							{
-								if ( (state == oam::ACTIVE && (*listPtr).state == oam::AUTO_INIT) ||
-										(state == oam::ACTIVE && (*listPtr).state == oam::MAN_INIT) ||
-										(state == oam::ACTIVE && (*listPtr).state == oam::STANDBY) ||
-										(state == oam::ACTIVE && (*listPtr).state == oam::INITIAL) ||
-										(state == oam::ACTIVE && (*listPtr).state == oam::STANDBY_INIT) ||
-										(state == oam::ACTIVE && (*listPtr).state == oam::BUSY_INIT) ||
-										(state == oam::STANDBY && (*listPtr).state == oam::AUTO_INIT) ||
-										(state == oam::STANDBY && (*listPtr).state == oam::MAN_INIT) ||
-										(state == oam::STANDBY && (*listPtr).state == oam::INITIAL) ||
-										(state == oam::STANDBY && (*listPtr).state == oam::BUSY_INIT) ||
-										(state == oam::STANDBY && (*listPtr).state == oam::STANDBY_INIT) ) {
-									// updated local state to ACTIVE
-									(*listPtr).state = state;
-									break;
-								}
-								if ( (state == oam::FAILED && (*listPtr).state == oam::AUTO_INIT) ||
-									(state == oam::FAILED && (*listPtr).state == oam::BUSY_INIT) ||
-									(state == oam::FAILED && (*listPtr).state == oam::MAN_INIT) ) {
-									// issue ALARM and update local status to FAILED
-									log.writeLog(__LINE__, (*listPtr).ProcessName + " failed initialization", LOG_TYPE_WARNING);
-									aMonitor.sendAlarm((*listPtr).ProcessName, PROCESS_INIT_FAILURE, SET);
-									(*listPtr).state = state;
-	
-									//setModule status to failed
-									try{
-										oam.setModuleStatus(config.moduleName(), oam::FAILED);
-									}
-									catch (exception& ex)
-									{
-										string error = ex.what();
-										log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: " + error, LOG_TYPE_ERROR);
-									}
-									catch(...)
-									{
-										log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-									}
-	
-									break;
-								}
-	
-								if (state == oam::AUTO_OFFLINE || state == oam::INITIAL || 
-									PID != (*listPtr).processID) {
-									//due to a small window, only process if out-of-sync for more than 1 second
-									outOfSyncCount++;
-									if ( outOfSyncCount == 2 ) {
-										// out of sync, update with internal state/PID
-										log.writeLog(__LINE__, "State out-of-sync, update on " + (*listPtr).ProcessName + "/" + oam.itoa((*listPtr).state) + "/" + oam.itoa((*listPtr).processID) , LOG_TYPE_DEBUG);
-	
-										aMonitor.updateProcessInfo((*listPtr).ProcessName, (*listPtr).state, (*listPtr).processID);
-										break;
-									}
-									sleep(1);
-								}
-								else
-									break;
 							}
+
+							if (state == oam::AUTO_OFFLINE || state == oam::INITIAL || 
+								PID != (*listPtr).processID) {
+								//due to a small window, only process if out-of-sync for more than 1 second
+								outOfSyncCount++;
+								if ( outOfSyncCount == 2 ) {
+									// out of sync, update with internal state/PID
+									log.writeLog(__LINE__, "State out-of-sync, update on " + (*listPtr).ProcessName + "/" + oam.itoa((*listPtr).state) + "/" + oam.itoa((*listPtr).processID) , LOG_TYPE_DEBUG);
+
+									aMonitor.updateProcessInfo((*listPtr).ProcessName, (*listPtr).state, (*listPtr).processID);
+									break;
+								}
+								sleep(1);
+							}
+							else
+								break;
 						}
-						else
-							break;
 					}
+					else
+						break;
 				}
 			}
 
@@ -2326,20 +2331,25 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 				fShmProcessStatus[shmIndex].ProcessID = PID;
 			memcpy(fShmProcessStatus[shmIndex].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
 
-			//if DMLProc set to ACTIVE, set system state to ACTIVE
-			if ( processName == "DMLProc" && state == oam::ACTIVE )
-			{
-				fShmSystemStatus[0].OpState = state;
-				memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
-				log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
-			}
-
 			//if DMLProc set to BUSY_INIT, set system state to BUSY_INIT
 			if ( processName == "DMLProc" && state == oam::BUSY_INIT )
 			{
 				fShmSystemStatus[0].OpState = state;
 				memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
 				log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
+			}
+
+			//if DMLProc set to ACTIVE, set system state to ACTIVE if in an INIT state
+			if ( processName == "DMLProc" && state == oam::ACTIVE )
+			{
+				if ( fShmSystemStatus[0].OpState == oam::BUSY_INIT ||
+					fShmSystemStatus[0].OpState == oam::MAN_INIT ||
+					fShmSystemStatus[0].OpState == oam::AUTO_INIT )
+				{
+					fShmSystemStatus[0].OpState = state;
+					memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
+					log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
+				}
 			}
 		}
 		break;

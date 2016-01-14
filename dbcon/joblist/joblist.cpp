@@ -41,11 +41,14 @@ using namespace execplan;
 #include "tupleunion.h"
 #include "tupleaggregatestep.h"
 #include "windowfunctionstep.h"
+#include "configcpp.h"
+#include "oamcache.h"
 
 #include "atomicops.h"
 
 namespace joblist
 {
+int  JobList::fPmsConfigured = 0;
 
 struct JSJoiner
 {
@@ -60,7 +63,7 @@ struct JSJoiner
 JobList::JobList(bool isEM) :
 	fIsRunning(false),
 	fIsExeMgr(isEM),
-	fPmConnected(false),
+	fPmsConnected(0),
 	projectingTableOID(0),
 	fAborted(0),
 	fPriority(50)
@@ -119,7 +122,7 @@ JobList::~JobList()
 int JobList::doQuery()
 {
 	// Don't start the steps if there is no PrimProc connection.
-	if (!fPmConnected)
+	if (fPmsConfigured < 1 || fPmsConnected < fPmsConfigured)
 		return 0;
 
 	JobStep *js;
@@ -206,20 +209,38 @@ int JobList::doQuery()
 int JobList::putEngineComm(DistributedEngineComm* dec)
 {
 	int retryCnt = 0;
-	while (!fPmConnected)
+
+	if (fPmsConfigured == 0)
 	{
-		// Don't sleep until after the first retry
-		if (retryCnt > 1)
-		{
-			sleep(1);
-		}
-		fPmConnected = (dec->connectedPmServers() > 0);
+		logging::LoggingID lid(05);
+		logging::MessageLog ml(lid);
+		logging::Message::Args args;
+		logging::Message m(0);
+		// We failed to get a connection
+		args.add("There are no PMs configured. Can't perform Query");
+		args.add(retryCnt);
+		m.format(args);
+		ml.logDebugMessage(m);
+		if (!errInfo)
+			errInfo.reset(new ErrorInfo);
+		errInfo->errCode = logging::ERR_NO_PRIMPROC;
+		errInfo->errMsg  = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NO_PRIMPROC);
+		return errInfo->errCode;
+	}
+	// Check to be sure all PrimProcs are attached.
+	fPmsConnected = dec->connectedPmServers();
+	while (fPmsConnected < fPmsConfigured)
+	{
+		sleep(1);
+		fPmsConnected = dec->connectedPmServers();
 		// Give up after 20 seconds. Primproc isn't coming back
-		if (fPmConnected || retryCnt >= 20)
+		if (retryCnt >= 20)
 		{
 			break;
 		}
 		++retryCnt;
+		oam::OamCache *oamCache = oam::OamCache::makeOamCache();
+		oamCache->forceReload();
 		dec->Setup();
 	}
 	if (retryCnt > 0)
@@ -228,10 +249,10 @@ int JobList::putEngineComm(DistributedEngineComm* dec)
 		logging::MessageLog ml(lid);
 		logging::Message::Args args;
 		logging::Message m(0);
-		if (!fPmConnected)
+		if (fPmsConnected < fPmsConfigured)
 		{
 			// We failed to get a connection
-			args.add("Failed to get a PrimProc connection. Retry count");
+			args.add("Failed to get all PrimProc connections. Retry count");
 			args.add(retryCnt);
 			m.format(args);
 			ml.logDebugMessage(m);

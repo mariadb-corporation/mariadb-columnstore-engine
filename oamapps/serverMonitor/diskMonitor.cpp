@@ -82,42 +82,6 @@ void diskMonitor()
 
 	bool Externalflag = false;
 
-	//check for external disk
-	DBrootList dbrootList;
-	if (moduleType == "pm") {
-		systemStorageInfo_t t;
-		t = oam.getStorageConfig();
-		if ( boost::get<0>(t) == "external")
-			Externalflag = true;
-
-		// get dbroot list and storage type from config file
-		DBRootConfigList dbrootConfigList;
-		oam.getPmDbrootConfig(moduleID, dbrootConfigList);
-	
-		DBRootConfigList::iterator pt = dbrootConfigList.begin();
-		for( ; pt != dbrootConfigList.end() ; pt++)
-		{
-			int dbrootID = *pt;
-	
-			string dbroot = "DBRoot" + oam.itoa(dbrootID);
-	
-			string dbootdir;
-			try{
-				oam.getSystemConfig(dbroot, dbootdir);
-			}
-			catch(...) {}
-	
-			if ( dbootdir.empty() || dbootdir == "" )
-				continue;
-	
-			DBrootData dbrootData;
-			dbrootData.dbrootDir = dbootdir;
-			dbrootData.downFlag = false;
-	
-			dbrootList.push_back(dbrootData);
-		}
-	}
-
 	string cloud = oam::UnassignedName;
 	try {
 		oam.getSystemConfig( "Cloud", cloud);
@@ -140,6 +104,42 @@ void diskMonitor()
 
 	while(true)
 	{
+		//check for external disk
+		DBrootList dbrootList;
+		if (moduleType == "pm") {
+			systemStorageInfo_t t;
+			t = oam.getStorageConfig();
+			if ( boost::get<0>(t) == "external")
+				Externalflag = true;
+	
+			// get dbroot list and storage type from config file
+			DBRootConfigList dbrootConfigList;
+			oam.getPmDbrootConfig(moduleID, dbrootConfigList);
+		
+			DBRootConfigList::iterator pt = dbrootConfigList.begin();
+			for( ; pt != dbrootConfigList.end() ; pt++)
+			{
+				int dbrootID = *pt;
+		
+				string dbroot = "DBRoot" + oam.itoa(dbrootID);
+		
+				string dbootdir;
+				try{
+					oam.getSystemConfig(dbroot, dbootdir);
+				}
+				catch(...) {}
+		
+				if ( dbootdir.empty() || dbootdir == "" )
+					continue;
+		
+				DBrootData dbrootData;
+				dbrootData.dbrootDir = dbootdir;
+				dbrootData.downFlag = false;
+		
+				dbrootList.push_back(dbrootData);
+			}
+		}
+
 		SystemStatus systemstatus;
 		try {
 			oam.getSystemStatus(systemstatus);
@@ -518,7 +518,7 @@ void diskMonitor()
 									args.add("dbroot monitoring: Lost access to ");
 									args.add(dbrootDir);
 									msg.format(args);
-									ml.logCriticalMessage(msg);
+									ml.logWarningMessage(msg);
 
 									oam.sendDeviceNotification(dbrootName, DBROOT_DOWN, moduleName);
 									(*p).downFlag = true;
@@ -610,11 +610,12 @@ void diskMonitor()
 
 		//check disk space every 10 minutes
 		diskSpaceCheck++;
-		if ( diskSpaceCheck >= 20 )
+		if ( diskSpaceCheck >= 20 ) {
 			diskSpaceCheck = 0;
 
-		lfs.clear();
-		sdl.clear();
+			lfs.clear();
+			sdl.clear();
+		}
 
 	} // end of while loop
 }

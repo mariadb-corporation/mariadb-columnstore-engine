@@ -403,7 +403,7 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
 *
 *
 ******************************************************************************************/
-int sendReplicationRequest(int IserverTypeInstall, std::string password, std::string port)
+int sendReplicationRequest(int IserverTypeInstall, std::string password, std::string port, bool pmwithum)
 {
 	Oam oam;
 
@@ -490,6 +490,13 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 						}
 						else
 						{ // set for slave repl request
+							// don't do PMs unless PMwithUM flag is set
+							string moduleType = (*pt).DeviceName.substr(0,MAX_MODULE_TYPE_SIZE);
+							if ( moduleType == "pm" && !pmwithum ) {
+								pt++;
+								continue;
+							}
+
 							ByteStream msg;
 							ByteStream::byte requestID = oam::SLAVEREP;
 							msg << requestID;

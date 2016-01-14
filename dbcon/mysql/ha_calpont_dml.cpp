@@ -708,7 +708,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 			if (colpos == ci.columnTypes.size())
 				break;
 
-			if (headerByte >= ci.headerLength)
+			if (ci.headerLength > 0 && headerByte >= ci.headerLength)
 			{
 				// We've used more null bits than allowed. Something is seriously wrong.
 				std::string errormsg = "Null bit header is wrong size";

@@ -1805,6 +1805,23 @@ int main(int argc, char *argv[])
 	catch(...)
 	{}
 
+	try {
+		string AmazonPMFailover = sysConfigOld->getConfig("Installation", "AmazonPMFailover");
+
+		if ( !AmazonPMFailover.empty() )
+		{
+			try {
+				sysConfigNew->setConfig("Installation", "AmazonPMFailover", AmazonPMFailover);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting AmazonPMFailover in the Calpont System Configuration file" << endl;
+				exit(-1);
+			}
+		}
+	}
+	catch(...)
+	{}
 
 	//Write out Updated System Configuration File
 	sysConfigNew->write();

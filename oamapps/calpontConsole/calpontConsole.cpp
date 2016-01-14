@@ -1750,7 +1750,27 @@ int processCommand(string* arguments)
                 break;
             }
 
-			systemStorageInfo_t t;
+		SystemStatus systemstatus;
+		try {
+			oam.getSystemStatus(systemstatus);
+	
+			if (systemstatus.SystemOpState != oam::ACTIVE ) {
+			cout << endl << "**** removeDbroot Failed,  System has to be in a ACTIVE state" << endl;
+				break;
+			}
+		}
+		catch (exception& e)
+		{
+			cout << endl << "**** removeDbroot Failed : " << e.what() << endl;
+			break;
+		}
+		catch(...)
+		{
+			cout << endl << "**** removeDbroot Failed,  Failed return from getSystemStatus API" << endl;
+			break;
+		}
+
+		systemStorageInfo_t t;
             try
             {
                 t = oam.getStorageConfig();
@@ -2043,6 +2063,11 @@ int processCommand(string* arguments)
 				if (oam.checkLogStatus("/tmp/cc-stop.pdsh", "exit") ) {
 					cout << endl << "ERROR: Stopping InfiniDB Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
 				}
+			}
+			else
+			{
+				string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/status.log";
+				system(cmd.c_str());
 			}
 		}
             	catch (exception& e)
@@ -4877,7 +4902,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MySQL' Password configured in " + HOME + "/.my.cnf  (y,n): ";
+			string prompt = "Is there a 'MySQL' Password configured on the MySQL Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -4892,6 +4917,7 @@ int processCommand(string* arguments)
 		//set flag
 		try {
 			oam.setSystemConfig("MySQLRep", "y");
+			sleep(2);
 		}
 		catch(...) {}
 
@@ -5824,7 +5850,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MySQL' Password configured in " + HOME + "/.my.cnf  (y,n): ";
+			string prompt = "Is there a 'MySQL' Password configured on the MySQL Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -5839,6 +5865,7 @@ int processCommand(string* arguments)
 		//set flag
 		try {
 			oam.setSystemConfig("MySQLRep", "n");
+			sleep(2);
 		}
 		catch(...) {}
 

@@ -53,7 +53,7 @@ extern string USER;
 extern bool HDFS;
 extern string localHostName;
 extern string PMwithUM;
-extern string MySQLRep;
+extern string AmazonPMFailover;
 
 typedef   map<string, int>	moduleList;
 extern moduleList moduleInfoList;
@@ -617,7 +617,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							oam.dbrmctl("resume");
 							log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
-							processManager.reinitProcessType("ExeMgr");
+							processManager.restartProcessType("ExeMgr");
 
 							//setup MySQL Replication for started modules
 							log.writeLog(__LINE__, "Setup MySQL Replication for module being started", LOG_TYPE_DEBUG);
@@ -738,7 +738,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							//distribute config file
 							processManager.distributeConfigFile("system");	
 
-							processManager.reinitProcessType("ExeMgr");
+							processManager.restartProcessType("ExeMgr");
 						}
 					}
 					else
@@ -1702,7 +1702,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						processManager.distributeConfigFile("system");	
 
 						processManager.reinitProcessType("WriteEngineServer");
-						processManager.reinitProcessType("ExeMgr");
+						processManager.restartProcessType("ExeMgr");
 						processManager.reinitProcessType("DDLProc");
 						processManager.reinitProcessType("DMLProc");
 					}
@@ -1752,7 +1752,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						processManager.distributeConfigFile("system");	
 
 						processManager.reinitProcessType("WriteEngineServer");
-						processManager.reinitProcessType("ExeMgr");
+						processManager.restartProcessType("ExeMgr");
 						processManager.reinitProcessType("DDLProc");
 						processManager.reinitProcessType("DMLProc");
 					}
@@ -2193,7 +2193,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						processManager.distributeConfigFile("system");	
 
 						processManager.reinitProcessType("WriteEngineServer");
-						processManager.reinitProcessType("ExeMgr");
+						processManager.restartProcessType("ExeMgr");
 						processManager.reinitProcessType("DDLProc");
 						processManager.reinitProcessType("DMLProc");
 					}
@@ -2226,7 +2226,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							processManager.distributeConfigFile("system");	
 
 							processManager.reinitProcessType("WriteEngineServer");
-							processManager.reinitProcessType("ExeMgr");
+							processManager.restartProcessType("ExeMgr");
 							processManager.reinitProcessType("DDLProc");
 							processManager.reinitProcessType("DMLProc");
 						}
@@ -2557,6 +2557,28 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					break;	
 				}
 
+				case DISABLEMYSQLREP:
+				{
+					log.writeLog(__LINE__,  "MSG RECEIVED: Disable MySQL Replication");
+
+					// target = root password
+					oam::DeviceNetworkList devicenetworklist;
+					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target, false);
+	
+					log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
+
+					ackMsg << (ByteStream::byte) oam::ACK;
+					ackMsg << actionType;
+					ackMsg << target;
+					ackMsg << (ByteStream::byte) status;
+					try {
+						fIos.write(ackMsg);
+					}
+					catch(...) {}
+
+					break;	
+				}
+
 				case GLUSTERASSIGN:
 				{
 					string dbroot;
@@ -2742,7 +2764,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								processManager.distributeConfigFile("system");
 			
 								processManager.reinitProcessType("WriteEngineServer");
-								processManager.reinitProcessType("ExeMgr");
+								processManager.restartProcessType("ExeMgr");
 								processManager.reinitProcessType("DDLProc");
 								processManager.reinitProcessType("DMLProc");
 							}
@@ -3302,7 +3324,7 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 /******************************************************************************************
 * @brief	recycleProcess
 *
-* purpose:	recyle process, general;ly after some disable module is run
+* purpose:	recyle process, generally after some disable module is run
 *
 ******************************************************************************************/
 void ProcessManager::recycleProcess(string module)
@@ -3327,20 +3349,23 @@ void ProcessManager::recycleProcess(string module)
 		restartProcessType("mysql");
 	}
 	else
-		reinitProcessType("ExeMgr");
+		restartProcessType("ExeMgr");
 
 	if ( PrimaryUMModuleName == module )
 	{
-		restartProcessType("DDLProc", "none", false);
+		restartProcessType("DDLProc", module);
+//		restartProcessType("DDLProc", module, false);
 		sleep(1);
-		restartProcessType("DMLProc", "none", false);
+		restartProcessType("DMLProc", module);
+//		restartProcessType("DMLProc", module, false);
 	}
 
 	if( moduleType == "pm" && PrimaryUMModuleName != module)
 	{
 		reinitProcessType("DDLProc");
 		sleep(1);
-		restartProcessType("DMLProc", "none", false);
+		restartProcessType("DMLProc", module);
+//		restartProcessType("DMLProc", module, false);
 	}
 
 	return;
@@ -8809,10 +8834,10 @@ int ProcessManager::OAMParentModuleChange()
 			{}
 
 			//do amazon failover
-			if (amazon)
+			if (amazon && AmazonPMFailover == "n")
 			{
 				log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
-				log.writeLog(__LINE__, "*** OAMParentModule outage, recover the Instance ***", LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, wating for instance to restart  ***", LOG_TYPE_DEBUG);
 	
 				string currentIPAddr = oam.getEC2InstanceIpAddress(downOAMParentHostname);
 				if (currentIPAddr == "stopped")
@@ -9068,6 +9093,12 @@ int ProcessManager::OAMParentModuleChange()
 	if ( status != 0 )
 		log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
+	if (status == 0)
+	{
+		pthread_join(startmodulethread, NULL);
+		status = startsystemthreadStatus;
+	}
+
 	//restart/reinit processes to force their release of the controller node port
 	if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
 		( moduleNameList.size() <= 1 && config.moduleType() == "pm") )
@@ -9135,7 +9166,7 @@ int ProcessManager::OAMParentModuleChange()
 					if (opState != oam::AUTO_DISABLED) {
 						if ((*pt).DeviceName != downOAMParentName ) {
 							if ((*pt).DeviceName != config.moduleName() ) {
-								processManager.setModuleState((*pt).DeviceName, oam::AUTO_INIT);
+							//	processManager.setModuleState((*pt).DeviceName, oam::AUTO_INIT);
 								pthread_t startmodulethread;
 								string moduleName = (*pt).DeviceName;
 								int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &moduleName);
@@ -9150,25 +9181,6 @@ int ProcessManager::OAMParentModuleChange()
 				}
 			}
 		}
-	}
-
-	//wait until local module is active before continuing
-	while(true)
-	{
-		int opState = oam::ACTIVE;
-		bool degraded;
-		try {
-			oam.getModuleStatus(config.moduleName(), opState, degraded);
-		}
-		catch(...)
-		{
-//			log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + config.moduleName() + ": Caught unknown exception!", LOG_TYPE_ERROR);
-		}
-
-		if (opState == oam::ACTIVE)
-			break;
-
-		sleep(1);
 	}
 
 	//restart DDLProc/DMLProc to perform any rollbacks, if needed
@@ -9194,13 +9206,8 @@ int ProcessManager::OAMParentModuleChange()
 	// clear alarm
 	aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
 
-	if (amazon) {
-		//Set the down module instance state so it will be auto restarted 
-		processManager.setModuleState(downOAMParentName, oam::AUTO_OFFLINE);
-
-		// sleep to give time for local pm to fully go active
-		sleep(30);
-	}
+	//set status to ACTIVE while failover is in progress
+	processManager.setSystemState(oam::ACTIVE);
 
 	log.writeLog(__LINE__, "*** Exiting OAMParentModuleChange function ***", LOG_TYPE_DEBUG);
 
@@ -9866,6 +9873,14 @@ void ProcessManager::flushInodeCache()
 int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule, bool failover, bool distributeDB, std::string password, bool enable)
 {
 	Oam oam;
+
+	string MySQLRep;
+	try {
+		oam.getSystemConfig("MySQLRep", MySQLRep);
+	}
+	catch(...) {
+		MySQLRep = "n";
+	}
 
 	if ( MySQLRep == "n" && enable )
 		return oam::API_SUCCESS;

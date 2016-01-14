@@ -1189,6 +1189,8 @@ void added_a_pm(int)
         catch (...)
         {}
 
+		oam::OamCache *oamCache = oam::OamCache::makeOamCache();
+		oamCache->forceReload();
         ec->Setup();
 
         //set ACTIVE state

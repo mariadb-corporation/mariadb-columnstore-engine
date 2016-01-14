@@ -1216,6 +1216,13 @@ void pingDeviceThread()
 							if (LANOUTAGEACTIVE)
 								break;
 	
+							try {
+								oam.getSystemConfig("MySQLRep", MySQLRep);
+							}
+							catch(...) {
+								MySQLRep = "n";
+							}
+
 							if (moduleInfoList[moduleName] >= ModuleHeartbeatCount ||
 								opState == oam::DOWN || opState == oam::AUTO_DISABLED)
 							{
@@ -1503,15 +1510,22 @@ void pingDeviceThread()
 										processManager.restartProcessType("ExeMgr", moduleName);
 									}
 
+									string moduleType = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
+
 									if ( MySQLRep == "y" ) {
-										//setup MySQL Replication for started modules
-										
-										log.writeLog(__LINE__, "Setup MySQL Replication for module recovering from outage on " + moduleName, LOG_TYPE_DEBUG);
-										DeviceNetworkList devicenetworklist;
-										DeviceNetworkConfig devicenetworkconfig;
-										devicenetworkconfig.DeviceName = moduleName;
-										devicenetworklist.push_back(devicenetworkconfig);
-										processManager.setMySQLReplication(devicenetworklist);
+										if ( moduleType == "um" ||
+											( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+											( moduleType == "pm" && PMwithUM == "y") ) {
+
+											//setup MySQL Replication for started modules
+											
+											log.writeLog(__LINE__, "Setup MySQL Replication for module recovering from outage on " + moduleName, LOG_TYPE_DEBUG);
+											DeviceNetworkList devicenetworklist;
+											DeviceNetworkConfig devicenetworkconfig;
+											devicenetworkconfig.DeviceName = moduleName;
+											devicenetworklist.push_back(devicenetworkconfig);
+											processManager.setMySQLReplication(devicenetworklist);
+										}
 									}
 									else
 									{
@@ -1530,6 +1544,8 @@ void pingDeviceThread()
 
 									//set query system state ready
 									processManager.setQuerySystemState(true);
+
+									processManager.setSystemState(oam::ACTIVE);
 
 									//clear count
 									moduleInfoList[moduleName] = 0;
@@ -1674,7 +1690,6 @@ void pingDeviceThread()
 								// state = stopped, then try starting, if fail, remove/addmodule to launch new instance
 								// state = terminate or nothing, remove/addmodule to launch new instance
 								if ( amazon ) {
-
 									if ( moduleName.find("um") == 0 )
 									{
 										// resume the dbrm
@@ -1932,6 +1947,9 @@ void pingDeviceThread()
 										// resume the dbrm
 										oam.dbrmctl("resume");
 										log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+
+										//set query system state ready
+										processManager.setQuerySystemState(true);
 									}
 								}
 								else
@@ -2087,8 +2105,8 @@ void pingDeviceThread()
 				if ( parentOAMModule == config.moduleName() || 
 						parentOAMModule == "FAILED" ) {
 
-					//send sighup to these guys incase they marked any PrimProcs offline
-					processManager.reinitProcessType("ExeMgr");
+					//srestart to these guys incase they marked any PrimProcs offline
+					processManager.restartProcessType("ExeMgr");
 					processManager.reinitProcessType("DDLProc");
 					processManager.reinitProcessType("DMLProc");
 				}

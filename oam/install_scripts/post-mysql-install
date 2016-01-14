@@ -6,33 +6,21 @@
 
 # check log for error
 checkForError() {
-	grep ERROR /tmp/mysql_install.log > /tmp/error.check
+	# check for password error
+	grep "ERROR 1045" /tmp/mysql_install.log > /tmp/error.check
 	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
-		# check for password error
- 	      	grep "ERROR 1045" /tmp/mysql_install.log > /tmp/error.check
-        	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
-			echo "MySQL Password missing or incorrect, check local file"
-			password=`$installdir/bin/getMySQLpw`
-			if [ $? -ne 0 ]; then
-				rm -f /tmp/error.check
-				$installdir/mysql/mysql-Calpont stop
-				sleep 2
-				exit 2;
-			fi
+		password=`$installdir/bin/getMySQLpw`
+		if [ $? -ne 0 ]; then
+			echo "MySQL Password missing or incorrect"
 			rm -f /tmp/error.check
-			return 1;
- 		else
- 	               	# ignore 1125 - already exist error
-               		grep "ERROR 1125" /tmp/mysql_install.log > /tmp/error.check
-                	if [ `cat /tmp/error.check | wc -c` -eq 0 ]; then
-				echo "ERROR: check log file: /tmp/mysql_install.log"
-				rm -f /tmp/error.check
-				$installdir/mysql/mysql-Calpont stop
-				sleep 2
-				exit 1;
-			fi
+			$installdir/mysql/mysql-Calpont stop
+			sleep 2
+			exit 2;
 		fi
+		rm -f /tmp/error.check
+		return 1;
 	fi
+
 	rm -f /tmp/error.check
 	return 0;
 }
@@ -100,7 +88,7 @@ if [ -x $installdir/mysql/mysql-Calpont ]; then
 		$installdir/mysql/install_calpont_mysql.sh --password=$password --installdir=$installdir
 		checkForError
 		if [ $? -ne 0 ]; then
-			echo "ERROR: missing or invalidate passed"
+			echo "ERROR: missing or invalid password"
 			$installdir/mysql/mysql-Calpont stop
 			sleep 2
 			exit 1;

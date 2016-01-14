@@ -442,17 +442,24 @@ int RedistributeControlThread::executeRedistributePlan()
 			bool isActive = false;
 			while (!isActive)
 			{
+				bool noExcept = true;
 				SystemStatus systemstatus;
-				systemstatus.SystemOpState = oam::ACTIVE;
 				try
 				{
 					fControl->fOam->getSystemStatus(systemstatus);
 				}
+				catch (const std::exception& ex)
+				{
+					fErrorMsg += ex.what();
+					noExcept = false;
+				}
 				catch (...)
-				{}
+				{
+					noExcept = false;
+				}
 
-				if ((isActive = (systemstatus.SystemOpState == oam::ACTIVE) == false))
-					sleep(1);
+				if (noExcept && ((isActive = (systemstatus.SystemOpState == oam::ACTIVE)) == false))
+					sleep(1);;
 			}
 #endif
 

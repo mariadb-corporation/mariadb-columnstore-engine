@@ -8191,7 +8191,7 @@ namespace oam
 	bool Oam::disableMySQLRep()
 	{
 		// build and send msg
-		int returnStatus = sendMsgToProcMgr(DISABLEMYSQLREP);
+		int returnStatus = sendMsgToProcMgr(DISABLEMYSQLREP, oam::UnassignedName, FORCEFUL, ACK_YES);
 	
 		if (returnStatus != API_SUCCESS)
 			exceptionControl("disableMySQLRep", returnStatus);
@@ -8522,17 +8522,17 @@ namespace oam
         string target;
         ByteStream::byte status;
 
-		// get current requesting process, an error will occur if process is a UI tool (not kept in Status Table)
-		// this will be used to determine if this is a manually or auto request down within Process-Monitor
-		bool requestManual;
-		myProcessStatus_t t;
-		try {
-			t = getMyProcessStatus();
-			requestManual = false;	// set to auto
-		}
-		catch (...) {
-			requestManual = true;	// set to manual
-		}
+	// get current requesting process, an error will occur if process is a UI tool (not kept in Status Table)
+	// this will be used to determine if this is a manually or auto request down within Process-Monitor
+	bool requestManual;
+	myProcessStatus_t t;
+	try {
+		t = getMyProcessStatus();
+		requestManual = false;	// set to auto
+	}
+	catch (...) {
+		requestManual = true;	// set to manual
+	}
 
         // setup message
         msg << (ByteStream::byte) REQUEST;
@@ -9079,6 +9079,8 @@ namespace oam
 		if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") && 
 			DBRootStorageType == "external" )
 		{
+			writeLog("amazonReattach function started ", LOG_TYPE_DEBUG );
+
 			//get Instance Name for to-pm
 			string toInstanceName = oam::UnassignedName;
 			try

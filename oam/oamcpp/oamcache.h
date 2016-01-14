@@ -42,6 +42,7 @@ public:
 	EXPORT virtual ~OamCache();
 
 	EXPORT void checkReload();
+	EXPORT void forceReload() {mtime=0;}
 
 	EXPORT dbRootPMMap_t getDBRootToPMMap();
 	EXPORT dbRootPMMap_t getDBRootToConnectionMap();

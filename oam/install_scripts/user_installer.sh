@@ -41,9 +41,9 @@ if { $MYSQLPW == "none" } {
 } 
 
 set BASH "/bin/bash "
-if { $DEBUG == "1" } {
-	set BASH "/bin/bash -x "
-}
+#if { $DEBUG == "1" } {
+#	set BASH "/bin/bash -x "
+#}
 
 log_user $DEBUG
 spawn -noecho /bin/bash

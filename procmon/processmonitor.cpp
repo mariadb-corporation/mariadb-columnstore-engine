@@ -546,18 +546,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 						//Check for SIMPLEX runtype processes
 						initType = checkSpecialProcessState( processconfig.ProcessName, processconfig.RunType, processconfig.ModuleType );
 
-						if ( actIndicator == oam::GRACEFUL_STANDBY) {
-							//this module running Parent OAM Standby
-							runStandby = true;
-							log.writeLog(__LINE__,  "ProcMon Running Hot-Standby");
-
-							// delete any old active alarm log file
-							unlink ("/var/log/Calpont/activeAlarms");
-						}
-
-						//Check for SIMPLEX runtype processes
-						initType = checkSpecialProcessState( processconfig.ProcessName, processconfig.RunType, processconfig.ModuleType );
-
 						if ( initType == oam::COLD_STANDBY) {
 							//there is a mate active, skip
 							config.buildList(processconfig.ModuleType,
@@ -1771,6 +1759,19 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string masterLogFile = oam::UnassignedName;
 			string masterLogPos = oam::UnassignedName;
 
+			if ( (PMwithUM == "n") && (config.moduleType() == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			{
+				ackMsg << (ByteStream::byte) ACK;
+				ackMsg << (ByteStream::byte) MASTERREP;
+				ackMsg << (ByteStream::byte) oam::API_FAILURE;
+				ackMsg <<  masterLogFile;
+				ackMsg <<  masterLogPos;
+				mq.write(ackMsg);
+	
+				log.writeLog(__LINE__, "MASTERREP: Error PM invalid msg - ACK back to ProcMgr return status = " + oam.itoa((int) oam::API_FAILURE));
+				break;
+			}
+
 			//change local my.cnf file
 			int ret;
 			int retry;
@@ -1831,6 +1832,17 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string port;
 			msg >> port;
 
+			if ( (PMwithUM == "n") && (config.moduleType() == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			{
+				ackMsg << (ByteStream::byte) ACK;
+				ackMsg << (ByteStream::byte) SLAVEREP;
+				ackMsg << (ByteStream::byte) oam::API_FAILURE;
+				mq.write(ackMsg);
+	
+				log.writeLog(__LINE__, "SLAVEREP: Error PM invalid msg - ACK back to ProcMgr return status = " + oam.itoa((int) oam::API_FAILURE));
+				break;
+			}
+
 			//change local my.cnf file
 			int ret = changeMyCnf("slave");
 
@@ -1866,6 +1878,16 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			msg >> password;
 			string module;
 			msg >> module;
+
+			if ( (PMwithUM == "n") && (config.moduleType() == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			{
+				ackMsg << (ByteStream::byte) ACK;
+				ackMsg << (ByteStream::byte) MASTERDIST;
+				ackMsg << (ByteStream::byte) oam::API_FAILURE;
+				mq.write(ackMsg);
+	
+				log.writeLog(__LINE__, "MASTERDIST: runMasterRep - ACK back to ProcMgr return status = " + oam.itoa((int) oam::API_FAILURE));
+			}
 
 			if ( password == oam::UnassignedName )
 				password = "ssh";
@@ -3796,8 +3818,6 @@ int ProcessMonitor::createDataDirs(std::string cloud)
 		if (UMStorageType == "external")
 		{
 			if(!amazonVolumeCheck()) {
-				//Set the alarm
-				sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 				return API_FAILURE;
 			}
 		}
@@ -3856,8 +3876,6 @@ int ProcessMonitor::createDataDirs(std::string cloud)
 							config.moduleID() == moduleID)
 					{
 						if(!amazonVolumeCheck(id)) {
-							//Set the alarm
-							sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 							return API_FAILURE;
 						}
 					}
@@ -4696,33 +4714,16 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				buf = "server-id = 1";
 			}
 
-/*			pos = buf.find("# log-bin=mysql-bin",0);
+			pos = buf.find("# binlog_format=ROW",0);
 			if ( pos != string::npos ) {
-				buf = "log-bin=mysql-bin";
+				buf = "binlog_format=ROW";
 			}
-*/
+
 			pos = buf.find("infinidb_local_query=1",0);
 			if ( pos != string::npos && pos == 0) {
 				buf = "# infinidb_local_query=1";
 			}
 
-/*			pos = buf.find("slave-skip-errors=all",0);
-			if ( pos != string::npos && pos == 0) {
-				buf = "# slave-skip-errors=all" + buf;
-			}
-
-			pos = buf.find("# relay-log=",0);
-			if ( pos != string::npos && pos == 0) {
-				buf = buf;
-			}
-			else
-			{
-				pos = buf.find("relay-log=",0);
-				if ( pos != string::npos && pos == 0) {
-					buf = "# " + buf;
-				}
-			}
-*/
 			//output to temp file
 			lines.push_back(buf);
 		}
@@ -4823,16 +4824,6 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				buf = "server-id = " + slaveID;
 			}
 
-/*			pos = buf.find("# relay-log=",0);
-			if ( pos != string::npos ) {
-				buf = "relay-log=" + dbDir + "/relay-bin";
-			}
-
-			pos = buf.find("# slave-skip-errors=all",0);
-			if ( pos != string::npos ) {
-				buf = "slave-skip-errors=all";
-			}
-*/
 			// set local query flag if on pm
 			if ( (PMwithUM == "y") && config.moduleType() == "pm" )
 			{
@@ -4849,11 +4840,11 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				}
 			}
 
-/*			pos = buf.find("log-bin=mysql-bin",0);
+			pos = buf.find("binlog_format=ROW",0);
 			if ( pos != string::npos && pos == 0 ) {
-				buf = "# log-bin=mysql-bin";
+				buf = "# binlog_format=ROW";
 			}
-*/
+
 			//output to temp file
 			lines.push_back(buf);
 		}
@@ -4891,6 +4882,11 @@ int ProcessMonitor::changeMyCnf(std::string type)
 			pos = buf.find("log-bin=mysql-bin",0);
 			if ( pos != string::npos ) {
 				buf = "# log-bin=mysql-bin";
+			}
+
+			pos = buf.find("binlog_format=ROW",0);
+			if ( pos != string::npos && pos == 0 ) {
+				buf = "# binlog_format=ROW";
 			}
 
 			pos = buf.find("infinidb_local_query=1",0);
@@ -5585,7 +5581,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 		}
 	
 		if ( status != "available" ) {
-			log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume not attached and not available: " + volumeName, LOG_TYPE_CRITICAL);
+			log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume not attached and not available: " + volumeName, LOG_TYPE_WARNING);
 			return false;
 		}
 		else
@@ -5610,7 +5606,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 			}
 			else
 			{
-				log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume failed to attached: " + volumeName, LOG_TYPE_CRITICAL);
+				log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume failed to attached: " + volumeName, LOG_TYPE_WARNING);
 				return false;
 			}
 		}
@@ -5642,7 +5638,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 		}
 	
 		if ( status != "available" ) {
-			log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume not attached and not available: " + volumeName, LOG_TYPE_CRITICAL);
+			log.writeLog(__LINE__, "amazonVolumeCheck function failed, volume not attached and not available: " + volumeName, LOG_TYPE_WARNING);
 			return false;
 		}
 		else

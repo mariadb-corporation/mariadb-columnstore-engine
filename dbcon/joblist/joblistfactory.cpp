@@ -1595,6 +1595,9 @@ SJLP makeJobList_(
 	CalpontSelectExecutionPlan* csep = dynamic_cast<CalpontSelectExecutionPlan*>(cplan);
 	boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(csep->sessionID());
 
+	static config::Config* sysConfig = config::Config::makeConfig();
+	int pmsConfigured = atoi(sysConfig->getConfig("PrimitiveServers", "Count").c_str());
+
 	// We have to go ahead and create JobList now so we can store the joblist's
 	// projectTableOID pointer in JobInfo for use during jobstep creation.
 	SErrorInfo errorInfo(new ErrorInfo());
@@ -1602,6 +1605,7 @@ SJLP makeJobList_(
 	boost::shared_ptr<int> subCount(new int);
 	*subCount = 0;
 	JobList* jl = new TupleJobList(isExeMgr);
+	jl->setPMsConfigured(pmsConfigured);
 	jl->priority(csep->priority());
 	jl->errorInfo(errorInfo);
 	rm.setTraceFlags(csep->traceFlags());
@@ -1794,6 +1798,7 @@ SJLP JobListFactory::makeJobList(
 	SJLP ret;
 	string emsg;
 	unsigned errCode = 0;
+
 	ret = makeJobList_(cplan, rm, isExeMgr, errCode, emsg);
 
 	if (!ret)

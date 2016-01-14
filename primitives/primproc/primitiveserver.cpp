@@ -796,6 +796,7 @@ struct AsynchLoader {
 				 uint32_t sesID,
 				 boost::mutex *m,
 				 uint32_t *loaderCount,
+				 boost::shared_ptr<BPPSendThread> st,	// sendThread for abort upon exception.
 				 VSSCache *vCache) :
 		lbid(l),
 		ver(v),
@@ -807,6 +808,7 @@ struct AsynchLoader {
 		readCount(rCount),
 		busyLoaders(loaderCount),
 		mutex(m),
+		sendThread(st),
 		vssCache(vCache)
 	{ }
 
@@ -818,9 +820,10 @@ struct AsynchLoader {
 
 		//cout << "asynch started " << pthread_self() << " l: " << lbid << endl;
 		try {
-			loadBlock(lbid, ver, txn, compType, buf, &cached, &rCount, LBIDTrace, sessionID, true, vssCache);
+			loadBlock(lbid, ver, txn, compType, buf, &cached, &rCount, LBIDTrace, true, vssCache);
 		}
 		catch (std::exception& ex) {
+			sendThread->abort();
 			cerr << "AsynchLoader caught loadBlock exception: " << ex.what() << endl;
 			idbassert(asyncCounter > 0);
 			(void)atomicops::atomicDec(&asyncCounter);
@@ -834,6 +837,7 @@ struct AsynchLoader {
 			return;
 		}
 		catch (...) {
+			sendThread->abort();
 			cerr << "AsynchLoader caught unknown exception: " << endl;
 			//FIXME Use a locked processor primitive?
 			idbassert(asyncCounter > 0);
@@ -869,6 +873,7 @@ private:
 	uint32_t *readCount;
 	uint32_t *busyLoaders;
 	boost::mutex *mutex;
+	boost::shared_ptr<BPPSendThread> sendThread;
 	VSSCache *vssCache;
 };
 
@@ -882,6 +887,7 @@ void loadBlockAsync(uint64_t lbid,
 					uint32_t sessionID,
 					boost::mutex *m,
 					uint32_t *busyLoaders,
+					boost::shared_ptr<BPPSendThread> sendThread,		// sendThread for abort upon exception.
 					VSSCache *vssCache)
 {
 	blockCacheClient bc(*BRPp[cacheNum(lbid)]);
@@ -913,7 +919,7 @@ void loadBlockAsync(uint64_t lbid,
 	mutex::scoped_lock sl(*m);
 	try {
 		boost::thread thd(AsynchLoader(lbid, c, txn, compType, cCount, rCount,
-									   LBIDTrace, sessionID, m, busyLoaders, vssCache));
+									   LBIDTrace, sessionID, m, busyLoaders, sendThread, vssCache));
 		(*busyLoaders)++;
 	}
 	catch (boost::thread_resource_error &e) {
