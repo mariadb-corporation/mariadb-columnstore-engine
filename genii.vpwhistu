@@ -1,0 +1,352 @@
+[Global]
+CurrentProject=exemgr/exemgr.vpj
+[ProjectDates]
+tools/configMgt/autoConfigure.vpj=20131028163559000
+utils/batchloader/batchloader.vpj=20131028163302000
+primitives/blockcache/blockcache.vpj=20131028163251000
+utils/boost_idb/boost_idb.vpj=20131028163319000
+versioning/BRM/brm.vpj=20131028163600000
+writeengine/bulk/bulk.vpj=20131028163458000
+utils/cacheutils/cacheutils.vpj=20131028163255000
+oamapps/calpont-console/calpontConsole.vpj=20160105232646000
+oamapps/calpontDB/calpontDBWrite.vpj=20131028163403000
+tools/dbloadxml/colxml.vpj=20131028163557000
+utils/common/common.vpj=20131028163254000
+utils/compress/compress.vpj=20131028163319000
+utils/configcpp/configcpp.vpj=20131028163257000
+utils/dataconvert/dataconvert.vpj=20131028163255000
+utils/ddlcleanup/ddlcleanup.vpj=20131028163300000
+dbcon/ddlpackage/ddlpackage.vpj=20131028163352000
+dbcon/ddlpackageproc/ddlpackageproc.vpj=20131028163341000
+ddlproc/ddlproc.vpj=20131028163559000
+writeengine/dictionary/dictionary.vpj=20131028163511000
+dbcon/dmlpackage/dmlpackage.vpj=20131028163343000
+dbcon/dmlpackageproc/dmlpackageproc.vpj=20131028163340000
+dmlproc/dmlproc.vpj=20131028163513000
+tools/editem/editem.vpj=20131028163558000
+dbcon/execplan/execplan.vpj=20131028163401000
+exemgr/exemgr.vpj=20131028163435000
+utils/funcexp/funcexp.vpj=20131028163322000
+oamapps/hardwareMonitor/HardwareMonitor.vpj=20131028163404000
+tools/hdfsCheck/hdfsCheck.vpj=20131028163558000
+utils/idbdatafile/idbdatafile.vpj=20131028163254000
+utils/idbhdfs/idbhdfs.vpj=20131028163256000
+dbcon/ingres/ingres.vpj=20131028163401000
+dbcon/joblist/joblist.vpj=20141105231726000
+utils/joiner/joiner.vpj=20131028163316000
+primitives/linux-port/linux-port.vpj=20131028163250000
+utils/loggingcpp/loggingcpp.vpj=20131028163259000
+utils/messageqcpp/messageqcpp.vpj=20131028163254000
+utils/multicast/multicast.vpj=20131028163256000
+dbcon/mysql/mysql.vpj=20160104211036000
+oam/oamcpp/oamcpp.vpj=20131028163553000
+oamapps/postConfigure/postConfigure.vpj=20131028163403000
+primitives/primproc/primproc.vpj=20131028163250000
+procmgr/procmgr.vpj=20131028163620000
+procmon/procmon.vpj=20131028163552000
+oamapps/replayTransactionLog/ReplayTransactionLog.vpj=20131028163404000
+oamapps/resourceMonitor/resourceMonitor.vpj=20131028163404000
+utils/rowgroup/rowgroup.vpj=20131028163319000
+utils/rwlock/rwlock.vpj=20131028163255000
+oamapps/serverMonitor/ServerMonitor.vpj=20131028163404000
+writeengine/splitter/splitter.vpj=20131028163510000
+utils/startup/startup.vpj=20131028163254000
+utils/dataconvert/tdriver.vpj=20131028163255000
+utils/threadpool/threadpool.vpj=20131028163256000
+utils/udfsdk/udfsdk.vpj=20141119175501000
+utils/utils.vpj=20131028163300000
+writeengine/wrapper/wrapper.vpj=20131028163513000
+writeengine/client/writeengineclient.vpj=20131028163503000
+writeengine/server/WriteEngineServer.vpj=20131028163453000
+[TreeExpansion2]
++@ oamapps/hardwareMonitor/HardwareMonitor.vpj
++@ oamapps/replayTransactionLog/ReplayTransactionLog.vpj
++@ oamapps/serverMonitor/ServerMonitor.vpj
++@ writeengine/server/WriteEngineServer.vpj
++@ tools/configMgt/autoConfigure.vpj
++@ utils/batchloader/batchloader.vpj
++@ primitives/blockcache/blockcache.vpj
++@ utils/boost_idb/boost_idb.vpj
++@ versioning/BRM/brm.vpj
++@ writeengine/bulk/bulk.vpj
++@ utils/cacheutils/cacheutils.vpj
++@ oamapps/calpont-console/calpontConsole.vpj
++@ oamapps/calpontDB/calpontDBWrite.vpj
++@ tools/dbloadxml/colxml.vpj
++@ utils/common/common.vpj
++@ utils/compress/compress.vpj
++@ utils/configcpp/configcpp.vpj
++@ utils/dataconvert/dataconvert.vpj
++@ utils/ddlcleanup/ddlcleanup.vpj
++@ dbcon/ddlpackage/ddlpackage.vpj
++@ dbcon/ddlpackageproc/ddlpackageproc.vpj
++@ ddlproc/ddlproc.vpj
++@ writeengine/dictionary/dictionary.vpj
++@ dbcon/dmlpackage/dmlpackage.vpj
++@ dbcon/dmlpackageproc/dmlpackageproc.vpj
++@ dmlproc/dmlproc.vpj
++@ tools/editem/editem.vpj
++@ dbcon/execplan/execplan.vpj
++@ exemgr/exemgr.vpj
++@ utils/funcexp/funcexp.vpj
++@ tools/hdfsCheck/hdfsCheck.vpj
++@ utils/idbdatafile/idbdatafile.vpj
++@ utils/idbhdfs/idbhdfs.vpj
++@ dbcon/ingres/ingres.vpj
++@ dbcon/joblist/joblist.vpj
++@ utils/joiner/joiner.vpj
++@ primitives/linux-port/linux-port.vpj
++@ utils/loggingcpp/loggingcpp.vpj
++@ utils/messageqcpp/messageqcpp.vpj
++@ utils/multicast/multicast.vpj
++@ dbcon/mysql/mysql.vpj
+-@ oam/oamcpp/oamcpp.vpj
+  - Source Files
+  - Header Files
+  + Resource Files
+  + Bitmaps
+  + Other Files
++@ oamapps/postConfigure/postConfigure.vpj
++@ primitives/primproc/primproc.vpj
++@ procmgr/procmgr.vpj
+-@ procmon/procmon.vpj
+  - Source Files
+  + Header Files
+  + Resource Files
+  + Bitmaps
+  + Other Files
++@ oamapps/resourceMonitor/resourceMonitor.vpj
++@ utils/rowgroup/rowgroup.vpj
++@ utils/rwlock/rwlock.vpj
++@ writeengine/splitter/splitter.vpj
++@ utils/startup/startup.vpj
++@ utils/dataconvert/tdriver.vpj
++@ utils/threadpool/threadpool.vpj
++@ utils/udfsdk/udfsdk.vpj
++@ utils/utils.vpj
++@ writeengine/wrapper/wrapper.vpj
++@ writeengine/client/writeengineclient.vpj
+scroll:0
+[State]
+SCREEN: 1856 996 466 0 1382 939 0 0 N 0 0 0 0 965 533 0
+CWD: ../mariadb/sql
+BUFFER: BN="../mariadb/sql/sql_plugin.cc"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=616 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.35765 CL=1 LE=0 CX=2 CY=9 WI=5 BI=35 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="export/include/idb_mysql.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=616 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.1378 CL=48 LE=0 CX=49 CY=27 WI=5 BI=29 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="../mariadb/storage/innobase/handler/ha_innodb.cc"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=104 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.1684 CL=22 LE=0 CX=23 CY=15 WI=5 BI=28 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="dbcon/mysql/idb_mysql.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=1049192 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.1353 CL=1 LE=0 CX=2 CY=16 WI=5 BI=34 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="utils/udfsdk/Makefile"
+BI: MA=1 74 1  TABS=1 9  WWS=1 IWT=1 ST=0 IN=1 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=Makefile	HM=0 MF=131688 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.509 CL=102 LE=0 CX=103 CY=18 WI=5 BI=30 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="../mariadb/sql/table.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=616 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.43633 CL=64 LE=0 CX=65 CY=19 WI=5 BI=31 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="../mariadb/sql/sql_plugin.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=616 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.3925 CL=16 LE=0 CX=17 CY=2 WI=5 BI=4 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="../mariadb/include/my_config.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=616 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.10933 CL=24 LE=0 CX=25 CY=19 WI=5 BI=32 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="../mariadb/include/my_global.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=608 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.29646 CL=34 LE=0 CX=35 CY=18 WI=5 BI=37 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="oam/oamcpp/liboamcpp.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=1049184 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.16474 CL=30 LE=0 CX=31 CY=22 WI=5 BI=36 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="../mariadb/sql/item_cmpfunc.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=131680 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.45867 CL=29 LE=0 CX=30 CY=13 WI=5 BI=38 HT=0 HN=0 HF=0 HC=4
+BUFFER: BN="../mariadb/include/config.h"
+BI: MA=1 74 1  TABS=1 5  WWS=1 IWT=1 ST=0 IN=2 BW=0 US=32000 RO=0 SE=1 SN=0 BIN=0 MN=C/C++	HM=0 MF=608 TL=0 MLL=0 ASE=0 LNL=1 LCF=0 CAPS=0 E=0 ESBU2=1 CL="" SC="" SCE= SCU=
+VIEW: LN=.12519 CL=9 LE=0 CX=10 CY=15 WI=5 BI=40 HT=0 HN=0 HF=0 HC=4
+WINDOW: 54 0 747 373 0 0 N  WF=0 WT=12 ",,,"
+BUFFER: BN="../mariadb/include/config.h"
+VIEW: LN=.12519 CL=9 LE=0 CX=10 CY=15 WI=343 BI=40 HT=0 HN=0 HF=0 HC=4
+WINDOW: 36 0 747 373 0 0 N  WF=0 WT=8 ",,,"
+BUFFER: BN="../mariadb/sql/sql_plugin.cc"
+VIEW: LN=.35765 CL=1 LE=0 CX=2 CY=9 WI=264 BI=35 HT=0 HN=0 HF=0 HC=4
+WINDOW: 162 25 747 373 0 0 N  WF=0 WT=2 ",,,"
+BUFFER: BN="export/include/idb_mysql.h"
+VIEW: LN=.1378 CL=48 LE=0 CX=49 CY=27 WI=234 BI=29 HT=0 HN=0 HF=0 HC=4
+WINDOW: 144 0 747 373 0 0 N  WF=0 WT=3 ",,,"
+BUFFER: BN="../mariadb/storage/innobase/handler/ha_innodb.cc"
+VIEW: LN=.1684 CL=22 LE=0 CX=23 CY=15 WI=284 BI=28 HT=0 HN=0 HF=0 HC=4
+WINDOW: 0 125 747 373 0 0 N  WF=0 WT=5 ",,,"
+BUFFER: BN="../mariadb/sql/table.h"
+VIEW: LN=.43633 CL=64 LE=0 CX=65 CY=19 WI=175 BI=31 HT=0 HN=0 HF=0 HC=4
+WINDOW: 18 150 747 373 0 0 N  WF=0 WT=6 ",,,"
+BUFFER: BN="../mariadb/sql/sql_plugin.h"
+VIEW: LN=.3925 CL=16 LE=0 CX=17 CY=2 WI=206 BI=4 HT=0 HN=0 HF=0 HC=4
+WINDOW: 126 150 747 373 0 0 N  WF=0 WT=1 ",,,"
+BUFFER: BN="dbcon/mysql/idb_mysql.h"
+VIEW: LN=.1353 CL=1 LE=0 CX=2 CY=16 WI=318 BI=34 HT=0 HN=0 HF=0 HC=4
+WINDOW: 180 50 747 373 0 0 N  WF=0 WT=4 ",,,"
+BUFFER: BN="utils/udfsdk/Makefile"
+VIEW: LN=.509 CL=102 LE=36 CX=66 CY=18 WI=186 BI=30 HT=0 HN=0 HF=0 HC=4
+WINDOW: 72 50 747 373 0 0 N  WF=0 WT=9 ",,,"
+BUFFER: BN="../mariadb/include/my_config.h"
+VIEW: LN=.10933 CL=24 LE=0 CX=25 CY=19 WI=305 BI=32 HT=0 HN=0 HF=0 HC=4
+WINDOW: 144 150 747 373 0 0 N  WF=0 WT=7 ",,,"
+BUFFER: BN="../mariadb/include/my_global.h"
+VIEW: LN=.29646 CL=34 LE=0 CX=35 CY=18 WI=266 BI=37 HT=0 HN=0 HF=0 HC=4
+WINDOW: 36 150 747 373 0 0 N  WF=0 WT=10 ",,,"
+BUFFER: BN="oam/oamcpp/liboamcpp.h"
+VIEW: LN=.16474 CL=30 LE=0 CX=30 CY=22 WI=339 BI=36 HT=0 HN=0 HF=0 HC=4
+WINDOW: 72 25 747 373 0 0 M  WF=0 WT=13 ",,,"
+BUFFER: BN="../mariadb/sql/item_cmpfunc.h"
+VIEW: LN=.45867 CL=29 LE=0 CX=29 CY=13 WI=335 BI=38 HT=0 HN=0 HF=0 HC=4
+FILEHIST: 9
+mysql/include/my_alarm.h
+mysql/sql/handler.h
+dbcon/mysql/ha_calpont_dml.cpp
+../mariadb/storage/tokudb/ha_tokudb.cc
+../mariadb/storage/archive/ha_archive.cc
+dbcon/mysql/ha_calpont.cpp
+../mariadb/include/config.h
+oam/oamcpp/liboamcpp.h
+../mariadb/sql/item_cmpfunc.h
+DEBUG: 0 0 5 0 3 0 gdb
+00handle_fatal_signal../mysql/sql/signal_handler.cc16410
+00ndb_binlog_thread_func../mysql/sql/ha_ndbcluster_binlog.cc382210
+00ndb_util_thread_func../mysql/sql/ha_ndbcluster.cc940810
+00MYSQL_LOG~MYSQL_LOG../mysql/sql/log.cc206010
+00LOGGERcleanup_end../mysql/sql/log.cc88610
+printf
+strcpy
+std::*
+SESSION: gdb ATTACH: /home/calpont/4.0/export/bin/ExeMgr
+DEBUG: 3 0 1 0 3 0 gdb
+1qsv0
+1tableOid0
+1joblist::associateTupleJobStepstableInfoMap0
+00joblistassociateTupleJobSteps../4.0/dbcon/joblist/jlf_tuplejoblist.cpp290110x00007fa56a5437530
+printf
+strcpy
+std::*
+SESSION: gdb ATTACH: /home/calpont/mysql/sql/mysqld
+DEBUG: 1 0 3 0 3 0 gdb
+1ptr0
+00handle_connections_sockets../mysql/sql/mysqld.cc498700
+00LOGGERcleanup_end../mysql/sql/log.cc88600
+00processmonitor::ProcessMonitorprocessMessageprocmon/processmonitor.cpp75900
+printf
+strcpy
+std::*
+DEBUG2: 5
+00handle_fatal_signal../mysql/sql/signal_handler.cc1641055
+wwheremysqlddiedIfyouseenomessagesafterthissomethingwent\n 
+tterriblywrong..\\n); 
+my_print_stacktracetthd?uuchar)thd>tthread_stackNULL 
+my_thread_stack_size; 
+ 
+iftthd 
+ 
+constcharkkreasonUUNKNOWN; 
+switchtthd>kkilled 
+caseTHD:NNOT_KILLED 
+kreasonNNOT_KILLED; 
+00ndb_binlog_thread_func../mysql/sql/ha_ndbcluster_binlog.cc38221055
+IF_DBUGiinterror) 
+inj>rrecord_incidenttthdINCIDENT_LOST_EVENTSmsgiincident_id); 
+DBUG_ASSERT!!error; 
+break 
+ 
+incident_id1 
+ 
+thd>pproc_infoWWaitingforndbclustertostart; 
+
+pthread_mutex_lock&iinjector_mutex; 
+while!!ndb_schema_share||
+00ndb_util_thread_func../mysql/sql/ha_ndbcluster.cc94081055
+ 
+
+pthread_mutex_lock&LLOCK_ndb_util_thread; 
+
+ndb_util_thread_end 
+net_end&tthd>nnet; 
+ndb_util_thread_fail 
+ifsshare_list 
+delete]share_list 
+thd>ccleanup); 
+deletethd 
+00MYSQL_LOG~MYSQL_LOG../mysql/sql/log.cc20601045
+* 
+Closethelogfile
+
+SYNOPSIS
+close) 
+exitingBitmaskFortheslowandgenerallogstheonlyusedbitis
+LOG_CLOSE_TO_BE_OPENEDThisisusedifweintendtocall
+openatonceafterclose 
+
+NOTES
+00LOGGERcleanup_end../mysql/sql/log.cc8861045
+file_log_handlerNNULL 
+ 
+inited0 
+ 
+
+** 
+Performbasicloginitializationcreatefilebbasedloghandlerand
+initerrorlog 
+/ 
+voidLOGGER:iinit_base) 
+SESSION2: gdb ATTACH: /home/calpont/4.0/export/bin/ExeMgr
+DEBUG2: 1
+00joblistassociateTupleJobSteps../4.0/dbcon/joblist/jlf_tuplejoblist.cpp290110x00007fa56a543753055
+key2jobInfokkeyInfo>ddictKeyMapkkey2; 
+
+/notcorrelated
+joinStepsppush_back*iit; 
+tableInfoMapttid1.ffJoinKeysppush_backkkey1; 
+tableInfoMapttid2.ffJoinKeysppush_backkkey2; 
+
+/keepajoinmap
+pairuuintuinttablePairttid1tid2; 
+TableJoinMap:iiteratorm1jobInfottableJoinMapffindttablePair; 
+TableJoinMap:iiteratorm2jobInfottableJoinMapeend); 
+SESSION2: gdb ATTACH: /home/calpont/mysql/sql/mysqld
+DEBUG2: 3
+00handle_connections_sockets../mysql/sql/mysqld.cc49870055
+ip_flagsfcntliip_sockF_GETFL0; 
+#endif
+ 
+#ifdefHAVE_SYS_UN_H
+FD_SETuunix_sock&cclientFDs; 
+#ifdefHAVE_FCNTL
+socket_flagsffcntluunix_sockF_GETFL0; 
+#endif
+#endif
+
+DBUG_PRINT"ggeneral,("WWaitingforconnections")); 
+00LOGGERcleanup_end../mysql/sql/log.cc8860045
+file_log_handlerNNULL 
+ 
+inited0 
+ 
+
+** 
+Performbasicloginitializationcreatefilebbasedloghandlerand
+initerrorlog 
+/ 
+voidLOGGER:iinit_base) 
+00processmonitor::ProcessMonitorprocessMessageprocmon/processmonitor.cpp7590055
+logwwriteLog___LINE__PPROCREINITPROCESScompletednoacktoProcMgr); 
+break 
+ 
+caseSTOPALL 
+ 
+msg>manualFlag 
+logwwriteLog___LINE__MMSGRECEIVEDStopAllprocessrequest.."); 
+
+ifactIndicator=STATUS_UPDATE 
+/ccheckandsendnotification
+MonitorConfigconfig 
+TBCLASS: 0 0

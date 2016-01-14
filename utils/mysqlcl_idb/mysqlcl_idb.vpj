@@ -1,0 +1,153 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+    Version="10.0"
+    VendorName="SlickEdit"
+    TemplateName="Makefile"
+    WorkingDir="."
+    BuildSystem=""
+    BuildMakeFile="Makefile">
+    <Config
+        Name="Release"
+        Type="Makefile"
+        OutputFile="mysqlcl_idb"
+        CompilerConfigName="">
+        <Menu>
+            <Target
+                Name="Compile"
+                MenuCaption="&amp;Compile"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveCurrent"
+                RunFromDir="%rw">
+                <Exec/>
+            </Target>
+            <Target
+                Name="Build"
+                MenuCaption="&amp;Build"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine="make -f Makefile all"/>
+            </Target>
+            <Target
+                Name="Rebuild"
+                MenuCaption="&amp;Rebuild"
+                CaptureOutputWith="ProcessBuffer"
+                SaveOption="SaveWorkspaceFiles"
+                RunFromDir="%rw">
+                <Exec CmdLine="make -f Makefile clean all"/>
+            </Target>
+            <Target
+                Name="Debug"
+                MenuCaption="&amp;Debug"
+                SaveOption="SaveNone"
+                RunFromDir="%rw">
+                <Exec/>
+            </Target>
+            <Target
+                Name="Execute"
+                MenuCaption="E&amp;xecute"
+                SaveOption="SaveNone"
+                RunFromDir="%rw">
+                <Exec CmdLine='"mysqlcl_idb.exe"'/>
+            </Target>
+        </Menu>
+    </Config>
+    <Files>
+        <Folder
+            Name="Source Files"
+            Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+            <F N="array.c"/>
+            <F N="bchange.c"/>
+            <F N="bmove_upp.c"/>
+            <F N="charset-def.c"/>
+            <F N="charset.c"/>
+            <F N="client.c"/>
+            <F N="ctype-bin.c"/>
+            <F N="ctype-extra.c"/>
+            <F N="ctype-latin1.c"/>
+            <F N="ctype-mb.c"/>
+            <F N="ctype-simple.c"/>
+            <F N="ctype-uca.c"/>
+            <F N="ctype-utf8.c"/>
+            <F N="ctype.c"/>
+            <F N="dbug.c"/>
+            <F N="default.c"/>
+            <F N="errmsg.c"/>
+            <F N="errors.c"/>
+            <F N="int2str.c"/>
+            <F N="is_prefix.c"/>
+            <F N="libmysql.c"/>
+            <F N="list.c"/>
+            <F N="mf_arr_appstr.c"/>
+            <F N="mf_dirname.c"/>
+            <F N="mf_fn_ext.c"/>
+            <F N="mf_format.c"/>
+            <F N="mf_loadpath.c"/>
+            <F N="mf_pack.c"/>
+            <F N="mf_qsort.c"/>
+            <F N="mulalloc.c"/>
+            <F N="my_alloc.c"/>
+            <F N="my_compress.c"/>
+            <F N="my_div.c"/>
+            <F N="my_error.c"/>
+            <F N="my_fopen.c"/>
+            <F N="my_gethostbyname.c"/>
+            <F N="my_getwd.c"/>
+            <F N="my_init.c"/>
+            <F N="my_lib.c"/>
+            <F N="my_malloc.c"/>
+            <F N="my_messnc.c"/>
+            <F N="my_net.c"/>
+            <F N="my_once.c"/>
+            <F N="my_open.c"/>
+            <F N="my_pthread.c"/>
+            <F N="my_read.c"/>
+            <F N="my_realloc.c"/>
+            <F N="my_static.c"/>
+            <F N="my_strtoll10.c"/>
+            <F N="my_symlink.c"/>
+            <F N="my_sync.c"/>
+            <F N="my_thr_init.c"/>
+            <F N="my_time.c"/>
+            <F N="my_vsnprintf.c"/>
+            <F N="net.c"/>
+            <F N="pack.c"/>
+            <F N="password.c"/>
+            <F N="sha1.c"/>
+            <F N="str2int.c"/>
+            <F N="strcend.c"/>
+            <F N="strend.c"/>
+            <F N="strmake.c"/>
+            <F N="strnmov.c"/>
+            <F N="strtod.c"/>
+            <F N="strxmov.c"/>
+            <F N="thr_mutex.c"/>
+            <F N="typelib.c"/>
+            <F N="vio.c"/>
+            <F N="viosocket.c"/>
+            <F N="xml.c"/>
+        </Folder>
+        <Folder
+            Name="Header Files"
+            Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+            <F N="client_settings.h"/>
+            <F N="my_static.h"/>
+            <F N="mysql.h"/>
+            <F N="mysys_priv.h"/>
+            <F N="vio_priv.h"/>
+        </Folder>
+        <Folder
+            Name="Resource Files"
+            Filters="*.ico;*.cur;*.dlg"/>
+        <Folder
+            Name="Bitmaps"
+            Filters="*.bmp"/>
+        <Folder
+            Name="Other Files"
+            Filters="">
+            <F
+                N="Makefile"
+                Type="Makefile"/>
+        </Folder>
+    </Files>
+</Project>

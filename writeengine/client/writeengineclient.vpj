@@ -1,0 +1,291 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+	Version="10.0"
+	VendorName="SlickEdit"
+	TemplateName="GNU C/C++"
+	WorkingDir=".">
+	<Config
+		Name="Debug"
+		Type="gnuc"
+		DebugCallbackName="gdb"
+		Version="1"
+		OutputFile="%bdwriteengineclient.so"
+		CompilerConfigName="Latest Version"
+		ObjectDir="/home/dhall/genii/writeengine/client/">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				Dialog="_gnuc_options_form Compile"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				OutputExts="*.o"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ -c %xup  %defd -g -o "%bd%n%oe" %i "%f"'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link"
+				ShowOnMenu="Never"
+				Dialog="_gnuc_options_form Link"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ %xup -g -o "%o" %f %libs -shared -fPIC'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw"
+				ClearProcessBuffer="1">
+				<Exec CmdLine="make install"/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine=""/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				Dialog="_gnuc_options_form Run/Debug"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine=""/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				Dialog="_gnuc_options_form Run/Debug"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine=""/>
+			</Target>
+			<Target
+				Name="dash"
+				MenuCaption="-"
+				Deletable="0">
+				<Exec/>
+			</Target>
+			<Target
+				Name="GNU C Options"
+				MenuCaption="GNU C &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0"
+				SaveOption="SaveNone">
+				<Exec
+					CmdLine="gnucoptions"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<List Name="GNUC Options">
+			<Item
+				Name="LinkerOutputType"
+				Value="SharedLibrary"/>
+		</List>
+	</Config>
+	<Config
+		Name="Release"
+		Type="gnuc"
+		DebugCallbackName="gdb"
+		Version="1"
+		OutputFile="%bdwriteengineclient.so"
+		CompilerConfigName="Latest Version">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				Dialog="_gnuc_options_form Compile"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				OutputExts="*.o"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ -c %xup %defd -o "%bd%n%oe" %i "%f"'/>
+			</Target>
+			<Target
+				Name="Link"
+				MenuCaption="&amp;Link"
+				ShowOnMenu="Never"
+				Dialog="_gnuc_options_form Link"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine='g++ %xup -o "%o" %f %libs -shared -fPIC'/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw"
+				ClearProcessBuffer="1">
+				<Exec CmdLine="make install"/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine=""/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				Dialog="_gnuc_options_form Run/Debug"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine=""/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				Dialog="_gnuc_options_form Run/Debug"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine=""/>
+			</Target>
+			<Target
+				Name="dash"
+				MenuCaption="-"
+				Deletable="0">
+				<Exec/>
+			</Target>
+			<Target
+				Name="GNU C Options"
+				MenuCaption="GNU C &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0"
+				SaveOption="SaveNone">
+				<Exec
+					CmdLine="gnucoptions"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<List Name="GNUC Options">
+			<Item
+				Name="LinkerOutputType"
+				Value="SharedLibrary"/>
+		</List>
+	</Config>
+	<Files>
+		<Folder
+			Name="Source Files"
+			Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+			<Folder
+				Name="shared"
+				Filters="">
+				<F N="../shared/tshared.cpp"/>
+				<F N="../shared/we_blockop.cpp"/>
+				<F N="../shared/we_brm.cpp"/>
+				<F N="../shared/we_bulkrollbackfile.cpp"/>
+				<F N="../shared/we_bulkrollbackfilecompressed.cpp"/>
+				<F N="../shared/we_bulkrollbackmgr.cpp"/>
+				<F N="../shared/we_cache.cpp"/>
+				<F N="../shared/we_chunkmanager.cpp"/>
+				<F N="../shared/we_config.cpp"/>
+				<F N="../shared/we_convertor.cpp"/>
+				<F N="../shared/we_dbfileop.cpp"/>
+				<F N="../shared/we_dbrootextenttracker.cpp"/>
+				<F N="../shared/we_define.cpp"/>
+				<F N="../shared/we_fileop.cpp"/>
+				<F N="../shared/we_log.cpp"/>
+				<F N="../shared/we_rbmetawriter.cpp"/>
+				<F N="../shared/we_simplesyslog.cpp"/>
+				<F N="../shared/we_stats.cpp"/>
+			</Folder>
+			<Folder
+				Name="xml"
+				Filters="">
+				<F N="../xml/txml.cpp"/>
+				<F N="../xml/we_xmlgendata.cpp"/>
+				<F N="../xml/we_xmlgenproc.cpp"/>
+				<F N="../xml/we_xmljob.cpp"/>
+				<F N="../xml/we_xmlop.cpp"/>
+			</Folder>
+			<F N="we_clients.cpp"/>
+			<F N="we_ddlcommandclient.cpp"/>
+			<F N="we_dmlcommandclient.cpp"/>
+		</Folder>
+		<Folder
+			Name="Header Files"
+			Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+			<Folder
+				Name="shared headers"
+				Filters="">
+				<F N="../shared/we_blockop.h"/>
+				<F N="../shared/we_brm.h"/>
+				<F N="../shared/we_bulkrollbackfile.h"/>
+				<F N="../shared/we_bulkrollbackfilecompressed.h"/>
+				<F N="../shared/we_bulkrollbackmgr.h"/>
+				<F N="../shared/we_cache.h"/>
+				<F N="../shared/we_chunkmanager.h"/>
+				<F N="../shared/we_config.h"/>
+				<F N="../shared/we_convertor.h"/>
+				<F N="../shared/we_dbfileop.h"/>
+				<F N="../shared/we_dbrootextenttracker.h"/>
+				<F N="../shared/we_define.h"/>
+				<F N="../shared/we_fileop.h"/>
+				<F N="../shared/we_index.h"/>
+				<F N="../shared/we_log.h"/>
+				<F N="../shared/we_macro.h"/>
+				<F N="../shared/we_obj.h"/>
+				<F N="../shared/we_rbmetawriter.h"/>
+				<F N="../shared/we_simplesyslog.h"/>
+				<F N="../shared/we_stats.h"/>
+				<F N="../shared/we_type.h"/>
+				<F N="../shared/we_typeext.h"/>
+			</Folder>
+			<Folder
+				Name="xml headers"
+				Filters="">
+				<F N="../xml/we_xmlgendata.h"/>
+				<F N="../xml/we_xmlgenproc.h"/>
+				<F N="../xml/we_xmljob.h"/>
+				<F N="../xml/we_xmlop.h"/>
+				<F N="../xml/we_xmltag.h"/>
+			</Folder>
+			<F N="we_clients.h"/>
+			<F N="we_ddlcommandclient.h"/>
+			<F N="we_dmlcommandclient.h"/>
+		</Folder>
+		<Folder
+			Name="Resource Files"
+			Filters="*.ico;*.cur;*.dlg"/>
+		<Folder
+			Name="Bitmaps"
+			Filters="*.bmp"/>
+		<Folder
+			Name="Other Files"
+			Filters="">
+			<F
+				N="Makefile"
+				Type="Makefile"/>
+		</Folder>
+	</Files>
+</Project>
