@@ -7,7 +7,7 @@
 include ../../rules.mak
 .PHONY: install clean test docs coverage leakcheck
 
-MYSQL_DIR=../../mariadb
+MYSQL_DIR=../../MariaDB_InfiniDB
 
 PROGRAM=libmysqlcl_idb.so
 VERSION=1.0.0

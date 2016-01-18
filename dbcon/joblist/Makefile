@@ -11,7 +11,7 @@ PROGRAM=libjoblist.so
 VERSION=1.0.0
 LIBRARY=$(PROGRAM).$(VERSION)
 
-MYSQL_DIR=../../mariadb
+MYSQL_DIR=../../MariaDB_InfiniDB
 CPPFLAGS+= -I. -I$(EXPORT_ROOT)/include -I$(MYSQL_DIR)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall -fpic -fno-strict-aliasing $(JL_DEBUG_FLAGS)
 #CXXFLAGS+=-DFIFO_SINK
