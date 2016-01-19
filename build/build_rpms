@@ -4,7 +4,7 @@
 #
 
 verbose=0
-mysqldir=$HOME/InfiniDB-MySQL/export/mysql
+mysqldir=$HOME/MariaDB_InfiniDB/export/mysql
 
 usage()
 {
