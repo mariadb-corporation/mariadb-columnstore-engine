@@ -15,10 +15,10 @@ cp build/gdb export/bin
 cp build/libgcc_s.so.1 export/lib 
 cp build/libstdc++.so.6.0.14 export/lib
 
-cp build/files.lst $HOME/InfiniDB-MySQL/export/mysql/.
-cp dbcon/mysql/install_calpont_mysql.sh $HOME/InfiniDB-MySQL/export/mysql/.
-cp dbcon/mysql/my.cnf $HOME/InfiniDB-MySQL/export/mysql/.
-cp dbcon/mysql/mysql-Calpont $HOME/InfiniDB-MySQL/export/mysql/.
+cp build/files.lst $HOME/MariaDB_InfiniDB/export/mysql/.
+cp dbcon/mysql/install_calpont_mysql.sh $HOME/MariaDB_InfiniDB/export/mysql/.
+cp dbcon/mysql/my.cnf $HOME/MariaDB_InfiniDB/export/mysql/.
+cp dbcon/mysql/mysql-Calpont $HOME/MariaDB_InfiniDB/export/mysql/.
 
 cp build/Doxyfile export/etc
 if [ ! $$ ]; then
