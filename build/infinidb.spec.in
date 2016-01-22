@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-Summary: InfiniDB software
+Summary: InfiniDB-MariaDB software
 Name: infinidb
 @@VERSION@@
 @@RELEASE@@
@@ -9,29 +9,29 @@ Vendor: MariaDB, Inc.
 URL: http://www.mariadb.com/
 @@PACKAGER@@
 Group: Applications
-License: Copyright (c) 2014 InfiniDB, Inc., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.
+License: Copyright (c) 2016 MariaDB, Inc., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.
 BuildRoot: %{_tmppath}/%{name}-%{release}-buildroot
 
 %description
-InfiniDB software meta-package
+InfiniDB-MariaDB software meta-package
 
 %package platform
-Summary: InfiniDB software binaries
+Summary: InfiniDB-MariaDB software binaries
 Group: Applications
 Obsoletes: calpont
 Requires: expect, infinidb-libs
 
 %description platform
-InfiniDB binary files
+InfiniDB-MariaDB binary files
 @@BUILDINFO@@
 
 %package libs
-Summary: InfiniDB software libraries
+Summary: InfiniDB-MariaDB software libraries
 Group: Applications
 Obsoletes: calpont
 
 %description libs
-InfiniDB libraries
+InfiniDB-MariaDB libraries
 
 %package enterprise
 Summary: InfiniDB Enterprise software binaries
@@ -44,21 +44,13 @@ License: Proprietary; Copyright (c) 2014 InfiniDB, Inc., all rights reserved
 InfiniDB Enterprise binary files
 
 %package storage-engine
-Summary: InfiniDB software MySQL connector
+Summary: InfiniDB-MariaDB software MariaDB connector
 Group: Applications
 Obsoletes: calpont-mysql
 Requires: infinidb-libs
 
 %description storage-engine
-InfiniDB MySQL connector binary files
-
-%package mysql
-Summary: InfiniDB software MySQL server
-Group: Applications
-Obsoletes: calpont-mysqld
-
-%description mysql
-InfiniDB/MySQL 5.1.73 server binary files
+InfiniDB MariaDB connector binary files
 
 %prep
 %define _use_internal_dependency_generator 0
@@ -356,136 +348,6 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/Calpont/lib/libcalmysql.so.1.0.0
 /usr/local/Calpont/lib/libudf_mysql.so.1.0.0
 
-%files mysql
-/usr/local/Calpont/mysql/lib/mysql/libmysqlclient.so.16.0.0
-/usr/local/Calpont/mysql/lib/mysql/libmysqlclient_r.so.16.0.0
-/usr/local/Calpont/mysql/lib/mysql/plugin/ha_federated.so.0.0.0
-/usr/local/Calpont/mysql/lib/mysql/plugin/ha_blackhole.so.0.0.0
-/usr/local/Calpont/mysql/lib/mysql/plugin/ha_archive.so.0.0.0
-/usr/local/Calpont/mysql/lib/mysql/plugin/ha_innodb.so.0.0.0
-/usr/local/Calpont/mysql/lib/mysql/plugin/ha_innodb_plugin.so.0.0.0
-/usr/local/Calpont/mysql/libexec/mysqlmanager
-/usr/local/Calpont/mysql/libexec/mysqld
-/usr/local/Calpont/mysql/bin/mysql_find_rows
-/usr/local/Calpont/mysql/bin/mysqlbug
-/usr/local/Calpont/mysql/bin/innochecksum
-/usr/local/Calpont/mysql/bin/mysql_secure_installation
-/usr/local/Calpont/mysql/bin/resolve_stack_dump
-/usr/local/Calpont/mysql/bin/my_print_defaults
-/usr/local/Calpont/mysql/bin/mysql_waitpid
-/usr/local/Calpont/mysql/bin/resolveip
-/usr/local/Calpont/mysql/bin/perror
-/usr/local/Calpont/mysql/bin/myisamlog
-/usr/local/Calpont/mysql/bin/mysql
-/usr/local/Calpont/mysql/bin/myisamchk
-/usr/local/Calpont/mysql/bin/mysql_fix_privilege_tables
-/usr/local/Calpont/mysql/bin/mysql_upgrade
-/usr/local/Calpont/mysql/bin/mysqlcheck
-/usr/local/Calpont/mysql/bin/myisampack
-/usr/local/Calpont/mysql/bin/mysql_setpermission
-/usr/local/Calpont/mysql/bin/mysqladmin
-/usr/local/Calpont/mysql/bin/mysqlslap
-/usr/local/Calpont/mysql/bin/mysql_zap
-/usr/local/Calpont/mysql/bin/mysqldump
-/usr/local/Calpont/mysql/bin/mysqld_safe
-/usr/local/Calpont/mysql/bin/mysqlshow
-/usr/local/Calpont/mysql/bin/mysqltest
-/usr/local/Calpont/mysql/bin/mysql_config
-/usr/local/Calpont/mysql/bin/mysql_client_test
-/usr/local/Calpont/mysql/bin/mysqlbinlog
-/usr/local/Calpont/mysql/bin/mysqld_multi
-/usr/local/Calpont/mysql/bin/mysqlaccess
-/usr/local/Calpont/mysql/bin/mysql_install_db
-/usr/local/Calpont/mysql/bin/msql2mysql
-/usr/local/Calpont/mysql/bin/mysqlimport
-/usr/local/Calpont/mysql/bin/replace
-/usr/local/Calpont/mysql/bin/mysql_convert_table_format
-/usr/local/Calpont/mysql/bin/myisam_ftdump
-/usr/local/Calpont/mysql/bin/mysql_tzinfo_to_sql
-/usr/local/Calpont/mysql/bin/mysql_fix_extensions
-/usr/local/Calpont/mysql/bin/mysqldumpslow
-/usr/local/Calpont/mysql/bin/mysqlhotcopy
-/usr/local/Calpont/mysql/share/mysql/config.small.ini
-/usr/local/Calpont/mysql/share/mysql/romanian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/korean/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/norwegian-ny/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/binary-configure
-/usr/local/Calpont/mysql/share/mysql/french/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/greek/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/mysql-log-rotate
-/usr/local/Calpont/mysql/share/mysql/mysql_system_tables_data.sql
-/usr/local/Calpont/mysql/share/mysql/russian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/mysql.server
-/usr/local/Calpont/mysql/share/mysql/mi_test_all.res
-/usr/local/Calpont/mysql/share/mysql/danish/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/portuguese/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/mysql_fix_privilege_tables.sql
-/usr/local/Calpont/mysql/share/mysql/italian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/mi_test_all
-/usr/local/Calpont/mysql/share/mysql/mysql_system_tables.sql
-/usr/local/Calpont/mysql/share/mysql/my-innodb-heavy-4G.cnf
-/usr/local/Calpont/mysql/share/mysql/norwegian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/fill_help_tables.sql
-/usr/local/Calpont/mysql/share/mysql/spanish/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/ndb-config-2-node.ini
-/usr/local/Calpont/mysql/share/mysql/slovak/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/mysql_test_data_timezone.sql
-/usr/local/Calpont/mysql/share/mysql/czech/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/english/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/hungarian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/mysqld_multi.server
-/usr/local/Calpont/mysql/share/mysql/estonian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/german/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/errmsg.txt
-/usr/local/Calpont/mysql/share/mysql/swedish/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/dutch/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/charsets/cp866.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/hebrew.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/latin2.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/armscii8.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/latin7.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/geostd8.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/latin5.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/swe7.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/keybcs2.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/cp1257.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/macroman.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/cp1251.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/cp1256.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/macce.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/dec8.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/latin1.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/greek.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/cp850.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/hp8.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/cp852.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/koi8r.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/README
-/usr/local/Calpont/mysql/share/mysql/charsets/cp1250.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/koi8u.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/Index.xml
-/usr/local/Calpont/mysql/share/mysql/charsets/ascii.xml
-/usr/local/Calpont/mysql/share/mysql/config.medium.ini
-/usr/local/Calpont/mysql/share/mysql/my-huge.cnf
-/usr/local/Calpont/mysql/share/mysql/polish/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/my-medium.cnf
-/usr/local/Calpont/mysql/share/mysql/my-large.cnf
-/usr/local/Calpont/mysql/share/mysql/config.huge.ini
-/usr/local/Calpont/mysql/share/mysql/ukrainian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/serbian/errmsg.sys
-/usr/local/Calpont/mysql/share/mysql/my-small.cnf
-/usr/local/Calpont/mysql/share/mysql/japanese/errmsg.sys
-/usr/local/Calpont/mysql/mysql-Calpont
-/usr/local/Calpont/mysql/install_calpont_mysql.sh
-/usr/local/Calpont/mysql/syscatalog_mysql.sql
-/usr/local/Calpont/mysql/dumpcat_mysql.sql
-/usr/local/Calpont/mysql/dumpcat.pl
-/usr/local/Calpont/mysql/calsetuserpriority.sql
-/usr/local/Calpont/mysql/calremoveuserpriority.sql
-/usr/local/Calpont/mysql/calshowprocesslist.sql
-
-%config /usr/local/Calpont/mysql/my.cnf
-
 #
 # Scriptlets
 # for an install, pre & post run with $1 set to 1
@@ -530,17 +392,6 @@ prefix=/usr/local
 
 echo "InfinIDB RPM install completed"
 
-%post mysql
-rpmmode=install
-if  [ "$1" -eq "$1" 2> /dev/null ]; then
-	if [ $1 -ne 1 ]; then
-		rpmmode=upgrade
-	fi
-fi
-
-prefix=/usr/local
-
-echo "InfinIDB RPM install completed"
 
 %post enterprise
 rpmmode=install
@@ -606,26 +457,4 @@ fi
 
 exit 0
 
-%preun mysql
-rpmmode=upgrade
-if  [ "$1" -eq "$1" 2> /dev/null ]; then
-	if [ $1 -ne 1 ]; then
-		rpmmode=erase
-	fi
-else
-	rpmmode=erase
-fi
-
-if [ $rpmmode = erase ]; then
-	/etc/init.d/mysql-Calpont stop > /dev/null 2>&1
-	if [ -x /sbin/chkconfig ]; then
-		/sbin/chkconfig mysql-Calpont off > /dev/null 2>&1
-		/sbin/chkconfig --del mysql-Calpont > /dev/null 2>&1
-	elif [ -x /usr/sbin/update-rc.d ]; then
-		/usr/sbin/update-rc.d -f mysql-Calpont remove > /dev/null 2>&1
-	fi
-	rm -f /etc/init.d/mysql-Calpont
-fi
-
-exit 0
 
