@@ -52,7 +52,6 @@ mkdir -p $buildroot
 echo -n "Writing binary files to $buildroot..."
 tar -cf - --exclude 'export/include' --exclude 'export/*.tar' export | tar -C $buildroot -xf -
 mv $buildroot/export $buildroot/Calpont
-/usr/bin/cp -rf $HOME/infinidb/export/* $buildroot/Calpont/.
 
 #get mysql server files
 #pushd $mysqldir > /dev/null
