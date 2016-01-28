@@ -54,10 +54,10 @@ tar -cf - --exclude 'export/include' --exclude 'export/*.tar' export | tar -C $b
 mv $buildroot/export $buildroot/Calpont
 
 #get mysql server files
-#pushd $mysqldir > /dev/null
-#mkdir -p $buildroot/Calpont/mysql
-#cpio -pdmu --quiet $buildroot/Calpont/mysql < files.lst
-#popd >/dev/null
+pushd $mysqldir > /dev/null
+mkdir -p $buildroot/Calpont/mysql
+cpio -pdmu --quiet $buildroot/Calpont/mysql < files.lst
+popd >/dev/null
 
 #clean up some files from buildroot
 rm -f $buildroot/Calpont/etc/Doxyfile

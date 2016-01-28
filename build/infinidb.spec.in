@@ -348,6 +348,17 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/Calpont/lib/libcalmysql.so.1.0.0
 /usr/local/Calpont/lib/libudf_mysql.so.1.0.0
 
+/usr/local/Calpont/mysql/mysql-Calpont
+/usr/local/Calpont/mysql/install_calpont_mysql.sh
+/usr/local/Calpont/mysql/syscatalog_mysql.sql
+/usr/local/Calpont/mysql/dumpcat_mysql.sql
+/usr/local/Calpont/mysql/dumpcat.pl
+/usr/local/Calpont/mysql/calsetuserpriority.sql
+/usr/local/Calpont/mysql/calremoveuserpriority.sql
+/usr/local/Calpont/mysql/calshowprocesslist.sql
+
+%config /usr/local/Calpont/mysql/my.cnf
+
 #
 # Scriptlets
 # for an install, pre & post run with $1 set to 1
