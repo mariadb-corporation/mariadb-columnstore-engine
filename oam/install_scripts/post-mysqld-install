@@ -30,8 +30,8 @@ done
 
 cd $installdir/mysql/lib/mysql
 for file in libmysqlclient libmysqlclient_r; do
-	ln -sf $file.so.16.0.0 $file.so
-	ln -sf $file.so.16.0.0 $file.so.16
+	ln -sf $file.so.18.0.0 $file.so
+	ln -sf $file.so.18.0.0 $file.so.18
 done
 cd $installdir/mysql/lib64/mysql/plugin
 for file in ha_archive ha_blackhole ha_federated ha_innodb ha_innodb_plugin; do
