@@ -35,8 +35,7 @@ for file in libmysqlclient libmysqlclient_r; do
 done
 cd $installdir/mysql/lib64/mysql/plugin
 for file in ha_archive ha_blackhole ha_federated ha_innodb ha_innodb_plugin; do
-	ln -sf $file.so.0.0.0 $file.so
-	ln -sf $file.so.0.0.0 $file.so.0
+	ln -sf $file.so $file.so.0
 done
 
 ### taken from MySQL-server-5.1.30-0.glibc23.i386.rpm
