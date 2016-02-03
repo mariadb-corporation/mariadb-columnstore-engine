@@ -3168,11 +3168,11 @@ int main(int argc, char *argv[])
 									}
 								}
 	
-								//re-run post-mysqld-install with password
-								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "'";
+								//re-run post-mysql-install with password
+								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "' < /tmp/post-mysql-install.log";
 								rtnCode = system(cmd.c_str());
 								if (WEXITSTATUS(rtnCode) != 0) {
-									cout << endl << "Error returned from post-mysql-install" << endl;
+									cout << endl << "Error returned from post-mysql-install, check /tmp/post-mysql-install.log" << endl;
 									exit(1);
 								}
 							}

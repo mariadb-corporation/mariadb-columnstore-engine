@@ -234,10 +234,10 @@ void mysqlSetup()
 {
 	Oam oam;
 	string cmd;
-	cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir;
+	cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " > /tmp/post-mysqld-install.log";
 	int rtnCode = system(cmd.c_str());
 	if (WEXITSTATUS(rtnCode) != 0)
-		cout << "Error running post-mysqld-install" << endl;
+		cout << "Error running post-mysqld-install, check /tmp/post-mysqld-install.log" << endl;
 
 	int user;
 	bool rootUser = true;
@@ -309,12 +309,12 @@ void mysqlSetup()
 		}
 	}
 	
-	cmd = installDir + "/bin/post-mysql-install " + pwprompt + " --installdir=" + installDir;
+	cmd = installDir + "/bin/post-mysql-install " + pwprompt + " --installdir=" + installDir + " > /tmp/post-mysql-install.log";;
 	rtnCode = system(cmd.c_str());
 	if (WEXITSTATUS(rtnCode) == 2)
 		cout << "Error running post-mysql-install, password is needed. check " + HOME + "/.my.cnf " << endl;
 	if (WEXITSTATUS(rtnCode) == 1)
-		cout << "Error running post-mysql-install" << endl;
+		cout << "Error running post-mysql-install, /tmp/post-mysql-install.log" << endl;
 
 	return;
 }
