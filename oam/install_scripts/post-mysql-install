@@ -61,8 +61,8 @@ else
 	libcalmysql=
 fi
 
-if [ -d $installdir/mysql/lib/mysql/plugin -a -n "$libcalmysql" ]; then
-	cd $installdir/mysql/lib/mysql/plugin
+if [ -d $installdir/mysql/lib64/mysql/plugin -a -n "$libcalmysql" ]; then
+	cd $installdir/mysql/lib64/mysql/plugin
 	ln -sf $libcalmysql libcalmysql.so
         ln -sf $libcalmysql libcalmysqlent.so
 	ln -sf $libudfsdk libudf_mysql.so

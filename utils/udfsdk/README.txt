@@ -18,7 +18,7 @@ Stop InfiniDB
 Copy the libudf_mysql.so.1.0.0 and libudfsdk.so.1.0.0 file to /usr/local/Calpont/lib on
 every InfiniDB node
 Start InfiniDB
-In the directory /usr/local/Calpont/mysql/lib/mysql/plugin create a symbolic link called 
+In the directory /usr/local/Calpont/mysql/lib64/mysql/plugin create a symbolic link called 
 libudf_msql.so to the file /usr/local/Calpont/lib/libudf_msql.so.1.0.0
 In the mysql client add the function (e.g. "create function idb_add returns integer soname 
 'libudf_msql.so';")
