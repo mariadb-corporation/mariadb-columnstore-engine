@@ -28,7 +28,7 @@ for arg in "$@"; do
 	fi
 done
 
-cd $installdir/mysql/lib/mysql
+cd $installdir/mysql/lib64
 for file in libmysqlclient libmysqlclient_r; do
 	ln -sf $file.so.18.0.0 $file.so
 	ln -sf $file.so.18.0.0 $file.so.18
