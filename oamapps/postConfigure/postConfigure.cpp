@@ -3174,6 +3174,9 @@ int main(int argc, char *argv[])
 								if (WEXITSTATUS(rtnCode) != 0) {
 									cout << endl << "Error returned from post-mysql-install, check /tmp/post-mysql-install.log" << endl;
 									exit(1);
+								else
+									cout << endl << "post-mysql-install Successfully Completed" << endl;
+
 								}
 							}
 						}
