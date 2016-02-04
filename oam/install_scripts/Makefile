@@ -18,7 +18,7 @@ os_check.sh infinidb calpontSyslog calpontSyslog-ng syslogSetup.sh \
 remote_scp_put.sh calpontUninstall.sh infinidb.def \
 remotessh.exp master-rep-infinidb.sh slave-rep-infinidb.sh rsync.sh \
 myCnf-include-args.text myCnf-exclude-args.text remote_command_verify.sh \
-calpontSyslog7 disable-rep-infinidb.sh
+calpontSyslog7 disable-rep-infinidb.sh infinidb.conf
 
 LOCAL=module
 
