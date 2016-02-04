@@ -45,6 +45,8 @@ mysql_datadir=$installdir/mysql/db
 if test ! -d $mysql_datadir; then mkdir -m 755 $mysql_datadir; fi
 if test ! -d $mysql_datadir/mysql; then mkdir $mysql_datadir/mysql; fi
 if test ! -d $mysql_datadir/test; then mkdir $mysql_datadir/test; fi
+if test ! -d $installdir/mysql/lib; then mkdir $installdir/mysql/lib; fi
+if test ! -d $installdir/mysql/lib/mysql; then mkdir $installdir/mysql/lib/mysql; fi
 
 # Create a MySQL user and group. Do not report any problems if it already
 # exists.
@@ -55,7 +57,7 @@ usermod -g $user $user 2> /dev/null || true
 
 # Change permissions so that the user that will run the MySQL daemon
 # owns all database files.
-chown -R $user:$user $mysql_datadir
+chown -R $user:$user $installdir/mysql
 
 # Initiate databases if needed
 if [ $installdir != "/usr/local/Calpont" ]; then
