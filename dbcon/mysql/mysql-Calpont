@@ -296,6 +296,25 @@ fi
 [ -f /etc/sysconfig/mysql ] && . /etc/sysconfig/mysql
 [ -f /etc/conf.d/mysql ] && . /etc/conf.d/mysql
 
+kill_by_pid() {
+  # let's see if we can kill the 2 mysql procs by hand
+  # get the our mysql from ps
+  eval $(ps -ef | grep "$INFINIDB_INSTALL_DIR/mysql//sbin/mysqld" | grep -v grep | head -1 | awk '{printf "pid=%d\n", $2}')
+
+  if [ -n "$pid" ]; then
+	ppid=$(ps -o ppid= -p $pid)
+        $SUDO kill -9 $ppid
+        kill -9 $ppid
+        sleep 1
+        $SUDO kill -9 $pid
+        kill -9 $pid
+        echo $echo_n "Force shutting down (no/bad pid file)" 
+        log_success_msg
+        exit 0
+  fi
+  return
+}
+
 case "$mode" in
   'start')
     # Start daemon
@@ -349,6 +368,7 @@ case "$mode" in
       fi
       exit $return_value
     else
+      kill_by_pid
       log_failure_msg "MySQL server PID file could not be found!"
     fi
     ;;
