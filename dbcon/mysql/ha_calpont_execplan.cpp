@@ -21,6 +21,7 @@
 
 /** @file */
 
+#include <my_config.h>
 #include <string>
 #include <iostream>
 #include <stack>

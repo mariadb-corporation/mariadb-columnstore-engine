@@ -24,6 +24,7 @@
 /** class ExistsSub definition */
 
 //#define NDEBUG
+#include <my_config.h>
 #include <cassert>
 
 #include "idb_mysql.h"

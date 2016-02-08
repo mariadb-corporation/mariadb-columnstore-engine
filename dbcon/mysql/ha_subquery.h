@@ -27,6 +27,7 @@
 #define HA_SUBQUERY
 
 //#undef LOG_INFO
+#include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_calpont_impl_if.h"
 

@@ -19,6 +19,7 @@
  * $Id: ha_calpont_udf.cpp 9210 2013-01-21 14:10:42Z rdempsey $
  */
 
+#include <my_config.h>
 #ifdef _MSC_VER
 #include <unordered_map>
 #else

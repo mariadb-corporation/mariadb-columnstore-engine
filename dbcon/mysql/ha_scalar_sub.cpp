@@ -24,6 +24,7 @@
 /** class ScalarSub definition */
 
 //#define NDEBUG
+#include <my_config.h>
 #include <cassert>
 #include <vector>
 using namespace std;

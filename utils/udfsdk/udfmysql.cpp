@@ -1,3 +1,4 @@
+#include <my_config.h>
 #include <cmath>
 #include <iostream>
 #include <sstream>

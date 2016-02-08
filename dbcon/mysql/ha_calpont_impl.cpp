@@ -19,6 +19,7 @@
  * $Id: ha_calpont_impl.cpp 9642 2013-06-24 14:57:42Z rdempsey $
  */
 
+#include <my_config.h>
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif

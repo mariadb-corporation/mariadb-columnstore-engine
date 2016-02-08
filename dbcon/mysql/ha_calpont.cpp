@@ -154,12 +154,14 @@ int calpont_discover(handlerton *hton, THD* thd, TABLE_SHARE *share)
 #ifdef INFINIDB_DEBUG
 fprintf(stderr, "calpont_discover()\n");
 #endif
+DBUG_PRINT("info", ("calpont_discover."));
 	return 1;
 }
 
 static int calpont_init_func(void *p)
 {
   DBUG_ENTER("calpont_init_func");
+DBUG_PRINT("info", ("calpont_init_func."));
 
   struct tm tm;
   time_t t;
@@ -283,6 +285,7 @@ static handler* calpont_create_handler(handlerton *hton,
                                        TABLE_SHARE *table, 
                                        MEM_ROOT *mem_root)
 {
+DBUG_PRINT("info", ("calpont_create_handler."));
   return new (mem_root) ha_calpont(hton, table);
 }
 
@@ -300,6 +303,7 @@ static int calpont_rollback(handlerton *hton, THD* thd, bool all)
 
 static int calpont_close_connection ( handlerton *hton, THD* thd )
 {
+DBUG_PRINT("info", ("calpont_close_connection."));
 	int rc = ha_calpont_impl_close_connection( hton, thd);
 	return rc;
 }
@@ -311,7 +315,9 @@ static void calpont_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint
 
 ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg)
   :handler(hton, table_arg)
-{}
+{
+DBUG_PRINT("info", ("ha_calpont::ha_calpont."));
+}
 
 
 /**

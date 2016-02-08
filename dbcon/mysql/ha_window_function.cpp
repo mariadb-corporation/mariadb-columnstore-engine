@@ -20,6 +20,7 @@
 *
 *
 ***********************************************************************/
+#include <my_config.h>
 #include <iostream>
 #include <string>
 using namespace std;

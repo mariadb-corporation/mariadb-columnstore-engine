@@ -19,6 +19,7 @@
 * $Id: ha_calpont_partition.cpp 9642 2013-06-24 14:57:42Z rdempsey $
 */
 
+#include <my_config.h>
 #include <iostream>
 #include <vector>
 #include <cassert>

@@ -19,6 +19,7 @@
  * $Id: ha_calpont_dml.cpp 9711 2013-07-23 21:01:27Z chao $
  */
 
+#include <my_config.h>
 #include <string>
 #include <iostream>
 #include <stack>

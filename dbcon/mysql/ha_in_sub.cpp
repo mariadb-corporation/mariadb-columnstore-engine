@@ -23,6 +23,7 @@
 /** @file */
 /** class InSub definition */
 
+#include <my_config.h>
 #include <stdint.h>
 //#define NDEBUG
 #include <cassert>

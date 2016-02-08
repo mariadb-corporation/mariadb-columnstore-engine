@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 
+#include <my_config.h>
 #include "idb_mysql.h"
 
 #include <string>

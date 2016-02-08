@@ -24,6 +24,7 @@
 /** class FromSubSelect definition */
 
 //#define NDEBUG
+#include <my_config.h>
 #include <cassert>
 #include <map>
 using namespace std;
