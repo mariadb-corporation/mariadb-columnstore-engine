@@ -2305,6 +2305,21 @@ int ha_calpont_impl_close(void)
 	return 0;
 }
 
+int ha_calpont_impl_discover_existence(const char *schema, const char *name)
+{
+	boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog();
+	try
+	{
+		const CalpontSystemCatalog::OID oid = csc->lookupTableOID(make_table(schema, name));
+		if (oid)
+			return 1;
+	}
+	catch ( ... )
+	{
+	}
+	return 0;
+}
+
 int ha_calpont_impl_rnd_init(TABLE* table)
 {
 #ifdef DEBUG_SETENV

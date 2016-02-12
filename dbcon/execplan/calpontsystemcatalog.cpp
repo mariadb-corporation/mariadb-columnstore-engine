@@ -368,6 +368,90 @@ CalpontSystemCatalog::CatalogMap CalpontSystemCatalog::fCatalogMap;
 /*static*/
 uint32_t CalpontSystemCatalog::fModuleID = numeric_limits<uint32_t>::max();
 
+const CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const TableName& tablename)
+{
+	TableName aTableName;
+	aTableName.schema = tablename.schema;
+	aTableName.table = tablename.table;	
+	transform( aTableName.schema.begin(), aTableName.schema.end(), aTableName.schema.begin(), to_lower() );
+	transform( aTableName.table.begin(), aTableName.table.end(), aTableName.table.begin(), to_lower() );
+
+	if (aTableName.schema.compare(CALPONT_SCHEMA) != 0)
+		DEBUG << "Enter tableInfo: " << tablename.schema << "|" << tablename.table << endl;
+
+	// select objectid from systable where schema = tableName.schema and tablename = tableName.table;
+	CalpontSelectExecutionPlan csep;
+	CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
+	CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
+	CalpontSelectExecutionPlan::ColumnMap colMap;
+
+	SimpleColumn *c1 = new SimpleColumn(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+OBJECTID_COL, fSessionID);
+	SimpleColumn *c2 = new SimpleColumn(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+SCHEMA_COL, fSessionID);
+	SimpleColumn *c3 = new SimpleColumn(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+TABLENAME_COL, fSessionID);
+
+	SRCP srcp;
+	srcp.reset(c1);
+	colMap.insert(CMVT_(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+OBJECTID_COL, srcp));
+	srcp.reset(c2);
+	colMap.insert(CMVT_(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+SCHEMA_COL, srcp));
+	srcp.reset(c3);
+	colMap.insert(CMVT_(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+TABLENAME_COL, srcp));
+	csep.columnMapNonStatic(colMap);
+
+	srcp.reset(c1->clone());
+	returnedColumnList.push_back(srcp);
+	csep.returnedCols(returnedColumnList);
+	OID oid = c1->oid();
+
+	// Filters
+	SimpleFilter *f1 = new SimpleFilter (opeq,
+										 c2->clone(),
+										 new ConstantColumn(aTableName.schema, ConstantColumn::LITERAL));
+	filterTokenList.push_back(f1);
+	filterTokenList.push_back(new Operator("and"));
+
+	SimpleFilter *f2 = new SimpleFilter (opeq,
+										 c3->clone(),
+										 new ConstantColumn(aTableName.table, ConstantColumn::LITERAL));
+	filterTokenList.push_back(f2);
+	csep.filterTokenList(filterTokenList);
+
+	ostringstream oss;
+	oss << "select objectid from systable where schema='" << aTableName.schema << "' and tablename='" <<
+		aTableName.table << "' --tableRID/";
+
+	csep.data(oss.str()); //@bug 6078. Log the statement
+	if (fIdentity == EC) oss << "EC";
+	else oss << "FE";
+	NJLSysDataList sysDataList;
+	try {
+		getSysData (csep, sysDataList, SYSTABLE_TABLE);
+	}
+	catch ( IDBExcept& ){
+		throw;
+	}
+	catch ( runtime_error& e ) {
+		throw runtime_error ( e.what() );
+	}
+
+	vector<ColumnResult*>::const_iterator it;
+	for (it = sysDataList.begin(); it != sysDataList.end(); it++)
+	{
+		if ((*it)->dataCount() == 0)
+		{
+			return (OID)0;
+		}
+		if ((*it)->ColumnOID() == oid)
+		{
+			if (fIdentity == EC)
+				return (*it)->GetRid(0);
+			else
+			    return (OID)((*it)->GetData(0));
+		}	
+	}
+	return (OID)0;
+}
+
 const CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& tableColName)
 {
     if (tableColName.schema.length() == 0 || tableColName.table.length() == 0 || tableColName.column.length() == 0)

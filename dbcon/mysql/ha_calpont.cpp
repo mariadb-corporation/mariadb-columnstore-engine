@@ -137,6 +137,14 @@ static HASH calpont_open_tables;
 pthread_mutex_t calpont_mutex;
 #endif
 
+#ifdef DEBUG_ENTER
+#undef DEBUG_ENTER
+#endif
+#ifdef DEBUG_RETURN
+#undef DEBUG_ENTER
+#endif
+#define DEBUG_RETURN return
+
 /**
   @brief
   Function we use in the creation of our hash to get key.
@@ -154,14 +162,17 @@ int calpont_discover(handlerton *hton, THD* thd, TABLE_SHARE *share)
 #ifdef INFINIDB_DEBUG
 fprintf(stderr, "calpont_discover()\n");
 #endif
-DBUG_PRINT("info", ("calpont_discover."));
 	return 1;
+}
+int calpont_discover_existence(handlerton *hton, const char *db,
+                                const char *table_name)
+{
+	return ha_calpont_impl_discover_existence(db, table_name);
 }
 
 static int calpont_init_func(void *p)
 {
   DBUG_ENTER("calpont_init_func");
-DBUG_PRINT("info", ("calpont_init_func."));
 
   struct tm tm;
   time_t t;
@@ -184,7 +195,8 @@ DBUG_PRINT("info", ("calpont_init_func."));
   calpont_hton->state=   SHOW_OPTION_YES;
   calpont_hton->create=  calpont_create_handler;
   calpont_hton->flags=   HTON_CAN_RECREATE;
-  calpont_hton->discover_table=   calpont_discover;
+  calpont_hton->discover_table= calpont_discover;
+  calpont_hton->discover_table_existence= calpont_discover_existence;
   calpont_hton->commit= calpont_commit;
   calpont_hton->rollback= calpont_rollback;
   calpont_hton->close_connection = calpont_close_connection;
@@ -285,7 +297,6 @@ static handler* calpont_create_handler(handlerton *hton,
                                        TABLE_SHARE *table, 
                                        MEM_ROOT *mem_root)
 {
-DBUG_PRINT("info", ("calpont_create_handler."));
   return new (mem_root) ha_calpont(hton, table);
 }
 
@@ -303,7 +314,6 @@ static int calpont_rollback(handlerton *hton, THD* thd, bool all)
 
 static int calpont_close_connection ( handlerton *hton, THD* thd )
 {
-DBUG_PRINT("info", ("calpont_close_connection."));
 	int rc = ha_calpont_impl_close_connection( hton, thd);
 	return rc;
 }
@@ -316,7 +326,6 @@ static void calpont_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint
 ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg)
   :handler(hton, table_arg)
 {
-DBUG_PRINT("info", ("ha_calpont::ha_calpont."));
 }
 
 

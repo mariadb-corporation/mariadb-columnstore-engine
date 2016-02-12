@@ -27,6 +27,7 @@
 #include "idb_mysql.h"
 
 #ifdef NEED_CALPONT_EXTERNS
+extern int ha_calpont_impl_discover_existence(const char *schema, const char *name);
 extern int ha_calpont_impl_create(const char *name, TABLE *table_arg, HA_CREATE_INFO *create_info);
 extern int ha_calpont_impl_delete_table(const char *name);
 extern int ha_calpont_impl_open(const char *name, int mode, uint32_t test_if_locked);

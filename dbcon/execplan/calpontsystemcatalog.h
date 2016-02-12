@@ -496,6 +496,12 @@ public:
 	 */
 	typedef boost::shared_ptr<CalpontSystemCatalog> SPCSC;
 
+	/** looks up a table's OID in the System Catalog
+	 *
+	 * For a unique table_name return the internal OID
+	 */
+	const OID lookupTableOID(const TableName& tableName);
+
 	/** looks up a column's OID in the System Catalog
 	 *
 	 * For a unique table_name.column_name return the internal OID
