@@ -1165,7 +1165,7 @@ uint32_t doUpdateDelete(THD *thd)
 			else
 			{
 				string emsg("Deleting rows from multiple tables in a single statement is currently not supported.");
-                thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, emsg.c_str());
+                thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
 				ci->rc = 1;
                 thd->set_row_count_func(0);
 				return 0;
@@ -1224,7 +1224,7 @@ uint32_t doUpdateDelete(THD *thd)
 	if (/*( select_lex.explicit_limit ) || */( select_lex.order_list.elements != 0 ) )
 	{
 		string emsg("DML Statement with order by clause is not currently supported.");
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, emsg.c_str());
+        thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
 		ci->rc = 1;
         thd->set_row_count_func(0);
 		return 0;
@@ -1317,7 +1317,7 @@ uint32_t doUpdateDelete(THD *thd)
 			//error out for now. Wait for scalar join.
 /*			Message::Args args;
 			string emsg(IDBErrorInfo::instance()->errorMsg(ERR_COLUMN_EQ_DIFFTABLE_COLUMN, args));
-            thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, emsg.c_str());
+            thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
 			ci->rc = 1;
             thd->set_row_count_func(0);
 			return 0;
@@ -1661,7 +1661,7 @@ uint32_t doUpdateDelete(THD *thd)
 	if ( ( b != 0 ) && (b != dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING))
 	{
 		//@Bug 2540. Set error status instead of warning
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, errorMsg.c_str());
+        thd->raise_error_printf(ER_INTERNAL_ERROR, errorMsg.c_str());
 		ci->rc = b;
         thd->set_row_count_func(0);
         thd->get_stmt_da()->set_overwrite_status(true);

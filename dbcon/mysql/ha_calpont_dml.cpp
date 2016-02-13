@@ -282,7 +282,7 @@ int ProcessCommandStatement(THD *thd, string& dmlStatement, cal_connection_info&
 			thd->killed = KILL_QUERY;
             thd->get_stmt_da()->set_overwrite_status(true);
 
-            thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DMLProc [1]");
+            thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [1]");
         }
 		else {
         	bytestream >> b;
@@ -296,7 +296,7 @@ int ProcessCommandStatement(THD *thd, string& dmlStatement, cal_connection_info&
 		thd->killed = KILL_QUERY;
         thd->get_stmt_da()->set_overwrite_status(true);
 
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DMLProc [2]");
+        thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [2]");
     }
     catch (...)
     {
@@ -304,14 +304,14 @@ int ProcessCommandStatement(THD *thd, string& dmlStatement, cal_connection_info&
 		thd->killed = KILL_QUERY;
         thd->get_stmt_da()->set_overwrite_status(true);
 
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Caught unknown error");
+        thd->raise_error_printf(ER_INTERNAL_ERROR, "Caught unknown error");
     }
 
 	if (( b !=0 ) && (!thd->get_stmt_da()->is_set()))
 	{
 		rc = 1;
 		thd->killed = KILL_QUERY;
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, errormsg.c_str());
+        thd->raise_error_printf(ER_INTERNAL_ERROR, errormsg.c_str());
 	}
 	delete ci.dmlProc;
 	ci.dmlProc = NULL;
@@ -338,7 +338,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 			rc = -1;
 			string emsg("Calpont DML package cannot build. ");
             thd->get_stmt_da()->set_overwrite_status(true);
-            thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, emsg.c_str());
+            thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
 			return rc;
 		}
 		
@@ -503,7 +503,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 		if ((b != 0) && (b != dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING))
 		{
             thd->get_stmt_da()->set_overwrite_status(true);
-            thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, errormsg.c_str());
+            thd->raise_error_printf(ER_INTERNAL_ERROR, errormsg.c_str());
 
 		}
 		if ( b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING )
@@ -567,7 +567,7 @@ int ha_calpont_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool
 			rc = 1;
             thd->get_stmt_da()->set_overwrite_status(true);
             std::string errormsg = "statement is aborted.";
-            thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, errormsg.c_str());
+            thd->raise_error_printf(ER_INTERNAL_ERROR, errormsg.c_str());
 		}
 		
 		if ( rc == dmlpackageprocessor::DMLPackageProcessor::ACTIVE_TRANSACTION_ERROR  )
@@ -619,7 +619,7 @@ int ha_calpont_impl_write_row_(uchar *buf, TABLE* table, cal_connection_info& ci
 		rc = 1;
 		ci.rc = rc; //@Bug 2790 Save the error infomation.
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, rex.what());
+        thd->raise_error_printf(ER_INTERNAL_ERROR, rex.what());
 		return rc;
 	}
 	//timer.stop( "buildValueList");
@@ -1581,7 +1581,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 		if ( bytestream.length() == 0 )
         {
             thd->get_stmt_da()->set_overwrite_status(true);
-            thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DMLProc [5]");
+            thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [5]");
         }
 		else
 		{
@@ -1595,12 +1595,12 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
     catch (runtime_error&)
     {
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DMLProc [6]");
+        thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [6]");
     }
     catch (...)
     {
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Caught unknown error");
+        thd->raise_error_printf(ER_INTERNAL_ERROR, "Caught unknown error");
     }
 	if ( b != 0 )
 		tableLockInfo = errorMsg;
@@ -1653,7 +1653,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 		eMsg += prelimTask;
 
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, eMsg.c_str());
+        thd->raise_error_printf(ER_INTERNAL_ERROR, eMsg.c_str());
 		return tableLockInfo;
 	}
 	catch (...)
@@ -1662,7 +1662,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 		eMsg += prelimTask;
 
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, eMsg.c_str());
+        thd->raise_error_printf(ER_INTERNAL_ERROR, eMsg.c_str());
 		return tableLockInfo;
 	}
 
@@ -1694,7 +1694,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 		if ( bytestream.length() == 0 )
         {
             thd->get_stmt_da()->set_overwrite_status(true);
-            thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DMLProc [7]");
+            thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [7]");
         }
 		else
 		{
@@ -1708,12 +1708,12 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
     catch (runtime_error&)
     {
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DMLProc [8]");
+        thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [8]");
     }
     catch (...)
     {
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Caught unknown error");
+        thd->raise_error_printf(ER_INTERNAL_ERROR, "Caught unknown error");
     }
 	//@Bug 2606. Send error message back to sql session
 	if ( b != 0 )

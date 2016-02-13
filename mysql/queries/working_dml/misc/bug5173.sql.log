@@ -1,9 +1,0 @@
-ERROR 138 (HY000) at line 2: Cannot execute the statement. DBRM is read only!
-ERROR 1146 (42S02) at line 3: Table 'dmlc.qadefaulttest' doesn't exist
-ERROR 1146 (42S02) at line 4: Table 'dmlc.qadefaulttest' doesn't exist
-ERROR 1146 (42S02) at line 5: Table 'dmlc.qadefaulttest' doesn't exist
-ERROR 1146 (42S02) at line 6: Table 'dmlc.qadefaulttest' doesn't exist
-ERROR 1146 (42S02) at line 7: Table 'dmlc.qadefaulttest' doesn't exist
-ERROR 1146 (42S02) at line 8: Table 'dmlc.qadefaulttest' doesn't exist
-ERROR 1146 (42S02) at line 9: Table 'dmlc.qadefaulttest' doesn't exist
-ERROR 1051 (42S02) at line 10: Unknown table 'qadefaulttest'

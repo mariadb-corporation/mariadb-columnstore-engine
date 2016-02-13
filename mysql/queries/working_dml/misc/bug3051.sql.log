@@ -1,8 +1,0 @@
-ERROR 138 (HY000) at line 4: Cannot execute the statement. DBRM is read only!
-ERROR 1050 (42S01) at line 6: Table 'bug3051' already exists
-ERROR 168 (HY000) at line 22: Cannot execute the statement. DBRM is read only!
-ERROR 168 (HY000) at line 23: Cannot execute the statement. DBRM is read only!
-ERROR 138 (HY000) at line 25: Cannot execute the statement. DBRM is read only!
-ERROR 1060 (42S21) at line 26: Duplicate column name 'c7'
-ERROR 122 (HY000) at line 27: The system is not yet ready to accept queries
-ERROR 122 (HY000) at line 28: The system is not yet ready to accept queries

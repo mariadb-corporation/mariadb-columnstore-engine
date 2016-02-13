@@ -1,6 +1,0 @@
-drop table if exists bug3532;
-create table `bug3532` (`c1` char(1) default null, `c2` int(11) default null) engine=infinidb;
-insert into bug3532 values (1,1), (0,0), (1,12), (1,-1), (null, null);
-select round(c1,c1) from bug3532 where c1 = 1;
-drop table bug3532;
-

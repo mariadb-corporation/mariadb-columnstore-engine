@@ -1,6 +1,0 @@
-cmp_inst_id	agt_inst_id	output_id	level_id	tgt_level_id	row_id	rndnr	b_cmp_inst_id	b_agt_inst_id	b_output_id	clientid	A_	C_	B_
-abc	a2cd4803c0a8641214988506a8938f5a	-2	sss	qqq	10	1	lll	ppp	qw	ooo	llolo	uuu	ttt
-cmp_inst_id	agt_inst_id	output_id	level_id	tgt_level_id	row_id	rndnr	b_cmp_inst_id	b_agt_inst_id	b_output_id	clientid	A_	C_	B_
-abc	a2cd4803c0a8641214988506a8938f5a	-2	sss	qqq	10	1	lll	ppp	qw	ooo	llolo	uuu	ttt
-cmp_inst_id	agt_inst_id	output_id	level_id	tgt_level_id	row_id	rndnr	b_cmp_inst_id	b_agt_inst_id	b_output_id	clientid	A_	C_	B_
-abc	a2cd4803c0a8641214988506a8938f5a	0	sss	qqq	10	1	abc	a2cd4803c0a8641214988506a8938f5a	qw	ooo	llolo	uuu	ttt

@@ -1,5 +1,0 @@
-ERROR 122 (HY000) at line 17: clientrotator.cpp: Could not get a connection to a ExeMgr
-ERROR 2013 (HY000) at line 20: Lost connection to MySQL server during query
-ERROR 2006 (HY000) at line 23: MySQL server has gone away
-ERROR 2006 (HY000) at line 26: MySQL server has gone away
-ERROR 2006 (HY000) at line 29: MySQL server has gone away

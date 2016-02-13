@@ -1,2 +1,0 @@
-max(l_shipdate)	count(l_partkey)
-1998-12-01	1000048

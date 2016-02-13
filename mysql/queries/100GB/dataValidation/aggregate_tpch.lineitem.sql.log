@@ -1,3 +1,0 @@
-count(l_orderkey)	min(l_orderkey)	max(l_orderkey)	sum(l_orderkey)	avg(l_orderkey)
-6001215	1	6000000	18005322964949	3000279.6042
-Query aborted by Ctrl+C

@@ -1,2 +1,0 @@
-ERROR 138 (HY000) at line 1: IDB-3034: Query is not supported.  Unknown column 'supplier.s_address' in subquery.
-ERROR 138 (HY000) at line 2: IDB-3034: Query is not supported.  Unknown column 'supplier.s_nationkey' in subquery.

@@ -1,8 +1,0 @@
-num_days	format(min(lo_orderdate), 0)	format(max(lo_orderdate), 0)	avg_rows_per_day	total_rows	total_sales_last_day_in_week	total_sales_last_day_in_month	total_sales_on_holidays	total_weekday_sales	total_weekend_sales
-3	19,920,101	19,930,101	2,402	7,207	2,366	7,207	4,863	4,841	2,366
-num_days	min(lo_orderdate)	max(lo_orderdate)	avg_rows_per_day	total_rows	total_sales_last_day_in_week	total_sales_last_day_in_month	total_sales_on_holidays	total_weekday_sales	total_weekend_sales	num_days	format(min(lo_orderdate), 0)	format(max(lo_orderdate), 0)	avg_rows_per_day	total_rows1	total_sales_last_day_in_week	total_sales_last_day_in_month	total_sales_on_holidays	total_weekday_sales	total_weekend_sales
-3	19920101	19930101	2402.3333	7207	2366	7207	4863	4841	2366	3	19,920,101	19,930,101	2,402	7,207	2,366	7,207	4,863	4,841	2,366
-num_days	sum(daily_cnt * d_lastdayinweekfl)
-3	2366
-num_days	sum(daily_cnt * d_lastdayinweekfl)	total_sales_last_day_in_week
-3	2366	2,366

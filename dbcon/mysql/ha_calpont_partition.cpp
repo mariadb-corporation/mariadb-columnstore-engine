@@ -482,7 +482,7 @@ int processPartition ( SqlStatement* stmt)
 		{
 			rc = 1;
 			thd->get_stmt_da()->set_overwrite_status(true);
-			thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DDLProc");
+			thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DDLProc");
 		}
 		else
 		{
@@ -495,13 +495,13 @@ int processPartition ( SqlStatement* stmt)
 	{
 		rc =1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DDLProc");
+		thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DDLProc");
 	}
 	catch (...)
 	{
 		rc = 1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Unknown error caught");
+		thd->raise_error_printf(ER_INTERNAL_ERROR, "Unknown error caught");
 	}
 
 	if (b == ddlpackageprocessor::DDLPackageProcessor::WARN_NO_PARTITION)
@@ -523,7 +523,7 @@ int processPartition ( SqlStatement* stmt)
 	else if (b != 0 && b != ddlpackageprocessor::DDLPackageProcessor::WARN_NO_PARTITION)
 	{
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, emsg.c_str());
+		thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
 	}
 	return rc;
 }
@@ -1195,7 +1195,7 @@ const char* calenablepartitions(UDF_INIT* initid, UDF_ARGS* args,
 		if (!current_thd->db)
 		{
 			current_thd->get_stmt_da()->set_overwrite_status(true);
-            current_thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_PARTITION_NO_SCHEMA).c_str());
+            current_thd->raise_error_printf(ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_PARTITION_NO_SCHEMA).c_str());
 			return result;
 		}
 		tableName.schema = current_thd->db;
@@ -1279,7 +1279,7 @@ const char* caldroppartitions(UDF_INIT* initid, UDF_ARGS* args,
 		if (!current_thd->db)
 		{
 			current_thd->get_stmt_da()->set_overwrite_status(true);
-            current_thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_PARTITION_NO_SCHEMA).c_str());
+            current_thd->raise_error_printf(ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_PARTITION_NO_SCHEMA).c_str());
 			return result;
 		}
 		tableName.schema = current_thd->db;
@@ -1365,7 +1365,7 @@ const char* caldroppartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args,
 	if (!msg.empty())
 	{
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, msg.c_str());
+		current_thd->raise_error_printf(ER_INTERNAL_ERROR, msg.c_str());
 		return result;
 	}
 
@@ -1436,7 +1436,7 @@ const char* caldisablepartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args,
 	if (!msg.empty())
 	{
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, msg.c_str());
+		current_thd->raise_error_printf(ER_INTERNAL_ERROR, msg.c_str());
 		return result;
 	}
 
@@ -1507,7 +1507,7 @@ const char* calenablepartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args,
 	if (!msg.empty())
 	{
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, msg.c_str());
+		current_thd->raise_error_printf(ER_INTERNAL_ERROR, msg.c_str());
 		return result;
 	}
 

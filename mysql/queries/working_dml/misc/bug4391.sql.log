@@ -1,7 +1,0 @@
-ERROR 138 (HY000) at line 1: Cannot execute the statement. DBRM is read only!
-ERROR 1050 (42S01) at line 2: Table 'bug4391' already exists
-ERROR 168 (HY000) at line 3: Cannot execute the statement. DBRM is read only!
-ERROR 122 (HY000) at line 4: The system is not yet ready to accept queries
-ERROR 168 (HY000) at line 5: Cannot execute the statement. DBRM is read only!
-ERROR 168 (HY000) at line 6: Cannot execute the statement. DBRM is read only!
-ERROR 122 (HY000) at line 7: The system is not yet ready to accept queries

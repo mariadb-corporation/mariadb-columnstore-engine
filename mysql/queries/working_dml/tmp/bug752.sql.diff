@@ -1,5 +1,0 @@
-1,2c1
-< datum	datum_hour	datum_month	datum_week	us_id	xy_id	yellow	device	device_sys	r_id	os_id	br_id	op_id	pa_id	ba_id	rule_id	sub_id	watchme
-< 2015-04-17	2015-04-17 03:00:00	2015-04-01	16	19	90	24	2	0	2	1	15	196	3617	100018	1114	NULL	9
----
-> ERROR 2005 (HY000): Unknown MySQL server host 'srvhill01' (1)

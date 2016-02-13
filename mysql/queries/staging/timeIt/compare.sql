@@ -1,1 +1,0 @@
-select r1.queryId, r1.run, r1.success, r2.success, r1.time, r2.time, round(r2.time-r1.time,2) diff, r1.maxExePct, r2.maxExePct, round(r2.maxExePct-r1.maxExePct,2) MaxExeDiff, r1.maxPPPct, r2.maxPPPct, round(r2.maxPPPct-r1.maxPPPct,2) MaxPDiff from runs_3_6_1 r1 left join runs r2 using (queryId, run);

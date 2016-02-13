@@ -1,8 +1,0 @@
-ERROR 138 (HY000) at line 2: Cannot execute the statement. DBRM is read only!
-ERROR 1146 (42S02) at line 3: Table 'dmlc.bug2873' doesn't exist
-ERROR 1146 (42S02) at line 16: Table 'dmlc.bug2873' doesn't exist
-ERROR 1146 (42S02) at line 18: Table 'dmlc.bug2873' doesn't exist
-ERROR 1146 (42S02) at line 21: Table 'dmlc.bug2873' doesn't exist
-ERROR 1146 (42S02) at line 22: Table 'dmlc.bug2873' doesn't exist
-ERROR 1146 (42S02) at line 23: Table 'dmlc.bug2873' doesn't exist
-ERROR 1051 (42S02) at line 25: Unknown table 'bug2873'

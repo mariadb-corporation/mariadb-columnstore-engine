@@ -1,1 +1,0 @@
-select * from region order by r_regionkey limit 1, 3;

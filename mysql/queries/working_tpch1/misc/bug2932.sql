@@ -1,2 +1,0 @@
-select count(*) from region a inner join nation b on (a.r_regionkey=b.n_regionkey) right outer join customer c on (b.n_name and b.n_nationkey = c.c_nationkey);
-select * from region where r_regionkey;       

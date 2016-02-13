@@ -1,2 +1,0 @@
-max(makedate(year(l_shipdate), dayofyear(l_shipdate)))
-1992-06-30

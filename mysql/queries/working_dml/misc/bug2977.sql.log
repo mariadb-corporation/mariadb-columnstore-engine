@@ -1,7 +1,0 @@
-ERROR 138 (HY000) at line 4: Cannot execute the statement. DBRM is read only!
-ERROR 138 (HY000) at line 13: Cannot execute the statement. DBRM is read only!
-ERROR 138 (HY000) at line 22: Cannot execute the statement. DBRM is read only!
-ERROR 1146 (42S02) at line 31: Table 'dmlc.shipamounts' doesn't exist
-ERROR 1146 (42S02) at line 32: Table 'dmlc.ship1' doesn't exist
-ERROR 1146 (42S02) at line 33: Table 'dmlc.ship2' doesn't exist
-ERROR 1146 (42S02) at line 35: Table 'dmlc.shipamounts' doesn't exist

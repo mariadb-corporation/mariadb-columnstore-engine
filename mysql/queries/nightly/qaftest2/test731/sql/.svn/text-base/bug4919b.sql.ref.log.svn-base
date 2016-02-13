@@ -1,2 +1,0 @@
-max(maketime(l_orderkey%23, 10, 10))
-22:10:10

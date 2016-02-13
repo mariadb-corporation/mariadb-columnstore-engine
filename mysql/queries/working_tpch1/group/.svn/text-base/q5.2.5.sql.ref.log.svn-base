@@ -1,2 +1,0 @@
-max(l_orderkey)	max(l_partkey)	max(l_suppkey)	count(*)
-5999938	199997	10000	85687

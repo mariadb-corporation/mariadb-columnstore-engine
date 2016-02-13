@@ -1,4 +1,0 @@
-lo_orderkey	lo_linenumber	lo_custkey	lo_partkey	lo_suppkey	lo_orderdate	lo_orderpriority	lo_shippriority	lo_quantity	lo_extendedprice	lo_ordtotalprice	lo_discount	lo_revenue	lo_supplycost	lo_tax	lo_commitdate	lo_shipmode
-1248	6	9406	61457	6836	19920102	1-URGENT	0	30.00	4255350.00	26208109.00	10.00	3829815.00	85107.00	1.00	19920324	MAIL
-3172	3	17644	131989	6528	19920603	4-NOT SPECI	0	0.00	0.00	0.00	3.00	0.00	121258.00	1.00	19920806	MAIL
-8070	5	20024	135282	8034	19920129	3-MEDIUM	0	42.00	5532576.00	32833705.00	1.00	5477250.00	79036.00	3.00	19920229	TRUCK

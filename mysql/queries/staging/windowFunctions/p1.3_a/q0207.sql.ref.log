@@ -1,5 +1,0 @@
-SELECT CUME_DIST(salary) OVER (PARTITION BY depname ORDER BY  enroll_date ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING), salary, empno, enroll_date, depname from empsalary where empno < 10000;
-ERROR:  function cume_dist(integer) does not exist
-LINE 1: SELECT CUME_DIST(salary) OVER (PARTITION BY depname ORDER BY...
-               ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.

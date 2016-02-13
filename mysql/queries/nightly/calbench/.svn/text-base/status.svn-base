@@ -1,1 +1,0 @@
-\! /usr/local/Calpont/bin/calpontConsole getsystemstatus | grep "Module pm" | grep ' ACTIVE ' | wc -l | awk '{print "-- -- --  " $0" Active Performance Modules  -- -- --"}'

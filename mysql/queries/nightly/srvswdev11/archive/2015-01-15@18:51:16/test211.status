@@ -1,1 +1,0 @@
-211 Concurrent Transactions Test:     Passed (seconds=1800, thr=15, rowFactor=10000, batches=2695, rows=198680000)

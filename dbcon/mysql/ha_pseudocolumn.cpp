@@ -45,7 +45,7 @@ void bailout(char* error, const string& funcName)
 {
 	string errMsg = IDBErrorInfo::instance()->errorMsg(ERR_PSEUDOCOL_IDB_ONLY, funcName);
 	current_thd->get_stmt_da()->set_overwrite_status(true);
-    current_thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, errMsg.c_str());
+    current_thd->raise_error_printf(ER_INTERNAL_ERROR, errMsg.c_str());
 	*error = 1;
 }
 

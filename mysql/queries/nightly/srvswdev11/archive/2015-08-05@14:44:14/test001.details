@@ -1,6 +1,0 @@
-Working Folder Test scripts that failed:
-Compare failed - working_tpch1/qa_fe_cnxFunctions/RIGHT.SM.sql
-Compare failed - working_tpch1/qa_fe_postProcessedFunctions/HOUR.DS.sql
-Compare failed - working_tpch1/qa_fe_postProcessedFunctions/IF.NM.sql
-Compare failed - working_tpch1/qa_fe_postProcessedFunctions/MAX.NC.sql
-Compare failed - working_tpch1/qa_fe_postProcessedFunctions/MAX.SC.sql

@@ -1,2 +1,0 @@
-max(replace(p_mfgr, 'U', 'X'))
-Manufacturer#5

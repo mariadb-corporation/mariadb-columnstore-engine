@@ -1,5 +1,0 @@
-select count(*) from empsalary;
-select count(*) from empsalary3;
-select count(*) from int4_tbl;
-select count(*) from tenk1;
-select count(*) from tenk2;

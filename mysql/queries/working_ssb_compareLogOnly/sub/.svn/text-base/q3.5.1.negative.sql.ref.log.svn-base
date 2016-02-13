@@ -1,1 +1,0 @@
-ERROR 138 (HY000) at line 3: IDB-3008: Aggregate function in EXISTS subquery is currently not supported.

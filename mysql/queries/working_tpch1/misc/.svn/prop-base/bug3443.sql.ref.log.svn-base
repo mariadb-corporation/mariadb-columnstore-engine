@@ -1,6 +1,0 @@
-K 13
-svn:mergeinfo
-V 150
-/branches/sn/queries/working_tpch1/misc/bug3443.sql.ref.log:2463-2767
-/branches/string-tables/queries/working_tpch1/misc/bug3443.sql.ref.log:3633-4080
-END

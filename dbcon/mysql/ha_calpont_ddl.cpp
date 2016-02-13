@@ -1799,7 +1799,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 		rc = 1;
 	  	thd->get_stmt_da()->set_overwrite_status(true);
 
-	  	thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DDLProc");
+	  	thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DDLProc");
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 	  }
@@ -1815,7 +1815,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	  rc =1;
 	  thd->get_stmt_da()->set_overwrite_status(true);
 
-	  thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Lost connection to DDLProc");
+	  thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DDLProc");
 	  ci->alterTableState = cal_connection_info::NOT_ALTER;
 	  ci->isAlter = false;
 	}
@@ -1824,7 +1824,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	  rc = 1;
 	  thd->get_stmt_da()->set_overwrite_status(true);
 
-	  thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Unknown error caught");
+	  thd->raise_error_printf(ER_INTERNAL_ERROR, "Unknown error caught");
 	  ci->alterTableState = cal_connection_info::NOT_ALTER;
 	  ci->isAlter = false;
 	}
@@ -1833,7 +1833,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	{
 	  thd->get_stmt_da()->set_overwrite_status(true);
 
-	  thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, emsg.c_str());
+	  thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
 	}
 
 	if (b ==ddlpackageprocessor::DDLPackageProcessor::WARNING)
@@ -1949,7 +1949,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	    && tbl != "sysconstraintcol" )
 	{
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Can not create non-system Calpont tables in calpontsys database");
+		thd->raise_error_printf(ER_INTERNAL_ERROR, "Can not create non-system Calpont tables in calpontsys database");
 		return 1;
 	}
 
@@ -1979,13 +1979,13 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		if (db == "calpontsys")
 		{
 				thd->get_stmt_da()->set_overwrite_status(true);
-				thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Calpont system tables can only be created with 'SCHEMA SYNC ONLY'");
+				thd->raise_error_printf(ER_INTERNAL_ERROR, "Calpont system tables can only be created with 'SCHEMA SYNC ONLY'");
 				return 1;
 		}
 		else if ( db == "infinidb_vtable") //@bug 3540. table created in infinidb_vtable schema could be dropped when select statement happen to have same tablename.
 		{
 			thd->get_stmt_da()->set_overwrite_status(true);
-			thd->raise_error_printf(HA_ERR_INTERNAL_ERROR, "Table creation is not allowed in infinidb_vtable schema.");
+			thd->raise_error_printf(ER_INTERNAL_ERROR, "Table creation is not allowed in infinidb_vtable schema.");
 			return 1;
 		}
 	}

@@ -1,6 +1,0 @@
-ERROR 138 (HY000) at line 4: Cannot execute the statement. DBRM is read only!
-ERROR 138 (HY000) at line 5: Cannot execute the statement. DBRM is read only!
-ERROR 1146 (42S02) at line 7: Table 'dmlc.user_prop_by_game' doesn't exist
-ERROR 1146 (42S02) at line 8: Table 'dmlc.visit' doesn't exist
-ERROR 1146 (42S02) at line 11: Table 'dmlc.user_prop_by_game' doesn't exist
-ERROR 1146 (42S02) at line 15: Table 'dmlc.user_prop_by_game' doesn't exist

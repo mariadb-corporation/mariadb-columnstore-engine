@@ -1,4 +1,0 @@
-Jan 15 20:17:54 srvhall03 ExeMgr[23930]: 54.170173 |1227|0|0| C 16 CAL0055: ERROR: ExeMgr has caught an exception. ExeMgr: error writing qb response for qb cmd 3; InetStreamSocket::write error: Broken pipe -- write from InetStreamSocket: sd: 14 inet: 127.0.0.1 port: 47045
-Jan 15 21:10:42 srvhall03 ProcessMonitor[57682]: 42.137118 |0|0|0| C 18 CAL0000: *****Calpont Process Restarting: ExeMgr, old PID = 12369         
-Jan 15 21:46:02 srvhall03 ProcessMonitor[57682]: 02.558154 |0|0|0| C 18 CAL0000: *****Calpont Process Restarting: ExeMgr, old PID = 38304         
-Jan 15 21:51:21 srvhall03 workernode[11819]: 21.645542 |0|0|0| C 30 CAL0000: VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = 8:0:49300:49399 lbid locked is 15576600#012         

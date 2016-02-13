@@ -1,1 +1,0 @@
-select n_regionkey+n_nationkey, n_regionkey-n_nationkey, n_regionkey*n_nationkey, n_regionkey/n_nationkey from nation where n_nationkey = 2;

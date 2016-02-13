@@ -1,3 +1,0 @@
-SELECT ntile(0) OVER (ORDER BY ten), ten, four FROM tenk1;
-ERROR:  argument of ntile must be greater than zero
-

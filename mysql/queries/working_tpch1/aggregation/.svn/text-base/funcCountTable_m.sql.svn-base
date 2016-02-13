@@ -1,3 +1,0 @@
-SELECT COUNT(*) FROM DataTypeTestm;
-
-

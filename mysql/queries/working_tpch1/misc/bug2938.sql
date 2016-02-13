@@ -1,6 +1,0 @@
-select t.CCHAR1 from datatypetestm t, (select CCHAR1 from datatypetestm1) t1 where t.CCHAR1 = t1.CCHAR1 order by 1;
-select t.CCHAR9 from datatypetestm t, (select CCHAR9 from datatypetestm1) t1 where t.CCHAR9 = t1.CCHAR9 order by 1;
-select t.CCHAR1 from datatypetestm t, (select CCHAR9 from datatypetestm1) t1 where t.CCHAR1 = t1.CCHAR9 order by 1;
-select t1.CCHAR1 from datatypetestm t1, (select t2.CCHAR1 from datatypetestm t2) t3 where t1.CCHAR1 = t3.CCHAR1 order by 1;
-select t1.CCHAR1 from datatypetestm t1, (select t2.CCHAR9 from datatypetestm t2) t3 where t1.CCHAR1 = t3.CCHAR9 order by 1;
-

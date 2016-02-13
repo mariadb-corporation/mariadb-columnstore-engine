@@ -1,2 +1,0 @@
-count(n_nationkey)	avg(c_custkey)	max(c_nationkey)	min(o_custkey)
-1500000	75006.0406	24	1

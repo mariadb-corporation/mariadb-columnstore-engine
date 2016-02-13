@@ -1,8 +1,0 @@
-ERROR 138 (HY000) at line 2: Cannot execute the statement. DBRM is read only!
-ERROR 1146 (42S02) at line 11: Table 'dml.sam_r368530763500' doesn't exist
-ERROR 1146 (42S02) at line 12: Table 'dml.sam_r368530763500' doesn't exist
-ERROR 1146 (42S02) at line 13: Table 'dml.sam_r368530763500' doesn't exist
-ERROR 1146 (42S02) at line 21: Table 'dml.sam_r368530763500' doesn't exist
-ERROR 1146 (42S02) at line 22: Table 'dml.sam_r368530763500' doesn't exist
-ERROR 1146 (42S02) at line 30: Table 'dml.sam_r368530763500' doesn't exist
-ERROR 1051 (42S02) at line 31: Unknown table 'sam_r368530763500'
