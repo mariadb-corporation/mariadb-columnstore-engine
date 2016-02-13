@@ -60,8 +60,8 @@ ifeq (4.5,$(shell test -x /usr/local/gcc45/bin/gcc && /usr/local/gcc45/bin/gcc -
 endif
 
 #Use only the last, non-comment line from MyDebugFlags file
-LOCAL_DEBUG_FLAGS=$(shell test -f $(TOP)/MyDebugFlags && awk '/^[^\#]/ {last=$$0}END{print last}' $(TOP)/MyDebugFlags)
-ifneq (,$(LOCAL_DEBUG_FLAGS))
-	DEBUG_FLAGS=$(LOCAL_DEBUG_FLAGS)
-endif
+#LOCAL_DEBUG_FLAGS=$(shell test -f $(TOP)/MyDebugFlags && awk '/^[^\#]/ {last=$$0}END{print last}' $(TOP)/MyDebugFlags)
+#ifneq (,$(LOCAL_DEBUG_FLAGS))
+#	DEBUG_FLAGS=$(LOCAL_DEBUG_FLAGS)
+#endif
 
