@@ -35,7 +35,7 @@ IDB_SNMP_LIBS=-lnetsnmpagent -lnetsnmp -lnetsnmpmibs -lnetsnmphelpers
 
 LDFLAGS=-Wl,--no-as-needed 
 
-#DEBUG_FLAGS=-ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC
+#DEBUG_FLAGS=-ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC
 DEBUG_FLAGS=-g0 -O3 -fno-strict-aliasing -fno-tree-vectorize -DDBUG_OFF
 
 #DEBUG_FLAGS+=-DVALGRIND
