@@ -765,7 +765,7 @@ uint32_t doUpdateDelete(THD *thd)
 
 	if (rc != 0 )
 	{
-		setError(current_thd, ER_ENGINE_READ_ONLY, "Cannot execute the statement. DBRM is read only!");
+		setError(current_thd, ER_READ_ONLY_MODE, "Cannot execute the statement. DBRM is read only!");
 		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
