@@ -51,13 +51,13 @@ ReturnedColumn* nullOnError(gp_walk_info& gwi)
 	if (gwi.hasSubSelect)
 	{
 		gwi.parseErrorText = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NON_SUPPORT_SELECT_SUB);
-		setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText);
+		setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
 	}
 
 	if (gwi.parseErrorText.empty())
 	{
 		gwi.parseErrorText = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_NON_SUPPORT);
-		setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText);
+		setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
 	}
 	return NULL;
 }
@@ -416,7 +416,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 	{
 		if (gwi.parseErrorText.empty())
 			gwi.parseErrorText = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_NON_SUPPORT);
-		setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText);
+		setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
 		return NULL;
 	}
 

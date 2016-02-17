@@ -557,7 +557,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 		{
 			gwi.fatalParseError = true;
 			gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText);
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
 			return -1;
 		}
 
@@ -1569,6 +1569,10 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
 	thd->get_stmt_da()->set_overwrite_status(true);
 	if (errmsg.empty())
 		errmsg = "Unknown error";
+	if (errcode < ER_ERROR_FIRST || errcode > ER_ERROR_LAST)
+	{
+		errcode = ER_UNKNOWN_ERROR;
+	}
 	thd->raise_error_printf(errcode, errmsg.c_str());
 	thd->infinidb_vtable.mysql_optimizer_off = false;
 	thd->infinidb_vtable.override_largeside_estimate = false;
@@ -1675,11 +1679,11 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
 			else if (funcName.compare("bit_xor(") == 0)
 				ac->aggOp(AggregateColumn::BIT_XOR);
 			else
-				return HA_ERR_UNSUPPORTED;
+				return ER_CHECK_NOT_IMPLEMENTED;
 			return rc;
 		}
 		default:
-			return HA_ERR_UNSUPPORTED;
+			return ER_CHECK_NOT_IMPLEMENTED;
 	}
 }
 
@@ -1945,7 +1949,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			{
 				gwi.fatalParseError = true;
 				gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
-				setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
+				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 				break;
 			}
 
@@ -2254,7 +2258,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 		{
 			if (gwi.parseErrorText.empty())
 				gwi.parseErrorText = "Unsupported function.";
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 			return NULL;
 		}
 		return rc;
@@ -2784,7 +2788,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 
 	if (gwi.fatalParseError)
 	{
-		setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
+		setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 		return NULL;
 	}
 
@@ -4134,8 +4138,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 	{
 		gwi.fatalParseError = true;
 		gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ROLLUP_NOT_SUPPORT);
-		setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-		return HA_ERR_UNSUPPORTED;
+		setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
 	gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
@@ -4210,8 +4214,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			{
 				Message::Args args;
 				args.add("View");
-				setError(gwi.thd, HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)), gwi);
-				return HA_ERR_UNSUPPORTED;
+				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)), gwi);
+				return ER_CHECK_NOT_IMPLEMENTED;
 			}
 #endif
 
@@ -4228,9 +4232,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				SCSEP plan = fromSub.transform();
 				if (!plan)
 				{
-					setError(gwi.thd, HA_ERR_INTERNAL_ERROR, fromSub.gwip().parseErrorText, gwi);
+					setError(gwi.thd, ER_INTERNAL_ERROR, fromSub.gwip().parseErrorText, gwi);
 					CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-					return HA_ERR_INTERNAL_ERROR;
+					return ER_INTERNAL_ERROR;
 				}
 
 				gwi.derivedTbList.push_back(plan);
@@ -4272,18 +4276,18 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		}
 		if (gwi.fatalParseError)
 		{
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 	}
 	catch (IDBExcept& ie)
 	{
-		setError(gwi.thd, HA_ERR_INTERNAL_ERROR, ie.what(), gwi);
+		setError(gwi.thd, ER_INTERNAL_ERROR, ie.what(), gwi);
 		CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 		// @bug 3852. set error status for gwi.
 		gwi.fatalParseError = true;
 		gwi.parseErrorText = ie.what();
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 	catch (...)
 	{
@@ -4291,9 +4295,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		// @bug3852 set error status for gwi.
 		gwi.fatalParseError = true;
 		gwi.parseErrorText = emsg;
-		setError(gwi.thd, HA_ERR_INTERNAL_ERROR, emsg, gwi);
+		setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
 		CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 
 	csep->tableList(gwi.tbList);
@@ -4392,8 +4396,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				gwi.thd->infinidb_vtable.isUpdateWithDerive = true;
 				return -1;
 			}
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 	}
 
@@ -4596,9 +4600,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				}
 				else
 				{
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 					delete sc;
-					return HA_ERR_UNSUPPORTED;
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 				break;
 			}
@@ -4609,9 +4613,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				if (gwi.fatalParseError)
 				{
 					// e.g., non-support ref column
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 					delete ac;
-					return HA_ERR_UNSUPPORTED;
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 
 				// add this agg col to returnedColumnList
@@ -4634,16 +4638,16 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				{
 					gwi.fatalParseError = true;
 					gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SP_FUNCTION_NOT_SUPPORT);
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-					return HA_ERR_UNSUPPORTED;
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 
 				if (string(ifp->func_name()) == "xor")
 				{
 					gwi.fatalParseError = true;
 					gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-					return HA_ERR_UNSUPPORTED;
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 
 				uint16_t parseInfo = 0;
@@ -4657,8 +4661,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				{
 					gwi.fatalParseError = true;
 					gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-					return HA_ERR_UNSUPPORTED;
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 
 				ReturnedColumn* rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
@@ -4759,15 +4763,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 							args.add(ifp->func_name());
 							gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
 						}
-						setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-						return HA_ERR_UNSUPPORTED;
+						setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+						return ER_CHECK_NOT_IMPLEMENTED;
 					}
 					else if ( gwi.subQuery && (isPredicateFunction(ifp, &gwi) || ifp->type() == Item::COND_ITEM ))
 					{
 						gwi.fatalParseError = true;
 						gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
-						setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-						return HA_ERR_UNSUPPORTED;
+						setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+						return ER_CHECK_NOT_IMPLEMENTED;
 					}
 
 					//@Bug 3030 Add error check for dml statement
@@ -4894,8 +4898,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				{
 					gwi.fatalParseError = true;
 					gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-					return HA_ERR_UNSUPPORTED;
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 #ifdef DEBUG_WALK_COND
 				cout << "SELECT clause SUBSELECT Item: " << sub->substype() << endl;
@@ -4915,8 +4919,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				{
 					if (gwi.parseErrorText.empty())
 						gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-					return HA_ERR_UNSUPPORTED;
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 				selectSubList.push_back(ssub);
 				SimpleColumn* rc = new SimpleColumn();
@@ -4947,8 +4951,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			{
 				gwi.fatalParseError = true;
 				gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
-				setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-				return HA_ERR_UNSUPPORTED;
+				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+				return ER_CHECK_NOT_IMPLEMENTED;
 			}
 			case Item::WINDOW_FUNC_ITEM:
 			{
@@ -4957,8 +4961,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				{
 					if (gwi.parseErrorText.empty())
 						gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-					return HA_ERR_UNSUPPORTED;
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 				gwi.returnedCols.push_back(srcp);
 				break;
@@ -5009,8 +5013,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 		if (gwi.fatalParseError)
 		{
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 
 		ParseTree* ptp = 0;
@@ -5045,8 +5049,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		if (funcFieldVec.size() != 0 && !gwi.fatalParseError)
 		{
 			string emsg("Fatal parse error in vtable mode: Unsupported Items in union or sub select unit");
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, emsg);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 	}
 
@@ -5067,8 +5071,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			{
 				emsg = gwi.parseErrorText;
 			}
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, emsg, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 		String str;
 		funcFieldVec[i]->print(&str, QT_INFINIDB_NO_QUOTE);
@@ -5126,8 +5130,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		{
 			gwi.fatalParseError = true;
 			gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_WF_NOT_ALLOWED, "GROUP BY clause");
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 		gwi.hasWindowFunc = hasWindowFunc;
 
@@ -5357,8 +5361,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			else
 				args.add("");
 			gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 	}
 
@@ -5428,8 +5432,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 					{
 						string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
 						gwi.parseErrorText = emsg;
-						setError(gwi.thd, HA_ERR_UNSUPPORTED, emsg, gwi);
-						return HA_ERR_UNSUPPORTED;
+						setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+						return ER_CHECK_NOT_IMPLEMENTED;
 					}
 				}
 				if (ordercol->asc)
@@ -5522,8 +5526,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 											if (ac)
 											{
 												gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-												setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-												return HA_ERR_UNSUPPORTED;
+												setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+												return ER_CHECK_NOT_IMPLEMENTED;
 											}
 											addToSel = true;
 											//continue;
@@ -5539,8 +5543,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 					else if (ord_item->type() == Item::SUBSELECT_ITEM)
 					{
 						string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-						setError(gwi.thd, HA_ERR_UNSUPPORTED, emsg, gwi);
-						return HA_ERR_UNSUPPORTED;
+						setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+						return ER_CHECK_NOT_IMPLEMENTED;
 					}
 
 					else if (ord_item->type() == Item::SUM_FUNC_ITEM)
@@ -5552,9 +5556,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ac = buildAggregateColumn(ifp, gwi);
 						if (!ac)
 						{
-							setError(gwi.thd, HA_ERR_UNSUPPORTED,
+							setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED,
 							         IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY), gwi);
-							return HA_ERR_UNSUPPORTED;
+							return ER_CHECK_NOT_IMPLEMENTED;
 						}
 						// check if this order by column is on the select list
 						for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
@@ -5635,8 +5639,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						if (select_lex.options & SELECT_DISTINCT)
 						{
 							gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ORDERBY_NOT_IN_DISTINCT);
-							setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText, gwi);
-							return HA_ERR_UNSUPPORTED;
+							setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+							return ER_CHECK_NOT_IMPLEMENTED;
 						}
 						bool hasNonSupportItem = false;
 						uint16_t parseInfo = 0;
@@ -5644,8 +5648,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						if (hasNonSupportItem)
 						{
 							string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-							setError(gwi.thd, HA_ERR_UNSUPPORTED, emsg, gwi);
-							return HA_ERR_UNSUPPORTED;
+							setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+							return ER_CHECK_NOT_IMPLEMENTED;
 						}
 						String str;
 						ord_item->print(&str, QT_INFINIDB);
@@ -5664,8 +5668,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				if (!sc)
 				{
 					string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-					setError(gwi.thd, HA_ERR_UNSUPPORTED, emsg, gwi);
-					return HA_ERR_UNSUPPORTED;
+					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 				String str;
 				fieldVec[i]->print(&str, QT_INFINIDB_NO_QUOTE);
@@ -5715,16 +5719,16 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		}
 		catch (runtime_error& e)
 		{
-			setError(gwi.thd, HA_ERR_INTERNAL_ERROR, e.what(), gwi);
+			setError(gwi.thd, ER_INTERNAL_ERROR, e.what(), gwi);
 			CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-			return HA_ERR_INTERNAL_ERROR;
+			return ER_INTERNAL_ERROR;
 		}
 		catch (...)
 		{
 			string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
-			setError(gwi.thd, HA_ERR_INTERNAL_ERROR, emsg, gwi);
+			setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
 			CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-			return HA_ERR_INTERNAL_ERROR;
+			return ER_INTERNAL_ERROR;
 		}
 
 		if (!gwi.count_asterisk_list.empty() || !gwi.no_parm_func_list.empty() ||
@@ -5758,9 +5762,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			} catch (...)
 			{
 				string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
-				setError(gwi.thd, HA_ERR_INTERNAL_ERROR, emsg, gwi);
+				setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
 				CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-				return HA_ERR_INTERNAL_ERROR;
+				return ER_INTERNAL_ERROR;
 			}
 
 			if (gwi.returnedCols.empty() && gwi.additionalRetCols.empty())
@@ -5962,8 +5966,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						else if (ord_item->type() == Item::SUBSELECT_ITEM)
 						{
 							string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-							setError(gwi.thd, HA_ERR_UNSUPPORTED, emsg, gwi);
-							return HA_ERR_UNSUPPORTED;
+							setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+							return ER_CHECK_NOT_IMPLEMENTED;
 						}
 						else
 						{
@@ -6116,8 +6120,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		{
 			gwi.fatalParseError = true;
 			gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);
-			setError(gwi.thd, HA_ERR_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 	}
 
@@ -6159,8 +6163,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		{
 			gwi.fatalParseError = true;
 			gwi.parseErrorText = "No project column found for aggregate function";
-			setError(gwi.thd, HA_ERR_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-			return HA_ERR_UNSUPPORTED;
+			setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 		(*coliter)->functionParms(minSc);
 	}
@@ -6206,7 +6210,7 @@ int cp_get_plan(THD* thd, SCSEP& csep)
 	gwi.thd = thd;
 	int status = getSelectPlan(gwi, select_lex, csep);
 	if (status > 0)
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	else if (status < 0)
 		return status;
 

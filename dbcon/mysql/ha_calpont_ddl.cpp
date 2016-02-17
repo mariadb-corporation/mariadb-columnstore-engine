@@ -647,7 +647,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			rc = 1;
 			thd->get_stmt_da()->set_overwrite_status(true);
 
-			thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_DATATYPE_NOT_SUPPORT)).c_str());
+			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_DATATYPE_NOT_SUPPORT)).c_str());
 			ci->alterTableState = cal_connection_info::NOT_ALTER;
 			ci->isAlter = false;
 			return rc;
@@ -670,7 +670,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
 
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -684,7 +684,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				rc = 1;
   	 			thd->get_stmt_da()->set_overwrite_status(true);
 
-	 			thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary is currently not supported by InfiniDB.");
+	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by InfiniDB.");
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 	 			return rc;
@@ -696,7 +696,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				rc = 1;
   	 			thd->get_stmt_da()->set_overwrite_status(true);
 
-	 			thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary length has to be between 8 and 8000.");
+	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary length has to be between 8 and 8000.");
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 	 			return rc;
@@ -709,7 +709,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
 
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary column cannot have default value.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary column cannot have default value.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -734,7 +734,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -743,7 +743,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -753,7 +753,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -774,7 +774,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				else if ( compressionType < 0 )
 				{
 					rc = 1;
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -789,9 +789,9 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 		Message::Args args;
 		thd->get_stmt_da()->set_overwrite_status(true);
 		args.add("The compression type");
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
 #else
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 #endif
 					return rc;
 				}
@@ -805,7 +805,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	{
 		int rc = 1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 		return rc;
@@ -819,7 +819,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -838,7 +838,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Autoincrement column cannot have a default value.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Autoincrement column cannot have a default value.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -850,7 +850,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -868,7 +868,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			{
 				rc = 1;
 				thd->get_stmt_da()->set_overwrite_status(true);
-				thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE)).c_str());
+				thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE)).c_str());
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 				return rc;
@@ -880,7 +880,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -891,7 +891,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			{
 				rc = 1;
 				thd->get_stmt_da()->set_overwrite_status(true);
-				thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
+				thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 				return rc;
@@ -920,7 +920,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			Message::Args args;
 			thd->get_stmt_da()->set_overwrite_status(true);
 			args.add(autoiColName);
-			thd->raise_error_printf(HA_ERR_UNSUPPORTED,(IDBErrorInfo::instance()->errorMsg(ERR_UNKNOWN_COL, args)).c_str());
+			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,(IDBErrorInfo::instance()->errorMsg(ERR_UNKNOWN_COL, args)).c_str());
 			ci->alterTableState = cal_connection_info::NOT_ALTER;
 			ci->isAlter = false;
 			return rc;
@@ -937,7 +937,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				rc = 1;
   	 			thd->get_stmt_da()->set_overwrite_status(true);
 
-	 			thd->raise_error_printf(HA_ERR_UNSUPPORTED, "No database selected.");
+	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "No database selected.");
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 	 			return rc;
@@ -950,7 +950,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			rc = 1;
 			thd->get_stmt_da()->set_overwrite_status(true);
 
-			thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Multiple actions in alter table statement is currently not supported by InfiniDB.");
+			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Multiple actions in alter table statement is currently not supported by InfiniDB.");
 
 			ci->alterTableState = cal_connection_info::NOT_ALTER;
 			ci->isAlter = false;
@@ -966,7 +966,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary is currently not supported by InfiniDB.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by InfiniDB.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -977,7 +977,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary length has to be between 8 and 8000.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary length has to be between 8 and 8000.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -993,7 +993,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1011,7 +1011,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1020,7 +1020,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Unknown exception caught when checking any rows in the table.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Unknown exception caught when checking any rows in the table.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1029,7 +1029,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Table is not empty. New column has to have a default value if NOT NULL required.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Table is not empty. New column has to have a default value if NOT NULL required.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1041,7 +1041,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "New column has to have a default value if NOT NULL required.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "New column has to have a default value if NOT NULL required.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1055,7 +1055,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary column cannot have default value.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary column cannot have default value.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1078,7 +1078,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1087,7 +1087,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1097,7 +1097,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1124,7 +1124,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					else if ( compressionType < 0 )
 					{
 						rc = 1;
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1137,9 +1137,9 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 		Message::Args args;
 		thd->get_stmt_da()->set_overwrite_status(true);
 		args.add("The compression type");
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
 #else
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 #endif
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
@@ -1162,7 +1162,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	{
 		int rc = 1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 		return rc;
@@ -1174,7 +1174,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1195,7 +1195,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1205,7 +1205,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1215,7 +1215,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1224,7 +1224,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1234,7 +1234,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1255,7 +1255,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				rc = 1;
   	 			thd->get_stmt_da()->set_overwrite_status(true);
 
-	 			thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 	 			return rc;
@@ -1264,7 +1264,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			{
 				rc = 1;
   	 			thd->get_stmt_da()->set_overwrite_status(true);
-	 			thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 	 			return rc;
@@ -1273,7 +1273,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			{
 				rc = 1;
   	 			thd->get_stmt_da()->set_overwrite_status(true);
-	 			thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 	 			return rc;
@@ -1285,7 +1285,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Multiple actions in alter table statement is currently not supported by InfiniDB.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Multiple actions in alter table statement is currently not supported by InfiniDB.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -1296,7 +1296,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary is currently not supported by InfiniDB.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by InfiniDB.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -1308,7 +1308,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary length has to be between 8 and 8000.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary length has to be between 8 and 8000.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -1324,7 +1324,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1342,7 +1342,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1351,7 +1351,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Unknown exception caught when checking any rows in the table.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Unknown exception caught when checking any rows in the table.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1360,7 +1360,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Table is not empty. New column has to have a default value if NOT NULL required.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Table is not empty. New column has to have a default value if NOT NULL required.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1372,7 +1372,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "New column has to have a default value if NOT NULL required.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "New column has to have a default value if NOT NULL required.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1386,7 +1386,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Varbinary column cannot have default value.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary column cannot have default value.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1409,7 +1409,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1418,7 +1418,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1428,7 +1428,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The default value is out of range for the specified data type.");
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The default value is out of range for the specified data type.");
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1448,7 +1448,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					else if ( compressionType < 0 )
 					{
 						rc = 1;
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1461,9 +1461,9 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 		Message::Args args;
 		thd->get_stmt_da()->set_overwrite_status(true);
 		args.add("The compression type");
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
 #else
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 #endif
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
@@ -1487,7 +1487,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	{
 		int rc = 1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 		return rc;
@@ -1499,7 +1499,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1520,7 +1520,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1530,7 +1530,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1540,7 +1540,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1549,7 +1549,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1558,7 +1558,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE)).c_str());
 							return rc;
 						}
 					}
@@ -1589,7 +1589,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					else if ( compressionType < 0 )
 					{
 						rc = 1;
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1602,9 +1602,9 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 		Message::Args args;
 		thd->get_stmt_da()->set_overwrite_status(true);
 		args.add("The compression type");
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
 #else
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 #endif
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
@@ -1632,7 +1632,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	{
 		int rc = 1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 		return rc;
@@ -1644,7 +1644,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1662,7 +1662,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_NUMBER_AUTOINCREMENT)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1672,7 +1672,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_AUTOINCREMENT_TYPE)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1681,7 +1681,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_STARTVALUE)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1713,7 +1713,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1722,7 +1722,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Unknown exception caught when checking any existing null values in the column.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Unknown exception caught when checking any existing null values in the column.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1731,7 +1731,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The existing rows in this column has null value already.");
+								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The existing rows in this column has null value already.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1741,7 +1741,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+							thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
 							ci->alterTableState = cal_connection_info::NOT_ALTER;
 							ci->isAlter = false;
 							return rc;
@@ -1761,7 +1761,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	{
 		rc = 1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SYNTAX)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SYNTAX)).c_str());
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 		return rc;	
@@ -1774,7 +1774,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	{
 		rc = 1;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Cannot execute the statement. DBRM is read only!");
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Cannot execute the statement. DBRM is read only!");
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 		return rc;
@@ -1853,14 +1853,14 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	 algorithm::to_upper(ddlStatement);
 	 if (ddlStatement.find("AUTO_INCREMENT") != string::npos)
 	 {
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Use of the MySQL auto_increment syntax is not supported in InfiniDB. If you wish to create an auto increment column in InfiniDB, please consult the InfiniDB SQL Syntax Guide for the correct usage.");
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Use of the MySQL auto_increment syntax is not supported in InfiniDB. If you wish to create an auto increment column in InfiniDB, please consult the InfiniDB SQL Syntax Guide for the correct usage.");
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 	 }
 	 else
 	 {
 		//@Bug 1888,1885. update error message
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The syntax or the data type(s) is not supported by InfiniDB. Please check the InfiniDB syntax guide for supported syntax or data types.");
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax or the data type(s) is not supported by InfiniDB. Please check the InfiniDB syntax guide for supported syntax or data types.");
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 	 }
@@ -1922,7 +1922,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 			{
 				int rc = 1;
 				thd->get_stmt_da()->set_overwrite_status(true);
-				thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
+				thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
 				return rc;
 			}
 #endif
@@ -1930,7 +1930,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		catch (runtime_error& ex)
 		{
 			thd->get_stmt_da()->set_overwrite_status(true);
-			thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 			return 1;
 		}
 		algorithm::to_upper(tablecomment);
@@ -2017,7 +2017,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	if (ci.isSlaveNode)
 	{
 		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
+		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
 		return 1;
 	}
 
@@ -2027,7 +2027,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		rc = 1;
 		Message::Args args;
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS, args)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS, args)).c_str());
 		ci.alterTableState = cal_connection_info::NOT_ALTER;
 		ci.isAlter = false;
 		return rc;
@@ -2047,7 +2047,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	else if ( compressiontype < 0 )
 	{
 		rc = 1;
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 		ci.alterTableState = cal_connection_info::NOT_ALTER;
 		ci.isAlter = false;
 		return rc;
@@ -2071,9 +2071,9 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		Message::Args args;
 		thd->get_stmt_da()->set_overwrite_status(true);
 		args.add("The compression type");
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
 #else
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 #endif
 		ci.alterTableState = cal_connection_info::NOT_ALTER;
 		ci.isAlter = false;
@@ -2120,7 +2120,7 @@ int ha_calpont_impl_delete_table_(const char *name, cal_connection_info& ci)
 	if (ci.isSlaveNode)
 	{
 		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
+		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
 		return 1;
 	}
 
@@ -2154,7 +2154,7 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
 	if (ci.isSlaveNode)
 	{
 		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
+		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
 		return 1;
 	}
 
@@ -2164,7 +2164,7 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
 	if (fromPair.first != toPair.first)
 	{
 		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Both tables must be in the same database to use RENAME TABLE");
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Both tables must be in the same database to use RENAME TABLE");
 		return -1;
 	}
 

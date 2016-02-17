@@ -981,13 +981,13 @@ const char* calshowpartitions(UDF_INIT* initid, UDF_ARGS* args,
 	} catch (IDBExcept& ex)
 	{
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+		current_thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 		return result;
 	}
 	catch (...)
 	{
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Error occured when calling CALSHOWPARTITIONS");
+		current_thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Error occured when calling CALSHOWPARTITIONS");
 		return result;
 	}
 
@@ -1749,19 +1749,19 @@ const char* calshowpartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args,
 		args.add(ex.what());
 		errMsg = IDBErrorInfo::instance()->errorMsg(ERR_INVALID_FUNC_ARGUMENT, args);
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_UNSUPPORTED, (char*)errMsg.c_str());
+		current_thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (char*)errMsg.c_str());
 		return result;
 	}
 	catch (IDBExcept& ex)
 	{
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_UNSUPPORTED, ex.what());
+		current_thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
 		return result;
 	}
 	catch (...)
 	{
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Error occured when calling CALSHOWPARTITIONS");
+		current_thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Error occured when calling CALSHOWPARTITIONS");
 		return result;
 	}
 
@@ -1826,7 +1826,7 @@ const char* calshowpartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args,
 	{
 		errMsg = IDBErrorInfo::instance()->errorMsg(WARN_NO_PARTITION_FOUND);
 		current_thd->get_stmt_da()->set_overwrite_status(true);
-		current_thd->raise_error_printf(HA_ERR_UNSUPPORTED, errMsg.c_str());
+		current_thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, errMsg.c_str());
 		return result;
 	}
 

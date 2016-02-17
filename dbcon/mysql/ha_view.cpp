@@ -128,20 +128,20 @@ void View::transform()
 		}
 		if (gwi.fatalParseError)
 		{
-			setError(gwi.thd, HA_ERR_UNSUPPORTED, gwi.parseErrorText);
+			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
 			return;
 		}
 	}
 	catch (IDBExcept& ie)
 	{
-		setError(gwi.thd, HA_ERR_INTERNAL_ERROR, ie.what());
+		setError(gwi.thd, ER_INTERNAL_ERROR, ie.what());
 		CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 		return;
 	}
 	catch (...)
 	{
 		string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
-		setError(gwi.thd, HA_ERR_INTERNAL_ERROR, emsg);
+		setError(gwi.thd, ER_INTERNAL_ERROR, emsg);
 		CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 		return;
 	}

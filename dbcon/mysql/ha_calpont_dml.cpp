@@ -713,7 +713,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 			{
 				// We've used more null bits than allowed. Something is seriously wrong.
 				std::string errormsg = "Null bit header is wrong size";
-				setError(current_thd, HA_ERR_INTERNAL_ERROR, errormsg);
+				setError(current_thd, ER_INTERNAL_ERROR, errormsg);
 				return -1;
 			}
 				

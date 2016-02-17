@@ -637,7 +637,7 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 	else if (sm_stat == sm::CALPONT_INTERNAL_ERROR)
 	{
 		ti.moreRows = false;
-		rc = HA_ERR_INTERNAL_ERROR;
+		rc = ER_INTERNAL_ERROR;
 		ci->rc = rc;
 	}
 	else if ((uint32_t)sm_stat == logging::ERR_LOST_CONN_EXEMGR)
@@ -754,8 +754,8 @@ uint32_t doUpdateDelete(THD *thd)
 	if (ci->isSlaveNode && !thd->slave_thread)
 	{
 		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
-		return HA_ERR_UNSUPPORTED;
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
 	//@Bug 4387. Check BRM status before start statement.
@@ -765,8 +765,8 @@ uint32_t doUpdateDelete(THD *thd)
 
 	if (rc != 0 )
 	{
-		setError(current_thd, HA_ERR_GENERIC, "Cannot execute the statement. DBRM is read only!");
-		return HA_ERR_UNSUPPORTED;
+		setError(current_thd, ER_ENGINE_READ_ONLY, "Cannot execute the statement. DBRM is read only!");
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
 	// stats start
@@ -805,8 +805,8 @@ uint32_t doUpdateDelete(THD *thd)
 			else
 				args.add("Delete");
 			string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_VIEW, args);
-			setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
-			return HA_ERR_UNSUPPORTED;
+			setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 
 /*
@@ -821,8 +821,8 @@ uint32_t doUpdateDelete(THD *thd)
 			Message::Args args;
 			args.add("Non Calpont table(s)");
 			string emsg(IDBErrorInfo::instance()->errorMsg(ERR_DML_NOT_SUPPORT_FEATURE, args));
-			setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
-			return HA_ERR_UNSUPPORTED;
+			setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 */
 	}
@@ -882,7 +882,7 @@ uint32_t doUpdateDelete(THD *thd)
             {
                 //@ Bug3326 error out for multi table update
                 string emsg(IDBErrorInfo::instance()->errorMsg(ERR_UPDATE_NOT_SUPPORT_FEATURE));
-                thd->raise_error_printf(HA_ERR_UNSUPPORTED, emsg.c_str());
+                thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, emsg.c_str());
                 ci->rc = -1;
                 thd->set_row_count_func(0);
                 return -1;
@@ -894,7 +894,7 @@ uint32_t doUpdateDelete(THD *thd)
                     return 0;
                 else
                 {
-                    thd->raise_error_printf(HA_ERR_UNSUPPORTED, "The statement cannot be processed without schema.");
+                    thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The statement cannot be processed without schema.");
                     ci->rc = -1;
                     thd->set_row_count_func(0);
                     return -1;
@@ -1058,9 +1058,9 @@ uint32_t doUpdateDelete(THD *thd)
             }
             else if (value->type() == Item::WINDOW_FUNC_ITEM)
             {
-                setError(thd, HA_ERR_INTERNAL_ERROR,
+                setError(thd, ER_INTERNAL_ERROR,
                          logging::IDBErrorInfo::instance()->errorMsg(ERR_WF_UPDATE));
-                return HA_ERR_UNSUPPORTED;
+                return ER_CHECK_NOT_IMPLEMENTED;
                 //return 0;
             }
             else
@@ -1116,12 +1116,12 @@ uint32_t doUpdateDelete(THD *thd)
 	catch (IDBExcept &ie) {
 		setError(thd, HA_ERR_NO_SUCH_TABLE,
 					 ie.what());
-		return HA_ERR_UNSUPPORTED;
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 	catch (std::exception&ex) {
 		setError(thd, HA_ERR_GENERIC,
 					logging::IDBErrorInfo::instance()->errorMsg(ERR_SYSTEM_CATALOG) + ex.what());
-		return HA_ERR_UNSUPPORTED;
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
 	ci->tableOid = roPair.objnum;
@@ -1195,8 +1195,8 @@ uint32_t doUpdateDelete(THD *thd)
 	if (!pDMLPackage)
 	{
 		string emsg("Fatal parse error in vtable mode in DMLParser ");
-		setError(thd, HA_ERR_UNSUPPORTED, emsg);
-		return HA_ERR_UNSUPPORTED;
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 	pDMLPackage->set_TableName(tableName);
 
@@ -1290,7 +1290,7 @@ uint32_t doUpdateDelete(THD *thd)
 			{
 				emsg = gwi.parseErrorText;
 			}
-            thd->raise_error_printf(HA_ERR_UNSUPPORTED, emsg.c_str());
+            thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, emsg.c_str());
 			ci->rc = -1;
             thd->set_row_count_func(0);
 			return -1;
@@ -1360,7 +1360,7 @@ uint32_t doUpdateDelete(THD *thd)
 				colrids = csc->columnRIDs(deleteTableName);
 			}
 			catch (IDBExcept &ie) {
-                thd->raise_error_printf(HA_ERR_UNSUPPORTED, ie.what());
+                thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ie.what());
 				ci->rc = -1;
                 thd->set_row_count_func(0);
 				return 0;
@@ -2131,20 +2131,20 @@ long long callastinsertid(UDF_INIT* initid, UDF_ARGS* args,
 	catch (std::exception&)
 	{
 		string msg("No such table found");
-		setError(thd, HA_ERR_UNSUPPORTED, msg);
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, msg);
 		return nextVal;
 	}
 
 	if (nextVal == AUTOINCR_SATURATED)
 	{
-		setError(thd, HA_ERR_UNSUPPORTED, IDBErrorInfo::instance()->errorMsg(ERR_EXCEED_LIMIT));
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, IDBErrorInfo::instance()->errorMsg(ERR_EXCEED_LIMIT));
 		return nextVal;
 	}
 	//@Bug 3559. Return a message for table without autoincrement column.
 	if (nextVal == 0)
 	{
 		string msg("Autoincrement does not exist for this table.");
-		setError(thd, HA_ERR_UNSUPPORTED, msg);
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, msg);
 		return nextVal;
 	}
 
@@ -2350,17 +2350,17 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     if (bSystemQueryReady == 0)
 	{
 		// Still not ready
-		setError(thd, HA_ERR_INTERNAL_ERROR, "The system is not yet ready to accept queries");
+		setError(thd, ER_INTERNAL_ERROR, "The system is not yet ready to accept queries");
 		thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 	else
 	if (bSystemQueryReady < 0)
 	{
 		// Still not ready
-		setError(thd, HA_ERR_INTERNAL_ERROR, "DBRM is not responding. Cannot accept queries");
+		setError(thd, ER_INTERNAL_ERROR, "DBRM is not responding. Cannot accept queries");
 		thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 #endif
 	// prevent "create table as select" from running on slave
@@ -2386,7 +2386,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
 	// return error is error status is already set
 	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 
 	// by pass the extra union trips. return 0
 	if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
@@ -2396,9 +2396,9 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 	// @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
 	if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
 	{
-		setError(thd, HA_ERR_UNSUPPORTED, "This stored procedure syntax is not supported by InfiniDB in this version");
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by InfiniDB in this version");
 		thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 
 #ifdef SKIP_INSERT_SELECT
@@ -2406,8 +2406,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 	{
 		Message::Args args;
 		args.add("Insert with Select");
-		setError(thd, HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)));
-		return HA_ERR_UNSUPPORTED;
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)));
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 #endif
 
@@ -2495,7 +2495,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 		try {
 			ti.conn_hndl->connect();
 		} catch (...) {
-			setError(thd, HA_ERR_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
+			setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
 			CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 			goto error;
 		}
@@ -2576,7 +2576,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 		try {
 			ci->cal_conn_hndl->connect();
 		} catch (...) {
-			setError(thd, HA_ERR_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
+			setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
 			CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 			goto error;
 		}
@@ -2613,7 +2613,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			int status = cp_get_plan(thd, csep);
 			//if (cp_get_plan(thd, csep) != 0)
 			if (status > 0)
-				return HA_ERR_INTERNAL_ERROR;
+				return ER_INTERNAL_ERROR;
 			else if (status < 0)
 				return 0;
 
@@ -2682,8 +2682,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				if (msg.length() == 0 || emsgBs.length() == 0)
 				{
 					emsg = "Lost connection to ExeMgr. Please contact your administrator";
-					setError(thd, HA_ERR_UNSUPPORTED, emsg);
-					return HA_ERR_UNSUPPORTED;
+					setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 				string emsgStr;
 				emsgBs >> emsgStr;
@@ -2716,8 +2716,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				}
 				if (err)
 				{
-					setError(thd, HA_ERR_UNSUPPORTED, emsgStr);
-					return HA_ERR_UNSUPPORTED;
+					setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsgStr);
+					return ER_CHECK_NOT_IMPLEMENTED;
 				}
 
 				rmParms.clear();
@@ -2744,7 +2744,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				try {
 					hndl->connect();
 				} catch (...) {
-					setError(thd, HA_ERR_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
+					setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
 					CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 					goto error;
 				}
@@ -2774,7 +2774,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			tableid = execplan::IDB_VTABLE_ID;
 		} catch (...) {
 			string emsg = "No table ID found for table " + string(table->s->table_name.str);
-			setError(thd, HA_ERR_INTERNAL_ERROR, emsg);
+			setError(thd, ER_INTERNAL_ERROR, emsg);
 			CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 			goto internal_error;
 		}
@@ -2785,14 +2785,14 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 		} catch (std::exception& e)
 		{
 			string emsg = "table can not be opened: " + string(e.what());
-			setError(thd, HA_ERR_INTERNAL_ERROR, emsg);
+			setError(thd, ER_INTERNAL_ERROR, emsg);
 			CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 			goto internal_error;
 		}
 		catch (...)
 		{
 			string emsg = "table can not be opened";
-			setError(thd, HA_ERR_INTERNAL_ERROR, emsg);
+			setError(thd, ER_INTERNAL_ERROR, emsg);
 			CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
 			goto internal_error;
 		}
@@ -2831,7 +2831,7 @@ error:
 		ci->cal_conn_hndl = 0;
 	}
 	// do we need to close all connection handle of the table map?
-	return HA_ERR_INTERNAL_ERROR;
+	return ER_INTERNAL_ERROR;
 
 internal_error:
 	if (ci->cal_conn_hndl)
@@ -2839,7 +2839,7 @@ internal_error:
 		sm::sm_cleanup(ci->cal_conn_hndl);
 		ci->cal_conn_hndl = 0;
 	}
-	return HA_ERR_UNSUPPORTED;
+	return ER_CHECK_NOT_IMPLEMENTED;
 }
 
 int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
@@ -2860,7 +2860,7 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 
 
 	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	// @bug 3005
 	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
 	    string(table->s->table_name.str).find("$vtable") != 0)
@@ -2877,9 +2877,9 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 	// @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
 	if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
 	{
-		setError(thd, HA_ERR_UNSUPPORTED, "This stored procedure syntax is not supported by InfiniDB in this version");
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by InfiniDB in this version");
 		thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 
 	if (!thd->infinidb_vtable.cal_conn_info)
@@ -2921,10 +2921,10 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 		if (!thd->get_stmt_da()->is_error())
 		{
 			string emsg = "Cannot open table handle for " + string(table->s->table_name.str) + ".";
-			setError(thd, HA_ERR_INTERNAL_ERROR, emsg);
+			setError(thd, ER_INTERNAL_ERROR, emsg);
 		}
 		CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 
 	idbassert(ti.msTablePtr == table);
@@ -2934,9 +2934,9 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 	} catch (std::exception& e)
 	{
 		string emsg = string("Lost connection to ExeMgr while fetching: ") + e.what();
-		setError(thd, HA_ERR_INTERNAL_ERROR, emsg);
+		setError(thd, ER_INTERNAL_ERROR, emsg);
 		CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
-		return HA_ERR_INTERNAL_ERROR;
+		return ER_INTERNAL_ERROR;
 	}
 	ci->tableMap[table] = ti;
 
@@ -2951,11 +2951,11 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 			logging::ErrorCodes errorcodes;
 			emsg = errorcodes.errorString(rc);
 		}
-		setError(thd, HA_ERR_INTERNAL_ERROR, emsg);
-		//setError(thd, HA_ERR_INTERNAL_ERROR, "testing");
+		setError(thd, ER_INTERNAL_ERROR, emsg);
+		//setError(thd, ER_INTERNAL_ERROR, "testing");
 		ci->stats.fErrorNo = rc;
 		CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
-		rc = HA_ERR_INTERNAL_ERROR;
+		rc = ER_INTERNAL_ERROR;
 	}
 
 	return rc;
@@ -3073,7 +3073,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 			try {
 				sm::tpl_scan_close(ti.tpl_scan_ctx);
 			} catch (...) {
-				rc = HA_ERR_INTERNAL_ERROR;
+				rc = ER_INTERNAL_ERROR;
 			}
 		}
 		ti.tpl_scan_ctx.reset();
@@ -3094,18 +3094,18 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 			}
 			else
 			{
-				setError(thd, HA_ERR_INTERNAL_ERROR, e.what());
-				rc = HA_ERR_INTERNAL_ERROR;
+				setError(thd, ER_INTERNAL_ERROR, e.what());
+				rc = ER_INTERNAL_ERROR;
 			}
 		}
 		catch (std::exception& e) {
-			setError(thd, HA_ERR_INTERNAL_ERROR, e.what());
-			rc = HA_ERR_INTERNAL_ERROR;
+			setError(thd, ER_INTERNAL_ERROR, e.what());
+			rc = ER_INTERNAL_ERROR;
 		}
 		catch (...)
 		{
-			setError(thd, HA_ERR_INTERNAL_ERROR, "Internal error throwed in rnd_end");
-			rc = HA_ERR_INTERNAL_ERROR;
+			setError(thd, ER_INTERNAL_ERROR, "Internal error throwed in rnd_end");
+			rc = ER_INTERNAL_ERROR;
 		}
 	}
 	ti.tpl_ctx = 0;
@@ -3168,7 +3168,7 @@ int ha_calpont_impl_delete_table(const char *name)
 	if (thd->lex->sql_command == SQLCOM_DROP_DB)
 	{
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_UNSUPPORTED,  "Non-empty database can not be dropped. ");
+        thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,  "Non-empty database can not be dropped. ");
 		return 1;
 	}
 
@@ -3177,7 +3177,7 @@ int ha_calpont_impl_delete_table(const char *name)
 	// should never get in here
 	if (!first_table)
 	{
-		setError(thd, HA_ERR_INTERNAL_ERROR, "Null table pointer detected when dropping table");
+		setError(thd, ER_INTERNAL_ERROR, "Null table pointer detected when dropping table");
 		return 1;
 	}
 	if (!(first_table->table && first_table->table->s && first_table->table->s->db.str))
@@ -3202,7 +3202,7 @@ int ha_calpont_impl_delete_table(const char *name)
 		{
 			return 0;
 		}
-		setError(thd, HA_ERR_INTERNAL_ERROR, "Calpont system tables can only be dropped with restrict.");
+		setError(thd, ER_INTERNAL_ERROR, "Calpont system tables can only be dropped with restrict.");
 		return 1;
 	}
 
@@ -3224,8 +3224,8 @@ int ha_calpont_impl_write_row(uchar *buf, TABLE* table)
 			Message::Args args;
 			args.add("Insert");
 			string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_VIEW, args);
-			setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
-			return HA_ERR_UNSUPPORTED;
+			setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 	}
 
@@ -3317,7 +3317,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 	if (ci->isSlaveNode && thd->infinidb_vtable.vtable_state != THD::INFINIDB_ALTER_VTABLE)
 	{
 		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
+		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
 		return;
 	}
 
@@ -3447,7 +3447,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				int localModuleId = oamcache->getLocalPMId();
 				if (localModuleId == 0)
 				{
-					setError(current_thd, HA_ERR_UNSUPPORTED, logging::IDBErrorInfo::instance()->errorMsg(ERR_LOCAL_QUERY_UM));
+					setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, logging::IDBErrorInfo::instance()->errorMsg(ERR_LOCAL_QUERY_UM));
 					ci->singleInsert = true;
 					LoggingID logid( 24, tid2sid(thd->thread_id), 0);
 					logging::Message::Args args1;
@@ -3884,7 +3884,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 				if (exitCode != 0)
 				{
 					rc = 1;
-					setError(thd, HA_ERR_INTERNAL_ERROR, "load failed. The detailed error information is listed in InfiniDBLog.txt.");
+					setError(thd, ER_INTERNAL_ERROR, "load failed. The detailed error information is listed in InfiniDBLog.txt.");
 				}
 				// Close handles to the cpimport process and its primary thread.
 				CloseHandle(ci->cpimportProcInfo.hProcess);
@@ -3916,7 +3916,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 							{
 								string line;
 								getline(dmlFile, line);
-								setError(thd, HA_ERR_INTERNAL_ERROR, line);
+								setError(thd, ER_INTERNAL_ERROR, line);
 								dmlFile.close();
 								remove (oss.str().c_str());
 							}
@@ -3932,12 +3932,12 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 							{
 								string line;
 								getline(dmlFile, line);
-								setError(thd, HA_ERR_INTERNAL_ERROR, line);
+								setError(thd, ER_INTERNAL_ERROR, line);
 								dmlFile.close();
 								remove (oss.str().c_str());
 							}
 							else
-								setError(thd, HA_ERR_INTERNAL_ERROR, "load failed. The detailed error information is listed in err.log.");
+								setError(thd, ER_INTERNAL_ERROR, "load failed. The detailed error information is listed in err.log.");
 						}
 					}
 				}
@@ -4138,7 +4138,7 @@ int ha_calpont_impl_rename_table(const char* from, const char* to)
 	{
 #if 0
         thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(HA_ERR_UNSUPPORTED, "Syntax is not supported in InfiniDB.");
+        thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Syntax is not supported in InfiniDB.");
 		return 1;
 #endif
 	}
@@ -4214,9 +4214,9 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 	// @bug 3014. Error out locking table command. IDB does not support it now.
 	if (thd->lex->sql_command == SQLCOM_LOCK_TABLES)
 	{
-		setError(current_thd, HA_ERR_UNSUPPORTED,
+		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED,
 				 logging::IDBErrorInfo::instance()->errorMsg(ERR_LOCK_TABLE));
-		return HA_ERR_UNSUPPORTED;
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
 	// @info called for every table at the beginning and at the end of a query.
@@ -4233,8 +4233,8 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 	{
 		Message::Args args;
 		args.add("Insert with Select");
-		setError(thd, HA_ERR_UNSUPPORTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)));
-		return HA_ERR_UNSUPPORTED;
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)));
+		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 #endif
 
@@ -4325,8 +4325,8 @@ int ha_calpont_impl_rnd_pos(uchar *buf, uchar *pos)
 {
 	IDEBUG( cout << "ha_calpont_impl_rnd_pos" << endl);
 	string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_ORDERBY_TOO_BIG);
-	setError(current_thd, HA_ERR_UNSUPPORTED, emsg);
-	return HA_ERR_UNSUPPORTED;
+	setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+	return ER_CHECK_NOT_IMPLEMENTED;
 }
 
 // Called from mysql parser to set IDB error for window functions
@@ -4337,7 +4337,7 @@ void ha_calpont_impl_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uin
 	for (uint32_t i = 0; i < argCount; i++)
 		arguments.add(args[i].str);
 	string emsg = logging::IDBErrorInfo::instance()->errorMsg(errCode, arguments);
-	setError(thd, HA_ERR_INTERNAL_ERROR, emsg);
+	setError(thd, ER_INTERNAL_ERROR, emsg);
 }
 // vim:sw=4 ts=4:
 
