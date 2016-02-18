@@ -60,7 +60,7 @@ extern int ha_calpont_impl_write_last_batch(TABLE* table, cal_impl_if::cal_conne
 extern int ha_calpont_impl_commit_ (handlerton *hton, THD *thd, bool all, cal_impl_if::cal_connection_info& ci);
 extern int ha_calpont_impl_rollback_ (handlerton *hton, THD *thd, bool all, cal_impl_if::cal_connection_info& ci);
 extern int ha_calpont_impl_close_connection_ (handlerton *hton, THD *thd, cal_impl_if::cal_connection_info& ci);
-extern int ha_calpont_impl_delete_table_(const char *name, cal_impl_if::cal_connection_info& ci);
+extern int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_impl_if::cal_connection_info& ci);
 extern int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *create_info,
 	cal_impl_if::cal_connection_info& ci);
 extern std::string  ha_calpont_impl_markpartition_ (execplan::CalpontSystemCatalog::TableName tableName, uint32_t partition);

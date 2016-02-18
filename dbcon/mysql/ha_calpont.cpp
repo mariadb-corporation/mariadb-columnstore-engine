@@ -159,28 +159,26 @@ static uchar* calpont_get_key(INFINIDB_SHARE *share, size_t *length,
 int calpont_discover(handlerton *hton, THD* thd, TABLE_SHARE *share)
 {
   DBUG_ENTER("calpont_discover");
-	DBUG_PRINT("calpont_discover", ("db: '%s'  name: '%s'", share->db.str,
-																	share->table_name.str)); 
+  DBUG_PRINT("calpont_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str)); 
 #ifdef INFINIDB_DEBUG
 fprintf(stderr, "calpont_discover()\n");
 #endif
 
-	uchar* frm_data = NULL;
-	size_t frm_len = 0;
-	int error = 0;
+  uchar* frm_data = NULL;
+  size_t frm_len = 0;
+  int error = 0;
 
+  if (!ha_calpont_impl_discover_existence(share->db.str, share->table_name.str))
+      DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
 
-	if (!ha_calpont_impl_discover_existence(share->db.str, share->table_name.str))
-		DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
-
-	error = share->read_frm_image((const uchar**)&frm_data, &frm_len);
+  error = share->read_frm_image((const uchar**)&frm_data, &frm_len);
 
   if (error)
-		DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
+    DBUG_RETURN(HA_ERR_NO_SUCH_TABLE);
 
   my_errno= share->init_from_binary_frm_image(thd, 1, frm_data, frm_len);
 
-	my_free(frm_data);
+  my_free(frm_data);
   DBUG_RETURN(my_errno);
 }
 
@@ -215,7 +213,7 @@ static int calpont_init_func(void *p)
   calpont_hton->state=   SHOW_OPTION_YES;
   calpont_hton->create=  calpont_create_handler;
   calpont_hton->flags=   HTON_CAN_RECREATE;
-//  calpont_hton->discover_table= calpont_discover;
+  calpont_hton->discover_table= calpont_discover;
   calpont_hton->discover_table_existence= calpont_discover_existence;
   calpont_hton->commit= calpont_commit;
   calpont_hton->rollback= calpont_rollback;
@@ -1030,7 +1028,7 @@ int ha_calpont::create(const char *name, TABLE *table_arg,
   DBUG_ENTER("ha_calpont::create");
 
   int rc = ha_calpont_impl_create(name, table_arg, create_info);
-
+  table_arg->s->write_frm_image();
   DBUG_RETURN(rc);
 }
 

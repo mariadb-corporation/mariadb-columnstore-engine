@@ -3180,10 +3180,6 @@ int ha_calpont_impl_delete_table(const char *name)
 		setError(thd, ER_INTERNAL_ERROR, "Null table pointer detected when dropping table");
 		return 1;
 	}
-	if (!(first_table->table && first_table->table->s && first_table->table->s->db.str))
-		return 0;
-
-	string db = first_table->table->s->db.str;
 
 	if (!ci) return 0;
 
@@ -3193,7 +3189,7 @@ int ha_calpont_impl_delete_table(const char *name)
 		 return 0;
 	}
 	// @bug 1793. make vtable droppable in calpontsys. "$vtable" ==> "@0024vtable" passed in as name.
-	if (db == "calpontsys" && string(name).find("@0024vtable") == string::npos)
+	if (strcmp(first_table->db, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
 	{
 		std::string stmt(idb_mysql_query_str(thd));
 		algorithm::to_upper(stmt);
@@ -3206,7 +3202,7 @@ int ha_calpont_impl_delete_table(const char *name)
 		return 1;
 	}
 
-	int rc = ha_calpont_impl_delete_table_(name, *ci);
+	int rc = ha_calpont_impl_delete_table_(first_table->db, name, *ci);
 	return rc;
 }
 int ha_calpont_impl_write_row(uchar *buf, TABLE* table)

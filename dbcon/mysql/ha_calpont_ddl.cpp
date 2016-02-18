@@ -2094,13 +2094,14 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	return rc;
 }
 
-int ha_calpont_impl_delete_table_(const char *name, cal_connection_info& ci)
+int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connection_info& ci)
 {
 #ifdef INFINIDB_DEBUG
-	cout << "ha_calpont_impl_delete_table: " << name << endl;
+	cout << "ha_calpont_impl_delete_table: " << db << name << endl;
 #endif
 	THD *thd = current_thd;
 	std::string tbl(name);
+	std::string schema(db);
 	std::string stmt(idb_mysql_query_str(thd));
 	algorithm::to_upper(stmt);
 	// @bug 4158 allow table name with 'restrict' in it (but not by itself)
@@ -2124,12 +2125,10 @@ int ha_calpont_impl_delete_table_(const char *name, cal_connection_info& ci)
 		return 1;
 	}
 
-	TABLE_LIST *first_table= (TABLE_LIST*) thd->lex->select_lex.table_list.first;
-		string db = first_table->table->s->db.str;
 	string emsg;
 	stmt = idb_mysql_query_str(thd);
 	stmt += ";";
-	int rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg);
+	int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
 	if (rc != 0)
 		push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, emsg.c_str());
 	return rc;
