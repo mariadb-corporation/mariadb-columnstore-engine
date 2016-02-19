@@ -213,8 +213,8 @@ static int calpont_init_func(void *p)
   calpont_hton->state=   SHOW_OPTION_YES;
   calpont_hton->create=  calpont_create_handler;
   calpont_hton->flags=   HTON_CAN_RECREATE;
-  calpont_hton->discover_table= calpont_discover;
-  calpont_hton->discover_table_existence= calpont_discover_existence;
+//  calpont_hton->discover_table= calpont_discover;
+//  calpont_hton->discover_table_existence= calpont_discover_existence;
   calpont_hton->commit= calpont_commit;
   calpont_hton->rollback= calpont_rollback;
   calpont_hton->close_connection = calpont_close_connection;
@@ -470,7 +470,7 @@ int ha_calpont::write_row(uchar *buf)
   DBUG_RETURN(rc);
 }
 
-void ha_calpont::start_bulk_insert(ha_rows rows)
+void ha_calpont::start_bulk_insert(ha_rows rows, uint flags)
 {
 	DBUG_ENTER("ha_calpont::start_bulk_insert");
 	ha_calpont_impl_start_bulk_insert(rows, table);
@@ -1028,7 +1028,7 @@ int ha_calpont::create(const char *name, TABLE *table_arg,
   DBUG_ENTER("ha_calpont::create");
 
   int rc = ha_calpont_impl_create(name, table_arg, create_info);
-  table_arg->s->write_frm_image();
+//  table_arg->s->write_frm_image();
   DBUG_RETURN(rc);
 }
 

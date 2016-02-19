@@ -187,7 +187,7 @@ public:
     We implement this in ha_example.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
-  void start_bulk_insert(ha_rows rows) ;
+  void start_bulk_insert(ha_rows rows, uint flags= 0) ;
   
   /** @brief
     We implement this in ha_example.cc. It's not an obligatory method;
