@@ -51,7 +51,7 @@ datadir=/usr/local/Calpont/mysql/db
 # Value here is overriden by value in my.cnf. 
 # 0 means don't wait at all
 # Negative numbers mean to wait indefinitely
-service_startup_timeout=900
+service_startup_timeout=30
 
 # Lock directory for RedHat / SuSE.
 lockdir='/var/lock/subsys'
@@ -239,6 +239,7 @@ wait_for_gone () {
         continue  # Check again.
       fi
 
+      kill_by_pid
       # Cannot help it
       log_failure_msg "The server quit without updating PID file ($pid_file_path)."
       return 1  # not waiting any more.
