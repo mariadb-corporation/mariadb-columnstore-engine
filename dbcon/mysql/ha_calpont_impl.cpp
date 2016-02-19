@@ -1114,14 +1114,14 @@ uint32_t doUpdateDelete(THD *thd)
 			roPair = csc->tableRID( aTableName );
 	}
 	catch (IDBExcept &ie) {
-		setError(thd, HA_ERR_NO_SUCH_TABLE,
+		setError(thd, ER_UNKNOWN_TABLE,
 					 ie.what());
-		return ER_CHECK_NOT_IMPLEMENTED;
+		return ER_UNKNOWN_TABLE;
 	}
 	catch (std::exception&ex) {
-		setError(thd, HA_ERR_GENERIC,
+		setError(thd, ER_INTERNAL_ERROR,
 					logging::IDBErrorInfo::instance()->errorMsg(ERR_SYSTEM_CATALOG) + ex.what());
-		return ER_CHECK_NOT_IMPLEMENTED;
+		return ER_INTERNAL_ERROR;
 	}
 
 	ci->tableOid = roPair.objnum;
@@ -2682,8 +2682,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				if (msg.length() == 0 || emsgBs.length() == 0)
 				{
 					emsg = "Lost connection to ExeMgr. Please contact your administrator";
-					setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-					return ER_CHECK_NOT_IMPLEMENTED;
+					setError(thd, ER_INTERNAL_ERROR, emsg);
+					return ER_INTERNAL_ERROR;
 				}
 				string emsgStr;
 				emsgBs >> emsgStr;
@@ -3320,7 +3320,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 	//@bug 4771. reject REPLACE key word
 	if ((thd->lex)->sql_command == SQLCOM_REPLACE_SELECT)
 	{
-		setError(current_thd, HA_ERR_GENERIC, "REPLACE statement is not supported in infinidb.");
+		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, "REPLACE statement is not supported in infinidb.");
 	}
 
 	boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(tid2sid(thd->thread_id));
@@ -3339,7 +3339,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 		found = insertStmt.find("ignore");
 		if (found!=string::npos)
 		{
-			setError(current_thd, HA_ERR_GENERIC, "IGNORE option in insert statement is not supported in infinidb.");
+			setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, "IGNORE option in insert statement is not supported in infinidb.");
 		}
 
 		if ( rows > 1 )
@@ -3376,7 +3376,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				colrids = csc->columnRIDs(tableName);
 			}
 			catch (IDBExcept &ie) {
-				setError(thd, HA_ERR_NO_SUCH_TABLE, ie.what());
+				setError(thd, ER_UNKNOWN_TABLE, ie.what());
 				ci->rc = 5;
 				ci->singleInsert = true;
 				return;
@@ -3604,7 +3604,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				ostringstream oss;
 				oss <<" : Error in " << pSectionMsg << " (errno-" <<
 					errnum << "); " << errmsg;
-				setError(current_thd, HA_ERR_GENERIC, oss.str());
+				setError(current_thd, ER_INTERNAL_ERROR, oss.str());
 				ci->singleInsert = true;
 				LoggingID logid( 24, tid2sid(thd->thread_id), 0);
 				logging::Message::Args args1, args2;
@@ -3632,7 +3632,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				ostringstream oss;
 				oss <<" : Error in creating pipe (errno-" <<
 					errnum << "); " << strerror(errnum);
-				setError(current_thd, HA_ERR_GENERIC, oss.str());
+				setError(current_thd, ER_INTERNAL_ERROR, oss.str());
 				ci->singleInsert = true;
 				LoggingID logid( 24, tid2sid(thd->thread_id), 0);
 				logging::Message::Args args1;
@@ -3652,7 +3652,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				ostringstream oss;
 				oss << " : Error in forking cpimport.bin (errno-" <<
 					errnum << "); " << strerror(errnum);
-				setError(current_thd, HA_ERR_GENERIC, oss.str());
+				setError(current_thd, ER_INTERNAL_ERROR, oss.str());
 				ci->singleInsert = true;
 				LoggingID logid( 24, tid2sid(thd->thread_id), 0);
 				logging::Message::Args args1;
@@ -3673,7 +3673,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				errno = 0;
 				if (dup2(ci->fdt[0], 0) < 0)	//make stdin be the reading end of the pipe
 				{
-					setError(current_thd, HA_ERR_GENERIC, "dup2 failed");
+					setError(current_thd, ER_INTERNAL_ERROR, "dup2 failed");
 					ci->singleInsert = true;
 					exit (1);
 				}
@@ -3692,7 +3692,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 					"; Check file and try invoking locally.";
 				cout << oss.str();
 				
-				setError(current_thd, HA_ERR_GENERIC, "Forking process cpimport failed.");
+				setError(current_thd, ER_INTERNAL_ERROR, "Forking process cpimport failed.");
 				ci->singleInsert = true;
 				LoggingID logid( 24, tid2sid(thd->thread_id), 0);
 				logging::Message::Args args1;
@@ -3760,7 +3760,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 		int rc = dbrmp->isReadWrite();
 		if (rc != 0 )
 		{
-			setError(current_thd, HA_ERR_GENERIC, "Cannot execute the statement. DBRM is read only!");
+			setError(current_thd, ER_READ_ONLY_MODE, "Cannot execute the statement. DBRM is read only!");
 			ci->rc = rc;
 			ci->singleInsert = true;
 			return;
@@ -3774,11 +3774,11 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			ci->tableOid = roPair.objnum;
 		}
 		catch (IDBExcept &ie) {
-			setError(thd, HA_ERR_NO_SUCH_TABLE,
+			setError(thd, ER_UNKNOWN_TABLE,
 					 ie.what());
 		}
 		catch (std::exception& ex) {
-			setError(thd, HA_ERR_GENERIC,
+			setError(thd, ER_INTERNAL_ERROR,
 					logging::IDBErrorInfo::instance()->errorMsg(ERR_SYSTEM_CATALOG) + ex.what());
 		}
 	}

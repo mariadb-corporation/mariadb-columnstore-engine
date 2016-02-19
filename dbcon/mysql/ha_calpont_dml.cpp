@@ -329,7 +329,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
                 table->s->db.str, size, ci.colNameList.size(), ci.colNameList,
                 ci.tableValuesMap, sessionID);
 
-			CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStmts);
+		CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStmts);
 		//@Bug 2466 Move the clean up earlier to avoid the second insert in another session to get the data
 		ci.tableValuesMap.clear();
 		ci.colNameList.clear();
