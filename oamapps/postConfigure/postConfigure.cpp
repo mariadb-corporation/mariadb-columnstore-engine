@@ -2925,7 +2925,8 @@ int main(int argc, char *argv[])
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				calpontPackage1 = "infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				//mariadb
+				calpontPackage1 = "infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				calpontPackage2 = "infinidb-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				calpontPackage3 = "infinidb-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				mysqlPackage = "infinidb-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
@@ -2945,6 +2946,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
+				// binary
 				string fileName = installDir + "/bin/healthcheck";
 				ifstream file (fileName.c_str());
 				if (!file)	// CE
@@ -2972,20 +2974,21 @@ int main(int argc, char *argv[])
 				globfree(&gt);
 			}
 
+			//mariadb
 			//if PM is running with UM functionality
 			// install UM packages and run mysql setup scripts
-			if ( pmwithum ) {
+//			if ( pmwithum ) {
 				//run the mysql / mysqld setup scripts
 		
-				if ( EEPackageType != "binary") {
-					cout << endl << "===== Installing InfiniDB UM Packages and Running the InfiniDB MySQL setup scripts =====" << endl << endl;
-					string cmd = "rpm -Uv --force " + mysqlPackage + " " + mysqldPackage;
-					if ( EEPackageType == "deb" )
-						cmd = "dpkg -i " + mysqlPackage + " " + mysqldPackage;
-					system(cmd.c_str());
-					cout << endl;
-				}
-			}
+//				if ( EEPackageType != "binary") {
+//					cout << endl << "===== Installing InfiniDB UM Packages and Running the InfiniDB MySQL setup scripts =====" << endl << endl;
+//					string cmd = "rpm -Uv --force " + mysqlPackage + " " + mysqldPackage;
+//					if ( EEPackageType == "deb" )
+//						cmd = "dpkg -i " + mysqlPackage + " " + mysqldPackage;
+//					system(cmd.c_str());
+//					cout << endl;
+//				}
+//			}
 
 			cout << endl;
 			cout << "Next step is to enter the password to access the other Servers." << endl;

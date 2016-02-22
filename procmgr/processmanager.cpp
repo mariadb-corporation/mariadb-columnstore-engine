@@ -4435,7 +4435,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string separator = "-";
 		if ( packageType == "deb" )
 			separator = "_";
-		calpontPackage = homedir + "/infinidb-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		//mariadb
+		calpontPackage = homedir + "/infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 		mysqlPackage = homedir + "/infinidb-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 		mysqldPackage = homedir + "/infinidb-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 		calpontPackage1 = homedir + "/infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
