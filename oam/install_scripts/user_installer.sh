@@ -52,7 +52,7 @@ if { $PKGTYPE == "rpm" } {
 	set PKGERASE "rpm -e --nodeps $(rpm -qa | grep '^infinidb')"
 	set PKGERASE1 "rpm -e --nodeps "
 
-	set PKGINSTALL "rpm -ivh $NODEPS "
+	set PKGINSTALL "rpm -ivh $NODEPS --force "
 	set PKGUPGRADE "rpm -Uvh --noscripts "
 } else {
 	if { $PKGTYPE == "deb" } {

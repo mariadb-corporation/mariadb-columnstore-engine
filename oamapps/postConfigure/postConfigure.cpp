@@ -4227,15 +4227,9 @@ bool pkgCheck()
 {
 	while(true) 
 	{
-		string cmd = "ls " + HOME + " | grep " + calpontPackage1 + " > /tmp/calpontpkgs";
+		string cmd = "ls " + HOME + " | grep " + calpontPackage1 + "* > /tmp/calpontpkgs";
 		system(cmd.c_str());
 	
-		cmd = "ls " + HOME + " | grep " + mysqlPackage + " > /tmp/mysqlpkgs";
-		system(cmd.c_str());
-	
-		cmd = "ls " + HOME + " | grep " + mysqldPackage + " > /tmp/mysqldpkgs";
-		system(cmd.c_str());
-
 		string pkg = calpontPackage1;
 		string fileName = "/tmp/calpontpkgs";
 		ifstream oldFile (fileName.c_str());
@@ -4245,32 +4239,8 @@ bool pkgCheck()
 			if ( size != 0 ) {
 				oldFile.close();
 				unlink (fileName.c_str());
-	
-				pkg = mysqlPackage;
-				fileName = "/tmp/mysqlpkgs";
-				ifstream oldFile1 (fileName.c_str());
-				if (oldFile1) {
-					oldFile1.seekg(0, std::ios::end);
-					size = oldFile1.tellg();
-					if ( size != 0 ) {
-						oldFile1.close();
-						unlink (fileName.c_str());
-		
-						pkg = mysqldPackage;
-						fileName = "/tmp/mysqldpkgs";
-						ifstream oldFile2 (fileName.c_str());
-						if (oldFile2) {
-							oldFile2.seekg(0, std::ios::end);
-							size = oldFile2.tellg();
-							if ( size != 0 ) {
-								oldFile2.close();
-								unlink (fileName.c_str());
-								// all 3 pkgs found
-								return true;
-							}
-						}
-					}
-				}
+				// pkgs found
+				return true;
 			}
 		}
 	
