@@ -35,18 +35,20 @@ if { $DEBUG == "1" } {
 	set BASH "/bin/bash -x "
 }
 
+set HOME "$env(HOME)"
+
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
 if { $PKGTYPE == "rpm" } {
-	set PKGERASE "rpm -e --nodeps '$'(rpm -qa | grep '^infinidb')"
+	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^infinidb')"
 	set PKGERASE1 "rpm -e --nodeps "
 
 	set PKGINSTALL "rpm -ivh $NODEPS --force infinidb*$VERSION*"
 	set PKGUPGRADE "rpm -Uvh --noscripts infinidb*$VERSION*"
 } else {
 	if { $PKGTYPE == "deb" } {
-		set PKGERASE "dpkg -P '$'(dpkg --get-selections | grep '^infinidb')"
+		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^infinidb')"
 		set PKGERASE1 "dpkg -P "
 		set PKGINSTALL "dpkg -i --force-confnew infinidb*$VERSION*"
 		set PKGUPGRADE "dpkg -i --force-confnew infinidb*$VERSION*"
@@ -170,7 +172,7 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	send_user "Install InfiniDB Packages on Module               "
 
-	send "ssh $USERNAME@$SERVER '$PKGINSTALL $CALPONTRPM1 ;$PKGERASE dummy'\n"
+	send "ssh $USERNAME@$SERVER '$PKGINSTALL infinidb*$VERSION* ;$PKGERASE dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
 		expect {

@@ -3088,7 +3088,7 @@ int main(int argc, char *argv[])
 						//run remote installer script
 						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
 
-cout << cmd << endl;
+//cout << cmd << endl;
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
 
@@ -3237,7 +3237,7 @@ cout << cmd << endl;
 							//run remote installer script
 							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
-cout << cmd << endl;
+//cout << cmd << endl;
 							if ( thread_remote_installer ) {
 								thr_data[thread_id].command = cmd;
 
