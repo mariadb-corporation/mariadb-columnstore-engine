@@ -199,7 +199,6 @@ int main(int argc, char *argv[])
 	// hidden options
 	// -f for force use nodeps on rpm install
 	// -o to prompt for process to start offline
-	// -em for Enterprise Manager
 
 	//default
 	installDir = installDir + "";
@@ -3088,6 +3087,7 @@ int main(int argc, char *argv[])
 						//run remote installer script
 						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage1 + " " + calpontPackage2 + " " + calpontPackage3 + " " + mysqlPackage + " " + mysqldPackage + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
 
+cout << cmd << endl;
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
 
@@ -3236,6 +3236,7 @@ int main(int argc, char *argv[])
 							//run remote installer script
 							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage1 + " " + calpontPackage2 + " " + calpontPackage3 + " " + mysqlPackage + " " + mysqldPackage + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
+cout << cmd << endl;
 							if ( thread_remote_installer ) {
 								thr_data[thread_id].command = cmd;
 
