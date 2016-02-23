@@ -2925,9 +2925,8 @@ int main(int argc, char *argv[])
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				//mariadb
-				calpontPackage1 = "infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage2 = "infinidb-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage1 = "infinidb-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage2 = "infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				calpontPackage3 = "infinidb-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				mysqlPackage = "infinidb-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				mysqldPackage = "infinidb-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
@@ -2937,6 +2936,9 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
+				//mariadb
+					calpontPackage1 = "infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+
 					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
 					calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
 					calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
@@ -4227,7 +4229,7 @@ bool pkgCheck()
 {
 	while(true) 
 	{
-		string cmd = "ls " + HOME + " | grep " + calpontPackage1 + "* > /tmp/calpontpkgs";
+		string cmd = "ls " + HOME + " | grep " + calpontPackage1 + " > /tmp/calpontpkgs";
 		system(cmd.c_str());
 	
 		string pkg = calpontPackage1;
