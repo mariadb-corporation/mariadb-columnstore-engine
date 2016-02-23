@@ -14,17 +14,13 @@ set USERNAME root
 set MODULE [lindex $argv 0]
 set SERVER [lindex $argv 1]
 set PASSWORD [lindex $argv 2]
-set CALPONTRPM1 [lindex $argv 3]
-set CALPONTRPM2 [lindex $argv 4]
-set CALPONTRPM3 [lindex $argv 5]
-set CALPONTMYSQLRPM [lindex $argv 6]
-set CALPONTMYSQLDRPM [lindex $argv 7]
-set INSTALLTYPE [lindex $argv 8]
-set PKGTYPE [lindex $argv 9]
-set NODEPS [lindex $argv 10]
-set DEBUG [lindex $argv 11]
+set VERSION [lindex $argv 3]
+set INSTALLTYPE [lindex $argv 4]
+set PKGTYPE [lindex $argv 5]
+set NODEPS [lindex $argv 6]
+set DEBUG [lindex $argv 7]
 set INSTALLDIR "/usr/local/Calpont"
-set IDIR [lindex $argv 12]
+set IDIR [lindex $argv 8]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
@@ -43,17 +39,17 @@ log_user $DEBUG
 spawn -noecho /bin/bash
 #
 if { $PKGTYPE == "rpm" } {
-	set PKGERASE "rpm -e --nodeps $(rpm -qa | grep '^infinidb')"
+	set PKGERASE "rpm -e --nodeps '$'(rpm -qa | grep '^infinidb')"
 	set PKGERASE1 "rpm -e --nodeps "
 
-	set PKGINSTALL "rpm -ivh $NODEPS --force "
-	set PKGUPGRADE "rpm -Uvh --noscripts "
+	set PKGINSTALL "rpm -ivh $NODEPS --force infinidb*$VERSION*"
+	set PKGUPGRADE "rpm -Uvh --noscripts infinidb*$VERSION*"
 } else {
 	if { $PKGTYPE == "deb" } {
-		set PKGERASE "dpkg -P $(dpkg --get-selections | grep '^infinidb')"
+		set PKGERASE "dpkg -P '$'(dpkg --get-selections | grep '^infinidb')"
 		set PKGERASE1 "dpkg -P "
-		set PKGINSTALL "dpkg -i --force-confnew"
-		set PKGUPGRADE "dpkg -i --force-confnew"
+		set PKGINSTALL "dpkg -i --force-confnew infinidb*$VERSION*"
+		set PKGUPGRADE "dpkg -i --force-confnew infinidb*$VERSION*"
 	} else {
 		if { $PKGTYPE != "bin" } {
 			send_user "Invalid Package Type of $PKGTYPE"
@@ -146,7 +142,7 @@ expect {
         -re {[$#] } { }
 }
 
-send "scp $CALPONTRPM1 $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/infinidb*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
 if { $PASSWORD != "ssh" } {
         set timeout 30
         expect {

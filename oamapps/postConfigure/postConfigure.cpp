@@ -2920,6 +2920,7 @@ int main(int argc, char *argv[])
 			}
 
 			//check if pkgs are located in $HOME directory
+			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType != "binary") {
 				string separator = "-";
 				if ( EEPackageType == "deb" )
@@ -3085,7 +3086,7 @@ int main(int argc, char *argv[])
 							temppwprompt = "none";
 
 						//run remote installer script
-						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage1 + " " + calpontPackage2 + " " + calpontPackage3 + " " + mysqlPackage + " " + mysqldPackage + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
+						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
 
 cout << cmd << endl;
 						if ( thread_remote_installer ) {
@@ -3234,7 +3235,7 @@ cout << cmd << endl;
 
 						if ( EEPackageType != "binary" ) {
 							//run remote installer script
-							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage1 + " " + calpontPackage2 + " " + calpontPackage3 + " " + mysqlPackage + " " + mysqldPackage + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
 cout << cmd << endl;
 							if ( thread_remote_installer ) {
