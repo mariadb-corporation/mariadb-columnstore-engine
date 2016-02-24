@@ -3245,6 +3245,7 @@ int ProcessMonitor::getConfigLog()
 				break;
 			}
 			string logFile = oam::LogFile[i];
+			logFile = logFile.substr(14, 80);
 
 			string::size_type pos = buf.find(logFile,0);
 			if (pos != string::npos) {
