@@ -4163,6 +4163,8 @@ int ProcessMonitor::changeCrontab()
 	// restart the service to make sure it running
 	system("/etc/init.d/crond start > /dev/null 2>&1");
 	system("/etc/init.d/crond reload > /dev/null 2>&1");
+	system("systemctl start crond.service > /dev/null 2>&1");
+	system("systemctl reload crond.service > /dev/null 2>&1");
 
 	return API_SUCCESS;
 }
@@ -4259,6 +4261,8 @@ int ProcessMonitor::changeTransactionLog()
 	// restart the service to make sure it running
 	system("/etc/init.d/crond start > /dev/null 2>&1");
 	system("/etc/init.d/crond reload > /dev/null 2>&1");
+	system("systemctl start crond.service > /dev/null 2>&1");
+	system("systemctl reload crond.service > /dev/null 2>&1");
 
 	return API_SUCCESS;
 }
@@ -4296,6 +4300,9 @@ void ProcessMonitor::setTransactionLog(bool action)
 	log.writeLog(__LINE__, "Start and reload crond", LOG_TYPE_DEBUG);
 	system("/etc/init.d/crond start > /dev/null 2>&1");
 	system("/etc/init.d/crond reload > /dev/null 2>&1");
+	system("systemctl start crond.service > /dev/null 2>&1");
+	system("systemctl reload crond.service > /dev/null 2>&1");
+
 }
 
 /******************************************************************************************

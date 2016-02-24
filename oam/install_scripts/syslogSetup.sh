@@ -169,7 +169,9 @@ if [ ! -z "$syslog_conf" ] ; then
 
 	pkill -hup syslogd > /dev/null 2>&1
 	pkill -hup syslog-ng  > /dev/null 2>&1
+	pkill -hup rsyslogd  > /dev/null 2>&1
 	/etc/init.d/rsyslog restart  > /dev/null 2>&1
+	systemctl restart rsyslog.service > /dev/null 2>&1
 fi
 
 }
@@ -201,6 +203,7 @@ if [ ! -z "$syslog_conf" ] ; then
 	pkill -hup syslogd > /dev/null 2>&1
 	pkill -hup syslog-ng  > /dev/null 2>&1
 	/etc/init.d/rsyslog restart  > /dev/null 2>&1
+	systemctl restart rsyslog.service > /dev/null 2>&1
 
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile "unassigned"
 
