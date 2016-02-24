@@ -4399,6 +4399,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	string mysqldPackage;
 	string calpontPackage1;
 	string calpontPackage2;
+	string version;
 
 	string systemID;
 	string packageType = "rpm";
@@ -4431,6 +4432,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			homedir = p;
 	}
 
+	version = systemsoftware.Version + "-" + systemsoftware.Release;
 	if ( packageType != "binary") {
 		string separator = "-";
 		if ( packageType == "deb" )
@@ -5025,7 +5027,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			if ( packageType != "binary" ) {
 				log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
-				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + calpontPackage1 + " " + calpontPackage2 + " " + mysqlPackage + " " + mysqldPackage + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 > /tmp/user_installer.log";
+				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 > /tmp/user_installer.log";
 
 				log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -5063,7 +5065,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			if ( remoteModuleType == "pm" ) {
 				if ( packageType != "binary" ) {
 					log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-					string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + calpontPackage1 + " " + calpontPackage2 + " " + mysqlPackage + " " + mysqldPackage + " initial " + 	packageType + " --nodeps 1 > /tmp/performance_installer.log";
+					string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + 	packageType + " --nodeps 1 > /tmp/performance_installer.log";
 					log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					rtnCode = system(cmd.c_str());
