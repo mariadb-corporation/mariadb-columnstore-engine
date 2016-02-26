@@ -422,6 +422,12 @@ void debug_walk(const Item *item, void *arg)
 			debug_walk(row->element_index(i), 0);
 		break;
 	}
+	case Item::EXPR_CACHE_ITEM:
+	{
+		cout << "Expr Cache Item" << endl;
+		((Item_cache_wrapper*)item)->get_orig_item()->traverse_cond(debug_walk, arg, Item::POSTFIX);
+		break;
+	}
 	case Item::WINDOW_FUNC_ITEM:
 	{
 		cout << "Window Function Item" << endl;
@@ -2029,6 +2035,13 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			}
 			break;
 		}
+		case Item::EXPR_CACHE_ITEM:
+		{
+			// TODO: item is a Item_cache_wrapper
+			printf("EXPR_CACHE_ITEM in buildReturnedColumn\n");
+			cout << "EXPR_CACHE_ITEM in buildReturnedColumn" << endl;
+			break;
+		}
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			return buildWindowFunctionColumn(item, gwi, nonSupport);
@@ -3468,7 +3481,6 @@ void gp_walk(const Item *item, void *arg)
 {
 	gp_walk_info* gwip = reinterpret_cast<gp_walk_info*>(arg);
 	idbassert(gwip);
-
 	//Bailout...
 	if (gwip->fatalParseError) return;
 
@@ -3948,6 +3960,11 @@ void gp_walk(const Item *item, void *arg)
 			gwip->rcWorkStack.push(rowCol);
 			break;
 		}
+		case Item::EXPR_CACHE_ITEM:
+		{
+			((Item_cache_wrapper*)item)->get_orig_item()->traverse_cond(gp_walk, arg, Item::POSTFIX);
+			break;
+		}
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			gwip->hasWindowFunc = true;
@@ -4072,7 +4089,7 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 				}
 				else
 				{
-					//cout << "UNKNOWN REF Item" << endl;
+					cout << "UNKNOWN REF Item" << endl;
 					break;
 				}
 			}
@@ -4093,10 +4110,19 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 				parse_item(row->element_index(i), field_vec, hasNonSupportItem, parseInfo);
 			break;
 		}
+		case Item::EXPR_CACHE_ITEM:
+		{
+			// item is a Item_cache_wrapper. Shouldn't get here.
+			printf("EXPR_CACHE_ITEM in parse_item\n");
+			string parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SUB_QUERY_TYPE);
+			setError(item->thd(), ER_CHECK_NOT_IMPLEMENTED, parseErrorText);
+			break;
+		}
 		case Item::WINDOW_FUNC_ITEM:
 			parseInfo |= AF_BIT;
+			break;
 		default:
-			return;
+			break;
 	}
 }
 
@@ -4951,6 +4977,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			{
 				gwi.fatalParseError = true;
 				gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
+				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+				return ER_CHECK_NOT_IMPLEMENTED;
+			}
+			case Item::EXPR_CACHE_ITEM:
+			{
+				printf("EXPR_CACHE_ITEM in getSelectPlan\n");
+				gwi.fatalParseError = true;
+				gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_UNKNOWN_COL);
 				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 				return ER_CHECK_NOT_IMPLEMENTED;
 			}
