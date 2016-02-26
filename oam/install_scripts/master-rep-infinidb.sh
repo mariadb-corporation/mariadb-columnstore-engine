@@ -49,6 +49,7 @@ echo "Create Replication User $repUser for node $hostipaddr" >>/tmp/master-rep-s
 cat >/tmp/idb_master-rep.sql <<EOD
 CREATE USER '$repUser'@'$hostipaddr' IDENTIFIED BY '$password';
 GRANT REPLICATION SLAVE ON *.* TO '$repUser'@'$hostipaddr';
+GRANT ALL PRIVILEGES ON *.* TO '$repUser'@'$hostipaddr';
 EOD
 
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log

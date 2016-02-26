@@ -3575,18 +3575,18 @@ int main(int argc, char *argv[])
 		{
 			if ( oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
 
-				cout << endl << "Run MySQL Upgrade.. ";
+//				cout << endl << "Run MySQL Upgrade.. ";
 				cout.flush();
 
 				//send message to procmon's to run upgrade script
-				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
+//				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
 	
-				if ( status != 0 ) {
-					cout << endl << "InfiniDB Install Failed" << endl << endl;
-					exit(1);
-				}
-				else
-					cout << " DONE" << endl;
+//				if ( status != 0 ) {
+//					cout << endl << "InfiniDB Install Failed" << endl << endl;
+//					exit(1);
+//				}
+//				else
+//					cout << " DONE" << endl;
 			}
 			else
 			{
