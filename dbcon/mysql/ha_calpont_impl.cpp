@@ -772,10 +772,8 @@ uint32_t doUpdateDelete(THD *thd)
 	ci->stats.reset();
 	ci->stats.setStartTime();
 	ci->stats.fUser = thd->main_security_ctx.user;
-//	if (thd->main_security_ctx.host)
-//		ci->stats.fHost = thd->main_security_ctx.host;
-	if (thd->main_security_ctx.get_host())
-		ci->stats.fHost = thd->main_security_ctx.get_host()->c_ptr();
+	if (thd->main_security_ctx.host)
+		ci->stats.fHost = thd->main_security_ctx.host;
 	else if (thd->main_security_ctx.host_or_ip)
 		ci->stats.fHost = thd->main_security_ctx.host_or_ip;
 	else
@@ -2544,10 +2542,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			ci->stats.reset(); // reset query stats
 			ci->stats.setStartTime();
 			ci->stats.fUser = thd->main_security_ctx.user;
-//			if (thd->main_security_ctx.host)
-//				ci->stats.fHost = thd->main_security_ctx.host;
-			if (thd->main_security_ctx.get_host())
-				ci->stats.fHost = thd->main_security_ctx.get_host()->c_ptr();
+			if (thd->main_security_ctx.host)
+				ci->stats.fHost = thd->main_security_ctx.host;
 			else if (thd->main_security_ctx.host_or_ip)
 				ci->stats.fHost = thd->main_security_ctx.host_or_ip;
 			else
@@ -2975,6 +2971,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 	    thd->lex->sql_command == SQLCOM_LOAD))
 		return 0;
 
+	thd->infinidb_vtable.isNewQuery = true;
 
 	if (thd->infinidb_vtable.cal_conn_info)
 		ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
@@ -3722,10 +3719,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 		ci->stats.reset();
 		ci->stats.setStartTime();
 		ci->stats.fUser = thd->main_security_ctx.user;
-//		if (thd->main_security_ctx.host)
-//			ci->stats.fHost = thd->main_security_ctx.host;
-		if (thd->main_security_ctx.get_host())
-			ci->stats.fHost = thd->main_security_ctx.get_host()->c_ptr();
+		if (thd->main_security_ctx.host)
+			ci->stats.fHost = thd->main_security_ctx.host;
 		else if (thd->main_security_ctx.host_or_ip)
 			ci->stats.fHost = thd->main_security_ctx.host_or_ip;
 		else
