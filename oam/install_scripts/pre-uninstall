@@ -82,6 +82,7 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 rm -f /etc/cron.d/ps > /dev/null 2>&1
 rm -f /etc/pscollect > /dev/null 2>&1
 /etc/init.d/crond reload  > /dev/null 2>&1
+systemctl reload crond.service > /dev/null 2>&1
 
 # delete tmp files
 rm -f $installdir/local/*.calpont

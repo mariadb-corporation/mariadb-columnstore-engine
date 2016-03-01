@@ -351,25 +351,9 @@ int main(int argc, char *argv[])
 				idbver = 4;
 			globfree(&gt);
 		}
-		//v4 really means 4+, it'll get fixed later...
-		currentPrefix = oam.itoa(idbver);
-		if (idbver >= 4)
-		{
-			calpontPackagename = "infinidb";
-			mysqlRPMname = calpontPackagename + "-storage-engine";
-		}
-		else
-		{
-			if (CE == "1")
-			{
-				cout << endl << "FAILED: Community-Edition install valid for 4.x builds and above" << endl;
-				cerr << endl << "FAILED: Community-Edition install valid for 4.x builds and above" << endl;
-				exit(1);
-			}
 
-			calpontPackagename = "calpont";
-			mysqlRPMname = calpontPackagename + "-mysql";
-		}
+		calpontPackagename = "infinidb";
+		mysqlRPMname = calpontPackagename + "-storage-engine";
 
 		//check if package is there
 		cmd = "ls " + systemDir + mysqlRPMname + "* > /tmp/package.txt 2>&1";
@@ -393,21 +377,10 @@ int main(int argc, char *argv[])
 			buf = line;
 	
 			string::size_type pos;
-			if (idbver >= 4)
-			{
-				pos = buf.find("infinidb-storage-engine-",0);
-				if (pos != string::npos) {
-					currentPrefix = buf.substr(pos+24,1);
-					break;
-				}
-			}
-			else
-			{
-				pos = buf.find("calpont-mysql-",0);
-				if (pos != string::npos) {
-					currentPrefix = buf.substr(pos+14,1);
-					break;
-				}
+			pos = buf.find("infinidb-storage-engine-",0);
+			if (pos != string::npos) {
+				currentPrefix = buf.substr(pos+24,1);
+				break;
 			}
 		}
 		file.close();
@@ -438,20 +411,11 @@ int main(int argc, char *argv[])
 				idbver = 4;
 			globfree(&gt);
 		}
-		//v4 really means 4+, it'll get fixed later...
 		currentPrefix = oam.itoa(idbver);
-		if (idbver >= 4)
-		{
-			calpontPackagename = "infinidb";
-			mysqlRPMname = calpontPackagename + "-storage-engine";
-			calpontPackage = "infinidb-ent-" + systemPackage;
-		}
-		else
-		{
-			calpontPackagename = "calpont";
-			mysqlRPMname = calpontPackagename + "-mysql";
-			calpontPackage = calpontPackagename + "-infinidb-ent-" + systemPackage;
-		}
+
+		calpontPackagename = "infinidb";
+		mysqlRPMname = calpontPackagename + "-storage-engine";
+		calpontPackage = "infinidb-ent-" + systemPackage;
 
 		//check if package is there
 		cmd = "ls " + systemDir + calpontPackage + " > /tmp/package.txt 2>&1";
@@ -475,21 +439,10 @@ int main(int argc, char *argv[])
 			buf = line;
 	
 			string::size_type pos;
-			if (idbver >= 4)
-			{
-				pos = buf.find("infinidb-ent-",0);
-				if (pos != string::npos) {
-					currentPrefix = buf.substr(pos+13,1);
-					break;
-				}
-			}
-			else
-			{
-				pos = buf.find("calpont-infinidb-ent-",0);
-				if (pos != string::npos) {
-					currentPrefix = buf.substr(pos+21,1);
-					break;
-				}
+			pos = buf.find("infinidb-ent-",0);
+			if (pos != string::npos) {
+				currentPrefix = buf.substr(pos+13,1);
+				break;
 			}
 		}
 		file.close();
@@ -499,10 +452,8 @@ int main(int argc, char *argv[])
 	}
 
 	mysqlRPM = mysqlRPMname + "-" + systemPackage;
-	if (idbver >= 4)
-		mysqldRPM = calpontPackagename + "-mysql-" + systemPackage;
-	else
-		mysqldRPM = calpontPackagename + "-mysqld-" + systemPackage;
+
+	mysqldRPM = calpontPackagename + "-mysql-" + systemPackage;
 
 	//TODO: we go to all the effort of downloading the packages above only to delete them here...
 	cmd = "rm -f " + systemDir + systemPackage + " > /dev/null 2>&1";
@@ -802,10 +753,7 @@ CONFIGDONE:
 	string installer;
 	if ( systemPackage != "*.x86_64.rpm" )
 	{	//do binary install
-		if (idbver >= 4)
-			installer = "parent_binary_installer.sh";
-		else
-			installer = "parent_binary_installer_v3.sh";
+		installer = "parent_binary_installer.sh";
 		cmd = "cd " + systemDir + ";../../" + installer + " " + installParentModuleIPAddr + " " +
 			password + " " + systemPackage + " " + release + " " + configFile + " " + systemUser + " " +
 			installDir + " " + debug_flag;
@@ -814,19 +762,13 @@ CONFIGDONE:
 	{
 		if ( serverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
 		{
-			if (idbver >= 4)
-				installer = "dm_parent_installer.sh";
-			else
-				installer = "dm_parent_installer_v3.sh";
+			installer = "dm_parent_installer.sh";
 			cmd = "cd " + systemDir + ";../../" + installer + " " + installParentModuleIPAddr + " " +
 				password + " " + systemPackage + " " + release + " " + configFile + " " + systemUser + " " + CE + " " + debug_flag;
 		}
 		else
 		{
-			if (idbver >= 4)
-				installer = "pm_parent_installer.sh";
-			else
-				installer = "pm_parent_installer_v3.sh";
+			installer = "pm_parent_installer.sh";
 			cmd = "cd " + systemDir + ";../../" + installer + " " + installParentModuleIPAddr + " " +
 				password + " " + systemPackage + " " + release + " " + configFile + " " + currentPrefix + " " +
 				systemUser + " " + debug_flag;
@@ -844,34 +786,27 @@ CONFIGDONE:
 	// Perform System Installing and launch
 	//
 	cout << "Install System                               " << flush;
-	if (idbver < 3)
+	if (HDFS)
 	{
-		cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + " " + password + "  '/usr/local/Calpont/bin/installer /root/" + calpontPackage + " /root/" + mysqlRPM + " /root/" + mysqldRPM + " initial " + password + " " + XMpassword + " --nodeps 1' 'InfiniDB Install Successfully Completed' ERROR 1200 " + debug_flag;
-	}
-	else
-	{
-		if (HDFS)
+		if ( MySQLport == oam::UnassignedName )
 		{
-			if ( MySQLport == oam::UnassignedName )
-			{
-				cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "/Calpont/bin/" + DataFileEnvFile + ";" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
-			}
-			else
-			{
-				cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "/Calpont/bin/" + DataFileEnvFile + ";" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
-			}
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "/Calpont/bin/" + DataFileEnvFile + ";" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
 		}
 		else
 		{
-			if ( MySQLport == oam::UnassignedName )
-			{
-				cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
-			}
-			else
-			{
-				cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
-				string DataFileEnvFile = "setenv-hdfs-20";
-			}
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "/Calpont/bin/" + DataFileEnvFile + ";" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
+		}
+	}
+	else
+	{
+		if ( MySQLport == oam::UnassignedName )
+		{
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
+		}
+		else
+		{
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
+			string DataFileEnvFile = "setenv-hdfs-20";
 		}
 	}
 

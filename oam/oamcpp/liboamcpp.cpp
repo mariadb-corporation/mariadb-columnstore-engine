@@ -7854,6 +7854,13 @@ namespace oam
 			int user;
 			user = getuid();
 			if (user == 0)
+				cmd = "systemctl " + action + " " + systemlog + ".service > /dev/null 2>&1";
+			else
+				cmd = "sudo systemctl " + action + " " + systemlog + ".service > /dev/null 2>&1";
+
+			system(cmd.c_str());
+
+			if (user == 0)
 				cmd = "/etc/init.d/" + systemlog + " " + action + " > /dev/null 2>&1";
 			else
 				cmd = "sudo /etc/init.d/" + systemlog + " " + action + " > /dev/null 2>&1";

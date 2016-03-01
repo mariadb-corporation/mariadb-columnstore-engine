@@ -199,7 +199,6 @@ int main(int argc, char *argv[])
 	// hidden options
 	// -f for force use nodeps on rpm install
 	// -o to prompt for process to start offline
-	// -em for Enterprise Manager
 
 	//default
 	installDir = installDir + "";
@@ -2921,12 +2920,13 @@ int main(int argc, char *argv[])
 			}
 
 			//check if pkgs are located in $HOME directory
+			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType != "binary") {
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				calpontPackage1 = "infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage2 = "infinidb-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage1 = "infinidb-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage2 = "infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				calpontPackage3 = "infinidb-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				mysqlPackage = "infinidb-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 				mysqldPackage = "infinidb-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
@@ -2936,6 +2936,9 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
+				//mariadb
+					calpontPackage1 = "infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+
 					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
 					calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
 					calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
@@ -2945,6 +2948,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
+				// binary
 				string fileName = installDir + "/bin/healthcheck";
 				ifstream file (fileName.c_str());
 				if (!file)	// CE
@@ -2972,20 +2976,21 @@ int main(int argc, char *argv[])
 				globfree(&gt);
 			}
 
+			//mariadb
 			//if PM is running with UM functionality
 			// install UM packages and run mysql setup scripts
-			if ( pmwithum ) {
+//			if ( pmwithum ) {
 				//run the mysql / mysqld setup scripts
 		
-				if ( EEPackageType != "binary") {
-					cout << endl << "===== Installing InfiniDB UM Packages and Running the InfiniDB MySQL setup scripts =====" << endl << endl;
-					string cmd = "rpm -Uv --force " + mysqlPackage + " " + mysqldPackage;
-					if ( EEPackageType == "deb" )
-						cmd = "dpkg -i " + mysqlPackage + " " + mysqldPackage;
-					system(cmd.c_str());
-					cout << endl;
-				}
-			}
+//				if ( EEPackageType != "binary") {
+//					cout << endl << "===== Installing InfiniDB UM Packages and Running the InfiniDB MySQL setup scripts =====" << endl << endl;
+//					string cmd = "rpm -Uv --force " + mysqlPackage + " " + mysqldPackage;
+//					if ( EEPackageType == "deb" )
+//						cmd = "dpkg -i " + mysqlPackage + " " + mysqldPackage;
+//					system(cmd.c_str());
+//					cout << endl;
+//				}
+//			}
 
 			cout << endl;
 			cout << "Next step is to enter the password to access the other Servers." << endl;
@@ -3081,8 +3086,9 @@ int main(int argc, char *argv[])
 							temppwprompt = "none";
 
 						//run remote installer script
-						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage1 + " " + calpontPackage2 + " " + calpontPackage3 + " " + mysqlPackage + " " + mysqldPackage + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
+						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
 
+//cout << cmd << endl;
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
 
@@ -3229,8 +3235,9 @@ int main(int argc, char *argv[])
 
 						if ( EEPackageType != "binary" ) {
 							//run remote installer script
-							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage1 + " " + calpontPackage2 + " " + calpontPackage3 + " " + mysqlPackage + " " + mysqldPackage + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
+//cout << cmd << endl;
 							if ( thread_remote_installer ) {
 								thr_data[thread_id].command = cmd;
 
@@ -3568,18 +3575,18 @@ int main(int argc, char *argv[])
 		{
 			if ( oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
 
-				cout << endl << "Run MySQL Upgrade.. ";
+//				cout << endl << "Run MySQL Upgrade.. ";
 				cout.flush();
 
 				//send message to procmon's to run upgrade script
-				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
+//				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
 	
-				if ( status != 0 ) {
-					cout << endl << "InfiniDB Install Failed" << endl << endl;
-					exit(1);
-				}
-				else
-					cout << " DONE" << endl;
+//				if ( status != 0 ) {
+//					cout << endl << "InfiniDB Install Failed" << endl << endl;
+//					exit(1);
+//				}
+//				else
+//					cout << " DONE" << endl;
 			}
 			else
 			{
@@ -4227,12 +4234,6 @@ bool pkgCheck()
 		string cmd = "ls " + HOME + " | grep " + calpontPackage1 + " > /tmp/calpontpkgs";
 		system(cmd.c_str());
 	
-		cmd = "ls " + HOME + " | grep " + mysqlPackage + " > /tmp/mysqlpkgs";
-		system(cmd.c_str());
-	
-		cmd = "ls " + HOME + " | grep " + mysqldPackage + " > /tmp/mysqldpkgs";
-		system(cmd.c_str());
-
 		string pkg = calpontPackage1;
 		string fileName = "/tmp/calpontpkgs";
 		ifstream oldFile (fileName.c_str());
@@ -4242,32 +4243,8 @@ bool pkgCheck()
 			if ( size != 0 ) {
 				oldFile.close();
 				unlink (fileName.c_str());
-	
-				pkg = mysqlPackage;
-				fileName = "/tmp/mysqlpkgs";
-				ifstream oldFile1 (fileName.c_str());
-				if (oldFile1) {
-					oldFile1.seekg(0, std::ios::end);
-					size = oldFile1.tellg();
-					if ( size != 0 ) {
-						oldFile1.close();
-						unlink (fileName.c_str());
-		
-						pkg = mysqldPackage;
-						fileName = "/tmp/mysqldpkgs";
-						ifstream oldFile2 (fileName.c_str());
-						if (oldFile2) {
-							oldFile2.seekg(0, std::ios::end);
-							size = oldFile2.tellg();
-							if ( size != 0 ) {
-								oldFile2.close();
-								unlink (fileName.c_str());
-								// all 3 pkgs found
-								return true;
-							}
-						}
-					}
-				}
+				// pkgs found
+				return true;
 			}
 		}
 	

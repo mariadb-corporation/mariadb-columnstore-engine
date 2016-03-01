@@ -14,24 +14,20 @@ set USERNAME root
 set MODULE [lindex $argv 0]
 set SERVER [lindex $argv 1]
 set PASSWORD [lindex $argv 2]
-set CALPONTRPM1 [lindex $argv 3]
-set CALPONTRPM2 [lindex $argv 4]
-set CALPONTRPM3 [lindex $argv 5]
-set CALPONTMYSQLRPM [lindex $argv 6]
-set CALPONTMYSQLDRPM [lindex $argv 7]
-set INSTALLTYPE [lindex $argv 8]
-set PKGTYPE [lindex $argv 9]
-set NODEPS [lindex $argv 10]
-set MYSQLPW [lindex $argv 11]
-set MYSQLPORT [lindex $argv 12]
-set DEBUG [lindex $argv 13]
+set VERSION [lindex $argv 3]
+set INSTALLTYPE [lindex $argv 4]
+set PKGTYPE [lindex $argv 5]
+set NODEPS [lindex $argv 6]
+set MYSQLPW [lindex $argv 7]
+set MYSQLPORT [lindex $argv 8]
+set DEBUG [lindex $argv 9]
 set INSTALLDIR "/usr/local/Calpont"
-set IDIR [lindex $argv 14]
+set IDIR [lindex $argv 10]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
 set USERNAME "root"
-set UNM [lindex $argv 15]
+set UNM [lindex $argv 11]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
@@ -45,18 +41,23 @@ set BASH "/bin/bash "
 #	set BASH "/bin/bash -x "
 #}
 
+set HOME "$env(HOME)"
+
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
 if { $PKGTYPE == "rpm" } {
-	set PKGERASE "rpm -e --nodeps --allmatches "
-	set PKGINSTALL "rpm -ivh $NODEPS "
-	set PKGUPGRADE "rpm -Uvh --noscripts "
+	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^infinidb')"
+	set PKGERASE1 "rpm -e --nodeps "
+
+	set PKGINSTALL "rpm -ivh $NODEPS --force infinidb*$VERSION*"
+	set PKGUPGRADE "rpm -Uvh --noscripts infinidb*$VERSION*"
 } else {
 	if { $PKGTYPE == "deb" } {
-		set PKGERASE "dpkg -P "
-		set PKGINSTALL "dpkg -i --force-confnew"
-		set PKGUPGRADE "dpkg -i --force-confnew"
+		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^infinidb')"
+		set PKGERASE1 "dpkg -P "
+		set PKGINSTALL "dpkg -i --force-confnew infinidb*$VERSION*"
+		set PKGUPGRADE "dpkg -i --force-confnew infinidb*$VERSION*"
 	} else {
 		send_user "Invalid Package Type of $PKGTYPE"
 		exit 1
@@ -99,7 +100,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	# erase InfiniDB packages
 	#
 	send_user "Erase InfiniDB Packages on Module           "
-	send "ssh $USERNAME@$SERVER '$PKGERASE calpont >/dev/null 2>&1; $PKGERASE calpont-mysql >/dev/null 2>&1; $PKGERASE calpont-mysqld >/dev/null 2>&1; $PKGERASE infinidb-enterprise >/dev/null 2>&1; $PKGERASE infinidb-libs infinidb-platform;$PKGERASE infinidb-storage-engine infinidb-mysql;$PKGERASE dummy'\n"
+	send "ssh $USERNAME@$SERVER '$PKGERASE ;$PKGERASE1 dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
 		expect {
@@ -145,7 +146,7 @@ expect {
 	-re {[$#] } { }
 }
 
-send "scp $CALPONTRPM1 $CALPONTRPM2 $CALPONTMYSQLRPM $CALPONTMYSQLDRPM $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/infinidb*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {
@@ -165,30 +166,6 @@ send_user "\n"
 
 #sleep to make sure it's finished
 sleep 5
-if { $CALPONTRPM3 != "dummy.rpm" } {
-	expect -re {[$#] }
-	send_user "Copy new InfiniDB Enterprise Packages to Module   "
-	send "scp $CALPONTRPM3 $USERNAME@$SERVER:.\n"
-	if { $PASSWORD != "ssh" } {
-		set timeout 30
-		expect {
-			"word: " { send "$PASSWORD\n" }
-			"passphrase" { send "$PASSWORD\n" }
-		}
-	}
-	set timeout 120
-	expect {
-		"100%" 			{ send_user "DONE" }
-		"directory"  		{ send_user "ERROR\n" ; 
-						send_user "\n*** Installation ERROR\n" ; 
-						exit 1 }
-		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	}
-	send_user "\n"
-}
-
-#sleep to make sure it's finished
-sleep 5
 #
 set timeout 30
 expect -re {[$#] }
@@ -197,7 +174,7 @@ if { $INSTALLTYPE == "initial"} {
 	# install package
 	#
 	send_user "Install InfinIDB Packages on Module               "
-	send "ssh $USERNAME@$SERVER '$PKGINSTALL $CALPONTRPM1 $CALPONTRPM2 $CALPONTMYSQLDRPM $CALPONTMYSQLRPM;$PKGERASE dummy'\n"
+	send "ssh $USERNAME@$SERVER '$PKGINSTALL ;$PKGERASE dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
 		expect {
@@ -217,82 +194,7 @@ if { $INSTALLTYPE == "initial"} {
 	}
 	send_user "\n"
 
-	if { $CALPONTRPM3 != "dummy.rpm" } {
-        expect -re {[$#] }
-		send_user "Install InfinIDB Enterprise Packages on Module    "
-		send "ssh $USERNAME@$SERVER '$PKGINSTALL $CALPONTRPM3'\n"
-		if { $PASSWORD != "ssh" } {
-			set timeout 30
-			expect {
-				"word: " { send "$PASSWORD\n" }
-				"passphrase" { send "$PASSWORD\n" }
-			}
-		}
-		set timeout 60
-		expect {
-			"completed" 		  { send_user "DONE" }
-			"Setting up" 		  { send_user "DONE" }
-			"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
-								send_user "\n*** Installation ERROR\n" ; 
-								exit 1 }
-			"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-		}
-		send_user "\n"
-	}
-
 	set timeout 30
-	#expect -re {[$#] }
-} else {
-	#
-	# upgrade package
-	#
-	#expect -re {[$#] }
-	send_user "Upgrade InfinIDB Packages on Module               "
-	send "ssh $USERNAME@$SERVER '$PKGUPGRADE $CALPONTRPM1 $CALPONTRPM2 $CALPONTRPM3 $CALPONTMYSQLDRPM $CALPONTMYSQLRPM;$PKGERASE dummy'\n"
-	if { $PASSWORD != "ssh" } {
-		set timeout 30
-		expect {
-			"word: " { send "$PASSWORD\n" }
-			"passphrase" { send "$PASSWORD\n" }
-		}
-	}
-	set timeout 120
-	expect {
-		"package dummy" 		  { send_user "DONE" }
-		"already installed"   { send_user "INFO: Already Installed\n" ; exit 1 }
-		"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
-									send_user "\n*** Installation ERROR\n" ; 
-										exit 1 }
-		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	}
-	send_user "\n"
-
-	if { $CALPONTRPM3 != "dummy.rpm" } {
-		expect -re {[$#] }
-		send_user "Upgrade InfinIDB Enterprise Packages on Module    "
-		send "ssh $USERNAME@$SERVER '$PKGUPGRADE $CALPONTRPM3'\n"
-		if { $PASSWORD != "ssh" } {
-			set timeout 30
-			expect {
-				"word: " { send "$PASSWORD\n" }
-				"passphrase" { send "$PASSWORD\n" }
-			}
-		}
-		set timeout 30
-		expect {
-			"completed" 		  { send_user "DONE" }
-			"Setting up" 		  { send_user "DONE" }
-			"already installed"   { send_user "INFO: Already Installed\n" ; exit 1 }
-			"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
-										send_user "\n*** Installation ERROR\n" ; 
-											exit 1 }
-			"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-		}
-		send_user "\n"
-	}
-
-	set timeout 30
-	expect -re {[$#] }
 }
 #sleep to make sure it's finished
 sleep 5

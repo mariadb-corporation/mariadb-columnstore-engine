@@ -915,8 +915,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					if ( actIndicator == oam::REMOVE ) {
 						log.writeLog(__LINE__,  "STOPALL: uninstall Calpont RPMs", LOG_TYPE_DEBUG);
 						if ( config.moduleType() == "um" ) {
-							system("rpm -e infinidb-libs infinidb-platform infinidb-enterprise infinidb-storage-engine infinidb-mysql --nodeps");
-							system("dpkg -P infinidb-libs infinidb-platform infinidb-enterprise infinidb-storage-engine infinidb-mysql");
+							system("rpm -e --nodeps $(rpm -qa | grep '^infinidb')");
+							system("dpkg -P $(dpkg --get-selections | grep '^infinidb')");
 						}
 						else	// pm
 						{
@@ -930,8 +930,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 							system(cmd.c_str());
 							sleep(1);
 	
-							system("rpm -e infinidb-libs infinidb-platform infinidb-enterprise infinidb-storage-engine infinidb-mysql --nodeps");
-							system("dpkg -P infinidb-libs infinidb-platform infinidb-enterprise infinidb-storage-engine infinidb-mysql");
+							system("rpm -e --nodeps $(rpm -qa | grep '^infinidb')");
+							system("dpkg -P $(dpkg --get-selections | grep '^infinidb')");
 						}
 						// should get here is packages get removed correctly
 						string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
@@ -1380,24 +1380,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				}
 			}
 
-			// remove mysql rpms if being reconfigured as a pm
-			if ( reconfigureModuleName.find("pm") != string::npos &&
-				config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
-				try {
-					oam.actionMysqlCalpont(MYSQL_STOP);
-				}
-				catch(...)
-				{}
-				system("rpm -e infinidb-storage-engine infinidb-mysql");
-				system("dpkg -P infinidb-storage-engine infinidb-mysql");
-				log.writeLog(__LINE__, "RECONFIGURE: removed mysql rpms");
-			}
-
 			// install mysql rpms if being reconfigured as a um
 			if ( reconfigureModuleName.find("um") != string::npos ) {
-				system("rpm -ivh /root/infinidb-storage-engine-*rpm /root/infinidb-mysql-*rpm > /tmp/rpminstall");
-				system("dpgk -i /root/infinidb-storage-engine-*deb /root/infinidb-mysql-*deb >> /tmp/rpminstall");
-
 				string cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install >> /tmp/rpminstall";
 				system(cmd.c_str());
 				cmd = startup::StartUp::installDir() + "/bin/post-mysql-install >> /tmp/rpminstall";
@@ -1429,7 +1413,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 						log.writeLog(__LINE__, "RECONFIGURE: mysqld failed to start", LOG_TYPE_ERROR);
 					}
 					else
-						log.writeLog(__LINE__, "RECONFIGURE: install mysql rpms and started mysqld");
+						log.writeLog(__LINE__, "RECONFIGURE: install started mysqld");
 				}
 			}
 
@@ -3261,6 +3245,7 @@ int ProcessMonitor::getConfigLog()
 				break;
 			}
 			string logFile = oam::LogFile[i];
+			logFile = logFile.substr(14, 80);
 
 			string::size_type pos = buf.find(logFile,0);
 			if (pos != string::npos) {
@@ -4178,6 +4163,8 @@ int ProcessMonitor::changeCrontab()
 	// restart the service to make sure it running
 	system("/etc/init.d/crond start > /dev/null 2>&1");
 	system("/etc/init.d/crond reload > /dev/null 2>&1");
+	system("systemctl start crond.service > /dev/null 2>&1");
+	system("systemctl reload crond.service > /dev/null 2>&1");
 
 	return API_SUCCESS;
 }
@@ -4274,6 +4261,8 @@ int ProcessMonitor::changeTransactionLog()
 	// restart the service to make sure it running
 	system("/etc/init.d/crond start > /dev/null 2>&1");
 	system("/etc/init.d/crond reload > /dev/null 2>&1");
+	system("systemctl start crond.service > /dev/null 2>&1");
+	system("systemctl reload crond.service > /dev/null 2>&1");
 
 	return API_SUCCESS;
 }
@@ -4311,6 +4300,9 @@ void ProcessMonitor::setTransactionLog(bool action)
 	log.writeLog(__LINE__, "Start and reload crond", LOG_TYPE_DEBUG);
 	system("/etc/init.d/crond start > /dev/null 2>&1");
 	system("/etc/init.d/crond reload > /dev/null 2>&1");
+	system("systemctl start crond.service > /dev/null 2>&1");
+	system("systemctl reload crond.service > /dev/null 2>&1");
+
 }
 
 /******************************************************************************************

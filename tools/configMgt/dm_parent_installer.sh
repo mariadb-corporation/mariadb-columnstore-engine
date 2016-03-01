@@ -121,7 +121,7 @@ send_user "\n"
 # install InfiniDB package
 #
 send_user "Install New InfiniDB Packages                 "
-send "ssh $USERNAME@$SERVER ' rpm -iv --nodeps $CALPONTPACKAGE1 $CALPONTPACKAGE2 $CALPONTPACKAGE3 $MYSQLPACKAGE $MYSQLDPACKAGE'\n"
+send "ssh $USERNAME@$SERVER ' rpm -ivh --nodeps infinidb-mariadb*'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
