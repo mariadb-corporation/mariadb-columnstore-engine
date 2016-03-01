@@ -211,6 +211,9 @@ void debug_walk(const Item *item, void *arg)
 		Item_field* ifp = (Item_field*)item;
 		cout << "FIELD_ITEM: " << (ifp->db_name ? ifp->db_name : "") << '.' << bestTableName(ifp) <<
 			'.' << ifp->field_name << endl;
+		if (ifp->field && ifp->field->table && ifp->field->table->reginfo.join_tab &&
+		    ifp->field->table->reginfo.join_tab->sj_mat_exec)
+			cout  << ifp->field->table->reginfo.join_tab->sj_mat_exec->mat_table_index << endl;
 		break;
 	}
 	case Item::INT_ITEM:
@@ -297,6 +300,19 @@ void debug_walk(const Item *item, void *arg)
 		case Item_func::ISNOTNULLTEST_FUNC:
 			cout << "isnotnulltest_func" << endl;
 			break;
+			break;
+		case Item_func::MULT_EQUAL_FUNC:
+		{
+			cout << "mult_equal_func:" << endl;
+			Item_equal* item_eq = (Item_equal*)ifp;
+			List_iterator_fast<Item_field> it(item_eq->fields);
+			Item *item_field;
+			while ((item_field= it++))
+			{
+				cout << item_field->full_name() << endl;
+			}
+			break;
+		}
 		default:
 			cout << "type=" << ifp->functype() << endl;
 			break;
@@ -504,13 +520,16 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 	// check non-collapsed outer join
 	// this set contains all processed embedded joins. duplicate joins are ignored
 	set<TABLE_LIST*> embeddingSet;
-	TABLE_LIST* table_ptr = select_lex.get_table_list();
+//	TABLE_LIST* table_ptr = select_lex.get_table_list();
+	List_iterator_fast<TABLE_LIST> ti(select_lex.top_join_list);
+	TABLE_LIST *table_ptr;
 	gp_walk_info gwi_outer = gwi;
 	gwi_outer.subQuery = NULL;
 	gwi_outer.hasSubSelect = false;
 	vector <Item_field*> tmpVec;
 
-	for (; table_ptr; table_ptr= table_ptr->next_local)
+//	for (; table_ptr; table_ptr= table_ptr->next_local)
+	while ((table_ptr= ti++))
 	{
 		gwi_outer.innerTables.clear();
 		clearStacks(gwi_outer);
@@ -520,8 +539,8 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 		// View is already processed in view::transform
 		// @bug5319. view is sometimes treated as derived table and
 		// fromSub::transform does not build outer join filters.
-		if (!table_ptr->derived && table_ptr->view)
-			continue;
+		//if (!table_ptr->derived && table_ptr->view)
+		//	continue;
 
 		CalpontSystemCatalog:: TableAliasName tan = make_aliasview(
 			(table_ptr->db ? table_ptr->db : ""),
@@ -1048,7 +1067,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 			oss << "Attempt to negate a non-constant column";
 			gwip->parseErrorText = oss.str();
 			gwip->fatalParseError = true;
-			return;
+			return false;
 		}
 		string cval = ccp->constval();
 		string newval;
@@ -6229,10 +6248,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			}
 		}
 
-		// check limit clause
-		if (gwi.thd->variables.select_limit != (uint64_t)-1)
-			gwi.thd->infinidb_vtable.has_limit = true;
-
 		if (unionSel || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
 		{
 			if (select_lex.master_unit()->global_parameters()->explicit_limit)
@@ -6254,7 +6269,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 					limit << csep->limitStart() << ", ";
 					limit << csep->limitNum();
 					select_query += limit.str();
-					gwi.thd->infinidb_vtable.has_limit = true;
 				}
 			}
 		}
@@ -6327,7 +6341,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				ostringstream limit;
 				limit << " limit " << limitOffset << ", " << limitNum;
 				select_query += limit.str();
-				gwi.thd->infinidb_vtable.has_limit = true;
 			}
 		}
 
