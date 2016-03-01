@@ -109,9 +109,11 @@ export PATH=$path
 export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
-# get x509 Certification and Private Key and region
-x509Cert=`$prefix/Calpont/bin/getConfig Installation AmazonX509Certificate`
-x509PriKey=`$prefix/Calpont/bin/getConfig Installation AmazonX509PrivateKey`
+# get Keys and region
+AmazonAccessKey=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+AmazonSecretKey=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+AmazonAccessKey=`cat $AmazonAccessKeyFile`
+AmazonSecretKey=`cat $AmazonSecretKeyFile`
 Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
 subnet=`$prefix/Calpont/bin/getConfig Installation AmazonSubNetID`
 
@@ -132,7 +134,7 @@ describeInstanceFile="/tmp/describeInstance.txt"
 touch $describeInstanceFile
 
 describeInstance() {
-	ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region > $describeInstanceFile 2>&1
+	ec2-describe-instances -O $AmazonAccessKey -W $xAmazonSecretKey --region $Region > $describeInstanceFile 2>&1
 }
 
 getInstance() {
@@ -145,8 +147,6 @@ getInstance() {
 	localIP=`ifconfig eth0 | grep "inet addr:" | awk '{print substr($2,6,20)}'`
 
 	#get local Instance ID
-#	instance=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
-
 	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 	if [ "$instance" == "" ]; then
 		describeInstance
@@ -167,8 +167,6 @@ getInstancePrivate() {
 	localIP=`ifconfig eth0 | grep "inet addr:" | awk '{print substr($2,6,20)}'`
 
 	#get local Instance ID
-#	instance=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
-
 	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 	if [ "$instance" == "" ]; then
 		describeInstance
@@ -188,8 +186,6 @@ getZone() {
 		getInstancePrivate >/dev/null 2>&1
 		#get zone
 		if [ "$subnet" == "unassigned" ]; then
-#			zone=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
-
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 			if [ "$zone" == "" ]; then
 				describeInstance
@@ -197,8 +193,6 @@ getZone() {
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 
 		else
-#			zone=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
-
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
 			if [ "$zone" == "" ]; then
 				describeInstance
@@ -214,8 +208,6 @@ getZone() {
 
 getPrivateIP() {
 	#get instance info
-#	ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region $instanceName > /tmp/instanceInfo_$instanceName 2>&1
-
 	grep -B1 -A4 -m 1 $instanceName $describeInstanceFile > /tmp/instanceInfo_$instanceName 2>&1
 	if [ `cat /tmp/instanceInfo_$instanceName | wc -c` -eq 0 ]; then
 		describeInstance
@@ -265,8 +257,6 @@ getType() {
 	getInstancePrivate >/dev/null 2>&1
 	#get Type
 	if [ "$subnet" == "unassigned" ]; then
-#		instanceType=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $9}'`
-
 		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $9}'`
 		if [ "$instanceType" == "" ]; then
 			describeInstance
@@ -274,8 +264,6 @@ getType() {
 		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $9}'`
 
 	else
-#		instanceType=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $8}'`
-
 		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $8}'`
 		if [ "$instanceType" == "" ]; then
 			describeInstance
@@ -293,8 +281,6 @@ getKey() {
 	getInstancePrivate >/dev/null 2>&1
 	#get Key
 	if [ "$subnet" == "unassigned" ]; then
-#		key=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
-
 		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
 		if [ "$key" == "" ]; then
 			describeInstance
@@ -302,8 +288,6 @@ getKey() {
 		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
 
 	else
-#		key=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
-
 		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
 		if [ "$key" == "" ]; then
 			describeInstance
@@ -320,8 +304,6 @@ getAMI() {
 	#get local Instance ID
 	getInstancePrivate >/dev/null 2>&1
 	#get AMI
-#	ami=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
-
 	ami=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
 	if [ "$ami" == "" ]; then
 		describeInstance
@@ -337,8 +319,6 @@ getGroup() {
 	getInstancePrivate >/dev/null 2>&1
 	#get group 
 	if [ "$subnet" == "unassigned" ]; then
-#		group=`ec2-describe-instances -C $x509Cert -K $x509PriKey $instance --region $Region |  grep -m 1 RESERVATION | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $4}'`
-
 		group=`grep -B1 -A4 -m 1 $instance $describeInstanceFile |  grep -m 1 RESERVATION | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $4}'`
 		if [ "$group" == "" ]; then
 			describeInstance
@@ -348,8 +328,6 @@ getGroup() {
 			group=`grep -B1 -A4 -m 1 $instance $describeInstanceFile |  grep -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $22}'`
 		fi
 	else
-#		group=`ec2-describe-instances -C $x509Cert -K $x509PriKey $instance --region $Region |  grep -m 1 GROUP | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
-
 		group=`grep -B1 -A4 -m 1 $instance $describeInstanceFile |  grep -m 1 GROUP | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 		if [ "$group" == "" ]; then
 			describeInstance
@@ -366,8 +344,6 @@ getProfile() {
 	getInstancePrivate >/dev/null 2>&1
 	#get Type
 	if [ "$subnet" == "unassigned" ]; then
-#		instanceProfile=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $23}'`
-
 		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $23}'`
 		if [ "$instanceProfile" == "" ]; then
 			describeInstance
@@ -375,8 +351,6 @@ getProfile() {
 		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $23}'`
 
 	else
-#		instanceProfile=`ec2-describe-instances -C $x509Cert -K $x509PriKey --region $Region | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $21}'`
-
 		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $21}'`
 		if [ "$instanceProfile" == "" ]; then
 			describeInstance

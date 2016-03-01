@@ -106,12 +106,12 @@ bool createDbrootDirs(string DBRootStorageType);
 bool pkgCheck();
 bool storageSetup(string cloud);
 void setSystemName();
-bool checkInstanceRunning(string instanceName, string x509Cert, string x509PriKey);
-string getInstanceIP(string instanceName, string x509Cert, string x509PriKey);
+bool checkInstanceRunning(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
+string getInstanceIP(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
 bool attachVolume(string instanceName, string volumeName, string deviceName, string dbrootPath);
 bool singleServerDBrootSetup();
 bool copyFstab(string moduleName);
-bool copyX509files();
+bool copyKeyfiles();
 
 void remoteInstallThread(void *);
 
@@ -145,8 +145,8 @@ bool thread_remote_installer = true;
 string singleServerInstall = "1";
 string reuseConfig ="n";
 string oldFileName;
-string x509Cert;
-string x509PriKey;
+string AmazonAccessKey;
+string AmazonSecretKey;
 string glusterCopies;
 string glusterInstalled = "n";
 string hadoopInstalled = "n";
@@ -981,8 +981,8 @@ int main(int argc, char *argv[])
 			{
 				cout << endl << "For Amazon EC2/VPC Instance installs, these files will need to be installed on" << endl;
 				cout << "on the local instance:" << endl << endl;
-				cout << " 1. X.509 Certificate" << endl;
-				cout << " 2. X.509 Private Key" << endl << endl;
+				cout << " 1. File containing the Amazon Access Key" << endl;
+				cout << " 2. File containing the Amazon Secret Key" << endl << endl;
 	
 				while(true) {
 					string ready = "y";
@@ -1006,8 +1006,8 @@ int main(int argc, char *argv[])
 				}
 	
 				try {
-					x509Cert = sysConfig->getConfig(InstallSection, "AmazonX509Certificate");
-					x509PriKey = sysConfig->getConfig(InstallSection, "AmazonX509PrivateKey");
+					AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
+					AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
 				}
 				catch(...)
 				{}
@@ -1016,13 +1016,13 @@ int main(int argc, char *argv[])
 	
 				while(true)
 				{
-					prompt = "Enter Name and directory of the X.509 Certificate (" + x509Cert + ") > ";
+					prompt = "Enter file name containing the Access Key (" + AmazonAccessKey + ") > ";
 					pcommand = callReadline(prompt.c_str());
 					if (pcommand) {
-						if (strlen(pcommand) > 0) x509Cert = pcommand;
+						if (strlen(pcommand) > 0) AmazonAccessKey = pcommand;
 						callFree(pcommand);
 					}
-					ifstream File (x509Cert.c_str());
+					ifstream File (AmazonAccessKey.c_str());
 					if (!File) {
 						cout << "Error: file not found, please re-enter" << endl;
 						if ( noPrompting )
@@ -1034,13 +1034,13 @@ int main(int argc, char *argv[])
 	
 				while(true)
 				{
-					prompt = "Enter Name and directory of the X.509 Private Key (" + x509PriKey + ") > ";
+					prompt = "Enter file name containing the Secret Key (" + AmazonSecretKey + ") > ";
 					pcommand = callReadline(prompt.c_str());
 					if (pcommand) {
-						if (strlen(pcommand) > 0) x509PriKey = pcommand;
+						if (strlen(pcommand) > 0) AmazonSecretKey = pcommand;
 						callFree(pcommand);
 					}
-					ifstream File (x509PriKey.c_str());
+					ifstream File (AmazonSecretKey.c_str());
 					if (!File)
 					{
 						cout << "Error: file not found, please re-enter" << endl;
@@ -1052,15 +1052,40 @@ int main(int argc, char *argv[])
 				}
 	
 				try {
-					sysConfig->setConfig(InstallSection, "AmazonX509Certificate", x509Cert);
-					sysConfig->setConfig(InstallSection, "AmazonX509PrivateKey", x509PriKey);
+					sysConfig->setConfig(InstallSection, "AmazonAccessKey", AmazonAccessKey);
+					sysConfig->setConfig(InstallSection, "AmazonSecretKey", AmazonSecretKey);
 				}
 				catch(...)
 				{}
 	
-				if( !copyX509files() )
-					cout << "copyX509files error" << endl;
+				if( !copyKeyfiles() )
+					cout << "copyKeyfiles error" << endl;
+
+				try {
+					AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
+				}
+				catch(...)
+				{}
 	
+				cout << endl;
+	
+				while(true)
+				{
+					prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
+					pcommand = callReadline(prompt.c_str());
+					if (pcommand) {
+						if (strlen(pcommand) > 0) AmazonRegion = pcommand;
+						callFree(pcommand);
+					}
+						break;
+				}
+		
+				try {
+					sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
+				}
+				catch(...)
+				{}
+
 				break;
 			}
 		}
@@ -2551,239 +2576,6 @@ int main(int argc, char *argv[])
 
 	//check snmp Apps disable option
 	snmpAppCheck();
-
-	//
-	// Configure External Devices
-	//
-	SystemExtDeviceConfig systemextdeviceconfig;
-
-	try{
-		oam.getSystemConfig(systemextdeviceconfig);
-	}
-	catch(...)
-	{
-		cout << "ERROR: Problem reading the InfiniDB System Configuration file" << endl;
-		exit(1);
-	}
-
-	cout << endl << "===== Setup the External Device Configuration =====" << endl << endl;
-
-	cout << "External Devices are devices like a storage array or a Ethernet Switch that can" << endl;
-	cout << "be setup to be monitored by InfiniDB with a ping test. If device fails, InfiniDB" << endl;
-	cout << "will report a failure alarm." << endl << endl;
-
-	if ( systemextdeviceconfig.Count > 0 ) {
-
-		cout << "Current List of External Devices being monitored" << endl << endl;
-	
-		cout << "Device Name    IP Address" << endl;
-		cout << "--------------------------    ----------------" << endl;
-
-		for ( unsigned int i = 0 ; i < systemextdeviceconfig.Count ; i++ )
-		{
-			cout.setf(ios::left);
-			cout.width(30);
-			cout << systemextdeviceconfig.extdeviceconfig[i].Name;
-			cout << systemextdeviceconfig.extdeviceconfig[i].IPAddr << endl;
-//			cout << "Device Name: " << (*pt1).Name << "     IP Address: " << (*pt1).IPAddr << endl;
-		}
-	
-		cout << endl;
-	
-		string modify = "n";
-		while(true) {
-			prompt = "Would you like to modify current list? [y,n] (n) > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) modify = pcommand;
-				callFree(pcommand);
-			}
-			if ( modify == "y" || modify == "n" )
-				break;
-			cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-			if ( noPrompting )
-				exit(1);
-		}
-	
-		if ( modify == "y" ) {
-	
-			for ( unsigned int i = 0 ; i < systemextdeviceconfig.Count ; i++ )
-			{
-				string name = systemextdeviceconfig.extdeviceconfig[i].Name;
-				modify = "n";
-				while(true) {
-					prompt = "Would you like to modify or delete '" + name + "'? [m,d,n] (n) > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand)
-					{
-						if (strlen(pcommand) > 0) modify = pcommand;
-						callFree(pcommand);
-					}
-					if ( modify == "m" || modify == "d" || modify == "n")
-						break;
-					cout << "Invalid Entry, please enter 'm' for modify, 'd' for delete or 'n' for no" << endl;
-					if ( noPrompting )
-						exit(1);
-				}
-				
-				if ( modify == "d" ) {
-					// delete device
-					ExtDeviceConfig extdeviceconfig;
-	
-					extdeviceconfig.Name = oam::UnassignedName;
-					extdeviceconfig.IPAddr = oam::UnassignedIpAddr;
-					extdeviceconfig.DisableState = oam::ENABLEDSTATE;
-	
-					try{
-						oam.setSystemConfig(name, extdeviceconfig);
-					}
-					catch(...)
-					{
-						cout << "ERROR: Problem updating the InfiniDB System Configuration file" << endl;
-						exit(1);
-					}
-					cout << "External Device '" + name + "' deleted" << endl << endl;
-				}
-				else
-				{
-					if ( modify == "m" ) {
-						string newName = name;
-						prompt = "Enter Name (" + newName + ") > ";
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand)
-						{
-							if (strlen(pcommand) > 0) newName = pcommand;
-							callFree(pcommand);
-						}
-	
-						string newIPAddr = systemextdeviceconfig.extdeviceconfig[i].IPAddr;
-						while (true)
-						{
-							prompt = "Enter IP Address of (" + newIPAddr + ") > ";
-							pcommand = callReadline(prompt.c_str());
-							if (pcommand)
-							{
-								if (strlen(pcommand) > 0) newIPAddr = pcommand;
-								callFree(pcommand);
-							}
-	
-							if (oam.isValidIP(newIPAddr))
-								break;
-							else
-							{
-								cout << "Invalid IP Address format, xxx.xxx.xxx.xxx, please re-enter" << endl;
-								if ( noPrompting )
-									exit(1);
-							}
-						}
-	
-						ExtDeviceConfig extdeviceconfig;
-		
-						extdeviceconfig.Name = newName;
-						extdeviceconfig.IPAddr = newIPAddr;
-						extdeviceconfig.DisableState = oam::ENABLEDSTATE;
-		
-						try{
-							oam.setSystemConfig(name, extdeviceconfig);
-						}
-						catch(...)
-						{
-							cout << "ERROR: Problem updating the InfiniDB System Configuration file" << endl;
-							exit(1);
-						}
-						cout << "External Device '" + name + "' modified" << endl << endl;
-					}
-				}
-			}
-		}
-	}
-
-	while(true) {
-		string add = "n";
-		while(true) {
-			prompt = "Would you like to add an External Device? [y,n] (n) > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) add = pcommand;
-				callFree(pcommand);
-			}
-			if ( add == "y" || add == "n" )
-				break;
-			cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-			if ( noPrompting )
-				exit(1);
-		}
-	
-		if ( add == "y" ) {
-			cout << endl;
-			string newName = oam::UnassignedName;
-			while(true) {
-				prompt = "Enter Name (" + newName + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand)
-				{
-					if (strlen(pcommand) > 0) newName = pcommand;
-					callFree(pcommand);
-				}
-				
-				if ( newName == oam::UnassignedName ) {
-					cout << "Invalid Entry, please enter valid name or 'abort'" << endl;
-					if ( noPrompting )
-						exit(1);
-				}
-				else
-					break;
-			}
-
-			if ( newName == "abort" )
-				continue;
-
-			//get Network IP Address
-			string newIPAddr = oam::UnassignedIpAddr;
-			string IPAddress = oam.getIPAddress(newName);
-			if ( !IPAddress.empty() )
-				newIPAddr = IPAddress;
-
-			while (true)
-			{
-				prompt = "Enter IP Address of (" + newIPAddr + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand)
-				{
-					if (strlen(pcommand) > 0) newIPAddr = pcommand;
-					callFree(pcommand);
-				}
-		
-				if (oam.isValidIP(newIPAddr))
-					break;
-				else
-					cout << "Invalid IP Address format, xxx.xxx.xxx.xxx, please re-enter" << endl;
-				if ( noPrompting )
-					exit(1);
-				newIPAddr = oam::UnassignedIpAddr;
-			}
-		
-			ExtDeviceConfig extdeviceconfig;
-		
-			extdeviceconfig.Name = newName;
-			extdeviceconfig.IPAddr = newIPAddr;
-			extdeviceconfig.DisableState = oam::ENABLEDSTATE;
-		
-			try{
-				oam.setSystemConfig(newName, extdeviceconfig);
-			}
-			catch(...)
-			{
-				cout << "ERROR: Problem updating the InfiniDB System Configuration file" << endl;
-				exit(1);
-			}
-			cout << endl;
-		}
-		else
-			break;
-	}
 
 	//setup local OS Files
 	if( !setOSFiles(parentOAMModuleName, IserverTypeInstall) ) {
@@ -5031,12 +4823,12 @@ bool copyFstab(string moduleName)
 /*
  * Copy x.509 file
  */
-bool copyX509files()
+bool copyKeyfiles()
 {
-	string cmd = "/bin/cp -f " + x509Cert + " " + installDir + "/local/etc/. > /dev/null 2>&1";
+	string cmd = "/bin/cp -f " + AmazonAccessKey + " " + installDir + "/local/etc/. > /dev/null 2>&1";
 	system(cmd.c_str());
 
-	cmd = "/bin/cp -f " + x509PriKey + " " + installDir + "/local/etc/. > /dev/null 2>&1";
+	cmd = "/bin/cp -f " + AmazonSecretKey + " " + installDir + "/local/etc/. > /dev/null 2>&1";
 	system(cmd.c_str());
 
 	return true;

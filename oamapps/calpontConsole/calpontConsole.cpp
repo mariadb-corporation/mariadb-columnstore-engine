@@ -4103,203 +4103,23 @@ int processCommand(string* arguments)
         }
         break;
 
-       case 39: // addExternalDevice
+       case 39:
 		{
-            ExtDeviceConfig extdeviceconfig;
-
-            if (arguments[2] == "")
-            {
-                // need 2 arguments
-                cout << endl << "**** addExternalDevice Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                break;
-			}
-
-			// check if ext device exist
-			try
-			{
-				oam.getSystemConfig(arguments[1], extdeviceconfig);
-				cout << endl << "**** addExternalDevice Failed : Device already configured" << endl;
-				break;
-			}
-			catch (...)
-			{
-			}
-
-			extdeviceconfig.Name = arguments[1];
-			extdeviceconfig.IPAddr = arguments[2];
-			extdeviceconfig.DisableState = oam::ENABLEDSTATE;
-
-			try
-			{
-				oam.setSystemConfig(arguments[1], extdeviceconfig);
-				cout << endl << "   Successfully Added: " << arguments[1] << endl << endl;
-			}
-			catch (exception& e)
-			{
-				cout << endl << "**** addExternalDevice Failed =  " << e.what() << endl;
-				break;
-			}
-			catch (...)
-			{
-				cout << endl << "**** addExternalDevice Failed" << endl;
-				break;
-			}
 		}
 		break;
 
-        case 40: // getexternaldeviceconfig
+        case 40: 
         {
-            SystemExtDeviceConfig systemextdeviceconfig;
-            ExtDeviceConfig extdeviceconfig;
-            systemextdeviceconfig.extdeviceconfig.clear();
-            string returnValue;
-            string Argument;
-
-            if (arguments[1] == "all" || arguments[1] == "")
-            {
-
-                // get and all display Ext Devices Name config parameters
-
-                try
-                {
-                    oam.getSystemConfig(systemextdeviceconfig);
-
-                    cout << endl << "External Device Configuration" << endl << endl;
-
-					for ( unsigned int i = 0 ; i < systemextdeviceconfig.Count ; i++ )
-					{
-						cout << "Name = ";
-						cout.setf(ios::left);
-						cout.width(30);
-						cout << systemextdeviceconfig.extdeviceconfig[i].Name;
-						cout << "IPAddr = " << systemextdeviceconfig.extdeviceconfig[i].IPAddr << endl;
-					}
-
-					cout << endl;
-                }
-                catch (exception& e)
-                {
-                    cout << endl << "**** getextdeviceconfig Failed =  " << e.what() << endl;
-                }
-            }
-            else
-            { // get a single ext device name info
-				try
-				{
-					oam.getSystemConfig(arguments[1], extdeviceconfig);
-
-						cout << endl << "Name = ";
-						cout.setf(ios::left);
-						cout.width(30);
-						cout << extdeviceconfig.Name;
-						cout << "IPAddr = " << extdeviceconfig.IPAddr << endl;
-					cout << endl;
-				}
-				catch (...)
-				{
-					cout << endl << "**** getextdeviceconfig Failed, invalid device name" << endl;
-				}
-           }
         }
         break;
 
-        case 41: // setexternaldeviceconfig - parameters: Ext Device name, Parameter name and value
+        case 41: 
         {
-            ExtDeviceConfig extdeviceconfig;
-            string Argument;
-
-			parentOAMModule = getParentOAMModule();
-			if ( localModule != parentOAMModule ) {
-				// exit out since not on Parent OAM Module
-                cout << endl << "**** setexternaldeviceconfig Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
-                break;
-			}
-
-            if (arguments[3] == "")
-            {
-                // need 3 arguments
-                cout << endl << "**** setextdeviceconfig Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                break;
-            }
-			if ( arguments[3] == "=" ) {
-				cout << endl << "**** setextdeviceconfig Failed : Invalid Value of '=', please re-enter" << endl;
-				break;
-			}
-
-			// check if ext device exist
-			try
-			{
-				oam.getSystemConfig(arguments[1], extdeviceconfig);
-			}
-			catch (...)
-			{
-				cout << endl << "**** getextdeviceconfig Failed : Invalid device name " << arguments[1] << endl;
-				break;
-			}
-
-			if ( arguments[2] == "Name" )
-				extdeviceconfig.Name = arguments[3];
-			else
-				if ( arguments[2] == "IPAddr")
-					extdeviceconfig.IPAddr = arguments[3];
-				else {
-					cout << endl << "**** setextdeviceconfig Failed : Invalid Parameter, please re-enter" << endl;
-					break;
-				}
-			try
-			{
-				oam.setSystemConfig(arguments[1], extdeviceconfig);
-                cout << endl << "   Successfully set " << arguments[2] << " = " << arguments[3] << endl << endl;
-			}
-			catch (...)
-			{
-				cout << endl << "**** setextdeviceconfig Failed : Invalid device name " << arguments[1] << endl;
-				break;
-			}
-
          }
         break;
 
-       case 42: // removeExternalDevice
+       case 42: 
 		{
-            ExtDeviceConfig extdeviceconfig;
-
-            if (arguments[1] == "")
-            {
-                // need 1 arguments
-                cout << endl << "**** removeExternalDevice Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                break;
-			}
-
-			// check if ext device exist
-			try
-			{
-				oam.getSystemConfig(arguments[1], extdeviceconfig);
-			}
-			catch (...)
-			{
-				cout << endl << "**** removeExternalDevice Failed : Device not configured" << endl;
-				break;
-			}
-
-			extdeviceconfig.Name = oam::UnassignedName;
-			extdeviceconfig.IPAddr = oam::UnassignedIpAddr;
-
-			try
-			{
-				oam.setSystemConfig(arguments[1], extdeviceconfig);
-				cout << endl << "   Successfully removed: " << arguments[1] << endl << endl;
-			}
-			catch (exception& e)
-			{
-				cout << endl << "**** removeExternalDevice Failed =  " << e.what() << endl;
-				break;
-			}
-			catch (...)
-			{
-				cout << endl << "**** removeExternalDevice Failed" << endl;
-				break;
-			}
 		}
         break;
 

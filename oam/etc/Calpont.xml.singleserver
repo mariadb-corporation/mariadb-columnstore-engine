@@ -439,8 +439,8 @@
 		<Cloud>unassigned</Cloud>
 		<EEPackageType>rpm</EEPackageType>
 		<EnableSNMP>y</EnableSNMP>
-		<AmazonX509Certificate>unassigned</AmazonX509Certificate>
-		<AmazonX509PrivateKey>unassigned</AmazonX509PrivateKey>
+		<AmazonAccessKey>unassigned</AmazonAccessKey>
+		<AmazonSecretKey>unassigned</AmazonSecretKey>
 		<AmazonRegion>us-east-1</AmazonRegion>
 		<AmazonZone>unassigned</AmazonZone>
 		<AmazonSubNetID>unassigned</AmazonSubNetID>

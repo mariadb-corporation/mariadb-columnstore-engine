@@ -49,7 +49,6 @@ echo "Create Replication User $repUser for node $hostipaddr" >>/tmp/master-rep-s
 cat >/tmp/idb_master-rep.sql <<EOD
 CREATE USER '$repUser'@'$hostipaddr' IDENTIFIED BY '$password';
 GRANT REPLICATION SLAVE ON *.* TO '$repUser'@'$hostipaddr';
-GRANT ALL PRIVILEGES ON *.* TO '$repUser'@'$hostipaddr';
 EOD
 
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
@@ -66,7 +65,7 @@ checkForError
 echo "Grant table access for $repUser for node $hostipaddr" >>/tmp/master-rep-status-$hostipaddr.log
 cat >/tmp/idb_master-rep.sql <<EOD
 use mysql
-grant all on infinidb_vtable to '$repUser'@'$hostipaddr' identified by 'Calpont1';
+grant all on *.* to '$repUser'@'$hostipaddr' identified by 'Calpont1';
 grant REPLICATION SLAVE on *.* to '$repUser'@'$hostipaddr' identified by 'Calpont1';
 EOD
 

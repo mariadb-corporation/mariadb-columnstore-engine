@@ -10069,7 +10069,20 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 					if ( moduleType == "pm" && PMwithUM == "n" )
 						continue;
 				}
-		
+
+				//check status, skip if module is offline
+				int opState = oam::ACTIVE;
+				bool degraded;
+				try {
+					oam.getModuleStatus(remoteModuleName, opState, degraded);
+				}
+				catch(...)
+				{
+				}
+
+				if (opState != oam::ACTIVE)
+					continue;
+
 				ByteStream msg1;
 				ByteStream::byte requestID = oam::SLAVEREP;
 				if ( !enable ) {
