@@ -147,6 +147,7 @@ string reuseConfig ="n";
 string oldFileName;
 string AmazonAccessKey;
 string AmazonSecretKey;
+string AmazonRegion;
 string glusterCopies;
 string glusterInstalled = "n";
 string hadoopInstalled = "n";
