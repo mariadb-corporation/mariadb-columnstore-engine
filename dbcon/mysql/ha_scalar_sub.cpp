@@ -288,7 +288,8 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
 	csep->tableList(tblist);
 	csep->derivedTableList(derivedTbList);
 
-	if (fSub->is_correlated)
+//	if (fSub->is_correlated)
+	if (fSub->unit->first_select()->master_unit()->uncacheable)
 	{
 		SelectFilter *subFilter = new SelectFilter();
 		subFilter->correlated(true);

@@ -427,8 +427,8 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 	ac->adjustResultType();
 
 	ac->expressionId(ci->expressionId++);
-	if (item->name)
-		ac->alias(item->name);
+	if (item->full_name())
+		ac->alias(item->full_name());
 	
 	// put ac on windowFuncList
 	gwi.windowFuncList.push_back(ac);

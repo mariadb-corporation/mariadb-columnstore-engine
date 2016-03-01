@@ -656,7 +656,6 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 		ti.c = 0;
 		ti.moreRows = false;
 		rc = HA_ERR_END_OF_FILE;
-		current_thd->infinidb_vtable.has_limit = true;
 		ci->rc = rc;
 	}
 	else
@@ -773,8 +772,10 @@ uint32_t doUpdateDelete(THD *thd)
 	ci->stats.reset();
 	ci->stats.setStartTime();
 	ci->stats.fUser = thd->main_security_ctx.user;
-	if (thd->main_security_ctx.host)
-		ci->stats.fHost = thd->main_security_ctx.host;
+//	if (thd->main_security_ctx.host)
+//		ci->stats.fHost = thd->main_security_ctx.host;
+	if (thd->main_security_ctx.get_host())
+		ci->stats.fHost = thd->main_security_ctx.get_host()->c_ptr();
 	else if (thd->main_security_ctx.host_or_ip)
 		ci->stats.fHost = thd->main_security_ctx.host_or_ip;
 	else
@@ -828,7 +829,8 @@ uint32_t doUpdateDelete(THD *thd)
 	}
 
 	// @bug 1127. Re-construct update stmt using lex instead of using the original query.
-	string dmlStmt="";
+//	string dmlStmt="";
+	string dmlStmt=string(idb_mysql_query_str(thd));
 	string schemaName;
 	string tableName("");
 	string aliasName("");
@@ -844,27 +846,27 @@ uint32_t doUpdateDelete(THD *thd)
 	{
 		ColumnAssignment* columnAssignmentPtr;
 		Item_field *item;
-		TABLE_LIST* table_ptr = thd->lex->select_lex.get_table_list();
+//		TABLE_LIST* table_ptr = thd->lex->select_lex.get_table_list();
         List_iterator_fast<Item> field_it(thd->lex->select_lex.item_list);
         List_iterator_fast<Item> value_it(thd->lex->value_list);
-        dmlStmt += "update ";
+//      dmlStmt += "update ";
         updateCP->queryType(CalpontSelectExecutionPlan::UPDATE);
         ci->stats.fQueryType = updateCP->queryType();
         uint32_t cnt = 0;
 
-        for (; table_ptr; table_ptr= table_ptr->next_local)
-        {
-            dmlStmt += string(table_ptr->table_name);
-            if (table_ptr->next_local)
-                dmlStmt += ", ";
-        }
+//        for (; table_ptr; table_ptr= table_ptr->next_local)
+//        {
+//            dmlStmt += string(table_ptr->table_name);
+//            if (table_ptr->next_local)
+//                dmlStmt += ", ";
+//        }
 
-		dmlStmt += " set ";
+//		dmlStmt += " set ";
 
         while ((item= (Item_field *) field_it++))
         {
             cnt++;
-            dmlStmt += string(item->name) + "=";
+//            dmlStmt += string(item->name) + "=";
 
             string tmpTableName = bestTableName(item);
 
@@ -913,7 +915,7 @@ uint32_t doUpdateDelete(THD *thd)
                 //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
                 String val, *str;
                 str = value->val_str(&val);
-                dmlStmt += "'" + string(str->c_ptr()) + "'";
+//                dmlStmt += "'" + string(str->c_ptr()) + "'";
                 columnAssignmentPtr->fScalarExpression =  string(str->c_ptr()) ;
                 columnAssignmentPtr->fFromCol = false;
             }
@@ -921,7 +923,7 @@ uint32_t doUpdateDelete(THD *thd)
             {
                 String val, *str;
                 str = value->val_str(&val);
-                dmlStmt += "'" + string(str->c_ptr()) + "'";
+//                dmlStmt += "'" + string(str->c_ptr()) + "'";
                 columnAssignmentPtr->fScalarExpression =  string(str->c_ptr()) ;
                 columnAssignmentPtr->fFromCol = false;
             }
@@ -995,7 +997,7 @@ uint32_t doUpdateDelete(THD *thd)
                 {
                     oss << value->val_int();
                 }
-                dmlStmt += oss.str();
+//                dmlStmt += oss.str();
                 columnAssignmentPtr->fScalarExpression = oss.str();
                 columnAssignmentPtr->fFromCol = false;
             }
@@ -1020,21 +1022,21 @@ uint32_t doUpdateDelete(THD *thd)
             }
             else if ( value->type() ==  Item::NULL_ITEM )
             {
-                dmlStmt += "NULL";
+//                dmlStmt += "NULL";
                 columnAssignmentPtr->fScalarExpression = "NULL";
                 columnAssignmentPtr->fFromCol = false;
             }
             else if ( value->type() == Item::SUBSELECT_ITEM )
             {
-                isFromCol = true;
-                columnAssignmentPtr->fFromCol = true;
-                Item_field* setIt = reinterpret_cast<Item_field*> (value);
-                string sectableName = string(setIt->table_name);
-                string secschemaName = string(setIt->db_name);
-                if ( (strcasecmp(tableName.c_str(), sectableName.c_str()) != 0) || (strcasecmp(schemaName.c_str(), secschemaName.c_str()) != 0))
-                {
+//                isFromCol = true;
+//                columnAssignmentPtr->fFromCol = true;
+//                Item_field* setIt = reinterpret_cast<Item_field*> (value);
+//                string sectableName = string(setIt->table_name);
+//                string secschemaName = string(setIt->db_name);
+//                if ( (strcasecmp(tableName.c_str(), sectableName.c_str()) != 0) || (strcasecmp(schemaName.c_str(), secschemaName.c_str()) != 0))
+//                {
                     isFromSameTable = false;
-                }
+//                }
             }
             //@Bug 4449 handle default value
             else if (value->type() == Item::DEFAULT_VALUE_ITEM)
@@ -1043,7 +1045,7 @@ uint32_t doUpdateDelete(THD *thd)
 
                 if (!tmp->field_name) //null
                 {
-                    dmlStmt += "NULL";
+//                    dmlStmt += "NULL";
                     columnAssignmentPtr->fScalarExpression = "NULL";
                     columnAssignmentPtr->fFromCol = false;
                 }
@@ -1051,7 +1053,7 @@ uint32_t doUpdateDelete(THD *thd)
                 {
                     String val, *str;
                     str = value->val_str(&val);
-                    dmlStmt += string(str->c_ptr());
+//                    dmlStmt += string(str->c_ptr());
                     columnAssignmentPtr->fScalarExpression = string(str->c_ptr());
                     columnAssignmentPtr->fFromCol = false;
                 }
@@ -1069,26 +1071,26 @@ uint32_t doUpdateDelete(THD *thd)
                 str = value->val_str(&val);
                 if (str)
                 {
-                    dmlStmt += string(str->c_ptr());
+//                    dmlStmt += string(str->c_ptr());
                     columnAssignmentPtr->fScalarExpression = string(str->c_ptr());
                     columnAssignmentPtr->fFromCol = false;
                 }
                 else
                 {
-                    dmlStmt += "NULL";
+//                    dmlStmt += "NULL";
                     columnAssignmentPtr->fScalarExpression = "NULL";
                     columnAssignmentPtr->fFromCol = false;
                 }
             }
 
             colAssignmentListPtr->push_back ( columnAssignmentPtr );
-            if (cnt < thd->lex->select_lex.item_list.elements)
-                dmlStmt += ", ";
+//            if (cnt < thd->lex->select_lex.item_list.elements)
+//                dmlStmt += ", ";
         }
 	}
 	else
 	{
-		dmlStmt = string(idb_mysql_query_str(thd));
+//		dmlStmt = string(idb_mysql_query_str(thd));
 		updateCP->queryType(CalpontSelectExecutionPlan::DELETE);
 		ci->stats.fQueryType = updateCP->queryType();
 	}
@@ -1126,7 +1128,7 @@ uint32_t doUpdateDelete(THD *thd)
 
 	ci->tableOid = roPair.objnum;
 	CalpontDMLPackage* pDMLPackage = 0;
-	dmlStmt += ";";
+//	dmlStmt += ";";
 	IDEBUG( cout << "STMT: " << dmlStmt << " and sessionID " << thd->thread_id <<  endl );
 	VendorDMLStatement dmlStatement(dmlStmt, sessionID);
 	if (( (thd->lex)->sql_command == SQLCOM_UPDATE ) || ( (thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) )
@@ -1314,14 +1316,6 @@ uint32_t doUpdateDelete(THD *thd)
 		}
 		if ( notFirst )
 		{
-			//error out for now. Wait for scalar join.
-/*			Message::Args args;
-			string emsg(IDBErrorInfo::instance()->errorMsg(ERR_COLUMN_EQ_DIFFTABLE_COLUMN, args));
-            thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
-			ci->rc = 1;
-            thd->set_row_count_func(0);
-			return 0;
-*/
 			CalpontSystemCatalog::TableAliasName tn = make_aliastable(schemaName, tableName, aliasName);
 			iter = tbList.begin();
 			tbList.insert( iter, 1, tn );
@@ -1669,7 +1663,7 @@ uint32_t doUpdateDelete(THD *thd)
 	}
 	else
 	{
-		if (dmlRowCount != 0) //Bug 5117. Handling self join.
+//		if (dmlRowCount != 0) //Bug 5117. Handling self join.
 			thd->set_row_count_func(dmlRowCount);
 
 
@@ -2433,6 +2427,12 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
 	idbassert(ci != 0);
 
+	// MySQL sometimes calls rnd_init multiple times, plan should only be
+	// generated and sent once.
+	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE &&
+	    !thd->infinidb_vtable.isNewQuery)
+		return 0;
+
 	if(thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
 	{
 		if (ci->cal_conn_hndl)
@@ -2450,7 +2450,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			sm::sm_cleanup(ci->cal_conn_hndl);
 			ci->cal_conn_hndl = 0;
 		}
-		thd->infinidb_vtable.has_limit = false;
 		return 0;
 	}
 
@@ -2545,8 +2544,10 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			ci->stats.reset(); // reset query stats
 			ci->stats.setStartTime();
 			ci->stats.fUser = thd->main_security_ctx.user;
-			if (thd->main_security_ctx.host)
-				ci->stats.fHost = thd->main_security_ctx.host;
+//			if (thd->main_security_ctx.host)
+//				ci->stats.fHost = thd->main_security_ctx.host;
+			if (thd->main_security_ctx.get_host())
+				ci->stats.fHost = thd->main_security_ctx.get_host()->c_ptr();
 			else if (thd->main_security_ctx.host_or_ip)
 				ci->stats.fHost = thd->main_security_ctx.host_or_ip;
 			else
@@ -2558,7 +2559,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				string msg = string("InfiniDB User Priority - ") + e.what();
 				ci->warningMsg = msg;
 			}
-			thd->infinidb_vtable.has_limit = false;
 
 			// if the previous query has error, re-establish the connection
 			if (ci->queryState != 0)
@@ -2753,6 +2753,11 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 		}
 	}
 
+	// set query state to be in_process. Sometimes mysql calls rnd_init multiple
+	// times, this makes sure plan only being generated and sent once. It will be
+	// reset when query finishes in sm::end_query
+	thd->infinidb_vtable.isNewQuery = false;
+
 	// common path for both vtable select phase and table mode -- open scan handle
 	ti = ci->tableMap[table];
 	ti.msTablePtr = table;
@@ -2904,7 +2909,6 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 			sm::sm_cleanup(ci->cal_conn_hndl);
 			ci->cal_conn_hndl = 0;
 		}
-		thd->infinidb_vtable.has_limit = false;
 		return 0;
 	}
 
@@ -2916,13 +2920,6 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 
 	if (!ti.tpl_ctx || !ti.tpl_scan_ctx)
 	{
-		// @bug 2135.  Changed wording of error message below. If error already
-		// set, do not reset.
-		if (!thd->get_stmt_da()->is_error())
-		{
-			string emsg = "Cannot open table handle for " + string(table->s->table_name.str) + ".";
-			setError(thd, ER_INTERNAL_ERROR, emsg);
-		}
 		CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
 		return ER_INTERNAL_ERROR;
 	}
@@ -3017,7 +3014,6 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 			}
 			sm::sm_cleanup(ci->cal_conn_hndl);
 			ci->cal_conn_hndl = 0;
-			thd->infinidb_vtable.has_limit = false; // prevent connection re-established
 			return rc;
 		}
 	}
@@ -3052,7 +3048,6 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 			// clear querystats because no query stats available for cancelled query
 			ci->queryStats = "";
 		}
-		thd->infinidb_vtable.has_limit = false;
 		return 0;
 	}
 
@@ -3173,13 +3168,6 @@ int ha_calpont_impl_delete_table(const char *name)
 	}
 
 	TABLE_LIST *first_table= (TABLE_LIST*) thd->lex->select_lex.table_list.first;
-
-	// should never get in here
-	if (!first_table)
-	{
-		setError(thd, ER_INTERNAL_ERROR, "Null table pointer detected when dropping table");
-		return 1;
-	}
 
 	if (!ci) return 0;
 
@@ -3420,10 +3408,10 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			ci->mysqld_pid = getpid();
 			
 			//get delimiter
-			if (char(thd->variables.infinidb_import_for_batchinsert_delimiter) != '\7')
+			if (char(thd->variables.infinidb_import_for_batchinsert_delimiter) != '\007')
 				ci->delimiter = char(thd->variables.infinidb_import_for_batchinsert_delimiter);
 			else
-				ci->delimiter = '\7';
+				ci->delimiter = '\007';
 			//get enclosed by
 			if (char(thd->variables.infinidb_import_for_batchinsert_enclosed_by) != 8)
 				ci->enclosed_by = char(thd->variables.infinidb_import_for_batchinsert_enclosed_by);
@@ -3734,8 +3722,10 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 		ci->stats.reset();
 		ci->stats.setStartTime();
 		ci->stats.fUser = thd->main_security_ctx.user;
-		if (thd->main_security_ctx.host)
-			ci->stats.fHost = thd->main_security_ctx.host;
+//		if (thd->main_security_ctx.host)
+//			ci->stats.fHost = thd->main_security_ctx.host;
+		if (thd->main_security_ctx.get_host())
+			ci->stats.fHost = thd->main_security_ctx.get_host()->c_ptr();
 		else if (thd->main_security_ctx.host_or_ip)
 			ci->stats.fHost = thd->main_security_ctx.host_or_ip;
 		else
@@ -4017,6 +4007,12 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 
 int ha_calpont_impl_commit (handlerton *hton, THD *thd, bool all)
 {
+	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE ||
+	    thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE ||
+	    thd->infinidb_vtable.vtable_state == THD::INFINIDB_DROP_VTABLE ||
+	    thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1)
+	    return 0;
+
 	if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
 	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
@@ -4130,14 +4126,6 @@ int ha_calpont_impl_rename_table(const char* from, const char* to)
 	}
 	else if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE )
 		return 0;
-	else
-	{
-#if 0
-        thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Syntax is not supported in InfiniDB.");
-		return 1;
-#endif
-	}
 
 	int rc = ha_calpont_impl_rename_table_(from, to, *ci);
 	return rc;
@@ -4255,7 +4243,6 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 			sm::sm_cleanup(ci->cal_conn_hndl);
 			ci->cal_conn_hndl = 0;
 		}
-		thd->infinidb_vtable.has_limit = false;
 		return 0;
 	}
 
@@ -4307,7 +4294,6 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 				ci->miniStats = ci->cal_conn_hndl->miniStats;
 				ci->queryState = 0;
 				thd->infinidb_vtable.override_largeside_estimate = false;
-				thd->infinidb_vtable.has_limit = false;
 			}
 		}
 		ci->tableMap.erase(table);

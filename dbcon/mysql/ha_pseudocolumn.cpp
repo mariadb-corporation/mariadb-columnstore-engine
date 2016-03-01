@@ -489,7 +489,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
 			cc = new ConstantColumn(localPm);
 		else
 			cc = new ConstantColumn("", ConstantColumn::NULLDATA);
-		cc->alias(ifp->name? ifp->name : "");
+		cc->alias(ifp->full_name() ? ifp->full_name() : "");
 		return cc;
 	}
 
@@ -559,7 +559,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
 		// operation type integer
 		funcexp::Func_idbpartition* idbpartition = new funcexp::Func_idbpartition();
 		fc->operationType(idbpartition->operationType(parms, fc->resultType()));
-		fc->alias(ifp->name? ifp->name : "");
+		fc->alias(ifp->full_name() ? ifp->full_name() : "");
 		return fc;
 	}
 
