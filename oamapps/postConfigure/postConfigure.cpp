@@ -2132,7 +2132,7 @@ int main(int argc, char *argv[])
 						catch(...)
 						{}
 
-						prompt = "Enter Volume Name assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
+						prompt = "Enter Volume ID assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
 						pcommand = callReadline(prompt.c_str());
 						if (pcommand)
 						{
@@ -2140,7 +2140,7 @@ int main(int argc, char *argv[])
 							callFree(pcommand);
 						}
 
-						prompt = "Enter Device Name assigned to module '" + newModuleName + "' (" + deviceName + ") > ";
+						prompt = "Enter Device Name (/dev/sdxx) '" + newModuleName + "' (" + deviceName + ") > ";
 						pcommand = callReadline(prompt.c_str());
 						if (pcommand)
 						{
@@ -2409,7 +2409,7 @@ int main(int argc, char *argv[])
 							catch(...)
 							{}
 
-							prompt = "Enter Volume Name assigned to '" + DBrootID + "' (" + volumeName + ") > ";
+							prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
 							pcommand = callReadline(prompt.c_str());
 							if (pcommand)
 							{
@@ -2425,7 +2425,7 @@ int main(int argc, char *argv[])
 							catch(...)
 							{}
 
-							prompt = "Enter Device Name for volume '" + volumeName + "' (" + deviceName + ") > ";
+							prompt = "Enter Device Name (/dev/sdxx) for volume '" + volumeName + "' (" + deviceName + ") > ";
 							pcommand = callReadline(prompt.c_str());
 							if (pcommand)
 							{
@@ -4580,54 +4580,6 @@ bool storageSetup(string cloud)
 			cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
 			return false;
 		}
-	}
-
-
-	if( DBRootStorageType == "external" && cloud == "amazon" )
-	{	//set AmazonPMFailover
-
-		string AmazonPMFailover = "y";
-
-		try {
-			AmazonPMFailover = sysConfig->getConfig(InstallSection, "AmazonPMFailover");
-		}
-		catch(...)
-		{}
-
-		cout << endl;
-		while(true)
-		{
-			pcommand = callReadline("Do you want to enable Instance failover support? [y,n] (" + AmazonPMFailover + ") > ");
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) AmazonPMFailover = pcommand;
-				callFree(pcommand);
-			}
-
-			if ( AmazonPMFailover == "y" || AmazonPMFailover == "n" ) {
-				cout << endl;
-				break;
-			}
-			else
-				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-			if ( noPrompting )
-				exit(1);
-		}
-
-		try {
-			sysConfig->setConfig(InstallSection, "AmazonPMFailover", AmazonPMFailover);
-		}
-		catch(...)
-		{}
-	}
-
-	if( DBRootStorageType == "internal" && cloud == "amazon" )
-	{	//set AmazonPMFailover
-		try {
-			sysConfig->setConfig(InstallSection, "AmazonPMFailover", "n");
-		}
-		catch(...)
-		{}
 	}
 
 	if ( !writeConfig(sysConfig) ) {

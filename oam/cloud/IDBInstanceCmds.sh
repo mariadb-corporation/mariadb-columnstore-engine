@@ -134,7 +134,7 @@ describeInstanceFile="/tmp/describeInstance.txt"
 touch $describeInstanceFile
 
 describeInstance() {
-	ec2-describe-instances -O $AmazonAccessKey -W $xAmazonSecretKey --region $Region > $describeInstanceFile 2>&1
+	ec2-describe-instances -O $AmazonAccessKey -W $AmazonSecretKey --region $Region > $describeInstanceFile 2>&1
 }
 
 getInstance() {

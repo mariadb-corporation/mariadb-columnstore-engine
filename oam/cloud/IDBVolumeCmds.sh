@@ -110,13 +110,13 @@ AmazonSecretKey=`cat $AmazonSecretKeyFile`
 
 Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
 
-if test ! -f $x509Cert ; then
-	echo "FAILED: missing x509Cert : $x509Cert"
+if test ! -f $AmazonAccessKeyFile ; then
+	echo "FAILED: missing AmazonAccessKeyFile : $AmazonAccessKeyFile"
 	exit 1
 fi
 
-if test ! -f $x509PriKey ; then
-	echo "FAILED: missing x509PriKey : $x509PriKey"
+if test ! -f $xAmazonSecretKeyFile ; then
+	echo "FAILED: missing AmazonSecretKeyFile : $xAmazonSecretKeyFile"
 	exit 1
 fi
 
@@ -200,7 +200,7 @@ detachvolume() {
 		retries=1
 		while [ $retries -ne 60 ]; do
 			#retry until it's attached
-			ec2-detach-volume -C $x509Cert -K $x509PriKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+			ec2-detach-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
 		
 			checkInfostatus
 			if [ $STATUS == "available" ]; then
