@@ -102,21 +102,20 @@ export PATH=$path
 export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
-# get Keys
-AmazonAccessKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
-AmazonSecretKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+# get Keys and region
+AmazonAccessKeyfile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+AmazonSecretKeyfile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
 AmazonAccessKey=`cat $AmazonAccessKeyFile`
 AmazonSecretKey=`cat $AmazonSecretKeyFile`
-
 Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
 
-if test ! -f $AmazonAccessKeyFile ; then
-	echo "FAILED: missing AmazonAccessKeyFile : $AmazonAccessKeyFile"
+if test ! -f $AmazonAccessKeyfile ; then
+	echo "FAILED: missing AmazonAccessKeyfile : $AmazonAccessKeyfile"
 	exit 1
 fi
 
-if test ! -f $xAmazonSecretKeyFile ; then
-	echo "FAILED: missing AmazonSecretKeyFile : $xAmazonSecretKeyFile"
+if test ! -f $AmazonSecretKeyfile ; then
+	echo "FAILED: missing AmazonSecretKeyfile : $AmazonSecretKeyfile"
 	exit 1
 fi
 

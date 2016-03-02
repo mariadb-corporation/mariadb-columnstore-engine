@@ -110,20 +110,20 @@ export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
 # get Keys and region
-AmazonAccessKey=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
-AmazonSecretKey=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+AmazonAccessKeyfile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+AmazonSecretKeyfile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
 AmazonAccessKey=`cat $AmazonAccessKeyFile`
 AmazonSecretKey=`cat $AmazonSecretKeyFile`
 Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
 subnet=`$prefix/Calpont/bin/getConfig Installation AmazonSubNetID`
 
-if test ! -f $x509Cert ; then
-	echo "FAILED: missing x509Cert : $x509Cert"
+if test ! -f $AmazonAccessKeyfile ; then
+	echo "FAILED: missing AmazonAccessKeyfile : $AmazonAccessKeyfile"
 	exit 1
 fi
 
-if test ! -f $x509PriKey ; then
-	echo "FAILED: missing x509PriKey : $x509PriKey"
+if test ! -f $AmazonSecretKeyfile ; then
+	echo "FAILED: missing AmazonSecretKeyfile : $AmazonSecretKeyfile"
 	exit 1
 fi
 
@@ -384,37 +384,37 @@ launchInstance() {
 	if [ "$subnet" == "unassigned" ]; then
 		#NOT VPC
 		if [ "$instanceProfile" = "" ] || [ "$instanceProfile" = "default" ]; then
-			newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -g $group -t $instanceType -z $zone --region $Region $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+			newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -g $group -t $instanceType -z $zone --region $Region $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 		else
-			newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -g $group -t $instanceType -z $zone -p $instanceProfile --region $Region $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+			newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -g $group -t $instanceType -z $zone -p $instanceProfile --region $Region $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 		fi
 	else	# VPC
 		if [ "$instanceProfile" = "" ] || [ "$instanceProfile" = "default" ]; then
 			if [ "$group" != "default" ]; then
 				if [ "$IPaddress" = "autoassign" ]; then
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -g $group -t $instanceType -z $zone  --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -g $group -t $instanceType -z $zone  --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				else
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -g $group -t $instanceType -z $zone  --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -g $group -t $instanceType -z $zone  --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				fi
 			else
 				if [ "$IPaddress" = "autoassign" ]; then
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -t $instanceType -z $zone --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -t $instanceType -z $zone --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				else
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -t $instanceType -z $zone --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances --O $AmazonAccessKey -W $AmazonSecretKey -k $key -t $instanceType -z $zone --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				fi
 			fi
 		else
 			if [ "$group" != "default" ]; then
 				if [ "$IPaddress" = "autoassign" ]; then
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -g $group -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -g $group -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				else
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -g $group -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -g $group -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				fi
 			else
 				if [ "$IPaddress" = "autoassign" ]; then
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				else
-					newInstance=`ec2-run-instances -C $x509Cert -K $x509PriKey -k $key -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+					newInstance=`ec2-run-instances -O $AmazonAccessKey -W $AmazonSecretKey -k $key -t $instanceType -z $zone -p $instanceProfile --region $Region -s $subnet --private-ip-address $IPaddress $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 				fi
 			fi
 		fi
@@ -425,19 +425,19 @@ launchInstance() {
 
 terminateInstance() {
 	#terminate Instance
-	ec2-terminate-instances -C $x509Cert -K $x509PriKey --region $Region $instanceName > /tmp/termInstanceInfo_$instanceName 2>&1
+	ec2-terminate-instances -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $instanceName > /tmp/termInstanceInfo_$instanceName 2>&1
 	return
 }
 
 stopInstance() {
 	#terminate Instance
-	ec2-stop-instances -C $x509Cert -K $x509PriKey --region $Region $instanceName > /tmp/stopInstanceInfo_$instanceName 2>&1
+	ec2-stop-instances -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $instanceName > /tmp/stopInstanceInfo_$instanceName 2>&1
 	return
 }
 
 startInstance() {
 	#terminate Instance
-	ec2-start-instances -C $x509Cert -K $x509PriKey --region $Region $instanceName > /tmp/startInstanceInfo_$instanceName 2>&1
+	ec2-start-instances -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $instanceName > /tmp/startInstanceInfo_$instanceName 2>&1
 
 	cat /tmp/startInstanceInfo_$instanceName | grep INSTANCE > /tmp/startInstanceStatus_$instanceName
 	if [ `cat /tmp/startInstanceStatus_$instanceName | wc -c` -eq 0 ]; then
@@ -450,7 +450,7 @@ startInstance() {
 
 assignElasticIP() {
 	#terminate Instance
-	ec2-associate-address -C $x509Cert -K $x509PriKey -i $instanceName $IPAddress > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+	ec2-associate-address -O $AmazonAccessKey -W $AmazonSecretKey -i $instanceName $IPAddress > /tmp/assignElasticIPInfo_$IPAddress 2>&1
 
 	cat /tmp/assignElasticIPInfo_$IPAddress | grep ADDRESS > /tmp/assignElasticIPStatus_$IPAddress
 	if [ `cat /tmp/assignElasticIPStatus_$IPAddress | wc -c` -eq 0 ]; then
@@ -464,7 +464,7 @@ assignElasticIP() {
 
 deassignElasticIP() {
 	#terminate Instance
-	ec2-disassociate-address -C $x509Cert -K $x509PriKey $IPAddress > /tmp/deassignElasticIPInfo_$IPAddress 2>&1
+	ec2-disassociate-address -O $AmazonAccessKey -W $AmazonSecretKey $IPAddress > /tmp/deassignElasticIPInfo_$IPAddress 2>&1
 
 	cat /tmp/deassignElasticIPInfo_$IPAddress | grep ADDRESS > /tmp/deassignElasticIPStatus_$IPAddress
 	if [ `cat /tmp/deassignElasticIPStatus_$IPAddress | wc -c` -eq 0 ]; then
