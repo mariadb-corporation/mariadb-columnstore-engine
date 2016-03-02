@@ -1826,7 +1826,7 @@ int main(int argc, char *argv[])
 	try {
 		string AmazonSecretKey = sysConfigOld->getConfig("Installation", "AmazonSecretKey");
 
-		if ( !AmazonAccessKey.empty() )
+		if ( !AmazonSecretKey.empty() )
 		{
 			try {
 				sysConfigNew->setConfig("Installation", "AmazonSecretKey", AmazonSecretKey);
