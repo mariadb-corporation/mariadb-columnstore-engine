@@ -102,18 +102,21 @@ export PATH=$path
 export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
-# get x509 Certification and Private Key
-x509Cert=`$prefix/Calpont/bin/getConfig Installation AmazonX509Certificate`
-x509PriKey=`$prefix/Calpont/bin/getConfig Installation AmazonX509PrivateKey`
+# get Keys and region
+AmazonAccessKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+AmazonSecretKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+AmazonAccessKey=`cat $AmazonAccessKeyFile`
+AmazonSecretKey=`cat $AmazonSecretKeyFile`
+
 Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
 
-if test ! -f $x509Cert ; then
-	echo "FAILED: missing x509Cert : $x509Cert"
+if test ! -f $AmazonAccessKeyfile ; then
+	echo "FAILED: missing AmazonAccessKeyfile : $AmazonAccessKeyfile"
 	exit 1
 fi
 
-if test ! -f $x509PriKey ; then
-	echo "FAILED: missing x509PriKey : $x509PriKey"
+if test ! -f $AmazonSecretKeyfile ; then
+	echo "FAILED: missing AmazonSecretKeyfile : $AmazonSecretKeyfile"
 	exit 1
 fi
 
@@ -171,7 +174,7 @@ createvolume() {
 	# get zone
 	zone=`$prefix/Calpont/bin/IDBInstanceCmds.sh getZone`
 	#create volume
-	volume=`ec2-create-volume -C $x509Cert -K $x509PriKey --region $Region -z $zone -s $volumeSize | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	volume=`ec2-create-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -z $zone -s $volumeSize | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 
 #	#get volume name
 #	volume=`cat /tmp/volumeCreate_$resourceName | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
@@ -181,7 +184,7 @@ createvolume() {
 
 describevolume() {
 	#describe volume
-	ec2-describe-volumes -C $x509Cert -K $x509PriKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	ec2-describe-volumes -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	echo $STATUS
@@ -190,14 +193,14 @@ describevolume() {
 
 detachvolume() {
 	#detach volume
-	ec2-detach-volume -C $x509Cert -K $x509PriKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	ec2-detach-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "detaching" ]; then
 		retries=1
 		while [ $retries -ne 60 ]; do
 			#retry until it's attached
-			ec2-detach-volume -C $x509Cert -K $x509PriKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+			ec2-detach-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
 		
 			checkInfostatus
 			if [ $STATUS == "available" ]; then
@@ -227,7 +230,7 @@ detachvolume() {
 attachvolume() {
 
 	#detach volume
-	ec2-attach-volume -C $x509Cert -K $x509PriKey --region $Region $volumeName -i $instanceName -d $deviceName > /tmp/volumeInfo_$volumeName 2>&1
+	ec2-attach-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName -i $instanceName -d $deviceName > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "attaching" -o $STATUS == "already-attached" ]; then
@@ -261,13 +264,13 @@ attachvolume() {
 
 deletevolume() {
 	#delete volume
-	ec2-delete-volume -C $x509Cert -K $x509PriKey --region $Region $volumeName > /tmp/deletevolume_$volumeName 2>&1
+	ec2-delete-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/deletevolume_$volumeName 2>&1
 	return
 }
 
 createTag() {
 	#create tag
-	ec2-create-tags -C $x509Cert -K $x509PriKey --region $Region $resourceName --tag $tagName=$tagValue > /tmp/createTag_$volumeName 2>&1
+	ec2-create-tags -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $resourceName --tag $tagName=$tagValue > /tmp/createTag_$volumeName 2>&1
 	return
 }
 

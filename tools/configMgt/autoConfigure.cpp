@@ -1806,16 +1806,34 @@ int main(int argc, char *argv[])
 	{}
 
 	try {
-		string AmazonPMFailover = sysConfigOld->getConfig("Installation", "AmazonPMFailover");
+		string AmazonAccessKey = sysConfigOld->getConfig("Installation", "AmazonAccessKey");
 
-		if ( !AmazonPMFailover.empty() )
+		if ( !AmazonAccessKey.empty() )
 		{
 			try {
-				sysConfigNew->setConfig("Installation", "AmazonPMFailover", AmazonPMFailover);
+				sysConfigNew->setConfig("Installation", "AmazonAccessKey", AmazonAccessKey);
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting AmazonPMFailover in the Calpont System Configuration file" << endl;
+				cout << "ERROR: Problem setting AmazonAccessKey in the Calpont System Configuration file" << endl;
+				exit(-1);
+			}
+		}
+	}
+	catch(...)
+	{}
+
+	try {
+		string AmazonSecretKey = sysConfigOld->getConfig("Installation", "AmazonSecretKey");
+
+		if ( !AmazonSecretKey.empty() )
+		{
+			try {
+				sysConfigNew->setConfig("Installation", "AmazonSecretKey", AmazonSecretKey);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting AmazonSecretKey in the Calpont System Configuration file" << endl;
 				exit(-1);
 			}
 		}

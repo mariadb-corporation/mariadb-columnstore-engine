@@ -843,6 +843,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 						//stop the mysql daemon
 						try {
 							oam.actionMysqlCalpont(MYSQL_STOP);
+							log.writeLog(__LINE__, "Stop MySQL Process", LOG_TYPE_DEBUG);
 						}
 						catch(...)
 						{}

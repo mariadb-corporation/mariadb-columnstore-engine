@@ -256,30 +256,16 @@
 		<Arg3>Optional: Module-name and Parameter-name will display the Module Name Configuration parameter</Arg3>
 	</Cmd38>
 	<Cmd39>
-		<Name>addExternalDevice</Name>
-		<Desc1>Add External Device to Configuration file</Desc1>
-		<Desc2>External Devices will be monitored and alarms reported on failures</Desc2>
-		<Arg1>Required: External Device name</Arg1>
-		<Arg2>Required: External Device IP Address</Arg2>
+		<Name>AVAILABLE</Name>
 	</Cmd39>
 	<Cmd40>
-		<Name>getExternalDeviceConfig</Name>
-		<Desc1>Get External Device Configuration Information</Desc1>
-		<Desc2>Can display all External Device parameters or a single External Device</Desc2>
-		<Arg1>No Argument or 'all' will display all External Devices Configuration parameters</Arg1>
-		<Arg2>Optional: External Device name will display the Switch Name Configuration parameters</Arg2>
+		<Name>AVAILABLE</Name>
 	</Cmd40>
 	<Cmd41>
-		<Name>setExternalDeviceConfig</Name>
-		<Desc1>Set a External Device Configuration parameter</Desc1>
-		<Arg1>Required: External-device-name is the parameter to be updated</Arg1>
-		<Arg2>Required: Parameter-name is the parameter to be updated</Arg2>
-		<Arg3>Required: Parameter-value is the parameter value</Arg3>
+		<Name>AVAILABLE</Name>
 	</Cmd41>
 	<Cmd42>
-		<Name>removeExternalDevice</Name>
-		<Desc1>Remove External Device to Configuration file</Desc1>
-		<Arg1>Required: External Device name</Arg1>
+		<Name>AVAILABLE</Name>
 	</Cmd42>
 	<Cmd43>
 		<Name>assignElasticIPAddress</Name>
