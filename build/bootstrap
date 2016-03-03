@@ -20,7 +20,6 @@ cp dbcon/mysql/install_calpont_mysql.sh $HOME/MariaDB_InfiniDB/export/mysql/.
 cp dbcon/mysql/my.cnf $HOME/MariaDB_InfiniDB/export/mysql/.
 cp dbcon/mysql/mysql-Calpont $HOME/MariaDB_InfiniDB/export/mysql/.
 
-cp build/Doxyfile export/etc
 if [ ! $$ ]; then
     exit 1
 fi
