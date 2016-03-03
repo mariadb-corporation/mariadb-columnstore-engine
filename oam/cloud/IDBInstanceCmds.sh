@@ -110,8 +110,8 @@ export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
 # get Keys and region
-AmazonAccessKeyfile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
-AmazonSecretKeyfile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+AmazonAccessKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+AmazonSecretKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
 AmazonAccessKey=`cat $AmazonAccessKeyFile`
 AmazonSecretKey=`cat $AmazonSecretKeyFile`
 Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
