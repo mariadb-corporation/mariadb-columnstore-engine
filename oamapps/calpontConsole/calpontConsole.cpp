@@ -2643,13 +2643,26 @@ int processCommand(string* arguments)
 
         case 20: // getSystemStatus - parameters: NONE
         {
+		try {
 			printSystemStatus();
+		}
+		catch (...)
+		{
+			break;
+		}
+
         }
         break;
 
         case 21: // getProcessStatus - parameters: NONE
         {
+		try {
 			printProcessStatus();
+		}
+		catch (...)
+		{
+			break;
+		}
         }
         break;
 
