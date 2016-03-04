@@ -49,6 +49,7 @@ string cloud;
 bool amazon = false;
 string PMInstanceType;
 string UMInstanceType;
+string AmazonPMFailover = "y";
 string GlusterConfig = "n";
 bool rootUser = true;
 string USER = "root";
@@ -143,6 +144,7 @@ int main(int argc, char **argv)
 	{
 		oam.getSystemConfig("PMInstanceType", PMInstanceType);
 		oam.getSystemConfig("UMInstanceType", UMInstanceType);
+//		oam.getSystemConfig("AmazonPMFailover", AmazonPMFailover);
 
 		amazon = true;
 	}
@@ -1279,8 +1281,9 @@ void pingDeviceThread()
 								int status;
 	
 								// if pm, move dbroots back to pm
-								if ( ( moduleName.find("pm") == 0 ) ||
-									( moduleName.find("pm") == 0 && downActiveOAMModule ) ) {
+								if ( ( moduleName.find("pm") == 0 && !amazon ) ||
+									( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
+									( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
 
 									//restart to get the versionbuffer files closed so it can be unmounted
 									processManager.restartProcessType("WriteEngineServer", moduleName);
@@ -1556,8 +1559,8 @@ void pingDeviceThread()
 									aManager.sendAlarmReport(moduleName.c_str(), MODULE_DOWN_AUTO, SET);
 
 									// if pm, move dbroots back to pm
-									if ( ( moduleName.find("pm") == 0 ) ||
-										( moduleName.find("pm") == 0 && downActiveOAMModule ) ) {
+									if ( ( moduleName.find("pm") == 0 && !amazon ) ||
+										( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ) {
 										//move dbroots to other modules
 										try {
 											log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
@@ -1590,9 +1593,9 @@ void pingDeviceThread()
 
 									log.writeLog(__LINE__, "Module failed to auto start: " + moduleName, LOG_TYPE_CRITICAL);
 
-//									if ( amazon )
-//										processManager.setSystemState(oam::FAILED);
-//									else
+									if ( amazon )
+										processManager.setSystemState(oam::FAILED);
+									else
 										processManager.setSystemState(oam::ACTIVE);
 
 									//set query system state ready
@@ -1660,8 +1663,8 @@ void pingDeviceThread()
 								log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
 
 								// if pm, move dbroots to other pms
-//								if ( !amazon ||
-//									( amazon ) ) {
+								if ( !amazon ||
+									( amazon && AmazonPMFailover == "y") ) {
 									if( moduleName.find("pm") == 0 ) {
 										try {
 											log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
@@ -1680,7 +1683,7 @@ void pingDeviceThread()
 											log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
 										}
 									}
-//								}
+								}
 	
 								// if Cloud Instance
 								// state = running, then instance is rebooting, monitor for recovery
