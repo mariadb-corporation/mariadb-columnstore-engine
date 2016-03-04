@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 	{
 		oam.getSystemConfig("PMInstanceType", PMInstanceType);
 		oam.getSystemConfig("UMInstanceType", UMInstanceType);
-//		oam.getSystemConfig("AmazonPMFailover", AmazonPMFailover);
+		oam.getSystemConfig("AmazonPMFailover", AmazonPMFailover);
 
 		amazon = true;
 	}
