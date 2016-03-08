@@ -2643,13 +2643,26 @@ int processCommand(string* arguments)
 
         case 20: // getSystemStatus - parameters: NONE
         {
+		try {
 			printSystemStatus();
+		}
+		catch (...)
+		{
+			break;
+		}
+
         }
         break;
 
         case 21: // getProcessStatus - parameters: NONE
         {
+		try {
 			printProcessStatus();
+		}
+		catch (...)
+		{
+			break;
+		}
         }
         break;
 
@@ -3917,9 +3930,23 @@ int processCommand(string* arguments)
 
         case 37: // getSystemInfo
         {
+		try {
 			printSystemStatus();
+		}
+		catch (...)
+		{
+			break;
+		}
+
+		try {
 			printProcessStatus();
-			printAlarmSummary();
+		}
+		catch (...)
+		{
+			break;
+		}
+
+		printAlarmSummary();
         }
         break;
 
@@ -7827,6 +7854,7 @@ void printSystemStatus()
 	catch (exception& e)
 	{
 		cout << endl << "**** printSystemStatus Failed =  " << e.what() << endl;
+		throw runtime_error("");
 	}
 }
 
@@ -7946,6 +7974,7 @@ void printProcessStatus(std::string port)
 	catch (exception& e)
 	{
 		cout << endl << "**** printProcessStatus Failed =  " << e.what() << endl;
+		throw runtime_error("");
 	}
 }
 

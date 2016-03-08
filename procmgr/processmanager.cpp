@@ -53,6 +53,7 @@ extern string USER;
 extern bool HDFS;
 extern string localHostName;
 extern string PMwithUM;
+extern string AmazonPMFailover;
 
 typedef   map<string, int>	moduleList;
 extern moduleList moduleInfoList;
@@ -4398,7 +4399,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	string mysqldPackage;
 	string calpontPackage1;
 	string calpontPackage2;
-	string version;
 
 	string systemID;
 	string packageType = "rpm";
@@ -4431,7 +4431,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			homedir = p;
 	}
 
-	version = systemsoftware.Version + "-" + systemsoftware.Release;
 	if ( packageType != "binary") {
 		string separator = "-";
 		if ( packageType == "deb" )
@@ -5026,7 +5025,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			if ( packageType != "binary" ) {
 				log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
-				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 > /tmp/user_installer.log";
+				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + calpontPackage1 + " " + calpontPackage2 + " " + mysqlPackage + " " + mysqldPackage + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 > /tmp/user_installer.log";
 
 				log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -5064,7 +5063,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			if ( remoteModuleType == "pm" ) {
 				if ( packageType != "binary" ) {
 					log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-					string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + 	packageType + " --nodeps 1 > /tmp/performance_installer.log";
+					string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + calpontPackage1 + " " + calpontPackage2 + " " + mysqlPackage + " " + mysqldPackage + " initial " + 	packageType + " --nodeps 1 > /tmp/performance_installer.log";
 					log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					rtnCode = system(cmd.c_str());
@@ -8625,7 +8624,7 @@ int ProcessManager::OAMParentModuleChange()
 				noAckCount = 0;
 
 				//if Amazon Parent PM is restarting, monitor when back active and take needed actions
-/*				if (amazonParentRestart)
+				if (amazonParentRestart)
 				{
 					log.writeLog(__LINE__, "Amazon Parent pinging, waiting until it's active", LOG_TYPE_DEBUG);
 					sleep(60);
@@ -8658,7 +8657,7 @@ int ProcessManager::OAMParentModuleChange()
 						sleep(5);
 					}
 				}
-*/
+
 				sleep(1);
 				break;
 			}
@@ -8836,7 +8835,7 @@ int ProcessManager::OAMParentModuleChange()
 			{}
 
 			//do amazon failover
-/*			if (amazon && AmazonPMFailover == "n")
+			if (amazon && AmazonPMFailover == "n")
 			{
 				log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
 				log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, wating for instance to restart  ***", LOG_TYPE_DEBUG);
@@ -8911,7 +8910,7 @@ int ProcessManager::OAMParentModuleChange()
 
 				//clear and go monitor again
 				failover = false;
-			}*/
+			}
 		}
 	}
 
@@ -9186,7 +9185,9 @@ int ProcessManager::OAMParentModuleChange()
 	}
 
 	//restart DDLProc/DMLProc to perform any rollbacks, if needed
-	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM  ) ) {
+	//dont rollback in amazon, wait until down pm recovers
+	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM  ) 
+		&& !amazon ) {
 		processManager.restartProcessType("DDLProc", config.moduleName());
 		sleep(1);
 		processManager.restartProcessType("DMLProc", config.moduleName());
@@ -10066,20 +10067,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 					if ( moduleType == "pm" && PMwithUM == "n" )
 						continue;
 				}
-
-				//check status, skip if module is offline
-				int opState = oam::ACTIVE;
-				bool degraded;
-				try {
-					oam.getModuleStatus(remoteModuleName, opState, degraded);
-				}
-				catch(...)
-				{
-				}
-
-				if (opState != oam::ACTIVE)
-					continue;
-
+		
 				ByteStream msg1;
 				ByteStream::byte requestID = oam::SLAVEREP;
 				if ( !enable ) {
