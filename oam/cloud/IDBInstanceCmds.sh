@@ -137,6 +137,9 @@ describeInstance() {
 	ec2-describe-instances -O $AmazonAccessKey -W $AmazonSecretKey --region $Region > $describeInstanceFile 2>&1
 }
 
+#call at start up
+describeInstance
+
 getInstance() {
 	if [ "$instance" != "" ]; then
 		echo $instance
