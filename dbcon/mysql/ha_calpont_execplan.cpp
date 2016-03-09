@@ -2545,7 +2545,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 		else // where clause
 		{
 			stack<SPTP> tmpPtStack;
-			for (int32_t i = ifp->argument_count(); i>0; i--)
+			for (int32_t i = ifp->argument_count()-1; i>=0; i--)
 			{
 				if (isPredicateFunction((ifp->arguments()[i]), &gwi) && !gwi.ptWorkStack.empty())
 				{
