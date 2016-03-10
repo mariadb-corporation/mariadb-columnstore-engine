@@ -1700,6 +1700,7 @@ void pingDeviceThread()
 										processManager.recycleProcess(moduleName);
 									}
 
+									// return values = 'ip address' for running or rebooting, stopped or terminated
 									string currentIPAddr = oam.getEC2InstanceIpAddress(hostName);
 									if (currentIPAddr == "stopped")
 									{ // start instance
@@ -1754,7 +1755,7 @@ void pingDeviceThread()
 										}
 									}
 
-									if ( currentIPAddr == "terminated" || currentIPAddr == "running")
+									if ( currentIPAddr == "terminated")
 									{
 										//check if down module was Standby OAM, if so find another one
 										if ( moduleName == config.OAMStandbyName() ) {
