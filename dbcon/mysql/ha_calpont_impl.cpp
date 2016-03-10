@@ -1195,8 +1195,8 @@ uint32_t doUpdateDelete(THD *thd)
 	if (!pDMLPackage)
 	{
 		string emsg("Fatal parse error in vtable mode in DMLParser ");
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-		return ER_CHECK_NOT_IMPLEMENTED;
+		setError(thd, ER_INTERNAL_ERROR, emsg);
+		return ER_INTERNAL_ERROR;
 	}
 	pDMLPackage->set_TableName(tableName);
 
@@ -1284,13 +1284,13 @@ uint32_t doUpdateDelete(THD *thd)
 			{
 				Message::Args args;
 				args.add(gwi.parseErrorText);
-				emsg = IDBErrorInfo::instance()->errorMsg(ERR_DML_NOT_SUPPORT_FEATURE, args);
+				emsg = IDBErrorInfo::instance()->errorMsg(ER_INTERNAL_ERROR, args);
 			}
 			else
 			{
 				emsg = gwi.parseErrorText;
 			}
-            thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, emsg.c_str());
+            thd->raise_error_printf(ER_INTERNAL_ERROR, emsg.c_str());
 			ci->rc = -1;
             thd->set_row_count_func(0);
 			return -1;
@@ -2122,21 +2122,21 @@ long long callastinsertid(UDF_INIT* initid, UDF_ARGS* args,
 	}
 	catch (std::exception&)
 	{
-		string msg("No such table found");
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, msg);
+		string msg("No such table found during autincrement");
+		setError(thd, ER_INTERNAL_ERROR, msg);
 		return nextVal;
 	}
 
 	if (nextVal == AUTOINCR_SATURATED)
 	{
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, IDBErrorInfo::instance()->errorMsg(ERR_EXCEED_LIMIT));
+		setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_EXCEED_LIMIT));
 		return nextVal;
 	}
 	//@Bug 3559. Return a message for table without autoincrement column.
 	if (nextVal == 0)
 	{
 		string msg("Autoincrement does not exist for this table.");
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, msg);
+		setError(thd, ER_INTERNAL_ERROR, msg);
 		return nextVal;
 	}
 
@@ -2712,8 +2712,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				}
 				if (err)
 				{
-					setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsgStr);
-					return ER_CHECK_NOT_IMPLEMENTED;
+					setError(thd, ER_INTERNAL_ERROR, emsgStr);
+					return ER_INTERNAL_ERROR;
 				}
 
 				rmParms.clear();
@@ -2840,7 +2840,7 @@ internal_error:
 		sm::sm_cleanup(ci->cal_conn_hndl);
 		ci->cal_conn_hndl = 0;
 	}
-	return ER_CHECK_NOT_IMPLEMENTED;
+	return ER_INTERNAL_ERROR;
 }
 
 int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
@@ -3428,7 +3428,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				int localModuleId = oamcache->getLocalPMId();
 				if (localModuleId == 0)
 				{
-					setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, logging::IDBErrorInfo::instance()->errorMsg(ERR_LOCAL_QUERY_UM));
+					setError(current_thd, ER_INTERNAL_ERROR, logging::IDBErrorInfo::instance()->errorMsg(ERR_LOCAL_QUERY_UM));
 					ci->singleInsert = true;
 					LoggingID logid( 24, tid2sid(thd->thread_id), 0);
 					logging::Message::Args args1;

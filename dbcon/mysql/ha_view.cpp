@@ -128,7 +128,7 @@ void View::transform()
 		}
 		if (gwi.fatalParseError)
 		{
-			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
+			setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
 			return;
 		}
 	}

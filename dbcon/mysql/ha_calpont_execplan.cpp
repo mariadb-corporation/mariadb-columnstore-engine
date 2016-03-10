@@ -493,7 +493,7 @@ void buildNestedTableOuterJoin(gp_walk_info& gwi, TABLE_LIST* table_ptr)
 			while ((tab= li++))
 			{
 				CalpontSystemCatalog::TableAliasName ta = make_aliasview(
-				                       (tab->db ? table->db : ""),
+				                       (tab->db ? tab->db : ""),
 				                       (tab->table_name ? tab->table_name : ""),
 				                       (tab->alias ? tab->alias : ""),
 				                       getViewName(tab));
@@ -659,7 +659,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 		{
 			gwi.fatalParseError = true;
 			gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
-			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText);
+			setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
 			return -1;
 		}
 
@@ -4494,8 +4494,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		}
 		if (gwi.fatalParseError)
 		{
-			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-			return ER_CHECK_NOT_IMPLEMENTED;
+			setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+			return ER_INTERNAL_ERROR;
 		}
 	}
 	catch (IDBExcept& ie)
@@ -4614,8 +4614,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				gwi.thd->infinidb_vtable.isUpdateWithDerive = true;
 				return -1;
 			}
-			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-			return ER_CHECK_NOT_IMPLEMENTED;
+			setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+			return ER_INTERNAL_ERROR;
 		}
 	}
 	else if (join && join->zero_result_cause)
@@ -4828,9 +4828,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				}
 				else
 				{
-					setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+					setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
 					delete sc;
-					return ER_CHECK_NOT_IMPLEMENTED;
+					return ER_INTERNAL_ERROR;
 				}
 				break;
 			}
@@ -5249,8 +5249,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 		if (gwi.fatalParseError)
 		{
-			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-			return ER_CHECK_NOT_IMPLEMENTED;
+			setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+			return ER_INTERNAL_ERROR;
 		}
 
 		ParseTree* ptp = 0;
@@ -5307,8 +5307,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			{
 				emsg = gwi.parseErrorText;
 			}
-			setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-			return ER_CHECK_NOT_IMPLEMENTED;
+			setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
+			return ER_INTERNAL_ERROR;
 		}
 		String str;
 		funcFieldVec[i]->print(&str, QT_INFINIDB_NO_QUOTE);
