@@ -211,9 +211,6 @@ void debug_walk(const Item *item, void *arg)
 		Item_field* ifp = (Item_field*)item;
 		cout << "FIELD_ITEM: " << (ifp->db_name ? ifp->db_name : "") << '.' << bestTableName(ifp) <<
 			'.' << ifp->field_name << endl;
-		if (ifp->field && ifp->field->table && ifp->field->table->reginfo.join_tab &&
-		    ifp->field->table->reginfo.join_tab->sj_mat_exec)
-			cout  << ifp->field->table->reginfo.join_tab->sj_mat_exec->mat_table_index << endl;
 		break;
 	}
 	case Item::INT_ITEM:
@@ -249,70 +246,166 @@ void debug_walk(const Item *item, void *arg)
 		switch (ifp->functype())
 		{
 		case Item_func::UNKNOWN_FUNC: // 0
-			cout << ifp->func_name() << endl;
+			cout << ifp->func_name() << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::GT_FUNC: // 7
-			cout << '>' << endl;
+			cout << '>' << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::EQ_FUNC: // 1
-			cout << '=' << endl;
+			cout << '=' << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::GE_FUNC:
-			cout << ">=" << endl;
+			cout << ">=" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::LE_FUNC:
-			cout << "<=" << endl;
+			cout << "<=" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::LT_FUNC:
-			cout << '<' << endl;
+			cout << '<' << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::NE_FUNC:
-			cout << "<>" << endl;
+			cout << "<>" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::NEG_FUNC: // 45
-			cout << "unary minus" << endl;
+			cout << "unary minus" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::IN_FUNC: // 16
 			inp = (Item_func_opt_neg*)ifp;
 			if (inp->negated) cout << "not ";
-			cout << "in" << endl;
+			cout << "in" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::BETWEEN:
 			inp = (Item_func_opt_neg*)ifp;
 			if (inp->negated) cout << "not ";
-			cout << "between" << endl;
+			cout << "between" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::ISNULL_FUNC: // 10
-			cout << "is null" << endl;
+			cout << "is null" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::ISNOTNULL_FUNC: // 11
-			cout << "is not null" << endl;
+			cout << "is not null" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::NOT_ALL_FUNC:
-			cout << "not_all" << endl;
+			cout << "not_all" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::NOT_FUNC:
-			cout << "not_func" << endl;
+			cout << "not_func" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::TRIG_COND_FUNC:
-			cout << "trig_cond_func" << endl;
+			cout << "trig_cond_func" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::ISNOTNULLTEST_FUNC:
-			cout << "isnotnulltest_func" << endl;
-			break;
+			cout << "isnotnulltest_func" << " (" << ifp->functype() << ")" << endl;
 			break;
 		case Item_func::MULT_EQUAL_FUNC:
 		{
-			cout << "mult_equal_func:" << endl;
+			cout << "mult_equal_func:" << " (" << ifp->functype() << ")" << endl;
 			Item_equal* item_eq = (Item_equal*)ifp;
-			List_iterator_fast<Item_field> it(item_eq->fields);
-			Item *item_field;
-			while ((item_field= it++))
+			Item_equal_fields_iterator it(*item_eq);
+			Item *item;
+			while ((item= it++))
 			{
-				cout << item_field->full_name() << endl;
+			    Field *equal_field= it.get_curr_field();
+				cout << equal_field->field_name << endl;
 			}
 			break;
 		}
+		case Item_func::EQUAL_FUNC:
+			cout << "equal func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::FT_FUNC:
+			cout << "ft func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::LIKE_FUNC:
+			cout << "like func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::COND_AND_FUNC:
+			cout << "cond and func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::COND_OR_FUNC:
+			cout << "cond or func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::XOR_FUNC:
+			cout << "xor func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::INTERVAL_FUNC:
+			cout << "interval func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_EQUALS_FUNC:
+			cout << "sp equals func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_DISJOINT_FUNC:
+			cout << "sp disjoint func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_INTERSECTS_FUNC:
+			cout << "sp intersects func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_TOUCHES_FUNC:
+			cout << "sp touches func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_CROSSES_FUNC:
+			cout << "sp crosses func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_WITHIN_FUNC:
+			cout << "sp within func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_CONTAINS_FUNC:
+			cout << "sp contains func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_OVERLAPS_FUNC:
+			cout << "sp overlaps func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_STARTPOINT:
+			cout << "sp startpoint func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_ENDPOINT:
+			cout << "sp endpoint func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_EXTERIORRING:
+			cout << "sp exteriorring func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_POINTN:
+			cout << "sp pointn func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_GEOMETRYN:
+			cout << "sp geometryn func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_INTERIORRINGN:
+			cout << "sp exteriorringn func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SP_RELATE_FUNC:
+			cout << "sp relate func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::NOW_FUNC:
+			cout << "now func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::SUSERVAR_FUNC:
+			cout << "suservar func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::GUSERVAR_FUNC:
+			cout << "guservar func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::COLLATE_FUNC:
+			cout << "collate func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::EXTRACT_FUNC:
+			cout << "extract func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::CHAR_TYPECAST_FUNC:
+			cout << "char typecast func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::FUNC_SP:
+			cout << "func sp func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::UDF_FUNC:
+			cout << "udf func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::GSYSVAR_FUNC:
+			cout << "gsysvar func" << " (" << ifp->functype() << ")" << endl;
+			break;
+		case Item_func::DYNCOL_FUNC:
+			cout << "dyncol func" << " (" << ifp->functype() << ")" << endl;
+			break;
 		default:
 			cout << "type=" << ifp->functype() << endl;
 			break;
@@ -329,10 +422,10 @@ void debug_walk(const Item *item, void *arg)
 	{
 		Item_sum* isp = (Item_sum*)item;
 		Item_sum_int*            isip = 0;
-		Item_sum_distinct*       isdp = 0;
+		Item_sum_sum*            isdp = 0;
 		Item_sum_avg*            isap = 0;
 		Item_sum_count*          iscp = 0;
-		Item_sum_count_distinct* iscdp = 0;
+		Item_sum_count*          iscdp = 0;
 		Item_sum_min*            isnp = 0;
 		Item_sum_max*            isxp = 0;
 		char* item_name = item->name;
@@ -347,7 +440,7 @@ void debug_walk(const Item *item, void *arg)
 			cout << "SUM_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::SUM_DISTINCT_FUNC:
-			isdp = (Item_sum_distinct*)isp;
+			isdp = (Item_sum_sum*)isp;
 			cout << "SUM_DISTINCT_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::AVG_FUNC:
@@ -359,7 +452,7 @@ void debug_walk(const Item *item, void *arg)
 			cout << "COUNT_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::COUNT_DISTINCT_FUNC:
-			iscdp = (Item_sum_count_distinct*)isp;
+			iscdp = (Item_sum_count*)isp;
 			cout << "COUNT_DISTINCT_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::MIN_FUNC:
@@ -427,7 +520,7 @@ void debug_walk(const Item *item, void *arg)
 				ifp->field_name << endl;
 			break;
 		}
-		cout << "UNKNOWN REF ITEM" << endl;
+		cout << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
 		break;
 	}
 	case Item::ROW_ITEM:
@@ -4322,6 +4415,9 @@ bool isInfiniDB(TABLE* table_ptr)
 
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion)
 {
+#ifdef DEBUG_WALK_COND
+	cout << "getSelectPlan()" << endl;
+#endif
 	// by pass the derived table resolve phase of mysql
 	if (!(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
 		 ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
