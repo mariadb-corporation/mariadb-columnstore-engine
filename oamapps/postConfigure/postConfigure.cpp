@@ -262,11 +262,12 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-n][-p][-mp][-s][-port]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Calpont.xml.rpmsave" << endl;
-			cout << "   -n  Install with no prompting" << endl;
-			cout << "   -p  Password, used with no-prompting option" << endl;
+			cout << "   -u  Upgrade, Install using the Config File from -c, default to Calpont.xml.rpmsave" << endl;
+			cout << "	 If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
+			cout << "   -p  Unix Password, used with no-prompting option" << endl;
 			cout << "   -mp MySQL Password" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
 			cout << "   -port MySQL Port Address" << endl;
@@ -316,7 +317,7 @@ int main(int argc, char *argv[])
 			if ( mysqlpw == "dummymysqlpw" )
 				mysqlpw = " ";
 		}
-		else if( string("-n") == argv[i] )
+		else if( string("-u") == argv[i] )
 			noPrompting = true;
 		else if( string("-i") == argv[i] ) {
 			i++;
@@ -346,7 +347,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-n][-p][-mp][-s][-port]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
 			exit (1);
 		}
 	}
