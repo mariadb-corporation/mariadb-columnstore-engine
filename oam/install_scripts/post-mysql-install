@@ -97,9 +97,10 @@ if [ -x $installdir/mysql/mysql-Calpont ]; then
 
 	# Restart in the same way that mysqld will be started normally.
 	$installdir/mysql/mysql-Calpont stop >/dev/null 2>&1
+	sleep 2
 	$installdir/mysql/mysql-Calpont start
 
-	sleep 2
+	sleep 5
 
 	# Install various Calpont stuff...
 	$installdir/mysql/install_calpont_mysql.sh --password=$password --installdir=$installdir
