@@ -22,6 +22,27 @@ checkForError() {
 	fi
 
 	rm -f /tmp/error.check
+
+        #---------------------------------------------------------------------------
+        # See if engine infinidb exist
+        #---------------------------------------------------------------------------
+        echo "checking for engine infinidb..."
+        $installdir/mysql/bin/mysql \
+                --defaults-file=$installdir/mysql/my.cnf \
+                --user=root $pwprompt \
+                --execute='show engines;' \
+                calpontsys | grep -i infinidb
+
+        #
+        # Add compressiontype column to SYSCOLUMN if applicable
+        #
+        if [ $? -ne 0 ]; then
+                echo "infinidb doesn't exist"
+                return 1
+        fi
+
+        echo "infinidb exist"
+
 	return 0;
 }
 
@@ -88,7 +109,7 @@ if [ -x $installdir/mysql/mysql-Calpont ]; then
 		$installdir/mysql/install_calpont_mysql.sh --password=$password --installdir=$installdir
 		checkForError
 		if [ $? -ne 0 ]; then
-			echo "ERROR: missing or invalid password"
+			echo "ERROR: missing or invalid password, or InfiniDB plugin install missing"
 			$installdir/mysql/mysql-Calpont stop
 			sleep 2
 			exit 1;
