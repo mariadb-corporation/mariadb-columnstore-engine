@@ -319,6 +319,9 @@ int main(int argc, char *argv[])
 		}
 		else if( string("-u") == argv[i] )
 			noPrompting = true;
+		// for backward compatibility
+		else if( string("-n") == argv[i] )
+			noPrompting = true;
 		else if( string("-i") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
