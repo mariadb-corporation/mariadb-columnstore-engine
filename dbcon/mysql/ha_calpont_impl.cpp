@@ -765,7 +765,7 @@ uint32_t doUpdateDelete(THD *thd)
 	if (rc != 0 )
 	{
 		setError(current_thd, ER_READ_ONLY_MODE, "Cannot execute the statement. DBRM is read only!");
-		return ER_CHECK_NOT_IMPLEMENTED;
+		return ER_READ_ONLY_MODE;
 	}
 
 	// stats start
@@ -1352,7 +1352,7 @@ uint32_t doUpdateDelete(THD *thd)
 				colrids = csc->columnRIDs(deleteTableName);
 			}
 			catch (IDBExcept &ie) {
-                thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ie.what());
+                thd->raise_error_printf(ER_INTERNAL_ERROR, ie.what());
 				ci->rc = -1;
                 thd->set_row_count_func(0);
 				return 0;
@@ -4302,8 +4302,8 @@ int ha_calpont_impl_rnd_pos(uchar *buf, uchar *pos)
 {
 	IDEBUG( cout << "ha_calpont_impl_rnd_pos" << endl);
 	string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_ORDERBY_TOO_BIG);
-	setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-	return ER_CHECK_NOT_IMPLEMENTED;
+	setError(current_thd, ER_INTERNAL_ERROR, emsg);
+	return ER_INTERNAL_ERROR;
 }
 
 // Called from mysql parser to set IDB error for window functions

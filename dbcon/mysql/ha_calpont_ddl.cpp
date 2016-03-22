@@ -1342,7 +1342,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
+								thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1351,7 +1351,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Unknown exception caught when checking any rows in the table.");
+								thd->raise_error_printf(ER_INTERNAL_ERROR, "Unknown exception caught when checking any rows in the table.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1499,7 +1499,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					{
 						rc = 1;
 						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
+						thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1713,7 +1713,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
+								thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1722,7 +1722,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Unknown exception caught when checking any existing null values in the column.");
+								thd->raise_error_printf(ER_INTERNAL_ERROR, "Unknown exception caught when checking any existing null values in the column.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1731,7 +1731,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							{
 								rc = 1;
 								thd->get_stmt_da()->set_overwrite_status(true);
-								thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The existing rows in this column has null value already.");
+								thd->raise_error_printf(ER_INTERNAL_ERROR, "The existing rows in this column has null value already.");
 								ci->alterTableState = cal_connection_info::NOT_ALTER;
 								ci->isAlter = false;
 								return rc;
@@ -1930,7 +1930,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		catch (runtime_error& ex)
 		{
 			thd->get_stmt_da()->set_overwrite_status(true);
-			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, ex.what());
+			thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
 			return 1;
 		}
 		algorithm::to_upper(tablecomment);
