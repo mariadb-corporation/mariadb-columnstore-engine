@@ -4583,7 +4583,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + amazonDefaultPassword + " 'ls' 1  > /tmp/login_test.log";
 					system(cmd.c_str());
-					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
+					if (WEXITSTATUS(rtnCode) != 0) {
 						//check for RSA KEY ISSUE and fix
 						if (oam.checkLogStatus("/tmp/login_test.log", "Offending RSA key")) {
 							log.writeLog(__LINE__, "addModule - login failed, RSA key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
