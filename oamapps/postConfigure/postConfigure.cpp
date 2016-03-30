@@ -3106,7 +3106,6 @@ int main(int argc, char *argv[])
 		
 				cout << "  DONE" << endl;
 			}
-
 		}
 	}
 
@@ -3280,9 +3279,13 @@ int main(int argc, char *argv[])
 			
 					//run remote command script
 					cout << endl << "----- Starting InfiniDB on '" + remoteModuleName + "' -----" << endl << endl;
+
+					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Calpont.xml " +  installDir + "/etc/. > /dev/null 2>&1";
+					int rtnCode = system(cmd.c_str());
+
 					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
 						" '" + installDir + "/bin/infinidb restart' 0";
-					int rtnCode = system(cmd.c_str());
+					rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0)
 						cout << "Error with running remote_command.sh" << endl;
 					else
@@ -4302,7 +4305,7 @@ bool storageSetup(string cloud)
 	if ( DBRootStorageType == "hdfs" )
 		storageType = "4";
 
-	cout << "----- Setup High Availability Data Storage Mount Configuration -----" << endl << endl;
+	cout << endl << "----- Setup High Availability Data Storage Mount Configuration -----" << endl << endl;
 
 	if ( glusterInstalled == "n" && hadoopInstalled == "n" )
 	{
