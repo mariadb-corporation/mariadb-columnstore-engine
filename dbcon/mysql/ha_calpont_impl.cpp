@@ -2609,7 +2609,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			int status = cp_get_plan(thd, csep);
 			//if (cp_get_plan(thd, csep) != 0)
 			if (status > 0)
-				return ER_INTERNAL_ERROR;
+				goto internal_error;
 			else if (status < 0)
 				return 0;
 
@@ -3029,7 +3029,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 	{
 		if (ci->cal_conn_hndl)
 		{
-			// send ExeMgr a signal before cloing the connection
+			// send ExeMgr a signal before closing the connection
 			ByteStream msg;
 			ByteStream::quadbyte qb = 0;
 			msg << qb;
