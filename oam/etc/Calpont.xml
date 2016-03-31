@@ -456,7 +456,7 @@
 		<PMInstanceType>unassigned</PMInstanceType>
 		<PMVolumeSize>unassigned</PMVolumeSize>
 		<AmazonPMFailover>y</AmazonPMFailover>
-		<AmazonAutoTagging>n</AmazonAutoTagging>
+		<AmazonAutoTagging>y</AmazonAutoTagging>
 		<AmazonElasticIPCount>0</AmazonElasticIPCount>
 		<AmazonElasticIPAddr1>unassigned</AmazonElasticIPAddr1>
 		<AmazonElasticModule1>unassigned</AmazonElasticModule1>
