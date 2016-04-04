@@ -4463,7 +4463,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	//
 
 	// This is the password that is set in a amazon AMI
-	string amazonDefaultPassword = "Calpont1";
+	string amazonDefaultPassword = "root";
 
 	if ( password == "ssh" && amazon )
 	{	// check if there is a root password stored
@@ -4474,7 +4474,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		}
 		catch(...)
 		{
-			rpw = oam::UnassignedName;
+			rpw = "root";
 		}
 
 		if (rpw != oam::UnassignedName)
