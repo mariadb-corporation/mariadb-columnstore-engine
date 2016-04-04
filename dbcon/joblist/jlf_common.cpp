@@ -56,7 +56,7 @@ uint32_t uniqTupleKey(JobInfo& jobInfo,
                       bool correlated=false)
 {
 	uint64_t subId = jobInfo.subId;
-	if (correlated)
+	if (correlated && jobInfo.pJobInfo)
 		subId = jobInfo.pJobInfo->subId;
 
 	string alias(ta);
@@ -212,7 +212,7 @@ uint32_t getTupleKey_(const JobInfo& jobInfo,
 				uint64_t engine = 0)
 {
 	uint64_t subId = jobInfo.subId;
-	if (correlated)
+	if (correlated && jobInfo.pJobInfo)
 		subId = jobInfo.pJobInfo->subId;
 
 	string alias(tblAlias);
@@ -541,7 +541,7 @@ TupleInfo setExpTupleInfo(const execplan::CalpontSystemCatalog::ColType& ct, uin
 	// pretend all expressions belong to "virtual" table EXPRESSION, (CNX_EXP_TABLE_ID, expression)
 	// CNX_EXP_TABLE_ID(999) is not for user table or column, there will be no confilict in queries.
 	JobInfo* ji = &jobInfo;
-	if (cr)
+	if (cr && jobInfo.pJobInfo)
 		ji = jobInfo.pJobInfo;
 
 	string expAlias("$exp");
@@ -563,7 +563,7 @@ TupleInfo setExpTupleInfo(const execplan::ReturnedColumn* rc, JobInfo& jobInfo)
 uint32_t getExpTupleKey(const JobInfo& jobInfo, uint64_t eid, bool cr)
 {
 	const JobInfo* ji = &jobInfo;
-	if (cr)
+	if (cr && jobInfo.pJobInfo)
 		ji = jobInfo.pJobInfo;
 
 	string expAlias("$exp");
