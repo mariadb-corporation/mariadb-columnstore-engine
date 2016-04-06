@@ -297,13 +297,13 @@ if { $INSTALLTYPE == "initial"} {
 	send_user "Run MySQL Setup Scripts on Module               "
 	send "ssh $USERNAME@$SERVER '$BASH $INSTALLDIR/bin/post-mysqld-install'\n"
 	if { $PASSWORD != "ssh" } {
-		set timeout 30
+		set timeout 60
 		expect {
 			"word: " { send "$PASSWORD\n" }
 			"passphrase" { send "$PASSWORD\n" }
 		}
 	}
-	set timeout 20
+	set timeout 60
 	expect {
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	}
