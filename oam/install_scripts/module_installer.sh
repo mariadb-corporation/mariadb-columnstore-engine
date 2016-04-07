@@ -152,6 +152,14 @@ if test -f $INFINIDB_INSTALL_DIR/mysql/my.cnf ; then
 	$INFINIDB_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > /tmp/mycnfUpgrade_port.log 2>&1
 fi
 
+# if um, run mysql install scripts
+if [ $module = "um" ]; then
+	echo "Run post-mysqld-install"
+	$INFINIDB_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
+	echo "Run post-mysql-install"
+	$INFINIDB_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
+fi
+
 
 echo " "
 echo "!!!Module Installation Successfully Completed!!!"
