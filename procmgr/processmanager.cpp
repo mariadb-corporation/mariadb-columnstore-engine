@@ -4580,7 +4580,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
 					system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0) {
+					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
 						//check for RSA KEY ISSUE and fix
 						if (oam.checkLogStatus("/tmp/login_test.log", "Offending RSA key")) {
 							log.writeLog(__LINE__, "addModule - login failed, RSA key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
