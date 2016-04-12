@@ -4891,7 +4891,10 @@ int processCommand(string* arguments)
 				if (arguments[4] != "")
 					password = arguments[4];
 				else
-					password = "ssh";
+				{
+					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+					password = dataPrompt(prompt);
+				}
 
 				if (arguments[5] != "")
 					dbrootPerPM = atoi(arguments[5].c_str());
@@ -4913,7 +4916,10 @@ int processCommand(string* arguments)
 				if (arguments[3] != "")
 					password = arguments[3];
 				else
-					password = "ssh";
+				{
+					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+					password = dataPrompt(prompt);
+				}
 
 				if (arguments[4] != "")
 					dbrootPerPM = atoi(arguments[4].c_str());
