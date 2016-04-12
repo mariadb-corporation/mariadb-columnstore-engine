@@ -4892,6 +4892,7 @@ int processCommand(string* arguments)
 					password = arguments[4];
 				else
 				{
+					cout << endl;
 					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
 					password = dataPrompt(prompt);
 				}
@@ -4917,6 +4918,7 @@ int processCommand(string* arguments)
 					password = arguments[3];
 				else
 				{
+					cout << endl;
 					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
 					password = dataPrompt(prompt);
 				}
@@ -4966,7 +4968,7 @@ int processCommand(string* arguments)
 				{
 					if ( cloud == "amazon-ec2" )
 					{
-						cout << endl << "number of Instance-IDs (" << inputnames.size() << ") is less than Module Count (" << moduleCount << "), will launch new Instance(s)" << endl;
+						cout << endl << "Launching new Instance(s)" << endl;
 						for ( int id = inputnames.size() ; id < moduleCount ; id++ )
 						{
 							inputnames.push_back(oam::UnassignedName);
