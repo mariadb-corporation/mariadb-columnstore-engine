@@ -4462,9 +4462,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	// Verify Host IP and Password
 	//
 
-	// This is the password that is set in a amazon AMI
-	string amazonDefaultPassword = "root";
-
 	if ( password == "ssh" && amazon )
 	{	// check if there is a root password stored
 		string rpw = oam::UnassignedName;
@@ -4581,7 +4578,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 						continue;
 					}
 
-					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + amazonDefaultPassword + " 'ls' 1  > /tmp/login_test.log";
+					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
 					system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						//check for RSA KEY ISSUE and fix
@@ -5007,7 +5004,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 		//set root password
 		if (amazon) {
-			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + amazonDefaultPassword + " '/root/updatePassword.sh " + password + "' > /tmp/password_change.log";
+			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/updatePassword.sh " + password + "' > /tmp/password_change.log";
 			//log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
 			rtnCode = system(cmd.c_str());
 			if (WEXITSTATUS(rtnCode) == 0)
