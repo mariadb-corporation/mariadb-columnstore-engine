@@ -5930,14 +5930,14 @@ namespace oam
      *
      ****************************************************************************/
 
-    void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist)
+    void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string EBSsize)
 	{
 		int SystemDBRootCount = 0;
 		string cloud;
 		string DBRootStorageType;
 		string volumeSize;
 		Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
-        string Section = "SystemConfig";
+        	string Section = "SystemConfig";
 
 		try {
 			getSystemConfig("DBRootCount", SystemDBRootCount);
@@ -5957,6 +5957,20 @@ namespace oam
 		if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") && 
 				DBRootStorageType == "external" )
 		{
+			if ( volumeSize == oam::UnassignedName ) 
+			{
+				if ( EBSsize != oam::UnassignedName ) {
+					volumeSize = EBSsize;
+					setSystemConfig("PMVolumeSize", volumeSize);
+				}
+			}
+			else
+			{
+				if ( EBSsize != oam::UnassignedName ) {
+					volumeSize = EBSsize;
+				}
+			}	
+
 			if ( newSystemDBRootCount > MAX_DBROOT_AMAZON )
 			{
 				cout << "ERROR: Failed add, total Number of DBRoots would be over maximum of " << MAX_DBROOT_AMAZON << endl;

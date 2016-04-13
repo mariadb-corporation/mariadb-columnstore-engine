@@ -14,7 +14,7 @@ fi
 
 if [ "$1" = "create" ]; then
 	if [ "$2" = "" ]; then
-		echo "Enter of the volume, in GiB (1-1024)"
+		echo "Enter size of the volume, in GiB (1-1024)"
 		exit 1
 	fi
 	volumeSize="$2"

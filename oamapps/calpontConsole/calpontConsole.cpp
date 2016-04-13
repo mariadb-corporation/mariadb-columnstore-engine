@@ -1666,65 +1666,84 @@ int processCommand(string* arguments)
 
         case 14: // addDbroot parameters: dbroot-number
         {
-			string GlusterConfig = "n";
-			try {
-				oam.getSystemConfig( "GlusterConfig", GlusterConfig);
-			}
-			catch(...)
-			{}
+		string GlusterConfig = "n";
+		try {
+			oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+		}
+		catch(...)
+		{}
 
-			if (GlusterConfig == "y") {
-				cout << endl << "**** addDbroot Not Supported on Data Redundancy Configured System, use addModule command to expand your capacity" << endl;
-				break;
-			}
+		if (GlusterConfig == "y") {
+			cout << endl << "**** addDbroot Not Supported on Data Redundancy Configured System, use addModule command to expand your capacity" << endl;
+			break;
+		}
 
-			if ( localModule != parentOAMModule ) {
-				// exit out since not on active module
-				cout << endl << "**** addDbroot Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
-				break;
-			}
+		if ( localModule != parentOAMModule ) {
+			// exit out since not on active module
+			cout << endl << "**** addDbroot Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
+			break;
+		}
 
-            if (arguments[1] == "")
-            {
-                // need atleast 1 arguments
-                cout << endl << "**** addDbroot Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                break;
-            }
+		string cloud;
+		bool amazon = false;
+		try {
+			oam.getSystemConfig("Cloud", cloud);
+		}
+		catch(...) {}
 
-            if (arguments[2] != "")
-            {
-                // error out if extra arguments exist to catch if they meant to use assigndbrootpmconfig
-                cout << endl << "**** addDbroot Failed : Extra Parameter passed, enter 'help' for additional information" << endl;
-                break;
-            }
+		string::size_type pos = cloud.find("amazon",0);
+		if (pos != string::npos)
+			amazon = true;
 
-			int dbrootNumber = atoi(arguments[1].c_str());
+		if (arguments[1] == "")
+		{
+			// need atleast 1 arguments
+			cout << endl << "**** addDbroot Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
+			break;
+		}
 
-			//get dbroots ids for reside PM
-            try
-            {
-				DBRootConfigList dbrootlist;
-                oam.addDbroot(dbrootNumber, dbrootlist);
+		int dbrootNumber = atoi(arguments[1].c_str());
 
-				cout << endl << " New DBRoot IDs added = ";
-
-				DBRootConfigList::iterator pt = dbrootlist.begin();
-				for( ; pt != dbrootlist.end() ;)
-				{
-					cout << oam.itoa(*pt);
-					pt++;
-					if (pt != dbrootlist.end())
-						cout << ", ";
-				}
+		string EBSsize = oam::UnassignedName;
+		if (amazon)
+		{
+			if ( arguments[2] != "")
+				EBSsize = arguments[2];
+			else
+			{
 				cout << endl;
-            }
-            catch (exception& e)
-            {
-                cout << endl << "**** addDbroot Failed: " << e.what() << endl;
-				break;
-            }
+				oam.getSystemConfig("PMVolumeSize", EBSsize);
 
+				string prompt = "Enter EBS storage size in GB: (" + EBSsize + "): ";
+				EBSsize = dataPrompt(prompt);
+			}
+		}
+
+		//get dbroots ids for reside PM
+		try
+		{
+			DBRootConfigList dbrootlist;
+                	oam.addDbroot(dbrootNumber, dbrootlist, EBSsize);
+
+			cout << endl << " New DBRoot IDs added = ";
+
+			DBRootConfigList::iterator pt = dbrootlist.begin();
+			for( ; pt != dbrootlist.end() ;)
+			{
+				cout << oam.itoa(*pt);
+				pt++;
+				if (pt != dbrootlist.end())
+					cout << ", ";
+			}
 			cout << endl;
+		}
+		catch (exception& e)
+		{
+			cout << endl << "**** addDbroot Failed: " << e.what() << endl;
+					break;
+		}
+
+		cout << endl;
         }
         break;
 

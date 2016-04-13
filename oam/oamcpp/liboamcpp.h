@@ -2244,7 +2244,7 @@ namespace oam
 		/**
 		*@brief add DBRoot
 		*/
-		EXPORT void addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist);
+		EXPORT void addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, std::string EBSsize = oam::UnassignedName);
 
 		/**
 		*@brief distribute Fstab Updates
