@@ -129,6 +129,9 @@ string DBRootStorageLoc;
 string DBRootStorageType;
 string UMStorageType;
 
+string PMVolumeSize = oam::UnassignedName;
+string UMVolumeSize = oam::UnassignedName;
+
 int DBRootCount;
 string deviceName;
 
@@ -2123,33 +2126,62 @@ int main(int argc, char *argv[])
 				if ( moduleType == "um" && moduleDisableState == oam::ENABLEDSTATE) {
 					//get EC2 volume name and info
 					if ( UMStorageType == "external" && cloud == "amazon" &&
-							IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) {
+						IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) {
 
+						string create = "y";
+
+						while(true)
+						{
+							pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
+							if (pcommand)
+							{
+								if (strlen(pcommand) > 0) create = pcommand;
+								callFree(pcommand);
+							}
+							if ( create == "y" || create == "n" )
+								break;
+							else
+								cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+							create = "y";
+							if ( noPrompting )
+								exit(1);
+						}
+					
 						string volumeNameID = "UMVolumeName" + oam.itoa(moduleID);
 						string volumeName = oam::UnassignedName;
 						string deviceNameID = "UMVolumeDeviceName" + oam.itoa(moduleID);
 						string deviceName = oam::UnassignedName;
-						try {
-							volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
-							deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
-						}
-						catch(...)
-						{}
 
-						prompt = "Enter Volume ID assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand)
-						{
-							if (strlen(pcommand) > 0) volumeName = pcommand;	
-							callFree(pcommand);
+						if ( create == "n" ) {
+							// prompt for volume ID
+							try {
+								volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
+							}
+							catch(...)
+							{}
+	
+							prompt = "Enter Volume ID assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
+							pcommand = callReadline(prompt.c_str());
+							if (pcommand)
+							{
+								if (strlen(pcommand) > 0) volumeName = pcommand;	
+								callFree(pcommand);
+							}
+	
+							//get device name based on dbroot ID
+							deviceName = "/dev/sdf" + oam.itoa(moduleID);
 						}
-
-						prompt = "Enter Device Name (/dev/sdxx) '" + newModuleName + "' (" + deviceName + ") > ";
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand)
+						else
 						{
-							if (strlen(pcommand) > 0) deviceName = pcommand;	
-							callFree(pcommand);
+							//create new UM volume
+							try{
+
+    								oam.addUMdisk(moduleID, volumeName, deviceName, UMVolumeSize);
+							}
+							catch(...) {
+								cout << "ERROR: volume create failed for " + newModuleName << endl;
+								return false;
+							}
 						}
 
 						//write volume and device name
@@ -2405,36 +2437,73 @@ int main(int argc, char *argv[])
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
 							cout << endl;
+
+							string create = "y";
+	
+							while(true)
+							{
+								pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
+								if (pcommand)
+								{
+									if (strlen(pcommand) > 0) create = pcommand;
+									callFree(pcommand);
+								}
+								if ( create == "y" || create == "n" )
+									break;
+								else
+									cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+								create = "y";
+								if ( noPrompting )
+									exit(1);
+							}
+					
+
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;
-							try {
-								volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
-							}
-							catch(...)
-							{}
-
-							prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
-							pcommand = callReadline(prompt.c_str());
-							if (pcommand)
-							{
-								if (strlen(pcommand) > 0) volumeName = pcommand;	
-								callFree(pcommand);
-							}
-
 							string deviceNameID = "PMVolumeDeviceName" + *it;
 							string deviceName = oam::UnassignedName;
 							try {
+								volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
 								deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
 							}
 							catch(...)
 							{}
 
-							prompt = "Enter Device Name (/dev/sdxx) for volume '" + volumeName + "' (" + deviceName + ") > ";
-							pcommand = callReadline(prompt.c_str());
-							if (pcommand)
+
+							if ( create == "n" ) {
+								prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
+								pcommand = callReadline(prompt.c_str());
+								if (pcommand)
+								{
+									if (strlen(pcommand) > 0) volumeName = pcommand;	
+									callFree(pcommand);
+								}
+
+							}
+							else
 							{
-								if (strlen(pcommand) > 0) deviceName = pcommand;	
-								callFree(pcommand);
+								// create amazon ebs dbroot
+								try
+								{
+									DBRootConfigList dbrootlist;
+									dbrootlist.push_back(atoi(DBrootID.c_str()));
+
+									oam.addDbroot(1, dbrootlist, PMVolumeSize);
+						
+									sleep(2);
+									try {
+										volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
+										deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
+									}
+									catch(...)
+									{}
+
+								}
+								catch (exception& e)
+								{
+									cout << endl << "**** addDbroot Failed: " << e.what() << endl;
+											break;
+								}
 							}
 
 							//write volume and device name
@@ -4240,8 +4309,27 @@ bool storageSetup(string cloud)
 		if ( storageType == "1" )
 			UMStorageType = "internal";
 		else
+		{
 			UMStorageType = "external";
+
+			cout << endl;
+			oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
 	
+			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + "): ";
+			PMVolumeSize = callReadline(prompt);
+	
+			//set DBRootStorageType
+			try {
+				sysConfig->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting UMVolumeSize in the InfiniDB System Configuration file" << endl;
+				return false;
+			}
+		}
+
+
 		try {
 			sysConfig->setConfig(InstallSection, "UMStorageType", UMStorageType);
 		}
@@ -4438,6 +4526,26 @@ bool storageSetup(string cloud)
 		catch(...)
 		{
 			cout << "ERROR: Problem setting UMStorageType in the InfiniDB System Configuration file" << endl;
+			return false;
+		}
+	}
+
+	// if external and amazon, prompt for storage size
+	if ( storageType == "2" && cloud == "amazon")
+	{
+		cout << endl;
+		oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
+
+		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + "): ";
+		PMVolumeSize = callReadline(prompt);
+
+		//set DBRootStorageType
+		try {
+			sysConfig->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting PMVolumeSize in the InfiniDB System Configuration file" << endl;
 			return false;
 		}
 	}

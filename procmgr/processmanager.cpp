@@ -4656,42 +4656,13 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					
 						if ( volumeName.empty() || volumeName == oam::UnassignedName ) {
 							// need to create a new one
-							string UMVolumeSize = "10";
+							string device;
 							try{
-								oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
+
+    								oam.addUMdisk(moduleID, volumeName, device);
 							}
-							catch(...) {}
-
-							log.writeLog(__LINE__, "addModule - Create new Volume for: " + (*listPT).DeviceName, LOG_TYPE_DEBUG);
-							string volumeName = oam.createEC2Volume(UMVolumeSize);
-							if ( volumeName == "failed" ) {
-								log.writeLog(__LINE__, "addModule: create volume failed", LOG_TYPE_CRITICAL);
-								pthread_mutex_unlock(&THREAD_LOCK);
-								return API_FAILURE;
-							}
-
-							//attach and format volumes
-							string device = "/dev/sdf" + oam.itoa(moduleID);
-
-							string localInstance = oam.getEC2LocalInstance();
-
-							//attach volumes to local instance
-							log.writeLog(__LINE__, "addModule - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
-							if (!oam.attachEC2Volume(volumeName, device, localInstance)) {
-								log.writeLog(__LINE__, "addModule: volume failed to attach to local instance", LOG_TYPE_CRITICAL);
-								pthread_mutex_unlock(&THREAD_LOCK);
-								return API_FAILURE;
-							}
-				
-							//format attached volume
-							log.writeLog(__LINE__, "addModule - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
-							string cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
-							system(cmd.c_str());
-				
-							//detach volume
-							log.writeLog(__LINE__, "addModule - detach new Volume from local instance: " + volumeName, LOG_TYPE_DEBUG);
-							if (!oam.detachEC2Volume(volumeName)) {
-								log.writeLog(__LINE__, "addModule: volume failed to deattach to local instance", LOG_TYPE_CRITICAL);
+							catch(...) {
+								log.writeLog(__LINE__, "addModule: volume create failed for um: " + moduleName, LOG_TYPE_CRITICAL);
 								pthread_mutex_unlock(&THREAD_LOCK);
 							}
 			
@@ -4712,21 +4683,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 							}
 							catch(...)
 							{}
-
-							// add instance tag
-							string systemName;
-							{
-								try{
-									oam.getSystemConfig("SystemName", systemName);
-								}
-								catch(...) {}
-							}
-
-							if ( AmazonAutoTagging == "y" )
-							{
-								string tagValue = systemName + "-" + moduleName;
-								oam.createEC2tag( volumeName, "Name", tagValue );
-							}
 
 							log.writeLog(__LINE__, "addModule - create/attach new volume: " + volumeName + "/" + device, LOG_TYPE_DEBUG);
 

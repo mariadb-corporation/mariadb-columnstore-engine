@@ -2247,6 +2247,11 @@ namespace oam
 		EXPORT void addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, std::string EBSsize = oam::UnassignedName);
 
 		/**
+		*@brief add UM Disk
+		*/
+		EXPORT void addUMdisk(const int moduleID, std::string& volumeName, std::string& device, std::string EBSsize = oam::UnassignedName);
+
+		/**
 		*@brief distribute Fstab Updates
 		*/
 		EXPORT void distributeFstabUpdates(std::string entry, std::string toPM = "system" );

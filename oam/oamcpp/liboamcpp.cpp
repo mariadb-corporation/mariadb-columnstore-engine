@@ -5924,13 +5924,76 @@ namespace oam
 
     /***************************************************************************
      *
+     * Function:  addUMdisk
+     *
+     * Purpose:   add UM disk
+     *
+     ****************************************************************************/
+
+    	void Oam::addUMdisk(const int moduleID, std::string& volumeName, std::string& device, string EBSsize)
+	{
+		string UMVolumeSize = "10";
+		try{
+			getSystemConfig("UMVolumeSize", UMVolumeSize);
+		}
+		catch(...) {}
+
+		writeLog("addUMdisk - Create new Volume for um" + itoa(moduleID), LOG_TYPE_DEBUG);
+		volumeName = createEC2Volume(UMVolumeSize);
+		if ( volumeName == "failed" ) {
+			writeLog("addModule: create volume failed", LOG_TYPE_CRITICAL);
+			exceptionControl("addUMdisk", API_FAILURE);
+		}
+
+		//attach and format volumes
+		device = "/dev/sdf" + itoa(moduleID);
+
+		string localInstance = getEC2LocalInstance();
+
+		//attach volumes to local instance
+		writeLog("addUMdisk - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
+		if (!attachEC2Volume(volumeName, device, localInstance)) {
+			writeLog("addUMdisk: volume failed to attach to local instance", LOG_TYPE_CRITICAL);
+			exceptionControl("addUMdisk", API_FAILURE);
+		}
+
+		//format attached volume
+		writeLog("addUMdisk - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
+		string cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+		system(cmd.c_str());
+
+		//detach volume
+		writeLog("addUMdisk - detach new Volume from local instance: " + volumeName, LOG_TYPE_DEBUG);
+		if (!detachEC2Volume(volumeName)) {
+			exceptionControl("addUMdisk", API_FAILURE);
+		}
+
+		// add instance tag
+		string AmazonAutoTagging;
+		string systemName;
+
+		try {
+			getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
+			getSystemConfig("SystemName", systemName);
+		}
+		catch(...) {}
+
+		if ( AmazonAutoTagging == "y" )
+		{
+			string tagValue = systemName + "-um" + itoa(moduleID);
+			createEC2tag( volumeName, "Name", tagValue );
+		}
+	}
+
+    /***************************************************************************
+     *
      * Function:  addDbroot
      *
      * Purpose:   add DBRoot
      *
      ****************************************************************************/
 
-    void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string EBSsize)
+    	void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string EBSsize)
 	{
 		int SystemDBRootCount = 0;
 		string cloud;
@@ -5999,33 +6062,36 @@ namespace oam
 			dbrootConfigList.push_back(*pt1);
 		}
 
-		int newID = 1;
-		for ( int count = 0 ; count < dbrootNumber ; count++ )
+		if ( dbrootlist.empty() )
 		{
-			//check for match
-			while (true)
+			int newID = 1;
+			for ( int count = 0 ; count < dbrootNumber ; count++ )
 			{
-				bool found = false;
-				DBRootConfigList::iterator pt = dbrootConfigList.begin();
-				for( ; pt != dbrootConfigList.end() ; pt++)
+				//check for match
+				while (true)
 				{
-					if ( newID == *pt ) {
+					bool found = false;
+					DBRootConfigList::iterator pt = dbrootConfigList.begin();
+					for( ; pt != dbrootConfigList.end() ; pt++)
+					{
+						if ( newID == *pt ) {
+							newID++;
+							found = true;
+							break;
+						}
+					}
+	
+					if (!found)
+					{
+						dbrootlist.push_back(newID);
 						newID++;
-						found = true;
 						break;
 					}
-				}
-
-				if (!found)
-				{
-					dbrootlist.push_back(newID);
-					newID++;
-					break;
 				}
 			}
 		}
 
-		if ( dbrootlist.size() == 0 )
+		if ( dbrootlist.empty() )
 		{
 			cout << "ERROR: Failed add, No DBRoot IDs available" << endl;
 			exceptionControl("addDbroot", API_INVALID_PARAMETER);
