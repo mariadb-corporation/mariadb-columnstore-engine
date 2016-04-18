@@ -4343,7 +4343,11 @@ bool storageSetup(string cloud)
 			UMStorageType = "external";
 
 			cout << endl;
-			oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
+			try {
+				oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
+			}
+			catch(...)
+			{}
 	
 			if ( UMVolumeSize.empty() || UMVolumeSize == "")
 				UMVolumeSize = oam::UnassignedName;
@@ -4567,7 +4571,11 @@ bool storageSetup(string cloud)
 	if ( storageType == "2" && cloud == "amazon")
 	{
 		cout << endl;
-		oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
+		try {
+			oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
+		}
+		catch(...)
+		{}
 
 		if ( PMVolumeSize.empty() || PMVolumeSize == "" )
 			PMVolumeSize = oam::UnassignedName;
