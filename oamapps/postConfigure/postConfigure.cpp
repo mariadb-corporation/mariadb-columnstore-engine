@@ -2490,7 +2490,6 @@ int main(int argc, char *argv[])
 								if ( noPrompting )
 									exit(1);
 							}
-					
 
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;
@@ -2503,7 +2502,6 @@ int main(int argc, char *argv[])
 							catch(...)
 							{}
 
-
 							if ( create == "n" ) {
 								prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
 								pcommand = callReadline(prompt.c_str());
@@ -2512,7 +2510,6 @@ int main(int argc, char *argv[])
 									if (strlen(pcommand) > 0) volumeName = pcommand;	
 									callFree(pcommand);
 								}
-
 							}
 							else
 							{

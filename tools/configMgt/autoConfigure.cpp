@@ -1456,9 +1456,13 @@ int main(int argc, char *argv[])
 					string volumeName = oam::UnassignedName;
 					string deviceNameID = "PMVolumeDeviceName" + oam.itoa(id);
 					string deviceName = oam::UnassignedName;
+					string amazondeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(id);
+					string amazondeviceName = oam::UnassignedName;
+
 					try {
 						volumeName = sysConfigOld->getConfig(InstallSection, volumeNameID);
 						deviceName = sysConfigOld->getConfig(InstallSection, deviceNameID);
+						amazondeviceName = sysConfigOld->getConfig(InstallSection, amazondeviceNameID);
 					}
 					catch(...)
 					{}
@@ -1466,6 +1470,25 @@ int main(int argc, char *argv[])
 					try {
 						sysConfigNew->setConfig(InstallSection, volumeNameID, volumeName);
 						sysConfigNew->setConfig(InstallSection, deviceNameID, deviceName);
+						sysConfigNew->setConfig(InstallSection, amazondeviceNameID, amazondeviceName);
+					}
+					catch(...)
+					{}
+
+
+					string UMVolumeSize = oam::UnassignedName;
+					string PMVolumeSize = oam::UnassignedName;
+
+					try {
+						UMVolumeSize = sysConfigOld->getConfig(InstallSection, "UMVolumeSize");
+						PMVolumeSize = sysConfigOld->getConfig(InstallSection, "PMVolumeSize");
+					}
+					catch(...)
+					{}
+	
+					try {
+						sysConfigNew->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
+						sysConfigNew->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
 					}
 					catch(...)
 					{}

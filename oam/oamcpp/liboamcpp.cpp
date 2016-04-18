@@ -6156,7 +6156,7 @@ namespace oam
 				catch(...) {}
 
 				string deviceName = boost::get<0>(st);
-				string labelName = boost::get<1>(st);
+				string amazonDeviceName = boost::get<1>(st);
 
 				//attach volumes to local instance
 				retry = 0;
@@ -6177,7 +6177,7 @@ namespace oam
 			
 				//format attached volume
 				cout << "  Formatting DBRoot #" << itoa(*pt1) << ", please wait..." << endl;
-				string cmd = "mkfs.ext2 -F " + deviceName + " " + "-L " + labelName + " > /tmp/format.log 2>&1";
+				string cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
 
 				writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
 
@@ -6188,17 +6188,19 @@ namespace oam
 
 				string volumeNameID = "PMVolumeName" + itoa(*pt1);
 				string deviceNameID = "PMVolumeDeviceName" + itoa(*pt1);
-	
+				string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + itoa(*pt1);
+
 				//write volume and device name
 				try {
 					sysConfig->setConfig(Section, volumeNameID, volumeName);
-					sysConfig->setConfig(Section, deviceNameID, labelName);
+					sysConfig->setConfig(Section, deviceNameID, deviceName);
+					sysConfig->setConfig(Section, amazonDeviceNameID, amazonDeviceName);
 				}
 				catch(...)
 				{}
 	
 				//update /etc/fstab with mount
-				string entry = labelName + " " + InstallDir + "/data" + itoa(*pt1) + " ext2 noatime,nodiratime,noauto 0 0";
+				string entry = amazonDeviceName + " " + InstallDir + "/data" + itoa(*pt1) + " ext2 noatime,nodiratime,noauto 0 0";
 	
 				//use from addmodule later
 				cmd = "echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
@@ -6895,6 +6897,7 @@ namespace oam
 
 	//current amazon max dbroot id support = 190;
 	string PMdeviceName = "/dev/sd";
+	string amazondeviceName = "/dev/xvd";
 	string deviceLetter[] = {"g","h","i","j","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","end"};
 
     /***************************************************************************
@@ -6911,7 +6914,7 @@ namespace oam
 		int lid = (dbrootid-1) / 10;
 		int did = dbrootid - (dbrootid * lid);
 
-		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), "LABEL=DBROOT" + itoa(dbrootid));
+		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), amazondeviceName + deviceLetter[lid] + itoa(did));
 	}
 
     /***************************************************************************
