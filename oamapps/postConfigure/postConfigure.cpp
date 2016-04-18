@@ -1765,9 +1765,9 @@ int main(int argc, char *argv[])
 								//get local instance name (pm1)
 								string localInstance = oam.getEC2LocalInstance();
 								if ( localInstance == "failed" || localInstance.empty() || localInstance == "") 
-									moduleHostName == oam::UnassignedName;
+									moduleHostName = oam::UnassignedName;
 								else
-									moduleHostName == localInstance;
+									moduleHostName = localInstance;
 							}
 
 							prompt = "Enter EC2 Instance ID  (" + moduleHostName + ") > ";
