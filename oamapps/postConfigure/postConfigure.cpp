@@ -1767,10 +1767,7 @@ int main(int argc, char *argv[])
 								if ( localInstance == "failed" || localInstance.empty() || localInstance == "") 
 									moduleHostName == oam::UnassignedName;
 								else
-								{
 									moduleHostName == localInstance;
-
-								}
 							}
 
 							prompt = "Enter EC2 Instance ID  (" + moduleHostName + ") > ";
@@ -4348,6 +4345,9 @@ bool storageSetup(string cloud)
 			cout << endl;
 			oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
 	
+			if ( UMVolumeSize.empty() )
+				UMVolumeSize = oam::UnassignedName;
+
 			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + "): ";
 			PMVolumeSize = callReadline(prompt);
 	
@@ -4568,6 +4568,9 @@ bool storageSetup(string cloud)
 	{
 		cout << endl;
 		oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
+
+		if ( PMVolumeSize.empty() )
+			PMVolumeSize = oam::UnassignedName;
 
 		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + "): ";
 		PMVolumeSize = callReadline(prompt);
