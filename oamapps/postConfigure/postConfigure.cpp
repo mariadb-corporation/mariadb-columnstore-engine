@@ -1770,7 +1770,7 @@ int main(int argc, char *argv[])
 									moduleHostName = localInstance;
 							}
 
-							prompt = "Enter EC2 Instance ID  (" + moduleHostName + ") > ";
+							prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
 						}
 						else
 							prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " Host Name (" + moduleHostName + ") > ";
@@ -1778,7 +1778,11 @@ int main(int argc, char *argv[])
 						pcommand = callReadline(prompt.c_str());
 						if (pcommand)
 						{
-							if (strlen(pcommand) > 0) newModuleHostName = pcommand;	
+							if (strlen(pcommand) > 0) 
+								newModuleHostName = pcommand;
+							else
+								newModuleHostName = moduleHostName;
+
 							callFree(pcommand);
 						}
 		
@@ -4352,7 +4356,7 @@ bool storageSetup(string cloud)
 			if ( UMVolumeSize.empty() || UMVolumeSize == "")
 				UMVolumeSize = oam::UnassignedName;
 
-			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + "): ";
+			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + ") > ";
 			PMVolumeSize = callReadline(prompt);
 	
 			//set DBRootStorageType
@@ -4580,7 +4584,7 @@ bool storageSetup(string cloud)
 		if ( PMVolumeSize.empty() || PMVolumeSize == "" )
 			PMVolumeSize = oam::UnassignedName;
 
-		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + "): ";
+		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + ") > ";
 		PMVolumeSize = callReadline(prompt);
 
 		//set DBRootStorageType
