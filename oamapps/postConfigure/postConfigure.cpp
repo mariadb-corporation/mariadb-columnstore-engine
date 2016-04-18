@@ -1760,7 +1760,7 @@ int main(int argc, char *argv[])
 						newModuleHostName = moduleHostName;
 						if (cloud == "amazon") {
 							if ( moduleHostName == oam::UnassignedName && 
-								moduleNameDesc == "pm1" )
+								newModuleName == "pm1" )
 							{
 								//get local instance name (pm1)
 								string localInstance = oam.getEC2LocalInstance();
