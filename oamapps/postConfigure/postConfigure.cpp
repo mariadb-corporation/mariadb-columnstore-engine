@@ -1758,8 +1758,23 @@ int main(int argc, char *argv[])
 					while (true)
 					{
 						newModuleHostName = moduleHostName;
-						if (cloud == "amazon")
+						if (cloud == "amazon") {
+							if ( moduleHostName == oam::UnassignedName && 
+								moduleNameDesc == "pm1" )
+							{
+								//get local instance name (pm1)
+								string localInstance = oam.getEC2LocalInstance();
+								if ( localInstance == "failed" || localInstance.empty() || localInstance == "") 
+									moduleHostName == oam::UnassignedName;
+								else
+								{
+									moduleHostName == localInstance;
+
+								}
+							}
+
 							prompt = "Enter EC2 Instance ID  (" + moduleHostName + ") > ";
+						}
 						else
 							prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " Host Name (" + moduleHostName + ") > ";
 
@@ -1796,6 +1811,24 @@ int main(int argc, char *argv[])
 
 								//check Instance ID and get IP Address if running
 								if (cloud == "amazon") {
+									string instanceType = oam.getEC2LocalInstanceType(newModuleHostName);
+									if ( moduleType == "pm" )
+									{
+										try {
+											sysConfig->setConfig(InstallSection, "PMInstanceType", instanceType);
+										}
+										catch(...)
+										{}
+									}
+									else
+									{
+										try {
+											sysConfig->setConfig(InstallSection, "UMInstanceType", instanceType);
+										}
+										catch(...)
+										{}
+									}
+
 									cout << "Getting Private IP Address for Instance " << newModuleHostName << ", please wait..." << endl;
 									newModuleIPAddr = oam.getEC2InstanceIpAddress(newModuleHostName);
 									if (newModuleIPAddr == "stopped") {
@@ -2486,7 +2519,7 @@ int main(int argc, char *argv[])
 								try
 								{
 									DBRootConfigList dbrootlist;
-									dbrootlist.push_back(atoi(DBrootID.c_str()));
+									dbrootlist.push_back(atoi((*it).c_str()));
 
 									oam.addDbroot(1, dbrootlist, PMVolumeSize);
 						
