@@ -1077,6 +1077,15 @@ namespace oam
 
     typedef boost::tuple<uint16_t, std::string, uint16_t> myProcessStatus_t;
 
+    /** @brief Store Device ID Structure
+     *
+     *   Structure that is returned by the getMyProcessStatus API for the
+     *   Local Process OAM Status data stored in the Process Status file
+     *	 Returns: Process ID, Process Name, and Process State
+     */
+
+    typedef boost::tuple<std::string, std::string> storageID_t;
+
     /** @brief User Configuration Structure
      *
      *   Structure that is returned by the getHardwareUserConfig API for the
@@ -2279,7 +2288,7 @@ namespace oam
 		/**
 		*@brief get AWS Device Name for DBRoot ID
 		*/
-		EXPORT std::string getAWSdeviceName( const int dbrootid);
+		EXPORT storageID_t getAWSdeviceName( const int dbrootid);
 
 		/**
 		*@brief set System DBRoot Count

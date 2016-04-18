@@ -6149,7 +6149,14 @@ namespace oam
 				}
 
 				//get device name based on dbroot ID
-				string deviceName = getAWSdeviceName( *pt1 );
+				storageID_t st;
+				try {
+					st = getAWSdeviceName( *pt1 );
+				}
+				catch(...) {}
+
+				string deviceName = boost::get<0>(st);
+				string labelName = boost::get<1>(st);
 
 				//attach volumes to local instance
 				retry = 0;
@@ -6170,7 +6177,10 @@ namespace oam
 			
 				//format attached volume
 				cout << "  Formatting DBRoot #" << itoa(*pt1) << ", please wait..." << endl;
-				string cmd = "mkfs.ext2 -F " + deviceName + " > /dev/null 2>&1";
+				string cmd = "mkfs.ext2 -F " + deviceName + " " + "-L " + labelName + " > /tmp/format.log 2>&1";
+
+				writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
+
 				system(cmd.c_str());
 
 				//detach
@@ -6182,13 +6192,13 @@ namespace oam
 				//write volume and device name
 				try {
 					sysConfig->setConfig(Section, volumeNameID, volumeName);
-					sysConfig->setConfig(Section, deviceNameID, deviceName);
+					sysConfig->setConfig(Section, deviceNameID, labelName);
 				}
 				catch(...)
 				{}
 	
 				//update /etc/fstab with mount
-				string entry = deviceName + " " + InstallDir + "/data" + itoa(*pt1) + " ext2 noatime,nodiratime,noauto 0 0";
+				string entry = labelName + " " + InstallDir + "/data" + itoa(*pt1) + " ext2 noatime,nodiratime,noauto 0 0";
 	
 				//use from addmodule later
 				cmd = "echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
@@ -6895,13 +6905,13 @@ namespace oam
      *
      ****************************************************************************/
 
-	std::string Oam::getAWSdeviceName( const int dbrootid)
+	storageID_t Oam::getAWSdeviceName( const int dbrootid)
 	{
 		//calulate id numbers from DBRoot ID
 		int lid = (dbrootid-1) / 10;
 		int did = dbrootid - (dbrootid * lid);
 
-		return PMdeviceName + deviceLetter[lid] + itoa(did);
+		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), "LABEL=DBROOT" + itoa(dbrootid));
 	}
 
     /***************************************************************************
