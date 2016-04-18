@@ -4345,7 +4345,7 @@ bool storageSetup(string cloud)
 			cout << endl;
 			oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
 	
-			if ( UMVolumeSize.empty() )
+			if ( UMVolumeSize.empty() || UMVolumeSize == "")
 				UMVolumeSize = oam::UnassignedName;
 
 			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + "): ";
@@ -4569,7 +4569,7 @@ bool storageSetup(string cloud)
 		cout << endl;
 		oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
 
-		if ( PMVolumeSize.empty() )
+		if ( PMVolumeSize.empty() || PMVolumeSize == "" )
 			PMVolumeSize = oam::UnassignedName;
 
 		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + "): ";
