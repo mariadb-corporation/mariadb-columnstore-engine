@@ -6237,6 +6237,11 @@ namespace oam
 			exceptionControl("sysConfig->write", API_FAILURE);
 		}
 
+		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+			return;
+
 		//get updated Calpont.xml distributed
 		distributeConfigFile("system");
 
