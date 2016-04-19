@@ -61,6 +61,9 @@ fi
 if test -f /etc/rc.local.calpontSave ; then
 	$sudo mv -f /etc/rc.local.calpontSave /etc/rc.local > /dev/null 2>&1
 fi
+if test -f /etc/fstab.calpontSave ; then
+	$sudo mv -f /etc/fstab.calpontSave /etc/fstab > /dev/null 2>&1
+fi
  
 #remove log file directories
 #rm -rf /var/log/Calpont > /dev/null 2>&1

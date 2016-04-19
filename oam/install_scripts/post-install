@@ -139,11 +139,10 @@ chmod 755 /var/log/Calpont/corefiles > /dev/null 2>&1
 mkdir /mnt/tmp > /dev/null 2>&1
 mkdir /var/log/Calpont/data/archive > /dev/null 2>&1
 
-#remove this fstab back file if its left over from 2.x version
-if test -f /etc/fstab.calpontSave ; then
-	rm -f /etc/fstab.calpontSave > /dev/null 2>&1
-fi
-
+#backup fstab
+touch /etc/fstab
+rm -f /etc/fstab.calpontSave
+cp /etc/fstab /etc/fstab.calpontSave
 
 # install Calpont Log Rotate File
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
