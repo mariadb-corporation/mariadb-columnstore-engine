@@ -61,8 +61,14 @@ fi
 if test -f /etc/rc.local.calpontSave ; then
 	$sudo mv -f /etc/rc.local.calpontSave /etc/rc.local > /dev/null 2>&1
 fi
-if test -f /etc/fstab.calpontSave ; then
-	$sudo mv -f /etc/fstab.calpontSave /etc/fstab > /dev/null 2>&1
+
+export INFINIDB_INSTALL_DIR=$installdir
+
+cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
+if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+	if test -f /etc/fstab ; then
+		$sudo sed -i '/Calpont\/data/d' /etc/fstab > /dev/null 2>&1
+	fi
 fi
  
 #remove log file directories
