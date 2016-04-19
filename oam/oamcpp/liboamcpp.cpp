@@ -6201,7 +6201,11 @@ namespace oam
 	
 				//update /etc/fstab with mount
 				string entry = amazonDeviceName + " " + InstallDir + "/data" + itoa(*pt1) + " ext2 noatime,nodiratime,noauto 0 0";
-	
+
+				//update local fstab	
+				cmd = "echo " + entry + " >> /etc/fstab";
+				system(cmd.c_str());
+
 				//use from addmodule later
 				cmd = "echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
 				system(cmd.c_str());
