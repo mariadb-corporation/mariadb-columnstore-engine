@@ -2528,12 +2528,11 @@ int main(int argc, char *argv[])
 									}
 									catch(...)
 									{}
-
 								}
 								catch (exception& e)
 								{
 									cout << endl << "**** addDbroot Failed: " << e.what() << endl;
-											break;
+									exit(1);
 								}
 							}
 

@@ -1553,16 +1553,20 @@ int processCommand(string* arguments)
 							string volumeName = oam::UnassignedName;
 							string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt);
 							string deviceName = oam::UnassignedName;
+							string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt);
+							string amazondeviceName = oam::UnassignedName;
+
 							try {
 								oam.getSystemConfig( volumeNameID, volumeName);
 								oam.getSystemConfig( deviceNameID, deviceName);
+								oam.getSystemConfig( amazonDeviceNameID, amazondeviceName);
 							}
 							catch(...)
 							{
 								continue;
 							}
 	
-							cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt) << ": " << volumeName << ", " << deviceName << endl;
+							cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
 						}
 					}
 					catch (exception& e)
@@ -1570,6 +1574,7 @@ int processCommand(string* arguments)
 						cout << endl << "**** getSystemDbrootConfig Failed :  " << e.what() << endl;
 					}
 
+					// print un-assigned dbroots
 					DBRootConfigList::iterator pt1 = undbrootlist.begin();
 					for( ; pt1 != undbrootlist.end() ; pt1++)
 					{
@@ -1577,16 +1582,20 @@ int processCommand(string* arguments)
 						string volumeName = oam::UnassignedName;
 						string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt1);
 						string deviceName = oam::UnassignedName;
+						string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt1);
+						string amazondeviceName = oam::UnassignedName;
+
 						try {
 							oam.getSystemConfig( volumeNameID, volumeName);
 							oam.getSystemConfig( deviceNameID, deviceName);
+							oam.getSystemConfig( amazonDeviceNameID, amazondeviceName);
 						}
 						catch(...)
 						{
 							continue;
 						}
 
-						cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt1) << ": " << volumeName << ", " << deviceName << endl;
+						cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt1) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
 					}
 				}
  

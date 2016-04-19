@@ -6274,12 +6274,17 @@ namespace oam
 
     	void Oam::distributeFstabUpdates(std::string entry, std::string toPM)
 	{
-		ACK_FLAG ackflag = oam::ACK_YES;
-        // build and send msg
-        int returnStatus = sendMsgToProcMgr(FSTABUPDATE, toPM, FORCEFUL, ackflag, entry);
+		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+			return;
 
-        if (returnStatus != API_SUCCESS)
-            exceptionControl("distributeFstabUpdates", returnStatus);
+		ACK_FLAG ackflag = oam::ACK_YES;
+		// build and send msg
+		int returnStatus = sendMsgToProcMgr(FSTABUPDATE, toPM, FORCEFUL, ackflag, entry);
+	
+		if (returnStatus != API_SUCCESS)
+           		exceptionControl("distributeFstabUpdates", returnStatus);
 	}
 
     /***************************************************************************
