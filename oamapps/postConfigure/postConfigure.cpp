@@ -2472,25 +2472,6 @@ int main(int argc, char *argv[])
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
 							cout << endl;
 
-							string create = "y";
-	
-							while(true)
-							{
-								pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
-								if (pcommand)
-								{
-									if (strlen(pcommand) > 0) create = pcommand;
-									callFree(pcommand);
-								}
-								if ( create == "y" || create == "n" )
-									break;
-								else
-									cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-								create = "y";
-								if ( noPrompting )
-									exit(1);
-							}
-
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;
 							string deviceNameID = "PMVolumeDeviceName" + *it;
@@ -2502,37 +2483,68 @@ int main(int argc, char *argv[])
 							catch(...)
 							{}
 
-							if ( create == "n" ) {
+							if ( reuseConfig == "n" ) {
+								string create = "y";
+		
+								while(true)
+								{
+									pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
+									if (pcommand)
+									{
+										if (strlen(pcommand) > 0) create = pcommand;
+										callFree(pcommand);
+									}
+									if ( create == "y" || create == "n" )
+										break;
+									else
+										cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+									create = "y";
+									if ( noPrompting )
+										exit(1);
+								}
+	
+								if ( create == "n" ) {
+									prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
+									pcommand = callReadline(prompt.c_str());
+									if (pcommand)
+									{
+										if (strlen(pcommand) > 0) volumeName = pcommand;	
+										callFree(pcommand);
+									}
+								}
+								else
+								{
+									// create amazon ebs dbroot
+									try
+									{
+										DBRootConfigList dbrootlist;
+										dbrootlist.push_back(atoi((*it).c_str()));
+	
+										oam.addDbroot(1, dbrootlist, PMVolumeSize);
+							
+										sleep(2);
+										try {
+											volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
+											deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
+										}
+										catch(...)
+										{}
+									}
+									catch (exception& e)
+									{
+										cout << endl << "**** addDbroot Failed: " << e.what() << endl;
+										exit(1);
+									}
+								}
+							}
+							else
+							{
 								prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
 								pcommand = callReadline(prompt.c_str());
 								if (pcommand)
 								{
 									if (strlen(pcommand) > 0) volumeName = pcommand;	
 									callFree(pcommand);
-								}
-							}
-							else
-							{
-								// create amazon ebs dbroot
-								try
-								{
-									DBRootConfigList dbrootlist;
-									dbrootlist.push_back(atoi((*it).c_str()));
-
-									oam.addDbroot(1, dbrootlist, PMVolumeSize);
-						
-									sleep(2);
-									try {
-										volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
-										deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
-									}
-									catch(...)
-									{}
-								}
-								catch (exception& e)
-								{
-									cout << endl << "**** addDbroot Failed: " << e.what() << endl;
-									exit(1);
 								}
 							}
 
