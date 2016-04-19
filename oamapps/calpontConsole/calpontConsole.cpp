@@ -1566,7 +1566,7 @@ int processCommand(string* arguments)
 								continue;
 							}
 	
-							cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
+							cout << "Amazon EC2 Volume Name/Device Name/Amazon Device Name for DBRoot" << oam.itoa(*pt) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
 						}
 					}
 					catch (exception& e)
@@ -1595,7 +1595,7 @@ int processCommand(string* arguments)
 							continue;
 						}
 
-						cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt1) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
+						cout << "Amazon EC2 Volume Name/Device Name/Amazon Device Name for DBRoot" << oam.itoa(*pt1) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
 					}
 				}
  

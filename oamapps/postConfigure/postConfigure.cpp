@@ -1812,7 +1812,7 @@ int main(int argc, char *argv[])
 
 								//check Instance ID and get IP Address if running
 								if (cloud == "amazon") {
-/*									string instanceType = oam.getEC2LocalInstanceType(newModuleHostName);
+									string instanceType = oam.getEC2LocalInstanceType(newModuleHostName);
 									if ( moduleType == "pm" )
 									{
 										try {
@@ -1829,7 +1829,7 @@ int main(int argc, char *argv[])
 										catch(...)
 										{}
 									}
-*/
+
 									cout << "Getting Private IP Address for Instance " << newModuleHostName << ", please wait..." << endl;
 									newModuleIPAddr = oam.getEC2InstanceIpAddress(newModuleHostName);
 									if (newModuleIPAddr == "stopped") {
