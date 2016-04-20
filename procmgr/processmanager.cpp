@@ -4972,6 +4972,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		//default
 		string binaryInstallDir = installDir;
 
+		//sleep for a bit, amazon adds failed at times with it
+		sleep(10);
+
 		//run installer on remote module
 		if ( remoteModuleType == "um" ||
 			( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
