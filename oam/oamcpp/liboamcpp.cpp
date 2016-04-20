@@ -6198,20 +6198,13 @@ namespace oam
 				}
 				catch(...)
 				{}
-	
-				//update /etc/fstab with mount
-				string entry = amazonDeviceName + " " + InstallDir + "/data" + itoa(*pt1) + " ext2 noatime,nodiratime,noauto 0 0";
 
-				//update local fstab	
-				cmd = "echo " + entry + " >> /etc/fstab";
-				system(cmd.c_str());
-
-				//use from addmodule later
-				cmd = "echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
-				system(cmd.c_str());
+				// fstabs
+				string entry = updateFstab( amazonDeviceName, itoa(*pt1));
 
 				//send update pms
-				distributeFstabUpdates(entry);
+				if (entry != "" )
+					distributeFstabUpdates(entry);
 			}
 		}
 	
@@ -8464,6 +8457,36 @@ namespace oam
 
 		exceptionControl("getMySQLPassword", API_FAILURE);
 		return oam::UnassignedName;
+	}
+
+
+	/******************************************************************************************
+	* @brief	updateFstab
+	*
+	* purpose:	check and get mysql user password
+	*
+	******************************************************************************************/
+	std::string Oam::updateFstab(std::string device, std::string dbrootID)
+	{
+		//check if entry already exist 
+		string cmd = "grep /data" + dbrootID + " > /etc/fstab /dev/null 2>&1";
+
+		int status = system(cmd.c_str());
+		if (WEXITSTATUS(status) == 0 )
+			return "";
+
+		//update /etc/fstab with mount
+		string entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+
+		//update local fstab	
+		cmd = "echo " + entry + " >> /etc/fstab";
+		system(cmd.c_str());
+
+		//use from addmodule later
+		cmd = "echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
+		system(cmd.c_str());
+
+		return entry;
 	}
 
 

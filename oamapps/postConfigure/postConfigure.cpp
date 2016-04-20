@@ -2526,16 +2526,8 @@ int main(int argc, char *argv[])
 									deviceName = boost::get<0>(st);
 									amazondeviceName = boost::get<1>(st);
 
-									//update /etc/fstab with mount
-									string entry = amazondeviceName + " " + installDir + "/data" + *it + " ext2 noatime,nodiratime,noauto 0 0";
-					
-									//update local fstab	
-									cmd = "echo " + entry + " >> /etc/fstab";
-									system(cmd.c_str());
-					
-									//use from addmodule later
-									cmd = "echo " + entry + " >> " + installDir + "/local/etc/pm1/fstab";
-									system(cmd.c_str());
+									// fstabs
+									string entry = oam.updateFstab( amazondeviceName, *it);
 								}
 								else
 								{
@@ -2573,16 +2565,8 @@ int main(int argc, char *argv[])
 									callFree(pcommand);
 								}
 
-								//update /etc/fstab with mount
-								string entry = amazondeviceName + " " + installDir + "/data" + *it + " ext2 noatime,nodiratime,noauto 0 0";
-				
-								//update local fstab	
-								cmd = "echo " + entry + " >> /etc/fstab";
-								system(cmd.c_str());
-				
-								//use from addmodule later
-								cmd = "echo " + entry + " >> " + installDir + "/local/etc/pm1/fstab";
-								system(cmd.c_str());
+								// fstabs
+								string entry = oam.updateFstab( amazondeviceName, *it);
 
 							}
 

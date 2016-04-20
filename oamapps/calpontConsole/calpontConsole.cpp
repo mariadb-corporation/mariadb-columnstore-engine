@@ -1723,7 +1723,7 @@ int processCommand(string* arguments)
 				cout << endl;
 				oam.getSystemConfig("PMVolumeSize", EBSsize);
 
-				string prompt = "Enter EBS storage size in GB: (" + EBSsize + "): ";
+				string prompt = "Enter EBS storage size in GB, current setting is " + EBSsize + " : ";
 				EBSsize = dataPrompt(prompt);
 			}
 		}

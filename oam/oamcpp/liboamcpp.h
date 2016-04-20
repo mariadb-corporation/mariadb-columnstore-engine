@@ -2436,6 +2436,10 @@ namespace oam
              	*/
             	EXPORT std::string getMySQLPassword(bool bypassConfig = false);
 
+            	/** @brief update fstab with dbroot mounts
+             	*/
+            	EXPORT std::string updateFstab(std::string device, std::string dbrootID);
+
         private:
 
 	    int sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, snmpmanager::AlarmList& alarmlist, const std::string date);
