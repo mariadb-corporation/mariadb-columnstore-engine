@@ -4561,10 +4561,27 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					return API_FAILURE;
 				}
 
+				// add instance tag
+				string systemName;
+				string AmazonAutoTagging;
+				{
+					try{
+						oam.getSystemConfig("SystemName", systemName);
+						oam.getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
+					}
+					catch(...) {}
+				}
+
+				if ( AmazonAutoTagging == "y" )
+				{
+					string tagValue = systemName + "-" + moduleName;
+					oam.createEC2tag( hostName, "Name", tagValue );
+				}
+
 				//wait until login is success until continuing or fail if can't login
 				log.writeLog(__LINE__, "addModule - Successfully Launch of new Instance, retry login test: " + moduleName, LOG_TYPE_DEBUG);
 				int retry = 0;
-				for (  ; retry < 60 ; retry++)
+				for (  ; retry < 18 ; retry++)
 				{
 					IPAddr = oam.getEC2InstanceIpAddress(hostName);
 					if (IPAddr == "terminated") {
@@ -4597,7 +4614,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					break;
 				}
 
-				if ( retry >= 60 )
+				if ( retry >= 18 )
 				{
 					log.writeLog(__LINE__, "addModule - Failed to log in to Instance: " + hostName, LOG_TYPE_ERROR);
 					pthread_mutex_unlock(&THREAD_LOCK);
@@ -4605,23 +4622,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				}
 
 				log.writeLog(__LINE__, "addModule - Successful loggin: " + hostName, LOG_TYPE_DEBUG);
-
-				// add instance tag
-				string systemName;
-				string AmazonAutoTagging;
-				{
-					try{
-						oam.getSystemConfig("SystemName", systemName);
-						oam.getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
-					}
-					catch(...) {}
-				}
-
-				if ( AmazonAutoTagging == "y" )
-				{
-					string tagValue = systemName + "-" + moduleName;
-					oam.createEC2tag( hostName, "Name", tagValue );
-				}
 
 				log.writeLog(__LINE__, "addModule - Launched new Instance: " + hostName + "/" + IPAddr, LOG_TYPE_DEBUG);
 

@@ -1302,7 +1302,7 @@ int main(int argc, char *argv[])
 		string AmazonRegion;
 		string AmazonZone;
 		string AmazonVPCNextPrivateIP;
-
+		string AmazonDeviceName;
 		try {
 			cloud = sysConfigOld->getConfig(InstallSection, "Cloud");
 			x509Cert = sysConfigOld->getConfig(InstallSection, "AmazonX509Certificate");
@@ -1319,6 +1319,7 @@ int main(int argc, char *argv[])
 			AmazonZone = sysConfigOld->getConfig(InstallSection, "AmazonZone");
 			AmazonVPCNextPrivateIP = sysConfigOld->getConfig(InstallSection, "AmazonVPCNextPrivateIP");
 			AmazonSubNetID = sysConfigOld->getConfig(InstallSection, "AmazonSubNetID");
+			AmazonDeviceName = sysConfigOld->getConfig(InstallSection, "AmazonDeviceName");
 		}
 		catch(...)
 		{ }
@@ -1380,6 +1381,7 @@ int main(int argc, char *argv[])
 			sysConfigNew->setConfig(InstallSection, "AmazonAutoTagging", AmazonAutoTagging);
 			sysConfigNew->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
 			sysConfigNew->setConfig(InstallSection, "AmazonZone", AmazonZone);
+			sysConfigNew->setConfig(InstallSection, "AmazonDeviceName", AmazonDeviceName);
 		}
 		catch(...)
 		{

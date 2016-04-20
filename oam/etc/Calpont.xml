@@ -441,7 +441,7 @@
 		<UMStorageType>internal</UMStorageType>
 		<EEPackageType>rpm</EEPackageType>
 		<SystemLogConfigFile>unassigned</SystemLogConfigFile>
-		<rpw>unassigned</rpw>
+		<rpw>root</rpw>
 		<Cloud>unassigned</Cloud>
 		<AmazonAccessKey>unassigned</AmazonAccessKey>
 		<AmazonSecretKey>unassigned</AmazonSecretKey>
@@ -468,6 +468,7 @@
 		<JavaPath>unassigned</JavaPath>
 		<MySQLPort>3306</MySQLPort>
 		<MySQLPasswordConfig>unassigned</MySQLPasswordConfig>
+		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 	</Installation>
 	<ExtentMap>
 		<!--

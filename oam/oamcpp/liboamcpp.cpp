@@ -6904,7 +6904,6 @@ namespace oam
 
 	//current amazon max dbroot id support = 190;
 	string PMdeviceName = "/dev/sd";
-	string amazondeviceName = "/dev/xvd";
 	string deviceLetter[] = {"g","h","i","j","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","end"};
 
     /***************************************************************************
@@ -6917,6 +6916,16 @@ namespace oam
 
 	storageID_t Oam::getAWSdeviceName( const int dbrootid)
 	{
+		string amazondeviceName = "/dev/xvd";
+		try {
+			getSystemConfig( "AmazonDeviceName", amazondeviceName );
+		}
+		catch(...)
+		{}
+
+		if ( amazondeviceName.empty() || amazondeviceName == "" )
+			amazondeviceName = "/dev/xvd";
+
 		//calulate id numbers from DBRoot ID
 		int lid = (dbrootid-1) / 10;
 		int did = dbrootid - (dbrootid * lid);
