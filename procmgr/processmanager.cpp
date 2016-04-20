@@ -4960,8 +4960,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 		//set root password
 		if (amazon) {
-			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/updatePassword.sh " + password + "' > /tmp/password_change.log";
-			//log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
+			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
+			log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
 			rtnCode = system(cmd.c_str());
 			if (WEXITSTATUS(rtnCode) == 0)
 				log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
@@ -4988,7 +4988,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				if (WEXITSTATUS(rtnCode) != 0) {
 					log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed", LOG_TYPE_ERROR);
 					pthread_mutex_unlock(&THREAD_LOCK);
-					system(" cp /tmp/user_installer.log /tmp/user_installer.log.failed");
+					system("/bin/cp -f /tmp/user_installer.log /tmp/user_installer.log.failed");
 					processManager.setModuleState(remoteModuleName, oam::FAILED);
 					return API_FAILURE;
 				}

@@ -2470,7 +2470,7 @@ int main(int argc, char *argv[])
 
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
-							cout << endl;
+							cout << endl << "*** Setup External EBS Storage for dbroot #" << *it << " ***" << endl << endl;
 
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;
@@ -2492,7 +2492,7 @@ int main(int argc, char *argv[])
 		
 								while(true)
 								{
-									pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
+									pcommand = callReadline("Create a new EBS volume?  [y,n] (y) > ");
 									if (pcommand)
 									{
 										if (strlen(pcommand) > 0) create = pcommand;
@@ -4604,18 +4604,6 @@ bool storageSetup(string cloud)
 	{
 		cout << "ERROR: Problem setting DBRootStorageType in the InfiniDB System Configuration file" << endl;
 		return false;
-	}
-
-	if( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
-	{
-		try {
-			sysConfig->setConfig(InstallSection, "UMStorageType", DBRootStorageType);
-		}
-		catch(...)
-		{
-			cout << "ERROR: Problem setting UMStorageType in the InfiniDB System Configuration file" << endl;
-			return false;
-		}
 	}
 
 	// if external and amazon, prompt for storage size
