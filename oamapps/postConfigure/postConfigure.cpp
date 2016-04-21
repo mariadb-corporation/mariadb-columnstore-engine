@@ -1145,37 +1145,21 @@ int main(int argc, char *argv[])
 
 	cout << endl;
 
+	oamModuleInfo_t t;
+	string localModuleName;
+	try {
+		t = oam.getModuleInfo();
+		localModuleName = boost::get<0>(t);
+	}
+	catch (exception& e) {}
+
 	//get Parent OAM Module Name
-	string parentOAMModuleName;
-	try{
-		parentOAMModuleName = sysConfig->getConfig(SystemSection, "ParentOAMModuleName");
-	}
-	catch(...)
+	string parentOAMModuleName = "pm1";
+
+	if ( localModuleName != parentOAMModuleName )
 	{
-		cout << "ERROR: Problem getting ParentOAMModuleName the InfiniDB System Configuration file" << endl;
+		cout << endl << endl << "ERROR: exiting, postConfigure can only run executed on " + parentOAMModuleName + ", current module is " << localModuleName << endl;
 		exit(1);
-	}
-
-	while(true) {
-		string newparentOAMModuleName = parentOAMModuleName;
-		prompt = "Enter the Local Module Name or exit [pmx,exit] (" + parentOAMModuleName +") > ";
-		pcommand = callReadline(prompt.c_str());
-		if (pcommand) {
-			if (strlen(pcommand) > 0) newparentOAMModuleName = pcommand;
-			callFree(pcommand);
-			if (newparentOAMModuleName == "exit")
-				exit(0);
-		}
-		else
-			exit(0);
-
-		if ( newparentOAMModuleName.find("pm") == 0 ) {
-			parentOAMModuleName = newparentOAMModuleName;
-			break;
-		}
-		cout << "Invalid Module Name, please re-enter" << endl;
-		if ( noPrompting )
-			exit(1);
 	}
 
 	try{
@@ -1250,7 +1234,7 @@ int main(int argc, char *argv[])
 	// setup memory paramater settings
 	//
 
-	cout << endl << "===== Setup Memory Configuration =====" << endl << endl;
+	cout << endl << "===== Setup Memory Configuration =====" << endl;
 
 	switch ( IserverTypeInstall ) {
 		case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
@@ -1285,14 +1269,6 @@ int main(int argc, char *argv[])
 					cout << "ERROR: Problem setting NumBlocksPct in the InfiniDB System Configuration file" << endl;
 					exit(1);
 				}
-
-//				try{
-//					sysinfo(&myinfo);
-//				}
-//				catch (...) {}
-		
-				//get memory stats
-//				long long total = myinfo.totalram / 1024 / 1000;
 
 				string percent = "25%";
 
@@ -1367,14 +1343,6 @@ int main(int argc, char *argv[])
 					cout << "ERROR: Problem setting NumBlocksPct in the InfiniDB System Configuration file" << endl;
 					exit(1);
 				}
-
-//				try{
-//					sysinfo(&myinfo);
-//				}
-//				catch (...) {}
-		
-				//get memory stats
-//				long long total = myinfo.totalram / 1024 / 1000;
 
 				string percent = "50%";
 				if (hdfs) {
@@ -1551,33 +1519,6 @@ int main(int argc, char *argv[])
 			umNumber = moduleCount;
 
 		int moduleID = 1;
-		while(true) {
-			prompt = "Enter Starting Module ID for " + moduleDesc + " [1," + oam.itoa(oam::MAX_MODULE-moduleCount+1) + "] (1) > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) moduleID = atoi(pcommand);
-				callFree(pcommand);
-			}
-	
-			if ( moduleID < 1 || moduleID > oam::MAX_MODULE-moduleCount+1 ) {
-				cout << endl << "ERROR: Invalid Module ID '" + oam.itoa(moduleID) + "', please re-enter" << endl << endl;
-				if ( noPrompting )
-					exit(1);
-				continue;
-			}
-
-			//valid if parent OAM module type and is consistent with parentOAMModuleName
-			if ( parentOAMModuleType == moduleType && 
-					( parentOAMModuleID < moduleID || parentOAMModuleID > moduleID + (moduleCount-1) ) ) {
-				cout << endl << "ERROR: Parent and Starting Module ID out of range, please re-enter" << endl << endl;
-				moduleID = 1;
-				if ( noPrompting )
-					exit(1);
-			}
-			else
-				break;
-		}
 
 		int listSize = sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.size();
 
@@ -2471,6 +2412,7 @@ int main(int argc, char *argv[])
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
 							cout << endl << "*** Setup External EBS Storage for dbroot #" << *it << " ***" << endl << endl;
+							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or Enter an existing Volume ID" << endl << endl;
 
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;

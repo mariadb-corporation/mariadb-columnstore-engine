@@ -436,7 +436,7 @@
 		<SingleServerInstall>n</SingleServerInstall>
 		<ServerTypeInstall>2</ServerTypeInstall>
 		<PMwithUM>n</PMwithUM>
-		<MySQLRep>n</MySQLRep>
+		<MySQLRep>y</MySQLRep>
 		<DBRootStorageType>internal</DBRootStorageType>
 		<UMStorageType>internal</UMStorageType>
 		<EEPackageType>rpm</EEPackageType>
