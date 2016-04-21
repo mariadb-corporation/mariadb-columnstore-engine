@@ -1262,7 +1262,7 @@ int main(int argc, char *argv[])
 				try {
 					sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-					cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+					cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
 				}
 				catch(...)
 				{
@@ -1276,7 +1276,7 @@ int main(int argc, char *argv[])
 					percent = "12%";
 				}
 
-				cout << "      Setting 'TotalUmMemory' to " << percent << " of total memory" << endl;
+				cout << "      Setting 'TotalUmMemory' to " << percent << endl;
 
 				try {
 					sysConfig->setConfig("HashJoin", "TotalUmMemory", percent);
@@ -1336,7 +1336,7 @@ int main(int argc, char *argv[])
 				try {
 					sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-					cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+					cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
 				}
 				catch(...)
 				{
@@ -1349,7 +1349,7 @@ int main(int argc, char *argv[])
 					percent = "12%";
 				}	
 
-				cout << "      Setting 'TotalUmMemory' to " << percent << " of total memory" << endl;
+				cout << "      Setting 'TotalUmMemory' to " << percent << endl;
 
 				try {
 					sysConfig->setConfig("HashJoin", "TotalUmMemory", percent);
@@ -2301,6 +2301,29 @@ int main(int argc, char *argv[])
 							}
 						}
 
+						//if pm1, make sure dbroot #1 is in the list
+						if ( newModuleName == "pm1" )
+						{
+							bool found = false;
+							std::vector<std::string>::iterator list = dbroots.begin();
+							for (; list != dbroots.end() ; list++)
+							{
+								if ( *list == "1" ) 
+								{
+									found = true;
+									break;
+								}
+							}
+
+							if ( !found )
+							{
+								cout << "Invalid Entry, Module pm1 has to have dbroot #1 assigned to it, please 	re-enter" << endl;
+								if ( noPrompting )
+									exit(1);
+								break;
+							}
+						}
+
 						//check and see if dbroot ID already used
 						std::vector<std::string>::iterator list = dbroots.begin();
 						for (; list != dbroots.end() ; list++)
@@ -2411,8 +2434,8 @@ int main(int argc, char *argv[])
 
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
-							cout << endl << "*** Setup External EBS Storage for dbroot #" << *it << " ***" << endl << endl;
-							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or Enter an existing Volume ID" << endl << endl;
+							cout << endl << "*** Setup External EBS Storage for dbroot #" << *it << " ***" << endl;
+							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or you can provide an existing Volume ID to use" << endl << endl;
 
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;
@@ -4330,7 +4353,12 @@ bool storageSetup(string cloud)
 				UMVolumeSize = oam::UnassignedName;
 
 			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + ") > ";
-			PMVolumeSize = callReadline(prompt);
+			pcommand = callReadline(prompt);
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
+				callFree(pcommand);
+			}
 	
 			//set DBRootStorageType
 			try {
@@ -4546,7 +4574,12 @@ bool storageSetup(string cloud)
 			PMVolumeSize = oam::UnassignedName;
 
 		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + ") > ";
-		PMVolumeSize = callReadline(prompt);
+		pcommand = callReadline(prompt);
+		if (pcommand)
+		{
+			if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
+			callFree(pcommand);
+		}
 
 		//set DBRootStorageType
 		try {
