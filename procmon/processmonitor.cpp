@@ -1714,6 +1714,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string entry;
 			msg >> entry;
 
+			//check if entry already exist 
+			string cmd = "grep " + entry + " /etc/fstab /dev/null 2>&1";
+			int status = system(cmd.c_str());
+			if (WEXITSTATUS(status) == 0 )
+				break;
+
 			string cmd = "echo " + entry + " >> /etc/fstab";
 			system(cmd.c_str());
 

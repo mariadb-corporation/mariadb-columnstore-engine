@@ -8477,6 +8477,8 @@ namespace oam
 	******************************************************************************************/
 	std::string Oam::updateFstab(std::string device, std::string dbrootID)
 	{
+		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_INFO );
+
 		//check if entry already exist 
 		string cmd = "grep /data" + dbrootID + " /etc/fstab /dev/null 2>&1";
 		int status = system(cmd.c_str());
