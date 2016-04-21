@@ -2317,10 +2317,10 @@ int main(int argc, char *argv[])
 
 							if ( !found )
 							{
-								cout << "Invalid Entry, Module pm1 has to have dbroot #1 assigned to it, please 	re-enter" << endl;
+								cout << endl << "Invalid Entry, Module pm1 has to have dbroot #1 assigned to it, please 	re-enter" << endl;
 								if ( noPrompting )
 									exit(1);
-								break;
+								continue;
 							}
 						}
 
@@ -2434,7 +2434,7 @@ int main(int argc, char *argv[])
 
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
-							cout << endl << "*** Setup External EBS Storage for dbroot #" << *it << " ***" << endl;
+							cout << endl << "*** Setup External EBS Volume for dbroot #" << *it << " ***" << endl;
 							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or you can provide an existing Volume ID to use" << endl << endl;
 
 							string volumeNameID = "PMVolumeName" + *it;
@@ -2457,7 +2457,7 @@ int main(int argc, char *argv[])
 		
 								while(true)
 								{
-									pcommand = callReadline("Create a new EBS volume?  [y,n] (y) > ");
+									pcommand = callReadline("Create a new EBS volume for dbroot #" + *it + " ?  [y,n] (y) > ");
 									if (pcommand)
 									{
 										if (strlen(pcommand) > 0) create = pcommand;

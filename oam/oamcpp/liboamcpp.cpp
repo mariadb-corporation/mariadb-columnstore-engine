@@ -8478,8 +8478,7 @@ namespace oam
 	std::string Oam::updateFstab(std::string device, std::string dbrootID)
 	{
 		//check if entry already exist 
-		string cmd = "grep /data" + dbrootID + " > /etc/fstab /dev/null 2>&1";
-
+		string cmd = "grep /data" + dbrootID + " /etc/fstab /dev/null 2>&1";
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 0 )
 			return "";
