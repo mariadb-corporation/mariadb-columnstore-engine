@@ -4846,8 +4846,8 @@ void snmpAppCheck()
 
 		cout << endl << "===== Setup the Network Management System (NMS) Server Configuration =====" << endl << endl;
 
-		cout << "This would be used to receive SNMP Traps from InfiniDB, like a Network Control Center" << endl;
-		prompt = "Enter IP Address(es) of NMS Server (" + currentNMSIPAddress + ") > ";
+		cout << "This would be used to receive SNMP Traps from InfiniDB, 0.0.0.0 defaults to not sending off the system" << endl;
+		prompt = "Enter IP Address(es) of where you want the SNMP Traps went (" + currentNMSIPAddress + ") > ";
 		pcommand = callReadline(prompt.c_str());
 		if (pcommand)
 		{

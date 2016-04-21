@@ -4972,9 +4972,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		//default
 		string binaryInstallDir = installDir;
 
-		//sleep for a bit, amazon adds failed at times with it
-		sleep(10);
-
 		//run installer on remote module
 		if ( remoteModuleType == "um" ||
 			( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
@@ -4987,8 +4984,33 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 				log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
-				rtnCode = system(cmd.c_str());
-				if (WEXITSTATUS(rtnCode) != 0) {
+				bool passed = false;
+				for ( int retry = 0 ; retry < 20 ; retry++ )
+				{
+					rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						// if log file size is zero, retry
+						ifstream in("/tmp/user_installer.log");
+						in.seekg(0, std::ios::end);
+						int size = in.tellg();
+						if ( size == 0 )
+						{
+							log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							sleep(5);
+							continue;
+						}
+						else
+							break;
+					}
+					else
+					{
+						passed = true;
+						break;
+					}
+				}
+
+				if ( !passed )
+				{
 					log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed", LOG_TYPE_ERROR);
 					pthread_mutex_unlock(&THREAD_LOCK);
 					system("/bin/cp -f /tmp/user_installer.log /tmp/user_installer.log.failed");
@@ -5006,11 +5028,37 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
 
 				log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
-				rtnCode = system(cmd.c_str());
-				if (WEXITSTATUS(rtnCode) != 0) {
+
+				bool passed = false;
+				for ( int retry = 0 ; retry < 20 ; retry++ )
+				{
+					rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						// if log file size is zero, retry
+						ifstream in("/tmp/binary_installer.log");
+						in.seekg(0, std::ios::end);
+						int size = in.tellg();
+						if ( size == 0 )
+						{
+							log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							sleep(5);
+							continue;
+						}
+						else
+							break;
+					}
+					else
+					{
+						passed = true;
+						break;
+					}
+				}
+
+				if ( !passed )
+				{
 					log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
-					system(" cp /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 					pthread_mutex_unlock(&THREAD_LOCK);
+					system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 					processManager.setModuleState(remoteModuleName, oam::FAILED);
 					return API_FAILURE;
 				}
@@ -5025,10 +5073,37 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					rtnCode = system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0) {
+
+					bool passed = false;
+					for ( int retry = 0 ; retry < 20 ; retry++ )
+					{
+						rtnCode = system(cmd.c_str());
+						if (WEXITSTATUS(rtnCode) != 0) {
+							// if log file size is zero, retry
+							ifstream in("/tmp/performance_installer.log");
+							in.seekg(0, std::ios::end);
+							int size = in.tellg();
+							if ( size == 0 )
+							{
+								log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								sleep(5);
+								continue;
+							}
+							else
+								break;
+						}
+						else
+						{
+							passed = true;
+							break;
+						}
+					}
+	
+					if ( !passed )
+					{
 						log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed", LOG_TYPE_ERROR);
-						system(" cp /tmp/performance_installer.log /tmp/performance_installer.log.failed");
 						pthread_mutex_unlock(&THREAD_LOCK);
+						system("/bin/cp -f /tmp/performance_installer.log /tmp/performance_installer.log.failed");
 						processManager.setModuleState(remoteModuleName, oam::FAILED);
 						return API_FAILURE;
 					}
@@ -5042,13 +5117,39 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 						binservertype = "pmwithum";
 
 					string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+
 					log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
-					rtnCode = system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0) {
+					bool passed = false;
+					for ( int retry = 0 ; retry < 20 ; retry++ )
+					{
+						rtnCode = system(cmd.c_str());
+						if (WEXITSTATUS(rtnCode) != 0) {
+							// if log file size is zero, retry
+							ifstream in("/tmp/binary_installer.log");
+							in.seekg(0, std::ios::end);
+							int size = in.tellg();
+							if ( size == 0 )
+							{
+								log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								sleep(5);
+								continue;
+							}
+							else
+								break;
+						}
+						else
+						{
+							passed = true;
+							break;
+						}
+					}
+	
+					if ( !passed )
+					{
 						log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
-						system(" cp /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 						pthread_mutex_unlock(&THREAD_LOCK);
+						system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 						processManager.setModuleState(remoteModuleName, oam::FAILED);
 						return API_FAILURE;
 					}
