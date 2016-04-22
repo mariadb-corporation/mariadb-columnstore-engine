@@ -8477,7 +8477,7 @@ namespace oam
 	******************************************************************************************/
 	std::string Oam::updateFstab(std::string device, std::string dbrootID)
 	{
-		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_INFO );
+		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
 
 		//check if entry already exist 
 		string cmd = "grep /data" + dbrootID + " /etc/fstab /dev/null 2>&1";
@@ -8493,7 +8493,7 @@ namespace oam
 		system(cmd.c_str());
 
 		//use from addmodule later
-		cmd = "echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
+		cmd = "touch " + InstallDir + "/local/etc/pm1/fstab;echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
 		system(cmd.c_str());
 
 		return entry;

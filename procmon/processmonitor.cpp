@@ -981,7 +981,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 					if( config.moduleType() == "pm" )
 					{
-						//setup dbroot mounts
+						//setup DBRoot mounts
 						createDataDirs(cloud);
 						int ret = checkDataMount();
 						if (ret != oam::API_SUCCESS)
@@ -1592,7 +1592,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string dbrootID;
 			msg >> dbrootID;
 
-			log.writeLog(__LINE__,  "MSG RECEIVED: Unmount dbroot: " + dbrootID);
+			log.writeLog(__LINE__,  "MSG RECEIVED: Unmount DBRoot: " + dbrootID);
 
 			//Flush the cache
 			cacheutils::flushPrimProcCache();
@@ -1636,7 +1636,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 				if ( retry >= 5 )
 				{
-					log.writeLog(__LINE__, "unmount failed, device busy, dbroot: " + dbrootID, LOG_TYPE_ERROR);
+					log.writeLog(__LINE__, "unmount failed, device busy, DBRoot: " + dbrootID, LOG_TYPE_ERROR);
 					return_status = API_FAILURE;
 					system("mv -f /tmp/umount.txt /tmp/umount_failed.txt");
 				}
@@ -1671,7 +1671,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string dbrootID;
 			msg >> dbrootID;
 
-			log.writeLog(__LINE__,  "MSG RECEIVED: Mount dbroot: " + dbrootID);;
+			log.writeLog(__LINE__,  "MSG RECEIVED: Mount DBRoot: " + dbrootID);;
 
 			int return_status = API_SUCCESS;
 			if (GlusterConfig == "n")
@@ -1692,7 +1692,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				if ( size != 0 )
 				{
 					if (!oam.checkLogStatus("/tmp/mount.txt", "already")) {
-						log.writeLog(__LINE__, "mount failed, dbroot: " + dbrootID, LOG_TYPE_ERROR);
+						log.writeLog(__LINE__, "mount failed, DBRoot: " + dbrootID, LOG_TYPE_ERROR);
 						return_status = API_FAILURE;
 						system("mv -f /tmp/mount.txt /tmp/mount_failed.txt");
 					}
@@ -3596,7 +3596,7 @@ int ProcessMonitor::reconfigureModule(std::string reconfigureModuleName)
 		system(cmd.c_str());
 	}
 
-	//copy and apply new rc.local.calpont from dm1
+	//copy and apply new rc.local.calpont from pm1
 	cmd = "rm -f " + installDir + "/local/rc.local.calpont";
 	system(cmd.c_str());
 	cmd = "cp " + installDir + "/local/etc/" + reconfigureModuleName + "/rc.local.calpont " + installDir + "/local/.";
@@ -5612,7 +5612,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 	}
 	else
 	{
-		log.writeLog(__LINE__, "amazonVolumeCheck function called for dbroot" + oam.itoa(dbrootID), LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "amazonVolumeCheck function called for DBRoot" + oam.itoa(dbrootID), LOG_TYPE_DEBUG);
 	
 		string volumeNameID = "PMVolumeName" + oam.itoa(dbrootID);
 		string volumeName = oam::UnassignedName;
@@ -5626,7 +5626,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 		{}
 	
 		if ( volumeName.empty() || volumeName == oam::UnassignedName ) {
-			log.writeLog(__LINE__, "amazonVolumeCheck function exiting, no volume assigned to dbroot " + oam.itoa(dbrootID), LOG_TYPE_WARNING);
+			log.writeLog(__LINE__, "amazonVolumeCheck function exiting, no volume assigned to DBRoot " + oam.itoa(dbrootID), LOG_TYPE_WARNING);
 			return false;
 		}
 	
@@ -5837,7 +5837,7 @@ int ProcessMonitor::checkDataMount()
 	}
 	catch(...) {}
 
-	//asign dbroot is gluster
+	//asign DBRoot is gluster
 	if (GlusterConfig == "y")
 	{
 		vector<string>::iterator p = dbrootList.begin();
@@ -5872,7 +5872,7 @@ int ProcessMonitor::checkDataMount()
 			string fileName = dbroot + "/OAMdbrootCheck";
 			ofstream fout(fileName.c_str());
 			if (!fout) {
-				log.writeLog(__LINE__, "ERROR: Failed test write to dbroot: "  + dbroot, LOG_TYPE_ERROR);
+				log.writeLog(__LINE__, "ERROR: Failed test write to DBRoot: "  + dbroot, LOG_TYPE_ERROR);
 
 				return API_FAILURE;
 			}
@@ -5919,7 +5919,7 @@ int ProcessMonitor::checkDataMount()
 				if ( size != 0 )
 				{
 					if (!oam.checkLogStatus("/tmp/mount.txt", "already")) {
-						log.writeLog(__LINE__, "checkDataMount: mount failed, dbroot: " + dbroot, LOG_TYPE_ERROR);
+						log.writeLog(__LINE__, "checkDataMount: mount failed, DBRoot: " + dbroot, LOG_TYPE_ERROR);
 		
 						try{
 							oam.setDbrootStatus(*p, oam::AUTO_OFFLINE);
@@ -5943,7 +5943,7 @@ int ProcessMonitor::checkDataMount()
 		//create OAM-Test-Flag check rw mount
 		ofstream fout(fileName.c_str());
 		if (!fout) {
-			log.writeLog(__LINE__, "ERROR: Failed test write to dbroot: "  + dbroot, LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "ERROR: Failed test write to DBRoot: "  + dbroot, LOG_TYPE_ERROR);
 
 			try{
 				oam.setDbrootStatus(*p, oam::AUTO_OFFLINE);

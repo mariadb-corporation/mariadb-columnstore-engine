@@ -2495,7 +2495,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
  
 					if ( target == "system" )
 					{
-						//send out to all pms
+						//send out to all pms except local module
 						for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
 						{
 							if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType != "pm" )
@@ -2508,6 +2508,9 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
 							for (;pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
 							{
+								if ( (*pt).DeviceName == config.moduleName() )
+									continue;
+
 								int retStatus = processManager.updateFstab((*pt).DeviceName, entry);
 								if (retStatus != API_SUCCESS)
 									status = retStatus;

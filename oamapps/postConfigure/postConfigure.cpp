@@ -559,11 +559,11 @@ int main(int argc, char *argv[])
 				// setup storage
 				if (!singleServerDBrootSetup())
 				{
-					cout << "ERROR: Problem setting up dbroot IDs" << endl;
+					cout << "ERROR: Problem setting up DBRoot IDs" << endl;
 					exit(1);
 				}
 
-				//set system dbroot count and check 'files per parition' with number of dbroots
+				//set system DBRoot count and check 'files per parition' with number of dbroots
 				try {
 					sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
 				}
@@ -2076,9 +2076,9 @@ int main(int argc, char *argv[])
 						cout << "makeRClocal error" << endl;
 	
 					//if cloud, copy fstab in module tmp dir
-					if ( cloud == "amazon" && moduleType == "pm")
-						if( !copyFstab(newModuleName) )
-							cout << "copyFstab error" << endl;
+//					if ( cloud == "amazon" && moduleType == "pm")
+//						if( !copyFstab(newModuleName) )
+//							cout << "copyFstab error" << endl;
 
 					//setup DBRM Processes
 					if ( newModuleName == parentOAMModuleName )
@@ -2143,7 +2143,7 @@ int main(int argc, char *argv[])
 								callFree(pcommand);
 							}
 	
-							//get device name based on dbroot ID
+							//get device name based on DBRoot ID
 							deviceName = "/dev/sdf" + oam.itoa(moduleID);
 						}
 						else
@@ -2205,7 +2205,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 						exit(1);
 					}
 
@@ -2245,7 +2245,7 @@ int main(int argc, char *argv[])
 						dbroots.clear();
 						bool matchFound = false;
 
-						prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of dbroot IDs assigned to module '" + newModuleName + "' (" + dbrootList + ") > ";
+						prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of DBRoot IDs assigned to module '" + newModuleName + "' (" + dbrootList + ") > ";
 						pcommand = callReadline(prompt.c_str());
 						if (pcommand)
 						{
@@ -2301,7 +2301,7 @@ int main(int argc, char *argv[])
 							}
 						}
 
-						//if pm1, make sure dbroot #1 is in the list
+						//if pm1, make sure DBRoot #1 is in the list
 						if ( newModuleName == "pm1" )
 						{
 							bool found = false;
@@ -2317,14 +2317,14 @@ int main(int argc, char *argv[])
 
 							if ( !found )
 							{
-								cout << endl << "Invalid Entry, Module pm1 has to have dbroot #1 assigned to it, please 	re-enter" << endl;
+								cout << endl << "Invalid Entry, Module pm1 has to have DBRoot #1 assigned to it, please 	re-enter" << endl;
 								if ( noPrompting )
 									exit(1);
 								continue;
 							}
 						}
 
-						//check and see if dbroot ID already used
+						//check and see if DBRoot ID already used
 						std::vector<std::string>::iterator list = dbroots.begin();
 						for (; list != dbroots.end() ; list++)
 						{
@@ -2345,7 +2345,7 @@ int main(int argc, char *argv[])
 							if ( inUse)
 								break;
 							else 
-							{	// if upgrade, dont allow a new dbroot id to be entered
+							{	// if upgrade, dont allow a new DBRoot id to be entered
 								if ( reuseConfig == "y" )
 								{
 									DBRootConfigList::iterator pt = dbrootConfigList.begin();
@@ -2403,7 +2403,7 @@ int main(int argc, char *argv[])
 						dbrootmodule.dbrootID = *it;
 						dbrootlist.push_back(dbrootmodule);
 
-						//store dbroot ID
+						//store DBRoot ID
 						string moduledbrootid = "ModuleDBRootID" + oam.itoa(moduleID) + "-" + oam.itoa(id) + "-" + oam.itoa(i+1);
 						try {
 							sysConfig->setConfig(ModuleSection, moduledbrootid, *it);
@@ -2434,7 +2434,7 @@ int main(int argc, char *argv[])
 
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
-							cout << endl << "*** Setup External EBS Volume for dbroot #" << *it << " ***" << endl;
+							cout << endl << "*** Setup External EBS Volume for DBRoot #" << *it << " ***" << endl;
 							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or you can provide an existing Volume ID to use" << endl << endl;
 
 							string volumeNameID = "PMVolumeName" + *it;
@@ -2457,7 +2457,7 @@ int main(int argc, char *argv[])
 		
 								while(true)
 								{
-									pcommand = callReadline("Create a new EBS volume for dbroot #" + *it + " ?  [y,n] (y) > ");
+									pcommand = callReadline("Create a new EBS volume for DBRoot #" + *it + " ?  [y,n] (y) > ");
 									if (pcommand)
 									{
 										if (strlen(pcommand) > 0) create = pcommand;
@@ -2481,7 +2481,7 @@ int main(int argc, char *argv[])
 										callFree(pcommand);
 									}
 
-									//get device name based on dbroot ID
+									//get device name based on DBRoot ID
 									oam::storageID_t st;
 									try {
 										st = oam.getAWSdeviceName( atoi((*it).c_str()) );
@@ -2491,12 +2491,12 @@ int main(int argc, char *argv[])
 									deviceName = boost::get<0>(st);
 									amazondeviceName = boost::get<1>(st);
 
-									// fstabs
+									// update fstabs
 									string entry = oam.updateFstab( amazondeviceName, *it);
 								}
 								else
 								{
-									// create amazon ebs dbroot
+									// create amazon ebs DBRoot
 									try
 									{
 										DBRootConfigList dbrootlist;
@@ -2530,7 +2530,7 @@ int main(int argc, char *argv[])
 									callFree(pcommand);
 								}
 
-								// fstabs
+								// update fstabs
 								string entry = oam.updateFstab( amazondeviceName, *it);
 
 							}
@@ -2567,7 +2567,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 						exit(1);
 					}
 					//total dbroots on the system
@@ -4461,21 +4461,21 @@ bool storageSetup(string cloud)
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=GlusterFS, 4=hdfs] (" + storageType + ") > ";
 	}
 
-	cout << "  'internal' -    This is specified when a local disk is used for the dbroot storage." << endl;
+	cout << "  'internal' -    This is specified when a local disk is used for the DBRoot storage." << endl;
 	cout << "                  High Availability Server Failover is not Supported in this mode" << endl << endl; 
-	cout << "  'external' -    This is specified when the dbroot directories are mounted." << endl;
+	cout << "  'external' -    This is specified when the DBRoot directories are mounted." << endl;
 	cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 
 	if ( glusterInstalled == "y" )
 	{
 		cout << "  'GlusterFS' -   This is specified when GlusterFS Data Redundancy is installed" << endl;
-		cout << "                  and you want the dbroot directories to be controlled by glusterfs." << endl;
+		cout << "                  and you want the DBRoot directories to be controlled by glusterfs." << endl;
 		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 	}
 
 	if ( hadoopInstalled == "y" )
 	{
-		cout << "  'hdfs' -        This is specified when hadoop is installed and you want the dbroot" << endl;
+		cout << "  'hdfs' -        This is specified when hadoop is installed and you want the DBRoot" << endl;
  		cout << "                  directories to be controlled by the Hadoop Distributed File System (HDFS)." << endl;
 		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 	}
@@ -5067,7 +5067,7 @@ bool attachVolume(string instanceName, string volumeName, string deviceName, str
 	string status = oam.getEC2VolumeStatus(volumeName);
 	if ( status == "attached" ) {
 		cout << "Volume " << volumeName << " is attached " << endl;
-		cout << "Make sure it's device " << deviceName << " is mounted to dbroot directory " << dbrootPath << endl;
+		cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
 		return true;
 	}
 
@@ -5102,7 +5102,7 @@ bool attachVolume(string instanceName, string volumeName, string deviceName, str
 			cout << "Attaching, please wait..." << endl;
 			if(oam.attachEC2Volume(volumeName, deviceName, instanceName)) {
 				cout << "Volume " << volumeName << " is now attached " << endl;
-				cout << "Make sure it's device " << deviceName << " is mounted to dbroot directory " << dbrootPath << endl;
+				cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
 				return true;
 			}
 			else
@@ -5135,7 +5135,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5170,7 +5170,7 @@ bool singleServerDBrootSetup()
 	{
 		dbroots.clear();
 
-		prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of dbroot IDs assigned to module 'pm1' (" + dbrootList + ") > ";
+		prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of DBRoot IDs assigned to module 'pm1' (" + dbrootList + ") > ";
 		pcommand = callReadline(prompt.c_str());
 		if (pcommand)
 		{
@@ -5225,7 +5225,7 @@ bool singleServerDBrootSetup()
 	std::vector<std::string>::iterator it = dbroots.begin();
 	for (; it != dbroots.end() ; it++, ++id)
 	{
-		//store dbroot ID
+		//store DBRoot ID
 		string moduledbrootid = "ModuleDBRootID1-" + oam.itoa(id) + "-3";
 		try {
 			sysConfig->setConfig(ModuleSection, moduledbrootid, *it);
@@ -5256,7 +5256,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 		exit(1);
 	}
 
