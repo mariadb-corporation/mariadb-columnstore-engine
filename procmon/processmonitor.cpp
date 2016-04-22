@@ -1720,7 +1720,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			if (WEXITSTATUS(status) == 0 )
 				break;
 
-			string cmd = "echo " + entry + " >> /etc/fstab";
+			cmd = "echo " + entry + " >> /etc/fstab";
 			system(cmd.c_str());
 
 			log.writeLog(__LINE__, "Add line entry to /etc/fstab : " + entry);
