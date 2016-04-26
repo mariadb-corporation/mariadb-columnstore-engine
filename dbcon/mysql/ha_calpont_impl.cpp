@@ -2435,7 +2435,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 	{
 		if (ci->cal_conn_hndl)
 		{
-			// send ExeMgr a signal before cloing the connection
+			// send ExeMgr a signal before closing the connection
 			ByteStream msg;
 			ByteStream::quadbyte qb = 0;
 			msg << qb;
@@ -4147,7 +4147,7 @@ COND* ha_calpont_impl_cond_push(COND *cond, TABLE* table)
 		((thd->lex)->sql_command == SQLCOM_DELETE) ||
 		((thd->lex)->sql_command == SQLCOM_DELETE_MULTI))
 		return cond;
-	IDEBUG( cout << "ha_calpont_impl_cond_push: " << table->alias << endl );
+	IDEBUG( cout << "ha_calpont_impl_cond_push: " << table->alias.c_ptr() << endl );
 
 	if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
@@ -4155,6 +4155,16 @@ COND* ha_calpont_impl_cond_push(COND *cond, TABLE* table)
 
 	cal_table_info ti = ci->tableMap[table];
 
+#ifdef DEBUG_WALK_COND
+{
+		gp_walk_info gwi;
+		gwi.condPush = true;
+		gwi.sessionid = tid2sid(thd->thread_id);
+		cout << "------------------ cond push -----------------------" << endl;
+		cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+		cout << "------------------------------------------------\n" << endl;
+}
+#endif
 	if (!ti.csep)
 	{
 		if (!ti.condInfo)
@@ -4180,9 +4190,13 @@ COND* ha_calpont_impl_cond_push(COND *cond, TABLE* table)
 			return cond;
 		}
 		if (gwi->dropCond)
+		{
 			return cond;
+		}
 		else
+		{
 			return NULL;
+		}
 	}
 
 	return cond;
@@ -4200,7 +4214,7 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 
 	// @info called for every table at the beginning and at the end of a query.
 	// used for cleaning up the tableinfo.
-	IDEBUG( cout << "external_lock for " << table->alias << endl );
+	IDEBUG( cout << "external_lock for " << table->alias.c_ptr() << endl );
 	idbassert((thd->infinidb_vtable.vtable_state >= THD::INFINIDB_INIT_CONNECT &&
 	           thd->infinidb_vtable.vtable_state <= THD::INFINIDB_REDO_QUERY) ||
 	          thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR);

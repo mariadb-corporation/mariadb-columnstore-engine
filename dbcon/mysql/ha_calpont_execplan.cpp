@@ -540,13 +540,43 @@ void debug_walk(const Item *item, void *arg)
 	case Item::CACHE_ITEM:
 	{
 		Item_cache* isp = (Item_cache*)item;
-		if (item->result_type() == ROW_RESULT)
+		String val, *str = NULL;
+		switch (item->result_type()) 
 		{
-			cout << "CACHE_ROW_ITEM" << endl;
-			break;
+			case STRING_RESULT:
+				str = isp->val_str(&val);
+				cout << "CACHE_STRING_ITEM";
+				break;
+			case REAL_RESULT:
+				str = isp->val_str(&val);
+				cout << "CACHE_REAL_ITEM";
+				break;
+			case INT_RESULT:
+				str = isp->val_str(&val);
+				cout << "CACHE_INT_ITEM";
+				break;
+			case ROW_RESULT:
+				cout << "CACHE_ROW_ITEM";
+				break;
+			case DECIMAL_RESULT:
+				str = isp->val_str(&val);
+				cout << "CACHE_DECIMAL_ITEM";
+				break;
+			default:
+				cout << "CACHE_UNKNOWN_ITEM";
+				break;
 		}
-		String val, *str = isp->val_str(&val);
-		cout << "CACHE_ITEM: >" << str->c_ptr() << '<' << endl;
+		if (str)
+			cout << ": (" << str->c_ptr() << ')' << endl;
+		else
+			cout << ": <NULL>" << endl;
+		break;
+	}
+	case Item::DATE_ITEM:
+	{
+		String val;
+		Item_temporal_literal* itp = (Item_temporal_literal*)item;
+		cout << "DATE ITEM: " << itp->val_str(&val)->c_ptr() << endl;
 		break;
 	}
 	case Item::WINDOW_FUNC_ITEM:
@@ -2270,6 +2300,12 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			cout << "EXPR_CACHE_ITEM in buildReturnedColumn" << endl;
 			break;
 		}
+		case Item::DATE_ITEM:
+		{
+			String val, *str = item->val_str(&val);
+			rc = new ConstantColumn(str->c_ptr());
+			break;
+		}
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			return buildWindowFunctionColumn(item, gwi, nonSupport);
@@ -3905,7 +3941,7 @@ void gp_walk(const Item *item, void *arg)
 				else
 					gwip->rcWorkStack.push(cc);
 				if (str)
-					IDEBUG( cout << "Const F&E " << item->name? item->name : "<NULL>" << " evaluate: " << str->ptr() << endl );
+					IDEBUG( cout << "Const F&E " << item->full_name() << " evaluate: " << str->c_ptr() << endl );
 				break;
 			}
 
@@ -4188,6 +4224,12 @@ void gp_walk(const Item *item, void *arg)
 			((Item_cache_wrapper*)item)->get_orig_item()->traverse_cond(gp_walk, arg, Item::POSTFIX);
 			break;
 		}
+		case Item::DATE_ITEM:
+		{
+			Item_temporal_literal* itp = (Item_temporal_literal*)item;
+			gwip->rcWorkStack.push(buildReturnedColumn(itp, *gwip, gwip->fatalParseError));
+			break;
+		}
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			gwip->hasWindowFunc = true;
@@ -4198,46 +4240,43 @@ void gp_walk(const Item *item, void *arg)
 			break;
 		}
 		case Item::COPY_STR_ITEM:
-			printf("********** received COPY_STR_ITEM *********");
+			printf("********** received COPY_STR_ITEM *********\n");
 			break;
 		case Item::FIELD_AVG_ITEM:
-			printf("********** received FIELD_AVG_ITEM *********");
+			printf("********** received FIELD_AVG_ITEM *********\n");
 			break;
 		case Item::DEFAULT_VALUE_ITEM:
-			printf("********** received DEFAULT_VALUE_ITEM *********");
+			printf("********** received DEFAULT_VALUE_ITEM *********\n");
 			break;
 		case Item::PROC_ITEM:
-			printf("********** received PROC_ITEM *********");
+			printf("********** received PROC_ITEM *********\n");
 			break;
 		case Item::FIELD_STD_ITEM:
-			printf("********** received FIELD_STD_ITEM *********");
+			printf("********** received FIELD_STD_ITEM *********\n");
 			break;
 		case Item::FIELD_VARIANCE_ITEM:
-			printf("********** received FIELD_VARIANCE_ITEM *********");
+			printf("********** received FIELD_VARIANCE_ITEM *********\n");
 			break;
 		case Item::INSERT_VALUE_ITEM:
-			printf("********** received INSERT_VALUE_ITEM *********");
+			printf("********** received INSERT_VALUE_ITEM *********\n");
 			break;
 		case Item::Item::TYPE_HOLDER:
-			printf("********** received TYPE_HOLDER *********");
+			printf("********** received TYPE_HOLDER *********\n");
 			break;
 		case Item::PARAM_ITEM:
-			printf("********** received PARAM_ITEM *********");
+			printf("********** received PARAM_ITEM *********\n");
 			break;
 		case Item::TRIGGER_FIELD_ITEM:
-			printf("********** received TRIGGER_FIELD_ITEM *********");
+			printf("********** received TRIGGER_FIELD_ITEM *********\n");
 			break;
 		case Item::XPATH_NODESET:
-			printf("********** received XPATH_NODESET *********");
+			printf("********** received XPATH_NODESET *********\n");
 			break;
 		case Item::XPATH_NODESET_CMP:
-			printf("********** received XPATH_NODESET_CMP *********");
+			printf("********** received XPATH_NODESET_CMP *********\n");
 			break;
 		case Item::VIEW_FIXER_ITEM:
-			printf("********** received VIEW_FIXER_ITEM *********");
-			break;
-		case Item::DATE_ITEM:
-			printf("********** received DATE_ITEM *********");
+			printf("********** received VIEW_FIXER_ITEM *********\n");
 			break;
 		default:
 		{

@@ -341,8 +341,10 @@ static void calpont_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint
 	return ha_calpont_impl_set_error(thd, errCode, args, argCount);
 }
 
-ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg)
-  :handler(hton, table_arg)
+ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg) :
+    handler(hton, table_arg),
+	int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_TABLE_SCAN_ON_INDEX | HA_CAN_TABLE_CONDITION_PUSHDOWN)
+//	int_table_flags(HA_NO_BLOBS | HA_BINLOG_STMT_CAPABLE)
 {
 }
 
@@ -373,7 +375,6 @@ const char **ha_calpont::bas_ext() const
 {
   return ha_calpont_exts;
 }
-
 
 /**
   @brief
@@ -702,6 +703,12 @@ int ha_calpont::rnd_next(uchar *buf)
     @see
   filesort.cc, sql_select.cc, sql_delete.cc and sql_update.cc
 */
+// @TODO: Implement position() and rnd_pos() and remove HA_NO_BLOBS from table_flags
+// This would require us to add a psuedo-column of some sort for a primary index. This
+// would only be used in rare cases of ORDER BY, so the slow down would be ok and would
+// allow for implementing blobs (is that the same as varbinary?). Perhaps using 
+// lbid and offset as key would work, or something. We also need to add functionality
+// to retrieve records quickly by this "key"
 void ha_calpont::position(const uchar *record)
 {
   DBUG_ENTER("ha_calpont::position");

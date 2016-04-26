@@ -57,6 +57,7 @@ class ha_calpont: public handler
 {
   THR_LOCK_DATA lock;      ///< MySQL lock
   INFINIDB_SHARE *share;    ///< Shared lock info
+  ulonglong int_table_flags;
 
 public:
   ha_calpont(handlerton *hton, TABLE_SHARE *table_arg);
@@ -67,7 +68,7 @@ public:
   /** @brief
     The name that will be used for display purposes.
    */
-  const char *table_type() const { return "InfiniDB"; }
+  const char *table_type() const { return "ColumnStore"; }
 
   /** @brief
     The name of the index type that will be used for display.
@@ -84,15 +85,7 @@ public:
     This is a list of flags that indicate what functionality the storage engine
     implements. The current table flags are documented in handler.h
   */
-  ulonglong table_flags() const
-  {
-    /*
-      We are saying that this engine is just row capable to have an
-      engine that can only handle row-based logging. This is used in
-      testing.
-    */
-    return HA_BINLOG_STMT_CAPABLE;
-  }
+  ulonglong table_flags() const {return int_table_flags;}
 
   /** @brief
     This is a bitmap of flags that indicates how the storage engine
@@ -104,10 +97,8 @@ public:
     If all_parts is set, MySQL wants to know the flags for the combined
     index, up to and including 'part'.
   */
-  ulong index_flags(uint32_t inx, uint32_t part, bool all_parts) const
-  {
-    return 0;
-  }
+  ulong index_flags(uint32_t inx, uint32_t part, bool all_parts) const {return 0;}
+
 
   /** @brief
     unireg.cc will call max_supported_record_length(), max_supported_keys(),
@@ -119,47 +110,9 @@ public:
   uint32_t max_supported_record_length() const { return HA_MAX_REC_LENGTH; }
 
   /** @brief
-    unireg.cc will call this to make sure that the storage engine can handle
-    the data it is about to send. Return *real* limits of your storage engine
-    here; MySQL will do min(your_limits, MySQL_limits) automatically.
-
-      @details
-    There is no need to implement ..._key_... methods if your engine doesn't
-    support indexes.
-   */
-  uint32_t max_supported_keys()          const { return 1; }
-
-  /** @brief
-    unireg.cc will call this to make sure that the storage engine can handle
-    the data it is about to send. Return *real* limits of your storage engine
-    here; MySQL will do min(your_limits, MySQL_limits) automatically.
-
-      @details
-    There is no need to implement ..._key_... methods if your engine doesn't
-    support indexes.
-   */
-  uint32_t max_supported_key_parts()     const { return 1; }
-
-  /** @brief
-    unireg.cc will call this to make sure that the storage engine can handle
-    the data it is about to send. Return *real* limits of your storage engine
-    here; MySQL will do min(your_limits, MySQL_limits) automatically.
-
-      @details
-    There is no need to implement ..._key_... methods if your engine doesn't
-    support indexes.
-   */
-  uint32_t max_supported_key_length()    const { return 8; }
-
-  /** @brief
     Called in test_quick_select to determine if indexes should be used.
   */
   virtual double scan_time() { return (double) (stats.records+stats.deleted) / 20.0+10; }
-
-  /** @brief
-    This method will never be called if you do not implement indexes.
-  */
-  virtual double read_time(ha_rows rows) { return (double) rows /  20.0+1; }
 
   /*
     Everything below are methods that we implement in ha_example.cc.
@@ -167,6 +120,7 @@ public:
     Most of these methods are not obligatory, skip them and
     MySQL will treat them as not implemented
   */
+
   /** @brief
     We implement this in ha_example.cc; it's a required method.
   */
