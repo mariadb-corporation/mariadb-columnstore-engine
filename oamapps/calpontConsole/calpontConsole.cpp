@@ -1713,8 +1713,14 @@ int processCommand(string* arguments)
 
 		int dbrootNumber = atoi(arguments[1].c_str());
 
+		string DBRootStorageType;
+		try {
+			oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+		}
+		catch(...) {}
+	
 		string EBSsize = oam::UnassignedName;
-		if (amazon)
+		if (amazon && DBRootStorageType == "external" )
 		{
 			if ( arguments[2] != "")
 				EBSsize = arguments[2];
