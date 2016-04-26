@@ -7633,6 +7633,38 @@ namespace oam
 
     /***************************************************************************
      *
+     * Function:  getEC2LocalInstanceSubnet
+     *
+     * Purpose:   Get Amazon EC2 local Instance Subnet
+     *
+     ****************************************************************************/
+
+    	std::string Oam::getEC2LocalInstanceSubnet(std::string name)
+	{
+		// run script to get Instance Subnet
+		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh Subnet  > /tmp/getInstanceSubnet_" + name;
+		int status = system(cmd.c_str());
+		if (WEXITSTATUS(status) != 0 )
+			return "failed";
+
+		// get Instance Name
+		string instanceSubnet;
+		string file = "/tmp/getInstanceSubnet_" + name;
+		ifstream oldFile (file.c_str());
+		char line[400];
+		while (oldFile.getline(line, 400))
+		{
+			instanceSubnet = line;
+		}
+		oldFile.close();
+
+		return instanceSubnet;
+
+	}
+
+
+    /***************************************************************************
+     *
      * Function:  launchEC2Instance
      *
      * Purpose:   Launch Amazon EC2 Instance

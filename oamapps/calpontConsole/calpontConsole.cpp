@@ -4883,11 +4883,11 @@ int processCommand(string* arguments)
 			string GlusterStorageType;
 			string AmazonVPCNextPrivateIP;
 			try {
+				oam.getSystemConfig("Cloud", cloud);
+				oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 				oam.getSystemConfig("GlusterConfig", GlusterConfig);
 				oam.getSystemConfig("GlusterCopies", GlusterCopies);
-				oam.getSystemConfig("Cloud", cloud);
 				oam.getSystemConfig("GlusterStorageType", GlusterStorageType);
-				oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 			}
 			catch(...) {}
 

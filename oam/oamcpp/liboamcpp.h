@@ -2325,6 +2325,10 @@ namespace oam
              */
             EXPORT std::string getEC2LocalInstanceType(std::string name = "dummy");
 
+            /** @brief getEC2LocalInstanceSubnet
+             */
+            EXPORT std::string getEC2LocalInstanceSubnet(std::string name = "dummy");
+
             /** @brief launchEC2Instance
              */
             EXPORT std::string launchEC2Instance(const std::string name = "dummy", const std::string IPAddress = oam::UnassignedName, const std::string type = oam::UnassignedName, const std::string group = oam::UnassignedName);

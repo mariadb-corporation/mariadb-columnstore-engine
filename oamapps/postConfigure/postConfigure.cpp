@@ -668,7 +668,14 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{}
-			}
+
+				if ( amazonSubNet == oam::UnassignedName || amazonSubNet == "" )
+				{
+					amazonSubNet = oam.getEC2LocalInstanceSubnet();
+					if ( amazonSubNet == "failed" || amazonSubNet == "" )
+						amazonSubNet == oam::UnassignedName;
+				}
+			}	
 		}
 	}
 
@@ -964,13 +971,16 @@ int main(int argc, char *argv[])
 					amazonVPC = true;
 					cloud = "amazon-vpc";
 
-					prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) amazonSubNet = pcommand;
-						callFree(pcommand);
+					if ( amazonSubNet == oam::UnassignedName )
+					{
+						prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
+						pcommand = callReadline(prompt.c_str());
+						if (pcommand) {
+							if (strlen(pcommand) > 0) amazonSubNet = pcommand;
+							callFree(pcommand);
+						}
 					}
-
+	
 					//set subnetID
 					try {
 						sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
@@ -3521,7 +3531,7 @@ int main(int argc, char *argv[])
 		cout << ". " + installDir + "/bin/calpontAlias" << endl << endl;
 
 		cout << "Enter 'idbmysql' to access the InfiniDB MySQL console" << endl;
-		cout << "Enter 'cc' to access the InfiniDB OAM console" << endl << endl;
+		cout << "Enter 'cc' to access the InfiniDB System Management console" << endl << endl;
 	}
 	else
 	{

@@ -8,7 +8,7 @@ prefix=/usr/local
 
 #check command
 if [ "$1" = "" ]; then
-	echo "Enter Command Name: {launchInstance|getInstance|getZone|getPrivateIP|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup}
+	echo "Enter Command Name: {launchInstance|getInstance|getZone|getPrivateIP|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet}
 }"
 	exit 1
 fi
@@ -479,6 +479,21 @@ deassignElasticIP() {
 	exit 0
 }
 
+getSubnet() {
+        #get local Instance ID
+        getInstancePrivate >/dev/null 2>&1
+        #get Subnet
+        subnet=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $16}'`
+        if [ "$subnet" == "" ]; then
+                describeInstance
+        fi
+        subnet=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $16}'`
+
+        echo $subnet
+        return
+}
+
+
 case "$1" in
   getInstance)
   	getInstance
@@ -525,8 +540,11 @@ case "$1" in
   getGroup)
   	getGroup
 	;;
+  getSubnet)
+  	getSubnet
+	;;
   *)
-	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup}"
+	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet}"
 	exit 1
 esac
 
