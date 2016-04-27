@@ -104,7 +104,7 @@ bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
 bool createDbrootDirs(string DBRootStorageType);
 bool pkgCheck();
-bool storageSetup(string cloud);
+bool storageSetup();
 void setSystemName();
 bool checkInstanceRunning(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
 string getInstanceIP(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
@@ -165,6 +165,7 @@ bool pmwithum = false;
 bool mysqlRep = false;
 string MySQLRep = "n";
 string PMwithUM = "n";
+bool amazonInstall = false;
 
 string DataFileEnvFile;
 
@@ -546,7 +547,7 @@ int main(int argc, char *argv[])
 				system(cmd.c_str());
 
 				// setup storage
-				if (!storageSetup("n"))
+				if (!storageSetup())
 				{
 					cout << "ERROR: Problem setting up storage" << endl;
 					exit(1);
@@ -632,53 +633,6 @@ int main(int argc, char *argv[])
 	//
 
 	cout << endl;
-	string cloud = oam::UnassignedName;
-	string amazonSubNet = oam::UnassignedName;
-	bool amazonEC2 = false;
-	bool amazonVPC = false;
-
-	try {
-		 cloud = sysConfig->getConfig(InstallSection, "Cloud");
-	}
-	catch(...)
-	{
-		cloud  = oam::UnassignedName;
-	}
-
-	string tcloud = "n";
-	if (cloud == oam::UnassignedName)
-		tcloud = "n";
-	else
-	{
-	 	if (cloud == "amazon-ec2")
-		{
-			tcloud = "y";
-			amazonEC2 = true;
-		}
-		else
-		{
-			if (cloud == "amazon-vpc")
-			{
-				tcloud = "y";
-				amazonVPC = true;
-
-				//get subnetID
-				try {
-					amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-				}
-				catch(...)
-				{}
-
-				if ( amazonSubNet == oam::UnassignedName || amazonSubNet == "" )
-				{
-					amazonSubNet = oam.getEC2LocalInstanceSubnet();
-					if ( amazonSubNet == "failed" || amazonSubNet == "" )
-						amazonSubNet == oam::UnassignedName;
-				}
-			}	
-		}
-	}
-
 	//cleanup/create local/etc  directory
 	cmd = "rm -rf " + installDir + "/local/etc > /dev/null 2>&1";
 	system(cmd.c_str());
@@ -926,75 +880,144 @@ int main(int argc, char *argv[])
 	}
 
 	//amazon install setup check
-	while(true) {
-		prompt = "Installing on Amazon System (EC2 or VPC services) [y,n] (" + tcloud + ") > ";
-		pcommand = callReadline(prompt.c_str());
-		if (pcommand) {
-			if (strlen(pcommand) > 0) tcloud = pcommand;
-			callFree(pcommand);
+	bool amazonInstall = false;
+	if (rootUser)
+		system("ec2-version > /tmp/amazon.log 2>&1");
+	else
+		system("sudo ec2-version > /tmp/amazon.log 2>&1");
+
+	ifstream in("/tmp/amazon.log");
+
+	in.seekg(0, std::ios::end);
+	int size = in.tellg();
+	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "command not found")) 
+	// no gluster
+		amazonInstall = false;
+	else
+		amazonInstall = true;
+
+	string amazonSubNet = oam::UnassignedName;
+	bool amazonEC2 = false;
+	bool amazonVPC = false;
+
+	if ( amazonInstall )
+	{
+		string cloud = oam::UnassignedName;
+		string tcloud = "n";
+
+		try {
+			cloud = sysConfig->getConfig(InstallSection, "Cloud");
 		}
-
-		if (tcloud == "y") 
+		catch(...)
 		{
-			if (!amazonEC2)
-				tcloud = "n";
-
-			prompt = "Using EC2 services [y,n] (" + tcloud + ") > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand) {
-				if (strlen(pcommand) > 0) tcloud = pcommand;
-				callFree(pcommand);
-			}
+			cloud  = oam::UnassignedName;
+		}
 	
-			if (tcloud == "n")
+		if (cloud == oam::UnassignedName)
+			tcloud = "n";
+		else
+		{
+			if (cloud == "amazon-ec2")
 			{
-				amazonEC2 = false;
-				cloud = oam::UnassignedName;
-
-				if (amazonVPC)
+				tcloud = "y";
+				amazonEC2 = true;
+			}
+			else
+			{
+				if (cloud == "amazon-vpc")
+				{
 					tcloud = "y";
-
-				prompt = "Using VPC services [y,n] (" + tcloud + ") > ";
+					amazonVPC = true;
+	
+					//get subnetID
+					try {
+						amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
+					}
+					catch(...)
+					{}
+	
+					if ( amazonSubNet == oam::UnassignedName || amazonSubNet == "" )
+					{
+						amazonSubNet = oam.getEC2LocalInstanceSubnet();
+						if ( amazonSubNet == "failed" || amazonSubNet == "" )
+							amazonSubNet == oam::UnassignedName;
+					}
+				}	
+			}
+		}
+	
+		while(true) {
+			if ( amazonSubNet == oam::UnassignedName )
+			{
+				prompt = "Running on Amazon EC2 System, do you want to configure using the EC2-api-tool set [y,n] (" + tcloud + ") > ";
 				pcommand = callReadline(prompt.c_str());
 				if (pcommand) {
 					if (strlen(pcommand) > 0) tcloud = pcommand;
 					callFree(pcommand);
 				}
 		
-				if (tcloud == "n")
+				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+				if ( noPrompting )
+					exit(1);
+				continue;
+
+				if (tcloud == "y")
 				{
-					amazonVPC = false;
-					cloud = oam::UnassignedName;
+					amazonEC2 = true;
+					cloud = "amazon-ec2";
 				}
 				else
-				{
-					amazonVPC = true;
-					cloud = "amazon-vpc";
-
-					if ( amazonSubNet == oam::UnassignedName )
-					{
-						prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand) {
-							if (strlen(pcommand) > 0) amazonSubNet = pcommand;
-							callFree(pcommand);
-						}
-					}
-	
-					//set subnetID
-					try {
-						sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-					}
-					catch(...)
-					{}
-				}
+					amazonEC2 = false;
 			}
 			else
 			{
-				amazonEC2 = true;
-				cloud = "amazon-ec2";
+				prompt = "Running on Amazon VPC System, do you want to configure using the VPC EC2-api-tool set [y,n] (" + tcloud + ") > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) tcloud = pcommand;
+					callFree(pcommand);
+				}
+		
+				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+				if ( noPrompting )
+					exit(1);
+				continue;
+
+				if (tcloud == "y") 
+				{
+					amazonVPC = true;
+					cloud = "amazon-vpc";
+				}
+				else
+					amazonVPC = false;
 			}
 
+			if (!amazonEC2 && !amazonVPC)
+			{
+				amazonInstall = false;
+				break;
+			}
+
+			if ( amazonVPC )
+			{
+				if ( amazonSubNet == oam::UnassignedName )
+				{
+					prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
+					pcommand = callReadline(prompt.c_str());
+					if (pcommand) {
+						if (strlen(pcommand) > 0) amazonSubNet = pcommand;
+						callFree(pcommand);
+					}
+				}
+
+				//set subnetID
+				try {
+					sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+				}
+				catch(...)
+				{}
+			}
+	
 			if ( amazonEC2 || amazonVPC )
 			{
 				cout << endl << "For Amazon EC2/VPC Instance installs, these files will need to be installed on" << endl;
@@ -1107,27 +1130,13 @@ int main(int argc, char *argv[])
 				break;
 			}
 		}
-		else 
-		{
-			if (tcloud == "n" ) {
-				cloud = oam::UnassignedName;
-				break;
-			}
+	
+		try {
+			sysConfig->setConfig(InstallSection, "Cloud", cloud);
 		}
-
-		cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-		if ( noPrompting )
-			exit(1);
+		catch(...)
+		{}
 	}
-
-	try {
-		 sysConfig->setConfig(InstallSection, "Cloud", cloud);
-	}
-	catch(...)
-	{}
-
-	if ( cloud == "amazon-ec2" || cloud == "amazon-vpc" )
-		cloud = "amazon";
 
 	if ( pmwithum )
 		cout << endl << "NOTE: Local Query Feature is enabled" << endl;
@@ -1230,7 +1239,7 @@ int main(int argc, char *argv[])
 	// setup storage
 	//
 
-	if (!storageSetup(cloud))
+	if (!storageSetup())
 	{
 		cout << "ERROR: Problem setting up storage" << endl;
 		exit(1);
@@ -1709,7 +1718,7 @@ int main(int argc, char *argv[])
 					while (true)
 					{
 						newModuleHostName = moduleHostName;
-						if (cloud == "amazon") {
+						if (amazonInstall) {
 							if ( moduleHostName == oam::UnassignedName && 
 								newModuleName == "pm1" )
 							{
@@ -1762,7 +1771,7 @@ int main(int argc, char *argv[])
 									continue;
 
 								//check Instance ID and get IP Address if running
-								if (cloud == "amazon") {
+								if (amazonInstall) {
 									string instanceType = oam.getEC2LocalInstanceType(newModuleHostName);
 									if ( moduleType == "pm" )
 									{
@@ -1827,7 +1836,7 @@ int main(int argc, char *argv[])
 						newModuleIPAddr = oam::UnassignedIpAddr;
 					else
 					{
-						if (cloud != "amazon") {
+						if (!amazonInstall) {
 							if ( moduleIPAddr == oam::UnassignedIpAddr )
 							{
 								//get IP Address
@@ -2086,7 +2095,7 @@ int main(int argc, char *argv[])
 						cout << "makeRClocal error" << endl;
 	
 					//if cloud, copy fstab in module tmp dir
-//					if ( cloud == "amazon" && moduleType == "pm")
+//					if ( amazonInstall && moduleType == "pm")
 //						if( !copyFstab(newModuleName) )
 //							cout << "copyFstab error" << endl;
 
@@ -2102,7 +2111,7 @@ int main(int argc, char *argv[])
 					}	
 
 					// only support 1 nic ID per Amazon instance
-					if (cloud == "amazon")
+					if (amazonInstall)
 						break;
 
 				} //end of nicID loop
@@ -2110,7 +2119,7 @@ int main(int argc, char *argv[])
 				//enter storage for user module
 				if ( moduleType == "um" && moduleDisableState == oam::ENABLEDSTATE) {
 					//get EC2 volume name and info
-					if ( UMStorageType == "external" && cloud == "amazon" &&
+					if ( UMStorageType == "external" && amazonInstall &&
 						IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) {
 
 						string create = "y";
@@ -2443,7 +2452,7 @@ int main(int argc, char *argv[])
 						system(cmd.c_str());
 
 						//get EC2 volume name and info
-						if ( DBRootStorageType == "external" && cloud == "amazon") {
+						if ( DBRootStorageType == "external" && amazonInstall) {
 							cout << endl << "*** Setup External EBS Volume for DBRoot #" << *it << " ***" << endl;
 							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or you can provide an existing Volume ID to use" << endl << endl;
 
@@ -4188,7 +4197,7 @@ bool pkgCheck()
 	return true;
 }
 
-bool storageSetup(string cloud)
+bool storageSetup()
 {
 	Oam oam;
 
@@ -4303,7 +4312,7 @@ bool storageSetup(string cloud)
 	
 	string storageType;
 
-	if( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM && cloud == "amazon" )
+	if( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM && amazonInstall )
 	{
 		//
 		// get Frontend Data storage type
@@ -4571,7 +4580,7 @@ bool storageSetup(string cloud)
 	}
 
 	// if external and amazon, prompt for storage size
-	if ( storageType == "2" && cloud == "amazon")
+	if ( storageType == "2" && amazonInstall)
 	{
 		cout << endl;
 		try {
