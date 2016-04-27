@@ -1055,8 +1055,11 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
+		sleep(2);
+
 		//check if this is a vpc system by checking for subnet setup
 		amazonSubNet = oam.getEC2LocalInstanceSubnet();
+cout << "amazonSubNet = " <<  amazonSubNet << endl;
 		if ( amazonSubNet == "failed" || amazonSubNet == "" )
 		{
 			amazonSubNet = oam::UnassignedName;
@@ -1103,6 +1106,7 @@ int main(int argc, char *argv[])
 	}
 
 	cout << endl;
+
 	setSystemName();
 
 	cout << endl;
@@ -1196,7 +1200,7 @@ int main(int argc, char *argv[])
 	// setup memory paramater settings
 	//
 
-	cout << endl << "===== Setup Memory Configuration =====" << endl;
+	cout << endl << "===== Setup Memory Configuration =====" << endl << endl;
 
 	switch ( IserverTypeInstall ) {
 		case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
