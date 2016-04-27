@@ -1030,15 +1030,11 @@ int main(int argc, char *argv[])
 
 			cout << endl;
 
-			while(true)
-			{
-				prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) AmazonRegion = pcommand;
-					callFree(pcommand);
-				}
-					break;
+			prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
+			pcommand = callReadline(prompt.c_str());
+			if (pcommand) {
+				if (strlen(pcommand) > 0) AmazonRegion = pcommand;
+				callFree(pcommand);
 			}
 	
 			try {
