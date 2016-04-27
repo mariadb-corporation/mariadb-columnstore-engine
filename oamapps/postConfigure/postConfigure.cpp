@@ -919,15 +919,20 @@ int main(int argc, char *argv[])
 				callFree(pcommand);
 			}
 	
-			cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-			if ( noPrompting )
-				exit(1);
-			continue;
-
 			if (tcloud == "n")
 			{
 				amazonInstall = false;
 				break;
+			}
+			else
+			{
+				if ( tcloud != "y" )
+				{
+					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+					if ( noPrompting )
+						exit(1);
+					continue;
+				}
 			}
 
 			cout << endl << "To use the EC2-api-tools, these files will need to be installed on" << endl;
