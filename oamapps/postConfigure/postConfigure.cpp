@@ -897,228 +897,167 @@ int main(int argc, char *argv[])
 		amazonInstall = true;
 
 	string amazonSubNet = oam::UnassignedName;
-	bool amazonEC2 = false;
-	bool amazonVPC = false;
 
 	if ( amazonInstall )
 	{
 		string cloud = oam::UnassignedName;
-		string tcloud = "n";
+		string tcloud = "y";
 
-		//check if this is a vpc system by checking for subnet setup
-		amazonSubNet = oam.getEC2LocalInstanceSubnet();
-		if ( amazonSubNet == "failed" || amazonSubNet == "" )
-		{
-			amazonSubNet == oam::UnassignedName;
-
-			try {
-				cloud = sysConfig->getConfig(InstallSection, "Cloud");
-			}
-			catch(...)
-			{
-				cloud  = oam::UnassignedName;
-			}
+		try {
+			cloud = sysConfig->getConfig(InstallSection, "Cloud");
 		}
-		else
+		catch(...)
 		{
-			amazonVPC = true;
-			cloud == "amazon-vpc";
-			tcloud = "y";
+			cloud  = oam::UnassignedName;
 		}
 
-		if (cloud != oam::UnassignedName)
-		{
-			if (cloud == "amazon-ec2")
-			{
-				tcloud = "y";
-				amazonEC2 = true;
-			}
-		}
-	
 		while(true) {
-			if ( amazonSubNet == oam::UnassignedName )
-			{
-				prompt = "Running on Amazon EC2 System, do you want to configure using the EC2-api-tool set [y,n] (" + tcloud + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) tcloud = pcommand;
-					callFree(pcommand);
-				}
-		
-				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-				if ( noPrompting )
-					exit(1);
-				continue;
-
-				if (tcloud == "y")
-				{
-					amazonEC2 = true;
-					cloud = "amazon-ec2";
-				}
-				else
-					amazonEC2 = false;
+			prompt = "Running on Amazon EC2 System, do you want to configure using the EC2-api-tool set [y,n] (" + tcloud + ") > ";
+			pcommand = callReadline(prompt.c_str());
+			if (pcommand) {
+				if (strlen(pcommand) > 0) tcloud = pcommand;
+				callFree(pcommand);
 			}
-			else
-			{
-				prompt = "Running on Amazon VPC System, do you want to configure using the VPC EC2-api-tool set [y,n] (" + tcloud + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) tcloud = pcommand;
-					callFree(pcommand);
-				}
-		
-				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-				if ( noPrompting )
-					exit(1);
-				continue;
+	
+			cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+			if ( noPrompting )
+				exit(1);
+			continue;
 
-				if (tcloud == "y") 
-				{
-					amazonVPC = true;
-					cloud = "amazon-vpc";
-				}
-				else
-					amazonVPC = false;
-			}
-
-			if (!amazonEC2 && !amazonVPC)
+			if (tcloud == "n")
 			{
 				amazonInstall = false;
 				break;
 			}
 
-			if ( amazonVPC )
-			{
-				if ( amazonSubNet == oam::UnassignedName )
-				{
-					prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) amazonSubNet = pcommand;
-						callFree(pcommand);
+			cout << endl << "To use the EC2-api-tools, these files will need to be installed on" << endl;
+			cout << "on the local instance:" << endl << endl;
+			cout << " 1. File containing the Amazon Access Key" << endl;
+			cout << " 2. File containing the Amazon Secret Key" << endl << endl;
+
+			while(true) {
+				string ready = "y";
+				prompt = "Are these files installed and ready to continue [y,n] (y) > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) ready = pcommand;
+					callFree(pcommand);
+					if (ready == "n") {
+						cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
+						exit(0);
 					}
 				}
 
-				//set subnetID
-				try {
-					sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-				}
-				catch(...)
-				{}
+				if ( ready == "y" )
+					break;
+
+				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+				if ( noPrompting )
+					exit(1);
 			}
-	
-			if ( amazonEC2 || amazonVPC )
+
+			try {
+				AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
+				AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
+			}
+			catch(...)
+			{}
+
+			cout << endl;
+
+			while(true)
 			{
-				cout << endl << "For Amazon EC2/VPC Instance installs, these files will need to be installed on" << endl;
-				cout << "on the local instance:" << endl << endl;
-				cout << " 1. File containing the Amazon Access Key" << endl;
-				cout << " 2. File containing the Amazon Secret Key" << endl << endl;
-	
-				while(true) {
-					string ready = "y";
-					prompt = "Are these files installed and ready to continue [y,n] (y) > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) ready = pcommand;
-						callFree(pcommand);
-						if (ready == "n") {
-							cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
-							exit(0);
-						}
-					}
-	
-					if ( ready == "y" )
-						break;
-	
-					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+				prompt = "Enter file name containing the Access Key (" + AmazonAccessKey + ") > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) AmazonAccessKey = pcommand;
+					callFree(pcommand);
+				}
+				ifstream File (AmazonAccessKey.c_str());
+				if (!File) {
+					cout << "Error: file not found, please re-enter" << endl;
 					if ( noPrompting )
 						exit(1);
 				}
-	
-				try {
-					AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
-					AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
-				}
-				catch(...)
-				{}
-	
-				cout << endl;
-	
-				while(true)
-				{
-					prompt = "Enter file name containing the Access Key (" + AmazonAccessKey + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) AmazonAccessKey = pcommand;
-						callFree(pcommand);
-					}
-					ifstream File (AmazonAccessKey.c_str());
-					if (!File) {
-						cout << "Error: file not found, please re-enter" << endl;
-						if ( noPrompting )
-							exit(1);
-					}
-					else
-						break;
-				}
-	
-				while(true)
-				{
-					prompt = "Enter file name containing the Secret Key (" + AmazonSecretKey + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) AmazonSecretKey = pcommand;
-						callFree(pcommand);
-					}
-					ifstream File (AmazonSecretKey.c_str());
-					if (!File)
-					{
-						cout << "Error: file not found, please re-enter" << endl;
-						if ( noPrompting )
-							exit(1);
-					}
-					else
-						break;
-				}
-	
-				try {
-					sysConfig->setConfig(InstallSection, "AmazonAccessKey", AmazonAccessKey);
-					sysConfig->setConfig(InstallSection, "AmazonSecretKey", AmazonSecretKey);
-				}
-				catch(...)
-				{}
-	
-				if( !copyKeyfiles() )
-					cout << "copyKeyfiles error" << endl;
-
-				try {
-					AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
-				}
-				catch(...)
-				{}
-	
-				cout << endl;
-	
-				while(true)
-				{
-					prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) AmazonRegion = pcommand;
-						callFree(pcommand);
-					}
-						break;
-				}
-		
-				try {
-					sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
-				}
-				catch(...)
-				{}
-
-				break;
+				else
+					break;
 			}
+
+			while(true)
+			{
+				prompt = "Enter file name containing the Secret Key (" + AmazonSecretKey + ") > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) AmazonSecretKey = pcommand;
+					callFree(pcommand);
+				}
+				ifstream File (AmazonSecretKey.c_str());
+				if (!File)
+				{
+					cout << "Error: file not found, please re-enter" << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+				else
+					break;
+			}
+
+			try {
+				sysConfig->setConfig(InstallSection, "AmazonAccessKey", AmazonAccessKey);
+				sysConfig->setConfig(InstallSection, "AmazonSecretKey", AmazonSecretKey);
+			}
+			catch(...)
+			{}
+
+			if( !copyKeyfiles() )
+				cout << "copyKeyfiles error" << endl;
+
+			try {
+				AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
+			}
+			catch(...)
+			{}
+
+			cout << endl;
+
+			while(true)
+			{
+				prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) AmazonRegion = pcommand;
+					callFree(pcommand);
+				}
+					break;
+			}
+	
+			try {
+				sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
+			}
+			catch(...)
+			{}
+
+			break;
 		}
+
+		//check if this is a vpc system by checking for subnet setup
+		amazonSubNet = oam.getEC2LocalInstanceSubnet();
+		if ( amazonSubNet == "failed" || amazonSubNet == "" )
+		{
+			amazonSubNet = oam::UnassignedName;
+			cloud = "amazon-ec2";
+		}
+		else
+		{
+			cloud = "amazon-vpc";
+		}
+
+		//set subnetID
+		try {
+			sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+		}
+		catch(...)
+		{}
 	
 		try {
 			sysConfig->setConfig(InstallSection, "Cloud", cloud);
