@@ -104,7 +104,7 @@ bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
 bool createDbrootDirs(string DBRootStorageType);
 bool pkgCheck();
-bool storageSetup();
+bool storageSetup(bool amazonInstall);
 void setSystemName();
 bool checkInstanceRunning(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
 string getInstanceIP(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
@@ -547,7 +547,7 @@ int main(int argc, char *argv[])
 				system(cmd.c_str());
 
 				// setup storage
-				if (!storageSetup())
+				if (!storageSetup(false))
 				{
 					cout << "ERROR: Problem setting up storage" << endl;
 					exit(1);
@@ -879,6 +879,11 @@ int main(int argc, char *argv[])
 		break;
 	}
 
+	if ( !writeConfig(sysConfig) ) { 
+		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
+		exit(1);
+	}
+
 	//amazon install setup check
 	bool amazonInstall = false;
 	if (rootUser)
@@ -1045,6 +1050,11 @@ int main(int argc, char *argv[])
 			break;
 		}
 
+		if ( !writeConfig(sysConfig) ) { 
+			cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
+			exit(1);
+		}
+
 		//check if this is a vpc system by checking for subnet setup
 		amazonSubNet = oam.getEC2LocalInstanceSubnet();
 		if ( amazonSubNet == "failed" || amazonSubNet == "" )
@@ -1172,7 +1182,7 @@ int main(int argc, char *argv[])
 	// setup storage
 	//
 
-	if (!storageSetup())
+	if (!storageSetup(amazonInstall))
 	{
 		cout << "ERROR: Problem setting up storage" << endl;
 		exit(1);
@@ -4130,7 +4140,7 @@ bool pkgCheck()
 	return true;
 }
 
-bool storageSetup()
+bool storageSetup(bool amazonInstall)
 {
 	Oam oam;
 
