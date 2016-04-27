@@ -1302,7 +1302,7 @@ int main(int argc, char *argv[])
 		string AmazonRegion;
 		string AmazonZone;
 		string AmazonVPCNextPrivateIP;
-
+		string AmazonDeviceName;
 		try {
 			cloud = sysConfigOld->getConfig(InstallSection, "Cloud");
 			x509Cert = sysConfigOld->getConfig(InstallSection, "AmazonX509Certificate");
@@ -1319,6 +1319,7 @@ int main(int argc, char *argv[])
 			AmazonZone = sysConfigOld->getConfig(InstallSection, "AmazonZone");
 			AmazonVPCNextPrivateIP = sysConfigOld->getConfig(InstallSection, "AmazonVPCNextPrivateIP");
 			AmazonSubNetID = sysConfigOld->getConfig(InstallSection, "AmazonSubNetID");
+			AmazonDeviceName = sysConfigOld->getConfig(InstallSection, "AmazonDeviceName");
 		}
 		catch(...)
 		{ }
@@ -1380,6 +1381,7 @@ int main(int argc, char *argv[])
 			sysConfigNew->setConfig(InstallSection, "AmazonAutoTagging", AmazonAutoTagging);
 			sysConfigNew->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
 			sysConfigNew->setConfig(InstallSection, "AmazonZone", AmazonZone);
+			sysConfigNew->setConfig(InstallSection, "AmazonDeviceName", AmazonDeviceName);
 		}
 		catch(...)
 		{
@@ -1456,9 +1458,13 @@ int main(int argc, char *argv[])
 					string volumeName = oam::UnassignedName;
 					string deviceNameID = "PMVolumeDeviceName" + oam.itoa(id);
 					string deviceName = oam::UnassignedName;
+					string amazondeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(id);
+					string amazondeviceName = oam::UnassignedName;
+
 					try {
 						volumeName = sysConfigOld->getConfig(InstallSection, volumeNameID);
 						deviceName = sysConfigOld->getConfig(InstallSection, deviceNameID);
+						amazondeviceName = sysConfigOld->getConfig(InstallSection, amazondeviceNameID);
 					}
 					catch(...)
 					{}
@@ -1466,6 +1472,25 @@ int main(int argc, char *argv[])
 					try {
 						sysConfigNew->setConfig(InstallSection, volumeNameID, volumeName);
 						sysConfigNew->setConfig(InstallSection, deviceNameID, deviceName);
+						sysConfigNew->setConfig(InstallSection, amazondeviceNameID, amazondeviceName);
+					}
+					catch(...)
+					{}
+
+
+					string UMVolumeSize = oam::UnassignedName;
+					string PMVolumeSize = oam::UnassignedName;
+
+					try {
+						UMVolumeSize = sysConfigOld->getConfig(InstallSection, "UMVolumeSize");
+						PMVolumeSize = sysConfigOld->getConfig(InstallSection, "PMVolumeSize");
+					}
+					catch(...)
+					{}
+	
+					try {
+						sysConfigNew->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
+						sysConfigNew->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
 					}
 					catch(...)
 					{}

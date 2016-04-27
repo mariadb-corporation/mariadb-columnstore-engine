@@ -129,6 +129,9 @@ string DBRootStorageLoc;
 string DBRootStorageType;
 string UMStorageType;
 
+string PMVolumeSize = oam::UnassignedName;
+string UMVolumeSize = oam::UnassignedName;
+
 int DBRootCount;
 string deviceName;
 
@@ -556,11 +559,11 @@ int main(int argc, char *argv[])
 				// setup storage
 				if (!singleServerDBrootSetup())
 				{
-					cout << "ERROR: Problem setting up dbroot IDs" << endl;
+					cout << "ERROR: Problem setting up DBRoot IDs" << endl;
 					exit(1);
 				}
 
-				//set system dbroot count and check 'files per parition' with number of dbroots
+				//set system DBRoot count and check 'files per parition' with number of dbroots
 				try {
 					sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
 				}
@@ -665,7 +668,14 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{}
-			}
+
+				if ( amazonSubNet == oam::UnassignedName || amazonSubNet == "" )
+				{
+					amazonSubNet = oam.getEC2LocalInstanceSubnet();
+					if ( amazonSubNet == "failed" || amazonSubNet == "" )
+						amazonSubNet == oam::UnassignedName;
+				}
+			}	
 		}
 	}
 
@@ -961,13 +971,16 @@ int main(int argc, char *argv[])
 					amazonVPC = true;
 					cloud = "amazon-vpc";
 
-					prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) amazonSubNet = pcommand;
-						callFree(pcommand);
+					if ( amazonSubNet == oam::UnassignedName )
+					{
+						prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
+						pcommand = callReadline(prompt.c_str());
+						if (pcommand) {
+							if (strlen(pcommand) > 0) amazonSubNet = pcommand;
+							callFree(pcommand);
+						}
 					}
-
+	
 					//set subnetID
 					try {
 						sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
@@ -1142,37 +1155,21 @@ int main(int argc, char *argv[])
 
 	cout << endl;
 
+	oamModuleInfo_t t;
+	string localModuleName;
+	try {
+		t = oam.getModuleInfo();
+		localModuleName = boost::get<0>(t);
+	}
+	catch (exception& e) {}
+
 	//get Parent OAM Module Name
-	string parentOAMModuleName;
-	try{
-		parentOAMModuleName = sysConfig->getConfig(SystemSection, "ParentOAMModuleName");
-	}
-	catch(...)
+	string parentOAMModuleName = "pm1";
+
+	if ( localModuleName != parentOAMModuleName )
 	{
-		cout << "ERROR: Problem getting ParentOAMModuleName the InfiniDB System Configuration file" << endl;
+		cout << endl << endl << "ERROR: exiting, postConfigure can only run executed on " + parentOAMModuleName + ", current module is " << localModuleName << endl;
 		exit(1);
-	}
-
-	while(true) {
-		string newparentOAMModuleName = parentOAMModuleName;
-		prompt = "Enter the Local Module Name or exit [pmx,exit] (" + parentOAMModuleName +") > ";
-		pcommand = callReadline(prompt.c_str());
-		if (pcommand) {
-			if (strlen(pcommand) > 0) newparentOAMModuleName = pcommand;
-			callFree(pcommand);
-			if (newparentOAMModuleName == "exit")
-				exit(0);
-		}
-		else
-			exit(0);
-
-		if ( newparentOAMModuleName.find("pm") == 0 ) {
-			parentOAMModuleName = newparentOAMModuleName;
-			break;
-		}
-		cout << "Invalid Module Name, please re-enter" << endl;
-		if ( noPrompting )
-			exit(1);
 	}
 
 	try{
@@ -1247,7 +1244,7 @@ int main(int argc, char *argv[])
 	// setup memory paramater settings
 	//
 
-	cout << endl << "===== Setup Memory Configuration =====" << endl << endl;
+	cout << endl << "===== Setup Memory Configuration =====" << endl;
 
 	switch ( IserverTypeInstall ) {
 		case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
@@ -1275,7 +1272,7 @@ int main(int argc, char *argv[])
 				try {
 					sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-					cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+					cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
 				}
 				catch(...)
 				{
@@ -1283,21 +1280,13 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 
-//				try{
-//					sysinfo(&myinfo);
-//				}
-//				catch (...) {}
-		
-				//get memory stats
-//				long long total = myinfo.totalram / 1024 / 1000;
-
 				string percent = "25%";
 
 				if (hdfs) {
 					percent = "12%";
 				}
 
-				cout << "      Setting 'TotalUmMemory' to " << percent << " of total memory" << endl;
+				cout << "      Setting 'TotalUmMemory' to " << percent << endl;
 
 				try {
 					sysConfig->setConfig("HashJoin", "TotalUmMemory", percent);
@@ -1357,7 +1346,7 @@ int main(int argc, char *argv[])
 				try {
 					sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-					cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+					cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
 				}
 				catch(...)
 				{
@@ -1365,20 +1354,12 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 
-//				try{
-//					sysinfo(&myinfo);
-//				}
-//				catch (...) {}
-		
-				//get memory stats
-//				long long total = myinfo.totalram / 1024 / 1000;
-
 				string percent = "50%";
 				if (hdfs) {
 					percent = "12%";
 				}	
 
-				cout << "      Setting 'TotalUmMemory' to " << percent << " of total memory" << endl;
+				cout << "      Setting 'TotalUmMemory' to " << percent << endl;
 
 				try {
 					sysConfig->setConfig("HashJoin", "TotalUmMemory", percent);
@@ -1548,33 +1529,6 @@ int main(int argc, char *argv[])
 			umNumber = moduleCount;
 
 		int moduleID = 1;
-		while(true) {
-			prompt = "Enter Starting Module ID for " + moduleDesc + " [1," + oam.itoa(oam::MAX_MODULE-moduleCount+1) + "] (1) > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) moduleID = atoi(pcommand);
-				callFree(pcommand);
-			}
-	
-			if ( moduleID < 1 || moduleID > oam::MAX_MODULE-moduleCount+1 ) {
-				cout << endl << "ERROR: Invalid Module ID '" + oam.itoa(moduleID) + "', please re-enter" << endl << endl;
-				if ( noPrompting )
-					exit(1);
-				continue;
-			}
-
-			//valid if parent OAM module type and is consistent with parentOAMModuleName
-			if ( parentOAMModuleType == moduleType && 
-					( parentOAMModuleID < moduleID || parentOAMModuleID > moduleID + (moduleCount-1) ) ) {
-				cout << endl << "ERROR: Parent and Starting Module ID out of range, please re-enter" << endl << endl;
-				moduleID = 1;
-				if ( noPrompting )
-					exit(1);
-			}
-			else
-				break;
-		}
 
 		int listSize = sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.size();
 
@@ -1755,15 +1709,31 @@ int main(int argc, char *argv[])
 					while (true)
 					{
 						newModuleHostName = moduleHostName;
-						if (cloud == "amazon")
-							prompt = "Enter EC2 Instance ID  (" + moduleHostName + ") > ";
+						if (cloud == "amazon") {
+							if ( moduleHostName == oam::UnassignedName && 
+								newModuleName == "pm1" )
+							{
+								//get local instance name (pm1)
+								string localInstance = oam.getEC2LocalInstance();
+								if ( localInstance == "failed" || localInstance.empty() || localInstance == "") 
+									moduleHostName = oam::UnassignedName;
+								else
+									moduleHostName = localInstance;
+							}
+
+							prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+						}
 						else
 							prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " Host Name (" + moduleHostName + ") > ";
 
 						pcommand = callReadline(prompt.c_str());
 						if (pcommand)
 						{
-							if (strlen(pcommand) > 0) newModuleHostName = pcommand;	
+							if (strlen(pcommand) > 0) 
+								newModuleHostName = pcommand;
+							else
+								newModuleHostName = moduleHostName;
+
 							callFree(pcommand);
 						}
 		
@@ -1793,6 +1763,24 @@ int main(int argc, char *argv[])
 
 								//check Instance ID and get IP Address if running
 								if (cloud == "amazon") {
+									string instanceType = oam.getEC2LocalInstanceType(newModuleHostName);
+									if ( moduleType == "pm" )
+									{
+										try {
+											sysConfig->setConfig(InstallSection, "PMInstanceType", instanceType);
+										}
+										catch(...)
+										{}
+									}
+									else
+									{
+										try {
+											sysConfig->setConfig(InstallSection, "UMInstanceType", instanceType);
+										}
+										catch(...)
+										{}
+									}
+
 									cout << "Getting Private IP Address for Instance " << newModuleHostName << ", please wait..." << endl;
 									newModuleIPAddr = oam.getEC2InstanceIpAddress(newModuleHostName);
 									if (newModuleIPAddr == "stopped") {
@@ -2098,9 +2086,9 @@ int main(int argc, char *argv[])
 						cout << "makeRClocal error" << endl;
 	
 					//if cloud, copy fstab in module tmp dir
-					if ( cloud == "amazon" && moduleType == "pm")
-						if( !copyFstab(newModuleName) )
-							cout << "copyFstab error" << endl;
+//					if ( cloud == "amazon" && moduleType == "pm")
+//						if( !copyFstab(newModuleName) )
+//							cout << "copyFstab error" << endl;
 
 					//setup DBRM Processes
 					if ( newModuleName == parentOAMModuleName )
@@ -2123,33 +2111,62 @@ int main(int argc, char *argv[])
 				if ( moduleType == "um" && moduleDisableState == oam::ENABLEDSTATE) {
 					//get EC2 volume name and info
 					if ( UMStorageType == "external" && cloud == "amazon" &&
-							IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) {
+						IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) {
 
+						string create = "y";
+
+						while(true)
+						{
+							pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
+							if (pcommand)
+							{
+								if (strlen(pcommand) > 0) create = pcommand;
+								callFree(pcommand);
+							}
+							if ( create == "y" || create == "n" )
+								break;
+							else
+								cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+							create = "y";
+							if ( noPrompting )
+								exit(1);
+						}
+					
 						string volumeNameID = "UMVolumeName" + oam.itoa(moduleID);
 						string volumeName = oam::UnassignedName;
 						string deviceNameID = "UMVolumeDeviceName" + oam.itoa(moduleID);
 						string deviceName = oam::UnassignedName;
-						try {
-							volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
-							deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
-						}
-						catch(...)
-						{}
 
-						prompt = "Enter Volume ID assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand)
-						{
-							if (strlen(pcommand) > 0) volumeName = pcommand;	
-							callFree(pcommand);
+						if ( create == "n" ) {
+							// prompt for volume ID
+							try {
+								volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
+							}
+							catch(...)
+							{}
+	
+							prompt = "Enter Volume ID assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
+							pcommand = callReadline(prompt.c_str());
+							if (pcommand)
+							{
+								if (strlen(pcommand) > 0) volumeName = pcommand;	
+								callFree(pcommand);
+							}
+	
+							//get device name based on DBRoot ID
+							deviceName = "/dev/sdf" + oam.itoa(moduleID);
 						}
-
-						prompt = "Enter Device Name (/dev/sdxx) '" + newModuleName + "' (" + deviceName + ") > ";
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand)
+						else
 						{
-							if (strlen(pcommand) > 0) deviceName = pcommand;	
-							callFree(pcommand);
+							//create new UM volume
+							try{
+
+    								oam.addUMdisk(moduleID, volumeName, deviceName, UMVolumeSize);
+							}
+							catch(...) {
+								cout << "ERROR: volume create failed for " + newModuleName << endl;
+								return false;
+							}
 						}
 
 						//write volume and device name
@@ -2198,7 +2215,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 						exit(1);
 					}
 
@@ -2238,7 +2255,7 @@ int main(int argc, char *argv[])
 						dbroots.clear();
 						bool matchFound = false;
 
-						prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of dbroot IDs assigned to module '" + newModuleName + "' (" + dbrootList + ") > ";
+						prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of DBRoot IDs assigned to module '" + newModuleName + "' (" + dbrootList + ") > ";
 						pcommand = callReadline(prompt.c_str());
 						if (pcommand)
 						{
@@ -2294,7 +2311,30 @@ int main(int argc, char *argv[])
 							}
 						}
 
-						//check and see if dbroot ID already used
+						//if pm1, make sure DBRoot #1 is in the list
+						if ( newModuleName == "pm1" )
+						{
+							bool found = false;
+							std::vector<std::string>::iterator list = dbroots.begin();
+							for (; list != dbroots.end() ; list++)
+							{
+								if ( *list == "1" ) 
+								{
+									found = true;
+									break;
+								}
+							}
+
+							if ( !found )
+							{
+								cout << endl << "Invalid Entry, Module pm1 has to have DBRoot #1 assigned to it, please 	re-enter" << endl;
+								if ( noPrompting )
+									exit(1);
+								continue;
+							}
+						}
+
+						//check and see if DBRoot ID already used
 						std::vector<std::string>::iterator list = dbroots.begin();
 						for (; list != dbroots.end() ; list++)
 						{
@@ -2315,7 +2355,7 @@ int main(int argc, char *argv[])
 							if ( inUse)
 								break;
 							else 
-							{	// if upgrade, dont allow a new dbroot id to be entered
+							{	// if upgrade, dont allow a new DBRoot id to be entered
 								if ( reuseConfig == "y" )
 								{
 									DBRootConfigList::iterator pt = dbrootConfigList.begin();
@@ -2373,7 +2413,7 @@ int main(int argc, char *argv[])
 						dbrootmodule.dbrootID = *it;
 						dbrootlist.push_back(dbrootmodule);
 
-						//store dbroot ID
+						//store DBRoot ID
 						string moduledbrootid = "ModuleDBRootID" + oam.itoa(moduleID) + "-" + oam.itoa(id) + "-" + oam.itoa(i+1);
 						try {
 							sysConfig->setConfig(ModuleSection, moduledbrootid, *it);
@@ -2404,43 +2444,112 @@ int main(int argc, char *argv[])
 
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && cloud == "amazon") {
-							cout << endl;
+							cout << endl << "*** Setup External EBS Volume for DBRoot #" << *it << " ***" << endl;
+							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or you can provide an existing Volume ID to use" << endl << endl;
+
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;
-							try {
-								volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
-							}
-							catch(...)
-							{}
-
-							prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
-							pcommand = callReadline(prompt.c_str());
-							if (pcommand)
-							{
-								if (strlen(pcommand) > 0) volumeName = pcommand;	
-								callFree(pcommand);
-							}
-
 							string deviceNameID = "PMVolumeDeviceName" + *it;
 							string deviceName = oam::UnassignedName;
+							string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + *it;
+							string amazondeviceName = oam::UnassignedName;
+
 							try {
+								volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
 								deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
+								amazondeviceName = sysConfig->getConfig(InstallSection, amazonDeviceNameID);
 							}
 							catch(...)
 							{}
 
-							prompt = "Enter Device Name (/dev/sdxx) for volume '" + volumeName + "' (" + deviceName + ") > ";
-							pcommand = callReadline(prompt.c_str());
-							if (pcommand)
+							if ( reuseConfig == "n" ) {
+								string create = "y";
+		
+								while(true)
+								{
+									pcommand = callReadline("Create a new EBS volume for DBRoot #" + *it + " ?  [y,n] (y) > ");
+									if (pcommand)
+									{
+										if (strlen(pcommand) > 0) create = pcommand;
+										callFree(pcommand);
+									}
+									if ( create == "y" || create == "n" )
+										break;
+									else
+										cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+									create = "y";
+									if ( noPrompting )
+										exit(1);
+								}
+	
+								if ( create == "n" ) {
+									prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
+									pcommand = callReadline(prompt.c_str());
+									if (pcommand)
+									{
+										if (strlen(pcommand) > 0) volumeName = pcommand;	
+										callFree(pcommand);
+									}
+
+									//get device name based on DBRoot ID
+									oam::storageID_t st;
+									try {
+										st = oam.getAWSdeviceName( atoi((*it).c_str()) );
+									}
+									catch(...) {}
+					
+									deviceName = boost::get<0>(st);
+									amazondeviceName = boost::get<1>(st);
+
+									// update fstabs
+									string entry = oam.updateFstab( amazondeviceName, *it);
+								}
+								else
+								{
+									// create amazon ebs DBRoot
+									try
+									{
+										DBRootConfigList dbrootlist;
+										dbrootlist.push_back(atoi((*it).c_str()));
+	
+										oam.addDbroot(1, dbrootlist, PMVolumeSize);
+							
+										sleep(2);
+										try {
+											volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
+											deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
+											amazondeviceName = sysConfig->getConfig(InstallSection, amazonDeviceNameID);
+										}
+										catch(...)
+										{}
+									}
+									catch (exception& e)
+									{
+										cout << endl << "**** addDbroot Failed: " << e.what() << endl;
+										exit(1);
+									}
+								}
+							}
+							else
 							{
-								if (strlen(pcommand) > 0) deviceName = pcommand;	
-								callFree(pcommand);
+								prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
+								pcommand = callReadline(prompt.c_str());
+								if (pcommand)
+								{
+									if (strlen(pcommand) > 0) volumeName = pcommand;	
+									callFree(pcommand);
+								}
+
+								// update fstabs
+								string entry = oam.updateFstab( amazondeviceName, *it);
+
 							}
 
 							//write volume and device name
 							try {
 								sysConfig->setConfig(InstallSection, volumeNameID, volumeName);
 								sysConfig->setConfig(InstallSection, deviceNameID, deviceName);
+								sysConfig->setConfig(InstallSection, amazonDeviceNameID, amazondeviceName);
 							}
 							catch(...)
 							{
@@ -2468,7 +2577,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 						exit(1);
 					}
 					//total dbroots on the system
@@ -3422,7 +3531,7 @@ int main(int argc, char *argv[])
 		cout << ". " + installDir + "/bin/calpontAlias" << endl << endl;
 
 		cout << "Enter 'idbmysql' to access the InfiniDB MySQL console" << endl;
-		cout << "Enter 'cc' to access the InfiniDB OAM console" << endl << endl;
+		cout << "Enter 'cc' to access the InfiniDB System Management console" << endl << endl;
 	}
 	else
 	{
@@ -4240,8 +4349,39 @@ bool storageSetup(string cloud)
 		if ( storageType == "1" )
 			UMStorageType = "internal";
 		else
+		{
 			UMStorageType = "external";
+
+			cout << endl;
+			try {
+				oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
+			}
+			catch(...)
+			{}
 	
+			if ( UMVolumeSize.empty() || UMVolumeSize == "")
+				UMVolumeSize = oam::UnassignedName;
+
+			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + ") > ";
+			pcommand = callReadline(prompt);
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
+				callFree(pcommand);
+			}
+	
+			//set DBRootStorageType
+			try {
+				sysConfig->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting UMVolumeSize in the InfiniDB System Configuration file" << endl;
+				return false;
+			}
+		}
+
+
 		try {
 			sysConfig->setConfig(InstallSection, "UMStorageType", UMStorageType);
 		}
@@ -4331,21 +4471,21 @@ bool storageSetup(string cloud)
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=GlusterFS, 4=hdfs] (" + storageType + ") > ";
 	}
 
-	cout << "  'internal' -    This is specified when a local disk is used for the dbroot storage." << endl;
+	cout << "  'internal' -    This is specified when a local disk is used for the DBRoot storage." << endl;
 	cout << "                  High Availability Server Failover is not Supported in this mode" << endl << endl; 
-	cout << "  'external' -    This is specified when the dbroot directories are mounted." << endl;
+	cout << "  'external' -    This is specified when the DBRoot directories are mounted." << endl;
 	cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 
 	if ( glusterInstalled == "y" )
 	{
 		cout << "  'GlusterFS' -   This is specified when GlusterFS Data Redundancy is installed" << endl;
-		cout << "                  and you want the dbroot directories to be controlled by glusterfs." << endl;
+		cout << "                  and you want the DBRoot directories to be controlled by glusterfs." << endl;
 		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 	}
 
 	if ( hadoopInstalled == "y" )
 	{
-		cout << "  'hdfs' -        This is specified when hadoop is installed and you want the dbroot" << endl;
+		cout << "  'hdfs' -        This is specified when hadoop is installed and you want the DBRoot" << endl;
  		cout << "                  directories to be controlled by the Hadoop Distributed File System (HDFS)." << endl;
 		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 	}
@@ -4430,14 +4570,34 @@ bool storageSetup(string cloud)
 		return false;
 	}
 
-	if( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
+	// if external and amazon, prompt for storage size
+	if ( storageType == "2" && cloud == "amazon")
 	{
+		cout << endl;
 		try {
-			sysConfig->setConfig(InstallSection, "UMStorageType", DBRootStorageType);
+			oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
+		}
+		catch(...)
+		{}
+
+		if ( PMVolumeSize.empty() || PMVolumeSize == "" )
+			PMVolumeSize = oam::UnassignedName;
+
+		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + ") > ";
+		pcommand = callReadline(prompt);
+		if (pcommand)
+		{
+			if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
+			callFree(pcommand);
+		}
+
+		//set DBRootStorageType
+		try {
+			sysConfig->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting UMStorageType in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting PMVolumeSize in the InfiniDB System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4696,8 +4856,8 @@ void snmpAppCheck()
 
 		cout << endl << "===== Setup the Network Management System (NMS) Server Configuration =====" << endl << endl;
 
-		cout << "This would be used to receive SNMP Traps from InfiniDB, like a Network Control Center" << endl;
-		prompt = "Enter IP Address(es) of NMS Server (" + currentNMSIPAddress + ") > ";
+		cout << "This would be used to receive SNMP Traps from InfiniDB, 0.0.0.0 defaults to not sending off the system" << endl;
+		prompt = "Enter IP Address(es) of where you want the SNMP Traps went (" + currentNMSIPAddress + ") > ";
 		pcommand = callReadline(prompt.c_str());
 		if (pcommand)
 		{
@@ -4917,7 +5077,7 @@ bool attachVolume(string instanceName, string volumeName, string deviceName, str
 	string status = oam.getEC2VolumeStatus(volumeName);
 	if ( status == "attached" ) {
 		cout << "Volume " << volumeName << " is attached " << endl;
-		cout << "Make sure it's device " << deviceName << " is mounted to dbroot directory " << dbrootPath << endl;
+		cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
 		return true;
 	}
 
@@ -4952,7 +5112,7 @@ bool attachVolume(string instanceName, string volumeName, string deviceName, str
 			cout << "Attaching, please wait..." << endl;
 			if(oam.attachEC2Volume(volumeName, deviceName, instanceName)) {
 				cout << "Volume " << volumeName << " is now attached " << endl;
-				cout << "Make sure it's device " << deviceName << " is mounted to dbroot directory " << dbrootPath << endl;
+				cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
 				return true;
 			}
 			else
@@ -4985,7 +5145,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5020,7 +5180,7 @@ bool singleServerDBrootSetup()
 	{
 		dbroots.clear();
 
-		prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of dbroot IDs assigned to module 'pm1' (" + dbrootList + ") > ";
+		prompt = "Enter the list (Nx,Ny,Nz) or range (Nx-Nz) of DBRoot IDs assigned to module 'pm1' (" + dbrootList + ") > ";
 		pcommand = callReadline(prompt.c_str());
 		if (pcommand)
 		{
@@ -5075,7 +5235,7 @@ bool singleServerDBrootSetup()
 	std::vector<std::string>::iterator it = dbroots.begin();
 	for (; it != dbroots.end() ; it++, ++id)
 	{
-		//store dbroot ID
+		//store DBRoot ID
 		string moduledbrootid = "ModuleDBRootID1-" + oam.itoa(id) + "-3";
 		try {
 			sysConfig->setConfig(ModuleSection, moduledbrootid, *it);
@@ -5106,7 +5266,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
 		exit(1);
 	}
 

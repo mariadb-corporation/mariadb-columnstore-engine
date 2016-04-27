@@ -1553,16 +1553,20 @@ int processCommand(string* arguments)
 							string volumeName = oam::UnassignedName;
 							string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt);
 							string deviceName = oam::UnassignedName;
+							string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt);
+							string amazondeviceName = oam::UnassignedName;
+
 							try {
 								oam.getSystemConfig( volumeNameID, volumeName);
 								oam.getSystemConfig( deviceNameID, deviceName);
+								oam.getSystemConfig( amazonDeviceNameID, amazondeviceName);
 							}
 							catch(...)
 							{
 								continue;
 							}
 	
-							cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt) << ": " << volumeName << ", " << deviceName << endl;
+							cout << "Amazon EC2 Volume Name/Device Name/Amazon Device Name for DBRoot" << oam.itoa(*pt) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
 						}
 					}
 					catch (exception& e)
@@ -1570,6 +1574,7 @@ int processCommand(string* arguments)
 						cout << endl << "**** getSystemDbrootConfig Failed :  " << e.what() << endl;
 					}
 
+					// print un-assigned dbroots
 					DBRootConfigList::iterator pt1 = undbrootlist.begin();
 					for( ; pt1 != undbrootlist.end() ; pt1++)
 					{
@@ -1577,16 +1582,20 @@ int processCommand(string* arguments)
 						string volumeName = oam::UnassignedName;
 						string deviceNameID = "PMVolumeDeviceName" + oam.itoa(*pt1);
 						string deviceName = oam::UnassignedName;
+						string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + oam.itoa(*pt1);
+						string amazondeviceName = oam::UnassignedName;
+
 						try {
 							oam.getSystemConfig( volumeNameID, volumeName);
 							oam.getSystemConfig( deviceNameID, deviceName);
+							oam.getSystemConfig( amazonDeviceNameID, amazondeviceName);
 						}
 						catch(...)
 						{
 							continue;
 						}
 
-						cout << "Amazon EC2 Volume Name/Device Name for DBRoot" << oam.itoa(*pt1) << ": " << volumeName << ", " << deviceName << endl;
+						cout << "Amazon EC2 Volume Name/Device Name/Amazon Device Name for DBRoot" << oam.itoa(*pt1) << ": " << volumeName << ", " << deviceName << ", " << amazondeviceName << endl;
 					}
 				}
  
@@ -1666,65 +1675,90 @@ int processCommand(string* arguments)
 
         case 14: // addDbroot parameters: dbroot-number
         {
-			string GlusterConfig = "n";
-			try {
-				oam.getSystemConfig( "GlusterConfig", GlusterConfig);
-			}
-			catch(...)
-			{}
+		string GlusterConfig = "n";
+		try {
+			oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+		}
+		catch(...)
+		{}
 
-			if (GlusterConfig == "y") {
-				cout << endl << "**** addDbroot Not Supported on Data Redundancy Configured System, use addModule command to expand your capacity" << endl;
-				break;
-			}
+		if (GlusterConfig == "y") {
+			cout << endl << "**** addDbroot Not Supported on Data Redundancy Configured System, use addModule command to expand your capacity" << endl;
+			break;
+		}
 
-			if ( localModule != parentOAMModule ) {
-				// exit out since not on active module
-				cout << endl << "**** addDbroot Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
-				break;
-			}
+		if ( localModule != parentOAMModule ) {
+			// exit out since not on active module
+			cout << endl << "**** addDbroot Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
+			break;
+		}
 
-            if (arguments[1] == "")
-            {
-                // need atleast 1 arguments
-                cout << endl << "**** addDbroot Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                break;
-            }
+		string cloud;
+		bool amazon = false;
+		try {
+			oam.getSystemConfig("Cloud", cloud);
+		}
+		catch(...) {}
 
-            if (arguments[2] != "")
-            {
-                // error out if extra arguments exist to catch if they meant to use assigndbrootpmconfig
-                cout << endl << "**** addDbroot Failed : Extra Parameter passed, enter 'help' for additional information" << endl;
-                break;
-            }
+		string::size_type pos = cloud.find("amazon",0);
+		if (pos != string::npos)
+			amazon = true;
 
-			int dbrootNumber = atoi(arguments[1].c_str());
+		if (arguments[1] == "")
+		{
+			// need atleast 1 arguments
+			cout << endl << "**** addDbroot Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
+			break;
+		}
 
-			//get dbroots ids for reside PM
-            try
-            {
-				DBRootConfigList dbrootlist;
-                oam.addDbroot(dbrootNumber, dbrootlist);
+		int dbrootNumber = atoi(arguments[1].c_str());
 
-				cout << endl << " New DBRoot IDs added = ";
-
-				DBRootConfigList::iterator pt = dbrootlist.begin();
-				for( ; pt != dbrootlist.end() ;)
-				{
-					cout << oam.itoa(*pt);
-					pt++;
-					if (pt != dbrootlist.end())
-						cout << ", ";
-				}
+		string DBRootStorageType;
+		try {
+			oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+		}
+		catch(...) {}
+	
+		string EBSsize = oam::UnassignedName;
+		if (amazon && DBRootStorageType == "external" )
+		{
+			if ( arguments[2] != "")
+				EBSsize = arguments[2];
+			else
+			{
 				cout << endl;
-            }
-            catch (exception& e)
-            {
-                cout << endl << "**** addDbroot Failed: " << e.what() << endl;
-				break;
-            }
+				oam.getSystemConfig("PMVolumeSize", EBSsize);
 
+				string prompt = "Enter EBS storage size in GB, current setting is " + EBSsize + " : ";
+				EBSsize = dataPrompt(prompt);
+			}
+		}
+
+		//get dbroots ids for reside PM
+		try
+		{
+			DBRootConfigList dbrootlist;
+                	oam.addDbroot(dbrootNumber, dbrootlist, EBSsize);
+
+			cout << endl << " New DBRoot IDs added = ";
+
+			DBRootConfigList::iterator pt = dbrootlist.begin();
+			for( ; pt != dbrootlist.end() ;)
+			{
+				cout << oam.itoa(*pt);
+				pt++;
+				if (pt != dbrootlist.end())
+					cout << ", ";
+			}
 			cout << endl;
+		}
+		catch (exception& e)
+		{
+			cout << endl << "**** addDbroot Failed: " << e.what() << endl;
+					break;
+		}
+
+		cout << endl;
         }
         break;
 
@@ -4849,11 +4883,11 @@ int processCommand(string* arguments)
 			string GlusterStorageType;
 			string AmazonVPCNextPrivateIP;
 			try {
+				oam.getSystemConfig("Cloud", cloud);
+				oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 				oam.getSystemConfig("GlusterConfig", GlusterConfig);
 				oam.getSystemConfig("GlusterCopies", GlusterCopies);
-				oam.getSystemConfig("Cloud", cloud);
 				oam.getSystemConfig("GlusterStorageType", GlusterStorageType);
-				oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 			}
 			catch(...) {}
 
@@ -4891,7 +4925,11 @@ int processCommand(string* arguments)
 				if (arguments[4] != "")
 					password = arguments[4];
 				else
-					password = "ssh";
+				{
+					cout << endl;
+					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+					password = dataPrompt(prompt);
+				}
 
 				if (arguments[5] != "")
 					dbrootPerPM = atoi(arguments[5].c_str());
@@ -4913,7 +4951,11 @@ int processCommand(string* arguments)
 				if (arguments[3] != "")
 					password = arguments[3];
 				else
-					password = "ssh";
+				{
+					cout << endl;
+					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+					password = dataPrompt(prompt);
+				}
 
 				if (arguments[4] != "")
 					dbrootPerPM = atoi(arguments[4].c_str());
@@ -4960,7 +5002,7 @@ int processCommand(string* arguments)
 				{
 					if ( cloud == "amazon-ec2" )
 					{
-						cout << endl << "number of Instance-IDs (" << inputnames.size() << ") is less than Module Count (" << moduleCount << "), will launch new Instance(s)" << endl;
+						cout << endl << "Launching new Instance(s)" << endl;
 						for ( int id = inputnames.size() ; id < moduleCount ; id++ )
 						{
 							inputnames.push_back(oam::UnassignedName);

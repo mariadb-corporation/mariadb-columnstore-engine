@@ -2495,7 +2495,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
  
 					if ( target == "system" )
 					{
-						//send out to all pms
+						//send out to all pms except local module
 						for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
 						{
 							if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType != "pm" )
@@ -2508,6 +2508,9 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
 							for (;pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
 							{
+								if ( (*pt).DeviceName == config.moduleName() )
+									continue;
+
 								int retStatus = processManager.updateFstab((*pt).DeviceName, entry);
 								if (retStatus != API_SUCCESS)
 									status = retStatus;
@@ -4462,9 +4465,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	// Verify Host IP and Password
 	//
 
-	// This is the password that is set in a amazon AMI
-	string amazonDefaultPassword = "Calpont1";
-
 	if ( password == "ssh" && amazon )
 	{	// check if there is a root password stored
 		string rpw = oam::UnassignedName;
@@ -4474,7 +4474,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		}
 		catch(...)
 		{
-			rpw = oam::UnassignedName;
+			rpw = "root";
 		}
 
 		if (rpw != oam::UnassignedName)
@@ -4564,51 +4564,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					return API_FAILURE;
 				}
 
-				//wait until login is success until continuing or fail if can't login
-				log.writeLog(__LINE__, "addModule - Successfully Launch of new Instance, retry login test: " + moduleName, LOG_TYPE_DEBUG);
-				int retry = 0;
-				for (  ; retry < 60 ; retry++)
-				{
-					IPAddr = oam.getEC2InstanceIpAddress(hostName);
-					if (IPAddr == "terminated") {
-						log.writeLog(__LINE__, "addModule - Failed to log in to Instance, it was terminated: " + hostName, LOG_TYPE_ERROR);
-						pthread_mutex_unlock(&THREAD_LOCK);
-						return API_FAILURE;
-					}
-
-					if (IPAddr == "stopped") {
-						sleep(10);
-						continue;
-					}
-
-					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + amazonDefaultPassword + " 'ls' 1  > /tmp/login_test.log";
-					system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0) {
-						//check for RSA KEY ISSUE and fix
-						if (oam.checkLogStatus("/tmp/login_test.log", "Offending RSA key")) {
-							log.writeLog(__LINE__, "addModule - login failed, RSA key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
-							string file = "/tmp/login_test.log";
-							oam.fixRSAkey(file);
-						}
-
-						log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
-						sleep(10);
-						continue;
-					}
-
-					// logged in
-					break;
-				}
-
-				if ( retry >= 60 )
-				{
-					log.writeLog(__LINE__, "addModule - Failed to log in to Instance: " + hostName, LOG_TYPE_ERROR);
-					pthread_mutex_unlock(&THREAD_LOCK);
-					return API_FAILURE;
-				}
-
-				log.writeLog(__LINE__, "addModule - Successful loggin: " + hostName, LOG_TYPE_DEBUG);
-
 				// add instance tag
 				string systemName;
 				string AmazonAutoTagging;
@@ -4625,6 +4580,51 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					string tagValue = systemName + "-" + moduleName;
 					oam.createEC2tag( hostName, "Name", tagValue );
 				}
+
+				//wait until login is success until continuing or fail if can't login
+				log.writeLog(__LINE__, "addModule - Successfully Launch of new Instance, retry login test: " + moduleName, LOG_TYPE_DEBUG);
+				int retry = 0;
+				for (  ; retry < 18 ; retry++)
+				{
+					IPAddr = oam.getEC2InstanceIpAddress(hostName);
+					if (IPAddr == "terminated") {
+						log.writeLog(__LINE__, "addModule - Failed to log in to Instance, it was terminated: " + hostName, LOG_TYPE_ERROR);
+						pthread_mutex_unlock(&THREAD_LOCK);
+						return API_FAILURE;
+					}
+
+					if (IPAddr == "stopped") {
+						sleep(10);
+						continue;
+					}
+
+					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
+					system(cmd.c_str());
+					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
+						//check for RSA KEY ISSUE and fix
+						if (oam.checkLogStatus("/tmp/login_test.log", "Offending RSA key")) {
+							log.writeLog(__LINE__, "addModule - login failed, RSA key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
+							string file = "/tmp/login_test.log";
+							oam.fixRSAkey(file);
+						}
+
+						log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
+						sleep(10);
+						continue;
+					}
+
+					// logged in
+					break;
+				}
+
+				if ( retry >= 18 )
+				{
+					log.writeLog(__LINE__, "addModule - Failed to log in to Instance: " + hostName, LOG_TYPE_ERROR);
+					pthread_mutex_unlock(&THREAD_LOCK);
+					return API_FAILURE;
+				}
+
+				log.writeLog(__LINE__, "addModule - Successful loggin: " + hostName, LOG_TYPE_DEBUG);
 
 				log.writeLog(__LINE__, "addModule - Launched new Instance: " + hostName + "/" + IPAddr, LOG_TYPE_DEBUG);
 
@@ -4659,42 +4659,13 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					
 						if ( volumeName.empty() || volumeName == oam::UnassignedName ) {
 							// need to create a new one
-							string UMVolumeSize = "10";
+							string device;
 							try{
-								oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
+
+    								oam.addUMdisk(moduleID, volumeName, device);
 							}
-							catch(...) {}
-
-							log.writeLog(__LINE__, "addModule - Create new Volume for: " + (*listPT).DeviceName, LOG_TYPE_DEBUG);
-							string volumeName = oam.createEC2Volume(UMVolumeSize);
-							if ( volumeName == "failed" ) {
-								log.writeLog(__LINE__, "addModule: create volume failed", LOG_TYPE_CRITICAL);
-								pthread_mutex_unlock(&THREAD_LOCK);
-								return API_FAILURE;
-							}
-
-							//attach and format volumes
-							string device = "/dev/sdf" + oam.itoa(moduleID);
-
-							string localInstance = oam.getEC2LocalInstance();
-
-							//attach volumes to local instance
-							log.writeLog(__LINE__, "addModule - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
-							if (!oam.attachEC2Volume(volumeName, device, localInstance)) {
-								log.writeLog(__LINE__, "addModule: volume failed to attach to local instance", LOG_TYPE_CRITICAL);
-								pthread_mutex_unlock(&THREAD_LOCK);
-								return API_FAILURE;
-							}
-				
-							//format attached volume
-							log.writeLog(__LINE__, "addModule - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
-							string cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
-							system(cmd.c_str());
-				
-							//detach volume
-							log.writeLog(__LINE__, "addModule - detach new Volume from local instance: " + volumeName, LOG_TYPE_DEBUG);
-							if (!oam.detachEC2Volume(volumeName)) {
-								log.writeLog(__LINE__, "addModule: volume failed to deattach to local instance", LOG_TYPE_CRITICAL);
+							catch(...) {
+								log.writeLog(__LINE__, "addModule: volume create failed for um: " + moduleName, LOG_TYPE_CRITICAL);
 								pthread_mutex_unlock(&THREAD_LOCK);
 							}
 			
@@ -4715,21 +4686,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 							}
 							catch(...)
 							{}
-
-							// add instance tag
-							string systemName;
-							{
-								try{
-									oam.getSystemConfig("SystemName", systemName);
-								}
-								catch(...) {}
-							}
-
-							if ( AmazonAutoTagging == "y" )
-							{
-								string tagValue = systemName + "-" + moduleName;
-								oam.createEC2tag( volumeName, "Name", tagValue );
-							}
 
 							log.writeLog(__LINE__, "addModule - create/attach new volume: " + volumeName + "/" + device, LOG_TYPE_DEBUG);
 
@@ -5007,8 +4963,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 		//set root password
 		if (amazon) {
-			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + amazonDefaultPassword + " '/root/updatePassword.sh " + password + "' > /tmp/password_change.log";
-			//log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
+			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
+			log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
 			rtnCode = system(cmd.c_str());
 			if (WEXITSTATUS(rtnCode) == 0)
 				log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
@@ -5031,11 +4987,36 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 				log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
-				rtnCode = system(cmd.c_str());
-				if (WEXITSTATUS(rtnCode) != 0) {
+				bool passed = false;
+				for ( int retry = 0 ; retry < 20 ; retry++ )
+				{
+					rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						// if log file size is zero, retry
+						ifstream in("/tmp/user_installer.log");
+						in.seekg(0, std::ios::end);
+						int size = in.tellg();
+						if ( size == 0 )
+						{
+							log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							sleep(5);
+							continue;
+						}
+						else
+							break;
+					}
+					else
+					{
+						passed = true;
+						break;
+					}
+				}
+
+				if ( !passed )
+				{
 					log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed", LOG_TYPE_ERROR);
 					pthread_mutex_unlock(&THREAD_LOCK);
-					system(" cp /tmp/user_installer.log /tmp/user_installer.log.failed");
+					system("/bin/cp -f /tmp/user_installer.log /tmp/user_installer.log.failed");
 					processManager.setModuleState(remoteModuleName, oam::FAILED);
 					return API_FAILURE;
 				}
@@ -5050,11 +5031,37 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
 
 				log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
-				rtnCode = system(cmd.c_str());
-				if (WEXITSTATUS(rtnCode) != 0) {
+
+				bool passed = false;
+				for ( int retry = 0 ; retry < 20 ; retry++ )
+				{
+					rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						// if log file size is zero, retry
+						ifstream in("/tmp/binary_installer.log");
+						in.seekg(0, std::ios::end);
+						int size = in.tellg();
+						if ( size == 0 )
+						{
+							log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							sleep(5);
+							continue;
+						}
+						else
+							break;
+					}
+					else
+					{
+						passed = true;
+						break;
+					}
+				}
+
+				if ( !passed )
+				{
 					log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
-					system(" cp /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 					pthread_mutex_unlock(&THREAD_LOCK);
+					system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 					processManager.setModuleState(remoteModuleName, oam::FAILED);
 					return API_FAILURE;
 				}
@@ -5069,10 +5076,37 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					rtnCode = system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0) {
+
+					bool passed = false;
+					for ( int retry = 0 ; retry < 20 ; retry++ )
+					{
+						rtnCode = system(cmd.c_str());
+						if (WEXITSTATUS(rtnCode) != 0) {
+							// if log file size is zero, retry
+							ifstream in("/tmp/performance_installer.log");
+							in.seekg(0, std::ios::end);
+							int size = in.tellg();
+							if ( size == 0 )
+							{
+								log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								sleep(5);
+								continue;
+							}
+							else
+								break;
+						}
+						else
+						{
+							passed = true;
+							break;
+						}
+					}
+	
+					if ( !passed )
+					{
 						log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed", LOG_TYPE_ERROR);
-						system(" cp /tmp/performance_installer.log /tmp/performance_installer.log.failed");
 						pthread_mutex_unlock(&THREAD_LOCK);
+						system("/bin/cp -f /tmp/performance_installer.log /tmp/performance_installer.log.failed");
 						processManager.setModuleState(remoteModuleName, oam::FAILED);
 						return API_FAILURE;
 					}
@@ -5086,13 +5120,39 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 						binservertype = "pmwithum";
 
 					string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+
 					log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
-					rtnCode = system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) != 0) {
+					bool passed = false;
+					for ( int retry = 0 ; retry < 20 ; retry++ )
+					{
+						rtnCode = system(cmd.c_str());
+						if (WEXITSTATUS(rtnCode) != 0) {
+							// if log file size is zero, retry
+							ifstream in("/tmp/binary_installer.log");
+							in.seekg(0, std::ios::end);
+							int size = in.tellg();
+							if ( size == 0 )
+							{
+								log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								sleep(5);
+								continue;
+							}
+							else
+								break;
+						}
+						else
+						{
+							passed = true;
+							break;
+						}
+					}
+	
+					if ( !passed )
+					{
 						log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
-						system(" cp /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 						pthread_mutex_unlock(&THREAD_LOCK);
+						system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
 						processManager.setModuleState(remoteModuleName, oam::FAILED);
 						return API_FAILURE;
 					}

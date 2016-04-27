@@ -5924,20 +5924,83 @@ namespace oam
 
     /***************************************************************************
      *
+     * Function:  addUMdisk
+     *
+     * Purpose:   add UM disk
+     *
+     ****************************************************************************/
+
+    	void Oam::addUMdisk(const int moduleID, std::string& volumeName, std::string& device, string EBSsize)
+	{
+		string UMVolumeSize = "10";
+		try{
+			getSystemConfig("UMVolumeSize", UMVolumeSize);
+		}
+		catch(...) {}
+
+		writeLog("addUMdisk - Create new Volume for um" + itoa(moduleID), LOG_TYPE_DEBUG);
+		volumeName = createEC2Volume(UMVolumeSize);
+		if ( volumeName == "failed" ) {
+			writeLog("addModule: create volume failed", LOG_TYPE_CRITICAL);
+			exceptionControl("addUMdisk", API_FAILURE);
+		}
+
+		//attach and format volumes
+		device = "/dev/sdf" + itoa(moduleID);
+
+		string localInstance = getEC2LocalInstance();
+
+		//attach volumes to local instance
+		writeLog("addUMdisk - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
+		if (!attachEC2Volume(volumeName, device, localInstance)) {
+			writeLog("addUMdisk: volume failed to attach to local instance", LOG_TYPE_CRITICAL);
+			exceptionControl("addUMdisk", API_FAILURE);
+		}
+
+		//format attached volume
+		writeLog("addUMdisk - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
+		string cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+		system(cmd.c_str());
+
+		//detach volume
+		writeLog("addUMdisk - detach new Volume from local instance: " + volumeName, LOG_TYPE_DEBUG);
+		if (!detachEC2Volume(volumeName)) {
+			exceptionControl("addUMdisk", API_FAILURE);
+		}
+
+		// add instance tag
+		string AmazonAutoTagging;
+		string systemName;
+
+		try {
+			getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
+			getSystemConfig("SystemName", systemName);
+		}
+		catch(...) {}
+
+		if ( AmazonAutoTagging == "y" )
+		{
+			string tagValue = systemName + "-um" + itoa(moduleID);
+			createEC2tag( volumeName, "Name", tagValue );
+		}
+	}
+
+    /***************************************************************************
+     *
      * Function:  addDbroot
      *
      * Purpose:   add DBRoot
      *
      ****************************************************************************/
 
-    void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist)
+    	void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string EBSsize)
 	{
 		int SystemDBRootCount = 0;
 		string cloud;
 		string DBRootStorageType;
 		string volumeSize;
 		Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
-        string Section = "SystemConfig";
+        	string Section = "SystemConfig";
 
 		try {
 			getSystemConfig("DBRootCount", SystemDBRootCount);
@@ -5957,6 +6020,20 @@ namespace oam
 		if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") && 
 				DBRootStorageType == "external" )
 		{
+			if ( volumeSize == oam::UnassignedName ) 
+			{
+				if ( EBSsize != oam::UnassignedName ) {
+					volumeSize = EBSsize;
+					setSystemConfig("PMVolumeSize", volumeSize);
+				}
+			}
+			else
+			{
+				if ( EBSsize != oam::UnassignedName ) {
+					volumeSize = EBSsize;
+				}
+			}	
+
 			if ( newSystemDBRootCount > MAX_DBROOT_AMAZON )
 			{
 				cout << "ERROR: Failed add, total Number of DBRoots would be over maximum of " << MAX_DBROOT_AMAZON << endl;
@@ -5985,33 +6062,36 @@ namespace oam
 			dbrootConfigList.push_back(*pt1);
 		}
 
-		int newID = 1;
-		for ( int count = 0 ; count < dbrootNumber ; count++ )
+		if ( dbrootlist.empty() )
 		{
-			//check for match
-			while (true)
+			int newID = 1;
+			for ( int count = 0 ; count < dbrootNumber ; count++ )
 			{
-				bool found = false;
-				DBRootConfigList::iterator pt = dbrootConfigList.begin();
-				for( ; pt != dbrootConfigList.end() ; pt++)
+				//check for match
+				while (true)
 				{
-					if ( newID == *pt ) {
+					bool found = false;
+					DBRootConfigList::iterator pt = dbrootConfigList.begin();
+					for( ; pt != dbrootConfigList.end() ; pt++)
+					{
+						if ( newID == *pt ) {
+							newID++;
+							found = true;
+							break;
+						}
+					}
+	
+					if (!found)
+					{
+						dbrootlist.push_back(newID);
 						newID++;
-						found = true;
 						break;
 					}
-				}
-
-				if (!found)
-				{
-					dbrootlist.push_back(newID);
-					newID++;
-					break;
 				}
 			}
 		}
 
-		if ( dbrootlist.size() == 0 )
+		if ( dbrootlist.empty() )
 		{
 			cout << "ERROR: Failed add, No DBRoot IDs available" << endl;
 			exceptionControl("addDbroot", API_INVALID_PARAMETER);
@@ -6069,7 +6149,14 @@ namespace oam
 				}
 
 				//get device name based on dbroot ID
-				string deviceName = getAWSdeviceName( *pt1 );
+				storageID_t st;
+				try {
+					st = getAWSdeviceName( *pt1 );
+				}
+				catch(...) {}
+
+				string deviceName = boost::get<0>(st);
+				string amazonDeviceName = boost::get<1>(st);
 
 				//attach volumes to local instance
 				retry = 0;
@@ -6090,7 +6177,10 @@ namespace oam
 			
 				//format attached volume
 				cout << "  Formatting DBRoot #" << itoa(*pt1) << ", please wait..." << endl;
-				string cmd = "mkfs.ext2 -F " + deviceName + " > /dev/null 2>&1";
+				string cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
+
+				writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
+
 				system(cmd.c_str());
 
 				//detach
@@ -6098,24 +6188,23 @@ namespace oam
 
 				string volumeNameID = "PMVolumeName" + itoa(*pt1);
 				string deviceNameID = "PMVolumeDeviceName" + itoa(*pt1);
-	
+				string amazonDeviceNameID = "PMVolumeAmazonDeviceName" + itoa(*pt1);
+
 				//write volume and device name
 				try {
 					sysConfig->setConfig(Section, volumeNameID, volumeName);
 					sysConfig->setConfig(Section, deviceNameID, deviceName);
+					sysConfig->setConfig(Section, amazonDeviceNameID, amazonDeviceName);
 				}
 				catch(...)
 				{}
-	
-				//update /etc/fstab with mount
-				string entry = deviceName + " " + InstallDir + "/data" + itoa(*pt1) + " ext2 noatime,nodiratime,noauto 0 0";
-	
-				//use from addmodule later
-				cmd = "echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
-				system(cmd.c_str());
+
+				// fstabs
+				string entry = updateFstab( amazonDeviceName, itoa(*pt1));
 
 				//send update pms
-				distributeFstabUpdates(entry);
+				if (entry != "" )
+					distributeFstabUpdates(entry);
 			}
 		}
 	
@@ -6144,6 +6233,11 @@ namespace oam
 		{
 			exceptionControl("sysConfig->write", API_FAILURE);
 		}
+
+		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+			return;
 
 		//get updated Calpont.xml distributed
 		distributeConfigFile("system");
@@ -6182,12 +6276,17 @@ namespace oam
 
     	void Oam::distributeFstabUpdates(std::string entry, std::string toPM)
 	{
-		ACK_FLAG ackflag = oam::ACK_YES;
-        // build and send msg
-        int returnStatus = sendMsgToProcMgr(FSTABUPDATE, toPM, FORCEFUL, ackflag, entry);
+		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+			return;
 
-        if (returnStatus != API_SUCCESS)
-            exceptionControl("distributeFstabUpdates", returnStatus);
+		ACK_FLAG ackflag = oam::ACK_YES;
+		// build and send msg
+		int returnStatus = sendMsgToProcMgr(FSTABUPDATE, toPM, FORCEFUL, ackflag, entry);
+	
+		if (returnStatus != API_SUCCESS)
+           		exceptionControl("distributeFstabUpdates", returnStatus);
 	}
 
     /***************************************************************************
@@ -6815,13 +6914,23 @@ namespace oam
      *
      ****************************************************************************/
 
-	std::string Oam::getAWSdeviceName( const int dbrootid)
+	storageID_t Oam::getAWSdeviceName( const int dbrootid)
 	{
+		string amazondeviceName = "/dev/xvd";
+		try {
+			getSystemConfig( "AmazonDeviceName", amazondeviceName );
+		}
+		catch(...)
+		{}
+
+		if ( amazondeviceName.empty() || amazondeviceName == "" )
+			amazondeviceName = "/dev/xvd";
+
 		//calulate id numbers from DBRoot ID
 		int lid = (dbrootid-1) / 10;
 		int did = dbrootid - (dbrootid * lid);
 
-		return PMdeviceName + deviceLetter[lid] + itoa(did);
+		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), amazondeviceName + deviceLetter[lid] + itoa(did));
 	}
 
     /***************************************************************************
@@ -7521,6 +7630,38 @@ namespace oam
 		return instanceType;
 
 	}
+
+    /***************************************************************************
+     *
+     * Function:  getEC2LocalInstanceSubnet
+     *
+     * Purpose:   Get Amazon EC2 local Instance Subnet
+     *
+     ****************************************************************************/
+
+    	std::string Oam::getEC2LocalInstanceSubnet(std::string name)
+	{
+		// run script to get Instance Subnet
+		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh Subnet  > /tmp/getInstanceSubnet_" + name;
+		int status = system(cmd.c_str());
+		if (WEXITSTATUS(status) != 0 )
+			return "failed";
+
+		// get Instance Name
+		string instanceSubnet;
+		string file = "/tmp/getInstanceSubnet_" + name;
+		ifstream oldFile (file.c_str());
+		char line[400];
+		while (oldFile.getline(line, 400))
+		{
+			instanceSubnet = line;
+		}
+		oldFile.close();
+
+		return instanceSubnet;
+
+	}
+
 
     /***************************************************************************
      *
@@ -8357,6 +8498,37 @@ namespace oam
 
 		exceptionControl("getMySQLPassword", API_FAILURE);
 		return oam::UnassignedName;
+	}
+
+
+	/******************************************************************************************
+	* @brief	updateFstab
+	*
+	* purpose:	check and get mysql user password
+	*
+	******************************************************************************************/
+	std::string Oam::updateFstab(std::string device, std::string dbrootID)
+	{
+		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
+
+		//check if entry already exist 
+		string cmd = "grep /data" + dbrootID + " /etc/fstab /dev/null 2>&1";
+		int status = system(cmd.c_str());
+		if (WEXITSTATUS(status) == 0 )
+			return "";
+
+		//update /etc/fstab with mount
+		string entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+
+		//update local fstab	
+		cmd = "echo " + entry + " >> /etc/fstab";
+		system(cmd.c_str());
+
+		//use from addmodule later
+		cmd = "touch " + InstallDir + "/local/etc/pm1/fstab;echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
+		system(cmd.c_str());
+
+		return entry;
 	}
 
 

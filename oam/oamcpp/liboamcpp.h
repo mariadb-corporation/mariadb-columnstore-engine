@@ -1077,6 +1077,15 @@ namespace oam
 
     typedef boost::tuple<uint16_t, std::string, uint16_t> myProcessStatus_t;
 
+    /** @brief Store Device ID Structure
+     *
+     *   Structure that is returned by the getMyProcessStatus API for the
+     *   Local Process OAM Status data stored in the Process Status file
+     *	 Returns: Process ID, Process Name, and Process State
+     */
+
+    typedef boost::tuple<std::string, std::string> storageID_t;
+
     /** @brief User Configuration Structure
      *
      *   Structure that is returned by the getHardwareUserConfig API for the
@@ -2244,7 +2253,12 @@ namespace oam
 		/**
 		*@brief add DBRoot
 		*/
-		EXPORT void addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist);
+		EXPORT void addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, std::string EBSsize = oam::UnassignedName);
+
+		/**
+		*@brief add UM Disk
+		*/
+		EXPORT void addUMdisk(const int moduleID, std::string& volumeName, std::string& device, std::string EBSsize = oam::UnassignedName);
 
 		/**
 		*@brief distribute Fstab Updates
@@ -2274,7 +2288,7 @@ namespace oam
 		/**
 		*@brief get AWS Device Name for DBRoot ID
 		*/
-		EXPORT std::string getAWSdeviceName( const int dbrootid);
+		EXPORT storageID_t getAWSdeviceName( const int dbrootid);
 
 		/**
 		*@brief set System DBRoot Count
@@ -2310,6 +2324,10 @@ namespace oam
             /** @brief getEC2LocalInstanceType
              */
             EXPORT std::string getEC2LocalInstanceType(std::string name = "dummy");
+
+            /** @brief getEC2LocalInstanceSubnet
+             */
+            EXPORT std::string getEC2LocalInstanceSubnet(std::string name = "dummy");
 
             /** @brief launchEC2Instance
              */
@@ -2421,6 +2439,10 @@ namespace oam
             	/** @brief check and get mysql user password
              	*/
             	EXPORT std::string getMySQLPassword(bool bypassConfig = false);
+
+            	/** @brief update fstab with dbroot mounts
+             	*/
+            	EXPORT std::string updateFstab(std::string device, std::string dbrootID);
 
         private:
 

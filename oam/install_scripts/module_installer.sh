@@ -57,12 +57,12 @@ cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	cp $INFINIDB_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
 
-	if test -f $INFINIDB_INSTALL_DIR/local/fstab ; then
+	if test -f $INFINIDB_INSTALL_DIR/local/pm1/fstab ; then
 		echo "Setup fstab on Module"
 		touch /etc/fstab
 		rm -f /etc/fstab.calpontSave
 		mv /etc/fstab /etc/fstab.calpontSave
-		cp $INFINIDB_INSTALL_DIR/local/fstab /etc/fstab
+		cat $INFINIDB_INSTALL_DIR/local/pm1/fstab >> /etc/fstab
 	fi
 fi
 
@@ -150,6 +150,14 @@ fi
 if test -f $INFINIDB_INSTALL_DIR/mysql/my.cnf ; then
 	echo "Run Mysql Port update on my.cnf on Module"
 	$INFINIDB_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > /tmp/mycnfUpgrade_port.log 2>&1
+fi
+
+# if um, run mysql install scripts
+if [ $module = "um" ]; then
+	echo "Run post-mysqld-install"
+	$INFINIDB_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
+	echo "Run post-mysql-install"
+	$INFINIDB_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
 fi
 
 

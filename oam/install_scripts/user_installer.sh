@@ -281,50 +281,12 @@ if { $INSTALLTYPE == "initial"} {
 			"passphrase" { send "$PASSWORD\n" }
 		}
 	}
-	set timeout 30
+	set timeout 200
 	expect {
 		"!!!Module" 	{ send_user "DONE" }
 		"FAILED"   	{ send_user "ERROR: missing OS file\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }
-	}
-	send_user "\n"
-	set timeout 30
-	expect -re {[$#] }
-	#
-	# run mysql setup scripts
-	#
-	send_user "Run MySQL Setup Scripts on Module               "
-	send "ssh $USERNAME@$SERVER '$BASH $INSTALLDIR/bin/post-mysqld-install'\n"
-	if { $PASSWORD != "ssh" } {
-		set timeout 30
-		expect {
-			"word: " { send "$PASSWORD\n" }
-			"passphrase" { send "$PASSWORD\n" }
-		}
-	}
-	set timeout 20
-	expect {
-		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	}
-	set timeout 30
-	expect -re {[$#] }
-	#
-	send "ssh $USERNAME@$SERVER '$BASH $INSTALLDIR/bin/post-mysql-install $MYSQLPW'\n"
-	if { $PASSWORD != "ssh" } {
-		set timeout 30
-		expect {
-			"word: " { send "$PASSWORD\n" }
-			"passphrase" { send "$PASSWORD\n" }
-		}
-	}
-	set timeout 60
-	expect {
-		"Shutting down mysql." { send_user "DONE" }
-		-re {[$#] } 	{ send_user "DONE" }
-		timeout { send_user "DONE" }
-		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-		"ERROR" { send_user "ERROR: Check mysql logs and /tmp/mysql_install.log\n" ; exit 1 }
 	}
 	send_user "\n"
 	set timeout 30
