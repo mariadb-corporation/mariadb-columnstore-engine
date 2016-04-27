@@ -891,7 +891,7 @@ int main(int argc, char *argv[])
 	in.seekg(0, std::ios::end);
 	int size = in.tellg();
 	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "command not found")) 
-	// no gluster
+	// not running on amazon with ec2-api-tools
 		amazonInstall = false;
 	else
 		amazonInstall = true;
@@ -905,44 +905,33 @@ int main(int argc, char *argv[])
 		string cloud = oam::UnassignedName;
 		string tcloud = "n";
 
-		try {
-			cloud = sysConfig->getConfig(InstallSection, "Cloud");
-		}
-		catch(...)
+		//check if this is a vpc system by checking for subnet setup
+		amazonSubNet = oam.getEC2LocalInstanceSubnet();
+		if ( amazonSubNet == "failed" || amazonSubNet == "" )
 		{
-			cloud  = oam::UnassignedName;
+			amazonSubNet == oam::UnassignedName;
+
+			try {
+				cloud = sysConfig->getConfig(InstallSection, "Cloud");
+			}
+			catch(...)
+			{
+				cloud  = oam::UnassignedName;
+			}
 		}
-	
-		if (cloud == oam::UnassignedName)
-			tcloud = "n";
 		else
+		{
+			amazonVPC = true;
+			cloud == "amazon-vpc";
+			tcloud = "y";
+		}
+
+		if (cloud != oam::UnassignedName)
 		{
 			if (cloud == "amazon-ec2")
 			{
 				tcloud = "y";
 				amazonEC2 = true;
-			}
-			else
-			{
-				if (cloud == "amazon-vpc")
-				{
-					tcloud = "y";
-					amazonVPC = true;
-	
-					//get subnetID
-					try {
-						amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-					}
-					catch(...)
-					{}
-	
-					if ( amazonSubNet == oam::UnassignedName || amazonSubNet == "" )
-					{
-						amazonSubNet = oam.getEC2LocalInstanceSubnet();
-						if ( amazonSubNet == "failed" || amazonSubNet == "" )
-							amazonSubNet == oam::UnassignedName;
-					}
-				}	
 			}
 		}
 	
