@@ -489,7 +489,12 @@ getSubnet() {
         fi
         subnet=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $16}'`
 
-        echo $subnet
+	if [[ $subnet == *"sub"* ]]
+	then
+        	echo $subnet
+	else
+		echo "failed"
+
         return
 }
 
