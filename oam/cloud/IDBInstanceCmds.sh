@@ -196,11 +196,11 @@ getZone() {
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 
 		else
-			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
+			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
 			if [ "$zone" == "" ]; then
 				describeInstance
 			fi
-			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
+			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
 		fi
 		$prefix/Calpont/bin/setConfig Installation AmazonZone $zone
 	fi
@@ -494,7 +494,6 @@ getSubnet() {
         	echo $subnet
 	else
 		echo "failed"
-	fi
 
         return
 }
