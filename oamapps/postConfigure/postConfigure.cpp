@@ -1055,7 +1055,7 @@ int main(int argc, char *argv[])
 
 		//check if this is a vpc system by checking for subnet setup
 		amazonSubNet = oam.getEC2LocalInstanceSubnet();
-cout << "amazonSubNet = " <<  amazonSubNet << endl;
+		// cout << "amazonSubNet = " <<  amazonSubNet << endl;
 		if ( amazonSubNet == "failed" || amazonSubNet == "" )
 		{
 			amazonSubNet = oam::UnassignedName;
