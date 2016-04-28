@@ -7642,7 +7642,7 @@ namespace oam
     	std::string Oam::getEC2LocalInstanceSubnet(std::string name)
 	{
 		// run script to get Instance Subnet
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh Subnet  > /tmp/getInstanceSubnet_" + name;
+		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh getSubnet  > /tmp/getInstanceSubnet_" + name;
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) != 0 )
 			return "failed";
