@@ -8751,7 +8751,7 @@ int ProcessManager::OAMParentModuleChange()
 				
 					/* Read interface flags */
 					if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) < 0) {
-						log.writeLog(__LINE__, "Error reading ioctl for NIC #1", LOG_TYPE_ERROR);
+						// not supported
 						close(sockfd);
 						break;
 					}
