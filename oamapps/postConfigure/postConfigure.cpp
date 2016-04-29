@@ -906,7 +906,7 @@ int main(int argc, char *argv[])
 	if ( amazonInstall )
 	{
 		string cloud = oam::UnassignedName;
-		string tcloud = "y";
+		string option = "1";
 
 		try {
 			cloud = sysConfig->getConfig(InstallSection, "Cloud");
@@ -916,24 +916,33 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
+		cout << "Amazon EC2-API-TOOLS Instance install. You have 2 install options: " << endl << endl;
+		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
+		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
+		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl;
+		cout << "2. Using standard hardware IDs for hostnames, IP Addresses, and Storage Devices." << endl;
+		cout <<     "Using this option, you would need to pre-create the Instances and the EBS storages" << endl;
+		cout <<     "and then provide the hostnames/IP-Addresses during the configuration and system expansion" << endl;
+		cout <<     "commands. This option would be used when you are installing on a existing system." << endl << endl;
+
 		while(true) {
-			prompt = "Running on Amazon EC2 System, do you want to configure using the EC2-api-tool set [y,n] (" + tcloud + ") > ";
+			prompt = "Select Install Option [1,2] (" + option + ") > ";
 			pcommand = callReadline(prompt.c_str());
 			if (pcommand) {
-				if (strlen(pcommand) > 0) tcloud = pcommand;
+				if (strlen(pcommand) > 0) option = pcommand;
 				callFree(pcommand);
 			}
 	
-			if (tcloud == "n")
+			if (option == "2")
 			{
 				amazonInstall = false;
 				break;
 			}
 			else
 			{
-				if ( tcloud != "y" )
+				if ( option != "1" )
 				{
-					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+					cout << "Invalid Entry, please enter '1' or '2'" << endl;
 					if ( noPrompting )
 						exit(1);
 					continue;
@@ -4520,6 +4529,14 @@ bool storageSetup(bool amazonInstall)
 	{
 		cout << "ERROR: Problem setting DBRootStorageType in the InfiniDB System Configuration file" << endl;
 		return false;
+	}
+
+	// if external and not amazon, print fstab note
+	if ( storageType == "2" && !amazonInstall)
+	{
+		cout << endl << "NOTE: For External configuration, the /etc/fstab should have been manually updated for the" << endl;
+		cout <<         "      DBRoot mounts. Check the Installation Guide for further details" << endl << endl; 
+
 	}
 
 	// if external and amazon, prompt for storage size
