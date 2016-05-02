@@ -453,11 +453,17 @@ startInstance() {
 
 assignElasticIP() {
 	#terminate Instance
-	ec2-associate-address -O $AmazonAccessKey -W $AmazonSecretKey -i $instanceName $IPAddress > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+
+        if [ "$subnet" == "unassigned" ]; then
+		ec2-associate-address -O $AmazonAccessKey -W $AmazonSecretKey -i $instanceName $IPAddress > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+	else
+		EIP=`ec2-describe-addresses -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $IPAddress | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $4}'`
+                ec2-associate-address -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -i $instanceName -a $EIP > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+	fi
 
 	cat /tmp/assignElasticIPInfo_$IPAddress | grep ADDRESS > /tmp/assignElasticIPStatus_$IPAddress
 	if [ `cat /tmp/assignElasticIPStatus_$IPAddress | wc -c` -eq 0 ]; then
-		echo "Failed, check /tmp/assignElasticIPStatus_$IPAddress"
+		echo "Failed, check /tmp/assignElasticIPInfo_$IPAddress"
 		exit 1
 	fi
 
