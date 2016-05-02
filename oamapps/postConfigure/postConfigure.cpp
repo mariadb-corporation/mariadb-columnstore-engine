@@ -104,7 +104,7 @@ bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
 bool createDbrootDirs(string DBRootStorageType);
 bool pkgCheck();
-bool storageSetup(string cloud);
+bool storageSetup(bool amazonInstall);
 void setSystemName();
 bool checkInstanceRunning(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
 string getInstanceIP(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
@@ -165,6 +165,7 @@ bool pmwithum = false;
 bool mysqlRep = false;
 string MySQLRep = "n";
 string PMwithUM = "n";
+bool amazonInstall = false;
 
 string DataFileEnvFile;
 
@@ -546,7 +547,7 @@ int main(int argc, char *argv[])
 				system(cmd.c_str());
 
 				// setup storage
-				if (!storageSetup("n"))
+				if (!storageSetup(false))
 				{
 					cout << "ERROR: Problem setting up storage" << endl;
 					exit(1);
@@ -632,53 +633,6 @@ int main(int argc, char *argv[])
 	//
 
 	cout << endl;
-	string cloud = oam::UnassignedName;
-	string amazonSubNet = oam::UnassignedName;
-	bool amazonEC2 = false;
-	bool amazonVPC = false;
-
-	try {
-		 cloud = sysConfig->getConfig(InstallSection, "Cloud");
-	}
-	catch(...)
-	{
-		cloud  = oam::UnassignedName;
-	}
-
-	string tcloud = "n";
-	if (cloud == oam::UnassignedName)
-		tcloud = "n";
-	else
-	{
-	 	if (cloud == "amazon-ec2")
-		{
-			tcloud = "y";
-			amazonEC2 = true;
-		}
-		else
-		{
-			if (cloud == "amazon-vpc")
-			{
-				tcloud = "y";
-				amazonVPC = true;
-
-				//get subnetID
-				try {
-					amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-				}
-				catch(...)
-				{}
-
-				if ( amazonSubNet == oam::UnassignedName || amazonSubNet == "" )
-				{
-					amazonSubNet = oam.getEC2LocalInstanceSubnet();
-					if ( amazonSubNet == "failed" || amazonSubNet == "" )
-						amazonSubNet == oam::UnassignedName;
-				}
-			}	
-		}
-	}
-
 	//cleanup/create local/etc  directory
 	cmd = "rm -rf " + installDir + "/local/etc > /dev/null 2>&1";
 	system(cmd.c_str());
@@ -761,51 +715,6 @@ int main(int argc, char *argv[])
 				if ( MySQLRep == "y" )
 					mysqlRep = true;
 
-				string answer = "n";
-				while(true) {
-					if ( !mysqlRep ) 
-						prompt = "Enable MySQL Replication feature? [y,n] (n) > ";
-					else
-						break;
-
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) answer = pcommand;
-						callFree(pcommand);
-					}
-			
-					if ( answer == "y" || answer == "n" ) {
-						cout << endl;
-						break;
-					}
-					else
-						cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-					if ( noPrompting )
-						exit(1);
-				}
-
-				if ( answer == "y" ) {
-					mysqlRep = true;
-					MySQLRep = "y";
-				}
-
-				if ( MySQLRep == "y" )
-					mysqlRep = true;
-				else
-					mysqlRep = false;
-
-				try {
-					 sysConfig->setConfig(InstallSection, "PMwithUM", PMwithUM);
-				}
-				catch(...)
-				{}
-
-				try {
-					 sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
-				}
-				catch(...)
-				{}
-
 				break;
 			}
 			default:	// normal, separate UM and PM
@@ -871,42 +780,6 @@ int main(int argc, char *argv[])
 					}
 				}
 
-				if ( !pmwithum )
-				{
-					answer = "n";
-					while(true) {
-						if ( mysqlRep ) 
-							prompt = "Enable MySQL Replication feature? [y,n] (n) > ";
-						else
-							break;
-
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand) {
-							if (strlen(pcommand) > 0) answer = pcommand;
-							callFree(pcommand);
-						}
-				
-						if ( answer == "y" || answer == "n" ) {
-							cout << endl;
-							break;
-						}
-						else
-							cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-						if ( noPrompting )
-							exit(1);
-					}
-
-					if ( answer == "y" ) {
-						mysqlRep = true;
-						MySQLRep = "y";
-					}
-
-					if ( MySQLRep == "y" )
-						mysqlRep = true;
-					else
-						mysqlRep = false;
-				}
-
 				try {
 					 sysConfig->setConfig(InstallSection, "PMwithUM", PMwithUM);
 				}
@@ -925,209 +798,215 @@ int main(int argc, char *argv[])
 		break;
 	}
 
+	if ( !writeConfig(sysConfig) ) { 
+		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
+		exit(1);
+	}
+
 	//amazon install setup check
-	while(true) {
-		prompt = "Installing on Amazon System (EC2 or VPC services) [y,n] (" + tcloud + ") > ";
-		pcommand = callReadline(prompt.c_str());
-		if (pcommand) {
-			if (strlen(pcommand) > 0) tcloud = pcommand;
-			callFree(pcommand);
+	bool amazonInstall = false;
+	if (rootUser)
+		system("ec2-version > /tmp/amazon.log 2>&1");
+	else
+		system("sudo ec2-version > /tmp/amazon.log 2>&1");
+
+	ifstream in("/tmp/amazon.log");
+
+	in.seekg(0, std::ios::end);
+	int size = in.tellg();
+	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "command not found")) 
+	// not running on amazon with ec2-api-tools
+		amazonInstall = false;
+	else
+		amazonInstall = true;
+
+	string amazonSubNet = oam::UnassignedName;
+
+	if ( amazonInstall )
+	{
+		string cloud = oam::UnassignedName;
+		string option = "1";
+
+		try {
+			cloud = sysConfig->getConfig(InstallSection, "Cloud");
+		}
+		catch(...)
+		{
+			cloud  = oam::UnassignedName;
 		}
 
-		if (tcloud == "y") 
-		{
-			if (!amazonEC2)
-				tcloud = "n";
+		cout << "Amazon EC2-API-TOOLS Instance install. You have 2 install options: " << endl << endl;
+		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
+		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
+		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl;
+		cout << "2. Using standard hardware IDs for hostnames, IP Addresses, and Storage Devices." << endl;
+		cout <<     "Using this option, you would need to pre-create the Instances and the EBS storages" << endl;
+		cout <<     "and then provide the hostnames/IP-Addresses during the configuration and system expansion" << endl;
+		cout <<     "commands. This option would be used when you are installing on a existing system." << endl << endl;
 
-			prompt = "Using EC2 services [y,n] (" + tcloud + ") > ";
+		while(true) {
+			prompt = "Select Install Option [1,2] (" + option + ") > ";
 			pcommand = callReadline(prompt.c_str());
 			if (pcommand) {
-				if (strlen(pcommand) > 0) tcloud = pcommand;
+				if (strlen(pcommand) > 0) option = pcommand;
 				callFree(pcommand);
 			}
 	
-			if (tcloud == "n")
+			if (option == "2")
 			{
-				amazonEC2 = false;
-				cloud = oam::UnassignedName;
-
-				if (amazonVPC)
-					tcloud = "y";
-
-				prompt = "Using VPC services [y,n] (" + tcloud + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) tcloud = pcommand;
-					callFree(pcommand);
-				}
-		
-				if (tcloud == "n")
-				{
-					amazonVPC = false;
-					cloud = oam::UnassignedName;
-				}
-				else
-				{
-					amazonVPC = true;
-					cloud = "amazon-vpc";
-
-					if ( amazonSubNet == oam::UnassignedName )
-					{
-						prompt = "Enter VPC SubNet ID (" + amazonSubNet + ") > ";
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand) {
-							if (strlen(pcommand) > 0) amazonSubNet = pcommand;
-							callFree(pcommand);
-						}
-					}
-	
-					//set subnetID
-					try {
-						sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-					}
-					catch(...)
-					{}
-				}
+				amazonInstall = false;
+				break;
 			}
 			else
 			{
-				amazonEC2 = true;
-				cloud = "amazon-ec2";
+				if ( option != "1" )
+				{
+					cout << "Invalid Entry, please enter '1' or '2'" << endl;
+					if ( noPrompting )
+						exit(1);
+					continue;
+				}
 			}
 
-			if ( amazonEC2 || amazonVPC )
-			{
-				cout << endl << "For Amazon EC2/VPC Instance installs, these files will need to be installed on" << endl;
-				cout << "on the local instance:" << endl << endl;
-				cout << " 1. File containing the Amazon Access Key" << endl;
-				cout << " 2. File containing the Amazon Secret Key" << endl << endl;
-	
-				while(true) {
-					string ready = "y";
-					prompt = "Are these files installed and ready to continue [y,n] (y) > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) ready = pcommand;
-						callFree(pcommand);
-						if (ready == "n") {
-							cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
-							exit(0);
-						}
+			cout << endl << "To use the EC2-api-tools, these files will need to be installed on" << endl;
+			cout << "on the local instance:" << endl << endl;
+			cout << " 1. File containing the Amazon Access Key" << endl;
+			cout << " 2. File containing the Amazon Secret Key" << endl << endl;
+
+			while(true) {
+				string ready = "y";
+				prompt = "Are these files installed and ready to continue [y,n] (y) > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) ready = pcommand;
+					callFree(pcommand);
+					if (ready == "n") {
+						cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
+						exit(0);
 					}
-	
-					if ( ready == "y" )
-						break;
-	
-					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+				}
+
+				if ( ready == "y" )
+					break;
+
+				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+				if ( noPrompting )
+					exit(1);
+			}
+
+			try {
+				AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
+				AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
+			}
+			catch(...)
+			{}
+
+			cout << endl;
+
+			while(true)
+			{
+				prompt = "Enter file name containing the Access Key (" + AmazonAccessKey + ") > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) AmazonAccessKey = pcommand;
+					callFree(pcommand);
+				}
+				ifstream File (AmazonAccessKey.c_str());
+				if (!File) {
+					cout << "Error: file not found, please re-enter" << endl;
 					if ( noPrompting )
 						exit(1);
 				}
-	
-				try {
-					AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
-					AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
-				}
-				catch(...)
-				{}
-	
-				cout << endl;
-	
-				while(true)
-				{
-					prompt = "Enter file name containing the Access Key (" + AmazonAccessKey + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) AmazonAccessKey = pcommand;
-						callFree(pcommand);
-					}
-					ifstream File (AmazonAccessKey.c_str());
-					if (!File) {
-						cout << "Error: file not found, please re-enter" << endl;
-						if ( noPrompting )
-							exit(1);
-					}
-					else
-						break;
-				}
-	
-				while(true)
-				{
-					prompt = "Enter file name containing the Secret Key (" + AmazonSecretKey + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) AmazonSecretKey = pcommand;
-						callFree(pcommand);
-					}
-					ifstream File (AmazonSecretKey.c_str());
-					if (!File)
-					{
-						cout << "Error: file not found, please re-enter" << endl;
-						if ( noPrompting )
-							exit(1);
-					}
-					else
-						break;
-				}
-	
-				try {
-					sysConfig->setConfig(InstallSection, "AmazonAccessKey", AmazonAccessKey);
-					sysConfig->setConfig(InstallSection, "AmazonSecretKey", AmazonSecretKey);
-				}
-				catch(...)
-				{}
-	
-				if( !copyKeyfiles() )
-					cout << "copyKeyfiles error" << endl;
-
-				try {
-					AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
-				}
-				catch(...)
-				{}
-	
-				cout << endl;
-	
-				while(true)
-				{
-					prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) AmazonRegion = pcommand;
-						callFree(pcommand);
-					}
-						break;
-				}
-		
-				try {
-					sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
-				}
-				catch(...)
-				{}
-
-				break;
+				else
+					break;
 			}
-		}
-		else 
-		{
-			if (tcloud == "n" ) {
-				cloud = oam::UnassignedName;
-				break;
+
+			while(true)
+			{
+				prompt = "Enter file name containing the Secret Key (" + AmazonSecretKey + ") > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+					if (strlen(pcommand) > 0) AmazonSecretKey = pcommand;
+					callFree(pcommand);
+				}
+				ifstream File (AmazonSecretKey.c_str());
+				if (!File)
+				{
+					cout << "Error: file not found, please re-enter" << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+				else
+					break;
 			}
+
+			try {
+				sysConfig->setConfig(InstallSection, "AmazonAccessKey", AmazonAccessKey);
+				sysConfig->setConfig(InstallSection, "AmazonSecretKey", AmazonSecretKey);
+			}
+			catch(...)
+			{}
+
+			if( !copyKeyfiles() )
+				cout << "copyKeyfiles error" << endl;
+
+			try {
+				AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
+			}
+			catch(...)
+			{}
+
+			cout << endl;
+
+			prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
+			pcommand = callReadline(prompt.c_str());
+			if (pcommand) {
+				if (strlen(pcommand) > 0) AmazonRegion = pcommand;
+				callFree(pcommand);
+			}
+	
+			try {
+				sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
+			}
+			catch(...)
+			{}
+
+			break;
 		}
 
-		cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-		if ( noPrompting )
+		if ( !writeConfig(sysConfig) ) { 
+			cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
 			exit(1);
-	}
+		}
 
-	try {
-		 sysConfig->setConfig(InstallSection, "Cloud", cloud);
-	}
-	catch(...)
-	{}
+		sleep(2);
 
-	if ( cloud == "amazon-ec2" || cloud == "amazon-vpc" )
-		cloud = "amazon";
+		//check if this is a vpc system by checking for subnet setup
+		amazonSubNet = oam.getEC2LocalInstanceSubnet();
+		// cout << "amazonSubNet = " <<  amazonSubNet << endl;
+		if ( amazonSubNet == "failed" || amazonSubNet == "" )
+		{
+			amazonSubNet = oam::UnassignedName;
+			cloud = "amazon-ec2";
+		}
+		else
+		{
+			cloud = "amazon-vpc";
+		}
+
+		//set subnetID
+		try {
+			sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+		}
+		catch(...)
+		{}
+	
+		try {
+			sysConfig->setConfig(InstallSection, "Cloud", cloud);
+		}
+		catch(...)
+		{}
+	}
 
 	if ( pmwithum )
 		cout << endl << "NOTE: Local Query Feature is enabled" << endl;
@@ -1151,6 +1030,7 @@ int main(int argc, char *argv[])
 	}
 
 	cout << endl;
+
 	setSystemName();
 
 	cout << endl;
@@ -1230,7 +1110,7 @@ int main(int argc, char *argv[])
 	// setup storage
 	//
 
-	if (!storageSetup(cloud))
+	if (!storageSetup(amazonInstall))
 	{
 		cout << "ERROR: Problem setting up storage" << endl;
 		exit(1);
@@ -1244,7 +1124,7 @@ int main(int argc, char *argv[])
 	// setup memory paramater settings
 	//
 
-	cout << endl << "===== Setup Memory Configuration =====" << endl;
+	cout << endl << "===== Setup Memory Configuration =====" << endl << endl;
 
 	switch ( IserverTypeInstall ) {
 		case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
@@ -1522,11 +1402,33 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if ( moduleType == "pm" )
+		if ( moduleType == "pm" ) {
 			pmNumber = moduleCount;
 
-		if ( moduleType == "um" )
+			if ( pmNumber > 1 && ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) )
+			{
+				mysqlRep = true;
+				try {
+					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
+				}
+				catch(...)
+				{}
+			}
+		}
+
+		if ( moduleType == "um" ) {
 			umNumber = moduleCount;
+			
+			if ( umNumber > 1 )
+			{
+				mysqlRep = true;
+				try {
+					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
+				}
+				catch(...)
+				{}
+			}
+		}
 
 		int moduleID = 1;
 
@@ -1709,7 +1611,7 @@ int main(int argc, char *argv[])
 					while (true)
 					{
 						newModuleHostName = moduleHostName;
-						if (cloud == "amazon") {
+						if (amazonInstall) {
 							if ( moduleHostName == oam::UnassignedName && 
 								newModuleName == "pm1" )
 							{
@@ -1762,7 +1664,7 @@ int main(int argc, char *argv[])
 									continue;
 
 								//check Instance ID and get IP Address if running
-								if (cloud == "amazon") {
+								if (amazonInstall) {
 									string instanceType = oam.getEC2LocalInstanceType(newModuleHostName);
 									if ( moduleType == "pm" )
 									{
@@ -1827,7 +1729,7 @@ int main(int argc, char *argv[])
 						newModuleIPAddr = oam::UnassignedIpAddr;
 					else
 					{
-						if (cloud != "amazon") {
+						if (!amazonInstall) {
 							if ( moduleIPAddr == oam::UnassignedIpAddr )
 							{
 								//get IP Address
@@ -2086,7 +1988,7 @@ int main(int argc, char *argv[])
 						cout << "makeRClocal error" << endl;
 	
 					//if cloud, copy fstab in module tmp dir
-//					if ( cloud == "amazon" && moduleType == "pm")
+//					if ( amazonInstall && moduleType == "pm")
 //						if( !copyFstab(newModuleName) )
 //							cout << "copyFstab error" << endl;
 
@@ -2102,7 +2004,7 @@ int main(int argc, char *argv[])
 					}	
 
 					// only support 1 nic ID per Amazon instance
-					if (cloud == "amazon")
+					if (amazonInstall)
 						break;
 
 				} //end of nicID loop
@@ -2110,7 +2012,7 @@ int main(int argc, char *argv[])
 				//enter storage for user module
 				if ( moduleType == "um" && moduleDisableState == oam::ENABLEDSTATE) {
 					//get EC2 volume name and info
-					if ( UMStorageType == "external" && cloud == "amazon" &&
+					if ( UMStorageType == "external" && amazonInstall &&
 						IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) {
 
 						string create = "y";
@@ -2443,7 +2345,7 @@ int main(int argc, char *argv[])
 						system(cmd.c_str());
 
 						//get EC2 volume name and info
-						if ( DBRootStorageType == "external" && cloud == "amazon") {
+						if ( DBRootStorageType == "external" && amazonInstall) {
 							cout << endl << "*** Setup External EBS Volume for DBRoot #" << *it << " ***" << endl;
 							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or you can provide an existing Volume ID to use" << endl << endl;
 
@@ -4188,7 +4090,7 @@ bool pkgCheck()
 	return true;
 }
 
-bool storageSetup(string cloud)
+bool storageSetup(bool amazonInstall)
 {
 	Oam oam;
 
@@ -4303,7 +4205,7 @@ bool storageSetup(string cloud)
 	
 	string storageType;
 
-	if( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM && cloud == "amazon" )
+	if( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM && amazonInstall )
 	{
 		//
 		// get Frontend Data storage type
@@ -4570,8 +4472,16 @@ bool storageSetup(string cloud)
 		return false;
 	}
 
+	// if external and not amazon, print fstab note
+	if ( storageType == "2" && !amazonInstall)
+	{
+		cout << endl << "NOTE: For External configuration, the /etc/fstab should have been manually updated for the" << endl;
+		cout <<         "      DBRoot mounts. Check the Installation Guide for further details" << endl << endl; 
+
+	}
+
 	// if external and amazon, prompt for storage size
-	if ( storageType == "2" && cloud == "amazon")
+	if ( storageType == "2" && amazonInstall)
 	{
 		cout << endl;
 		try {

@@ -83,7 +83,7 @@ if [ "$1" = "deassignElasticIP" ]; then
 		echo "Enter Elastic IP Address"
 		exit 1
 	else
-		IPAddress="$2"getType
+		IPAddress="$2"
 	fi
 fi
 
@@ -150,11 +150,11 @@ getInstance() {
 	localIP=`ifconfig eth0 | grep "inet addr:" | awk '{print substr($2,6,20)}'`
 
 	#get local Instance ID
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 	if [ "$instance" == "" ]; then
 		describeInstance
 	fi
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 
 	echo $instance
 	return
@@ -170,11 +170,11 @@ getInstancePrivate() {
 	localIP=`ifconfig eth0 | grep "inet addr:" | awk '{print substr($2,6,20)}'`
 
 	#get local Instance ID
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 	if [ "$instance" == "" ]; then
 		describeInstance
 	fi
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 
 	return
 }
@@ -184,7 +184,7 @@ getZone() {
 	#get from Calpont.xml if it's there, if not, get from instance then store
 	zone=`$prefix/Calpont/bin/getConfig Installation AmazonZone`
 
-	if [ "$zone" = "unassigned" ]; then
+	if [ "$zone" = "unassigned" ] || [ "$zone" = "" ]; then
 		#get local Instance ID
 		getInstancePrivate >/dev/null 2>&1
 		#get zone
@@ -196,11 +196,11 @@ getZone() {
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 
 		else
-			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
+			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 			if [ "$zone" == "" ]; then
 				describeInstance
 			fi
-			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
+			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 		fi
 		$prefix/Calpont/bin/setConfig Installation AmazonZone $zone
 	fi
@@ -267,11 +267,11 @@ getType() {
 		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $9}'`
 
 	else
-		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $8}'`
+		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $9}'`
 		if [ "$instanceType" == "" ]; then
 			describeInstance
 		fi
-		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $8}'`
+		instanceType=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $9}'`
 
 	fi
 
@@ -291,11 +291,11 @@ getKey() {
 		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
 
 	else
-		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
+		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
 		if [ "$key" == "" ]; then
 			describeInstance
 		fi
-		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
+		key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
 
 	fi
 
@@ -331,11 +331,11 @@ getGroup() {
 			group=`grep -B1 -A4 -m 1 $instance $describeInstanceFile |  grep -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $22}'`
 		fi
 	else
-		group=`grep -B1 -A4 -m 1 $instance $describeInstanceFile |  grep -m 1 GROUP | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+		group=`grep -B1 -A6 -m 1 $instance $describeInstanceFile |  grep -m 1 GROUP | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 		if [ "$group" == "" ]; then
 			describeInstance
 		fi
-		group=`grep -B1 -A4 -m 1 $instance $describeInstanceFile |  grep -m 1 GROUP | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+		group=`grep -B1 -A6 -m 1 $instance $describeInstanceFile |  grep -m 1 GROUP | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 	fi
 
 	echo $group
@@ -354,11 +354,11 @@ getProfile() {
 		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $23}'`
 
 	else
-		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $21}'`
+		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $22}'`
 		if [ "$instanceProfile" == "" ]; then
 			describeInstance
 		fi
-		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $21}'`
+		instanceProfile=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $22}'`
 
 	fi
 
@@ -453,11 +453,17 @@ startInstance() {
 
 assignElasticIP() {
 	#terminate Instance
-	ec2-associate-address -O $AmazonAccessKey -W $AmazonSecretKey -i $instanceName $IPAddress > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+
+        if [ "$subnet" == "unassigned" ]; then
+		ec2-associate-address -O $AmazonAccessKey -W $AmazonSecretKey -i $instanceName $IPAddress > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+	else
+		EIP=`ec2-describe-addresses -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $IPAddress | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $4}'`
+                ec2-associate-address -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -i $instanceName -a $EIP > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+	fi
 
 	cat /tmp/assignElasticIPInfo_$IPAddress | grep ADDRESS > /tmp/assignElasticIPStatus_$IPAddress
 	if [ `cat /tmp/assignElasticIPStatus_$IPAddress | wc -c` -eq 0 ]; then
-		echo "Failed, check /tmp/assignElasticIPStatus_$IPAddress"
+		echo "Failed, check /tmp/assignElasticIPInfo_$IPAddress"
 		exit 1
 	fi
 
@@ -489,7 +495,13 @@ getSubnet() {
         fi
         subnet=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $16}'`
 
-        echo $subnet
+	if [[ $subnet == *"subnet"* ]]
+	then
+        	echo $subnet
+	else
+		echo "failed"
+	fi
+
         return
 }
 
@@ -503,9 +515,6 @@ case "$1" in
 	;;
   getPrivateIP)
   	getPrivateIP
-	;;
-  getType)
-  	getType
 	;;
   getKey)
   	getKey
@@ -544,7 +553,7 @@ case "$1" in
   	getSubnet
 	;;
   *)
-	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet}"
+	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet}"
 	exit 1
 esac
 

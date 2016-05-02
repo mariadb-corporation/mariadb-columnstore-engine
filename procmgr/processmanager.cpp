@@ -4737,9 +4737,14 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		sysConfig->setConfig(Section, "Port", "8622");
 	}
 
+	bool setMysqlRep = false;
+
 	if ( moduleType == "um" ||
 		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 		( moduleType == "pm" && PMwithUM == "y") ) {
+
+		setMysqlRep = true;
+
 		listPT = devicenetworklist.begin();
 		for( ; listPT != devicenetworklist.end() ; listPT++)
 		{
@@ -5229,10 +5234,25 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		sleep(30);
 	}
 
+	//check and add MySQL Replication slave
+	string MySQLRep;
+	try {
+		oam.getSystemConfig("MySQLRep", MySQLRep);
+	}
+	catch(...) {
+		MySQLRep = "n";
+	}
+
+	if ( MySQLRep == "n" && setMysqlRep ) {
+		try {
+			oam.setSystemConfig("MySQLRep", "y");
+		}
+		catch(...) {}
+	}
+
 	//distribute config file
 	distributeConfigFile("system");
 
-	//add MySQL Replication slave
 	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
 	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
@@ -5247,6 +5267,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 ******************************************************************************************/
 int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool manualFlag)
 {
+	ProcessLog log;
+	Configuration config;
+	ProcessManager processManager(config, log);
+
 	ModuleTypeConfig moduletypeconfig;
 	ModuleTypeConfig setmoduletypeconfig;
 	Oam oam;
@@ -5587,7 +5611,22 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 
 	//distribute config file
 	distributeConfigFile("system");	
-	
+
+	string password;
+	// check if there is a root password stored
+	string rpw = oam::UnassignedName;
+	try
+	{
+		oam.getSystemConfig("rpw", password);
+	}
+	catch(...)
+	{
+		rpw = "root";
+	}
+
+	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
+	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
+
 	return API_SUCCESS;
 }
 
@@ -8751,7 +8790,7 @@ int ProcessManager::OAMParentModuleChange()
 				
 					/* Read interface flags */
 					if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) < 0) {
-						log.writeLog(__LINE__, "Error reading ioctl for NIC #1", LOG_TYPE_ERROR);
+						// not supported
 						close(sockfd);
 						break;
 					}
@@ -9966,8 +10005,17 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM && !failover ) {
 		try {
 			Config* sysConfig = Config::makeConfig();
-			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" )
-				return oam::API_SUCCESS;
+			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
+				//disable mysqlrep
+				log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
+				try {
+					oam.setSystemConfig("MySQLRep", "n");
+				}
+				catch(...) {}
+
+				enable = false;
+				distributeDB = true;
+			}
 		}
 		catch(...)
 		{
@@ -9985,7 +10033,17 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		{}
 	
 		if ( moduletypeconfig.ModuleCount < 1 )
-			return oam::API_SUCCESS;
+		{
+			//disable mysqlrep
+			log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
+			try {
+				oam.setSystemConfig("MySQLRep", "n");
+			}
+			catch(...) {}
+
+			enable = false;
+			distributeDB = true;
+		}
 	}
 
 	log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
