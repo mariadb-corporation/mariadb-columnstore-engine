@@ -715,51 +715,6 @@ int main(int argc, char *argv[])
 				if ( MySQLRep == "y" )
 					mysqlRep = true;
 
-				string answer = "n";
-				while(true) {
-					if ( !mysqlRep ) 
-						prompt = "Enable MySQL Replication feature? [y,n] (n) > ";
-					else
-						break;
-
-					pcommand = callReadline(prompt.c_str());
-					if (pcommand) {
-						if (strlen(pcommand) > 0) answer = pcommand;
-						callFree(pcommand);
-					}
-			
-					if ( answer == "y" || answer == "n" ) {
-						cout << endl;
-						break;
-					}
-					else
-						cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-					if ( noPrompting )
-						exit(1);
-				}
-
-				if ( answer == "y" ) {
-					mysqlRep = true;
-					MySQLRep = "y";
-				}
-
-				if ( MySQLRep == "y" )
-					mysqlRep = true;
-				else
-					mysqlRep = false;
-
-				try {
-					 sysConfig->setConfig(InstallSection, "PMwithUM", PMwithUM);
-				}
-				catch(...)
-				{}
-
-				try {
-					 sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
-				}
-				catch(...)
-				{}
-
 				break;
 			}
 			default:	// normal, separate UM and PM
@@ -823,42 +778,6 @@ int main(int argc, char *argv[])
 						mysqlRep = true;
 						MySQLRep = "y";
 					}
-				}
-
-				if ( !pmwithum )
-				{
-					answer = "n";
-					while(true) {
-						if ( mysqlRep ) 
-							prompt = "Enable MySQL Replication feature? [y,n] (n) > ";
-						else
-							break;
-
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand) {
-							if (strlen(pcommand) > 0) answer = pcommand;
-							callFree(pcommand);
-						}
-				
-						if ( answer == "y" || answer == "n" ) {
-							cout << endl;
-							break;
-						}
-						else
-							cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-						if ( noPrompting )
-							exit(1);
-					}
-
-					if ( answer == "y" ) {
-						mysqlRep = true;
-						MySQLRep = "y";
-					}
-
-					if ( MySQLRep == "y" )
-						mysqlRep = true;
-					else
-						mysqlRep = false;
 				}
 
 				try {
@@ -1483,11 +1402,33 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if ( moduleType == "pm" )
+		if ( moduleType == "pm" ) {
 			pmNumber = moduleCount;
 
-		if ( moduleType == "um" )
+			if ( pmNumber > 1 && ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) )
+			{
+				mysqlRep = true;
+				try {
+					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
+				}
+				catch(...)
+				{}
+			}
+		}
+
+		if ( moduleType == "um" ) {
 			umNumber = moduleCount;
+			
+			if ( umNumber > 1 )
+			{
+				mysqlRep = true;
+				try {
+					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
+				}
+				catch(...)
+				{}
+			}
+		}
 
 		int moduleID = 1;
 

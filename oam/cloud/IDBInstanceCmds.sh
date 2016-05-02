@@ -83,7 +83,7 @@ if [ "$1" = "deassignElasticIP" ]; then
 		echo "Enter Elastic IP Address"
 		exit 1
 	else
-		IPAddress="$2"getType
+		IPAddress="$2"
 	fi
 fi
 
@@ -150,11 +150,11 @@ getInstance() {
 	localIP=`ifconfig eth0 | grep "inet addr:" | awk '{print substr($2,6,20)}'`
 
 	#get local Instance ID
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 	if [ "$instance" == "" ]; then
 		describeInstance
 	fi
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 
 	echo $instance
 	return
@@ -170,11 +170,11 @@ getInstancePrivate() {
 	localIP=`ifconfig eth0 | grep "inet addr:" | awk '{print substr($2,6,20)}'`
 
 	#get local Instance ID
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 	if [ "$instance" == "" ]; then
 		describeInstance
 	fi
-	instance=`cat $describeInstanceFile | grep -m 1 $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	instance=`cat $describeInstanceFile | grep -m 1 -w $localIP |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 
 	return
 }
@@ -184,7 +184,7 @@ getZone() {
 	#get from Calpont.xml if it's there, if not, get from instance then store
 	zone=`$prefix/Calpont/bin/getConfig Installation AmazonZone`
 
-	if [ "$zone" = "unassigned" ]; then
+	if [ "$zone" = "unassigned" ] || [ "$zone" = "" ]; then
 		#get local Instance ID
 		getInstancePrivate >/dev/null 2>&1
 		#get zone
@@ -196,11 +196,11 @@ getZone() {
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 
 		else
-			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
+			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 			if [ "$zone" == "" ]; then
 				describeInstance
 			fi
-			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
+			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 		fi
 		$prefix/Calpont/bin/setConfig Installation AmazonZone $zone
 	fi
@@ -494,6 +494,7 @@ getSubnet() {
         	echo $subnet
 	else
 		echo "failed"
+	fi
 
         return
 }
