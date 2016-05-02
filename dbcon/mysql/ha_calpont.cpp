@@ -343,7 +343,10 @@ static void calpont_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint
 
 ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg) :
     handler(hton, table_arg),
-	int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_TABLE_SCAN_ON_INDEX | HA_CAN_TABLE_CONDITION_PUSHDOWN)
+	int_table_flags(HA_BINLOG_STMT_CAPABLE | 
+					HA_TABLE_SCAN_ON_INDEX | 
+					HA_CAN_TABLE_CONDITION_PUSHDOWN |
+					HA_FAST_KEY_READ)
 //	int_table_flags(HA_NO_BLOBS | HA_BINLOG_STMT_CAPABLE)
 {
 }

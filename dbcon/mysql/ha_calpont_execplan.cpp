@@ -421,13 +421,6 @@ void debug_walk(const Item *item, void *arg)
 	case Item::SUM_FUNC_ITEM:
 	{
 		Item_sum* isp = (Item_sum*)item;
-		Item_sum_int*            isip = 0;
-		Item_sum_sum*            isdp = 0;
-		Item_sum_avg*            isap = 0;
-		Item_sum_count*          iscp = 0;
-		Item_sum_count*          iscdp = 0;
-		Item_sum_min*            isnp = 0;
-		Item_sum_max*            isxp = 0;
 		char* item_name = item->name;
 		if (!item_name)
 		{
@@ -436,31 +429,24 @@ void debug_walk(const Item *item, void *arg)
 		switch (isp->sum_func())
 		{
 		case Item_sum::SUM_FUNC:
-			isip = (Item_sum_int*)isp;
 			cout << "SUM_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::SUM_DISTINCT_FUNC:
-			isdp = (Item_sum_sum*)isp;
 			cout << "SUM_DISTINCT_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::AVG_FUNC:
-			isap = (Item_sum_avg*)isp;
 			cout << "AVG_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::COUNT_FUNC:
-			iscp = (Item_sum_count*)isp;
 			cout << "COUNT_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::COUNT_DISTINCT_FUNC:
-			iscdp = (Item_sum_count*)isp;
 			cout << "COUNT_DISTINCT_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::MIN_FUNC:
-			isnp = (Item_sum_min*)isp;
 			cout << "MIN_FUNC: " << item_name << endl;
 			break;
 		case Item_sum::MAX_FUNC:
-			isxp = (Item_sum_max*)isp;
 			cout << "MAX_FUNC: " << item_name << endl;
 			break;
 		default:
@@ -643,16 +629,13 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 	// check non-collapsed outer join
 	// this set contains all processed embedded joins. duplicate joins are ignored
 	set<TABLE_LIST*> embeddingSet;
-//	TABLE_LIST* table_ptr = select_lex.get_table_list();
-	List_iterator_fast<TABLE_LIST> ti(select_lex.top_join_list);
-	TABLE_LIST *table_ptr;
+	TABLE_LIST* table_ptr = select_lex.get_table_list();
 	gp_walk_info gwi_outer = gwi;
 	gwi_outer.subQuery = NULL;
 	gwi_outer.hasSubSelect = false;
 	vector <Item_field*> tmpVec;
 
-//	for (; table_ptr; table_ptr= table_ptr->next_local)
-	while ((table_ptr= ti++))
+	for (; table_ptr; table_ptr= table_ptr->next_local)
 	{
 		gwi_outer.innerTables.clear();
 		clearStacks(gwi_outer);
@@ -1616,7 +1599,13 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 
 					// @bug5634, @bug5635. mark used derived col on derived table.
 					// outer join inner table filter can not be moved in
-					if (!(ifp->cached_table && ifp->cached_table->outer_join))
+					// MariaDB 10.1: cached_table is never true for derived tables.
+					// Find another way to determine outer_join
+					if (ifp->context && 
+						ifp->context->table_list &&
+						ifp->context->table_list->next_local &&
+					   !ifp->context->table_list->next_local->outer_join)
+//					if ((ifp->cached_table && !ifp->cached_table->outer_join))
 					{
 						sc->derivedTable(derivedName);
 						sc->derivedRefCol(cols[j].get());
@@ -4331,7 +4320,6 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 				parseInfo |= CORRELATED;
 				break;
 			}
-			Item** sfitempp = isp->arguments();
 			for (uint32_t i = 0; i < isp->argument_count(); i++)
 				parse_item(isp->arguments()[i], field_vec, hasNonSupportItem, parseInfo);
 //				parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo);
@@ -4566,11 +4554,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			// @todo process from subquery
 			if (table_ptr->derived)
 			{
-				//cout << "DERIVED TABLE DEBUG" << endl;
-				//String str;
-				//(table_ptr->derived->first_select())->print(gwi.thd, &str, QT_INFINIDB_DERIVED);
-				//cout << str.ptr() << endl;
-				//cout << "DERIVED TABLE DEBUG END" << endl;
+				cout << "DERIVED TABLE DEBUG" << endl;
+				String str;
+				(table_ptr->derived->first_select())->print(gwi.thd, &str, QT_INFINIDB_DERIVED);
+				cout << str.ptr() << endl;
+				cout << "DERIVED TABLE DEBUG END" << endl;
 
 				SELECT_LEX *select_cursor = table_ptr->derived->first_select();
 				FromSubQuery fromSub(gwi, select_cursor);
