@@ -6927,10 +6927,11 @@ namespace oam
 			amazondeviceName = "/dev/xvd";
 
 		//calulate id numbers from DBRoot ID
-		int lid = (dbrootid-1) / 10;
-		int did = dbrootid - (dbrootid * lid);
+//		int lid = (dbrootid-1) / 10;
+//		int did = dbrootid - (dbrootid * lid);
 
-		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), amazondeviceName + deviceLetter[lid] + itoa(did));
+//		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), amazondeviceName + deviceLetter[lid] + itoa(did));
+		return boost::make_tuple(PMdeviceName + deviceLetter[dbrootid-1], amazondeviceName + deviceLetter[dbrootid-1]);
 	}
 
     /***************************************************************************
