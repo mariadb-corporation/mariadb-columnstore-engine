@@ -683,12 +683,12 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 #endif
 			expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
 		}
-		if (table_ptr->nested_join && &(table_ptr->nested_join->join_list))
+		else if (table_ptr->nested_join && &(table_ptr->nested_join->join_list))
 		{
 			buildNestedTableOuterJoin(gwi_outer, table_ptr);
 		}
 		// this part is ambiguous. Not quite sure how MySQL's lay out the outer join filters in the structure
-		if (table_ptr->embedding && table_ptr->embedding->outer_join && table_ptr->embedding->sj_on_expr)
+		else if (table_ptr->embedding && table_ptr->embedding->outer_join && table_ptr->embedding->on_expr)
 		{
 			// all the tables in nested_join are inner tables.
 			TABLE_LIST *table;
@@ -707,7 +707,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 			if (embeddingSet.find(table_ptr->embedding) != embeddingSet.end())
 				continue;
 			embeddingSet.insert(table_ptr->embedding);
-			Item_cond* expr = reinterpret_cast<Item_cond*>(table_ptr->embedding->sj_on_expr);
+			Item_cond* expr = reinterpret_cast<Item_cond*>(table_ptr->embedding->on_expr);
 
 #ifdef DEBUG_WALK_COND
 			cout << "inner tables: " << endl;
@@ -720,7 +720,7 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 			expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
 		}
 		// @bug 2849
-		if (table_ptr->embedding && table_ptr->embedding->nested_join)
+		else if (table_ptr->embedding && table_ptr->embedding->nested_join)
 		{
 			// if this is dervied table process phase, mysql may have not developed the plan
 			// completely. Return and let it finish. It will come to rnd_init again.
@@ -744,12 +744,12 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 			TABLE_LIST* curr;
 			while ((curr = li++))
 			{
-				if (curr->sj_on_expr)
+				if (curr->on_expr)
 				{
 					if (!curr->outer_join) // only handle nested JOIN for now
 					{
 						gwi_outer.innerTables.clear();
-						Item_cond* expr = reinterpret_cast<Item_cond*>(curr->sj_on_expr);
+						Item_cond* expr = reinterpret_cast<Item_cond*>(curr->on_expr);
 
 				#ifdef DEBUG_WALK_COND
 						expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
