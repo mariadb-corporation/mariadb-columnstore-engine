@@ -1308,7 +1308,13 @@ int main(int argc, char *argv[])
 	// Module Configuration
 	//
 	cout << endl;
-	cout << "===== Setup the Module Configuration =====" << endl;
+	cout << "===== Setup the Module Configuration =====" << endl << endl;
+
+	if (amazonInstall) {
+		cout << "Amazon Install: For Module Configuration, you will have the option to Enter the Instance IDs" << endl;
+		cout << "if you have already precreated the Instance's you want to install on or have postConfigure create" << endl;
+		cout << "the Instances for you. You will be prompted during the Module Configuration setup section." << endl;
+	}
 
 	//get OAM Parent Module IP addresses and Host Name, if it exist
 	for ( unsigned int i = 0 ; i < sysModuleTypeConfig.moduletypeconfig.size(); i++)
@@ -1627,13 +1633,17 @@ int main(int argc, char *argv[])
 							{
 								//get local instance name (pm1)
 								string localInstance = oam.getEC2LocalInstance();
-								if ( localInstance == "failed" || localInstance.empty() || localInstance == "") 
+								if ( localInstance == "failed" || localInstance.empty() || localInstance == "")
+								{
 									moduleHostName = oam::UnassignedName;
+									prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+								}
 								else
-									moduleHostName = localInstance;
-
-								prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
-
+								{
+									newModuleHostName = localInstance;
+									cout << "EC2 Instance ID for pm1: " + moduleHostName << endl;
+									prompt = "";
+								}
 							}
 							else
 							{
