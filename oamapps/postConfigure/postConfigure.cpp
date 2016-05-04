@@ -1641,7 +1641,7 @@ int main(int argc, char *argv[])
 								else
 								{
 									newModuleHostName = localInstance;
-									cout << "EC2 Instance ID for pm1: " + moduleHostName << endl;
+									cout << "EC2 Instance ID for pm1: " + localInstance << endl;
 									prompt = "";
 								}
 							}

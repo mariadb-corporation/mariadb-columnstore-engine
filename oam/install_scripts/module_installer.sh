@@ -57,12 +57,12 @@ cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	cp $INFINIDB_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
 
-	if test -f $INFINIDB_INSTALL_DIR/local/pm1/fstab ; then
+	if test -f $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab ; then
 		echo "Setup fstab on Module"
 		touch /etc/fstab
 		rm -f /etc/fstab.calpontSave
 		mv /etc/fstab /etc/fstab.calpontSave
-		cat $INFINIDB_INSTALL_DIR/local/pm1/fstab >> /etc/fstab
+		cat $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
 	fi
 fi
 
