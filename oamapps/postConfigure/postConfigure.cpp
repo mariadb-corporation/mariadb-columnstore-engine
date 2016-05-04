@@ -115,6 +115,14 @@ bool copyKeyfiles();
 
 void remoteInstallThread(void *);
 
+typedef struct ModuleIP_struct
+{
+	std::string     IPaddress;
+	std::string     moduleName;
+} ModuleIP;
+
+std::string launchInstance(ModuleIP moduleip);
+
 string calpontPackage1;
 string calpontPackage2;
 string calpontPackage3;
@@ -155,6 +163,7 @@ string glusterCopies;
 string glusterInstalled = "n";
 string hadoopInstalled = "n";
 string mysqlPort = oam::UnassignedName;
+string systemName;
 
 bool noPrompting = false;
 bool rootUser = true;
@@ -182,6 +191,7 @@ extern string prompt;
 typedef struct _thread_data_t {
   	std::string command;
 } thread_data_t;
+
 
 int main(int argc, char *argv[])
 {
@@ -838,7 +848,7 @@ int main(int argc, char *argv[])
 		cout << "Amazon EC2-API-TOOLS Instance install. You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
 		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
-		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl;
+		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl << endl;
 		cout << "2. Using standard hardware IDs for hostnames, IP Addresses, and Storage Devices." << endl;
 		cout <<     "Using this option, you would need to pre-create the Instances and the EBS storages" << endl;
 		cout <<     "and then provide the hostnames/IP-Addresses during the configuration and system expansion" << endl;
@@ -1621,24 +1631,69 @@ int main(int argc, char *argv[])
 									moduleHostName = oam::UnassignedName;
 								else
 									moduleHostName = localInstance;
-							}
 
-							prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+								prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+
+							}
+							else
+							{
+								//check if need to create instance or user enter ID
+								string create = "y";
+		
+								while(true)
+								{
+									pcommand = callReadline("Do you need the instance created [y,n] (y) > ");
+									if (pcommand)
+									{
+										if (strlen(pcommand) > 0) create = pcommand;
+										callFree(pcommand);
+									}
+									if ( create == "y" || create == "n" )
+										break;
+									else
+										cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+									create = "y";
+									if ( noPrompting )
+										exit(1);
+								}
+							
+		
+								if ( create == "y" ) {
+									ModuleIP moduleip;
+									moduleip.moduleName = newModuleName;
+									moduleip.IPaddress = oam::UnassignedName;
+						
+									moduleHostName = launchInstance(moduleip);
+									if ( moduleHostName == oam::UnassignedName )
+									{
+										cout << "launch Instance failed for " + newModuleName << endl;
+										exit (1);
+									}
+
+									cout << "Launching EC2 Instance ID " + moduleHostName << endl;
+									prompt = "";
+								}
+								else
+									prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+							}
 						}
 						else
 							prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " Host Name (" + moduleHostName + ") > ";
 
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand)
+						if ( prompt != "" )
 						{
-							if (strlen(pcommand) > 0) 
-								newModuleHostName = pcommand;
-							else
-								newModuleHostName = moduleHostName;
-
-							callFree(pcommand);
+							pcommand = callReadline(prompt.c_str());
+							if (pcommand)
+							{
+								if (strlen(pcommand) > 0) 
+									newModuleHostName = pcommand;
+								else
+									newModuleHostName = moduleHostName;
+	
+								callFree(pcommand);
+							}
 						}
-		
+
 						if ( newModuleHostName == oam::UnassignedName && nicID == 1 ) {
 							cout << "Invalid Entry, please re-enter" << endl;
 							if ( noPrompting )
@@ -4804,7 +4859,6 @@ void snmpAppCheck()
 void setSystemName()
 {
 	//setup System Name
-	string systemName;
 	try {
 		systemName = sysConfig->getConfig(SystemSection, "SystemName");
 	}
@@ -5207,5 +5261,91 @@ void remoteInstallThread(void *arg)
 	// exit thread
 	pthread_exit(0);
 }
-// vim:ts=4 sw=4:
 
+std::string launchInstance(ModuleIP moduleip)
+{
+	Oam oam;
+
+	//get module info
+	string moduleName = moduleip.moduleName;
+	string IPAddress = moduleip.IPaddress;
+	string instanceName= oam::UnassignedName;
+
+	//due to bad instances getting launched causing scp failures
+	//have retry login around fail scp command where a instance will be relaunched
+	int instanceRetry = 0;
+	for ( ; instanceRetry < 5 ; instanceRetry ++ )
+	{
+		if ( moduleName.find("um") == 0 ) {
+			string UserModuleInstanceType;
+			oam.getSystemConfig("UMInstanceType", UserModuleInstanceType);
+			string UserModuleSecurityGroup;
+			oam.getSystemConfig("UMSecurityGroup", UserModuleSecurityGroup);
+
+			instanceName = oam.launchEC2Instance(moduleName, IPAddress, UserModuleInstanceType, UserModuleSecurityGroup);
+		}
+		else
+			instanceName = oam.launchEC2Instance(moduleName, IPAddress);
+	
+		if ( instanceName == "failed" ) {
+			cout << " *** Failed to Launch an Instance for " + moduleName << ", will retry up to 5 times" << endl;
+			continue;
+		}
+	
+		cout << "Launched Instance for " << moduleName << ": " << instanceName << endl;
+	
+		//give time for instance to startup
+		sleep(60);
+	
+		cout << " SCP x.509 files to " + moduleName << endl;
+	
+		string ipAddress = oam::UnassignedName;
+	
+		bool pass = false;
+		for ( int retry = 0 ; retry < 60 ; retry++ )
+		{
+			//get IP Address of pm instance
+			if ( ipAddress == oam::UnassignedName || ipAddress == "stopped" || ipAddress == "No-IPAddress" )
+			{
+				ipAddress = oam.getEC2InstanceIpAddress(instanceName);
+			
+				if (ipAddress == "stopped" || ipAddress == "No-IPAddress" ) {
+					sleep(5);
+					continue;
+				}
+			}
+
+			pass = true;
+			break;
+		}
+	
+		if (!pass)
+		{
+			oam.terminateEC2Instance( instanceName );
+			continue;
+		}
+
+		string autoTagging;
+		oam.getSystemConfig("AmazonAutoTagging", autoTagging);
+
+		if ( autoTagging == "y" )
+		{
+			string tagValue = systemName + "-" + moduleName;
+			oam.createEC2tag( instanceName, "Name", tagValue );
+		}
+
+		break;
+	}
+
+	if ( instanceRetry >= 5 )
+	{
+		cout << " *** Failed to Successfully Launch Instance for " + moduleName << endl;
+		return oam::UnassignedName;
+	}
+
+	return instanceName;
+}
+
+
+
+// vim:ts=4 sw=4:
