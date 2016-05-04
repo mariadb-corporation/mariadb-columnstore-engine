@@ -1670,14 +1670,13 @@ int main(int argc, char *argv[])
 
 									moduleip.IPaddress = AmazonVPCNextPrivateIP;
 						
-									moduleHostName = launchInstance(moduleip);
-									if ( moduleHostName == oam::UnassignedName )
+									newModuleHostName = launchInstance(moduleip);
+									if ( newModuleHostName == oam::UnassignedName )
 									{
 										cout << "launch Instance failed for " + newModuleName << endl;
 										exit (1);
 									}
 
-									cout << "Launching EC2 Instance ID " + moduleHostName << endl;
 									prompt = "";
 								}
 								else
@@ -5306,12 +5305,10 @@ std::string launchInstance(ModuleIP moduleip)
 			continue;
 		}
 	
-		cout << "Launched Instance for " << moduleName << ": " << instanceName << endl;
+		cout << endl << "Launched Instance for " << moduleName << ": " << instanceName << endl;
 	
 		//give time for instance to startup
 		sleep(60);
-	
-		cout << " SCP x.509 files to " + moduleName << endl;
 	
 		string ipAddress = oam::UnassignedName;
 	
