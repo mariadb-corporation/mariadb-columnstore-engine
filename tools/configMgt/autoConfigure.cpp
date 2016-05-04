@@ -1303,6 +1303,12 @@ int main(int argc, char *argv[])
 		string AmazonZone;
 		string AmazonVPCNextPrivateIP;
 		string AmazonDeviceName;
+		string UMVolumeType;
+		string UMVolumeIOPS;
+		string PMVolumeType;
+		string PMVolumeIOPS;
+
+
 		try {
 			cloud = sysConfigOld->getConfig(InstallSection, "Cloud");
 			x509Cert = sysConfigOld->getConfig(InstallSection, "AmazonX509Certificate");
@@ -1320,6 +1326,10 @@ int main(int argc, char *argv[])
 			AmazonVPCNextPrivateIP = sysConfigOld->getConfig(InstallSection, "AmazonVPCNextPrivateIP");
 			AmazonSubNetID = sysConfigOld->getConfig(InstallSection, "AmazonSubNetID");
 			AmazonDeviceName = sysConfigOld->getConfig(InstallSection, "AmazonDeviceName");
+			UMVolumeType = sysConfigOld->getConfig(InstallSection, "UMVolumeType");
+			UMVolumeIOPS = sysConfigOld->getConfig(InstallSection, "UMVolumeIOPS");
+			PMVolumeType = sysConfigOld->getConfig(InstallSection, "PMVolumeType");
+			PMVolumeIOPS = sysConfigOld->getConfig(InstallSection, "PMVolumeIOPS");
 		}
 		catch(...)
 		{ }
@@ -1382,6 +1392,11 @@ int main(int argc, char *argv[])
 			sysConfigNew->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
 			sysConfigNew->setConfig(InstallSection, "AmazonZone", AmazonZone);
 			sysConfigNew->setConfig(InstallSection, "AmazonDeviceName", AmazonDeviceName);
+
+			sysConfigNew->setConfig(InstallSection, "UMVolumeType", UMVolumeType);
+			sysConfigNew->setConfig(InstallSection, "UMVolumeIOPS", UMVolumeIOPS);
+			sysConfigNew->setConfig(InstallSection, "PMVolumeType", PMVolumeType);
+			sysConfigNew->setConfig(InstallSection, "PMVolumeIOPS", PMVolumeIOPS);
 		}
 		catch(...)
 		{

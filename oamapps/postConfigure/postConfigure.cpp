@@ -139,6 +139,11 @@ string UMStorageType;
 
 string PMVolumeSize = oam::UnassignedName;
 string UMVolumeSize = oam::UnassignedName;
+string UMVolumeType = "standard";
+string PMVolumeType = "standard";
+string PMVolumeIOPS = oam::UnassignedName;
+string UMVolumeIOPS = oam::UnassignedName;
+
 
 int DBRootCount;
 string deviceName;
@@ -4327,6 +4332,46 @@ bool storageSetup(bool amazonInstall)
 
 			cout << endl;
 			try {
+				oam.getSystemConfig("UMVolumeType", UMVolumeType);
+			}
+			catch(...)
+			{}
+
+			if ( UMVolumeType.empty() || UMVolumeType == "")
+				UMVolumeType = "standard";
+
+			while(true)
+			{
+				string prompt = "Enter EBS Volume Type (standard, gp2, io1) : (" + UMVolumeType + ") > ";
+				pcommand = callReadline(prompt);
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0) UMVolumeType = pcommand;
+					callFree(pcommand);
+				}
+
+				if ( UMVolumeType == "standard" || UMVolumeType == "gp2" || UMVolumeType == "io1" )
+					break;
+				else
+				{
+					cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+			}
+	
+			//set UMVolumeType
+			try {
+				sysConfig->setConfig(InstallSection, "UMVolumeType", UMVolumeType);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting UMVolumeType in the InfiniDB System Configuration file" << endl;
+				return false;
+			}
+
+			cout << endl;
+			try {
 				oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
 			}
 			catch(...)
@@ -4335,15 +4380,33 @@ bool storageSetup(bool amazonInstall)
 			if ( UMVolumeSize.empty() || UMVolumeSize == "")
 				UMVolumeSize = oam::UnassignedName;
 
-			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + ") > ";
-			pcommand = callReadline(prompt);
-			if (pcommand)
+			string minSize = "1";
+			string maxSize = "16384";
+
+			if (UMVolumeType == "io1")
+				minSize = "4";
+
+			while(true)
 			{
-				if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
-				callFree(pcommand);
+				string prompt = "Enter EBS Volume storage size in GB: [" + minSize + "," + maxSize + "] (" + UMVolumeSize + ") > ";
+				pcommand = callReadline(prompt);
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
+					callFree(pcommand);
+				}
+
+				if ( atoi(UMVolumeSize.c_str()) < atoi(minSize.c_str()) || atoi(UMVolumeSize.c_str()) > atoi(maxSize.c_str()) )
+				{
+					cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+				else
+					break;
 			}
 	
-			//set DBRootStorageType
+			//set UMVolumeSize
 			try {
 				sysConfig->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
 			}
@@ -4352,8 +4415,54 @@ bool storageSetup(bool amazonInstall)
 				cout << "ERROR: Problem setting UMVolumeSize in the InfiniDB System Configuration file" << endl;
 				return false;
 			}
-		}
 
+
+			if ( UMVolumeType == "io1" )
+			{
+				string minIOPS = UMVolumeSize;
+				string maxIOPS = oam.itoa(atoi(UMVolumeSize.c_str()) * 30);
+	
+				cout << endl;
+				try {
+					oam.getSystemConfig("UMVolumeIOPS", UMVolumeIOPS);
+				}
+				catch(...)
+				{}
+
+				if ( UMVolumeIOPS.empty() || UMVolumeIOPS == "")
+					UMVolumeIOPS = maxIOPS;
+
+				while(true)
+				{
+					string prompt = "Enter EBS Volume IOPS: [" + minIOPS + "," + maxIOPS + "] (" + UMVolumeIOPS + ") > ";
+					pcommand = callReadline(prompt);
+					if (pcommand)
+					{
+						if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
+						callFree(pcommand);
+					}
+	
+					if ( atoi(UMVolumeSize.c_str()) < atoi(minIOPS.c_str()) || atoi(UMVolumeSize.c_str()) > atoi(maxIOPS.c_str()) )
+					{
+						cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+						if ( noPrompting )
+							exit(1);
+					}
+					else
+						break;
+				}
+		
+				//set UMVolumeIOPS
+				try {
+					sysConfig->setConfig(InstallSection, "UMVolumeIOPS", UMVolumeIOPS);
+				}
+				catch(...)
+				{
+					cout << "ERROR: Problem setting UMVolumeIOPS in the InfiniDB System Configuration file" << endl;
+					return false;
+				}
+			}
+		}
 
 		try {
 			sysConfig->setConfig(InstallSection, "UMStorageType", UMStorageType);
@@ -4556,20 +4665,135 @@ bool storageSetup(bool amazonInstall)
 	{
 		cout << endl;
 		try {
+			oam.getSystemConfig("PMVolumeType", PMVolumeType);
+		}
+		catch(...)
+		{}
+
+		if ( PMVolumeType.empty() || PMVolumeType == "")
+			PMVolumeType = "standard";
+
+		while(true)
+		{
+			string prompt = "Enter EBS Volume Type (standard, gp2, io1) : (" + PMVolumeType + ") > ";
+			pcommand = callReadline(prompt);
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0) PMVolumeType = pcommand;
+				callFree(pcommand);
+			}
+
+			if ( PMVolumeType == "standard" || PMVolumeType == "gp2" || PMVolumeType == "io1" )
+				break;
+			else
+			{
+				cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+				if ( noPrompting )
+					exit(1);
+			}
+		}
+
+		//set PMVolumeType
+		try {
+			sysConfig->setConfig(InstallSection, "PMVolumeType", PMVolumeType);
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting PMVolumeType in the InfiniDB System Configuration file" << endl;
+			return false;
+		}
+
+		cout << endl;
+		try {
 			oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
 		}
 		catch(...)
 		{}
 
-		if ( PMVolumeSize.empty() || PMVolumeSize == "" )
+		if ( PMVolumeSize.empty() || PMVolumeSize == "")
 			PMVolumeSize = oam::UnassignedName;
 
-		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + ") > ";
-		pcommand = callReadline(prompt);
-		if (pcommand)
+		string minSize = "1";
+		string maxSize = "16384";
+
+		if (PMVolumeType == "io1")
+			minSize = "4";
+
+		while(true)
 		{
-			if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
-			callFree(pcommand);
+			string prompt = "Enter EBS Volume storage size in GB: [" + minSize + "," + maxSize + "] (" + PMVolumeSize + ") > ";
+			pcommand = callReadline(prompt);
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
+				callFree(pcommand);
+			}
+
+			if ( atoi(PMVolumeSize.c_str()) < atoi(minSize.c_str()) || atoi(PMVolumeSize.c_str()) > atoi(maxSize.c_str()) )
+			{
+				cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+				if ( noPrompting )
+					exit(1);
+			}
+			else
+				break;
+		}
+
+		//set PMVolumeSize
+		try {
+			sysConfig->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting PMVolumeSize in the InfiniDB System Configuration file" << endl;
+			return false;
+		}
+
+
+		if ( PMVolumeType == "io1" )
+		{
+			string minIOPS = PMVolumeSize;
+			string maxIOPS = oam.itoa(atoi(PMVolumeSize.c_str()) * 30);
+
+			cout << endl;
+			try {
+				oam.getSystemConfig("PMVolumeIOPS", PMVolumeIOPS);
+			}
+			catch(...)
+			{}
+
+			if ( PMVolumeIOPS.empty() || PMVolumeIOPS == "")
+				PMVolumeIOPS = maxIOPS;
+
+			while(true)
+			{
+				string prompt = "Enter EBS Volume IOPS: [" + minIOPS + "," + maxIOPS + "] (" + PMVolumeIOPS + ") > ";
+				pcommand = callReadline(prompt);
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
+					callFree(pcommand);
+				}
+
+				if ( atoi(PMVolumeSize.c_str()) < atoi(minIOPS.c_str()) || atoi(PMVolumeSize.c_str()) > atoi(maxIOPS.c_str()) )
+				{
+					cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+				else
+					break;
+			}
+	
+			//set PMVolumeIOPS
+			try {
+				sysConfig->setConfig(InstallSection, "PMVolumeIOPS", PMVolumeIOPS);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting PMVolumeIOPS in the InfiniDB System Configuration file" << endl;
+				return false;
+			}
 		}
 
 		//set DBRootStorageType
