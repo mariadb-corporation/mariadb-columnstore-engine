@@ -1652,7 +1652,7 @@ int main(int argc, char *argv[])
 		
 								while(true)
 								{
-									pcommand = callReadline("Do you need the instance created [y,n] (y) > ");
+									pcommand = callReadline("Do you need the instance created for " + newModuleName + " [y,n] (y) > ");
 									if (pcommand)
 									{
 										if (strlen(pcommand) > 0) create = pcommand;
