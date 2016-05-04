@@ -1661,7 +1661,14 @@ int main(int argc, char *argv[])
 								if ( create == "y" ) {
 									ModuleIP moduleip;
 									moduleip.moduleName = newModuleName;
-									moduleip.IPaddress = oam::UnassignedName;
+
+									string AmazonVPCNextPrivateIP = "autoassign";
+									try {
+										oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
+									}
+									catch(...) {}
+
+									moduleip.IPaddress = AmazonVPCNextPrivateIP;
 						
 									moduleHostName = launchInstance(moduleip);
 									if ( moduleHostName == oam::UnassignedName )
@@ -5278,9 +5285,16 @@ std::string launchInstance(ModuleIP moduleip)
 	{
 		if ( moduleName.find("um") == 0 ) {
 			string UserModuleInstanceType;
-			oam.getSystemConfig("UMInstanceType", UserModuleInstanceType);
+			try {
+				oam.getSystemConfig("UMInstanceType", UserModuleInstanceType);
+			}
+			catch(...) {}
+
 			string UserModuleSecurityGroup;
-			oam.getSystemConfig("UMSecurityGroup", UserModuleSecurityGroup);
+			try {
+				oam.getSystemConfig("UMSecurityGroup", UserModuleSecurityGroup);
+			}
+			catch(...) {}
 
 			instanceName = oam.launchEC2Instance(moduleName, IPAddress, UserModuleInstanceType, UserModuleSecurityGroup);
 		}
