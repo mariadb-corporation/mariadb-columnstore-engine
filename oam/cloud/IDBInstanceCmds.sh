@@ -111,7 +111,7 @@ export JAVA_HOME=$java
 
 # get Keys and region
 AmazonAccessKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
-if [ $AmazonAccessKeyfile == "unassigned" ]; then
+if [ $AmazonAccessKeyFile == "unassigned" ]; then
 	echo "FAILED: missing Config Setting AmazonAccessKey : $AmazonAccessKeyfile"
 	exit 1
 fi

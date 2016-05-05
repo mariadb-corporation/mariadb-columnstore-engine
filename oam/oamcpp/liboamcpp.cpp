@@ -5946,7 +5946,7 @@ namespace oam
 		}
 
 		//attach and format volumes
-		device = "/dev/sdf" + itoa(moduleID);
+		device = "/dev/sdf";
 
 		string localInstance = getEC2LocalInstance();
 

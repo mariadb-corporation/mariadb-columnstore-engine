@@ -850,7 +850,8 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
-		cout << "Amazon EC2-API-TOOLS Instance install. You have 2 install options: " << endl << endl;
+		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
+		cout << "You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
 		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
 		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl << endl;
@@ -1316,9 +1317,9 @@ int main(int argc, char *argv[])
 	cout << "===== Setup the Module Configuration =====" << endl << endl;
 
 	if (amazonInstall) {
-		cout << "Amazon Install: For Module Configuration, you will have the option to Enter the Instance IDs" << endl;
-		cout << "if you have already precreated the Instance's you want to install on or have postConfigure create" << endl;
-		cout << "the Instances for you. You will be prompted during the Module Configuration setup section." << endl;
+		cout << "Amazon Install: For Module Configuration, you will have the option to provide the" << endl;
+		cout << "existing Instance IDs or have postConfigure create the Instances used for the other nodes." << endl;
+		cout << "You will be prompted during the Module Configuration setup section." << endl;
 	}
 
 	//get OAM Parent Module IP addresses and Host Name, if it exist
@@ -1652,47 +1653,52 @@ int main(int argc, char *argv[])
 							}
 							else
 							{
-								//check if need to create instance or user enter ID
-								string create = "y";
-		
-								while(true)
+								if ( moduleHostName == oam::UnassignedName )
 								{
-									pcommand = callReadline("Do you need the instance created for " + newModuleName + " [y,n] (y) > ");
-									if (pcommand)
+									//check if need to create instance or user enter ID
+									string create = "y";
+			
+									while(true)
 									{
-										if (strlen(pcommand) > 0) create = pcommand;
-										callFree(pcommand);
+										pcommand = callReadline("Create Instance for " + newModuleName + " [y,n] (y) > ");
+										if (pcommand)
+										{
+											if (strlen(pcommand) > 0) create = pcommand;
+											callFree(pcommand);
+										}
+										if ( create == "y" || create == "n" )
+											break;
+										else
+											cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+										create = "y";
+										if ( noPrompting )
+											exit(1);
 									}
-									if ( create == "y" || create == "n" )
-										break;
-									else
-										cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-									create = "y";
-									if ( noPrompting )
-										exit(1);
-								}
+								
+			
+									if ( create == "y" ) {
+										ModuleIP moduleip;
+										moduleip.moduleName = newModuleName;
+	
+										string AmazonVPCNextPrivateIP = "autoassign";
+										try {
+											oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
+										}
+										catch(...) {}
+	
+										moduleip.IPaddress = AmazonVPCNextPrivateIP;
 							
-		
-								if ( create == "y" ) {
-									ModuleIP moduleip;
-									moduleip.moduleName = newModuleName;
-
-									string AmazonVPCNextPrivateIP = "autoassign";
-									try {
-										oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
+										newModuleHostName = launchInstance(moduleip);
+										if ( newModuleHostName == oam::UnassignedName )
+										{
+											cout << "launch Instance failed for " + newModuleName << endl;
+											exit (1);
+										}
+	
+										prompt = "";
 									}
-									catch(...) {}
-
-									moduleip.IPaddress = AmazonVPCNextPrivateIP;
-						
-									newModuleHostName = launchInstance(moduleip);
-									if ( newModuleHostName == oam::UnassignedName )
-									{
-										cout << "launch Instance failed for " + newModuleName << endl;
-										exit (1);
-									}
-
-									prompt = "";
+									else
+										prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
 								}
 								else
 									prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
@@ -2095,8 +2101,7 @@ int main(int argc, char *argv[])
 
 						while(true)
 						{
-							pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
-							if (pcommand)
+							pcommand = callReadline("Create an EBS volume for " + newModuleName + " ?  [y,n] (y) > ");
 							{
 								if (strlen(pcommand) > 0) create = pcommand;
 								callFree(pcommand);
@@ -2132,7 +2137,7 @@ int main(int argc, char *argv[])
 							}
 	
 							//get device name based on DBRoot ID
-							deviceName = "/dev/sdf" + oam.itoa(moduleID);
+							deviceName = "/dev/sdf";
 						}
 						else
 						{
@@ -4287,13 +4292,11 @@ bool storageSetup(bool amazonInstall)
 		// get Frontend Data storage type
 		//
 	
-		cout << "----- Setup High Availability Frontend MySQL Data Storage Mount Configuration -----" << endl << endl;
+		cout << "----- Setup User Module MySQL Data Storage Mount Configuration -----" << endl << endl;
 	
 		cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
-		cout << "  'internal' -    This is specified when a local disk is used for the MySQL Data storage." << endl;
-		cout << "                  High Availability Server Failover is not Supported in this mode," << endl << endl; 
-		cout << "  'external' -    This is specified when the MySQL Data directory is externally mounted." << endl;
-		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
+		cout << "  'internal' -    This is specified when a local disk is used for the MySQL Data storage." << endl << endl;
+		cout << "  'external' -    This is specified when the MySQL Data directory is externally mounted." << endl << endl;
 	
 		try {
 			UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");
@@ -4370,6 +4373,12 @@ bool storageSetup(bool amazonInstall)
 				return false;
 			}
 
+			string minSize = "1";
+			string maxSize = "16384";
+
+			if (UMVolumeType == "io1")
+				minSize = "4";
+
 			cout << endl;
 			try {
 				oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
@@ -4377,14 +4386,8 @@ bool storageSetup(bool amazonInstall)
 			catch(...)
 			{}
 	
-			if ( UMVolumeSize.empty() || UMVolumeSize == "")
-				UMVolumeSize = oam::UnassignedName;
-
-			string minSize = "1";
-			string maxSize = "16384";
-
-			if (UMVolumeType == "io1")
-				minSize = "4";
+			if ( UMVolumeSize.empty() || UMVolumeSize == "" || UMVolumeSize == oam::UnassignedName)
+				UMVolumeSize = "10";
 
 			while(true)
 			{
@@ -4527,7 +4530,7 @@ bool storageSetup(bool amazonInstall)
 	if ( DBRootStorageType == "hdfs" )
 		storageType = "4";
 
-	cout << endl << "----- Setup High Availability Data Storage Mount Configuration -----" << endl << endl;
+	cout << endl << "----- Setup Performance Module DBRoot Data Storage Mount Configuration -----" << endl << endl;
 
 	if ( glusterInstalled == "n" && hadoopInstalled == "n" )
 	{
@@ -4710,8 +4713,8 @@ bool storageSetup(bool amazonInstall)
 		catch(...)
 		{}
 
-		if ( PMVolumeSize.empty() || PMVolumeSize == "")
-			PMVolumeSize = oam::UnassignedName;
+		if ( PMVolumeSize.empty() || PMVolumeSize == "" || PMVolumeSize == oam::UnassignedName)
+			PMVolumeSize = "100";
 
 		string minSize = "1";
 		string maxSize = "16384";
@@ -4762,7 +4765,7 @@ bool storageSetup(bool amazonInstall)
 			catch(...)
 			{}
 
-			if ( PMVolumeIOPS.empty() || PMVolumeIOPS == "")
+			if ( PMVolumeIOPS.empty() || PMVolumeIOPS == "" || PMVolumeIOPS == oam::UnassignedName)
 				PMVolumeIOPS = maxIOPS;
 
 			while(true)
@@ -4771,11 +4774,11 @@ bool storageSetup(bool amazonInstall)
 				pcommand = callReadline(prompt);
 				if (pcommand)
 				{
-					if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
+					if (strlen(pcommand) > 0) PMVolumeIOPS = pcommand;
 					callFree(pcommand);
 				}
 
-				if ( atoi(PMVolumeSize.c_str()) < atoi(minIOPS.c_str()) || atoi(PMVolumeSize.c_str()) > atoi(maxIOPS.c_str()) )
+				if ( atoi(PMVolumeIOPS.c_str()) < atoi(minIOPS.c_str()) || atoi(PMVolumeIOPS.c_str()) > atoi(maxIOPS.c_str()) )
 				{
 					cout << endl << "Invalid Entry, please re-enter" << endl << endl;
 					if ( noPrompting )
