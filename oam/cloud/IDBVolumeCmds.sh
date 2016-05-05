@@ -18,6 +18,13 @@ if [ "$1" = "create" ]; then
 		exit 1
 	fi
 	volumeSize="$2"
+
+	#get module-type
+	if [ "$3" = "" ]; then
+		echo "Enter Module Type"
+		exit 1
+	fi
+	moduleType="$3"
 fi
 
 if [ "$1" = "describe" ]; then
@@ -104,11 +111,19 @@ export JAVA_HOME=$java
 
 # get Keys and region
 AmazonAccessKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+if [ $AmazonAccessKeyfile == "unassigned" ]; then
+	echo "FAILED: missing Config Setting AmazonAccessKey : $AmazonAccessKeyfile"
+	exit 1
+fi
+
 AmazonSecretKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+if [ $AmazonSecretKeyFile == "unassigned" ]; then
+	echo "FAILED: missing Config Setting AmazonSecretKeyFile : $AmazonSecretKeyFile"
+	exit 1
+fi
+
 AmazonAccessKey=`cat $AmazonAccessKeyFile`
 AmazonSecretKey=`cat $AmazonSecretKeyFile`
-
-Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
 
 if test ! -f $AmazonAccessKeyfile ; then
 	echo "FAILED: missing AmazonAccessKeyfile : $AmazonAccessKeyfile"
@@ -119,6 +134,8 @@ if test ! -f $AmazonSecretKeyfile ; then
 	echo "FAILED: missing AmazonSecretKeyfile : $AmazonSecretKeyfile"
 	exit 1
 fi
+
+Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
 
 
 checkInfostatus() {
@@ -173,11 +190,29 @@ checkInfostatus() {
 createvolume() {
 	# get zone
 	zone=`$prefix/Calpont/bin/IDBInstanceCmds.sh getZone`
-	#create volume
-	volume=`ec2-create-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -z $zone -s $volumeSize | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
 
-#	#get volume name
-#	volume=`cat /tmp/volumeCreate_$resourceName | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	if [ $moduleType == "um" ]; then
+		# get type
+		volumeType=`$prefix/Calpont/bin/IDBInstanceCmds.sh UMVolumeType`
+		if [ $volumeType == "io1" ]; then
+			# get IOPS
+			volumeIOPS=`$prefix/Calpont/bin/IDBInstanceCmds.sh UMVolumeIOPS`
+		fi
+	else	# pm
+		# get type
+		volumeType=`$prefix/Calpont/bin/IDBInstanceCmds.sh PMVolumeType`
+		if [ $volumeType == "io1" ]; then
+			# get IOPS
+			volumeIOPS=`$prefix/Calpont/bin/IDBInstanceCmds.sh PMVolumeIOPS`
+		fi
+	fi
+
+	#create volume
+	if [ $volumeType == "io1" ]; then
+		volume=`ec2-create-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -z $zone -s $volumeSize -t volumeType -iops $volumeIOPS  | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+	else
+		volume=`ec2-create-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -z $zone -s $volumeSize -t volumeType | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+
 	echo $volume
 	return
 }
