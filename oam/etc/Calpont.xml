@@ -454,11 +454,11 @@
 		<UMSecurityGroup>unassigned</UMSecurityGroup>
 		<UMVolumeSize>unassigned</UMVolumeSize>
 		<UMVolumeType>standard</UMVolumeType>
-		<UMVolumeIOPS>unassigned</UMVolumeiops>
+		<UMVolumeIOPS>unassigned</UMVolumeIOPS>
 		<PMInstanceType>unassigned</PMInstanceType>
 		<PMVolumeSize>unassigned</PMVolumeSize>
 		<PMVolumeType>standard</PMVolumeType>
-		<PMVolumeIOPS>unassigned</PMVolumeiops>
+		<PMVolumeIOPS>unassigned</PMVolumeIOPS>
 		<AmazonPMFailover>y</AmazonPMFailover>
 		<AmazonAutoTagging>y</AmazonAutoTagging>
 		<AmazonElasticIPCount>0</AmazonElasticIPCount>
