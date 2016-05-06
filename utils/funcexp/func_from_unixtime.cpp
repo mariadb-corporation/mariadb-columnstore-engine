@@ -145,7 +145,18 @@ int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& ct)
 {
-	return getDatetimeIntVal(row, parm, isNull, ct);
+	DateTime dt = getDateTime(row, parm, isNull);
+	if (*reinterpret_cast<int64_t*>(&dt) == 0)
+	{
+		isNull = true;
+		return 0;
+	}
+	char buf[32];  // actual string guaranteed to be 22
+	snprintf( buf, 32, "%04d%02d%02d%02d%02d%02",
+			  dt.year, dt.month, dt.day, dt.hour,
+			  dt.minute, dt.second ); 
+	return atoll(buf);
+//	return getDatetimeIntVal(row, parm, isNull, ct);
 }								
 
 double Func_from_unixtime::getDoubleVal(rowgroup::Row& row,
