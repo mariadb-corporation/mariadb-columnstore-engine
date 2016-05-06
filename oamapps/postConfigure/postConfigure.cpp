@@ -995,28 +995,40 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		sleep(2);
+		sleep(1);
 
-		//check if this is a vpc system by checking for subnet setup
-		amazonSubNet = oam.getEC2LocalInstanceSubnet();
-		// cout << "amazonSubNet = " <<  amazonSubNet << endl;
-		if ( amazonSubNet == "failed" || amazonSubNet == "" )
-		{
-			amazonSubNet = oam::UnassignedName;
-			cloud = "amazon-ec2";
-		}
-		else
-		{
-			cloud = "amazon-vpc";
-		}
-
-		//set subnetID
+		//get subnetID
 		try {
-			sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+			amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
 		}
 		catch(...)
 		{}
-	
+
+		if ( amazonSubNet == oam::UnassignedName )
+		{	
+			//check if this is a vpc system by checking for subnet setup
+			amazonSubNet = oam.getEC2LocalInstanceSubnet();
+			// cout << "amazonSubNet = " <<  amazonSubNet << endl;
+			if ( amazonSubNet == "failed" || amazonSubNet == "" )
+			{
+				amazonSubNet = oam::UnassignedName;
+				cloud = "amazon-ec2";
+			}
+			else
+			{
+				cloud = "amazon-vpc";
+			}
+
+			//set subnetID
+			try {
+				sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+			}
+			catch(...)
+			{}
+		}
+		else
+			cloud = "amazon-vpc";
+
 		try {
 			sysConfig->setConfig(InstallSection, "Cloud", cloud);
 		}
@@ -1318,7 +1330,7 @@ int main(int argc, char *argv[])
 
 	if (amazonInstall) {
 		cout << "Amazon Install: For Module Configuration, you will have the option to provide the" << endl;
-		cout << "existing Instance IDs or have postConfigure create the Instances used for the other nodes." << endl;
+		cout << "existing Instance IDs or have the Instances created." << endl;
 		cout << "You will be prompted during the Module Configuration setup section." << endl;
 	}
 
@@ -2097,37 +2109,42 @@ int main(int argc, char *argv[])
 					if ( UMStorageType == "external" && amazonInstall &&
 						IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) {
 
-						string create = "y";
-
-						while(true)
-						{
-							pcommand = callReadline("Create an EBS volume for " + newModuleName + " ?  [y,n] (y) > ");
-							{
-								if (strlen(pcommand) > 0) create = pcommand;
-								callFree(pcommand);
-							}
-							if ( create == "y" || create == "n" )
-								break;
-							else
-								cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-							create = "y";
-							if ( noPrompting )
-								exit(1);
-						}
-					
 						string volumeNameID = "UMVolumeName" + oam.itoa(moduleID);
 						string volumeName = oam::UnassignedName;
 						string deviceNameID = "UMVolumeDeviceName" + oam.itoa(moduleID);
 						string deviceName = oam::UnassignedName;
 
-						if ( create == "n" ) {
-							// prompt for volume ID
-							try {
-								volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
+						// prompt for volume ID
+						try {
+							volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
+							deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
+						}
+						catch(...)
+						{}
+
+						string create = "n";
+						if ( volumeName == oam::UnassignedName )
+						{
+							string create = "y";
+
+							while(true)
+							{
+								pcommand = callReadline("Create an EBS volume for " + newModuleName + " ?  [y,n] (y) > ");
+								{
+									if (strlen(pcommand) > 0) create = pcommand;
+									callFree(pcommand);
+								}
+								if ( create == "y" || create == "n" )
+									break;
+								else
+									cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+								create = "y";
+								if ( noPrompting )
+									exit(1);
 							}
-							catch(...)
-							{}
-	
+						}
+					
+						if ( create == "n" ) {
 							prompt = "Enter Volume ID assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
 							pcommand = callReadline(prompt.c_str());
 							if (pcommand)
@@ -2427,8 +2444,7 @@ int main(int argc, char *argv[])
 
 						//get EC2 volume name and info
 						if ( DBRootStorageType == "external" && amazonInstall) {
-							cout << endl << "*** Setup External EBS Volume for DBRoot #" << *it << " ***" << endl;
-							cout << "*** NOTE: You can either have postConfigure create a new EBS volume or you can provide an existing Volume ID to use" << endl << endl;
+							cout << endl << "*** Setup External EBS Volume for DBRoot #" << *it << " ***" << endl << endl;
 
 							string volumeNameID = "PMVolumeName" + *it;
 							string volumeName = oam::UnassignedName;
@@ -2445,9 +2461,12 @@ int main(int argc, char *argv[])
 							catch(...)
 							{}
 
-							if ( reuseConfig == "n" ) {
+							if ( reuseConfig == "n"  && volumeName == oam::UnassignedName ) {
 								string create = "y";
 		
+								cout << "*** NOTE: You will have the option to provide an" << endl;
+								cout << "          existing EBS Volume ID or have a Volume created" << endl << endl;
+
 								while(true)
 								{
 									pcommand = callReadline("Create a new EBS volume for DBRoot #" + *it + " ?  [y,n] (y) > ");
@@ -2865,26 +2884,13 @@ int main(int argc, char *argv[])
 				globfree(&gt);
 			}
 
-			//mariadb
-			//if PM is running with UM functionality
-			// install UM packages and run mysql setup scripts
-//			if ( pmwithum ) {
-				//run the mysql / mysqld setup scripts
-		
-//				if ( EEPackageType != "binary") {
-//					cout << endl << "===== Installing InfiniDB UM Packages and Running the InfiniDB MySQL setup scripts =====" << endl << endl;
-//					string cmd = "rpm -Uv --force " + mysqlPackage + " " + mysqldPackage;
-//					if ( EEPackageType == "deb" )
-//						cmd = "dpkg -i " + mysqlPackage + " " + mysqldPackage;
-//					system(cmd.c_str());
-//					cout << endl;
-//				}
-//			}
-
-			cout << endl;
-			cout << "Next step is to enter the password to access the other Servers." << endl;
-			cout << "This is either your password or you can default to using a ssh key" << endl;
-			cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+			if ( password.empty() )
+			{
+				cout << endl;
+				cout << "Next step is to enter the password to access the other Servers." << endl;
+				cout << "This is either your password or you can default to using a ssh key" << endl;
+				cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+			}
 
 			while(true)
 			{	
