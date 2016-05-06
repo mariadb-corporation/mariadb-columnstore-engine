@@ -5939,14 +5939,14 @@ namespace oam
 		catch(...) {}
 
 		writeLog("addUMdisk - Create new Volume for um" + itoa(moduleID), LOG_TYPE_DEBUG);
-		volumeName = createEC2Volume(UMVolumeSize);
+		volumeName = createEC2Volume(UMVolumeSize, "um");
 		if ( volumeName == "failed" ) {
 			writeLog("addModule: create volume failed", LOG_TYPE_CRITICAL);
 			exceptionControl("addUMdisk", API_FAILURE);
 		}
 
 		//attach and format volumes
-		device = "/dev/sdf" + itoa(moduleID);
+		device = "/dev/sdf";
 
 		string localInstance = getEC2LocalInstance();
 
@@ -6120,7 +6120,7 @@ namespace oam
 				int retry = 0;
 				for ( ; retry < 5 ; retry++ )
 				{
-					volumeName = createEC2Volume(volumeSize);
+					volumeName = createEC2Volume(volumeSize, "pm");
 				
 					if ( volumeName == "failed" || volumeName.empty() )
 						retry = retry;
@@ -6927,10 +6927,11 @@ namespace oam
 			amazondeviceName = "/dev/xvd";
 
 		//calulate id numbers from DBRoot ID
-		int lid = (dbrootid-1) / 10;
-		int did = dbrootid - (dbrootid * lid);
+//		int lid = (dbrootid-1) / 10;
+//		int did = dbrootid - (dbrootid * lid);
 
-		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), amazondeviceName + deviceLetter[lid] + itoa(did));
+//		return boost::make_tuple(PMdeviceName + deviceLetter[lid] + itoa(did), amazondeviceName + deviceLetter[lid] + itoa(did));
+		return boost::make_tuple(PMdeviceName + deviceLetter[dbrootid-1], amazondeviceName + deviceLetter[dbrootid-1]);
 	}
 
     /***************************************************************************
@@ -7838,7 +7839,7 @@ namespace oam
 	std::string Oam::createEC2Volume(std::string size, std::string name)
 	{
 		// run script to get Volume Status
-		string cmd = InstallDir + "/bin/IDBVolumeCmds.sh create " + size + " > /tmp/createVolumeStatus_" + name;
+		string cmd = InstallDir + "/bin/IDBVolumeCmds.sh create " + size + " " + name + " > /tmp/createVolumeStatus_" + name;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
 			return "failed";

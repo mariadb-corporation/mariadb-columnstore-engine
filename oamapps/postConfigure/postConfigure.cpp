@@ -115,6 +115,14 @@ bool copyKeyfiles();
 
 void remoteInstallThread(void *);
 
+typedef struct ModuleIP_struct
+{
+	std::string     IPaddress;
+	std::string     moduleName;
+} ModuleIP;
+
+std::string launchInstance(ModuleIP moduleip);
+
 string calpontPackage1;
 string calpontPackage2;
 string calpontPackage3;
@@ -131,6 +139,11 @@ string UMStorageType;
 
 string PMVolumeSize = oam::UnassignedName;
 string UMVolumeSize = oam::UnassignedName;
+string UMVolumeType = "standard";
+string PMVolumeType = "standard";
+string PMVolumeIOPS = oam::UnassignedName;
+string UMVolumeIOPS = oam::UnassignedName;
+
 
 int DBRootCount;
 string deviceName;
@@ -155,6 +168,7 @@ string glusterCopies;
 string glusterInstalled = "n";
 string hadoopInstalled = "n";
 string mysqlPort = oam::UnassignedName;
+string systemName;
 
 bool noPrompting = false;
 bool rootUser = true;
@@ -182,6 +196,7 @@ extern string prompt;
 typedef struct _thread_data_t {
   	std::string command;
 } thread_data_t;
+
 
 int main(int argc, char *argv[])
 {
@@ -835,10 +850,11 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
-		cout << "Amazon EC2-API-TOOLS Instance install. You have 2 install options: " << endl << endl;
+		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
+		cout << "You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
 		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
-		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl;
+		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl << endl;
 		cout << "2. Using standard hardware IDs for hostnames, IP Addresses, and Storage Devices." << endl;
 		cout <<     "Using this option, you would need to pre-create the Instances and the EBS storages" << endl;
 		cout <<     "and then provide the hostnames/IP-Addresses during the configuration and system expansion" << endl;
@@ -1298,7 +1314,13 @@ int main(int argc, char *argv[])
 	// Module Configuration
 	//
 	cout << endl;
-	cout << "===== Setup the Module Configuration =====" << endl;
+	cout << "===== Setup the Module Configuration =====" << endl << endl;
+
+	if (amazonInstall) {
+		cout << "Amazon Install: For Module Configuration, you will have the option to provide the" << endl;
+		cout << "existing Instance IDs or have postConfigure create the Instances used for the other nodes." << endl;
+		cout << "You will be prompted during the Module Configuration setup section." << endl;
+	}
 
 	//get OAM Parent Module IP addresses and Host Name, if it exist
 	for ( unsigned int i = 0 ; i < sysModuleTypeConfig.moduletypeconfig.size(); i++)
@@ -1617,28 +1639,88 @@ int main(int argc, char *argv[])
 							{
 								//get local instance name (pm1)
 								string localInstance = oam.getEC2LocalInstance();
-								if ( localInstance == "failed" || localInstance.empty() || localInstance == "") 
+								if ( localInstance == "failed" || localInstance.empty() || localInstance == "")
+								{
 									moduleHostName = oam::UnassignedName;
+									prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+								}
 								else
-									moduleHostName = localInstance;
+								{
+									newModuleHostName = localInstance;
+									cout << "EC2 Instance ID for pm1: " + localInstance << endl;
+									prompt = "";
+								}
 							}
-
-							prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+							else
+							{
+								if ( moduleHostName == oam::UnassignedName )
+								{
+									//check if need to create instance or user enter ID
+									string create = "y";
+			
+									while(true)
+									{
+										pcommand = callReadline("Create Instance for " + newModuleName + " [y,n] (y) > ");
+										if (pcommand)
+										{
+											if (strlen(pcommand) > 0) create = pcommand;
+											callFree(pcommand);
+										}
+										if ( create == "y" || create == "n" )
+											break;
+										else
+											cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+										create = "y";
+										if ( noPrompting )
+											exit(1);
+									}
+								
+			
+									if ( create == "y" ) {
+										ModuleIP moduleip;
+										moduleip.moduleName = newModuleName;
+	
+										string AmazonVPCNextPrivateIP = "autoassign";
+										try {
+											oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
+										}
+										catch(...) {}
+	
+										moduleip.IPaddress = AmazonVPCNextPrivateIP;
+							
+										newModuleHostName = launchInstance(moduleip);
+										if ( newModuleHostName == oam::UnassignedName )
+										{
+											cout << "launch Instance failed for " + newModuleName << endl;
+											exit (1);
+										}
+	
+										prompt = "";
+									}
+									else
+										prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+								}
+								else
+									prompt = "Enter EC2 Instance ID (" + moduleHostName + ") > ";
+							}
 						}
 						else
 							prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " Host Name (" + moduleHostName + ") > ";
 
-						pcommand = callReadline(prompt.c_str());
-						if (pcommand)
+						if ( prompt != "" )
 						{
-							if (strlen(pcommand) > 0) 
-								newModuleHostName = pcommand;
-							else
-								newModuleHostName = moduleHostName;
-
-							callFree(pcommand);
+							pcommand = callReadline(prompt.c_str());
+							if (pcommand)
+							{
+								if (strlen(pcommand) > 0) 
+									newModuleHostName = pcommand;
+								else
+									newModuleHostName = moduleHostName;
+	
+								callFree(pcommand);
+							}
 						}
-		
+
 						if ( newModuleHostName == oam::UnassignedName && nicID == 1 ) {
 							cout << "Invalid Entry, please re-enter" << endl;
 							if ( noPrompting )
@@ -2019,8 +2101,7 @@ int main(int argc, char *argv[])
 
 						while(true)
 						{
-							pcommand = callReadline("Do you need the volume created [y,n] (y) > ");
-							if (pcommand)
+							pcommand = callReadline("Create an EBS volume for " + newModuleName + " ?  [y,n] (y) > ");
 							{
 								if (strlen(pcommand) > 0) create = pcommand;
 								callFree(pcommand);
@@ -2056,7 +2137,7 @@ int main(int argc, char *argv[])
 							}
 	
 							//get device name based on DBRoot ID
-							deviceName = "/dev/sdf" + oam.itoa(moduleID);
+							deviceName = "/dev/sdf";
 						}
 						else
 						{
@@ -4211,13 +4292,11 @@ bool storageSetup(bool amazonInstall)
 		// get Frontend Data storage type
 		//
 	
-		cout << "----- Setup High Availability Frontend MySQL Data Storage Mount Configuration -----" << endl << endl;
+		cout << "----- Setup User Module MySQL Data Storage Mount Configuration -----" << endl << endl;
 	
 		cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
-		cout << "  'internal' -    This is specified when a local disk is used for the MySQL Data storage." << endl;
-		cout << "                  High Availability Server Failover is not Supported in this mode," << endl << endl; 
-		cout << "  'external' -    This is specified when the MySQL Data directory is externally mounted." << endl;
-		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
+		cout << "  'internal' -    This is specified when a local disk is used for the MySQL Data storage." << endl << endl;
+		cout << "  'external' -    This is specified when the MySQL Data directory is externally mounted." << endl << endl;
 	
 		try {
 			UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");
@@ -4256,23 +4335,81 @@ bool storageSetup(bool amazonInstall)
 
 			cout << endl;
 			try {
+				oam.getSystemConfig("UMVolumeType", UMVolumeType);
+			}
+			catch(...)
+			{}
+
+			if ( UMVolumeType.empty() || UMVolumeType == "")
+				UMVolumeType = "standard";
+
+			while(true)
+			{
+				string prompt = "Enter EBS Volume Type (standard, gp2, io1) : (" + UMVolumeType + ") > ";
+				pcommand = callReadline(prompt);
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0) UMVolumeType = pcommand;
+					callFree(pcommand);
+				}
+
+				if ( UMVolumeType == "standard" || UMVolumeType == "gp2" || UMVolumeType == "io1" )
+					break;
+				else
+				{
+					cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+			}
+	
+			//set UMVolumeType
+			try {
+				sysConfig->setConfig(InstallSection, "UMVolumeType", UMVolumeType);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting UMVolumeType in the InfiniDB System Configuration file" << endl;
+				return false;
+			}
+
+			string minSize = "1";
+			string maxSize = "16384";
+
+			if (UMVolumeType == "io1")
+				minSize = "4";
+
+			cout << endl;
+			try {
 				oam.getSystemConfig("UMVolumeSize", UMVolumeSize);
 			}
 			catch(...)
 			{}
 	
-			if ( UMVolumeSize.empty() || UMVolumeSize == "")
-				UMVolumeSize = oam::UnassignedName;
+			if ( UMVolumeSize.empty() || UMVolumeSize == "" || UMVolumeSize == oam::UnassignedName)
+				UMVolumeSize = "10";
 
-			string prompt = "Enter EBS Volume storage size in GB: (" + UMVolumeSize + ") > ";
-			pcommand = callReadline(prompt);
-			if (pcommand)
+			while(true)
 			{
-				if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
-				callFree(pcommand);
+				string prompt = "Enter EBS Volume storage size in GB: [" + minSize + "," + maxSize + "] (" + UMVolumeSize + ") > ";
+				pcommand = callReadline(prompt);
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
+					callFree(pcommand);
+				}
+
+				if ( atoi(UMVolumeSize.c_str()) < atoi(minSize.c_str()) || atoi(UMVolumeSize.c_str()) > atoi(maxSize.c_str()) )
+				{
+					cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+				else
+					break;
 			}
 	
-			//set DBRootStorageType
+			//set UMVolumeSize
 			try {
 				sysConfig->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
 			}
@@ -4281,8 +4418,54 @@ bool storageSetup(bool amazonInstall)
 				cout << "ERROR: Problem setting UMVolumeSize in the InfiniDB System Configuration file" << endl;
 				return false;
 			}
-		}
 
+
+			if ( UMVolumeType == "io1" )
+			{
+				string minIOPS = UMVolumeSize;
+				string maxIOPS = oam.itoa(atoi(UMVolumeSize.c_str()) * 30);
+	
+				cout << endl;
+				try {
+					oam.getSystemConfig("UMVolumeIOPS", UMVolumeIOPS);
+				}
+				catch(...)
+				{}
+
+				if ( UMVolumeIOPS.empty() || UMVolumeIOPS == "")
+					UMVolumeIOPS = maxIOPS;
+
+				while(true)
+				{
+					string prompt = "Enter EBS Volume IOPS: [" + minIOPS + "," + maxIOPS + "] (" + UMVolumeIOPS + ") > ";
+					pcommand = callReadline(prompt);
+					if (pcommand)
+					{
+						if (strlen(pcommand) > 0) UMVolumeSize = pcommand;
+						callFree(pcommand);
+					}
+	
+					if ( atoi(UMVolumeSize.c_str()) < atoi(minIOPS.c_str()) || atoi(UMVolumeSize.c_str()) > atoi(maxIOPS.c_str()) )
+					{
+						cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+						if ( noPrompting )
+							exit(1);
+					}
+					else
+						break;
+				}
+		
+				//set UMVolumeIOPS
+				try {
+					sysConfig->setConfig(InstallSection, "UMVolumeIOPS", UMVolumeIOPS);
+				}
+				catch(...)
+				{
+					cout << "ERROR: Problem setting UMVolumeIOPS in the InfiniDB System Configuration file" << endl;
+					return false;
+				}
+			}
+		}
 
 		try {
 			sysConfig->setConfig(InstallSection, "UMStorageType", UMStorageType);
@@ -4347,7 +4530,7 @@ bool storageSetup(bool amazonInstall)
 	if ( DBRootStorageType == "hdfs" )
 		storageType = "4";
 
-	cout << endl << "----- Setup High Availability Data Storage Mount Configuration -----" << endl << endl;
+	cout << endl << "----- Setup Performance Module DBRoot Data Storage Mount Configuration -----" << endl << endl;
 
 	if ( glusterInstalled == "n" && hadoopInstalled == "n" )
 	{
@@ -4485,20 +4668,135 @@ bool storageSetup(bool amazonInstall)
 	{
 		cout << endl;
 		try {
+			oam.getSystemConfig("PMVolumeType", PMVolumeType);
+		}
+		catch(...)
+		{}
+
+		if ( PMVolumeType.empty() || PMVolumeType == "")
+			PMVolumeType = "standard";
+
+		while(true)
+		{
+			string prompt = "Enter EBS Volume Type (standard, gp2, io1) : (" + PMVolumeType + ") > ";
+			pcommand = callReadline(prompt);
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0) PMVolumeType = pcommand;
+				callFree(pcommand);
+			}
+
+			if ( PMVolumeType == "standard" || PMVolumeType == "gp2" || PMVolumeType == "io1" )
+				break;
+			else
+			{
+				cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+				if ( noPrompting )
+					exit(1);
+			}
+		}
+
+		//set PMVolumeType
+		try {
+			sysConfig->setConfig(InstallSection, "PMVolumeType", PMVolumeType);
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting PMVolumeType in the InfiniDB System Configuration file" << endl;
+			return false;
+		}
+
+		cout << endl;
+		try {
 			oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
 		}
 		catch(...)
 		{}
 
-		if ( PMVolumeSize.empty() || PMVolumeSize == "" )
-			PMVolumeSize = oam::UnassignedName;
+		if ( PMVolumeSize.empty() || PMVolumeSize == "" || PMVolumeSize == oam::UnassignedName)
+			PMVolumeSize = "100";
 
-		string prompt = "Enter EBS Volume storage size in GB: (" + PMVolumeSize + ") > ";
-		pcommand = callReadline(prompt);
-		if (pcommand)
+		string minSize = "1";
+		string maxSize = "16384";
+
+		if (PMVolumeType == "io1")
+			minSize = "4";
+
+		while(true)
 		{
-			if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
-			callFree(pcommand);
+			string prompt = "Enter EBS Volume storage size in GB: [" + minSize + "," + maxSize + "] (" + PMVolumeSize + ") > ";
+			pcommand = callReadline(prompt);
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0) PMVolumeSize = pcommand;
+				callFree(pcommand);
+			}
+
+			if ( atoi(PMVolumeSize.c_str()) < atoi(minSize.c_str()) || atoi(PMVolumeSize.c_str()) > atoi(maxSize.c_str()) )
+			{
+				cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+				if ( noPrompting )
+					exit(1);
+			}
+			else
+				break;
+		}
+
+		//set PMVolumeSize
+		try {
+			sysConfig->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting PMVolumeSize in the InfiniDB System Configuration file" << endl;
+			return false;
+		}
+
+
+		if ( PMVolumeType == "io1" )
+		{
+			string minIOPS = PMVolumeSize;
+			string maxIOPS = oam.itoa(atoi(PMVolumeSize.c_str()) * 30);
+
+			cout << endl;
+			try {
+				oam.getSystemConfig("PMVolumeIOPS", PMVolumeIOPS);
+			}
+			catch(...)
+			{}
+
+			if ( PMVolumeIOPS.empty() || PMVolumeIOPS == "" || PMVolumeIOPS == oam::UnassignedName)
+				PMVolumeIOPS = maxIOPS;
+
+			while(true)
+			{
+				string prompt = "Enter EBS Volume IOPS: [" + minIOPS + "," + maxIOPS + "] (" + PMVolumeIOPS + ") > ";
+				pcommand = callReadline(prompt);
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0) PMVolumeIOPS = pcommand;
+					callFree(pcommand);
+				}
+
+				if ( atoi(PMVolumeIOPS.c_str()) < atoi(minIOPS.c_str()) || atoi(PMVolumeIOPS.c_str()) > atoi(maxIOPS.c_str()) )
+				{
+					cout << endl << "Invalid Entry, please re-enter" << endl << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+				else
+					break;
+			}
+	
+			//set PMVolumeIOPS
+			try {
+				sysConfig->setConfig(InstallSection, "PMVolumeIOPS", PMVolumeIOPS);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting PMVolumeIOPS in the InfiniDB System Configuration file" << endl;
+				return false;
+			}
 		}
 
 		//set DBRootStorageType
@@ -4804,7 +5102,6 @@ void snmpAppCheck()
 void setSystemName()
 {
 	//setup System Name
-	string systemName;
 	try {
 		systemName = sysConfig->getConfig(SystemSection, "SystemName");
 	}
@@ -5207,5 +5504,96 @@ void remoteInstallThread(void *arg)
 	// exit thread
 	pthread_exit(0);
 }
-// vim:ts=4 sw=4:
 
+std::string launchInstance(ModuleIP moduleip)
+{
+	Oam oam;
+
+	//get module info
+	string moduleName = moduleip.moduleName;
+	string IPAddress = moduleip.IPaddress;
+	string instanceName= oam::UnassignedName;
+
+	//due to bad instances getting launched causing scp failures
+	//have retry login around fail scp command where a instance will be relaunched
+	int instanceRetry = 0;
+	for ( ; instanceRetry < 5 ; instanceRetry ++ )
+	{
+		if ( moduleName.find("um") == 0 ) {
+			string UserModuleInstanceType;
+			try {
+				oam.getSystemConfig("UMInstanceType", UserModuleInstanceType);
+			}
+			catch(...) {}
+
+			string UserModuleSecurityGroup;
+			try {
+				oam.getSystemConfig("UMSecurityGroup", UserModuleSecurityGroup);
+			}
+			catch(...) {}
+
+			instanceName = oam.launchEC2Instance(moduleName, IPAddress, UserModuleInstanceType, UserModuleSecurityGroup);
+		}
+		else
+			instanceName = oam.launchEC2Instance(moduleName, IPAddress);
+	
+		if ( instanceName == "failed" ) {
+			cout << " *** Failed to Launch an Instance for " + moduleName << ", will retry up to 5 times" << endl;
+			continue;
+		}
+	
+		cout << endl << "Launched Instance for " << moduleName << ": " << instanceName << endl;
+	
+		//give time for instance to startup
+		sleep(60);
+	
+		string ipAddress = oam::UnassignedName;
+	
+		bool pass = false;
+		for ( int retry = 0 ; retry < 60 ; retry++ )
+		{
+			//get IP Address of pm instance
+			if ( ipAddress == oam::UnassignedName || ipAddress == "stopped" || ipAddress == "No-IPAddress" )
+			{
+				ipAddress = oam.getEC2InstanceIpAddress(instanceName);
+			
+				if (ipAddress == "stopped" || ipAddress == "No-IPAddress" ) {
+					sleep(5);
+					continue;
+				}
+			}
+
+			pass = true;
+			break;
+		}
+	
+		if (!pass)
+		{
+			oam.terminateEC2Instance( instanceName );
+			continue;
+		}
+
+		string autoTagging;
+		oam.getSystemConfig("AmazonAutoTagging", autoTagging);
+
+		if ( autoTagging == "y" )
+		{
+			string tagValue = systemName + "-" + moduleName;
+			oam.createEC2tag( instanceName, "Name", tagValue );
+		}
+
+		break;
+	}
+
+	if ( instanceRetry >= 5 )
+	{
+		cout << " *** Failed to Successfully Launch Instance for " + moduleName << endl;
+		return oam::UnassignedName;
+	}
+
+	return instanceName;
+}
+
+
+
+// vim:ts=4 sw=4:
