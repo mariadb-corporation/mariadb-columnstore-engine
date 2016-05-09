@@ -736,7 +736,7 @@ CONFIGDONE:
 
 	cout << "Shutdown System                               " << flush;
 
-	cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/calpontConsole shutdownsystem Force y' 'Successful shutdown' Error 60 " + debug_flag;
+	cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/mcsadmin shutdownsystem Force y' 'Successful shutdown' Error 60 " + debug_flag;
 	rtnCode = system(cmd.c_str());
 	if (rtnCode == 0)
 		cout << "DONE" << endl;

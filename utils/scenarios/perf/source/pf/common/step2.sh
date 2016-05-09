@@ -46,15 +46,15 @@ while [ $k -le $repeatNum ]
 do
      if [ $restart == Y ] || [ $restart == y ]
      then
-         /usr/local/Calpont/bin/calpontConsole restartsystem y
+         /usr/local/Calpont/bin/mcsadmin restartsystem y
          sleep 90
      fi
      mkdir $k
      cd $k
      cp /usr/local/Calpont/etc/Calpont.xml .
-     /usr/local/Calpont/bin/calpontConsole getCalpontSoftware >CalpontSoftware.txt
+     /usr/local/Calpont/bin/mcsadmin getCalpontSoftware >CalpontSoftware.txt
      ls -al /usr/local/Calpont/data* > dbRoots.txt
-     /usr/local/Calpont/bin/calpontConsole getProcessStatus >stackConfigBefore.txt
+     /usr/local/Calpont/bin/mcsadmin getProcessStatus >stackConfigBefore.txt
      $exeCommand > $logFileName 2>&1
 #
      if [ $streamNum == 1_7 ]
@@ -67,7 +67,7 @@ do
          done
      fi
 #
-     /usr/local/Calpont/bin/calpontConsole getProcessStatus >stackConfigAfter.txt
+     /usr/local/Calpont/bin/mcsadmin getProcessStatus >stackConfigAfter.txt
      cd ..
      ((k++))
 done

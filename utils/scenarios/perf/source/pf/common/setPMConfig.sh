@@ -13,7 +13,7 @@
 echo Start - Set PM configuration
 #
 # Stopping the Calpont software
-/usr/local/Calpont/bin/calpontConsole stopsystem y ACK_YES
+/usr/local/Calpont/bin/mcsadmin stopsystem y ACK_YES
 #
 # set maximum number of PMs possible for the stack
 maxPMs=4
@@ -26,7 +26,7 @@ numPMs=$1
 #-----------------------------------------------------------------------------
 k=1
 while [ $k -le $maxPMs ]; do
-       /usr/local/Calpont/bin/calpontConsole enableModule pm$k ACK_YES
+       /usr/local/Calpont/bin/mcsadmin enableModule pm$k ACK_YES
        ((k++))
 done
 #-----------------------------------------------------------------------------
@@ -34,12 +34,12 @@ done
 #-----------------------------------------------------------------------------
 k=$maxPMs
 while [ $k -gt $numPMs ]; do
-       /usr/local/Calpont/bin/calpontConsole disableModule pm$k ACK_YES
+       /usr/local/Calpont/bin/mcsadmin disableModule pm$k ACK_YES
        ((k--))
 done
 #-----------------------------------------------------------------------------
 # Starting the Calpont software
-/usr/local/Calpont/bin/calpontConsole startsystem y ACK_YES
+/usr/local/Calpont/bin/mcsadmin startsystem y ACK_YES
 sleep 60
 echo *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 echo End - Set PM configuration

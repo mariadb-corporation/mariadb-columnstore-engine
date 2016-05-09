@@ -11,7 +11,7 @@
 04 - execplan 
 05 - joblist 
 06 - resultset 
-07 - calpontConsole 
+07 - cmcsadmin 
 08 - oamcpp 
 09 - servermonitor 
 10 - traphandler 

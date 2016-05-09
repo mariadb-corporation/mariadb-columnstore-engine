@@ -79,7 +79,7 @@ send_user "\nPerforming InfiniDB System Uninstall\n\n"
 #
 send_user "Shutdown InfiniDB System                         "
 expect -re {[$#] }
-send "$INFINIDB_INSTALL_DIR/bin/calpontConsole shutdownsystem y\n"
+send "$INFINIDB_INSTALL_DIR/bin/mcsadmin shutdownsystem y\n"
 expect {
 	"shutdownSystem "       { send_user "DONE" }
 }

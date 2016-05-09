@@ -35,7 +35,7 @@ then
 fi
 
 # issue Calpont console command and send the output to a file
-/usr/local/Calpont/bin/calpontConsole getsystemnetworkconfig ACK_YES |
+/usr/local/Calpont/bin/mcsadmin getsystemnetworkconfig ACK_YES |
 egrep -w 'Director|User|Performance' | 
 awk -F" " '{print $1"\t" $2"\t" $3"\t" $4"\t" $6}' > /tmp/modulelist.txt
 #

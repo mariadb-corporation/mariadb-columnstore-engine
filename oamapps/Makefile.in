@@ -209,7 +209,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 toolsdir = @toolsdir@
-SUBDIRS = calpontConsole calpontDB postConfigure serverMonitor traphandler \
+SUBDIRS = mcsadmin calpontDB postConfigure serverMonitor traphandler \
 sendtrap calpontSupport
 
 all: all-recursive

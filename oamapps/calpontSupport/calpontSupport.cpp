@@ -204,11 +204,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# calpontConsole getLogConfig ################# ' >> " + outputFile;
+			cmd = "echo '################# mcsadmin getLogConfig ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = installDir + "/bin/calpontConsole getLogConfig >> " + outputFile;
+			cmd = installDir + "/bin/mcsadmin getLogConfig >> " + outputFile;
 			system(cmd.c_str());
 	}
 	else
@@ -236,11 +236,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# calpontConsole getSystemNetworkConfig ################# ' >> " + outputFile;
+			cmd = "echo '################# mcsadmin getSystemNetworkConfig ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = installDir + "/bin/calpontConsole getSystemNetworkConfig >> " + outputFile;
+			cmd = installDir + "/bin/mcsadmin getSystemNetworkConfig >> " + outputFile;
 			system(cmd.c_str());
 	
 			cmd = "echo ' ' >> " + outputFile;
@@ -249,11 +249,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# calpontConsole getModuleTypeConfig ################# ' >> " + outputFile;
+			cmd = "echo '################# mcsadmin getModuleTypeConfig ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = installDir + "/bin/calpontConsole getModuleTypeConfig >> " + outputFile;
+			cmd = installDir + "/bin/mcsadmin getModuleTypeConfig >> " + outputFile;
 			system(cmd.c_str());
 	
 			cmd = "echo ' ' >> " + outputFile;
@@ -262,11 +262,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# calpontConsole getStorageConfig ################# ' >> " + outputFile;
+			cmd = "echo '################# mcsadmin getStorageConfig ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = installDir + "/bin/calpontConsole getStorageConfig >> " + outputFile;
+			cmd = installDir + "/bin/mcsadmin getStorageConfig >> " + outputFile;
 			system(cmd.c_str());
 	
 			cmd = "echo ' ' >> " + outputFile;
@@ -275,11 +275,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# calpontConsole getStorageStatus ################# ' >> " + outputFile;
+			cmd = "echo '################# mcsadmin getStorageStatus ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = installDir + "/bin/calpontConsole getStorageStatus >> " + outputFile;
+			cmd = installDir + "/bin/mcsadmin getStorageStatus >> " + outputFile;
 			system(cmd.c_str());
 	
 			cmd = "echo ' ' >> " + outputFile;
@@ -288,11 +288,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# calpontConsole getSystemInfo ################# ' >> " + outputFile;
+			cmd = "echo '################# mcsadmin getSystemInfo ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = installDir + "/bin/calpontConsole getSystemInfo >> " + outputFile;
+			cmd = installDir + "/bin/mcsadmin getSystemInfo >> " + outputFile;
 			system(cmd.c_str());
 	
 			cmd = "echo ' ' >> " + outputFile;
@@ -312,20 +312,20 @@ void reportThread(string reporttype)
 		if (reportType == "resource" )
 		{
 			if (LOCAL) {
-				cmd = "echo '################# calpontConsole getModuleResourceUsage ################# ' >> " + outputFile;
+				cmd = "echo '################# mcsadmin getModuleResourceUsage ################# ' >> " + outputFile;
 				system(cmd.c_str());
 				cmd = "echo ' ' >> " + outputFile;
 				system(cmd.c_str());
-				string cmd = installDir + "/bin/calpontConsole getModuleResourceUsage " + localModule + " >> " + outputFile;
+				string cmd = installDir + "/bin/mcsadmin getModuleResourceUsage " + localModule + " >> " + outputFile;
 				system(cmd.c_str());
 			}
 			else
 			{
-				cmd = "echo '################# calpontConsole getSystemResourceUsage ################# ' >> " + outputFile;
+				cmd = "echo '################# mcsadmin getSystemResourceUsage ################# ' >> " + outputFile;
 				system(cmd.c_str());
 				cmd = "echo ' ' >> " + outputFile;
 				system(cmd.c_str());
-				string cmd = installDir + "/bin/calpontConsole getSystemResourceUsage >> " + outputFile;
+				string cmd = installDir + "/bin/mcsadmin getSystemResourceUsage >> " + outputFile;
 				system(cmd.c_str());
 			}
 		}
@@ -947,11 +947,11 @@ int main(int argc, char *argv[])
 		system("echo ' ' >> calpontSupportReport.txt");
 		system("echo '******************** Active Queries ********************' >> calpontSupportReport.txt");
 		system("echo ' ' >> calpontSupportReport.txt");
-		cmd = "echo '################# calpontConsole getActiveSqlStatement ################# ' >> calpontSupportReport.txt";
+		cmd = "echo '################# mcsadmin getActiveSqlStatement ################# ' >> calpontSupportReport.txt";
 		system(cmd.c_str());
 		cmd = "echo ' ' >> calpontSupportReport.txt";
 		system(cmd.c_str());
-		cmd = installDir + "/bin/calpontConsole getActiveSqlStatement >> calpontSupportReport.txt";
+		cmd = installDir + "/bin/mcsadmin getActiveSqlStatement >> calpontSupportReport.txt";
 		system(cmd.c_str());
 
 		cmd = "cat calpontSupportReport.txt > " + localModule + "_dbmsReport.txt";

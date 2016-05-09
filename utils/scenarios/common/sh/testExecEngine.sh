@@ -60,10 +60,10 @@ function logEnvInfo {
 # $2 = a or b, b=before test run, a=after test run
 #
    cp /usr/local/Calpont/etc/Calpont.xml $1/.
-   /usr/local/Calpont/bin/calpontConsole getcalpontsoftwareinfo > $1/getcalpontsoftwareinfo.log
-   /usr/local/Calpont/bin/calpontConsole getsystemstatus > $1/getSystemStatus.$2.log
-   /usr/local/Calpont/bin/calpontConsole getsystemnetwork > $1/getSystemNetwork.$2.log
-   /usr/local/Calpont/bin/calpontConsole getprocessstatus > $1/getProcessStatus.$2.log
+   /usr/local/Calpont/bin/mcsadmin getcalpontsoftwareinfo > $1/getcalpontsoftwareinfo.log
+   /usr/local/Calpont/bin/mcsadmin getsystemstatus > $1/getSystemStatus.$2.log
+   /usr/local/Calpont/bin/mcsadmin getsystemnetwork > $1/getSystemNetwork.$2.log
+   /usr/local/Calpont/bin/mcsadmin getprocessstatus > $1/getProcessStatus.$2.log
 }
 #=========================================================================================
 # log environment info

@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 			if (!VERBOSE)
 				cmd = "./remote_command.sh " + installParentModuleHostName + " " + systemUser + " " + password + " 'cat " + installDir + "/releasenum' 'release=' cat: 10 " + debug_flag;
 			else
-				cmd = "./remote_command.sh " + installParentModuleHostName + " " + systemUser + " " + password + " '" + installDir + "/bin/calpontConsole getcalpontsoftware' 'tools' Error 10 " + debug_flag;
+				cmd = "./remote_command.sh " + installParentModuleHostName + " " + systemUser + " " + password + " '" + installDir + "/bin/mcsadmin getcalpontsoftware' 'tools' Error 10 " + debug_flag;
 
 			cout << "***** Calpont InfiniDB Package Release Information for stack '" << tempSystem << "' *****" << endl << endl;
 
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 
 			cout << "***** Status of stack '" << tempSystem << "' *****" << endl << endl;
 
-			cmd = "./remote_command.sh " + installParentModuleHostName + " " + systemUser + " " + password + " '" + installDir + "/bin/calpontConsole getsystems' dummy Error 10 " + debug_flag;
+			cmd = "./remote_command.sh " + installParentModuleHostName + " " + systemUser + " " + password + " '" + installDir + "/bin/mcsadmin getsystems' dummy Error 10 " + debug_flag;
 
 			system(cmd.c_str());
 

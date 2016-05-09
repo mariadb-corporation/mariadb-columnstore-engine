@@ -1,8 +1,8 @@
 # InfiniDB Alias Commands
 #
 alias idbmysql='/usr/local/Calpont/mysql/bin/mysql --defaults-file=/usr/local/Calpont/mysql/my.cnf -u root'
-alias cc=/usr/local/Calpont/bin/calpontConsole
-alias cmconsole=/usr/local/Calpont/bin/calpontConsole
+alias cc=/usr/local/Calpont/bin/mcsadmin
+alias mscadmin=/usr/local/Calpont/bin/mscadmin
 alias home='cd /usr/local/Calpont/'
 alias log='cd /var/log/Calpont/'
 alias core='cd /var/log/Calpont/corefiles'

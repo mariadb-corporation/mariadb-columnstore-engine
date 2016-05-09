@@ -76,7 +76,7 @@ send_user "\nPerforming Calpont RPM System Install\n\n"
 #
 send_user "Stop Calpont System                             "
 expect -re "# "
-send "$INSTALLDIR/bin/calpontConsole stopSystem INSTALL y\n"
+send "$INSTALLDIR/bin/mcsadmin stopSystem INSTALL y\n"
 expect {
 	-re "# "                  	{ send_user "DONE" }
 	-re "**** stopSystem Failed" { send_user "INFO: System not running" }

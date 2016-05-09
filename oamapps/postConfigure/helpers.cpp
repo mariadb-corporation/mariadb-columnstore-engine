@@ -79,7 +79,7 @@ bool waitForActive()
 {
 	Oam oam;
 
-	const string cmd = installDir + "/bin/calpontConsole getsystemstatus > /tmp/status.log";
+	const string cmd = installDir + "/bin/mcsadmin getsystemstatus > /tmp/status.log";
 	system(cmd.c_str());
 
 	for ( int i = 0 ; i < 120 ; i ++ )

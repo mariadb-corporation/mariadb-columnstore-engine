@@ -217,7 +217,7 @@ AC_CONFIG_FILES([
 	oam/post/Makefile
 	oam/cloud/Makefile
 	oamapps/Makefile
-	oamapps/calpontConsole/Makefile
+	oamapps/mcsadmin/Makefile
 	oamapps/calpontDB/Makefile
 	oamapps/postConfigure/Makefile
 	oamapps/serverMonitor/Makefile

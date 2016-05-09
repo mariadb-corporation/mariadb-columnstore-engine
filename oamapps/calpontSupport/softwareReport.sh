@@ -30,9 +30,9 @@ echo " "
 echo " "
 echo "-- Calpont Package Details --"
 echo " "
-echo "################# calpontConsole getcalpontsoftwareinfo #################"
+echo "################# mcsadmin getcalpontsoftwareinfo #################"
 echo " "
-$INSTALLDIR/bin/calpontConsole getcalpontsoftwareinfo
+$INSTALLDIR/bin/mcsadmin getcalpontsoftwareinfo
 
 echo " "
 echo "-- Calpont Release Number file --"
@@ -44,9 +44,9 @@ cat $INSTALLDIR/releasenum
 echo " "
 echo "-- Calpont Storage Configuration --"
 echo " "
-echo "################# calpontConsole getStorageConfig #################"
+echo "################# mcsadmin getStorageConfig #################"
 echo " "
-$INSTALLDIR/bin/calpontConsole getStorageConfig
+$INSTALLDIR/bin/mcsadmin getStorageConfig
 
 } > /tmp/${MODULE}_softwareReport.txt
 
