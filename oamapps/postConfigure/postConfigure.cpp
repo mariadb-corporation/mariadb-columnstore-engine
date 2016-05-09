@@ -2120,10 +2120,12 @@ int main(int argc, char *argv[])
 							deviceName = sysConfig->getConfig(InstallSection, deviceNameID);
 						}
 						catch(...)
-						{}
+						{
+							string volumeName = oam::UnassignedName;
+						}
 
 						string create = "n";
-						if ( volumeName == oam::UnassignedName )
+						if ( volumeName == oam::UnassignedName || volumeName.empty() || volumeName == "" )
 						{
 							string create = "y";
 
@@ -2461,7 +2463,8 @@ int main(int argc, char *argv[])
 							catch(...)
 							{}
 
-							if ( reuseConfig == "n"  && volumeName == oam::UnassignedName ) {
+							if ( reuseConfig == "n"  && ( volumeName == oam::UnassignedName || volumeName.empty() || volumeName == "" ) )
+							{
 								string create = "y";
 		
 								cout << "*** NOTE: You will have the option to provide an" << endl;
