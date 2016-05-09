@@ -10,7 +10,7 @@ TARGETS = bootstrap clean test docs coverage leakcheck install
 .PHONY: all $(TARGETS)
 
 all:
-	$(MAKE) -C calpontConsole
+	$(MAKE) -C mcsadmin
 	$(MAKE) -C traphandler
 	$(MAKE) -C serverMonitor
 	$(MAKE) -C postConfigure
@@ -18,7 +18,7 @@ all:
 	$(MAKE) -C sendtrap
 	$(MAKE) -C calpontSupport
 $(TARGETS):
-	$(MAKE) -C calpontConsole $@
+	$(MAKE) -C mcsadmin $@
 	$(MAKE) -C traphandler $@
 	$(MAKE) -C serverMonitor $@
 	$(MAKE) -C postConfigure $@

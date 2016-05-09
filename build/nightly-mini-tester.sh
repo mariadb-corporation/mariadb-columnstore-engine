@@ -25,7 +25,7 @@ if [ ! -d ${builddir}/export/Calpont ]; then
 fi
 
 # stop any current procs
-${prefix}/Calpont/bin/calpontConsole shutdownsystem y
+${prefix}/Calpont/bin/mcsadmin shutdownsystem y
 if [ -x ${prefix}/Calpont/bin/infinidb ]; then
 	${prefix}/Calpont/bin/infinidb stop
 fi
@@ -86,7 +86,7 @@ sed -i -e 's/port.*=.*3306/port=14406/' ${prefix}/Calpont/mysql/my.cnf
 ${prefix}/Calpont/bin/postConfigure -n
 
 # restart (argh)
-#${prefix}/Calpont/bin/calpontConsole RestartSystem y
+#${prefix}/Calpont/bin/mcsadmin RestartSystem y
 
 sleep 30
 pkill DMLProc

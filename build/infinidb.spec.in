@@ -106,7 +106,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/Calpont/bin/clearShm
 /usr/local/Calpont/bin/viewtablelock
 /usr/local/Calpont/bin/cleartablelock
-/usr/local/Calpont/bin/calpontConsole
+/usr/local/Calpont/bin/mcsadmin
 /usr/local/Calpont/bin/trapHandler
 /usr/local/Calpont/bin/remote_command.sh
 /usr/local/Calpont/bin/postConfigure
