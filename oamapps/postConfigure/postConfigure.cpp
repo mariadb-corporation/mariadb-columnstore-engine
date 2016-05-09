@@ -2127,7 +2127,7 @@ int main(int argc, char *argv[])
 						string create = "n";
 						if ( volumeName == oam::UnassignedName || volumeName.empty() || volumeName == "" )
 						{
-							string create = "y";
+							create = "y";
 
 							while(true)
 							{
