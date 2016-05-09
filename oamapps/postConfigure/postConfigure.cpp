@@ -758,7 +758,7 @@ int main(int argc, char *argv[])
 				string answer = "n";
 
 				cout << "NOTE: Local Query Feature allows the ability to query data from a single Performance" << endl;
-				cout << "      Module" << endl << endl;
+				cout << "      Module. Check InfiniDB Admin Guide for additional information." << endl << endl;
 
 				while(true) {
 					if ( pmwithum ) 
@@ -1333,7 +1333,7 @@ int main(int argc, char *argv[])
 	cout << "===== Setup the Module Configuration =====" << endl << endl;
 
 	if (amazonInstall) {
-		cout << "Amazon Install: For Module Configuration, you will have the option to provide the" << endl;
+		cout << "Amazon Install: For Module Configuration, you have the option to provide the" << endl;
 		cout << "existing Instance IDs or have the Instances created." << endl;
 		cout << "You will be prompted during the Module Configuration setup section." << endl;
 	}
@@ -2471,7 +2471,7 @@ int main(int argc, char *argv[])
 							{
 								string create = "y";
 		
-								cout << "*** NOTE: You will have the option to provide an" << endl;
+								cout << "*** NOTE: You have the option to provide an" << endl;
 								cout << "          existing EBS Volume ID or have a Volume created" << endl << endl;
 
 								while(true)
@@ -5078,7 +5078,7 @@ void snmpAppCheck()
 		cout << endl << "===== Setup the Network Management System (NMS) Server Configuration =====" << endl << endl;
 
 		cout << "This would be used to receive SNMP Traps from InfiniDB." << endl;
-		cout <<  "0.0.0.0 defaults to not sending off the system" << endl;
+		cout <<  "0.0.0.0 defaults to not sending off the system" << endl << endl;
 		prompt = "Enter IP Address(es) of where you want the SNMP Traps went (" + currentNMSIPAddress + ") > ";
 		pcommand = callReadline(prompt.c_str());
 		if (pcommand)
