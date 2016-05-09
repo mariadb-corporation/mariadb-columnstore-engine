@@ -5575,6 +5575,9 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 			system(cmd.c_str());
 			log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
+			cmd = "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+			system(cmd.c_str());
+
 			log.writeLog(__LINE__, "amazonVolumeCheck function successfully completed, volume attached: " + volumeName, LOG_TYPE_DEBUG);
 			return true;
 		}
@@ -5601,6 +5604,10 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 				string cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /dev/null";
 				system(cmd.c_str());
 				log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
+
+				cmd = "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+				system(cmd.c_str());
+
 				return true;
 			}
 			else

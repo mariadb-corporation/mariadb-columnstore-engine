@@ -756,6 +756,10 @@ int main(int argc, char *argv[])
 					mysqlRep = true;
 
 				string answer = "n";
+
+				cout << "NOTE: Local Query Feature allows the ability to query data from a single Performance" << endl;
+				cout << "      Module" << endl << endl;
+
 				while(true) {
 					if ( pmwithum ) 
 						prompt = "Local Query feature is Enabled, Do you want to disable? [y,n] (n) > ";
@@ -5073,7 +5077,8 @@ void snmpAppCheck()
 
 		cout << endl << "===== Setup the Network Management System (NMS) Server Configuration =====" << endl << endl;
 
-		cout << "This would be used to receive SNMP Traps from InfiniDB, 0.0.0.0 defaults to not sending off the system" << endl;
+		cout << "This would be used to receive SNMP Traps from InfiniDB." << endl;
+		cout <  "0.0.0.0 defaults to not sending off the system" << endl;
 		prompt = "Enter IP Address(es) of where you want the SNMP Traps went (" + currentNMSIPAddress + ") > ";
 		pcommand = callReadline(prompt.c_str());
 		if (pcommand)
