@@ -50,15 +50,15 @@ while [ $k -le $repeatNum ]
 do
      if [ $restart == Y ] || [ $restart == y ]
      then
-         /usr/local/Calpont/bin/mcsadmin restartsystem y
+         /usr/local/MariaDB/Columnstore/bin/mcsadmin restartsystem y
          sleep 90
      fi
      mkdir $k
      cd $k
-     cp /usr/local/Calpont/etc/Calpont.xml .
-     /usr/local/Calpont/bin/mcsadmin getCalpontSoftware >CalpontSoftware.txt
-     ls -al /mnt/pm*/usr/local/Calpont/data* > dbRoots.txt
-     /usr/local/Calpont/bin/mcsadmin getProcessStatus >stackConfigBefore.txt
+     cp /usr/local/MariaDB/Columnstore/etc/Calpont.xml .
+     /usr/local/MariaDB/Columnstore/bin/mcsadmin getCalpontSoftware >CalpontSoftware.txt
+     ls -al /mnt/pm*/usr/local/MariaDB/Columnstore/data* > dbRoots.txt
+     /usr/local/MariaDB/Columnstore/bin/mcsadmin getProcessStatus >stackConfigBefore.txt
      $exeCommand > $logFileName 2>&1
 #
      if [ $streamNum == 1_7 ]
@@ -71,7 +71,7 @@ do
          done
      fi
 #
-     /usr/local/Calpont/bin/mcsadmin getProcessStatus >stackConfigAfter.txt
+     /usr/local/MariaDB/Columnstore/bin/mcsadmin getProcessStatus >stackConfigAfter.txt
      /home/pf/auto/common/extractstartstoptimes.sh
      cd ..
      ((k++))

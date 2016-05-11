@@ -1,0 +1,18 @@
+# List of my.cnf arguments that should be checked and saved during upgrade install
+#
+infinidb_local_query
+log-bin=mysql-bin
+server-id
+max_length_for_sort_data
+tmpdir
+log-error
+general_log_file
+slow_query_log_file
+general-log
+slow-query-log
+character-set-server
+collation-server
+init-connect
+binlog_format
+secure-auth
+port

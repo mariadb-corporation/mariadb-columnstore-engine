@@ -25,13 +25,13 @@ cd /root/autoOAM/
 rpm -e infinidb-libs infinidb-platform infinidb-enterprise --nodeps
 rpm -e infinidb-storage-engine infinidb-mysql --nodeps
 rpm -e infinidb-mysql --nodeps
-rm -rf /usr/local/Calpont
+rm -rf /usr/local/MariaDB/Columnstore
 rm -rf calpont*
 rm -f *gz
 #
 smbclient //calweb/shared -Wcalpont -Uoamuser%Calpont1 -c "cd Iterations/$DIR;prompt OFF;mget *.rpm"
 rpm -ivh calpont*.x86_64.rpm --nodeps
-rpm -iq calpont >> /usr/local/Calpont/releasenum
+rpm -iq calpont >> /usr/local/MariaDB/Columnstore/releasenum
 cd /usr/local/
 tar -zcvf calpont-infinidb-ent-$REL.x86_64.bin.tar.gz Calpont
 mv calpont-infinidb-ent-$REL.x86_64.bin.tar.gz /root/autoOAM/

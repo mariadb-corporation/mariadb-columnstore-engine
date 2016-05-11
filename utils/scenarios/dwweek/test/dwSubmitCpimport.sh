@@ -22,13 +22,13 @@
    echo \#!/bin/bash > $bulkScriptName
    echo \# >> $bulkScriptName
 #
-   echo rm -f /usr/local/Calpont/data/bulk/log/Jobxml_9999.log >> $bulkScriptName
-   echo rm -f /usr/local/Calpont/data/bulk/log/Job_9999.log >> $bulkScriptName
-   echo /usr/local/Calpont/bin/colxml $testDB -t lineitem -l $sourceFileName -j 9999 >> $bulkScriptName
-   echo /usr/local/Calpont/bin/cpimport -j 9999 >> $bulkScriptName
-   echo cp /usr/local/Calpont/data/bulk/job/Job_9999.xml . >> $bulkScriptName
-   echo cp /usr/local/Calpont/data/bulk/log/Jobxml_9999.log . >> $bulkScriptName
-   echo cp /usr/local/Calpont/data/bulk/log/Job_9999.log . >> $bulkScriptName
+   echo rm -f /usr/local/MariaDB/Columnstore/data/bulk/log/Jobxml_9999.log >> $bulkScriptName
+   echo rm -f /usr/local/MariaDB/Columnstore/data/bulk/log/Job_9999.log >> $bulkScriptName
+   echo /usr/local/MariaDB/Columnstore/bin/colxml $testDB -t lineitem -l $sourceFileName -j 9999 >> $bulkScriptName
+   echo /usr/local/MariaDB/Columnstore/bin/cpimport -j 9999 >> $bulkScriptName
+   echo cp /usr/local/MariaDB/Columnstore/data/bulk/job/Job_9999.xml . >> $bulkScriptName
+   echo cp /usr/local/MariaDB/Columnstore/data/bulk/log/Jobxml_9999.log . >> $bulkScriptName
+   echo cp /usr/local/MariaDB/Columnstore/data/bulk/log/Job_9999.log . >> $bulkScriptName
    chmod 777 $bulkScriptName
 #
 #append current directory path to to script file name

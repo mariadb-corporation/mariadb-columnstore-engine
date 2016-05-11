@@ -14,7 +14,7 @@
 echo Start - Set stack configuration
 #
 # Stopping the Calpont software
-/usr/local/Calpont/bin/mcsadmin stopsystem y ACK_YES
+/usr/local/MariaDB/Columnstore/bin/mcsadmin stopsystem y ACK_YES
 #
 # set maximum number of UMs and PMs possible the stack
 maxUMs=2
@@ -29,7 +29,7 @@ numPMs=$2
 #-----------------------------------------------------------------------------
 k=1
 while [ $k -le $maxUMs ]; do
-       /usr/local/Calpont/bin/mcsadmin enableModule um$k ACK_YES
+       /usr/local/MariaDB/Columnstore/bin/mcsadmin enableModule um$k ACK_YES
        ((k++))
 done
 #-----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ done
 #-----------------------------------------------------------------------------
 k=$maxUMs
 while [ $k -gt $numUMs ]; do
-       /usr/local/Calpont/bin/mcsadmin disableModule um$k ACK_YES
+       /usr/local/MariaDB/Columnstore/bin/mcsadmin disableModule um$k ACK_YES
        ((k--))
 done
 #-----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ done
 #-----------------------------------------------------------------------------
 k=1
 while [ $k -le $maxPMs ]; do
-       /usr/local/Calpont/bin/mcsadmin enableModule pm$k ACK_YES
+       /usr/local/MariaDB/Columnstore/bin/mcsadmin enableModule pm$k ACK_YES
        ((k++))
 done
 #-----------------------------------------------------------------------------
@@ -53,7 +53,7 @@ done
 #-----------------------------------------------------------------------------
 k=$maxPMs
 while [ $k -gt $numPMs ]; do
-       /usr/local/Calpont/bin/mcsadmin disableModule pm$k ACK_YES
+       /usr/local/MariaDB/Columnstore/bin/mcsadmin disableModule pm$k ACK_YES
        ((k--))
 done
 #-----------------------------------------------------------------------------

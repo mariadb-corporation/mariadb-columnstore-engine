@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 	if (rlrc > 0)
 	{
 		thisexepath[rlrc] = 0;
-		//should look something like '/usr/local/Calpont/bin/postConfigure'
+		//should look something like '/usr/local/MariaDB/Columnstore/bin/postConfigure'
 		char* ptr;
 		ptr = strrchr(thisexepath, '/');
 		if (ptr)

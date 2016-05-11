@@ -11,7 +11,7 @@ fi
 if [ $2 ] ; then
         INSTALLDIR=$2
 else
-        INSTALLDIR="/usr/local/Calpont"
+        INSTALLDIR="/usr/local/MariaDB/Columnstore"
 fi
 
 if [ $USER = "root" ]; then

@@ -241,7 +241,7 @@ bool TestRunner::runTest( IDBDataFile::Types filetype, unsigned open_opts )
 		for( int i = 0; i < m_opts.numDbRoots; ++i )
 		{
 			ostringstream dbroot;
-			dbroot << "/usr/local/Calpont/data" << i+1;
+			dbroot << "/usr/local/MariaDB/Columnstore/data" << i+1;
 			if( !fs.exists(dbroot.str().c_str()) )
 			{
 				ostringstream msg;

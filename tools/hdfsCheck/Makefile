@@ -25,7 +25,7 @@ CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 
 # Linker flags
 LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS) -lloggingcpp -lidbdatafile -lboost_idb \
-	 -Wl,--rpath -Wl,/usr/local/Calpont/lib
+	 -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 
 # install dir (set CALPONT_INSTALL_ROOT in env to override)
 CALPONT_INSTALL_ROOT?=$(EXPORT_ROOT)

@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
 						exit (-1);
 					}
 
-					cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " /usr/local/Calpont/etc/Calpont.xml 0 ";
+					cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " /usr/local/MariaDB/Columnstore/etc/Calpont.xml 0 ";
 					rtnCode = system(cmd.c_str());
 					if (rtnCode == 0) {
 						cmd = "mv Calpont.xml systems/" + systemName + "/.";
@@ -507,7 +507,7 @@ int main(int argc, char *argv[])
 		}
 
 		string DBrootID = "DBRoot" + oam.itoa(i);
-		string pathID =  "/usr/local/Calpont/data" + oam.itoa(i);
+		string pathID =  "/usr/local/MariaDB/Columnstore/data" + oam.itoa(i);
 
 		try {
 			sysConfig->setConfig(SystemSection, DBrootID, pathID);

@@ -19,19 +19,19 @@
 #
    echo \#\!/bin/bash > $cpimportScriptName
    echo \# >> $cpimportScriptName
-   echo cd /usr/local/Calpont/data/bulk/log >> $cpimportScriptName
+   echo cd /usr/local/MariaDB/Columnstore/data/bulk/log >> $cpimportScriptName
    echo rm -f Jobxml_9999.log >> $cpimportScriptName
    echo rm -f Job_9999.log >> $cpimportScriptName
    echo rm -f fileStats.txt >> $cpimportScriptName
    echo rm -f finished.txt >> $cpimportScriptName
-   echo "ls -alh /usr/local/Calpont/data/bulk/data/import/*.tbl > fileStats.txt" >> $cpimportScriptName
-#   echo "wc -l /usr/local/Calpont/data/bulk/data/import/*.tbl >> fileStats.txt" >> $cpimportScriptName
+   echo "ls -alh /usr/local/MariaDB/Columnstore/data/bulk/data/import/*.tbl > fileStats.txt" >> $cpimportScriptName
+#   echo "wc -l /usr/local/MariaDB/Columnstore/data/bulk/data/import/*.tbl >> fileStats.txt" >> $cpimportScriptName
 #
-   echo /usr/local/Calpont/bin/colxml $testDB -r 2 -j 9999 >> $cpimportScriptName
+   echo /usr/local/MariaDB/Columnstore/bin/colxml $testDB -r 2 -j 9999 >> $cpimportScriptName
    echo sleep 5 >> $cpimportScriptName
    echo sync >> $cpimportScriptName
 #
-   echo \# /usr/local/Calpont/bin/cpimport -j 9999 -i >> $cpimportScriptName
+   echo \# /usr/local/MariaDB/Columnstore/bin/cpimport -j 9999 -i >> $cpimportScriptName
    echo sleep 5 >> $cpimportScriptName
    echo touch finished.txt >> $cpimportScriptName
    echo sync >> $cpimportScriptName
@@ -47,15 +47,15 @@
    echo "/root/genii/utils/scenarios/common/sh/remote_command.sh $PM1 qalpont! \"/mnt/parentOAM$curDir/$cpimportScriptName\"" >> $bulkScriptName
 #
    echo sleep 5 >> $bulkScriptName
-   echo "while [ ! -f /mnt/pm1/usr/local/Calpont/data/bulk/log/finished.txt ]; do" >> $bulkScriptName
+   echo "while [ ! -f /mnt/pm1/usr/local/MariaDB/Columnstore/data/bulk/log/finished.txt ]; do" >> $bulkScriptName
    echo    sleep 5 >> $bulkScriptName
    echo echo waiting...... >> $bulkScriptName
    echo done >> $bulkScriptName
 #
-   echo cp /mnt/pm1/usr/local/Calpont/data/bulk/job/Job_9999.xml . >> $bulkScriptName
-   echo cp /mnt/pm1/usr/local/Calpont/data/bulk/log/Jobxml_9999.log . >> $bulkScriptName
-   echo cp /mnt/pm1/usr/local/Calpont/data/bulk/log/Job_9999.log . >> $bulkScriptName
-   echo cp /mnt/pm1/usr/local/Calpont/data/bulk/log/fileStats.txt . >> $bulkScriptName
+   echo cp /mnt/pm1/usr/local/MariaDB/Columnstore/data/bulk/job/Job_9999.xml . >> $bulkScriptName
+   echo cp /mnt/pm1/usr/local/MariaDB/Columnstore/data/bulk/log/Jobxml_9999.log . >> $bulkScriptName
+   echo cp /mnt/pm1/usr/local/MariaDB/Columnstore/data/bulk/log/Job_9999.log . >> $bulkScriptName
+   echo cp /mnt/pm1/usr/local/MariaDB/Columnstore/data/bulk/log/fileStats.txt . >> $bulkScriptName
 #   
    chmod 777 $bulkScriptName
 #

@@ -25,7 +25,7 @@ rpm -e infinidb-libs infinidb-platform infinidb-enterprise --nodeps --allmatches
 rpm -e infinidb-storage-engine infinidb-mysql --nodeps --allmatches
 rpm -e infinidb-mysql --nodeps --allmatches
 rpm -e infinidb-datdup --nodeps --allmatches
-rm -rf /usr/local/Calpont
+rm -rf /usr/local/MariaDB/Columnstore
 rm -rf infinidb*
 rm -f *gz
 #

@@ -16,8 +16,8 @@ CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 
 # we need to add some search paths here because on a boostrap build we won't find liboamcpp
 #  anywhere except in ../oamcpp
-CLIBS=-L../oamcpp -L$(EXPORT_ROOT)/lib -L/usr/local/Calpont/lib $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS)
-LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/Calpont/lib
+CLIBS=-L../oamcpp -L$(EXPORT_ROOT)/lib -L/usr/local/MariaDB/Columnstore/lib $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS)
+LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 TLIBS=-lcppunit -ldl
 GLIBS=$(CLIBS) -lcppunit -ldl
 

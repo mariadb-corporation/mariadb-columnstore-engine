@@ -14,7 +14,7 @@ LIBRARY=$(PROGRAM).$(VERSION)
 CPPFLAGS=-I. -I$(EXPORT_ROOT)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall -fpic
 
-CLIBS=-L$(EXPORT_ROOT)/lib -loamcpp -lmessageqcpp -lloggingcpp -lconfigcpp -lxml2 -lsnmpmanager -lnetsnmpmibs -lnetsnmpagent -L/usr/local/Calpont/lib -lnetsnmp -lnetsnmphelpers -lcppunit -ldl -lrpm -lrwlock -lbrm
+CLIBS=-L$(EXPORT_ROOT)/lib -loamcpp -lmessageqcpp -lloggingcpp -lconfigcpp -lxml2 -lsnmpmanager -lnetsnmpmibs -lnetsnmpagent -L/usr/local/MariaDB/Columnstore/lib -lnetsnmp -lnetsnmphelpers -lcppunit -ldl -lrpm -lrwlock -lbrm
 TLIBS=-L. -loamcpp $(CLIBS)
 GLIBS=$(CLIBS)
 

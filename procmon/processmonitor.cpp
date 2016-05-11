@@ -5472,7 +5472,7 @@ bool ProcessMonitor::amazonIPCheck()
 								log.writeLog(__LINE__, "Module is Running: '" + moduleName + "' / Instance '" + instanceID + "' current IP being reconfigured in Calpont.xml. old = " + IPAddr + ", new = " + currentIPAddr, LOG_TYPE_DEBUG);
 		
 								// update the Calpont.xml with the new IP Address
-								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/Calpont/etc/Calpont.xml";
+								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/MariaDB/Columnstore/etc/Calpont.xml";
 								system(cmd.c_str());
 							}
 							else

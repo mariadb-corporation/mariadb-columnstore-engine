@@ -147,7 +147,7 @@ if { $CONFIGFILE != "NULL"} {
 	#
 	# copy over Calpont.xml file
 	#
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/Calpont/etc/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/MariaDB/Columnstore/etc/Calpont.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -158,7 +158,7 @@ if { $CONFIGFILE != "NULL"} {
 		-re "No such file or directory" { send_user "FAILED: Invalid package\n" ; exit -1 }
 	}
 	send_user "Copy InfiniDB Configuration File              "
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/Calpont/etc/Calpont.xml.rpmsave\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/MariaDB/Columnstore/etc/Calpont.xml.rpmsave\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -181,7 +181,7 @@ if { $CONFIGFILE != "NULL"} {
 	# rename previous installed config file
 	#
 	send_user "Copy RPM-saved InfiniDB Configuration File     "
-	send "ssh $USERNAME@$SERVER 'cd /usr/local/Calpont/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
+	send "ssh $USERNAME@$SERVER 'cd /usr/local/MariaDB/Columnstore/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
 	expect -re "word: "
 	# password for ssh
 	send "$PASSWORD\n"

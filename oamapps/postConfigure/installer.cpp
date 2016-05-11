@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	if (argc >= 13)
 		installDir = argv[12];
 	else
-		installDir = "/usr/local/Calpont";
+		installDir = "/usr/local/MariaDB/Columnstore";
 
     ofstream file("/dev/null");
 

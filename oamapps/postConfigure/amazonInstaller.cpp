@@ -113,7 +113,7 @@ string SystemSection = "SystemConfig";
 string InstallSection = "Installation";
 string ModuleSection = "SystemModuleConfig";
 
-string installDir = "/usr/local/Calpont";
+string installDir = "/usr/local/MariaDB/Columnstore";
 
 InstanceList uminstancelist;
 InstanceList pminstancelist;
@@ -2750,7 +2750,7 @@ void cleanupSystem(bool terminate)
 	if ( terminate ) {
 		cout << endl << "***** Performing System Cleanup *****" << endl << endl;
 
-		system("umount /usr/local/Calpont/data* > /dev/null 2>&1");
+		system("umount /usr/local/MariaDB/Columnstore/data* > /dev/null 2>&1");
 	
 		//run pre-uninstall
 		string cmd = installDir + "/bin/pre-uninstall  > /dev/null 2>&1";

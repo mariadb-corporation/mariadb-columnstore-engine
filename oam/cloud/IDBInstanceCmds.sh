@@ -88,9 +88,9 @@ if [ "$1" = "deassignElasticIP" ]; then
 fi
 
 
-test -f /usr/local/Calpont/post/functions && . /usr/local/Calpont/post/functions
+test -f /usr/local/MariaDB/Columnstore/post/functions && . /usr/local/MariaDB/Columnstore/post/functions
 
-ec2=`$prefix/Calpont/bin/getConfig Installation EC2_HOME`
+ec2=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_HOME`
 
 if [ $ec2 == "unassigned" ]; then
 	if [ "$1" = "getPrivateIP" ]; then
@@ -102,21 +102,21 @@ if [ $ec2 == "unassigned" ]; then
 	fi
 fi
 
-java=`$prefix/Calpont/bin/getConfig Installation JAVA_HOME`
-path=`$prefix/Calpont/bin/getConfig Installation EC2_PATH`
+java=`$prefix/MariaDB/Columnstore/bin/getConfig Installation JAVA_HOME`
+path=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_PATH`
 
 export PATH=$path
 export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
 # get Keys and region
-AmazonAccessKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+AmazonAccessKeyFile=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonAccessKey`
 if [ $AmazonAccessKeyFile == "unassigned" ]; then
 	echo "FAILED: missing Config Setting AmazonAccessKey : $AmazonAccessKeyfile"
 	exit 1
 fi
 
-AmazonSecretKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+AmazonSecretKeyFile=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonSecretKey`
 if [ $AmazonSecretKeyFile == "unassigned" ]; then
 	echo "FAILED: missing Config Setting AmazonSecretKeyFile : $AmazonSecretKeyFile"
 	exit 1
@@ -125,8 +125,8 @@ fi
 AmazonAccessKey=`cat $AmazonAccessKeyFile`
 AmazonSecretKey=`cat $AmazonSecretKeyFile`
 
-Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
-subnet=`$prefix/Calpont/bin/getConfig Installation AmazonSubNetID`
+Region=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonRegion`
+subnet=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonSubNetID`
 
 if test ! -f $AmazonAccessKeyfile ; then
 	echo "FAILED: missing AmazonAccessKeyfile : $AmazonAccessKeyfile"
@@ -193,7 +193,7 @@ getInstancePrivate() {
 
 getZone() {
 	#get from Calpont.xml if it's there, if not, get from instance then store
-	zone=`$prefix/Calpont/bin/getConfig Installation AmazonZone`
+	zone=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonZone`
 
 	if [ "$zone" = "unassigned" ] || [ "$zone" = "" ]; then
 		#get local Instance ID
@@ -213,7 +213,7 @@ getZone() {
 			fi
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 		fi
-		$prefix/Calpont/bin/setConfig Installation AmazonZone $zone
+		$prefix/MariaDB/Columnstore/bin/setConfig Installation AmazonZone $zone
 	fi
 
 	echo $zone

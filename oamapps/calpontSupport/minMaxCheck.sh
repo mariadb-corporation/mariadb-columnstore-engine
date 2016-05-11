@@ -45,11 +45,11 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="/usr/local/Calpont/mysql/bin/mysql --defaults-file=/usr/local/Calpont/mysql/my.cnf -u root"
+        MYSQLCMD="/usr/local/MariaDB/Columnstore/mysql/bin/mysql --defaults-file=/usr/local/MariaDB/Columnstore/mysql/my.cnf -u root"
 fi
 
 if [ -z "$INSTALLDIR" ]; then
-        INSTALLDIR="/usr/local/Calpont"
+        INSTALLDIR="/usr/local/MariaDB/Columnstore"
 fi
 
 if [ -z "$PGMPATH" ]; then

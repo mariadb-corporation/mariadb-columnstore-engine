@@ -24,7 +24,7 @@ CPPFLAGS=-I$(EXPORT_ROOT)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall -Wno-unused-label
 
 # Linker flags
-LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) -Wl,--rpath -Wl,/usr/local/Calpont/lib 
+LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib 
 QFE_LDLIBS=$(IDB_WRITE_LIBS) $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS)
 CLI_LDLIBS=$(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS)
 

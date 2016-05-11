@@ -3,7 +3,7 @@
    numRoots=4
 #
    for ((idx=1; $idx<=$numRoots; idx++)); do
-      rm -rf /usr/local/Calpont/data$idx/dwbackup/2 & 
+      rm -rf /usr/local/MariaDB/Columnstore/data$idx/dwbackup/2 & 
       pids[$idx]=$!
    done
 #
@@ -26,9 +26,9 @@
    done
 #
    for ((idx=1; $idx<=$numRoots; idx++)); do
-      mv /usr/local/Calpont/data$idx/dwbackup/1 /usr/local/Calpont/data$idx/dwbackup/2
-      mkdir -p /usr/local/Calpont/data$idx/dwbackup/1
-      cp -r /usr/local/Calpont/data$idx/000.dir /usr/local/Calpont/data$idx/dwbackup/1 &
+      mv /usr/local/MariaDB/Columnstore/data$idx/dwbackup/1 /usr/local/MariaDB/Columnstore/data$idx/dwbackup/2
+      mkdir -p /usr/local/MariaDB/Columnstore/data$idx/dwbackup/1
+      cp -r /usr/local/MariaDB/Columnstore/data$idx/000.dir /usr/local/MariaDB/Columnstore/data$idx/dwbackup/1 &
       pids[$idx]=$!
    done
 #
@@ -49,4 +49,4 @@
       done
       sleep 5
    done
-   cp -r /mnt/OAM/dbrm /usr/local/Calpont/data1/dwbackup/1/.
+   cp -r /mnt/OAM/dbrm /usr/local/MariaDB/Columnstore/data1/dwbackup/1/.
