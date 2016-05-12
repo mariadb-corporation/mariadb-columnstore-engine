@@ -18,7 +18,7 @@ MariaDB-Columnstore software meta-package
 %package platform
 Summary: MariaDB-Columnstore software binaries
 Group: Applications
-Requires: expect, columnstore-libs
+Requires: expect, mariadb-columnstore-libs
 
 %description platform
 MariaDB-Columnstore binary files
@@ -34,7 +34,7 @@ MariaDB-Columnstore libraries
 %package enterprise
 Summary: InfiniDB Enterprise software binaries
 Group: Applications
-Requires: columnstore-libs, columnstore-platform
+Requires: mariabd-columnstore-libs, mariadb-columnstore-platform
 License: Proprietary; Copyright (c) 2016 MariaDB, Inc., all rights reserved
 
 %description enterprise
@@ -43,8 +43,7 @@ InfiniDB Enterprise binary files
 %package storage-engine
 Summary: MariaDB-Columnstore software MariaDB connector
 Group: Applications
-Obsoletes: columnstore-mysql
-Requires: columnstore-libs
+Requires: mariadb-columnstore-libs
 
 %description storage-engine
 MariaDB Columnstore connector binary files
