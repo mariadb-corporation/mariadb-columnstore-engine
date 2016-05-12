@@ -34,7 +34,7 @@ MariaDB-Columnstore libraries
 %package enterprise
 Summary: InfiniDB Enterprise software binaries
 Group: Applications
-Requires: mariabd-columnstore-libs, mariadb-columnstore-platform
+Requires: mariadb-columnstore-libs, mariadb-columnstore-platform
 License: Proprietary; Copyright (c) 2016 MariaDB, Inc., all rights reserved
 
 %description enterprise
