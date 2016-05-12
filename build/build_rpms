@@ -49,6 +49,7 @@ buildroot=$HOME/rpm/BUILD/columnstore-$version-$release
 
 rm -rf $buildroot
 mkdir -p $buildroot
+mkdir -p $buildroot/MariaDB
 echo -n "Writing binary files to $buildroot..."
 tar -cf - --exclude 'export/include' --exclude 'export/*.tar' export | tar -C $buildroot -xf -
 mv $buildroot/export $buildroot/MariaDB/Columnstore
