@@ -214,7 +214,7 @@
 	</PMS32>
 	<SystemConfig>
 		<SystemLang>C</SystemLang>
-		<SystemName>calpont-1</SystemName>
+		<SystemName>columnstore-1</SystemName>
 		<ParentOAMModuleName>pm1</ParentOAMModuleName>
 		<StandbyOAMModuleName>unassigned</StandbyOAMModuleName>
 		<!-- Disabled
