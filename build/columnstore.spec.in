@@ -43,7 +43,6 @@ InfiniDB Enterprise binary files
 %package storage-engine
 Summary: MariaDB-Columnstore software MariaDB connector
 Group: Applications
-Obsoletes: columnstore-mysql
 Requires: columnstore-libs
 
 %description storage-engine
