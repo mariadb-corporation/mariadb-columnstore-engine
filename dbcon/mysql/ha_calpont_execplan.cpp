@@ -225,7 +225,7 @@ void debug_walk(const Item *item, void *arg)
 	{
 		Item_string* isp = (Item_string*)item;
 		String val, *str = isp->val_str(&val);
-		cout << "STRING_ITEM: >" << str->c_ptr() << '<' << endl;
+		cout << "STRING_ITEM: >" << str->ptr() << '<' << endl;
 		break;
 	}
 	case Item::REAL_ITEM:
@@ -553,16 +553,21 @@ void debug_walk(const Item *item, void *arg)
 				break;
 		}
 		if (str)
-			cout << ": (" << str->c_ptr() << ')' << endl;
+			cout << ": (" << str->ptr() << ')' << endl;
 		else
 			cout << ": <NULL>" << endl;
 		break;
 	}
 	case Item::DATE_ITEM:
 	{
-		String val;
+		String val, *str=NULL;
 		Item_temporal_literal* itp = (Item_temporal_literal*)item;
-		cout << "DATE ITEM: " << itp->val_str(&val)->c_ptr() << endl;
+		str = itp->val_str(&val);
+		cout << "DATE ITEM: ";
+		if (str)
+			cout << ": (" << str->ptr() << ')' << endl;
+		else
+			cout << ": <NULL>" << endl;
 		break;
 	}
 	case Item::WINDOW_FUNC_ITEM:
@@ -1016,9 +1021,9 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 		// @bug5811. This filter string is for cross engine to use.
 		// Use real table name.
 		ifp->print(&str, QT_INFINIDB_DERIVED);
-		//IDEBUG(cout << str.c_ptr() << endl);
-		if (str.c_ptr())
-			cf->data(str.c_ptr());
+		//IDEBUG(cout << str.ptr() << endl);
+		if (str.ptr())
+			cf->data(str.ptr());
 		ParseTree* ptp = new ParseTree(cf);
 		gwip->ptWorkStack.push(ptp);
 		return true;
@@ -1095,9 +1100,9 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 		// @bug5811. This filter string is for cross engine to use.
 		// Use real table name.
 		ifp->print(&str, QT_INFINIDB_DERIVED);
-		IDEBUG(cout << str.c_ptr() << endl);
-		if (str.c_ptr())
-			cf->data(str.c_ptr());
+		IDEBUG(cout << str.ptr() << endl);
+		if (str.ptr())
+			cf->data(str.ptr());
 		ParseTree* ptp = new ParseTree(cf);
 		gwip->ptWorkStack.push(ptp);
 	}
@@ -1154,10 +1159,10 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 			}
 
 			if (udf->result_type() == STRING_RESULT)
-				gwip->rcWorkStack.push(new ConstantColumn(buf.c_ptr()));
+				gwip->rcWorkStack.push(new ConstantColumn(buf.ptr()));
 			else
             {
-				gwip->rcWorkStack.push(new ConstantColumn(buf.c_ptr(), ConstantColumn::NUM));
+				gwip->rcWorkStack.push(new ConstantColumn(buf.ptr(), ConstantColumn::NUM));
             }
 			return false;
 		}
@@ -3781,7 +3786,13 @@ void gp_walk(const Item *item, void *arg)
 				if (isp->result_type() == STRING_RESULT)
 				{
 					String val, *str = isp->val_str(&val);
-					string cval(str->c_ptr());
+					string cval;
+					if (str->ptr())
+					{
+						cval = str->ptr();
+						// MariaDB doesn't always put a null terminator. Trim to proper length.
+						cval = cval.substr(0, str->length());
+					}
 					size_t spos = cval.find_last_not_of(" ");
 					if (spos != string::npos)
 						cval = cval.substr(0, spos+1);
