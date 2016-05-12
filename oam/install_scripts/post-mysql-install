@@ -13,7 +13,7 @@ checkForError() {
 		if [ $? -ne 0 ]; then
 			echo "MySQL Password missing or incorrect"
 			rm -f /tmp/error.check
-			$installdir/mysql/mysql-Calpont stop
+			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
 			exit 2;
 		fi
@@ -93,12 +93,12 @@ if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
 	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/mysql/my.cnf
 fi
 
-if [ -x $installdir/mysql/mysql-Calpont ]; then
+if [ -x $installdir/mysql/mysql-Columnstore ]; then
 
 	# Restart in the same way that mysqld will be started normally.
-	$installdir/mysql/mysql-Calpont stop >/dev/null 2>&1
+	$installdir/mysql/mysql-Columnstore stop >/dev/null 2>&1
 	sleep 2
-	$installdir/mysql/mysql-Calpont start
+	$installdir/mysql/mysql-Columnstore start
 
 	sleep 5
 
@@ -111,13 +111,13 @@ if [ -x $installdir/mysql/mysql-Calpont ]; then
 		checkForError
 		if [ $? -ne 0 ]; then
 			echo "ERROR: missing or invalid password, or InfiniDB plugin install missing"
-			$installdir/mysql/mysql-Calpont stop
+			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
 			exit 1;
 		fi
 	fi
 
-	$installdir/mysql/mysql-Calpont stop
+	$installdir/mysql/mysql-Columnstore stop
 fi
 
 exit 0

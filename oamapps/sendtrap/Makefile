@@ -46,8 +46,8 @@ tdriver: tdriver.o
 	$(LINK.cpp) -o $@ $^ $(TLIBS)
 
 test: $(LIBRARY) tdriver
-	rm -f /var/log/Calpont/activeAlarms
-	rm -f /var/log/Calpont/alarm.log
+	rm -f /var/log/Columnstore/activeAlarms
+	rm -f /var/log/Columnstore/alarm.log
 #	LD_LIBRARY_PATH=.:$(EXPORT_ROOT)/lib:/usr/local/lib ./sendtrap processAlarm < ./test.txt
 
 %-gcov.o: %.cpp
@@ -59,8 +59,8 @@ tdriver-gcov: sendtrap-gcov.o $(subst .o,-gcov.o,$(OBJS))
 
 coverage: tdriver-gcov
 	rm -f *.gcda
-	rm -f /var/log/Calpont/activeAlarms
-	rm -f /var/log/Calpont/alarm.log
+	rm -f /var/log/Columnstore/activeAlarms
+	rm -f /var/log/Columnstore/alarm.log
 #	LD_LIBRARY_PATH=$(EXPORT_ROOT)/lib:/usr/local/lib ./tdriver-gcov processAlarm < ./test.txt
 	for file in $(SRCS); do \
 		bfile=`basename $$file .cpp`; \
@@ -69,8 +69,8 @@ coverage: tdriver-gcov
 	/usr/local/bin/genCoverage.pl $(SRCS)
 
 leakcheck: $(LIBRARY) tdriver
-	rm -f /var/log/Calpont/activeAlarms
-	rm -f /var/log/Calpont/alarm.log
+	rm -f /var/log/Columnstore/activeAlarms
+	rm -f /var/log/Columnstore/alarm.log
 #	LD_LIBRARY_PATH=.:$(EXPORT_ROOT)/lib:/usr/local/lib valgrind --tool=memcheck --leak-check=yes ./tdriver
 
 %.d: %.cpp

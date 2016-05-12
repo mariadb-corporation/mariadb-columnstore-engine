@@ -72,10 +72,10 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 fi
  
 #remove log file directories
-#rm -rf /var/log/Calpont > /dev/null 2>&1
+#rm -rf /var/log/Columnstore > /dev/null 2>&1
 #rm -f $installdir/mysql/db/*.err > /dev/null 2>&1
-rm -f /var/log/Calpont/activeAlarms > /dev/null 2>&1
-rm -f /var/log/Calpont/*.log1 > /dev/null 2>&1
+rm -f /var/log/Columnstore/activeAlarms > /dev/null 2>&1
+rm -f /var/log/Columnstore/*.log1 > /dev/null 2>&1
 rm -rf $installdir/mysql/db/infinidb_log_archive > /dev/null 2>&1
 sudo rm -f /etc/default/infinidb
 
@@ -116,7 +116,7 @@ else
 fi
 
 # delete core files
-#rm -f /var/log/Calpont/corefiles/* > /dev/null 2>&1
+#rm -f /var/log/Columnstore/corefiles/* > /dev/null 2>&1
 
 #uninstall InfiniDB system logging
 if [ -x $installdir/bin/syslogSetup.sh ]; then

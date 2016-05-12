@@ -53,7 +53,7 @@ def find_paths():
   except KeyError:
     try:
         logger.info("Environment variable CALPONT_CONFIG_FILE not set, looking for system Calpont.xml")
-        config_file = '/usr/local/Calpont/etc/Calpont.xml'
+        config_file = '/usr/local/MariaDB/Columnstore/etc/Calpont.xml'
         os.lstat(config_file)
     except:
         logger.error('No config file available')

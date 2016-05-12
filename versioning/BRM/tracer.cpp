@@ -37,7 +37,7 @@ using namespace std;
 
 namespace BRM {
 #ifdef BRM_INFO
-std::ofstream brmlog("/var/log/Calpont/brm.log", std::ios::app);
+std::ofstream brmlog("/var/log/Columnstore/brm.log", std::ios::app);
 
 Tracer::Tracer(const std::string& file, int line, const std::string& msg, bool debug, bool writeNow): fFileName(file), fLine(line), fMsg(msg), fDebug(debug), fpid(getpid())
 {

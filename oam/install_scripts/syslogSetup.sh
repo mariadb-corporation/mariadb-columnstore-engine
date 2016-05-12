@@ -161,7 +161,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		if [ $rsyslog7 == 1 ]; then
 			rm -f /etc/rsyslog.d/49-calpont.conf
 			cat  ${columnstoreSyslogFile7} >> ${syslog_conf}
-			chown syslog:adm /var/log/Calpont
+			chown syslog:adm /var/log/Columnstore
 		else
 			cat  ${columnstoreSyslogFile} >> ${syslog_conf}
 		fi
@@ -228,7 +228,7 @@ test -f $installdir/post/functions && . $installdir/post/functions
 number=$RANDOM
 cplogger -i 100 "InfiniDB Log Test: $number"
 sleep 3
-egrep -qs "InfiniDB Log Test: $number" /var/log/Calpont/info.log
+egrep -qs "InfiniDB Log Test: $number" /var/log/Columnstore/info.log
 if [ $? -eq 0 ]; then
 	echo "InfiniDB System Logging working"
 	exit 0

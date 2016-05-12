@@ -3014,10 +3014,10 @@ int main(int argc, char *argv[])
 							//check for mysql password on remote UM
 							if ( pwprompt == " " ) {
 								//start mysqld
-								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Calpont start'";
+								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
 								int rtnCode = system(cmd.c_str());
 								if (WEXITSTATUS(rtnCode) != 0) {
-									cout << endl << "Error returned from mysql-Calpont start" << endl;
+									cout << endl << "Error returned from mysql-Columnstore start" << endl;
 									exit(1);
 								}
 
@@ -3065,10 +3065,10 @@ int main(int argc, char *argv[])
 									{
 										cout << endl << "Additional MySQL Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
 
-										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Calpont stop'";
+										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
 										int rtnCode = system(cmd.c_str());
 										if (WEXITSTATUS(rtnCode) != 0) {
-											cout << endl << "Error returned from mysql-Calpont stop" << endl;
+											cout << endl << "Error returned from mysql-Columnstore stop" << endl;
 											exit(1);
 										}
 										unlink("/tmp/idbmysql.log");
@@ -3532,7 +3532,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "InfiniDB System failed to start, check log files in /var/log/Calpont" << endl;
+		cout << endl << "InfiniDB System failed to start, check log files in /var/log/Columnstore" << endl;
 		exit(1);
 	}
 
@@ -4231,7 +4231,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Calpont");
+				string logdir("/var/log/Columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -4889,7 +4889,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << endl << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Calpont");
+				string logdir("/var/log/Columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 

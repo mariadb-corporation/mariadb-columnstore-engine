@@ -22,6 +22,6 @@ fi
 
 $SUDO rm -f /tmp/${MODULE}_logReport.tar.gz
 
-tar -zcf /tmp/${MODULE}_logReport.tar.gz /var/log/Calpont > /dev/null 2>&1
+tar -zcf /tmp/${MODULE}_logReport.tar.gz /var/log/Columnstore > /dev/null 2>&1
 
 exit 0

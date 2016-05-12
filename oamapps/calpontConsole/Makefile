@@ -57,7 +57,7 @@ tdriver: tdriver.o
 	$(LINK.cpp) -o $@ $^ $(TLIBS)
 
 test: $(LIBRARY) tdriver
-	rm -f /var/log/Calpont/uiCommands.log
+	rm -f /var/log/Columnstore/uiCommands.log
 	LD_LIBRARY_PATH=.:$(EXPORT_ROOT)/lib:/usr/local/lib ./tdriver
 
 %-gcov.o: %.cpp
@@ -69,7 +69,7 @@ tdriver-gcov: calpontConsole-gcov.o $(subst .o,-gcov.o,$(OBJS))
 
 
 leakcheck: $(LIBRARY) tdriver
-	rm -f /var/log/Calpont/uiCommands.log
+	rm -f /var/log/Columnstore/uiCommands.log
 	LD_LIBRARY_PATH=.:$(EXPORT_ROOT)/lib:/usr/local/lib valgrind --tool=memcheck --leak-check=yes ./tdriver
 
 %.d: %.cpp

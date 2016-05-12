@@ -34,7 +34,7 @@ export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
 
 InstallDir=$INFINIDB_INSTALL_DIR
 
-if [ $InstallDir != "/usr/local/Calpont" ]; then
+if [ $InstallDir != "/usr/local/MariaDB/Columnstore" ]; then
 	export PATH=$InstallDir/bin:$InstallDir/mysql/bin:/bin:/usr/bin
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$InstallDir/lib:$InstallDir/mysql/lib/mysql
 fi
@@ -107,7 +107,7 @@ start() {
 		#columnstore core files
 		$SUDO ulimit -c unlimited  > /dev/null 2>&1
 		$SUDO sysctl -q -w kernel.core_uses_pid=1  > /dev/null 2>&1
-		$SUDO sysctl -q -w kernel.core_pattern=/var/log/Calpont/corefiles/core.%e.%p  > /dev/null 2>&1
+		$SUDO sysctl -q -w kernel.core_pattern=/var/log/Columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
 	fi
 
 	RETVAL=0
@@ -128,8 +128,8 @@ stop() {
 	RETVAL=$?
 	rm -f /var/lock/subsys/columnstore
 	fuser -k 8604/tcp > /dev/null 2>&1
-	test -f $InstallDir/mysql/mysql-Calpont || return $RETVAL
-	$InstallDir/mysql/mysql-Calpont stop > /dev/null 2>&1
+	test -f $InstallDir/mysql/mysql-Columnstore || return $RETVAL
+	$InstallDir/mysql/mysql-Columnstore stop > /dev/null 2>&1
 	if [ -x $InstallDir/bin/columnstore.post-stop ]; then
 		$InstallDir/bin/columnstore.post-stop
 	fi

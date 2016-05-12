@@ -21,27 +21,27 @@ filter f_local1debug { facility(local1) and level(debug); };
 filter f_local2crit { facility(local2) and level(crit); };
 
 destination d_crit{
-	file("/var/log/Calpont/crit.log");
+	file("/var/log/Columnstore/crit.log");
 };
 
 destination d_err{       
-	file("/var/log/Calpont/err.log");
+	file("/var/log/Columnstore/err.log");
 };
 
 destination d_warning{       
-	file("/var/log/Calpont/warning.log");
+	file("/var/log/Columnstore/warning.log");
 };
 
 destination d_info{       
-	file("/var/log/Calpont/info.log");
+	file("/var/log/Columnstore/info.log");
 };
 
 destination d_debug{       
-	file("/var/log/Calpont/debug.log");
+	file("/var/log/Columnstore/debug.log");
 };
 
 destination d_data_mods{       
-	file("/var/log/Calpont/data/data_mods.log");
+	file("/var/log/Columnstore/data/data_mods.log");
 };
 
 log{

@@ -43,6 +43,7 @@ InfiniDB Enterprise binary files
 %package storage-engine
 Summary: MariaDB-Columnstore software MariaDB connector
 Group: Applications
+Obsoletes: columnstore-mysql
 Requires: columnstore-libs
 
 %description storage-engine
@@ -341,7 +342,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/MariaDB/Columnstore/lib/libcalmysql.so.1.0.0
 /usr/local/MariaDB/Columnstore/lib/libudf_mysql.so.1.0.0
 
-/usr/local/MariaDB/Columnstore/mysql/mysql-Calpont
+/usr/local/MariaDB/Columnstore/mysql/mysql-Columnstore
 /usr/local/MariaDB/Columnstore/mysql/install_calpont_mysql.sh
 /usr/local/MariaDB/Columnstore/mysql/syscatalog_mysql.sql
 /usr/local/MariaDB/Columnstore/mysql/dumpcat_mysql.sql

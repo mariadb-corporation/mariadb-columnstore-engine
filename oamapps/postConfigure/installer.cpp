@@ -888,7 +888,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "ERROR: InfiniDB Process failed to start, check log files in /var/log/Calpont" << endl;
+		cout << endl << "ERROR: InfiniDB Process failed to start, check log files in /var/log/Columnstore" << endl;
 	}
 }
 

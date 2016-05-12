@@ -60,7 +60,7 @@ tdriver-gcov: resourceMonitor-gcov.o $(subst .o,-gcov.o,$(OBJS))
 
 coverage: tdriver-gcov
 #	rm -f *.gcda
-#	rm -f /var/log/Calpont/cpu*.log
+#	rm -f /var/log/Columnstore/cpu*.log
 #	LD_LIBRARY_PATH=$(EXPORT_ROOT)/lib:/usr/local/lib ./tdriver-gcov
 #	for file in $(SRCS); do \
 #		bfile=`basename $$file .cpp`; \

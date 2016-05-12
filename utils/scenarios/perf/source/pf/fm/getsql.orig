@@ -41,7 +41,7 @@ cmd="/$startdate/,/$enddate/ {print \$0} "
 echo $cmd > /tmp/$host/sql/cmd.$$
 #
 # execute the command 
-awk -f /tmp/$host/sql/cmd.$$ /usr/local/Calpont/mysql/db/$host.log > /tmp/$host/sql/temp.log
+awk -f /tmp/$host/sql/cmd.$$ /usr/local/MariaDB/Columnstore/mysql/db/$host.log > /tmp/$host/sql/temp.log
 #
 exit
 #

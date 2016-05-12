@@ -1,25 +1,25 @@
-<?xml version="1.0"?>
+<?xml version = '1.0'?>
 <kdevelop>
- <general>
-  <author></author>
-  <email>dhill@srvhill04.calpont.com</email>
-  <version>$VERSION$</version>
-  <projectmanagement>KDevCustomProject</projectmanagement>
-  <primarylanguage>C</primarylanguage>
-  <ignoreparts>
-  </ignoreparts>
- </general>
- <kdevcustomproject>
-  <run>
-   <mainprogram>build</mainprogram>
-  </run>
- </kdevcustomproject>
- <kdevdebugger>
   <general>
-   <dbgshell></dbgshell>
+    <author/>
+    <email>dhill@srvhill04.calpont.com</email>
+    <version>$VERSION$</version>
+    <projectmanagement>KDevCustomProject</projectmanagement>
+    <primarylanguage>C</primarylanguage>
+    <ignoreparts/>
   </general>
- </kdevdebugger>
- <kdevdoctreeview>
+  <kdevcustomproject>
+    <run>
+      <mainprogram>build</mainprogram>
+      <directoryradio>executable</directoryradio>
+    </run>
+  </kdevcustomproject>
+  <kdevdebugger>
+    <general>
+      <dbgshell/>
+    </general>
+  </kdevdebugger>
+  <kdevdoctreeview>
     <ignoretocs>
       <toc>ada</toc>
       <toc>ada_bugs_gcc</toc>
@@ -66,7 +66,7 @@
     <ignoredoxygen>
       <toc>KDE Libraries (Doxygen)</toc>
     </ignoredoxygen>
- </kdevdoctreeview>
+  </kdevdoctreeview>
   <kdevfilecreate>
     <filetypes/>
     <useglobaltypes>
@@ -74,4 +74,29 @@
       <type ext="h" />
     </useglobaltypes>
   </kdevfilecreate>
+  <kdevcppsupport>
+    <references/>
+    <codecompletion>
+      <includeGlobalFunctions>true</includeGlobalFunctions>
+      <includeTypes>true</includeTypes>
+      <includeEnums>true</includeEnums>
+      <includeTypedefs>false</includeTypedefs>
+      <automaticCodeCompletion>true</automaticCodeCompletion>
+      <automaticArgumentsHint>true</automaticArgumentsHint>
+      <automaticHeaderCompletion>true</automaticHeaderCompletion>
+      <codeCompletionDelay>250</codeCompletionDelay>
+      <argumentsHintDelay>400</argumentsHintDelay>
+      <headerCompletionDelay>250</headerCompletionDelay>
+    </codecompletion>
+  </kdevcppsupport>
+  <kdevfileview>
+    <groups>
+      <hidenonprojectfiles>false</hidenonprojectfiles>
+      <hidenonlocation>false</hidenonlocation>
+    </groups>
+    <tree>
+      <hidepatterns>*.o,*.lo,CVS</hidepatterns>
+      <hidenonprojectfiles>false</hidenonprojectfiles>
+    </tree>
+  </kdevfileview>
 </kdevelop>

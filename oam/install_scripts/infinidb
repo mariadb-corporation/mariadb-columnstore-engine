@@ -107,7 +107,7 @@ start() {
 		#infinidb core files
 		$SUDO ulimit -c unlimited  > /dev/null 2>&1
 		$SUDO sysctl -q -w kernel.core_uses_pid=1  > /dev/null 2>&1
-		$SUDO sysctl -q -w kernel.core_pattern=/var/log/Calpont/corefiles/core.%e.%p  > /dev/null 2>&1
+		$SUDO sysctl -q -w kernel.core_pattern=/var/log/Columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
 	fi
 
 	RETVAL=0
@@ -128,8 +128,8 @@ stop() {
 	RETVAL=$?
 	rm -f /var/lock/subsys/infinidb
 	fuser -k 8604/tcp > /dev/null 2>&1
-	test -f $InstallDir/mysql/mysql-Calpont || return $RETVAL
-	$InstallDir/mysql/mysql-Calpont stop > /dev/null 2>&1
+	test -f $InstallDir/mysql/mysql-Columnstore || return $RETVAL
+	$InstallDir/mysql/mysql-Columnstore stop > /dev/null 2>&1
 	if [ -x $InstallDir/bin/infinidb.post-stop ]; then
 		$InstallDir/bin/infinidb.post-stop
 	fi

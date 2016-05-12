@@ -101,14 +101,14 @@ chown -h $user.$user libjemalloc.so >/dev/null 2>&1
 
 cd /
 
-test -d /var/log/Calpont || mkdir /var/log/Calpont >/dev/null 2>&1
-test -d /var/log/Calpont/archive || mkdir /var/log/Calpont/archive >/dev/null 2>&1
-test -d /var/log/Calpont/corefiles || mkdir /var/log/Calpont/corefiles >/dev/null 2>&1
-test -d /var/log/Calpont/trace || mkdir /var/log/Calpont/trace >/dev/null 2>&1
-test -h /var/log/Calpont/data && rm -f /var/log/Calpont/data
-test -d /var/log/Calpont/data || mkdir /var/log/Calpont/data >/dev/null 2>&1
+test -d /var/log/Columnstore || mkdir /var/log/Columnstore >/dev/null 2>&1
+test -d /var/log/Columnstore/archive || mkdir /var/log/Columnstore/archive >/dev/null 2>&1
+test -d /var/log/Columnstore/corefiles || mkdir /var/log/Columnstore/corefiles >/dev/null 2>&1
+test -d /var/log/Columnstore/trace || mkdir /var/log/Columnstore/trace >/dev/null 2>&1
+test -h /var/log/Columnstore/data && rm -f /var/log/Columnstore/data
+test -d /var/log/Columnstore/data || mkdir /var/log/Columnstore/data >/dev/null 2>&1
 # make sure trace dir is world-writable and sticky
-chmod 1755 /var/log/Calpont/trace >/dev/null 2>&1
+chmod 1755 /var/log/Columnstore/trace >/dev/null 2>&1
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
 test -d $installdir/data1/systemFiles || mkdir $installdir/data1/systemFiles
@@ -132,12 +132,12 @@ chmod -R 755 $installdir/data/bulk >/dev/null 2>&1
 mkdir -p /tmp/infinidb_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
-mkdir /var/log/Calpont/corefiles > /dev/null 2>&1
-chmod 755 /var/log/Calpont/corefiles > /dev/null 2>&1
+mkdir /var/log/Columnstore/corefiles > /dev/null 2>&1
+chmod 755 /var/log/Columnstore/corefiles > /dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
-mkdir /var/log/Calpont/data/archive > /dev/null 2>&1
+mkdir /var/log/Columnstore/data/archive > /dev/null 2>&1
 
 # install Calpont Log Rotate File
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
@@ -169,9 +169,9 @@ else
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Calpont.xml
 	sudo chmod 755 /var/log
-	sudo chmod -R 755 /var/log/Calpont
+	sudo chmod -R 755 /var/log/Columnstore
 	sudo chmod -R 777 /dev/shm
-	sudo rm -f /var/lock/subsys/mysql-Calpont
+	sudo rm -f /var/lock/subsys/mysql-Columnstore
 	sudo rm -f /tmp/StopCalpont
 
 	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/bin/infinidb.def

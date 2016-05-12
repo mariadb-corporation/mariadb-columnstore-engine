@@ -251,7 +251,7 @@
 		<ModuleHeartbeatPeriod>5</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
 		<ProcessHeartbeatPeriod>60</ProcessHeartbeatPeriod>
-		<DBRoot>/usr/local/Calpont/data</DBRoot>
+		<DBRoot>/usr/local/MariaDB/Columnstore/data</DBRoot>
 		<DBRMRoot>/home/pleblanc/DBRMRoot_test</DBRMRoot>
 		<RAIDCriticalThreshold>90</RAIDCriticalThreshold>
 		<RAIDMajorThreshold>80</RAIDMajorThreshold>
@@ -355,7 +355,7 @@
 	</VersionBuffer>
 	<OIDManager>
 		<!-- XXXPAT: This is located in tmp so we all have R/W access.
-		It should be relocated to /usr/local/Calpont/share/oidbitmap
+		It should be relocated to /usr/local/MariaDB/Columnstore/share/oidbitmap
 		on the production machine-->
 		<OIDBitmapFile>/tmp/oidbitmap</OIDBitmapFile>
 		<FirstOID>3000</FirstOID>
@@ -364,7 +364,7 @@
 		<OnDisconnect>Commit</OnDisconnect> <!-- or Rollback -->
 	</OracleConnector>
 	<WriteEngine>
-		<BulkRoot>/usr/local/Calpont/data/bulk</BulkRoot>
+		<BulkRoot>/usr/local/MariaDB/Columnstore/data/bulk</BulkRoot>
 	</WriteEngine>
 	<!-- The DBRM configuration entries should look like this.
 		 <DBRM_Master>

@@ -33,9 +33,9 @@ if test -f /sbin/chkconfig ; then
 	echo "################# /sbin/chkconfig --list | grep infinidb #################"
 	echo " "
 	$SUDO /sbin/chkconfig --list | grep infinidb 2>/dev/null
-	echo "################# /sbin/chkconfig --list | grep mysql-Calpont #################"
+	echo "################# /sbin/chkconfig --list | grep mysql-Columnstore #################"
 	echo " "
-	$SUDO /sbin/chkconfig --list | grep mysql-Calpont 2>/dev/null
+	$SUDO /sbin/chkconfig --list | grep mysql-Columnstore 2>/dev/null
 fi
 
 echo " "

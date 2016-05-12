@@ -4,7 +4,7 @@
 *  Author:         Joseph Williams
 *  Purpose:        Script to load the performance test result from a CSV file.
 ******************************************************************************/
-LOAD DATA INFILE '/usr/local/Calpont/data/bulk/data/import/TestTime.tbl' 
+LOAD DATA INFILE '/usr/local/MariaDB/Columnstore/data/bulk/data/import/TestTime.tbl' 
 INTO TABLE TestTime
 FIELDS 
 TERMINATED BY '|' 

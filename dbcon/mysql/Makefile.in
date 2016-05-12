@@ -40,7 +40,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = dbcon/mysql
-DIST_COMMON = $(dist_mysql_DATA) $(dist_mysql_SCRIPTS) \
+DIST_COMMON = $(dist_mysql_DATA) $(mysql-Columnstore) \
 	$(include_HEADERS) $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/compilerflags.m4 \
@@ -75,7 +75,7 @@ am_libcalmysql_la_OBJECTS = libcalmysql_la-ha_calpont.lo \
 	libcalmysql_la-ha_pseudocolumn.lo
 libcalmysql_la_OBJECTS = $(am_libcalmysql_la_OBJECTS)
 dist_mysqlSCRIPT_INSTALL = $(INSTALL_SCRIPT)
-SCRIPTS = $(dist_mysql_SCRIPTS)
+SCRIPTS = $(mysql-Columnstore)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -255,7 +255,7 @@ libcalmysql_la_LDFLAGS = -version-info 1:0:0 $(idb_common_ldflags) $(idb_common_
 libcalmysql_la_CPPFLAGS = -I/usr/include/libxml2 -I../../../mysql/include -I../../../mysql/sql -I../../../mysql/regex -DMYSQL_DYNAMIC_PLUGIN $(AM_CPPFLAGS)
 include_HEADERS = idb_mysql.h
 dist_mysql_DATA = syscatalog_mysql.sql dumpcat_mysql.sql calsetuserpriority.sql calremoveuserpriority.sql calshowprocesslist.sql my.cnf
-dist_mysql_SCRIPTS = install_calpont_mysql.sh mysql-Calpont dumpcat.pl
+mysql-Columnstore = install_calpont_mysql.sh mysql-Calpont dumpcat.pl
 all: all-am
 
 .SUFFIXES:
@@ -318,10 +318,10 @@ clean-libLTLIBRARIES:
 	done
 libcalmysql.la: $(libcalmysql_la_OBJECTS) $(libcalmysql_la_DEPENDENCIES) 
 	$(CXXLINK) -rpath $(libdir) $(libcalmysql_la_LDFLAGS) $(libcalmysql_la_OBJECTS) $(libcalmysql_la_LIBADD) $(LIBS)
-install-dist_mysqlSCRIPTS: $(dist_mysql_SCRIPTS)
+install-dist_mysqlSCRIPTS: $(mysql-Columnstore)
 	@$(NORMAL_INSTALL)
 	test -z "$(mysqldir)" || $(mkdir_p) "$(DESTDIR)$(mysqldir)"
-	@list='$(dist_mysql_SCRIPTS)'; for p in $$list; do \
+	@list='$(mysql-Columnstore)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  if test -f $$d$$p; then \
 	    f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
@@ -332,7 +332,7 @@ install-dist_mysqlSCRIPTS: $(dist_mysql_SCRIPTS)
 
 uninstall-dist_mysqlSCRIPTS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dist_mysql_SCRIPTS)'; for p in $$list; do \
+	@list='$(mysql-Columnstore)'; for p in $$list; do \
 	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
 	  echo " rm -f '$(DESTDIR)$(mysqldir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(mysqldir)/$$f"; \

@@ -358,12 +358,12 @@ namespace oam
      */
     const std::string LogFile[] =
     {
-        "local1.=crit -/var/log/Calpont/crit.log",
-        "local1.=err -/var/log/Calpont/err.log",
-        "local1.=warning -/var/log/Calpont/warning.log",
-        "local1.=info -/var/log/Calpont/info.log",
-        "local1.=debug -/var/log/Calpont/debug.log",
-        "local2.=crit -/var/log/Calpont/data/data_mods.log",
+        "local1.=crit -/var/log/Columnstore/crit.log",
+        "local1.=err -/var/log/Columnstore/err.log",
+        "local1.=warning -/var/log/Columnstore/warning.log",
+        "local1.=info -/var/log/Columnstore/info.log",
+        "local1.=debug -/var/log/Columnstore/debug.log",
+        "local2.=crit -/var/log/Columnstore/data/data_mods.log",
         ""
     };
 

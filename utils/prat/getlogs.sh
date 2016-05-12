@@ -51,9 +51,9 @@ getlogsremote ()
 getlogslocal ()
 { mkdir -p $CTOOLS/data/$hostdir/logs
   if [ $date = $currentdate ]; then
-     cp -r /var/log/Calpont/* /usr/local/MariaDB/Columnstore/tools/data/$hostdir/logs
+     cp -r /var/log/Columnstore/* /usr/local/MariaDB/Columnstore/tools/data/$hostdir/logs
   else
-     find /var/log/Calpont -type f -name "*$date"  -exec sh -c 'exec cp -f "$@" '$CTOOLS/data/$hostdir/logs'' find-copy {} +
+     find /var/log/Columnstore -type f -name "*$date"  -exec sh -c 'exec cp -f "$@" '$CTOOLS/data/$hostdir/logs'' find-copy {} +
   fi
 }
 #

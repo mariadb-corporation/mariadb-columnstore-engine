@@ -1,8 +1,8 @@
 #
 # $Id$
 #
-Summary: InfiniDB-MariaDB software
-Name: infinidb
+Summary: MariaDB-Columnstore software
+Name: columnstore
 @@VERSION@@
 @@RELEASE@@
 Vendor: MariaDB, Inc.
@@ -13,44 +13,41 @@ License: Copyright (c) 2016 MariaDB, Inc., all rights reserved; redistributable 
 BuildRoot: %{_tmppath}/%{name}-%{release}-buildroot
 
 %description
-InfiniDB-MariaDB software meta-package
+MariaDB-Columnstore software meta-package
 
 %package platform
-Summary: InfiniDB-MariaDB software binaries
+Summary: MariaDB-Columnstore software binaries
 Group: Applications
-Obsoletes: calpont
-Requires: expect, infinidb-libs
+Requires: expect, columnstore-libs
 
 %description platform
-InfiniDB-MariaDB binary files
+MariaDB-Columnstore binary files
 @@BUILDINFO@@
 
 %package libs
-Summary: InfiniDB-MariaDB software libraries
+Summary: MariaDB-Columnstore software libraries
 Group: Applications
-Obsoletes: calpont
 
 %description libs
-InfiniDB-MariaDB libraries
+MariaDB-Columnstore libraries
 
 %package enterprise
 Summary: InfiniDB Enterprise software binaries
 Group: Applications
-Obsoletes: calpont
-Requires: infinidb-libs, infinidb-platform
-License: Proprietary; Copyright (c) 2014 InfiniDB, Inc., all rights reserved
+Requires: columnstore-libs, columnstore-platform
+License: Proprietary; Copyright (c) 2016 MariaDB, Inc., all rights reserved
 
 %description enterprise
 InfiniDB Enterprise binary files
 
 %package storage-engine
-Summary: InfiniDB-MariaDB software MariaDB connector
+Summary: MariaDB-Columnstore software MariaDB connector
 Group: Applications
-Obsoletes: calpont-mysql
-Requires: infinidb-libs
+Obsoletes: columnstore-mysql
+Requires: columnstore-libs
 
 %description storage-engine
-InfiniDB MariaDB connector binary files
+MariaDB Columnstore connector binary files
 
 %prep
 %define _use_internal_dependency_generator 0
@@ -85,15 +82,15 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/MariaDB/Columnstore/bin/pre-uninstall
 /usr/local/MariaDB/Columnstore/bin/PrimProc
 /usr/local/MariaDB/Columnstore/bin/DecomSvr
-/usr/local/MariaDB/Columnstore/bin/upgrade-infinidb.sh
+/usr/local/MariaDB/Columnstore/bin/upgrade-columnstore.sh
 /usr/local/MariaDB/Columnstore/bin/run.sh
-/usr/local/MariaDB/Columnstore/bin/infinidb
-/usr/local/MariaDB/Columnstore/bin/calpontSyslog 
-/usr/local/MariaDB/Columnstore/bin/calpontSyslog7
-/usr/local/MariaDB/Columnstore/bin/calpontSyslog-ng 
+/usr/local/MariaDB/Columnstore/bin/columnstore
+/usr/local/MariaDB/Columnstore/bin/columnstoreSyslog 
+/usr/local/MariaDB/Columnstore/bin/columnstoreSyslog7
+/usr/local/MariaDB/Columnstore/bin/columnstoreSyslog-ng 
 /usr/local/MariaDB/Columnstore/bin/syslogSetup.sh
 /usr/local/MariaDB/Columnstore/bin/cplogger
-/usr/local/MariaDB/Columnstore/bin/infinidb.def
+/usr/local/MariaDB/Columnstore/bin/columnstore.def
 /usr/local/MariaDB/Columnstore/bin/dbbuilder
 /usr/local/MariaDB/Columnstore/bin/cpimport.bin
 /usr/local/MariaDB/Columnstore/bin/load_brm
@@ -110,18 +107,14 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/MariaDB/Columnstore/bin/trapHandler
 /usr/local/MariaDB/Columnstore/bin/remote_command.sh
 /usr/local/MariaDB/Columnstore/bin/postConfigure
-/usr/local/MariaDB/Columnstore/bin/calpontLogRotate
+/usr/local/MariaDB/Columnstore/bin/columnstoreLogRotate
 /usr/local/MariaDB/Columnstore/bin/transactionLog
-/usr/local/MariaDB/Columnstore/bin/calpontDBWrite
+/usr/local/MariaDB/Columnstore/bin/columnstoreDBWrite
 /usr/local/MariaDB/Columnstore/bin/transactionLogArchiver.sh
 /usr/local/MariaDB/Columnstore/bin/system_installer.sh
 /usr/local/MariaDB/Columnstore/bin/installer
 /usr/local/MariaDB/Columnstore/bin/module_installer.sh
 /usr/local/MariaDB/Columnstore/bin/patchInstaller
-/usr/local/MariaDB/Columnstore/bin/patch_installer.sh
-/usr/local/MariaDB/Columnstore/bin/xm_installer.sh
-/usr/local/MariaDB/Columnstore/bin/calpontUninstall.sh
-/usr/local/MariaDB/Columnstore/bin/director_installer.sh
 /usr/local/MariaDB/Columnstore/bin/user_installer.sh
 /usr/local/MariaDB/Columnstore/bin/performance_installer.sh
 /usr/local/MariaDB/Columnstore/bin/startupTests.sh
@@ -130,10 +123,10 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/MariaDB/Columnstore/bin/remote_scp_put.sh
 /usr/local/MariaDB/Columnstore/bin/remotessh.exp
 /usr/local/MariaDB/Columnstore/bin/ServerMonitor
-/usr/local/MariaDB/Columnstore/bin/master-rep-infinidb.sh 
-/usr/local/MariaDB/Columnstore/bin/slave-rep-infinidb.sh
+/usr/local/MariaDB/Columnstore/bin/master-rep-columnstore.sh 
+/usr/local/MariaDB/Columnstore/bin/slave-rep-columnstore.sh
 /usr/local/MariaDB/Columnstore/bin/rsync.sh
-/usr/local/MariaDB/Columnstore/bin/calpontSupport
+/usr/local/MariaDB/Columnstore/bin/columnstoreSupport
 /usr/local/MariaDB/Columnstore/bin/hardwareReport.sh
 /usr/local/MariaDB/Columnstore/bin/softwareReport.sh
 /usr/local/MariaDB/Columnstore/bin/configReport.sh
@@ -144,7 +137,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/MariaDB/Columnstore/bin/alarmReport.sh
 /usr/local/MariaDB/Columnstore/bin/amazonInstaller
 /usr/local/MariaDB/Columnstore/bin/remote_command_verify.sh
-/usr/local/MariaDB/Columnstore/bin/disable-rep-infinidb.sh
+/usr/local/MariaDB/Columnstore/bin/disable-rep-columnstore.sh
 
 
 #
@@ -175,7 +168,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/MariaDB/Columnstore/bin/hdfsCheck
 /usr/local/MariaDB/Columnstore/bin/configxml.sh
 /usr/local/MariaDB/Columnstore/bin/remote_scp_get.sh
-/usr/local/MariaDB/Columnstore/bin/calpontAlias
+/usr/local/MariaDB/Columnstore/bin/columnstoreAlias
 /usr/local/MariaDB/Columnstore/bin/autoConfigure
 /usr/local/MariaDB/Columnstore/bin/ddlcleanup
 /usr/local/MariaDB/Columnstore/bin/idbmeminfo
@@ -186,7 +179,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/MariaDB/Columnstore/bin/myCnf-exclude-args.text
 /usr/local/MariaDB/Columnstore/bin/mycnfUpgrade
 /usr/local/MariaDB/Columnstore/bin/getMySQLpw
-/usr/local/MariaDB/Columnstore/bin/infinidb.conf
+/usr/local/MariaDB/Columnstore/bin/columnstore.conf
 
 /usr/local/MariaDB/Columnstore/sbin/snmpd
 /usr/local/MariaDB/Columnstore/sbin/snmptrapd

@@ -53,7 +53,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	send_user "Uninstall Calpont Package                       "
 	send " \n"
 	send date\n
-	send "ssh $USERNAME@$SERVER 'rm -f /etc/init.d/infinidb /etc/init.d/mysql-Calpont $INSTALLDIR/releasenum >/dev/null 2>&1'\n"
+	send "ssh $USERNAME@$SERVER 'rm -f /etc/init.d/infinidb /etc/init.d/mysql-Columnstore $INSTALLDIR/releasenum >/dev/null 2>&1'\n"
 	set timeout 20
 	expect {
 		"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
