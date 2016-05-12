@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE KDevPrjSession>
 <KDevPrjSession>
- <DocsAndViews NumberOfDocuments="2" >
-  <Doc0 NumberOfViews="1" URL="file:///home/dhill/InfiniDB_MariaDB/utils/loggingcpp/Calpont.xml" >
-   <View0 line="0" Type="Source" />
+ <DocsAndViews NumberOfDocuments="1" >
+  <Doc0 NumberOfViews="1" URL="file:///home/dhill/InfiniDB_MariaDB/oamapps/mcsadmin/mcsadmin.cpp" >
+   <View0 line="4830" Type="Source" />
   </Doc0>
-  <Doc1 NumberOfViews="1" URL="file:///home/dhill/InfiniDB_MariaDB/oam/etc/Calpont.xml" >
-   <View0 line="11" Type="Source" />
-  </Doc1>
  </DocsAndViews>
  <pluginList>
   <kdevdebugger>

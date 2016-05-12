@@ -1,5 +1,5 @@
 #
-# Calpont version with Daily running at midnight
+# MariaDB Columnstore version with Daily running at midnight
 #
 
 SHELL=/bin/bash

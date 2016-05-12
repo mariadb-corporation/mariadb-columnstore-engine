@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2014 MariaDB Columnstore, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -164,7 +164,7 @@ bool waitForStop()
 //------------------------------------------------------------------------------
 void handleSigTerm(int i)
 {
-    std::cout << "Received SIGTERM to terminate Calpont Console..." << std::endl;
+    std::cout << "Received SIGTERM to terminate MariDB Columnstore Console..." << std::endl;
 
 }
 
@@ -324,9 +324,9 @@ int main(int argc, char *argv[])
     }
     else
     {
-        cout << endl << "Calpont InfiniDB Command Console" << endl;
+        cout << endl << "MariaDB Columnstore Admin Console" << endl;
         cout << "   enter 'help' for list of commands" << endl;
-        cout << "   enter 'exit' to exit the Calpont InfiniDB Command Console" << endl;
+        cout << "   enter 'exit' to exit the MariaDB Columnstore Command Console" << endl;
         cout << "   use up/down arrows to recall commands" << endl << endl;
 
 		// output current active alarm stats
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
             }
 
             // read input
-            pcommand = readline("InfiniDB> ");
+            pcommand = readline("MariaDB-Columnstore > ");
 
             if (!pcommand)                        // user hit <Ctrl>-D
                 pcommand = strdup("exit");
@@ -695,7 +695,7 @@ int processCommand(string* arguments)
             // close the log file
             writeLog("End of a command session!!!");
             logFile.close();
-            cout << "Exiting the Calpont Command Console" << endl;
+            cout << "Exiting the MariaDB Columnstore Admin Console" << endl;
 
             exit (0);
         }
@@ -1876,7 +1876,7 @@ int processCommand(string* arguments)
 				break;
             }
 
-			cout << endl << "This command stops the processing of applications on all Modules within the Calpont System" << endl;
+			cout << endl << "This command stops the processing of applications on all Modules within the MariDB Columnstore System" << endl;
 
             try
             {
@@ -1993,7 +1993,7 @@ int processCommand(string* arguments)
 		bool bDBRMReady = dbrm.isDBRMReady();
             	getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 
-		cout << endl << "This command stops the processing of applications on all Modules within the Calpont System" << endl;
+		cout << endl << "This command stops the processing of applications on all Modules within the MariDB Columnstore System" << endl;
 
 		try
 		{
@@ -2092,15 +2092,15 @@ int processCommand(string* arguments)
 		
 			if ( DBRootStorageType == "hdfs")
 			{
-				string cmd = "pdsh -a '/" + startup::StartUp::installDir() + "/bin/infinidb stop' > /tmp/cc-stop.pdsh 2>&1";
+				string cmd = "pdsh -a '/" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/cc-stop.pdsh", "exit") ) {
-					cout << endl << "ERROR: Stopping InfiniDB Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
+					cout << endl << "ERROR: Stopping MariaDB Columnstore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
 				}
 			}
 			else
 			{
-				string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/status.log";
+				string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
 				system(cmd.c_str());
 			}
 		}
@@ -2110,17 +2110,17 @@ int processCommand(string* arguments)
 	
 			if ( gracefulTemp == FORCEFUL )
 			{
-				string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/status.log";
+				string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
 				system(cmd.c_str());
-				cout << endl << "   Successful shutdown of System (stopped local infinidb service) " << endl << endl;
+				cout << endl << "   Successful shutdown of System (stopped local columnstore service) " << endl << endl;
 			}
 	
 			if (Failed.find("Connection refused") != string::npos)
 			{
-				cout << endl << "**** shutdownSystem Error : ProcessManager not Active, stopping infinidb service" << endl;
-				string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/status.log";
+				cout << endl << "**** shutdownSystem Error : ProcessManager not Active, stopping columnstore service" << endl;
+				string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
 				system(cmd.c_str());
-				cout << endl << "   Successful stop of local infinidb service " << endl << endl;
+				cout << endl << "   Successful stop of local columnstore service " << endl << endl;
 			}
 			else
 			{
@@ -2137,10 +2137,10 @@ int processCommand(string* arguments)
 		
 			if ( DBRootStorageType == "hdfs")
 			{
-				string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/infinidb stop' > /tmp/cc-stop.pdsh 2>&1";
+				string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/cc-stop.pdsh", "exit") ) {
-					cout << endl << "ERROR: Stopping InfiniDB Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
+					cout << endl << "ERROR: Stopping MariaDB Columnstore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
 					break;
 				}
 			}
@@ -2160,16 +2160,16 @@ int processCommand(string* arguments)
 				break;
 			}
 
-			// if infinidb service is down, then start system by starting all of the infinidb services
+			// if columnstore service is down, then start system by starting all of the columnstore services
 			// this would be used after a shutdownSystem command
-			// if infinidb service is up, send message to ProcMgr to start system (which starts all processes)
+			// if columnstore service is up, send message to ProcMgr to start system (which starts all processes)
 
-			string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+			string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 			system(cmd.c_str());
-			if (!oam.checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+			if (!oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 			{
-				cout << "startSystem command, 'infinidb' service is down, sending command to" << endl;
-				cout << "start the 'infinidb' service on all modules" << endl << endl;
+				cout << "startSystem command, 'columnstore' service is down, sending command to" << endl;
+				cout << "start the 'columnstore' service on all modules" << endl << endl;
 
 				SystemModuleTypeConfig systemmoduletypeconfig;
 				ModuleTypeConfig moduletypeconfig;
@@ -2203,7 +2203,7 @@ int processCommand(string* arguments)
 						password = "ssh";
 
 					//
-					// perform start of InfiniDB of other servers in the system
+					// perform start of columnstore of other servers in the system
 					//
 	
 					DeviceNetworkList::iterator pt;
@@ -2235,10 +2235,10 @@ int processCommand(string* arguments)
 				
 					if ( DBRootStorageType == "hdfs")
 					{
-						string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/infinidb restart' > /tmp/cc-restart.pdsh 2>&1";
+						string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
 						system(cmd.c_str());
 						if (oam.checkLogStatus("/tmp/cc-restart.pdsh", "exit") ) {
-							cout << endl << "ERROR: Restart InfiniDB Service failure, check /tmp/cc-restart.pdsh. exit..." << endl;
+							cout << endl << "ERROR: Restart MariaDB Columnstore Service failure, check /tmp/cc-restart.pdsh. exit..." << endl;
 							break;
 						}
 					}
@@ -2269,11 +2269,11 @@ int processCommand(string* arguments)
 	
 								if ( modulename == localModule ) 
 								{
-									cmd = startup::StartUp::installDir() + "/bin/infinidb restart > /tmp/start.log 2>&1";
+									cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
 									int rtnCode = system(cmd.c_str());
 									if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0) 
 									{
-										cout << endl << "error with running 'infinidb restart' on local module " << endl;
+										cout << endl << "error with running 'columnstore restart' on local module " << endl;
 										cout << endl << "**** startSystem Failed" << endl;
 										break;
 									}
@@ -2285,14 +2285,14 @@ int processCommand(string* arguments)
 								for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
 								{
 									//run remote command script
-									cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " '" + startup::StartUp::installDir() + "/bin/infinidb restart' 0";
+									cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " '" + startup::StartUp::installDir() + "/bin/columnstore restart' 0";
 									int rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) < 0) {
-										cout << endl << "error with running 'infinidb start' on module " + modulename << endl;
+										cout << endl << "error with running 'columnstore start' on module " + modulename << endl;
 										cout << endl << "**** startSystem Failed" << endl;
 
-										// stop local infinidb service
-										cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/stop.log 2>&1";
+										// stop local columnstore service
+										cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/stop.log 2>&1";
 										system(cmd.c_str());
 
 										FAILED = true;
@@ -2301,11 +2301,11 @@ int processCommand(string* arguments)
 									else
 									{
 										if (rtnCode > 0) {
-											cout << endl << "Invalid Password when running 'infinidb start' on module " + modulename << ", can retry by providing password as the second argument" << endl;
+											cout << endl << "Invalid Password when running 'columnstore start' on module " + modulename << ", can retry by providing password as the second argument" << endl;
 											cout << endl << "**** startSystem Failed" << endl;
 
-											// stop local infinidb service
-											cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/stop.log 2>&1";
+											// stop local columnstore service
+											cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/stop.log 2>&1";
 											system(cmd.c_str());
 
 											FAILED = true;
@@ -2329,10 +2329,10 @@ int processCommand(string* arguments)
 					//just kick off local server
 					cout << "   System being started, please wait...";
 					cout.flush();
-					cmd = startup::StartUp::installDir() + "/bin/infinidb restart > /tmp/start.log 2>&1";
+					cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
 					int rtnCode = system(cmd.c_str());
 					if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0) {
-						cout << endl << "error with running 'infinidb restart' on local module " << endl;
+						cout << endl << "error with running 'columnstore restart' on local module " << endl;
 						cout << endl << "**** startSystem Failed" << endl;
 						break;
 					}
@@ -2378,21 +2378,21 @@ int processCommand(string* arguments)
 				break;
 			}
 
-			// if infinidb service is down, then start system by starting all of the infinidb services
+			// if columnstore service is down, then start system by starting all of the columnstore services
 			// this would be used after a shutdownSystem command
-			// if infinidb service is up, send message to ProcMgr to start system (which starts all processes)
+			// if columnstore service is up, send message to ProcMgr to start system (which starts all processes)
 
-			string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+			string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 			system(cmd.c_str());
-			if (!oam.checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+			if (!oam.checkLogStatus("/tmp/status.log", "columnstore is running") ) 
 			{
 				if (bNeedsConfirm) 
 				{
 					if (confirmPrompt("")) // returns true if user wants to quit.
 						break;
 				}
-				cout << "restartSystem command, 'infinidb' service is down, sending command to" << endl;
-				cout << "start the 'infinidb' service on all modules" << endl << endl;
+				cout << "restartSystem command, 'columnstore' service is down, sending command to" << endl;
+				cout << "start the 'columnstore' service on all modules" << endl << endl;
 
 				SystemModuleTypeConfig systemmoduletypeconfig;
 				ModuleTypeConfig moduletypeconfig;
@@ -2424,7 +2424,7 @@ int processCommand(string* arguments)
 						password = "ssh";
 
 					//
-					// perform start of InfiniDB of other servers in the system
+					// perform start of columnstore of other servers in the system
 					//
 	
 					DeviceNetworkList::iterator pt;
@@ -2456,10 +2456,10 @@ int processCommand(string* arguments)
 				
 					if ( DBRootStorageType == "hdfs")
 					{
-						string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/infinidb restart' > /tmp/cc-restart.pdsh 2>&1";
+						string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
 						system(cmd.c_str());
 						if (oam.checkLogStatus("/tmp/cc-restart.pdsh", "exit") ) {
-							cout << endl << "ERROR: Restart InfiniDB Service failue, check /tmp/cc-restart.pdsh. exit..." << endl;
+							cout << endl << "ERROR: Restart MariaDB Columnstore Service failue, check /tmp/cc-restart.pdsh. exit..." << endl;
 							break;
 						}
 					}
@@ -2495,15 +2495,15 @@ int processCommand(string* arguments)
 								for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
 								{
 									//run remote command script
-									cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " '" + startup::StartUp::installDir() + "/bin/infinidb restart' 0";
+									cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " '" + startup::StartUp::installDir() + "/bin/columnstore restart' 0";
 	
 									int rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) < 0) {
-										cout << endl << "error with running 'infinidb start' on module " + modulename << endl;
+										cout << endl << "error with running 'columnstore start' on module " + modulename << endl;
 										cout << endl << "**** restartSystem Failed" << endl;
 
-										// stop local infinidb service
-										cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/stop.log 2>&1";
+										// stop local columnstore service
+										cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/stop.log 2>&1";
 										system(cmd.c_str());
 
 										FAILED = true;
@@ -2512,12 +2512,12 @@ int processCommand(string* arguments)
 									else
 									{
 										if (rtnCode > 0) {
-											cout << endl << "Invalid Password when running 'infinidb start' on module " + modulename << ", can retry by providing password as the second argument" << endl;
+											cout << endl << "Invalid Password when running 'columnstore start' on module " + modulename << ", can retry by providing password as the second argument" << endl;
 											cout << endl << "**** restartSystem Failed" << endl;
 											FAILED = true;
 
-											// stop local infinidb service
-											cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /tmp/stop.log 2>&1";
+											// stop local columnstore service
+											cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/stop.log 2>&1";
 											system(cmd.c_str());
 
 											break;
@@ -2531,11 +2531,11 @@ int processCommand(string* arguments)
 								break;
 
 							//RESTART LOCAL HOST
-							cmd = startup::StartUp::installDir() + "/bin/infinidb restart > /tmp/start.log 2>&1";
+							cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
 							int rtnCode = system(cmd.c_str());
 							if (geteuid() == 0 && WEXITSTATUS(rtnCode) != 0) 
 							{
-								cout << endl << "error with running 'infinidb restart' on local module " << endl;
+								cout << endl << "error with running 'columnstore restart' on local module " << endl;
 								cout << endl << "**** restartSystem Failed" << endl;
 								break;
 							}
@@ -2550,10 +2550,10 @@ int processCommand(string* arguments)
 					//just kick off local server
 					cout << "   System being restarted, please wait...";
 					cout.flush();
-					string cmd = startup::StartUp::installDir() + "/bin/infinidb restart > /tmp/start.log 2>&1";
+					string cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
-						cout << endl << "error with running 'infinidb start' on local module " << endl;
+						cout << endl << "error with running 'columnstore start' on local module " << endl;
 						cout << endl << "**** restartSystem Failed" << endl;
 						break;
 					}
@@ -3314,7 +3314,7 @@ int processCommand(string* arguments)
 				string configFileName;
 				oam.getSystemConfig("SystemLogConfigFile", configFileName);
 
-                cout << endl << "Calpont System Log Configuration Data" << endl << endl;
+                cout << endl << "MariDB Columnstore System Log Configuration Data" << endl << endl;
 
 				cout << "System Logging Configuration File being used: " <<  configFileName << endl << endl;
 
@@ -3382,9 +3382,9 @@ int processCommand(string* arguments)
 		}
 
 		//check the system status / service status and only allow command when System is MAN_OFFLINE
-		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
-		if (oam.checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+		if (oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 		{
 			SystemStatus systemstatus;
 			try {
@@ -3639,7 +3639,7 @@ int processCommand(string* arguments)
 			BRM::DBRM dbrm;
 			getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 
-			cout << endl << "This command suspends the DDL/DML writes to the Calpont Database" << endl;
+			cout << endl << "This command suspends the DDL/DML writes to the MariDB Columnstore Database" << endl;
             try
             {
 
@@ -3720,7 +3720,7 @@ int processCommand(string* arguments)
                         break;
                 }
 
-                // stop writes to Calpont Database
+                // stop writes to MariDB Columnstore Database
                 oam.SuspendWrites(gracefulTemp, ackTemp);
             }
 			catch (exception& e)
@@ -3738,11 +3738,11 @@ int processCommand(string* arguments)
         case 33: // resumeDatabaseWrites
         {
 			if ( arguments[1] != "y" ) {
-				if (confirmPrompt("This command resumes the DDL/DML writes to the Calpont Database"))
+				if (confirmPrompt("This command resumes the DDL/DML writes to the MariDB Columnstore Database"))
 					break;
 			}
 
-			// resume writes to Calpont Database
+			// resume writes to MariDB Columnstore Database
 
 			try{
 				SystemProcessStatus systemprocessstatus;
@@ -3767,7 +3767,7 @@ int processCommand(string* arguments)
 					}
 				}
 				oam.setSystemStatus(ACTIVE);
-				cout << endl << "Resume Calpont Database Writes Request successfully completed" << endl;
+				cout << endl << "Resume MariDB Columnstore Database Writes Request successfully completed" << endl;
 			}
 			catch (exception& e)
 			{
@@ -3859,9 +3859,9 @@ int processCommand(string* arguments)
 		}
 
 		//check the system status / service status and only allow command when System is MAN_OFFLINE
-		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
-		if (!oam.checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+		if (!oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 		{
 			cout << endl << "**** assignDbrootPmConfig Failed,  System is down. Needs to be running" << endl;
 			break;
@@ -4331,7 +4331,7 @@ int processCommand(string* arguments)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting AmazonElasticModule in the Calpont System Configuration file" << endl;
+				cout << "ERROR: Problem setting AmazonElasticModule in the MariDB Columnstore System Configuration file" << endl;
 				break;
 			}
 
@@ -4445,7 +4445,7 @@ int processCommand(string* arguments)
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting AmazonElasticModule in the Calpont System Configuration file" << endl;
+						cout << "ERROR: Problem setting AmazonElasticModule in the MariDB Columnstore System Configuration file" << endl;
 						break;
 					}
 				}
@@ -4823,18 +4823,18 @@ int processCommand(string* arguments)
         	break;
 	}
 
-        case 47: // getCalpontSoftwareInfo
+        case 47: // getMariDB ColumnstoreSoftwareInfo
         {
 			cout << endl;
 			if ( rootUser)
 			{
-				system("rpm -qi infinidb-platform > /tmp/calpont.txt 2>&1");
-				if (oam.checkLogStatus("/tmp/calpont.txt", "Name"))
-					system("cat /tmp/calpont.txt");
+				system("rpm -qi columnstore-platform > /tmp/columnstore.txt 2>&1");
+				if (oam.checkLogStatus("/tmp/columnstore.txt", "Name"))
+					system("cat /tmp/columnstore.txt");
 				else {
-					system("dpkg -s calpont > /tmp/calpont.txt 2>&1");
-					if (oam.checkLogStatus("/tmp/calpont.txt", "Status: install"))
-						system("cat /tmp/calpont.txt");
+					system("dpkg -s columnstore > /tmp/columnstore.txt 2>&1");
+					if (oam.checkLogStatus("/tmp/columnstore.txt", "Status: install"))
+						system("cat /tmp/columnstore.txt");
 					else {
 						SystemSoftware systemsoftware;
 						oam.getSystemSoftware(systemsoftware);
@@ -5452,7 +5452,7 @@ int processCommand(string* arguments)
 
 				if ( arguments[3] != "y") {
 					cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-					string warning = "This command does a remove a module from the Calpont System";
+					string warning = "This command does a remove a module from the MariDB Columnstore System";
 					// confirm request
 					if (confirmPrompt(warning))
 						break;
@@ -5517,7 +5517,7 @@ int processCommand(string* arguments)
 
 				if ( arguments[2] != "y") {
 					cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-					string warning = "This command does a stop and remove a module from the Calpont System";
+					string warning = "This command does a stop and remove a module from the MariDB Columnstore System";
 					// confirm request
 					if (confirmPrompt(warning))
 						break;
@@ -6511,7 +6511,7 @@ int processCommand(string* arguments)
 		{
 			// confirm request
 			if ( arguments[2] != "y" ) {
-				if (confirmPrompt("This command stops the processing of applications on a Module within the Calpont System"))
+				if (confirmPrompt("This command stops the processing of applications on a Module within the MariDB Columnstore System"))
 					break;
 			}
 		}
@@ -6630,7 +6630,7 @@ int processCommand(string* arguments)
 
             // confirm request
 			if ( arguments[2] != "y" ) {
-				if (confirmPrompt("This command starts the processing of applications on a Module within the Calpont System"))
+				if (confirmPrompt("This command starts the processing of applications on a Module within the MariDB Columnstore System"))
 					break;
 			}
 
@@ -6775,7 +6775,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			{
 				// give warning for Process-Monitor
 				if ( arguments[1] == "ProcessManager" ) {
-            		if (confirmPrompt("ProcessManager is the Interface for the Console and should only be removed as part of a Calpont Package installation"))
+            		if (confirmPrompt("ProcessManager is the Interface for the Console and should only be removed as part of a MariDB Columnstore Package installation"))
                 		break;
 				}
 				else
@@ -6783,7 +6783,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 					if ( arguments[3] != "y" ) {
 						getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 						// confirm request
-						if (confirmPrompt("This command stops the processing of an application on a Module within the Calpont System"))
+						if (confirmPrompt("This command stops the processing of an application on a Module within the MariDB Columnstore System"))
 							break;
 					}
 				}
@@ -6836,7 +6836,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 
             // confirm request
-            if (confirmPrompt("This command restarts the processing of an application on a Module within the Calpont System"))
+            if (confirmPrompt("This command restarts the processing of an application on a Module within the MariDB Columnstore System"))
                 break;
 
             try
@@ -6899,7 +6899,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			string password = arguments[1];
 			if ( arguments[2] != "y") {
 				cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-				string warning = "This command stops the Processing of applications and reboots all modules within the Calpont System";
+				string warning = "This command stops the Processing of applications and reboots all modules within the MariDB Columnstore System";
 				// confirm request
 				if (confirmPrompt(warning))
 					break;
@@ -6991,7 +6991,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 					// close the log file
 					writeLog("End of a command session!!!");
 					logFile.close();
-					cout << endl << "Exiting the Calpont Command Console" << endl;
+					cout << endl << "Exiting the MariDB Columnstore Command Console" << endl;
 					exit (0);
 				}
 			}
@@ -7022,7 +7022,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			string password = arguments[2];
 			if ( arguments[3] != "y") {
 				cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-				string warning = "This command reboots a node within the Calpont System";
+				string warning = "This command reboots a node within the MariDB Columnstore System";
 				// confirm request
 				if (confirmPrompt(warning))
 					break;
@@ -7061,7 +7061,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 										// close the log file
 										writeLog("End of a command session!!!");
 										logFile.close();
-										cout << endl << "Exiting the Calpont Command Console" << endl;
+										cout << endl << "Exiting the MariDB Columnstore Command Console" << endl;
 										exit (0);
 									}
 								}
@@ -7095,7 +7095,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command stops the dbrm processes within the Calpont System"))
+				if (confirmPrompt("This command stops the dbrm processes within the MariDB Columnstore System"))
 					break;
 			}
 
@@ -7129,7 +7129,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command restarts the dbrm processes within the Calpont System"))
+				if (confirmPrompt("This command restarts the dbrm processes within the MariDB Columnstore System"))
 					break;
 			}
 
@@ -7163,7 +7163,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem getting systemStartupOffline from the Calpont System Configuration file" << endl;
+				cout << "ERROR: Problem getting systemStartupOffline from the MariDB Columnstore System Configuration file" << endl;
 				return 1;
 			}
 		
@@ -7195,7 +7195,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting systemStartupOffline in the Calpont System Configuration file" << endl;
+				cout << "ERROR: Problem setting systemStartupOffline in the MariDB Columnstore System Configuration file" << endl;
 				exit(-1);
 			}
             cout << endl << "   Successful setting of systemStartupOffline to '" << systemStartupOffline << "'" << endl << endl;
@@ -7206,7 +7206,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command stops the PrimProc processes within the Calpont System"))
+				if (confirmPrompt("This command stops the PrimProc processes within the MariDB Columnstore System"))
 					break;
 			}
 
@@ -7240,7 +7240,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command restarts the PrimProc processes within the Calpont System"))
+				if (confirmPrompt("This command restarts the PrimProc processes within the MariDB Columnstore System"))
 					break;
 			}
 
@@ -7260,7 +7260,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command stops the ExeMgr processes within the Calpont System"))
+				if (confirmPrompt("This command stops the ExeMgr processes within the MariDB Columnstore System"))
 					break;
 			}
 
@@ -7294,7 +7294,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command restarts the ExeMgr processes within the Calpont System"))
+				if (confirmPrompt("This command restarts the ExeMgr processes within the MariDB Columnstore System"))
 					break;
 			}
 
@@ -7326,11 +7326,11 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
             try
             {
 				oam.distributeConfigFile(name);
-                cout << endl << "   Successful Distribution of Calpont Config File" << endl << endl;
+                cout << endl << "   Successful Distribution of MariDB Columnstore Config File" << endl << endl;
             }
             catch (exception& e)
             {
-                cout << endl << "**** Distribution of Calpont Config File Failed :  " << e.what() << endl;
+                cout << endl << "**** Distribution of MariDB Columnstore Config File Failed :  " << e.what() << endl;
             }
         }
         break;
@@ -7954,7 +7954,7 @@ void printProcessStatus(std::string port)
 		}
 	}
 
-	cout << endl << "Calpont Process statuses" << endl << endl;
+	cout << endl << "MariDB Columnstore Process statuses" << endl << endl;
 	cout << "Process             Module    Status            Last Status Change        Process ID" << endl;
 	cout << "------------------  ------    ---------------   ------------------------  ----------" << endl;
 	try

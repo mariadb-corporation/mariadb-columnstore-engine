@@ -2,7 +2,7 @@
 #
 # $Id: post-mysqld-install 3661 2013-06-25 22:04:33Z dhill $
 #
-# Post-install steps for infinidb-mysql install
+# Post-install steps for columnstore-mysql install
 
 prefix=/usr/local
 installdir=$prefix/MariaDB/Columnstore

@@ -1,5 +1,5 @@
 # 
-# Calpont Log Rotate file that gets installed in /etc/logrotate.d
+# MariaDb Columnstore Log Rotate file that gets installed in /etc/logrotate.d
 # as part of the RPM installation
 # 
 

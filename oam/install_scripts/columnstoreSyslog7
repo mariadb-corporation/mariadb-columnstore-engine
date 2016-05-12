@@ -1,4 +1,4 @@
-# Calpont Database Platform Logging
+# MariaDb Columnstore Database Platform Logging
 local1.crit -/var/log/Columnstore/crit.log
 local1.err -/var/log/Columnstore/err.log
 local1.warning -/var/log/Columnstore/warning.log

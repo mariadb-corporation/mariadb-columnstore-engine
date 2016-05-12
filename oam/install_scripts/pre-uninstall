@@ -67,7 +67,7 @@ export INFINIDB_INSTALL_DIR=$installdir
 cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if test -f /etc/fstab ; then
-		$sudo sed -i '/Calpont\/data/d' /etc/fstab > /dev/null 2>&1
+		$sudo sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
 	fi
 fi
  
@@ -79,11 +79,11 @@ rm -f /var/log/Columnstore/*.log1 > /dev/null 2>&1
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 sudo rm -f /etc/default/columnstore
 
-# remove Calpont Log Rotate File abd Transaction Log File
+# remove Mariab Columnstore Log Rotate File abd Transaction Log File
 rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
 rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
 
-# delete Calpont shared memory segments
+# delete Mariab Columnstore shared memory segments
 pkill -9 ProcMon
 $installdir/bin/clearShm  > /dev/null 2>&1
 
@@ -150,7 +150,7 @@ fi
 
 #tell user to run post configure script
 echo " "
-echo "Calpont uninstall completed"
+echo "Mariab Columnstore uninstall completed"
 
 exit 0
 

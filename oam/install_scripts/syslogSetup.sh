@@ -2,7 +2,7 @@
 #
 # $Id: syslogSetup.sh 421 2007-04-05 15:46:55Z dhill $
 #
-# syslogSetup.sh - install / uninstall Calpont InfiniDB system logging configuration
+# syslogSetup.sh - install / uninstall MariaDB Columnstore system logging configuration
 
 # no point in going any further if not root... (only works in bash)
 test $EUID -eq 0 || exit 0
@@ -148,12 +148,12 @@ checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ "$syslog_conf" != /etc/rsyslog.d/calpont.conf ]; then
-		rm -f ${syslog_conf}.calpontSave
-		cp ${syslog_conf} ${syslog_conf}.calpontSave >/dev/null 2>&1
-		sed -i '/# Calpont/,$d' ${syslog_conf}.calpontSave > /dev/null 2>&1
+		rm -f ${syslog_conf}.columnstoreSave
+		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
+		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
 
-	egrep -qs 'Calpont Database Platform Logging' ${syslog_conf}
+	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
 		#set the syslog for calpont logging
 		# remove older version incase it was installed by previous build
@@ -181,18 +181,18 @@ checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	if [ "$syslog_conf" != /etc/rsyslog.d/calpont.conf ]; then
 		if [ "$syslog_conf" != /etc/rsyslog.d/49-calpont.conf ]; then
-			egrep -qs 'Calpont Database Platform Logging' ${syslog_conf}
+			egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 			if [ $? -eq 0 ]; then
-				if [ -f ${syslog_conf}.calpontSave ] ; then
+				if [ -f ${syslog_conf}.columnstoreSave ] ; then
 					#uninstall the syslog for calpont logging
 					mv -f ${syslog_conf} ${syslog_conf}.calpontBackup
-					mv -f ${syslog_conf}.calpontSave ${syslog_conf} >/dev/null 2>&1
+					mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
 					if [ ! -f ${syslog_conf} ] ; then
 						cp ${syslog_conf}.calpontBackup ${syslog_conf}
 					fi
 				fi
 			fi
-			sed -i '/# Calpont/,$d' ${syslog_conf} > /dev/null 2>&1
+			sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
 		else
 			rm -f "$syslog_conf"
 		fi
@@ -214,11 +214,11 @@ fi
 status() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
-	egrep -qs 'Calpont Database Platform Logging' ${syslog_conf}
+	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -eq 0 ]; then
 		echo $syslog_conf
 	else
-		echo "No System Log Config File configured for InfiniDB System Logging"
+		echo "No System Log Config File configured for MariaDB Columnstore System Logging"
 	fi
 fi
 }

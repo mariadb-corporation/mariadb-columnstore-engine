@@ -112,14 +112,14 @@ start() {
 
 	RETVAL=0
 	echo "Starting MariaDB Columnstore Database Platform"
-	rm -f /tmp/StopCalpont
+	rm -f /tmp/StopColumnstore
 	exec $InstallDir/bin/run.sh $InstallDir/bin/ProcMon  > /dev/null 2>&1 &
 
 	return $RETVAL
 }	
 stop() {
 	echo "Shutting down MariaDB Columnstore Database Platform"
-	touch /tmp/StopCalpont
+	touch /tmp/StopColumnstore
 	pkill -9 ProcMon
 	pkill -9 ProcMgr
 	pkill -9 snmptrapd
