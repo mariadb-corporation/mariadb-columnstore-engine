@@ -38,7 +38,7 @@ if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
 	# add library config file
-	/bin/cp -f $installdir/bin/infinidb.conf /etc/ld.so.conf.d/.
+	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
 	ldconfig
 fi
 
@@ -128,8 +128,8 @@ mkdir -p $installdir/data/bulk/tmpjob >/dev/null 2>&1
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 chmod -R 755 $installdir/data/bulk >/dev/null 2>&1
 
-#create infinidb temp file directory
-mkdir -p /tmp/infinidb_tmp_files >/dev/null 2>&1
+#create columnstore temp file directory
+mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
 mkdir /var/log/Columnstore/corefiles > /dev/null 2>&1
@@ -142,29 +142,29 @@ mkdir /var/log/Columnstore/data/archive > /dev/null 2>&1
 # install Calpont Log Rotate File
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
 cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-rm -rf $installdir/mysql/db/infinidb_log_archive > /dev/null 2>&1
+rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
 # delete Calpont shared memory segments
 $installdir/bin/Calpont/bin/clearShm  > /dev/null 2>&1
 
-#setup the infinidb service script
-rm -f /etc/init.d/infinidb >/dev/null 2>&1
-cp $installdir/bin/infinidb /etc/init.d >/dev/null 2>&1
+#setup the columnstore service script
+rm -f /etc/init.d/columnstore >/dev/null 2>&1
+cp $installdir/bin/columnstore /etc/init.d >/dev/null 2>&1
 if [ -x /sbin/chkconfig ]; then
-	/sbin/chkconfig --add infinidb > /dev/null 2>&1
-	/sbin/chkconfig infinidb on > /dev/null 2>&1
+	/sbin/chkconfig --add columnstore > /dev/null 2>&1
+	/sbin/chkconfig columnstore on > /dev/null 2>&1
 elif [ -x /usr/sbin/update-rc.d ]; then
-	/usr/sbin/update-rc.d infinidb defaults 99 > /dev/null 2>&1
+	/usr/sbin/update-rc.d columnstore defaults 99 > /dev/null 2>&1
 else
 	echo ""
-	echo "Package 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for infinidb"	
+	echo "Package 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
 fi
 
 #setup InfiniDB system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	chmod 777 -R /dev/shm
-	rm -f /etc/default/infinidb
+	rm -f /etc/default/columnstore
 else
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Calpont.xml
@@ -174,8 +174,8 @@ else
 	sudo rm -f /var/lock/subsys/mysql-Columnstore
 	sudo rm -f /tmp/StopCalpont
 
-	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/bin/infinidb.def
-	sudo cp $installdir/bin/infinidb.def /etc/default/infinidb
+	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/bin/columnstore.def
+	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
 fi
 
 #check if InfiniDB system logging was setup
