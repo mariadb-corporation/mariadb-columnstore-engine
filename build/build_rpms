@@ -45,7 +45,7 @@ fi
 . ./build/releasenum
 
 # make the install package
-buildroot=$HOME/rpm/BUILD/columnstore-$version-$release
+buildroot=$HOME/rpm/BUILD/mariadb-columnstore-$version-$release
 
 rm -rf $buildroot
 mkdir -p $buildroot

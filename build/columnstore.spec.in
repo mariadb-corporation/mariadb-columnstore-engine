@@ -2,7 +2,7 @@
 # $Id$
 #
 Summary: MariaDB-Columnstore software
-Name: columnstore
+Name: mariadb-columnstore
 @@VERSION@@
 @@RELEASE@@
 Vendor: MariaDB, Inc.
