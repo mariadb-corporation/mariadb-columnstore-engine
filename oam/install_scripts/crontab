@@ -1,5 +1,5 @@
 #
-# Calpont version with Daily running at midnight
+# MariaDB Columnstore version with Daily running at midnight
 #
 
 SHELL=/bin/bash
@@ -14,5 +14,5 @@ HOME=/
 42 4 1 * * root run-parts /etc/cron.monthly
 
 # Translation Log Archiver, default to every 10 minutes
-00,10,20,30,40,50 * * * * root /usr/local/Calpont/bin/transactionLogArchiver.sh
+00,10,20,30,40,50 * * * * root /usr/local/MariaDB/Columnstore/bin/transactionLogArchiver.sh
 

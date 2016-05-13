@@ -11,14 +11,14 @@
 #*                  hostdir - directory name for this run
 #******************************************************************************/
 
-CTOOLS=/usr/local/Calpont/tools
+CTOOLS=/usr/local/MariaDB/Columnstore/tools
 
 date=$1
 starttime=$2
 endtime=$3
 hostdir=$4
 localhost=$(hostname -s)
-modulename=`cat /usr/local/Calpont/local/module`
+modulename=`cat /usr/local/MariaDB/Columnstore/local/module`
 if [ -f /tmp/.prat/.hostlist2.txt ]; then
    sc=`wc -l < /tmp/.prat/.hostlist2.txt`
 else
@@ -47,7 +47,7 @@ readserverlist ()
 #
 getsarremote ()
 { # Send the sar extraction statments to the remote module
-  /usr/local/Calpont/bin/remote_command.sh $servername $srvpwd "$CTOOLS/getsar.sh $date $starttime $endtime $hostdir"
+  /usr/local/MariaDB/Columnstore/bin/remote_command.sh $servername $srvpwd "$CTOOLS/getsar.sh $date $starttime $endtime $hostdir"
 }
 #
 getsarlocal ()

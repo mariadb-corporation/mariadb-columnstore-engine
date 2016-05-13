@@ -30,7 +30,7 @@
  * 2. add the UDF function implementation in udfsdk.cpp
  * 3. add the connector stub for this UDF function in udfsdk.cpp
  * 4. build the dynamic library libudfsdk
- * 5. put the library in /usr/local/Calpont/lib of all modules
+ * 5. put the library in /usr/local/MariaDB/Columnstore/lib of all modules
  * 6. restart all the InfiniDB servers and MySQL server
  * 7. notify mysqld about the new functions with the commands like:
  *

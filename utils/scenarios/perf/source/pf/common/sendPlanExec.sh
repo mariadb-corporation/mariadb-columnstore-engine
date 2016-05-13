@@ -14,7 +14,7 @@ echo ---------------------------------------------------------------------------
 echo sendPlan start: $3
 date
 echo
-/usr/local/Calpont/bin/sendPlan -v -s$1 -t$2 $3
+/usr/local/MariaDB/Columnstore/bin/sendPlan -v -s$1 -t$2 $3
 echo
 date
 echo sendPlan end: $3

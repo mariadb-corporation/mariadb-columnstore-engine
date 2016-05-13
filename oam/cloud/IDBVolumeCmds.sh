@@ -93,30 +93,30 @@ if [ "$1" = "createTag" ]; then
 fi
 
 
-test -f /usr/local/Calpont/post/functions && . /usr/local/Calpont/post/functions
+test -f /usr/local/MariaDB/Columnstore/post/functions && . /usr/local/MariaDB/Columnstore/post/functions
 
-ec2=`$prefix/Calpont/bin/getConfig Installation EC2_HOME`
+ec2=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_HOME`
 
 if [ $ec2 == "unassigned" ]; then
        STATUS="unknown"
         RETVAL=1
 fi
 
-java=`$prefix/Calpont/bin/getConfig Installation JAVA_HOME`
-path=`$prefix/Calpont/bin/getConfig Installation EC2_PATH`
+java=`$prefix/MariaDB/Columnstore/bin/getConfig Installation JAVA_HOME`
+path=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_PATH`
 
 export PATH=$path
 export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
 # get Keys and region
-AmazonAccessKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonAccessKey`
+AmazonAccessKeyFile=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonAccessKey`
 if [ $AmazonAccessKeyFile == "unassigned" ]; then
 	echo "FAILED: missing Config Setting AmazonAccessKey : $AmazonAccessKeyfile"
 	exit 1
 fi
 
-AmazonSecretKeyFile=`$prefix/Calpont/bin/getConfig Installation AmazonSecretKey`
+AmazonSecretKeyFile=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonSecretKey`
 if [ $AmazonSecretKeyFile == "unassigned" ]; then
 	echo "FAILED: missing Config Setting AmazonSecretKeyFile : $AmazonSecretKeyFile"
 	exit 1
@@ -135,7 +135,7 @@ if test ! -f $AmazonSecretKeyfile ; then
 	exit 1
 fi
 
-Region=`$prefix/Calpont/bin/getConfig Installation AmazonRegion`
+Region=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonRegion`
 
 
 checkInfostatus() {
@@ -189,21 +189,21 @@ checkInfostatus() {
 
 createvolume() {
 	# get zone
-	zone=`$prefix/Calpont/bin/IDBInstanceCmds.sh getZone`
+	zone=`$prefix/MariaDB/Columnstore/bin/IDBInstanceCmds.sh getZone`
 
 	if [ $moduleType == "um" ]; then
 		# get type
-		volumeType=`$prefix/Calpont/bin/getConfig Installation UMVolumeType`
+		volumeType=`$prefix/MariaDB/Columnstore/bin/getConfig Installation UMVolumeType`
 		if [ $volumeType == "io1" ]; then
 			# get IOPS
-			volumeIOPS=`$prefix/Calpont/bin/getConfig Installation UMVolumeIOPS`
+			volumeIOPS=`$prefix/MariaDB/Columnstore/bin/getConfig Installation UMVolumeIOPS`
 		fi
 	else	# pm
 		# get type
-		volumeType=`$prefix/Calpont/bin/getConfig Installation PMVolumeType`
+		volumeType=`$prefix/MariaDB/Columnstore/bin/getConfig Installation PMVolumeType`
 		if [ $volumeType == "io1" ]; then
 			# get IOPS
-			volumeIOPS=`$prefix/Calpont/bin/getConfig Installation PMVolumeIOPS`
+			volumeIOPS=`$prefix/MariaDB/Columnstore/bin/getConfig Installation PMVolumeIOPS`
 		fi
 	fi
 
@@ -246,7 +246,7 @@ detachvolume() {
 			((retries++))
 			sleep 1
 		done
-		test -f /usr/local/Calpont/post/functions && . /usr/local/Calpont/post/functions
+		test -f /usr/local/MariaDB/Columnstore/post/functions && . /usr/local/MariaDB/Columnstore/post/functions
 		cplogger -w 100 "detachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
@@ -257,7 +257,7 @@ detachvolume() {
 		exit 0
 	fi
 
-	test -f /usr/local/Calpont/post/functions && . /usr/local/Calpont/post/functions
+	test -f /usr/local/MariaDB/Columnstore/post/functions && . /usr/local/MariaDB/Columnstore/post/functions
 	cplogger -w 100 "detachvolume failed status: $STATUS"
 	echo $STATUS
 	exit 1
@@ -281,7 +281,7 @@ attachvolume() {
 			((retries++))
 			sleep 1
 		done
-		test -f /usr/local/Calpont/post/functions && . /usr/local/Calpont/post/functions
+		test -f /usr/local/MariaDB/Columnstore/post/functions && . /usr/local/MariaDB/Columnstore/post/functions
 		cplogger -w 100 "attachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
@@ -292,7 +292,7 @@ attachvolume() {
 		exit 0
 	fi
 
-	test -f /usr/local/Calpont/post/functions && . /usr/local/Calpont/post/functions
+	test -f /usr/local/MariaDB/Columnstore/post/functions && . /usr/local/MariaDB/Columnstore/post/functions
 	cplogger -w 100 "attachvolume failed: $STATUS"
 	echo $STATUS
 	exit 1

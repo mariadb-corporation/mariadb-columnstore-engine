@@ -24,7 +24,7 @@ set PKGTYPE "binary"
 set SERVERTYPE [lindex $argv 6]
 set MYSQLPORT [lindex $argv 7]
 set DEBUG [lindex $argv 8]
-set INSTALLDIR "/usr/local/Calpont"
+set INSTALLDIR "/usr/local/MariaDB/Columnstore"
 set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
@@ -48,12 +48,12 @@ spawn -noecho /bin/bash
 
 if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	#
-	# remove Calpont files
+	# remove MariaDB Columnstore files
 	#
-	send_user "Uninstall Calpont Package                       "
+	send_user "Uninstall MariabDB Columnstore Package                       "
 	send " \n"
 	send date\n
-	send "ssh $USERNAME@$SERVER 'rm -f /etc/init.d/infinidb /etc/init.d/mysql-Calpont $INSTALLDIR/releasenum >/dev/null 2>&1'\n"
+	send "ssh $USERNAME@$SERVER 'rm -f /etc/init.d/columnstore /etc/init.d/mysql-Columnstore $INSTALLDIR/releasenum >/dev/null 2>&1'\n"
 	set timeout 20
 	expect {
 		"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
@@ -68,12 +68,12 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 		"passphrase" { send "$PASSWORD\n" }
 		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-		"Calpont uninstall completed"	{ send_user "DONE" }
+		"MariabDB Columnstore uninstall completed"	{ send_user "DONE" }
 	}
 	set timeout 30
 	expect {
 		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-		"Calpont uninstall completed"	{ send_user "DONE" }
+		"MariabDB Columnstore uninstall completed"	{ send_user "DONE" }
 	}
 	send_user "\n"
 }
@@ -82,9 +82,9 @@ if { $INSTALLTYPE == "uninstall" } {
 }
 sleep 10
 # 
-# send the Calpont package
+# send the MariabDB Columnstore package
 #
-send_user "Copy New Calpont Package to Module              "
+send_user "Copy New MariabDB Columnstore Package to Module              "
 send " \n"
 send date\n
 send "scp $CALPONTPKG $USERNAME@$SERVER:$CALPONTPKG\n"
@@ -113,7 +113,7 @@ sleep 5
 #
 # install package
 #
-send_user "Install Calpont Package on Module               "
+send_user "Install MariabDB Columnstore Package on Module               "
 send " \n"
 send date\n
 send "ssh $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG;cat $INSTALLDIR/releasenum'\n"
@@ -133,7 +133,7 @@ expect {
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	timeout { send_user "ERROR: Timeout\n" ; exit 1 }
 }
-#sleep to give time for cat Calpont/releasenum to complete
+#sleep to give time for cat MariabDB Columnstore/releasenum to complete
 sleep 5
 
 send_user "\n"
@@ -164,7 +164,7 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	# copy over calpont config file
 	#
-	send_user "Copy Calpont Config file to Module              "
+	send_user "Copy MariabDB Columnstore Config file to Module              "
 	send " \n"
 	send date\n
 	send "scp $INSTALLDIR/etc/* $USERNAME@$SERVER:$INSTALLDIR/etc\n"
@@ -208,7 +208,7 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	# copy over calpont OS files
 	#
-	send_user "Copy Calpont OS files to Module                 "
+	send_user "Copy MariabDB Columnstore OS files to Module                 "
 	send " \n"
 	send date\n
 	send "scp $INSTALLDIR/local/etc/$MODULE/*  $USERNAME@$SERVER:$INSTALLDIR/local\n"

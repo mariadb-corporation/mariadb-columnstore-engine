@@ -10,7 +10,7 @@
 #*
 #***************************************************************************/
 #
-moduletype=`cat /usr/local/Calpont/local/module`
+moduletype=`cat /usr/local/MariaDB/Columnstore/local/module`
 hostdir=`date +%Y%m%d%H%M%S`
 #
 # Module check
@@ -35,7 +35,7 @@ then
 fi
 
 # issue Calpont console command and send the output to a file
-/usr/local/Calpont/bin/mcsadmin getsystemnetworkconfig ACK_YES |
+/usr/local/MariaDB/Columnstore/bin/mcsadmin getsystemnetworkconfig ACK_YES |
 egrep -w 'Director|User|Performance' | 
 awk -F" " '{print $1"\t" $2"\t" $3"\t" $4"\t" $6}' > /tmp/modulelist.txt
 #

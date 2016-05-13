@@ -11,12 +11,12 @@
 # Close enough for hand grenades.
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/Calpont
+	INFINIDB_INSTALL_DIR=/usr/local/MariaDB/Columnstore
 fi
 
 export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
 
-if [ $INFINIDB_INSTALL_DIR != "/usr/local/Calpont" ]; then
+if [ $INFINIDB_INSTALL_DIR != "/usr/local/MariaDB/Columnstore" ]; then
 	export PATH=$INFINIDB_INSTALL_DIR/bin:$INFINIDB_INSTALL_DIR/mysql/bin:/bin:/usr/bin
 	export LD_LIBRARY_PATH=$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql
 fi

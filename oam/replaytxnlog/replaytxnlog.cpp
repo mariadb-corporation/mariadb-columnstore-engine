@@ -349,7 +349,7 @@ list<string> ReplayTxnLog::getLogFileNames()
 		oam.getLogFile("pm1", "data", fullLogFileName);
 	#else
 */
-		fullLogFileName = "/var/log/Calpont/data/data_mods.log";
+		fullLogFileName = "/var/log/Columnstore/data/data_mods.log";
 /*
 	#endif
 */

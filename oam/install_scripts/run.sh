@@ -47,7 +47,7 @@ fi
 
 while [ $keep_going -ne 0 ]; do
 	$exename $args
-	if [ -e /tmp/StopCalpont ]; then
+	if [ -e /tmp/StopColumnstore ]; then
 		exit 0
 	fi
 	if [ $topt -gt 0 -a $retries -ge $topt ]; then

@@ -19,5 +19,5 @@
 #
 #  Execute script on test database
 #
-   /usr/local/Calpont/mysql/bin/mysql --defaults-file=/usr/local/Calpont/mysql/my.cnf -u root $1 <$2 > $logFileName.test.log
+   /usr/local/MariaDB/Columnstore/mysql/bin/mysql --defaults-file=/usr/local/MariaDB/Columnstore/mysql/my.cnf -u root $1 <$2 > $logFileName.test.log
    exit 0

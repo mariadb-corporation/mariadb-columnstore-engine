@@ -19,7 +19,7 @@ set INSTALLTYPE [lindex $argv 4]
 set PKGTYPE [lindex $argv 5]
 set NODEPS [lindex $argv 6]
 set DEBUG [lindex $argv 7]
-set INSTALLDIR "/usr/local/Calpont"
+set INSTALLDIR "/usr/local/MariaDB/Columnstore"
 set IDIR [lindex $argv 8]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
@@ -41,17 +41,17 @@ log_user $DEBUG
 spawn -noecho /bin/bash
 #
 if { $PKGTYPE == "rpm" } {
-	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^infinidb')"
+	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^mariabd-columnstore')"
 	set PKGERASE1 "rpm -e --nodeps "
 
-	set PKGINSTALL "rpm -ivh $NODEPS --force infinidb*$VERSION*"
-	set PKGUPGRADE "rpm -Uvh --noscripts infinidb*$VERSION*"
+	set PKGINSTALL "rpm -ivh $NODEPS --force mariabd-columnstore*$VERSION*"
+	set PKGUPGRADE "rpm -Uvh --noscripts mariabd-columnstore*$VERSION*"
 } else {
 	if { $PKGTYPE == "deb" } {
-		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^infinidb')"
+		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^mariabd-columnstore')"
 		set PKGERASE1 "dpkg -P "
-		set PKGINSTALL "dpkg -i --force-confnew infinidb*$VERSION*"
-		set PKGUPGRADE "dpkg -i --force-confnew infinidb*$VERSION*"
+		set PKGINSTALL "dpkg -i --force-confnew mariabd-columnstore*$VERSION*"
+		set PKGUPGRADE "dpkg -i --force-confnew mariabd-columnstore*$VERSION*"
 	} else {
 		if { $PKGTYPE != "bin" } {
 			send_user "Invalid Package Type of $PKGTYPE"
@@ -125,7 +125,7 @@ if { $INSTALLTYPE == "uninstall" } { exit 0 }
 set timeout 30
 #expect -re {[$#] }
 send_user "Copy New InfiniDB Package to Module              "
-send "ssh $USERNAME@$SERVER 'rm -f /root/infinidb-*.$PKGTYPE'\n"
+send "ssh $USERNAME@$SERVER 'rm -f /root/mariabd-columnstore-*.$PKGTYPE'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {
@@ -144,7 +144,7 @@ expect {
         -re {[$#] } { }
 }
 
-send "scp $HOME/infinidb*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/mariabd-columnstore*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
 if { $PASSWORD != "ssh" } {
         set timeout 30
         expect {
@@ -172,7 +172,7 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	send_user "Install InfiniDB Packages on Module               "
 
-	send "ssh $USERNAME@$SERVER '$PKGINSTALL infinidb*$VERSION* ;$PKGERASE dummy'\n"
+	send "ssh $USERNAME@$SERVER '$PKGINSTALL mariabd-columnstore*$VERSION* ;$PKGERASE dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
 		expect {

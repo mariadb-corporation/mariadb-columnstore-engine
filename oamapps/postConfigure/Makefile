@@ -19,8 +19,8 @@ VERSION=1.0.0
 CPPFLAGS=-I$(EXPORT_ROOT)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 
-CLIBS=-L$(EXPORT_ROOT)/lib -L/usr/local/Calpont/lib $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS)
-LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/Calpont/lib
+CLIBS=-L$(EXPORT_ROOT)/lib -L/usr/local/MariaDB/Columnstore/lib $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS)
+LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 TLIBS=-lcppunit -ldl
 GLIBS=$(CLIBS) -lcppunit -ldl
 

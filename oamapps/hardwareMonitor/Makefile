@@ -18,7 +18,7 @@ CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 #  anywhere except in ../oamcpp
 CLIBS=-L$(EXPORT_ROOT)/lib -lloggingcpp -lsnmpmanager -lnetsnmpmibs -lnetsnmpagent -lnetsnmp \
 -lnetsnmpmibs -lnetsnmphelpers -loamcpp -lmessageqcpp -lconfigcpp -lboost_filesystem -lssl -lxml2 -ldl
-LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/Calpont/lib
+LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 TLIBS=-lcppunit -ldl
 GLIBS=$(CLIBS) -lcppunit -ldl
 LD_LIBRARY_PATH=

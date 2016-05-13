@@ -7,7 +7,7 @@ use DBD::mysql;
 
 $| = 1;
 
-$cfgfile='/usr/local/Calpont/mysql/my.cnf';
+$cfgfile='/usr/local/MariaDB/Columnstore/mysql/my.cnf';
 
 $username = 'root';
 $auth = '';

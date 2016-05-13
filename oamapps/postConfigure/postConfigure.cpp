@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2014 MariDB Columnstore, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 	if (rlrc > 0)
 	{
 		thisexepath[rlrc] = 0;
-		//should look something like '/usr/local/Calpont/bin/postConfigure'
+		//should look something like '/usr/local/MariaDB/Columnstore/bin/postConfigure'
 		char* ptr;
 		ptr = strrchr(thisexepath, '/');
 		if (ptr)
@@ -268,8 +268,8 @@ int main(int argc, char *argv[])
 	{
 		if( string("-h") == argv[i] ) {
 			cout << endl;
-			cout << "This is the InfiniDB System Configuration and Installation tool." << endl;
-			cout << "It will Configure the InfiniDB System based on Operator inputs and" << endl;
+			cout << "This is the MariDB Columnstore System Configuration and Installation tool." << endl;
+			cout << "It will Configure the MariDB Columnstore System based on Operator inputs and" << endl;
 			cout << "will perform a Package Installation of all of the Modules within the" << endl;
 			cout << "System that is being configured." << endl;
 			cout << endl;
@@ -383,8 +383,8 @@ int main(int argc, char *argv[])
 	oldFileName = installDir + "/etc/Calpont.xml.rpmsave";
 
 	cout << endl;
-	cout << "This is the InfiniDB System Configuration and Installation tool." << endl;
-	cout << "It will Configure the InfiniDB System and will perform a Package" << endl;
+	cout << "This is the MariDB Columnstore System Configuration and Installation tool." << endl;
+	cout << "It will Configure the MariDB Columnstore System and will perform a Package" << endl;
 	cout << "Installation of all of the Servers within the System that is being configured." << endl;
 	cout << endl;
 
@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
 		strftime (timestamp, 200, "%m:%d:%y-%H:%M:%S", &tm);
 		string currentDate = timestamp;
 
-		string postConfigureLog = "/var/log/infinidb-postconfigure-" + currentDate;
+		string postConfigureLog = "/var/log/columnstore-postconfigure-" + currentDate;
 
 		cout << "With the no-Prompting Option being specified, you will be required to have the following:" << endl;
 		cout << endl;
@@ -423,11 +423,11 @@ int main(int argc, char *argv[])
 //		redirectStandardOutputToFile(postConfigureLog, false );
 	}
 
-	//check if InfiniDB is up and running
-	string cmd = installDir + "/bin/infinidb status > /tmp/status.log";
+	//check if MariDB Columnstore is up and running
+	string cmd = installDir + "/bin/columnstore status > /tmp/status.log";
 	system(cmd.c_str());
-	if (oam.checkLogStatus("/tmp/status.log", "InfiniDB is running") ) {
-		cout << "InfiniDB is running, can't run postConfigure while InfiniDB is running. Exiting.." << endl;
+	if (oam.checkLogStatus("/tmp/status.log", "MariDB Columnstore is running") ) {
+		cout << "MariDB Columnstore is running, can't run postConfigure while MariDB Columnstore is running. Exiting.." << endl;
 		exit (0);
 	}
 
@@ -585,7 +585,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting DBRoot Count in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem setting DBRoot Count in the MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -603,11 +603,11 @@ int main(int argc, char *argv[])
 				checkMysqlPort(mysqlPort, sysConfig);
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
-				cout << endl << "===== Performing Configuration Setup and InfiniDB Startup =====" << endl;
+				cout << endl << "===== Performing Configuration Setup and MariDB Columnstore Startup =====" << endl;
 
 				cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
 				system(cmd.c_str());
@@ -634,12 +634,12 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting SingleServerInstall from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting SingleServerInstall from the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -665,7 +665,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem getting ServerTypeInstall from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem getting ServerTypeInstall from the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -696,7 +696,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting ServerTypeInstall in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting ServerTypeInstall in the MariDB Columnstore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -705,7 +705,7 @@ int main(int argc, char *argv[])
 			{
 				cout << "Combined Server Installation will be performed." << endl;
 				cout << "The Server will be configured as a Performance Module." << endl;
-				cout << "All InfiniDB Processes will run on the Performance Modules." << endl << endl;
+				cout << "All MariDB Columnstore Processes will run on the Performance Modules." << endl << endl;
 
 				//module ProcessConfig.xml to setup all apps on the dm
 				if( !updateProcessConfig(IserverTypeInstall) )
@@ -758,7 +758,7 @@ int main(int argc, char *argv[])
 				string answer = "n";
 
 				cout << "NOTE: Local Query Feature allows the ability to query data from a single Performance" << endl;
-				cout << "      Module. Check InfiniDB Admin Guide for additional information." << endl << endl;
+				cout << "      Module. Check MariDB Columnstore Admin Guide for additional information." << endl << endl;
 
 				while(true) {
 					if ( pmwithum ) 
@@ -818,7 +818,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !writeConfig(sysConfig) ) { 
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl; 
 		exit(1);
 	}
 
@@ -858,7 +858,7 @@ int main(int argc, char *argv[])
 		cout << "You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
 		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
-		cout <<     "This option is recommended and would be use if you are setting up a InfiniDB system." << endl << endl;
+		cout <<     "This option is recommended and would be use if you are setting up a MariDB Columnstore system." << endl << endl;
 		cout << "2. Using standard hardware IDs for hostnames, IP Addresses, and Storage Devices." << endl;
 		cout <<     "Using this option, you would need to pre-create the Instances and the EBS storages" << endl;
 		cout <<     "and then provide the hostnames/IP-Addresses during the configuration and system expansion" << endl;
@@ -995,7 +995,7 @@ int main(int argc, char *argv[])
 		}
 
 		if ( !writeConfig(sysConfig) ) { 
-			cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
+			cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl; 
 			exit(1);
 		}
 
@@ -1052,12 +1052,12 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting InitialInstallFlag from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting InitialInstallFlag from the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) { 
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl; 
 		exit(1);
 	}
 
@@ -1089,7 +1089,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting ParentOAMModuleName the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting ParentOAMModuleName the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1100,7 +1100,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting ParentStandbyOAMModuleName the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting ParentStandbyOAMModuleName the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1134,7 +1134,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem reading the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1188,7 +1188,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting NumBlocksPct in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem setting NumBlocksPct in the MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -1205,12 +1205,12 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting TotalUmMemory in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem setting TotalUmMemory in the MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 			}
@@ -1231,7 +1231,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 			}
@@ -1262,7 +1262,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting NumBlocksPct in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem setting NumBlocksPct in the MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -1278,12 +1278,12 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting TotalUmMemory in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem setting TotalUmMemory in the MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 			}
@@ -1303,7 +1303,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 			}	
@@ -1317,12 +1317,12 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting InitialInstallFlag from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting InitialInstallFlag from the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1390,7 +1390,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting Module Count in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting Module Count in the MariDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 				}
@@ -1435,7 +1435,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting Module Count in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting Module Count in the MariDB Columnstore System Configuration file" << endl;
 				exit(1);
 			}
 		}
@@ -1580,7 +1580,7 @@ int main(int argc, char *argv[])
 								else 
 								{
 									string enable = "y";
-									cout << "Module '" + newModuleName + "' is Disabled. It needs to be enabled to startup InfiniDB." << endl;
+									cout << "Module '" + newModuleName + "' is Disabled. It needs to be enabled to startup MariDB Columnstore." << endl;
 									prompt = "Do you want to Enable it or exit? [y,exit] (y) > ";
 									pcommand = callReadline(prompt.c_str());
 									if (pcommand)
@@ -1621,12 +1621,12 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting ModuleDisableState in the InfiniDB System Configuration file" << endl;
+							cout << "ERROR: Problem setting ModuleDisableState in the MariDB Columnstore System Configuration file" << endl;
 							exit(1);
 						}
 	
 						if ( !writeConfig(sysConfig) ) {
-							cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+							cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 							exit(1);
 						}
 	
@@ -1819,7 +1819,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting Host Name in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting Host Name in the MariDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 	
@@ -1932,7 +1932,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting IP address in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting IP address in the MariDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 	
@@ -2067,7 +2067,7 @@ int main(int argc, char *argv[])
 					}
 					
 					if ( !writeConfig(sysConfig) ) {
-						cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 
@@ -2182,12 +2182,12 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting Volume/Device Names in the InfiniDB System Configuration file" << endl;
+							cout << "ERROR: Problem setting Volume/Device Names in the MariDB Columnstore System Configuration file" << endl;
 							return false;
 						}
 
 						if ( !writeConfig(sysConfig) ) {
-							cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+							cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 							exit(1);
 						}
 
@@ -2221,7 +2221,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the MariDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 
@@ -2248,7 +2248,7 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting DBRoot ID in the InfiniDB System Configuration file" << endl;
+							cout << "ERROR: Problem setting DBRoot ID in the MariDB Columnstore System Configuration file" << endl;
 							exit(1);
 						}
 					}
@@ -2426,7 +2426,7 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting DBRoot ID in the InfiniDB System Configuration file" << endl;
+							cout << "ERROR: Problem setting DBRoot ID in the MariDB Columnstore System Configuration file" << endl;
 							exit(1);
 						}
 
@@ -2438,7 +2438,7 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting DBRoot in the InfiniDB System Configuration file" << endl;
+							cout << "ERROR: Problem setting DBRoot in the MariDB Columnstore System Configuration file" << endl;
 							return false;
 						}
 
@@ -2562,12 +2562,12 @@ int main(int argc, char *argv[])
 							}
 							catch(...)
 							{
-								cout << "ERROR: Problem setting Volume/Device Names in the InfiniDB System Configuration file" << endl;
+								cout << "ERROR: Problem setting Volume/Device Names in the MariDB Columnstore System Configuration file" << endl;
 								return false;
 							}
 
 							if ( !writeConfig(sysConfig) ) {
-								cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+								cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 								exit(1);
 							}
 
@@ -2586,7 +2586,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the MariDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 					//total dbroots on the system
@@ -2594,7 +2594,7 @@ int main(int argc, char *argv[])
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -2611,7 +2611,7 @@ int main(int argc, char *argv[])
 		}
 
 		if ( !writeConfig(sysConfig) ) {
-			cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -2622,7 +2622,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRoot Count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot Count in the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -2638,7 +2638,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting ConnectionsPerPrimProc in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting ConnectionsPerPrimProc in the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -2693,7 +2693,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -2713,7 +2713,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 	
@@ -2722,7 +2722,7 @@ int main(int argc, char *argv[])
 
 	if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM && pmNumber == 1) {
 		//run the mysql / mysqld setup scripts
-		cout << endl << "===== Running the InfiniDB MySQL setup scripts =====" << endl << endl;
+		cout << endl << "===== Running the MariDB Columnstore MySQL setup scripts =====" << endl << endl;
 
 		checkMysqlPort(mysqlPort, sysConfig);
 
@@ -2788,7 +2788,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem getting EEPackageType from the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem getting EEPackageType from the MariDB Columnstore System Configuration file" << endl;
 				exit(1);
 			}
 
@@ -2810,13 +2810,13 @@ int main(int argc, char *argv[])
 			}
 
 			if ( EEPackageType == "rpm" )
-				cout << "Performing an InfiniDB System install using RPM packages located in the " + HOME + " directory." << endl;
+				cout << "Performing an MariDB Columnstore System install using RPM packages located in the " + HOME + " directory." << endl;
 			else
 			{
 				if ( EEPackageType == "binary" )
-					cout << "Performing an InfiniDB System install using a Binary package located in the " + HOME + " directory." << endl;
+					cout << "Performing an MariDB Columnstore System install using a Binary package located in the " + HOME + " directory." << endl;
 				else
-					cout << "Performing an InfiniDB System install using using DEB packages located in the " + HOME + " directory." << endl;
+					cout << "Performing an MariDB Columnstore System install using using DEB packages located in the " + HOME + " directory." << endl;
 			}
 	
 			//Write out Updated System Configuration File
@@ -2825,12 +2825,12 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting EEPackageType from the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting EEPackageType from the MariDB Columnstore System Configuration file" << endl;
 				exit(1);
 			}
 		
 			if ( !writeConfig(sysConfig) ) { 
-				cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl; 
+				cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl; 
 				exit(1);
 			}
 
@@ -2840,11 +2840,11 @@ int main(int argc, char *argv[])
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				calpontPackage1 = "infinidb-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage2 = "infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage3 = "infinidb-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				mysqlPackage = "infinidb-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				mysqldPackage = "infinidb-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage1 = "mariadb-columnstore-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage2 = "mariadb-columnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				mysqldPackage = "mariadb-columnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 
 				if( !pkgCheck() ) {
 					exit(1);
@@ -2852,7 +2852,7 @@ int main(int argc, char *argv[])
 				else
 				{
 				//mariadb
-					calpontPackage1 = "infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
 
 					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
 					calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
@@ -2867,9 +2867,9 @@ int main(int argc, char *argv[])
 				string fileName = installDir + "/bin/healthcheck";
 				ifstream file (fileName.c_str());
 				if (!file)	// CE
-					calpontPackage1 = "infinidb-" + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-" + systemsoftware.Version + "-" + systemsoftware.Release;
 				else		// EE
-					calpontPackage1 = "infinidb-ent-" + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-ent-" + systemsoftware.Version + "-" + systemsoftware.Release;
 				calpontPackage2 = "dummy";
 				calpontPackage3 = "dummy";
 				mysqlPackage = calpontPackage1;
@@ -2944,7 +2944,7 @@ int main(int argc, char *argv[])
 			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 			{
-				cout << endl << "===== Running the InfiniDB MySQL setup scripts =====" << endl << endl;
+				cout << endl << "===== Running the MariDB Columnstore MySQL setup scripts =====" << endl << endl;
 
 				// call the mysql setup scripts
 				mysqlSetup();
@@ -3014,10 +3014,10 @@ int main(int argc, char *argv[])
 							//check for mysql password on remote UM
 							if ( pwprompt == " " ) {
 								//start mysqld
-								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Calpont start'";
+								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
 								int rtnCode = system(cmd.c_str());
 								if (WEXITSTATUS(rtnCode) != 0) {
-									cout << endl << "Error returned from mysql-Calpont start" << endl;
+									cout << endl << "Error returned from mysql-Columnstore start" << endl;
 									exit(1);
 								}
 
@@ -3034,7 +3034,7 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "InfiniDB-MySQL login failure, password is assigned. Need MySQL password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariDB Columnstore-MySQL login failure, password is assigned. Need MySQL password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 
@@ -3050,13 +3050,13 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "InfiniDB-MySQL login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariDB Columnstore-MySQL login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 								}
 								else
 								{
-									if (!oam.checkLogStatus("/tmp/idbmysql.log", "InfiniDB") ) {
+									if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
 										cout << endl << "ERROR: MySQL runtime error, exit..." << endl << endl;
 										system("cat /tmp/idbmysql.log");
 										exit (1);
@@ -3065,10 +3065,10 @@ int main(int argc, char *argv[])
 									{
 										cout << endl << "Additional MySQL Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
 
-										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Calpont stop'";
+										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
 										int rtnCode = system(cmd.c_str());
 										if (WEXITSTATUS(rtnCode) != 0) {
-											cout << endl << "Error returned from mysql-Calpont stop" << endl;
+											cout << endl << "Error returned from mysql-Columnstore stop" << endl;
 											exit(1);
 										}
 										unlink("/tmp/idbmysql.log");
@@ -3201,7 +3201,7 @@ int main(int argc, char *argv[])
 			if ( thread_remote_installer ) {
 		
 				//wait until remove install Thread Count is at zero or hit timeout
-				cout << endl << "InfiniDB Package being installed, please wait ...";
+				cout << endl << "MariDB Columnstore Package being installed, please wait ...";
 				cout.flush();
 			
 				/* block until all threads complete */
@@ -3226,7 +3226,7 @@ int main(int argc, char *argv[])
 
 		while(true)
 		{
-			pcommand = callReadline("Would you like to configure InfiniDB GlusterFS Data Redundancy? [y,n] (" + start + ") > ");
+			pcommand = callReadline("Would you like to configure MariDB Columnstore GlusterFS Data Redundancy? [y,n] (" + start + ") > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) start = pcommand;
@@ -3242,7 +3242,7 @@ int main(int argc, char *argv[])
 		}
 	
 		if ( start == "y" ) {
-			cout << endl << "===== Configuring InfiniDB Data Redundancy Functionality =====" << endl << endl;
+			cout << endl << "===== Configuring MariDB Columnstore Data Redundancy Functionality =====" << endl << endl;
 			int ret = system(glusterconfig.c_str());
 			if ( WEXITSTATUS(ret) != 0 )
 			{
@@ -3260,12 +3260,12 @@ int main(int argc, char *argv[])
 	{}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
-	//check if local InfiniDB system logging is working
-	cout << endl << "===== Checking InfiniDB System Logging Functionality =====" << endl << endl;
+	//check if local MariDB Columnstore system logging is working
+	cout << endl << "===== Checking MariDB Columnstore System Logging Functionality =====" << endl << endl;
 
 	if ( rootUser)
 		cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
@@ -3281,29 +3281,29 @@ int main(int argc, char *argv[])
 
 	int ret = system(cmd.c_str());
 	if ( WEXITSTATUS(ret) != 0)
-		cerr << "WARNING: The InfiniDB system logging not correctly setup and working" << endl;
+		cerr << "WARNING: The MariDB Columnstore system logging not correctly setup and working" << endl;
 	else
-		cout << "The InfiniDB system logging is setup and working on local server" << endl;
+		cout << "The MariDB Columnstore system logging is setup and working on local server" << endl;
 
-	cout << endl << "InfiniDB System Configuration and Installation is Completed" << endl;
+	cout << endl << "MariDB Columnstore System Configuration and Installation is Completed" << endl;
 
 	//
-	// startup infinidb
+	// startup MariDB Columnstore
 	//
 
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
-		// perform InfiniDB system startup
+		// perform MariDB Columnstore system startup
 		//
-		cout << endl << "===== Infinidb System Startup =====" << endl << endl;
+		cout << endl << "===== MariDB Columnstore System Startup =====" << endl << endl;
 	
 		string start = "y";
 		cout << "System Installation is complete. If any part of the install failed," << endl;
 		cout << "the problem should be investigated and resolved before continuing." << endl << endl;
 		while(true)
 		{
-			pcommand = callReadline("Would you like to startup the InfiniDB System? [y,n] (y) > ");
+			pcommand = callReadline("Would you like to startup the MariDB Columnstore System? [y,n] (y) > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) start = pcommand;
@@ -3322,11 +3322,11 @@ int main(int argc, char *argv[])
 	
 			if (hdfs)
 			{
-				cout << endl << "----- Starting InfiniDB Service on all Modules -----" << endl << endl;
-				string cmd = "pdsh -a '" + installDir + "/bin/infinidb restart' > /tmp/postConfigure.pdsh 2>&1";
+				cout << endl << "----- Starting MariDB Columnstore Service on all Modules -----" << endl << endl;
+				string cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > /tmp/postConfigure.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/postConfigure.pdsh", "exit") ) {
-					cout << endl << "ERROR: Starting InfiniDB Service failue, check /tmp/postConfigure.pdsh. exit..." << endl;
+					cout << endl << "ERROR: Starting MariDB Columnstore Service failue, check /tmp/postConfigure.pdsh. exit..." << endl;
 					exit (1);
 				}
 			}
@@ -3383,50 +3383,50 @@ int main(int argc, char *argv[])
 					string remoteHostName = (*list1).hostName;
 			
 					//run remote command script
-					cout << endl << "----- Starting InfiniDB on '" + remoteModuleName + "' -----" << endl << endl;
+					cout << endl << "----- Starting MariDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
 
 					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Calpont.xml " +  installDir + "/etc/. > /dev/null 2>&1";
 					int rtnCode = system(cmd.c_str());
 
 					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
-						" '" + installDir + "/bin/infinidb restart' 0";
+						" '" + installDir + "/bin/columnstore restart' 0";
 					rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0)
 						cout << "Error with running remote_command.sh" << endl;
 					else
-						cout << "InfiniDB successfully started" << endl;
+						cout << "MariDB Columnstore successfully started" << endl;
 				}
 		
-				//start InfiniDB on local server
-				cout << endl << "----- Starting InfiniDB on local server -----" << endl << endl;
-				cmd = installDir + "/bin/infinidb restart > /dev/null 2>&1";
+				//start MariDB Columnstore on local server
+				cout << endl << "----- Starting MariDB Columnstore on local server -----" << endl << endl;
+				cmd = installDir + "/bin/columnstore restart > /dev/null 2>&1";
 				int rtnCode = system(cmd.c_str());
 				if (WEXITSTATUS(rtnCode) != 0) {
-					cout << "Error Starting InfiniDB local module" << endl;
+					cout << "Error Starting MariDB Columnstore local module" << endl;
 					cout << "Installation Failed, exiting" << endl;
 					exit (1);
 				}
 				else
-					cout << "InfiniDB successfully started" << endl;
+					cout << "MariDB Columnstore successfully started" << endl;
 			}
 		}
 		else
 		{
-			cout << endl << "You choose not to Start the InfiniDB Software at this time." << endl;
+			cout << endl << "You choose not to Start the MariDB Columnstore Software at this time." << endl;
 			exit (1);
 		}
 	}
 	else // Single Server start
 	{
-		cout << endl << "===== InfiniDB System Startup =====" << endl << endl;
+		cout << endl << "===== MariDB Columnstore System Startup =====" << endl << endl;
 	
 		string start = "y";
 		cout << "System Installation is complete." << endl;
-		cout << "If an error occurred while running the InfiniDB MySQL setup scripts," << endl;
+		cout << "If an error occurred while running the MariDB Columnstore MySQL setup scripts," << endl;
 		cout << "this will need to be corrected and postConfigure will need to be re-run." << endl << endl;
 		while(true)
 		{
-			pcommand = callReadline("Would you like to startup the InfiniDB System? [y,n] (y) > ");
+			pcommand = callReadline("Would you like to startup the MariDB Columnstore System? [y,n] (y) > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) start = pcommand;
@@ -3442,26 +3442,26 @@ int main(int argc, char *argv[])
 		}
 	
 		if ( start == "y" ) {
-			//start InfiniDB on local server
-			cout << endl << "----- Starting InfiniDB on local Server '" + parentOAMModuleName + "' -----" << endl << endl;
-			string cmd = installDir + "/bin/infinidb restart > /dev/null 2>&1";
+			//start MariDB Columnstore on local server
+			cout << endl << "----- Starting MariDB Columnstore on local Server '" + parentOAMModuleName + "' -----" << endl << endl;
+			string cmd = installDir + "/bin/columnstore restart > /dev/null 2>&1";
 			int rtnCode = system(cmd.c_str());
 			if (WEXITSTATUS(rtnCode) != 0) {
-				cout << "Error Starting InfiniDB local module" << endl;
+				cout << "Error Starting MariDB Columnstore local module" << endl;
 				cout << "Installation Failed, exiting" << endl;
 				exit (1);
 			}
 			else
-				cout << endl << "InfiniDB successfully started" << endl;
+				cout << endl << "MariDB Columnstore successfully started" << endl;
 		}
 		else
 		{
-			cout << endl << "You choose not to Start the InfiniDB Software at this time." << endl;
+			cout << endl << "You choose not to Start the MariDB Columnstore Software at this time." << endl;
 			exit (1);
 		}
 	}
 
-	cout << endl << "InfiniDB Database Platform Starting, please wait .";
+	cout << endl << "MariDB Columnstore Database Platform Starting, please wait .";
 	cout.flush();
 	
 	if ( waitForActive() ) {
@@ -3487,7 +3487,7 @@ int main(int argc, char *argv[])
 //				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
 	
 //				if ( status != 0 ) {
-//					cout << endl << "InfiniDB Install Failed" << endl << endl;
+//					cout << endl << "MariDB Columnstore Install Failed" << endl << endl;
 //					exit(1);
 //				}
 //				else
@@ -3513,26 +3513,26 @@ int main(int argc, char *argv[])
 			int status = sendReplicationRequest(IserverTypeInstall, password, mysqlPort, pmwithum);
 
 			if ( status != 0 ) {
-				cout << endl << " InfiniDB Install Failed" << endl << endl;
+				cout << endl << " MariDB Columnstore Install Failed" << endl << endl;
 				exit(1);
 			}
 			else
 				cout << " DONE" << endl;
 		}
 
-		cout << endl << "InfiniDB Install Successfully Completed, System is Active" << endl << endl;
+		cout << endl << "MariDB Columnstore Install Successfully Completed, System is Active" << endl << endl;
 
-		cout << "Enter the following command to define InfiniDB Alias Commands" << endl << endl;
+		cout << "Enter the following command to define MariDB Columnstore Alias Commands" << endl << endl;
 
 		cout << ". " + installDir + "/bin/calpontAlias" << endl << endl;
 
-		cout << "Enter 'idbmysql' to access the InfiniDB MySQL console" << endl;
-		cout << "Enter 'cc' to access the InfiniDB System Management console" << endl << endl;
+		cout << "Enter 'mcsmysql' to access the MariDB Columnstore MySQL console" << endl;
+		cout << "Enter 'mcsadmin' to access the MariDB Columnstore Admin console" << endl << endl;
 	}
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "InfiniDB System failed to start, check log files in /var/log/Calpont" << endl;
+		cout << endl << "MariDB Columnstore System failed to start, check log files in /var/log/Columnstore" << endl;
 		exit(1);
 	}
 
@@ -3590,14 +3590,14 @@ bool checkSaveConfigFile()
 		singleServerInstall = "2";
 
 	if ( !noPrompting ) {
-		cout << endl << "A copy of the InfiniDB Configuration file has been saved during Package install." << endl;
+		cout << endl << "A copy of the MariDB Columnstore Configuration file has been saved during Package install." << endl;
 		if ( singleServerInstall == "1")
 			cout << "It's Configured for a Single Server Install." << endl; 
 		else
 			cout << "It's Configured for a Multi-Server Install." << endl; 
 	
 		cout << "You have an option of utilizing the configuration data from that file or starting" << endl;
-		cout << "with the InfiniDB Configuration File that comes with the InfiniDB Package." << endl;
+		cout << "with the MariDB Columnstore Configuration File that comes with the MariDB Columnstore Package." << endl;
 		cout << "You will only want to utilize the old configuration data when performing the same" << endl;
 		cout << "type of install, i.e. Single or Multi-Server" << endl;
 	}
@@ -4159,7 +4159,7 @@ bool pkgCheck()
 	
 		while(true)
 		{
-			pcommand = callReadline("Please place a copy of the InfiniDB Packages in directory " + HOME + " and press <enter> to continue or enter 'exit' to exit the install > ");
+			pcommand = callReadline("Please place a copy of the MariDB Columnstore Packages in directory " + HOME + " and press <enter> to continue or enter 'exit' to exit the install > ");
 			if (pcommand) {
 				if (strcmp(pcommand, "exit") == 0)
 				{
@@ -4193,7 +4193,7 @@ bool storageSetup(bool amazonInstall)
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem getting DB Storage Data from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem getting DB Storage Data from the MariDB Columnstore System Configuration file" << endl;
 		return false;
 	}
 
@@ -4231,7 +4231,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Calpont");
+				string logdir("/var/log/Columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -4246,7 +4246,7 @@ bool storageSetup(bool amazonInstall)
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DataFilePlugin in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DataFilePlugin in the MariDB Columnstore System Configuration file" << endl;
 						return false;
 					}
 			
@@ -4255,12 +4255,12 @@ bool storageSetup(bool amazonInstall)
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DataFileEnvFile in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting DataFileEnvFile in the MariDB Columnstore System Configuration file" << endl;
 						return false;
 					}
 
 					if ( !writeConfig(sysConfig) ) {
-						cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 						return false;
 					}
 
@@ -4316,7 +4316,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem getting UM DB Storage Data from the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem getting UM DB Storage Data from the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 	
@@ -4382,7 +4382,7 @@ bool storageSetup(bool amazonInstall)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting UMVolumeType in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting UMVolumeType in the MariDB Columnstore System Configuration file" << endl;
 				return false;
 			}
 
@@ -4428,7 +4428,7 @@ bool storageSetup(bool amazonInstall)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting UMVolumeSize in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting UMVolumeSize in the MariDB Columnstore System Configuration file" << endl;
 				return false;
 			}
 
@@ -4474,7 +4474,7 @@ bool storageSetup(bool amazonInstall)
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting UMVolumeIOPS in the InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Problem setting UMVolumeIOPS in the MariDB Columnstore System Configuration file" << endl;
 					return false;
 				}
 			}
@@ -4485,7 +4485,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting UMStorageType in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting UMStorageType in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4496,7 +4496,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting UMStorageType in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting UMStorageType in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4664,7 +4664,7 @@ bool storageSetup(bool amazonInstall)
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRootStorageType in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRootStorageType in the MariDB Columnstore System Configuration file" << endl;
 		return false;
 	}
 
@@ -4715,7 +4715,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting PMVolumeType in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting PMVolumeType in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4761,7 +4761,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting PMVolumeSize in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting PMVolumeSize in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4807,7 +4807,7 @@ bool storageSetup(bool amazonInstall)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting PMVolumeIOPS in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting PMVolumeIOPS in the MariDB Columnstore System Configuration file" << endl;
 				return false;
 			}
 		}
@@ -4818,7 +4818,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting PMVolumeSize in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting PMVolumeSize in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4889,7 +4889,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << endl << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Calpont");
+				string logdir("/var/log/Columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -4911,7 +4911,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFilePlugin in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFilePlugin in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4920,7 +4920,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFileEnvFile in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFileEnvFile in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4929,7 +4929,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFileLog in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFileLog in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4938,7 +4938,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting ExtentsPerSegmentFile in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting ExtentsPerSegmentFile in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4951,7 +4951,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFilePlugin in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFilePlugin in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4960,18 +4960,18 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFileEnvFile in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFileEnvFile in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 
 		if ( !writeConfig(sysConfig) ) {
-			cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		return false;
 	}
 
@@ -4982,13 +4982,13 @@ void snmpAppCheck()
 {
 	Oam oam;
 
-	cout << endl << "===== InfiniDB SNMP-Trap Process Check  =====" << endl << endl;
-	cout << "InfiniDB is packaged with an SNMP-Trap process." << endl;
-	cout << "If the system where InfiniDB is being installed already has an SNMP-Trap process" << endl;
-	cout << "running, then you have the option of disabling InfiniDB's SNMP-Trap process." << endl;
-	cout << "Not having the InfiniDB SNMP-Trap process will affect the" << endl;
-	cout << "generation of InfiniDB alarms and associated SNMP traps." << endl;
-	cout << "Please reference the InfiniDB Installation Guide for" << endl;
+	cout << endl << "===== MariDB Columnstore SNMP-Trap Process Check  =====" << endl << endl;
+	cout << "MariDB Columnstore is packaged with an SNMP-Trap process." << endl;
+	cout << "If the system where MariDB Columnstore is being installed already has an SNMP-Trap process" << endl;
+	cout << "running, then you have the option of disabling MariDB Columnstore's SNMP-Trap process." << endl;
+	cout << "Not having the MariDB Columnstore SNMP-Trap process will affect the" << endl;
+	cout << "generation of MariDB Columnstore alarms and associated SNMP traps." << endl;
+	cout << "Please reference the MariDB Columnstore Installation Guide for" << endl;
 	cout << "additional information." << endl << endl;
 
 	string enableSNMP = "y";
@@ -5004,7 +5004,7 @@ void snmpAppCheck()
 	{
 		if ( enableSNMP == "y" ) {
 			string disable = "n";
-			pcommand = callReadline("InfiniDB SNMP-Trap process is enabled, would you like to disable it [y,n] (n) > ");
+			pcommand = callReadline("MariDB Columnstore SNMP-Trap process is enabled, would you like to disable it [y,n] (n) > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) disable = pcommand;
@@ -5027,7 +5027,7 @@ void snmpAppCheck()
 		else
 		{
 			string enable = "n";
-			pcommand = callReadline("InfiniDB SNMP-Trap process is disabled, would you like to enable it (y,n) [n] > ");
+			pcommand = callReadline("MariDB Columnstore SNMP-Trap process is disabled, would you like to enable it (y,n) [n] > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) enable = pcommand;
@@ -5056,7 +5056,7 @@ void snmpAppCheck()
 			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "BootLaunch", "1");
 			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "LaunchID", "3");
 
-			cout << endl << "InfiniDB SNMP Process successfully enabled" << endl;
+			cout << endl << "MariDB Columnstore SNMP Process successfully enabled" << endl;
 		}
 		catch (exception& e)
 		{
@@ -5077,7 +5077,7 @@ void snmpAppCheck()
 
 		cout << endl << "===== Setup the Network Management System (NMS) Server Configuration =====" << endl << endl;
 
-		cout << "This would be used to receive SNMP Traps from InfiniDB." << endl;
+		cout << "This would be used to receive SNMP Traps from MariDB Columnstore." << endl;
 		cout <<  "0.0.0.0 defaults to not sending off the system" << endl << endl;
 		prompt = "Enter IP Address(es) of where you want the SNMP Traps went (" + currentNMSIPAddress + ") > ";
 		pcommand = callReadline(prompt.c_str());
@@ -5096,7 +5096,7 @@ void snmpAppCheck()
 			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "BootLaunch", "0");
 			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "LaunchID", "0");
 
-			cout << endl << "InfiniDB SNMP-Trap Process successfully disabled" << endl;
+			cout << endl << "MariDB Columnstore SNMP-Trap Process successfully disabled" << endl;
 		}
 		catch (exception& e)
 		{
@@ -5105,7 +5105,7 @@ void snmpAppCheck()
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5140,12 +5140,12 @@ void setSystemName()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting SystemName from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting SystemName from the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 }
@@ -5209,10 +5209,10 @@ bool updateBash()
 
 	if (!rootUser)
 	{
-		string cmd = "echo export INFINIDB_INSTALL_DIR=" + installDir + " >> " + fileName;
+		string cmd = "echo export columnstore_INSTALL_DIR=" + installDir + " >> " + fileName;
 		system(cmd.c_str());
 	
-		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
+		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$columnstore_INSTALL_DIR/lib:$columnstore_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
 		system(cmd.c_str());
 	}
 
@@ -5246,7 +5246,7 @@ void offLineAppCheck()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem getting systemStartupOffline from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem getting systemStartupOffline from the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5280,7 +5280,7 @@ void offLineAppCheck()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting systemStartupOffline in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting systemStartupOffline in the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 }
@@ -5366,7 +5366,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5389,7 +5389,7 @@ bool singleServerDBrootSetup()
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRoot ID in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRoot ID in the MariDB Columnstore System Configuration file" << endl;
 			exit(1);
 		}
 	}
@@ -5463,7 +5463,7 @@ bool singleServerDBrootSetup()
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRoot ID in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRoot ID in the MariDB Columnstore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -5475,7 +5475,7 @@ bool singleServerDBrootSetup()
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRoot in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRoot in the MariDB Columnstore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -5487,7 +5487,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRoot count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5495,7 +5495,7 @@ bool singleServerDBrootSetup()
 	DBRootCount = DBRootCount + dbroots.size();
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 

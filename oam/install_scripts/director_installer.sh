@@ -20,7 +20,7 @@ set CALPONTMYSQLRPM [lindex $argv 6]
 set CALPONTMYSQLDRPM [lindex $argv 7]
 set INSTALLTYPE [lindex $argv 8]
 set DEBUG [lindex $argv 9]
-set INSTALLDIR "/usr/local/Calpont"
+set INSTALLDIR "/usr/local/MariaDB/Columnstore"
 set IDIR [lindex $argv 10]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR

@@ -57,9 +57,9 @@ smbclient //calweb/perf -Wcalpont -Uoamuser%Calpont1 -c "cd ${host1};prompt OFF;
 #------------------------------------------------------------------------------
 # Execute the script on the other servers in the stack
 #
-/usr/local/Calpont/bin/remote_command.sh $host2 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
-/usr/local/Calpont/bin/remote_command.sh $host3 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
-/usr/local/Calpont/bin/remote_command.sh $host4 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
-/usr/local/Calpont/bin/remote_command.sh $host5 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
+/usr/local/MariaDB/Columnstore/bin/remote_command.sh $host2 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
+/usr/local/MariaDB/Columnstore/bin/remote_command.sh $host3 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
+/usr/local/MariaDB/Columnstore/bin/remote_command.sh $host4 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
+/usr/local/MariaDB/Columnstore/bin/remote_command.sh $host5 qalpont! "/home/pf/auto/fm/sar.sh $1 $2 $3" 1
 #
 # End of Script

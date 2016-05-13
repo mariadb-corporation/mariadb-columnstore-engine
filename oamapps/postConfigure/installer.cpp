@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	if (argc >= 13)
 		installDir = argv[12];
 	else
-		installDir = "/usr/local/Calpont";
+		installDir = "/usr/local/MariaDB/Columnstore";
 
     ofstream file("/dev/null");
 
@@ -888,7 +888,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "ERROR: InfiniDB Process failed to start, check log files in /var/log/Calpont" << endl;
+		cout << endl << "ERROR: InfiniDB Process failed to start, check log files in /var/log/Columnstore" << endl;
 	}
 }
 

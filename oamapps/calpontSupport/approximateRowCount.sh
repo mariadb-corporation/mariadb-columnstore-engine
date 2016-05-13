@@ -9,7 +9,7 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-	INSTALLDIR="/usr/local/Calpont"
+	INSTALLDIR="/usr/local/MariaDB/Columnstore"
 	MYSQLCNF=$INSTALLDIR/mysql/my.cnf
 	MYSQLCMD="$INSTALLDIR/mysql/bin/mysql --defaults-file=$MYSQLCNF -u root"
 fi
@@ -51,7 +51,7 @@ colWidth=`$MYSQLCMD calpontsys --skip-column-names -e "$sql"`
 #
 # Use editem to count the extents.
 #
-extentCount=`/usr/local/Calpont/bin/editem -o $objectid | wc -l`
+extentCount=`/usr/local/MariaDB/Columnstore/bin/editem -o $objectid | wc -l`
 let extentCount-=2 # Take out the 2 extra rows for header and blank line at end.
 let approximateRowCount=$extentCount*8192*1024;
 

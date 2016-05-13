@@ -331,7 +331,7 @@ link_all_deplibs=unknown
 sys_lib_search_path_spec=`echo "/lib64 /usr/lib64 /usr/local/lib64" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /usr/lib64/ctapi /usr/local/Calpont/lib /usr/local/Calpont/mysql/lib/mysql hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg /usr/lib64/mysql /usr/lib64/qt-3.3/lib /usr/lib/vmware-tools/lib32/libvmGuestLib.so /usr/lib/vmware-tools/lib64/libvmGuestLib.so /usr/lib/vmware-tools/lib32/libvmGuestLibJava.so /usr/lib/vmware-tools/lib64/libvmGuestLibJava.so /usr/lib/vmware-tools/lib32/libDeployPkg.so /usr/lib/vmware-tools/lib64/libDeployPkg.so /usr/lib64/xulrunner "
+sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /usr/lib64/ctapi /usr/local/MariaDB/Columnstore/lib /usr/local/MariaDB/Columnstore/mysql/lib/mysql hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg /usr/lib64/mysql /usr/lib64/qt-3.3/lib /usr/lib/vmware-tools/lib32/libvmGuestLib.so /usr/lib/vmware-tools/lib64/libvmGuestLib.so /usr/lib/vmware-tools/lib32/libvmGuestLibJava.so /usr/lib/vmware-tools/lib64/libvmGuestLibJava.so /usr/lib/vmware-tools/lib32/libDeployPkg.so /usr/lib/vmware-tools/lib64/libDeployPkg.so /usr/lib64/xulrunner "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
@@ -7550,7 +7550,7 @@ link_all_deplibs=unknown
 sys_lib_search_path_spec=`echo "/lib64 /usr/lib64 /usr/local/lib64" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /usr/lib64/ctapi /usr/local/Calpont/lib /usr/local/Calpont/mysql/lib/mysql hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg /usr/lib64/mysql /usr/lib64/qt-3.3/lib /usr/lib/vmware-tools/lib32/libvmGuestLib.so /usr/lib/vmware-tools/lib64/libvmGuestLib.so /usr/lib/vmware-tools/lib32/libvmGuestLibJava.so /usr/lib/vmware-tools/lib64/libvmGuestLibJava.so /usr/lib/vmware-tools/lib32/libDeployPkg.so /usr/lib/vmware-tools/lib64/libDeployPkg.so /usr/lib64/xulrunner "
+sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /usr/lib64/ctapi /usr/local/MariaDB/Columnstore/lib /usr/local/MariaDB/Columnstore/mysql/lib/mysql hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg hwcap 1 nosegneg /usr/lib64/mysql /usr/lib64/qt-3.3/lib /usr/lib/vmware-tools/lib32/libvmGuestLib.so /usr/lib/vmware-tools/lib64/libvmGuestLib.so /usr/lib/vmware-tools/lib32/libvmGuestLibJava.so /usr/lib/vmware-tools/lib64/libvmGuestLibJava.so /usr/lib/vmware-tools/lib32/libDeployPkg.so /usr/lib/vmware-tools/lib64/libDeployPkg.so /usr/lib64/xulrunner "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""

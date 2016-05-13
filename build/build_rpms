@@ -18,7 +18,7 @@ for arg in "$@"; do
 	if [ `expr -- "$arg" : '--verbose'` -eq 9 ]; then
 		((verbose++))
 	elif [ `expr -- "$arg" : '--local-mysql'` -eq 13 ]; then
-		mysqldir=../Calpont/mysql
+		mysqldir=../MariaDB/Columnstore/mysql
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		usage
 		exit 0
@@ -45,23 +45,24 @@ fi
 . ./build/releasenum
 
 # make the install package
-buildroot=$HOME/rpm/BUILD/infinidb-$version-$release
+buildroot=$HOME/rpm/BUILD/mariadb-columnstore-$version-$release
 
 rm -rf $buildroot
 mkdir -p $buildroot
+mkdir -p $buildroot/MariaDB
 echo -n "Writing binary files to $buildroot..."
 tar -cf - --exclude 'export/include' --exclude 'export/*.tar' export | tar -C $buildroot -xf -
-mv $buildroot/export $buildroot/Calpont
+mv $buildroot/export $buildroot/MariaDB/Columnstore
 
 #get mysql server files
 pushd $mysqldir > /dev/null
-mkdir -p $buildroot/Calpont/mysql
-cpio -pdmu --quiet $buildroot/Calpont/mysql < files.lst
+mkdir -p $buildroot/MariaDB/Columnstore/mysql
+cpio -pdmu --quiet $buildroot/MariaDB/Columnstore/mysql < files.lst
 popd >/dev/null
 
 #clean up some files from buildroot
-rm -f $buildroot/Calpont/etc/Doxyfile
-for file in $buildroot/Calpont/lib/*; do
+rm -f $buildroot/MariaDB/Columnstore/etc/Doxyfile
+for file in $buildroot/MariaDB/Columnstore/lib/*; do
 	if [ -h $file ]; then
 		rm -f $file
 	fi
@@ -69,16 +70,16 @@ done
 
 #temporarily clean up these BRM thingies
 for file in dbrm script-fcns; do
-	rm -f $buildroot/Calpont/bin/$file
+	rm -f $buildroot/MariaDB/Columnstore/bin/$file
 done
 
 #clean up these bulkload scripts
 for file in bulkload.sh cleanup.sh dbbuilder.sh dbload.sh cpimport.sh bulkloadp.sh; do
-	rm -f $buildroot/Calpont/bin/$file
+	rm -f $buildroot/MariaDB/Columnstore/bin/$file
 done
 
-rm -f $buildroot/Calpont/lib/libidbboot.a
-rm -f $buildroot/Calpont/lib/libiberty.a
+rm -f $buildroot/MariaDB/Columnstore/lib/libidbboot.a
+rm -f $buildroot/MariaDB/Columnstore/lib/libiberty.a
 
 mkdir -p $HOME/rpm/BUILD $HOME/rpm/RPMS $HOME/rpm/SRPMS $HOME/rpm/SPECS $HOME/rpm/tmp
 
@@ -103,16 +104,16 @@ b="$b\\n$l"
 done
 echo $b )`
 
-cp ./build/infinidb.spec.in $HOME/rpm/SPECS/infinidb.spec
+cp ./build/columnstore.spec.in $HOME/rpm/SPECS/columnstore.spec
 sed -i  -e "s/@@PACKAGER@@/Packager: $packager/" \
 	-e "s/@@VERSION@@/Version: $version/" \
 	-e "s/@@RELEASE@@/Release: $release/" \
-	-e "s?@@BUILDINFO@@?$buildinfo?" $HOME/rpm/SPECS/infinidb.spec
+	-e "s?@@BUILDINFO@@?$buildinfo?" $HOME/rpm/SPECS/columnstore.spec
 
 echo done.
 
 echo -n "Building rpms..."
-rpmbuild -ba $HOME/rpm/SPECS/infinidb.spec >/tmp/rpmbuild.out.$$ 2>&1
+rpmbuild -ba $HOME/rpm/SPECS/columnstore.spec >/tmp/rpmbuild.out.$$ 2>&1
 rc=$?
 echo done.
 if [ $verbose -gt 0 -o $rc -ne 0 ]; then

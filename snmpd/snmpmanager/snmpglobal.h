@@ -46,9 +46,9 @@ typedef oid CALPONT_OID;
 const int SET = 1;
 const int CLEAR = 0;
 
-const std::string ACTIVE_ALARM_FILE = "/var/log/Calpont/activeAlarms";
-const std::string ALARM_FILE = "/var/log/Calpont/alarm.log";
-const std::string ALARM_ARCHIVE_FILE = "/var/log/Calpont/archive";
+const std::string ACTIVE_ALARM_FILE = "/var/log/Columnstore/activeAlarms";
+const std::string ALARM_FILE = "/var/log/Columnstore/alarm.log";
+const std::string ALARM_ARCHIVE_FILE = "/var/log/Columnstore/archive";
 
 const CALPONT_OID SNMPTRAP_OID [] = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0 };
 const CALPONT_OID CALPONT_TRAP_OID [] = { 1, 3, 6, 1, 4, 1, 2021, 991 };

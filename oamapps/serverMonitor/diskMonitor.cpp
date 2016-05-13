@@ -222,7 +222,7 @@ void diskMonitor()
 				string fileName;
 				// check local
 				if ( deviceName == "/") {
-					fileName = deviceName + "usr/local/Calpont/releasenum";
+					fileName = deviceName + "usr/local/MariaDB/Columnstore/releasenum";
 				}
 				else
 				{

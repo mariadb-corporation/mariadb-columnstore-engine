@@ -23,12 +23,12 @@ echo " "
 
 echo "-- Today's Alarms --"
 echo " "
-cat /var/log/Calpont/alarm.log 2>/dev/null
+cat /var/log/Columnstore/alarm.log 2>/dev/null
 
-if test -f /var/log/Calpont/archive/alarm.log-$DATE ; then
+if test -f /var/log/Columnstore/archive/alarm.log-$DATE ; then
 	echo "-- Archived Alarms --"
 	echo " "
-	cat /var/log/Calpont/archive/alarm.log-$DATE 2>/dev/null
+	cat /var/log/Columnstore/archive/alarm.log-$DATE 2>/dev/null
 fi
 
 } > /tmp/logReport.log

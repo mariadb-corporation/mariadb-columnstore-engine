@@ -23,7 +23,7 @@ TLIBS=-L. -lbrm -L$(EXPORT_ROOT)/lib -lrwlock -lmessageqcpp -ldl -lpthread -lcpp
 -lconfigcpp -lxml2 -lexecplan -ljoblist -lfuncexp -ljoiner -lcommon \
 -ldataconvert -lloggingcpp -lrowgroup
 
-GLIBS=-L. -lbrm -L$(EXPORT_ROOT)/lib $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/Calpont/lib
+GLIBS=-L. -lbrm -L$(EXPORT_ROOT)/lib $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 
 OAMLIBS=-loamcpp -lsnmpmanager -lnetsnmp \
 -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs
