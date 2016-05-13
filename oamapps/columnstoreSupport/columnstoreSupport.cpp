@@ -301,11 +301,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# cat /etc/MariaDB/Columnstore.xml ################# ' >> " + outputFile;
+			cmd = "echo '################# cat /etc/Calpont.xml ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "cat " + installDir + "/etc/MariaDB/Columnstore.xml >> " + outputFile;
+			cmd = "cat " + installDir + "/etc/Calpont.xml >> " + outputFile;
 			system(cmd.c_str());
 		}
 	
