@@ -4828,11 +4828,11 @@ int processCommand(string* arguments)
 			cout << endl;
 			if ( rootUser)
 			{
-				system("rpm -qi columnstore-platform > /tmp/columnstore.txt 2>&1");
+				system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
 				if (oam.checkLogStatus("/tmp/columnstore.txt", "Name"))
 					system("cat /tmp/columnstore.txt");
 				else {
-					system("dpkg -s columnstore > /tmp/columnstore.txt 2>&1");
+					system("dpkg -s mariadb-columnstore > /tmp/columnstore.txt 2>&1");
 					if (oam.checkLogStatus("/tmp/columnstore.txt", "Status: install"))
 						system("cat /tmp/columnstore.txt");
 					else {
