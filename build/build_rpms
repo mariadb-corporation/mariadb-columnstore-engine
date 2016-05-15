@@ -45,7 +45,7 @@ fi
 . ./build/releasenum
 
 # make the install package
-buildroot=$HOME/rpm/BUILD/mariadb-columnstore-$version-$release
+buildroot=$HOME/rpm/BUILD/mariadb-columnstore-$version.$release
 
 rm -rf $buildroot
 mkdir -p $buildroot
@@ -113,7 +113,8 @@ sed -i  -e "s/@@PACKAGER@@/Packager: $packager/" \
 echo done.
 
 echo -n "Building rpms..."
-rpmbuild -ba $HOME/rpm/SPECS/columnstore.spec >/tmp/rpmbuild.out.$$ 2>&1
+
+rpmbuild -ba $HOME/rpm/SPECS/columnstore.spec > /tmp/rpmbuild.out.$$ 2>&1
 rc=$?
 echo done.
 if [ $verbose -gt 0 -o $rc -ne 0 ]; then

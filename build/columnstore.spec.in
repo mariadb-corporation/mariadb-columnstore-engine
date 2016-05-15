@@ -10,7 +10,7 @@ URL: http://www.mariadb.com/
 @@PACKAGER@@
 Group: Applications
 License: Copyright (c) 2016 MariaDB, Inc., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.
-BuildRoot: %{_tmppath}/%{name}-%{release}-buildroot
+BuildRoot: %{_tmppath}/%{name}.%{release}-buildroot
 
 %description
 MariaDB-Columnstore software meta-package
@@ -58,10 +58,10 @@ MariaDB Columnstore connector binary files
 
 %install
 mkdir -p %{buildroot}/usr/local
-tar -C $RPM_BUILD_DIR/%{name}-%{version}-%{release} -cf - . | tar -C %{buildroot}/usr/local -xf -
+tar -C $RPM_BUILD_DIR/%{name}-%{version}.%{release} -cf - . | tar -C %{buildroot}/usr/local -xf -
 
 %clean
-rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
+rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 
 %changelog
 
