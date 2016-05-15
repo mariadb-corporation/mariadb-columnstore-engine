@@ -293,7 +293,7 @@ void mysqlSetup()
 		}
 		else
 		{
-			if (!oam.checkLogStatus("/tmp/idbmysql.log", "MariDB Columnstore") ) {
+			if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
 				cout << endl << "ERROR: MySQL runtime error, exit..." << endl << endl;
 				system("cat /tmp/idbmysql.log");
 				exit (1);
