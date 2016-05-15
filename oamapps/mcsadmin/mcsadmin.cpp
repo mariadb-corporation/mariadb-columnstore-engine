@@ -4823,7 +4823,7 @@ int processCommand(string* arguments)
         	break;
 	}
 
-        case 47: // getMariDB ColumnstoreSoftwareInfo
+        case 47: // getSoftwareInfo
         {
 			cout << endl;
 			if ( rootUser)
