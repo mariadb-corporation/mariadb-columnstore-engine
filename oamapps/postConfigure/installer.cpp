@@ -851,25 +851,7 @@ int main(int argc, char *argv[])
 			cout << endl << "System Catalog Successfull Created" << endl;
 		else
 		{
-			if ( oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
-
-				cout << endl << "Run Upgrade Script..";
-				cout.flush();
-
-				//send message to procmon's to run upgrade script
-				bool pmwithum = false;
-				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
-	
-				if ( status != 0 ) {
-					cout << "ERROR: Error return in running the upgrade script, check /tmp/upgrade.log" << endl;
-					cout << endl << "MariaDB Columnstore Install Failed" << endl << endl;
-					exit(1);
-				}
-				else
-					cout << " DONE" << endl;
-			}
-			else
-			{
+			if ( !oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
 				cout << endl << "System Catalog Create Failure" << endl;
 				cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
 				exit (1);
