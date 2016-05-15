@@ -680,7 +680,7 @@ int main(int argc, char *argv[])
 		sm.updateSNMPD("parentOAMIPStub", parentOAMModuleIPAddr);
 	}
 
-	string idbstartcmd = installDir + "/bin/infinidb start";
+	string idbstartcmd = installDir + "/bin/columnstore start";
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			performancemodulelist.size() > 1 ) {
 		// 
@@ -822,7 +822,7 @@ int main(int argc, char *argv[])
 			//
 
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the Infinidb MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();

@@ -24,24 +24,24 @@ checkForError() {
 	rm -f /tmp/error.check
 
         #---------------------------------------------------------------------------
-        # See if engine columnstore exist
+        # See if engine infinidb exist
         #---------------------------------------------------------------------------
-        echo "checking for engine columnstore..."
+        echo "checking for engine infinidb..."
         $installdir/mysql/bin/mysql \
                 --defaults-file=$installdir/mysql/my.cnf \
                 --user=root $pwprompt \
                 --execute='show engines;' \
-                calpontsys | grep -i columnstore
+                calpontsys | grep -i infinidb
 
         #
         # Add compressiontype column to SYSCOLUMN if applicable
         #
         if [ $? -ne 0 ]; then
-                echo "columnstore doesn't exist"
+                echo "infinidb doesn't exist"
                 return 1
         fi
 
-        echo "columnstore exist"
+        echo "infinidb exist"
 
 	return 0;
 }

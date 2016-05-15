@@ -1,4 +1,4 @@
-# InfiniDB Alias Commands
+# MariaDB Columnstore Alias Commands
 #
 alias mcsmysql='/usr/local/MariaDB/Columnstore/mysql/bin/mysql --defaults-file=/usr/local/MariaDB/Columnstore/mysql/my.cnf -u root'
 alias ma=/usr/local/MariaDB/Columnstore/bin/mcsadmin
