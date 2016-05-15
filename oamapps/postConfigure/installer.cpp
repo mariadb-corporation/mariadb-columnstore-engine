@@ -880,7 +880,7 @@ int main(int argc, char *argv[])
 
 		cout << "Enter the following command to define MariaDB Columnstore Alias Commands" << endl << endl;
 
-		cout << ". " + installDir + "/bin/calpontAlias" << endl << endl;
+		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
 
 		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore MySQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB Columnstore Admin console" << endl << endl;
