@@ -1288,7 +1288,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
 						}
 	
-						string cmd = "pdsh -a -x " + localHostName + " '" + startup::StartUp::installDir() + "/infinidb stop' > /dev/null 2>&1";
+						string cmd = "pdsh -a -x " + localHostName + " '" + startup::StartUp::installDir() + "/columnstore stop' > /dev/null 2>&1";
 						system(cmd.c_str());
 
 						break;
@@ -4439,15 +4439,15 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		if ( packageType == "deb" )
 			separator = "_";
 		//mariadb
-		calpontPackage = homedir + "/infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqlPackage = homedir + "/infinidb-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqldPackage = homedir + "/infinidb-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage1 = homedir + "/infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage2 = homedir + "/infinidb-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage = homedir + "/mariadbcolumnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		mysqlPackage = homedir + "/mariadbcolumnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		mysqldPackage = homedir + "/mariadbcolumnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage1 = homedir + "/mariadbcolumnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage2 = homedir + "/mariadbcolumnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 	}
 	else
 	{
-		calpontPackage = homedir + "/infinidb*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
+		calpontPackage = homedir + "/mariadbcolumnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
 		mysqlPackage = calpontPackage;
 		mysqldPackage = calpontPackage;
 	}
@@ -5181,9 +5181,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string remoteHostName = (*pt1).HostName;
 
 		//send start service commands
-		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/infinidb restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
+		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
 		system(cmd.c_str());
-		log.writeLog(__LINE__, "addModule - restart infinidb service " +  remoteModuleName, LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
 
 		// add to monitor list
 		moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));

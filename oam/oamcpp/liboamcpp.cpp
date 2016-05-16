@@ -6220,7 +6220,7 @@ namespace oam
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting DBRoot in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting DBRoot in the MariaDB Columnstore System Configuration file" << endl;
 				exceptionControl("setConfig", API_FAILURE);
 			}
 		}
@@ -6234,9 +6234,9 @@ namespace oam
 			exceptionControl("sysConfig->write", API_FAILURE);
 		}
 
-		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 			return;
 
 		//get updated Calpont.xml distributed
@@ -6276,9 +6276,9 @@ namespace oam
 
     	void Oam::distributeFstabUpdates(std::string entry, std::string toPM)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/infinidb status > /tmp/status.log";
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "InfiniDB is running") ) 
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 			return;
 
 		ACK_FLAG ackflag = oam::ACK_YES;
@@ -6861,7 +6861,7 @@ namespace oam
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem deleting DBRoot in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem deleting DBRoot in the MariaDB Columnstore System Configuration file" << endl;
 				exceptionControl("deleteConfig", API_FAILURE);
 			}
 		}
