@@ -565,7 +565,7 @@ exit(0);
 							    // redirect cout to /dev/null
 								cerr.rdbuf(file.rdbuf());
 
-								sysConfigOld = Config::makeConfig( systemDir + "" + installLocation + ".xml");
+								sysConfigOld = Config::makeConfig( systemDir + "/Calpont.xml");
 
 							   // restore cout stream buffer
 								cerr.rdbuf (strm_buffer);
