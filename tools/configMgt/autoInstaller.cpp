@@ -601,7 +601,7 @@ RPMSAVE:
 				cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/calpont.xml.rpmsave " + systemUser + " " + debug_flag;
 				rtnCode = system(cmd.c_str());
 				if (rtnCode == 0) {
-					cmd = "mv Calpont.xml.rpmsave " + systemDir + "" + installLocation + ".xml";
+					cmd = "mv Calpont.xml.rpmsave " + systemDir + "Calpont.xml";
 					rtnCode = system(cmd.c_str());
 					if ( rtnCode != 0 ) {
 						cout << "ERROR: No system Calpont.xml or Calpont.xml.rpmsave found, exiting" << endl;
@@ -631,7 +631,7 @@ CONFIGDONE:
 
 	Config* sysConfigOld;
 	try {
-		sysConfigOld = Config::makeConfig( systemDir + "" + installLocation + ".xml");
+		sysConfigOld = Config::makeConfig( systemDir + "/Calpont.xml");
 	}
 	catch(...)
 	{
