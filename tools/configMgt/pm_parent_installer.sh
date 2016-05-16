@@ -27,9 +27,9 @@ set INSTALLDIR "/usr/local"
 log_user $DEBUG
 spawn -noecho /bin/bash
 
-SET CONFIG "Calpont"
-if { $PACKAGENAME != "NULL"} {
-	SET CONFIG "Calpont"
+set CONFIG "Calpont"
+if { $PACKAGENAME != "columnstore"} {
+	set CONFIG "Calpont"
 }
 
 send "rm -f $PACKAGE\n"
