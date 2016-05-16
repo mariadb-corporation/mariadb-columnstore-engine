@@ -47,17 +47,17 @@ log_user $DEBUG
 spawn -noecho /bin/bash
 #
 if { $PKGTYPE == "rpm" } {
-	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^mariabd-columnstore')"
+	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^mariadb-columnstore')"
 	set PKGERASE1 "rpm -e --nodeps "
 
-	set PKGINSTALL "rpm -ivh $NODEPS --force mariabd-columnstore*$VERSION*"
-	set PKGUPGRADE "rpm -Uvh --noscripts mariabd-columnstore*$VERSION*"
+	set PKGINSTALL "rpm -ivh $NODEPS --force mariadb-columnstore*$VERSION*"
+	set PKGUPGRADE "rpm -Uvh --noscripts mariadb-columnstore*$VERSION*"
 } else {
 	if { $PKGTYPE == "deb" } {
-		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^mariabd-columnstore')"
+		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^mariadb-columnstore')"
 		set PKGERASE1 "dpkg -P "
-		set PKGINSTALL "dpkg -i --force-confnew mariabd-columnstore*$VERSION*"
-		set PKGUPGRADE "dpkg -i --force-confnew mariabd-columnstore*$VERSION*"
+		set PKGINSTALL "dpkg -i --force-confnew mariadb-columnstore*$VERSION*"
+		set PKGUPGRADE "dpkg -i --force-confnew mariadb-columnstore*$VERSION*"
 	} else {
 		send_user "Invalid Package Type of $PKGTYPE"
 		exit 1
@@ -126,7 +126,7 @@ if { $INSTALLTYPE == "uninstall" } { exit 0 }
 set timeout 30
 #expect -re {[$#] }
 send_user "Copy new InfiniDB Packages to Module              "
-send "ssh $USERNAME@$SERVER 'rm -f /root/mariabd-columnstore-*.$PKGTYPE'\n"
+send "ssh $USERNAME@$SERVER 'rm -f /root/mariadb-columnstore-*.$PKGTYPE'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {
@@ -146,7 +146,7 @@ expect {
 	-re {[$#] } { }
 }
 
-send "scp $HOME/mariabd-columnstore*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/mariadb-columnstore*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {

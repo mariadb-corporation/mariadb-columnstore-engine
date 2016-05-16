@@ -37,7 +37,7 @@ send "rm -f $PACKAGE\n"
 # delete and erase all old packages from Parent OAM Module
 #
 set timeout 30
-send "ssh $USERNAME@$SERVER 'rm -f /root/Calpont-*.rpm /root/$PACKAGENAME*.rpm /root/mariabd*.rpm '\n"
+send "ssh $USERNAME@$SERVER 'rm -f /root/Calpont-*.rpm /root/$PACKAGENAME*.rpm /root/mariadb*.rpm '\n"
 expect {
 	-re "authenticity" { send "yes\n" 
 						expect {
