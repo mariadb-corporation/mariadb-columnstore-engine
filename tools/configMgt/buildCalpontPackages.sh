@@ -25,13 +25,13 @@ cd /root/autoOAM/
 rpm -e infinidb-libs infinidb-platform infinidb-enterprise --nodeps
 rpm -e infinidb-storage-engine infinidb-mysql --nodeps
 rpm -e infinidb-mysql --nodeps
-rm -rf /usr/local/MariaDB/Columnstore
+rm -rf /usr/local/Calpont
 rm -rf calpont*
 rm -f *gz
 #
-smbclient //calweb/shared -Wcalpont -Uoamuser%Calpont1 -c "cd Iterations/$DIR;prompt OFF;mget *.rpm"
+smbclient //srvhill01/shared -WMARIADB -Uroot%Calpont1 -c "cd packages/$DIR;prompt OFF;mget *.rpm"
 rpm -ivh calpont*.x86_64.rpm --nodeps
-rpm -iq calpont >> /usr/local/MariaDB/Columnstore/releasenum
+rpm -iq calpont >> /usr/local/Calpont/releasenum
 cd /usr/local/
 tar -zcvf calpont-infinidb-ent-$REL.x86_64.bin.tar.gz Calpont
 mv calpont-infinidb-ent-$REL.x86_64.bin.tar.gz /root/autoOAM/
@@ -40,7 +40,7 @@ alien -ck calpont*.x86_64.rpm
 tar -zcvf calpont-infinidb-ent-$REL.x86_64.rpm.tar.gz *$REL*.rpm
 tar -zcvf calpont-infinidb-ent-$REL.amd64.deb.tar.gz *$REL*.deb
 
-smbclient //calweb/shared -Wcalpont -Uoamuser%Calpont1 -c "cd Iterations/$DIR;mkdir packages;cd packages;prompt OFF;del calpont-infinidb-ent*gz;mput *gz"
+smbclient //srvhill01/shared -WMARIADB -Uroot%Calpont1 -c "cd packages/$DIR;mkdir packages;cd packages;prompt OFF;del calpont-infinidb-ent*gz;mput *gz"
 } > /root/autoOAM/buildCalpontPackages-$DIR.log 2>&1
 #
 echo "Calpont Packages Build Successfully Completed"

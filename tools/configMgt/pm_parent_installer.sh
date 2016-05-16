@@ -11,7 +11,8 @@
 set USERNAME root
 set SERVER [lindex $argv 0]
 set PASSWORD [lindex $argv 1]
-set PACKAGE [lindex $argv 2]
+#set PACKAGE [lindex $argv 2]
+set PACKAGE *.rpm
 set RELEASE [lindex $argv 3]
 set CONFIGFILE [lindex $argv 4]
 set PREFIX [lindex $argv 5]
@@ -23,7 +24,7 @@ set CALPONTPACKAGE2 infinidb-platform-$PREFIX$PACKAGE
 set CALPONTPACKAGE3 infinidb-enterprise-$PREFIX$PACKAGE
 set MYSQLPACKAGE infinidb-storage-engine-$PACKAGE
 set MYSQLDPACKAGE infinidb-mysql-$PACKAGE
-set SHARED "//calweb/shared"
+set SHARED "//srvhill01/shared"
 set INSTALLDIR "/usr/local"
 
 log_user $DEBUG
@@ -52,7 +53,7 @@ expect {
 #
 expect -re {[$#] }
 send_user "Get InfiniDB Packages                         "
-send "smbclient $SHARED -Wcalpont -Uoamuser%Calpont1 -c 'cd Iterations/$RELEASE/;prompt OFF;mget $PACKAGE'\n"
+send "smbclient $SHARED -WMARIADB -Uroot%Calpont1 -c 'cd packages/$RELEASE/;prompt OFF;mget $PACKAGE'\n"
 expect {
 	-re "NT_STATUS_NO_SUCH_FILE" { send_user "FAILED: $PACKAGE not found\n" ; exit -1 }
 	-re "getting" 				 { send_user "DONE" }
@@ -81,7 +82,7 @@ send_user "\n"
 set timeout 60
 expect -re {[$#] }
 send_user "Erase Old InfiniDB Package                    "
-send "ssh $USERNAME@$SERVER 'rpm -e --nodeps \$(rpm -qa | grep '^calpont') >/dev/null 2>&1; rpm -e --nodeps \$(rpm -qa | grep '^infinidb-')'\n"
+send "ssh $USERNAME@$SERVER 'rpm -e --nodeps \$(rpm -qa | grep '^InfiniDB') >/dev/null 2>&1; rpm -e --nodeps \$(rpm -qa | grep '^infinidb-')'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
@@ -111,7 +112,7 @@ sleep 5
 #
 set timeout 160
 send_user "Install New InfiniDB Packages                 "
-send "ssh $USERNAME@$SERVER ' rpm -ivh --nodeps infinidb-mariadb*'\n"
+send "ssh $USERNAME@$SERVER ' rpm -ivh --nodeps --force infinidb-*'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
@@ -130,7 +131,7 @@ expect -re {[$#] }
 send "rm -f $PACKAGE\n"
 #
 if { $CONFIGFILE != "NULL"} {
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/MariaDB/Columnstore/etc/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/Calpont/etc/Calpont.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -144,7 +145,7 @@ if { $CONFIGFILE != "NULL"} {
 	# copy over Calpont.xml file
 	#
 	send_user "Copy InfiniDB Configuration File              "
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/MariaDB/Columnstore/etc/Calpont.xml.rpmsave\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/Calpont/etc/Calpont.xml.rpmsave\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -167,7 +168,7 @@ if { $CONFIGFILE != "NULL"} {
 	# rename previous installed config file
 	#
 	send_user "Copy RPM-saved InfiniDB Configuration File     "
-	send "ssh $USERNAME@$SERVER 'cd /usr/local/MariaDB/Columnstore/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
+	send "ssh $USERNAME@$SERVER 'cd /usr/local/Calpont/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
 	expect -re "word: "
 	# password for ssh
 	send "$PASSWORD\n"

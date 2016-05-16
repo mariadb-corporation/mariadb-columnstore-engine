@@ -19,7 +19,7 @@ set DEBUG [lindex $argv 7]
 
 set CALPONTPACKAGE infinidb-ent-*$PACKAGE
 
-set SHARED "//calweb/shared"
+set SHARED "//srvhill01/shared"
 
 set INSTALLDIRARG " "
 set HOME "/root"
@@ -54,7 +54,7 @@ send_user "DONE\n"
 # get the calpont package
 #
 send_user "Get Calpont Packages                          "
-send "smbclient $SHARED -Wcalpont -Uoamuser%Calpont1 -c 'cd Iterations/$RELEASE/packages;prompt OFF;mget $PACKAGE'\n"
+send "smbclient $SHARED -WMARIADB -Uroot%Calpont1 -c 'cd packages/$RELEASE/packages;prompt OFF;mget $PACKAGE'\n"
 expect {
 	-re "NT_STATUS_NO_SUCH_FILE" { send_user "FAILED: $PACKAGE not found\n" ; exit -1 }
 	-re "getting" 				 { send_user "DONE" } abort
