@@ -15,7 +15,9 @@ set RELEASE [lindex $argv 3]
 set CONFIGFILE [lindex $argv 4]
 set USERNAME [lindex $argv 5]
 set INSTALLDIR [lindex $argv 6]
-set DEBUG [lindex $argv 7]
+set PACKAGENAME [lindex $argv 7]
+set INSTALLLOCATION [lindex $argv 8]
+set DEBUG [lindex $argv 9]
 
 set CALPONTPACKAGE infinidb-ent-*$PACKAGE
 
@@ -24,7 +26,7 @@ set SHARED "//srvhill01/shared"
 set INSTALLDIRARG " "
 set HOME "/root"
 if { $USERNAME != "root" } {
-	set INSTALLDIRARG "--installdir=$INSTALLDIR/Calpont"
+	set INSTALLDIRARG "--installdir=$INSTALLDIR/$INSTALLLOCATION"
 	set HOME $INSTALLDIR
 }
 
@@ -36,7 +38,7 @@ send "rm -f $PACKAGE\n"
 #
 set timeout 30
 send_user "Remove Calpont Packages from System           "
-send "ssh $USERNAME@$SERVER 'rm -f $INSTALLDIR/calpont*.gz;rm -f /root/calpont*.rpm;rm -f /root/calpont*.gz'\n"
+send "ssh $USERNAME@$SERVER 'rm -f $INSTALLDIR/$INSTALLLOCATION*.gz;rm -f /root/$INSTALLLOCATION*.rpm;rm -f /root/$INSTALLLOCATION*.gz'\n"
 expect {
 	-re "authenticity" { send "yes\n" 
 						expect {
@@ -102,7 +104,7 @@ expect {
 	-re "Permission denied, please try again"   { send_user "FAILED: Invalid password\n" ; exit -1 }
 }
 sleep 10
-send "ssh $USERNAME@$SERVER 'rm -f $INSTALLDIR/Calpont/releasenum >/dev/null 2>&1; test -x $INSTALLDIR/Calpont/bin/pre-uninstall && $INSTALLDIR/Calpont/bin/pre-uninstall $INSTALLDIRARG'\n"
+send "ssh $USERNAME@$SERVER 'rm -f $INSTALLDIR/$INSTALLLOCATION/releasenum >/dev/null 2>&1; test -x $INSTALLDIR/$INSTALLLOCATION/bin/pre-uninstall && $INSTALLDIR/$INSTALLLOCATION/bin/pre-uninstall $INSTALLDIRARG'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
@@ -120,7 +122,7 @@ sleep 5
 #
 set timeout 30
 send_user "Install New Calpont Package                   "
-send "ssh $USERNAME@$SERVER 'tar -C $INSTALLDIR --exclude db -zxf $HOME/$CALPONTPACKAGE;cat $INSTALLDIR/Calpont/releasenum'\n"
+send "ssh $USERNAME@$SERVER 'tar -C $INSTALLDIR --exclude db -zxf $HOME/$CALPONTPACKAGE;cat $INSTALLDIR/$INSTALLLOCATION/releasenum'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
@@ -142,7 +144,7 @@ send "rm -f $PACKAGE\n"
 send_user "Run post-install script                       "
 send " \n"
 send date\n
-send "ssh $USERNAME@$SERVER '$INSTALLDIR/Calpont/bin/post-install $INSTALLDIRARG'\n"
+send "ssh $USERNAME@$SERVER '$INSTALLDIR/$INSTALLLOCATION/bin/post-install $INSTALLDIRARG'\n"
 set timeout 10
 expect {
 	-re "word: " { send "$PASSWORD\n" } abort
@@ -165,10 +167,10 @@ sleep 10
 #
 if { $CONFIGFILE != "NULL"} {
 	#
-	# copy over Calpont.xml file
+	# copy over $CONFIG.xml file
 	#
 	send_user "Copy Calpont Configuration File               "
-	send "scp $CONFIGFILE $USERNAME@$SERVER:$INSTALLDIR/Calpont/etc/Calpont.xml.rpmsave\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:$INSTALLDIR/$INSTALLLOCATION/etc/$CONFIG.xml.rpmsave\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -180,7 +182,7 @@ if { $CONFIGFILE != "NULL"} {
 		-re "Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit -1 }
 		-re "No such file or directory" { send_user "FAILED: Invalid package\n" ; exit -1 }
 	}
-	send "scp $CONFIGFILE $USERNAME@$SERVER:$INSTALLDIR/Calpont/etc/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:$INSTALLDIR/$INSTALLLOCATION/etc/$CONFIG.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -197,13 +199,13 @@ if { $CONFIGFILE != "NULL"} {
 	# rename previous installed config file
 	#
 	send_user "Copy RPM-saved Calpont Configuration File     "
-	send "ssh $USERNAME@$SERVER 'cd $INSTALLDIR/Calpont/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
+	send "ssh $USERNAME@$SERVER 'cd $INSTALLDIR/$INSTALLLOCATION/etc/;mv -f $CONFIG.xml $CONFIG.xml.install;cp -v $CONFIG.xml.rpmsave $CONFIG.xml'\n"
 	expect -re "word: "
 	# password for ssh
 	send "$PASSWORD\n"
 	# check return
 	expect {
-		-re "Calpont.xml"         { send_user "DONE" } abort
+		-re "$CONFIG.xml"         { send_user "DONE" } abort
 		-re "Permission denied, please try again"   { send_user "FAILED: Invalid password\n" ; exit -1 }
 	}
 }

@@ -17,24 +17,27 @@ set RELEASE [lindex $argv 3]
 set CONFIGFILE [lindex $argv 4]
 set PREFIX [lindex $argv 5]
 set USERNAME [lindex $argv 6]
-set DEBUG [lindex $argv 7]
+set PACKAGENAME [lindex $argv 7]
+set INSTALLLOCATION [lindex $argv 8]
+set DEBUG [lindex $argv 9]
 
-set CALPONTPACKAGE1 infinidb-libs-$PREFIX$PACKAGE
-set CALPONTPACKAGE2 infinidb-platform-$PREFIX$PACKAGE
-set CALPONTPACKAGE3 infinidb-enterprise-$PREFIX$PACKAGE
-set MYSQLPACKAGE infinidb-storage-engine-$PACKAGE
-set MYSQLDPACKAGE infinidb-mysql-$PACKAGE
 set SHARED "//srvhill01/shared"
 set INSTALLDIR "/usr/local"
 
 log_user $DEBUG
 spawn -noecho /bin/bash
+
+SET CONFIG "Calpont"
+if { $PACKAGENAME != "NULL"} {
+	SET CONFIG "Calpont"
+}
+
 send "rm -f $PACKAGE\n"
 # 
 # delete and erase all old packages from Parent OAM Module
 #
 set timeout 30
-send "ssh $USERNAME@$SERVER 'rm -f /root/calpont-*.rpm /root/infinidb*.rpm'\n"
+send "ssh $USERNAME@$SERVER 'rm -f /root/$INSTALLLOCATION-*.rpm /root/infinidb*.rpm /root/mariabd*.rpm '\n"
 expect {
 	-re "authenticity" { send "yes\n" 
 						expect {
@@ -82,7 +85,7 @@ send_user "\n"
 set timeout 60
 expect -re {[$#] }
 send_user "Erase Old InfiniDB Package                    "
-send "ssh $USERNAME@$SERVER 'rpm -e --nodeps \$(rpm -qa | grep '^InfiniDB') >/dev/null 2>&1; rpm -e --nodeps \$(rpm -qa | grep '^infinidb-')'\n"
+send "ssh $USERNAME@$SERVER 'rpm -e --nodeps \$(rpm -qa | grep '^mariadb-columnstore') >/dev/null 2>&1; rpm -e --nodeps \$(rpm -qa | grep '^infinidb-')'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
@@ -94,7 +97,7 @@ expect {
 	-re "Permission denied, please try again"   { send_user "FAILED: Invalid password\n" ; exit -1 }
 }
 sleep 10
-send "ssh $USERNAME@$SERVER 'rm -f $INSTALLDIR/Calpont/releasenum >/dev/null 2>&1; test -x $INSTALLDIR/Calpont/bin/pre-uninstall && $INSTALLDIR/Calpont/bin/pre-uninstall'\n"
+send "ssh $USERNAME@$SERVER 'rm -f $INSTALLDIR/$INSTALLLOCATION/releasenum >/dev/null 2>&1; test -x $INSTALLDIR/$INSTALLLOCATION/bin/pre-uninstall && $INSTALLDIR/$INSTALLLOCATION/bin/pre-uninstall'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
@@ -131,7 +134,7 @@ expect -re {[$#] }
 send "rm -f $PACKAGE\n"
 #
 if { $CONFIGFILE != "NULL"} {
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/Calpont/etc/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/$INSTALLLOCATION/etc/$CONFIG.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -142,10 +145,10 @@ if { $CONFIGFILE != "NULL"} {
 		-re "No such file or directory" { send_user "FAILED: Invalid package\n" ; exit -1 }
 	}
 	#
-	# copy over Calpont.xml file
+	# copy over $CONFIG.xml file
 	#
 	send_user "Copy InfiniDB Configuration File              "
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/Calpont/etc/Calpont.xml.rpmsave\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/$INSTALLLOCATION/etc/$CONFIG.xml.rpmsave\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -156,7 +159,7 @@ if { $CONFIGFILE != "NULL"} {
 		-re "No such file or directory" { send_user "FAILED: Invalid package\n" ; exit -1 }
 	}
 	#do a dummy scp command
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/tmp/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/tmp/$CONFIG.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -168,13 +171,13 @@ if { $CONFIGFILE != "NULL"} {
 	# rename previous installed config file
 	#
 	send_user "Copy RPM-saved InfiniDB Configuration File     "
-	send "ssh $USERNAME@$SERVER 'cd /usr/local/Calpont/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
+	send "ssh $USERNAME@$SERVER 'cd /usr/local/$INSTALLLOCATION/etc/;mv -f $CONFIG.xml $CONFIG.xml.install;cp -v $CONFIG.xml.rpmsave $CONFIG.xml'\n"
 	expect -re "word: "
 	# password for ssh
 	send "$PASSWORD\n"
 	# check return
 	expect {
-		-re "Calpont.xml"         { send_user "DONE" }
+		-re "$CONFIG.xml"         { send_user "DONE" }
 		-re "Permission denied, please try again"   { send_user "FAILED: Invalid password\n" ; exit -1 }
 	}
 }

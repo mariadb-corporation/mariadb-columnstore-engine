@@ -20,7 +20,7 @@
 *
 *
 * List of files being updated by configure:
-*		Calpont/etc/Calpont.xml
+*		Calpont/etc" + installLocation + ".xml
 *
 *		
 ******************************************************************************************/
@@ -64,6 +64,11 @@ int main(int argc, char *argv[])
 	string installDir = "/usr/local";
 	string MySQLport= oam::UnassignedName;
 	string installPackageType = "";
+	string product = "columnstore";
+	string company = "MariaDB-Columnstore";
+	string calpontPackagename = "mariadb-columnstore";
+	string installLocation = "/MariaDB/Columnstore";
+	string adminCommand = "" + adminCommand + "";
 
     	char* pcommand = 0;
 	string prompt;
@@ -72,7 +77,7 @@ int main(int argc, char *argv[])
 
 	int forceVer = -1;
 
-	Config* sysConfig = Config::makeConfig("./systems/CalpontSystems.xml");
+	Config* sysConfig = Config::makeConfig("./systems" + installLocation + "Systems.xml");
 
 	//gethostname to determine where to get the packages
 	string SHARED = "//srvhill01/shared";
@@ -96,16 +101,17 @@ int main(int argc, char *argv[])
 			cout << "configuration of the 'Calpont.xml' located on the system being" << endl;
 			cout << "or can be passed as an argument into 'quickInstaller'." << endl;
 			cout << endl;
-   			cout << "Usage: autoInstaller -s system [-h][-ce][-r release][-c configFile][-n][-d][-p package-type][-m mysql-password][-port mysql-port]" << endl;
+   			cout << "Usage: autoInstaller -s system [-h][-ce][-r release][-c configFile][-n][-d][-p package-type][-m mysql-password][-port mysql-port][-pr product-name]" << endl;
 			cout << "			-s system-name" << endl;
 			cout << "			-ce community-edition install" << endl;
 			cout << "			-r release-number (optional, default to 'Latest')" << endl;
-			cout << "			-c InfiniDB Config File located in system-name directory (optional, default to system configuration)" << endl;
+			cout << "			-c Config File located in system-name directory (optional, default to system configuration)" << endl;
 			cout << "			-n No Prompt (Used for automated Installs)" << endl;
 			cout << "			-port System MySQL Port, if set" << endl;
 			cout << "			-d Debug Flag" << endl;
 			cout << "			-p Install Package Type (rpm or binary), defaults to " << sysConfig->configFile() << " setting" << endl;
 			cout << "			-3 Force a version 3 install, defaults to autodetect" << endl;
+			cout << "			-pr Product installing (infinidb or columnstore), defaults to columnstore" << endl;
 			exit(0);
 		}
       		else if( string("-s") == argv[i] ) {
@@ -167,6 +173,14 @@ int main(int argc, char *argv[])
 		else if( string("-3") == argv[i] ) {
 			forceVer = 3;
 		}
+		else if( string("-pr") == argv[i] ) {
+			i++;
+			if ( argc == i ) {
+				cout << "ERROR: product name type argument" << endl;
+				exit(1);
+			}
+			product = argv[i];
+		}
 		else {
 			cout << "ERROR: Unknown option: " << argv[i] << endl;
 			exit(1);
@@ -175,7 +189,21 @@ int main(int argc, char *argv[])
 
 	if (systemName.empty() ) {
 		cout << endl;
+		cout << "Missing system name" << endl;
    		cout << "Usage: autoInstaller -s system [-h][-ce][-r release][-c configFile][-n][-d][-p package-type][-m mysql-password][-port mysql-port]" << endl;
+		exit(1);
+	}
+
+	if ( product == "infinidb" ) {
+		company = "InfiniDB";
+		calpontPackagename = "infinidb";
+		installLocation = "" + installLocation + "";
+		adminCommand = "calpontConsole";
+	}
+	else if ( product != "columnstore" )
+	{
+		cout << endl;
+		cout << "Invalid product name" << endl;
 		exit(1);
 	}
 
@@ -249,8 +277,8 @@ int main(int argc, char *argv[])
 			systemPackage = "*x86_64.bin.tar.gz";
 		else
 		{
-			cout << "Invalid InfiniDB Package Type Arugument entered, use 'rpm' or 'binary' exiting" << endl;
-			cerr << "Invalid InfiniDB Package Type Arugument entered, use 'rpm' or 'binary' exiting" << endl;
+			cout << "Invalid " + company + " Package Type Arugument entered, use 'rpm' or 'binary' exiting" << endl;
+			cerr << "Invalid " + company + " Package Type Arugument entered, use 'rpm' or 'binary' exiting" << endl;
 			exit(1);
 		}
 	}
@@ -263,9 +291,9 @@ int main(int argc, char *argv[])
 			cout << endl;
 
 			if ( systemPackage == "*.x86_64.rpm" )
-				prompt = "Are you sure you want to install the '" + release + "' InfiniDB RPM on '" + systemName + "' ? (y,n,exit) > ";
+				prompt = "Are you sure you want to install the '" + release + "' " + company + " RPM on '" + systemName + "' ? (y,n,exit) > ";
 			else
-				prompt = "Are you sure you want to install the '" + release + "/packages' InfiniDB Binary Package on '" + systemName + "' ? (y,n,exit) > ";
+				prompt = "Are you sure you want to install the '" + release + "/packages' " + company + " Binary Package on '" + systemName + "' ? (y,n,exit) > ";
 
 			pcommand = readline(prompt.c_str());
 			if (!pcommand)
@@ -310,7 +338,7 @@ int main(int argc, char *argv[])
 
 	//remove all calpont packages from local /root/ directory, can interfere with install
 	if (geteuid() == 0)
-		system("rm -f /root/calpont-*rpm /root/infinidb-*rpm");
+		system("rm -f /root" + installLocation + "-*rpm /root/infinidb-*rpm /root/mariadb-*rpm ");
 
 	string systemDir = "systems/" + systemName + "/";
 
@@ -323,11 +351,8 @@ int main(int argc, char *argv[])
 
 	int idbver = -1;
 	string currentPrefix;
-	string calpontPackagename;
 	string mysqlRPMname;
 
-	//TODO: replace all the goofy file I/O with glob(3) or better yet just parse the output of samba 'dir' cmd
-	//  and avoid all the wasted network I/O
 	if ( systemPackage == "*.x86_64.rpm" )
 	{
 		//get rpm
@@ -343,7 +368,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			//try to guess the release, v4+ takes precedence
-			string sentinel = systemDir + "infinidb-libs-*.rpm";
+			string sentinel = systemDir + "" + calpontPackagename + "-libs-*.rpm";
 			glob_t gt;
 			memset(&gt, 0, sizeof(gt));
 			idbver = 3;
@@ -352,7 +377,6 @@ int main(int argc, char *argv[])
 			globfree(&gt);
 		}
 
-		calpontPackagename = "infinidb";
 		mysqlRPMname = calpontPackagename + "-storage-engine";
 
 		//check if package is there
@@ -361,8 +385,8 @@ int main(int argc, char *argv[])
 		int rtnCode = system(cmd.c_str());
 		if (rtnCode != 0) {
 			{
-				cout << endl << "FAILED: InfiniDB Package(s) not found in " << release << " , exiting" << endl;
-				cerr << endl << "FAILED: InfiniDB Package(s) not found in " << release << " , exiting" << endl;
+				cout << endl << "FAILED: " + company + " Package(s) not found in " << release << " , exiting" << endl;
+				cerr << endl << "FAILED: " + company + " Package(s) not found in " << release << " , exiting" << endl;
 				exit(1);
 			}
 		}
@@ -377,7 +401,8 @@ int main(int argc, char *argv[])
 			buf = line;
 	
 			string::size_type pos;
-			pos = buf.find("infinidb-storage-engine-",0);
+			string package = calpontPackagename + "-storage-engine-";
+			pos = buf.find(package,0);
 			if (pos != string::npos) {
 				currentPrefix = buf.substr(pos+24,1);
 				break;
@@ -387,7 +412,7 @@ int main(int argc, char *argv[])
 
 		calpontPackage = calpontPackagename + "-" + currentPrefix + systemPackage;
 
-		cout << endl << "Using the InfiniDB Packages '" + systemPackage + "' from " + SHARED + "/packages/" + release + "/" << endl;
+		cout << endl << "Using the " + company + " Packages '" + systemPackage + "' from " + SHARED + "/packages/" + release + "/" << endl;
 	}
 	else	//binary package
 	{
@@ -403,7 +428,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			//try to guess the release, v4+ takes precedence
-			string sentinel = systemDir + "infinidb-ent-*.tar.gz";
+			string sentinel = systemDir + "" + calpontPackagename + "-ent-*.tar.gz";
 			glob_t gt;
 			memset(&gt, 0, sizeof(gt));
 			idbver = 3;
@@ -413,9 +438,8 @@ int main(int argc, char *argv[])
 		}
 		currentPrefix = oam.itoa(idbver);
 
-		calpontPackagename = "infinidb";
 		mysqlRPMname = calpontPackagename + "-storage-engine";
-		calpontPackage = "infinidb-ent-" + systemPackage;
+		calpontPackage = "" + calpontPackagename + "-ent-" + systemPackage;
 
 		//check if package is there
 		cmd = "ls " + systemDir + calpontPackage + " > /tmp/package.txt 2>&1";
@@ -423,8 +447,8 @@ int main(int argc, char *argv[])
 		int rtnCode = system(cmd.c_str());
 		if (rtnCode != 0) {
 			{
-				cout << endl << "FAILED: InfiniDB binary package not found in " << release << ", exiting" << endl;
-				cerr << endl << "FAILED: InfiniDB binary package not found in " << release << ", exiting" << endl;
+				cout << endl << "FAILED: " + company + " binary package not found in " << release << ", exiting" << endl;
+				cerr << endl << "FAILED: " + company + " binary package not found in " << release << ", exiting" << endl;
 				exit(1);
 			}
 		}
@@ -439,7 +463,8 @@ int main(int argc, char *argv[])
 			buf = line;
 	
 			string::size_type pos;
-			pos = buf.find("infinidb-ent-",0);
+			string package = calpontPackagename + "-ent-"
+			pos = buf.find(package,0);
 			if (pos != string::npos) {
 				currentPrefix = buf.substr(pos+13,1);
 				break;
@@ -447,7 +472,7 @@ int main(int argc, char *argv[])
 		}
 		file.close();
 
-		cout << endl << "Using the InfiniDB Package '" + systemPackage + "' from " + SHARED + "/Iterations/" + release + "/packages" << endl;
+		cout << endl << "Using the " + company + " Package '" + systemPackage + "' from " + SHARED + "/Iterations/" + release + "/packages" << endl;
 
 	}
 
@@ -519,14 +544,14 @@ exit(0);
 				cout << "Get System Calpont.xml                        " << flush;
 				for ( int retry = 0 ; retry < 5 ; retry++ )
 				{
-					cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "/Calpont/etc/Calpont.xml " + systemUser + " " + debug_flag;
+					cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc" + installLocation + ".xml " + systemUser + " " + debug_flag;
 					rtnCode = system(cmd.c_str());
 					sleep(2);
 					if (rtnCode == 0) {
 						cmd = "mv Calpont.xml " + systemDir + "/.";
 						rtnCode = system(cmd.c_str());
 						if ( rtnCode == 0 ) {
-							//Calpont.xml found
+							/" + installLocation + ".xml found
 	
 							//try to parse it
 							Config* sysConfigOld;
@@ -540,7 +565,7 @@ exit(0);
 							    // redirect cout to /dev/null
 								cerr.rdbuf(file.rdbuf());
 
-								sysConfigOld = Config::makeConfig( systemDir + "/Calpont.xml");
+								sysConfigOld = Config::makeConfig( systemDir + "" + installLocation + ".xml");
 
 							   // restore cout stream buffer
 								cerr.rdbuf (strm_buffer);
@@ -573,10 +598,10 @@ exit(0);
 RPMSAVE:
 				//try Calpont.xml.rpmsave
 				cout << "Get System Calpont.xml.rpmsave                " << flush;
-				cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "/Calpont/etc/Calpont.xml.rpmsave " + systemUser + " " + debug_flag;
+				cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc" + installLocation + ".xml.rpmsave " + systemUser + " " + debug_flag;
 				rtnCode = system(cmd.c_str());
 				if (rtnCode == 0) {
-					cmd = "mv Calpont.xml.rpmsave " + systemDir + "/Calpont.xml";
+					cmd = "mv Calpont.xml.rpmsave " + systemDir + "" + installLocation + ".xml";
 					rtnCode = system(cmd.c_str());
 					if ( rtnCode != 0 ) {
 						cout << "ERROR: No system Calpont.xml or Calpont.xml.rpmsave found, exiting" << endl;
@@ -606,7 +631,7 @@ CONFIGDONE:
 
 	Config* sysConfigOld;
 	try {
-		sysConfigOld = Config::makeConfig( systemDir + "/Calpont.xml");
+		sysConfigOld = Config::makeConfig( systemDir + "" + installLocation + ".xml");
 	}
 	catch(...)
 	{
@@ -625,8 +650,8 @@ CONFIGDONE:
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem updating the InfiniDB System Configuration file, exiting" << endl;
-		cerr << "ERROR: Problem updating the InfiniDB System Configuration file, exiting" << endl;
+		cout << "ERROR: Problem updating the " + company + " System Configuration file, exiting" << endl;
+		cerr << "ERROR: Problem updating the " + company + " System Configuration file, exiting" << endl;
 		exit(1);
 	}
 
@@ -644,8 +669,8 @@ CONFIGDONE:
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading serverTypeInstall from the InfiniDB System Configuration file, exiting" << endl;
-		cerr << "ERROR: Problem reading serverTypeInstall from the InfiniDB System Configuration file, exiting" << endl;
+		cout << "ERROR: Problem reading serverTypeInstall from the " + company + " System Configuration file, exiting" << endl;
+		cerr << "ERROR: Problem reading serverTypeInstall from the " + company + " System Configuration file, exiting" << endl;
 		exit(1);
 	}
 
@@ -656,8 +681,8 @@ CONFIGDONE:
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading DBRootStorageType from the InfiniDB System Configuration file, exiting" << endl;
-		cerr << "ERROR: Problem reading DBRootStorageType from the InfiniDB System Configuration file, exiting" << endl;
+		cout << "ERROR: Problem reading DBRootStorageType from the " + company + " System Configuration file, exiting" << endl;
+		cerr << "ERROR: Problem reading DBRootStorageType from the " + company + " System Configuration file, exiting" << endl;
 		exit(1);
 	}
 
@@ -670,8 +695,8 @@ CONFIGDONE:
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem reading DataFileEnvFile from the InfiniDB System Configuration file, exiting" << endl;
-			cerr << "ERROR: Problem reading DataFileEnvFile from the InfiniDB System Configuration file, exiting" << endl;
+			cout << "ERROR: Problem reading DataFileEnvFile from the " + company + " System Configuration file, exiting" << endl;
+			cerr << "ERROR: Problem reading DataFileEnvFile from the " + company + " System Configuration file, exiting" << endl;
 			exit(1);
 		}
 	}
@@ -736,15 +761,7 @@ CONFIGDONE:
 
 	cout << "Shutdown System                               " << flush;
 
-	cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/mcsadmin shutdownsystem Force y' 'Successful shutdown' Error 60 " + debug_flag;
-	rtnCode = system(cmd.c_str());
-	if (rtnCode == 0)
-		cout << "DONE" << endl;
-
-	// run calpontUninstaller script
-	cout << "Run calpontUninstall script                   " << flush;
-
-	cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/calpontUninstall.sh -d -p " + password + "' 'Uninstall Completed' FAILED 500 " + debug_flag;
+	cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "" + installLocation + "/bin/" + adminCommand + " shutdownsystem Force y' 'Successful shutdown' Error 60 " + debug_flag;
 	rtnCode = system(cmd.c_str());
 	if (rtnCode == 0)
 		cout << "DONE" << endl;
@@ -756,7 +773,7 @@ CONFIGDONE:
 		installer = "parent_binary_installer.sh";
 		cmd = "cd " + systemDir + ";../../" + installer + " " + installParentModuleIPAddr + " " +
 			password + " " + systemPackage + " " + release + " " + configFile + " " + systemUser + " " +
-			installDir + " " + debug_flag;
+			installDir + " " + calpontPackagename + " " + installLocation + " " + debug_flag;
 	}
 	else
 	{
@@ -764,14 +781,14 @@ CONFIGDONE:
 		{
 			installer = "dm_parent_installer.sh";
 			cmd = "cd " + systemDir + ";../../" + installer + " " + installParentModuleIPAddr + " " +
-				password + " " + systemPackage + " " + release + " " + configFile + " " + systemUser + " " + CE + " " + debug_flag;
+				password + " " + systemPackage + " " + release + " " + configFile + " " + systemUser + " " + CE + " " + calpontPackagename + " " + installLocation + " " + debug_flag;
 		}
 		else
 		{
 			installer = "pm_parent_installer.sh";
 			cmd = "cd " + systemDir + ";../../" + installer + " " + installParentModuleIPAddr + " " +
 				password + " " + systemPackage + " " + release + " " + configFile + " " + currentPrefix + " " +
-				systemUser + " " + debug_flag;
+				systemUser + " " + calpontPackagename + " " + installLocation + " " + debug_flag;
 		}
 	}
 
@@ -790,22 +807,22 @@ CONFIGDONE:
 	{
 		if ( MySQLport == oam::UnassignedName )
 		{
-			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "/Calpont/bin/" + DataFileEnvFile + ";" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "" + installLocation + "/bin/" + DataFileEnvFile + ";" + installDir + "" + installLocation + "/bin/postConfigure -i " + installDir + "" + installLocation + " -u -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
 		}
 		else
 		{
-			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "/Calpont/bin/" + DataFileEnvFile + ";" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '. " + installDir + "" + installLocation + "/bin/" + DataFileEnvFile + ";" + installDir + "" + installLocation + "/bin/postConfigure -i " + installDir + "" + installLocation + " -u -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
 		}
 	}
 	else
 	{
 		if ( MySQLport == oam::UnassignedName )
 		{
-			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "" + installLocation + "/bin/postConfigure -i " + installDir + "" + installLocation + " -u -p " + password + "' 'System is Active' Error 1200 " + debug_flag;
 		}
 		else
 		{
-			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "/Calpont/bin/postConfigure -i " + installDir + "/Calpont -n -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
+			cmd = "./remote_command.sh " + installParentModuleIPAddr + " " + systemUser + " " + password + " '" + installDir + "" + installLocation + "/bin/postConfigure -i " + installDir + "" + installLocation + " -u -p " + password + " -port " + MySQLport + "' 'System is Active' Error 1200 " + debug_flag;
 			string DataFileEnvFile = "setenv-hdfs-20";
 		}
 	}
