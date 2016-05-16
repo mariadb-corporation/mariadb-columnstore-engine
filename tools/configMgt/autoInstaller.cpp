@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
 	int forceVer = -1;
 
-	Config* sysConfig = Config::makeConfig("./systems" + installLocation + "Systems.xml");
+	Config* sysConfig = Config::makeConfig("./systems/CalpontSystems.xml");
 
 	//gethostname to determine where to get the packages
 	string SHARED = "//srvhill01/shared";
