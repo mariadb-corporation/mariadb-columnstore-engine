@@ -132,7 +132,8 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
                     (*field)->type() == MYSQL_TYPE_VAR_STRING ||
                     (*field)->type() == MYSQL_TYPE_STRING || 
                     (*field)->type() == MYSQL_TYPE_DATE ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME )
+                    (*field)->type() == MYSQL_TYPE_DATETIME ||
+				    (*field)->type() == MYSQL_TYPE_DATETIME2 )
                 vals.append("'");
             while (ptr < end_ptr)
             {
@@ -159,7 +160,8 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
                     (*field)->type() == MYSQL_TYPE_VAR_STRING ||
                     (*field)->type() == MYSQL_TYPE_STRING || 
                     (*field)->type() == MYSQL_TYPE_DATE ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME )
+                    (*field)->type() == MYSQL_TYPE_DATETIME ||
+ 				    (*field)->type() == MYSQL_TYPE_DATETIME2 )
                 vals.append("'");
         }
     }
@@ -768,23 +770,39 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 					if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
 					{
 						fprintf(ci.filePtr, "%c", ci.delimiter);
+						buf += 8;
 					}
 					else
 					{
-						long long value = *((long long*) buf);
-						long datePart = (long) (value/1000000ll);
-						int day = datePart % 100;
-						int month = (datePart/100) % 100;
-						int year = datePart/10000;
-						fprintf(ci.filePtr, "%04d-%02d-%02d ", year,month,day);
-				
-						long timePart = (long) (value - (long long) datePart*1000000ll);
-						int second = timePart % 100;
-						int min = (timePart/100) % 100;
-						int hour = timePart/10000;
-						fprintf(ci.filePtr, "%02d:%02d:%02d%c", hour,min,second, ci.delimiter);
+						if (table->field[colpos]->real_type() == MYSQL_TYPE_DATETIME2)
+						{
+							// mariadb 10.1 compatibility -- MYSQL_TYPE_DATETIME2 introduced in mysql 5.6
+							MYSQL_TIME ltime;
+							const uchar *pos = buf;
+							longlong tmp= my_datetime_packed_from_binary(pos, 0);
+							TIME_from_longlong_datetime_packed(&ltime, tmp);
+							fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d%c", 
+									ltime.year,ltime.month, ltime.day,
+									ltime.hour,ltime.minute,ltime.second, ci.delimiter);
+							buf += table->field[colpos]->pack_length();
+						}
+						else
+						{
+							long long value = *((long long*) buf);
+							long datePart = (long) (value/1000000ll);
+							int day = datePart % 100;
+							int month = (datePart/100) % 100;
+							int year = datePart/10000;
+							fprintf(ci.filePtr, "%04d-%02d-%02d ", year,month,day);
+					
+							long timePart = (long) (value - (long long) datePart*1000000ll);
+							int second = timePart % 100;
+							int min = (timePart/100) % 100;
+							int hour = timePart/10000;
+							fprintf(ci.filePtr, "%02d:%02d:%02d%c", hour,min,second, ci.delimiter);
+							buf += 8;
+						}
 					}
-					buf += 8;
 					break;
 				}
 				case CalpontSystemCatalog::CHAR:

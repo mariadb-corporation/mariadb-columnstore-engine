@@ -2092,7 +2092,10 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
 					ct.colWidth = 4;
 				}
 				else if (item->field_type() == MYSQL_TYPE_DATETIME ||
-					       item->field_type() == MYSQL_TYPE_TIMESTAMP)
+						 item->field_type() == MYSQL_TYPE_DATETIME2 ||
+						 item->field_type() == MYSQL_TYPE_TIMESTAMP ||
+  				         item->field_type() == MYSQL_TYPE_TIMESTAMP2
+						 )
 				{
 					ct.colDataType = CalpontSystemCatalog::DATETIME;
 					ct.colWidth = 8;
@@ -2822,7 +2825,9 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 		// MySQL give string result type for date function, but has the flag set.
 		// we should set the result type to be datetime for comparision.
 		if (ifp->field_type() == MYSQL_TYPE_DATETIME ||
+			ifp->field_type() == MYSQL_TYPE_DATETIME2 ||
 		    ifp->field_type() == MYSQL_TYPE_TIMESTAMP ||
+			ifp->field_type() == MYSQL_TYPE_TIMESTAMP2 ||
 		    funcName == "add_time")
 		{
 			CalpontSystemCatalog::ColType ct;
