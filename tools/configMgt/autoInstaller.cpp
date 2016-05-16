@@ -598,7 +598,7 @@ exit(0);
 RPMSAVE:
 				//try Calpont.xml.rpmsave
 				cout << "Get System Calpont.xml.rpmsave                " << flush;
-				cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/calpont.xml.rpmsave " + systemUser + " " + debug_flag;
+				cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/Calpont.xml.rpmsave " + systemUser + " " + debug_flag;
 				rtnCode = system(cmd.c_str());
 				if (rtnCode == 0) {
 					cmd = "mv Calpont.xml.rpmsave " + systemDir + "Calpont.xml";
