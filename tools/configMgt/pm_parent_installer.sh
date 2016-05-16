@@ -37,7 +37,7 @@ send "rm -f $PACKAGE\n"
 # delete and erase all old packages from Parent OAM Module
 #
 set timeout 30
-send "ssh $USERNAME@$SERVER 'rm -f /root/$INSTALLLOCATION-*.rpm /root/infinidb*.rpm /root/mariabd*.rpm '\n"
+send "ssh $USERNAME@$SERVER 'rm -f /root/Calpont-*.rpm /root/$PACKAGENAME*.rpm /root/mariabd*.rpm '\n"
 expect {
 	-re "authenticity" { send "yes\n" 
 						expect {
@@ -115,7 +115,7 @@ sleep 5
 #
 set timeout 160
 send_user "Install New InfiniDB Packages                 "
-send "ssh $USERNAME@$SERVER ' rpm -ivh --nodeps --force infinidb-*'\n"
+send "ssh $USERNAME@$SERVER ' rpm -ivh --nodeps --force $PACKAGENAME-*'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"

@@ -34,7 +34,7 @@ if { $PACKAGENAME != "columnstore"} {
 
 
 set timeout 10
-send "ssh $USERNAME@$SERVER 'rm -f /root/$INSTALLLOCATION-*.rpm /root/infinidb*.rpm'\n"
+send "ssh $USERNAME@$SERVER 'rm -f /root/Calpont-*.rpm /root/$PACKAGENAME*.rpm'\n"
 expect {
 	-re "authenticity" { send "yes\n" 
 						expect {
@@ -118,7 +118,7 @@ send_user "\n"
 # install InfiniDB package
 #
 send_user "Install New InfiniDB Packages                 "
-send "ssh $USERNAME@$SERVER ' rpm -iv --nodeps --force infinidb-*'\n"
+send "ssh $USERNAME@$SERVER ' rpm -iv --nodeps --force $PACKAGENAME-*'\n"
 expect -re "word: "
 # password for ssh
 send "$PASSWORD\n"
