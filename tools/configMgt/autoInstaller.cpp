@@ -64,11 +64,11 @@ int main(int argc, char *argv[])
 	string installDir = "/usr/local";
 	string MySQLport= oam::UnassignedName;
 	string installPackageType = "";
-	string product = "columnstore";
-	string company = "MariaDB-Columnstore";
-	string calpontPackagename = "mariadb-columnstore";
-	string installLocation = "/MariaDB/Columnstore";
-	string adminCommand = "mcsadmin";
+	string company = "InfiniDB";
+	string calpontPackagename = "infinidb";
+	string installLocation = "/Calpont";
+	string adminCommand = "calpontConsole";
+	string product = "infinidb";
 
     	char* pcommand = 0;
 	string prompt;
@@ -194,13 +194,13 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ( product == "infinidb" ) {
-		company = "InfiniDB";
-		calpontPackagename = "infinidb";
-		installLocation = "" + installLocation + "";
-		adminCommand = "calpontConsole";
+	if ( product == "columnstore" ) {
+		company = "MariaDB-Columnstore";
+		calpontPackagename = "mariadb-columnstore";
+		installLocation = "/MariaDB/Columnstore";
+		adminCommand = "mcsadmin";
 	}
-	else if ( product != "columnstore" )
+	else if ( product != "infinidb" )
 	{
 		cout << endl;
 		cout << "Invalid product name" << endl;
