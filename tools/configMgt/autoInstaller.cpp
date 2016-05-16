@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
 			buf = line;
 	
 			string::size_type pos;
-			string package = calpontPackagename + "-ent-"
+			string package = calpontPackagename + "-ent-";
 			pos = buf.find(package,0);
 			if (pos != string::npos) {
 				currentPrefix = buf.substr(pos+13,1);
