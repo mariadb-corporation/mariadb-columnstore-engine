@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	string company = "MariaDB-Columnstore";
 	string calpontPackagename = "mariadb-columnstore";
 	string installLocation = "/MariaDB/Columnstore";
-	string adminCommand = "" + adminCommand + "";
+	string adminCommand = "mcsadmin";
 
     	char* pcommand = 0;
 	string prompt;
