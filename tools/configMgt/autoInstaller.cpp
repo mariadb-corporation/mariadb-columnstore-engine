@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
 		installDir = "/home/" + systemUser;
 
 	//remove all calpont packages from local /root/ directory, can interfere with install
-	if (geteuid() == 0) {
+	if (geteuid() == 0)
 		system("rm -f /root/calpont-*rpm /root/infinidb-*rpm /root/mariadb-*rpm ");
 
 	string systemDir = "systems/" + systemName + "/";
