@@ -3,7 +3,7 @@
 alias mcsmysql='/usr/local/MariaDB/Columnstore/mysql/bin/mysql --defaults-file=/usr/local/MariaDB/Columnstore/mysql/my.cnf -u root'
 alias ma=/usr/local/MariaDB/Columnstore/bin/mcsadmin
 alias mcsadmin=/usr/local/MariaDB/Columnstore/bin/mcsadmin
-alias home='cd /usr/local/MariadDB/Columnstore'
+alias home='cd /usr/local/MariaDB/Columnstore'
 alias log='cd /var/log/Columnstore/'
 alias core='cd /var/log/Columnstore/corefiles'
 alias tmsg='tail -f /var/log/messages'
