@@ -337,8 +337,8 @@ int main(int argc, char *argv[])
 		installDir = "/home/" + systemUser;
 
 	//remove all calpont packages from local /root/ directory, can interfere with install
-	if (geteuid() == 0)
-		system("rm -f /root" + installLocation + "-*rpm /root/infinidb-*rpm /root/mariadb-*rpm ");
+	if (geteuid() == 0) {
+		system("rm -f /root/calpont-*rpm /root/infinidb-*rpm /root/mariadb-*rpm ");
 
 	string systemDir = "systems/" + systemName + "/";
 
@@ -551,7 +551,7 @@ exit(0);
 						cmd = "mv Calpont.xml " + systemDir + "/.";
 						rtnCode = system(cmd.c_str());
 						if ( rtnCode == 0 ) {
-							/" + installLocation + ".xml found
+							// Calpont.xml found
 	
 							//try to parse it
 							Config* sysConfigOld;
