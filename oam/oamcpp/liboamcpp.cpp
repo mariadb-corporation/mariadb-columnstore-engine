@@ -6944,6 +6944,8 @@ namespace oam
 
     	void Oam::setSystemDBrootCount()
 	{
+		sleep(1); //let other updates get applied to the config file
+
 		//set the system dbroot number
 		try
 		{
