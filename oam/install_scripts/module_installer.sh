@@ -54,7 +54,7 @@ fi
 export INFINIDB_INSTALL_DIR=$installdir
 
 cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
-if [ $module = "um" ]; then
+if [ $module = "pm" ]; then
 	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 		cp $INFINIDB_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
 	
