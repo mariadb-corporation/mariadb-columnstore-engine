@@ -4439,15 +4439,15 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		if ( packageType == "deb" )
 			separator = "_";
 		//mariadb
-		calpontPackage = homedir + "/mariadbcolumnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqlPackage = homedir + "/mariadbcolumnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqldPackage = homedir + "/mariadbcolumnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage1 = homedir + "/mariadbcolumnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage2 = homedir + "/mariadbcolumnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage = homedir + "/mariadb-columnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		mysqlPackage = homedir + "/mariadb-columnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		mysqldPackage = homedir + "/mariadb-columnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage1 = homedir + "/mariadb-columnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage2 = homedir + "/mariadb-columnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 	}
 	else
 	{
-		calpontPackage = homedir + "/mariadbcolumnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
+		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
 		mysqlPackage = calpontPackage;
 		mysqldPackage = calpontPackage;
 	}
