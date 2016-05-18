@@ -4469,7 +4469,7 @@ bool isInfiniDB(TABLE* table_ptr)
 	string engineName = table_ptr->s->db_plugin->name.str;
 #endif
 
-	if (engineName == "InfiniDB")
+	if (engineName == "Columnstore" || engineName == "InfiniDB")
 		return true;
 	else
 		return false;

@@ -782,7 +782,7 @@ uint32_t doUpdateDelete(THD *thd)
 		ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
 	} catch (std::exception& e)
 	{
-		string msg = string("InfiniDB User Priority - ") + e.what();
+		string msg = string("Columnstore User Priority - ") + e.what();
 		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 	}
 	ci->stats.fSessionID = tid2sid(thd->thread_id);
@@ -1259,7 +1259,7 @@ uint32_t doUpdateDelete(THD *thd)
 			updateCP->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
 		}catch(std::exception& e)
 		{
-			string msg = string("InfiniDB User Priority - ") + e.what();
+			string msg = string("Columnstore User Priority - ") + e.what();
 			push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 		}
 
@@ -1688,7 +1688,7 @@ uint32_t doUpdateDelete(THD *thd)
 	}
 	catch (std::exception& e)
 	{
-		string msg = string("InfiniDB Query Stats - ") + e.what();
+		string msg = string("Columnstore Query Stats - ") + e.what();
 		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 	}
 	delete ci->dmlProc;
@@ -2388,7 +2388,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 	// @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
 	if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
 	{
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by InfiniDB in this version");
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
 		thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
 		return ER_INTERNAL_ERROR;
 	}
@@ -2552,7 +2552,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
 			} catch (std::exception& e)
 			{
-				string msg = string("InfiniDB User Priority - ") + e.what();
+				string msg = string("Columnstore User Priority - ") + e.what();
 				ci->warningMsg = msg;
 			}
 
@@ -2622,7 +2622,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 				csep->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
 			}catch (std::exception& e)
 			{
-				string msg = string("InfiniDB User Priority - ") + e.what();
+				string msg = string("Columnstore User Priority - ") + e.what();
 				push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 			}
 
@@ -2701,7 +2701,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 							ci->stats.insert();
 						} catch (std::exception& e)
 						{
-							string msg = string("InfiniDB Query Stats - ") + e.what();
+							string msg = string("Columnstore Query Stats - ") + e.what();
 							push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 						}
 					}
@@ -2878,7 +2878,7 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 	// @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
 	if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
 	{
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by InfiniDB in this version");
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
 		thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
 		return ER_INTERNAL_ERROR;
 	}
@@ -3081,7 +3081,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 		{
 			if (e.errorCode() == ERR_CROSS_ENGINE_CONNECT || e.errorCode() == ERR_CROSS_ENGINE_CONFIG)
 			{
-				string msg = string("InfiniDB Query Stats - ") + e.what();
+				string msg = string("Columnstore Query Stats - ") + e.what();
 				push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 			}
 			else
@@ -3305,7 +3305,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 	//@bug 4771. reject REPLACE key word
 	if ((thd->lex)->sql_command == SQLCOM_REPLACE_SELECT)
 	{
-		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, "REPLACE statement is not supported in infinidb.");
+		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, "REPLACE statement is not supported in Columnstore.");
 	}
 
 	boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(tid2sid(thd->thread_id));
@@ -3324,7 +3324,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 		found = insertStmt.find("ignore");
 		if (found!=string::npos)
 		{
-			setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, "IGNORE option in insert statement is not supported in infinidb.");
+			setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, "IGNORE option in insert statement is not supported in Columnstore.");
 		}
 
 		if ( rows > 1 )
@@ -3731,7 +3731,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
 		} catch (std::exception& e)
 		{
-			string msg = string("InfiniDB User Priority - ") + e.what();
+			string msg = string("Columnstore User Priority - ") + e.what();
 			push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 		}
 
@@ -3985,7 +3985,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 			ci->stats.insert();
 		} catch (std::exception& e)
 		{
-			string msg = string("InfiniDB Query Stats - ") + e.what();
+			string msg = string("Columnstore Query Stats - ") + e.what();
 			push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
 		}
 	}

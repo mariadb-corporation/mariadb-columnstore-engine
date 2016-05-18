@@ -201,7 +201,7 @@ static int calpont_init_func(void *p)
     tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
     tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-  fprintf(stderr, "InfiniDB: Started; Version: %s-%s\n", idb_version.c_str(), idb_release.c_str());
+  fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", idb_version.c_str(), idb_release.c_str());
 
   calpont_hton= (handlerton *)p;
 #ifndef _MSC_VER
@@ -1048,6 +1048,9 @@ const COND *ha_calpont::cond_push(const COND *cond)
 }
 
 
+struct st_mysql_storage_engine columnstore_storage_engine=
+{ MYSQL_HANDLERTON_INTERFACE_VERSION };
+
 struct st_mysql_storage_engine infinidb_storage_engine=
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
@@ -1095,19 +1098,53 @@ static struct st_mysql_sys_var* calpont_system_variables[]= {
   NULL
 };
 
-mysql_declare_plugin(calpont)
+mysql_declare_plugin(columnstore)
+{
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &columnstore_storage_engine,
+  "Columnstore",
+  "MariaDB",
+  "Columnstore storage engine",
+  PLUGIN_LICENSE_GPL,
+  calpont_init_func,                            /* Plugin Init */
+  calpont_done_func,                            /* Plugin Deinit */
+  0x0100 /* 1.0 */,
+  NULL,                                         /* status variables */
+  calpont_system_variables,                     /* system variables */
+  NULL,                                         /* reserved */
+  0                                             /* config flags */
+},
 {
   MYSQL_STORAGE_ENGINE_PLUGIN,
   &infinidb_storage_engine,
   "InfiniDB",
-  "InfiniDB, Inc.",
-  "InfiniDB storage engine",
+  "MariaDB",
+  "Columnstore storage engine (deprecated: use columnstore)",
   PLUGIN_LICENSE_GPL,
   calpont_init_func,                            /* Plugin Init */
   calpont_done_func,                            /* Plugin Deinit */
-  0x0001 /* 0.1 */,
+  0x0100 /* 1.0 */,
   NULL,                                         /* status variables */
   calpont_system_variables,                     /* system variables */
-  NULL                                          /* config options */
+  NULL,                                         /* reserved */
+  0                                             /* config flags */
 }
 mysql_declare_plugin_end;
+#if 0
+{
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &columnstore_storage_engine,
+  "columnstore",
+  "MariaDB",
+  "Columnstore storage engine",
+  PLUGIN_LICENSE_GPL,
+  calpont_init_func,                            /* Plugin Init */
+  calpont_done_func,                            /* Plugin Deinit */
+  0x0100 /* 1.0 */,
+  NULL,                                         /* status variables */
+  calpont_system_variables,                     /* system variables */
+  NULL,                                         /* reserved */
+  0                                             /* config flags */
+},
+#endif
+

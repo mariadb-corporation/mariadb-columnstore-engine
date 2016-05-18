@@ -684,7 +684,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				rc = 1;
   	 			thd->get_stmt_da()->set_overwrite_status(true);
 
-	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by InfiniDB.");
+	 			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by Columnstore.");
 				ci->alterTableState = cal_connection_info::NOT_ALTER;
 				ci->isAlter = false;
 	 			return rc;
@@ -901,7 +901,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			if ((compressionType ==0) && (useHdfs))
 			{
 				compressionType = 2;
-				string errmsg ("The table is created with infinidb compression type 2 under HDFS." );
+				string errmsg ("The table is created with Columnstore compression type 2 under HDFS." );
 				push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errmsg.c_str());
 			}
 
@@ -950,7 +950,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 			rc = 1;
 			thd->get_stmt_da()->set_overwrite_status(true);
 
-			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Multiple actions in alter table statement is currently not supported by InfiniDB.");
+			thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Multiple actions in alter table statement is currently not supported by Columnstore.");
 
 			ci->alterTableState = cal_connection_info::NOT_ALTER;
 			ci->isAlter = false;
@@ -966,7 +966,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by InfiniDB.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by Columnstore.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -1149,7 +1149,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					if ((compressionType ==0) && (useHdfs))
 					{
 						compressionType = 2;
-						string errmsg ("The column is created with infinidb compression type 2 under HDFS." );
+						string errmsg ("The column is created with Columnstore compression type 2 under HDFS." );
 						push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errmsg.c_str());
 					}
 
@@ -1285,7 +1285,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Multiple actions in alter table statement is currently not supported by InfiniDB.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Multiple actions in alter table statement is currently not supported by Columnstore.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -1296,7 +1296,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				{
 					rc = 1;
 					thd->get_stmt_da()->set_overwrite_status(true);
-					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by InfiniDB.");
+					thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Varbinary is currently not supported by Columnstore.");
 					ci->alterTableState = cal_connection_info::NOT_ALTER;
 					ci->isAlter = false;
 					return rc;
@@ -1473,7 +1473,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					if ((compressionType ==0) && (useHdfs))
 					{
 						compressionType = 2;
-						string errmsg ("The column is created with infinidb compression type 2 under HDFS." );
+						string errmsg ("The column is created with Columnstore compression type 2 under HDFS." );
 						push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errmsg.c_str());
 					}
 
@@ -1614,7 +1614,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					if ((compressionType ==0) && (useHdfs))
 					{
 						compressionType = 2;
-						string errmsg ("The column is created with infinidb compression type 2 under HDFS." );
+						string errmsg ("The column is created with Columnstore compression type 2 under HDFS." );
 						push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errmsg.c_str());
 					}
 
@@ -1853,14 +1853,14 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	 algorithm::to_upper(ddlStatement);
 	 if (ddlStatement.find("AUTO_INCREMENT") != string::npos)
 	 {
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Use of the MySQL auto_increment syntax is not supported in InfiniDB. If you wish to create an auto increment column in InfiniDB, please consult the InfiniDB SQL Syntax Guide for the correct usage.");
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Use of the MySQL auto_increment syntax is not supported in Columnstore. If you wish to create an auto increment column in Columnstore, please consult the Columnstore SQL Syntax Guide for the correct usage.");
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 	 }
 	 else
 	 {
 		//@Bug 1888,1885. update error message
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax or the data type(s) is not supported by InfiniDB. Please check the InfiniDB syntax guide for supported syntax or data types.");
+		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
 		ci->alterTableState = cal_connection_info::NOT_ALTER;
 		ci->isAlter = false;
 	 }
@@ -2057,7 +2057,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	if ((compressiontype ==0) && (useHdfs))
 	{
 		compressiontype = 2;
-		string errmsg ("The table is created with infinidb compression type 2 under HDFS." );
+		string errmsg ("The table is created with Columnstore compression type 2 under HDFS." );
 		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errmsg.c_str());
 	}
 

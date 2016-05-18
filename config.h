@@ -286,22 +286,22 @@
 #define LSTAT_FOLLOWS_SLASHED_SYMLINK 1
 
 /* Name of package */
-#define PACKAGE "infinidb"
+#define PACKAGE "columnstore"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "support@infinidb.co"
+#define PACKAGE_BUGREPORT "jira.mariadb.org"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "infinidb"
+#define PACKAGE_NAME "columnstore"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "infinidb 4.6.1"
+#define PACKAGE_STRING "columnstore 1.0.1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "infinidb"
+#define PACKAGE_TARNAME "columnstore"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "4.6.1"
+#define PACKAGE_VERSION "1.0.1"
 
 /* Define to 1 if the C compiler supports function prototypes. */
 #define PROTOTYPES 1
