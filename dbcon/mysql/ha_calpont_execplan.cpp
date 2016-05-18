@@ -3734,8 +3734,10 @@ void gp_walk(const Item *item, void *arg)
 	RecursionCounter r(gwip); // Increments and auto-decrements upon exit.
 
 	Item::Type itype = item->type();
-	//if (itype == Item::FUNC_ITEM && string(((Item_func*)item)->func_name()) == "xor")
-	//	itype = Item::COND_ITEM;
+        
+        // Allow to process XOR(which is Item_func) like other logical operators (which are Item_cond)
+	if (itype == Item::FUNC_ITEM && ((Item_func*)item)->functype() == Item_func::XOR_FUNC )
+	    itype = Item::COND_ITEM;
 
 	if(item->type() == Item::CACHE_ITEM)
 	{
@@ -3995,20 +3997,40 @@ void gp_walk(const Item *item, void *arg)
 		}
 		case Item::COND_ITEM:
 		{
-			Item_cond* icp = (Item_cond*)item;
+			// All logical functions are handled here,  most of them are Item_cond, 
+                        // but XOR (it is Item_func_boolean2)
+			Item_func *func =(Item_func *)item;
 
-			if (icp)
+			enum Item_func::Functype ftype = func->functype();
+			bool isOr = (ftype == Item_func::COND_OR_FUNC);
+                        bool isXor = (ftype == Item_func::XOR_FUNC);
+
+			List<Item> *argumentList;
+			List<Item> xorArgumentList;
+			if (isXor)
 			{
+				for(unsigned i = 0; i < func->argument_count(); i++)
+				{
+					xorArgumentList.push_back(func->arguments()[i]);
+				}
+				argumentList = &xorArgumentList;
+			}
+			else
+			{
+				argumentList = ((Item_cond*)item)->argument_list();
+			}
+
+                        List_iterator_fast<Item> li(*argumentList);
+	
 				// @bug2932. if ptWorkStack contains less items than the condition's arguments,
 				// the missing one should be in the rcWorkStack, unless the it's subselect.
 				// @todo need to figure out a way to combine these two stacks while walking.
 				//if (gwip->ptWorkStack.size() < icp->argument_list()->elements)
 				{
-					List_iterator_fast<Item> li(*(icp->argument_list()));
 					while (Item *it= li++)
 					{
 						//@bug3495, @bug5865 error out non-supported OR with correlated subquery
-						if (icp->functype() == Item_func::COND_OR_FUNC)
+						if (isOr)
 						{
 							vector <Item_field*> fieldVec;
 							uint16_t parseInfo = 0;
@@ -4035,20 +4057,20 @@ void gp_walk(const Item *item, void *arg)
 						}
 					}
 				}
+			
 				// @bug1603. MySQL's filter tree is a multi-tree grouped by operator. So more than
 				// two filters saved on the stack so far might belong to this operator.
-				uint32_t leftInStack = gwip->ptWorkStack.size() - icp->argument_list()->elements + 1;
+				uint32_t leftInStack = gwip->ptWorkStack.size() - argumentList->elements + 1;
 				while (true)
 				{
 					if (gwip->ptWorkStack.size() < 2)
 						break;
-
 					ParseTree* lhs = gwip->ptWorkStack.top();
 					gwip->ptWorkStack.pop();
 					SimpleFilter *lsf = dynamic_cast<SimpleFilter*>(lhs->data());
 					if (lsf && lsf->op()->data() == "noop")
 					{
-						if (icp->functype() == Item_func::COND_OR_FUNC)
+						if (isOr)
 						{
 							gwip->parseErrorText = "Unhandled item in WHERE or HAVING clause";
 							gwip->fatalParseError = true;
@@ -4063,7 +4085,7 @@ void gp_walk(const Item *item, void *arg)
 					SimpleFilter *rsf = dynamic_cast<SimpleFilter*>(rhs->data());
 					if (rsf && rsf->op()->data() == "noop")
 					{
-						if (icp->functype() == Item_func::COND_OR_FUNC)
+						if (isOr)
 						{
 							gwip->parseErrorText = "Unhandled item in WHERE or HAVING clause";
 							gwip->fatalParseError = true;
@@ -4075,22 +4097,19 @@ void gp_walk(const Item *item, void *arg)
 							continue;
 						}
 					}
-					Operator* op = new LogicOperator(icp->func_name());
+					Operator* op = new LogicOperator(func->func_name());
 					ParseTree* ptp = new ParseTree(op);
-
 					ptp->left(lhs);
 					ptp->right(rhs);
 					gwip->ptWorkStack.push(ptp);
 					if (gwip->ptWorkStack.size() == leftInStack)
 						break;
 				}
-
 				// special handling for subquery with aggregate. MySQL adds isnull function to the selected
 				// column. InfiniDB will remove it and set nullmatch flag if it's NOT_IN sub.
 				// @todo need more checking here to make sure it's not a user input OR operator
-				if (icp->functype() == Item_func::COND_OR_FUNC && gwip->subQuery)
-					gwip->subQuery->handleFunc(gwip, icp);
-			}
+				if (isOr && gwip->subQuery)
+					gwip->subQuery->handleFunc(gwip, func);
 			break;
 		}
 		case Item::REF_ITEM:
