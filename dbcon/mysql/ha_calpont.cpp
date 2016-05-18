@@ -188,9 +188,9 @@ int calpont_discover_existence(handlerton *hton, const char *db,
 	return ha_calpont_impl_discover_existence(db, table_name);
 }
 
-static int calpont_init_func(void *p)
+static int columnstore_init_func(void *p)
 {
-  DBUG_ENTER("calpont_init_func");
+  DBUG_ENTER("columnstore_init_func");
 
   struct tm tm;
   time_t t;
@@ -222,8 +222,37 @@ static int calpont_init_func(void *p)
   DBUG_RETURN(0);
 }
 
+static int infinidb_init_func(void *p)
+{
+  DBUG_ENTER("infinidb_init_func");
 
-static int calpont_done_func(void *p)
+  struct tm tm;
+  time_t t;
+
+  time(&t);
+  localtime_r(&t, &tm);
+  fprintf(stderr,"%02d%02d%02d %2d:%02d:%02d ",
+    tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
+    tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+  fprintf(stderr, "InfiniDB: Started; Version: %s-%s\n", idb_version.c_str(), idb_release.c_str());
+
+	calpont_hton= (handlerton *)p;
+
+	calpont_hton->state=   SHOW_OPTION_YES;
+	calpont_hton->create=  calpont_create_handler;
+	calpont_hton->flags=   HTON_CAN_RECREATE;
+//  calpont_hton->discover_table= calpont_discover;
+//  calpont_hton->discover_table_existence= calpont_discover_existence;
+	calpont_hton->commit= calpont_commit;
+	calpont_hton->rollback= calpont_rollback;
+	calpont_hton->close_connection = calpont_close_connection;
+	calpont_hton->set_error= calpont_set_error;
+	DBUG_RETURN(0);
+}
+
+
+static int columnstore_done_func(void *p)
 {
   DBUG_ENTER("calpont_done_func");
 
@@ -234,6 +263,12 @@ static int calpont_done_func(void *p)
   DBUG_RETURN(0);
 }
 
+static int infinidb_done_func(void *p)
+{
+  DBUG_ENTER("calpont_done_func");
+
+  DBUG_RETURN(0);
+}
 
 #if 0
 /**
@@ -1106,8 +1141,8 @@ mysql_declare_plugin(columnstore)
   "MariaDB",
   "Columnstore storage engine",
   PLUGIN_LICENSE_GPL,
-  calpont_init_func,                            /* Plugin Init */
-  calpont_done_func,                            /* Plugin Deinit */
+  columnstore_init_func,                        /* Plugin Init */
+  columnstore_done_func,                        /* Plugin Deinit */
   0x0100 /* 1.0 */,
   NULL,                                         /* status variables */
   calpont_system_variables,                     /* system variables */
@@ -1121,8 +1156,8 @@ mysql_declare_plugin(columnstore)
   "MariaDB",
   "Columnstore storage engine (deprecated: use columnstore)",
   PLUGIN_LICENSE_GPL,
-  calpont_init_func,                            /* Plugin Init */
-  calpont_done_func,                            /* Plugin Deinit */
+  infinidb_init_func,                           /* Plugin Init */
+  infinidb_done_func,                            /* Plugin Deinit */
   0x0100 /* 1.0 */,
   NULL,                                         /* status variables */
   calpont_system_variables,                     /* system variables */
@@ -1130,21 +1165,4 @@ mysql_declare_plugin(columnstore)
   0                                             /* config flags */
 }
 mysql_declare_plugin_end;
-#if 0
-{
-  MYSQL_STORAGE_ENGINE_PLUGIN,
-  &columnstore_storage_engine,
-  "columnstore",
-  "MariaDB",
-  "Columnstore storage engine",
-  PLUGIN_LICENSE_GPL,
-  calpont_init_func,                            /* Plugin Init */
-  calpont_done_func,                            /* Plugin Deinit */
-  0x0100 /* 1.0 */,
-  NULL,                                         /* status variables */
-  calpont_system_variables,                     /* system variables */
-  NULL,                                         /* reserved */
-  0                                             /* config flags */
-},
-#endif
 

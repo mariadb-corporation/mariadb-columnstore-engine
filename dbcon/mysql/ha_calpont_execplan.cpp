@@ -4003,7 +4003,7 @@ void gp_walk(const Item *item, void *arg)
 
 			enum Item_func::Functype ftype = func->functype();
 			bool isOr = (ftype == Item_func::COND_OR_FUNC);
-                        bool isXor = (ftype == Item_func::XOR_FUNC);
+            bool isXor = (ftype == Item_func::XOR_FUNC);
 
 			List<Item> *argumentList;
 			List<Item> xorArgumentList;
@@ -4020,13 +4020,13 @@ void gp_walk(const Item *item, void *arg)
 				argumentList = ((Item_cond*)item)->argument_list();
 			}
 
-                        List_iterator_fast<Item> li(*argumentList);
-	
+
 				// @bug2932. if ptWorkStack contains less items than the condition's arguments,
 				// the missing one should be in the rcWorkStack, unless the it's subselect.
 				// @todo need to figure out a way to combine these two stacks while walking.
 				//if (gwip->ptWorkStack.size() < icp->argument_list()->elements)
 				{
+					List_iterator_fast<Item> li(*argumentList);
 					while (Item *it= li++)
 					{
 						//@bug3495, @bug5865 error out non-supported OR with correlated subquery
@@ -4448,7 +4448,7 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 		}
 		case Item::WINDOW_FUNC_ITEM:
 			parseInfo |= AF_BIT;
-			break;
+			break; 
 		default:
 			break;
 	}
