@@ -9,16 +9,16 @@ include ../../rules.mak
 .PHONY: install clean test docs coverage leakcheck
 
 SCRIPTS=post-install pre-uninstall remote_command.sh \
-calpontLogRotate transactionLog transactionLogArchiver.sh system_installer.sh \
-module_installer.sh patch_installer.sh xm_installer.sh startupTests.sh \
-director_installer.sh user_installer.sh performance_installer.sh \
-remote_scp_get.sh calpontAlias run.sh upgrade-infinidb.sh \
+columnstoreLogRotate transactionLog transactionLogArchiver.sh system_installer.sh \
+module_installer.sh startupTests.sh \
+user_installer.sh performance_installer.sh \
+remote_scp_get.sh columnstoreAlias run.sh upgrade-columnstore.sh \
 post-mysql-install post-mysqld-install binary_installer.sh \
-os_check.sh infinidb calpontSyslog calpontSyslog-ng syslogSetup.sh \
-remote_scp_put.sh calpontUninstall.sh infinidb.def \
-remotessh.exp master-rep-infinidb.sh slave-rep-infinidb.sh rsync.sh \
+os_check.sh columnstore columnstoreSyslog columnstoreSyslog-ng syslogSetup.sh \
+remote_scp_put.sh columnstoreUninstall.sh columnstore.def \
+remotessh.exp master-rep-columnstore.sh slave-rep-columnstore.sh rsync.sh \
 myCnf-include-args.text myCnf-exclude-args.text remote_command_verify.sh \
-calpontSyslog7 disable-rep-infinidb.sh infinidb.conf
+columnstoreSyslog7 disable-rep-columnstore.sh columnstore.conf
 
 LOCAL=module
 

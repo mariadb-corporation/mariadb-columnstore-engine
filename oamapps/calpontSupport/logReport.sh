@@ -11,7 +11,7 @@ fi
 if [ $2 ] ; then
         INSTALLDIR=$2
 else
-        INSTALLDIR="/usr/local/Calpont"
+        INSTALLDIR="/usr/local/MariaDB/Columnstore"
 fi
 
 if [ $USER = "root" ]; then
@@ -22,6 +22,6 @@ fi
 
 $SUDO rm -f /tmp/${MODULE}_logReport.tar.gz
 
-tar -zcf /tmp/${MODULE}_logReport.tar.gz /var/log/Calpont > /dev/null 2>&1
+tar -zcf /tmp/${MODULE}_logReport.tar.gz /var/log/Columnstore > /dev/null 2>&1
 
 exit 0

@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 				if ( moduleName != parentOAMModuleName ) {
 					//run remote patch installer script
 					cout << endl << "----- Performing Patch installation of Module '" + moduleName + "' -----" << endl << endl;
-					string cmd = "/usr/local/Calpont/bin/patch_installer.sh " + moduleName + " " + moduleIPAddr + " " + password + " " + patchLocation + " " + installLocation + " " + softwareFile + " " + installer_debug;
+					string cmd = "/usr/local/MariaDB/Columnstore/bin/patch_installer.sh " + moduleName + " " + moduleIPAddr + " " + password + " " + patchLocation + " " + installLocation + " " + softwareFile + " " + installer_debug;
 
 					int rtnCode = system(cmd.c_str());
 					if (rtnCode != 0)

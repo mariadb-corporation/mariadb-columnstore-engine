@@ -12,7 +12,7 @@
 #Job ID will determine the names of the two xml files. For example, job id 100 will generate Job_100.xml for columns and Job_101 for index xml file. Job id for index xml file is the entered job id +1
 #if the job id is skipped, the default job ids are 299 and 300 for column and index files
 #There are two xml files will be generated which reside in bulkroot directory under subdirectory job
-#For example, the job directory may look like /usr/local/Calpont/test/bulk/job 
+#For example, the job directory may look like /usr/local/MariaDB/Columnstore/test/bulk/job 
 
 # Set up a default search path.
 

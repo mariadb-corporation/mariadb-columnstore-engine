@@ -5,12 +5,12 @@
 # Setup the Custom OS files during a System install on a module
 #
 #
-# append calpont OS files to Linux OS file
+# append columnstore OS files to Linux OS file
 #
 #
 
 prefix=/usr/local
-installdir=$prefix/Calpont
+installdir=$prefix/MariaDB/Columnstore
 rpmmode=install
 user=$USER
 if [ -z "$user" ]; then
@@ -22,7 +22,7 @@ shiftcnt=0
 for arg in "$@"; do
 	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
 		prefix="$(echo $arg | awk -F= '{print $2}')"
-		installdir=$prefix/Calpont
+		installdir=$prefix/MariaDB/Columnstore
 		((shiftcnt++))
 	elif [ $(expr -- "$arg" : '--rpmmode=') -eq 10 ]; then
 		rpmmode="$(echo $arg | awk -F= '{print $2}')"
@@ -47,22 +47,24 @@ for arg in "$@"; do
 done
 shift $shiftcnt
 
-if [ $installdir != "/usr/local/Calpont" ]; then
+if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql
 fi
 
 export INFINIDB_INSTALL_DIR=$installdir
 
 cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
-if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
-	cp $INFINIDB_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
-
-	if test -f $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab ; then
-		echo "Setup fstab on Module"
-		touch /etc/fstab
-		rm -f /etc/fstab.calpontSave
-		mv /etc/fstab /etc/fstab.calpontSave
-		cat $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
+if [ $module = "pm" ]; then
+	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+		cp $INFINIDB_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
+	
+		if test -f $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab ; then
+			echo "Setup fstab on Module"
+			touch /etc/fstab
+			rm -f /etc/fstab.columnstoreSave
+			cp /etc/fstab /etc/fstab.columnstoreSave
+			cat $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
+		fi
 	fi
 fi
 
@@ -97,17 +99,17 @@ if [ $module = "pm" ]; then
 fi
 
 echo "Setup rc.local on Module"
-if [ $EUID -eq 0 -a -f $INFINIDB_INSTALL_DIR/local/rc.local.calpont ]; then
+if [ $EUID -eq 0 -a -f $INFINIDB_INSTALL_DIR/local/rc.local.columnstore ]; then
 	if [ $user = "root" ]; then
 		touch /etc/rc.local
-		rm -f /etc/rc.local.calpontSave
-		cp /etc/rc.local /etc/rc.local.calpontSave
-		cat $INFINIDB_INSTALL_DIR/local/rc.local.calpont >> /etc/rc.local
+		rm -f /etc/rc.local.columnstoreSave
+		cp /etc/rc.local /etc/rc.local.columnstoreSave
+		cat $INFINIDB_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
 	else
 		sudo touch /etc/rc.local
-		sudo rm -f /etc/rc.local.calpontSave
-		sudo cp /etc/rc.local /etc/rc.local.calpontSave
-		sudo cat $INFINIDB_INSTALL_DIR/local/rc.local.calpont >> /etc/rc.local
+		sudo rm -f /etc/rc.local.columnstoreSave
+		sudo cp /etc/rc.local /etc/rc.local.columnstoreSave
+		sudo cat $INFINIDB_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
 	fi
 fi
 

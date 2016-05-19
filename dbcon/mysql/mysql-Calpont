@@ -55,7 +55,7 @@ service_startup_timeout=30
 
 # Lock directory for RedHat / SuSE.
 lockdir='/var/lock/subsys'
-lock_file_path="$lockdir/mysql-Calpont"
+lock_file_path="$lockdir/mysql-Columnstore"
 
 # The following variables are only set for letting mysql.server find things.
 

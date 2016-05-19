@@ -63,7 +63,7 @@ public class InfiniDBOutputDriver extends Configured implements Tool
 		InfiniDBConfiguration idbconf = new InfiniDBConfiguration(jobconf);
 		idbconf.setInputPath("input");
 		idbconf.setOutputPath("output");
-		idbconf.setInfiniDBHome("/usr/local/Calpont");
+		idbconf.setInfiniDBHome("/usr/local/MariaDB/Columnstore");
 
 		jobconf.setMapperClass(InfiniDoopMapper.class);
 		jobconf.setNumMapTasks(1);

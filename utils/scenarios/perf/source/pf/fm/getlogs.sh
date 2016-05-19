@@ -28,6 +28,6 @@ then
 fi
 #
 mkdir /tmp/$host/logs
-cp -r /var/log/Calpont/* /tmp/$host/logs
+cp -r /var/log/Columnstore/* /tmp/$host/logs
 #
 # End of script

@@ -97,7 +97,7 @@ namespace processmanager{
 	typedef   std::map<std::string, std::string>	srvStateList;
 
 	const int MAX_ARGUMENTS = 10;
-	const std::string DEFAULT_LOG_FILE = "/var/log/Calpont/ProcessManager.log";
+	const std::string DEFAULT_LOG_FILE = "/var/log/Columnstore/ProcessManager.log";
 
 
    /**

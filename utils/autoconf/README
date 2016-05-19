@@ -2,26 +2,26 @@ To build the software from source, consult the file INSTALL.
 
 Brief Install Instructions:
 
-1. Install the 3 Calpont InfiniDB RPMs.
-2. Install and start the software, run: /usr/local/Calpont/bin/postConfigure
-3. Setup some aliases: . /usr/local/Calpont/bin/calpontAlias
+1. Install the 3 MariaDB Columnstore RPMs.
+2. Install and start the software, run: /usr/local/MariaDB/Columnstore/bin/postConfigure
+3. Setup some aliases: . /usr/local/MariaDB/Columnstore/bin/MariaDB ColumnstoreAlias
 4. Connect to MySQL: idbmysql
 5. Try the test in step 12 below
 
 
 Detailed Installation Instructions:
 
-1. Download the package calpont-2.2.0-2.x86_64.rpm.tar.gz (RHEL5 64-BIT)
-   to the server where you are installing Calpont.
+1. Download the package MariaDB Columnstore-2.2.0-2.x86_64.rpm.tar.gz (RHEL5 64-BIT)
+   to the server where you are installing MariaDB Columnstore.
 
 2. Obtain root user access.
 
 3. Unpack the tarball, which will generate 4 RPMs.
 
-   	tar xvf calpont-2.2.0-2.x86_64.rpm.tar.gz
+   	tar xvf MariaDB Columnstore-2.2.0-2.x86_64.rpm.tar.gz
    
-4. Install the 3 RPMs in this order, the Calpont InfiniDB software will be installed in 
-   /usr/local/Calpont.
+4. Install the 3 RPMs in this order, the MariaDB Columnstore software will be installed in 
+   /usr/local/MariaDB/Columnstore.
 
    	rpm -ivh infinidb-libs-2.2.0-2.x86_64.rpm
    	rpm -ivh infinidb-platform-2.2.0-2.x86_64.rpm
@@ -31,50 +31,50 @@ Detailed Installation Instructions:
 5a.To configure and run on a single server system utilizing local disk storage, 
    run install script:
    
-   	/usr/local/Calpont/bin/postConfigure
+   	/usr/local/MariaDB/Columnstore/bin/postConfigure
 
 5b.To configure and run on a multi-server system and/or to utilize a SAN storage 
-   system, follow the instructions in the Calpont InfiniDB Installation Guide.
+   system, follow the instructions in the MariaDB Columnstore Installation Guide.
 
-   	/usr/local/Calpont/bin/postConfigure
+   	/usr/local/MariaDB/Columnstore/bin/postConfigure
 
-6. Ports utilized by the Calpont InfiniDB Software
+6. Ports utilized by the MariaDB Columnstore Software
 
-   The Calpont MySQL daemon utilizes port 3306. To use a different port, update 
+   The MariaDB Columnstore MySQL daemon utilizes port 3306. To use a different port, update 
    the 2 locations in the following file:
 
-   	/usr/local/Calpont/mysql/my.cnf
+   	/usr/local/MariaDB/Columnstore/mysql/my.cnf
 
 	port            = 3306
 	port            = 3306
 
-   You must reserve the following ports to run the Calpont InfiniDB Software:
+   You must reserve the following ports to run the MariaDB Columnstore Software:
 
 	8600 - 8622, 8700, and 8800
 
 7. Setup some aliases:
-. /usr/local/Calpont/bin/calpontAlias
+. /usr/local/MariaDB/Columnstore/bin/MariaDB ColumnstoreAlias
 
-8. To manually start and stop the Calpont InfiniDB Software as the root user run:
+8. To manually start and stop the MariaDB Columnstore Software as the root user run:
 
    cc startSystem
 
-   To stop the Calpont Software, run:
+   To stop the MariaDB Columnstore Software, run:
 
    cc stopSystem
 
-9. To start/stop the Calpont InfiniDB Software during system boot/shutdown use the 
+9. To start/stop the MariaDB Columnstore Software during system boot/shutdown use the 
    chkconfig command
 
- 	/sbin/chkconfig --add infinidb
-	/sbin/chkconfig infinidb on
+ 	/sbin/chkconfig --add columnstore
+	/sbin/chkconfig columnstore on
  
-10. After the Calpont InfiniDB Software has been started, use the following command to 
-    connect to the Calpont OAM Console and watch for the System to go to the 
+10. After the MariaDB Columnstore Software has been started, use the following command to 
+    connect to the MariaDB Columnstore OAM Console and watch for the System to go to the 
     ACTIVE status. The follow will repeatedly run the OAM command getsysteminfo 
     every 5 seconds.
 
-    	calpontOAMconsole getsysteminfo -r
+    	MariaDB ColumnstoreOAMconsole getsysteminfo -r
 
     Here is an example display from a Single Server Install:
 
@@ -86,7 +86,7 @@ Detailed Installation Instructions:
 
     Module dm1    ACTIVE                   Mon Apr  6 18:07:12 2009
 
-    Calpont Process statuses
+    MariaDB Columnstore Process statuses
 
     Process             Module    Status         Last Status Change        Process ID
     ------------------  ------    ------------   ------------------------  ----------
@@ -109,11 +109,11 @@ Detailed Installation Instructions:
 
 	CNTR<C>
 
-    Or to get back Calpont OAM Console Prompt,enter the following:
+    Or to get back MariaDB Columnstore OAM Console Prompt,enter the following:
 
 	CNTR<D>
 
-11. Use the following command to access the Calpont InfiniDB MySQL console:
+11. Use the following command to access the MariaDB Columnstore MySQL console:
 
     	idbmysql 
 
@@ -121,18 +121,18 @@ Detailed Installation Instructions:
 
 		Welcome to the Mysql monitor.  Commands end with ; or \g.
 		Your Mysql connection id is 1
-		Server version: 5.1.26-Calpont-log Source distribution
+		Server version: 5.1.26-MariaDB Columnstore-log Source distribution
 
 		Type 'help;' or '\h' for help. Type '\c' to clear the buffer.
 
 		mysql>
 
-12. Run the following upgrade script to create calponsys schema and upgrade the syscolumn table:  /usr/local/Calpont/bin/upgrade-infinidb.sh
+12. Run the following upgrade script to create calponsys schema and upgrade the syscolumn table:  /usr/local/MariaDB/Columnstore/bin/upgrade-infinidb.sh
 
 13. As an example to get you started, try this:
 
-        create database calpont;
-        use calpont;
+        create database MariaDB Columnstore;
+        use MariaDB Columnstore;
         create table caltest (col1 int, col2 int) engine=infinidb;
         show create table caltest;
         insert into caltest values (1, 2);

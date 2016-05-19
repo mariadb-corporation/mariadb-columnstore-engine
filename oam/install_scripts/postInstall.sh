@@ -13,7 +13,7 @@ set PASSWORD " "
 set CONFIGFILE " "
 set DEBUG 0
 set USERNAME "root"
-set INSTALLDIR "/usr/local/Calpont"
+set INSTALLDIR "/usr/local/MariaDB/Columnstore"
 
 spawn -noecho /bin/bash
 

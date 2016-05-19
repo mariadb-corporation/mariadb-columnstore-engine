@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	if (argc >= 13)
 		installDir = argv[12];
 	else
-		installDir = "/usr/local/Calpont";
+		installDir = "/usr/local/MariaDB/Columnstore";
 
     ofstream file("/dev/null");
 
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem getting ServerTypeInstall from the Calpont System Configuration file" << endl;
+		cout << "ERROR: Problem getting ServerTypeInstall from the MariaDB Columnstore  System Configuration file" << endl;
 		exit(1);
 	}
 	IserverTypeInstall = atoi(serverTypeInstall.c_str());
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
 			case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
 			{	
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 	
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting RotatingDestination in the Calpont System Configuration file" << endl;
+					cout << "ERROR: Problem setting RotatingDestination in the MariaDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem getting DB Storage Data from the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem getting DB Storage Data from the MariaDB Columnstore System Configuration file" << endl;
 						return false;
 					}
 
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting NumBlocksPct in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting NumBlocksPct in the MariaDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting TotalUmMemory in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 				}
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 							}
 							catch(...)
 							{
-								cout << "ERROR: Problem setting NumBlocksPct in the InfiniDB System Configuration file" << endl;
+								cout << "ERROR: Problem setting NumBlocksPct in the MariaDB Columnstore System Configuration file" << endl;
 								exit(1);
 							}
 						}
@@ -315,13 +315,13 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 		
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting TotalUmMemory in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem setting TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 				}
@@ -386,13 +386,13 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the InfiniDB System Configuration file" << endl;
+						cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
 						exit(1);
 					}
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 		
@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !writeConfig(sysConfig) ) {                
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;                
+		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;                
 		exit(1);        
 	}
 
@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem getting NMSIPAddress from Calpont System Configuration file" << endl;
+				cout << "ERROR: Problem getting NMSIPAddress from MariaDB Columnstore System Configuration file" << endl;
 				exit(1);
 			}
 		}
@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading the Calpont System Configuration file" << endl;
+		cout << "ERROR: Problem reading the MariaDB Columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -680,7 +680,7 @@ int main(int argc, char *argv[])
 		sm.updateSNMPD("parentOAMIPStub", parentOAMModuleIPAddr);
 	}
 
-	string idbstartcmd = installDir + "/bin/infinidb start";
+	string idbstartcmd = installDir + "/bin/columnstore start";
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			performancemodulelist.size() > 1 ) {
 		// 
@@ -757,17 +757,17 @@ int main(int argc, char *argv[])
 		if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
 		{
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the InfiniDB MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
 			sleep(5);
 		}
 
-		cout << "System Install successfully completed, starting InfiniDB" << endl;
+		cout << "System Install successfully completed, starting MariaDB Columnstore" << endl;
 
 		//
-		// perform start of InfiniDB of other servers in the system
+		// perform start of MariaDB Columnstore of other servers in the system
 		//
 		list1 = childmodulelist.begin();
 		
@@ -790,9 +790,9 @@ int main(int argc, char *argv[])
 		//start on local module
 		int rtnCode = system(idbstartcmd.c_str());
 		if (rtnCode != 0)
-			cout << "Error starting InfiniDB local module" << endl;
+			cout << "Error starting MariaDB Columnstore local module" << endl;
 		else
-			cout << "Start InfiniDB request successful" << endl;
+			cout << "Start MariaDB Columnstore request successful" << endl;
 	}
 	else
 	{
@@ -802,7 +802,7 @@ int main(int argc, char *argv[])
 		if ( calpont_rpm1 != "dummy.rpm" ) {
 
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the InfiniDB MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -811,9 +811,9 @@ int main(int argc, char *argv[])
 			//start on local module
 			int rtnCode = system(idbstartcmd.c_str());
 			if (WEXITSTATUS(rtnCode) != 0)
-				cout << "Error starting InfiniDB local module" << endl;
+				cout << "Error starting MariaDB Columnstore local module" << endl;
 			else
-				cout << "Start InfiniDB request successful" << endl;
+				cout << "Start MariaDB Columnstore request successful" << endl;
 		}
 		else
 		{
@@ -822,7 +822,7 @@ int main(int argc, char *argv[])
 			//
 
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the Infinidb MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -838,7 +838,7 @@ int main(int argc, char *argv[])
 
 	// check for system going ACTIVE
 	sleep(5);
-	cout << endl << "InfiniDB Database Platform Starting, please wait ."; 
+	cout << endl << "MariaDB Columnstore Database Platform Starting, please wait ."; 
 	cout.flush();
 
 	if ( waitForActive() ) {
@@ -851,44 +851,26 @@ int main(int argc, char *argv[])
 			cout << endl << "System Catalog Successfull Created" << endl;
 		else
 		{
-			if ( oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
-
-				cout << endl << "Run Upgrade Script..";
-				cout.flush();
-
-				//send message to procmon's to run upgrade script
-				bool pmwithum = false;
-				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
-	
-				if ( status != 0 ) {
-					cout << "ERROR: Error return in running the upgrade script, check /tmp/upgrade.log" << endl;
-					cout << endl << "InfiniDB Install Failed" << endl << endl;
-					exit(1);
-				}
-				else
-					cout << " DONE" << endl;
-			}
-			else
-			{
+			if ( !oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
 				cout << endl << "System Catalog Create Failure" << endl;
 				cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
 				exit (1);
 			}
 		}
 
-		cout << endl << "InfiniDB Install Successfully Completed, System is Active" << endl << endl;
+		cout << endl << "MariaDB Columnstore Install Successfully Completed, System is Active" << endl << endl;
 
-		cout << "Enter the following command to define InfiniDB Alias Commands" << endl << endl;
+		cout << "Enter the following command to define MariaDB Columnstore Alias Commands" << endl << endl;
 
-		cout << ". " + installDir + "/bin/calpontAlias" << endl << endl;
+		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
 
-		cout << "Enter 'idbmysql' to access the InfiniDB MySQL console" << endl;
-		cout << "Enter 'cc' to access the InfiniDB OAM console" << endl << endl;
+		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore MySQL console" << endl;
+		cout << "Enter 'mcsadmin' to access the MariaDB Columnstore Admin console" << endl << endl;
 	}
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "ERROR: InfiniDB Process failed to start, check log files in /var/log/Calpont" << endl;
+		cout << endl << "ERROR: MariaDB Columnstore Process failed to start, check log files in /var/log/Columnstore" << endl;
 	}
 }
 
@@ -1130,7 +1112,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 				mount1 = "/mnt\\/tmp/";
 			else
 				if ( moduleType == "pm" )
-					mount1 = "/Calpont\\/data/";
+					mount1 = "/MariaDB/Columnstore\\/data/";
 				else
 					return true;
 			break;
@@ -1139,7 +1121,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 		{
 			if ( moduleType == "pm" ) {
 				mount1 = "/mnt\\/tmp/";
-				mount2 = "/Calpont\\/data/";
+				mount2 = "/MariaDB/Columnstore\\/data/";
 			}
 			else
 				return true;
@@ -1151,7 +1133,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 				mount1 = "/mnt\\/tmp/";
 			else
 				if ( moduleType == "pm" )
-					mount1 = "/Calpont\\/data/";
+					mount1 = "/MariaDB/Columnstore\\/data/";
 				else
 					return true;
 			break;
@@ -1160,7 +1142,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 		{
 			if ( moduleType == "pm" ) {
 				mount1 = "/mnt\\/tmp/";
-				mount2 = "/Calpont\\/data/";
+				mount2 = "/MariaDB/Columnstore\\/data/";
 			}
 			else
 				return true;

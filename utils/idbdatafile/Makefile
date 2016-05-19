@@ -77,10 +77,10 @@ docs:
 	doxygen $(EXPORT_ROOT)/etc/Doxyfile
 
 tdriver: tdriver.o
-	$(LINK.cpp) -o $@ $^ $(TLIBS) -Wl,--rpath -Wl,/usr/local/Calpont/lib
+	$(LINK.cpp) -o $@ $^ $(TLIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 
 tdriver1: tdriver1.o
-	$(LINK.cpp) -o $@ $^ $(TLIBS) -Wl,-rpath -Wl,/usr/local/Calpont/lib
+	$(LINK.cpp) -o $@ $^ $(TLIBS) -Wl,-rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 
 test: $(LIBRARY) tdriver
 	LD_LIBRARY_PATH=.:$(EXPORT_ROOT)/lib ./tdriver

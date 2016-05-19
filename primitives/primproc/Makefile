@@ -41,7 +41,7 @@ OAMLIBS=-loamcpp -lsnmpmanager -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsn
 
 # Linker flags
 LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) -lthreadpool -lwriteengine \
-	-lidbdatafile -lcacheutils $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/Calpont/lib
+	-lidbdatafile -lcacheutils $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 
 # install dir (set CALPONT_INSTALL_ROOT in env to override)
 CALPONT_INSTALL_ROOT?=$(EXPORT_ROOT)

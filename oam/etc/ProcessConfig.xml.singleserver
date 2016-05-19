@@ -4,7 +4,7 @@
 	<PROCESSCONFIG1>
 		<ProcessName>ProcessMonitor</ProcessName>
 		<ModuleType>ChildExtOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/ProcMon</ProcessLocation>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/ProcMon</ProcessLocation>
 		<BootLaunch>0</BootLaunch>
 		<LaunchID>1</LaunchID>
 		<DepProcessName/>
@@ -14,7 +14,7 @@
 	<PROCESSCONFIG2>
 		<ProcessName>ProcessManager</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/ProcMgr</ProcessLocation>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/ProcMgr</ProcessLocation>
 		<BootLaunch>1</BootLaunch>
 		<LaunchID>2</LaunchID>
 		<DepProcessName/>
@@ -24,17 +24,17 @@
 	<PROCESSCONFIG3>
 		<ProcessName>SNMPTrapDaemon</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/sbin/snmptrapd</ProcessLocation>
-		<ProcessArg1>/usr/local/Calpont/sbin/snmptrapd</ProcessArg1>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/sbin/snmptrapd</ProcessLocation>
+		<ProcessArg1>/usr/local/MariaDB/Columnstore/sbin/snmptrapd</ProcessArg1>
 		<ProcessArg2>-M</ProcessArg2>
-                <ProcessArg3>/usr/local/Calpont/share/snmp/mibs</ProcessArg3>
+                <ProcessArg3>/usr/local/MariaDB/Columnstore/share/snmp/mibs</ProcessArg3>
                 <ProcessArg4>-m</ProcessArg4>
-                <ProcessArg5>/usr/local/Calpont/share/snmp/mibs/CALPONT-MIB.txt</ProcessArg5>
+                <ProcessArg5>/usr/local/MariaDB/Columnstore/share/snmp/mibs/CALPONT-MIB.txt</ProcessArg5>
                 <ProcessArg6>-c</ProcessArg6>
-                <ProcessArg7>/usr/local/Calpont/etc/snmptrapd.conf</ProcessArg7>
+                <ProcessArg7>/usr/local/MariaDB/Columnstore/etc/snmptrapd.conf</ProcessArg7>
                 <ProcessArg8>-C</ProcessArg8>
                 <ProcessArg9>-Lf</ProcessArg9>
-                <ProcessArg10>/var/log/Calpont/snmptrapd.log</ProcessArg10>
+                <ProcessArg10>/usr/local/MariaDB/Columnstore/snmptrapd.log</ProcessArg10>
                 <ProcessArg11>-p</ProcessArg11>
                 <ProcessArg12>/var/run/snmptrapd.pid</ProcessArg12>
 		<BootLaunch>1</BootLaunch>
@@ -47,8 +47,8 @@
 	<PROCESSCONFIG4>
 		<ProcessName>DBRMControllerNode</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/controllernode</ProcessLocation>
-		<ProcessArg1>/usr/local/Calpont/bin/controllernode</ProcessArg1>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/controllernode</ProcessLocation>
+		<ProcessArg1>/usr/local/MariaDB/Columnstore/bin/controllernode</ProcessArg1>
 		<ProcessArg2>fg</ProcessArg2>
 		<BootLaunch>2</BootLaunch>
 		<LaunchID>4</LaunchID>
@@ -60,13 +60,13 @@
 	<PROCESSCONFIG5>
 		<ProcessName>SNMPAgent</ProcessName>
 		<ModuleType>ChildOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/sbin/snmpd</ProcessLocation>
-		<ProcessArg1>/usr/local/Calpont/sbin/snmpd</ProcessArg1>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/sbin/snmpd</ProcessLocation>
+		<ProcessArg1>/usr/local/MariaDB/Columnstore/sbin/snmpd</ProcessArg1>
 		<ProcessArg2>-c</ProcessArg2>
-		<ProcessArg3>/usr/local/Calpont/etc/snmpd.conf</ProcessArg3>
+		<ProcessArg3>/usr/local/MariaDB/Columnstore/etc/snmpd.conf</ProcessArg3>
 		<ProcessArg4>-C</ProcessArg4>
 		<ProcessArg5>-Lf</ProcessArg5>
-		<ProcessArg6>/var/log/Calpont/snmpd.log</ProcessArg6>
+		<ProcessArg6>/usr/local/MariaDB/Columnstore/snmpd.log</ProcessArg6>
 		<ProcessArg7>-p</ProcessArg7>
 		<ProcessArg8>/var/run/snmpd.pid</ProcessArg8>
 		<BootLaunch>0</BootLaunch>
@@ -78,8 +78,8 @@
 	<PROCESSCONFIG6>
 		<ProcessName>ServerMonitor</ProcessName>
 		<ModuleType>ChildOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/ServerMonitor</ProcessLocation>
-		<ProcessArg1>/usr/local/Calpont/bin/ServerMonitor</ProcessArg1>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/ServerMonitor</ProcessLocation>
+		<ProcessArg1>/usr/local/MariaDB/Columnstore/bin/ServerMonitor</ProcessArg1>
 		<BootLaunch>2</BootLaunch>
 		<LaunchID>6</LaunchID>
 		<DepProcessName/>
@@ -89,8 +89,8 @@
 	<PROCESSCONFIG7>
 		<ProcessName>DBRMWorkerNode</ProcessName>
 		<ModuleType>ChildExtOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/workernode</ProcessLocation>
-		<ProcessArg1>/usr/local/Calpont/bin/workernode</ProcessArg1>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/workernode</ProcessLocation>
+		<ProcessArg1>/usr/local/MariaDB/Columnstore/bin/workernode</ProcessArg1>
 		<ProcessArg2>DBRM_Worker</ProcessArg2>
 		<ProcessArg3>fg</ProcessArg3>
 		<BootLaunch>2</BootLaunch>
@@ -102,7 +102,7 @@
 	<PROCESSCONFIG8>
 		<ProcessName>DecomSvr</ProcessName>
 		<ModuleType>pm</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/DecomSvr</ProcessLocation>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/DecomSvr</ProcessLocation>
 		<BootLaunch>2</BootLaunch>
 		<LaunchID>15</LaunchID>
 		<DepProcessName/>
@@ -112,7 +112,7 @@
 	<PROCESSCONFIG9>
 		<ProcessName>PrimProc</ProcessName>
 		<ModuleType>pm</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/PrimProc</ProcessLocation>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/PrimProc</ProcessLocation>
 		<BootLaunch>2</BootLaunch>
 		<LaunchID>20</LaunchID>
 		<DepProcessName/>
@@ -122,7 +122,7 @@
 	<PROCESSCONFIG10>
 		<ProcessName>ExeMgr</ProcessName>
 		<ModuleType>pm</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/ExeMgr</ProcessLocation>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/ExeMgr</ProcessLocation>
 		<BootLaunch>2</BootLaunch>
 		<LaunchID>30</LaunchID>
 		<DepProcessName1>PrimProc</DepProcessName1>
@@ -133,7 +133,7 @@
 	<PROCESSCONFIG11>
 		<ProcessName>WriteEngineServer</ProcessName>
 		<ModuleType>pm</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/bin/WriteEngineServer</ProcessLocation>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/bin/WriteEngineServer</ProcessLocation>
 		<BootLaunch>2</BootLaunch>
 		<LaunchID>40</LaunchID>
 		<RunType>LOADSHARE</RunType>
@@ -172,7 +172,7 @@
 	<PROCESSCONFIG14>
 		<ProcessName>mysqld</ProcessName>
 		<ModuleType>pm</ModuleType>
-		<ProcessLocation>/usr/local/Calpont/mysql/libexe/mysqld</ProcessLocation>
+		<ProcessLocation>/usr/local/MariaDB/Columnstore/mysql/libexe/mysqld</ProcessLocation>
 		<BootLaunch>0</BootLaunch>
 		<LaunchID>100</LaunchID>
 		<DepProcessName/>

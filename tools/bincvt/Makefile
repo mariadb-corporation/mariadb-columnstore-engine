@@ -22,7 +22,7 @@ CPPFLAGS=-I$(EXPORT_ROOT)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 
 # Linker flags
-LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) -Wl,--rpath -Wl,/usr/local/Calpont/lib
+LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
 
 # install dir (set CALPONT_INSTALL_ROOT in env to override)
 CALPONT_INSTALL_ROOT?=$(EXPORT_ROOT)

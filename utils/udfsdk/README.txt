@@ -15,11 +15,11 @@ At this point you can use the idb_add() function template in udfinfinidb.cpp and
 files to create your own function or just try that function as is.
 Make the library
 Stop InfiniDB
-Copy the libudf_mysql.so.1.0.0 and libudfsdk.so.1.0.0 file to /usr/local/Calpont/lib on
+Copy the libudf_mysql.so.1.0.0 and libudfsdk.so.1.0.0 file to /usr/local/MariaDB/Columnstore/lib on
 every InfiniDB node
 Start InfiniDB
-In the directory /usr/local/Calpont/mysql/lib64/mysql/plugin create a symbolic link called 
-libudf_msql.so to the file /usr/local/Calpont/lib/libudf_msql.so.1.0.0
+In the directory /usr/local/MariaDB/Columnstore/mysql/lib64/mysql/plugin create a symbolic link called 
+libudf_msql.so to the file /usr/local/MariaDB/Columnstore/lib/libudf_msql.so.1.0.0
 In the mysql client add the function (e.g. "create function idb_add returns integer soname 
 'libudf_msql.so';")
 You should now be able to use the idb_add() function in the select and/or where clauses 

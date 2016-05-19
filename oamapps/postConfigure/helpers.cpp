@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2014 MariDB Columnstore, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -203,7 +203,7 @@ void dbrmDirCheck()
 		cout << "If the files were copied from " << dbrmrootPrevDir << " to " << dbrmrootDir << endl;
 		cout << "you will need to edit the file BRM_saves_current to contain the current path of" << endl;
 		cout << dbrmrootDir << endl << endl;
-		cout << "Please reference the InfiniDB Installation Guide on Upgrade Installs for" << endl;
+		cout << "Please reference the MariDB Columnstore Installation Guide on Upgrade Installs for" << endl;
 		cout << "addition information, if needed." << endl << endl;
 
 		while(true)
@@ -279,7 +279,7 @@ void mysqlSetup()
 			}
 			catch (...)
 			{
-				cout << endl << "InfiniDB-MySQL login failure, password is assigned. Need MySQL password configuration file " + HOME + "/.my.cnf on local module" << endl;
+				cout << endl << "MariDB Columnstore-MySQL login failure, password is assigned. Need MySQL password configuration file " + HOME + "/.my.cnf on local module" << endl;
 				exit(1);
 			}
 
@@ -293,7 +293,7 @@ void mysqlSetup()
 		}
 		else
 		{
-			if (!oam.checkLogStatus("/tmp/idbmysql.log", "InfiniDB") ) {
+			if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
 				cout << endl << "ERROR: MySQL runtime error, exit..." << endl << endl;
 				system("cat /tmp/idbmysql.log");
 				exit (1);
@@ -388,7 +388,7 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
 						returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
 		
 						if ( returnStatus != API_SUCCESS) {
-							cout << "ERROR: Error return in running the InfiniDB Upgrade, check /tmp/upgrade*.logs on " << (*pt).DeviceName << endl;
+							cout << "ERROR: Error return in running the MariDB Columnstore Upgrade, check /tmp/upgrade*.logs on " << (*pt).DeviceName << endl;
 							return returnStatus;
 						}
 					}
@@ -742,7 +742,7 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 				{}
 		
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -864,7 +864,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 			{}
 	
 			if ( !writeConfig(sysConfig) ) {
-				cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
 				exit(1);
 			}
 

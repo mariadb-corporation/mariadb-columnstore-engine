@@ -53,7 +53,7 @@ echo ------------------------------------------------------------------
 echo executing setLowMem100 script to prep for following stream1_7 tests
 echo ------------------------------------------------------------------
 echo  
-/usr/local/Calpont/bin/setLowMem100.sh
+/usr/local/MariaDB/Columnstore/bin/setLowMem100.sh
 #
 echo  
 echo ------------------------------------------------------------------

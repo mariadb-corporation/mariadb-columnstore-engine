@@ -2,10 +2,10 @@
 #
 # $Id: post-mysqld-install 3661 2013-06-25 22:04:33Z dhill $
 #
-# Post-install steps for infinidb-mysql install
+# Post-install steps for columnstore-mysql install
 
 prefix=/usr/local
-installdir=$prefix/Calpont
+installdir=$prefix/MariaDB/Columnstore
 rpmmode=install
 user=mysql
 if [ $EUID -ne 0 ]; then
@@ -15,7 +15,7 @@ fi
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/Calpont
+		installdir=$prefix/MariaDB/Columnstore
 	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
 		rpmmode="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
@@ -60,8 +60,8 @@ usermod -g $user $user 2> /dev/null || true
 chown -R $user:$user $installdir/mysql
 
 # Initiate databases if needed
-if [ $installdir != "/usr/local/Calpont" ]; then
-	sed -i -e s@/usr/local/Calpont@$installdir@g $installdir/mysql/my.cnf
+if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
+	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/mysql/my.cnf
 fi
 
 # InfiniDB testing hook...
@@ -79,7 +79,7 @@ chmod -R og-rw $mysql_datadir/mysql
 # Change permissions again to fix any new files.
 chown -R $user.$user $installdir/mysql
 
-test -e /etc/init.d/mysql-Calpont || cp $installdir/mysql/mysql-Calpont /etc/init.d >/dev/null 2>&1
+test -e /etc/init.d/mysql-Columnstore || cp $installdir/mysql/mysql-Columnstore /etc/init.d >/dev/null 2>&1
 
 if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1.0.0

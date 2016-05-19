@@ -14,14 +14,14 @@ all:
 	$(MAKE) -C traphandler
 	$(MAKE) -C serverMonitor
 	$(MAKE) -C postConfigure
-	$(MAKE) -C calpontDB
+	$(MAKE) -C columnstoreDB
 	$(MAKE) -C sendtrap
-	$(MAKE) -C calpontSupport
+	$(MAKE) -C columnstoreSupport
 $(TARGETS):
 	$(MAKE) -C mcsadmin $@
 	$(MAKE) -C traphandler $@
 	$(MAKE) -C serverMonitor $@
 	$(MAKE) -C postConfigure $@
-	$(MAKE) -C calpontDB $@
+	$(MAKE) -C columnstoreDB $@
 	$(MAKE) -C sendtrap $@
-	$(MAKE) -C calpontSupport $@
+	$(MAKE) -C columnstoreSupport $@

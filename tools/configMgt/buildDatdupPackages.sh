@@ -29,7 +29,7 @@ rm -rf /usr/local/Calpont
 rm -rf infinidb*
 rm -f *gz
 #
-smbclient //calweb/shared -Wcalpont -Uoamuser%Calpont1 -c "cd Iterations/$DIR/packages;prompt OFF;mget infinidb-datdup*.rpm"
+smbclient //srvhill01/shared -WMARIADB -Uroot%Calpont1 -c "cd packages/$DIR/packages;prompt OFF;mget infinidb-datdup*.rpm"
 #
 test -f infinidb-datdup*.rpm || echo "infinidb-datdup rpm"
 test -f infinidb-datdup*.rpm || exit -1
@@ -39,7 +39,7 @@ cd /usr/local/
 tar -zcvf infinidb-datdup-$REL.x86_64.bin.tar.gz Calpont
 mv infinidb-datdup-$REL.x86_64.bin.tar.gz /root/autoOAM/
 cd /root/autoOAM/
-smbclient //calweb/shared -Wcalpont -Uoamuser%Calpont1 -c "cd Iterations/$DIR/packages;prompt OFF;del infinidb-datdup*gz;mput *gz"
+smbclient //srvhill01/shared -WMARIADB -Uroot%Calpont1 -c "cd packages/$DIR/packages;prompt OFF;del infinidb-datdup*gz;mput *gz"
 } > /root/autoOAM/buildDatdupPackages-$DIR.log 2>&1
 #
 echo "DatDup Package Build Successfully Completed"

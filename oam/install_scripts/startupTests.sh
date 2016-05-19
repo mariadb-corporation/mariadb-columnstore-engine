@@ -6,11 +6,11 @@
 #				 called by Process-Monitor
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	test -f /etc/default/infinidb && . /etc/default/infinidb
+	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/Calpont
+	INFINIDB_INSTALL_DIR=/usr/local/MariaDB/Columnstore
 fi
 
 export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR

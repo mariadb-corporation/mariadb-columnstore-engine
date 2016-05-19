@@ -11,7 +11,7 @@ if [ -z "$INFINIDB_INSTALL_DIR" ]; then
 fi
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/Calpont
+	INFINIDB_INSTALL_DIR=/usr/local/MariaDB/Columnstore
 fi
 
 export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR

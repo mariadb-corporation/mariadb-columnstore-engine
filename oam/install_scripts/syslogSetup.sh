@@ -2,20 +2,20 @@
 #
 # $Id: syslogSetup.sh 421 2007-04-05 15:46:55Z dhill $
 #
-# syslogSetup.sh - install / uninstall Calpont InfiniDB system logging configuration
+# syslogSetup.sh - install / uninstall MariaDB Columnstore system logging configuration
 
 # no point in going any further if not root... (only works in bash)
 test $EUID -eq 0 || exit 0
 
 prefix=/usr/local
-installdir=$prefix/Calpont
+installdir=$prefix/MariaDB/Columnstore
 syslog_conf=nofile
 rsyslog7=0
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/Calpont
+		installdir=$prefix/MariaDB/Columnstore
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
@@ -30,13 +30,13 @@ for arg in "$@"; do
 	shift
 done
 
-if [ $installdir != "/usr/local/Calpont" ]; then
+if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
 	export INFINIDB_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib
 fi
 
-calpontSyslogFile=$installdir/bin/calpontSyslog
-calpontSyslogFile7=$installdir/bin/calpontSyslog7
+columnstoreSyslogFile=$installdir/bin/columnstoreSyslog
+columnstoreSyslogFile7=$installdir/bin/columnstoreSyslog7
 
 checkSyslog() {
 #check which syslog daemon is being used
@@ -84,7 +84,7 @@ fi
 if [ "$daemon" = "syslog-ng" ]; then
 	if [ -f /etc/syslog-ng/syslog-ng.conf ]; then
 		syslog_conf=/etc/syslog-ng/syslog-ng.conf
-		calpontSyslogFile=$installdir/bin/calpontSyslog-ng
+		columnstoreSyslogFile=$installdir/bin/columnstoreSyslog-ng
 		echo ""
 		echo "System logging being used: syslog-ng"
 		echo ""
@@ -128,7 +128,7 @@ elif [ "$daemon" = "syslog" ]; then
 		echo ""
 	elif [ -d /etc/syslog-ng/syslog-ng.conf ]; then
 		syslog_conf=/etc/syslog-ng/syslog-ng.conf
-		calpontSyslogFile=$installdir/bin/calpontSyslog-ng
+		columnstoreSyslogFile=$installdir/bin/columnstoreSyslog-ng
 		echo ""
 		echo "System logging being used: syslog-ng"
 		echo ""
@@ -148,22 +148,22 @@ checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ "$syslog_conf" != /etc/rsyslog.d/calpont.conf ]; then
-		rm -f ${syslog_conf}.calpontSave
-		cp ${syslog_conf} ${syslog_conf}.calpontSave >/dev/null 2>&1
-		sed -i '/# Calpont/,$d' ${syslog_conf}.calpontSave > /dev/null 2>&1
+		rm -f ${syslog_conf}.columnstoreSave
+		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
+		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
 
-	egrep -qs 'Calpont Database Platform Logging' ${syslog_conf}
+	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
 		#set the syslog for calpont logging
 		# remove older version incase it was installed by previous build
 		rm -rf /etc/rsyslog.d/calpont.conf
 		if [ $rsyslog7 == 1 ]; then
 			rm -f /etc/rsyslog.d/49-calpont.conf
-			cat  ${calpontSyslogFile7} >> ${syslog_conf}
-			chown syslog:adm /var/log/Calpont
+			cat  ${columnstoreSyslogFile7} >> ${syslog_conf}
+			chown syslog:adm /var/log/Columnstore
 		else
-			cat  ${calpontSyslogFile} >> ${syslog_conf}
+			cat  ${columnstoreSyslogFile} >> ${syslog_conf}
 		fi
 	fi
 
@@ -181,18 +181,18 @@ checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	if [ "$syslog_conf" != /etc/rsyslog.d/calpont.conf ]; then
 		if [ "$syslog_conf" != /etc/rsyslog.d/49-calpont.conf ]; then
-			egrep -qs 'Calpont Database Platform Logging' ${syslog_conf}
+			egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 			if [ $? -eq 0 ]; then
-				if [ -f ${syslog_conf}.calpontSave ] ; then
+				if [ -f ${syslog_conf}.columnstoreSave ] ; then
 					#uninstall the syslog for calpont logging
 					mv -f ${syslog_conf} ${syslog_conf}.calpontBackup
-					mv -f ${syslog_conf}.calpontSave ${syslog_conf} >/dev/null 2>&1
+					mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
 					if [ ! -f ${syslog_conf} ] ; then
 						cp ${syslog_conf}.calpontBackup ${syslog_conf}
 					fi
 				fi
 			fi
-			sed -i '/# Calpont/,$d' ${syslog_conf} > /dev/null 2>&1
+			sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
 		else
 			rm -f "$syslog_conf"
 		fi
@@ -214,11 +214,11 @@ fi
 status() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
-	egrep -qs 'Calpont Database Platform Logging' ${syslog_conf}
+	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -eq 0 ]; then
 		echo $syslog_conf
 	else
-		echo "No System Log Config File configured for InfiniDB System Logging"
+		echo "No System Log Config File configured for MariaDB Columnstore System Logging"
 	fi
 fi
 }
@@ -228,7 +228,7 @@ test -f $installdir/post/functions && . $installdir/post/functions
 number=$RANDOM
 cplogger -i 100 "InfiniDB Log Test: $number"
 sleep 3
-egrep -qs "InfiniDB Log Test: $number" /var/log/Calpont/info.log
+egrep -qs "InfiniDB Log Test: $number" /var/log/Columnstore/info.log
 if [ $? -eq 0 ]; then
 	echo "InfiniDB System Logging working"
 	exit 0

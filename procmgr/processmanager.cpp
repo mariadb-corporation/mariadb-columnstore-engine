@@ -1288,7 +1288,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
 						}
 	
-						string cmd = "pdsh -a -x " + localHostName + " '" + startup::StartUp::installDir() + "/infinidb stop' > /dev/null 2>&1";
+						string cmd = "pdsh -a -x " + localHostName + " '" + startup::StartUp::installDir() + "/columnstore stop' > /dev/null 2>&1";
 						system(cmd.c_str());
 
 						break;
@@ -2455,7 +2455,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					// Wait for everything to settle down
 					sleep(5);
 					// Save the BRM. This command presages a system backup. Best to have a current BRM on disk
-					string logdir("/var/log/Calpont");
+					string logdir("/var/log/Columnstore");
 					if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 					string cmd = startup::StartUp::installDir() + "/bin/save_brm  > " + logdir + "/save_brm.log1 2>&1";
 					int rtnCode = system(cmd.c_str());
@@ -4439,15 +4439,15 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		if ( packageType == "deb" )
 			separator = "_";
 		//mariadb
-		calpontPackage = homedir + "/infinidb-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqlPackage = homedir + "/infinidb-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqldPackage = homedir + "/infinidb-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage1 = homedir + "/infinidb-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage2 = homedir + "/infinidb-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage = homedir + "/mariadb-columnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		mysqlPackage = homedir + "/mariadb-columnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		mysqldPackage = homedir + "/mariadb-columnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage1 = homedir + "/mariadb-columnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage2 = homedir + "/mariadb-columnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 	}
 	else
 	{
-		calpontPackage = homedir + "/infinidb*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
+		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
 		mysqlPackage = calpontPackage;
 		mysqldPackage = calpontPackage;
 	}
@@ -5181,9 +5181,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string remoteHostName = (*pt1).HostName;
 
 		//send start service commands
-		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/infinidb restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
+		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
 		system(cmd.c_str());
-		log.writeLog(__LINE__, "addModule - restart infinidb service " +  remoteModuleName, LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
 
 		// add to monitor list
 		moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
@@ -6172,7 +6172,7 @@ std::string ProcessManager::sendMsgProcMon1( std::string module, ByteStream msg,
 void ProcessManager::saveBRM(bool skipSession, bool clearshm)
 {
 	Oam oam;
-	string logdir("/var/log/Calpont");
+	string logdir("/var/log/Columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 
 	log.writeLog(__LINE__, "Running reset_locks", LOG_TYPE_DEBUG);

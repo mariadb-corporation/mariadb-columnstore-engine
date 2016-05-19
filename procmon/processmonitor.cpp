@@ -540,7 +540,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 							log.writeLog(__LINE__,  "ProcMon Running Hot-Standby");
 
 							// delete any old active alarm log file
-							unlink ("/var/log/Calpont/activeAlarms");
+							unlink ("/var/log/Columnstore/activeAlarms");
 						}
 
 						//Check for SIMPLEX runtype processes
@@ -823,7 +823,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 					//reset BRM locks and clearShm
 					if ( requestStatus == oam::API_SUCCESS ) {
-						string logdir("/var/log/Calpont");
+						string logdir("/var/log/Columnstore");
 						if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 						string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
 						system(cmd.c_str());
@@ -916,8 +916,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					if ( actIndicator == oam::REMOVE ) {
 						log.writeLog(__LINE__,  "STOPALL: uninstall Calpont RPMs", LOG_TYPE_DEBUG);
 						if ( config.moduleType() == "um" ) {
-							system("rpm -e --nodeps $(rpm -qa | grep '^infinidb')");
-							system("dpkg -P $(dpkg --get-selections | grep '^infinidb')");
+							system("rpm -e --nodeps $(rpm -qa | grep '^mariadb-columnstore')");
+							system("dpkg -P $(dpkg --get-selections | grep '^mariadb-columnstore')");
 						}
 						else	// pm
 						{
@@ -931,11 +931,11 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 							system(cmd.c_str());
 							sleep(1);
 	
-							system("rpm -e --nodeps $(rpm -qa | grep '^infinidb')");
-							system("dpkg -P $(dpkg --get-selections | grep '^infinidb')");
+							system("rpm -e --nodeps $(rpm -qa | grep '^mariadb-columnstore')");
+							system("dpkg -P $(dpkg --get-selections | grep '^mariadb-columnstore')");
 						}
 						// should get here is packages get removed correctly
-						string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+						string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
 						system(cmd.c_str());
 						exit (0);
 					}
@@ -1225,7 +1225,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					//send down notification
 					oam.sendDeviceNotification(config.moduleName(), MODULE_DOWN);
 
-					//stop the mysql daemon and then infinidb
+					//stop the mysql daemon and then columnstore
 					try {
 						oam.actionMysqlCalpont(MYSQL_STOP);
 					}
@@ -1241,7 +1241,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 					//sleep to give time for process-manager to finish up
 					sleep(5);
-					string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+					string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
 					system(cmd.c_str());
 					exit (0);
 
@@ -1387,7 +1387,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				system(cmd.c_str());
 				cmd = startup::StartUp::installDir() + "/bin/post-mysql-install >> /tmp/rpminstall";
 				system(cmd.c_str());
-				cmd = startup::StartUp::installDir() + "/mysql/mysql-Calpont start > /tmp/mysqldstart";
+				cmd = startup::StartUp::installDir() + "/mysql/mysql-Columnstore start > /tmp/mysqldstart";
 				system(cmd.c_str());
 
 				ifstream file ("/tmp/mysqldstart");
@@ -1528,7 +1528,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			runStandby = true;
 
 			// delete any old active alarm log file
-			unlink ("/var/log/Calpont/activeAlarms");
+			unlink ("/var/log/Columnstore/activeAlarms");
 
 			log.writeLog(__LINE__, "Running Standby", LOG_TYPE_INFO);
 			//give time for Status Control thread to start reading incoming messages
@@ -2396,7 +2396,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 //						dbrmFile = tempDBRMDir + dbrmFile.substr(pos,80);;
 //				}
 	
-				string logdir("/var/log/Calpont");
+				string logdir("/var/log/Columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 
 				string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
@@ -2470,7 +2470,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 	char timestamp[200];
 	strftime (timestamp, 200, "%m:%d:%y-%H:%M:%S", &tm);
 
-	string logdir("/var/log/Calpont");
+	string logdir("/var/log/Columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 	string outFileName = logdir + "/" + processName + ".out";
 	string errFileName = logdir + "/" + processName + ".err";
@@ -3552,7 +3552,7 @@ int ProcessMonitor::buildSystemTables()
 	string fileName = DBdir + "/000.dir";
 
 	if (!IDBPolicy::exists(fileName.c_str())) {
-		string logdir("/var/log/Calpont");
+		string logdir("/var/log/Columnstore");
 		if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 		string cmd = startup::StartUp::installDir() + "/bin/dbbuilder 7 > " + logdir + "/dbbuilder.log &";
 		system(cmd.c_str());
@@ -4335,7 +4335,7 @@ int ProcessMonitor::runStartupTest()
 		return oam::API_SUCCESS;
 
 	//run startup test script
-	string logdir("/var/log/Calpont");
+	string logdir("/var/log/Columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 	string cmd = startup::StartUp::installDir() + "/bin/startupTests.sh > " + logdir + "/startupTests.log1 2>&1";
 	system(cmd.c_str());
@@ -4399,7 +4399,7 @@ int ProcessMonitor::runHDFSTest()
 	Oam oam;
 	bool fail = false;
 
-	string logdir("/var/log/Calpont");
+	string logdir("/var/log/Columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 	string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -4414,7 +4414,7 @@ int ProcessMonitor::runHDFSTest()
 	}
 	else
 	{
-		// retry since infinidb can startup before hadoop is full up
+		// retry since columnstore can startup before hadoop is full up
 		int retry = 0;
 		for (  ; retry < 12 ; retry++ )
 		{
@@ -4649,22 +4649,22 @@ int ProcessMonitor::runUpgrade(std::string mysqlpw)
 	for ( int i = 0 ; i < 10 ; i++ )
 	{
 		//run upgrade script
-		string cmd = startup::StartUp::installDir() + "/bin/upgrade-infinidb.sh doupgrade --password=" +
-			mysqlpw + " --installdir=" +  startup::StartUp::installDir() + "  > " + "/tmp/upgrade-infinidb.log 2>&1";
+		string cmd = startup::StartUp::installDir() + "/bin/upgrade-columnstore.sh doupgrade --password=" +
+			mysqlpw + " --installdir=" +  startup::StartUp::installDir() + "  > " + "/tmp/upgrade-columnstore.log 2>&1";
 		system(cmd.c_str());
 
-		cmd = "/tmp/upgrade-infinidb.log";
+		cmd = "/tmp/upgrade-columnstore.log";
 		if (oam.checkLogStatus(cmd, "OK")) {
-			log.writeLog(__LINE__, "upgrade-infinidb.sh: Successful return", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "upgrade-columnstore.sh: Successful return", LOG_TYPE_DEBUG);
 			return oam::API_SUCCESS;
 		}
 		else {
 			if (oam.checkLogStatus(cmd, "ERROR 1045") ) {
-				log.writeLog(__LINE__, "upgrade-infinidb.sh: Missing Password error, return success", LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "upgrade-columnstore.sh: Missing Password error, return success", LOG_TYPE_DEBUG);
 				return oam::API_SUCCESS;
 			}
 
-			log.writeLog(__LINE__, "upgrade-infinidb.sh: Error return, check log /tmp/upgrade-status.log", LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "upgrade-columnstore.sh: Error return, check log /tmp/upgrade-status.log", LOG_TYPE_ERROR);
 			//restart mysqld and retry
 			try {
 				oam.actionMysqlCalpont(MYSQL_RESTART);
@@ -5011,8 +5011,8 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 				{
 					string ipAddr = (*pt1).IPAddr;
 	
-					string logFile = "/tmp/master-rep-infinidb-" + moduleName + ".log";
-					string cmd = startup::StartUp::installDir() + "/bin/master-rep-infinidb.sh --password=" +
+					string logFile = "/tmp/master-rep-columnstore-" + moduleName + ".log";
+					string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --password=" +
 						mysqlpw + " --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + "  > " + logFile + " 2>&1";
 					log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 	
@@ -5020,21 +5020,21 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 			
 					if (oam.checkLogStatus(logFile, "ERROR 1045") ) {
 						if ( passwordError ) {
-							log.writeLog(__LINE__, "master-rep-infinidb.sh:  MySQL Password Error", LOG_TYPE_ERROR);
+							log.writeLog(__LINE__, "master-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
 							return oam::API_FAILURE;
 						}
 	
-						log.writeLog(__LINE__, "master-rep-infinidb.sh: Missing Password error, go check for a password and retry", LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "master-rep-columnstore.sh: Missing Password error, go check for a password and retry", LOG_TYPE_DEBUG);
 						passwordError = true;
 						break;
 					}
 					else
 					{
 						if (oam.checkLogStatus(logFile, "OK"))
-							log.writeLog(__LINE__, "master-rep-infinidb.sh: Successful return for node " + moduleName, LOG_TYPE_DEBUG);
+							log.writeLog(__LINE__, "master-rep-columnstore.sh: Successful return for node " + moduleName, LOG_TYPE_DEBUG);
 						else 
 						{
-							log.writeLog(__LINE__, "master-rep-infinidb.sh: Error return, check log " + logFile, LOG_TYPE_ERROR);
+							log.writeLog(__LINE__, "master-rep-columnstore.sh: Error return, check log " + logFile, LOG_TYPE_ERROR);
 							return oam::API_FAILURE;
 						}
 					}
@@ -5051,7 +5051,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 				
 					if ( mysqlpw == oam::UnassignedName )
 					{
-						log.writeLog(__LINE__, "master-rep-infinidb.sh:  MySQL Password Error", LOG_TYPE_ERROR);
+						log.writeLog(__LINE__, "master-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
 						return oam::API_FAILURE;
 					}
 				}
@@ -5158,34 +5158,34 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 	bool passwordError = false;
 	while(true)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/slave-rep-infinidb.sh --password=" +
-			mysqlpw + " --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + + " --port=" + port + "  >   /tmp/slave-rep-infinidb.log 2>&1";
+		string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --password=" +
+			mysqlpw + " --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + + " --port=" + port + "  >   /tmp/slave-rep-columnstore.log 2>&1";
 	
 		log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 	
 		system(cmd.c_str());
 	
-		string logFile = "/tmp/slave-rep-infinidb.log";
+		string logFile = "/tmp/slave-rep-columnstore.log";
 	
 		if (oam.checkLogStatus(logFile, "ERROR 1045") ) {
 			if ( passwordError ) {
-				log.writeLog(__LINE__, "slave-rep-infinidb.sh:  MySQL Password Error", LOG_TYPE_ERROR);
+				log.writeLog(__LINE__, "slave-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
 				return oam::API_FAILURE;
 			}
 	
-			log.writeLog(__LINE__, "slave-rep-infinidb.sh: Missing Password error, go check for a password and retry", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "slave-rep-columnstore.sh: Missing Password error, go check for a password and retry", LOG_TYPE_DEBUG);
 			passwordError = true;
 		}
 		else
 		{
 			if (oam.checkLogStatus(logFile, "OK"))
 			{
-				log.writeLog(__LINE__, "slave-rep-infinidb.sh: Successful return", LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "slave-rep-columnstore.sh: Successful return", LOG_TYPE_DEBUG);
 				return oam::API_SUCCESS;
 			}
 			else 
 			{
-				log.writeLog(__LINE__, "slave-rep-infinidb.sh: Error return, check log /tmp/slave-rep-infinidb.log", LOG_TYPE_ERROR);
+				log.writeLog(__LINE__, "slave-rep-columnstore.sh: Error return, check log /tmp/slave-rep-columnstore.log", LOG_TYPE_ERROR);
 				return oam::API_FAILURE;
 			}
 		}
@@ -5201,7 +5201,7 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 		
 			if ( mysqlpw == oam::UnassignedName )
 			{
-				log.writeLog(__LINE__, "slave-rep-infinidb.sh:  MySQL Password Error", LOG_TYPE_ERROR);
+				log.writeLog(__LINE__, "slave-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
 				return oam::API_FAILURE;
 			}
 		}
@@ -5235,25 +5235,25 @@ int ProcessMonitor::runDisableRep()
 	if ( mysqlpw == oam::UnassignedName )
 		mysqlpw = "";
 
-	string cmd = startup::StartUp::installDir() + "/bin/disable-rep-infinidb.sh --password=" +
-		mysqlpw + " --installdir=" + startup::StartUp::installDir() + "  >   /tmp/disable-rep-infinidb.log 2>&1";
+	string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --password=" +
+		mysqlpw + " --installdir=" + startup::StartUp::installDir() + "  >   /tmp/disable-rep-columnstore.log 2>&1";
 
 	log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
 	system(cmd.c_str());
 
-	cmd = "/tmp/disable-rep-infinidb.log";
+	cmd = "/tmp/disable-rep-columnstore.log";
 	if (oam.checkLogStatus(cmd, "OK")) {
-		log.writeLog(__LINE__, "disable-rep-infinidb.sh: Successful return", LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "disable-rep-columnstore.sh: Successful return", LOG_TYPE_DEBUG);
 		return oam::API_SUCCESS;
 	}
 	else {
 		if (oam.checkLogStatus(cmd, "ERROR 1045") ) {
-			log.writeLog(__LINE__, "disable-rep-infinidb.sh: Missing Password error, return success", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "disable-rep-columnstore.sh: Missing Password error, return success", LOG_TYPE_DEBUG);
 			return oam::API_SUCCESS;
 		}
 
-		log.writeLog(__LINE__, "disable-rep-infinidb.sh: Error return, check log /tmp/disable-rep-infinidb.log", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "disable-rep-columnstore.sh: Error return, check log /tmp/disable-rep-columnstore.log", LOG_TYPE_ERROR);
 		return oam::API_FAILURE;
 	}
 
@@ -5472,7 +5472,7 @@ bool ProcessMonitor::amazonIPCheck()
 								log.writeLog(__LINE__, "Module is Running: '" + moduleName + "' / Instance '" + instanceID + "' current IP being reconfigured in Calpont.xml. old = " + IPAddr + ", new = " + currentIPAddr, LOG_TYPE_DEBUG);
 		
 								// update the Calpont.xml with the new IP Address
-								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/Calpont/etc/Calpont.xml";
+								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/MariaDB/Columnstore/etc/Calpont.xml";
 								system(cmd.c_str());
 							}
 							else

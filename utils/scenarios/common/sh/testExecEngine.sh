@@ -59,11 +59,11 @@ function logEnvInfo {
 # $1 = test run
 # $2 = a or b, b=before test run, a=after test run
 #
-   cp /usr/local/Calpont/etc/Calpont.xml $1/.
-   /usr/local/Calpont/bin/mcsadmin getcalpontsoftwareinfo > $1/getcalpontsoftwareinfo.log
-   /usr/local/Calpont/bin/mcsadmin getsystemstatus > $1/getSystemStatus.$2.log
-   /usr/local/Calpont/bin/mcsadmin getsystemnetwork > $1/getSystemNetwork.$2.log
-   /usr/local/Calpont/bin/mcsadmin getprocessstatus > $1/getProcessStatus.$2.log
+   cp /usr/local/MariaDB/Columnstore/etc/Calpont.xml $1/.
+   /usr/local/MariaDB/Columnstore/bin/mcsadmin getcalpontsoftwareinfo > $1/getcalpontsoftwareinfo.log
+   /usr/local/MariaDB/Columnstore/bin/mcsadmin getsystemstatus > $1/getSystemStatus.$2.log
+   /usr/local/MariaDB/Columnstore/bin/mcsadmin getsystemnetwork > $1/getSystemNetwork.$2.log
+   /usr/local/MariaDB/Columnstore/bin/mcsadmin getprocessstatus > $1/getProcessStatus.$2.log
 }
 #=========================================================================================
 # log environment info
@@ -186,7 +186,7 @@ function execOneTestRun {
          fi
          if [ $dbmsType = "M" ]; then
             pathSfn=$1\/$sess
-            /usr/local/Calpont/mysql/bin/mysql --defaults-file=/usr/local/Calpont/mysql/my.cnf -u root $testDB <$sfn 2> $pathSfn\/$sfn.err.log |grep "^Calpont" > $pathSfn\/$sfn.log &
+            /usr/local/MariaDB/Columnstore/mysql/bin/mysql --defaults-file=/usr/local/MariaDB/Columnstore/mysql/my.cnf -u root $testDB <$sfn 2> $pathSfn\/$sfn.err.log |grep "^Calpont" > $pathSfn\/$sfn.log &
          else
             su - oracle -c "sqlplus /nolog @/home/qa/srv/common/script/callogin.sql $testDB $testDB xe srvqaperf2 <$sfn" |grep "^Calpont" > $1\/$sess\/$sfn.log &
          fi

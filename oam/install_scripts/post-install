@@ -2,10 +2,10 @@
 #
 # $Id: post-install 3705 2013-08-07 19:47:20Z dhill $
 #
-# Post-install steps for calpont install
+# Post-install steps for columnstore install
 
 prefix=/usr/local
-installdir=$prefix/Calpont
+installdir=$prefix/MariaDB/Columnstore
 rpmmode=install
 user=$USER
 if [ -z "$user" ]; then
@@ -16,7 +16,7 @@ quiet=0
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/Calpont
+		installdir=$prefix/MariaDB/Columnstore
 	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
 		rpmmode="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
@@ -33,12 +33,12 @@ for arg in "$@"; do
 	fi
 done
 
-if [ $installdir != "/usr/local/Calpont" ]; then
+if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
 	export INFINIDB_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
 	# add library config file
-	/bin/cp -f $installdir/bin/infinidb.conf /etc/ld.so.conf.d/.
+	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
 	ldconfig
 fi
 
@@ -101,14 +101,14 @@ chown -h $user.$user libjemalloc.so >/dev/null 2>&1
 
 cd /
 
-test -d /var/log/Calpont || mkdir /var/log/Calpont >/dev/null 2>&1
-test -d /var/log/Calpont/archive || mkdir /var/log/Calpont/archive >/dev/null 2>&1
-test -d /var/log/Calpont/corefiles || mkdir /var/log/Calpont/corefiles >/dev/null 2>&1
-test -d /var/log/Calpont/trace || mkdir /var/log/Calpont/trace >/dev/null 2>&1
-test -h /var/log/Calpont/data && rm -f /var/log/Calpont/data
-test -d /var/log/Calpont/data || mkdir /var/log/Calpont/data >/dev/null 2>&1
+test -d /var/log/Columnstore || mkdir /var/log/Columnstore >/dev/null 2>&1
+test -d /var/log/Columnstore/archive || mkdir /var/log/Columnstore/archive >/dev/null 2>&1
+test -d /var/log/Columnstore/corefiles || mkdir /var/log/Columnstore/corefiles >/dev/null 2>&1
+test -d /var/log/Columnstore/trace || mkdir /var/log/Columnstore/trace >/dev/null 2>&1
+test -h /var/log/Columnstore/data && rm -f /var/log/Columnstore/data
+test -d /var/log/Columnstore/data || mkdir /var/log/Columnstore/data >/dev/null 2>&1
 # make sure trace dir is world-writable and sticky
-chmod 1755 /var/log/Calpont/trace >/dev/null 2>&1
+chmod 1755 /var/log/Columnstore/trace >/dev/null 2>&1
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
 test -d $installdir/data1/systemFiles || mkdir $installdir/data1/systemFiles
@@ -128,54 +128,54 @@ mkdir -p $installdir/data/bulk/tmpjob >/dev/null 2>&1
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 chmod -R 755 $installdir/data/bulk >/dev/null 2>&1
 
-#create infinidb temp file directory
-mkdir -p /tmp/infinidb_tmp_files >/dev/null 2>&1
+#create columnstore temp file directory
+mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
-mkdir /var/log/Calpont/corefiles > /dev/null 2>&1
-chmod 755 /var/log/Calpont/corefiles > /dev/null 2>&1
+mkdir /var/log/Columnstore/corefiles > /dev/null 2>&1
+chmod 755 /var/log/Columnstore/corefiles > /dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
-mkdir /var/log/Calpont/data/archive > /dev/null 2>&1
+mkdir /var/log/Columnstore/data/archive > /dev/null 2>&1
 
 # install Calpont Log Rotate File
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
-cp $installdir/bin/calpontLogRotate /etc/logrotate.d/calpont > /dev/null 2>&1
-rm -rf $installdir/mysql/db/infinidb_log_archive > /dev/null 2>&1
+cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
 # delete Calpont shared memory segments
-$installdir/bin/Calpont/bin/clearShm  > /dev/null 2>&1
+$installdir/bin/clearShm  > /dev/null 2>&1
 
-#setup the infinidb service script
-rm -f /etc/init.d/infinidb >/dev/null 2>&1
-cp $installdir/bin/infinidb /etc/init.d >/dev/null 2>&1
+#setup the columnstore service script
+rm -f /etc/init.d/columnstore >/dev/null 2>&1
+cp $installdir/bin/columnstore /etc/init.d >/dev/null 2>&1
 if [ -x /sbin/chkconfig ]; then
-	/sbin/chkconfig --add infinidb > /dev/null 2>&1
-	/sbin/chkconfig infinidb on > /dev/null 2>&1
+	/sbin/chkconfig --add columnstore > /dev/null 2>&1
+	/sbin/chkconfig columnstore on > /dev/null 2>&1
 elif [ -x /usr/sbin/update-rc.d ]; then
-	/usr/sbin/update-rc.d infinidb defaults 99 > /dev/null 2>&1
+	/usr/sbin/update-rc.d columnstore defaults 99 > /dev/null 2>&1
 else
 	echo ""
-	echo "Package 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for infinidb"	
+	echo "Package 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
 fi
 
 #setup InfiniDB system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	chmod 777 -R /dev/shm
-	rm -f /etc/default/infinidb
+	rm -f /etc/default/columnstore
 else
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Calpont.xml
 	sudo chmod 755 /var/log
-	sudo chmod -R 755 /var/log/Calpont
+	sudo chmod -R 755 /var/log/Columnstore
 	sudo chmod -R 777 /dev/shm
-	sudo rm -f /var/lock/subsys/mysql-Calpont
-	sudo rm -f /tmp/StopCalpont
+	sudo rm -f /var/lock/subsys/mysql-Columnstore
+	sudo rm -f /tmp/StopColumnstore
 
-	sed -i -e s@/usr/local/Calpont@$installdir@g $installdir/bin/infinidb.def
-	sudo cp $installdir/bin/infinidb.def /etc/default/infinidb
+	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/bin/columnstore.def
+	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
 fi
 
 #check if InfiniDB system logging was setup
@@ -188,17 +188,17 @@ fi
 eval userhome=~$user
 bashFile=$userhome/.bashrc
 touch ${bashFile}
-if [ $installdir != "/usr/local/Calpont" ]; then
-	sed -i -e s@/usr/local/Calpont@$installdir@g $installdir/bin/calpontAlias
+if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
+	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/bin/columnstoreAlias
 fi
-egrep -qs 'Calpont Database Platform Alias Commands' ${bashFile}
+egrep -qs 'MariaDB Columnstore Database Platform Alias Commands' ${bashFile}
 rc1=$?
-egrep -qs 'InfiniDB Alias Commands' ${bashFile}
+egrep -qs 'MariaDB Columnstore Alias Commands' ${bashFile}
 rc2=$?
 if [ $rc1 -ne 0 -a $rc2 -ne 0 ]; then
-	rm -f ${bashFile}.calpontSave
-	cp ${bashFile} ${bashFile}.calpontSave >/dev/null 2>&1
-	cat $installdir/bin/calpontAlias >> ${bashFile}
+	rm -f ${bashFile}.columnstoreSave
+	cp ${bashFile} ${bashFile}.columnstoreSave >/dev/null 2>&1
+	cat $installdir/bin/columnstoreAlias >> ${bashFile}
 	echo " " >> ${bashFile}
 fi
 
@@ -221,7 +221,7 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 
 hadoop=`which hadoop 2>/dev/null`
 if [ -z $hadoop ]; then
 	#check for non-root user
-	if [ $installdir != "/usr/local/Calpont" -a $quiet -eq 0 ]; then
+	if [ $installdir != "/usr/local/MariaDB/Columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 The next steps are:
 
@@ -251,7 +251,7 @@ else
 		$installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-20
 	
 		#check for non-root user
-		if [ $installdir != "/usr/local/Calpont" -a $quiet -eq 0 ]; then
+		if [ $installdir != "/usr/local/MariaDB/Columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install InfiniDB over Hadoop, the next steps are:
@@ -290,7 +290,7 @@ EOD
 			$installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-12.so
 			$installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-12
 
-			if [ $installdir != "/usr/local/Calpont" -a $quiet -eq 0 ]; then
+			if [ $installdir != "/usr/local/MariaDB/Columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install InfiniDB over Hadoop, the next steps are:

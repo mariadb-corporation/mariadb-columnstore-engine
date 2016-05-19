@@ -52,7 +52,7 @@ while [ $k -ge $st ] && [ $k -le $et ] && [ $foundstart == "no" ]; do
         k=`expr $k + 39`
         sm=`expr $sm - 61`
      elif [ $k -ge $st ] && [ $k -le $et ]; then
-        grep -q "$newdate $sh:$sm" /usr/local/Calpont/mysql/db/$host.log 
+        grep -q "$newdate $sh:$sm" /usr/local/MariaDB/Columnstore/mysql/db/$host.log 
 	if [ "$?" -eq "0" ] && [ $foundstart == "no" ]; then
 	   start="$newdate $sh:$sm"
 	   foundstart="yes"
@@ -69,7 +69,7 @@ while [ $k -ge $st ] && [ $k -le $et ] && [ $foundend == "no" ]; do
 	k=`expr $k + 39`
         em=`expr $em - 61`
      elif [ $k -ge $st ] && [ $k -le $et ]; then
-        grep -q "$newdate $eh:$em" /usr/local/Calpont/mysql/db/$host.log
+        grep -q "$newdate $eh:$em" /usr/local/MariaDB/Columnstore/mysql/db/$host.log
         if [ "$?" -eq "0" ] && [ $foundend == "no" ]; then
            end="$newdate $eh:$em"
            foundend="yes"
@@ -87,7 +87,7 @@ cmd="/$start/,/$end/ {print \$0} "
 echo $cmd >> /tmp/$host/sql/cmd.$$
 # 
 # execute the command 
-awk -f /tmp/$host/sql/cmd.$$ /usr/local/Calpont/mysql/db/$host.log > /tmp/$host/sql/temp.log
+awk -f /tmp/$host/sql/cmd.$$ /usr/local/MariaDB/Columnstore/mysql/db/$host.log > /tmp/$host/sql/temp.log
 #
 exit
 #

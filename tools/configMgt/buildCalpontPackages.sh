@@ -29,7 +29,7 @@ rm -rf /usr/local/Calpont
 rm -rf calpont*
 rm -f *gz
 #
-smbclient //calweb/shared -Wcalpont -Uoamuser%Calpont1 -c "cd Iterations/$DIR;prompt OFF;mget *.rpm"
+smbclient //srvhill01/shared -WMARIADB -Uroot%Calpont1 -c "cd packages/$DIR;prompt OFF;mget *.rpm"
 rpm -ivh calpont*.x86_64.rpm --nodeps
 rpm -iq calpont >> /usr/local/Calpont/releasenum
 cd /usr/local/
@@ -40,7 +40,7 @@ alien -ck calpont*.x86_64.rpm
 tar -zcvf calpont-infinidb-ent-$REL.x86_64.rpm.tar.gz *$REL*.rpm
 tar -zcvf calpont-infinidb-ent-$REL.amd64.deb.tar.gz *$REL*.deb
 
-smbclient //calweb/shared -Wcalpont -Uoamuser%Calpont1 -c "cd Iterations/$DIR;mkdir packages;cd packages;prompt OFF;del calpont-infinidb-ent*gz;mput *gz"
+smbclient //srvhill01/shared -WMARIADB -Uroot%Calpont1 -c "cd packages/$DIR;mkdir packages;cd packages;prompt OFF;del calpont-infinidb-ent*gz;mput *gz"
 } > /root/autoOAM/buildCalpontPackages-$DIR.log 2>&1
 #
 echo "Calpont Packages Build Successfully Completed"

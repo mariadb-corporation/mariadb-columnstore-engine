@@ -348,7 +348,7 @@ void msgProcessor()
 								time_t moduleStartTime = 0;
 								time_t queryStartTime = 0;
 
-								string fileName = "/var/log/Calpont/debug.log";
+								string fileName = "/var/log/Columnstore/debug.log";
 								try
 								{
 									// Get ServerMonitor start time. We don't report any SQL that started before then.
