@@ -145,6 +145,7 @@ int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& ct)
 {
+#if 0
 	DateTime dt = getDateTime(row, parm, isNull);
 	if (*reinterpret_cast<int64_t*>(&dt) == 0)
 	{
@@ -156,7 +157,8 @@ int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row,
 			  dt.year, dt.month, dt.day, dt.hour,
 			  dt.minute, dt.second ); 
 	return atoll(buf);
-//	return getDatetimeIntVal(row, parm, isNull, ct);
+#endif
+	return getDatetimeIntVal(row, parm, isNull, ct);
 }								
 
 double Func_from_unixtime::getDoubleVal(rowgroup::Row& row,

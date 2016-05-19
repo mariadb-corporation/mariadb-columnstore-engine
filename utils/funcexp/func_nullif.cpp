@@ -92,7 +92,17 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
         }
 		case execplan::CalpontSystemCatalog::DATE:
 		{
-			exp2 = parm[1]->data()->getDateIntVal(row, isNull);
+			if (parm[0]->data()->resultType().colDataType ==
+			    execplan::CalpontSystemCatalog::DATETIME)
+			{
+				// If we're comparing to a datetime field, promote.
+				exp2 = parm[0]->data()->getDatetimeIntVal(row, isNull);
+			}
+			else
+			{
+				exp2 = parm[1]->data()->getDateIntVal(row, isNull);
+			}
+
 			if (isNull) {
 				isNull = false;
 				return exp1;
@@ -104,6 +114,20 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
 		case execplan::CalpontSystemCatalog::DATETIME:
 		{
 			exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
+			if (parm[0]->data()->resultType().colDataType ==
+				execplan::CalpontSystemCatalog::DATE)
+			{
+				// When comparing exp1 as a Date, we can't simply promote. We have
+				// to be careful of the return value in case of not null return.
+				int64_t exp1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
+				if ( exp1 == exp2 ) 
+				{
+					isNull = true;
+					return 0;
+				}
+				// since exp1 here is inside the block, when we leave the block, the
+				// original (Date) value is restored.
+			}
 			if (isNull) {
 				isNull = false;
 				return exp1;
