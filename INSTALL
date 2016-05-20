@@ -46,7 +46,7 @@ Guide for addition details on using postConfigure:
 /usr/local/MariaDB/Columnstore/bin/postConfigure
 
 Setup some aliases:
-. /usr/local/MariaDB/Columnstore/bin/calpontAlias
+. /usr/local/MariaDB/Columnstore/bin/columnsoreAlias
 
 Connect to MySQL:
 idbmysql
