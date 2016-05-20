@@ -34,7 +34,7 @@
 		<ProcessArg7>$INSTALLDIR/etc/snmptrapd.conf</ProcessArg7>
 		<ProcessArg8>-C</ProcessArg8>
 		<ProcessArg9>-Lf</ProcessArg9>
-		<ProcessArg10>/var/log/Calpont/snmptrapd.log</ProcessArg10>
+		<ProcessArg10>/var/log/Columnstore/snmptrapd.log</ProcessArg10>
 		<ProcessArg11>-p</ProcessArg11>
 		<ProcessArg12>/var/run/snmptrapd.pid</ProcessArg12>
 		<BootLaunch>1</BootLaunch>
