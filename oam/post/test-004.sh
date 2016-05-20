@@ -7,7 +7,7 @@
 #
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	test -f /etc/default/infinidb && . /etc/default/infinidb
+	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then

@@ -3,7 +3,7 @@
 # $Id: test-003.sh 2937 2012-05-30 18:17:09Z rdempsey $
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	test -f /etc/default/infinidb && . /etc/default/infinidb
+	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
