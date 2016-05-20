@@ -109,9 +109,9 @@ elif [ "$daemon" = "rsyslog" ]; then
 		cnt=`grep "/etc/rsyslog.d/" /etc/rsyslog.conf | wc -l`
 		if [ $cnt -gt 0 ]; then
 			if [ $rsyslog7 == 1 ]; then
-				syslog_conf=/etc/rsyslog.d/49-calpont.conf
+				syslog_conf=/etc/rsyslog.d/49-columnstore.conf
 			else
-				syslog_conf=/etc/rsyslog.d/calpont.conf
+				syslog_conf=/etc/rsyslog.d/columnstore.conf
 			fi
 		else
 			syslog_conf=/etc/rsyslog.conf
@@ -147,7 +147,7 @@ install() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
-	if [ "$syslog_conf" != /etc/rsyslog.d/calpont.conf ]; then
+	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
 		rm -f ${syslog_conf}.columnstoreSave
 		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
 		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
@@ -157,9 +157,9 @@ if [ ! -z "$syslog_conf" ] ; then
 	if [ $? -ne 0 ]; then
 		#set the syslog for calpont logging
 		# remove older version incase it was installed by previous build
-		rm -rf /etc/rsyslog.d/calpont.conf
+		rm -rf /etc/rsyslog.d/columnstore.conf
 		if [ $rsyslog7 == 1 ]; then
-			rm -f /etc/rsyslog.d/49-calpont.conf
+			rm -f /etc/rsyslog.d/49-columnstore.conf
 			cat  ${columnstoreSyslogFile7} >> ${syslog_conf}
 			chown syslog:adm /var/log/Columnstore
 		else
@@ -179,8 +179,8 @@ fi
 uninstall() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
-	if [ "$syslog_conf" != /etc/rsyslog.d/calpont.conf ]; then
-		if [ "$syslog_conf" != /etc/rsyslog.d/49-calpont.conf ]; then
+	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
+		if [ "$syslog_conf" != /etc/rsyslog.d/49-columnstore.conf ]; then
 			egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 			if [ $? -eq 0 ]; then
 				if [ -f ${syslog_conf}.columnstoreSave ] ; then
