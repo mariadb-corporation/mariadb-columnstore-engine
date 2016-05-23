@@ -1604,16 +1604,18 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 
 					// @bug5634, @bug5635. mark used derived col on derived table.
 					// outer join inner table filter can not be moved in
-					// MariaDB 10.1: cached_table is never true for derived tables.
-					// Find another way to determine outer_join
+					// MariaDB 10.1: cached_table is never available for derived tables.
+					// Find the uncached object in table_list
 					TABLE_LIST* tblList = ifp->context->table_list;
 					while (tblList)
 					{
-						if (strcasecmp(tblList->alias, ifp->table_name) == 0 &&
-						    !tblList->outer_join)
+						if (strcasecmp(tblList->alias, ifp->table_name) == 0)
 						{
-							sc->derivedTable(derivedName);
-							sc->derivedRefCol(cols[j].get());
+							if (!tblList->outer_join)
+							{
+								sc->derivedTable(derivedName);
+								sc->derivedRefCol(cols[j].get());
+							}
 							break;
 						}
 						tblList = tblList->next_local;
