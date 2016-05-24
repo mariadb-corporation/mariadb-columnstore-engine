@@ -95,11 +95,14 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
 			if (parm[0]->data()->resultType().colDataType ==
 			    execplan::CalpontSystemCatalog::DATETIME)
 			{
-				// If we're comparing to a datetime field, promote.
-				exp2 = parm[0]->data()->getDatetimeIntVal(row, isNull);
+				// NULLIF arg0 is DATETIME, arg1 is DATE, 
+				// Upgrade arg1 to datetime
+				exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
 			}
 			else
 			{
+				// NULLIF arg0 is not DATETIME (might be date), arg1 is not DATE
+				// Use arg1 as DATE
 				exp2 = parm[1]->data()->getDateIntVal(row, isNull);
 			}
 
@@ -117,6 +120,8 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
 			if (parm[0]->data()->resultType().colDataType ==
 				execplan::CalpontSystemCatalog::DATE)
 			{
+				// NULLIF arg0 is DATE, arg1 is DATETIME, 
+				// Upgrade arg1 to datetime
 				// When comparing exp1 as a Date, we can't simply promote. We have
 				// to be careful of the return value in case of not null return.
 				int64_t exp1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
