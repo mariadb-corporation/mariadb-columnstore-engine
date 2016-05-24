@@ -370,7 +370,7 @@ prefix=/usr/local
 
 test -x /usr/local/MariaDB/Columnstore/bin/post-install && /usr/local/MariaDB/Columnstore/bin/post-install --prefix=$prefix --rpmmode=$rpmmode
 
-echo "InfinIDB RPM install completed"
+echo "MariaDB ColumnStore RPM install completed"
 
 %post libs
 rpmmode=install
@@ -382,7 +382,7 @@ fi
 
 prefix=/usr/local
 
-echo "InfinIDB RPM install completed"
+echo "MariaDB ColumnStore RPM install completed"
 
 %post storage-engine
 rpmmode=install
@@ -394,7 +394,7 @@ fi
 
 prefix=/usr/local
 
-echo "InfinIDB RPM install completed"
+echo "MariaDB ColumnStore RPM install completed"
 
 
 %post enterprise
@@ -407,7 +407,7 @@ fi
 
 prefix=/usr/local
 
-echo "InfinIDB RPM install completed"
+echo "MariaDB ColumnStore RPM install completed"
 
 %preun platform
 rpmmode=upgrade
