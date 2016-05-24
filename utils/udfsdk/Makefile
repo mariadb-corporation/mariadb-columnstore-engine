@@ -6,7 +6,7 @@
 #*****************************************************************************************/
 include ../../rules.mak
 .PHONY: install clean test docs coverage leakcheck
-MYSQL_DIR=../../../MariaDB_InfiniDB
+MYSQL_DIR=../../../mariadb-columnstore-server
 
 PROGRAM1=libudf_mysql.so
 VERSION1=1.0.0

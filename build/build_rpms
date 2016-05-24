@@ -4,7 +4,7 @@
 #
 
 verbose=0
-mysqldir=$HOME/MariaDB_InfiniDB/export/mysql
+mysqldir=$HOME/mariadb-columnstore-server/export/mysql
 
 usage()
 {

@@ -11,7 +11,7 @@ PROGRAM=libquerystats.so
 VERSION=1.0.0
 LIBRARY=$(PROGRAM).$(VERSION)
 
-MYSQL_DIR=../../MariaDB_InfiniDB
+MYSQL_DIR=../../mariadb-columnstore-server
 CPPFLAGS=-I$(EXPORT_ROOT)/include -I/usr/include/libxml2 -I$(MYSQL_DIR)/include
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall -fpic
 
