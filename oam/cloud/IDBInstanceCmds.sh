@@ -347,6 +347,9 @@ getGroup() {
 			describeInstance
 		fi
 		group=`grep -B1 -A6 -m 1 $instance $describeInstanceFile |  grep -m 1 GROUP | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+		if [ "$group" == "" ]; then
+			group=`grep -B1 -A4 -m 1 $instance $describeInstanceFile |  grep -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $21}'`
+		fi
 	fi
 
 	echo $group
