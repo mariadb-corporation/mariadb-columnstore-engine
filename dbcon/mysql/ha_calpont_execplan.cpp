@@ -1606,7 +1606,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 					// outer join inner table filter can not be moved in
 					// MariaDB 10.1: cached_table is never available for derived tables.
 					// Find the uncached object in table_list
-					TABLE_LIST* tblList = ifp->context->table_list;
+					TABLE_LIST* tblList = ifp->context ? ifp->context->table_list : NULL;
 					while (tblList)
 					{
 						if (strcasecmp(tblList->alias, ifp->table_name) == 0)
