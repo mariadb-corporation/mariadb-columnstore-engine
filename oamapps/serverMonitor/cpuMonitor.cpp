@@ -479,9 +479,9 @@ void ServerMonitor::getCPUdata()
 {
 	pcl.clear();
 
-	system("top -b -n1 | head -12 | awk '{print $9,$12}' | tail -5 > /tmp/infinidb_tmp_files/processCpu");
+	system("top -b -n1 | head -12 | awk '{print $9,$12}' | tail -5 > /tmp/columnstore_tmp_files/processCpu");
 
-	ifstream oldFile1 ("/tmp/infinidb_tmp_files/processCpu");
+	ifstream oldFile1 ("/tmp/columnstore_tmp_files/processCpu");
 
 	// read top 5 users
 	int i = 0;
@@ -503,9 +503,9 @@ void ServerMonitor::getCPUdata()
 	//
 	// get and check Total CPU usage
 	//
-	system("top -b -n 6 -d 1 | awk '{print $5}' | grep %id > /tmp/infinidb_tmp_files/systemCpu");
+	system("top -b -n 6 -d 1 | awk '{print $5}' | grep %id > /tmp/columnstore_tmp_files/systemCpu");
 
-	ifstream oldFile ("/tmp/infinidb_tmp_files/systemCpu");
+	ifstream oldFile ("/tmp/columnstore_tmp_files/systemCpu");
 
 	float systemIdle = 0;
 	// skip first line in file, and average the next 5 entries which contains idle times
