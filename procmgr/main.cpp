@@ -1383,12 +1383,12 @@ void pingDeviceThread()
 								//restart module processes
 								int retry = 0;
 
-								int ModuleProcMonWaitCount = 30;
+								int ModuleProcMonWaitCount = 6;
 								try{
 									oam.getSystemConfig("ModuleProcMonWaitCount", ModuleProcMonWaitCount);
 								}
 								catch(...) {
-									ModuleProcMonWaitCount = 30;
+									ModuleProcMonWaitCount = 6;
 								}
 
 								for ( ; retry < ModuleProcMonWaitCount ; retry ++ )
@@ -1702,7 +1702,7 @@ void pingDeviceThread()
 
 									// return values = 'ip address' for running or rebooting, stopped or terminated
 									string currentIPAddr = oam.getEC2InstanceIpAddress(hostName);
-									if (currentIPAddr == "stopped")
+/*									if (currentIPAddr == "stopped")
 									{ // start instance
 										log.writeLog(__LINE__, "Instance in stopped state, try starting it: " + hostName, LOG_TYPE_DEBUG);
 
@@ -1754,7 +1754,7 @@ void pingDeviceThread()
 											currentIPAddr = "terminated";
 										}
 									}
-
+*/
 									if ( currentIPAddr == "terminated")
 									{
 										//check if down module was Standby OAM, if so find another one

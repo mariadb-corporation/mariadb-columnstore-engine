@@ -231,7 +231,7 @@
 		<PrimaryUMModuleName>unassigned</PrimaryUMModuleName>
 		<ModuleHeartbeatPeriod>1</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
-		<ModuleProcMonWaitCount>30</ModuleProcMonWaitCount>	// 2.5 minutes
+		<ModuleProcMonWaitCount>6</ModuleProcMonWaitCount>	// 2.5 minutes
 		<!-- Disabled
 		<ProcessHeartbeatPeriod>-1</ProcessHeartbeatPeriod>
 		-->
