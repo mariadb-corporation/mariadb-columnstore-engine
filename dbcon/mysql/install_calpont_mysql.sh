@@ -29,7 +29,6 @@ df=$installdir/mysql/my.cnf
 
 $installdir/mysql/bin/mysql --defaults-file=$df --force --user=root $pwprompt mysql 2>/tmp/mysql_install.log <<EOD
 INSTALL PLUGIN columnstore SONAME 'libcalmysql.so';
-$installdir/mysql/bin/mysql --defaults-file=$df --force --user=root $pwprompt mysql 2>>/tmp/mysql_install.log <<EOD
 INSTALL PLUGIN infinidb SONAME 'libcalmysql.so';
 -- these are deprecated names
 DELETE FROM mysql.func WHERE name='caldisablepartition';
