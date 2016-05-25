@@ -2327,7 +2327,7 @@ int processCommand(string* arguments)
 				else
 				{
 					//just kick off local server
-					cout << "   System being started, please wait...";
+					cout << endl << "   System being started, please wait...";
 					cout.flush();
 					cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
 					int rtnCode = system(cmd.c_str());
@@ -2349,7 +2349,7 @@ int processCommand(string* arguments)
 	
 				try
 				{
-					cout << "   System being started, please wait...";
+					cout << endl << "   System being started, please wait...";
 					cout.flush();
 					oam.startSystem(ackTemp);
 					if ( waitForActive() )
