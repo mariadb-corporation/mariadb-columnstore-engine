@@ -4657,7 +4657,7 @@ namespace oam
 		{
 			buf = line;
 	
-			string::size_type pos = buf.find("Offending RSA key",0);
+			string::size_type pos = buf.find("Offending",0);
 			if (pos != string::npos) {
 				// line ID
 				pos = buf.find(":",0);
