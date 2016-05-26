@@ -1721,7 +1721,17 @@ int main(int argc, char *argv[])
 							}
 						}
 						else
+						{
+							if ( moduleHostName == oam::UnassignedName && 
+								newModuleName == "pm1" ) 
+							{
+								char hostname[128];
+								gethostname(hostname, sizeof hostname);
+								moduleHostName = hostname;
+							}
+
 							prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " Host Name (" + moduleHostName + ") > ";
+						}
 
 						if ( prompt != "" )
 						{
