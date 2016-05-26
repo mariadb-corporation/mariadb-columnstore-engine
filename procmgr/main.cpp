@@ -1609,9 +1609,12 @@ void pingDeviceThread()
 							break;
 		
 						case oam::DOWN:
-							// if disabled or initial state, skip
-							if (opState == oam::AUTO_DISABLED ||
-								opState == oam::INITIAL)
+							// if initial state, skip
+							if (opState == oam::INITIAL)
+								break;
+	
+							// if disabled and not amazon, skip
+							if (opState == oam::AUTO_DISABLED && !amazon)
 								break;
 	
 							log.writeLog(__LINE__, "module failed to respond to pings: " + moduleName, LOG_TYPE_WARNING);
@@ -1702,59 +1705,6 @@ void pingDeviceThread()
 
 									// return values = 'ip address' for running or rebooting, stopped or terminated
 									string currentIPAddr = oam.getEC2InstanceIpAddress(hostName);
-/*									if (currentIPAddr == "stopped")
-									{ // start instance
-										log.writeLog(__LINE__, "Instance in stopped state, try starting it: " + hostName, LOG_TYPE_DEBUG);
-
-										int retryCount = 6;		// 1 minutes
-										if( moduleName.find("pm") == 0 )
-										{
-											if ( PMInstanceType == "m2.4xlarge" )
-												retryCount = 15;		// 2.5 minutes
-										}
-										else
-										{
-											if( moduleName.find("um") == 0 )
-												if ( UMInstanceType == "m2.4xlarge" )
-													retryCount = 15;		// 2.5 minutes
-										}
-
-										int retry = 0;
-										for (  ; retry < retryCount ; retry++ )
-										{
-											if ( oam.startEC2Instance(hostName) )
-											{
-												log.writeLog(__LINE__, "Instance started, sleep for 30 seconds to allow it to fully come up: " + hostName, LOG_TYPE_DEBUG);
-	
-												//delay then get new IP Address
-												sleep(30);
-												string currentIPAddr = oam.getEC2InstanceIpAddress(hostName);
-												if (currentIPAddr == "stopped" || currentIPAddr == "terminated") {
-													log.writeLog(__LINE__, "Instance failed to start (no ip-address), retry: " + hostName, LOG_TYPE_DEBUG);
-												}
-												else
-												{
-													// update the Calpont.xml with the new IP Address
-													string cmd = "sed -i s/" + ipAddr + "/" + currentIPAddr + "/g " + startup::StartUp::installDir() + "/etc/Calpont.xml";
-													system(cmd.c_str());
-													break;
-												}
-											}
-											else
-											{
-												log.writeLog(__LINE__, "Instance failed to start, retry: " + hostName, LOG_TYPE_DEBUG);
-
-												sleep(10);
-											}
-										}
-
-										if ( retry >= retryCount )
-										{
-											log.writeLog(__LINE__, "Instance failed to start, restart a new instance: " + hostName, LOG_TYPE_DEBUG);
-											currentIPAddr = "terminated";
-										}
-									}
-*/
 									if ( currentIPAddr == "terminated")
 									{
 										//check if down module was Standby OAM, if so find another one
