@@ -2327,7 +2327,7 @@ int processCommand(string* arguments)
 				else
 				{
 					//just kick off local server
-					cout << "   System being started, please wait...";
+					cout << endl << "   System being started, please wait...";
 					cout.flush();
 					cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
 					int rtnCode = system(cmd.c_str());
@@ -2349,7 +2349,7 @@ int processCommand(string* arguments)
 	
 				try
 				{
-					cout << "   System being started, please wait...";
+					cout << endl << "   System being started, please wait...";
 					cout.flush();
 					oam.startSystem(ackTemp);
 					if ( waitForActive() )
@@ -6835,9 +6835,13 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 
 			getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 
-            // confirm request
-            if (confirmPrompt("This command restarts the processing of an application on a Module within the MariaDB Columnstore System"))
-                break;
+            if (arguments[3] != "y")
+            {
+	            // confirm request
+        	    if (confirmPrompt("This command restarts the processing of an application on a Module within the MariaDB Columnstore System"))
+                	break;
+            }
+
 
             try
             {

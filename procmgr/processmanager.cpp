@@ -4602,8 +4602,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					system(cmd.c_str());
 					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
 						//check for RSA KEY ISSUE and fix
-						if (oam.checkLogStatus("/tmp/login_test.log", "Offending RSA key")) {
-							log.writeLog(__LINE__, "addModule - login failed, RSA key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
+						if (oam.checkLogStatus("/tmp/login_test.log", "Offending")) {
+							log.writeLog(__LINE__, "addModule - login failed, Offending key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
 							string file = "/tmp/login_test.log";
 							oam.fixRSAkey(file);
 						}

@@ -236,7 +236,7 @@
 		<NMSIPAddress>0.0.0.0</NMSIPAddress>
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
-		<TempFileDir>/tmp/infinidb_tmp_files</TempFileDir>
+		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
 		<CalpontHome>$INSTALLDIR</CalpontHome>
 		<ModuleHeartbeatPeriod>10</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>

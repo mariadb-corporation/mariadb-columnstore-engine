@@ -1651,7 +1651,7 @@ int main(int argc, char *argv[])
 						newModuleHostName = moduleHostName;
 						if (amazonInstall) {
 							if ( moduleHostName == oam::UnassignedName && 
-								newModuleName == "pm1" )
+								newModuleName == "pm1" && nicID == 1)
 							{
 								//get local instance name (pm1)
 								string localInstance = oam.getEC2LocalInstance();
@@ -1721,7 +1721,17 @@ int main(int argc, char *argv[])
 							}
 						}
 						else
+						{
+							if ( moduleHostName == oam::UnassignedName && 
+								newModuleName == "pm1" && nicID == 1) 
+							{
+								char hostname[128];
+								gethostname(hostname, sizeof hostname);
+								moduleHostName = hostname;
+							}
+
 							prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " Host Name (" + moduleHostName + ") > ";
+						}
 
 						if ( prompt != "" )
 						{

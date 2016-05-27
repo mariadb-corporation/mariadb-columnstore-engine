@@ -427,9 +427,9 @@ void ServerMonitor::outputProcMemory(bool log)
 	// get top 5 Memory users by process
 	//
 
-	system("ps -e -orss=1,args= | sort -b -k1,1n |tail -n 5 | awk '{print $1,$2}' > /tmp/infinidb_tmp_files/processMem");
+	system("ps -e -orss=1,args= | sort -b -k1,1n |tail -n 5 | awk '{print $1,$2}' > /tmp/columnstore_tmp_files/processMem");
 
-	ifstream oldFile ("/tmp/infinidb_tmp_files/processMem");
+	ifstream oldFile ("/tmp/columnstore_tmp_files/processMem");
 
 	string process;
 	long long memory;

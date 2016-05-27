@@ -231,7 +231,7 @@
 		<PrimaryUMModuleName>unassigned</PrimaryUMModuleName>
 		<ModuleHeartbeatPeriod>1</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
-		<ModuleProcMonWaitCount>30</ModuleProcMonWaitCount>	// 2.5 minutes
+		<ModuleProcMonWaitCount>6</ModuleProcMonWaitCount>	// 2.5 minutes
 		<!-- Disabled
 		<ProcessHeartbeatPeriod>-1</ProcessHeartbeatPeriod>
 		-->
@@ -251,7 +251,7 @@
 		<NMSIPAddress>0.0.0.0</NMSIPAddress>
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
-		<TempFileDir>/tmp/infinidb_tmp_files</TempFileDir>
+		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
 		<CalpontHome>$INSTALLDIR</CalpontHome>
 		<ProcessRestartCount>10</ProcessRestartCount>
 		<ProcessRestartPeriod>120</ProcessRestartPeriod>
