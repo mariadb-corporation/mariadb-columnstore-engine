@@ -135,11 +135,7 @@ namespace
 	}
 }
 
-// Enterprise View
-#ifndef SKIP_VIEW
 #include "ha_view.h"
-#endif
-
 
 namespace cal_impl_if {
 
@@ -4580,17 +4576,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 			string viewName = getViewName(table_ptr);
 
-			// Enterprise View
-#ifdef SKIP_VIEW
-			if (table_ptr->view)
-			{
-				Message::Args args;
-				args.add("View");
-				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)), gwi);
-				return ER_CHECK_NOT_IMPLEMENTED;
-			}
-#endif
-
 			// @todo process from subquery
 			if (table_ptr->derived)
 			{
@@ -4621,7 +4606,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				gwi.tableMap[tan] = make_pair(0, table_ptr);
 				gwi.thd->infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
 			}
-#ifndef SKIP_VIEW
 			else if (table_ptr->view)
 			{
 				View *view = new View(table_ptr->view->select_lex, &gwi);
@@ -4630,7 +4614,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				gwi.viewList.push_back(view);
 				view->transform();
 			}
-#endif
 			else
 			{
 				// check foreign engine tables
