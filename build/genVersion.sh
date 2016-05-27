@@ -38,12 +38,12 @@ echo "
 const std::string idb_version(\"$version\");
 const std::string idb_release(\"$release\");
 #endif
-" > ${prefix}/include/versionnumber.h.tmp
+" > dbcon/mysql/versionnumber.h.tmp
 
-diff -bBq ${prefix}/include/versionnumber.h.tmp ${prefix}/include/versionnumber.h >/dev/null 2>&1
+diff -bBq dbcon/mysql/versionnumber.h.tmp dbcon/mysql/versionnumber.h >/dev/null 2>&1
 if [ $? -ne 0 ]; then
-	cp ${prefix}/include/versionnumber.h.tmp ${prefix}/include/versionnumber.h
+	cp dbcon/mysql/versionnumber.h.tmp dbcon/mysql/versionnumber.h
 fi
 
-rm -f ${prefix}/include/versionnumber.h.tmp
+rm -f dbcon/mysql/versionnumber.h.tmp
 
