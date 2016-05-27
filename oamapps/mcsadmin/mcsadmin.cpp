@@ -6835,9 +6835,13 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 
 			getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 
-            // confirm request
-            if (confirmPrompt("This command restarts the processing of an application on a Module within the MariaDB Columnstore System"))
-                break;
+            if (arguments[3] != "y")
+            {
+	            // confirm request
+        	    if (confirmPrompt("This command restarts the processing of an application on a Module within the MariaDB Columnstore System"))
+                	break;
+            }
+
 
             try
             {
