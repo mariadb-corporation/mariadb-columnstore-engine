@@ -1133,14 +1133,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					if (( compressionType > 0 ) && !(idbCompress.isCompressionAvail( compressionType )))
 					{
 						rc = 1;
-#ifdef SKIP_IDB_COMPRESSION
-		Message::Args args;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		args.add("The compression type");
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
-#else
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
-#endif
+						thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1457,14 +1450,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					if (( compressionType > 0 ) && !(idbCompress.isCompressionAvail( compressionType )))
 					{
 						rc = 1;
-#ifdef SKIP_IDB_COMPRESSION
-		Message::Args args;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		args.add("The compression type");
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
-#else
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
-#endif
+						thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -1598,14 +1584,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					if (( compressionType > 0 ) && !(idbCompress.isCompressionAvail( compressionType )))
 					{
 						rc = 1;
-#ifdef SKIP_IDB_COMPRESSION
-		Message::Args args;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		args.add("The compression type");
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
-#else
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
-#endif
+						thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
 						ci->alterTableState = cal_connection_info::NOT_ALTER;
 						ci->isAlter = false;
 						return rc;
@@ -2067,14 +2046,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	if ( ( compressiontype > 0 ) && !(idbCompress.isCompressionAvail( compressiontype )) )
 	{
 		rc = 1;
-#ifdef SKIP_IDB_COMPRESSION
-		Message::Args args;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		args.add("The compression type");
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)).c_str());
-#else
 		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
-#endif
 		ci.alterTableState = cal_connection_info::NOT_ALTER;
 		ci.isAlter = false;
 		return rc;

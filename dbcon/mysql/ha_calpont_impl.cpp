@@ -1114,9 +1114,9 @@ uint32_t doUpdateDelete(THD *thd)
 			roPair = csc->tableRID( aTableName );
 	}
 	catch (IDBExcept &ie) {
-		setError(thd, ER_UNKNOWN_TABLE,
-					 ie.what());
-		return ER_UNKNOWN_TABLE;
+//		setError(thd, ER_UNKNOWN_TABLE, ie.what());
+		setError(thd, ER_INTERNAL_ERROR, ie.what());
+		return ER_INTERNAL_ERROR;
 	}
 	catch (std::exception&ex) {
 		setError(thd, ER_INTERNAL_ERROR,
@@ -2393,16 +2393,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 		return ER_INTERNAL_ERROR;
 	}
 
-#ifdef SKIP_INSERT_SELECT
-	if (thd->infinidb_vtable.isInsertSelect)
-	{
-		Message::Args args;
-		args.add("Insert with Select");
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)));
-		return ER_CHECK_NOT_IMPLEMENTED;
-	}
-#endif
-
 	// mysql reads table twice for order by
 	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1 ||
 		thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY)
@@ -3361,7 +3351,10 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 				colrids = csc->columnRIDs(tableName);
 			}
 			catch (IDBExcept &ie) {
-				setError(thd, ER_UNKNOWN_TABLE, ie.what());
+				// TODO Can't use ERR_UNKNOWN_TABLE because it needs two
+				// arguments to format. Update setError to take vararg.
+//				setError(thd, ER_UNKNOWN_TABLE, ie.what());
+				setError(thd, ER_INTERNAL_ERROR, ie.what());
 				ci->rc = 5;
 				ci->singleInsert = true;
 				return;
@@ -3759,8 +3752,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			ci->tableOid = roPair.objnum;
 		}
 		catch (IDBExcept &ie) {
-			setError(thd, ER_UNKNOWN_TABLE,
-					 ie.what());
+			setError(thd, ER_INTERNAL_ERROR, ie.what());
+//			setError(thd, ER_UNKNOWN_TABLE, ie.what());
 		}
 		catch (std::exception& ex) {
 			setError(thd, ER_INTERNAL_ERROR,
@@ -4220,16 +4213,6 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 	          thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR);
 	if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_INIT  )
 		return 0;
-
-#ifdef SKIP_INSERT_SELECT
-	if (thd->infinidb_vtable.isInsertSelect)
-	{
-		Message::Args args;
-		args.add("Insert with Select");
-		setError(thd, ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_ENTERPRISE_ONLY, args)));
-		return ER_CHECK_NOT_IMPLEMENTED;
-	}
-#endif
 
 	if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());

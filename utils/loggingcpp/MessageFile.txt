@@ -102,8 +102,8 @@
 89	ClearTableLock: %1% for table %2%; lock-%3%.  %4%
 90	ClearTableLock: Nothing to rollback for table %1% on DBRoot%2%
 91	BBRM encountered network error, check the controllernode.	
-92	A process crashed while holding the BRM mutex.  The lock state is unreliable.  Please restart InfiniDB
-93	Unrecoverable BRM lock state detected. Diagnostic values: r=%1% rwt=%2% w=%3% wwt=%4%. Please restart InfiniDB.
+92	A process crashed while holding the BRM mutex.  The lock state is unreliable.  Please restart Columnstore
+93	Unrecoverable BRM lock state detected. Diagnostic values: r=%1% rwt=%2% w=%3% wwt=%4%. Please restart Columnstore.
 94	Attempting to fix the BRM lock state. Diagnostic values: r=%1% rwt=%2% w=%3% wwt=%4%.
 95	BRM lock state appears to be functional again.
 96	Table %s%.%2% (OID-%3%) was NOT successfully loaded. %4%.

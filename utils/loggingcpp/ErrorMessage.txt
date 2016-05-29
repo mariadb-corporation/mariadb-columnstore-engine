@@ -21,20 +21,17 @@
 1002	ERR_INCOMPATIBLE_JOIN	%1% incompatible column type specified for join condition.
 1003	ERR_CIRCULAR_JOIN	Circular joins are not supported.
 1004	ERR_MIX_JOIN	Mixed %1% JOIN is not supported.
-1005	ERR_UPDATE_SUB	update with subselect in select clause is currently not supported in InfiniDB.
+1005	ERR_UPDATE_SUB	update with subselect in select clause is currently not supported in Columnstore.
 1006	ERR_DATATYPE_NOT_SUPPORT	Function called with unsupported datatype.
-1007	ERR_DML_NOT_SUPPORT_FEATURE	This version of InfiniDB does not yet support the use of '%1%' in an update or delete statement.
-1008	ERR_CREATE_DATATYPE_NOT_SUPPORT	The syntax or the data type(s) is not supported by InfiniDB. Please check the InfiniDB syntax guide for supported syntax or data types.
-# 1009 	ERR_CREATE_DATACOMPRESSION_NOT_SUPPORT	The compression type is not supported in InfiniDB Community.
-1009	ERR_ENTERPRISE_ONLY	%1% is only available in InfiniDB Enterprise.
+1007	ERR_DML_NOT_SUPPORT_FEATURE	This version of Columnstore does not yet support the use of '%1%' in an update or delete statement.
+1008	ERR_CREATE_DATATYPE_NOT_SUPPORT	The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
 1010	ERR_AGGREGATE_TYPE_NOT_SUPPORT	'%1%' for column type '%2%' isn't supported.
 1011	ERR_DML_VIEW	%1% on VIEW is currently not supported.
-1012	ERR_UPDATE_NOT_SUPPORT_FEATURE	This version of InfiniDB supports update of only one table at a time.
-1013	ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT	Autoincrement columns are only available in InfiniDB Enterprise.
+#1012	ERR_UPDATE_NOT_SUPPORT_FEATURE	This version of Columstore supports update of only one table at a time.
 1014	ERR_ROLLUP_NOT_SUPPORT	Rollup is currently not supported.
 1015	ERR_OUTER_JOIN_SUBSELECT	Subquery on OUTER JOIN ON clause is currently not supported.
 1016	ERR_PARTITION_BY_RANGE	The column type %1% is currently  not supported in %2% function.
-1017	ERR_SP_FUNCTION_NOT_SUPPORT	Stored function is currently not supported in InfiniDB.
+1017	ERR_SP_FUNCTION_NOT_SUPPORT	Stored function is currently not supported in Columnstore.
 1018	ERR_DBJ_ANTI_NULL	Cannot currently process a disk-based antijoin with a function filter and a NULL join column in the large-side table.
 
 # Other errors ...
@@ -45,7 +42,7 @@
 2004	ERR_LOST_CONN_EXEMGR	Cannot connect to ExeMgr.
 #2005 Connector can connect to ExeMgr, but ExeMgr fail to respond. possibly PrimProc issue
 2005	ERR_EXEMGR_MALFUNCTION	ExeMgr is not functioning correctly.
-2006	ERR_TABLE_NOT_IN_CATALOG	%1% does not exist in InfiniDB.
+2006	ERR_TABLE_NOT_IN_CATALOG	%1% does not exist in Columnstore.
 2007	ERR_DICTBUFFER_OVERFLOW	The dictionary buffer is too small for this query; increase <PrimitiveServers><DictBufferSize> and try again.
 2008	ERR_VERSIONBUFFER_OVERFLOW	The version buffer overflowed. Increase VersionBufferFileSize or limit the rows to be processed.
 2009	ERR_TABLE_LOCKED	Unable to perform the operation because %1% with PID %2% is currently holding the table lock for session %3%.
@@ -68,7 +65,7 @@
 2026	ERR_AGG_IN_WHERE	Group function is not allowed in WHERE clause.
 2027	ERR_NON_SUPPORT_AGG_ARGS	Non supported item in aggregate function %1%.
 2028	ERR_NO_FROM	FROM keyword not found where expected.
-2029	ERR_LOCK_TABLE	Lock table command is currently not supported in InfiniDB.
+2029	ERR_LOCK_TABLE	Lock table command is currently not supported in Columnstore.
 2030	ERR_FILTER_COND_EXP	Predicate and Logic operators can not be used where an expression is expected.
 2031	ERR_BRM_LOOKUP	Blocks are missing.  Alter or drop table in progress?
 2032	ERR_INCORRECT_VALUE	Incorrect %1% value: '%2%'.
@@ -139,21 +136,21 @@
 4011	ERR_INVALID_STARTVALUE	The specified starting autoincrement value is too large.
 4012	ERR_EXCEED_LIMIT	The maximum allowed value has been exceeded for the autoincrement column data type.
 4013	ERR_INVALID_VARBINARYVALUE	The value is not varbinary.
-4014	ERR_CONSTRAINTS	Constraints are currently not supported in InfiniDB.
+4014	ERR_CONSTRAINTS	Constraints are currently not supported in Columnstore.
 4015	ERR_NOT_NULL_CONSTRAINTS	Column '%1%' cannot be null.
-4016	ERR_DML_DDL_SLAVE	DML and DDL statements for InfiniDB tables can only be run from the replication master.
+4016	ERR_DML_DDL_SLAVE	DML and DDL statements for Columnstore tables can only be run from the replication master.
 4017	ERR_DML_DDL_LOCAL	DML and DDL statements are not allowed when infinidb_local_query is greater than 0.
-4018	ERR_NON_SUPPORT_SYNTAX	The statement is not supported in InfiniDB.
+4018	ERR_NON_SUPPORT_SYNTAX	The statement is not supported in Columnstore.
 
 # UDF
 5001	ERR_FUNC_NON_IMPLEMENT	%1%:%2% is not implemented.
-5002	ERR_PSEUDOCOL_IDB_ONLY	Pseudo column function '%1%' is only supported in InfiniDB.
+5002	ERR_PSEUDOCOL_IDB_ONLY	Pseudo column function '%1%' is only supported in Columnstore.
 5003	ERR_PSEUDOCOL_WRONG_ARG	Argument of pseudo column function '%1%' is invalid.
 
 # DBRM Errors
 6001	ERR_NETWORK DBRM encountered a network error, check the controllernode.
-6002	ERR_BRM_MUTEX A process crashed while holding the BRM mutex.  The lock state is unreliable.  Please restart InfiniDB.
-6003	ERR_UNRECOVERABLE_LOCK_STATE Unrecoverable BRM lock state detected.  Diagnostic values: r=%1% rwt=%2 w=%3% wwt=%4%.  Please restart InfiniDB.
+6002	ERR_BRM_MUTEX A process crashed while holding the BRM mutex.  The lock state is unreliable.  Please restart Columnstore.
+6003	ERR_UNRECOVERABLE_LOCK_STATE Unrecoverable BRM lock state detected.  Diagnostic values: r=%1% rwt=%2 w=%3% wwt=%4%.  Please restart Columnstore.
 6004	ERR_RECOVERABLE_LOCK_STATE Attempting to fix the BRM lock state.  Diagnostic values: r=%1% rwt=%2 w=%3% wwt=%4%.  
 6005	ERR_SUCCESSFUL_RECOVERY BRM lock state appears to be functional again.
 6006	ERR_HARD_FAILURE DBRM encountered, most likely, a network or disk problem performing that operation.
@@ -184,7 +181,7 @@
 9015	ERR_WF_UPDATE	Can not use window function in UPDATE.
 9016	ERR_WF_ORDER_BY	OrderBy is not allowed for window function '%1%'.
 9017	ERR_WF_INVALID_ORDER_KEY_WITHIN	Only one sort key is allowed for WITHIN GROUP clause.
-9018	ERR_WF_NOT_SUPPORT	Window Function '%1%' is currently not supported in InfiniDB.
+9018	ERR_WF_NOT_SUPPORT	Window Function '%1%' is currently not supported in Columnstore.
 9019	ERR_WF_UNKNOWN_COL_TYPE	Unknown column type encountered: '%1%'.
 9020	ERR_EXECUTE_WINDOW_FUNCTION	Exception caught when process window function.
 9021	ERR_WINDOW_FUNCTION_WRAPPER	Exception caught by window function wrapper.
@@ -195,5 +192,5 @@
 9026	ERR_WF_NOT_IN_COL_MAP	Returned column not in intermediate result set. 
 9027	ERR_WF_ARG_OUT_OF_RANGE	Argument '%1%' is out of range.
 9028	ERR_WF_NOT_ALLOWED	Window functions are not allowed in %1%.
-9029	ERR_WF_IDB_ONLY	Window function are only supported for InfiniDB tables.
+9029	ERR_WF_IDB_ONLY	Window function are only supported for Columnstore tables.
 9030	ERR_WF_DATA_SET_TOO_BIG	Window function data set exceeds memory limit.
