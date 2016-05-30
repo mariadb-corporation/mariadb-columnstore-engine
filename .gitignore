@@ -2,6 +2,8 @@
 *.d.*
 config.log
 versionnumber.h
+autom4te.cache/
+*~
 #	dbcon/ddlpackage/.deps/
 #	dbcon/ddlpackageproc/.deps/
 #	dbcon/dmlpackage/.deps/
