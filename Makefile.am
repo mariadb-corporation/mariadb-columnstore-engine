@@ -18,6 +18,26 @@
 # $Id$
 
 ACLOCAL_AMFLAGS = -I ./m4
+# FIXME:
+# this sets the local linker path (-rpath) so that the ColumnStore
+# libraries and binaries know where to look for the necessary
+# libraries.  This is almost certainly a wrong approach, as 
+# MySQL should look in the plugin path for libraries, but that
+# path comes from CMake, not from autotools.  For now, until
+# the ColumnStore engine is integrated with CMake into the 
+# MariaDB server, the prefix must be set the same for the
+# MariaDB compilation and the engine compilation.  I can't see
+# a way around that for now.
+#
+# FIXME:
+# a second problem here is that this manually specifies 
+# the realtime library and a custom boost library. These
+# should be detected and used automatically by the autotools
+# process.  A custom boost library should not be needed
+# either. The system boost should be used. I am not aware if
+# there are changes made to this custom boost, so I am leaving
+# this AS IS for now.
+AM_LIBTOOLFLAGS = -Wl,-rpath -Wl,$(prefix)/lib -lrt -lboost_idb
 
 all-local: bootstrap
 	cd utils && $(MAKE) && $(MAKE) install
