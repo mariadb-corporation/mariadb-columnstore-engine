@@ -5,11 +5,12 @@
 
 verbose=0
 mysqldir=$HOME/mariadb-columnstore-server/export/mysql
+community=false
 
 usage()
 {
 cat <<EOD
-usage: build_rpms [--verbose] [--local-mysql] [--help]
+usage: build_rpms [--community] [--verbose] [--local-mysql] [--help]
    --local-mysql use local (relative) mysql binary tree
 EOD
 }
@@ -22,6 +23,8 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		usage
 		exit 0
+	elif [ `expr -- "$arg" : '--community'` -eq 11 ]; then
+                community=true
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
 	fi
@@ -104,7 +107,12 @@ b="$b\\n$l"
 done
 echo $b )`
 
-cp ./build/columnstore.spec.in $HOME/rpm/SPECS/columnstore.spec
+if [ ! $community ]; then
+	cp ./build/columnstore.spec.in $HOME/rpm/SPECS/columnstore.spec
+else
+	cp ./build/columnstore.community.spec.in $HOME/rpm/SPECS/columnstore.spec
+fi
+
 sed -i  -e "s/@@PACKAGER@@/Packager: $packager/" \
 	-e "s/@@VERSION@@/Version: $version/" \
 	-e "s/@@RELEASE@@/Release: $release/" \
@@ -115,6 +123,7 @@ echo done.
 echo -n "Building rpms..."
 
 rpmbuild -ba $HOME/rpm/SPECS/columnstore.spec > /tmp/rpmbuild.out.$$ 2>&1
+
 rc=$?
 echo done.
 if [ $verbose -gt 0 -o $rc -ne 0 ]; then
