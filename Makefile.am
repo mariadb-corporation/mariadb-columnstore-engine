@@ -17,7 +17,7 @@
 
 # $Id$
 
-ACLOCAL_AMFLAGS = -I ./m4
+ACLOCAL_AMFLAGS = -I m4
 # FIXME:
 # this sets the local linker path (-rpath) so that the ColumnStore
 # libraries and binaries know where to look for the necessary

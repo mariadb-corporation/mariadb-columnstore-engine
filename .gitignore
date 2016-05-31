@@ -1,5 +1,6 @@
 .deps/
 *.d.*
+m4/
 config.log
 versionnumber.h
 autom4te.cache/
@@ -12,3 +13,11 @@ config.h.in
 config.status
 configure
 libtool
+compile
+config.guess
+config.sub
+depcomp
+install-sh
+ltmain.sh
+missing
+stamp-h1

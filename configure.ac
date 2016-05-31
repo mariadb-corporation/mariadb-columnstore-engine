@@ -4,6 +4,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT(columnstore, 1.0.0, support@mariadb.com)
+AC_CONFIG_MACRO_DIR([m4])
 ### we don't want the deault CXXFLAGS set by AC_INIT, but we do want to allow the user to set them
 SAVE_CXXFLAGS=
 if test -n "$CXXFLAGS"; then
