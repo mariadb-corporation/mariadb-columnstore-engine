@@ -32,7 +32,7 @@ table=$2
 # Validate that the table exists.
 #
 sql="select count(*) from systable where \`schema\`='$db' and tablename='$table';"
-count=`$MYSQLCMD columnstoresys --skip-column-names -e "$sql;"`
+count=`$MYSQLCMD calpontsys --skip-column-names -e "$sql;"`
 if [ $count -le 0 ]; then
 	echo ""
 	echo "$db.$table does not exist in Columnstore."
@@ -44,9 +44,9 @@ fi
 # Grab the objectid and column width for a column in the table.
 #
 sql="select objectid from syscolumn where \`schema\`='$db' and tablename='$table' limit 1;" 
-objectid=`$MYSQLCMD columnstoresys --skip-column-names -e "$sql"`
+objectid=`$MYSQLCMD calpontsys --skip-column-names -e "$sql"`
 sql="select columnlength from syscolumn where objectid=$objectid;"
-colWidth=`$MYSQLCMD columnstoresys --skip-column-names -e "$sql"`
+colWidth=`$MYSQLCMD calpontsys --skip-column-names -e "$sql"`
 
 #
 # Use editem to count the extents.
