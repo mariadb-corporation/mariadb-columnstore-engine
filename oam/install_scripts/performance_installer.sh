@@ -19,7 +19,7 @@ set INSTALLTYPE [lindex $argv 4]
 set PKGTYPE [lindex $argv 5]
 set NODEPS [lindex $argv 6]
 set DEBUG [lindex $argv 7]
-set INSTALLDIR "/usr/local/MariaDB/Columnstore"
+set INSTALLDIR "/usr/local/mariadb/columnstore"
 set IDIR [lindex $argv 8]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR

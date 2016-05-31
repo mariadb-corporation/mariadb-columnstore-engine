@@ -2320,7 +2320,7 @@ namespace oam
 			moduleName = boost::get<0>(st);
 		}
 		catch (...) {
-			//system("touch /var/log/Columnstore/test2");
+			//system("touch /var/log/mariadb/columnstore/test2");
 		}
 	
 		for ( int i = 0 ; i < 5 ; i++)
@@ -2342,7 +2342,7 @@ namespace oam
 			}
 			catch(...)
 			{
-				//system("touch /var/log/Columnstore/test3");
+				//system("touch /var/log/mariadb/columnstore/test3");
 			}
 
 			sleep(1);
@@ -2724,7 +2724,7 @@ namespace oam
 
 	if (localModule.empty() ) {
 		// not found
-		//system("touch /var/log/Columnstore/test8");	
+		//system("touch /var/log/mariadb/columnstore/test8");	
 		exceptionControl("getModuleInfo", API_FAILURE);
 	}
 
@@ -2785,7 +2785,7 @@ namespace oam
 			moduleName = boost::get<0>(st);
 		}
 		catch (...) {
-			//system("touch /var/log/Columnstore/test4");
+			//system("touch /var/log/mariadb/columnstore/test4");
        		exceptionControl("getMyProcessStatus", API_FAILURE);
 		}
 
@@ -2826,7 +2826,7 @@ namespace oam
 							{
 								// shutdown connection
 								processor.shutdown();
-								//system("touch /var/log/Columnstore/test5");
+								//system("touch /var/log/mariadb/columnstore/test5");
 								exceptionControl("getMyProcessStatus", API_FAILURE);
 							}
 			
@@ -2838,14 +2838,14 @@ namespace oam
 					}
 					catch(...)
 					{
-						//system("touch /var/log/Columnstore/test6");
+						//system("touch /var/log/mariadb/columnstore/test6");
 						processor.shutdown();
 						exceptionControl("getMyProcessStatus", API_INVALID_PARAMETER);
 					}
 				}
 				catch(...)
 				{
-					//system("touch /var/log/Columnstore/test7");
+					//system("touch /var/log/mariadb/columnstore/test7");
 					processor.shutdown();
 					exceptionControl("getMyProcessStatus", API_INVALID_PARAMETER);
 				}
@@ -2857,7 +2857,7 @@ namespace oam
 		catch(...)
 		{}
 	}
-	//system("touch /var/log/Columnstore/test9");
+	//system("touch /var/log/mariadb/columnstore/test9");
         exceptionControl("getMyProcessStatus", API_FAILURE);
 
         return boost::make_tuple(-1, "", -1);
@@ -3390,7 +3390,7 @@ namespace oam
 		//make 1 log file made up of archive and current *.log
 		(void)system("touch /tmp/logs");
 	
-		string logdir("/var/log/Columnstore");
+		string logdir("/var/log/mariadb/columnstore");
 		if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 		string cmd = "ls " + path + logdir + "/archive | grep '" + logFileName + "' > /tmp/logfiles";
 		(void)system(cmd.c_str());

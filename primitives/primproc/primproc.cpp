@@ -252,7 +252,7 @@ void* waitForSIGUSR1(void* p)
 #ifdef _MSC_VER
 			ofstream out("C:/Calpont/log/trace/pplru.dat");
 #else
-			ofstream out("/var/log/Columnstore/trace/pplru.dat");
+			ofstream out("/var/log/mariadb/columnstore/trace/pplru.dat");
 #endif
 			for (int i = 0; i < cacheCount; i++)
 			{
@@ -602,7 +602,7 @@ int main(int argc, char* argv[])
 #ifdef _MSC_VER
 		ofstream* qszLog = new ofstream("C:/Calpont/log/trace/ppqsz.dat");
 #else
-		ofstream* qszLog = new ofstream("/var/log/Columnstore/trace/ppqsz.dat");
+		ofstream* qszLog = new ofstream("/var/log/mariadb/columnstore/trace/ppqsz.dat");
 #endif
 		if (!qszLog->good())
 		{

@@ -23,12 +23,12 @@ echo " "
 
 echo "-- Today's Alarms --"
 echo " "
-cat /var/log/MariaDB/Columnstore/alarm.log 2>/dev/null
+cat /var/log/mariadb/columnstore/alarm.log 2>/dev/null
 
-if test -f /var/log/MariaDB/Columnstore/archive/alarm.log-$DATE ; then
+if test -f /var/log/mariadb/columnstore/archive/alarm.log-$DATE ; then
 	echo "-- Archived Alarms --"
 	echo " "
-	cat /var/log/MariaDB/Columnstore/archive/alarm.log-$DATE 2>/dev/null
+	cat /var/log/mariadb/columnstore/archive/alarm.log-$DATE 2>/dev/null
 fi
 
 } > /tmp/logReport.log

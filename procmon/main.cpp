@@ -424,7 +424,7 @@ int main(int argc, char **argv)
 		if ( !gOAMParentModuleFlag ) {
 			runStandby = true;
 			// delete any old active alarm log file
-			unlink ("/var/log/Columnstore/activeAlarms");
+			unlink ("/var/log/mariadb/columnstore/activeAlarms");
 		}
 
 		//launch Status table control thread on 'pm' modules

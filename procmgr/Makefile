@@ -24,7 +24,7 @@ CPPFLAGS=-I$(EXPORT_ROOT)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 
 # Linker flags
-LDFLAGS+=-L../oamcpp -L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS) -lcacheutils -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
+LDFLAGS+=-L../oamcpp -L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS) -lcacheutils -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib
 
 .PHONY: install clean test docs FORCE coverage leakcheck
 

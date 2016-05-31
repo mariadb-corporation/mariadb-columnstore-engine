@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 	if ( product == "columnstore" ) {
 		company = "MariaDB-Columnstore";
 		calpontPackagename = "mariadb-columnstore";
-		installLocation = "/MariaDB/Columnstore";
+		installLocation = "/mariadb/columnstore";
 		adminCommand = "mcsadmin";
 	}
 	else if ( product != "infinidb" )

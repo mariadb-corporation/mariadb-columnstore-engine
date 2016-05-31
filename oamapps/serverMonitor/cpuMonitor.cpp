@@ -39,7 +39,7 @@ pthread_mutex_t CPU_LOCK;
  * constants define
  */ 
 
-const std::string FE_MOUNT_DIR = "/var/log/Columnstore/";	// FE mount dir
+const std::string FE_MOUNT_DIR = "/var/log/mariadb/columnstore/";	// FE mount dir
 const int MONITOR_FREQ = 5;					// monitor frequency in sec
 const int LOG_FREQ = 900;					// log frequency in sec
 const int RESOURCE_DEBUG = false;

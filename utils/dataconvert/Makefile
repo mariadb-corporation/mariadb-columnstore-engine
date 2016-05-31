@@ -13,7 +13,7 @@ CPPFLAGS=-I. -I$(EXPORT_ROOT)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall -fpic #-fno-strict-aliasing
 
 CLIBS=-L$(CALPONT_LIBRARY_PATH) $(IDB_WRITE_LIBS) $(IDB_COMMON_LIBS) -lcppunit -lthreadpool -lwriteengine \
-	-lcacheutils $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
+	-lcacheutils $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib
 TLIBS = -L. -ldataconvert $(CLIBS)
 GLIBS=$(CLIBS)
 

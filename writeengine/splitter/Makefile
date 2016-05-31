@@ -29,7 +29,7 @@ CPPFLAGS=-I$(EXPORT_ROOT)/include -I/usr/include/libxml2
 CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 
 # Linker flags
-LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS) -lthreadpool $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib -lbatchloader
+LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS) -lthreadpool $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib -lbatchloader
 
 .PHONY: install clean docs test coverage leakcheck 
 TLIBS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS) 

@@ -88,9 +88,9 @@ if [ "$1" = "deassignElasticIP" ]; then
 fi
 
 
-test -f /usr/local/MariaDB/Columnstore/post/functions && . /usr/local/MariaDB/Columnstore/post/functions
+test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
 
-ec2=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_HOME`
+ec2=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_HOME`
 
 if [ $ec2 == "unassigned" ]; then
 	if [ "$1" = "getPrivateIP" ]; then
@@ -102,21 +102,21 @@ if [ $ec2 == "unassigned" ]; then
 	fi
 fi
 
-java=`$prefix/MariaDB/Columnstore/bin/getConfig Installation JAVA_HOME`
-path=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_PATH`
+java=`$prefix/mariadb/columnstore/bin/getConfig Installation JAVA_HOME`
+path=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_PATH`
 
 export PATH=$path
 export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
 # get Keys and region
-AmazonAccessKeyFile=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonAccessKey`
+AmazonAccessKeyFile=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonAccessKey`
 if [ $AmazonAccessKeyFile == "unassigned" ]; then
 	echo "FAILED: missing Config Setting AmazonAccessKey : $AmazonAccessKeyfile"
 	exit 1
 fi
 
-AmazonSecretKeyFile=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonSecretKey`
+AmazonSecretKeyFile=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonSecretKey`
 if [ $AmazonSecretKeyFile == "unassigned" ]; then
 	echo "FAILED: missing Config Setting AmazonSecretKeyFile : $AmazonSecretKeyFile"
 	exit 1
@@ -125,8 +125,8 @@ fi
 AmazonAccessKey=`cat $AmazonAccessKeyFile`
 AmazonSecretKey=`cat $AmazonSecretKeyFile`
 
-Region=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonRegion`
-subnet=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonSubNetID`
+Region=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonRegion`
+subnet=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonSubNetID`
 
 if test ! -f $AmazonAccessKeyfile ; then
 	echo "FAILED: missing AmazonAccessKeyfile : $AmazonAccessKeyfile"
@@ -193,7 +193,7 @@ getInstancePrivate() {
 
 getZone() {
 	#get from Calpont.xml if it's there, if not, get from instance then store
-	zone=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonZone`
+	zone=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonZone`
 
 	if [ "$zone" = "unassigned" ] || [ "$zone" = "" ]; then
 		#get local Instance ID
@@ -213,7 +213,7 @@ getZone() {
 			fi
 			zone=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $11}'`
 		fi
-		$prefix/MariaDB/Columnstore/bin/setConfig Installation AmazonZone $zone
+		$prefix/mariadb/columnstore/bin/setConfig Installation AmazonZone $zone
 	fi
 
 	echo $zone

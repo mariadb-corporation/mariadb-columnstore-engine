@@ -67,7 +67,7 @@ BlockRequestProcessor::BlockRequestProcessor(uint32_t numBlcks,
 #ifdef _MSC_VER
 		brpLogFileName << "C:/Calpont/log/trace/brp." << tid;
 #else
-		brpLogFileName << "/var/log/Columnstore/trace/brp." << tid;
+		brpLogFileName << "/var/log/mariadb/columnstore/trace/brp." << tid;
 #endif
 		fLogFile.open(brpLogFileName.str().c_str(), ios_base::app | ios_base::ate);
 	}

@@ -69,289 +69,289 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 %files platform
 %defattr(-, root, root)
 
-/usr/local/MariaDB/Columnstore/bin/DDLProc
-/usr/local/MariaDB/Columnstore/bin/ExeMgr
-/usr/local/MariaDB/Columnstore/bin/ProcMgr
-/usr/local/MariaDB/Columnstore/bin/ProcMon
-/usr/local/MariaDB/Columnstore/bin/DMLProc
-/usr/local/MariaDB/Columnstore/bin/WriteEngineServer
-/usr/local/MariaDB/Columnstore/bin/cpimport
-/usr/local/MariaDB/Columnstore/bin/post-install
-/usr/local/MariaDB/Columnstore/bin/post-mysql-install
-/usr/local/MariaDB/Columnstore/bin/post-mysqld-install
-/usr/local/MariaDB/Columnstore/bin/pre-uninstall
-/usr/local/MariaDB/Columnstore/bin/PrimProc
-/usr/local/MariaDB/Columnstore/bin/DecomSvr
-/usr/local/MariaDB/Columnstore/bin/upgrade-columnstore.sh
-/usr/local/MariaDB/Columnstore/bin/run.sh
-/usr/local/MariaDB/Columnstore/bin/columnstore
-/usr/local/MariaDB/Columnstore/bin/columnstoreSyslog 
-/usr/local/MariaDB/Columnstore/bin/columnstoreSyslog7
-/usr/local/MariaDB/Columnstore/bin/columnstoreSyslog-ng 
-/usr/local/MariaDB/Columnstore/bin/syslogSetup.sh
-/usr/local/MariaDB/Columnstore/bin/cplogger
-/usr/local/MariaDB/Columnstore/bin/columnstore.def
-/usr/local/MariaDB/Columnstore/bin/dbbuilder
-/usr/local/MariaDB/Columnstore/bin/cpimport.bin
-/usr/local/MariaDB/Columnstore/bin/load_brm
-/usr/local/MariaDB/Columnstore/bin/save_brm
-/usr/local/MariaDB/Columnstore/bin/dbrmctl
-/usr/local/MariaDB/Columnstore/bin/controllernode
-/usr/local/MariaDB/Columnstore/bin/reset_locks
-/usr/local/MariaDB/Columnstore/bin/workernode
-/usr/local/MariaDB/Columnstore/bin/colxml
-/usr/local/MariaDB/Columnstore/bin/clearShm
-/usr/local/MariaDB/Columnstore/bin/viewtablelock
-/usr/local/MariaDB/Columnstore/bin/cleartablelock
-/usr/local/MariaDB/Columnstore/bin/mcsadmin
-/usr/local/MariaDB/Columnstore/bin/trapHandler
-/usr/local/MariaDB/Columnstore/bin/remote_command.sh
-/usr/local/MariaDB/Columnstore/bin/postConfigure
-/usr/local/MariaDB/Columnstore/bin/columnstoreLogRotate
-/usr/local/MariaDB/Columnstore/bin/transactionLog
-/usr/local/MariaDB/Columnstore/bin/columnstoreDBWrite
-/usr/local/MariaDB/Columnstore/bin/transactionLogArchiver.sh
-/usr/local/MariaDB/Columnstore/bin/system_installer.sh
-/usr/local/MariaDB/Columnstore/bin/installer
-/usr/local/MariaDB/Columnstore/bin/module_installer.sh
-/usr/local/MariaDB/Columnstore/bin/patchInstaller
-/usr/local/MariaDB/Columnstore/bin/user_installer.sh
-/usr/local/MariaDB/Columnstore/bin/performance_installer.sh
-/usr/local/MariaDB/Columnstore/bin/startupTests.sh
-/usr/local/MariaDB/Columnstore/bin/os_check.sh
-/usr/local/MariaDB/Columnstore/bin/sendtrap
-/usr/local/MariaDB/Columnstore/bin/remote_scp_put.sh
-/usr/local/MariaDB/Columnstore/bin/remotessh.exp
-/usr/local/MariaDB/Columnstore/bin/ServerMonitor
-/usr/local/MariaDB/Columnstore/bin/master-rep-columnstore.sh 
-/usr/local/MariaDB/Columnstore/bin/slave-rep-columnstore.sh
-/usr/local/MariaDB/Columnstore/bin/rsync.sh
-/usr/local/MariaDB/Columnstore/bin/columnstoreSupport
-/usr/local/MariaDB/Columnstore/bin/hardwareReport.sh
-/usr/local/MariaDB/Columnstore/bin/softwareReport.sh
-/usr/local/MariaDB/Columnstore/bin/configReport.sh
-/usr/local/MariaDB/Columnstore/bin/logReport.sh
-/usr/local/MariaDB/Columnstore/bin/bulklogReport.sh
-/usr/local/MariaDB/Columnstore/bin/resourceReport.sh
-/usr/local/MariaDB/Columnstore/bin/hadoopReport.sh
-/usr/local/MariaDB/Columnstore/bin/alarmReport.sh
-/usr/local/MariaDB/Columnstore/bin/amazonInstaller
-/usr/local/MariaDB/Columnstore/bin/remote_command_verify.sh
-/usr/local/MariaDB/Columnstore/bin/disable-rep-columnstore.sh
+/usr/local/mariadb/columnstore/bin/DDLProc
+/usr/local/mariadb/columnstore/bin/ExeMgr
+/usr/local/mariadb/columnstore/bin/ProcMgr
+/usr/local/mariadb/columnstore/bin/ProcMon
+/usr/local/mariadb/columnstore/bin/DMLProc
+/usr/local/mariadb/columnstore/bin/WriteEngineServer
+/usr/local/mariadb/columnstore/bin/cpimport
+/usr/local/mariadb/columnstore/bin/post-install
+/usr/local/mariadb/columnstore/bin/post-mysql-install
+/usr/local/mariadb/columnstore/bin/post-mysqld-install
+/usr/local/mariadb/columnstore/bin/pre-uninstall
+/usr/local/mariadb/columnstore/bin/PrimProc
+/usr/local/mariadb/columnstore/bin/DecomSvr
+/usr/local/mariadb/columnstore/bin/upgrade-columnstore.sh
+/usr/local/mariadb/columnstore/bin/run.sh
+/usr/local/mariadb/columnstore/bin/columnstore
+/usr/local/mariadb/columnstore/bin/columnstoreSyslog 
+/usr/local/mariadb/columnstore/bin/columnstoreSyslog7
+/usr/local/mariadb/columnstore/bin/columnstoreSyslog-ng 
+/usr/local/mariadb/columnstore/bin/syslogSetup.sh
+/usr/local/mariadb/columnstore/bin/cplogger
+/usr/local/mariadb/columnstore/bin/columnstore.def
+/usr/local/mariadb/columnstore/bin/dbbuilder
+/usr/local/mariadb/columnstore/bin/cpimport.bin
+/usr/local/mariadb/columnstore/bin/load_brm
+/usr/local/mariadb/columnstore/bin/save_brm
+/usr/local/mariadb/columnstore/bin/dbrmctl
+/usr/local/mariadb/columnstore/bin/controllernode
+/usr/local/mariadb/columnstore/bin/reset_locks
+/usr/local/mariadb/columnstore/bin/workernode
+/usr/local/mariadb/columnstore/bin/colxml
+/usr/local/mariadb/columnstore/bin/clearShm
+/usr/local/mariadb/columnstore/bin/viewtablelock
+/usr/local/mariadb/columnstore/bin/cleartablelock
+/usr/local/mariadb/columnstore/bin/mcsadmin
+/usr/local/mariadb/columnstore/bin/trapHandler
+/usr/local/mariadb/columnstore/bin/remote_command.sh
+/usr/local/mariadb/columnstore/bin/postConfigure
+/usr/local/mariadb/columnstore/bin/columnstoreLogRotate
+/usr/local/mariadb/columnstore/bin/transactionLog
+/usr/local/mariadb/columnstore/bin/columnstoreDBWrite
+/usr/local/mariadb/columnstore/bin/transactionLogArchiver.sh
+/usr/local/mariadb/columnstore/bin/system_installer.sh
+/usr/local/mariadb/columnstore/bin/installer
+/usr/local/mariadb/columnstore/bin/module_installer.sh
+/usr/local/mariadb/columnstore/bin/patchInstaller
+/usr/local/mariadb/columnstore/bin/user_installer.sh
+/usr/local/mariadb/columnstore/bin/performance_installer.sh
+/usr/local/mariadb/columnstore/bin/startupTests.sh
+/usr/local/mariadb/columnstore/bin/os_check.sh
+/usr/local/mariadb/columnstore/bin/sendtrap
+/usr/local/mariadb/columnstore/bin/remote_scp_put.sh
+/usr/local/mariadb/columnstore/bin/remotessh.exp
+/usr/local/mariadb/columnstore/bin/ServerMonitor
+/usr/local/mariadb/columnstore/bin/master-rep-columnstore.sh 
+/usr/local/mariadb/columnstore/bin/slave-rep-columnstore.sh
+/usr/local/mariadb/columnstore/bin/rsync.sh
+/usr/local/mariadb/columnstore/bin/columnstoreSupport
+/usr/local/mariadb/columnstore/bin/hardwareReport.sh
+/usr/local/mariadb/columnstore/bin/softwareReport.sh
+/usr/local/mariadb/columnstore/bin/configReport.sh
+/usr/local/mariadb/columnstore/bin/logReport.sh
+/usr/local/mariadb/columnstore/bin/bulklogReport.sh
+/usr/local/mariadb/columnstore/bin/resourceReport.sh
+/usr/local/mariadb/columnstore/bin/hadoopReport.sh
+/usr/local/mariadb/columnstore/bin/alarmReport.sh
+/usr/local/mariadb/columnstore/bin/amazonInstaller
+/usr/local/mariadb/columnstore/bin/remote_command_verify.sh
+/usr/local/mariadb/columnstore/bin/disable-rep-columnstore.sh
 
 
 #
-%config /usr/local/MariaDB/Columnstore/etc/Calpont.xml
-%config /usr/local/MariaDB/Columnstore/etc/ConsoleCmds.xml
-%config /usr/local/MariaDB/Columnstore/etc/ProcessConfig.xml
-%config /usr/local/MariaDB/Columnstore/etc/snmpd.conf
-%config /usr/local/MariaDB/Columnstore/etc/snmptrapd.conf
-%config /usr/local/MariaDB/Columnstore/etc/Calpont.xml.singleserver
-%config /usr/local/MariaDB/Columnstore/etc/ProcessConfig.xml.singleserver
-%config /usr/local/MariaDB/Columnstore/etc/snmpd.conf.singleserver
-%config /usr/local/MariaDB/Columnstore/etc/snmptrapd.conf.singleserver
+%config /usr/local/mariadb/columnstore/etc/Calpont.xml
+%config /usr/local/mariadb/columnstore/etc/ConsoleCmds.xml
+%config /usr/local/mariadb/columnstore/etc/ProcessConfig.xml
+%config /usr/local/mariadb/columnstore/etc/snmpd.conf
+%config /usr/local/mariadb/columnstore/etc/snmptrapd.conf
+%config /usr/local/mariadb/columnstore/etc/Calpont.xml.singleserver
+%config /usr/local/mariadb/columnstore/etc/ProcessConfig.xml.singleserver
+%config /usr/local/mariadb/columnstore/etc/snmpd.conf.singleserver
+%config /usr/local/mariadb/columnstore/etc/snmptrapd.conf.singleserver
 #
-/usr/local/MariaDB/Columnstore/etc/MessageFile.txt
-/usr/local/MariaDB/Columnstore/etc/ErrorMessage.txt
+/usr/local/mariadb/columnstore/etc/MessageFile.txt
+/usr/local/mariadb/columnstore/etc/ErrorMessage.txt
 #
-%attr(0666, root, root) /usr/local/MariaDB/Columnstore/local/module
+%attr(0666, root, root) /usr/local/mariadb/columnstore/local/module
 #
-/usr/local/MariaDB/Columnstore/releasenum
+/usr/local/mariadb/columnstore/releasenum
 
 # Tools...
-/usr/local/MariaDB/Columnstore/bin/rollback
-/usr/local/MariaDB/Columnstore/bin/editem
-/usr/local/MariaDB/Columnstore/bin/getConfig
-/usr/local/MariaDB/Columnstore/bin/setConfig
-/usr/local/MariaDB/Columnstore/bin/setenv-hdfs-12
-/usr/local/MariaDB/Columnstore/bin/setenv-hdfs-20
-/usr/local/MariaDB/Columnstore/bin/hdfsCheck
-/usr/local/MariaDB/Columnstore/bin/configxml.sh
-/usr/local/MariaDB/Columnstore/bin/remote_scp_get.sh
-/usr/local/MariaDB/Columnstore/bin/columnstoreAlias
-/usr/local/MariaDB/Columnstore/bin/autoConfigure
-/usr/local/MariaDB/Columnstore/bin/ddlcleanup
-/usr/local/MariaDB/Columnstore/bin/idbmeminfo
-/usr/local/MariaDB/Columnstore/bin/IDBInstanceCmds.sh
-/usr/local/MariaDB/Columnstore/bin/IDBVolumeCmds.sh
-/usr/local/MariaDB/Columnstore/bin/binary_installer.sh 
-/usr/local/MariaDB/Columnstore/bin/myCnf-include-args.text 
-/usr/local/MariaDB/Columnstore/bin/myCnf-exclude-args.text
-/usr/local/MariaDB/Columnstore/bin/mycnfUpgrade
-/usr/local/MariaDB/Columnstore/bin/getMySQLpw
-/usr/local/MariaDB/Columnstore/bin/columnstore.conf
+/usr/local/mariadb/columnstore/bin/rollback
+/usr/local/mariadb/columnstore/bin/editem
+/usr/local/mariadb/columnstore/bin/getConfig
+/usr/local/mariadb/columnstore/bin/setConfig
+/usr/local/mariadb/columnstore/bin/setenv-hdfs-12
+/usr/local/mariadb/columnstore/bin/setenv-hdfs-20
+/usr/local/mariadb/columnstore/bin/hdfsCheck
+/usr/local/mariadb/columnstore/bin/configxml.sh
+/usr/local/mariadb/columnstore/bin/remote_scp_get.sh
+/usr/local/mariadb/columnstore/bin/columnstoreAlias
+/usr/local/mariadb/columnstore/bin/autoConfigure
+/usr/local/mariadb/columnstore/bin/ddlcleanup
+/usr/local/mariadb/columnstore/bin/idbmeminfo
+/usr/local/mariadb/columnstore/bin/IDBInstanceCmds.sh
+/usr/local/mariadb/columnstore/bin/IDBVolumeCmds.sh
+/usr/local/mariadb/columnstore/bin/binary_installer.sh 
+/usr/local/mariadb/columnstore/bin/myCnf-include-args.text 
+/usr/local/mariadb/columnstore/bin/myCnf-exclude-args.text
+/usr/local/mariadb/columnstore/bin/mycnfUpgrade
+/usr/local/mariadb/columnstore/bin/getMySQLpw
+/usr/local/mariadb/columnstore/bin/columnstore.conf
 
-/usr/local/MariaDB/Columnstore/sbin/snmpd
-/usr/local/MariaDB/Columnstore/sbin/snmptrapd
-%config %attr(0666, root, root) /usr/local/MariaDB/Columnstore/etc/AlarmConfig.xml
+/usr/local/mariadb/columnstore/sbin/snmpd
+/usr/local/mariadb/columnstore/sbin/snmptrapd
+%config %attr(0666, root, root) /usr/local/mariadb/columnstore/etc/AlarmConfig.xml
 #
-%config /usr/local/MariaDB/Columnstore/local/snmpdx.conf
-%config /usr/local/MariaDB/Columnstore/local/snmpdx.conf.singleserver
+%config /usr/local/mariadb/columnstore/local/snmpdx.conf
+%config /usr/local/mariadb/columnstore/local/snmpdx.conf.singleserver
 #
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/AGENTX-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/CALPONT-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/DISMAN-EVENT-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/DISMAN-SCHEDULE-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/DISMAN-SCRIPT-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/EtherLike-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/HCNUM-TC.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/HOST-RESOURCES-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/HOST-RESOURCES-TYPES.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IANAifType-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IANA-LANGUAGE-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IANA-RTPROTO-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IF-INVERTED-STACK-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IF-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/INET-ADDRESS-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IP-FORWARD-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IP-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IPV6-ICMP-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IPV6-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IPV6-TCP-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IPV6-TC.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/IPV6-UDP-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/NET-SNMP-AGENT-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/NET-SNMP-EXAMPLES-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/NET-SNMP-EXTEND-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/NET-SNMP-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/NET-SNMP-TC.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/NOTIFICATION-LOG-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/RFC1155-SMI.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/RFC1213-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/RFC-1215.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/RMON-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SMUX-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-COMMUNITY-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-FRAMEWORK-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-MPD-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-NOTIFICATION-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-PROXY-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-TARGET-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-USER-BASED-SM-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-USM-AES-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-USM-DH-OBJECTS-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMPv2-CONF.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMPv2-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMPv2-SMI.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMPv2-TC.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMPv2-TM.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/SNMP-VIEW-BASED-ACM-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/TCP-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/TRANSPORT-ADDRESS-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/UCD-DEMO-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/UCD-DISKIO-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/UCD-DLMOD-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/UCD-IPFWACC-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/UCD-SNMP-MIB.txt
-/usr/local/MariaDB/Columnstore/share/snmp/mibs/UDP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/AGENTX-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/CALPONT-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/DISMAN-EVENT-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/DISMAN-SCHEDULE-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/DISMAN-SCRIPT-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/EtherLike-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/HCNUM-TC.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/HOST-RESOURCES-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/HOST-RESOURCES-TYPES.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IANAifType-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IANA-LANGUAGE-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IANA-RTPROTO-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IF-INVERTED-STACK-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IF-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/INET-ADDRESS-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IP-FORWARD-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-ICMP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-TCP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-TC.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-UDP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-AGENT-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-EXAMPLES-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-EXTEND-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-TC.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/NOTIFICATION-LOG-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/RFC1155-SMI.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/RFC1213-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/RFC-1215.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/RMON-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SMUX-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-COMMUNITY-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-FRAMEWORK-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-MPD-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-NOTIFICATION-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-PROXY-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-TARGET-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-USER-BASED-SM-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-USM-AES-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-USM-DH-OBJECTS-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-CONF.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-SMI.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-TC.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-TM.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-VIEW-BASED-ACM-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/TCP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/TRANSPORT-ADDRESS-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-DEMO-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-DISKIO-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-DLMOD-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-IPFWACC-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-SNMP-MIB.txt
+/usr/local/mariadb/columnstore/share/snmp/mibs/UDP-MIB.txt
 #
-/usr/local/MariaDB/Columnstore/post/functions
-/usr/local/MariaDB/Columnstore/post/test-001.sh
-/usr/local/MariaDB/Columnstore/post/test-002.sh
-/usr/local/MariaDB/Columnstore/post/test-003.sh
-/usr/local/MariaDB/Columnstore/post/test-004.sh
+/usr/local/mariadb/columnstore/post/functions
+/usr/local/mariadb/columnstore/post/test-001.sh
+/usr/local/mariadb/columnstore/post/test-002.sh
+/usr/local/mariadb/columnstore/post/test-003.sh
+/usr/local/mariadb/columnstore/post/test-004.sh
 
 %files enterprise
 %defattr(-, root, root)
-/usr/local/MariaDB/Columnstore/bin/displayJobGraph.sh
-/usr/local/MariaDB/Columnstore/bin/dbhealth.sh 
-/usr/local/MariaDB/Columnstore/bin/dbhealth.sql
+/usr/local/mariadb/columnstore/bin/displayJobGraph.sh
+/usr/local/mariadb/columnstore/bin/dbhealth.sh 
+/usr/local/mariadb/columnstore/bin/dbhealth.sql
 
 # Tools...
-/usr/local/MariaDB/Columnstore/bin/dumpcol
-/usr/local/MariaDB/Columnstore/bin/oid2file
-/usr/local/MariaDB/Columnstore/bin/evalcol
-/usr/local/MariaDB/Columnstore/bin/SesMgr
-/usr/local/MariaDB/Columnstore/bin/dumpVss
-/usr/local/MariaDB/Columnstore/bin/editTxn
-/usr/local/MariaDB/Columnstore/bin/dbprof.pl
-/usr/local/MariaDB/Columnstore/bin/dumpobm
-/usr/local/MariaDB/Columnstore/bin/file2oid.pl
-/usr/local/MariaDB/Columnstore/bin/print_journal
-/usr/local/MariaDB/Columnstore/bin/healthcheck
-/usr/local/MariaDB/Columnstore/bin/glusterctl
-/usr/local/MariaDB/Columnstore/bin/glusteradd
-/usr/local/MariaDB/Columnstore/bin/glusterconf
-/usr/local/MariaDB/Columnstore/bin/redistributeDB
-/usr/local/MariaDB/Columnstore/bin/databaseSizeReport
-/usr/local/MariaDB/Columnstore/bin/gdb
+/usr/local/mariadb/columnstore/bin/dumpcol
+/usr/local/mariadb/columnstore/bin/oid2file
+/usr/local/mariadb/columnstore/bin/evalcol
+/usr/local/mariadb/columnstore/bin/SesMgr
+/usr/local/mariadb/columnstore/bin/dumpVss
+/usr/local/mariadb/columnstore/bin/editTxn
+/usr/local/mariadb/columnstore/bin/dbprof.pl
+/usr/local/mariadb/columnstore/bin/dumpobm
+/usr/local/mariadb/columnstore/bin/file2oid.pl
+/usr/local/mariadb/columnstore/bin/print_journal
+/usr/local/mariadb/columnstore/bin/healthcheck
+/usr/local/mariadb/columnstore/bin/glusterctl
+/usr/local/mariadb/columnstore/bin/glusteradd
+/usr/local/mariadb/columnstore/bin/glusterconf
+/usr/local/mariadb/columnstore/bin/redistributeDB
+/usr/local/mariadb/columnstore/bin/databaseSizeReport
+/usr/local/mariadb/columnstore/bin/gdb
 #
-/usr/local/MariaDB/Columnstore/tools/copy2here.sh
-/usr/local/MariaDB/Columnstore/tools/getlogs.sh
-/usr/local/MariaDB/Columnstore/tools/getmodules.sh
-/usr/local/MariaDB/Columnstore/tools/getps.sh
-/usr/local/MariaDB/Columnstore/tools/getsar.sh
-/usr/local/MariaDB/Columnstore/tools/getuserinput.sh
-/usr/local/MariaDB/Columnstore/tools/prat
-/usr/local/MariaDB/Columnstore/tools/prat.sh
-/usr/local/MariaDB/Columnstore/tools/ps
-/usr/local/MariaDB/Columnstore/tools/pscollect
-/usr/local/MariaDB/Columnstore/tools/README
-/usr/local/MariaDB/Columnstore/tools/tarfiles.sh
+/usr/local/mariadb/columnstore/tools/copy2here.sh
+/usr/local/mariadb/columnstore/tools/getlogs.sh
+/usr/local/mariadb/columnstore/tools/getmodules.sh
+/usr/local/mariadb/columnstore/tools/getps.sh
+/usr/local/mariadb/columnstore/tools/getsar.sh
+/usr/local/mariadb/columnstore/tools/getuserinput.sh
+/usr/local/mariadb/columnstore/tools/prat
+/usr/local/mariadb/columnstore/tools/prat.sh
+/usr/local/mariadb/columnstore/tools/ps
+/usr/local/mariadb/columnstore/tools/pscollect
+/usr/local/mariadb/columnstore/tools/README
+/usr/local/mariadb/columnstore/tools/tarfiles.sh
 #
 %files libs
 %defattr(-, root, root)
 
-/usr/local/MariaDB/Columnstore/lib/libconfigcpp.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libddlpackageproc.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libddlpackage.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libdmlpackageproc.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libdmlpackage.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libexecplan.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libfuncexp.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libudfsdk.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libjoblist.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libjoiner.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libloggingcpp.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libmessageqcpp.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libnetsnmpagent.so.5.2.1
-/usr/local/MariaDB/Columnstore/lib/libnetsnmphelpers.so.5.2.1
-/usr/local/MariaDB/Columnstore/lib/libnetsnmpmibs.so.5.2.1
-/usr/local/MariaDB/Columnstore/lib/libnetsnmp.so.5.2.1
-/usr/local/MariaDB/Columnstore/lib/libnetsnmptrapd.so.5.2.1
-/usr/local/MariaDB/Columnstore/lib/liboamcpp.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libsnmpmanager.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libthreadpool.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libwindowfunction.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libwriteengine.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libwriteengineclient.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libbrm.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/librwlock.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libdataconvert.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/librowgroup.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libcacheutils.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libcommon.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libboost_idb.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libcompress.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libddlcleanuputil.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libbatchloader.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libmysqlcl_idb.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libquerystats.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libwriteengineredistribute.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libjemalloc.so.3.3.0
-/usr/local/MariaDB/Columnstore/lib/libidbdatafile.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/hdfs-20.so
-/usr/local/MariaDB/Columnstore/lib/hdfs-12.so
-/usr/local/MariaDB/Columnstore/lib/libgcc_s.so.1
-/usr/local/MariaDB/Columnstore/lib/libstdc++.so.6.0.14
-/usr/local/MariaDB/Columnstore/lib/libthrift.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libquerytele.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libconfigcpp.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libddlpackageproc.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libddlpackage.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libdmlpackageproc.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libdmlpackage.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libexecplan.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libfuncexp.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libudfsdk.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libjoblist.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libjoiner.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libloggingcpp.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libmessageqcpp.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libnetsnmpagent.so.5.2.1
+/usr/local/mariadb/columnstore/lib/libnetsnmphelpers.so.5.2.1
+/usr/local/mariadb/columnstore/lib/libnetsnmpmibs.so.5.2.1
+/usr/local/mariadb/columnstore/lib/libnetsnmp.so.5.2.1
+/usr/local/mariadb/columnstore/lib/libnetsnmptrapd.so.5.2.1
+/usr/local/mariadb/columnstore/lib/liboamcpp.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libsnmpmanager.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libthreadpool.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libwindowfunction.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libwriteengine.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libwriteengineclient.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libbrm.so.1.0.0
+/usr/local/mariadb/columnstore/lib/librwlock.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libdataconvert.so.1.0.0
+/usr/local/mariadb/columnstore/lib/librowgroup.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libcacheutils.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libcommon.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libboost_idb.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libcompress.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libddlcleanuputil.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libbatchloader.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libquerystats.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libwriteengineredistribute.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libjemalloc.so.3.3.0
+/usr/local/mariadb/columnstore/lib/libidbdatafile.so.1.0.0
+/usr/local/mariadb/columnstore/lib/hdfs-20.so
+/usr/local/mariadb/columnstore/lib/hdfs-12.so
+/usr/local/mariadb/columnstore/lib/libgcc_s.so.1
+/usr/local/mariadb/columnstore/lib/libstdc++.so.6.0.14
+/usr/local/mariadb/columnstore/lib/libthrift.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libquerytele.so.1.0.0
 
 %files storage-engine
-/usr/local/MariaDB/Columnstore/lib/libcalmysql.so.1.0.0
-/usr/local/MariaDB/Columnstore/lib/libudf_mysql.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libcalmysql.so.1.0.0
+/usr/local/mariadb/columnstore/lib/libudf_mysql.so.1.0.0
 
-/usr/local/MariaDB/Columnstore/mysql/mysql-Calpont
-/usr/local/MariaDB/Columnstore/mysql/install_calpont_mysql.sh
-/usr/local/MariaDB/Columnstore/mysql/syscatalog_mysql.sql
-/usr/local/MariaDB/Columnstore/mysql/dumpcat_mysql.sql
-/usr/local/MariaDB/Columnstore/mysql/dumpcat.pl
-/usr/local/MariaDB/Columnstore/mysql/calsetuserpriority.sql
-/usr/local/MariaDB/Columnstore/mysql/calremoveuserpriority.sql
-/usr/local/MariaDB/Columnstore/mysql/calshowprocesslist.sql
+/usr/local/mariadb/columnstore/mysql/mysql-Calpont
+/usr/local/mariadb/columnstore/mysql/install_calpont_mysql.sh
+/usr/local/mariadb/columnstore/mysql/syscatalog_mysql.sql
+/usr/local/mariadb/columnstore/mysql/dumpcat_mysql.sql
+/usr/local/mariadb/columnstore/mysql/dumpcat.pl
+/usr/local/mariadb/columnstore/mysql/calsetuserpriority.sql
+/usr/local/mariadb/columnstore/mysql/calremoveuserpriority.sql
+/usr/local/mariadb/columnstore/mysql/calshowprocesslist.sql
 
-%config /usr/local/MariaDB/Columnstore/mysql/my.cnf
+%config /usr/local/mariadb/columnstore/mysql/my.cnf
 
 #
 # Scriptlets
@@ -369,7 +369,7 @@ fi
 
 prefix=/usr/local
 
-test -x /usr/local/MariaDB/Columnstore/bin/post-install && /usr/local/MariaDB/Columnstore/bin/post-install --prefix=$prefix --rpmmode=$rpmmode
+test -x /usr/local/mariadb/columnstore/bin/post-install && /usr/local/mariadb/columnstore/bin/post-install --prefix=$prefix --rpmmode=$rpmmode
 
 echo "InfinIDB RPM install completed"
 
@@ -421,7 +421,7 @@ else
 fi
 
 if [ $rpmmode = erase ]; then
-	test -x /usr/local/MariaDB/Columnstore/bin/pre-uninstall && /usr/local/MariaDB/Columnstore/bin/pre-uninstall
+	test -x /usr/local/mariadb/columnstore/bin/pre-uninstall && /usr/local/mariadb/columnstore/bin/pre-uninstall
 fi
 
 exit 0

@@ -8,7 +8,7 @@
 #*  Parameter:      None
 #******************************************************************************/
 
-CTOOLS=/usr/local/MariaDB/Columnstore/tools
+CTOOLS=/usr/local/mariadb/columnstore/tools
 
 # Retrieve the names of servers in this Calpont stack
 $CTOOLS/getmodules.sh

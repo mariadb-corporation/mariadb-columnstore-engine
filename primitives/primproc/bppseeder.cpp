@@ -221,7 +221,7 @@ int BPPSeeder::operator()()
 #ifdef _MSC_VER
 			LogFileName << "C:/Calpont/log/trace/pt." << tid;
 #else
-			LogFileName << "/var/log/Columnstore/trace/pt." << tid;
+			LogFileName << "/var/log/mariadb/columnstore/trace/pt." << tid;
 #endif
 			spof.reset(new PTLogs_t(gThdCnt, LogFileName.str().c_str()));
 			gThdCnt++;

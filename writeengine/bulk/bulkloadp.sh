@@ -12,7 +12,7 @@
 #Job ID will determine the names of the two xml files. For example, job id 100 will generate Job_100.xml for columns and Job_101 for index xml file. Job id for index xml file is the entered job id +1
 #if the job id is skipped, the default job ids are 299 and 300 for column and index files
 #There are two xml files will be generated which reside in bulkroot directory under subdirectory job
-#For example, the job directory may look like /usr/local/MariaDB/Columnstore/test/bulk/job 
+#For example, the job directory may look like /usr/local/mariadb/columnstore/test/bulk/job 
 
 # Set up a default search path.
 PROG_NAME=$(basename $0)
@@ -92,10 +92,10 @@ fi
 if [ -n "$CALPONT_CONFIG_FILE" ]; then
   echo "CALPONT_CONFIG_FILE=" $CALPONT_CONFIG_FILE
 elif [ -z "$CALPONT_CONFIG_FILE"]; then
-  CALPONT_CONFIG_FILE="/usr/local/MariaDB/Columnstore/etc/Calpont.xml"
+  CALPONT_CONFIG_FILE="/usr/local/mariadb/columnstore/etc/Calpont.xml"
   echo "CALPONT_CONFIG_FILE=" $CALPONT_CONFIG_FILE
 else
-  CALPONT_CONFIG_FILE="/usr/local/MariaDB/Columnstore/etc/Calpont.xml"
+  CALPONT_CONFIG_FILE="/usr/local/mariadb/columnstore/etc/Calpont.xml"
   echo "CALPONT_CONFIG_FILE=" $CALPONT_CONFIG_FILE
 fi
 

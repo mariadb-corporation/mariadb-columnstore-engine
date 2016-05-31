@@ -17,7 +17,7 @@ CXXFLAGS+=$(DEBUG_FLAGS) -Wall -D_DEBUG
 # we need to add some search paths here because on a bootstrap build we won't find liboamcpp
 #  anywhere except in ../oamcpp
 CLIBS=-L$(EXPORT_ROOT)/lib $(IDB_COMMON_LIBS) -lreplaytxnlog $(IDB_SNMP_LIBS)
-LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
+LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib
 TLIBS=-lcppunit -ldl
 GLIBS=$(CLIBS) -lcppunit -ldl
 

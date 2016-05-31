@@ -9,23 +9,23 @@ prefix=/usr/local
 #get instance name from called
 instanceName="$1"
 
-ec2=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_HOME`
+ec2=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_HOME`
 
 if [ $ec2 == "unassigned" ]; then
 	echo "stopped"
 	exit 1
 fi
 
-java=`$prefix/MariaDB/Columnstore/bin/getConfig Installation JAVA_HOME`
-path=`$prefix/MariaDB/Columnstore/bin/getConfig Installation EC2_PATH`
+java=`$prefix/mariadb/columnstore/bin/getConfig Installation JAVA_HOME`
+path=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_PATH`
 
 export PATH=$path
 export EC2_HOME=$ec2
 export JAVA_HOME=$java
 
 # get x509 Certification and Private Key
-x509Cert=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonX509Certificate`
-x509PriKey=`$prefix/MariaDB/Columnstore/bin/getConfig Installation AmazonX509PrivateKey`
+x509Cert=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonX509Certificate`
+x509PriKey=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonX509PrivateKey`
 
 #get instance info
 ec2-describe-instances -C $x509Cert -K $x509PriKey $instanceName > /tmp/instanceInfo 2> /dev/null

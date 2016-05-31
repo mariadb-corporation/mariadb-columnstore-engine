@@ -16,10 +16,10 @@ CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 
 # we need to add some search paths here because on a boostrap build we won't find liboamcpp
 #  anywhere except in ../oamcpp
-CLIBS=-L../oamcpp -L$(EXPORT_ROOT)/lib -L/usr/local/MariaDB/Columnstore/lib -loamcpp -lmessageqcpp -lconfigcpp \
+CLIBS=-L../oamcpp -L$(EXPORT_ROOT)/lib -L/usr/local/mariadb/columnstore/lib -loamcpp -lmessageqcpp -lconfigcpp \
 -lxml2 -lsnmpmanager -lnetsnmpmibs -lnetsnmpagent -lnetsnmp -lnetsnmpmibs -lnetsnmphelpers \
 -lboost_filesystem -lloggingcpp
-LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
+LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib
 TLIBS=-lcppunit -ldl
 GLIBS=$(CLIBS) -lcppunit -ldl
 LD_LIBRARY_PATH=
@@ -60,7 +60,7 @@ tdriver-gcov: resourceMonitor-gcov.o $(subst .o,-gcov.o,$(OBJS))
 
 coverage: tdriver-gcov
 #	rm -f *.gcda
-#	rm -f /var/log/Columnstore/cpu*.log
+#	rm -f /var/log/mariadb/columnstore/cpu*.log
 #	LD_LIBRARY_PATH=$(EXPORT_ROOT)/lib:/usr/local/lib ./tdriver-gcov
 #	for file in $(SRCS); do \
 #		bfile=`basename $$file .cpp`; \

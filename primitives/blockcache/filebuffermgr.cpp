@@ -71,7 +71,7 @@ FileBufferMgr::FileBufferMgr(const uint32_t numBlcks, const uint32_t blkSz, cons
 #ifdef _MSC_VER
 	fLog.open("C:/Calpont/log/trace/bc", ios_base::app | ios_base::ate);
 #else
-	fLog.open("/var/log/Columnstore/trace/bc", ios_base::app | ios_base::ate);
+	fLog.open("/var/log/mariadb/columnstore/trace/bc", ios_base::app | ios_base::ate);
 #endif
 }
 

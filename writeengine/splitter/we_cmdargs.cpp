@@ -95,7 +95,7 @@ void WECmdArgs::appTestFunction()
 
 	// testing begins
 	//std::string aJobFile("/home/bpaul/Calpont/data/bulk/job/Job_1234.xml");
-	//std::string aJobFile("/usr/local/MariaDB/Columnstore/data/bulk/job/Job_1234.xml");
+	//std::string aJobFile("/usr/local/mariadb/columnstore/data/bulk/job/Job_1234.xml");
 	//setSchemaAndTableFromJobFile(aJobFile);
 	//setEnclByAndEscCharFromJobFile(aJobFile);
 	//exit(1);

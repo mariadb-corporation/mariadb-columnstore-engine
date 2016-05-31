@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 	if (rlrc > 0)
 	{
 		thisexepath[rlrc] = 0;
-		//should look something like '/usr/local/MariaDB/Columnstore/bin/postConfigure'
+		//should look something like '/usr/local/mariadb/columnstore/bin/postConfigure'
 		char* ptr;
 		ptr = strrchr(thisexepath, '/');
 		if (ptr)
@@ -3542,7 +3542,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "MariaDB Columnstore System failed to start, check log files in /var/log/Columnstore" << endl;
+		cout << endl << "MariaDB Columnstore System failed to start, check log files in /var/log/mariadb/columnstore" << endl;
 		exit(1);
 	}
 
@@ -4241,7 +4241,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Columnstore");
+				string logdir("/var/log/mariadb/columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -4899,7 +4899,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << endl << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Columnstore");
+				string logdir("/var/log/mariadb/columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 

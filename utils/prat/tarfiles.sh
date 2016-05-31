@@ -15,7 +15,7 @@ hostdir=$1
 tarfile=$2
 #
 # tar the files
-cd /usr/local/MariaDB/Columnstore/tools/data
+cd /usr/local/mariadb/columnstore/tools/data
 tar -cf $tarfile $hostdir
 #
 # End of Script

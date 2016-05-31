@@ -27,7 +27,7 @@ CXXFLAGS+=$(DEBUG_FLAGS) -Wall
 # we need to add some search paths here because on a boostrap build we won't find liboamcpp
 #  anywhere except in ../oamcpp
 CLIBS=-L../oamcpp -L$(EXPORT_ROOT)/lib $(IDB_COMMON_LIBS) $(IDB_SNMP_LIBS)
-LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
+LDFLAGS+=$(CLIBS) -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib
 TLIBS=-L/usr/local/lib -lcppunit -ldl
 GLIBS=$(CLIBS)
 
@@ -57,7 +57,7 @@ tdriver: tdriver.o
 	$(LINK.cpp) -o $@ $^ $(TLIBS)
 
 test: $(LIBRARY) tdriver
-	rm -f /var/log/Columnstore/uiCommands.log
+	rm -f /var/log/mariadb/columnstore/uiCommands.log
 	LD_LIBRARY_PATH=.:$(EXPORT_ROOT)/lib:/usr/local/lib ./tdriver
 
 %-gcov.o: %.cpp
@@ -69,7 +69,7 @@ tdriver-gcov: mcsadmin-gcov.o $(subst .o,-gcov.o,$(OBJS))
 
 
 leakcheck: $(LIBRARY) tdriver
-	rm -f /var/log/Columnstore/uiCommands.log
+	rm -f /var/log/mariadb/columnstore/uiCommands.log
 	LD_LIBRARY_PATH=.:$(EXPORT_ROOT)/lib:/usr/local/lib valgrind --tool=memcheck --leak-check=yes ./tdriver
 
 %.d: %.cpp

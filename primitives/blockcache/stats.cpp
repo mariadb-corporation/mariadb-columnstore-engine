@@ -104,7 +104,7 @@ public:
 #ifdef _MSC_VER
 			oss << "C:/Calpont/log/trace/" << outName << '.' << sessionID;
 #else
-			oss << "/var/log/Columnstore/trace/" << outName << '.' << sessionID;
+			oss << "/var/log/mariadb/columnstore/trace/" << outName << '.' << sessionID;
 #endif
 			oFile.reset(new ofstream());
 			oFile->open(oss.str().c_str(), ios_base::out | ios_base::ate | ios_base::app);

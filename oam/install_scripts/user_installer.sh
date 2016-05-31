@@ -21,7 +21,7 @@ set NODEPS [lindex $argv 6]
 set MYSQLPW [lindex $argv 7]
 set MYSQLPORT [lindex $argv 8]
 set DEBUG [lindex $argv 9]
-set INSTALLDIR "/usr/local/MariaDB/Columnstore"
+set INSTALLDIR "/usr/local/mariadb/columnstore"
 set IDIR [lindex $argv 10]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR

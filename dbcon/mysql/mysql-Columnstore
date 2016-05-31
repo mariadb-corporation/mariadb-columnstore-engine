@@ -25,7 +25,7 @@
 # Description: MySQL is a very fast and reliable SQL database engine.
 ### END INIT INFO
 
-# If you install MySQL on some other places than /usr/local/MariaDB/Columnstore/mysql, then you
+# If you install MySQL on some other places than /usr/local/mariadb/columnstore/mysql, then you
 # have to do one of the following things for this script to work:
 #
 # - Run this script from within the MySQL installation directory
@@ -43,8 +43,8 @@
 # If you change base dir, you must also change datadir. These may get
 # overwritten by settings in the MySQL configuration files.
 
-basedir=/usr/local/MariaDB/Columnstore/mysql
-datadir=/usr/local/MariaDB/Columnstore/mysql/db
+basedir=/usr/local/mariadb/columnstore/mysql
+datadir=/usr/local/mariadb/columnstore/mysql/db
 
 # Default value, in seconds, afterwhich the script should timeout waiting
 # for server start. 
@@ -63,7 +63,7 @@ lock_file_path="$lockdir/mysql-Columnstore"
 mysqld_pid_file_path=
 if test -z "$basedir"
 then
-  basedir=/usr/local/MariaDB/Columnstore/mysql
+  basedir=/usr/local/mariadb/columnstore/mysql
   bindir=/usr/local/bin
   if test -z "$datadir"
   then
@@ -260,7 +260,7 @@ wait_for_ready () {
   i=0
   while test $i -ne $service_startup_timeout ; do
 
-    if $bindir/mysqladmin ping --socket=/usr/local/MariaDB/Columnstore/mysql/lib/mysql/mysql.sock >/dev/null 2>&1; then
+    if $bindir/mysqladmin ping --socket=/usr/local/mariadb/columnstore/mysql/lib/mysql/mysql.sock >/dev/null 2>&1; then
       log_success_msg
       return 0
     elif kill -0 $! 2>/dev/null ; then

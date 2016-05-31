@@ -4,7 +4,7 @@
 #
 # configures and installs net-snmp modules that we need
 
-prefix=/usr/local/MariaDB/Columnstore
+prefix=/usr/local/mariadb/columnstore
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"

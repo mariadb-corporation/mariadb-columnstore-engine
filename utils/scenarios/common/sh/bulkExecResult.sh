@@ -12,25 +12,25 @@ function getTestInfo {
 
 function copySQLResultFiles {
 #
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestSummary.*
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestTime.*
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestStats.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/TestSummary.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/TestTime.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/TestStats.*
 #
-   cp -f testResultSummary.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestSummary.tbl
-   cp -f testResultTime.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestTime.tbl
-   cp -f testResultStats.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestStats.tbl
+   cp -f testResultSummary.txt /usr/local/mariadb/columnstore/data/bulk/data/import/TestSummary.tbl
+   cp -f testResultTime.txt /usr/local/mariadb/columnstore/data/bulk/data/import/TestTime.tbl
+   cp -f testResultStats.txt /usr/local/mariadb/columnstore/data/bulk/data/import/TestStats.tbl
 }
 
 
 function CalLoadSQLTestResult {
 #
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t TestSummary -j 1001
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t TestTime -j 1002
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t TestStats -j 1003
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t TestSummary -j 1001
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t TestTime -j 1002
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t TestStats -j 1003
 #   
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1001
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1002
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1003
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1001
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1002
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1003
 }
 #
 function MySQLLoadSQLTestResult {
@@ -47,38 +47,38 @@ function MySQLLoadSQLTestResult {
 #=========================================================================================
 function CalLoadSQLTestResult {
 #
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestSummary.*
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestTime.*
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestStats.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/TestSummary.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/TestTime.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/TestStats.*
 #
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t TestSummary -j 1001
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t TestTime -j 1002
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t TestStats -j 1003
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t TestSummary -j 1001
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t TestTime -j 1002
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t TestStats -j 1003
 #   
-   cp -f testResultSummary.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestSummary.tbl
-   cp -f testResultTime.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestTime.tbl
-   cp -f testResultStats.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/TestStats.tbl
+   cp -f testResultSummary.txt /usr/local/mariadb/columnstore/data/bulk/data/import/TestSummary.tbl
+   cp -f testResultTime.txt /usr/local/mariadb/columnstore/data/bulk/data/import/TestTime.tbl
+   cp -f testResultStats.txt /usr/local/mariadb/columnstore/data/bulk/data/import/TestStats.tbl
 #
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1001
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1002
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1003
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1001
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1002
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1003
 }
 #=========================================================================================
 # cpimport bulk test results
 #=========================================================================================
 function CalLoadBulkTestResult {
 #
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/BulkSummary.*
-   rm -f /usr/local/MariaDB/Columnstore/data/bulk/data/import/BulkTime.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/BulkSummary.*
+   rm -f /usr/local/mariadb/columnstore/data/bulk/data/import/BulkTime.*
 #
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t BulkSummary -j 1001
-   /usr/local/MariaDB/Columnstore/bin/colxml perfstats -t BulkStats -j 1002
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t BulkSummary -j 1001
+   /usr/local/mariadb/columnstore/bin/colxml perfstats -t BulkStats -j 1002
 #   
-   cp -f testResultSummary.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/BulkSummary.tbl
-   cp -f testResultTime.txt /usr/local/MariaDB/Columnstore/data/bulk/data/import/BulkStats.tbl
+   cp -f testResultSummary.txt /usr/local/mariadb/columnstore/data/bulk/data/import/BulkSummary.tbl
+   cp -f testResultTime.txt /usr/local/mariadb/columnstore/data/bulk/data/import/BulkStats.tbl
 #
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1001
-   /usr/local/MariaDB/Columnstore/bin/cpimport -j 1002
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1001
+   /usr/local/mariadb/columnstore/bin/cpimport -j 1002
 }
 
 #=========================================================================================

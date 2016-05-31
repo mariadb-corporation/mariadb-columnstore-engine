@@ -10,7 +10,7 @@ VERSION=1.0.0
 
 .PHONY: install clean docs test coverage leakcheck install_bulk
 TLIBS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS)
-GLIBS=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS) $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
+GLIBS=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS) $(IDB_SNMP_LIBS) -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib
 
 SRCS=we_bulkload.cpp we_workers.cpp we_colopbulk.cpp we_tableinfo.cpp we_bulkloadbuffer.cpp we_colbuf.cpp we_colbufcompressed.cpp we_colbufmgr.cpp we_colbufmgrdctnry.cpp we_colbufsec.cpp we_columninfo.cpp we_columninfocompressed.cpp we_bulkstatus.cpp we_colextinf.cpp we_tempxmlgendata.cpp we_columnautoinc.cpp we_brmreporter.cpp we_extentstripealloc.cpp
 BULK_SRCS=cpimport.cpp 

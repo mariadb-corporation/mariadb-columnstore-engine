@@ -1456,7 +1456,7 @@ int main(int argc, char *argv[])
 			{
 				int id = *pt;
 				string DBrootID = "DBRoot" + oam.itoa(id);;
-				string pathID =  "/usr/local/MariaDB/Columnstore/data" + oam.itoa(id);
+				string pathID =  "/usr/local/mariadb/columnstore/data" + oam.itoa(id);
 		
 				try {
 					sysConfigNew->setConfig(SystemSection, DBrootID, pathID);
@@ -1528,7 +1528,7 @@ int main(int argc, char *argv[])
 			{
 				int id = *pt;
 				string DBrootID = "DBRoot" + oam.itoa(id);;
-				string pathID =  "/usr/local/MariaDB/Columnstore/data" + oam.itoa(id);
+				string pathID =  "/usr/local/mariadb/columnstore/data" + oam.itoa(id);
 		
 				try {
 					sysConfigNew->setConfig(SystemSection, DBrootID, pathID);
@@ -1596,7 +1596,7 @@ int main(int argc, char *argv[])
 			}
 	
 			string DBrootID = "DBRoot" + oam.itoa(i);
-			string pathID =  "/usr/local/MariaDB/Columnstore/data" + oam.itoa(i);
+			string pathID =  "/usr/local/mariadb/columnstore/data" + oam.itoa(i);
 	
 			try {
 				sysConfigNew->setConfig(SystemSection, DBrootID, pathID);

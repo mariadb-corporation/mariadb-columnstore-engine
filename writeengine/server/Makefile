@@ -13,7 +13,7 @@ VERSION=1.0.0
 
 .PHONY: install clean docs test coverage leakcheck install_server
 TLIBS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS)
-LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS) $(IDB_SNMP_LIBS) -lthreadpool -lwriteengineredistribute -Wl,--rpath -Wl,/usr/local/MariaDB/Columnstore/lib
+LDFLAGS+=-L$(CALPONT_LIBRARY_PATH) $(IDB_COMMON_LIBS) $(IDB_WRITE_LIBS) $(IDB_SNMP_LIBS) -lthreadpool -lwriteengineredistribute -Wl,--rpath -Wl,/usr/local/mariadb/columnstore/lib
 GLIBS=$(LDFLAGS)
 
 SRCS= \

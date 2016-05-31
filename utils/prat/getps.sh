@@ -12,14 +12,14 @@
 #*                  
 #******************************************************************************/
 
-CTOOLS=/usr/local/MariaDB/Columnstore/tools
+CTOOLS=/usr/local/mariadb/columnstore/tools
 
 date=$1
 starttime=$2
 endtime=$3
 hostdir=$4
 localhost=$(hostname -s)
-modulename=`cat /usr/local/MariaDB/Columnstore/local/module`
+modulename=`cat /usr/local/mariadb/columnstore/local/module`
 if [ -f /tmp/.prat/.hostlist2.txt ]; then
    sc=`wc -l < /tmp/.prat/.hostlist2.txt`
 else
@@ -48,7 +48,7 @@ readserverlist ()
 #
 getpsremote ()
 { # Send the command to the remote module(s) to extract ps data
-  /usr/local/MariaDB/Columnstore/bin/remote_command.sh $servername $srvpwd "$CTOOLS/getps.sh $date $starttime $endtime $hostdir"
+  /usr/local/mariadb/columnstore/bin/remote_command.sh $servername $srvpwd "$CTOOLS/getps.sh $date $starttime $endtime $hostdir"
 }
 #
 getpslocal ()
