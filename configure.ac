@@ -118,9 +118,9 @@ if test "x$ac_cv_header_ncurses_h" != "xyes"; then
 	AC_MSG_ERROR([Could not find a usable ncurses development environment!])
 fi
 
-CXX_FLAG_CHECK([-Wno-unused-local-typedefs])
-CXX_FLAG_CHECK([-Wno-unused-result])
-CXX_FLAG_CHECK([-Wno-format])
+#CXX_FLAG_CHECK([-Wno-unused-local-typedefs])
+#CXX_FLAG_CHECK([-Wno-unused-result])
+#CXX_FLAG_CHECK([-Wno-format])
 
 AC_MSG_CHECKING(whether to enable debugging)
 AC_SUBST([idb_cppflags], [' '])

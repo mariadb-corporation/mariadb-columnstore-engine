@@ -70,15 +70,41 @@ cp -p -r utils/net-snmp export/include
 
 #FIXME:
 #This is not going to update the version in configure.ac
+echo Generating version header
 ./build/genVersion.sh
 if [ ! $$ ]; then
   exit 1
 fi
 
+echo Running GNU autotools to generate build environment
+aclocal 
+if [ ! $$ ]; then
+  exit 1
+fi
+autoconf
+if [ ! $$ ]; then
+  exit 1
+fi
+autoheader
+if [ ! $$ ]; then
+  exit 1
+fi
+libtoolize
+if [ ! $$ ]; then
+  exit 1
+fi
+automake --add-missing
+if [ ! $$ ]; then
+  exit 1
+fi
 autoreconf
 if [ ! $$ ]; then
   exit 1
 fi
+
+echo GNU autotools environment generation completed successfully
+
+echo Configuring MariaDB ColumnStore
 
 ./configure 
 if [ ! $$ ]; then
@@ -92,6 +118,6 @@ $(find . -name '[mM]akefile' \
     | sort -u)
 do
   echo bootstrapping $x
-  make BOOTSTRAP=1 -C $x bootstrap
+  echo make BOOTSTRAP=1 -C $x bootstrap
 done
 
