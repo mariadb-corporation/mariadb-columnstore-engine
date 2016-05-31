@@ -68,7 +68,14 @@ cp -p -r utils/net-snmp export/include
 ## done
 ## popd >/dev/null
 
+#FIXME:
+#This is not going to update the version in configure.ac
 ./build/genVersion.sh
+if [ ! $$ ]; then
+  exit 1
+fi
+
+autoreconf
 if [ ! $$ ]; then
   exit 1
 fi
