@@ -118,6 +118,6 @@ $(find . -name '[mM]akefile' \
     | sort -u)
 do
   echo bootstrapping $x
-  echo make BOOTSTRAP=1 -C $x bootstrap
+  make BOOTSTRAP=1 -C $x bootstrap
 done
 
