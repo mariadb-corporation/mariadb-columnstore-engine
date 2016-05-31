@@ -6,89 +6,9 @@ autom4te.cache/
 *~
 Makefile
 Makefile.in
-#	dbcon/ddlpackage/.deps/
-#	dbcon/ddlpackageproc/.deps/
-#	dbcon/dmlpackage/.deps/
-#	dbcon/dmlpackageproc/.deps/
-#	dbcon/execplan/.deps/
-#	dbcon/joblist/.deps/
-#	dbcon/mysql/.deps/
-#	ddlproc/.deps/
-#	ddlproc/ddlproc.d.32581
-#	ddlproc/ddlprocessor.d.32574
-#	decomsvr/.deps/
-#	dmlproc/.deps/
-#	dmlproc/batchinsertprocessor.d.32601
-#	dmlproc/dmlproc.d.32622
-#	dmlproc/dmlprocessor.d.32615
-#	dmlproc/dmlresultbuffer.d.32608
-#	doit
-#	exemgr/.deps/
-#	export/
-#	oam/oamcpp/.deps/
-#	oamapps/calpontDB/.deps/
-#	oamapps/calpontSupport/.deps/
-#	oamapps/mcsadmin/.deps/
-#	oamapps/mcsadmin/Makefile.am
-#	oamapps/mcsadmin/Makefile.in
-#	oamapps/postConfigure/.deps/
-#	oamapps/sendtrap/.deps/
-#	oamapps/serverMonitor/.deps/
-#	oamapps/sessionWalker/.deps/
-#	oamapps/traphandler/.deps/
-#	primitives/blockcache/.deps/
-#	primitives/linux-port/.deps/
-#	primitives/primproc/.deps/
-#	procmgr/.deps/
-#	procmon/.deps/
-#	procmon/main.d.469
-#	procmon/processmonitor.d.462
-#	reset.sh
-#	snmpd/snmpmanager/.deps/
-#	sorted.txt
-#	tools/clearShm/.deps/
-#	tools/cleartablelock/.deps/
-#	tools/configMgt/.deps/
-#	tools/cplogger/.deps/
-#	tools/dbbuilder/.deps/
-#	tools/dbloadxml/.deps/
-#	tools/ddlcleanup/.deps/
-#	tools/editem/.deps/
-#	tools/getConfig/.deps/
-#	tools/idbmeminfo/.deps/
-#	tools/setConfig/.deps/
-#	tools/viewtablelock/.deps/
-#	utils/batchloader/.deps/
-#	utils/boost_idb/.deps/
-#	utils/cacheutils/.deps/
-#	utils/common/.deps/
-#	utils/compress/.deps/
-#	utils/configcpp/.deps/
-#	utils/dataconvert/.deps/
-#	utils/ddlcleanup/.deps/
-#	utils/funcexp/.deps/
-#	utils/idbdatafile/.deps/
-#	utils/idbhdfs/hdfs-12/.deps/
-#	utils/idbhdfs/hdfs-20/.deps/
-#	utils/joiner/.deps/
-#	utils/loggingcpp/.deps/
-#	utils/messageqcpp/.deps/
-#	utils/mysqlcl_idb/.deps/
-#	utils/querystats/.deps/
-#	utils/querytele/.deps/
-#	utils/rowgroup/.deps/
-#	utils/rwlock/.deps/
-#	utils/startup/.deps/
-#	utils/threadpool/.deps/
-#	utils/thrift/.deps/
-#	utils/udfsdk/.deps/
-#	utils/windowfunction/.deps/
-#	versioning/BRM/.deps/
-#	writeengine/bulk/.deps/
-#	writeengine/client/.deps/
-#	writeengine/redistribute/.deps/
-#	writeengine/server/.deps/
-#	writeengine/splitter/.deps/
-#	writeengine/wrapper/.deps/
-#	writeengine/xml/.deps/
-nothing added to commit but untracked files present (use "git add" to track)
+aclocal.m4
+config.h
+config.h.in
+config.status
+configure
+libtool
