@@ -1,5 +1,0 @@
-#git checkout 3d3a753ad2adaed26ee577064317702a1b6c2c06 utils/idbdatafile/IDBDataFile.cpp
-#git checkout 3d3a753ad2adaed26ee577064317702a1b6c2c06 versioning/BRM/tablelockserver.cpp
-git checkout 3d3a753ad2adaed26ee577064317702a1b6c2c06 versioning/BRM/masterdbrmnode.cpp
-git checkout 3d3a753ad2adaed26ee577064317702a1b6c2c06  versioning/BRM/slavecomm.cpp
-
