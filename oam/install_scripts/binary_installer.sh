@@ -31,6 +31,7 @@ if { $IDIR != "" } {
 }
 set env(INFINIDB_INSTALL_DIR) $INSTALLDIR
 set PREFIX [file dirname $INSTALLDIR]
+set PREFIX [file dirname $PREFIX]
 set USERNAME $env(USER)
 set UNM [lindex $argv 10]
 if { $UNM != "" } {
