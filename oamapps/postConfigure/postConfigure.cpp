@@ -2850,11 +2850,11 @@ int main(int argc, char *argv[])
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				calpontPackage1 = "mariadb-columnstore-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage2 = "mariadb-columnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				mysqldPackage = "mariadb-columnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage1 = "mariadb-columnstore-platform" + separator + version;
+				calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
+				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
+				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
+				mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
 
 				if( !pkgCheck() ) {
 					exit(1);
@@ -2862,7 +2862,7 @@ int main(int argc, char *argv[])
 				else
 				{
 				//mariadb
-					calpontPackage1 = "mariadb-columnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-*" + separator + version;
 
 					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
 					calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
@@ -2877,9 +2877,9 @@ int main(int argc, char *argv[])
 				string fileName = installDir + "/bin/healthcheck";
 				ifstream file (fileName.c_str());
 				if (!file)	// CE
-					calpontPackage1 = "mariadb-columnstore-" + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-" + version;
 				else		// EE
-					calpontPackage1 = "mariadb-columnstore-ent-" + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-ent-" + version;
 				calpontPackage2 = "dummy";
 				calpontPackage3 = "dummy";
 				mysqlPackage = calpontPackage1;
