@@ -53,6 +53,12 @@ AC_PROG_CPP
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
+# FIXME:
+# for quicklz (note this macro is not needed if autotools is 1.14 or 
+# greater, but old versions of CentOS do not have newer version
+# of autotools
+AM_PROG_CC_C_O
+
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_STDC
