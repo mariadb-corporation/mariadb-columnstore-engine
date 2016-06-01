@@ -1446,6 +1446,7 @@ int main(int argc, char *argv[])
 			if ( pmNumber > 1 && ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) )
 			{
 				mysqlRep = true;
+				MySQLRep = "y";
 				try {
 					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
 				}
@@ -1460,6 +1461,7 @@ int main(int argc, char *argv[])
 			if ( umNumber > 1 )
 			{
 				mysqlRep = true;
+				MySQLRep = "y";
 				try {
 					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
 				}
