@@ -1,7 +1,7 @@
 include ../../rules.mak
 include ../build/we_rules.mak
 #******************************************************************************************
-# Copyright (C) 2016 MariaDB, Corporation
+# Copyright (C) 2009-2012 Calpont Corporation
 # All rights reserved
 #
 # $Id: Makefile 4624 2013-04-29 16:19:59Z rdempsey $

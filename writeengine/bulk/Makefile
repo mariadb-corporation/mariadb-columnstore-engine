@@ -1,7 +1,7 @@
 include ../../rules.mak
 include ../build/we_rules.mak
 #*******************************************************************************
-# Copyright (C) 2016 MariaDB, Corporation
+# Copyright (C) 2009-2012 Calpont Corporation
 # All rights reserved
 #******************************************************************************/
 # The name of the executable

@@ -43,10 +43,10 @@ the entire Calpont directory tree there.
 After untaring the sofware or installing the RPM's, setup the software
 to run (this script needs to run with root privileges). Check the Installation
 Guide for addition details on using postConfigure:
-/usr/local/mariadb/columnstore/bin/postConfigure
+/usr/local/Calpont/bin/postConfigure
 
 Setup some aliases:
-. /usr/local/mariadb/columnstore/bin/columnsoreAlias
+. /usr/local/Calpont/bin/calpontAlias
 
 Connect to MySQL:
 idbmysql
@@ -70,7 +70,7 @@ To use bulk load:
     200|2002|
 2. Save/place this file in a directory.
 3. From that same directory, import the rows:
-     /usr/local/mariadb/columnstore/bin/cpimport calpont caltest caltest.tbl
+     /usr/local/Calpont/bin/cpimport calpont caltest caltest.tbl
 
 And check the import:
 calpontmysql calpont
