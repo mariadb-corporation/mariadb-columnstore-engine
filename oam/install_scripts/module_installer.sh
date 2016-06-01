@@ -10,7 +10,7 @@
 #
 
 prefix=/usr/local
-installdir=$prefix/MariaDB/Columnstore
+installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=$USER
 if [ -z "$user" ]; then
@@ -22,7 +22,7 @@ shiftcnt=0
 for arg in "$@"; do
 	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
 		prefix="$(echo $arg | awk -F= '{print $2}')"
-		installdir=$prefix/MariaDB/Columnstore
+		installdir=$prefix/mariadb/columnstore
 		((shiftcnt++))
 	elif [ $(expr -- "$arg" : '--rpmmode=') -eq 10 ]; then
 		rpmmode="$(echo $arg | awk -F= '{print $2}')"
@@ -47,7 +47,7 @@ for arg in "$@"; do
 done
 shift $shiftcnt
 
-if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
+if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql
 fi
 

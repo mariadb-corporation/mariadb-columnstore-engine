@@ -130,7 +130,7 @@ if { $CONFIGFILE != "NULL"} {
 	# copy over Calpont.xml file
 	#
 	send_user "Copy Calpont Configuration File               "
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/MariaDB/Columnstore/etc/Calpont.xml.rpmsave\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/mariadb/columnstore/etc/Calpont.xml.rpmsave\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -140,7 +140,7 @@ if { $CONFIGFILE != "NULL"} {
 		-re "Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit -1 }
 		-re "No such file or directory" { send_user "FAILED: Invalid package\n" ; exit -1 }
 	}
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/MariaDB/Columnstore/etc/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/mariadb/columnstore/etc/Calpont.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -162,7 +162,7 @@ if { $CONFIGFILE != "NULL"} {
 	# rename previous installed config file
 	#
 	send_user "Copy RPM-saved Calpont Configuration File     "
-	send "ssh $USERNAME@$SERVER 'cd /usr/local/MariaDB/Columnstore/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
+	send "ssh $USERNAME@$SERVER 'cd /usr/local/mariadb/columnstore/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
 	expect -re "word: "
 	# password for ssh
 	send "$PASSWORD\n"

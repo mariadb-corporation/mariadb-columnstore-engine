@@ -3,21 +3,21 @@
 # as part of the RPM installation
 # 
 
-/var/log/Columnstore/*.log {
+/var/log/mariadb/columnstore/*.log {
     missingok
     rotate 7
     daily
     dateext
 	copytruncate
-    olddir /var/log/Columnstore/archive
+    olddir /var/log/mariadb/columnstore/archive
 }
-/var/log/Columnstore/*.log1 {
+/var/log/mariadb/columnstore/*.log1 {
     missingok
     rotate 7
     daily
 	nocreate
 	compress
-    olddir /var/log/Columnstore/archive
+    olddir /var/log/mariadb/columnstore/archive
 }
 /usr/local/Calpont/etc/Calpont.xml {
     daily

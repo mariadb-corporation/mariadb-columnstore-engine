@@ -5,7 +5,7 @@
 # Post-install steps for columnstore install
 
 prefix=/usr/local
-installdir=$prefix/MariaDB/Columnstore
+installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=$USER
 if [ -z "$user" ]; then
@@ -16,7 +16,7 @@ quiet=0
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/MariaDB/Columnstore
+		installdir=$prefix/mariadb/columnstore
 	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
 		rpmmode="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
@@ -33,7 +33,7 @@ for arg in "$@"; do
 	fi
 done
 
-if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
+if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export INFINIDB_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
@@ -101,14 +101,14 @@ chown -h $user.$user libjemalloc.so >/dev/null 2>&1
 
 cd /
 
-test -d /var/log/Columnstore || mkdir /var/log/Columnstore >/dev/null 2>&1
-test -d /var/log/Columnstore/archive || mkdir /var/log/Columnstore/archive >/dev/null 2>&1
-test -d /var/log/Columnstore/corefiles || mkdir /var/log/Columnstore/corefiles >/dev/null 2>&1
-test -d /var/log/Columnstore/trace || mkdir /var/log/Columnstore/trace >/dev/null 2>&1
-test -h /var/log/Columnstore/data && rm -f /var/log/Columnstore/data
-test -d /var/log/Columnstore/data || mkdir /var/log/Columnstore/data >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
+test -d /var/log/mariadb/columnstore/data || mkdir /var/log/mariadb/columnstore/data >/dev/null 2>&1
 # make sure trace dir is world-writable and sticky
-chmod 1755 /var/log/Columnstore/trace >/dev/null 2>&1
+chmod 1755 /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
 test -d $installdir/data1/systemFiles || mkdir $installdir/data1/systemFiles
@@ -132,12 +132,12 @@ chmod -R 755 $installdir/data/bulk >/dev/null 2>&1
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
-mkdir /var/log/Columnstore/corefiles > /dev/null 2>&1
-chmod 755 /var/log/Columnstore/corefiles > /dev/null 2>&1
+mkdir /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
+chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
-mkdir /var/log/Columnstore/data/archive > /dev/null 2>&1
+mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
 
 # install Calpont Log Rotate File
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
@@ -169,12 +169,12 @@ else
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Calpont.xml
 	sudo chmod 755 /var/log
-	sudo chmod -R 755 /var/log/Columnstore
+	sudo chmod -R 755 /var/log/mariadb/columnstore
 	sudo chmod -R 777 /dev/shm
 	sudo rm -f /var/lock/subsys/mysql-Columnstore
 	sudo rm -f /tmp/StopColumnstore
 
-	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/bin/columnstore.def
+	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
 fi
 
@@ -188,8 +188,8 @@ fi
 eval userhome=~$user
 bashFile=$userhome/.bashrc
 touch ${bashFile}
-if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
-	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/bin/columnstoreAlias
+if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
 fi
 egrep -qs 'MariaDB Columnstore Database Platform Alias Commands' ${bashFile}
 rc1=$?
@@ -221,7 +221,7 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 
 hadoop=`which hadoop 2>/dev/null`
 if [ -z $hadoop ]; then
 	#check for non-root user
-	if [ $installdir != "/usr/local/MariaDB/Columnstore" -a $quiet -eq 0 ]; then
+	if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 The next steps are:
 
@@ -251,7 +251,7 @@ else
 		$installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-20
 	
 		#check for non-root user
-		if [ $installdir != "/usr/local/MariaDB/Columnstore" -a $quiet -eq 0 ]; then
+		if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install InfiniDB over Hadoop, the next steps are:
@@ -290,7 +290,7 @@ EOD
 			$installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-12.so
 			$installdir/bin/setConfig -d SystemConfig DataFileEnvFile setenv-hdfs-12
 
-			if [ $installdir != "/usr/local/MariaDB/Columnstore" -a $quiet -eq 0 ]; then
+			if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
 If you are intending to install InfiniDB over Hadoop, the next steps are:

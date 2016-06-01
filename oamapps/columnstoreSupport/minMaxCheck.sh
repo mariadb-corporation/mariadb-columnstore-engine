@@ -39,17 +39,17 @@
 
 
 # Define the cols array.  Here's a sql statement that will list the date and datetime cols in the expected format.
-#   idbmysql columnstoresys -e "select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype in (8, 11) and tablename not like 'temp%';" > www.txt
+#   idbmysql calpontsys -e "select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype in (8, 11) and tablename not like 'temp%';" > www.txt
 #
 # NOTE:  The objectid will be looked up again when it's going through the columns in case the one in the array becomes stale.
 #
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="/usr/local/MariaDB/Columnstore/mysql/bin/mysql --defaults-file=/usr/local/MariaDB/Columnstore/mysql/my.cnf -u root"
+        MYSQLCMD="/usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root"
 fi
 
 if [ -z "$INSTALLDIR" ]; then
-        INSTALLDIR="/usr/local/MariaDB/Columnstore"
+        INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
 if [ -z "$PGMPATH" ]; then
@@ -71,7 +71,7 @@ cols=(
 # If called with "all", run the script against all of the column types that use CP.
 #
 if [ $# -eq 1 ] && [ "$1" == "all" ]; then
-	$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7);" columnstoresys --skip-column-names > /tmp/idb_mm_mon.cols
+	$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7);" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
 	cols=( $( cat /tmp/idb_mm_mon.cols ) )
 	rm -f /tmp/idb_mm_mon.cols
 
@@ -80,7 +80,7 @@ if [ $# -eq 1 ] && [ "$1" == "all" ]; then
 #
 elif [ $# -eq 1 ]; then
 	db=$1
-        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db';" columnstoresys --skip-column-names > /tmp/idb_mm_mon.cols
+        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
 	cols=( $( cat /tmp/idb_mm_mon.cols ) )
 	rm -f /tmp/idb_mm_mon.cols
 
@@ -90,7 +90,7 @@ elif [ $# -eq 1 ]; then
 elif [ $# -eq 2 ]; then
 	db=$1
 	tbl=$2
-        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db' and tablename = '$tbl';" columnstoresys --skip-column-names > /tmp/idb_mm_mon.cols
+        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where datatype not in (4, 10, 13) and not (datatype = 2 and columnlength > 8) and not (datatype = 12 and columnlength > 7) and \`schema\` = '$db' and tablename = '$tbl';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
         cols=( $( cat /tmp/idb_mm_mon.cols ) )
         rm -f /tmp/idb_mm_mon.cols
 
@@ -101,7 +101,7 @@ elif [ $# -eq 3 ]; then
 	db=$1
 	tbl=$2
 	col=$3
-        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$db' and tablename = '$tbl' and columnname='$col';" columnstoresys --skip-column-names > /tmp/idb_mm_mon.cols
+        $MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$db' and tablename = '$tbl' and columnname='$col';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
         cols=( $( cat /tmp/idb_mm_mon.cols ) )
         rm -f /tmp/idb_mm_mon.cols
 fi
@@ -127,7 +127,7 @@ while [ $i -lt ${#cols[@]} ]; do
 	# Look up the oid if the cols array is being used to keep from having to continually update the array if tables are dropped and recreated.
 	#
 	if [ $# -eq 0 ]; then
-		$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$schema' and tablename='$table' and columnname='$column';" columnstoresys --skip-column-names > /tmp/idb_mm_mon.cols
+		$MYSQLCMD --execute="select concat(objectid, ':', \`schema\`, '.', tablename, '.', columnname) from syscolumn where \`schema\` = '$schema' and tablename='$table' and columnname='$column';" calpontsys --skip-column-names > /tmp/idb_mm_mon.cols
 		results=`wc -l /tmp/idb_mm_mon.cols | awk '{print $1}'`
 		if [ $results -eq 0 ]; then
 			oid=0

@@ -9,14 +9,14 @@ if [ -z "$INFINIDB_INSTALL_DIR" ]; then
 fi
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/MariaDB/Columnstore
+	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
 export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
 
 InstallDir=$INFINIDB_INSTALL_DIR
 
-if [ $InstallDir != "/usr/local/MariaDB/Columnstore" ]; then
+if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
 	export PATH=$InstallDir/bin:$InstallDir/mysql/bin:/bin:/usr/bin
 	export LD_LIBRARY_PATH=$InstallDir/lib:$InstallDir/mysql/lib/mysql
 fi

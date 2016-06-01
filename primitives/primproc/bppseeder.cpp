@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -221,7 +221,7 @@ int BPPSeeder::operator()()
 #ifdef _MSC_VER
 			LogFileName << "C:/Calpont/log/trace/pt." << tid;
 #else
-			LogFileName << "/var/log/Columnstore/trace/pt." << tid;
+			LogFileName << "/var/log/mariadb/columnstore/trace/pt." << tid;
 #endif
 			spof.reset(new PTLogs_t(gThdCnt, LogFileName.str().c_str()));
 			gThdCnt++;

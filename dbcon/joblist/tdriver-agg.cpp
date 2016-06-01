@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -65,7 +65,7 @@ const uint32_t MAX_SIZE = 0x100000;
 const uint32_t MAX_ELEMENTS = 0x20000;
 const uint32_t NUM_THREADS = 4;
 const string datapath="/home/zzhu/genii/tools/dbbuilder/lineitem.tbl";
-//const string datapath="/usr/local/MariaDB/Columnstore/bin/lineitem.tbl";
+//const string datapath="/usr/local/mariadb/columnstore/bin/lineitem.tbl";
 int numConsumers = 1;
 int numRuns = 1;
 int printInterval = numRuns * 100000;

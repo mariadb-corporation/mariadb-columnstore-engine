@@ -4,7 +4,7 @@ Installation Instructions
 Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2004, 2005 Free
 Software Foundation, Inc.
 
-Copyright (C) 2014 InfiniDB, Inc.
+Copyright (C) 2016 MariaDB, Corporation
 
 This file is free documentation; the Free Software Foundation gives
 unlimited permission to copy, distribute and modify it.
@@ -43,10 +43,10 @@ the entire Calpont directory tree there.
 After untaring the sofware or installing the RPM's, setup the software
 to run (this script needs to run with root privileges). Check the Installation
 Guide for addition details on using postConfigure:
-/usr/local/MariaDB/Columnstore/bin/postConfigure
+/usr/local/mariadb/columnstore/bin/postConfigure
 
 Setup some aliases:
-. /usr/local/MariaDB/Columnstore/bin/columnsoreAlias
+. /usr/local/mariadb/columnstore/bin/columnsoreAlias
 
 Connect to MySQL:
 idbmysql
@@ -70,7 +70,7 @@ To use bulk load:
     200|2002|
 2. Save/place this file in a directory.
 3. From that same directory, import the rows:
-     /usr/local/MariaDB/Columnstore/bin/cpimport calpont caltest caltest.tbl
+     /usr/local/mariadb/columnstore/bin/cpimport calpont caltest caltest.tbl
 
 And check the import:
 calpontmysql calpont

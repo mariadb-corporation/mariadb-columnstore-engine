@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -42,7 +42,7 @@ namespace BRM {
 
 /** @brief Trace beginning and end of a call.
 *
-* When turned on, fDebug is true, Tracer writes informational messages to /var/log/Columnstore/brm.log.
+* When turned on, fDebug is true, Tracer writes informational messages to /var/log/mariadb/columnstore/brm.log.
 * It keeps track of integral, string and boolean inputs, and integral and boolean outputs.
 * If it should print a message immediately from the constructor, call it with the final parameter,
 * writeNow, true (default).  If input and output parameters need to be added, call it with

@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -222,7 +222,7 @@ void diskMonitor()
 				string fileName;
 				// check local
 				if ( deviceName == "/") {
-					fileName = deviceName + "usr/local/MariaDB/Columnstore/releasenum";
+					fileName = deviceName + "usr/local/mariadb/columnstore/releasenum";
 				}
 				else
 				{

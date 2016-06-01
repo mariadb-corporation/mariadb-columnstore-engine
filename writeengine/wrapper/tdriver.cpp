@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -2792,8 +2792,8 @@ void testBoostFloat()
 
    void testSoloman()
    {
-     char  fileName[80]="/usr/local/MariaDB/Columnstore/data1/test.dat";
-     char  outfile[80] = "/usr/local/MariaDB/Columnstore/data1/out.dat";
+     char  fileName[80]="/usr/local/mariadb/columnstore/data1/test.dat";
+     char  outfile[80] = "/usr/local/mariadb/columnstore/data1/out.dat";
      int   numOfBlock=8192,blockSize=8192;
      FILE* testFile;
      FILE* outFile;

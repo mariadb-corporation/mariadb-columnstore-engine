@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -95,7 +95,7 @@ void WECmdArgs::appTestFunction()
 
 	// testing begins
 	//std::string aJobFile("/home/bpaul/Calpont/data/bulk/job/Job_1234.xml");
-	//std::string aJobFile("/usr/local/MariaDB/Columnstore/data/bulk/job/Job_1234.xml");
+	//std::string aJobFile("/usr/local/mariadb/columnstore/data/bulk/job/Job_1234.xml");
 	//setSchemaAndTableFromJobFile(aJobFile);
 	//setEnclByAndEscCharFromJobFile(aJobFile);
 	//exit(1);

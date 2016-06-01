@@ -3,7 +3,7 @@
 # $Id: transactionLogArchiver.sh 1375 2009-04-30 13:53:06Z rdempsey $
 
 DATE=`date +'%s'`  
-CDATA=/var/log/Columnstore/data
+CDATA=/var/log/mariadb/columnstore/data
 
 if [ ! -d $CDATA/archive ]; then
 	echo "Installation error: $CDATA/archive is not a directory." 1>&2

@@ -298,7 +298,7 @@ Bug #   Short Description
 5752	ERROR 138 (HY000) at line 2: Sub-query failed: error code 2003 error for query that exceeded TotalUmMemory
 5753	When PrimProc restarts, DML statement didn't reset the connections to PrimProc in connector
 5757	addModule for UM failed on Amazon system - remote_command error
-5759	Must use -p option for hadoop fs -mkdir when creating /usr/local/MariaDB/Columnstore
+5759	Must use -p option for hadoop fs -mkdir when creating /usr/local/mariadb/columnstore
 5764	select count(*) from a complex view is returning an incorrect answer.
 5765	truncate statement does not show schema in the debug.log
 5767	'create table' creates table in front end when spaces are in the table name.

@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 	if (rlrc > 0)
 	{
 		thisexepath[rlrc] = 0;
-		//should look something like '/usr/local/MariaDB/Columnstore/bin/postConfigure'
+		//should look something like '/usr/local/mariadb/columnstore/bin/postConfigure'
 		char* ptr;
 		ptr = strrchr(thisexepath, '/');
 		if (ptr)
@@ -1446,6 +1446,7 @@ int main(int argc, char *argv[])
 			if ( pmNumber > 1 && ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) )
 			{
 				mysqlRep = true;
+				MySQLRep = "y";
 				try {
 					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
 				}
@@ -1460,6 +1461,7 @@ int main(int argc, char *argv[])
 			if ( umNumber > 1 )
 			{
 				mysqlRep = true;
+				MySQLRep = "y";
 				try {
 					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
 				}
@@ -2845,16 +2847,16 @@ int main(int argc, char *argv[])
 			}
 
 			//check if pkgs are located in $HOME directory
-			string version = systemsoftware.Version + "-" + systemsoftware.Release;
+			string version = systemsoftware.Version + "*" + systemsoftware.Release;
 			if ( EEPackageType != "binary") {
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				calpontPackage1 = "mariadb-columnstore-platform" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage2 = "mariadb-columnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
-				mysqldPackage = "mariadb-columnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+				calpontPackage1 = "mariadb-columnstore-platform" + separator + version;
+				calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
+				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
+				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
+				mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
 
 				if( !pkgCheck() ) {
 					exit(1);
@@ -2862,7 +2864,7 @@ int main(int argc, char *argv[])
 				else
 				{
 				//mariadb
-					calpontPackage1 = "mariadb-columnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-*" + separator + version;
 
 					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
 					calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
@@ -2877,9 +2879,9 @@ int main(int argc, char *argv[])
 				string fileName = installDir + "/bin/healthcheck";
 				ifstream file (fileName.c_str());
 				if (!file)	// CE
-					calpontPackage1 = "mariadb-columnstore-" + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-" + version;
 				else		// EE
-					calpontPackage1 = "mariadb-columnstore-ent-" + systemsoftware.Version + "-" + systemsoftware.Release;
+					calpontPackage1 = "mariadb-columnstore-ent-" + version;
 				calpontPackage2 = "dummy";
 				calpontPackage3 = "dummy";
 				mysqlPackage = calpontPackage1;
@@ -3542,7 +3544,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "MariaDB Columnstore System failed to start, check log files in /var/log/Columnstore" << endl;
+		cout << endl << "MariaDB Columnstore System failed to start, check log files in /var/log/mariadb/columnstore" << endl;
 		exit(1);
 	}
 
@@ -4241,7 +4243,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Columnstore");
+				string logdir("/var/log/mariadb/columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -4899,7 +4901,7 @@ bool storageSetup(bool amazonInstall)
 			{
 				cout << endl << " Running HDFS Sanity Test (please wait):    ";
 				cout.flush();
-				string logdir("/var/log/Columnstore");
+				string logdir("/var/log/mariadb/columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 				string hdfslog = logdir + "/hdfsCheck.log1";
 

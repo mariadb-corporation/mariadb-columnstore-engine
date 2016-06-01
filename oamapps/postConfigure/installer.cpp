@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	if (argc >= 13)
 		installDir = argv[12];
 	else
-		installDir = "/usr/local/MariaDB/Columnstore";
+		installDir = "/usr/local/mariadb/columnstore";
 
     ofstream file("/dev/null");
 
@@ -870,7 +870,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "ERROR: MariaDB Columnstore Process failed to start, check log files in /var/log/Columnstore" << endl;
+		cout << endl << "ERROR: MariaDB Columnstore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
 	}
 }
 
@@ -1112,7 +1112,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 				mount1 = "/mnt\\/tmp/";
 			else
 				if ( moduleType == "pm" )
-					mount1 = "/MariaDB/Columnstore\\/data/";
+					mount1 = "/mariadb/columnstore\\/data/";
 				else
 					return true;
 			break;
@@ -1121,7 +1121,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 		{
 			if ( moduleType == "pm" ) {
 				mount1 = "/mnt\\/tmp/";
-				mount2 = "/MariaDB/Columnstore\\/data/";
+				mount2 = "/mariadb/columnstore\\/data/";
 			}
 			else
 				return true;
@@ -1133,7 +1133,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 				mount1 = "/mnt\\/tmp/";
 			else
 				if ( moduleType == "pm" )
-					mount1 = "/MariaDB/Columnstore\\/data/";
+					mount1 = "/mariadb/columnstore\\/data/";
 				else
 					return true;
 			break;
@@ -1142,7 +1142,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 		{
 			if ( moduleType == "pm" ) {
 				mount1 = "/mnt\\/tmp/";
-				mount2 = "/MariaDB/Columnstore\\/data/";
+				mount2 = "/mariadb/columnstore\\/data/";
 			}
 			else
 				return true;

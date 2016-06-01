@@ -27,3 +27,11 @@ ltmain.sh
 missing
 stamp-h1
 export/
+buildFlags
+dbcon/ddlpackage/ddl-gram.cpp
+dbcon/ddlpackage/ddl-gram.h
+dbcon/dmlpackage/dml-gram.cpp
+dbcon/dmlpackage/dml-gram.h
+versioning/BRM/autoinctest
+versioning/BRM/copylocktest
+versioning/BRM/tablelocktest

@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -349,7 +349,7 @@ list<string> ReplayTxnLog::getLogFileNames()
 		oam.getLogFile("pm1", "data", fullLogFileName);
 	#else
 */
-		fullLogFileName = "/var/log/Columnstore/data/data_mods.log";
+		fullLogFileName = "/var/log/mariadb/columnstore/data/data_mods.log";
 /*
 	#endif
 */

@@ -3,11 +3,11 @@
 alias mcsmysql='/usr/local/Calpont/mysql/bin/mysql --defaults-file=/usr/local/Calpont/mysql/my.cnf -u root'
 alias ma=/usr/local/Calpont/bin/mcsadmin
 alias mcsadmin=/usr/local/Calpont/bin/mcsadmin
-alias home='cd /usr/local/MariaDB/Columnstore'
-alias log='cd /var/log/Columnstore/'
-alias core='cd /var/log/Columnstore/corefiles'
+alias home='cd /usr/local/mariadb/columnstore'
+alias log='cd /var/log/mariadb/columnstore/'
+alias core='cd /var/log/mariadb/columnstore/corefiles'
 alias tmsg='tail -f /var/log/messages'
-alias tdebug='tail -f /var/log/Columnstore/debug.log'
-alias tinfo='tail -f /var/log/Columnstore/info.log'
+alias tdebug='tail -f /var/log/mariadb/columnstore/debug.log'
+alias tinfo='tail -f /var/log/mariadb/columnstore/info.log'
 alias dbrm='cd /usr/local/Calpont/data1/systemFiles/dbrm'
 alias module='cat /usr/local/Calpont/local/module'

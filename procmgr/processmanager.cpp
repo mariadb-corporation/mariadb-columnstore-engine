@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -2455,7 +2455,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					// Wait for everything to settle down
 					sleep(5);
 					// Save the BRM. This command presages a system backup. Best to have a current BRM on disk
-					string logdir("/var/log/Columnstore");
+					string logdir("/var/log/mariadb/columnstore");
 					if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 					string cmd = startup::StartUp::installDir() + "/bin/save_brm  > " + logdir + "/save_brm.log1 2>&1";
 					int rtnCode = system(cmd.c_str());
@@ -6172,7 +6172,7 @@ std::string ProcessManager::sendMsgProcMon1( std::string module, ByteStream msg,
 void ProcessManager::saveBRM(bool skipSession, bool clearshm)
 {
 	Oam oam;
-	string logdir("/var/log/Columnstore");
+	string logdir("/var/log/mariadb/columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 
 	log.writeLog(__LINE__, "Running reset_locks", LOG_TYPE_DEBUG);

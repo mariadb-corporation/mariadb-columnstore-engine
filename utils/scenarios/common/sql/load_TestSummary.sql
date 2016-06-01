@@ -4,7 +4,7 @@
 *  Author:         Joseph Williams
 *  Purpose:        Script to load the performance test result from a CSV file.
 ******************************************************************************/
-LOAD DATA INFILE '/usr/local/MariaDB/Columnstore/data/bulk/data/import/TestSummary.tbl' 
+LOAD DATA INFILE '/usr/local/mariadb/columnstore/data/bulk/data/import/TestSummary.tbl' 
 INTO TABLE TestSummary
 FIELDS 
 TERMINATED BY '|' 

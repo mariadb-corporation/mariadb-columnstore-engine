@@ -21,27 +21,27 @@ filter f_local1debug { facility(local1) and level(debug); };
 filter f_local2crit { facility(local2) and level(crit); };
 
 destination d_crit{
-	file("/var/log/Columnstore/crit.log");
+	file("/var/log/mariadb/columnstore/crit.log");
 };
 
 destination d_err{       
-	file("/var/log/Columnstore/err.log");
+	file("/var/log/mariadb/columnstore/err.log");
 };
 
 destination d_warning{       
-	file("/var/log/Columnstore/warning.log");
+	file("/var/log/mariadb/columnstore/warning.log");
 };
 
 destination d_info{       
-	file("/var/log/Columnstore/info.log");
+	file("/var/log/mariadb/columnstore/info.log");
 };
 
 destination d_debug{       
-	file("/var/log/Columnstore/debug.log");
+	file("/var/log/mariadb/columnstore/debug.log");
 };
 
 destination d_data_mods{       
-	file("/var/log/Columnstore/data/data_mods.log");
+	file("/var/log/mariadb/columnstore/data/data_mods.log");
 };
 
 log{

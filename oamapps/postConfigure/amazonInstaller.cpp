@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -113,7 +113,7 @@ string SystemSection = "SystemConfig";
 string InstallSection = "Installation";
 string ModuleSection = "SystemModuleConfig";
 
-string installDir = "/usr/local/MariaDB/Columnstore";
+string installDir = "/usr/local/mariadb/columnstore";
 
 InstanceList uminstancelist;
 InstanceList pminstancelist;
@@ -2750,7 +2750,7 @@ void cleanupSystem(bool terminate)
 	if ( terminate ) {
 		cout << endl << "***** Performing System Cleanup *****" << endl << endl;
 
-		system("umount /usr/local/MariaDB/Columnstore/data* > /dev/null 2>&1");
+		system("umount /usr/local/mariadb/columnstore/data* > /dev/null 2>&1");
 	
 		//run pre-uninstall
 		string cmd = installDir + "/bin/pre-uninstall  > /dev/null 2>&1";

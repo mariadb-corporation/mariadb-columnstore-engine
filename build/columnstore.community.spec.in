@@ -1,56 +1,43 @@
 #
 # $Id$
 #
-Summary: InfiniDB-MariaDB software
-Name: infinidb
+Summary: MariaDB-Columnstore software
+Name: mariadb-columnstore
 @@VERSION@@
 @@RELEASE@@
-Vendor: MariaDB, Inc.
+Vendor: MariaDB Corporation Ab
 URL: http://www.mariadb.com/
 @@PACKAGER@@
 Group: Applications
-License: Copyright (c) 2016 MariaDB, Inc., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.
-BuildRoot: %{_tmppath}/%{name}-%{release}-buildroot
+License: Copyright (c) 2016 MariaDB Corporation Ab., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.
+BuildRoot: %{_tmppath}/%{name}.%{release}-buildroot
 
 %description
-InfiniDB-MariaDB software meta-package
+MariaDB-Columnstore software meta-package
 
 %package platform
-Summary: InfiniDB-MariaDB software binaries
+Summary: MariaDB-Columnstore software binaries
 Group: Applications
-Obsoletes: calpont
-Requires: expect, infinidb-libs
+Requires: expect, mariadb-columnstore-libs
 
 %description platform
-InfiniDB-MariaDB binary files
+MariaDB-Columnstore binary files
 @@BUILDINFO@@
 
 %package libs
-Summary: InfiniDB-MariaDB software libraries
+Summary: MariaDB-Columnstore software libraries
 Group: Applications
-Obsoletes: calpont
 
 %description libs
-InfiniDB-MariaDB libraries
-
-%package enterprise
-Summary: InfiniDB Enterprise software binaries
-Group: Applications
-Obsoletes: calpont
-Requires: infinidb-libs, infinidb-platform
-License: Proprietary; Copyright (c) 2014 InfiniDB, Inc., all rights reserved
-
-%description enterprise
-InfiniDB Enterprise binary files
+MariaDB-Columnstore libraries
 
 %package storage-engine
-Summary: InfiniDB-MariaDB software MariaDB connector
+Summary: MariaDB-Columnstore software MariaDB connector
 Group: Applications
-Obsoletes: calpont-mysql
-Requires: infinidb-libs
+Requires: mariadb-columnstore-libs
 
 %description storage-engine
-InfiniDB MariaDB connector binary files
+MariaDB Columnstore connector binary files
 
 %prep
 %define _use_internal_dependency_generator 0
@@ -62,10 +49,10 @@ InfiniDB MariaDB connector binary files
 
 %install
 mkdir -p %{buildroot}/usr/local
-tar -C $RPM_BUILD_DIR/%{name}-%{version}-%{release} -cf - . | tar -C %{buildroot}/usr/local -xf -
+tar -C $RPM_BUILD_DIR/%{name}-%{version}.%{release} -cf - . | tar -C %{buildroot}/usr/local -xf -
 
 %clean
-rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
+rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 
 %changelog
 
@@ -85,15 +72,15 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/bin/pre-uninstall
 /usr/local/mariadb/columnstore/bin/PrimProc
 /usr/local/mariadb/columnstore/bin/DecomSvr
-/usr/local/mariadb/columnstore/bin/upgrade-infinidb.sh
+/usr/local/mariadb/columnstore/bin/upgrade-columnstore.sh
 /usr/local/mariadb/columnstore/bin/run.sh
-/usr/local/mariadb/columnstore/bin/infinidb
-/usr/local/mariadb/columnstore/bin/calpontSyslog 
-/usr/local/mariadb/columnstore/bin/calpontSyslog7
-/usr/local/mariadb/columnstore/bin/calpontSyslog-ng 
+/usr/local/mariadb/columnstore/bin/columnstore
+/usr/local/mariadb/columnstore/bin/columnstoreSyslog 
+/usr/local/mariadb/columnstore/bin/columnstoreSyslog7
+/usr/local/mariadb/columnstore/bin/columnstoreSyslog-ng 
 /usr/local/mariadb/columnstore/bin/syslogSetup.sh
 /usr/local/mariadb/columnstore/bin/cplogger
-/usr/local/mariadb/columnstore/bin/infinidb.def
+/usr/local/mariadb/columnstore/bin/columnstore.def
 /usr/local/mariadb/columnstore/bin/dbbuilder
 /usr/local/mariadb/columnstore/bin/cpimport.bin
 /usr/local/mariadb/columnstore/bin/load_brm
@@ -110,18 +97,14 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/bin/trapHandler
 /usr/local/mariadb/columnstore/bin/remote_command.sh
 /usr/local/mariadb/columnstore/bin/postConfigure
-/usr/local/mariadb/columnstore/bin/calpontLogRotate
+/usr/local/mariadb/columnstore/bin/columnstoreLogRotate
 /usr/local/mariadb/columnstore/bin/transactionLog
-/usr/local/mariadb/columnstore/bin/calpontDBWrite
+/usr/local/mariadb/columnstore/bin/columnstoreDBWrite
 /usr/local/mariadb/columnstore/bin/transactionLogArchiver.sh
 /usr/local/mariadb/columnstore/bin/system_installer.sh
 /usr/local/mariadb/columnstore/bin/installer
 /usr/local/mariadb/columnstore/bin/module_installer.sh
 /usr/local/mariadb/columnstore/bin/patchInstaller
-/usr/local/mariadb/columnstore/bin/patch_installer.sh
-/usr/local/mariadb/columnstore/bin/xm_installer.sh
-/usr/local/mariadb/columnstore/bin/calpontUninstall.sh
-/usr/local/mariadb/columnstore/bin/director_installer.sh
 /usr/local/mariadb/columnstore/bin/user_installer.sh
 /usr/local/mariadb/columnstore/bin/performance_installer.sh
 /usr/local/mariadb/columnstore/bin/startupTests.sh
@@ -130,10 +113,10 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/bin/remote_scp_put.sh
 /usr/local/mariadb/columnstore/bin/remotessh.exp
 /usr/local/mariadb/columnstore/bin/ServerMonitor
-/usr/local/mariadb/columnstore/bin/master-rep-infinidb.sh 
-/usr/local/mariadb/columnstore/bin/slave-rep-infinidb.sh
+/usr/local/mariadb/columnstore/bin/master-rep-columnstore.sh 
+/usr/local/mariadb/columnstore/bin/slave-rep-columnstore.sh
 /usr/local/mariadb/columnstore/bin/rsync.sh
-/usr/local/mariadb/columnstore/bin/calpontSupport
+/usr/local/mariadb/columnstore/bin/columnstoreSupport
 /usr/local/mariadb/columnstore/bin/hardwareReport.sh
 /usr/local/mariadb/columnstore/bin/softwareReport.sh
 /usr/local/mariadb/columnstore/bin/configReport.sh
@@ -144,7 +127,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/bin/alarmReport.sh
 /usr/local/mariadb/columnstore/bin/amazonInstaller
 /usr/local/mariadb/columnstore/bin/remote_command_verify.sh
-/usr/local/mariadb/columnstore/bin/disable-rep-infinidb.sh
+/usr/local/mariadb/columnstore/bin/disable-rep-columnstore.sh
 
 
 #
@@ -175,7 +158,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/bin/hdfsCheck
 /usr/local/mariadb/columnstore/bin/configxml.sh
 /usr/local/mariadb/columnstore/bin/remote_scp_get.sh
-/usr/local/mariadb/columnstore/bin/calpontAlias
+/usr/local/mariadb/columnstore/bin/columnstoreAlias
 /usr/local/mariadb/columnstore/bin/autoConfigure
 /usr/local/mariadb/columnstore/bin/ddlcleanup
 /usr/local/mariadb/columnstore/bin/idbmeminfo
@@ -186,7 +169,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/bin/myCnf-exclude-args.text
 /usr/local/mariadb/columnstore/bin/mycnfUpgrade
 /usr/local/mariadb/columnstore/bin/getMySQLpw
-/usr/local/mariadb/columnstore/bin/infinidb.conf
+/usr/local/mariadb/columnstore/bin/columnstore.conf
 
 /usr/local/mariadb/columnstore/sbin/snmpd
 /usr/local/mariadb/columnstore/sbin/snmptrapd
@@ -259,43 +242,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/post/test-003.sh
 /usr/local/mariadb/columnstore/post/test-004.sh
 
-%files enterprise
-%defattr(-, root, root)
-/usr/local/mariadb/columnstore/bin/displayJobGraph.sh
-/usr/local/mariadb/columnstore/bin/dbhealth.sh 
-/usr/local/mariadb/columnstore/bin/dbhealth.sql
-
 # Tools...
-/usr/local/mariadb/columnstore/bin/dumpcol
-/usr/local/mariadb/columnstore/bin/oid2file
-/usr/local/mariadb/columnstore/bin/evalcol
-/usr/local/mariadb/columnstore/bin/SesMgr
-/usr/local/mariadb/columnstore/bin/dumpVss
-/usr/local/mariadb/columnstore/bin/editTxn
-/usr/local/mariadb/columnstore/bin/dbprof.pl
-/usr/local/mariadb/columnstore/bin/dumpobm
-/usr/local/mariadb/columnstore/bin/file2oid.pl
-/usr/local/mariadb/columnstore/bin/print_journal
-/usr/local/mariadb/columnstore/bin/healthcheck
-/usr/local/mariadb/columnstore/bin/glusterctl
-/usr/local/mariadb/columnstore/bin/glusteradd
-/usr/local/mariadb/columnstore/bin/glusterconf
-/usr/local/mariadb/columnstore/bin/redistributeDB
-/usr/local/mariadb/columnstore/bin/databaseSizeReport
-/usr/local/mariadb/columnstore/bin/gdb
-#
-/usr/local/mariadb/columnstore/tools/copy2here.sh
-/usr/local/mariadb/columnstore/tools/getlogs.sh
-/usr/local/mariadb/columnstore/tools/getmodules.sh
-/usr/local/mariadb/columnstore/tools/getps.sh
-/usr/local/mariadb/columnstore/tools/getsar.sh
-/usr/local/mariadb/columnstore/tools/getuserinput.sh
-/usr/local/mariadb/columnstore/tools/prat
-/usr/local/mariadb/columnstore/tools/prat.sh
-/usr/local/mariadb/columnstore/tools/ps
-/usr/local/mariadb/columnstore/tools/pscollect
-/usr/local/mariadb/columnstore/tools/README
-/usr/local/mariadb/columnstore/tools/tarfiles.sh
 #
 %files libs
 %defattr(-, root, root)
@@ -349,7 +296,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}-%{release}
 /usr/local/mariadb/columnstore/lib/libcalmysql.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libudf_mysql.so.1.0.0
 
-/usr/local/mariadb/columnstore/mysql/mysql-Calpont
+/usr/local/mariadb/columnstore/mysql/mysql-Columnstore
 /usr/local/mariadb/columnstore/mysql/install_calpont_mysql.sh
 /usr/local/mariadb/columnstore/mysql/syscatalog_mysql.sql
 /usr/local/mariadb/columnstore/mysql/dumpcat_mysql.sql
@@ -378,7 +325,7 @@ prefix=/usr/local
 
 test -x /usr/local/mariadb/columnstore/bin/post-install && /usr/local/mariadb/columnstore/bin/post-install --prefix=$prefix --rpmmode=$rpmmode
 
-echo "InfinIDB RPM install completed"
+echo "MariaDB ColumnStore RPM install completed"
 
 %post libs
 rpmmode=install
@@ -390,7 +337,7 @@ fi
 
 prefix=/usr/local
 
-echo "InfinIDB RPM install completed"
+echo "MariaDB ColumnStore RPM install completed"
 
 %post storage-engine
 rpmmode=install
@@ -402,20 +349,8 @@ fi
 
 prefix=/usr/local
 
-echo "InfinIDB RPM install completed"
+echo "MariaDB ColumnStore RPM install completed"
 
-
-%post enterprise
-rpmmode=install
-if  [ "$1" -eq "$1" 2> /dev/null ]; then
-	if [ $1 -ne 1 ]; then
-		rpmmode=upgrade
-	fi
-fi
-
-prefix=/usr/local
-
-echo "InfinIDB RPM install completed"
 
 %preun platform
 rpmmode=upgrade
@@ -446,18 +381,6 @@ fi
 exit 0
 
 %preun storage-engine
-rpmmode=upgrade
-if  [ "$1" -eq "$1" 2> /dev/null ]; then
-	if [ $1 -ne 1 ]; then
-		rpmmode=erase
-	fi
-else
-	rpmmode=erase
-fi
-
-exit 0
-
-%preun enterprise
 rpmmode=upgrade
 if  [ "$1" -eq "$1" 2> /dev/null ]; then
 	if [ $1 -ne 1 ]; then

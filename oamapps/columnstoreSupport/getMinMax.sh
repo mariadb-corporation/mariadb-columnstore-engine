@@ -9,7 +9,7 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-	INSTALLDIR="/usr/local/MariaDB/Columnstore"
+	INSTALLDIR="/usr/local/mariadb/columnstore"
 	MYSQLCNF=$INSTALLDIR/mysql/my.cnf
 	MYSQLCMD="$INSTALLDIR/mysql/bin/mysql --defaults-file=$MYSQLCNF -u root"
 fi
@@ -35,7 +35,7 @@ column=$3
 # Validate that the column exists.
 #
 sql="select count(*) from syscolumn where \`schema\`='$db' and tablename='$table' and columnname='$column';"
-count=`$MYSQLCMD columnstoresys --skip-column-names -e "$sql;"`
+count=`$MYSQLCMD calpontsys --skip-column-names -e "$sql;"`
 if [ $count -le 0 ]; then
 	echo ""
 	echo "$db.$table.$column does not exist in Columnstore."
@@ -51,7 +51,7 @@ fi
 # 9  bigint
 # 11 datetime
 sql="select datatype from syscolumn where \`schema\`='$db' and tablename='$table' and columnname='$column';"
-dataType=`$MYSQLCMD columnstoresys --skip-column-names -e "$sql"`
+dataType=`$MYSQLCMD calpontsys --skip-column-names -e "$sql"`
 if [ $dataType -ne 6 ] && [ $dataType -ne 8 ] && [ $dataType -ne 9 ] && [ $dataType -ne 11 ]; then
 	echo ""
 	echo "The column data type must be an int, bigint, date, or datetime."
@@ -63,7 +63,7 @@ fi
 # Grab the objectid for the column.
 #
 sql="select objectid from syscolumn where \`schema\`='$db' and tablename='$table' and columnname='$column';" 
-objectid=`$MYSQLCMD columnstoresys --skip-column-names -e "$sql"`
+objectid=`$MYSQLCMD calpontsys --skip-column-names -e "$sql"`
 
 #
 # Set the editem specific parameter if the column is a date or datetime.
@@ -77,7 +77,7 @@ fi
 #
 # Use the editem utility to get the min and max value.
 #
-/usr/local/MariaDB/Columnstore/bin/editem -o $objectid $parm | grep max | awk -v dataType=$dataType '
+/usr/local/mariadb/columnstore/bin/editem -o $objectid $parm | grep max | awk -v dataType=$dataType '
 	BEGIN {
 		allValid=1;
 		foundValidExtent=0;

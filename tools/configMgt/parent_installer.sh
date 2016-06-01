@@ -189,7 +189,7 @@ if { $CONFIGFILE != "NULL"} {
 	# copy over Calpont.xml file
 	#
 	send_user "Copy Calpont Configuration File               "
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/MariaDB/Columnstore/etc/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/mariadb/columnstore/etc/Calpont.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -206,7 +206,7 @@ if { $CONFIGFILE != "NULL"} {
 	# rename previous installed config file
 	#
 	send_user "Copy RPM-saved Calpont Configuration File     "
-	send "ssh $USERNAME@$SERVER 'cd /usr/local/MariaDB/Columnstore/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
+	send "ssh $USERNAME@$SERVER 'cd /usr/local/mariadb/columnstore/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
 	expect -re "word: "
 	# password for ssh
 	send "$PASSWORD\n"

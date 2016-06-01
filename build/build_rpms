@@ -6,10 +6,13 @@
 verbose=0
 mysqldir=$HOME/mariadb-columnstore-server/export/mysql
 
+# set default as community
+community=true
+
 usage()
 {
 cat <<EOD
-usage: build_rpms [--verbose] [--local-mysql] [--help]
+usage: build_rpms [--community] [--verbose] [--local-mysql] [--help]
    --local-mysql use local (relative) mysql binary tree
 EOD
 }
@@ -18,10 +21,12 @@ for arg in "$@"; do
 	if [ `expr -- "$arg" : '--verbose'` -eq 9 ]; then
 		((verbose++))
 	elif [ `expr -- "$arg" : '--local-mysql'` -eq 13 ]; then
-		mysqldir=../MariaDB/Columnstore/mysql
+		mysqldir=../mariadb/columnstore/mysql
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		usage
 		exit 0
+	elif [ `expr -- "$arg" : '--community'` -eq 11 ]; then
+                community=true
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
 	fi
@@ -49,20 +54,20 @@ buildroot=$HOME/rpm/BUILD/mariadb-columnstore-$version.$release
 
 rm -rf $buildroot
 mkdir -p $buildroot
-mkdir -p $buildroot/MariaDB
+mkdir -p $buildroot/mariadb/columnstore
 echo -n "Writing binary files to $buildroot..."
 tar -cf - --exclude 'export/include' --exclude 'export/*.tar' export | tar -C $buildroot -xf -
-mv $buildroot/export $buildroot/MariaDB/Columnstore
+mv $buildroot/export/* $buildroot/mariadb/columnstore/.
 
 #get mysql server files
 pushd $mysqldir > /dev/null
-mkdir -p $buildroot/MariaDB/Columnstore/mysql
-cpio -pdmu --quiet $buildroot/MariaDB/Columnstore/mysql < files.lst
+mkdir -p $buildroot/mariadb/columnstore/mysql
+cpio -pdmu --quiet $buildroot/mariadb/columnstore/mysql < files.lst
 popd >/dev/null
 
 #clean up some files from buildroot
-rm -f $buildroot/MariaDB/Columnstore/etc/Doxyfile
-for file in $buildroot/MariaDB/Columnstore/lib/*; do
+rm -f $buildroot/mariadb/columnstore/etc/Doxyfile
+for file in $buildroot/mariadb/columnstore/lib/*; do
 	if [ -h $file ]; then
 		rm -f $file
 	fi
@@ -70,16 +75,16 @@ done
 
 #temporarily clean up these BRM thingies
 for file in dbrm script-fcns; do
-	rm -f $buildroot/MariaDB/Columnstore/bin/$file
+	rm -f $buildroot/mariadb/columnstore/bin/$file
 done
 
 #clean up these bulkload scripts
 for file in bulkload.sh cleanup.sh dbbuilder.sh dbload.sh cpimport.sh bulkloadp.sh; do
-	rm -f $buildroot/MariaDB/Columnstore/bin/$file
+	rm -f $buildroot/mariadb/columnstore/bin/$file
 done
 
-rm -f $buildroot/MariaDB/Columnstore/lib/libidbboot.a
-rm -f $buildroot/MariaDB/Columnstore/lib/libiberty.a
+rm -f $buildroot/mariadb/columnstore/lib/libidbboot.a
+rm -f $buildroot/mariadb/columnstore/lib/libiberty.a
 
 mkdir -p $HOME/rpm/BUILD $HOME/rpm/RPMS $HOME/rpm/SRPMS $HOME/rpm/SPECS $HOME/rpm/tmp
 
@@ -104,7 +109,12 @@ b="$b\\n$l"
 done
 echo $b )`
 
-cp ./build/columnstore.spec.in $HOME/rpm/SPECS/columnstore.spec
+if [ ! $community ]; then
+	cp ./build/columnstore.spec.in $HOME/rpm/SPECS/columnstore.spec
+else
+	cp ./build/columnstore.community.spec.in $HOME/rpm/SPECS/columnstore.spec
+fi
+
 sed -i  -e "s/@@PACKAGER@@/Packager: $packager/" \
 	-e "s/@@VERSION@@/Version: $version/" \
 	-e "s/@@RELEASE@@/Release: $release/" \
@@ -115,6 +125,7 @@ echo done.
 echo -n "Building rpms..."
 
 rpmbuild -ba $HOME/rpm/SPECS/columnstore.spec > /tmp/rpmbuild.out.$$ 2>&1
+
 rc=$?
 echo done.
 if [ $verbose -gt 0 -o $rc -ne 0 ]; then

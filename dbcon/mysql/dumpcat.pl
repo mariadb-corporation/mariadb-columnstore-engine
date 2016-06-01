@@ -5,7 +5,7 @@
 use DBI;
 use DBD::mysql;
 
-$data_source = 'DBI:mysql:database=calpontsys:mysql_read_default_file=/usr/local/MariaDB/Columnstore/mysql/my.cnf';
+$data_source = 'DBI:mysql:database=calpontsys:mysql_read_default_file=/usr/local/mariadb/columnstore/mysql/my.cnf';
 $username = 'root';
 $auth = '';
 %attr = ();
