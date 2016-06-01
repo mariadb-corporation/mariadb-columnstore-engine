@@ -3273,9 +3273,6 @@ int ProcessMonitor::getConfigLog()
 					case 5:
 						configData = configData | LEVEL_DEBUG;
 						break;
-					case 6:
-						configData = configData | LEVEL_DATA;
-						break;
 					default:
 						break;
 				} //end of switch
