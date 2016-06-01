@@ -1,4 +1,4 @@
-/* Copyright (C) 2016 MariaDB, Corporation
+/* Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -363,7 +363,6 @@ namespace oam
         "local1.=warning -/var/log/mariadb/columnstore/warning.log",
         "local1.=info -/var/log/mariadb/columnstore/info.log",
         "local1.=debug -/var/log/mariadb/columnstore/debug.log",
-        "local2.=crit -/var/log/mariadb/columnstore/data/data_mods.log",
         ""
     };
 
@@ -387,7 +386,6 @@ namespace oam
         LEVEL_WARNING = 0x4,
         LEVEL_INFO = 0x8,
         LEVEL_DEBUG = 0x10,
-        LEVEL_DATA = 0x20
     };
 
     /** @brief Alarm IDs

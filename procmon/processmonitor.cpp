@@ -1,4 +1,4 @@
-/* Copyright (C) 2016 MariaDB, Corporation
+/* Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -3272,9 +3272,6 @@ int ProcessMonitor::getConfigLog()
 						break;
 					case 5:
 						configData = configData | LEVEL_DEBUG;
-						break;
-					case 6:
-						configData = configData | LEVEL_DATA;
 						break;
 					default:
 						break;

@@ -3357,8 +3357,6 @@ int processCommand(string* arguments)
                                 cout << "Info ";
                             if ( ((data & LEVEL_DEBUG) ? 1 : 0) == 1 )
                                 cout << "Debug ";
-                            if ( ((data & LEVEL_DATA) ? 1 : 0) == 1 )
-                                cout << "Data";
                             cout << endl;
                         }
                     }

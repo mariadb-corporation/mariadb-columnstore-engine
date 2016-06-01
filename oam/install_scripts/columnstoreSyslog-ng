@@ -40,9 +40,6 @@ destination d_debug{
 	file("/var/log/mariadb/columnstore/debug.log");
 };
 
-destination d_data_mods{       
-	file("/var/log/mariadb/columnstore/data/data_mods.log");
-};
 
 log{
         source(s_columnstore);
@@ -69,10 +66,5 @@ log{
 	source(s_columnstore);        
 	filter(f_local1debug);        
 	destination(d_debug);
-};
-log{        
-	source(s_columnstore);        
-	filter(f_local2crit);        
-	destination(d_data_mods);
 };
 
