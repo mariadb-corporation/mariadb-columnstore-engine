@@ -3,7 +3,7 @@ include ../../rules.mak
 #
 # $Id: Makefile 2142 2013-08-07 03:34:03Z bwilkinson $
 #
-# Copyright (C) 2009-2012 Calpont Corporation
+# Copyright (C) 2016 MariaDB, Corporation
 # All rights reserved
 #*****************************************************************************************/
 

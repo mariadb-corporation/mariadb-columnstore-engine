@@ -2,7 +2,7 @@ include ../../rules.mak
 #******************************************************************************************
 # $Id: Makefile 1872 2013-04-26 18:13:19Z rdempsey $
 #
-# Copyright (C) 2009-2012 Calpont Corporation
+# Copyright (C) 2016 MariaDB, Corporation
 # All rights reserved
 #*****************************************************************************************/
 .PHONY: install clean test docs coverage leakcheck

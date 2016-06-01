@@ -1,7 +1,7 @@
 #******************************************************************************************
 # $Id: Makefile 1652 2010-08-19 18:23:27Z rdempsey $
 #
-# Copyright (C) 2009-2012 Calpont Corporation
+# Copyright (C) 2016 MariaDB, Corporation
 # All rights reserved
 # Author: Zhixuan Zhu
 #*****************************************************************************************/
