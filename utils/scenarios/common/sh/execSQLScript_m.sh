@@ -22,5 +22,5 @@
 #
 #  Execute script on test database
 #
-   /usr/local/MariaDB/Columnstore/mysql/bin/mysql --defaults-file=/usr/local/MariaDB/Columnstore/mysql/my.cnf -f -u root $1 <$6 > $logFileName.test.log 2>&1
+   /usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-file=/usr/local/mariadb/columnstore/mysql/my.cnf -f -u root $1 <$6 > $logFileName.test.log 2>&1
    diff $logFileName.ref.log $logFileName.test.log > $logFileName.diff.log

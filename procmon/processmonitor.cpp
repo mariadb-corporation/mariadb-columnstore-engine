@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -540,7 +540,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 							log.writeLog(__LINE__,  "ProcMon Running Hot-Standby");
 
 							// delete any old active alarm log file
-							unlink ("/var/log/Columnstore/activeAlarms");
+							unlink ("/var/log/mariadb/columnstore/activeAlarms");
 						}
 
 						//Check for SIMPLEX runtype processes
@@ -823,7 +823,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 					//reset BRM locks and clearShm
 					if ( requestStatus == oam::API_SUCCESS ) {
-						string logdir("/var/log/Columnstore");
+						string logdir("/var/log/mariadb/columnstore");
 						if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 						string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
 						system(cmd.c_str());
@@ -1528,7 +1528,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			runStandby = true;
 
 			// delete any old active alarm log file
-			unlink ("/var/log/Columnstore/activeAlarms");
+			unlink ("/var/log/mariadb/columnstore/activeAlarms");
 
 			log.writeLog(__LINE__, "Running Standby", LOG_TYPE_INFO);
 			//give time for Status Control thread to start reading incoming messages
@@ -2396,7 +2396,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 //						dbrmFile = tempDBRMDir + dbrmFile.substr(pos,80);;
 //				}
 	
-				string logdir("/var/log/Columnstore");
+				string logdir("/var/log/mariadb/columnstore");
 				if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 
 				string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
@@ -2470,7 +2470,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 	char timestamp[200];
 	strftime (timestamp, 200, "%m:%d:%y-%H:%M:%S", &tm);
 
-	string logdir("/var/log/Columnstore");
+	string logdir("/var/log/mariadb/columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 	string outFileName = logdir + "/" + processName + ".out";
 	string errFileName = logdir + "/" + processName + ".err";
@@ -3552,7 +3552,7 @@ int ProcessMonitor::buildSystemTables()
 	string fileName = DBdir + "/000.dir";
 
 	if (!IDBPolicy::exists(fileName.c_str())) {
-		string logdir("/var/log/Columnstore");
+		string logdir("/var/log/mariadb/columnstore");
 		if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 		string cmd = startup::StartUp::installDir() + "/bin/dbbuilder 7 > " + logdir + "/dbbuilder.log &";
 		system(cmd.c_str());
@@ -4335,7 +4335,7 @@ int ProcessMonitor::runStartupTest()
 		return oam::API_SUCCESS;
 
 	//run startup test script
-	string logdir("/var/log/Columnstore");
+	string logdir("/var/log/mariadb/columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 	string cmd = startup::StartUp::installDir() + "/bin/startupTests.sh > " + logdir + "/startupTests.log1 2>&1";
 	system(cmd.c_str());
@@ -4399,7 +4399,7 @@ int ProcessMonitor::runHDFSTest()
 	Oam oam;
 	bool fail = false;
 
-	string logdir("/var/log/Columnstore");
+	string logdir("/var/log/mariadb/columnstore");
 	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 	string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -5472,7 +5472,7 @@ bool ProcessMonitor::amazonIPCheck()
 								log.writeLog(__LINE__, "Module is Running: '" + moduleName + "' / Instance '" + instanceID + "' current IP being reconfigured in Calpont.xml. old = " + IPAddr + ", new = " + currentIPAddr, LOG_TYPE_DEBUG);
 		
 								// update the Calpont.xml with the new IP Address
-								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/MariaDB/Columnstore/etc/Calpont.xml";
+								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/mariadb/columnstore/etc/Calpont.xml";
 								system(cmd.c_str());
 							}
 							else

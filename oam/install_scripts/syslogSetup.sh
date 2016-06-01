@@ -8,14 +8,14 @@
 test $EUID -eq 0 || exit 0
 
 prefix=/usr/local
-installdir=$prefix/MariaDB/Columnstore
+installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/MariaDB/Columnstore
+		installdir=$prefix/mariadb/columnstore
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
@@ -30,7 +30,7 @@ for arg in "$@"; do
 	shift
 done
 
-if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
+if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export INFINIDB_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib
 fi
@@ -161,7 +161,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		if [ $rsyslog7 == 1 ]; then
 			rm -f /etc/rsyslog.d/49-columnstore.conf
 			cat  ${columnstoreSyslogFile7} >> ${syslog_conf}
-			chown syslog:adm /var/log/Columnstore
+			chown syslog:adm /var/log/mariadb/columnstore
 		else
 			cat  ${columnstoreSyslogFile} >> ${syslog_conf}
 		fi
@@ -228,7 +228,7 @@ test -f $installdir/post/functions && . $installdir/post/functions
 number=$RANDOM
 cplogger -i 100 "InfiniDB Log Test: $number"
 sleep 3
-egrep -qs "InfiniDB Log Test: $number" /var/log/Columnstore/info.log
+egrep -qs "InfiniDB Log Test: $number" /var/log/mariadb/columnstore/info.log
 if [ $? -eq 0 ]; then
 	echo "InfiniDB System Logging working"
 	exit 0

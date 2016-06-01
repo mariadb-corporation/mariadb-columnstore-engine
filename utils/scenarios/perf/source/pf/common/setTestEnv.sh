@@ -21,7 +21,7 @@ setNum=$3
 #
 /home/pf/auto/common/setStackConfig.sh $numUMs $numPMs
 /home/pf/auto/common/setDBRoots.sh $setNum
-/usr/local/MariaDB/Columnstore/bin/mcsadmin startsystem
+/usr/local/mariadb/columnstore/bin/mcsadmin startsystem
 sleep 90
 #
 # End of script

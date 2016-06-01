@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -424,7 +424,7 @@ int main(int argc, char **argv)
 		if ( !gOAMParentModuleFlag ) {
 			runStandby = true;
 			// delete any old active alarm log file
-			unlink ("/var/log/Columnstore/activeAlarms");
+			unlink ("/var/log/mariadb/columnstore/activeAlarms");
 		}
 
 		//launch Status table control thread on 'pm' modules

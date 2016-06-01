@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -195,7 +195,7 @@ void m4()
 //------------------------------------------------------------------------------
 // This method is intended to test the messages used to profile db performance.
 // The method also provides an example on how to use these log messages.
-// Test can be verified by viewing /var/log/Columnstore/debug.log.
+// Test can be verified by viewing /var/log/mariadb/columnstore/debug.log.
 //
 // Message types are:
 //

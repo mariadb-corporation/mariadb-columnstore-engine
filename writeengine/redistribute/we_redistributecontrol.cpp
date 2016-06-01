@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -86,7 +86,7 @@ RedistributeControl* RedistributeControl::instance()
 
 RedistributeControl::RedistributeControl() : fInfoFilePtr(NULL), fPlanFilePtr(NULL)
 {
-	// default path /usr/local/MariaDB/Columnstore/data1/systemFiles/redistribute 
+	// default path /usr/local/mariadb/columnstore/data1/systemFiles/redistribute 
 	string installDir = startup::StartUp::installDir();
 	fRedistributeDir = installDir + RedistributeDir;
 	fInfoFilePath = fRedistributeDir + InfoFileName;

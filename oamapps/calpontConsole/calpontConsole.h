@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -57,7 +57,7 @@ const int ArgNum = 10;
 const int DescNumMax = 10;
 const int cmdNum = 68;
 
-const std::string  DEFAULT_LOG_FILE = "/var/log/Columnstore/uiCommands.log";
+const std::string  DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/uiCommands.log";
 std::ofstream   logFile;
 
 /**

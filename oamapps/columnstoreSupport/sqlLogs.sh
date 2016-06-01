@@ -7,12 +7,12 @@ DB=idb_idb_sqllogs
 TABLE=statements
 
 if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	COLUMNSTORE_INSTALL_DIR=/usr/local/MariaDB/Columnstore
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-if [ $COLUMNSTORE_INSTALL_DIR != "/usr/local/MariaDB/Columnstore" ]; then
+if [ $COLUMNSTORE_INSTALL_DIR != "/usr/local/mariadb/columnstore" ]; then
 	export PATH=$COLUMNSTORE_INSTALL_DIR/bin:$COLUMNSTORE_INSTALL_DIR/mysql/bin:/bin:/usr/bin
 	export LD_LIBRARY_PATH=$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
 fi

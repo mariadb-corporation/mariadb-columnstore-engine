@@ -3,8 +3,8 @@ To build the software from source, consult the file INSTALL.
 Brief Install Instructions:
 
 1. Install the 3 MariaDB Columnstore RPMs.
-2. Install and start the software, run: /usr/local/MariaDB/Columnstore/bin/postConfigure
-3. Setup some aliases: . /usr/local/MariaDB/Columnstore/bin/MariaDB ColumnstoreAlias
+2. Install and start the software, run: /usr/local/mariadb/columnstore/bin/postConfigure
+3. Setup some aliases: . /usr/local/mariadb/columnstore/bin/MariaDB ColumnstoreAlias
 4. Connect to MySQL: idbmysql
 5. Try the test in step 12 below
 
@@ -21,7 +21,7 @@ Detailed Installation Instructions:
    	tar xvf MariaDB Columnstore-2.2.0-2.x86_64.rpm.tar.gz
    
 4. Install the 3 RPMs in this order, the MariaDB Columnstore software will be installed in 
-   /usr/local/MariaDB/Columnstore.
+   /usr/local/mariadb/columnstore.
 
    	rpm -ivh infinidb-libs-2.2.0-2.x86_64.rpm
    	rpm -ivh infinidb-platform-2.2.0-2.x86_64.rpm
@@ -31,19 +31,19 @@ Detailed Installation Instructions:
 5a.To configure and run on a single server system utilizing local disk storage, 
    run install script:
    
-   	/usr/local/MariaDB/Columnstore/bin/postConfigure
+   	/usr/local/mariadb/columnstore/bin/postConfigure
 
 5b.To configure and run on a multi-server system and/or to utilize a SAN storage 
    system, follow the instructions in the MariaDB Columnstore Installation Guide.
 
-   	/usr/local/MariaDB/Columnstore/bin/postConfigure
+   	/usr/local/mariadb/columnstore/bin/postConfigure
 
 6. Ports utilized by the MariaDB Columnstore Software
 
    The MariaDB Columnstore MySQL daemon utilizes port 3306. To use a different port, update 
    the 2 locations in the following file:
 
-   	/usr/local/MariaDB/Columnstore/mysql/my.cnf
+   	/usr/local/mariadb/columnstore/mysql/my.cnf
 
 	port            = 3306
 	port            = 3306
@@ -53,7 +53,7 @@ Detailed Installation Instructions:
 	8600 - 8622, 8700, and 8800
 
 7. Setup some aliases:
-. /usr/local/MariaDB/Columnstore/bin/MariaDB ColumnstoreAlias
+. /usr/local/mariadb/columnstore/bin/MariaDB ColumnstoreAlias
 
 8. To manually start and stop the MariaDB Columnstore Software as the root user run:
 
@@ -127,7 +127,7 @@ Detailed Installation Instructions:
 
 		mysql>
 
-12. Run the following upgrade script to create calponsys schema and upgrade the syscolumn table:  /usr/local/MariaDB/Columnstore/bin/upgrade-infinidb.sh
+12. Run the following upgrade script to create calponsys schema and upgrade the syscolumn table:  /usr/local/mariadb/columnstore/bin/upgrade-infinidb.sh
 
 13. As an example to get you started, try this:
 

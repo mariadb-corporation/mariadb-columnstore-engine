@@ -8,7 +8,7 @@
 #*  Parameter:      None
 #******************************************************************************/
 
-CTOOLS=/usr/local/MariaDB/Columnstore/tools
+CTOOLS=/usr/local/mariadb/columnstore/tools
 
 getuserinput ()
 { echo -n "Enter the two digit day of the month for the desired timeframe  > "

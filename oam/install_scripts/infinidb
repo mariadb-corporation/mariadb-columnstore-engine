@@ -107,7 +107,7 @@ start() {
 		#infinidb core files
 		$SUDO ulimit -c unlimited  > /dev/null 2>&1
 		$SUDO sysctl -q -w kernel.core_uses_pid=1  > /dev/null 2>&1
-		$SUDO sysctl -q -w kernel.core_pattern=/var/log/Columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
+		$SUDO sysctl -q -w kernel.core_pattern=/var/log/mariadb/columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
 	fi
 
 	RETVAL=0

@@ -10,7 +10,7 @@
 #*                  
 #******************************************************************************/
 
-CTOOLS=/usr/local/MariaDB/Columnstore/tools
+CTOOLS=/usr/local/mariadb/columnstore/tools
 
 localhost=$(hostname -s)
 #
@@ -38,9 +38,9 @@ while read moduletype hostname hostdir; do
           echo Collecting files on remote host $servername
 	  echo "  and copying them to this server"
           tarfile=$hostdir.tar
-          /usr/local/MariaDB/Columnstore/bin/remote_command.sh $servername $srvpwd "$CTOOLS/tarfiles.sh $hostdir $tarfile" 
+          /usr/local/mariadb/columnstore/bin/remote_command.sh $servername $srvpwd "$CTOOLS/tarfiles.sh $hostdir $tarfile" 
 	  cd $CTOOLS/data
-          /usr/local/MariaDB/Columnstore/bin/remote_scp_get.sh $servername $srvpwd $CTOOLS/data/$tarfile 
+          /usr/local/mariadb/columnstore/bin/remote_scp_get.sh $servername $srvpwd $CTOOLS/data/$tarfile 
        fi
        done
     fi

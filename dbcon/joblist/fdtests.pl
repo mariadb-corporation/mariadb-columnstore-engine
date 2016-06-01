@@ -6,7 +6,7 @@ use DBI;
 use DBD::mysql;
 
 $databasename='calpont';
-$cnffile='/usr/local/MariaDB/Columnstore/mysql/my.cnf';
+$cnffile='/usr/local/mariadb/columnstore/mysql/my.cnf';
 
 $data_source = 'DBI:mysql:database=' . $databasename . ':mysql_read_default_file=' . $cnffile . '';
 $username = 'root';

@@ -301,11 +301,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# cat /etc/MariaDB/Columnstore.xml ################# ' >> " + outputFile;
+			cmd = "echo '################# cat /etc/mariadb/columnstore.xml ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "cat " + installDir + "/etc/MariaDB/Columnstore.xml >> " + outputFile;
+			cmd = "cat " + installDir + "/etc/mariadb/columnstore.xml >> " + outputFile;
 			system(cmd.c_str());
 		}
 	
@@ -864,41 +864,41 @@ int main(int argc, char *argv[])
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					system("echo '******************** DBMS Mysql Columnstore System Column  ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					cmd = "echo '################# " + columnstoreMysql + " -e desc columnstoresys.syscolumn ################# ' >> columnstoreSupportReport.txt";
+					cmd = "echo '################# " + columnstoreMysql + " -e desc calpontsys.syscolumn ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 					cmd = "echo ' ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
-					cmd = columnstoreMysql + " -e 'desc columnstoresys.syscolumn;' >> columnstoreSupportReport.txt";
+					cmd = columnstoreMysql + " -e 'desc calpontsys.syscolumn;' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					system("echo '******************** DBMS Mysql Columnstore System Table  ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					cmd = "echo '################# " + columnstoreMysql + " -e desc columnstoresys.systable ################# ' >> columnstoreSupportReport.txt";
+					cmd = "echo '################# " + columnstoreMysql + " -e desc calpontsys.systable ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 					cmd = "echo ' ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
-					cmd = columnstoreMysql + " -e 'desc columnstoresys.systable;' >> columnstoreSupportReport.txt";
+					cmd = columnstoreMysql + " -e 'desc calpontsys.systable;' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					system("echo '******************** DBMS Mysql Columnstore System Catalog Data ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					cmd = "echo '################# " + columnstoreMysql + " columnstoresys < " + installDir + "/mysql/dumpcat_mysql.sql ################# ' >> columnstoreSupportReport.txt";
+					cmd = "echo '################# " + columnstoreMysql + " calpontsys < " + installDir + "/mysql/dumpcat_mysql.sql ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 					cmd = "echo ' ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
-					cmd = columnstoreMysql + " columnstoresys < " + installDir + "/mysql/dumpcat_mysql.sql >> columnstoreSupportReport.txt";
+					cmd = columnstoreMysql + " calpontsys < " + installDir + "/mysql/dumpcat_mysql.sql >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					system("echo '******************** DBMS Mysql Columnstore System Table Data ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					cmd = "echo '################# " + columnstoreMysql + " -e select * from columnstoresys.systable ################# ' >> columnstoreSupportReport.txt";
+					cmd = "echo '################# " + columnstoreMysql + " -e select * from calpontsys.systable ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 					cmd = "echo ' ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
-					cmd = columnstoreMysql + " -e 'select * from columnstoresys.systable;' >> columnstoreSupportReport.txt";
+					cmd = columnstoreMysql + " -e 'select * from calpontsys.systable;' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");

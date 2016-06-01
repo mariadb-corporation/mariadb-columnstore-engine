@@ -9,7 +9,7 @@
 #
 
 if [ -z "$MYSQLCMD" ]; then
-	INSTALLDIR="/usr/local/MariaDB/Columnstore"
+	INSTALLDIR="/usr/local/mariadb/columnstore"
 	MYSQLCNF=$INSTALLDIR/mysql/my.cnf
 	MYSQLCMD="$INSTALLDIR/mysql/bin/mysql --defaults-file=$MYSQLCNF -u root"
 fi
@@ -77,7 +77,7 @@ fi
 #
 # Use the editem utility to get the min and max value.
 #
-/usr/local/MariaDB/Columnstore/bin/editem -o $objectid $parm | grep max | awk -v dataType=$dataType '
+/usr/local/mariadb/columnstore/bin/editem -o $objectid $parm | grep max | awk -v dataType=$dataType '
 	BEGIN {
 		allValid=1;
 		foundValidExtent=0;

@@ -10,12 +10,12 @@
 #*		    hostdir - directory name for this run
 #******************************************************************************/
 
-CTOOLS=/usr/local/MariaDB/Columnstore/tools
+CTOOLS=/usr/local/mariadb/columnstore/tools
 
 date=$1
 hostdir=$2
 localhost=$(hostname -s)
-modulename=`cat /usr/local/MariaDB/Columnstore/local/module`
+modulename=`cat /usr/local/mariadb/columnstore/local/module`
 currentdate=`date +%d`
 if [ -f /tmp/.prat/.hostlist2.txt ]; then
    sc=`wc -l < /tmp/.prat/.hostlist2.txt`
@@ -45,15 +45,15 @@ readserverlist ()
 #
 getlogsremote ()
 { # Send the command to the remote module(s) to copy the Calpont logs
-  /usr/local/MariaDB/Columnstore/bin/remote_command.sh $servername $srvpwd "$CTOOLS/getlogs.sh $date $hostdir"
+  /usr/local/mariadb/columnstore/bin/remote_command.sh $servername $srvpwd "$CTOOLS/getlogs.sh $date $hostdir"
 }
 #
 getlogslocal ()
 { mkdir -p $CTOOLS/data/$hostdir/logs
   if [ $date = $currentdate ]; then
-     cp -r /var/log/Columnstore/* /usr/local/MariaDB/Columnstore/tools/data/$hostdir/logs
+     cp -r /var/log/mariadb/columnstore/* /usr/local/mariadb/columnstore/tools/data/$hostdir/logs
   else
-     find /var/log/Columnstore -type f -name "*$date"  -exec sh -c 'exec cp -f "$@" '$CTOOLS/data/$hostdir/logs'' find-copy {} +
+     find /var/log/mariadb/columnstore -type f -name "*$date"  -exec sh -c 'exec cp -f "$@" '$CTOOLS/data/$hostdir/logs'' find-copy {} +
   fi
 }
 #

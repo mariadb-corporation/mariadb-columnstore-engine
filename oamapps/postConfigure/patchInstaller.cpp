@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 				if ( moduleName != parentOAMModuleName ) {
 					//run remote patch installer script
 					cout << endl << "----- Performing Patch installation of Module '" + moduleName + "' -----" << endl << endl;
-					string cmd = "/usr/local/MariaDB/Columnstore/bin/patch_installer.sh " + moduleName + " " + moduleIPAddr + " " + password + " " + patchLocation + " " + installLocation + " " + softwareFile + " " + installer_debug;
+					string cmd = "/usr/local/mariadb/columnstore/bin/patch_installer.sh " + moduleName + " " + moduleIPAddr + " " + password + " " + patchLocation + " " + installLocation + " " + softwareFile + " " + installer_debug;
 
 					int rtnCode = system(cmd.c_str());
 					if (rtnCode != 0)

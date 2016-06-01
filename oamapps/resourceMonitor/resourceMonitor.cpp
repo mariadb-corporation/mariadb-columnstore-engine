@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -43,7 +43,7 @@ enum HOST_INFO
 	IDLE
 };
 
-const string FE_MOUNT_DIR = "/var/log/Columnstore/";	// FE mount dir
+const string FE_MOUNT_DIR = "/var/log/mariadb/columnstore/";	// FE mount dir
 const int MONITOR_FREQ = 15;				// monitor frequency in sec
 const int LOG_FREQ = 900;					// log frequency in sec
 const int DEBUG = false;

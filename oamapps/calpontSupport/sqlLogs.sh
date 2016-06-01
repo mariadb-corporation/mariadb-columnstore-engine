@@ -7,12 +7,12 @@ DB=idb_idb_sqllogs
 TABLE=statements
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/MariaDB/Columnstore
+	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
 export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
 
-if [ $INFINIDB_INSTALL_DIR != "/usr/local/MariaDB/Columnstore" ]; then
+if [ $INFINIDB_INSTALL_DIR != "/usr/local/mariadb/columnstore" ]; then
 	export PATH=$INFINIDB_INSTALL_DIR/bin:$INFINIDB_INSTALL_DIR/mysql/bin:/bin:/usr/bin
 	export LD_LIBRARY_PATH=$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql
 fi

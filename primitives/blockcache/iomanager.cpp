@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -489,7 +489,7 @@ void* thr_popper(ioManager *arg) {
 		iomLogFileName << "C:/Calpont/log/trace/iom." << threadId;
 #else
 		threadId=pthread_self();
-		iomLogFileName << "/var/log/Columnstore/trace/iom." << threadId;
+		iomLogFileName << "/var/log/mariadb/columnstore/trace/iom." << threadId;
 #endif
 		lFile.open(iomLogFileName.str().c_str(), ios_base::app | ios_base::ate);
 	}
@@ -1293,7 +1293,7 @@ ioManager::ioManager(FileBufferMgr& fbm,
 #ifdef _MSC_VER
 		FDTraceFile().open("C:/Calpont/log/trace/fdcache", ios_base::ate | ios_base::app);
 #else
-		FDTraceFile().open("/var/log/Columnstore/trace/fdcache", ios_base::ate | ios_base::app);
+		FDTraceFile().open("/var/log/mariadb/columnstore/trace/fdcache", ios_base::ate | ios_base::app);
 #endif
 	}
 

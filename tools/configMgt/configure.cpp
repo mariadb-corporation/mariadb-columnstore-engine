@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
 						exit (-1);
 					}
 
-					cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " /usr/local/MariaDB/Columnstore/etc/Calpont.xml 0 ";
+					cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " /usr/local/mariadb/columnstore/etc/Calpont.xml 0 ";
 					rtnCode = system(cmd.c_str());
 					if (rtnCode == 0) {
 						cmd = "mv Calpont.xml systems/" + systemName + "/.";
@@ -507,7 +507,7 @@ int main(int argc, char *argv[])
 		}
 
 		string DBrootID = "DBRoot" + oam.itoa(i);
-		string pathID =  "/usr/local/MariaDB/Columnstore/data" + oam.itoa(i);
+		string pathID =  "/usr/local/mariadb/columnstore/data" + oam.itoa(i);
 
 		try {
 			sysConfig->setConfig(SystemSection, DBrootID, pathID);

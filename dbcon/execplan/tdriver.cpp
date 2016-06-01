@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1082,7 +1082,7 @@ public:
 		int oid, oidBase;
 
 		// fake out the objmgr...
-		setenv("CALPONT_CONFIG_FILE", "/usr/local/MariaDB/Columnstore/etc/Calpont.xml", 1);
+		setenv("CALPONT_CONFIG_FILE", "/usr/local/mariadb/columnstore/etc/Calpont.xml", 1);
 		Config* cf = Config::makeConfig();
 		cf->setConfig("OIDManager", "OIDBitmapFile", "./oidbitmap");
 		

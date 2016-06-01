@@ -37,7 +37,7 @@ elif [ $(expr 'release' : "$cmd") -gt 2 ]; then
 	INST=$4
 fi
 if [ -z "$INSTALLDIR" ]; then
-        INSTALLDIR="/usr/local/MariaDB/Columnstore"
+        INSTALLDIR="/usr/local/mariadb/columnstore"
         if [ $INST ]; then
                 INSTALLDIR=$INST
         fi

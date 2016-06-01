@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -104,7 +104,7 @@ public:
 #ifdef _MSC_VER
 			oss << "C:/Calpont/log/trace/" << outName << '.' << sessionID;
 #else
-			oss << "/var/log/Columnstore/trace/" << outName << '.' << sessionID;
+			oss << "/var/log/mariadb/columnstore/trace/" << outName << '.' << sessionID;
 #endif
 			oFile.reset(new ofstream());
 			oFile->open(oss.str().c_str(), ios_base::out | ios_base::ate | ios_base::app);

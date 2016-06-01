@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 	if ( product == "columnstore" ) {
 		company = "MariaDB-Columnstore";
 		calpontPackagename = "mariadb-columnstore";
-		installLocation = "/MariaDB/Columnstore";
+		installLocation = "/mariadb/columnstore";
 		adminCommand = "mcsadmin";
 	}
 	else if ( product != "infinidb" )

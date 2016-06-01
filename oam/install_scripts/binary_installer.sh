@@ -24,13 +24,14 @@ set PKGTYPE "binary"
 set SERVERTYPE [lindex $argv 6]
 set MYSQLPORT [lindex $argv 7]
 set DEBUG [lindex $argv 8]
-set INSTALLDIR "/usr/local/MariaDB/Columnstore"
+set INSTALLDIR "/usr/local/mariadb/columnstore"
 set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
 set env(INFINIDB_INSTALL_DIR) $INSTALLDIR
 set PREFIX [file dirname $INSTALLDIR]
+set PREFIX [file dirname $PREFIX]
 set USERNAME $env(USER)
 set UNM [lindex $argv 10]
 if { $UNM != "" } {

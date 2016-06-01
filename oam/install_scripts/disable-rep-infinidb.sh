@@ -18,12 +18,12 @@ checkForError() {
 }
 
 prefix=/usr/local
-installdir=$prefix/MariaDB/Columnstore
+installdir=$prefix/mariadb/columnstore
 pwprompt=
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/MariaDB/Columnstore
+		installdir=$prefix/mariadb/columnstore
 	elif [ `expr -- "$arg" : '--password='` -eq 11 ]; then
 		password="`echo $arg | awk -F= '{print $2}'`"
 		pwprompt="--password=$password"

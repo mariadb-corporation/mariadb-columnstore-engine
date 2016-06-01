@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -348,7 +348,7 @@ void msgProcessor()
 								time_t moduleStartTime = 0;
 								time_t queryStartTime = 0;
 
-								string fileName = "/var/log/Columnstore/debug.log";
+								string fileName = "/var/log/mariadb/columnstore/debug.log";
 								try
 								{
 									// Get ServerMonitor start time. We don't report any SQL that started before then.

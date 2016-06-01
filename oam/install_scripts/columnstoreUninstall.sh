@@ -4,7 +4,7 @@
 #
 # Uninstall Package from system
 
-set INFINIDB_INSTALL_DIR "/usr/local/MariaDB/Columnstore"
+set INFINIDB_INSTALL_DIR "/usr/local/mariadb/columnstore"
 set env(INFINIDB_INSTALL_DIR) $INFINIDB_INSTALL_DIR
 
 set USERNAME $env(USER)

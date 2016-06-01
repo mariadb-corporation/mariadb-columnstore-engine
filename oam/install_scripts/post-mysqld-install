@@ -5,7 +5,7 @@
 # Post-install steps for columnstore-mysql install
 
 prefix=/usr/local
-installdir=$prefix/MariaDB/Columnstore
+installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=mysql
 if [ $EUID -ne 0 ]; then
@@ -15,7 +15,7 @@ fi
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/MariaDB/Columnstore
+		installdir=$prefix/mariadb/columnstore
 	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
 		rpmmode="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
@@ -60,8 +60,8 @@ usermod -g $user $user 2> /dev/null || true
 chown -R $user:$user $installdir/mysql
 
 # Initiate databases if needed
-if [ $installdir != "/usr/local/MariaDB/Columnstore" ]; then
-	sed -i -e s@/usr/local/MariaDB/Columnstore@$installdir@g $installdir/mysql/my.cnf
+if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/mysql/my.cnf
 fi
 
 # InfiniDB testing hook...

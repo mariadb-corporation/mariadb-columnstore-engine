@@ -11,7 +11,7 @@ fi
 if [ $2 ] ; then
         INSTALLDIR=$2
 else
-        INSTALLDIR="/usr/local/MariaDB/Columnstore"
+        INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
 if [ $USER = "root" ]; then
@@ -82,7 +82,7 @@ for scsi_dev in `mount | awk '/mnt\/tmp/ {print $1}' | awk -F/ '{print $3}' | se
         echo '/dev/'$scsi_dev ' scheduler setup is'
         cat /sys/block/$scsi_dev/queue/scheduler 2>/dev/null
 done
-for scsi_dev in `mount | awk '/MariaDB/Columnstore\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'`; do
+for scsi_dev in `mount | awk '/MariaDB\/Columnstore\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'`; do
         if [ $scsi_dev != "local" ] ; then
                 echo '/dev/'$scsi_dev ' scheduler setup is'
                 cat /sys/block/$scsi_dev/queue/scheduler 2>/dev/null

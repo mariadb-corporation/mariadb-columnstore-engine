@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -52,7 +52,7 @@ const string StartUp::installDir()
 	if (!cfStr.empty())
 		*fInstallDirp = cfStr;
 #else
-	fInstallDirp = new string("/usr/local/MariaDB/Columnstore");
+	fInstallDirp = new string("/usr/local/mariadb/columnstore");
 	//See if we can figure out the install dir in Linux...
 	//1. env var INFINIDB_INSTALL_DIR
 	const char* p=0;
@@ -60,7 +60,7 @@ const string StartUp::installDir()
 	if (p && *p)
 		*fInstallDirp = p;
 	//2. up one level from current binary location?
-	//3. fall back to /usr/local/MariaDB/Columnstore
+	//3. fall back to /usr/local/mariadb/columnstore
 #endif
 
 	return *fInstallDirp;

@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB, Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -97,7 +97,7 @@ namespace processmanager{
 	typedef   std::map<std::string, std::string>	srvStateList;
 
 	const int MAX_ARGUMENTS = 10;
-	const std::string DEFAULT_LOG_FILE = "/var/log/Columnstore/ProcessManager.log";
+	const std::string DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/ProcessManager.log";
 
 
    /**

@@ -30,7 +30,7 @@
 
 /* default location to look for mibs to load using the above tokens
    and/or those in the MIBS envrionment variable*/
-#define DEFAULT_MIBDIRS "$HOME/.snmp/mibs:/usr/local/MariaDB/Columnstore/share/snmp/mibs"
+#define DEFAULT_MIBDIRS "$HOME/.snmp/mibs:/usr/local/mariadb/columnstore/share/snmp/mibs"
 
 /* default mib files to load, specified by path. */
 /* #undef DEFAULT_MIBFILES */
@@ -107,10 +107,10 @@
 /* #undef DEFAULT_CLIENT_RECV_BUF */
 
 /* SNMPLIBDIR contains important files */
-#define SNMPLIBPATH "/usr/local/MariaDB/Columnstore/lib/snmp"
-#define SNMPSHAREPATH "/usr/local/MariaDB/Columnstore/share/snmp"
-#define SNMPCONFPATH "/usr/local/MariaDB/Columnstore/etc/snmp"
-#define SNMPDLMODPATH "/usr/local/MariaDB/Columnstore/lib/snmp/dlmod"
+#define SNMPLIBPATH "/usr/local/mariadb/columnstore/lib/snmp"
+#define SNMPSHAREPATH "/usr/local/mariadb/columnstore/share/snmp"
+#define SNMPCONFPATH "/usr/local/mariadb/columnstore/etc/snmp"
+#define SNMPDLMODPATH "/usr/local/mariadb/columnstore/lib/snmp/dlmod"
 
 /* LOGFILE:  If defined it closes stdout/err/in and opens this in out/err's
    place.  (stdin is closed so that sh scripts won't wait for it) */
@@ -1339,7 +1339,7 @@
 #define LASTFIELD -1      /* internal define */
 
 /* configure options specified */
-#define CONFIGURE_OPTIONS "\"'--prefix=/usr/local/MariaDB/Columnstore' '--with-mib-modules=disman/event-mib' '--with-cc=gcc'\""
+#define CONFIGURE_OPTIONS "\"'--prefix=/usr/local/mariadb/columnstore' '--with-mib-modules=disman/event-mib' '--with-cc=gcc'\""
 
 /* got socklen_t? */
 #define HAVE_SOCKLEN_T 1

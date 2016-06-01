@@ -5,7 +5,7 @@
 # Post-uninstall steps for columnstore install
 
 prefix=/usr/local
-installdir=$prefix/MariaDB/Columnstore
+installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=$USER
 sudo=sudo
@@ -18,7 +18,7 @@ quiet=0
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
-		installdir=$prefix/MariaDB/Columnstore
+		installdir=$prefix/mariadb/columnstore
 	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
 		rpmmode="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
@@ -39,7 +39,7 @@ if test -f /etc/init.d/columnstore-Mysql ; then
 	$installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 fi
 
-if [ $installdir == "/usr/local/MariaDB/Columnstore" ]; then
+if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
 	# remove library config file
 	rm -f /etc/ld.so.conf.d/columnstore.conf
 	rm -f /etc/ld.so.cache
@@ -72,10 +72,10 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 fi
  
 #remove log file directories
-#rm -rf /var/log/Columnstore > /dev/null 2>&1
+#rm -rf /var/log/mariadb/columnstore > /dev/null 2>&1
 #rm -f $installdir/mysql/db/*.err > /dev/null 2>&1
-rm -f /var/log/Columnstore/activeAlarms > /dev/null 2>&1
-rm -f /var/log/Columnstore/*.log1 > /dev/null 2>&1
+rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
+rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 sudo rm -f /etc/default/columnstore
 
@@ -116,7 +116,7 @@ else
 fi
 
 # delete core files
-#rm -f /var/log/Columnstore/corefiles/* > /dev/null 2>&1
+#rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1
 
 #uninstall InfiniDB system logging
 if [ -x $installdir/bin/syslogSetup.sh ]; then

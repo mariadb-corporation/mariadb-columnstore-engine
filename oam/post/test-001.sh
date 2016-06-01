@@ -7,7 +7,7 @@ if [ -z "$INFINIDB_INSTALL_DIR" ]; then
 fi
 
 if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/MariaDB/Columnstore
+	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
 export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
