@@ -2385,7 +2385,7 @@ int processCommand(string* arguments)
 
 			string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 			system(cmd.c_str());
-			if (!oam.checkLogStatus("/tmp/status.log", "columnstore is running") ) 
+			if (!oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 			{
 				if (bNeedsConfirm) 
 				{
