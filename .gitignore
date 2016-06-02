@@ -5,6 +5,9 @@
 *.o
 *.lib
 *.sa
+*.lo
+*.la
+.libs/
 m4/
 config.log
 versionnumber.h
