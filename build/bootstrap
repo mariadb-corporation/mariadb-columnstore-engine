@@ -111,13 +111,13 @@ if [ ! $$ ]; then
   exit 1
 fi
 
-for x in \
-$(find . -name '[mM]akefile' \
-    | xargs grep -l ^bootstrap: \
-    | cut -f 2 -d / \
-    | sort -u)
-do
-  echo bootstrapping $x
-  make BOOTSTRAP=1 -C $x bootstrap
-done
+#for x in \
+#$(find . -name '[mM]akefile' \
+#    | xargs grep -l ^bootstrap: \
+#    | cut -f 2 -d / \
+#    | sort -u)
+#do
+#  echo bootstrapping $x
+#  make BOOTSTRAP=1 -C $x bootstrap
+#done
 
