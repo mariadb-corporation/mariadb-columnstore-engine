@@ -1,5 +1,5 @@
-/* Copyright (C) 2013 Columnstore Corp. */
-
+/* Copyright (C) 2013 Calpont Corp. */
+/* Copyright (C) 2016 MariaDB Corporation */ 
 
 /******************************************************************************************
 * $Id: columnstoreSupport.cpp 64 2006-10-12 22:21:51Z dhill $
