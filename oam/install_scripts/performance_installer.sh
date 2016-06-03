@@ -44,14 +44,14 @@ if { $PKGTYPE == "rpm" } {
 	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^mariadb-columnstore')"
 	set PKGERASE1 "rpm -e --nodeps "
 
-	set PKGINSTALL "rpm -ivh $NODEPS --force mariadb-columnstore*$VERSION*"
-	set PKGUPGRADE "rpm -Uvh --noscripts mariadb-columnstore*$VERSION*"
+	set PKGINSTALL "rpm -ivh $NODEPS --force mariadb-columnstore*$VERSION*rpm"
+	set PKGUPGRADE "rpm -Uvh --noscripts mariadb-columnstore*$VERSION*rpm"
 } else {
 	if { $PKGTYPE == "deb" } {
 		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^mariadb-columnstore')"
 		set PKGERASE1 "dpkg -P "
-		set PKGINSTALL "dpkg -i --force-confnew mariadb-columnstore*$VERSION*"
-		set PKGUPGRADE "dpkg -i --force-confnew mariadb-columnstore*$VERSION*"
+		set PKGINSTALL "dpkg -i --force-confnew mariadb-columnstore*$VERSION*deb"
+		set PKGUPGRADE "dpkg -i --force-confnew mariadb-columnstore*$VERSION*deb"
 	} else {
 		if { $PKGTYPE != "bin" } {
 			send_user "Invalid Package Type of $PKGTYPE"
