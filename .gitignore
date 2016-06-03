@@ -1,4 +1,5 @@
 .deps/
+.*.swp
 *.d.*
 *.so
 *.a
@@ -38,3 +39,10 @@ dbcon/dmlpackage/dml-gram.h
 versioning/BRM/autoinctest
 versioning/BRM/copylocktest
 versioning/BRM/tablelocktest
+versioning/BRM/controllernode
+versioning/BRM/dbrmctl
+versioning/BRM/load_brm
+versioning/BRM/reset_locks
+versioning/BRM/rollback
+versioning/BRM/save_brm
+versioning/BRM/workernode

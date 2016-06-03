@@ -84,7 +84,7 @@ all-local: bootstrap
 		$(MAKE) -C joblist
 	cd versioning && $(MAKE) 
 	cd oam && $(MAKE)
-	cd versioning && $(MAKE) dbrm tools && $(MAKE)_dbrm_tools
+	cd versioning && $(MAKE) dbrm tools
 	cd writeengine; \
 		$(MAKE) -C wrapper; \
 		$(MAKE) -C client; \

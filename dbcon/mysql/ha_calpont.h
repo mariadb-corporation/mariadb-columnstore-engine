@@ -37,7 +37,7 @@
 
 #ifndef HA_CALPONT_H__
 #define HA_CALPONT_H__
-#include <my_config.h>
+//#include <my_config.h>
 #include "idb_mysql.h"
 
 /** @brief
