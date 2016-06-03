@@ -75,37 +75,32 @@ all-local: bootstrap
 #	$(MAKE) -C writeengine/bulk install_bulk
 #	$(MAKE) -C writeengine/splitter install_splitter
 #	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
-	cd utils && $(MAKE) 
-	cd oam; \
-		$(MAKE) -C oamcpp
-	cd snmpd && $(MAKE)
-	cd dbcon; \
-		$(MAKE) -C execplan; \
-		$(MAKE) -C joblist
-	cd versioning && $(MAKE) 
-	cd oam && $(MAKE)
-	cd versioning && $(MAKE) dbrm tools
-	cd writeengine; \
-		$(MAKE) -C wrapper; \
-		$(MAKE) -C client; \
-		$(MAKE) -C xml; \
-		$(MAKE) -C redistribute
-	cd dbcon; \
-		$(MAKE) -C ddlpackage; \
-		$(MAKE) -C ddlpackageproc; \
-		$(MAKE) -C dmlpackage; \
-		$(MAKE) -C dmlpackageproc
-	cd dbcon && $(MAKE)
-	cd exemgr && $(MAKE)
-	cd ddlproc && $(MAKE)
-	cd dmlproc && $(MAKE)
-	cd procmon && $(MAKE)
-	cd procmgr && $(MAKE)
-	cd oamapps && $(MAKE)
-	cd decomsvr && $(MAKE)
-	cd primitives && $(MAKE)
-	cd tools && $(MAKE)
-	cd versioning && $(MAKE) tools
+	$(MAKE) -C utils
+	$(MAKE) -C oam/oamcpp
+	$(MAKE) -C snmpd
+	$(MAKE) -C dbcon/execplan
+	$(MAKE) -C dbcon/joblist
+	$(MAKE) -C versioning
+	$(MAKE) -C oam
+	$(MAKE) -C versioning dbrm tools
+	$(MAKE) -C writeengine/wrapper
+	$(MAKE) -C writeengine/client
+	$(MAKE) -C writeengine/xml
+	$(MAKE) -C writeengine/redistribute
+	$(MAKE) -C dbcon/ddlpackage
+	$(MAKE) -C dbcon/ddlpackageproc
+	$(MAKE) -C dbcon/dmlpackage
+	$(MAKE) -C dbcon/dmlpackageproc
+	$(MAKE) -C dbcon
+	$(MAKE) -C exemgr
+	$(MAKE) -C ddlproc
+	$(MAKE) -C dmlproc
+	$(MAKE) -C procmon
+	$(MAKE) -C procmgr
+	$(MAKE) -C oamapps
+	$(MAKE) -C decomsvr
+	$(MAKE) -C primitives
+	$(MAKE) -C tools
 	$(MAKE) -C writeengine/server
 	$(MAKE) -C writeengine/bulk
 	$(MAKE) -C writeengine/splitter

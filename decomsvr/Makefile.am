@@ -25,7 +25,7 @@ AM_LDFLAGS = $(idb_ldflags)
 bin_PROGRAMS = DecomSvr
 DecomSvr_SOURCES = quicklz.c server.cpp
 DecomSvr_CPPFLAGS = $(idb_common_includes) $(AM_CPPFLAGS)
-DecomSvr_LDFLAGS = $(idb_common_ldflags) -lboost_idb $(AM_LDFLAGS) -lpthread -lrt
+DecomSvr_LDFLAGS = $(idb_common_ldflags) ${abs_top_builddir}/utils/boost_idb/libboost_idb.la $(AM_LDFLAGS) -lpthread -lrt
 
 test:
 

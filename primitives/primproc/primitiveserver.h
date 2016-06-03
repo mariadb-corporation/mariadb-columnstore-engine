@@ -41,7 +41,6 @@
 #include "blockrequestprocessor.h"
 #include "batchprimitiveprocessor.h"
 
-#include "winport.h"
 //#define PRIMPROC_STOPWATCH
 #ifdef PRIMPROC_STOPWATCH
 #include "stopwatch.h"
