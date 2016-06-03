@@ -36,7 +36,7 @@
 #include "bytestream.h"
 #include "dbrm.h"
 #include "batchloader.h"
-#include "we_clients.h"
+#include "../writeengine/client/we_clients.h"
 namespace dmlprocessor 
 {
 class BatchInsertProc

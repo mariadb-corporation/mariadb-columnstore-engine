@@ -36,7 +36,7 @@
 #include <boost/thread.hpp>
 
 #include "threadpool.h"
-#include "prioritythreadpool.h"
+#include "../../utils/threadpool/prioritythreadpool.h"
 #include "messagequeue.h"
 #include "blockrequestprocessor.h"
 #include "batchprimitiveprocessor.h"

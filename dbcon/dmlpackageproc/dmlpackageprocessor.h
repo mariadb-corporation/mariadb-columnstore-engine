@@ -38,7 +38,7 @@
 #include "sessionmanager.h"
 #include "distributedenginecomm.h"
 #include "brmtypes.h"
-#include "we_clients.h"
+#include "../../writeengine/client/we_clients.h"
 #include "liboamcpp.h"
 #include "oamcache.h"
 #include "querystats.h"

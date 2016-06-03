@@ -49,7 +49,7 @@ using namespace joblist;
 #include "simplefilter.h"
 #include "aggregatecolumn.h"
 #include "constantfilter.h"
-#include "windowfunction.h"
+#include "../../utils/windowfunction/windowfunction.h"
 
 namespace execplan
 {

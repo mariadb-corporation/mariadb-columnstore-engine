@@ -41,7 +41,6 @@ using namespace std;
 #include "brm.h"
 #include "stopwatch.h"
 #include "we_colop.h"
-#include "we_dctnry.h"
 #include "we_type.h"
 
 #include "we_colopcompress.h"

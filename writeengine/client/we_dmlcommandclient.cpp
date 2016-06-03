@@ -23,7 +23,7 @@ using namespace messageqcpp;
 #include "we_messages.h"
 #include "we_clients.h"
 #include "resourcemanager.h"
-#include "dmlpkg.h"
+#include "../../dbcon/dmlpackage/dmlpkg.h"
 #include "ddlpackageprocessor.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 using namespace boost::gregorian;

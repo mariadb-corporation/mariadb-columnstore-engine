@@ -38,7 +38,7 @@ using namespace execplan;
 using namespace joblist;
 
 #ifndef SKIP_UDF
-#include "udfsdk.h"
+#include "../udfsdk/udfsdk.h"
 #endif
 
 namespace funcexp

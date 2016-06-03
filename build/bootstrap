@@ -6,10 +6,9 @@
 # following a git checkout.  It copies static files and shared include
 # files to the export tree prior to building the software.
 
+set -e
+
 mkdir -p export/{include,lib,etc,share,bin,sbin,post,mysql}
-if [ ! $$ ]; then
-    exit 1
-fi
 
 #TODO: these prebuilt binaries may need to be fetched
 #and built as dependencies
@@ -31,10 +30,6 @@ cp build/files.lst export/mysql/ && \
 cp dbcon/mysql/install_calpont_mysql.sh export/mysql/ && \
 cp dbcon/mysql/my.cnf export/mysql/ && \
 cp dbcon/mysql/mysql-Columnstore export/mysql/
-
-if [ ! $$ ]; then
-    exit 1
-fi
 
 cp -p -r utils/net-snmp export/include
 
@@ -59,57 +54,29 @@ cp -p -r utils/net-snmp export/include
 ## 		cp -p utils/net-snmp-built-libs/fc6bin/* export/sbin
 ## 	fi
 ## fi
-
-## pushd export/lib >/dev/null
-## for lib in libnetsnmpagent.so libnetsnmphelpers.so libnetsnmpmibs.so libnetsnmp.so libnetsnmptrapd.so; do
-## 	rm -f ${lib} ${lib}.5
-## 	ln -s ${lib}.5.2.1 ${lib}.5
-## 	ln -s ${lib}.5.2.1 ${lib}
-## done
-## popd >/dev/null
+d=utils/net-snmp-built-libs/lib64
+for lib in libnetsnmpagent.so libnetsnmphelpers.so libnetsnmpmibs.so libnetsnmp.so libnetsnmptrapd.so; do
+	ln -svf $lib.5.2.1 $d/$lib
+done
 
 #FIXME:
 #This is not going to update the version in configure.ac
 echo Generating version header
 ./build/genVersion.sh
-if [ ! $$ ]; then
-  exit 1
-fi
 
 echo Running GNU autotools to generate build environment
 aclocal 
-if [ ! $$ ]; then
-  exit 1
-fi
 autoconf
-if [ ! $$ ]; then
-  exit 1
-fi
 autoheader
-if [ ! $$ ]; then
-  exit 1
-fi
 libtoolize
-if [ ! $$ ]; then
-  exit 1
-fi
 automake --add-missing
-if [ ! $$ ]; then
-  exit 1
-fi
 autoreconf
-if [ ! $$ ]; then
-  exit 1
-fi
 
 echo GNU autotools environment generation completed successfully
 
 echo Configuring MariaDB ColumnStore
 
 ./configure 
-if [ ! $$ ]; then
-  exit 1
-fi
 
 #for x in \
 #$(find . -name '[mM]akefile' \

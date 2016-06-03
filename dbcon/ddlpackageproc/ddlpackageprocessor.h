@@ -44,7 +44,7 @@
 #include "we_define.h"
 #include "writeengine.h"
 #include "columnresult.h"
-#include "we_clients.h"
+#include "../../writeengine/client/we_clients.h"
 #include "liboamcpp.h"
 
 #if defined(_MSC_VER) && defined(DDLPKGPROC_DLLEXPORT)
