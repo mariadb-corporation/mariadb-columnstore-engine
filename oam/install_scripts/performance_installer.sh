@@ -144,7 +144,7 @@ expect {
         -re {[$#] } { }
 }
 
-send "scp $HOME/mariadb-columnstore*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/mariadb-columnstore*$VERSION*rpm $USERNAME@$SERVER:.;$PKGERASE dummy\n"
 if { $PASSWORD != "ssh" } {
         set timeout 30
         expect {
@@ -172,7 +172,7 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	send_user "Install InfiniDB Packages on Module               "
 
-	send "ssh $USERNAME@$SERVER '$PKGINSTALL mariadb-columnstore*$VERSION* ;$PKGERASE dummy'\n"
+	send "ssh $USERNAME@$SERVER '$PKGINSTALL ;$PKGERASE dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
 		expect {

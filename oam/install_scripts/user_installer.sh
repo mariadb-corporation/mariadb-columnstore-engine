@@ -146,7 +146,7 @@ expect {
 	-re {[$#] } { }
 }
 
-send "scp $HOME/mariadb-columnstore*$VERSION* $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/mariadb-columnstore*$VERSION*rpm $USERNAME@$SERVER:.;$PKGERASE dummy\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {
