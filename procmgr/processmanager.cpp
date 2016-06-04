@@ -4475,7 +4475,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		}
 		catch(...)
 		{
-			rpw = "root";
+			rpw = "mariadb1";
 		}
 
 		if (rpw != oam::UnassignedName)

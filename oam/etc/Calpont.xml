@@ -441,7 +441,7 @@
 		<UMStorageType>internal</UMStorageType>
 		<EEPackageType>rpm</EEPackageType>
 		<SystemLogConfigFile>unassigned</SystemLogConfigFile>
-		<rpw>root</rpw>
+		<rpw>mariadb1</rpw>
 		<Cloud>unassigned</Cloud>
 		<AmazonAccessKey>unassigned</AmazonAccessKey>
 		<AmazonSecretKey>unassigned</AmazonSecretKey>
