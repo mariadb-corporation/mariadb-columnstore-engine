@@ -106,6 +106,37 @@ all-local: bootstrap
 	$(MAKE) -C writeengine/splitter
 	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
 
+install:
+	$(MAKE) -C utils install
+	$(MAKE) -C oam/oamcpp install
+	$(MAKE) -C snmpd install
+	$(MAKE) -C dbcon/execplan install
+	$(MAKE) -C dbcon/joblist install
+	$(MAKE) -C versioning install
+	$(MAKE) -C oam install
+	$(MAKE) -C versioning dbrm tools install
+	$(MAKE) -C writeengine/wrapper install
+	$(MAKE) -C writeengine/client install
+	$(MAKE) -C writeengine/xml install
+	$(MAKE) -C writeengine/redistribute install
+	$(MAKE) -C dbcon/ddlpackage install
+	$(MAKE) -C dbcon/ddlpackageproc install
+	$(MAKE) -C dbcon/dmlpackage install
+	$(MAKE) -C dbcon/dmlpackageproc install
+	$(MAKE) -C dbcon install
+	$(MAKE) -C exemgr install
+	$(MAKE) -C ddlproc install
+	$(MAKE) -C dmlproc install
+	$(MAKE) -C procmon install
+	$(MAKE) -C procmgr install
+	$(MAKE) -C oamapps install
+	$(MAKE) -C decomsvr install
+	$(MAKE) -C primitives install
+	$(MAKE) -C tools install
+	$(MAKE) -C writeengine/server install
+	$(MAKE) -C writeengine/bulk install
+	$(MAKE) -C writeengine/splitter install
+
 compile: all-local
 
 .PHONY: test coverage leakcheck docs bootstrap

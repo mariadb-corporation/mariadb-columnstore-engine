@@ -63,20 +63,30 @@ done
 #This is not going to update the version in configure.ac
 echo Generating version header
 ./build/genVersion.sh
+if [ $? -ne 0 ]; then
+  echo Could not generate version header
+  exit $?
+fi
 
 echo Running GNU autotools to generate build environment
-aclocal 
-autoconf
-autoheader
-libtoolize
-automake --add-missing
+aclocal && \
+autoconf && \
+autoheader && \
+libtoolize && \
+automake --add-missing && \
 autoreconf
+
+if [ $? -ne 0 ]; then
+  echo GNU autotools generation failed
+  exit $?
+fi
+
 
 echo GNU autotools environment generation completed successfully
 
 echo Configuring MariaDB ColumnStore
 
-./configure 
+./configure $*
 
 #for x in \
 #$(find . -name '[mM]akefile' \
