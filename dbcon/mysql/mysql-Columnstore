@@ -43,8 +43,18 @@
 # If you change base dir, you must also change datadir. These may get
 # overwritten by settings in the MySQL configuration files.
 
-basedir=/usr/local/mariadb/columnstore/mysql
-datadir=/usr/local/mariadb/columnstore/mysql/db
+if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+    test -f /etc/default/columnstore && . /etc/default/columnstore
+fi
+
+if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+    INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+fi
+
+export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+
+basedir=$INFINIDB_INSTALL_DIR/mysql
+datadir=$basedir/db
 
 # Default value, in seconds, afterwhich the script should timeout waiting
 # for server start. 
@@ -260,7 +270,7 @@ wait_for_ready () {
   i=0
   while test $i -ne $service_startup_timeout ; do
 
-    if $bindir/mysqladmin ping --socket=/usr/local/mariadb/columnstore/mysql/lib/mysql/mysql.sock >/dev/null 2>&1; then
+    if $bindir/mysqladmin ping --socket=$basedir/lib/mysql/mysql.sock >/dev/null 2>&1; then
       log_success_msg
       return 0
     elif kill -0 $! 2>/dev/null ; then
