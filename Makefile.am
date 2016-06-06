@@ -38,6 +38,7 @@ ACLOCAL_AMFLAGS = -I m4
 # there are changes made to this custom boost, so I am leaving
 # this AS IS for now.
 AM_LIBTOOLFLAGS = -Wl,-rpath -Wl,$(prefix)/lib -lrt -lboost_idb
+.PHONY: test coverage leakcheck docs bootstrap install
 
 all-local: bootstrap
 #	cd utils && $(MAKE) && $(MAKE) install
@@ -139,7 +140,6 @@ install:
 
 compile: all-local
 
-.PHONY: test coverage leakcheck docs bootstrap
 test:
 
 coverage:
