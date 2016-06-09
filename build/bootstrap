@@ -9,6 +9,31 @@
 set -e
 
 mkdir -p export/{include,lib,etc,share,bin,sbin,post,mysql}
+params="$(getopt -o p:i: -l prefix:,include: --name "$cmdname" -- "$@")"
+
+eval set -- "$params"
+unset params
+
+while true
+	do
+	case $1 in
+		--include)
+		INCLUDE+="-I${2-} "
+		shift 2
+		;;
+		--prefix)
+		PREFIX="${2-}"
+		shift 2
+		;;
+
+		--)
+		shift
+		break
+		;;
+	esac
+done
+
+export CXXFLAGS=$INCLUDE $CXXFLAGS
 
 #TODO: these prebuilt binaries may need to be fetched
 #and built as dependencies
@@ -86,7 +111,14 @@ echo GNU autotools environment generation completed successfully
 
 echo Configuring MariaDB ColumnStore
 
-./configure $*
+if [ -n "$PREFIX" ]; 
+then
+	echo "BUILDING WITH PREFIX=$PREFIX"
+	./configure --prefix=$PREFIX
+else
+	echo "BUILDING WITH DEFAULT PREFIX"
+	./configure
+fi
 
 #for x in \
 #$(find . -name '[mM]akefile' \
