@@ -58,6 +58,10 @@ cp dbcon/mysql/mysql-Columnstore export/mysql/
 
 cp -p -r utils/net-snmp export/include
 
+d=utils/net-snmp-built-libs/lib64
+for lib in libnetsnmpagent.so libnetsnmphelpers.so libnetsnmpmibs.so libnetsnmp.so libnetsnmptrapd.so; do
+	ln -svf $lib.5.2.1 $d/$lib
+done
 #FIXME: 
 # This has to be terribly broken, especially for 32 bit
 # platforms.  There should be no PRE-BUILT tools in someting
@@ -66,23 +70,19 @@ cp -p -r utils/net-snmp export/include
 # as part of the bootstrap process.
 # I am commenting this out to see exactly what breaks in the build
 # process.
-## if [ `uname -m` == "x86_64" ]; then
-## 	cp -p utils/net-snmp-built-libs/lib64/* export/lib
-## 	cp -p utils/net-snmp-built-libs/bin64/* export/sbin
-## else
-## 	egrep -qs Constantine /etc/redhat-release
-## 	if [ $? -eq 0 ]; then
-## 		cp -p utils/net-snmp-built-libs/fc12lib/libnetsnmp*.so.* export/lib
-## 		cp -p utils/net-snmp-built-libs/fc12bin/* export/sbin
-## 	else
-## 		cp -p utils/net-snmp-built-libs/fc6lib/libnetsnmp*.so.* export/lib
-## 		cp -p utils/net-snmp-built-libs/fc6bin/* export/sbin
-## 	fi
-## fi
-d=utils/net-snmp-built-libs/lib64
-for lib in libnetsnmpagent.so libnetsnmphelpers.so libnetsnmpmibs.so libnetsnmp.so libnetsnmptrapd.so; do
-	ln -svf $lib.5.2.1 $d/$lib
-done
+ if [ `uname -m` == "x86_64" ]; then
+ 	cp -p utils/net-snmp-built-libs/lib64/* export/lib
+ 	cp -p utils/net-snmp-built-libs/bin64/* export/sbin
+ else
+ 	egrep -qs Constantine /etc/redhat-release
+ 	if [ $? -eq 0 ]; then
+ 		cp -p utils/net-snmp-built-libs/fc12lib/libnetsnmp*.so.* export/lib
+ 		cp -p utils/net-snmp-built-libs/fc12bin/* export/sbin
+ 	else
+ 		cp -p utils/net-snmp-built-libs/fc6lib/libnetsnmp*.so.* export/lib
+ 		cp -p utils/net-snmp-built-libs/fc6bin/* export/sbin
+ 	fi
+ fi
 
 #FIXME:
 #This is not going to update the version in configure.ac
