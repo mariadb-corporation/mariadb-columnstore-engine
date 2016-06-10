@@ -16,13 +16,13 @@
 # MA 02110-1301, USA.
 
 bin_SCRIPTS = post-install pre-uninstall remote_command.sh \
-calpontLogRotate transactionLog transactionLogArchiver.sh system_installer.sh \
-module_installer.sh patch_installer.sh xm_installer.sh startupTests.sh \
-director_installer.sh user_installer.sh performance_installer.sh \
-remote_scp_get.sh calpontAlias run.sh upgrade-infinidb.sh \
+columnstoreLogRotate transactionLog transactionLogArchiver.sh \
+module_installer.sh startupTests.sh \
+user_installer.sh performance_installer.sh \
+remote_scp_get.sh columnstoreAlias run.sh upgrade-columnstore.sh \
 post-mysql-install post-mysqld-install binary_installer.sh \
-os_check.sh infinidb calpontSyslog calpontSyslog-ng syslogSetup.sh \
-remote_scp_put.sh calpontUninstall.sh infinidb.def \
+os_check.sh columnstore columnstoreSyslog columnstoreSyslog-ng syslogSetup.sh \
+remote_scp_put.sh columnstoreUninstall.sh columnstore.def \
 remotessh.exp rsync.sh remote_command_verify.sh
 
 dist_local_DATA = module

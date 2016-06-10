@@ -17,8 +17,8 @@
 
 # $Id: Makefile.am 878 2009-04-03 20:34:32Z rdempsey $
 
-SUBDIRS = mcsadmin calpontDB postConfigure serverMonitor traphandler \
-sendtrap calpontSupport
+SUBDIRS = mcsadmin columnstoreDB postConfigure serverMonitor traphandler \
+sendtrap columnstoreSupport
 
 test:
 
