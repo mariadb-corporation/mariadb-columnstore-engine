@@ -22,19 +22,10 @@ AM_CPPFLAGS = $(idb_cppflags)
 AM_CFLAGS = $(idb_cflags)
 AM_CXXFLAGS = $(idb_cxxflags)
 AM_LDFLAGS = $(idb_ldflags)
-bin_PROGRAMS = columnstoreSupport
-columnstoreSupport_SOURCES = columnstoreSupport.cpp
-columnstoreSupport_CPPFLAGS = $(idb_common_includes) $(AM_CPPFLAGS)
-columnstoreSupport_LDFLAGS = $(idb_common_ldflags) $(idb_brm_libs) $(idb_oam_libs) $(idb_exec_libs) -lreadline -lncurses $(AM_LDFLAGS)
-dist_bin_SCRIPTS=\
-	alarmReport.sh \
-	bulklogReport.sh \
-	configReport.sh \
-	hadoopReport.sh \
-	hardwareReport.sh \
-	logReport.sh \
-	resourceReport.sh \
-	softwareReport.sh
+bin_PROGRAMS = columnstoreDBWrite
+columnstoreDBWrite_SOURCES = columnstoreDB.cpp
+columnstoreDBWrite_CPPFLAGS = $(idb_common_includes) $(AM_CPPFLAGS)
+columnstoreDBWrite_LDFLAGS = $(idb_common_ldflags) $(idb_common_libs) $(idb_oam_libs) $(idb_exec_libs) -lreadline -lncurses $(AM_LDFLAGS)
 
 test:
 
