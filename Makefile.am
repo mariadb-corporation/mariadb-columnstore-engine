@@ -78,6 +78,7 @@ all-local: bootstrap
 #	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
 	$(MAKE) -C utils
 	$(MAKE) -C oam/oamcpp
+	$(MAKE) -C net-snmp
 	$(MAKE) -C snmpd
 	$(MAKE) -C dbcon/execplan
 	$(MAKE) -C dbcon/joblist
@@ -110,6 +111,7 @@ all-local: bootstrap
 install:
 	$(MAKE) -C utils install
 	$(MAKE) -C oam/oamcpp install
+	$(MAKE) -C net-snmp install
 	$(MAKE) -C snmpd install
 	$(MAKE) -C dbcon/execplan install
 	$(MAKE) -C dbcon/joblist install

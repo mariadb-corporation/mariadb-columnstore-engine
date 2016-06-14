@@ -121,8 +121,20 @@ then
 	./configure --prefix=$PREFIX
 else
 	echo "BUILDING WITH DEFAULT PREFIX"
-	./configure --prefix=/usr/local/mariadb/columnstore
+	PREFIX=/usr/local/mariadb/columnstore
+	./configure --prefix=$PREFIX
 fi
+
+cd net-snmp/net-snmp
+	./configure --prefix=$PREFIX --with-mib-modules=disman/event-mib --with-cc=gcc \
+                --with-logfile=$PREFIX/log/snmpd.log \
+                --with-sys-location=Unknown \
+                --with-sys-contact=root@localhost.localdomain \
+                --with-default-snmp-version=3 \
+                --with-persistent-directory=$PREFIX/var/net-snmp \
+                --without-openssl \
+                --with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"
+
 
 #for x in \
 #$(find . -name '[mM]akefile' \
