@@ -134,6 +134,7 @@ cd net-snmp/net-snmp
                 --with-persistent-directory=$PREFIX/var/net-snmp \
                 --without-openssl \
                 --with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"
+#	./configure --prefix=$PREFIX --with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"
 
 #for x in \
 #$(find . -name '[mM]akefile' \
