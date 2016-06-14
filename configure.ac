@@ -226,6 +226,7 @@ AC_CONFIG_FILES([
 	oamapps/traphandler/Makefile
 	oamapps/sendtrap/Makefile
 	oamapps/calpontSupport/Makefile
+	oamapps/columnstoreDB/Makefile
 	primitives/Makefile
 	primitives/blockcache/Makefile
 	primitives/linux-port/Makefile
@@ -233,9 +234,11 @@ AC_CONFIG_FILES([
 	decomsvr/Makefile
 	procmgr/Makefile
 	procmon/Makefile
+	net-snmp/Makefile
 	snmpd/Makefile
 	snmpd/etc/Makefile
 	snmpd/snmpmanager/Makefile
+	oamapps/columnstoreSupport/Makefile
 	tools/Makefile
 	tools/editem/Makefile
 	tools/cplogger/Makefile

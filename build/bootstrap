@@ -33,6 +33,10 @@ while true
 	esac
 done
 
+if [ "$INCLUDE" == "" ]; then
+  INCLUDE="-I$PWD/../sql -I$PWD/../include -I$PWD/../pcre"
+fi
+
 export CXXFLAGS=$INCLUDE $CXXFLAGS
 
 #TODO: these prebuilt binaries may need to be fetched
@@ -117,7 +121,7 @@ then
 	./configure --prefix=$PREFIX
 else
 	echo "BUILDING WITH DEFAULT PREFIX"
-	./configure
+	./configure --prefix=/usr/local/mariadb/columnstore
 fi
 
 #for x in \
