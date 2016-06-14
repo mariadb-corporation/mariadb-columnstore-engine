@@ -368,6 +368,9 @@
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #undef HAVE_LIBPTHREAD
 
+/* Define to 1 if you have the `rpm' library (-lrpm). */
+#undef HAVE_LIBRPM
+
 /* Define to 1 if you have the `RSAglue' library (-lRSAglue). */
 #undef HAVE_LIBRSAGLUE
 
@@ -541,6 +544,9 @@
 
 /* Define to 1 if you have the <netipx/ipx.h> header file. */
 #undef HAVE_NETIPX_IPX_H
+
+/* Define to 1 if you have the <netlink/netlink.h> header file. */
+#undef HAVE_NETLINK_NETLINK_H
 
 /* Define to 1 if you have the <net/if_arp.h> header file. */
 #undef HAVE_NET_IF_ARP_H
@@ -1323,6 +1329,10 @@
 /* configure options specified */
 #undef NETSNMP_CONFIGURE_OPTIONS
 
+/* default location to look for mibs to load using the above tokens and/or
+   those in the MIBS envrionment variable */
+#undef NETSNMP_DEFAULT_MIBDIRS
+
 /* default mib files to load, specified by path. */
 #undef NETSNMP_DEFAULT_MIBFILES
 
@@ -1353,12 +1363,21 @@
 /* Define if you are embedding perl in the main agent. */
 #undef NETSNMP_EMBEDDED_PERL
 
+/* define if you want to enable IPv6 support */
+#undef NETSNMP_ENABLE_IPV6
+
+/* define if you want to restrict SMUX connections to localhost by default */
+#undef NETSNMP_ENABLE_LOCAL_SMUX
+
 /* Define if you want to build MFD module rewrites */
 #undef NETSNMP_ENABLE_MFD_REWRITES
 
 /* define if you want to compile support for both authentication and privacy
    support. */
 #undef NETSNMP_ENABLE_SCAPI_AUTHPRIV
+
+/* testing code sections. */
+#undef NETSNMP_ENABLE_TESTING_CODE
 
 /* Should evaluate to the name of the current function if defined */
 #undef NETSNMP_FUNCTION
