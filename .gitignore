@@ -81,3 +81,9 @@ versioning/BRM/workernode
 writeengine/bulk/cpimport.bin
 writeengine/server/WriteEngineServer
 writeengine/splitter/cpimport
+oamapps/columnstoreDB/columnstoreDBWrite
+oamapps/columnstoreSupport/columnstoreSupport
+net-snmp/net-snmp-5.7.3/include/net-snmp/net-snmp-config.h
+net-snmp/net-snmp-5.7.3/net-snmp-config
+net-snmp/net-snmp-5.7.3/net-snmp-create-v3-user
+

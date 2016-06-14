@@ -40,7 +40,7 @@ ACLOCAL_AMFLAGS = -I m4
 AM_LIBTOOLFLAGS = -Wl,-rpath -Wl,$(prefix)/lib -lrt -lboost_idb
 .PHONY: test coverage leakcheck docs bootstrap install
 
-all-local: bootstrap
+all-local: 
 #	cd utils && $(MAKE) && $(MAKE) install
 #	cd oam; \
 #		$(MAKE) -C oamcpp install
@@ -76,9 +76,9 @@ all-local: bootstrap
 #	$(MAKE) -C writeengine/bulk install_bulk
 #	$(MAKE) -C writeengine/splitter install_splitter
 #	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
+	$(MAKE) -C net-snmp
 	$(MAKE) -C utils
 	$(MAKE) -C oam/oamcpp
-	$(MAKE) -C net-snmp
 	$(MAKE) -C snmpd
 	$(MAKE) -C dbcon/execplan
 	$(MAKE) -C dbcon/joblist
@@ -109,9 +109,9 @@ all-local: bootstrap
 	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
 
 install:
+	$(MAKE) -C net-snmp install
 	$(MAKE) -C utils install
 	$(MAKE) -C oam/oamcpp install
-	$(MAKE) -C net-snmp install
 	$(MAKE) -C snmpd install
 	$(MAKE) -C dbcon/execplan install
 	$(MAKE) -C dbcon/joblist install
@@ -149,8 +149,6 @@ coverage:
 leakcheck:
 
 docs:
-
-bootstrap:
 
 clean: clean-am
 

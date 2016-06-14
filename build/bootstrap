@@ -34,7 +34,7 @@ while true
 done
 
 if [ "$INCLUDE" == "" ]; then
-  INCLUDE="-I$PWD/../sql -I$PWD/../include -I$PWD/../pcre"
+	INCLUDE="-I$PWD/../sql -I$PWD/../include -I$PWD/../pcre -I$PWD/net-snmp/net-snmp -I$PWD/net-snmp/net-snmp/include -I$PWD/snmpd/snmpmanager -L$PWD/net-snmp/net-snmp/snmplib/.libs -L$PWD/net-snmp/net-snmp/agent/helpers/.libs -L$PWD/net-snmp/net-snmp/agent/.libs/ -L$PWD/net-snmp/net-snmp/apps/.libs/"
 fi
 
 export CXXFLAGS=$INCLUDE $CXXFLAGS
@@ -60,12 +60,12 @@ cp dbcon/mysql/install_calpont_mysql.sh export/mysql/ && \
 cp dbcon/mysql/my.cnf export/mysql/ && \
 cp dbcon/mysql/mysql-Columnstore export/mysql/
 
-cp -p -r utils/net-snmp export/include
+#cp -p -r utils/net-snmp export/include
 
-d=utils/net-snmp-built-libs/lib64
-for lib in libnetsnmpagent.so libnetsnmphelpers.so libnetsnmpmibs.so libnetsnmp.so libnetsnmptrapd.so; do
-	ln -svf $lib.5.2.1 $d/$lib
-done
+#d=utils/net-snmp-built-libs/lib64
+#for lib in libnetsnmpagent.so libnetsnmphelpers.so libnetsnmpmibs.so libnetsnmp.so libnetsnmptrapd.so; do
+#	ln -svf $lib.5.2.1 $d/$lib
+#done
 #FIXME: 
 # This has to be terribly broken, especially for 32 bit
 # platforms.  There should be no PRE-BUILT tools in someting
@@ -74,19 +74,19 @@ done
 # as part of the bootstrap process.
 # I am commenting this out to see exactly what breaks in the build
 # process.
- if [ `uname -m` == "x86_64" ]; then
- 	cp -p utils/net-snmp-built-libs/lib64/* export/lib
- 	cp -p utils/net-snmp-built-libs/bin64/* export/sbin
- else
- 	egrep -qs Constantine /etc/redhat-release
- 	if [ $? -eq 0 ]; then
- 		cp -p utils/net-snmp-built-libs/fc12lib/libnetsnmp*.so.* export/lib
- 		cp -p utils/net-snmp-built-libs/fc12bin/* export/sbin
- 	else
- 		cp -p utils/net-snmp-built-libs/fc6lib/libnetsnmp*.so.* export/lib
- 		cp -p utils/net-snmp-built-libs/fc6bin/* export/sbin
- 	fi
- fi
+# if [ `uname -m` == "x86_64" ]; then
+# 	cp -p utils/net-snmp-built-libs/lib64/* export/lib
+# 	cp -p utils/net-snmp-built-libs/bin64/* export/sbin
+# else
+# 	egrep -qs Constantine /etc/redhat-release
+# 	if [ $? -eq 0 ]; then
+# 		cp -p utils/net-snmp-built-libs/fc12lib/libnetsnmp*.so.* export/lib
+# 		cp -p utils/net-snmp-built-libs/fc12bin/* export/sbin
+# 	else
+# 		cp -p utils/net-snmp-built-libs/fc6lib/libnetsnmp*.so.* export/lib
+# 		cp -p utils/net-snmp-built-libs/fc6bin/* export/sbin
+# 	fi
+# fi
 
 #FIXME:
 #This is not going to update the version in configure.ac
@@ -134,7 +134,6 @@ cd net-snmp/net-snmp
                 --with-persistent-directory=$PREFIX/var/net-snmp \
                 --without-openssl \
                 --with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"
-
 
 #for x in \
 #$(find . -name '[mM]akefile' \

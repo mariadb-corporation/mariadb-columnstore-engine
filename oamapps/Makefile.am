@@ -17,7 +17,7 @@
 
 # $Id: Makefile.am 878 2009-04-03 20:34:32Z rdempsey $
 #
-.PHONY install
+#.PHONY: install
 
 SUBDIRS = mcsadmin columnstoreDB postConfigure serverMonitor traphandler \
 sendtrap columnstoreSupport
@@ -30,9 +30,7 @@ leakcheck:
 
 docs:
 
-install:
-	for subdir in $(SUBDIRS); \
-		do $(MAKE) -C $$subdir install
-	done
-
-
+#install:
+#	for subdir in $(SUBDIRS); \
+#		do $(MAKE) -C $$subdir install
+#	done
