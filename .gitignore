@@ -17,6 +17,7 @@ config.status
 missing
 stamp-h1
 export/
+libtool
 buildFlags
 dbcon/ddlpackage/ddl-gram.cpp
 dbcon/ddlpackage/ddl-gram.h
