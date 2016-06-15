@@ -25,7 +25,7 @@ libcalmysql_la_CPPFLAGS = -I/usr/include/libxml2 -I../../../mysql/include -I../.
 include_HEADERS = idb_mysql.h
 
 dist_mysql_DATA = syscatalog_mysql.sql dumpcat_mysql.sql calsetuserpriority.sql calremoveuserpriority.sql calshowprocesslist.sql my.cnf
-mysqlColumnstore = install_calpont_mysql.sh mysql-Calpont dumpcat.pl
+mysql-Columnstore = install_calpont_mysql.sh mysql-Calpont dumpcat.pl
 
 test:
 
