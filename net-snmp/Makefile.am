@@ -1,6 +1,6 @@
 # $Id$
 
-.PHONY: test coverage leakcheck docs bootstrap install
+.PHONY: test coverage leakcheck docs bootstrap install clean
 test:
 
 coverage:
@@ -14,4 +14,7 @@ all:
 
 install:
 	$(MAKE) -C net-snmp install
+
+clean:
+	$(MAKE) -C net-snmp clean
 

@@ -38,45 +38,12 @@ ACLOCAL_AMFLAGS = -I m4
 # there are changes made to this custom boost, so I am leaving
 # this AS IS for now.
 AM_LIBTOOLFLAGS = -Wl,-rpath -Wl,$(prefix)/lib -lrt -lboost_idb
-.PHONY: test coverage leakcheck docs bootstrap install
+.PHONY: test coverage leakcheck docs bootstrap install net-snmp-install
 
-all-local: 
-#	cd utils && $(MAKE) && $(MAKE) install
-#	cd oam; \
-#		$(MAKE) -C oamcpp install
-#	cd snmpd && $(MAKE) && $(MAKE) install
-#	cd dbcon; \
-#		$(MAKE) -C execplan install; \
-#		$(MAKE) -C joblist install
-#	cd versioning && $(MAKE) && $(MAKE) install
-#	cd oam && $(MAKE) && $(MAKE) install
-#	cd versioning && $(MAKE) dbrm tools && $(MAKE) install_dbrm install_tools
-#	cd writeengine; \
-#		$(MAKE) -C wrapper install; \
-#		$(MAKE) -C client install; \
-#		$(MAKE) -C xml install; \
-#		$(MAKE) -C redistribute install
-#	cd dbcon; \
-#		$(MAKE) -C ddlpackage install; \
-#		$(MAKE) -C ddlpackageproc install; \
-#		$(MAKE) -C dmlpackage install; \
-#		$(MAKE) -C dmlpackageproc install
-#	cd dbcon && $(MAKE) && $(MAKE) install
-#	cd exemgr && $(MAKE) && $(MAKE) install
-#	cd ddlproc && $(MAKE) && $(MAKE) install
-#	cd dmlproc && $(MAKE) && $(MAKE) install
-#	cd procmon && $(MAKE) && $(MAKE) install
-#	cd procmgr && $(MAKE) && $(MAKE) install
-#	cd oamapps && $(MAKE) && $(MAKE) install
-#	cd decomsvr && $(MAKE) && $(MAKE) install
-#	cd primitives && $(MAKE) && $(MAKE) install
-#	cd tools && $(MAKE) && $(MAKE) install
-#	cd versioning && $(MAKE) tools install_tools
-#	$(MAKE) -C writeengine/server install_server
-#	$(MAKE) -C writeengine/bulk install_bulk
-#	$(MAKE) -C writeengine/splitter install_splitter
-#	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
-	$(MAKE) -C net-snmp
+net-snmp/net-snmp-5.7.3/agent/.libs/libnetsnmpmibs.so:
+	$(MAKE) -C net-snmp 
+
+all-local: net-snmp/net-snmp-5.7.3/agent/.libs/libnetsnmpmibs.so
 	$(MAKE) -C utils
 	$(MAKE) -C oam/oamcpp
 	$(MAKE) -C snmpd
@@ -108,8 +75,10 @@ all-local:
 	$(MAKE) -C writeengine/splitter
 	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
 
-install:
+net-snmp-install:
 	$(MAKE) -C net-snmp install
+
+install: net-snmp-install
 	$(MAKE) -C utils install
 	$(MAKE) -C oam/oamcpp install
 	$(MAKE) -C snmpd install
@@ -150,5 +119,7 @@ leakcheck:
 
 docs:
 
-clean: clean-am
+clean: 
+	rm -f net-snmp.built; \
+	find . -name \*.d.* -o -name \*.so -o -name \*.a -o -name \*.o -o -name \*.lib -o -name \*.sa -o -name \*.lo -o -name \*.la -exec rm {} \; -print
 

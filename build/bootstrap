@@ -33,9 +33,9 @@ while true
 	esac
 done
 
-if [ "$INCLUDE" == "" ]; then
-	INCLUDE="-I$PWD/../sql -I$PWD/../include -I$PWD/../pcre -I$PWD/net-snmp/net-snmp -I$PWD/net-snmp/net-snmp/include -I$PWD/snmpd/snmpmanager -L$PWD/net-snmp/net-snmp/snmplib/.libs -L$PWD/net-snmp/net-snmp/agent/helpers/.libs -L$PWD/net-snmp/net-snmp/agent/.libs/ -L$PWD/net-snmp/net-snmp/apps/.libs/"
-fi
+#if [ "$INCLUDE" == "" ]; then
+#	INCLUDE="-I$PWD/../sql -I$PWD/../include -I$PWD/../pcre -I$PWD/net-snmp/net-snmp -I$PWD/net-snmp/net-snmp/include -I$PWD/snmpd/snmpmanager -L$PWD/net-snmp/net-snmp/snmplib/.libs -L$PWD/net-snmp/net-snmp/agent/helpers/.libs -L$PWD/net-snmp/net-snmp/agent/.libs/ -L$PWD/net-snmp/net-snmp/apps/.libs/"
+#fi
 
 export CXXFLAGS=$INCLUDE $CXXFLAGS
 
