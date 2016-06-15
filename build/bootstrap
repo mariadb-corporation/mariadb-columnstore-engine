@@ -8,44 +8,7 @@
 
 set -e
 
-mkdir -p export/{include,lib,etc,share,bin,sbin,post,mysql}
-params="$(getopt -o p:i: -l prefix:,include: --name "$cmdname" -- "$@")"
-
-eval set -- "$params"
-unset params
-
-while true
-	do
-	case $1 in
-		--include)
-		INCLUDE+="-I${2-} "
-		shift 2
-		;;
-		--prefix)
-		PREFIX="${2-}"
-		shift 2
-		;;
-
-		--)
-		shift
-		break
-		;;
-	esac
-done
-
-#if [ "$INCLUDE" == "" ]; then
-#	INCLUDE="-I$PWD/../sql -I$PWD/../include -I$PWD/../pcre -I$PWD/net-snmp/net-snmp -I$PWD/net-snmp/net-snmp/include -I$PWD/snmpd/snmpmanager -L$PWD/net-snmp/net-snmp/snmplib/.libs -L$PWD/net-snmp/net-snmp/agent/helpers/.libs -L$PWD/net-snmp/net-snmp/agent/.libs/ -L$PWD/net-snmp/net-snmp/apps/.libs/"
-#fi
-
-export CXXFLAGS=$INCLUDE $CXXFLAGS
-
-#TODO: these prebuilt binaries may need to be fetched
-#and built as dependencies
-
-#cp build/gdb export/bin
-#cp build/libgcc_s.so.1 export/lib 
-#cp build/libstdc++.so.6.0.14 export/lib
-
+mkdir -p export/mysql
 #FIXME rename this
 cp dbcon/mysql/install_calpont_mysql.sh export/mysql/
 
@@ -59,34 +22,6 @@ cp build/files.lst export/mysql/ && \
 cp dbcon/mysql/install_calpont_mysql.sh export/mysql/ && \
 cp dbcon/mysql/my.cnf export/mysql/ && \
 cp dbcon/mysql/mysql-Columnstore export/mysql/
-
-#cp -p -r utils/net-snmp export/include
-
-#d=utils/net-snmp-built-libs/lib64
-#for lib in libnetsnmpagent.so libnetsnmphelpers.so libnetsnmpmibs.so libnetsnmp.so libnetsnmptrapd.so; do
-#	ln -svf $lib.5.2.1 $d/$lib
-#done
-#FIXME: 
-# This has to be terribly broken, especially for 32 bit
-# platforms.  There should be no PRE-BUILT tools in someting
-# that is being built.  If we need a custom compilation of
-# net-snmp for some reason then we will have to BUILD IT
-# as part of the bootstrap process.
-# I am commenting this out to see exactly what breaks in the build
-# process.
-# if [ `uname -m` == "x86_64" ]; then
-# 	cp -p utils/net-snmp-built-libs/lib64/* export/lib
-# 	cp -p utils/net-snmp-built-libs/bin64/* export/sbin
-# else
-# 	egrep -qs Constantine /etc/redhat-release
-# 	if [ $? -eq 0 ]; then
-# 		cp -p utils/net-snmp-built-libs/fc12lib/libnetsnmp*.so.* export/lib
-# 		cp -p utils/net-snmp-built-libs/fc12bin/* export/sbin
-# 	else
-# 		cp -p utils/net-snmp-built-libs/fc6lib/libnetsnmp*.so.* export/lib
-# 		cp -p utils/net-snmp-built-libs/fc6bin/* export/sbin
-# 	fi
-# fi
 
 #FIXME:
 #This is not going to update the version in configure.ac
@@ -113,36 +48,13 @@ fi
 
 echo GNU autotools environment generation completed successfully
 
-echo Configuring MariaDB ColumnStore
-
-if [ -n "$PREFIX" ]; 
-then
-	echo "BUILDING WITH PREFIX=$PREFIX"
-	./configure --prefix=$PREFIX
-else
-	echo "BUILDING WITH DEFAULT PREFIX"
-	PREFIX=/usr/local/mariadb/columnstore
-	./configure --prefix=$PREFIX
-fi
-
-cd net-snmp/net-snmp
-	./configure --prefix=$PREFIX --with-mib-modules=disman/event-mib --with-cc=gcc \
-                --with-logfile=$PREFIX/log/snmpd.log \
-                --with-sys-location=Unknown \
-                --with-sys-contact=root@localhost.localdomain \
-                --with-default-snmp-version=3 \
-                --with-persistent-directory=$PREFIX/var/net-snmp \
-                --without-openssl \
-                --with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"
-#	./configure --prefix=$PREFIX --with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"
-
-#for x in \
-#$(find . -name '[mM]akefile' \
-#    | xargs grep -l ^bootstrap: \
-#    | cut -f 2 -d / \
-#    | sort -u)
-#do
-#  echo bootstrapping $x
-#  make BOOTSTRAP=1 -C $x bootstrap
-#done
+#cd net-snmp/net-snmp
+#	./configure --prefix=$PREFIX --with-mib-modules=disman/event-mib --with-cc=gcc \
+#                --with-logfile=$PREFIX/log/snmpd.log \
+#                --with-sys-location=Unknown \
+#                --with-sys-contact=root@localhost.localdomain \
+#                --with-default-snmp-version=3 \
+#                --with-persistent-directory=$PREFIX/var/net-snmp \
+#                --without-openssl \
+#                --with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"
 

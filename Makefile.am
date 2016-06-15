@@ -41,7 +41,16 @@ AM_LIBTOOLFLAGS = -Wl,-rpath -Wl,$(prefix)/lib -lrt -lboost_idb
 .PHONY: test coverage leakcheck docs bootstrap install net-snmp-install
 
 net-snmp/net-snmp-5.7.3/agent/.libs/libnetsnmpmibs.so:
-	$(MAKE) -C net-snmp 
+	cd net-snmp/net-snmp; \
+	./configure --prefix=$PREFIX --with-mib-modules=disman/event-mib --with-cc=gcc \
+		--with-logfile=$PREFIX/log/snmpd.log \
+		--with-sys-location=Unknown \
+		--with-sys-contact=root@localhost.localdomain \
+		--with-default-snmp-version=3 \
+		--with-persistent-directory=$PREFIX/var/net-snmp \
+		--without-openssl \
+		--with-ldflags="-Wl,-rpath -Wl,$PREFIX/lib"; \
+		$(MAKE) -C net-snmp 
 
 all-local: net-snmp/net-snmp-5.7.3/agent/.libs/libnetsnmpmibs.so
 	$(MAKE) -C utils

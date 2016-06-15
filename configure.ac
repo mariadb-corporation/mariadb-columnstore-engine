@@ -3,7 +3,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(columnstore, 1.0.0, support@mariadb.com)
+AC_INIT(columnstore, 1.0.2, support@mariadb.com)
 AC_CONFIG_MACRO_DIR([m4])
 ### we don't want the deault CXXFLAGS set by AC_INIT, but we do want to allow the user to set them
 SAVE_CXXFLAGS=
@@ -20,7 +20,7 @@ CFLAGS=
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([config.h])
 
-AC_PREFIX_DEFAULT([/usr/local])
+AC_PREFIX_DEFAULT([/usr/local/mariadb/columnstore])
 
 AC_LANG_CPLUSPLUS
 
