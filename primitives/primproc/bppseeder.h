@@ -45,7 +45,6 @@
 #include "batchprimitiveprocessor.h"
 #include "primitiveserver.h"
 #include "umsocketselector.h"
-#include "prioritythreadpool.h"
 
 namespace primitiveprocessor
 {

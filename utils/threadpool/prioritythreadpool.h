@@ -35,7 +35,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
-#include "winport.h"
+#include "../winport/winport.h"
 
 namespace threadpool
 {

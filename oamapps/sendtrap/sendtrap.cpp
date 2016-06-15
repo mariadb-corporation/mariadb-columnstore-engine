@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 		}
 
 		// session initialization
-		create_trap_session(ipAdd.c_str(), 
+		create_trap_session((char*)ipAdd.c_str(), 
 							SNMP_TRAP_PORT, 
 							"public",
 							SNMP_VERSION_1, 

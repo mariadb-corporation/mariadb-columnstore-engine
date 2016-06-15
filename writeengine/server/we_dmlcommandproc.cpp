@@ -24,7 +24,7 @@ using namespace messageqcpp;
 
 #include "we_messages.h"
 #include "we_message_handlers.h"
-#include "dmlpkg.h"
+#include "../../dbcon/dmlpackage/dmlpkg.h"
 #include "we_dmlcommandproc.h"
 using namespace dmlpackage;
 #include "dmlpackageprocessor.h"

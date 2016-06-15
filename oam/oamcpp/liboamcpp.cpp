@@ -47,7 +47,7 @@
 #include <sstream>
 
 #include "ddlpkg.h"
-#include "dmlpkg.h"
+#include "../../dbcon/dmlpackage/dmlpkg.h"
 #define LIBOAM_DLLEXPORT
 #include "liboamcpp.h"
 #undef LIBOAM_DLLEXPORT

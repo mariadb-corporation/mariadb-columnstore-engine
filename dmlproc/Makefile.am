@@ -24,7 +24,7 @@ AM_CXXFLAGS = $(idb_cxxflags)
 AM_LDFLAGS = $(idb_ldflags)
 bin_PROGRAMS = DMLProc
 DMLProc_SOURCES = dmlproc.cpp dmlprocessor.cpp dmlresultbuffer.cpp batchinsertprocessor.cpp
-DMLProc_LDFLAGS = $(idb_common_ldflags) $(idb_write_libs) -lthreadpool -lddlcleanuputil -lbatchloader $(AM_LDFLAGS)
+DMLProc_LDFLAGS = $(idb_common_ldflags) $(idb_write_libs) ${abs_top_builddir}/utils/threadpool/libthreadpool.la ${abs_top_builddir}/utils/ddlcleanup/libddlcleanuputil.la ${abs_top_builddir}/utils/batchloader/libbatchloader.la $(AM_LDFLAGS)
 
 test:
 

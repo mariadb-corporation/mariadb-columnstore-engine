@@ -55,7 +55,7 @@ using namespace execplan;
 
 #include "writeengine.h"
 #include "cacheutils.h"
-#include "we_clients.h"
+#include "../writeengine/client/we_clients.h"
 #include "dbrm.h"
 #include "IDBPolicy.h"
 #include "utils_utf8.h"

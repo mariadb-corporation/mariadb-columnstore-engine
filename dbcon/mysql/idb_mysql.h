@@ -33,13 +33,15 @@ template <class T> bool isnan(T);
 
 #undef LOG_INFO
 
-#ifdef _MSC_VER
 #ifdef _DEBUG
 #define SAFEMALLOC
 #define DBUG_ON 1
+#undef  DBUG_OFF
 #else
 #define DBUG_OFF 1
+#undef DBUG_ON
 #endif
+#ifdef _MSC_VER
 #define MYSQL_DYNAMIC_PLUGIN
 #define DONT_DEFINE_VOID
 #ifdef ETIMEDOUT

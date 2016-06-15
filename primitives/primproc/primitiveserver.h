@@ -36,12 +36,11 @@
 #include <boost/thread.hpp>
 
 #include "threadpool.h"
-#include "prioritythreadpool.h"
+#include "../../utils/threadpool/prioritythreadpool.h"
 #include "messagequeue.h"
 #include "blockrequestprocessor.h"
 #include "batchprimitiveprocessor.h"
 
-#include "winport.h"
 //#define PRIMPROC_STOPWATCH
 #ifdef PRIMPROC_STOPWATCH
 #include "stopwatch.h"

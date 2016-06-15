@@ -53,18 +53,17 @@ using namespace config;
 #include "windowfunctioncolumn.h"
 using namespace execplan;
 
-#include "windowfunction.h"
-#include "windowfunctiontype.h"
-#include "framebound.h"
-#include "frameboundrange.h"
-#include "frameboundrow.h"
-#include "windowframe.h"
+#include "../../utils/windowfunction/windowfunction.h"
+#include "../../utils/windowfunction/windowfunctiontype.h"
+#include "../../utils/windowfunction/framebound.h"
+#include "../../utils/windowfunction/frameboundrange.h"
+#include "../../utils/windowfunction/frameboundrow.h"
+#include "../../utils/windowfunction/windowframe.h"
 using namespace windowfunction;
 
 #include "rowgroup.h"
 using namespace rowgroup;
 
-#include "idborderby.h"
 using namespace ordering;
 
 #include "funcexp.h"

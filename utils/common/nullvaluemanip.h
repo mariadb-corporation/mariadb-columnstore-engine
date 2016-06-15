@@ -19,7 +19,7 @@
 #ifndef NULLVALUEMANIP_H
 #define NULLVALUEMANIP_H
 
-#include "calpontsystemcatalog.h"
+#include "../../dbcon/execplan/calpontsystemcatalog.h"
 
 namespace utils {
 

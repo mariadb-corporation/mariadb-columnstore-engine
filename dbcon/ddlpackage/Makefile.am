@@ -39,7 +39,9 @@ droppartition.cpp
 include_HEADERS = ddlpkg.h \
 sqlparser.h
 
-ddl-gram.h ddl-gram.cpp: ddl.y
+ddl-gram.h: ddl-gram.cpp
+
+ddl-gram.cpp: ddl.y
 	$(YACC) -l -v -d -p ddl -o ddl-gram-temp.cpp ddl.y
 	set +e; \
 	if [ -f ddl-gram.cpp ]; \

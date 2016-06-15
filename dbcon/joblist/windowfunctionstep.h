@@ -21,7 +21,7 @@
 #ifndef JOBLIST_WINDOWFUNCTIONSTEP_H
 #define JOBLIST_WINDOWFUNCTIONSTEP_H
 
-#include "idborderby.h"
+#include "../../utils/windowfunction/idborderby.h"
 #include "jobstep.h"
 #include "rowgroup.h"
 #include "windowfunctioncolumn.h"

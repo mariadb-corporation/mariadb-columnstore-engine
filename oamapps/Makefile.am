@@ -16,9 +16,11 @@
 # MA 02110-1301, USA.
 
 # $Id: Makefile.am 878 2009-04-03 20:34:32Z rdempsey $
+#
+#.PHONY: install
 
-SUBDIRS = mcsadmin calpontDB postConfigure serverMonitor traphandler \
-sendtrap calpontSupport
+SUBDIRS = mcsadmin columnstoreDB postConfigure serverMonitor traphandler \
+sendtrap columnstoreSupport
 
 test:
 
@@ -28,8 +30,7 @@ leakcheck:
 
 docs:
 
-bootstrap:
-	for subdir in $(SUBDIRS); \
-		do $(MAKE) -C $$subdir bootstrap || exit $$?; \
-	done
-
+#install:
+#	for subdir in $(SUBDIRS); \
+#		do $(MAKE) -C $$subdir install
+#	done

@@ -34,7 +34,7 @@ we_cleartablelockcmd.cpp \
 we_cpifeederthread.cpp \
 we_getfilesizes.cpp
 include_HEADERS = we_messages.h
-WriteEngineServer_LDFLAGS = $(idb_common_ldflags) $(idb_exec_libs) -lthreadpool -lwriteengineredistribute $(idb_write_libs) $(AM_LDFLAGS)
+WriteEngineServer_LDFLAGS = $(idb_common_ldflags) $(idb_exec_libs) ${abs_top_builddir}/utils/threadpool/libthreadpool.la ${abs_top_builddir}/writeengine/redistribute/libwriteengineredistribute.la $(idb_write_libs) $(AM_LDFLAGS)
 
 install_server: install
 

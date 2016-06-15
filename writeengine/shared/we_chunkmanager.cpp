@@ -40,7 +40,7 @@ using namespace std;
 #include "we_config.h"
 #include "we_confirmhdfsdbfile.h"
 #include "we_fileop.h"
-#include "we_dctnry.h"
+#include "../dictionary/we_dctnry.h"
 #include "we_stats.h"
 using namespace execplan;
 

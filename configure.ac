@@ -3,7 +3,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(infinidb, 4.6.1, support@infinidb.co)
+AC_INIT(columnstore, 1.0.2, support@mariadb.com)
+AC_CONFIG_MACRO_DIR([m4])
 ### we don't want the deault CXXFLAGS set by AC_INIT, but we do want to allow the user to set them
 SAVE_CXXFLAGS=
 if test -n "$CXXFLAGS"; then
@@ -19,7 +20,7 @@ CFLAGS=
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([config.h])
 
-AC_PREFIX_DEFAULT([/usr/local])
+AC_PREFIX_DEFAULT([/usr/local/mariadb/columnstore])
 
 AC_LANG_CPLUSPLUS
 
@@ -52,6 +53,12 @@ AC_PROG_AWK
 AC_PROG_CPP
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+
+# FIXME:
+# for quicklz (note this macro is not needed if autotools is 1.14 or 
+# greater, but old versions of CentOS do not have newer version
+# of autotools
+AM_PROG_CC_C_O
 
 # Checks for header files.
 AC_FUNC_ALLOCA
@@ -111,9 +118,9 @@ if test "x$ac_cv_header_ncurses_h" != "xyes"; then
 	AC_MSG_ERROR([Could not find a usable ncurses development environment!])
 fi
 
-CXX_FLAG_CHECK([-Wno-unused-local-typedefs])
-CXX_FLAG_CHECK([-Wno-unused-result])
-CXX_FLAG_CHECK([-Wno-format])
+#CXX_FLAG_CHECK([-Wno-unused-local-typedefs])
+#CXX_FLAG_CHECK([-Wno-unused-result])
+#CXX_FLAG_CHECK([-Wno-format])
 
 AC_MSG_CHECKING(whether to enable debugging)
 AC_SUBST([idb_cppflags], [' '])
@@ -150,22 +157,16 @@ AC_SUBST([postdir], ['${idbinstall}/post'])
 AC_SUBST([localdir], ['${idbinstall}/local'])
 AC_SUBST([mysqldir], ['${idbinstall}/mysql'])
 AC_SUBST([mibdir], ['${idbinstall}/share/snmp/mibs'])
-AC_SUBST([netsnmpdir], ['${idbinstall}/include/net-snmp'])
-AC_SUBST([netsnmpsysdir], ['${idbinstall}/include/net-snmp/system'])
-AC_SUBST([netsnmpmachdir], ['${idbinstall}/include/net-snmp/machine'])
-AC_SUBST([netsnmplibrdir], ['${idbinstall}/include/net-snmp/library'])
-AC_SUBST([netsnmpagntdir], ['${idbinstall}/include/net-snmp/agent'])
 AC_SUBST([toolsdir], ['${idbinstall}/tools'])
 
-AC_SUBST([netsnmp_libs], ['-lnetsnmpmibs -lnetsnmpagent -lnetsnmp -lnetsnmpmibs -lnetsnmphelpers'])
-
-AC_SUBST([idb_common_libs], ['-lmessageqcpp -lloggingcpp -lconfigcpp -lidbboot -lboost_idb -lxml2 -lpthread -lrt'])
-AC_SUBST([idb_oam_libs], ['-loamcpp -lsnmpmanager ${netsnmp_libs}'])
-AC_SUBST([idb_brm_libs], ['-lbrm -lidbdatafile -lcacheutils -lrwlock ${idb_oam_libs} ${idb_common_libs}'])
-AC_SUBST([idb_exec_libs], ['-ljoblist -lexecplan -lwindowfunction -ljoiner -lrowgroup -lfuncexp -ludfsdk -ldataconvert -lcommon -lcompress -lmysqlcl_idb -lquerystats -lquerytele -lthrift -lthreadpool ${idb_brm_libs}'])
-AC_SUBST([idb_write_libs], ['-lddlpackageproc -lddlpackage -ldmlpackageproc -ldmlpackage -lwriteengine -lwriteengineclient -lidbdatafile -lcacheutils ${idb_exec_libs}'])
-AC_SUBST([idb_common_includes], ['-I${idbinstall}/include -I/usr/local/include -I/usr/local/include/libxml2 -I/usr/include/libxml2'])
-AC_SUBST([idb_common_ldflags], ['-L${idbinstall}/lib -L/usr/local/lib'])
+AC_SUBST([netsnmp_libs], ['-L${abs_top_builddir}/net-snmp/net-snmp/snmplib/.libs -L${abs_top_builddir}/net-snmp/net-snmp/agent/helpers/.libs -L${abs_top_builddir}/net-snmp/net-snmp/agent/.libs/ -L${abs_top_builddir}/net-snmp/net-snmp/apps/.libs/ -lnetsnmpmibs -lnetsnmpagent -lnetsnmp -lnetsnmpmibs -lnetsnmphelpers'])
+AC_SUBST([idb_common_libs], ['${abs_top_builddir}/utils/messageqcpp/libmessageqcpp.la ${abs_top_builddir}/utils/loggingcpp/libloggingcpp.la ${abs_top_builddir}/utils/configcpp/libconfigcpp.la ${abs_top_builddir}/utils/startup/libidbboot.a ${abs_top_builddir}/utils/boost_idb/libboost_idb.la -lxml2 -lpthread -lrt'])
+AC_SUBST([idb_oam_libs], ['${abs_top_builddir}/oam/oamcpp/liboamcpp.la ${abs_top_builddir}/snmpd/snmpmanager/libsnmpmanager.la ${netsnmp_libs}'])
+AC_SUBST([idb_brm_libs], ['${abs_top_builddir}/versioning/BRM/libbrm.la ${abs_top_builddir}/utils/idbdatafile/libidbdatafile.la ${abs_top_builddir}/utils/cacheutils/libcacheutils.la ${abs_top_builddir}/utils/rwlock/librwlock.la ${idb_oam_libs} ${idb_common_libs}'])
+AC_SUBST([idb_exec_libs], ['${abs_top_builddir}/dbcon/joblist/libjoblist.la ${abs_top_builddir}/dbcon/execplan/libexecplan.la ${abs_top_builddir}/utils/windowfunction/libwindowfunction.la ${abs_top_builddir}/utils/joiner/libjoiner.la ${abs_top_builddir}/utils/rowgroup/librowgroup.la ${abs_top_builddir}/utils/funcexp/libfuncexp.la ${abs_top_builddir}/utils/udfsdk/libudfsdk.la ${abs_top_builddir}/utils/dataconvert/libdataconvert.la ${abs_top_builddir}/utils/common/libcommon.la ${abs_top_builddir}/utils/compress/libcompress.la ${abs_top_builddir}/utils/mysqlcl_idb/libmysqlcl_idb.la ${abs_top_builddir}/utils/querystats/libquerystats.la ${abs_top_builddir}/utils/querytele/libquerytele.la ${abs_top_builddir}/utils/thrift/libthrift.la ${abs_top_builddir}/utils/threadpool/libthreadpool.la ${idb_brm_libs}'])
+AC_SUBST([idb_write_libs], ['${abs_top_builddir}/dbcon/ddlpackageproc/libddlpackageproc.la ${abs_top_builddir}/dbcon/ddlpackage/libddlpackage.la ${abs_top_builddir}/dbcon/dmlpackageproc/libdmlpackageproc.la ${abs_top_builddir}/dbcon/dmlpackage/libdmlpackage.la ${abs_top_builddir}/writeengine/wrapper/libwriteengine.la ${abs_top_builddir}/writeengine/client/libwriteengineclient.la ${abs_top_builddir}/utils/idbdatafile/libidbdatafile.la ${abs_top_builddir}/utils/cacheutils/libcacheutils.la ${idb_exec_libs}'])
+AC_SUBST([idb_common_includes], ['-I${abs_top_builddir}/utils/libxml -I${abs_top_builddir}/utils/messageqcpp -I${abs_top_builddir}/writeengine/shared -I${abs_top_builddir}/utils/idbdatafile -I${abs_top_builddir}/utils/loggingcpp -I${abs_top_builddir}/utils/configcpp -I${abs_top_builddir}/utils/compress -I${abs_top_builddir}/versioning/BRM -I${abs_top_builddir}/utils/rowgroup -I${abs_top_builddir}/utils/common -I${abs_top_builddir}/utils/dataconvert -I${abs_top_builddir}/utils/rwlock -I${abs_top_builddir}/utils/funcexp -I${abs_top_builddir}/snmpd/snmpmanager -I${abs_top_builddir}/utils -I${abs_top_builddir}/oam/oamcpp -I${abs_top_builddir}/dbcon/ddlpackageproc -I${abs_top_builddir}/dbcon/ddlpackage -I${abs_top_builddir}/dbcon/execplan -I${abs_top_builddir}/utils/startup -I${abs_top_builddir}/dbcon/joblist -I${abs_top_builddir}/writeengine/wrapper -I${abs_top_builddir}/writeengine/server -I${abs_top_builddir}/dbcon/dmlpackage -I${abs_top_builddir}/writeengine/client -I${abs_top_builddir}/dbcon/dmlpackageproc -I${abs_top_builddir}/utils/cacheutils -I${abs_top_builddir}/utils/mysqlcl_idb -I${abs_top_builddir}/utils/querytele -I${abs_top_builddir}/utils/boost_idb -I${abs_top_builddir}/utils/thrift -I${abs_top_builddir}/utils/joiner -I${abs_top_builddir}/utils/threadpool -I${abs_top_builddir}/utils/batchloader -I${abs_top_builddir}/utils/ddlcleanup -I${abs_top_builddir}/utils/querystats -I${abs_top_builddir}/writeengine/xml -I${abs_top_builddir}/../../../sql -I${abs_top_builddir}/../../../include -I${abs_top_builddir}/../../../pcre -I${abs_top_builddir}/../sql -I${abs_top_builddir}/../include -I${abs_top_builddir}/../pcre -I${abs_top_builddir}/net-snmp/net-snmp -I${abs_top_builddir}/net-snmp/net-snmp/include -I${abs_top_builddir}/snmpd/snmpmanager'])
+AC_SUBST([idb_common_ldflags], [''])
 
 AC_CONFIG_FILES([
 	Makefile
@@ -182,7 +183,6 @@ AC_CONFIG_FILES([
 	utils/joiner/Makefile
 	utils/rowgroup/Makefile
 	utils/cacheutils/Makefile
-	utils/net-snmp/Makefile
 	utils/funcexp/Makefile
 	utils/udfsdk/Makefile
 	utils/compress/Makefile
@@ -225,6 +225,7 @@ AC_CONFIG_FILES([
 	oamapps/traphandler/Makefile
 	oamapps/sendtrap/Makefile
 	oamapps/calpontSupport/Makefile
+	oamapps/columnstoreDB/Makefile
 	primitives/Makefile
 	primitives/blockcache/Makefile
 	primitives/linux-port/Makefile
@@ -232,9 +233,11 @@ AC_CONFIG_FILES([
 	decomsvr/Makefile
 	procmgr/Makefile
 	procmon/Makefile
+	net-snmp/Makefile
 	snmpd/Makefile
 	snmpd/etc/Makefile
 	snmpd/snmpmanager/Makefile
+	oamapps/columnstoreSupport/Makefile
 	tools/Makefile
 	tools/editem/Makefile
 	tools/cplogger/Makefile
@@ -261,6 +264,5 @@ AC_CONFIG_FILES([
 	writeengine/splitter/Makefile
 	writeengine/server/Makefile
 	writeengine/redistribute/Makefile
-	net-snmp/Makefile
 ])
 AC_OUTPUT

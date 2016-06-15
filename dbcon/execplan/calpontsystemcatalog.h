@@ -39,7 +39,7 @@
 #include <iosfwd>
 #include <limits>
 
-#include "we_typeext.h"
+#include "../../writeengine/shared/we_typeext.h"
 #include "columnresult.h"
 #include "bytestream.h"
 #include "joblisttypes.h"

@@ -29,7 +29,7 @@
 #include "brmtypes.h"
 #include "we_dbrootextenttracker.h"
 #include "we_tablemetadata.h"
-#include "we_dctnry.h"
+#include "../dictionary/we_dctnry.h"
 #if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
