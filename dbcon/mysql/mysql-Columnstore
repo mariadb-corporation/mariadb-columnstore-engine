@@ -80,7 +80,7 @@ then
     datadir=/var/lib/mysql
   fi
   sbindir=/usr/local/sbin
-  libexecdir=/usr/local/sbin
+  bindir=/usr/local/sbin
 else
   bindir="$basedir/bin"
   if test -z "$datadir"
@@ -90,9 +90,9 @@ else
   sbindir="$basedir/sbin"
   if test -f "$basedir/sbin/mysqld"
   then
-    libexecdir="$basedir/sbin"
+    bindir="$basedir/sbin"
   else
-    libexecdir="$basedir/libexec"
+    bindir="$basedir/bin"
   fi
 fi
 
@@ -146,11 +146,11 @@ parse_server_arguments() {
 		    sbindir="$basedir/sbin"
                     if test -f "$basedir/sbin/mysqld"
                     then
-                      libexecdir="$basedir/sbin"
+                      bindir="$basedir/sbin"
                     else
-                      libexecdir="$basedir/libexec"
+                      bindir="$basedir/bin"
                     fi
-		    #libexecdir="$basedir/libexec"
+		    #bindir="$basedir/bin"
         ;;
       --datadir=*)  datadir=`echo "$arg" | sed -e 's/^[^=]*=//'`
 		    datadir_set=1
@@ -338,7 +338,7 @@ case "$mode" in
     then
       # Give extra arguments to mysqld with the my.cnf file. This script
       # may be overwritten at next upgrade.
-      $bindir/mysqld_safe --datadir="$datadir" --pid-file="$mysqld_pid_file_path" "--ledir=$libexecdir" "$@" >/dev/null 2>&1 &
+      $bindir/mysqld_safe --datadir="$datadir" --pid-file="$mysqld_pid_file_path" "--ledir=$bindir" "$@" >/dev/null 2>&1 &
       wait_for_ready; return_value=$?
 
       # Make lock for RedHat / SuSE
@@ -421,7 +421,7 @@ case "$mode" in
       fi
     else
       # Try to find appropriate mysqld process
-      mysqld_pid=`pidof $libexecdir/mysqld`
+      mysqld_pid=`pidof $bindir/mysqld`
 
       # test if multiple pids exist
       pid_count=`echo $mysqld_pid | wc -w`
@@ -446,9 +446,9 @@ case "$mode" in
     cd $basedir
     echo $echo_n "Testing MySQL configuration syntax"
     daemon=$bindir/mysqld
-    if test -x $libexecdir/mysqld
+    if test -x $bindir/mysqld
     then
-      daemon=$libexecdir/mysqld
+      daemon=$bindir/mysqld
     elif test -x $sbindir/mysqld
     then
       daemon=$sbindir/mysqld
