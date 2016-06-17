@@ -16,6 +16,7 @@
 
 
 
+
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -82,7 +83,8 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = dbcon/mysql
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(top_srcdir)/depcomp $(dist_mysql_DATA) $(include_HEADERS)
+	$(dist_mysql_SCRIPTS) $(top_srcdir)/depcomp $(dist_mysql_DATA) \
+	$(include_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -122,7 +124,7 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(mysqldir)" \
-	"$(DESTDIR)$(includedir)"
+	"$(DESTDIR)$(mysqldir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcalmysql_la_LIBADD =
 am_libcalmysql_la_OBJECTS = libcalmysql_la-ha_calpont.lo \
@@ -145,6 +147,7 @@ libcalmysql_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(AM_CXXFLAGS) $(CXXFLAGS) $(libcalmysql_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
+SCRIPTS = $(dist_mysql_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -384,8 +387,8 @@ libcalmysql_la_SOURCES = ha_calpont.cpp ha_calpont_impl.cpp ha_calpont_dml.cpp h
 libcalmysql_la_LDFLAGS = -version-info 1:0:0 $(idb_common_ldflags) $(idb_common_libs) $(idb_write_libs) $(AM_LDFLAGS)
 libcalmysql_la_CPPFLAGS = -I/usr/include/libxml2 -I../../../mysql/include -I../../../mysql/sql -I../../../mysql/regex -DMYSQL_DYNAMIC_PLUGIN $(AM_CPPFLAGS)
 include_HEADERS = idb_mysql.h
-dist_mysql_DATA = syscatalog_mysql.sql dumpcat_mysql.sql calsetuserpriority.sql calremoveuserpriority.sql calshowprocesslist.sql my.cnf install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
-#mysqlColumnstore = install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
+dist_mysql_DATA = syscatalog_mysql.sql dumpcat_mysql.sql calsetuserpriority.sql calremoveuserpriority.sql calshowprocesslist.sql my.cnf
+dist_mysql_SCRIPTS = install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
 all: all-am
 
 .SUFFIXES:
@@ -458,6 +461,41 @@ clean-libLTLIBRARIES:
 
 libcalmysql.la: $(libcalmysql_la_OBJECTS) $(libcalmysql_la_DEPENDENCIES) $(EXTRA_libcalmysql_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(libcalmysql_la_LINK) -rpath $(libdir) $(libcalmysql_la_OBJECTS) $(libcalmysql_la_LIBADD) $(LIBS)
+install-dist_mysqlSCRIPTS: $(dist_mysql_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_mysql_SCRIPTS)'; test -n "$(mysqldir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(mysqldir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(mysqldir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f "$$d$$p"; then echo "$$d$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n' \
+	    -e 'h;s|.*|.|' \
+	    -e 'p;x;s,.*/,,;$(transform)' | sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1; } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) { files[d] = files[d] " " $$1; \
+	      if (++n[d] == $(am__install_max)) { \
+		print "f", d, files[d]; n[d] = 0; files[d] = "" } } \
+	    else { print "f", d "/" $$4, $$1 } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	     if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	     test -z "$$files" || { \
+	       echo " $(INSTALL_SCRIPT) $$files '$(DESTDIR)$(mysqldir)$$dir'"; \
+	       $(INSTALL_SCRIPT) $$files "$(DESTDIR)$(mysqldir)$$dir" || exit $$?; \
+	     } \
+	; done
+
+uninstall-dist_mysqlSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_mysql_SCRIPTS)'; test -n "$(mysqldir)" || exit 0; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	       sed -e 's,.*/,,;$(transform)'`; \
+	dir='$(DESTDIR)$(mysqldir)'; $(am__uninstall_files_from_dir)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -732,9 +770,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(SCRIPTS) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(mysqldir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(mysqldir)" "$(DESTDIR)$(mysqldir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -790,7 +828,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_mysqlDATA install-includeHEADERS
+install-data-am: install-dist_mysqlDATA install-dist_mysqlSCRIPTS \
+	install-includeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -836,8 +875,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_mysqlDATA uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES
+uninstall-am: uninstall-dist_mysqlDATA uninstall-dist_mysqlSCRIPTS \
+	uninstall-includeHEADERS uninstall-libLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -846,16 +885,18 @@ uninstall-am: uninstall-dist_mysqlDATA uninstall-includeHEADERS \
 	ctags-am distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
-	install-data-am install-dist_mysqlDATA install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-includeHEADERS install-info \
-	install-info-am install-libLTLIBRARIES install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-data-am install-dist_mysqlDATA \
+	install-dist_mysqlSCRIPTS install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-includeHEADERS install-info install-info-am \
+	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am uninstall-dist_mysqlDATA \
-	uninstall-includeHEADERS uninstall-libLTLIBRARIES
+	uninstall-dist_mysqlSCRIPTS uninstall-includeHEADERS \
+	uninstall-libLTLIBRARIES
 
 
 test:
