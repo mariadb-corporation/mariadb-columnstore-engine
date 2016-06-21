@@ -24,7 +24,9 @@ post-mysql-install post-mysqld-install binary_installer.sh \
 os_check.sh columnstore columnstoreSyslog columnstoreSyslog-ng syslogSetup.sh \
 remote_scp_put.sh columnstoreUninstall.sh columnstore.def \
 remotessh.exp rsync.sh remote_command_verify.sh \
-columnstore.conf
+columnstore.conf columnstoreSyslog7 master-rep-columnstore.sh \
+slave-rep-columnstore.sh disable-rep-columnstore.sh \
+myCnf-include-args.text myCnf-exclude-args.text 
 
 dist_local_DATA = module
 

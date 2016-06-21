@@ -101,10 +101,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/bin/transactionLog
 /usr/local/mariadb/columnstore/bin/columnstoreDBWrite
 /usr/local/mariadb/columnstore/bin/transactionLogArchiver.sh
-/usr/local/mariadb/columnstore/bin/system_installer.sh
 /usr/local/mariadb/columnstore/bin/installer
 /usr/local/mariadb/columnstore/bin/module_installer.sh
-/usr/local/mariadb/columnstore/bin/patchInstaller
 /usr/local/mariadb/columnstore/bin/user_installer.sh
 /usr/local/mariadb/columnstore/bin/performance_installer.sh
 /usr/local/mariadb/columnstore/bin/startupTests.sh
@@ -155,7 +153,6 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/bin/setConfig
 /usr/local/mariadb/columnstore/bin/setenv-hdfs-12
 /usr/local/mariadb/columnstore/bin/setenv-hdfs-20
-/usr/local/mariadb/columnstore/bin/hdfsCheck
 /usr/local/mariadb/columnstore/bin/configxml.sh
 /usr/local/mariadb/columnstore/bin/remote_scp_get.sh
 /usr/local/mariadb/columnstore/bin/columnstoreAlias
