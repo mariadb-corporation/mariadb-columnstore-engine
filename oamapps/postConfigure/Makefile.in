@@ -98,7 +98,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = postConfigure$(EXEEXT) installer$(EXEEXT) \
-	patchInstaller$(EXEEXT) amazonInstaller$(EXEEXT) \
+	getMySQLpw$(EXEEXT) amazonInstaller$(EXEEXT) \
 	mycnfUpgrade$(EXEEXT)
 subdir = oamapps/postConfigure
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
@@ -142,12 +142,12 @@ mycnfUpgrade_LDADD = $(LDADD)
 mycnfUpgrade_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(mycnfUpgrade_LDFLAGS) $(LDFLAGS) -o $@
-am_patchInstaller_OBJECTS = patchInstaller-patchInstaller.$(OBJEXT)
-patchInstaller_OBJECTS = $(am_patchInstaller_OBJECTS)
-patchInstaller_LDADD = $(LDADD)
-patchInstaller_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+am_getMySQLpw_OBJECTS = getMySQLpw-getMySQLpw.$(OBJEXT)
+getMySQLpw_OBJECTS = $(am_getMySQLpw_OBJECTS)
+getMySQLpw_LDADD = $(LDADD)
+getMySQLpw_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(AM_CXXFLAGS) $(CXXFLAGS) $(patchInstaller_LDFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS) $(getMySQLpw_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_postConfigure_OBJECTS = postConfigure-postConfigure.$(OBJEXT) \
 	postConfigure-helpers.$(OBJEXT)
@@ -192,10 +192,10 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(amazonInstaller_SOURCES) $(installer_SOURCES) \
-	$(mycnfUpgrade_SOURCES) $(patchInstaller_SOURCES) \
+	$(mycnfUpgrade_SOURCES) $(getMySQLpw_SOURCES) \
 	$(postConfigure_SOURCES)
 DIST_SOURCES = $(amazonInstaller_SOURCES) $(installer_SOURCES) \
-	$(mycnfUpgrade_SOURCES) $(patchInstaller_SOURCES) \
+	$(mycnfUpgrade_SOURCES) $(getMySQLpw_SOURCES) \
 	$(postConfigure_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -382,9 +382,9 @@ postConfigure_LDFLAGS = $(idb_common_ldflags) $(idb_common_libs) $(idb_oam_libs)
 installer_SOURCES = installer.cpp helpers.cpp
 installer_CPPFLAGS = $(idb_common_includes) $(AM_CPPFLAGS)
 installer_LDFLAGS = $(idb_common_ldflags) $(idb_common_libs) $(idb_oam_libs) $(idb_exec_libs) $(AM_LDFLAGS)
-patchInstaller_SOURCES = patchInstaller.cpp
-patchInstaller_CPPFLAGS = $(idb_common_includes) $(AM_CPPFLAGS)
-patchInstaller_LDFLAGS = $(idb_common_ldflags) $(idb_common_libs) $(idb_oam_libs) $(idb_exec_libs) $(AM_LDFLAGS)
+getMySQLpw_SOURCES = getMySQLpw.cpp
+getMySQLpw_CPPFLAGS = $(idb_common_includes) $(AM_CPPFLAGS)
+getMySQLpw_LDFLAGS = $(idb_common_ldflags) $(idb_common_libs) $(idb_oam_libs) $(idb_exec_libs) $(AM_LDFLAGS)
 amazonInstaller_SOURCES = amazonInstaller.cpp helpers.cpp
 amazonInstaller_CPPFLAGS = $(idb_common_includes) $(AM_CPPFLAGS)
 amazonInstaller_LDFLAGS = $(idb_common_ldflags) $(idb_common_libs) $(idb_oam_libs) $(idb_exec_libs) $(AM_LDFLAGS)
@@ -487,9 +487,9 @@ mycnfUpgrade$(EXEEXT): $(mycnfUpgrade_OBJECTS) $(mycnfUpgrade_DEPENDENCIES) $(EX
 	@rm -f mycnfUpgrade$(EXEEXT)
 	$(AM_V_CXXLD)$(mycnfUpgrade_LINK) $(mycnfUpgrade_OBJECTS) $(mycnfUpgrade_LDADD) $(LIBS)
 
-patchInstaller$(EXEEXT): $(patchInstaller_OBJECTS) $(patchInstaller_DEPENDENCIES) $(EXTRA_patchInstaller_DEPENDENCIES) 
-	@rm -f patchInstaller$(EXEEXT)
-	$(AM_V_CXXLD)$(patchInstaller_LINK) $(patchInstaller_OBJECTS) $(patchInstaller_LDADD) $(LIBS)
+getMySQLpw$(EXEEXT): $(getMySQLpw_OBJECTS) $(getMySQLpw_DEPENDENCIES) $(EXTRA_getMySQLpw_DEPENDENCIES) 
+	@rm -f getMySQLpw$(EXEEXT)
+	$(AM_V_CXXLD)$(getMySQLpw_LINK) $(getMySQLpw_OBJECTS) $(getMySQLpw_LDADD) $(LIBS)
 
 postConfigure$(EXEEXT): $(postConfigure_OBJECTS) $(postConfigure_DEPENDENCIES) $(EXTRA_postConfigure_DEPENDENCIES) 
 	@rm -f postConfigure$(EXEEXT)
@@ -506,7 +506,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/installer-helpers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/installer-installer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mycnfUpgrade-mycnfUpgrade.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/patchInstaller-patchInstaller.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getMySQLpw-getMySQLpw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/postConfigure-helpers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/postConfigure-postConfigure.Po@am__quote@
 
@@ -601,19 +601,19 @@ mycnfUpgrade-mycnfUpgrade.obj: mycnfUpgrade.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mycnfUpgrade_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mycnfUpgrade-mycnfUpgrade.obj `if test -f 'mycnfUpgrade.cpp'; then $(CYGPATH_W) 'mycnfUpgrade.cpp'; else $(CYGPATH_W) '$(srcdir)/mycnfUpgrade.cpp'; fi`
 
-patchInstaller-patchInstaller.o: patchInstaller.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(patchInstaller_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT patchInstaller-patchInstaller.o -MD -MP -MF $(DEPDIR)/patchInstaller-patchInstaller.Tpo -c -o patchInstaller-patchInstaller.o `test -f 'patchInstaller.cpp' || echo '$(srcdir)/'`patchInstaller.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/patchInstaller-patchInstaller.Tpo $(DEPDIR)/patchInstaller-patchInstaller.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='patchInstaller.cpp' object='patchInstaller-patchInstaller.o' libtool=no @AMDEPBACKSLASH@
+getMySQLpw-getMySQLpw.o: getMySQLpw.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(getMySQLpw_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT getMySQLpw-getMySQLpw.o -MD -MP -MF $(DEPDIR)/getMySQLpw-getMySQLpw.Tpo -c -o getMySQLpw-getMySQLpw.o `test -f 'getMySQLpw.cpp' || echo '$(srcdir)/'`getMySQLpw.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/getMySQLpw-getMySQLpw.Tpo $(DEPDIR)/getMySQLpw-getMySQLpw.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='getMySQLpw.cpp' object='getMySQLpw-getMySQLpw.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(patchInstaller_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o patchInstaller-patchInstaller.o `test -f 'patchInstaller.cpp' || echo '$(srcdir)/'`patchInstaller.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(getMySQLpw_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o getMySQLpw-getMySQLpw.o `test -f 'getMySQLpw.cpp' || echo '$(srcdir)/'`getMySQLpw.cpp
 
-patchInstaller-patchInstaller.obj: patchInstaller.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(patchInstaller_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT patchInstaller-patchInstaller.obj -MD -MP -MF $(DEPDIR)/patchInstaller-patchInstaller.Tpo -c -o patchInstaller-patchInstaller.obj `if test -f 'patchInstaller.cpp'; then $(CYGPATH_W) 'patchInstaller.cpp'; else $(CYGPATH_W) '$(srcdir)/patchInstaller.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/patchInstaller-patchInstaller.Tpo $(DEPDIR)/patchInstaller-patchInstaller.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='patchInstaller.cpp' object='patchInstaller-patchInstaller.obj' libtool=no @AMDEPBACKSLASH@
+getMySQLpw-getMySQLpw.obj: getMySQLpw.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(getMySQLpw_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT getMySQLpw-getMySQLpw.obj -MD -MP -MF $(DEPDIR)/getMySQLpw-getMySQLpw.Tpo -c -o getMySQLpw-getMySQLpw.obj `if test -f 'getMySQLpw.cpp'; then $(CYGPATH_W) 'getMySQLpw.cpp'; else $(CYGPATH_W) '$(srcdir)/getMySQLpw.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/getMySQLpw-getMySQLpw.Tpo $(DEPDIR)/getMySQLpw-getMySQLpw.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='getMySQLpw.cpp' object='getMySQLpw-getMySQLpw.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(patchInstaller_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o patchInstaller-patchInstaller.obj `if test -f 'patchInstaller.cpp'; then $(CYGPATH_W) 'patchInstaller.cpp'; else $(CYGPATH_W) '$(srcdir)/patchInstaller.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(getMySQLpw_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o getMySQLpw-getMySQLpw.obj `if test -f 'getMySQLpw.cpp'; then $(CYGPATH_W) 'getMySQLpw.cpp'; else $(CYGPATH_W) '$(srcdir)/getMySQLpw.cpp'; fi`
 
 postConfigure-postConfigure.o: postConfigure.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(postConfigure_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT postConfigure-postConfigure.o -MD -MP -MF $(DEPDIR)/postConfigure-postConfigure.Tpo -c -o postConfigure-postConfigure.o `test -f 'postConfigure.cpp' || echo '$(srcdir)/'`postConfigure.cpp
