@@ -149,7 +149,7 @@ public:
 	void destroySemaphores()
 	{
 		key_t semkey;
-		char* semseed = "/usr/local/mariadb/columnstore/etc/Calpont.xml";
+		char* semseed = "/usr/local/mariadb/columnstore/etc/Columnstore.xml";
 		int sems, err;
 		
 // 		semkey = ftok(semseed, 0x2149bdd2);   // these things must match in the SM constructor
@@ -167,7 +167,7 @@ public:
 	void destroyShmseg()
 	{
 		key_t shmkey;
-		char* shmseed = "/usr/local/mariadb/columnstore/etc/Calpont.xml";
+		char* shmseed = "/usr/local/mariadb/columnstore/etc/Columnstore.xml";
 		int shms, err;
 		
 // 		shmkey = ftok(shmseed, 0x2149bdd2);   // these things much match in the SM constructor

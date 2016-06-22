@@ -51,7 +51,7 @@ do
      fi
      mkdir $k
      cd $k
-     cp /usr/local/mariadb/columnstore/etc/Calpont.xml .
+     cp /usr/local/mariadb/columnstore/etc/Columnstore.xml .
      /usr/local/mariadb/columnstore/bin/mcsadmin getCalpontSoftware >CalpontSoftware.txt
      ls -al /usr/local/mariadb/columnstore/data* > dbRoots.txt
      /usr/local/mariadb/columnstore/bin/mcsadmin getProcessStatus >stackConfigBefore.txt

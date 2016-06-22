@@ -203,10 +203,10 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 
-			//@bug5554, make sure IDBPolicy matches the Calpont.xml config
+			//@bug5554, make sure IDBPolicy matches the Columnstore.xml config
 			try
 			{
-				string calpontConfigFile(startup::StartUp::installDir() + "/etc/Calpont.xml");
+				string calpontConfigFile(startup::StartUp::installDir() + "/etc/Columnstore.xml");
 				config::Config* sysConfig = config::Config::makeConfig(calpontConfigFile.c_str());
 				string tmp = sysConfig->getConfig("Installation", "DBRootStorageType");
 				if (boost::iequals(tmp, "hdfs"))

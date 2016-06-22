@@ -33,7 +33,7 @@ while true {
 		send_user "Usage: postInstaller.sh -r 'calpont-rpm' -p 'password' -c 'config-file' -d\n"
 		send_user "		calpont-rpm - Calpont RPM with directory locatation, i.e. /root/calpont.x.x.x.x\n"
 		send_user "		password    - root password on the servers being installed'\n"
-		send_user "		config-file - Optional: Calpont.xml config file with directory location, i.e. /root/Calpont.xml\n"
+		send_user "		config-file - Optional: Columnstore.xml config file with directory location, i.e. /root/Columnstore.xml\n"
 		send_user "		-d 			- Debug flag\n"
 		exit
 	} elseif { $arg($i) == "-r" } {
@@ -62,7 +62,7 @@ log_user $DEBUG
 if { $RPMPACKAGE == " " || $PASSWORD == " "} {puts "please enter both RPM and password, enter ./postInstaller.sh -h for additional info"; exit -1}
 
 if { $CONFIGFILE == " " } {
-	set CONFIGFILE $INSTALLDIR/etc/Calpont.xml.rpmsave
+	set CONFIGFILE $INSTALLDIR/etc/Columnstore.xml.rpmsave
 }
 if { [catch { open $CONFIGFILE "r"} handle ] } {
 	puts "Calpont Config file not found: $CONFIGFILE"; exit -1
@@ -113,8 +113,8 @@ expect {
 }
 expect -re "# "
 log_user 0
-exec mv -f $INSTALLDIR/etc/Calpont.xml $INSTALLDIR/etc/Calpont.xml.new  > /dev/null 2>&1
-exec mv -f $CONFIGFILE  $INSTALLDIR/etc/Calpont.xml  > /dev/null 2>&1
+exec mv -f $INSTALLDIR/etc/Columnstore.xml $INSTALLDIR/etc/Columnstore.xml.new  > /dev/null 2>&1
+exec mv -f $CONFIGFILE  $INSTALLDIR/etc/Columnstore.xml  > /dev/null 2>&1
 
 send_user "\n"
 set timeout 380

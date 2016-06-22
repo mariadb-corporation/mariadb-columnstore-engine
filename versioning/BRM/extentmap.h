@@ -120,7 +120,7 @@ struct EMEntry {
 	HWM_t       HWM;
 	uint32_t	partitionNum; // starts at 0
 	uint16_t	segmentNum;   // starts at 0
-	uint16_t	dbRoot;       // starts at 1 to match Calpont.xml
+	uint16_t	dbRoot;       // starts at 1 to match Columnstore.xml
 	uint16_t	colWid;
 	int16_t 	status;       //extent avail for query or not, or out of service
 	EMPartition_t partition;

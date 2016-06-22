@@ -92,10 +92,10 @@ fi
 if [ -n "$CALPONT_CONFIG_FILE" ]; then
   echo "CALPONT_CONFIG_FILE=" $CALPONT_CONFIG_FILE
 elif [ -z "$CALPONT_CONFIG_FILE"]; then
-  CALPONT_CONFIG_FILE="/usr/local/mariadb/columnstore/etc/Calpont.xml"
+  CALPONT_CONFIG_FILE="/usr/local/mariadb/columnstore/etc/Columnstore.xml"
   echo "CALPONT_CONFIG_FILE=" $CALPONT_CONFIG_FILE
 else
-  CALPONT_CONFIG_FILE="/usr/local/mariadb/columnstore/etc/Calpont.xml"
+  CALPONT_CONFIG_FILE="/usr/local/mariadb/columnstore/etc/Columnstore.xml"
   echo "CALPONT_CONFIG_FILE=" $CALPONT_CONFIG_FILE
 fi
 

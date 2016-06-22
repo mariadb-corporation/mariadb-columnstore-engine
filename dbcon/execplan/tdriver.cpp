@@ -1083,7 +1083,7 @@ public:
 		int oid, oidBase;
 
 		// fake out the objmgr...
-		setenv("CALPONT_CONFIG_FILE", "/usr/local/mariadb/columnstore/etc/Calpont.xml", 1);
+		setenv("CALPONT_CONFIG_FILE", "/usr/local/mariadb/columnstore/etc/Columnstore.xml", 1);
 		Config* cf = Config::makeConfig();
 		cf->setConfig("OIDManager", "OIDBitmapFile", "./oidbitmap");
 		

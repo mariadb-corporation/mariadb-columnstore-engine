@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# configxml	set/get an entry in Calpont.xml file
+# configxml	set/get an entry in Columnstore.xml file
 #
 #
 
@@ -32,13 +32,13 @@ case "$1" in
 	oldvalue=$($InstallDir/bin/getConfig $2 $3)
 
 	#if [ -z $oldvalue ]; then 
-	#	echo "$2 / $3 not found in Calpont.xml"	
+	#	echo "$2 / $3 not found in Columnstore.xml"	
 	#	exit 1
 	#fi
 
 	echo "Old value of $2 / $3 is $oldvalue"
 
-	calxml=$InstallDir/etc/Calpont.xml
+	calxml=$InstallDir/etc/Columnstore.xml
 
 	seconds=$(date +%s)
 	cp $calxml $calxml.$seconds
@@ -70,7 +70,7 @@ case "$1" in
 	value=$($InstallDir/bin/getConfig $2 $3)
 
 	if [ -z $value ]; then 
-		echo "$2 / $3 not found in Calpont.xml"	
+		echo "$2 / $3 not found in Columnstore.xml"	
 		exit 1
 	fi
 

@@ -154,11 +154,11 @@ int main(int argc, char *argv[])
 		mysqlpw = " ";
 	pwprompt = "--password=" + mysqlpw;
 
-	//copy Calpont.xml.rpmsave if upgrade option is selected
+	//copy Columnstore.xml.rpmsave if upgrade option is selected
 	if ( installType == "upgrade" ) {
-		cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml " + installDir + "/etc/Calpont.xml.new 2>&1";
+		cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.new 2>&1";
 		system(cmd.c_str());
-		cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml.rpmsave " + installDir + "/etc/Calpont.xml 2>&1";
+		cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.rpmsave " + installDir + "/etc/Columnstore.xml 2>&1";
 		system(cmd.c_str());
 	}
 
@@ -1196,11 +1196,11 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 
 
 /*
- * Uncomment entry in Calpont.xml
+ * Uncomment entry in Columnstore.xml
  */
 bool uncommentCalpontXml( string entry)
 {
-	string fileName = installDir + "/etc/Calpont.xml";
+	string fileName = installDir + "/etc/Columnstore.xml";
 
 	ifstream oldFile (fileName.c_str());
 	if (!oldFile) return true;

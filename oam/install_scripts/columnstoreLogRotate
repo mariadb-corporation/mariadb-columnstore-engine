@@ -19,7 +19,7 @@
 	compress
     olddir /var/log/mariadb/columnstore/archive
 }
-/usr/local/mariadb/columnstore/etc/Calpont.xml {
+/usr/local/mariadb/columnstore/etc/Columnstore.xml {
     daily
     dateext
 	copy

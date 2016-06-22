@@ -30,7 +30,7 @@ exit 0
 
 cplogger -i 48 $scrname "$tname"
 
-# Get the FilesPerColumnPartition setting from Calpont.xml.
+# Get the FilesPerColumnPartition setting from Columnstore.xml.
 filesPer=$(getConfig ExtentMap FilesPerColumnPartition)
 
 # Get the maximum segment number for all column files.

@@ -140,12 +140,12 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 
 
 #
-%config /usr/local/mariadb/columnstore/etc/Calpont.xml
+%config /usr/local/mariadb/columnstore/etc/Columnstore.xml
 %config /usr/local/mariadb/columnstore/etc/ConsoleCmds.xml
 %config /usr/local/mariadb/columnstore/etc/ProcessConfig.xml
 %config /usr/local/mariadb/columnstore/etc/snmpd.conf
 %config /usr/local/mariadb/columnstore/etc/snmptrapd.conf
-%config /usr/local/mariadb/columnstore/etc/Calpont.xml.singleserver
+%config /usr/local/mariadb/columnstore/etc/Columnstore.xml.singleserver
 %config /usr/local/mariadb/columnstore/etc/ProcessConfig.xml.singleserver
 %config /usr/local/mariadb/columnstore/etc/snmpd.conf.singleserver
 %config /usr/local/mariadb/columnstore/etc/snmptrapd.conf.singleserver

@@ -68,7 +68,7 @@ if [ -z "$user" ]; then
 fi
 
 checkInstallSetup() {
-	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Calpont.xml Installation InitialInstallFlag`
+	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
@@ -97,7 +97,7 @@ start() {
 	fi
 	checkInstallSetup
 
-	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Calpont.xml Installation CoreFileFlag`
+	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
 		SUDO=
 		if [ "$user" != "root" ]; then 

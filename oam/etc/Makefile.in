@@ -309,7 +309,7 @@ toolsdir = @toolsdir@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-dist_sysconf_DATA = AlarmConfig.xml Calpont.xml ProcessConfig.xml ConsoleCmds.xml Calpont.xml.singleserver ProcessConfig.xml.singleserver
+dist_sysconf_DATA = AlarmConfig.xml Columnstore.xml ProcessConfig.xml ConsoleCmds.xml Columnstore.xml.singleserver ProcessConfig.xml.singleserver
 all: all-am
 
 .SUFFIXES:

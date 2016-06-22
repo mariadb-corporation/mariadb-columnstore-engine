@@ -21,7 +21,7 @@
 *
 *
 * List of files being updated by configure:
-*		Calpont/etc/Calpont.xml
+*		Calpont/etc/Columnstore.xml
 *
 *		
 ******************************************************************************************/
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
 	cout << endl;
 	cout << "This is the Calpont System Configuration tool." << endl;
-	cout << "It will generate a Calpont System specific Calpont.xml file." << endl;
+	cout << "It will generate a Calpont System specific Columnstore.xml file." << endl;
 	cout << "The file can then be used by the autoInstaller tool" << endl;
 	cout << endl;
 
@@ -172,14 +172,14 @@ int main(int argc, char *argv[])
 		cout << "Invalid System Name, please re-enter" << endl;
 	}
 
-	//determine which Calpont.xml to use as a base
+	//determine which Columnstore.xml to use as a base
 	while(true)
 	{
 		cout << endl;
-		cout << "Enter the Calpont.xml file do you want to use as a based version" << endl;
+		cout << "Enter the Columnstore.xml file do you want to use as a based version" << endl;
 		cout << "Enter: 1 for System version (meaning copy from the system)" << endl; 
 		cout << "       2 for Release version" << endl; 
-		cout << "       3 for Calpont.xml version already located in the systems directory" << endl; 
+		cout << "       3 for Columnstore.xml version already located in the systems directory" << endl; 
 
 		int option;
 		prompt = "Enter (1,2,or 3) > ";
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 			free(pcommand);
 			pcommand = 0;
 			switch(option) {
-				case 1:	//get system Calpont.xml
+				case 1:	//get system Columnstore.xml
 				{
 					cout << "Copying from system, please wait...    " << flush;
 					//get Network IP Address
@@ -214,13 +214,13 @@ int main(int argc, char *argv[])
 						exit (-1);
 					}
 
-					cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " /usr/local/mariadb/columnstore/etc/Calpont.xml 0 ";
+					cmd = "./remote_scp_get.sh " + parentOAMModuleIPAddr + " " + password + " /usr/local/mariadb/columnstore/etc/Columnstore.xml 0 ";
 					rtnCode = system(cmd.c_str());
 					if (rtnCode == 0) {
-						cmd = "mv Calpont.xml systems/" + systemName + "/.";
+						cmd = "mv Columnstore.xml systems/" + systemName + "/.";
 						rtnCode = system(cmd.c_str());
 						if ( rtnCode != 0 ) {
-							cout << "ERROR: No system Calpont.xml found" << endl;
+							cout << "ERROR: No system Columnstore.xml found" << endl;
 							continue;
 						}
 						else
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 					}
 					break;
 				}
-				case 2:	//get release Calpont.xml
+				case 2:	//get release Columnstore.xml
 				{
 					string release;
 					while (true)
@@ -243,16 +243,16 @@ int main(int argc, char *argv[])
 							free(pcommand);
 							pcommand = 0;
 							if (release.empty()) continue;
-							string cmd = "cd systems/" + systemName + ";rm -f Calpont.xml;smbclient //cal6500/shared -Wcalpont -U" + oam::USERNAME + "%" + oam::PASSWORD + " -c 'cd Iterations/" + release + "/;prompt OFF;mget Calpont.xml' > /dev/null 2>&1";
+							string cmd = "cd systems/" + systemName + ";rm -f Columnstore.xml;smbclient //cal6500/shared -Wcalpont -U" + oam::USERNAME + "%" + oam::PASSWORD + " -c 'cd Iterations/" + release + "/;prompt OFF;mget Columnstore.xml' > /dev/null 2>&1";
 							int rtnCode = system(cmd.c_str());
 							if (rtnCode != 0)
-								cout << "FAILED: no Release Calpont.xml found for " + release << endl;
+								cout << "FAILED: no Release Columnstore.xml found for " + release << endl;
 							else
 							{
-								cmd = "cd systems/" + systemName + ";ls Calpont.xml > /dev/null 2>&1";
+								cmd = "cd systems/" + systemName + ";ls Columnstore.xml > /dev/null 2>&1";
 								rtnCode = system(cmd.c_str());
 								if (rtnCode != 0) {
-									cout << "FAILED: no Release Calpont.xml found for " + release  << endl;
+									cout << "FAILED: no Release Columnstore.xml found for " + release  << endl;
 									continue;
 								}
 								else
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
 					}
 					break;
 				}
-				case 3:	//use Calpont.xml alyread in system directory
+				case 3:	//use Columnstore.xml alyread in system directory
 					break;
 
 				default:
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 	setenv("CALPONT_HOME", env.c_str() , 1);
     Oam oam;
 
-	Config* sysConfig = Config::makeConfig(env + "/Calpont.xml");
+	Config* sysConfig = Config::makeConfig(env + "/Columnstore.xml");
 
 	// make DBRM backwards compatiable for pre 1.0.0.157 load
 	string dbrmMainProc = "DBRM_Controller";
@@ -1523,7 +1523,7 @@ int main(int argc, char *argv[])
 	}
 
 	//
-	//Update oidbitmap in Calpont.xml
+	//Update oidbitmap in Columnstore.xml
 	//
 
 	try {
@@ -1538,5 +1538,5 @@ int main(int argc, char *argv[])
 	//Write out Updated System Configuration File
 	sysConfig->write();
 
-	cout << endl << "Configure is successfuly completed, Calpont.xml is located in systems/" + systemName << endl << endl;
+	cout << endl << "Configure is successfuly completed, Columnstore.xml is located in systems/" + systemName << endl << endl;
 }

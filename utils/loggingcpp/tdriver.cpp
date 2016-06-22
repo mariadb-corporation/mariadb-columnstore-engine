@@ -45,7 +45,7 @@ private:
 
 public:
 	void setUp() {
-		setenv("CALPONT_CONFIG_FILE", "./Calpont.xml", 1);
+		setenv("CALPONT_CONFIG_FILE", "./Columnstore.xml", 1);
 	}
 
 	void tearDown() {

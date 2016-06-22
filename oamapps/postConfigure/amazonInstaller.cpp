@@ -441,9 +441,9 @@ int main(int argc, char *argv[])
 		exit (0);
 	}
 
-	//backup current Calpont.xml
-	string configFile = installDir + "/etc/Calpont.xml";
-	string saveFile = installDir + "/etc/Calpont.xml.save";
+	//backup current Columnstore.xml
+	string configFile = installDir + "/etc/Columnstore.xml";
+	string saveFile = installDir + "/etc/Columnstore.xml.save";
 	cmd = "rm -f " + saveFile;
 	system(cmd.c_str());
 	cmd = "cp " + configFile + " " + saveFile;
@@ -455,8 +455,8 @@ int main(int argc, char *argv[])
 	cmd = installDir + "/bin/post-uninstall  > /dev/null 2>&1";
 	system(cmd.c_str());
 
-	//backup original Calpont.xml if it doesn't exist
-	//if it does exist copy to Calpont.xml
+	//backup original Columnstore.xml if it doesn't exist
+	//if it does exist copy to Columnstore.xml
 
 	ifstream file (saveFile.c_str());
 	if (!file) {
@@ -1879,10 +1879,10 @@ int main(int argc, char *argv[])
 	}
 
 	// 
-	// update /root/Calpont.xml
+	// update /root/Columnstore.xml
 	//
 
-	cout << "----- Updating InfiniDB Configuration File (Calpont.xml)  -----" << endl << endl;
+	cout << "----- Updating InfiniDB Configuration File (Columnstore.xml)  -----" << endl << endl;
 
 	//setup for multi-server install
 	try {
@@ -2165,13 +2165,13 @@ int main(int argc, char *argv[])
 		cleanupSystem();
 	}
 
-	//copy Calpont.xml to Calpont.xml.rpmsave for postConfigure no-prompt option
-	cmd = "rm -f " + installDir + "/etc/Calpont.xml.rpmsave";
+	//copy Columnstore.xml to Columnstore.xml.rpmsave for postConfigure no-prompt option
+	cmd = "rm -f " + installDir + "/etc/Columnstore.xml.rpmsave";
 	system(cmd.c_str());
-	cmd = "cp " + installDir + "/etc/Calpont.xml " + installDir + "/etc/Calpont.xml.rpmsave";
+	cmd = "cp " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.rpmsave";
 	int rtnCode = system(cmd.c_str());
 	if (WEXITSTATUS(rtnCode) != 0) {
-		cout << "Error copying Calpont.xml to Calpont.xml.rpmsave" << endl;
+		cout << "Error copying Columnstore.xml to Columnstore.xml.rpmsave" << endl;
 		cleanupSystem();
 	}
 

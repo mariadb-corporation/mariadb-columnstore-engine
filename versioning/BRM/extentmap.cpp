@@ -5109,7 +5109,7 @@ void ExtentMap::checkReloadConfig()
 {
 	config::Config* cf = config::Config::makeConfig();
 
-	// Immediately return if Calpont.xml timestamp has not changed
+	// Immediately return if Columnstore.xml timestamp has not changed
 	if (cf->getCurrentMTime() == fCacheTime)
 		return;
 
@@ -5171,7 +5171,7 @@ void ExtentMap::checkReloadConfig()
 	if (filesPerColumnPartition == 0)
 		filesPerColumnPartition = 4;
 
-	// Get latest Calpont.xml timestamp after first access forced a reload
+	// Get latest Columnstore.xml timestamp after first access forced a reload
 	fCacheTime = cf ->getLastMTime();
 
 	//--------------------------------------------------------------------------
@@ -5248,7 +5248,7 @@ unsigned ExtentMap::getDbRootCount()
 
 //------------------------------------------------------------------------------
 // Get list of DBRoots that map to the specified PM.  DBRoot list is cached
-// internally in fPmDbRootMap after getting from Calpont.xml via OAM.
+// internally in fPmDbRootMap after getting from Columnstore.xml via OAM.
 //------------------------------------------------------------------------------
 void ExtentMap::getPmDbRoots( int pm, vector<int>& dbRootList )
 {

@@ -136,8 +136,8 @@ elif [ -x /usr/sbin/update-rc.d ]; then
 fi
 
 if [ $quiet != 1 ]; then
-	#make copy of Calpont.xml
-	/bin/cp -f $installdir/etc/Calpont.xml $installdir/etc/Calpont.xml.rpmsave > /dev/null 2>&1
+	#make copy of Columnstore.xml
+	/bin/cp -f $installdir/etc/Columnstore.xml $installdir/etc/Columnstore.xml.rpmsave > /dev/null 2>&1
 	/bin/cp -f $installdir/mysql/my.cnf $installdir/mysql/my.cnf.rpmsave > /dev/null 2>&1
 fi
 

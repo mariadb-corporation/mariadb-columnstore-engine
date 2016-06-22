@@ -128,7 +128,7 @@ private:
                                    const uint8_t BOP,
 				   const uint32_t& rowsInExtent);
 
-	// Configurables read from Calpont.xml - future.
+	// Configurables read from Columnstore.xml - future.
 	uint32_t fExtentsToSample;
 	uint32_t fIntDistinctAdjust;
 	uint32_t fDecDistinctAdjust;

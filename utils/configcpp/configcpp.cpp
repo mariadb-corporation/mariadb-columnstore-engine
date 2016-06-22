@@ -63,7 +63,7 @@ namespace fs=boost::filesystem;
 
 namespace
 {
-const fs::path defaultCalpontConfigFile("Calpont.xml");
+const fs::path defaultCalpontConfigFile("Columnstore.xml");
 }
 
 namespace config
@@ -345,9 +345,9 @@ void Config::writeConfig(const string& configFile) const
 	fs::rename(outFilePth, configFilePth);
 #else
 
-	const fs::path defaultCalpontConfigFileTemp("Calpont.xml.temp");
-	const fs::path saveCalpontConfigFileTemp("Calpont.xml.calpontSave");
-	const fs::path tmpCalpontConfigFileTemp("Calpont.xml.temp1");
+	const fs::path defaultCalpontConfigFileTemp("Columnstore.xml.temp");
+	const fs::path saveCalpontConfigFileTemp("Columnstore.xml.calpontSave");
+	const fs::path tmpCalpontConfigFileTemp("Columnstore.xml.temp1");
 
 	fs::path etcdir = fs::path(fInstallDir) / fs::path("etc");
 
@@ -355,7 +355,7 @@ void Config::writeConfig(const string& configFile) const
 	fs::path dcft = etcdir / fs::path(defaultCalpontConfigFileTemp);
 	fs::path scft = etcdir / fs::path(saveCalpontConfigFileTemp);
 	fs::path tcft = etcdir / fs::path(tmpCalpontConfigFileTemp);
-	//perform a temp write first if Calpont.xml file to prevent possible corruption
+	//perform a temp write first if Columnstore.xml file to prevent possible corruption
 	if ( configFile == dcf ) {
 
 		if (exists(dcft)) fs::remove(dcft);
@@ -378,7 +378,7 @@ void Config::writeConfig(const string& configFile) const
 			string value;
 			value = c1->getConfig("SystemConfig", "SystemName");
 
-			//good read, save copy, copy temp file tp tmp then to Calpont.xml
+			//good read, save copy, copy temp file tp tmp then to Columnstore.xml
 			//move to /tmp to get around a 'same file error' in mv command
 			try {
 				if (exists(scft)) fs::remove(scft);
@@ -402,7 +402,7 @@ void Config::writeConfig(const string& configFile) const
 		}
 	}
 	else
-	{ // non Calpont.xml, perform update
+	{ // non Columnstore.xml, perform update
 		if ((fi = fopen(configFile.c_str(), "w")) == NULL)
 			throw runtime_error("Config::writeConfig: error writing config file " + configFile);
 

@@ -915,7 +915,7 @@ static void startServer()
 	do {
 		try {
 			retry = false;
-			inMq = new MessageQueueServer(normServ, "./Calpont.xml");
+			inMq = new MessageQueueServer(normServ, "./Columnstore.xml");
 		}
 		catch (exception& ex) {
 			//cout << endl << "MessageQueueServer ctor threw!: " << ex.what() << endl;
@@ -975,7 +975,7 @@ static void startServer()
 
 static void startServer_16()
 {
-	MessageQueueServer server("server3", "./Calpont.xml");
+	MessageQueueServer server("server3", "./Columnstore.xml");
 	ByteStream msg;
 	struct timespec ts = {1, 0};	// 1 second
 // 	const ByteStream::byte *bMsg;
@@ -1012,7 +1012,7 @@ static void startServer_16()
 
 static void startServer_17()
 {
-	MessageQueueServer server("server3", "./Calpont.xml");
+	MessageQueueServer server("server3", "./Columnstore.xml");
 	server.syncProto(false);
 	ByteStream msg;
 	struct timespec ts = {1, 0};	// 1 second
@@ -1076,7 +1076,7 @@ volatile bool* fKeepRunning;
 static void startServer_18()
 {
 	boost::thread_group tg;
-	MessageQueueServer server("server3", "./Calpont.xml");
+	MessageQueueServer server("server3", "./Columnstore.xml");
 	struct timespec ts = {1, 0};
 	IOSocket sock;
 	isRunning = true;
@@ -1098,7 +1098,7 @@ static void startBrokenServer()
 	do {
 		try {
 			retry = false;
-			inMq = new MessageQueueServer(brokeServ, "./Calpont.xml");
+			inMq = new MessageQueueServer(brokeServ, "./Columnstore.xml");
 		}
 		catch (...) {
 			//cout << endl << "MessageQueueServer ctor threw!" << endl;
@@ -1136,7 +1136,7 @@ static void startWriteServer()
 	do {
 		try {
 			retry = false;
-			inMq = new MessageQueueServer(writeServ, "./Calpont.xml");
+			inMq = new MessageQueueServer(writeServ, "./Columnstore.xml");
 		}
 		catch (...) {
 			//cout << endl << "MessageQueueServer ctor threw!" << endl;
@@ -1196,7 +1196,7 @@ public:
 		bs.reset();
 		bs1.reset();
 		srvThread = 0;
-		//setenv("CALPONT_CONFIG_FILE", "./Calpont.xml", 1);
+		//setenv("CALPONT_CONFIG_FILE", "./Columnstore.xml", 1);
 	}
 
 	void tearDown() {
@@ -1219,7 +1219,7 @@ void mq_1()
 		::usleep(2500000);
 	}
 
-	Config* cf = Config::makeConfig("./Calpont.xml");
+	Config* cf = Config::makeConfig("./Columnstore.xml");
 	MessageQueueClient outMq(normServ, cf);
 	string msg = "This is a test";
 	ByteStream outBs;
@@ -1324,7 +1324,7 @@ void mq_2()
 
 	struct timespec ts = { 0, TS_MS(20) };
 
-	MessageQueueClient outMq(brokeServ, "./Calpont.xml");
+	MessageQueueClient outMq(brokeServ, "./Columnstore.xml");
 	bs1 = outMq.read(&ts);
 
 	keepRunning = false;
@@ -1351,7 +1351,7 @@ void mq_3()
 
 void mq_4()
 {
-	boost::scoped_ptr<MessageQueueClient> outMq(new MessageQueueClient("server4", "./Calpont.xml"));
+	boost::scoped_ptr<MessageQueueClient> outMq(new MessageQueueClient("server4", "./Columnstore.xml"));
 	// Should throw runtime_exception for connect failed
 	bs1 = outMq->read();
 
@@ -1361,7 +1361,7 @@ void mq_4()
 
 void mq_5()
 {
-	boost::scoped_ptr<MessageQueueClient> outMq(new MessageQueueClient("server4", "./Calpont.xml"));
+	boost::scoped_ptr<MessageQueueClient> outMq(new MessageQueueClient("server4", "./Columnstore.xml"));
 	string msg = "This is a test";
 	bs1.load(reinterpret_cast<const ByteStream::byte*>(msg.c_str()), msg.length());
 	// Should throw runtime_exception for connect failed
@@ -1373,7 +1373,7 @@ void mq_5()
 
 void mq_6()
 {
-	Config* cf = Config::makeConfig("./Calpont.xml");
+	Config* cf = Config::makeConfig("./Columnstore.xml");
 	boost::scoped_ptr<MessageQueueServer> outMq(new MessageQueueServer("server4", cf));
 	// Should throw runtime_exception for addr in use
 	MessageQueueServer* outMq1 = new MessageQueueServer("server4", cf);
@@ -1408,7 +1408,7 @@ void mq_8()
 		::usleep(2500000);
 	}
 
-	MessageQueueClient outMq(writeServ, "./Calpont.xml");
+	MessageQueueClient outMq(writeServ, "./Columnstore.xml");
 	bs1 = outMq.read();
 	CPPUNIT_ASSERT(memcmp(bs1.buf(), "This is a test", bs1.length()) == 0);
 
@@ -1428,7 +1428,7 @@ void mq_8()
 void mq_9()
 {
 	InetStreamSocket* iss;
-	boost::scoped_ptr<MessageQueueServer> mq1(new MessageQueueServer("server5", "./Calpont.xml"));
+	boost::scoped_ptr<MessageQueueServer> mq1(new MessageQueueServer("server5", "./Columnstore.xml"));
 	struct timespec ts = { 0, TS_MS(200) };
 	// this should block in accept() for ts
 	IOSocket sock = mq1->accept(&ts);
@@ -1449,7 +1449,7 @@ void mq_9()
 		cerr << "Runtime error (OK)..." << ex.what() << endl;
 	}
 
-	boost::scoped_ptr<MessageQueueClient> mq2(new MessageQueueClient("server5", "./Calpont.xml"));
+	boost::scoped_ptr<MessageQueueClient> mq2(new MessageQueueClient("server5", "./Columnstore.xml"));
 	bs.reset();
 	bs << "This is a test";
 	//close(mq2->fClientSock.fSocketParms.fSd);
@@ -1523,7 +1523,7 @@ void mq_13a()
 void mq_14()
 {
 	InetStreamSocket* iss;
-	boost::scoped_ptr<MessageQueueServer> mq1(new MessageQueueServer("server6", "./Calpont.xml"));
+	boost::scoped_ptr<MessageQueueServer> mq1(new MessageQueueServer("server6", "./Columnstore.xml"));
 	// Set a bogus fd
 	int fd;
 	fd = open("/dev/null", O_RDONLY);
@@ -1552,7 +1552,7 @@ void mq_16()
 	const char msg1[] = "Message 1";
 	const char msg2[] = "message 2";
 	string sTmp;
-	MessageQueueClient client("server3", "./Calpont.xml");
+	MessageQueueClient client("server3", "./Columnstore.xml");
 	ByteStream bs, bs2;
 	char buf[1000];
 	int len, err, socketfd;
@@ -1604,7 +1604,7 @@ void mq_17()
 	const char msg1[] = "Message 1";
 	const char msg2[] = "message 2";
 	string sTmp;
-	MessageQueueClient client("server3", "./Calpont.xml");
+	MessageQueueClient client("server3", "./Columnstore.xml");
 	client.syncProto(false);
 	ByteStream bs, bs2;
 	char buf[1000];
@@ -1654,8 +1654,8 @@ void mq_17()
 void mq_18()
 {
 
-	MessageQueueClient client1("server3", "./Calpont.xml");
-	MessageQueueClient client2("server3", "./Calpont.xml");
+	MessageQueueClient client1("server3", "./Columnstore.xml");
+	MessageQueueClient client2("server3", "./Columnstore.xml");
 
 	isRunning = false;
 	keepRunning = true;

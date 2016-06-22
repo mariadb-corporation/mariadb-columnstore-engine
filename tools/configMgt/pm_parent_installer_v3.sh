@@ -127,10 +127,10 @@ send "rm -f $PACKAGE\n"
 #
 if { $CONFIGFILE != "NULL"} {
 	#
-	# copy over Calpont.xml file
+	# copy over Columnstore.xml file
 	#
 	send_user "Copy Calpont Configuration File               "
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/mariadb/columnstore/etc/Calpont.xml.rpmsave\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/mariadb/columnstore/etc/Columnstore.xml.rpmsave\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -140,7 +140,7 @@ if { $CONFIGFILE != "NULL"} {
 		-re "Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit -1 }
 		-re "No such file or directory" { send_user "FAILED: Invalid package\n" ; exit -1 }
 	}
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/mariadb/columnstore/etc/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/usr/local/mariadb/columnstore/etc/Columnstore.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -150,7 +150,7 @@ if { $CONFIGFILE != "NULL"} {
 		-re "Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit -1 }
 		-re "No such file or directory" { send_user "FAILED: Invalid package\n" ; exit -1 }
 	}
-	send "scp $CONFIGFILE $USERNAME@$SERVER:/tmp/Calpont.xml\n"
+	send "scp $CONFIGFILE $USERNAME@$SERVER:/tmp/Columnstore.xml\n"
 	expect -re "word: "
 	# send the password
 	send "$PASSWORD\n"
@@ -162,13 +162,13 @@ if { $CONFIGFILE != "NULL"} {
 	# rename previous installed config file
 	#
 	send_user "Copy RPM-saved Calpont Configuration File     "
-	send "ssh $USERNAME@$SERVER 'cd /usr/local/mariadb/columnstore/etc/;mv -f Calpont.xml Calpont.xml.install;cp -v Calpont.xml.rpmsave Calpont.xml'\n"
+	send "ssh $USERNAME@$SERVER 'cd /usr/local/mariadb/columnstore/etc/;mv -f Columnstore.xml Columnstore.xml.install;cp -v Columnstore.xml.rpmsave Columnstore.xml'\n"
 	expect -re "word: "
 	# password for ssh
 	send "$PASSWORD\n"
 	# check return
 	expect {
-		-re "Calpont.xml"         { send_user "DONE" } abort
+		-re "Columnstore.xml"         { send_user "DONE" } abort
 		-re "Permission denied, please try again"   { send_user "FAILED: Invalid password\n" ; exit -1 }
 	}
 }
