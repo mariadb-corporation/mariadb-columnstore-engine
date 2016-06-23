@@ -80,7 +80,7 @@ then
     datadir=/var/lib/mysql
   fi
   sbindir=/usr/local/sbin
-  bindir=/usr/local/sbin
+  bindir=/usr/local/bin
 else
   bindir="$basedir/bin"
   if test -z "$datadir"
@@ -90,7 +90,7 @@ else
   sbindir="$basedir/sbin"
   if test -f "$basedir/sbin/mysqld"
   then
-    bindir="$basedir/sbin"
+    bindir="$basedir/bin"
   else
     bindir="$basedir/bin"
   fi
@@ -146,7 +146,7 @@ parse_server_arguments() {
 		    sbindir="$basedir/sbin"
                     if test -f "$basedir/sbin/mysqld"
                     then
-                      bindir="$basedir/sbin"
+                      bindir="$basedir/bin"
                     else
                       bindir="$basedir/bin"
                     fi
