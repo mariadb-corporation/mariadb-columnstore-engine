@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id: ConsoleCmds.xml 3331 2012-10-24 21:12:27Z dhill $ -->
-<Calpont Version="V1.0.0">
+<Columnstore Version="V1.0.0">
 	<Cmd0>
 		<Name>help</Name>
 		<Desc1>Get help on the Console Commands</Desc1>
@@ -418,4 +418,4 @@
 	<Cmd67>
 		<Name>AVAILABLE</Name>
 	</Cmd67>
-</Calpont>
+</Columnstore>
