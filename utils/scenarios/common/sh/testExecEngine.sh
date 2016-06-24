@@ -59,7 +59,7 @@ function logEnvInfo {
 # $1 = test run
 # $2 = a or b, b=before test run, a=after test run
 #
-   cp /usr/local/mariadb/columnstore/etc/Calpont.xml $1/.
+   cp /usr/local/mariadb/columnstore/etc/Columnstore.xml $1/.
    /usr/local/mariadb/columnstore/bin/mcsadmin getcalpontsoftwareinfo > $1/getcalpontsoftwareinfo.log
    /usr/local/mariadb/columnstore/bin/mcsadmin getsystemstatus > $1/getSystemStatus.$2.log
    /usr/local/mariadb/columnstore/bin/mcsadmin getsystemnetwork > $1/getSystemNetwork.$2.log

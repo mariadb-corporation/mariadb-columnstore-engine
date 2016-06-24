@@ -184,14 +184,14 @@ int constructPMList( const std::vector<uint32_t>& dbRootList,
 	catch (std::exception& ex)
 	{
 		std::cout << "Error mapping DBRoot " << dbRoot << " to a PM.  " <<
-			ex.what() << ".  Verify that this DBRoot is in Calpont.xml."<<
+			ex.what() << ".  Verify that this DBRoot is in Columnstore.xml."<<
 			std::endl;
 		return 5;
 	}
 	catch (...)
 	{
 		std::cout << "Error mapping DBRoot " << dbRoot << " to a PM.  " <<
-			"Unknown exception.  Verify that this DBRoot is in Calpont.xml"<<
+			"Unknown exception.  Verify that this DBRoot is in Columnstore.xml"<<
 			std::endl;
 		return 5;
 	}

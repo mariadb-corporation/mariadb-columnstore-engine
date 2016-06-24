@@ -168,12 +168,12 @@ void BucketReUseDriver::parseConfig()
 {
 	cout << "ut: parseConfig start...\n" << endl;
 
-	// before run this test, make sure "tpch.lineitem.l_orderkey" is in the Calpont.xml
+	// before run this test, make sure "tpch.lineitem.l_orderkey" is in the Columnstore.xml
 	BucketReuseManager* control = BucketReuseManager::instance();
 	ResourceManager rm;
 	BucketReuseManager::instance()->startup(rm);
 
-	// list all the predicates if any listed in the Calpont.xml file
+	// list all the predicates if any listed in the Columnstore.xml file
 	for (BucketReuseMap::iterator it = control->fControlMap.begin();
 									it != control->fControlMap.end(); it++)
 		cout << *(it->second);
@@ -530,7 +530,7 @@ void BucketReUseDriver::initControl(execplan::CalpontSystemCatalog::OID& oid)
 	BucketReuseManager* control = BucketReuseManager::instance();
 	if (found == false)
 	{
-		cout << "tpch.lineitem.l_orderkey is not in the Calpont.xml!)" << endl;
+		cout << "tpch.lineitem.l_orderkey is not in the Columnstore.xml!)" << endl;
 		cout << "insert it to countinue unit test" << endl;
 
 		size_t schemap = column.find_first_of(".");

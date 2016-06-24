@@ -24,7 +24,7 @@ function getTestInfo {
    fileName=`basename $scriptName`
    fileExt=${scriptName##*.}
    testRunDesc=""
-   stackName=`cat 1/Calpont.xml |grep "<SystemName>"|sed "s/</>/g"|awk -F">" '{print $3}'`
+   stackName=`cat 1/Columnstore.xml |grep "<SystemName>"|sed "s/</>/g"|awk -F">" '{print $3}'`
    stackConfig=""
 #
    IOType=$grpTestType

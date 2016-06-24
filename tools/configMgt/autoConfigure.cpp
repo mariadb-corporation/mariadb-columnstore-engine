@@ -21,7 +21,7 @@
 *
 *
 * List of files being updated by configure:
-*		Calpont/etc/Calpont.xml
+*		Calpont/etc/Columnstore.xml
 *
 *		
 ******************************************************************************************/
@@ -91,12 +91,12 @@ int main(int argc, char *argv[])
 		systemName = oam::UnassignedName;
 
 	try {
-		sysConfigOld = Config::makeConfig("./Calpont.xml");		// system version
-		sysConfigNew = Config::makeConfig("./Calpont.xml.new");	// released version
+		sysConfigOld = Config::makeConfig("./Columnstore.xml");		// system version
+		sysConfigNew = Config::makeConfig("./Columnstore.xml.new");	// released version
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading Calpont.xml files";
+		cout << "ERROR: Problem reading Columnstore.xml files";
 		exit(-1);
 	}
 
@@ -944,9 +944,9 @@ int main(int argc, char *argv[])
 				if ( moduleName == systemParentOAMModuleName ) {
 					parentOAMModuleIPAddr = moduleIPAddr;
 	
-				//exit out if parentOAMModuleIPAddr is NOT set, this means the System Calpont.xml isn't configured
+				//exit out if parentOAMModuleIPAddr is NOT set, this means the System Columnstore.xml isn't configured
 					if ( parentOAMModuleIPAddr == "0.0.0.0" ) {
-						cout << "ERROR: System Calpont.xml not configured" << endl;
+						cout << "ERROR: System Columnstore.xml not configured" << endl;
 						exit(-1);
 					}
 

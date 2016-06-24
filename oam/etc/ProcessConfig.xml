@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id: ProcessConfig.xml 3651 2013-06-18 17:55:27Z dhill $ -->
-<Calpont Version="V1.0.0">
+<Columnstore Version="V1.0.0">
 	<PROCESSCONFIG1>
 		<ProcessName>ProcessMonitor</ProcessName>
 		<ModuleType>ChildExtOAMModule</ModuleType>
@@ -179,4 +179,4 @@
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
 	</PROCESSCONFIG14>
-</Calpont>
+</Columnstore>

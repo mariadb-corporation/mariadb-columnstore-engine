@@ -39,14 +39,14 @@ expect {
 	-re "word: " { send "$PASSWORD\n" } abort
     	-re $GOOD_RESPONSE { send_user " " ; exit 0 }
     	-re $BAD_RESPONSE { send_user "FAILED\n" ; exit 1 }
-    	-re "parser error" { send_user "FAILED: System Calpont.xml parse error\n" ; exit 1 }
+    	-re "parser error" { send_user "FAILED: System Columnstore.xml parse error\n" ; exit 1 }
 }
 expect {
 	timeout { send_user "FAILED-TIMEOUT\n" ; exit 1 }
 	-re $GOOD_RESPONSE { send_user " " ; exit 0 }
 	-re $BAD_RESPONSE { send_user "FAILED\n" ; exit 1 }
 	-re "No such file" { send_user "FAILED\n" ; exit 1 }
-    	-re "parser error" { send_user "FAILED: System Calpont.xml parse error\n" ; exit 1 }
+    	-re "parser error" { send_user "FAILED: System Columnstore.xml parse error\n" ; exit 1 }
 }
 
 exit 1

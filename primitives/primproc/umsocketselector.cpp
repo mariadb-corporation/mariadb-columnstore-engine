@@ -84,8 +84,8 @@ UmSocketSelector::UmSocketSelector()
 }
 
 //------------------------------------------------------------------------------
-// Returns the number of IP addresses defined in the Calpont.xml file
-// return - uint32_t; the total number of IP addresses in the Calpont.xml file
+// Returns the number of IP addresses defined in the Columnstore.xml file
+// return - uint32_t; the total number of IP addresses in the Columnstore.xml file
 //------------------------------------------------------------------------------
 uint32_t
 UmSocketSelector::ipAddressCount() const
@@ -101,7 +101,7 @@ UmSocketSelector::ipAddressCount() const
 }
 
 //------------------------------------------------------------------------------
-// Loads the UM module information from the Calpont.xml file, so that we have
+// Loads the UM module information from the Columnstore.xml file, so that we have
 // the list of IP addresses that are valid for each UM.  Note that this method
 // does not insure thread safeness, but that's okay because it is assumed that
 // it will only be called once from the first call to instance().

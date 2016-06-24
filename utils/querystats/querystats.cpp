@@ -193,7 +193,7 @@ void QueryStats::unserialize(ByteStream& b)
 void QueryStats::insert()
 {
 	ResourceManager rm;
-	// check if query stats is enabled in Calpont.xml
+	// check if query stats is enabled in Columnstore.xml
 	if (!rm.queryStatsEnabled())
 		return;
 	
@@ -277,7 +277,7 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
 	fPriorityLevel = DEFAULT_USER_PRIORITY_LEVEL;
 	fPriority = DEFAULT_USER_PRIORITY;
 		
-	// check if query stats is enabled in Calpont.xml
+	// check if query stats is enabled in Columnstore.xml
 	if (!rm.userPriorityEnabled())
 	{
 		fPriority = DEFAULT_USER_PRIORITY;

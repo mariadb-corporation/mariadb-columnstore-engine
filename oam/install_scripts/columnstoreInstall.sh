@@ -33,8 +33,8 @@ while true {
 		send_user "		infinidb-version - InfiniDB Version, i.e. 1.0.0-1\n"
 		send_user "		password    	- root password on the servers being installed'\n"
 		send_user "		package-type 	- Package Type being installed (rpm, deb, or binary)\n"
-		send_user "		config-file 	- Optional: Calpont.xml config file with directory location, i.e. /root/Calpont.xml\n"
-		send_user "			 	 	Default version is $INSTALLDIR/etc/Calpont.xml.rpmsave\n"
+		send_user "		config-file 	- Optional: Columnstore.xml config file with directory location, i.e. /root/Columnstore.xml\n"
+		send_user "			 	 	Default version is $INSTALLDIR/etc/Columnstore.xml.rpmsave\n"
 		send_user "		mysql-password    - MySQL password on the servers being installed'\n"		
 		send_user "		-d		- Debug flag, output verbose information\n"
 		exit 0
@@ -78,16 +78,16 @@ expect {
 }
 
 if { $CONFIGFILE == " " } {
-	set CONFIGFILE $INSTALLDIR/etc/Calpont.xml.rpmsave
+	set CONFIGFILE $INSTALLDIR/etc/Columnstore.xml.rpmsave
 }
 
 if { [catch { open $CONFIGFILE "r"} handle ] } {
 	puts "Calpont Config file not found: $CONFIGFILE"; exit 1
 }
 
-exec rm -f $INSTALLDIR/etc/Calpont.xml.new  > /dev/null 2>&1
-exec mv -f $INSTALLDIR/etc/Calpont.xml $INSTALLDIR/etc/Calpont.xml.new  > /dev/null 2>&1
-exec /bin/cp -f $CONFIGFILE  $INSTALLDIR/etc/Calpont.xml  > /dev/null 2>&1
+exec rm -f $INSTALLDIR/etc/Columnstore.xml.new  > /dev/null 2>&1
+exec mv -f $INSTALLDIR/etc/Columnstore.xml $INSTALLDIR/etc/Columnstore.xml.new  > /dev/null 2>&1
+exec /bin/cp -f $CONFIGFILE  $INSTALLDIR/etc/Columnstore.xml  > /dev/null 2>&1
 
 set timeout 2
 set INSTALL 2

@@ -3297,7 +3297,7 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 	
 	setModuleState(target, newState);
 
-	//set Calpont.xml enbale state
+	//set Columnstore.xml enbale state
 	setEnableState( target, SnewState);
 
 	log.writeLog(__LINE__, "disableModule - setEnableState", LOG_TYPE_DEBUG);
@@ -3313,7 +3313,7 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 		log.writeLog(__LINE__, "disableModule - Updated PM server Count", LOG_TYPE_DEBUG);
 	}
 
-	//Update DBRM section of Calpont.xml
+	//Update DBRM section of Columnstore.xml
 	if ( updateWorkerNodeconfig() != API_SUCCESS )
 		return API_FAILURE;
 
@@ -3406,7 +3406,7 @@ int ProcessManager::enableModule(string target, int state)
 		log.writeLog(__LINE__, "enableModule - Updated PM server Count", LOG_TYPE_DEBUG);
 	}
 
-	//Update DBRM section of Calpont.xml
+	//Update DBRM section of Columnstore.xml
 	if ( updateWorkerNodeconfig() != API_SUCCESS )
 		return API_FAILURE;
 
@@ -4826,7 +4826,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		return API_FAILURE;
 	}
 
-	//write Calpont.xml Module section
+	//write Columnstore.xml Module section
 	try {
 		oam.setSystemConfig(moduleType, setmoduletypeconfig);
 		log.writeLog(__LINE__, "addModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
@@ -5539,7 +5539,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 		return API_FAILURE;
 	}
 
-	//write Calpont.xml Module section
+	//write Columnstore.xml Module section
 	try {
 		oam.setSystemConfig(moduleType, setmoduletypeconfig);
 		log.writeLog(__LINE__, "removeModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
@@ -5598,7 +5598,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 			return API_FAILURE;
 	}
 
-	//Update DBRM section of Calpont.xml
+	//Update DBRM section of Columnstore.xml
 	if ( updateWorkerNodeconfig() != API_SUCCESS )
 		return API_FAILURE;
 
@@ -5785,7 +5785,7 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 		return API_FAILURE;
 	}
 
-	//write Calpont.xml Module section
+	//write Columnstore.xml Module section
 	try {
 		oam.setSystemConfig(reconfigureModuleType, setreconfiguremoduletypeconfig);
 		log.writeLog(__LINE__, "reconfigureModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
@@ -5877,7 +5877,7 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 		return API_FAILURE;
 	}
 
-	//write Calpont.xml Module section
+	//write Columnstore.xml Module section
 	try {
 		oam.setSystemConfig(moduleType, setmoduletypeconfig);
 		log.writeLog(__LINE__, "reconfigureModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
@@ -5944,7 +5944,7 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 			return API_FAILURE;
 	}
 
-	//Update DBRM section of Calpont.xml
+	//Update DBRM section of Columnstore.xml
 	if ( updateWorkerNodeconfig() != API_SUCCESS )
 		return API_FAILURE;
 
@@ -7617,7 +7617,7 @@ int ProcessManager::updateWorkerNodeconfig()
 	{
 		Config* sysConfig3 = Config::makeConfig();;
 	
-		//update Calpont.xml
+		//update Columnstore.xml
 		sysConfig3->setConfig("DBRM_Controller", "NumWorkers", oam.itoa(module.size()));
 	
 		std::vector<std::string>::iterator pt = module.begin();
@@ -7726,12 +7726,12 @@ void ProcessManager::clearNICAlarms(std::string hostName)
 /******************************************************************************************
 * @brief	updateExtentMap
 *
-* purpose:	update Extent Map section in Calpont.xml
+* purpose:	update Extent Map section in Columnstore.xml
 *
 ******************************************************************************************/
 bool ProcessManager::updateExtentMap()
 {
-	string fileName = startup::StartUp::installDir() + "/etc/Calpont.xml";
+	string fileName = startup::StartUp::installDir() + "/etc/Columnstore.xml";
 
 	ifstream oldFile (fileName.c_str());
 	if (!oldFile) return false;
@@ -7832,7 +7832,7 @@ bool ProcessManager::makeXMInittab(std::string moduleName, std::string systemID,
 /******************************************************************************************
 * @brief	setPMProcIPs
 *
-* purpose:	Updates the Calpont.xml file for DDL/DMLProc IPs during PM switchover
+* purpose:	Updates the Columnstore.xml file for DDL/DMLProc IPs during PM switchover
 *
 *
 ******************************************************************************************/
@@ -8401,7 +8401,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
 	int moduleID = atoi(newActiveModuleName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
 
-	// update Calpont.xml entries
+	// update Columnstore.xml entries
 	string newActiveIPaddr;
 	try
 	{
@@ -8489,7 +8489,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 			catch(...) {}
 		}
 
-		log.writeLog(__LINE__, "Calpont.xml entries update to local IP address of " + newActiveIPaddr, LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "Columnstore.xml entries update to local IP address of " + newActiveIPaddr, LOG_TYPE_DEBUG);
 
 		//distribute config file
 		processManager.distributeConfigFile("system");
@@ -8965,8 +8965,8 @@ int ProcessManager::OAMParentModuleChange()
 							}
 							else
 							{
-								// update the Calpont.xml with the new IP Address
-								string cmd = "sed -i s/" + downOAMParentIPAddress + "/" + currentIPAddr + "/g " +  startup::StartUp::installDir() + "/etc/Calpont.xml";
+								// update the Columnstore.xml with the new IP Address
+								string cmd = "sed -i s/" + downOAMParentIPAddress + "/" + currentIPAddr + "/g " +  startup::StartUp::installDir() + "/etc/Columnstore.xml";
 								system(cmd.c_str());
 
 								// get parent hotsname and IP address in case it changed
@@ -9027,7 +9027,7 @@ int ProcessManager::OAMParentModuleChange()
 
 	gdownActiveOAMModule = downOAMParentName;
 
-	// update Calpont.xml entries
+	// update Columnstore.xml entries
 	string localIPaddr;
 	string newStandbyModule = downOAMParentName;
 	string standbyIPaddr = downOAMParentIPAddress;
@@ -9088,8 +9088,8 @@ int ProcessManager::OAMParentModuleChange()
 		Configuration config;
 		oam.setHotStandbyPM(standbyIPaddr);
 
-		log.writeLog(__LINE__, "Calpont.xml Standby OAM updated : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
-		log.writeLog(__LINE__, "Calpont.xml entries update to local IP address of " + localIPaddr, LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "Columnstore.xml Standby OAM updated : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "Columnstore.xml entries update to local IP address of " + localIPaddr, LOG_TYPE_DEBUG);
 	}
 	catch (exception& ex)
 	{
@@ -9509,7 +9509,7 @@ std::string ProcessManager::getStandbyModule()
 /******************************************************************************************
 * @brief	setStandbyModule
 *
-* purpose:	set Standby Module info in Calpont.xml
+* purpose:	set Standby Module info in Columnstore.xml
 *
 *
 ******************************************************************************************/
@@ -9546,7 +9546,7 @@ bool ProcessManager::setStandbyModule(std::string newStandbyModule, bool send)
 			//distribute config file
 			distributeConfigFile("system");	
 
-			log.writeLog(__LINE__, "Calpont.xml Standby OAM updated to : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "Columnstore.xml Standby OAM updated to : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
 
 			if (send) {
 				log.writeLog(__LINE__, "Send Message for new Hot-Standby ProcessManager to module = " + newStandbyModule, LOG_TYPE_DEBUG);
@@ -9578,7 +9578,7 @@ bool ProcessManager::setStandbyModule(std::string newStandbyModule, bool send)
 /******************************************************************************************
 * @brief	clearStandbyModule
 *
-* purpose:	clear Standby Module info in Calpont.xml
+* purpose:	clear Standby Module info in Columnstore.xml
 *
 *
 ******************************************************************************************/
@@ -9602,7 +9602,7 @@ bool ProcessManager::clearStandbyModule()
 			pthread_mutex_unlock(&THREAD_LOCK);
 	
 			oam.setHotStandbyPM(" ");
-			log.writeLog(__LINE__, "Clear Calpont.xml Standby OAM", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "Clear Columnstore.xml Standby OAM", LOG_TYPE_DEBUG);
 
 			//distribute config file
 			distributeConfigFile("system");	
@@ -9632,7 +9632,7 @@ bool ProcessManager::clearStandbyModule()
 /******************************************************************************************
 * @brief	setEnableState
 *
-* purpose:	set Enable State info in Calpont.xml
+* purpose:	set Enable State info in Columnstore.xml
 *
 *
 ******************************************************************************************/

@@ -134,7 +134,7 @@ protected:
 	bool fIsExeMgr;
 	int  fPmsConnected;
 	
-	// Dirty pool kludge. Contains the number of PMs configured in Calpont.xml.
+	// Dirty pool kludge. Contains the number of PMs configured in Columnstore.xml.
 	// This kludge reduces the number of calls needed to config.Config, which are expensive.
 	static int  fPmsConfigured;
 

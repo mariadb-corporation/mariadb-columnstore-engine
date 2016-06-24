@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: Calpont.xml 1286 2009-03-30 22:39:41Z dcathey $ -->
+<!-- $Id: Columnstore.xml 1286 2009-03-30 22:39:41Z dcathey $ -->
 <Calpont Version="V1.0.0">
 	<ExeMgr1>
 		<IPAddr>127.0.0.1</IPAddr>

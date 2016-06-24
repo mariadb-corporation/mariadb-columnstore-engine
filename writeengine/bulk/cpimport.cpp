@@ -1041,7 +1041,7 @@ int main(int argc, char **argv)
     //--------------------------------------------------------------------------
     task = TASK_INIT_CONFIG_CACHE;
 
-    // Initialize cache used to store configuration parms from Calpont.xml
+    // Initialize cache used to store configuration parms from Columnstore.xml
     Config::initConfigCache();
 
     // Setup signal handlers "again" because HDFS plugin seems to be

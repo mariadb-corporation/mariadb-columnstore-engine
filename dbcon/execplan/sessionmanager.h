@@ -47,7 +47,7 @@ namespace execplan {
  * Note: Added a macro 'DESTROYSHMSEG' which enables/disables the code to load/save
  * and deallocate the shared memory segment.
  *
- * This class uses 3 parameters from the Calpont.xml file:
+ * This class uses 3 parameters from the Columnstore.xml file:
  * SessionManager/MaxConcurrentTransactions: defines how many active transactions the
  * 		system should support.  When a new request comes in and there are already
  * 		MaxConcurrentTransactions active, the new request blocks by default.  The

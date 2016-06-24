@@ -23,7 +23,7 @@ buildTester.sh	-	Installs a Calpont system with a New Latest Built or
 			Execute './buildTester -h' for addition help.
 
 configure	-	Interactively reads and Configures a local version of the
-			Calpont.xml file based on user inputs.
+			Columnstore.xml file based on user inputs.
 			Usage ./configure
 
 Supported Command Scipts. These scripts are called by the User Command scripts:
@@ -32,7 +32,7 @@ autoConfigure, parent_installer.sh, remote_command.sh, and remote_scp_get.sh
 
 Directories:
 
-systems		-	Contains directories of the systems with associated Calpont.xml
+systems		-	Contains directories of the systems with associated Columnstore.xml
 			files for that system. 
 			Also contains the CalpontSystem.xml file, which contains the
 			support systems that can be installed using the autoInstaller

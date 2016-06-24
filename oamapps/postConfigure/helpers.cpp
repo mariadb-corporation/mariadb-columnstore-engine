@@ -99,7 +99,7 @@ bool waitForActive()
 void dbrmDirCheck() 
 {
 
-	const string fname = installDir + "/etc/Calpont.xml.rpmsave";
+	const string fname = installDir + "/etc/Columnstore.xml.rpmsave";
 	ifstream oldFile (fname.c_str());
 	if (!oldFile) return;
 

@@ -149,7 +149,7 @@ public:
 		DataList<element_t>* hashResult;
 	};
 
-	boost::scoped_array<struct control_struct> controls; //TODO: needs to be >= HJ threads from Calpont.xml
+	boost::scoped_array<struct control_struct> controls; //TODO: needs to be >= HJ threads from Columnstore.xml
 	typedef struct thrParams_struct {
 		HashJoin<element_t>* hjptr;
 		uint32_t startBucket;

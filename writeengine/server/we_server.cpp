@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 	sigaction(SIGPIPE, &sa, 0);
 #endif
 
-	// Init WriteEngine Wrapper (including Config Calpont.xml cache)
+	// Init WriteEngine Wrapper (including Config Columnstore.xml cache)
 	WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_WE_SRV );
 
 #ifdef _MSC_VER
