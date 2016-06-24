@@ -203,7 +203,7 @@ void Config::parseDoc(void)
 		throw runtime_error("Config::parseDoc: error parsing config file " + fConfigFile);
 	}
 
-	if (xmlStrcmp(cur->name, (const xmlChar *)"Calpont"))
+	if (xmlStrcmp(cur->name, (const xmlChar *)"Columnstore"))
 	{
 		xmlFreeDoc(fDoc);
 		fDoc = 0;
