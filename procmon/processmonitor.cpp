@@ -3829,7 +3829,7 @@ int ProcessMonitor::createDataDirs(std::string cloud)
 			t = oam.getStorageConfig();
 	
 			if ( boost::get<1>(t) == 0 ) {
-				log.writeLog(__LINE__, "No dbroots are configured in Calpont.xml file at proc mon startup time", LOG_TYPE_WARNING);
+				log.writeLog(__LINE__, "No dbroots are configured in Columnstore.xml file at proc mon startup time", LOG_TYPE_WARNING);
 				return API_INVALID_PARAMETER;
 			}
 	
@@ -5467,10 +5467,10 @@ bool ProcessMonitor::amazonIPCheck()
 						else
 						{
 							if ( currentIPAddr != IPAddr ) {
-								log.writeLog(__LINE__, "Module is Running: '" + moduleName + "' / Instance '" + instanceID + "' current IP being reconfigured in Calpont.xml. old = " + IPAddr + ", new = " + currentIPAddr, LOG_TYPE_DEBUG);
+								log.writeLog(__LINE__, "Module is Running: '" + moduleName + "' / Instance '" + instanceID + "' current IP being reconfigured in Columnstore.xml. old = " + IPAddr + ", new = " + currentIPAddr, LOG_TYPE_DEBUG);
 		
-								// update the Calpont.xml with the new IP Address
-								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/mariadb/columnstore/etc/Calpont.xml";
+								// update the Columnstore.xml with the new IP Address
+								string cmd = "sed -i s/" + IPAddr + "/" + currentIPAddr + "/g /usr/local/mariadb/columnstore/etc/Columnstore.xml";
 								system(cmd.c_str());
 							}
 							else
@@ -5796,7 +5796,7 @@ int ProcessMonitor::checkDataMount()
 			t = oam.getStorageConfig();
 	
 			if ( boost::get<1>(t) == 0 ) {
-				log.writeLog(__LINE__, "getStorageConfig return: No dbroots are configured in Calpont.xml file", LOG_TYPE_WARNING);
+				log.writeLog(__LINE__, "getStorageConfig return: No dbroots are configured in Columnstore.xml file", LOG_TYPE_WARNING);
 				return API_INVALID_PARAMETER;
 			}
 	
@@ -5833,7 +5833,7 @@ int ProcessMonitor::checkDataMount()
 	}
 
 	if ( dbrootList.size() == 0 ) {
-		log.writeLog(__LINE__, "No dbroots are configured in Calpont.xml file", LOG_TYPE_WARNING);
+		log.writeLog(__LINE__, "No dbroots are configured in Columnstore.xml file", LOG_TYPE_WARNING);
 		return API_INVALID_PARAMETER;
 	}
 

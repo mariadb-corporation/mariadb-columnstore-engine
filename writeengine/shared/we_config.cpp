@@ -94,7 +94,7 @@ void Config::initConfigCache()
 
 /*******************************************************************************
  * DESCRIPTION:
- *    Reload local cache using contents of Calpont.xml file.
+ *    Reload local cache using contents of Columnstore.xml file.
  * PARAMETERS:
  *    none
  ******************************************************************************/
@@ -107,7 +107,7 @@ void Config::checkReload( )
 
     config::Config* cf = config::Config::makeConfig();
 
-    // Immediately return if Calpont.xml timestamp has not changed
+    // Immediately return if Columnstore.xml timestamp has not changed
     if (cf->getCurrentMTime() == fCacheTime)
         return;
 
@@ -126,7 +126,7 @@ void Config::checkReload( )
 		m_bulkRoot += "/bulk";
     }
 
-    // Get latest Calpont.xml timestamp after first access forced a reload
+    // Get latest Columnstore.xml timestamp after first access forced a reload
     fCacheTime = cf ->getLastMTime();
 
     //--------------------------------------------------------------------------

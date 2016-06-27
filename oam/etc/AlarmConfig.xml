@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id: AlarmConfig.xml 3702 2013-08-06 22:29:48Z bpaul $ -->
-<Calpont Version="V1.0.0">
+<Columnstore Version="V1.0.0">
 	<AlarmConfig1>
 		<AlarmID>1</AlarmID>
 		<BriefDesc>CPU_USAGE_HIGH</BriefDesc>
@@ -325,4 +325,4 @@
 		<Occurrences>0</Occurrences>
 		<LastIssueTime>0</LastIssueTime>		
 	</AlarmConfig36>
-</Calpont>
+</Columnstore>

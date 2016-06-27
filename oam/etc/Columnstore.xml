@@ -5,7 +5,7 @@
 	Calpont service engineers. Incorrect settings can render your system
 	unusable and will require a service call to correct.
 -->
-<Calpont Version="V1.0.0">
+<Columnstore Version="V1.0.0">
 	<ExeMgr1>
 		<IPAddr>0.0.0.0</IPAddr>
 		<Port>8601</Port>
@@ -541,5 +541,5 @@
 		<Host>127.0.0.1</Host>
 		<Port>0</Port>
 	</QueryTele>
-</Calpont>
+</Columnstore>
 

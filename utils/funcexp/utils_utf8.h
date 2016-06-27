@@ -56,7 +56,7 @@ const int MAX_UTF8_BYTES_PER_CHAR=4;
 
 //Infinidb version of strlocale  BUG 5362
 //set System Locale "C" by default
-//return the system Locale currently set in from Calpont.xml
+//return the system Locale currently set in from Columnstore.xml
 inline
 std::string idb_setlocale()
 {

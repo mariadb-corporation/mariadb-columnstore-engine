@@ -388,7 +388,7 @@ int fixupConfig(const string& installDir, const string& mysqlPort)
 
 	cFilePath = installDir;
 	cFilePath /= "etc";
-	cFilePath /= "Calpont.xml";
+	cFilePath /= "Columnstore.xml";
 	tmpPath = cFilePath;
 	tmpPath.replace_extension(".tmp");
 	fs::remove(tmpPath);

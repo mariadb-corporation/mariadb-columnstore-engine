@@ -68,7 +68,7 @@ public:
 	}
 
 	void test1() {
-		Config* c1 = Config::makeConfig("./Calpont.xml");
+		Config* c1 = Config::makeConfig("./Columnstore.xml");
 		string value;
 		value = c1->getConfig("Message", "Name");
 		CPPUNIT_ASSERT(value == "Message");
@@ -97,7 +97,7 @@ public:
 
 		for (int i = 0; i < 1000; i++)
 		{
-			c1 = Config::makeConfig("./Calpont.xml");
+			c1 = Config::makeConfig("./Columnstore.xml");
 			value = c1->getConfig("Message", "Name");
 			assert(value == "Message");
 		}
@@ -105,7 +105,7 @@ public:
 	}
 
 	void test4() {
-		Config* c1 = Config::makeConfig("./Calpont.xml");
+		Config* c1 = Config::makeConfig("./Columnstore.xml");
 		string value;
 
 		value = c1->getConfig("SystemConfig", "SystemVersion");
@@ -113,8 +113,8 @@ public:
 		value = c1->getConfig("SystemConfig", "SystemVersion");
 		CPPUNIT_ASSERT(value == "2.2.versionversionversion");
 
-		::unlink("./Calpont.xml.new");
-		c1->write("./Calpont.xml.new");
+		::unlink("./Columnstore.xml.new");
+		c1->write("./Columnstore.xml.new");
 
 		value = c1->getConfig("SystemConfig", "SystemVersion");
 		CPPUNIT_ASSERT(value == "2.2.versionversionversion");
@@ -127,8 +127,8 @@ public:
 		value = c1->getConfig("SystemConfig1", "SystemVersion1");
 		CPPUNIT_ASSERT(value == "Vx.x");
 
-		c1->write("./Calpont.xml.new");
-		Config* c2 = Config::makeConfig("./Calpont.xml.new");
+		c1->write("./Columnstore.xml.new");
+		Config* c2 = Config::makeConfig("./Columnstore.xml.new");
 		value = c2->getConfig("SystemConfig1", "SystemVersion1");
 		CPPUNIT_ASSERT(value == "Vx.x");
 		c2->setConfig("SystemConfig", "SystemVersion1", "V1.1");
@@ -139,19 +139,19 @@ public:
 	}
 
 	void test5() {
-		Config* c1 = Config::makeConfig("./Calpont.xml");
+		Config* c1 = Config::makeConfig("./Columnstore.xml");
 		c1->write("/cantwritethis");
                 Config::deleteInstanceMap();
 	}
 
 	void test6() {
-		Config* c1 = Config::makeConfig("./XCalpont.xml");
+		Config* c1 = Config::makeConfig("./XColumnstore.xml");
 		// compiler warning...we won't actually get here
 		c1 = 0;
 	}
 
 	void test7() {
-		Config* c1 = Config::makeConfig("./Calpont.xml");
+		Config* c1 = Config::makeConfig("./Columnstore.xml");
 		string s;
 		string n;
 		string v;
@@ -160,7 +160,7 @@ public:
 	}
 
 	void test8() {
-		Config* c1 = Config::makeConfig("./Calpont.xml");
+		Config* c1 = Config::makeConfig("./Columnstore.xml");
 		string s;
 		string n;
 		string v;
@@ -171,8 +171,8 @@ public:
 	void test9() {
 		string value;
 
-		Config* c1 = Config::makeConfig("./Calpont.xml");
-		Config* c2 = Config::makeConfig("./Calpont.xml.new");
+		Config* c1 = Config::makeConfig("./Columnstore.xml");
+		Config* c2 = Config::makeConfig("./Columnstore.xml.new");
 
 		value = c1->getConfig("Message", "Name");
 		CPPUNIT_ASSERT(value == "Message");
@@ -185,7 +185,7 @@ public:
 	void test10() {
 		string value;
 
-		setenv("CALPONT_CONFIG_FILE", "./Calpont.xml", 1);
+		setenv("CALPONT_CONFIG_FILE", "./Columnstore.xml", 1);
 		Config* c1 = Config::makeConfig();
 
 		value = c1->getConfig("Message", "Name");
@@ -199,15 +199,15 @@ public:
 		struct stat stat_buf;
 		struct utimbuf utime_buf;
 
-		CPPUNIT_ASSERT(stat("./Calpont.xml.new", &stat_buf) == 0);
+		CPPUNIT_ASSERT(stat("./Columnstore.xml.new", &stat_buf) == 0);
 
-		Config* c1 = Config::makeConfig("./Calpont.xml.new");
+		Config* c1 = Config::makeConfig("./Columnstore.xml.new");
 
 		value = c1->getConfig("Message", "Name");
 		CPPUNIT_ASSERT(value == "Message");
 
 		utime_buf.actime = utime_buf.modtime = stat_buf.st_mtime + 1;
-		CPPUNIT_ASSERT(utime("./Calpont.xml.new", &utime_buf) == 0);
+		CPPUNIT_ASSERT(utime("./Columnstore.xml.new", &utime_buf) == 0);
 
 		value = c1->getConfig("Message", "Name");
 		CPPUNIT_ASSERT(value == "Message");
@@ -317,7 +317,7 @@ public:
 
 	void test14() {
 		ByteStream bs;
-		ifstream ifs("./Calpont.xml");
+		ifstream ifs("./Columnstore.xml");
 		ifs >> bs;
 		string id(".");
 		string value;

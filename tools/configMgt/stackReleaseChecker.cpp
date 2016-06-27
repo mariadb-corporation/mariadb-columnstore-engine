@@ -21,7 +21,7 @@
 *
 *
 * List of files being updated by configure:
-*		Calpont/etc/Calpont.xml
+*		Calpont/etc/Columnstore.xml
 *
 *		
 ******************************************************************************************/

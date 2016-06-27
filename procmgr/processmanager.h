@@ -461,7 +461,7 @@ public:
 	std::string sendMsgProcMon1( std::string module, messageqcpp::ByteStream msg, int requestID );
 
 	/*
-	* Updates the Calpont.xml file for DDL/DMLProc IPs during PM switchover
+	* Updates the Columnstore.xml file for DDL/DMLProc IPs during PM switchover
 	*/
 	int setPMProcIPs( std::string moduleName, std::string processName = oam::UnassignedName);
 
@@ -474,11 +474,11 @@ public:
 		*/
 	std::string getStandbyModule();
 
-	/** @brief set Standby Module info in Calpont.xml
+	/** @brief set Standby Module info in Columnstore.xml
 		*/
 	bool setStandbyModule(std::string newStandbyModule, bool send = true);
 
-	/** @brief clear Standby Module info in Calpont.xml
+	/** @brief clear Standby Module info in Columnstore.xml
 		*/
 	bool clearStandbyModule();
 
@@ -486,7 +486,7 @@ public:
 
 	/** @brief Distribute Calpont Config File to system modules
 		*/
-	int distributeConfigFile(std::string name, std::string file = "Calpont.xml");
+	int distributeConfigFile(std::string name, std::string file = "Columnstore.xml");
 
 	/** @brief Switch OAM Parent Module
 		*/
@@ -562,7 +562,7 @@ private:
 	bool createModuleFile(std::string remoteModuleName);
 
     /**
-     *@brief pdate Extent Map section in Calpont.xml
+     *@brief pdate Extent Map section in Columnstore.xml
      */
 	bool updateExtentMap();
 

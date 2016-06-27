@@ -123,7 +123,7 @@ namespace oam
 		if (cf != 0 && *cf != 0)
 			calpontfiledir = cf;
 
-		CalpontConfigFile = calpontfiledir + "/Calpont.xml";
+		CalpontConfigFile = calpontfiledir + "/Columnstore.xml";
 	
 		AlarmConfigFile = calpontfiledir + "/AlarmConfig.xml";
 	
@@ -5398,7 +5398,7 @@ namespace oam
 			cout << endl << "ERROR: mountDBRoot api failure" << endl;
 		}
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		return;
@@ -6209,7 +6209,7 @@ namespace oam
 			}
 		}
 	
-		//update Calpont.xml entries
+		//update Columnstore.xml entries
 		DBRootConfigList::iterator pt2 = dbrootlist.begin();
 		for( ; pt2 != dbrootlist.end() ; pt2++)
 		{
@@ -6240,7 +6240,7 @@ namespace oam
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 			return;
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		//
@@ -6504,7 +6504,7 @@ namespace oam
 			exceptionControl("assignPmDbrootConfig", API_FAILURE);
 		}
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		return;
@@ -6876,7 +6876,7 @@ namespace oam
 			exceptionControl("sysConfig->write", API_FAILURE);
 		}
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		//
@@ -6980,7 +6980,7 @@ namespace oam
      * Purpose:   set FilesPerColumnPartition
 	 *            This function takes the old DBRootCount as an input arg
 	 *            and expects that the new DBRootCount has been set in the
-	 *            Calpont.xml file.  Function assumes oldSystemDBRootCount
+	 *            Columnstore.xml file.  Function assumes oldSystemDBRootCount
 	 *            has already been validated to be > 0 (else we could get a
 	 *            divide by 0 error).
      *

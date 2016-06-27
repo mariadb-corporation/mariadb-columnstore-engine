@@ -1994,7 +1994,7 @@ void BatchPrimitiveProcessor::asyncLoadProjectColumns()
 	// relLBID is the LBID related to the primMsg->LBID,
 	// it is used to keep the read ahead boundary for asyncLoads
 	// 1. scan driven case: load blocks in # to (# + blocksReadAhead - 1) range,
-	//    where # is a multiple of ColScanReadAheadBlocks in Calpont.xml
+	//    where # is a multiple of ColScanReadAheadBlocks in Columnstore.xml
 	// 2. non-scan driven case: load blocks in the logical block.
 	//    because 1 logical block per primMsg, asyncLoad only once per message.
 	for (uint64_t i = 0; i < projectCount; ++i) {

@@ -1687,7 +1687,7 @@ struct ReadThread
 		if (bRotateDest) {
 			// If we tried adding an IP address not listed as UM in config
 			// file; probably a DMLProc connection.  We allow the connection
-			// but disable destination rotation since not in Calpont.xml.
+			// but disable destination rotation since not in Columnstore.xml.
 			if (!pUmSocketSelector->addConnection(outIosDefault, writeLockDefault)) {
 				bRotateDest = false;
 			}

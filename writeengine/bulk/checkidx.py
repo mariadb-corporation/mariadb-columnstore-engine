@@ -9,7 +9,7 @@ def find_paths():
     config_file = os.environ['CALPONT_CONFIG_FILE']
   except KeyError:
     try:
-      config_file = '/usr/local/mariadb/columnstore/etc/Calpont.xml'
+      config_file = '/usr/local/mariadb/columnstore/etc/Columnstore.xml'
       os.lstat(config_file)
     except:
       sys.exit('No config file available')

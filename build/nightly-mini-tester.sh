@@ -71,8 +71,8 @@ if [ ! -e ${prefix}/Calpont/lib/libjemalloc.so ]; then
 	popd >/dev/null
 fi
 
-if [ ! -f ${prefix}/Calpont/etc/Calpont.xml.rpmsave ]; then
-	cp ${prefix}/Calpont/etc/Calpont.xml.singleserver ${prefix}/Calpont/etc/Calpont.xml.rpmsave
+if [ ! -f ${prefix}/Calpont/etc/Columnstore.xml.rpmsave ]; then
+	cp ${prefix}/Calpont/etc/Columnstore.xml.singleserver ${prefix}/Calpont/etc/Columnstore.xml.rpmsave
 fi
 
 if [ ! -f ${prefix}/Calpont/mysql/my.cnf ]; then

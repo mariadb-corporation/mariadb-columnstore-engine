@@ -267,7 +267,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{ //running active after startup
-		//Update DBRM section of Calpont.xml
+		//Update DBRM section of Columnstore.xml
 		processManager.updateWorkerNodeconfig();
 //		processManager.distributeConfigFile("system");
 

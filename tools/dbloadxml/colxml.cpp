@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     setuid( 0 ); // set effective ID to root; ignore return status
 #endif
     setlocale(LC_ALL, "");
-    WriteEngine::Config::initConfigCache(); // load Calpont.xml config settings
+    WriteEngine::Config::initConfigCache(); // load Columnstore.xml config settings
 
 	//Bug 6137
 	std::string aBulkRoot = WriteEngine::Config::getBulkRoot();

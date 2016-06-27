@@ -129,12 +129,12 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 
 
 #
-%config /usr/local/mariadb/columnstore/etc/Calpont.xml
+%config /usr/local/mariadb/columnstore/etc/Columnstore.xml
 %config /usr/local/mariadb/columnstore/etc/ConsoleCmds.xml
 %config /usr/local/mariadb/columnstore/etc/ProcessConfig.xml
 %config /usr/local/mariadb/columnstore/etc/snmpd.conf
 %config /usr/local/mariadb/columnstore/etc/snmptrapd.conf
-%config /usr/local/mariadb/columnstore/etc/Calpont.xml.singleserver
+%config /usr/local/mariadb/columnstore/etc/Columnstore.xml.singleserver
 %config /usr/local/mariadb/columnstore/etc/ProcessConfig.xml.singleserver
 %config /usr/local/mariadb/columnstore/etc/snmpd.conf.singleserver
 %config /usr/local/mariadb/columnstore/etc/snmptrapd.conf.singleserver
@@ -256,11 +256,11 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/lib/libjoiner.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libloggingcpp.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libmessageqcpp.so.1.0.0
-/usr/local/mariadb/columnstore/lib/libnetsnmpagent.so.5.2.1
-/usr/local/mariadb/columnstore/lib/libnetsnmphelpers.so.5.2.1
-/usr/local/mariadb/columnstore/lib/libnetsnmpmibs.so.5.2.1
-/usr/local/mariadb/columnstore/lib/libnetsnmp.so.5.2.1
-/usr/local/mariadb/columnstore/lib/libnetsnmptrapd.so.5.2.1
+#/usr/local/mariadb/columnstore/lib/libnetsnmpagent.so.5.2.1
+#/usr/local/mariadb/columnstore/lib/libnetsnmphelpers.so.5.2.1
+#/usr/local/mariadb/columnstore/lib/libnetsnmpmibs.so.5.2.1
+#/usr/local/mariadb/columnstore/lib/libnetsnmp.so.5.2.1
+#/usr/local/mariadb/columnstore/lib/libnetsnmptrapd.so.5.2.1
 /usr/local/mariadb/columnstore/lib/liboamcpp.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libsnmpmanager.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libthreadpool.so.1.0.0
@@ -280,18 +280,18 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libquerystats.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libwriteengineredistribute.so.1.0.0
-/usr/local/mariadb/columnstore/lib/libjemalloc.so.3.3.0
+#/usr/local/mariadb/columnstore/lib/libjemalloc.so.3.3.0
 /usr/local/mariadb/columnstore/lib/libidbdatafile.so.1.0.0
-/usr/local/mariadb/columnstore/lib/hdfs-20.so
-/usr/local/mariadb/columnstore/lib/hdfs-12.so
-/usr/local/mariadb/columnstore/lib/libgcc_s.so.1
-/usr/local/mariadb/columnstore/lib/libstdc++.so.6.0.14
+#/usr/local/mariadb/columnstore/lib/hdfs-20.so
+#/usr/local/mariadb/columnstore/lib/hdfs-12.so
+#/usr/local/mariadb/columnstore/lib/libgcc_s.so.1
+#/usr/local/mariadb/columnstore/lib/libstdc++.so.6.0.14
 /usr/local/mariadb/columnstore/lib/libthrift.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libquerytele.so.1.0.0
 
 %files storage-engine
 /usr/local/mariadb/columnstore/lib/libcalmysql.so.1.0.0
-/usr/local/mariadb/columnstore/lib/libudf_mysql.so.1.0.0
+#/usr/local/mariadb/columnstore/lib/libudf_mysql.so.1.0.0
 
 /usr/local/mariadb/columnstore/mysql/mysql-Columnstore
 /usr/local/mariadb/columnstore/mysql/install_calpont_mysql.sh

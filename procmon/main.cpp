@@ -275,7 +275,7 @@ int main(int argc, char **argv)
 					log.writeLog(__LINE__, "ERROR: makeConfig failed", LOG_TYPE_ERROR);
 				}
 
-				// get updated Calpont.xml, retry in case ProcMgr isn't up yet
+				// get updated Columnstore.xml, retry in case ProcMgr isn't up yet
 				if (!HDFS)
 				{
 					int count = 0;
@@ -295,7 +295,7 @@ int main(int argc, char **argv)
 							sleep(1);
 						}
 					}
-					//re-read local system info with new Calpont.xml
+					//re-read local system info with new Columnstore.xml
 					sleep(1);
 					MonitorConfig config;
 				}
@@ -326,7 +326,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		// not active Parent, get updated Calpont.xml, retry in case ProcMgr isn't up yet
+		// not active Parent, get updated Columnstore.xml, retry in case ProcMgr isn't up yet
 		if (!HDFS)
 		{
 			int count = 0;
@@ -346,7 +346,7 @@ int main(int argc, char **argv)
 					sleep(1);
 				}
 			}
-			//re-read local system info with new Calpont.xml
+			//re-read local system info with new Columnstore.xml
 			sleep(1);
 			MonitorConfig config;
 		}
@@ -534,7 +534,7 @@ int main(int argc, char **argv)
 
 			oam.setHotStandbyPM(standbyIPaddr);
 
-			log.writeLog(__LINE__, "Calpont.xml Standby OAM updated : " + standbyPM + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "Columnstore.xml Standby OAM updated : " + standbyPM + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
 			log.writeLog(__LINE__, "Set Standby Module = " + standbyPM, LOG_TYPE_DEBUG);
 
 			try {

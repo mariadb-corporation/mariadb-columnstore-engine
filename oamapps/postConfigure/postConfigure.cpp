@@ -23,7 +23,7 @@
 * List of files being updated by post-install configure:
 *		Calpont/etc/snmpd.conf
 *		Calpont/etc/snmptrapd.conf
-*		Calpont/etc/Calpont.xml
+*		Calpont/etc/Columnstore.xml
 *		Calpont/etc/ProcessConfig.xml
 *		/etc/rc.local
 *		
@@ -284,8 +284,8 @@ int main(int argc, char *argv[])
 			cout << endl;
    			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
 			cout << "   -h  Help" << endl;
-			cout << "   -c  Config File to use to extract configuration data, default is Calpont.xml.rpmsave" << endl;
-			cout << "   -u  Upgrade, Install using the Config File from -c, default to Calpont.xml.rpmsave" << endl;
+			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
+			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
 			cout << "	 If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
 			cout << "   -mp MySQL Password" << endl;
@@ -306,8 +306,8 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 			oldFileName = argv[i];
-			if ( oldFileName.find("Calpont.xml") == string::npos ) {
-				cout << "   ERROR: Config File is not a Calpont.xml file name" << endl;
+			if ( oldFileName.find("Columnstore.xml") == string::npos ) {
+				cout << "   ERROR: Config File is not a Columnstore.xml file name" << endl;
 				exit (1);
 			}			
 		}
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	oldFileName = installDir + "/etc/Calpont.xml.rpmsave";
+	oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
 
 	cout << endl;
 	cout << "This is the MariaDB Columnstore System Configuration and Installation tool." << endl;
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
 		cout << endl;
 		cout << " 1. Root user ssh keys setup between all nodes in the system or" << endl;
 		cout << "    use the password command line option." << endl;
-		cout << " 2. A Configure File to use to retrieve configure data, default to Calpont.xml.rpmsave" << endl;
+		cout << " 2. A Configure File to use to retrieve configure data, default to Columnstore.xml.rpmsave" << endl;
 		cout << "    or use the '-c' option to point to a configuration file." << endl;
 		cout << endl;
 //		cout << " Output if being redirected to " << postConfigureLog << endl;
@@ -540,20 +540,20 @@ int main(int argc, char *argv[])
 				cout << endl << "Performing the Single Server Install." << endl; 
 
 				if ( reuseConfig == "n" ) {
-					//setup to use the single server Calpont.xml file
+					//setup to use the single server Columnstore.xml file
 
 					// we know that our Config instance just timestamped itself in the getConfig
 					// call above.  if postConfigure is running non-interactively we may get here
 					// within the same second which means the changes that are about to happen
-					// when Calpont.xml gets overwritten will be ignored because of the Config
+					// when Columnstore.xml gets overwritten will be ignored because of the Config
 					// instance won't know to reload
                     			sleep(2);
 
-					cmd = "rm -f " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+					cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 					system(cmd.c_str());
-					cmd = "mv -f " + installDir + "/etc/Calpont.xml " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+					cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 					system(cmd.c_str());
-					cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml.singleserver " + installDir + "/etc/Calpont.xml  > /dev/null 2>&1";
+					cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
 					system(cmd.c_str());
 				}
 
@@ -1165,7 +1165,7 @@ int main(int argc, char *argv[])
 			// are we using settings from previous config file?
 			if ( reuseConfig == "n" ) {
 				if( !uncommentCalpontXml("NumBlocksPct") ) {
-					cout << "Update Calpont.xml NumBlocksPct Section" << endl;
+					cout << "Update Columnstore.xml NumBlocksPct Section" << endl;
 					exit(1);
 				}
 
@@ -3398,7 +3398,7 @@ int main(int argc, char *argv[])
 					//run remote command script
 					cout << endl << "----- Starting MariaDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
 
-					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Calpont.xml " +  installDir + "/etc/. > /dev/null 2>&1";
+					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml " +  installDir + "/etc/. > /dev/null 2>&1";
 					int rtnCode = system(cmd.c_str());
 
 					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
@@ -3553,16 +3553,16 @@ int main(int argc, char *argv[])
 }
 
 /*
- * Check for reuse of RPM saved Calpont.xml
+ * Check for reuse of RPM saved Columnstore.xml
  */
 bool checkSaveConfigFile()
 {
-	string rpmFileName = installDir + "/etc/Calpont.xml";
-	string newFileName = installDir + "/etc/Calpont.xml.new";
+	string rpmFileName = installDir + "/etc/Columnstore.xml";
+	string newFileName = installDir + "/etc/Columnstore.xml.new";
 
 	string extentMapCheckOnly = " ";
 
-	//check if Calpont.xml.rpmsave exist
+	//check if Columnstore.xml.rpmsave exist
 	ifstream File (oldFileName.c_str());
 	if (!File) {
 		if ( noPrompting ) {
@@ -3648,11 +3648,11 @@ bool checkSaveConfigFile()
 		string cmd;
 		if ( reuseConfig == "y" ) {
 			if ( singleServerInstall == "1") {
-				cmd = "rm -f " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+				cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 				system(cmd.c_str());
-				cmd = "mv -f " + installDir + "/etc/Calpont.xml " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+				cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 				system(cmd.c_str());
-				cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml.singleserver " + installDir + "/etc/Calpont.xml  > /dev/null 2>&1";
+				cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
 				system(cmd.c_str());
 			}
 			break;
@@ -3675,7 +3675,7 @@ bool checkSaveConfigFile()
 		string cmd = "mv -f " + rpmFileName + " " + newFileName;
 		int rtnCode = system(cmd.c_str());
 		if (WEXITSTATUS(rtnCode) != 0) {
-			cout << "Error moving installed version of Calpont.xml" << endl;
+			cout << "Error moving installed version of Columnstore.xml" << endl;
 			return false;
 		}
 	
@@ -3702,7 +3702,7 @@ bool checkSaveConfigFile()
 
 		//check to see if updates were made	
 		if ( sysConfig->getConfig("ExeMgr1", "IPAddr") != "0.0.0.0") {
-			//Calpont.xml is ready to go, get feature options
+			//Columnstore.xml is ready to go, get feature options
 
 			if ( MySQLRep == "n" )
 			{
@@ -3737,7 +3737,7 @@ bool checkSaveConfigFile()
 	if ( reuseConfig == "n" )
 		return true;
 
-	cout << "ERROR: Failed to copy data to Calpont.xml" << endl;
+	cout << "ERROR: Failed to copy data to Columnstore.xml" << endl;
 	return false;
 
 }
@@ -3947,11 +3947,11 @@ bool updateProcessConfig(int serverTypeInstall)
 }
 
 /*
- * Uncomment entry in Calpont.xml
+ * Uncomment entry in Columnstore.xml
  */
 bool uncommentCalpontXml( string entry)
 {
-	string fileName = installDir + "/etc/Calpont.xml";
+	string fileName = installDir + "/etc/Columnstore.xml";
 
 	ifstream oldFile (fileName.c_str());
 	if (!oldFile) return true;

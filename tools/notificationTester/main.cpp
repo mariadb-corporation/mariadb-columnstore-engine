@@ -65,7 +65,7 @@ int main (int argc, char** argv)
 	string ipaddr = sysConfig->getConfig(msgPort, "IPAddr");
 	if (ipaddr.empty())
 	{
-		cerr << "CMP1 not configured in Calpont.xml, example of what to add to Calpont.xml:" << endl;
+		cerr << "CMP1 not configured in Columnstore.xml, example of what to add to Columnstore.xml:" << endl;
 		cerr << "<CMP1>" << endl;
 		cerr << "  <IPAddr>127.0.0.1</IPAddr>" << endl;
 		cerr << "  <Port>8650</Port>" << endl;

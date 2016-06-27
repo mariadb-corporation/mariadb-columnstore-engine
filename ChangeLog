@@ -101,7 +101,7 @@ Bug #   Short Description
 5785	While running a complex query a Control C aborts the query but may not clear ExeMgr memory
 5804	mysql reset occurring following an install when /dev/shm permissions were not set correctly
 5838	no prompt postConfigure does not work when mysql password is required.
-5873	install failure - No Calpont.xml: failed to be written in config api
+5873	install failure - No Columnstore.xml: failed to be written in config api
 5881	with replication, delete with idbpm(colname) in where clause failed with an error.
 5884	query returns incorrect results when using an on clause filter involving a table not directly involved in the outer join
 5887	" Incorrect results of Is Null "
@@ -181,7 +181,7 @@ Bug #   Short Description
 5808       colxml error reported on Windows system.
 5811       selecting from a view which has  a cross engine join produces an ERROR 122 (HY000): fatal error executing query in crossengine client lib(17)(17)
 5817       addModule / altersystem-enablemodule fails on amazon with InfiniDB 4.x
-5819       Calpont.xml and Calpont.xml.singleserver do not have the same parameters.
+5819       Columnstore.xml and Columnstore.xml.singleserver do not have the same parameters.
 5820       Inconsistent rounding on percentile_cont windowing function
 5861       post-install reported to have run the setenv-hdfs-12 script on a CDH 4 install
 5864       Include calpontSupport in the standard edition
@@ -388,7 +388,7 @@ Enh #   Short Description
 5087	Enhance InfiniDB to support over 32 PMs.
 5208	Change the Status Updates messages to have state show an ASCII value
 5237	Remove restriction preventing user from dropping a logical partition (segment file) in the last physical partition for a DBRoot
-5243	Add setting in Calpont.xml for enable/disable corefiles
+5243	Add setting in Columnstore.xml for enable/disable corefiles
 5300	calpontSupport script performance improvement and additional features
 5316	Include schema name in SQL statement debug log entries
 5410	Add support for InfiniDB on Apache Hadoop

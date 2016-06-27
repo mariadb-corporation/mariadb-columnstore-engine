@@ -301,11 +301,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# cat /etc/Calpont.xml ################# ' >> " + outputFile;
+			cmd = "echo '################# cat /etc/Columnstore.xml ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "cat " + installDir + "/etc/Calpont.xml >> " + outputFile;
+			cmd = "cat " + installDir + "/etc/Columnstore.xml >> " + outputFile;
 			system(cmd.c_str());
 		}
 	

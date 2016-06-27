@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-dist_sysconf_DATA = AlarmConfig.xml Calpont.xml ProcessConfig.xml ConsoleCmds.xml Calpont.xml.singleserver ProcessConfig.xml.singleserver
+dist_sysconf_DATA = AlarmConfig.xml Columnstore.xml ProcessConfig.xml ConsoleCmds.xml Columnstore.xml.singleserver ProcessConfig.xml.singleserver
 
 test:
 

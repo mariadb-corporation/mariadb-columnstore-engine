@@ -187,7 +187,7 @@ struct ExtentInfo {
 	execplan::CalpontSystemCatalog::OID oid;
 	uint32_t	partitionNum; // starts at 0
 	uint16_t	segmentNum;   // starts at 0
-	uint16_t	dbRoot;       // starts at 1 to match Calpont.xml
+	uint16_t	dbRoot;       // starts at 1 to match Columnstore.xml
 	HWM_t		hwm;
 	bool 		newFile;
 };
@@ -196,7 +196,7 @@ struct FileInfo {
 	execplan::CalpontSystemCatalog::OID oid;
 	uint32_t	partitionNum; // starts at 0
 	uint16_t	segmentNum;   // starts at 0
-	uint16_t	dbRoot;       // starts at 1 to match Calpont.xml
+	uint16_t	dbRoot;       // starts at 1 to match Columnstore.xml
 	uint16_t	compType;	  // compression type
 };
 

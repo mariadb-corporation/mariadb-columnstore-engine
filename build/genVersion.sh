@@ -29,7 +29,7 @@
 
 . ./build/releasenum
 
-mkdir -p ${prefix}/include
+#mkdir -p ${prefix}/include
 
 echo "
 #ifndef VERSIONNUMBER_H_

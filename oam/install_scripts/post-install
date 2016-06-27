@@ -60,8 +60,8 @@ if [ $is64bitpkg -eq 1 -a $is64bitos -ne 1 ]; then
 	exit 1
 fi
 
-if [ ! -f $installdir/etc/Calpont.xml ]; then
-	echo "$installdir/etc/Calpont.xml not found, exiting"
+if [ ! -f $installdir/etc/Columnstore.xml ]; then
+	echo "$installdir/etc/Columnstore.xml not found, exiting"
 	exit 1
 fi
 
@@ -169,7 +169,7 @@ if [ $user = "root" ]; then
 	rm -f /etc/default/columnstore
 else
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
-	sudo chown $user:$user $installdir/etc/Calpont.xml
+	sudo chown $user:$user $installdir/etc/Columnstore.xml
 	sudo chmod 755 /var/log
 	sudo chmod -R 755 /var/log/mariadb/columnstore
 	sudo chmod -R 777 /dev/shm

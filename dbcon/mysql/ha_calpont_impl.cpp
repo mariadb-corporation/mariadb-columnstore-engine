@@ -2325,7 +2325,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
 	if (!getenv("CALPONT_CONFIG_FILE"))
 	{
-		string calpontConfigFile(home + "/Calpont/etc/Calpont.xml");
+		string calpontConfigFile(home + "/Calpont/etc/Columnstore.xml");
 		setenv("CALPONT_CONFIG_FILE", calpontConfigFile.c_str(), 1);
 	}
 
