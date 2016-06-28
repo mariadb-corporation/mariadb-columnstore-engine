@@ -82,7 +82,7 @@ all-local: net-snmp/net-snmp-5.7.3/agent/.libs/libnetsnmpmibs.so
 	$(MAKE) -C writeengine/server
 	$(MAKE) -C writeengine/bulk
 	$(MAKE) -C writeengine/splitter
-	echo $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
+	echo $(idb_cxxflags) $(CXXFLAGS) $(DEBUG_FLAGS) > buildFlags
 
 net-snmp-install:
 	$(MAKE) -C net-snmp install
