@@ -127,8 +127,8 @@ AC_SUBST([idb_cppflags], [' '])
 AC_ARG_WITH([debug],
 	AS_HELP_STRING([--with-debug],[include debugging symbols/no optimization]))
 if test "x$with_debug" = "xyes"; then
-	AC_SUBST([idb_cxxflags],['-ggdb3 -Wall -DSAFE_MUTEX -DINFINIDB_DEBUG'])
-	AC_SUBST([idb_cflags],['-ggdb3 -Wall -DSAFE_MUTEX -DINFINIDB_DEBUG'])
+	AC_SUBST([idb_cxxflags],['-ggdb3 -O0 -Wall -D_DEBUG'])
+	AC_SUBST([idb_cflags],['-ggdb3 -O0 -Wall -D _DEBUG'])
 	AC_MSG_RESULT(yes)
 else
 	AC_SUBST([idb_cxxflags],["-g0 -O3 -fno-strict-aliasing -Wall $cxx_extra_flags"])
