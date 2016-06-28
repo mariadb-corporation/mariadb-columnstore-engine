@@ -46,7 +46,7 @@ struct st_ha_create_information;
 #include "functor.h"
 
 /** Debug macro */
-#if INFINIDB_DEBUG
+#ifdef INFINIDB_DEBUG
 #define IDEBUG(x) {x;}
 #else
 #define IDEBUG(x) {}
