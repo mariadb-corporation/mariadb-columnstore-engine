@@ -1368,6 +1368,11 @@ namespace oam
 
     void Oam::getSystemStatus(SystemStatus& systemstatus, bool systemStatusOnly)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
 #ifdef _MSC_VER
         // TODO: Remove when we create OAM for Windows
         return;
@@ -2085,6 +2090,11 @@ namespace oam
 
     void Oam::getProcessStatus(SystemProcessStatus& systemprocessstatus, string port)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
         ProcessStatus processstatus;
         systemprocessstatus.processstatus.clear();
 
@@ -2182,6 +2192,17 @@ namespace oam
         // TODO: Remove when we create OAM for Windows
         return;
 #endif
+
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
 		try
@@ -2275,6 +2296,11 @@ namespace oam
 
     void Oam::setProcessStatus(const std::string process, const std::string module, const int state, pid_t PID)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
 		//send and wait for ack and resend if not received
 		//retry 5 time max
 		for ( int i=0; i < 5 ; i++)
@@ -2789,6 +2815,11 @@ namespace oam
 			//system("touch /var/log/mariadb/columnstore/test4");
        		exceptionControl("getMyProcessStatus", API_FAILURE);
 		}
+
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -4794,6 +4825,11 @@ namespace oam
      ********************************************************************/
 	bool Oam::switchParentOAMModule(std::string moduleName, GRACEFUL_FLAG gracefulflag)
 	{
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
 		int returnStatus;
 		// We assume that moduleName is a valid pm
 
@@ -9207,6 +9243,11 @@ namespace oam
 
     void Oam::sendStatusUpdate(ByteStream obs, ByteStream::byte returnRequestType)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
 		try
