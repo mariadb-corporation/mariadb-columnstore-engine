@@ -403,7 +403,7 @@
 	</Cmd64>
 	<Cmd65>
 		<Name>alterSystem-disableModule</Name>
-		<Desc1>Disable a Module and Alter the InfiniDB System</Desc1>
+		<Desc1>Disable a Module and Alter the MariaDB Columnstore System</Desc1>
 		<Desc2>This command is used to place a Module in an disable state</Desc2>
 		<Desc3>and restart the associated processes the MariaDB Columnstore System. </Desc3>
 		<Arg1>Required: Module-name(s) being placed disable</Arg1>

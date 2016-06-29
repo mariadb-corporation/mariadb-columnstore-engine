@@ -165,7 +165,7 @@ else
 	echo "Package 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
 fi
 
-#setup InfiniDB system logging
+#setup MariaDB Columnstore system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	chmod 777 -R /dev/shm
@@ -183,7 +183,7 @@ else
 	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
 fi
 
-#check if InfiniDB system logging was setup
+#check if MariaDB Columnstore system logging was setup
 cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
 if [ $? -eq 0 ]; then
 	cat /tmp/syslog_install.log
@@ -220,7 +220,7 @@ fi
 
 #log install message
 test -f $installdir/post/functions && . $installdir/post/functions
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** InfiniDB Installed *****"
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
 
 #setup hadoop
 hadoop=`which hadoop 2>/dev/null`
@@ -259,14 +259,14 @@ else
 		if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 export INFINIDB_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure -i $installdir
 
-If you are intending to install InfiniDB without Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export INFINIDB_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
@@ -276,12 +276,12 @@ EOD
 		else
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure
 
-If you are intending to install InfiniDB without Hadoop, the next step is:
+If you are intending to install MariaDB Columnstore without Hadoop, the next step is:
 
 $installdir/bin/postConfigure
 
@@ -298,14 +298,14 @@ EOD
 			if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 export INFINIDB_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql:$libpath
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure -i $installdir
 
-If you are intending to install InfiniDB without Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export INFINIDB_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
@@ -315,12 +315,12 @@ EOD
 			else
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure
 
-If you are intending to install InfiniDB without Hadoop, the next step is:
+If you are intending to install MariaDB Columnstore without Hadoop, the next step is:
 
 $installdir/bin/postConfigure
 
@@ -329,9 +329,9 @@ EOD
 		else
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the Hadoop sanity check did not pass.  
+If you are intending to install MariaDB Columnstore over Hadoop, the Hadoop sanity check did not pass.  
 Most likely there is an environment setup conflict or the hdfs services are down.
-Please Contact InfiniDB Customer Support.
+Please Contact MariaDB Columnstore Customer Support.
 EOD
 		fi
 	fi

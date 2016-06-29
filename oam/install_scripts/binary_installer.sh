@@ -150,7 +150,7 @@ expect {
 set timeout 60
 # check return
 expect {
-	"InfiniDB syslog logging not working" { send_user "ERROR: InfiniDB System logging not setup\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
@@ -304,9 +304,9 @@ if { $INSTALLTYPE == "initial"} {
 }
 
 #
-# check InfiniDB syslog functionality
+# check MariaDB Columnstore syslog functionality
 #
-send_user "Check InfiniDB system logging functionality     "
+send_user "Check MariaDB Columnstore system logging functionality     "
 send " \n"
 send date\n
 send "ssh $USERNAME@$SERVER '$INSTALLDIR/bin/syslogSetup.sh check'\n"
@@ -319,7 +319,7 @@ set timeout 30
 expect {
 	"Logging working" { send_user "DONE" }
 	timeout { send_user "DONE" }
-	"not working" { send_user "WARNING: InfiniDB system logging functionality not working" }
+	"not working" { send_user "WARNING: MariaDB Columnstore system logging functionality not working" }
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }

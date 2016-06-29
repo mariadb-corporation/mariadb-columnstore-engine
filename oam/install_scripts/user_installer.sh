@@ -97,9 +97,9 @@ sleep 60
 
 if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	# 
-	# erase InfiniDB packages
+	# erase MariaDB Columnstore packages
 	#
-	send_user "Erase InfiniDB Packages on Module           "
+	send_user "Erase MariaDB Columnstore Packages on Module           "
 	send "ssh $USERNAME@$SERVER '$PKGERASE ;$PKGERASE1 dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
@@ -125,7 +125,7 @@ if { $INSTALLTYPE == "uninstall" } { exit 0 }
 #
 set timeout 30
 #expect -re {[$#] }
-send_user "Copy new InfiniDB Packages to Module              "
+send_user "Copy new MariaDB Columnstore Packages to Module              "
 send "ssh $USERNAME@$SERVER 'rm -f /root/mariadb-columnstore-*.$PKGTYPE'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -201,9 +201,9 @@ sleep 5
 #
 if { $INSTALLTYPE == "initial"} {
 	#
-	# copy over InfiniDB config file
+	# copy over MariaDB Columnstore config file
 	#
-	send_user "Copy InfiniDB Config file to Module              "
+	send_user "Copy MariaDB Columnstore Config file to Module              "
 	send "scp $INSTALLDIR/etc/*  $USERNAME@$SERVER:$INSTALLDIR/etc/.\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
@@ -247,9 +247,9 @@ if { $INSTALLTYPE == "initial"} {
 	#sleep to make sure it's finished
 	sleep 5
 	#
-	# copy over InfiniDB OS files
+	# copy over MariaDB Columnstore OS files
 	#
-	send_user "Copy InfiniDB OS files to Module                 "
+	send_user "Copy MariaDB Columnstore OS files to Module                 "
 	send "scp $INSTALLDIR/local/etc/$MODULE/*  $USERNAME@$SERVER:$INSTALLDIR/local/.\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
@@ -294,10 +294,10 @@ if { $INSTALLTYPE == "initial"} {
 }
 
 #
-# check InfiniDB syslog functionality
+# check MariaDB Columnstore syslog functionality
 #
 
-send_user "Check InfiniDB system logging functionality     "
+send_user "Check MariaDB Columnstore system logging functionality     "
 send " \n"
 send date\n
 send "ssh $USERNAME@$SERVER '$BASH $INSTALLDIR/bin/syslogSetup.sh check'\n"
@@ -312,7 +312,7 @@ set timeout 30
 expect {
 	"Logging working" { send_user "DONE" }
 	timeout { send_user "DONE" }
-	"not working" { send_user "WARNING: InfiniDB system logging functionality not working" }
+	"not working" { send_user "WARNING: MariaDB Columnstore system logging functionality not working" }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 }
 send_user "\n"

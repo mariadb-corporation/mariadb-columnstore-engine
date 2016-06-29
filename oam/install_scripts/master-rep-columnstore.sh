@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-# generic InfiniDB Master Replication script.
+# generic MariaDB Columnstore Master Replication script.
 #
 # Notes: This script gets run by ProcMon during installs and upgrades:
 

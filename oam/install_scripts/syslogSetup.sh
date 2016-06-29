@@ -75,7 +75,7 @@ fi
 if [ "$daemon" = "nodaemon" ]; then
 	echo ""
 	echo "*** No System Logging Application found (syslog, rsyslog, or syslog-ng)"
-	echo "*** For InfiniDB System Logging functionality, install a System Logging package and reinstall InfiniDB"
+	echo "*** For MariaDB Columnstore System Logging functionality, install a System Logging package and reinstall MariaDB Columnstore"
 	echo ""
 	exit 1
 fi
@@ -136,7 +136,7 @@ elif [ "$daemon" = "syslog" ]; then
 else
 	echo ""
 	echo "*** No System Logging Application found (syslog, rsyslog, or syslog-ng)"
-	echo "*** For InfiniDB System Logging functionality, install a System Logging package and reinstall InfiniDB"
+	echo "*** For MariaDB Columnstore System Logging functionality, install a System Logging package and reinstall MariaDB Columnstore"
 	echo ""
 	exit 1
 fi
@@ -226,14 +226,14 @@ fi
 check() {
 test -f $installdir/post/functions && . $installdir/post/functions
 number=$RANDOM
-cplogger -i 100 "InfiniDB Log Test: $number"
+cplogger -i 100 "MariaDB Columnstore Log Test: $number"
 sleep 3
-egrep -qs "InfiniDB Log Test: $number" /var/log/mariadb/columnstore/info.log
+egrep -qs "MariaDB Columnstore Log Test: $number" /var/log/mariadb/columnstore/info.log
 if [ $? -eq 0 ]; then
-	echo "InfiniDB System Logging working"
+	echo "MariaDB Columnstore System Logging working"
 	exit 0
 else
-	echo "InfiniDB System Logging not working"
+	echo "MariaDB Columnstore System Logging not working"
 	exit 1
 fi
 }

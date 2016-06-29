@@ -118,7 +118,7 @@ fi
 # delete core files
 #rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1
 
-#uninstall InfiniDB system logging
+#uninstall MariaDB Columnstore system logging
 if [ -x $installdir/bin/syslogSetup.sh ]; then
 	if [ $user = "root" ]; then
 		$installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
