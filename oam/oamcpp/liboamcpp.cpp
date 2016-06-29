@@ -1371,7 +1371,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
+			return;
 
 #ifdef _MSC_VER
         // TODO: Remove when we create OAM for Windows
@@ -2093,7 +2093,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
+			return;
 
         ProcessStatus processstatus;
         systemprocessstatus.processstatus.clear();
@@ -2196,12 +2196,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
-
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
+			return;
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -2299,7 +2294,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
+			return;
 
 		//send and wait for ack and resend if not received
 		//retry 5 time max
@@ -2819,7 +2814,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
+			return;
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -4828,7 +4823,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
+			return false;
 
 		int returnStatus;
 		// We assume that moduleName is a valid pm
@@ -9246,7 +9241,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return API_CONN_REFUSED;
+			return;
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
