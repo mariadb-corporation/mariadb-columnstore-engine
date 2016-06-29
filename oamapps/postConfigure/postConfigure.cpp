@@ -1867,7 +1867,7 @@ int main(int argc, char *argv[])
 									callFree(pcommand);
 								}
 	
-								if (newModuleIPAddr == "127.0.0.1" || newModuleIPAddr == "0.0.0.0") {
+								if (newModuleIPAddr == "127.0.0.1" || newModuleIPAddr == "0.0.0.0" || || newModuleIPAddr == "128.0.0.1") {
 									cout << endl << newModuleIPAddr + " is an Invalid IP Address for a multi-server system, please re-enter" << endl << endl;
 									newModuleIPAddr = "unassigned";
 									if ( noPrompting )
