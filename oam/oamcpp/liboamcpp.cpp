@@ -4836,7 +4836,7 @@ namespace oam
 	
 		string cmdLine = "ping ";
 		string cmdOption = " -w 1 >> /dev/null";
-		string cmd = cmdLine + IPAddr + cmdOption;
+		cmd = cmdLine + IPAddr + cmdOption;
 		if ( system(cmd.c_str()) != 0 ) {
 			//ping failure
 			try{
