@@ -2814,7 +2814,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+			return NULL;
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
