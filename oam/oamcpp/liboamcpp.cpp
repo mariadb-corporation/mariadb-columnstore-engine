@@ -8697,6 +8697,11 @@ namespace oam
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string argument1,
         const std::string argument2, int timeout)
     {
+	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+	system(cmd.c_str());
+	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		return API_CONN_REFUSED;
+
         int returnStatus = API_SUCCESS;           //default
         ByteStream msg;
         ByteStream receivedMSG;
@@ -8795,6 +8800,11 @@ namespace oam
     int Oam::sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetworkList devicenetworklist,
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string password, const std::string mysqlpw)
     {
+	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+	system(cmd.c_str());
+	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		return API_CONN_REFUSED;
+
         int returnStatus = API_TIMEOUT;           //default
         ByteStream msg;
         ByteStream receivedMSG;
@@ -8906,6 +8916,11 @@ namespace oam
 
     int Oam::sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, AlarmList& alarmlist, const std::string date)
     {
+	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+	system(cmd.c_str());
+	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		return API_CONN_REFUSED;
+
         int returnStatus = API_SUCCESS;           //default
         ByteStream msg;
         ByteStream receivedMSG;
@@ -9004,6 +9019,11 @@ namespace oam
 		GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag,
         const std::string argument1, const std::string argument2, int timeout)
 	{
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
 		int returnStatus = API_STILL_WORKING;
 		ByteStream msg;
 		ByteStream receivedMSG;
