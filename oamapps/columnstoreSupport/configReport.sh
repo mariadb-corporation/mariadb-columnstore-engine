@@ -27,16 +27,42 @@ echo " "
 echo "******************** Configuration/Status Report for ${MODULE} ********************"
 echo " "
 
-if test -f /sbin/chkconfig ; then
+chkconfig=`which chkconfig 2>/dev/null`
+if [ -z $chkconfig ]; then
 	echo "-- chkconfig configuration --"
 	echo " "
-	echo "################# /sbin/chkconfig --list | grep columnstore #################"
+	echo "################# chkconfig --list | grep columnstore #################"
 	echo " "
-	$SUDO /sbin/chkconfig --list | grep columnstore 2>/dev/null
-	echo "################# /sbin/chkconfig --list | grep mysql-Columnstore #################"
+	$SUDO chkconfig --list | grep columnstore 2>/dev/null
+	echo "################# chkconfig --list | grep mysql-Columnstore #################"
 	echo " "
-	$SUDO /sbin/chkconfig --list | grep mysql-Columnstore 2>/dev/null
+	$SUDO chkconfig --list | grep mysql-Columnstore 2>/dev/null
 fi
+
+systemctl=`which systemctl 2>/dev/null`
+if [ -z $systemctl ]; then
+	echo "-- systemctl configuration --"
+	echo " "
+	echo "################# systemctl list-unit-files --type=service | grep columnstore #################"
+	echo " "
+	$SUDO systemctl list-unit-files --type=service | grep columnstore 2>/dev/null
+	echo "################# systemctl list-unit-files --type=service | grep mysql-Columnstore #################"
+	echo " "
+	$SUDO systemctl list-unit-files --type=service | grep mysql-Columnstore 2>/dev/null
+fi
+
+updaterc=`which update-rc.d 2>/dev/null`
+if [ -z $updaterc ]; then
+	echo "-- services configuration --"
+	echo " "
+	echo "################# service --status-all | grep columnstore #################"
+	echo " "
+	$SUDO service --status-all | grep columnstore 2>/dev/null
+	echo "################# service --status-all | grep mysql-Columnstore #################"
+	echo " "
+	$SUDO service --status-all | grep mysql-Columnstore 2>/dev/null
+fi
+
 
 echo " "
 echo "-- fstab Configuration --"
