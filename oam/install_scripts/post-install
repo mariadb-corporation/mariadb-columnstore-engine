@@ -157,22 +157,21 @@ rm -f /etc/init.d/columnstore >/dev/null 2>&1
 #cp $installdir/bin/columnstore /etc/init.d >/dev/null 2>&1
 
 #check which system config to use
+cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+
 systemctl=`which systemctl 2>/dev/null`
-if [ -z $systemctl ]; then
-	$installdir/bin/setConfig -d Installation systemConfig systemctl
+if [ -n "$systemctl" ]; then
 
 	systemctl enable columnstore
 else
 	chkconfig=`which chkconfig 2>/dev/null`
-	if [ -z $chkconfig ]; then
-		$installdir/bin/setConfig -d Installation systemConfig chkconfig
+	if [ -n "$chkconfig" ]; then
 
 		chkconfig --add columnstore > /dev/null 2>&1
 		chkconfig columnstore on > /dev/null 2>&1
 	else
 		updaterc=`which update-rc.d 2>/dev/null`
-		if [ -z $updaterc ]; then
-			$installdir/bin/setConfig -d Installation systemConfig updaterc
+		if [ -n "$updaterc" ]; then
 
 			update-rc.d columnstore defaults 99 > /dev/null 2>&1
 		else
@@ -241,7 +240,7 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 
 
 #setup hadoop
 hadoop=`which hadoop 2>/dev/null`
-if [ -z $hadoop ]; then
+if [ -z "$hadoop" ]; then
 	#check for non-root user
 	if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD

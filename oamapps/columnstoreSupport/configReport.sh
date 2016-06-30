@@ -28,7 +28,7 @@ echo "******************** Configuration/Status Report for ${MODULE} ***********
 echo " "
 
 chkconfig=`which chkconfig 2>/dev/null`
-if [ -z $chkconfig ]; then
+if [ -n "$chkconfig" ]; then
 	echo "-- chkconfig configuration --"
 	echo " "
 	echo "################# chkconfig --list | grep columnstore #################"
@@ -40,7 +40,7 @@ if [ -z $chkconfig ]; then
 fi
 
 systemctl=`which systemctl 2>/dev/null`
-if [ -z $systemctl ]; then
+if [ -n "$systemctl" ]; then
 	echo "-- systemctl configuration --"
 	echo " "
 	echo "################# systemctl list-unit-files --type=service | grep columnstore #################"
@@ -52,7 +52,7 @@ if [ -z $systemctl ]; then
 fi
 
 updaterc=`which update-rc.d 2>/dev/null`
-if [ -z $updaterc ]; then
+if [ -n "$updaterc" ]; then
 	echo "-- services configuration --"
 	echo " "
 	echo "################# service --status-all | grep columnstore #################"

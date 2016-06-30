@@ -128,18 +128,18 @@ fi
 
 #remove the start service command
 systemctl=`which systemctl 2>/dev/null`
-if [ -z $systemctl ]; then
+if [ -n "$systemctl" ]; then
 
 	systemctl disable columnstore
 else
 	chkconfig=`which chkconfig 2>/dev/null`
-	if [ -z $chkconfig ]; then
+	if [ -n "$chkconfig" ]; then
 
 		chkconfig columnstore off > /dev/null 2>&1
 		chkconfig --del columnstore > /dev/null 2>&1
 	else
 		updaterc=`which update-rc.d 2>/dev/null`
-		if [ -z $updaterc ]; then
+		if [ -n "$updaterc" ]; then
 
 			update-rc.d -f columnstore remove > /dev/null 2>&1	
 		fi
