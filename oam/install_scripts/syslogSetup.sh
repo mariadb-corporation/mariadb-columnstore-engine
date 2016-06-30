@@ -59,10 +59,11 @@ fi
 
 #if none running, check installed
 if [ "$daemon" = "nodaemon" ]; then
-	if [ -f /etc/init.d/syslog ]; then
+
+	if [ -f /etc/syslog.conf ]; then
 		daemon="syslog"
 		/etc/init.d/syslog start > /dev/null 2>&1
-	elif [ -f /etc/init.d/rsyslog ]; then
+	elif [ -f /etc/rsyslog.conf ]; then
 		daemon="rsyslog"
 		/etc/init.d/rsyslog start > /dev/null 2>&1
 	elif [ -f /etc/init.d/syslog-ng ]; then
