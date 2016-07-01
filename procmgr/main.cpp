@@ -1647,8 +1647,8 @@ void pingDeviceThread()
 
 								processManager.setSystemState(oam::BUSY_INIT);
 
-								string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
-								system(cmd.c_str());
+								//string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
+								//system(cmd.c_str());
 
 								//send notification
 								oam.sendDeviceNotification(moduleName, MODULE_DOWN);

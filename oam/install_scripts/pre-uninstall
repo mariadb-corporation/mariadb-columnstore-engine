@@ -35,9 +35,7 @@ done
 
 #stop services
 $installdir/bin/columnstore stop > /dev/null 2>&1
-if test -f /etc/init.d/columnstore-Mysql ; then
-	$installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
-fi
+$installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
 if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
 	# remove library config file
@@ -128,12 +126,26 @@ if [ -x $installdir/bin/syslogSetup.sh ]; then
 	fi
 fi
 
-if [ -x /sbin/chkconfig ]; then
-	/sbin/chkconfig columnstore off > /dev/null 2>&1
-	/sbin/chkconfig --del columnstore > /dev/null 2>&1
-elif [ -x /usr/sbin/update-rc.d ]; then
-	/usr/sbin/update-rc.d -f columnstore remove > /dev/null 2>&1
+#remove the start service command
+systemctl=`which systemctl 2>/dev/null`
+if [ -n "$systemctl" ]; then
+
+	systemctl disable columnstore
+else
+	chkconfig=`which chkconfig 2>/dev/null`
+	if [ -n "$chkconfig" ]; then
+
+		chkconfig columnstore off > /dev/null 2>&1
+		chkconfig --del columnstore > /dev/null 2>&1
+	else
+		updaterc=`which update-rc.d 2>/dev/null`
+		if [ -n "$updaterc" ]; then
+
+			update-rc.d -f columnstore remove > /dev/null 2>&1	
+		fi
+	fi
 fi
+
 
 if [ $quiet != 1 ]; then
 	#make copy of Columnstore.xml

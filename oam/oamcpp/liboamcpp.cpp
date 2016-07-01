@@ -8037,9 +8037,9 @@ namespace oam
 			system(cmd.c_str());
 
 			if (user == 0)
-				cmd = "/etc/init.d/" + systemlog + " " + action + " > /dev/null 2>&1";
+				cmd = "/service " + systemlog + " " + action + " > /dev/null 2>&1";
 			else
-				cmd = "sudo /etc/init.d/" + systemlog + " " + action + " > /dev/null 2>&1";
+				cmd = "sudo service" + systemlog + " " + action + " > /dev/null 2>&1";
 		}
 		// take action on syslog service
 		writeLog("syslogAction cmd: " + cmd, LOG_TYPE_DEBUG );
@@ -8240,12 +8240,17 @@ namespace oam
 					// retry failure
 					writeLog("glusterctl: GLUSTER_WHOHAS: failure, retrying (restarting gluster) " + msg, LOG_TYPE_ERROR );
 
-					string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
+					string cmd = "service glusterd restart > /dev/null 2>&1";
 					if (user != 0)
 						cmd = "sudo " + cmd;
 
 					system(cmd.c_str());
 
+					string cmd = "systemctrl restart glusterd > /dev/null 2>&1";
+					if (user != 0)
+						cmd = "sudo " + cmd;
+
+					system(cmd.c_str());
 					sleep(1);
 				}
 
