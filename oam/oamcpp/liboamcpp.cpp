@@ -8246,7 +8246,7 @@ namespace oam
 
 					system(cmd.c_str());
 
-					string cmd = "systemctrl restart glusterd > /dev/null 2>&1";
+					cmd = "systemctrl restart glusterd > /dev/null 2>&1";
 					if (user != 0)
 						cmd = "sudo " + cmd;
 
