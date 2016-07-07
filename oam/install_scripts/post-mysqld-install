@@ -79,8 +79,6 @@ chmod -R og-rw $mysql_datadir/mysql
 # Change permissions again to fix any new files.
 chown -R $user.$user $installdir/mysql
 
-#test -e /etc/init.d/mysql-Columnstore || cp $installdir/mysql/mysql-Columnstore /etc/init.d >/dev/null 2>&1
-
 if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1.0.0
 	libudfsdk=$installdir/lib/libudf_mysql.so.1.0.0
