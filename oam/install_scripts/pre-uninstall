@@ -82,7 +82,6 @@ rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
 rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
 
 # delete Mariab Columnstore shared memory segments
-pkill -9 ProcMon
 $installdir/bin/clearShm  > /dev/null 2>&1
 
 # delete prat files
@@ -120,7 +119,6 @@ fi
 if [ -x $installdir/bin/syslogSetup.sh ]; then
 	if [ $user = "root" ]; then
 		$installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
-		rm -f /etc/init.d/columnstore > /dev/null 2>&1
 	else
 		sudo $installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
 	fi
@@ -130,18 +128,21 @@ fi
 systemctl=`which systemctl 2>/dev/null`
 if [ -n "$systemctl" ]; then
 
-	systemctl disable columnstore
+	systemctl disable columnstore >/dev/null 2>&1
+	rm -f /usr/lib/systemd/system/columnstore.service
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then
 
 		chkconfig columnstore off > /dev/null 2>&1
 		chkconfig --del columnstore > /dev/null 2>&1
+		rm -f /etc/init.d/columnstore > /dev/null 2>&1
 	else
 		updaterc=`which update-rc.d 2>/dev/null`
 		if [ -n "$updaterc" ]; then
 
-			update-rc.d -f columnstore remove > /dev/null 2>&1	
+			update-rc.d -f columnstore remove > /dev/null 2>&1
+			rm -f /etc/init.d/columnstore > /dev/null 2>&1	
 		fi
 	fi
 fi
