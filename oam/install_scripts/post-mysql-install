@@ -68,7 +68,7 @@ for arg in "$@"; do
 done
 
 #run to make sure library paths are setup
-ldconfig
+sudo ldconfig
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export INFINIDB_INSTALL_DIR=$installdir
