@@ -2848,7 +2848,7 @@ int main(int argc, char *argv[])
 			}
 
 			//check if pkgs are located in $HOME directory
-			string version = systemsoftware.Version + "*" + systemsoftware.Release;
+			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType != "binary") {
 				string separator = "-";
 				if ( EEPackageType == "deb" )
