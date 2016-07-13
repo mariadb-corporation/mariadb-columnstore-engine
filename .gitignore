@@ -5,6 +5,7 @@
 *.a
 *.o
 *.lib
+*.mk
 *.sa
 *.so
 *.lo
