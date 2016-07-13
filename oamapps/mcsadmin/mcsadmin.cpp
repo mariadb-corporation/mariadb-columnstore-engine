@@ -3147,7 +3147,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLRep == "y" && MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "MySQL Replication is enabled, is there a 'MySQL' Password configured in " + HOME + "/.my.cnf  (y,n): ";
+			string prompt = "MariaDB Columnstore Replication is enabled, is there a 'MariaDB Columnstore' Password configured in " + HOME + "/.my.cnf  (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -4747,7 +4747,7 @@ int processCommand(string* arguments)
 			break;
 		}
 
-        case 46: // enableMySQLReplication
+        case 46: // enableReplication
         {
 		string MySQLRep;
 		try {
@@ -4756,7 +4756,7 @@ int processCommand(string* arguments)
 		catch(...) {}
 
 		if ( MySQLRep == "y" ) {
-			string warning = "MySQL Replication Feature is already enabled";
+			string warning = "MariaDB Columnstore Replication Feature is already enabled";
 			// confirm request
 			if (confirmPrompt(warning))
 				break;
@@ -4782,7 +4782,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MySQL' Password configured on the MySQL Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
+			string prompt = "Is there a 'MariaDB Columnstore' Password configured on the MariaDB Columnstore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -4804,7 +4804,7 @@ int processCommand(string* arguments)
                 try
                 {
                     	oam.enableMySQLRep(password);
-			cout << endl << "   Successful Enabling of MySQL Replication " << endl << endl;
+			cout << endl << "   Successful Enabling of MariaDB Columnstore Replication " << endl << endl;
 
 			//display Primary UM Module / Master Node
 			string PrimaryUMModuleName;
@@ -4813,11 +4813,11 @@ int processCommand(string* arguments)
 			}
 			catch(...) {}
 
-			cout << "   MySQL Replication Master Node is " << PrimaryUMModuleName << endl << endl;
+			cout << "   MariaDB Columnstore Replication Master Node is " << PrimaryUMModuleName << endl << endl;
                 }
                 catch (exception& e)
                 {
-                    cout << endl << "**** enableMySQLRep Failed :  " << e.what() << endl;
+                    cout << endl << "**** enableRep Failed :  " << e.what() << endl;
                 }
         	break;
 	}
@@ -5715,7 +5715,7 @@ int processCommand(string* arguments)
             break;
 		}
 
-        case 51: // disableMySQLReplication
+        case 51: // disableReplication
         {
 		string MySQLRep;
 		try {
@@ -5724,7 +5724,7 @@ int processCommand(string* arguments)
 		catch(...) {}
 
 		if ( MySQLRep == "n" ) {
-			string warning = "MySQL Replication Feature is already disable";
+			string warning = "MariaDB Columnstore Replication Feature is already disable";
 			// confirm request
 			if (confirmPrompt(warning))
 				break;
@@ -5738,7 +5738,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MySQL' Password configured on the MySQL Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
+			string prompt = "Is there a 'MariaDB Columnstore' Password configured on the MariaDB Columnstore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -5760,11 +5760,11 @@ int processCommand(string* arguments)
                 try
                 {
                     oam.disableMySQLRep();
-			cout << endl << "   Successful Disable of MySQL Replication " << endl;
+			cout << endl << "   Successful Disable of MariaDB Columnstore Replication " << endl;
                 }
                 catch (exception& e)
                 {
-                    cout << endl << "**** disableMySQLRep Failed :  " << e.what() << endl;
+                    cout << endl << "**** disableRep Failed :  " << e.what() << endl;
                 }
 
             	break;
@@ -7866,13 +7866,13 @@ void printSystemStatus()
 				if ( moduletypeconfig.ModuleCount > 1 )
 				{
 					if ( PrimaryUMModuleName != oam::UnassignedName )
-						cout << "Primary Front-End MySQL Module is '" << PrimaryUMModuleName << "'" << endl;
+						cout << "Primary Front-End MariaDB Columnstore Module is '" << PrimaryUMModuleName << "'" << endl;
 				}
 			}
 			else
 			{
 				if ( PrimaryUMModuleName != oam::UnassignedName )
-					cout << "Primary Front-End MySQL Module is '" << PrimaryUMModuleName << "'" << endl;
+					cout << "Primary Front-End MariaDB Columnstore Module is '" << PrimaryUMModuleName << "'" << endl;
 			}
 		}
 
@@ -7894,7 +7894,7 @@ void printSystemStatus()
 		catch(...) {}
 
 		if ( MySQLRep == "y" )
-			cout << "MySQL Replication Feature is enabled" << endl << endl;
+			cout << "MariaDB Columnstore Replication Feature is enabled" << endl << endl;
 	}
 	catch (exception& e)
 	{

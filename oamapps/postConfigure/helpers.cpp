@@ -275,11 +275,11 @@ void mysqlSetup()
 			string mysqlpw = oam::UnassignedName;
 			try {
 				mysqlpw = oam.getMySQLPassword(false);
-				cout << "NOTE: Using MySQL password from " + HOME + "/.my.cnf" << endl;
+				cout << "NOTE: Using MariaDB Columnstore password from " + HOME + "/.my.cnf" << endl;
 			}
 			catch (...)
 			{
-				cout << endl << "MariDB Columnstore-MySQL login failure, password is assigned. Need MySQL password configuration file " + HOME + "/.my.cnf on local module" << endl;
+				cout << endl << "MariDB Columnstore login failure, password is assigned. Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on local module" << endl;
 				exit(1);
 			}
 
@@ -294,7 +294,7 @@ void mysqlSetup()
 		else
 		{
 			if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
-				cout << endl << "ERROR: MySQL runtime error, exit..." << endl << endl;
+				cout << endl << "ERROR: MariaDB Columnstore runtime error, exit..." << endl << endl;
 				system("cat /tmp/idbmysql.log");
 				exit (1);
 			}
@@ -474,7 +474,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg1, requestID, 600 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << "ERROR: Error return in running the MySQL Master DB Distribute, check /tmp/master-dist.logs on " << masterModule << endl;
+								cout << "ERROR: Error return in running the MariaDB Columnstore Master DB Distribute, check /tmp/master-dist.logs on " << masterModule << endl;
 								return returnStatus;
 							}
 
@@ -486,7 +486,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << "ERROR: Error return in running the MySQL Master replication, check /tmp/master-rep*.logs on " << masterModule << endl;
+								cout << "ERROR: Error return in running the MariaDB Columnstore Master replication, check /tmp/master-rep*.logs on " << masterModule << endl;
 								return returnStatus;
 							}
 
@@ -517,7 +517,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << "ERROR: Error return in running the MySQL Slave replication, check /tmp/slave-rep*.logs on " << (*pt).DeviceName << endl;
+								cout << "ERROR: Error return in running the MariaDB Columnstore Slave replication, check /tmp/slave-rep*.logs on " << (*pt).DeviceName << endl;
 								return returnStatus;
 							}
 
@@ -705,12 +705,12 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 			int size = oldFile.tellg();
 			if ( size != 0 ) {
 				if ( noPrompting ) {
-					cout << endl << "The mysqld port of '" + mysqlPort + "' is already in-use" << endl;
+					cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use" << endl;
 					cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
 					exit(1);
 				}
 
-				cout << "The mysqld port of '" + mysqlPort + "' is already in-use on local server" << endl;
+				cout << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use on local server" << endl;
 
 				while(true)
 				{
@@ -725,7 +725,7 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 	
 					if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
 					{
-						cout << "   ERROR: Invalid MySQL Port ID supplied, must be between 1000-9999" << endl;
+						cout << "   ERROR: Invalid MariaDB Columnstore Port ID supplied, must be between 1000-9999" << endl;
 					}
 					else
 						break;
@@ -781,7 +781,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 				int size = oldFile.tellg();
 				if ( size != 0 ) {
 					if ( noPrompting ) {
-						cout << endl << "The mysqld port of '" + mysqlPort + "' is already in-use" << endl;
+						cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use" << endl;
 						cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
 						exit(1);
 					}
@@ -812,7 +812,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) == 0) {
 						if ( noPrompting ) {
-							cout << endl << "The mysqld port of '" + mysqlPort + "' is already in-use on " << remoteModuleName << endl;
+							cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use on " << remoteModuleName << endl;
 							cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
 							cout << "exiting..." << endl;
 							exit(1);
@@ -830,7 +830,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 
 		if ( inUse )
 		{
-			cout << endl << "The mysqld port of '" + mysqlPort + "' is already in-use on " << inUseServer << endl;
+			cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use on " << inUseServer << endl;
 
 			while(true)
 			{
@@ -845,7 +845,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 
 				if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
 				{
-					cout << "   ERROR: Invalid MySQL Port ID supplied, must be between 1000-9999" << endl;
+					cout << "   ERROR: Invalid MariaDB Columnstore Port ID supplied, must be between 1000-9999" << endl;
 				}
 				else
 					break;

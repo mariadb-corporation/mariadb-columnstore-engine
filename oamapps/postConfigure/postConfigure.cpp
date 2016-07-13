@@ -288,9 +288,9 @@ int main(int argc, char *argv[])
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
 			cout << "	 If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
-			cout << "   -mp MySQL Password" << endl;
+			cout << "   -mp MariaDB Columnstore Password" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
-			cout << "   -port MySQL Port Address" << endl;
+			cout << "   -port MariaDB Columnstore Port Address" << endl;
 			exit (0);
 		}
       		else if( string("-s") == argv[i] )
@@ -326,12 +326,12 @@ int main(int argc, char *argv[])
 		else if( string("-mp") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
-				cout << "   ERROR: MySql Password not provided" << endl;
+				cout << "   ERROR: MariaDB Columnstore Password not provided" << endl;
 				exit (1);
 			}
 			mysqlpw = argv[i];
 			if ( mysqlpw.find("-") != string::npos ) {
-				cout << "   ERROR: Valid MySQL Password not provided" << endl;
+				cout << "   ERROR: Valid MariaDB Columnstore Password not provided" << endl;
 				exit (1);
 			}			
 			if ( mysqlpw == "dummymysqlpw" )
@@ -357,13 +357,13 @@ int main(int argc, char *argv[])
 		else if( string("-port") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
-				cout << "   ERROR: MySQL Port ID not supplied" << endl;
+				cout << "   ERROR: MariaDB Columnstore Port ID not supplied" << endl;
 				exit (1);
 			}
 			mysqlPort = argv[i];
 			if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
 			{
-				cout << "   ERROR: Invalid MySQL Port ID supplied, must be between 1000-9999" << endl;
+				cout << "   ERROR: Invalid MariaDB Columnstore Port ID supplied, must be between 1000-9999" << endl;
 				exit (1);
 			}
 		}
@@ -1045,7 +1045,7 @@ int main(int argc, char *argv[])
 		cout << endl << "NOTE: Local Query Feature is enabled" << endl;
 
 	if ( mysqlRep )
-		cout << endl << "NOTE: MySQL Replication Feature is enabled" << endl;
+		cout << endl << "NOTE: MariaDB Columnstore Replication Feature is enabled" << endl;
 
 	//Write out Updated System Configuration File
 	try {
@@ -2735,7 +2735,7 @@ int main(int argc, char *argv[])
 
 	if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM && pmNumber == 1) {
 		//run the mysql / mysqld setup scripts
-		cout << endl << "===== Running the MariaDB Columnstore MySQL setup scripts =====" << endl << endl;
+		cout << endl << "===== Running the MariaDB Columnstore MariaDB Columnstore setup scripts =====" << endl << endl;
 
 		checkMysqlPort(mysqlPort, sysConfig);
 
@@ -2957,7 +2957,7 @@ int main(int argc, char *argv[])
 			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 			{
-				cout << endl << "===== Running the MariaDB Columnstore MySQL setup scripts =====" << endl << endl;
+				cout << endl << "===== Running the MariaDB Columnstore MariaDB Columnstore setup scripts =====" << endl << endl;
 
 				// call the mysql setup scripts
 				mysqlSetup();
@@ -3047,7 +3047,7 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore-MySQL login failure, password is assigned. Need MySQL password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB Columnstore  login failure, password is assigned. Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 
@@ -3063,20 +3063,20 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore-MySQL login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB Columnstore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 								}
 								else
 								{
 									if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
-										cout << endl << "ERROR: MySQL runtime error, exit..." << endl << endl;
+										cout << endl << "ERROR: MariaDB Columnstore runtime error, exit..." << endl << endl;
 										system("cat /tmp/idbmysql.log");
 										exit (1);
 									}
 									else
 									{
-										cout << endl << "Additional MySQL Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
+										cout << endl << "Additional MariaDB Columnstore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
 
 										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
 										int rtnCode = system(cmd.c_str());
@@ -3435,7 +3435,7 @@ int main(int argc, char *argv[])
 	
 		string start = "y";
 		cout << "System Installation is complete." << endl;
-		cout << "If an error occurred while running the MariaDB Columnstore MySQL setup scripts," << endl;
+		cout << "If an error occurred while running the MariaDB Columnstore setup scripts," << endl;
 		cout << "this will need to be corrected and postConfigure will need to be re-run." << endl << endl;
 		while(true)
 		{
@@ -3519,7 +3519,7 @@ int main(int argc, char *argv[])
 			( mysqlRep && (umNumber > 1) ) ||
 			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
 		{
-			cout << endl << "Run MySQL Replication Setup.. ";
+			cout << endl << "Run MariaDB Columnstore Replication Setup.. ";
 			cout.flush();
 
 			//send message to procmon's to run upgrade script
@@ -3539,7 +3539,7 @@ int main(int argc, char *argv[])
 
 		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
 
-		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore MySQL console" << endl;
+		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB Columnstore Admin console" << endl << endl;
 	}
 	else
@@ -4318,11 +4318,11 @@ bool storageSetup(bool amazonInstall)
 		// get Frontend Data storage type
 		//
 	
-		cout << "----- Setup User Module MySQL Data Storage Mount Configuration -----" << endl << endl;
+		cout << "----- Setup User Module MariaDB Columnstore Data Storage Mount Configuration -----" << endl << endl;
 	
 		cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
-		cout << "  'internal' -    This is specified when a local disk is used for the MySQL Data storage." << endl << endl;
-		cout << "  'external' -    This is specified when the MySQL Data directory is externally mounted." << endl << endl;
+		cout << "  'internal' -    This is specified when a local disk is used for the Data storage." << endl << endl;
+		cout << "  'external' -    This is specified when the MariaDB Columnstore Data directory is externally mounted." << endl << endl;
 	
 		try {
 			UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");

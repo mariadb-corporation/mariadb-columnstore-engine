@@ -758,7 +758,7 @@ int main(int argc, char *argv[])
 		if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
 		{
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -803,7 +803,7 @@ int main(int argc, char *argv[])
 		if ( calpont_rpm1 != "dummy.rpm" ) {
 
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -823,7 +823,7 @@ int main(int argc, char *argv[])
 			//
 
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -865,7 +865,7 @@ int main(int argc, char *argv[])
 
 		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
 
-		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore MySQL console" << endl;
+		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB Columnstore Admin console" << endl << endl;
 	}
 	else
