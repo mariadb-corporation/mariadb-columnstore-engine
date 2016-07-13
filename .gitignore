@@ -27,6 +27,7 @@ config.status
 stamp-h1
 export/
 libtool
+libnetsnmpmibs-prefix
 buildFlags
 dbcon/ddlpackage/ddl-gram.cpp
 dbcon/ddlpackage/ddl-gram.h
