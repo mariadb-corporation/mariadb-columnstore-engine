@@ -33,6 +33,10 @@ dbcon/ddlpackage/ddl-gram.cpp
 dbcon/ddlpackage/ddl-gram.h
 dbcon/dmlpackage/dml-gram.cpp
 dbcon/dmlpackage/dml-gram.h
+dbcon/ddlpackage/ddl-scan.cpp
+dbcon/ddlpackage/ddl-scan.h
+dbcon/dmlpackage/dml-scan.cpp
+dbcon/dmlpackage/dml-scan.h
 ddlproc/DDLProc
 decomsvr/DecomSvr
 dmlproc/DMLProc
@@ -45,6 +49,7 @@ oamapps/postConfigure/installer
 oamapps/postConfigure/mycnfUpgrade
 oamapps/postConfigure/patchInstaller
 oamapps/postConfigure/postConfigure
+oamapps/postConfigure/getMySQLpw
 oamapps/sendtrap/sendtrap
 oamapps/serverMonitor/ServerMonitor
 oamapps/traphandler/trapHandler
