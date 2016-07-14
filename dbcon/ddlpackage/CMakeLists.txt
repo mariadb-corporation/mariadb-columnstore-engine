@@ -2,23 +2,11 @@
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT ddl-gram.cpp ddl-gram-temp.cpp
+    OUTPUT ddl-gram.cpp ddl-scan.cpp
     COMMAND ./ddl-gram.sh ${BISON_EXECUTABLE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ddl.y
-)
-ADD_CUSTOM_TARGET(
-    ddlgramSRC ALL DEPENDS ddl-gram-temp.cpp
-)
-
-ADD_CUSTOM_COMMAND(
-    OUTPUT ddl-scan.cpp ddl-scan-temp.cpp
     COMMAND ./ddl-scan.sh ${LEX_EXECUTABLE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS ddl.l
-)
-ADD_CUSTOM_TARGET(
-    ddlscanSRC ALL DEPENDS ddl-scan-temp.cpp
+    DEPENDS ddl.y ddl.l
 )
 
 ########### next target ###############
@@ -44,7 +32,7 @@ set(ddlpackage_LIB_SRCS
 
 add_library(ddlpackage SHARED ${ddlpackage_LIB_SRCS})
 
-add_dependencies(ddlpackage ddlgramSRC ddlscanSRC)
+add_dependencies(ddlpackage ddl-gram.cpp ddl-scan.cpp)
 
 set_target_properties(ddlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
