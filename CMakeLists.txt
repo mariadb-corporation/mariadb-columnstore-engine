@@ -229,16 +229,6 @@ SET(CMAKE_C_FLAGS "-g0 -O3 -fno-strict-aliasing -Wall -DHAVE_CONFIG_H")
 #SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3 -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H")
 #SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -O0 -Wall -D _DEBUG -DHAVE_CONFIG_H")
 
-check_cxx_compiler_flag(-std=c++11 HAVE_STDCXX11)
-check_cxx_compiler_flag(-std=c++0x HAVE_STDCXX0X)
-if (HAVE_STDCXX11)
-  set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-elseif (HAVE_STDCXX0X)
-  set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
-else ()
-  message(FATAL_ERROR "${CMAKE_CXX_COMPILER} doesn't support -std=c++11 or -std=c++0x, you need one that does.")
-endif ()
-
 #AC_SUBST([idb_ldflags],['-Wl,--rpath -Wl,${idbinstall}/lib -Wl,--no-as-needed -Wl,--add-needed'])
 SET (ENGINE_LDFLAGS    "-Wl,--rpath -Wl,${INSTALL_ENGINE}/lib -Wl,--no-as-needed -Wl,--add-needed")  
 
