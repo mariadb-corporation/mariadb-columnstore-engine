@@ -25,4 +25,3 @@ set_target_properties(mysqlcl_idb PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS mysqlcl_idb DESTINATION ${ENGINE_LIBDIR})
 
-
