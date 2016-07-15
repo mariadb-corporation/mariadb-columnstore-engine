@@ -18,5 +18,5 @@ add_library(idbdatafile SHARED ${idbdatafile_LIB_SRCS})
 
 set_target_properties(idbdatafile PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-#install(TARGETS idbdatafile DESTINATION ${INSTALL_TARGETS_DEFAULT_ARGS})
+install(TARGETS idbdatafile DESTINATION ${INSTALL_TARGETS_DEFAULT_ARGS})
 
