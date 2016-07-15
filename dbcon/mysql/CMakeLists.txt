@@ -22,6 +22,8 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 add_library(calmysql SHARED ${libcalmysql_SRCS})
 
+target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS calmysql DESTINATION ${ENGINE_LIBDIR})
