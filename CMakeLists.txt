@@ -313,10 +313,11 @@ ExternalProject_Add(
   libnetsnmpmibs
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/net-snmp/net-snmp
   CONFIGURE_COMMAND ./configure --prefix=${INSTALL_ENGINE} --with-mib-modules=disman/event-mib --with-cc=gcc --with-logfile=${INSTALL_ENGINE}/log/snmpd.log --with-sys-location=Unknown --with-sys-contact=root@localhost.localdomain --with-default-snmp-version=3 --with-persistent-directory=${INSTALL_ENGINE}/var/net-snmp --without-openssl --with-ldflags=-Wl,-rpath\ -Wl,${INSTALL_ENGINE}/lib
-  BUILD_COMMAND ""
-  INSTALL_COMMAND make
+  BUILD_COMMAND make
+  INSTALL_COMMAND ""
   BUILD_IN_SOURCE 1
 )
+INSTALL ( CODE "EXECUTE_PROCESS(COMMAND make install WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/net-snmp/net-snmp)")
 
 ADD_SUBDIRECTORY(utils)
 ADD_SUBDIRECTORY(oam/oamcpp)

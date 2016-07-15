@@ -32,7 +32,7 @@ install(FILES syscatalog_mysql.sql
               calshowprocesslist.sql 
               my.cnf
               DESTINATION ${ENGINE_MYSQLDIR})
-install(FILES install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
+install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
               DESTINATION ${ENGINE_MYSQLDIR})
 
 
