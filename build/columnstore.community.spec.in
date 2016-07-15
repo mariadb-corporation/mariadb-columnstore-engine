@@ -126,7 +126,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/bin/amazonInstaller
 /usr/local/mariadb/columnstore/bin/remote_command_verify.sh
 /usr/local/mariadb/columnstore/bin/disable-rep-columnstore.sh
-
+/usr/local/mariadb/columnstore/bin/columnstore.service
 
 #
 %config /usr/local/mariadb/columnstore/etc/Columnstore.xml
