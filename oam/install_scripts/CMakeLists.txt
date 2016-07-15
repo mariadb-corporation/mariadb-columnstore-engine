@@ -33,7 +33,8 @@ install(PROGRAMS post-install
                 slave-rep-columnstore.sh 
                 disable-rep-columnstore.sh  
                 myCnf-include-args.text 
-                myCnf-exclude-args.text  
+                myCnf-exclude-args.text
+                columnstore.service
                 DESTINATION ${ENGINE_BINDIR})
                 
 install(FILES  module DESTINATION ${ENGINE_LOCALDIR})
