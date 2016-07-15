@@ -1,5 +1,5 @@
 
-install(FILES  post-install 
+install(PROGRAMS post-install 
                 pre-uninstall 
                 remote_command.sh  
                 columnstoreLogRotate 

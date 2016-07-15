@@ -12,5 +12,5 @@ target_link_libraries(setConfig ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
 install(TARGETS setConfig DESTINATION ${ENGINE_BINDIR})
 
-install(FILES configxml.sh DESTINATION ${ENGINE_BINDIR})
+install(PROGRAMS configxml.sh DESTINATION ${ENGINE_BINDIR})
 
