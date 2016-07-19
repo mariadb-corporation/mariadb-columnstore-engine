@@ -130,7 +130,7 @@ module_list_o= \
 	hardware/cpu/cpu_linux.o \
 	snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_interface.o \
 	snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_data_access.o \
-	host/data_access/swinst_pkginfo.o \
+	host/data_access/swinst_apt.o \
 	host/data_access/swrun_procfs_status.o \
 	if-mib/data_access/interface.o \
 	if-mib/ifTable/ifTable_interface.o \

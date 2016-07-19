@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
 		if (WEXITSTATUS(rtnCode) != 0)
 			cout << "Error: Problem upgrade my.cnf, check /tmp/mycnfUpgrade.log" << endl;
 		else
-			cout << cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
+			cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
 	}
 
 	//check mysql port changes

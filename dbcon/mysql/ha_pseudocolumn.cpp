@@ -1,5 +1,5 @@
 #include <my_config.h>
-#include <cmath>
+//#include <cmath>
 #include <iostream>
 #include <sstream>
 using namespace std;

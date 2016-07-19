@@ -120,7 +120,7 @@ mibgroup_list_ft= \
 	mibgroup/hardware/cpu/cpu_linux.ft \
 	mibgroup/snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_interface.ft \
 	mibgroup/snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_data_access.ft \
-	mibgroup/host/data_access/swinst_pkginfo.ft \
+	mibgroup/host/data_access/swinst_apt.ft \
 	mibgroup/host/data_access/swrun_procfs_status.ft \
 	mibgroup/if-mib/data_access/interface.ft \
 	mibgroup/if-mib/ifTable/ifTable_interface.ft \

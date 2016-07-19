@@ -161,7 +161,7 @@
 #include "mibgroup/hardware/cpu/cpu_linux.h"
 /*#include "mibgroup/snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_interface.h"*/
 /*#include "mibgroup/snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_data_access.h"*/
-/*#include "mibgroup/host/data_access/swinst_pkginfo.h"*/
+/*#include "mibgroup/host/data_access/swinst_apt.h"*/
 /*#include "mibgroup/host/data_access/swrun_procfs_status.h"*/
 #include "mibgroup/if-mib/data_access/interface.h"
 /*#include "mibgroup/if-mib/ifTable/ifTable_interface.h"*/
