@@ -1,5 +1,9 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories( ${ENGINE_COMMON_INCLUDES}
+                     /usr/include/libxml2 
+                     ../../../mysql/include 
+                     ../../../mysql/sql 
+                     ../../../mysql/regex )
 
 
 SET ( libcalmysql_SRCS
@@ -19,6 +23,8 @@ SET ( libcalmysql_SRCS
     ha_pseudocolumn.cpp )
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
+
+set_source_files_properties(ha_calpont.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti -fno-implicit-templates")
 
 add_library(calmysql SHARED ${libcalmysql_SRCS})
 
