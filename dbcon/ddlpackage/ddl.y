@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -43,6 +44,7 @@
    a more recent version of flex.  At the time of this writing, our
    development systems have: flex version 2.5.4
 
+   MCOL-66 Modify to be a reentrant parser
    */
 
 %{
@@ -60,13 +62,15 @@ using namespace ddlpackage;
 /* The user is expect to pass a ParseTree* to grammar_init */
 static ParseTree* parseTree;
 static std::string db_schema;
-int ddllex();
-void ddlerror (char const *error);
+int ddllex(YYSTYPE* ddllval, void* yyscanner);
+void ddlerror (void* yyscanner, char const *error);
 char* copy_string(const char *str);
 %}
 
 %expect 15
-
+%pure-parser
+%lex-param {void * scanner}
+%parse-param {void * scanner}
 %debug
 
  /* Bison uses this to generate a C union definition.  This is used to

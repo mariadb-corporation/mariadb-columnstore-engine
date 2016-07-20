@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -802,6 +803,8 @@ protected:
 	int rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID, uint32_t sessionID);
 	int commitTransaction(uint64_t uniqueId, BRM::TxnID txnID);
 					   
+    // MCOL-66 The DBRM can't handle concurrent DDL					   
+    static boost::mutex dbrmMutex;
 private:
    /** @brief clean beginning and ending glitches and spaces from string
       *

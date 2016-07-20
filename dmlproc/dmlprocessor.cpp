@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-
+   Copyright (C) 2016 MariaDB Corporation 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; version 2 of
@@ -310,7 +310,6 @@ void PackageHandler::run()
 
 	try
 	{
-
 		switch( fPackageType )
 		{
 			case dmlpackage::DML_INSERT:
@@ -785,29 +784,53 @@ void PackageHandler::run()
 
 			ml.logWarningMessage( result.message );
 		}
-		
-		// send back the results
-		messageqcpp::ByteStream results;
-		messageqcpp::ByteStream::octbyte rowCount = result.rowCount;
-		messageqcpp::ByteStream::byte retval = result.result;
-		results << retval;
-		results << rowCount;
-		results << result.message.msg();
-		results << result.tableLockInfo; // ? connector does not get
-		// query stats
-		results << result.queryStats;
-		results << result.extendedStats;
-		results << result.miniStats;
-		result.stats.serialize(results);
-		fIos.write(results);
-		//Bug 5226. dmlprocessor thread will close the socket to mysqld.
-		//if (stmt == "CLEANUP")
-		//	fIos.close();
 	}
+    catch(std::exception& e)
+    {
+        cout << "dmlprocessor.cpp PackageHandler::run() package type(" 
+            << fPackageType << ") exception: " << e.what() << endl;
+        logging::LoggingID lid(21);
+        logging::MessageLog ml(lid);
+        logging::Message::Args args;
+        logging::Message message(1);
+        args.add("dmlprocessor.cpp PackageHandler::run() package type");
+        args.add((uint64_t)fPackageType);
+        args.add(e.what());
+        message.format(args);
+        ml.logErrorMessage(message);
+        result.result=DMLPackageProcessor::COMMAND_ERROR;
+        result.message = message;
+    }
 	catch(...)
 	{
-		fIos.close();
+        logging::LoggingID lid(21);
+        logging::MessageLog ml(lid);
+        logging::Message::Args args;
+        logging::Message message(1);
+        args.add("dmlprocessor.cpp PackageHandler::run() ... exception package type");
+        args.add((uint64_t)fPackageType);
+        message.format(args);
+        ml.logErrorMessage(message);
+        result.result=DMLPackageProcessor::COMMAND_ERROR;
+        result.message = message;
 	}
+    // send back the results
+    messageqcpp::ByteStream results;
+    messageqcpp::ByteStream::octbyte rowCount = result.rowCount;
+    messageqcpp::ByteStream::byte retval = result.result;
+    results << retval;
+    results << rowCount;
+    results << result.message.msg();
+    results << result.tableLockInfo; // ? connector does not get
+    // query stats
+    results << result.queryStats;
+    results << result.extendedStats;
+    results << result.miniStats;
+    result.stats.serialize(results);
+    fIos.write(results);
+    //Bug 5226. dmlprocessor thread will close the socket to mysqld.
+    //if (stmt == "CLEANUP")
+    //	fIos.close();
 }
 
 void PackageHandler::rollbackPending()
@@ -924,15 +947,15 @@ void DMLProcessor::operator()()
 				bs1.reset(new messageqcpp::ByteStream(fIos.read()));
 				//cout << "received from mysql socket " << fIos.getSockID() << endl;
 			}
-			catch (std::exception&)
+			catch (std::exception& ex)
 			{
 				//This is an I/O error from InetStreamSocket::read(), just close and move on...
-				//cout << "runtime error during read on " << fIos.getSockID() << " " << ex.what() << endl;
+				cout << "runtime error during read on " << fIos.getSockID() << " " << ex.what() << endl;
 				bs1->reset();
 			}
 			catch (...)
 			{
-				//cout << "... error during read " << fIos.getSockID() << endl;
+				cout << "... error during read " << fIos.getSockID() << endl;
 				// all this throw does is cause this thread to silently go away. I doubt this is the right
 				//  thing to do...
 				throw;
@@ -940,7 +963,7 @@ void DMLProcessor::operator()()
 
 			if (!bs1 || bs1->length() == 0)
 			{
-				//cout << "Read 0 bytes. Closing connection " << fIos.getSockID() << endl;
+				cout << "Read 0 bytes. Closing connection " << fIos.getSockID() << endl;
 				fIos.close();
 				break;
 			}
@@ -1069,8 +1092,11 @@ void DMLProcessor::operator()()
 				{
 					if (packageType == dmlpackage::DML_COMMAND)
 					{
+                        // MCOL-66 It's possible for a commit or rollback to get here if 
+                        // the timing is just right. Don't destroy its data
+                        messageqcpp::ByteStream bsctrlc(bs1);
 						dmlpackage::CommandDMLPackage commandPkg;
-						commandPkg.read(*(bs1.get()));
+						commandPkg.read(bsctrlc);
 						std::string stmt = commandPkg.get_DMLStatement();
 						boost::algorithm::to_upper(stmt);
 						trim(stmt);
@@ -1288,7 +1314,7 @@ void DMLProcessor::operator()()
 			{
 				if (packageType != dmlpackage::DML_COMMAND)
 				{
-					txnid = sessionManager.getTxnID(sessionID);
+                    txnid = sessionManager.getTxnID(sessionID);
 					if ( !txnid.valid )
 					{
 						txnid = sessionManager.newTxnID(sessionID, true);

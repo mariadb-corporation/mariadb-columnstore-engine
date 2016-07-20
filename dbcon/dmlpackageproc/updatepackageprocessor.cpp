@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -214,6 +215,8 @@ UpdatePackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
 					{
 						result.result = UPDATE_ERROR;
 						logging::Message::Args args;
+						string strOp("update");
+						args.add(strOp);
 						args.add(processName);
 						args.add((uint64_t)processID);
 						args.add(sessionId);

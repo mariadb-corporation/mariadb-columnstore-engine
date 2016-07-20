@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -67,6 +68,18 @@ typedef SqlStatementList ParseTree;
   @endverbatim
  */
 
+/*
+  Instance specific data for use by the scanner. 
+*/
+typedef std::vector<char*> valbuf_t;
+
+struct scan_data
+{
+	/* Handles to the buffer that the lexer uses internally */
+	char* scanbuf;
+	void* scanbufhandle; // This is a YY_BUFFER_STATE defined in ddl-scan.cpp
+	valbuf_t valbuf;
+};
 
 class SqlParser
 {
@@ -102,6 +115,8 @@ protected:
     ParseTree fParseTree;
     int fStatus; ///< return from yyparse() stored here.
     bool fDebug; ///< Turn on bison debugging.
+	void* scanner;   // yyscan_t * needed for re-entrant flex scanner
+	scan_data scanData;
 };
 
 

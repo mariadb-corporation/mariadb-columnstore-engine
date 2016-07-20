@@ -249,7 +249,7 @@ keepGoing:
 		}
 		fStartingColOID = fObjectIDManager.allocOIDs(numColumns+numDictCols+1); //include column, oids,dictionary oids and tableoid
 #ifdef IDB_DDL_DEBUG
-cout << "Create table allocOIDs got the stating oid " << fStartingColOID << endl;
+cout << fTxnid.id << " Create table allocOIDs got the starting oid " << fStartingColOID << endl;
 #endif		
 		if (fStartingColOID < 0)
 		{
@@ -298,12 +298,14 @@ cout << "Create table allocOIDs got the stating oid " << fStartingColOID << endl
 		boost::shared_ptr<messageqcpp::ByteStream> bsIn;
 		boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
 		pmNum = (*dbRootPMMap)[dbRoot];
+        // MCOL-66 The DBRM can't handle concurrent DDL					   
+        boost::mutex::scoped_lock lk(dbrmMutex);
 		try
 		{			
-			fWEClient->write(bytestream, (unsigned)pmNum);
 #ifdef IDB_DDL_DEBUG
-cout << "create table sending We_SVR_WRITE_SYSTABLE to pm " << pmNum << endl;
+cout << fTxnid.id << " create table sending We_SVR_WRITE_SYSTABLE to pm " << pmNum << endl;
 #endif	
+			fWEClient->write(bytestream, (unsigned)pmNum);
 			while (1)
 			{
 				bsIn.reset(new ByteStream());
@@ -320,7 +322,7 @@ cout << "create table sending We_SVR_WRITE_SYSTABLE to pm " << pmNum << endl;
                         errorMsg.clear();
 						*bsIn >> errorMsg;
 #ifdef IDB_DDL_DEBUG
-cout << "Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
+cout << fTxnid.id << "Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
 #endif
 					}
 					break;
@@ -330,7 +332,7 @@ cout << "Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
 		catch (runtime_error& ex) //write error
 		{
 #ifdef IDB_DDL_DEBUG
-cout << "create table got exception" << ex.what() << endl;
+cout << fTxnid.id << " create table got exception" << ex.what() << endl;
 #endif			
 			rc = NETWORK_ERROR;
 			errorMsg = ex.what();
@@ -345,6 +347,9 @@ cout << "create table got unknown exception" << endl;
 		
 		if (rc != 0)
 		{
+#ifdef IDB_DDL_DEBUG
+cout << fTxnid.id << " Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
+#endif
 			result.result =(ResultCode) rc;
 			Message::Args args;
 			Message message(9);
@@ -403,10 +408,10 @@ cout << "create table got unknown exception" << endl;
 		pmNum = (*dbRootPMMap)[dbRoot];
 		try
 		{			
-			fWEClient->write(bytestream, (uint32_t)pmNum);
 #ifdef IDB_DDL_DEBUG
-cout << "create table sending We_SVR_WRITE_SYSTABLE to pm " << pmNum << endl;
+cout << fTxnid.id << " create table sending WE_SVR_WRITE_CREATE_SYSCOLUMN to pm " << pmNum << endl;
 #endif	
+			fWEClient->write(bytestream, (uint32_t)pmNum);
 			while (1)
 			{
 				bsIn.reset(new ByteStream());
@@ -423,7 +428,7 @@ cout << "create table sending We_SVR_WRITE_SYSTABLE to pm " << pmNum << endl;
                         errorMsg.clear();
 						*bsIn >> errorMsg;
 #ifdef IDB_DDL_DEBUG
-cout << "Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
+cout << fTxnid.id << "Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
 #endif
 					}
 					break;
@@ -433,7 +438,7 @@ cout << "Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
 		catch (runtime_error& ex) //write error
 		{
 #ifdef IDB_DDL_DEBUG
-cout << "create table got exception" << ex.what() << endl;
+cout << fTxnid.id << " create table got exception" << ex.what() << endl;
 #endif			
 			rc = NETWORK_ERROR;
 			errorMsg = ex.what();
@@ -442,12 +447,15 @@ cout << "create table got exception" << ex.what() << endl;
 		{
 			rc = NETWORK_ERROR;
 #ifdef IDB_DDL_DEBUG
-cout << "create table got unknown exception" << endl;
+cout << fTxnid.id << " create table got unknown exception" << endl;
 #endif
 		}
 		
 		if (rc != 0)
 		{
+#ifdef IDB_DDL_DEBUG
+cout << fTxnid.id << " Create table WE_SVR_WRITE_CREATE_SYSCOLUMN: " << errorMsg << endl;
+#endif
 			result.result =(ResultCode) rc;
 			Message::Args args;
 			Message message(9);
@@ -572,6 +580,9 @@ cout << "create table got unknown exception" << endl;
 		pmNum = (*dbRootPMMap)[useDBRoot];
 		try
 		{
+#ifdef IDB_DDL_DEBUG
+cout << fTxnid.id << " create table sending WE_SVR_WRITE_CREATETABLEFILES to pm " << pmNum << endl;
+#endif	
 			fWEClient->write(bytestream, pmNum);
 			while (1)
 			{
@@ -631,6 +642,9 @@ cout << "Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
 		
 		if (rc != 0)
 		{
+#ifdef IDB_DDL_DEBUG
+cout << fTxnid.id << " Create table We_SVR_WRITE_CREATETABLEFILES: " << errorMsg << endl;
+#endif
 			rollBackTransaction( uniqueId, txnID, createTableStmt.fSessionID); //What to do with the error code
 			fSessionManager.rolledback(txnID);
 		}

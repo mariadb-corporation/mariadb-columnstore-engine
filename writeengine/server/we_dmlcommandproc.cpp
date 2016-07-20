@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -3068,10 +3069,10 @@ uint8_t WE_DMLCommandProc::processBulkRollback(messageqcpp::ByteStream& bs,
 		// but it shouldn't hurt to keep in here.
 		std::cout << "processBulkRollback";
 		bs >> tableLockID;
-		std::cout << ": tableLock-"<< tableLockID;
+		//std::cout << ": tableLock-"<< tableLockID;
 
 		bs >> tableOID;
-		std::cout << "; tableOID-" << tableOID;
+		//std::cout << "; tableOID-" << tableOID;
 
 		bs >> tableName;
 		if (tableName.length() == 0)

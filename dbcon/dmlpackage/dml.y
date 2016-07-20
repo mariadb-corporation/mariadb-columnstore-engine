@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -55,6 +56,7 @@
    a more recent version of flex.  At the time of this writing, our
    development systems have: flex version 2.5.4
 
+   MCOL-66 Modify to be a reentrant parser
    */
 %{
 #include <string.h>
@@ -72,9 +74,9 @@
 using namespace std;
 using namespace dmlpackage;	
 
-int dmllex();
+int dmllex(YYSTYPE* dmllval, void* yyscanner);
 
-void dmlerror (char const *error);
+void dmlerror (void* yyscanner, char const *error);
 
 namespace dmlpackage {
 
@@ -88,8 +90,12 @@ char* copy_string(const char *str);
 }
 
 %}
+%pure-parser
+%lex-param {void * scanner}
+%parse-param {void * scanner}
 %debug
-	/* symbolic tokens */
+
+/* symbolic tokens */
 
 %union {
 	int intval;

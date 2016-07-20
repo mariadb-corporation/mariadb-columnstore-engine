@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -196,6 +197,8 @@ namespace ddlpackageprocessor
 				{
 					result.result = DROP_ERROR;
 					logging::Message::Args args;
+					string strOp("drop partition");
+					args.add(strOp);
 					args.add(processName);
 					args.add((uint64_t)processID);
 					args.add((uint64_t)sessionID);

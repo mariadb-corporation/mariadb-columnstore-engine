@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -1955,6 +1956,9 @@ timer.stop("tokenize");
 
    if (rc == NO_ERROR)
    {
+      // MCOL-66 The DBRM can't handle concurrent transactions to sys tables
+      static boost::mutex dbrmMutex;
+      boost::mutex::scoped_lock lk(dbrmMutex);
       if (newExtent)
       {
          rc = writeColumnRec(txnid, colStructList, colOldValueList, rowIdArray, newColStructList, colNewValueList, tableOid, false); // @bug 5572 HDFS tmp file

@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -37,14 +38,16 @@
 #include <stdio.h>
 #include <string.h>
 
-int dmlparse();
+int dmllex_init_extra(void* user_defined, void** yyscanner);
+int dmllex_destroy(void* yyscanner);
+int dmlparse(void* yyscanner);
 
 namespace dmlpackage
 {
     using namespace std;
 
-	void scanner_finish(void);
-    void scanner_init(const char *str);
+	void scanner_finish(void* yyscanner);
+    void scanner_init(const char *str, void* yyscanner);
     void grammar_init(dmlpackage::ParseTree* _ptree, bool);
     valbuf_t get_valbuffer(void);
   
@@ -57,7 +60,8 @@ namespace dmlpackage
 
     DMLParser::~DMLParser()
     {
-        scanner_finish();
+        scanner_finish(scanner);
+		dmllex_destroy(scanner);
     }
 
     void DMLParser::setDebug(bool debug)
@@ -67,9 +71,10 @@ namespace dmlpackage
 
     int DMLParser::parse(const char* dmltext)
     {
-        scanner_init(dmltext);
+		dmllex_init_extra(&scanData, &scanner);
+        scanner_init(dmltext, scanner);
         grammar_init(&fParseTree, fDebug);
-        fStatus = dmlparse();
+        fStatus = dmlparse(scanner);
         if (fStatus == 0)
         {
             char* str;
