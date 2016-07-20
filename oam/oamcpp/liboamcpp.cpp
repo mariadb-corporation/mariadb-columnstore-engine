@@ -1371,7 +1371,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+			exceptionControl("getSystemStatus", API_FAILURE);
 
 #ifdef _MSC_VER
         // TODO: Remove when we create OAM for Windows
@@ -2093,7 +2093,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+			exceptionControl("getProcessStatus", API_FAILURE);
 
         ProcessStatus processstatus;
         systemprocessstatus.processstatus.clear();
@@ -2196,7 +2196,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+			exceptionControl("getProcessStatus", API_FAILURE);
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -2294,7 +2294,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+			exceptionControl("setProcessStatus", API_FAILURE);
 
 		//send and wait for ack and resend if not received
 		//retry 5 time max
@@ -2814,7 +2814,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return NULL;
+			exceptionControl("getMyProcessStatus", API_FAILURE);
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -4823,7 +4823,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return false;
+			exceptionControl("switchParentOAMModule", API_FAILURE);
 
 		int returnStatus;
 		// We assume that moduleName is a valid pm
@@ -6269,7 +6269,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+			exceptionControl("setConfig", API_FAILURE);
 
 		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
@@ -6311,7 +6311,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+			exceptionControl("distributeFstabUpdates", API_FAILURE);
 
 		ACK_FLAG ackflag = oam::ACK_YES;
 		// build and send msg
