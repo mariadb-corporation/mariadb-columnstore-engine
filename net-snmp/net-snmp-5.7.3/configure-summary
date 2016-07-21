@@ -5,8 +5,8 @@
   SNMPv3 Security Modules:     usm
   Agent MIB code:            default_modules disman/event-mib =>  snmpv3mibs mibII ucd_snmp notification notification-log-mib target agent_mibs agentx disman/event disman/schedule utilities host disman/event
   MYSQL Trap Logging:         unavailable
-  Embedded Perl support:      disabled
-  SNMP Perl modules:          building -- not embeddable
+  Embedded Perl support:      enabled
+  SNMP Perl modules:          building -- embeddable
   SNMP Python modules:        disabled
   Crypto support from:        
   Authentication support:     MD5

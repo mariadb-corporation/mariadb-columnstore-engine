@@ -485,8 +485,8 @@
 /* Define if compiling with the snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_data_access module files.  */
 #define USING_SNMP_NOTIFICATION_MIB_SNMPNOTIFYFILTERTABLE_SNMPNOTIFYFILTERTABLE_DATA_ACCESS_MODULE 1
  
-/* Define if compiling with the host/data_access/swinst_pkginfo module files.  */
-#define USING_HOST_DATA_ACCESS_SWINST_PKGINFO_MODULE 1
+/* Define if compiling with the host/data_access/swinst_apt module files.  */
+#define USING_HOST_DATA_ACCESS_SWINST_APT_MODULE 1
  
 /* Define if compiling with the host/data_access/swrun_procfs_status module files.  */
 #define USING_HOST_DATA_ACCESS_SWRUN_PROCFS_STATUS_MODULE 1

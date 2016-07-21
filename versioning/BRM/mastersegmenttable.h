@@ -39,6 +39,7 @@
 #include <boost/thread.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "rwlock.h"
 #include "shmkeys.h"

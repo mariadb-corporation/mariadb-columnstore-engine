@@ -120,7 +120,7 @@ mib_module_list_lo= \
 	hardware/cpu/cpu_linux.lo \
 	snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_interface.lo \
 	snmp-notification-mib/snmpNotifyFilterTable/snmpNotifyFilterTable_data_access.lo \
-	host/data_access/swinst_pkginfo.lo \
+	host/data_access/swinst_apt.lo \
 	host/data_access/swrun_procfs_status.lo \
 	if-mib/data_access/interface.lo \
 	if-mib/ifTable/ifTable_interface.lo \

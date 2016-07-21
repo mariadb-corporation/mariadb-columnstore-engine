@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 	string excludeFile = startup::StartUp::installDir() + "/bin/myCnf-exclude-args.text";
 	ifstream excludefile (excludeFile.c_str());
 	if (!excludefile) {
-		cerr << "mycnfUpgrade - my.cnf exclude argument file not found: " << excludefile << endl;
+		cerr << "mycnfUpgrade - my.cnf exclude argument file not found: "<< endl;
 		exit (1);
 	}
 
