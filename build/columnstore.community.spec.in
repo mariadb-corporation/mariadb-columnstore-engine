@@ -278,7 +278,6 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/lib/librowgroup.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libcacheutils.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libcommon.so.1.0.0
-/usr/local/mariadb/columnstore/lib/libboost_idb.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libcompress.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libddlcleanuputil.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libbatchloader.so.1.0.0
