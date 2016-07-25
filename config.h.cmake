@@ -285,42 +285,38 @@
    slash. */
 #cmakedefine LSTAT_FOLLOWS_SLASHED_SYMLINK 1
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#cmakedefine LT_OBJDIR
-
 /* Name of package */
-#cmakedefine PACKAGE
+#cmakedefine PACKAGE ${PACKAGE}
 
 /* Define to the address where bug reports for this package should be sent. */
-#cmakedefine PACKAGE_BUGREPORT
+#cmakedefine PACKAGE_BUGREPORT ${PACKAGE_BUGREPORT}
 
 /* Define to the full name of this package. */
-#cmakedefine PACKAGE_NAME
+#cmakedefine PACKAGE_NAME ${PACKAGE_NAME}
 
 /* Define to the full name and version of this package. */
-#cmakedefine PACKAGE_STRING
+#cmakedefine PACKAGE_STRING ${PACKAGE_STRING}
 
 /* Define to the one symbol short name of this package. */
-#cmakedefine PACKAGE_TARNAME
+#cmakedefine PACKAGE_TARNAME ${PACKAGE_TARNAME}
 
 /* Define to the home page for this package. */
-#cmakedefine PACKAGE_URL
+#cmakedefine PACKAGE_URL ${PACKAGE_URL}
 
 /* Define to the version of this package. */
-#cmakedefine PACKAGE_VERSION
+#cmakedefine PACKAGE_VERSION ${PACKAGE_VERSION}
 
 /* Define as the return type of signal handlers (`int' or `void'). */
-#cmakedefine RETSIGTYPE
+#cmakedefine RETSIGTYPE ${RETSIGTYPE}
 
 /* Define to the type of arg 1 for `select'. */
-#cmakedefine SELECT_TYPE_ARG1
+#cmakedefine SELECT_TYPE_ARG1 ${SELECT_TYPE_ARG1}
 
 /* Define to the type of args 2, 3 and 4 for `select'. */
-#cmakedefine SELECT_TYPE_ARG234
+#cmakedefine SELECT_TYPE_ARG234 (${SELECT_TYPE_ARG234})
 
 /* Define to the type of arg 5 for `select'. */
-#cmakedefine SELECT_TYPE_ARG5
+#cmakedefine SELECT_TYPE_ARG5 (${SELECT_TYPE_ARG5})
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
@@ -328,7 +324,7 @@
 	STACK_DIRECTION > 0 => grows toward higher addresses
 	STACK_DIRECTION < 0 => grows toward lower addresses
 	STACK_DIRECTION = 0 => direction of growth unknown */
-#cmakedefine STACK_DIRECTION
+#cmakedefine STACK_DIRECTION ${STACK_DIRECTION}
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
 #cmakedefine STAT_MACROS_BROKEN 1
@@ -337,8 +333,7 @@
 #cmakedefine STDC_HEADERS 1
 
 /* Define to 1 if strerror_r returns char *. */
-/* #cmakedefine STRERROR_R_CHAR_P 1 */
-#define STRERROR_R_CHAR_P 1
+#cmakedefine STRERROR_R_CHAR_P 1
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #cmakedefine TIME_WITH_SYS_TIME 1
@@ -347,7 +342,7 @@
 #cmakedefine TM_IN_SYS_TIME 1
 
 /* Version number of package */
-#cmakedefine VERSION
+#cmakedefine VERSION ${VERSION}
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
@@ -372,18 +367,18 @@
 #cmakedefine mbstate_t
 
 /* Define to `int' if <sys/types.h> does not define. */
-#cmakedefine mode_t
+#cmakedefine mode_t ${mode_t}
 
 /* Define to `long int' if <sys/types.h> does not define. */
-#cmakedefine off_t
+#cmakedefine off_t ${off_t}
 
 /* Define to `int' if <sys/types.h> does not define. */
-#cmakedefine pid_t
+#cmakedefine pid_t ${pid_t}
 
 /* Define to the equivalent of the C99 'restrict' keyword, or to
    nothing if this is not supported.  Do not define if restrict is
    supported directly.  */
-#cmakedefine restrict
+#cmakedefine restrict ${restrict}
 /* Work around a bug in Sun C++: it does not support _Restrict or
    __restrict__, even though the corresponding Sun C compiler ends up with
    "#define restrict _Restrict" or "#define restrict __restrict__" in the
@@ -395,10 +390,10 @@
 #endif
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
-#cmakedefine size_t
+#cmakedefine size_t ${size_t}
 
 /* Define as `fork' if `vfork' does not work. */
-#cmakedefine vfork
+#cmakedefine vfork ${VFORK}
 
 /* Define to empty if the keyword `volatile' does not work. Warning: valid
    code using `volatile' can become incorrect without. Disable with care. */
