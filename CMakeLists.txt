@@ -121,7 +121,7 @@ SET(CMAKE_C_FLAGS "-g0 -O3 -fno-strict-aliasing -Wall -DHAVE_CONFIG_H")
 #AC_SUBST([idb_ldflags],['-Wl,--rpath -Wl,${idbinstall}/lib -Wl,--no-as-needed -Wl,--add-needed'])
 SET (ENGINE_LDFLAGS    "-Wl,--rpath -Wl,${INSTALL_ENGINE}/lib -Wl,--no-as-needed -Wl,--add-needed")  
 
-FIND_PACKAGE(Boost 1.45.0 COMPONENTS system filesystem thread regex) 
+FIND_PACKAGE(Boost 1.55.0 REQUIRED COMPONENTS system filesystem thread regex) 
 
 SET (ENGINE_LIBDIR     "${INSTALL_ENGINE}/lib")
 SET (ENGINE_BINDIR     "${INSTALL_ENGINE}/bin")
