@@ -144,12 +144,15 @@ chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
 mkdir /mnt/tmp > /dev/null 2>&1
 mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
 
-# install Calpont Log Rotate File
-test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
+# install Columnstore Log Rotate File
 cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+chmod 644 /etc/logrotate.d/columnstore
+
+# remove mysql archive log
+test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
-# delete Calpont shared memory segments
+# delete Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
 
 #setup the columnstore service script
