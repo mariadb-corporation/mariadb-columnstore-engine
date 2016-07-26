@@ -121,7 +121,7 @@ SET(CMAKE_C_FLAGS "-g0 -O3 -fno-strict-aliasing -Wall -DHAVE_CONFIG_H")
 #AC_SUBST([idb_ldflags],['-Wl,--rpath -Wl,${idbinstall}/lib -Wl,--no-as-needed -Wl,--add-needed'])
 SET (ENGINE_LDFLAGS    "-Wl,--rpath -Wl,${INSTALL_ENGINE}/lib -Wl,--no-as-needed -Wl,--add-needed")  
 
-FIND_PACKAGE(Boost 1.55.0 REQUIRED COMPONENTS system filesystem thread regex) 
+#FIND_PACKAGE(Boost 1.55.0 REQUIRED COMPONENTS system filesystem thread regex) 
 
 SET (ENGINE_LIBDIR     "${INSTALL_ENGINE}/lib")
 SET (ENGINE_BINDIR     "${INSTALL_ENGINE}/bin")
@@ -138,7 +138,7 @@ SET (ENGINE_MIBDIR     "${INSTALL_ENGINE}/share/snmp/mibs")
 SET (ENGINE_TOOLSDIR   "${INSTALL_ENGINE}/tools")
 
 SET (ENGINE_NETSNMP_LIBS    "-L${CMAKE_CURRENT_SOURCE_DIR}/net-snmp/net-snmp/snmplib/.libs -L${CMAKE_CURRENT_SOURCE_DIR}/net-snmp/net-snmp/agent/helpers/.libs -L${CMAKE_CURRENT_SOURCE_DIR}/net-snmp/net-snmp/agent/.libs/ -L${CMAKE_CURRENT_SOURCE_DIR}/net-snmp/net-snmp/apps/.libs/ -lnetsnmpmibs -lnetsnmpagent -lnetsnmp -lnetsnmpmibs -lnetsnmphelpers")
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt)
+SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_idb xml2 pthread rt)
 SET (ENGINE_OAM_LIBS        oamcpp snmpmanager ${ENGINE_NETSNMP_LIBS})
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
 SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk dataconvert common compress mysqlcl_idb querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
@@ -147,7 +147,7 @@ SET (ENGINE_WRITE_LIBS      ddlpackageproc ddlpackage dmlpackageproc dmlpackage 
 SET (ENGINE_COMMON_LDFLAGS  "")
 
 
-SET (ENGINE_UTILS_BOOSTIDB_INCLUDE     "${Boost_INCLUDE_DIRS}")
+SET (ENGINE_UTILS_BOOSTIDB_INCLUDE     "{CMAKE_CURRENT_SOURCE_DIR}/utils/boost_idb")
 
 SET (ENGINE_UTILS_XML_INCLUDE         "${CMAKE_CURRENT_SOURCE_DIR}/utils/libxml")
 SET (ENGINE_UTILS_MESSAGEQCPP_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/messageqcpp")
