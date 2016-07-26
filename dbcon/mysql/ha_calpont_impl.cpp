@@ -150,7 +150,7 @@ namespace cal_impl_if
 namespace
 {
 // Calpont vtable non-support error message
-const string infinidb_autoswitch_warning = "The query includes syntax that is not supported by InfiniDB distributed mode. The execution was switched to standard mode with downgraded performance.";
+const string infinidb_autoswitch_warning = "The query includes syntax that is not supported by MariaDB Columnstore distributed mode. The execution was switched to standard mode with downgraded performance.";
 
 // copied from item_timefunc.cc
 static const string interval_names[]=
