@@ -92,3 +92,4 @@ net-snmp/net-snmp-5.7.3/agent/mibgroup/mib_module_includes.h
 net-snmp/net-snmp-5.7.3/configure-summary
 net-snmp/net-snmp-5.7.3/dist/generation-scripts/gen-variables
 net-snmp/net-snmp-5.7.3/include/net-snmp/agent/mib_module_config.h
+MYMETA.json
