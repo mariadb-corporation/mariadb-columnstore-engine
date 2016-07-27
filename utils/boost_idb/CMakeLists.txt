@@ -35,8 +35,6 @@ set(boost_idb_LIB_SRCS
 
 add_library(boost_idb SHARED ${boost_idb_LIB_SRCS})
 
-#target_link_libraries(boost_idb ${ENGINE_LDFLAGS})
-
 set_target_properties(boost_idb PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS boost_idb DESTINATION ${ENGINE_LIBDIR})

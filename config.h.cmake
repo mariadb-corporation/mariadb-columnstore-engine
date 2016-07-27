@@ -357,7 +357,7 @@
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
-#cmakedefine inline
+#cmakedefine inline ${inline}
 #endif
 
 /* Define to rpl_malloc if the replacement function should be used. */

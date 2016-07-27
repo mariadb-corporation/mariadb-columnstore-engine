@@ -23,6 +23,15 @@ ENDIF()
 
 MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
 
+# Distinguish between community and non-community builds, with the
+# default being a community build. This does not impact the feature
+# set that will be compiled in; it's merely provided as a hint to
+# custom packaging steps.
+OPTION(COMMUNITY_BUILD "Set to true if this is a community build" ON) 
+
+SET(CMAKE_BUILD_TYPE "None" CACHE STRING
+   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel")
+
 #set( CMAKE_VERBOSE_MAKEFILE on )
 
 SET (PACKAGE columnstore)
@@ -62,63 +71,15 @@ if(NOT AWK_EXECUTABLE)
     message(FATAL_ERROR "awk not found!")
 endif()
 
-
-#AC_PROG_CPP
-#AC_PROG_LN_S
-#AC_PROG_MAKE_SET
-
-## FIXME:
-## for quicklz (note this macro is not needed if autotools is 1.14 or 
-## greater, but old versions of CentOS do not have newer version
-## of autotools
-#AM_PROG_CC_C_O
-
-# Checks for header files.
-#AC_FUNC_ALLOCA
-#AC_HEADER_STDC
-#AC_HEADER_SYS_WAIT
-
-# Checks for typedefs, structures, and compiler characteristics.
-#AC_HEADER_STAT
-#AC_HEADER_STDBOOL
-#AC_C_INLINE
-
-#AC_TYPE_SIZE_T
-#AC_HEADER_TIME
-#AC_STRUCT_TM
-
 # Checks for library functions.
-#AC_FUNC_ERROR_AT_LINE
 #AC_REPLACE_FNMATCH
-#AC_FUNC_MEMCMP
-#AC_FUNC_MKTIME
-#AC_FUNC_SETVBUF_REVERSED
-#AC_FUNC_STAT
-#AC_FUNC_STRFTIME
-#AC_FUNC_STRTOD
 
-#AC_MSG_CHECKING(whether to enable debugging)
-#AC_SUBST([idb_cppflags], [' '])
-#AC_ARG_WITH([debug],
-#    AS_HELP_STRING([--with-debug],[include debugging symbols/no optimization]))
-#if test "x$with_debug" = "xyes"; then
-#    AC_SUBST([idb_cxxflags],['-ggdb3 -O0 -Wall -D_DEBUG'])
-#    AC_SUBST([idb_cflags],['-ggdb3 -O0 -Wall -D _DEBUG'])
-#    AC_MSG_RESULT(yes)
-#else
-#    AC_SUBST([idb_cxxflags],["-g0 -O3 -fno-strict-aliasing -Wall $cxx_extra_flags"])
-#    AC_SUBST([idb_cflags],['-g0 -O3 -fno-strict-aliasing -Wall'])
-#    AC_MSG_RESULT(no)
-#fi
-##-ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC
+SET(CMAKE_CXX_FLAGS "-g0 -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
+SET(CMAKE_C_FLAGS "-g0 -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
 
-SET(CMAKE_CXX_FLAGS "-g0 -O3 -fno-strict-aliasing -Wall -DHAVE_CONFIG_H")
-SET(CMAKE_C_FLAGS "-g0 -O3 -fno-strict-aliasing -Wall -DHAVE_CONFIG_H")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D _DEBUG -DHAVE_CONFIG_H")
 
-#SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3 -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H")
-#SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -O0 -Wall -D _DEBUG -DHAVE_CONFIG_H")
-
-#AC_SUBST([idb_ldflags],['-Wl,--rpath -Wl,${idbinstall}/lib -Wl,--no-as-needed -Wl,--add-needed'])
 SET (ENGINE_LDFLAGS    "-Wl,--rpath -Wl,${INSTALL_ENGINE}/lib -Wl,--no-as-needed -Wl,--add-needed")  
 
 #FIND_PACKAGE(Boost 1.55.0 REQUIRED COMPONENTS system filesystem thread regex) 
@@ -148,7 +109,6 @@ SET (ENGINE_COMMON_LDFLAGS  "")
 
 
 SET (ENGINE_UTILS_BOOSTIDB_INCLUDE     "{CMAKE_CURRENT_SOURCE_DIR}/utils/boost_idb")
-
 SET (ENGINE_UTILS_XML_INCLUDE         "${CMAKE_CURRENT_SOURCE_DIR}/utils/libxml")
 SET (ENGINE_UTILS_MESSAGEQCPP_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/messageqcpp")
 SET (ENGINE_WE_SHARED_INCLUDE         "${CMAKE_CURRENT_SOURCE_DIR}/writeengine/shared")
@@ -264,9 +224,3 @@ ADD_SUBDIRECTORY(writeengine/splitter)
 ## this AS IS for now.
 #AM_LIBTOOLFLAGS = -Wl,-rpath -Wl,$(prefix)/lib -lrt -lboost_idb
 #.PHONY: test coverage leakcheck docs bootstrap install net-snmp-install
-#
-#net-snmp/net-snmp-5.7.3/agent/.libs/libnetsnmpmibs.so:
-#	cd net-snmp/net-snmp; \
-#	./configure --prefix=${INSTALL_ENGINE} --with-mib-modules=disman/event-mib --with-cc=gcc --with-logfile=$(prefix)/log/snmpd.log --with-sys-location=Unknown --with-sys-contact=root@localhost.localdomain --with-default-snmp-version=3 --with-persistent-directory=$(prefix)var/net-snmp --without-openssl --with-ldflags="-Wl,-rpath -Wl,$(prefix)/lib"
-#		$(MAKE) 
-#
