@@ -15,6 +15,8 @@ set(dmlpackageproc_LIB_SRCS
 
 add_library(dmlpackageproc SHARED ${dmlpackageproc_LIB_SRCS})
 
+add_dependencies(dmlpackageproc libnetsnmpmibs)
+
 set_target_properties(dmlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS dmlpackageproc DESTINATION ${ENGINE_LIBDIR})

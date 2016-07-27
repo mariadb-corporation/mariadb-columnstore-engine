@@ -34,6 +34,8 @@ add_library(brm SHARED ${brm_LIB_SRCS})
 
 set_target_properties(brm PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
+add_dependencies(brm libnetsnmpmibs)
+
 install(TARGETS brm DESTINATION ${ENGINE_LIBDIR})
 
 
@@ -42,6 +44,8 @@ install(TARGETS brm DESTINATION ${ENGINE_LIBDIR})
 set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp)
 
 add_executable(controllernode ${controllernode_SRCS})
+
+add_dependencies(controllernode libnetsnmpmibs)
 
 target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
@@ -53,6 +57,8 @@ install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR})
 set(workernode_SRCS slavenode.cpp)
 
 add_executable(workernode ${workernode_SRCS})
+
+add_dependencies(workernode libnetsnmpmibs)
 
 target_link_libraries(workernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 

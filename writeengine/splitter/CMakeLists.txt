@@ -17,6 +17,8 @@ set(cpimport_SRCS
 
 add_executable(cpimport ${cpimport_SRCS})
 
+add_dependencies(cpimport libnetsnmpmibs)
+
 target_link_libraries(cpimport ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} batchloader threadpool)
 
 install(TARGETS cpimport DESTINATION ${ENGINE_BINDIR})

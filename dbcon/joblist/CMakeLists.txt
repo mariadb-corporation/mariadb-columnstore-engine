@@ -61,6 +61,8 @@ set(joblist_LIB_SRCS
 
 add_library(joblist SHARED ${joblist_LIB_SRCS})
 
+add_dependencies(joblist libnetsnmpmibs)
+
 set_target_properties(joblist PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR})

@@ -24,6 +24,8 @@ set(PrimProc_SRCS
 
 add_executable(PrimProc ${PrimProc_SRCS})
 
+add_dependencies(PrimProc libnetsnmpmibs)
+
 target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor)
 
 install(TARGETS PrimProc DESTINATION ${ENGINE_BINDIR})

@@ -108,6 +108,8 @@ set(funcexp_LIB_SRCS
 
 add_library(funcexp SHARED ${funcexp_LIB_SRCS})
 
+add_dependencies(funcexp libnetsnmpmibs)
+
 set_target_properties(funcexp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR})

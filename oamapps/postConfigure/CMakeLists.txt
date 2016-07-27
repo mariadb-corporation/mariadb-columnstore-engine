@@ -8,6 +8,8 @@ set(postConfigure_SRCS postConfigure.cpp helpers.cpp)
 
 add_executable(postConfigure ${postConfigure_SRCS})
 
+add_dependencies(postConfigure libnetsnmpmibs)
+
 target_link_libraries(postConfigure ${ENGINE_LDFLAGS} readline ncurses ${ENGINE_EXEC_LIBS})
 
 install(TARGETS postConfigure DESTINATION ${ENGINE_BINDIR})
@@ -18,6 +20,8 @@ install(TARGETS postConfigure DESTINATION ${ENGINE_BINDIR})
 set(installer_SRCS installer.cpp helpers.cpp)
 
 add_executable(installer ${installer_SRCS})
+
+add_dependencies(installer libnetsnmpmibs)
 
 target_link_libraries(installer ${ENGINE_LDFLAGS} readline ncurses ${ENGINE_EXEC_LIBS})
 
@@ -30,6 +34,8 @@ set(getMySQLpw_SRCS getMySQLpw.cpp)
 
 add_executable(getMySQLpw ${getMySQLpw_SRCS})
 
+add_dependencies(getMySQLpw libnetsnmpmibs)
+
 target_link_libraries(getMySQLpw ${ENGINE_LDFLAGS} readline ncurses ${ENGINE_EXEC_LIBS})
 
 install(TARGETS getMySQLpw DESTINATION ${ENGINE_BINDIR})
@@ -41,6 +47,8 @@ set(amazonInstaller_SRCS amazonInstaller.cpp helpers.cpp)
 
 add_executable(amazonInstaller ${amazonInstaller_SRCS})
 
+add_dependencies(amazonInstaller libnetsnmpmibs)
+
 target_link_libraries(amazonInstaller ${ENGINE_LDFLAGS} readline ncurses ${ENGINE_EXEC_LIBS})
 
 install(TARGETS amazonInstaller DESTINATION ${ENGINE_BINDIR})
@@ -51,6 +59,8 @@ install(TARGETS amazonInstaller DESTINATION ${ENGINE_BINDIR})
 set(mycnfUpgrade_SRCS mycnfUpgrade.cpp)
 
 add_executable(mycnfUpgrade ${mycnfUpgrade_SRCS})
+
+add_dependencies(mycnfUpgrade libnetsnmpmibs)
 
 target_link_libraries(mycnfUpgrade ${ENGINE_LDFLAGS} readline ncurses ${ENGINE_EXEC_LIBS})
 

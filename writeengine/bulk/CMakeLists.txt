@@ -34,6 +34,8 @@ set(cpimport.bin_SRCS cpimport.cpp)
 
 add_executable(cpimport.bin ${cpimport.bin_SRCS})
 
+add_dependencies(cpimport.bin libnetsnmpmibs)
+
 target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} we_bulk we_xml)
 
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR})

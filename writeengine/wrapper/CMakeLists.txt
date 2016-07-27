@@ -39,6 +39,8 @@ add_definitions(-D_FILE_OFFSET_BITS=64)
 
 add_library(writeengine SHARED ${writeengine_LIB_SRCS})
 
+add_dependencies(writeengine libnetsnmpmibs)
+
 set_target_properties(writeengine PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR})
