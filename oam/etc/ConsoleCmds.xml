@@ -26,17 +26,10 @@
 		<Arg1>None</Arg1>
 	</Cmd3>
 	<Cmd4>
-		<Name>getSystemConfig</Name>
-		<Desc1>Get System Configuration Information</Desc1>
-		<Desc2>Can display all parmeters or a single parameter</Desc2>
-		<Arg1>No Argument or 'all' will display all System Configuration parameters</Arg1>
-		<Arg2>Optional: Parameter-name will display the System Configuration parameter</Arg2>
+                <Name>AVAILABLE</Name>
 	</Cmd4>
 	<Cmd5>
-		<Name>setSystemConfig</Name>
-		<Desc1>Set a System Configuration parameter</Desc1>
-		<Arg1>Required: Parameter-name is the parameter to be updated</Arg1>
-		<Arg2>Required: Parameter-value is the parameter value</Arg2>
+                <Name>AVAILABLE</Name>
 	</Cmd5>
 	<Cmd6>
 		<Name>getModuleTypeConfig</Name>

@@ -702,107 +702,13 @@ int processCommand(string* arguments)
         }
         break;
 
-        case 4: // getSystemConfig
+        case 4: // Available
         {
-            SystemSoftware systemsoftware;
-            SystemConfig systemconfig;
-            string returnValue;
-
-            if (arguments[1] == "all" || arguments[1] == "")
-            {
-
-                // get and all display System config parameters
-
-                try
-                {
-					oam.getSystemSoftware(systemsoftware);
-					oam.getSystemConfig(systemconfig);
-
-					cout << endl << "System Configuration" << endl << endl;
-
-					cout << "SystemName = " << systemconfig.SystemName << endl;
-					cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-					cout << "SoftwareRelease = " << systemsoftware.Release << endl;
-
-                    cout << "ParentOAMModuleName = " << systemconfig.ParentOAMModule << endl;
-                    cout << "StandbyOAMModuleName = " << systemconfig.StandbyOAMModule << endl;
-                    cout << "NMSIPAddr = " << systemconfig.NMSIPAddr << endl;
-                    cout << "ModuleHeartbeatPeriod = " << systemconfig.ModuleHeartbeatPeriod << endl;
-                    cout << "ModuleHeartbeatCount = " << systemconfig.ModuleHeartbeatCount << endl;
-//                    cout << "ProcessHeartbeatPeriod = " << systemconfig.ProcessHeartbeatPeriod << endl;
-                    cout << "DBRootCount = " << systemconfig.DBRootCount << endl;
-
-					std::vector<std::string>::iterator pt = systemconfig.DBRoot.begin();
-					int id=1;
-					for( ; pt != systemconfig.DBRoot.end() ; pt++)
-					{
-						string dbroot = *pt;
-                   		cout << "DBRoot" + oam.itoa(id) + " = " + dbroot << endl;
-						++id;
-					}
-
-                    cout << "DBRMRoot = " << systemconfig.DBRMRoot << endl;
-                    cout << "ExternalCriticalThreshold = " << systemconfig.ExternalCriticalThreshold << endl;
-                    cout << "ExternalMajorThreshold = " << systemconfig.ExternalMajorThreshold << endl;
-                    cout << "ExternalMinorThreshold = " << systemconfig.ExternalMinorThreshold << endl;
-                    cout << "MaxConcurrentTransactions = " << systemconfig.MaxConcurrentTransactions << endl;
-                    cout << "SharedMemoryTmpFile = " << systemconfig.SharedMemoryTmpFile << endl;
-                    cout << "NumVersionBufferFiles = " << systemconfig.NumVersionBufferFiles << endl;
-                    cout << "VersionBufferFileSize = " << systemconfig.VersionBufferFileSize << endl;
-                    cout << "OIDBitmapFile = " << systemconfig.OIDBitmapFile << endl;
-                    cout << "FirstOID = " << systemconfig.FirstOID << endl;
-                    cout << "TransactionArchivePeriod = " << systemconfig.TransactionArchivePeriod << endl;
-
-                 }
-                catch (exception& e)
-                {
-                    cout << endl << "**** getSystemConfig Failed :  " << e.what() << endl;
-                }
-            }
-            else
-            { // get a single parameter
-
-                try
-                {
-                    oam.getSystemConfig(arguments[1], returnValue);
-                    cout << endl << "   " << arguments[1] << " = " << returnValue << endl << endl;
-                }
-                catch (exception& e)
-                {
-                    cout << endl << "**** getSystemConfig Failed :  " << e.what() << endl;
-                }
-            }
         }
         break;
 
-        case 5: // setSystemConfig - parameters: Module name, Parameter name and value
+        case 5: // Available
         {
-			parentOAMModule = getParentOAMModule();
-			if ( localModule != parentOAMModule ) {
-				// exit out since not on Parent OAM Module
-                cout << endl << "**** setSystemConfig Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
-                break;
-			}
-
-            if (arguments[2] == "")
-            {
-                // need 2 arguments
-                cout << endl << "**** setSystemConfig Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                break;
-            }
-            try
-            {
-				if ( arguments[2] == "=" ) {
-                	cout << endl << "**** setSystemConfig Failed : Invalid Value of '=', please re-enter" << endl;
-					break;
-				}
-                oam.setSystemConfig(arguments[1], arguments[2]);
-                cout << endl << "   Successfully set " << arguments[1] << " = " << arguments[2] << endl << endl;
-            }
-            catch (exception& e)
-            {
-                cout << endl << "**** setSystemConfig Failed :  " << e.what() << endl;
-            }
         }
         break;
 
