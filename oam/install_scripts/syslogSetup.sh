@@ -227,7 +227,7 @@ fi
 check() {
 test -f $installdir/post/functions && . $installdir/post/functions
 number=$RANDOM
-cplogger -i 100 "MariaDB Columnstore Log Test: $number"
+cplogger -i 104 "MariaDB Columnstore Log Test: $number"
 sleep 3
 egrep -qs "MariaDB Columnstore Log Test: $number" /var/log/mariadb/columnstore/info.log
 if [ $? -eq 0 ]; then
