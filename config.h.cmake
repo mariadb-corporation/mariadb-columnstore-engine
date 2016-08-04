@@ -1,13 +1,6 @@
 /* config.h.cmake  */
 #ifndef TEST_CONFIG_H
 #define TEST_CONFIG_H
-/* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
-   systems. This function is required for `alloca.c' support on those systems.
-   */
-#cmakedefine CRAY_STACKSEG_END
-
-/* Define to 1 if using `alloca.c'. */
-#cmakedefine C_ALLOCA 1
 
 /* Define to 1 if you have the `alarm' function. */
 #cmakedefine HAVE_ALARM 1
@@ -317,14 +310,6 @@
 
 /* Define to the type of arg 5 for `select'. */
 #cmakedefine SELECT_TYPE_ARG5 (${SELECT_TYPE_ARG5})
-
-/* If using the C implementation of alloca, define if you know the
-   direction of stack growth for your system; otherwise it will be
-   automatically deduced at runtime.
-	STACK_DIRECTION > 0 => grows toward higher addresses
-	STACK_DIRECTION < 0 => grows toward lower addresses
-	STACK_DIRECTION = 0 => direction of growth unknown */
-#cmakedefine STACK_DIRECTION ${STACK_DIRECTION}
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
 #cmakedefine STAT_MACROS_BROKEN 1
