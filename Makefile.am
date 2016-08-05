@@ -130,5 +130,12 @@ docs:
 
 clean: 
 	rm -f net-snmp.built; \
-	find . -name \*.d.* -o -name \*.so -o -name \*.a -o -name \*.o -o -name \*.lib -o -name \*.sa -o -name \*.lo -o -name \*.la -exec rm {} \; -print
+	find . -name \*.d.* -exec rm -f {} \; -print 
+	find . -name \*.so  -exec rm -f {} \; -print
+	find . -name \*.a   -exec rm -f {} \; -print
+	find . -name \*.o   -exec rm -f {} \; -print
+	find . -name \*.lib -exec rm -f {} \; -print
+	find . -name \*.sa  -exec rm -f {} \; -print
+	find . -name \*.lo  -exec rm -f {} \; -print
+	find . -name \*.la  -exec rm -f {} \; -print
 
