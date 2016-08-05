@@ -3455,12 +3455,15 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			//cout << "aCmdLine = " << aCmdLine << endl;
 			std::istringstream ss(aCmdLine);
 			std::string arg;
-			std::vector<std::string> v2;
+			std::vector<std::string> v2(20, "");
 			while (ss >> arg)
 			{
 				v2.push_back(arg);
-				Cmds.push_back(const_cast<char*>(v2.back().c_str()));
-			}
+            }
+            for (unsigned int i = 0; i < v2.size(); ++i)
+            {
+                Cmds.push_back(const_cast<char*>(v2[i].c_str()));
+            }
 
 			Cmds.push_back(0); //null terminate
 				
