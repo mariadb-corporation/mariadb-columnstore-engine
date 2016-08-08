@@ -248,11 +248,12 @@ bool WEDataLoader::setupCpimport() // fork the cpimport
 		std::istringstream ss(aCmdLine);
 		std::string arg;
 		std::vector<std::string> v2(20, "");
+        unsigned int i = 0;
 		while (ss >> arg)
 		{
-			v2.push_back(arg);
+            v2[i++] = arg;
         }
-        for (unsigned int i = 0; i < v2.size(); ++i)
+        for (i = 0; i < v2.size(); ++i)
         {
 			Cmds.push_back(const_cast<char*>(v2[i].c_str()));
 		}
