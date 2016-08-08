@@ -1405,8 +1405,19 @@ struct BPPHandler
 
 		it = bppMap.find(uniqueID);
 		if (it != bppMap.end()) {
-			it->second->abort();
-			bppMap.erase(it);
+            boost::shared_ptr<BPPV> bppv = it->second;
+            if (bppv->joinDataReceived)
+            {
+                bppv->abort();
+                bppMap.erase(it);
+            }
+            else
+            {
+                // MCOL-5. On ubuntu, a crash was happening. Checking 
+                // joinDataReceived here fixes it.
+                // We're not ready for a destroy. Reschedule.
+				return -1;
+            }
 		}
 		else {
 			//cout << "got a destroy for an unknown obj " << uniqueID << endl;
