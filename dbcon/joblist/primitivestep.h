@@ -1099,7 +1099,7 @@ private:
     uint32_t fExtentsPerSegFile;//config num of Extents Per Segment File
     boost::shared_ptr<boost::thread> cThread;  //consumer thread
 	boost::shared_ptr<boost::thread> pThread;  //producer thread
-	boost::mutex mutex;
+	boost::mutex tplMutex;
 	boost::mutex dlMutex;
 	boost::mutex cpMutex;
 	boost::mutex serializeJoinerMutex;
