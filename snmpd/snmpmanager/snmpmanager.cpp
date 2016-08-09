@@ -186,7 +186,7 @@ void SNMPManager::sendAlarmReport (const char* componentID, int alarmID, int sta
 	else
 		processName = repProcessName;
 
-	string ComponentID = componentID;
+	string ComponentID = componentID ? componentID : "Unknown-componentID";
 	// send Trap
 
 	string cmd = startup::StartUp::installDir() + "/bin/sendtrap " + ComponentID + " " + oam.itoa(alarmID) + " " + oam.itoa(state) + " " + ModuleName + " " + processName + " " + oam.itoa(pid) + " " + oam.itoa(tid) + " " + SNMPManager::parentOAMModuleName;
