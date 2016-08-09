@@ -838,7 +838,10 @@ int main(int argc, char *argv[])
 	// not running on amazon with ec2-api-tools
 		amazonInstall = false;
 	else
-		amazonInstall = true;
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+			amazonInstall = false;
+		else
+			amazonInstall = true;
 
 	string amazonSubNet = oam::UnassignedName;
 
