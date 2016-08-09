@@ -253,10 +253,10 @@ bool WEDataLoader::setupCpimport() // fork the cpimport
 		{
             v2[i++] = arg;
         }
-        for (i = 0; i < v2.size(); ++i)
+        for (unsigned int j = 0; j < i; ++j)
         {
-			Cmds.push_back(const_cast<char*>(v2[i].c_str()));
-		}
+            Cmds.push_back(const_cast<char*>(v2[j].c_str()));
+        }
 
 		Cmds.push_back(0); //null terminate
 		//updatePrgmPath(Cmds);

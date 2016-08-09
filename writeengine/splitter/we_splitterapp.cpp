@@ -459,10 +459,9 @@ void WESplitterApp::invokeCpimport()
 		//we need something that works on Windows as well as linux
         v2[i++] = arg;
     }
-    for (i = 0; i < v2.size(); ++i)
+    for (unsigned int j = 0; j < i; ++j)
     {
-		//we're going to exec() below, so don't worry about freeing
-        Cmds.push_back(const_cast<char*>(v2[i].c_str()));
+        Cmds.push_back(const_cast<char*>(v2[j].c_str()));
     }
 
     Cmds.push_back(0);    //null terminate
