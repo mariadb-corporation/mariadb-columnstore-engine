@@ -834,11 +834,14 @@ int main(int argc, char *argv[])
 
 	in.seekg(0, std::ios::end);
 	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "command not found")) 
+	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
 	// not running on amazon with ec2-api-tools
 		amazonInstall = false;
 	else
-		amazonInstall = true;
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+			amazonInstall = false;
+		else
+			amazonInstall = true;
 
 	string amazonSubNet = oam::UnassignedName;
 
