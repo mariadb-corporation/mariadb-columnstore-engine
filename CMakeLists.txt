@@ -82,7 +82,7 @@ SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAF
 
 SET (ENGINE_LDFLAGS    "-Wl,--rpath -Wl,${INSTALL_ENGINE}/lib -Wl,--no-as-needed -Wl,--add-needed")  
 
-FIND_PACKAGE(Boost 1.55.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
+FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
 
 SET (ENGINE_LIBDIR     "${INSTALL_ENGINE}/lib")
 SET (ENGINE_BINDIR     "${INSTALL_ENGINE}/bin")
