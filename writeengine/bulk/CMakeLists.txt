@@ -26,6 +26,8 @@ set(we_bulk_STAT_SRCS
 
 ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
+add_dependencies(we_bulk libnetsnmpmibs)
+
 REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 
 ########### next target ###############
