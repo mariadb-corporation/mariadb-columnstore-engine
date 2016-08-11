@@ -1621,7 +1621,17 @@ void TupleBPS::makeJobs(vector<Job> *jobs)
 
 		// a necessary DB root is offline
 		if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
-			throw IDBExcept(ERR_DATA_OFFLINE);
+        {
+            // MCOL-259 force a reload of the xml. This usualy fixes it.
+            std::cout << "forcing reload of columnstore.xml for dbRootConnectionMap" << std::endl;
+            oamCache->forceReload();
+            dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
+            if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
+            {
+                std::cout << "still not in dbRootConnectionMap" << std::endl;
+                throw IDBExcept(ERR_DATA_OFFLINE);
+            }
+        }
 
 //		cout << "   session " << fSessionId << " idx = " << i << " HWM = " << scannedExtents[i].HWM
 //				<< " ... will scan " << lbidsToScan << " lbids\n";

@@ -337,7 +337,7 @@ next:
 	/* If there was an error or an abort drain the input DL,
 		do endOfInput on the output */
 	if (cancelled()) {
-		cout << "HJ stopping... status is " << status() << endl;
+//		cout << "HJ stopping... status is " << status() << endl;
 		if (largeBPS)
 			largeBPS->abort();
 		while (more)
