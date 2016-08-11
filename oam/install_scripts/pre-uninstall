@@ -37,13 +37,6 @@ done
 $installdir/bin/columnstore stop > /dev/null 2>&1
 $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
-if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
-	# remove library config file
-	rm -f /etc/ld.so.conf.d/columnstore.conf
-	rm -f /etc/ld.so.cache
-	ldconfig
-fi
-
 # uninstall OS scripts updated by postConfigure
 if test -f /root/.bashrc.columnstoreSave ; then
 	$sudo mv -f /root/.bashrc.columnstoreSave /root/.bashrc > /dev/null 2>&1
@@ -130,6 +123,7 @@ if [ -n "$systemctl" ]; then
 
 	systemctl disable columnstore >/dev/null 2>&1
 	rm -f /usr/lib/systemd/system/columnstore.service
+	rm -f /lib/systemd/system/columnstore.service
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then
@@ -159,6 +153,14 @@ if [ $user = "root" ]; then
 	rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
 else
 	sudo rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
+fi
+
+#remove library paths
+if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
+        # remove library config file
+        rm -f /etc/ld.so.conf.d/columnstore.conf
+        rm -f /etc/ld.so.cache
+        ldconfig
 fi
 
 #tell user to run post configure script
