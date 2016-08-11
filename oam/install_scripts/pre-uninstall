@@ -123,6 +123,7 @@ if [ -n "$systemctl" ]; then
 
 	systemctl disable columnstore >/dev/null 2>&1
 	rm -f /usr/lib/systemd/system/columnstore.service
+	rm -f /lib/systemd/system/columnstore.service
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then
