@@ -1058,6 +1058,17 @@ void PackageHandler::run()
         result.result=DMLPackageProcessor::COMMAND_ERROR;
         result.message = message;
 	}
+
+	// We put the packageHandler into a map so that if we receive a
+	// message to affect the previous command, we can find it.
+	// We need to remove it from the list before sending the response back.
+	// If we remove it after sending the results, it's possible for a commit
+	// or rollback be sent and get processed before it is removed, and that
+	// will fail.
+	boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
+	DMLProcessor::packageHandlerMap.erase(getSessionID());
+	lk2.unlock();
+
     // send back the results
     messageqcpp::ByteStream results;
     messageqcpp::ByteStream::octbyte rowCount = result.rowCount;
@@ -1561,9 +1572,10 @@ void DMLProcessor::operator()()
 
 					php->run();		// Operates in this thread.
 
-					lk2.lock();
-					packageHandlerMap.erase(sessionID);
-					lk2.unlock();
+// Move this to the end of PackageHandler so it is removed from the map before the response is sent
+//					lk2.lock();
+//					packageHandlerMap.erase(sessionID);
+//					lk2.unlock();
 				}
 			}
 			else
@@ -1597,9 +1609,10 @@ void DMLProcessor::operator()()
 
 				php->run();		// Operates in this thread.
 
-				lk2.lock();
-				packageHandlerMap.erase(sessionID);
-				lk2.unlock();
+// Move this to the end of PackageHandler so it is removed from the map before the response is sent
+//				lk2.lock();
+//				packageHandlerMap.erase(sessionID);
+//				lk2.unlock();
 			}
 		}
     }
