@@ -1880,7 +1880,13 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 #endif
 	THD *thd = current_thd;
 
-	string stmt = idb_mysql_query_str(thd);
+	char* query = thd->query();
+	if (!query)
+	{
+		setError(thd, ER_INTERNAL_ERROR, "Attempt to create table, but query is NULL");
+		return 1;
+	}
+	string stmt(query);
 	stmt += ";";
 	algorithm::to_upper(stmt);
 
@@ -1894,23 +1900,11 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	{
 		tablecomment = table_arg->s->comment.str;
 		try {
-#ifndef SKIP_AUTOI
 			isAnyAutoincreCol = parseAutoincrementTableComment(tablecomment, startValue, columnName);
-#else
-			algorithm::to_upper(tablecomment);
-			if ( tablecomment.find("AUTOINCREMENT") != string::npos )
-			{
-				int rc = 1;
-				thd->get_stmt_da()->set_overwrite_status(true);
-				thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-				return rc;
-			}
-#endif
 		}
 		catch (runtime_error& ex)
 		{
-			thd->get_stmt_da()->set_overwrite_status(true);
-			thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
+			setError(thd, ER_INTERNAL_ERROR, ex.what());
 			return 1;
 		}
 		algorithm::to_upper(tablecomment);
@@ -1928,8 +1922,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	    && tbl != "sysconstraint" && tbl != "sysindexcol"
 	    && tbl != "sysconstraintcol" )
 	{
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_INTERNAL_ERROR, "Can not create non-system Calpont tables in calpontsys database");
+		setError(thd, ER_INTERNAL_ERROR, "Cannot create non-system Calpont tables in calpontsys database");
 		return 1;
 	}
 
@@ -1938,18 +1931,18 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	{
 		schemaSyncOnly = true;
 		pat = createpatstr;
-		if (!regex_search(stmt, pat)) {
+		if (!regex_search(stmt, pat)) 
+		{
 			isCreate = false;
-	}
-
-	if (isCreate)
-	{
-#ifdef INFINIDB_DEBUG
-		cout << "ha_calpont_impl_create_: SCHEMA SYNC ONLY found, returning" << endl;
-#endif
-		return 0;
 		}
-		else if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE) //check if it is select
+		if (isCreate)
+		{
+#ifdef INFINIDB_DEBUG
+			cout << "ha_calpont_impl_create_: SCHEMA SYNC ONLY found, returning" << endl;
+#endif
+			return 0;
+		}
+		if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ALTER_VTABLE) //check if it is select
 		{
 			return 0;
 		}
@@ -1958,14 +1951,12 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	{
 		if (db == "calpontsys")
 		{
-				thd->get_stmt_da()->set_overwrite_status(true);
-				thd->raise_error_printf(ER_INTERNAL_ERROR, "Calpont system tables can only be created with 'SCHEMA SYNC ONLY'");
-				return 1;
+			setError(thd, ER_INTERNAL_ERROR, "Calpont system tables can only be created with 'SCHEMA SYNC ONLY'");
+			return 1;
 		}
 		else if ( db == "infinidb_vtable") //@bug 3540. table created in infinidb_vtable schema could be dropped when select statement happen to have same tablename.
 		{
-			thd->get_stmt_da()->set_overwrite_status(true);
-			thd->raise_error_printf(ER_INTERNAL_ERROR, "Table creation is not allowed in infinidb_vtable schema.");
+			setError(thd, ER_INTERNAL_ERROR, "Table creation is not allowed in infinidb_vtable schema.");
 			return 1;
 		}
 	}
@@ -1980,7 +1971,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	}
 
 	string emsg;
-	stmt = idb_mysql_query_str(thd);
+	stmt = thd->query();
 	stmt += ";";
 	int rc = 0;
 
@@ -1997,20 +1988,18 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	if (ci.isSlaveNode)
 	{
 		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
 		return 1;
 	}
 
 	// @bug 3908. error out primary key for now.
 	if (table_arg->key_info && table_arg->key_info->name && string(table_arg->key_info->name) == "PRIMARY")
 	{
-		rc = 1;
-		Message::Args args;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS, args)).c_str());
+		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS);
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
 		ci.alterTableState = cal_connection_info::NOT_ALTER;
 		ci.isAlter = false;
-		return rc;
+		return 1;
 	}
 
 	int compressiontype = thd->variables.infinidb_compression_type;
@@ -2026,19 +2015,18 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		compressiontype = thd->variables.infinidb_compression_type;
 	else if ( compressiontype < 0 )
 	{
-		rc = 1;
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		string emsg = IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE);
+		setError(thd, ER_INTERNAL_ERROR, emsg);
 		ci.alterTableState = cal_connection_info::NOT_ALTER;
 		ci.isAlter = false;
-		return rc;
+		return 1;
 	}
 
 	//hdfs
 	if ((compressiontype ==0) && (useHdfs))
 	{
 		compressiontype = 2;
-		string errmsg ("The table is created with Columnstore compression type 2 under HDFS." );
-		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errmsg.c_str());
+		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, "The table is created with Columnstore compression type 2 under HDFS.");
 	}
 
 	if (compressiontype == 1) compressiontype = 2;
@@ -2046,20 +2034,20 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 	IDBCompressInterface idbCompress;
 	if ( ( compressiontype > 0 ) && !(idbCompress.isCompressionAvail( compressiontype )) )
 	{
-		rc = 1;
-		thd->raise_error_printf(ER_INTERNAL_ERROR, (IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE)).c_str());
+		string emsg = IDBErrorInfo::instance()->errorMsg(ERR_INVALID_COMPRESSION_TYPE);
+		setError(thd, ER_INTERNAL_ERROR, emsg);
 		ci.alterTableState = cal_connection_info::NOT_ALTER;
 		ci.isAlter = false;
-		return rc;
+		return 1;
 	}
 
 	rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg, compressiontype, isAnyAutoincreCol, startValue, columnName);
 
 	if (rc != 0) {
-	  push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, emsg.c_str());
-	  //Bug 1705 reset the flag if error occurs
-	  ci.alterTableState = cal_connection_info::NOT_ALTER;
-	  ci.isAlter = false;
+		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+		//Bug 1705 reset the flag if error occurs
+		ci.alterTableState = cal_connection_info::NOT_ALTER;
+		ci.isAlter = false;
 #ifdef INFINIDB_DEBUG
 		cout << "ha_calpont_impl_create_: ProcessDDL error, now in state NOT_ALTER" << endl;
 #endif
@@ -2075,7 +2063,13 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	THD *thd = current_thd;
 	std::string tbl(name);
 	std::string schema(db);
-	std::string stmt(idb_mysql_query_str(thd));
+	char* query = thd->query();
+	if (!query)
+	{
+		setError(thd, ER_INTERNAL_ERROR, "Attempt to drop table, but query is NULL");
+		return 1;
+	}
+	std::string stmt(query);
 	algorithm::to_upper(stmt);
 	// @bug 4158 allow table name with 'restrict' in it (but not by itself)
 	std::string::size_type fpos;
@@ -2094,16 +2088,16 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	if (ci.isSlaveNode)
 	{
 		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
 		return 1;
 	}
 
 	string emsg;
-	stmt = idb_mysql_query_str(thd);
+	stmt = thd->query();
 	stmt += ";";
 	int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
 	if (rc != 0)
-		push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, emsg.c_str());
+		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
 	return rc;
 }
 
