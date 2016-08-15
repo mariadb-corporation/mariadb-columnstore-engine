@@ -93,5 +93,8 @@ net-snmp/net-snmp-5.7.3/configure-summary
 net-snmp/net-snmp-5.7.3/dist/generation-scripts/gen-variables
 net-snmp/net-snmp-5.7.3/include/net-snmp/agent/mib_module_config.h
 *MYMETA.json
+utils/loggingcpp/errorids.h
 utils/loggingcpp/messageids.h
-
+CPackConfig.cmake
+CPackSourceConfig.cmake
+build/columnstore.community.spec
