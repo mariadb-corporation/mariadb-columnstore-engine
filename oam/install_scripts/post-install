@@ -145,8 +145,8 @@ mkdir /mnt/tmp > /dev/null 2>&1
 mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
 
 # install Columnstore Log Rotate File
-cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-chmod 644 /etc/logrotate.d/columnstore
+sudo cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+sudo chmod 644 /etc/logrotate.d/columnstore
 
 # remove mysql archive log
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
@@ -163,18 +163,18 @@ systemctl=`which systemctl 2>/dev/null`
 if [ -n "$systemctl" ]; then
 
 	chmod 644 $installdir/bin/columnstore.service
-	cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
-	cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+	sudo cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+	sudo cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
 	systemctl enable columnstore >/dev/null 2>&1
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then
 
-		cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
-		chkconfig --add columnstore > /dev/null 2>&1
+		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+		sudo chkconfig --add columnstore > /dev/null 2>&1
 		chkconfig columnstore on > /dev/null 2>&1
 	else
-		cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
 		updaterc=`which update-rc.d 2>/dev/null`
 		if [ -n "$updaterc" ]; then
 
