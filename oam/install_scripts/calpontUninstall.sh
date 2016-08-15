@@ -4,8 +4,8 @@
 #
 # Uninstall Package from system
 
-set INFINIDB_INSTALL_DIR "/usr/local/mariadb/columnstore"
-set env(INFINIDB_INSTALL_DIR) $INFINIDB_INSTALL_DIR
+set COLUMNSTORE_INSTALL_DIR "/usr/local/mariadb/columnstore"
+set env(COLUMNSTORE_INSTALL_DIR) $COLUMNSTORE_INSTALL_DIR
 
 set USERNAME $env(USER)
 set PASSWORD " "
@@ -55,13 +55,13 @@ log_user $DEBUG
 
 set timeout 2
 set INSTALL 2
-send "$INFINIDB_INSTALL_DIR/bin/getConfig DBRM_Controller NumWorkers\n"
+send "$COLUMNSTORE_INSTALL_DIR/bin/getConfig DBRM_Controller NumWorkers\n"
 expect {
         1                         { set INSTALL 1 }
 }
 
 set PACKAGE "rpm"
-send "$INFINIDB_INSTALL_DIR/bin/getConfig Installation EEPackageType\n"
+send "$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation EEPackageType\n"
 expect {
         rpm                         { set PACKAGE rpm }
         deb                         { set PACKAGE deb }
@@ -79,7 +79,7 @@ send_user "\nPerforming InfiniDB System Uninstall\n\n"
 #
 send_user "Shutdown InfiniDB System                         "
 expect -re {[$#] }
-send "$INFINIDB_INSTALL_DIR/bin/mcsadmin shutdownsystem y\n"
+send "$COLUMNSTORE_INSTALL_DIR/bin/mcsadmin shutdownsystem y\n"
 expect {
 	"shutdownSystem "       { send_user "DONE" }
 }
@@ -92,7 +92,7 @@ if { $INSTALL == "2"} {
 	# Run installer
 	#
 	send_user "Run System Uninstaller                           "
-	send "$INFINIDB_INSTALL_DIR/bin/installer $INFINIDBRPM1 $INFINIDBRPM2 $INFINIDBRPM3 $CONNECTORRPM1 $CONNECTORRPM2 uninstall $PASSWORD n --nodeps dummymysqlpw $DEBUG\n"
+	send "$COLUMNSTORE_INSTALL_DIR/bin/installer $INFINIDBRPM1 $INFINIDBRPM2 $INFINIDBRPM3 $CONNECTORRPM1 $CONNECTORRPM2 uninstall $PASSWORD n --nodeps dummymysqlpw $DEBUG\n"
 	expect {
 		"uninstall request successful" 			{ send_user "DONE" }
 		"ERROR"   								{ send_user "FAILED" ; exit -1 }
@@ -101,7 +101,7 @@ if { $INSTALL == "2"} {
 }
 
 if { $PACKAGE == "binary" } {
-	send "$INFINIDB_INSTALL_DIR/bin/pre-uninstall\n"
+	send "$COLUMNSTORE_INSTALL_DIR/bin/pre-uninstall\n"
 	expect {
 		-re {[$#] }                  {  }
 	}

@@ -48,42 +48,42 @@ done
 shift $shiftcnt
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
 fi
 
-export INFINIDB_INSTALL_DIR=$installdir
+export COLUMNSTORE_INSTALL_DIR=$installdir
 
-cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
+cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $module = "pm" ]; then
 	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
-		cp $INFINIDB_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
+		cp $COLUMNSTORE_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
 	
-		if test -f $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab ; then
+		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
 			echo "Setup fstab on Module"
 			touch /etc/fstab
 			rm -f /etc/fstab.columnstoreSave
 			cp /etc/fstab /etc/fstab.columnstoreSave
-			cat $INFINIDB_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
+			cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
 		fi
 	fi
 fi
 
-test -f $INFINIDB_INSTALL_DIR/post/functions && . $INFINIDB_INSTALL_DIR/post/functions
+test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
 
 mid=`module_id`
 
 #if um, cloud, separate system type, external um storage, then setup mount
 if [ $module = "um" ]; then
 	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
-		systemtype=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation ServerTypeInstall`
+		systemtype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation ServerTypeInstall`
 		if [ $systemtype = "1" ]; then
-			umstoragetype=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation UMStorageType`
+			umstoragetype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMStorageType`
 			if [ $umstoragetype = "external" ]; then
 				echo "Setup UM Volume Mount"
-				device=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation UMVolumeDeviceName$mid`
-				mkdir -p $INFINIDB_INSTALL_DIR/mysql/db > /dev/null 2>&1
-				mount $device $INFINIDB_INSTALL_DIR/mysql/db -t ext2 -o defaults
-				chown mysql:mysql -R $INFINIDB_INSTALL_DIR/mysql > /dev/null 2>&1
+				device=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMVolumeDeviceName$mid`
+				mkdir -p $COLUMNSTORE_INSTALL_DIR/mysql/db > /dev/null 2>&1
+				mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o defaults
+				chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
 			fi
 		fi
 	fi
@@ -91,25 +91,25 @@ fi
 
 #if pm, create dbroot directories
 if [ $module = "pm" ]; then
-	numdbroots=`$INFINIDB_INSTALL_DIR/bin/getConfig SystemConfig DBRootCount`
+	numdbroots=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DBRootCount`
 	for (( id=1; id<$numdbroots+1; id++ )); do
-		mkdir -p $INFINIDB_INSTALL_DIR/data$id > /dev/null 2>&1
-		chmod 755 $INFINIDB_INSTALL_DIR/data$id
+		mkdir -p $COLUMNSTORE_INSTALL_DIR/data$id > /dev/null 2>&1
+		chmod 755 $COLUMNSTORE_INSTALL_DIR/data$id
 	done
 fi
 
 echo "Setup rc.local on Module"
-if [ $EUID -eq 0 -a -f $INFINIDB_INSTALL_DIR/local/rc.local.columnstore ]; then
+if [ $EUID -eq 0 -a -f $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore ]; then
 	if [ $user = "root" ]; then
 		touch /etc/rc.local
 		rm -f /etc/rc.local.columnstoreSave
 		cp /etc/rc.local /etc/rc.local.columnstoreSave
-		cat $INFINIDB_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
+		cat $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
 	else
 		sudo touch /etc/rc.local
 		sudo rm -f /etc/rc.local.columnstoreSave
 		sudo cp /etc/rc.local /etc/rc.local.columnstoreSave
-		sudo cat $INFINIDB_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
+		sudo cat $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
 	fi
 fi
 
@@ -121,45 +121,45 @@ if [ $user != "root" ]; then
 	touch ${bashFile}
 
 	echo " " >> ${bashFile}
-	echo "export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR" >> ${bashFile}
-	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
+	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
+	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
 fi
 
-plugin=`$INFINIDB_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
+plugin=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
 if [ -n "$plugin" ]; then
 	echo "Setup .bashrc on Module for local-query"
 
-	setenv=`$INFINIDB_INSTALL_DIR/bin/getConfig SystemConfig DataFileEnvFile`
+	setenv=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFileEnvFile`
 
 	eval userhome=~$user
 	bashFile=$userhome/.bashrc
 	touch ${bashFile}
 
 	echo " " >> ${bashFile}
-	echo ". $INFINIDB_INSTALL_DIR/bin/$setenv" >> ${bashFile}
+	echo ". $COLUMNSTORE_INSTALL_DIR/bin/$setenv" >> ${bashFile}
 fi
 
 # if mysqlrep is on and module has a my.cnf file, upgrade it
 
-MySQLRep=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation MySQLRep`
+MySQLRep=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation MySQLRep`
 if [ $MySQLRep = "y" ]; then
-	if test -f $INFINIDB_INSTALL_DIR/mysql/my.cnf ; then
+	if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
 		echo "Run Upgrade on my.cnf on Module"
-		$INFINIDB_INSTALL_DIR/bin/mycnfUpgrade > /tmp/mycnfUpgrade.log 2>&1
+		$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade > /tmp/mycnfUpgrade.log 2>&1
 	fi
 fi
 
-if test -f $INFINIDB_INSTALL_DIR/mysql/my.cnf ; then
+if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
 	echo "Run Mysql Port update on my.cnf on Module"
-	$INFINIDB_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > /tmp/mycnfUpgrade_port.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > /tmp/mycnfUpgrade_port.log 2>&1
 fi
 
 # if um, run mysql install scripts
 if [ $module = "um" ]; then
 	echo "Run post-mysqld-install"
-	$INFINIDB_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
 	echo "Run post-mysql-install"
-	$INFINIDB_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
 fi
 
 

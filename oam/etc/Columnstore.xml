@@ -2,7 +2,7 @@
 <!-- $Id: Columnstore.xml 3713 2013-08-16 20:04:47Z wweeks $ -->
 <!--
 	WARNING: Do not make changes to this file unless directed to do so by
-	Calpont service engineers. Incorrect settings can render your system
+	MariaDB service engineers. Incorrect settings can render your system
 	unusable and will require a service call to correct.
 -->
 <Columnstore Version="V1.0.0">

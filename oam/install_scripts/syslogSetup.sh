@@ -31,8 +31,8 @@ for arg in "$@"; do
 done
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	export INFINIDB_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib
+	export COLUMNSTORE_INSTALL_DIR=$installdir
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib
 fi
 
 columnstoreSyslogFile=$installdir/bin/columnstoreSyslog

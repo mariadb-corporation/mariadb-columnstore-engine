@@ -2,17 +2,17 @@
 #
 # $Id: test-001.sh 3704 2013-08-07 03:33:20Z bwilkinson $
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-test -f $INFINIDB_INSTALL_DIR/post/functions && . $INFINIDB_INSTALL_DIR/post/functions
+test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
 
 scrname=`basename $0`
 tname="check-syscat-oids"
@@ -26,7 +26,7 @@ fi
 
 #check for dbrm and data1, don't run if missing both
 if firstboot; then
-	if [ -d $INFINIDB_INSTALL_DIR/data1/000.dir ]; then
+	if [ -d $COLUMNSTORE_INSTALL_DIR/data1/000.dir ]; then
 		cplogger -c 50 $scrname "$tname" "missing dbrm data with existing 000.dir"
 		exit 1
 	else

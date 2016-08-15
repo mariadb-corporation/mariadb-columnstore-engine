@@ -53,9 +53,9 @@ if test -f /etc/rc.local.columnstoreSave ; then
 	$sudo mv -f /etc/rc.local.columnstoreSave /etc/rc.local > /dev/null 2>&1
 fi
 
-export INFINIDB_INSTALL_DIR=$installdir
+export COLUMNSTORE_INSTALL_DIR=$installdir
 
-cloud=`$INFINIDB_INSTALL_DIR/bin/getConfig Installation Cloud`
+cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if test -f /etc/fstab ; then
 		$sudo sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1

@@ -2,8 +2,8 @@
 # Copy this file to /etc/default and rename it to 'columnstore'.
 
 # Change this line to your MariaDB Columnstore installation directory
-INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 
-LD_LIBRARY_PATH=$INFINIDB_INSTALL_DIR/lib:$INFINIDB_INSTALL_DIR/mysql/lib/mysql
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+LD_LIBRARY_PATH=$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH

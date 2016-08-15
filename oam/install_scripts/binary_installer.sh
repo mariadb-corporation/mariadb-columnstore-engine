@@ -29,7 +29,7 @@ set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
-set env(INFINIDB_INSTALL_DIR) $INSTALLDIR
+set env(COLUMNSTORE_INSTALL_DIR) $INSTALLDIR
 set PREFIX [file dirname $INSTALLDIR]
 set PREFIX [file dirname $PREFIX]
 set USERNAME $env(USER)

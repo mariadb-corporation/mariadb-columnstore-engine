@@ -55,9 +55,9 @@ const string StartUp::installDir()
 #else
 	fInstallDirp = new string("/usr/local/mariadb/columnstore");
 	//See if we can figure out the install dir in Linux...
-	//1. env var INFINIDB_INSTALL_DIR
+	//1. env var COLUMNSTORE_INSTALL_DIR
 	const char* p=0;
-	p = getenv("INFINIDB_INSTALL_DIR");
+	p = getenv("COLUMNSTORE_INSTALL_DIR");
 	if (p && *p)
 		*fInstallDirp = p;
 	//2. up one level from current binary location?
