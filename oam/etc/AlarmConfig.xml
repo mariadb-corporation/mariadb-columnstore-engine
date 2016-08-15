@@ -301,7 +301,7 @@
 	<AlarmConfig34>
 		<AlarmID>34</AlarmID>
 		<BriefDesc>ROLLBACK_FAILURE</BriefDesc>
-		<DetailedDesc>A Database Rollback Failure occurred, Contact Calpont Customer Support.</DetailedDesc>
+		<DetailedDesc>A Database Rollback Failure occurred, Contact MariaDB Customer Support.</DetailedDesc>
 		<Severity>1</Severity>
 		<Threshold>100</Threshold>
 		<Occurrences>0</Occurrences>
