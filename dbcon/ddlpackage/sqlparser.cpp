@@ -37,17 +37,17 @@
 
 void scanner_finish(void* yyscanner);
 void scanner_init(const char *str, void* yyscanner);
-void grammar_init(ddlpackage::ParseTree *ptree, bool);
 int ddllex_init_extra(void* user_defined,void** yyscanner);
 int ddllex_destroy(void* yyscanner);
-int ddlparse(void* yyscanner);
+int ddlparse(ddlpackage::pass_to_bison* x);
 void set_schema(std::string schema);
 namespace ddlpackage {
 	using namespace std;
 
 	SqlParser::SqlParser() :
 		fStatus(-1),
-		fDebug(false)
+		fDebug(false),
+		x(&fParseTree)
 	{
 	}
 
@@ -59,15 +59,14 @@ namespace ddlpackage {
 
 	void SqlParser::setDefaultSchema(std::string schema)
     {
-		set_schema(schema);
+		x.fDBSchema=schema;
 	}
 
 	int SqlParser::Parse(const char* sqltext)
 	{
-		ddllex_init_extra(&scanData, &scanner);
-		scanner_init(sqltext, scanner);
-		grammar_init(&fParseTree, fDebug);
-		fStatus = ddlparse(scanner);
+		ddllex_init_extra(&scanData, &x.scanner);
+		scanner_init(sqltext, x.scanner);
+		fStatus = ddlparse(&x);
 		return fStatus;
 	}
 	
@@ -89,8 +88,8 @@ namespace ddlpackage {
 
 	SqlParser::~SqlParser()
 	{
-		scanner_finish(scanner); // free scanner allocated memory
-		ddllex_destroy(scanner);
+		scanner_finish(x.scanner); // free scanner allocated memory
+		ddllex_destroy(x.scanner);
 	}
 
 
@@ -104,7 +103,6 @@ namespace ddlpackage {
 	{
 		fStatus = -1;
 		
-int ddlparse();
 		ifstream ifsql;
 		ifsql.open(sqlfile.c_str());
 		if(!ifsql.is_open()) {

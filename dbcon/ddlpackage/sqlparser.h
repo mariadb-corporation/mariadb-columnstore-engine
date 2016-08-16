@@ -81,6 +81,14 @@ struct scan_data
 	valbuf_t valbuf;
 };
 
+struct pass_to_bison {
+    ParseTree* fParseTree;
+    std::string fDBSchema;
+	void* scanner;
+
+	pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL) {};
+};
+
 class SqlParser
 {
 public:
@@ -113,10 +121,11 @@ public:
 
 protected:
     ParseTree fParseTree;
+	std::string fDBSchema;
     int fStatus; ///< return from yyparse() stored here.
     bool fDebug; ///< Turn on bison debugging.
-	void* scanner;   // yyscan_t * needed for re-entrant flex scanner
 	scan_data scanData;
+	pass_to_bison x;
 };
 
 

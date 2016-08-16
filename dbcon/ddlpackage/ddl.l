@@ -21,6 +21,7 @@
 #include <iostream>
 #include <vector>
 #include <stdio.h>
+#include "sqlparser.h"
 #include "ddlpkg.h"
 
 #ifdef _MSC_VER
@@ -29,8 +30,9 @@
 #include "ddl-gram.h"
 #endif
 
+using namespace ddlpackage;
 int lineno = 1;
-void ddlerror(yyscan_t yyscanner, char *s);
+void ddlerror(struct pass_to_bison* x, char const *s);
 
 static char* scanner_copy(char *str, yyscan_t yyscanner);
 
@@ -173,15 +175,14 @@ VARBINARY {return VARBINARY;}
 
 %%
 
-void ddlerror(yyscan_t yyscanner, char const *s)
+void ddlerror(struct pass_to_bison* x, char const *s)
 {
-	printf("yyerror: %d: %s at %s\n", lineno, s, ddlget_text(yyscanner));
+	printf("yyerror: %d: %s at %s\n", lineno, s, ddlget_text(x->scanner));
 }
 
 typedef std::vector<char*> valbuf_t;
 
 #include <pthread.h>
-#include "sqlparser.h"
 using namespace ddlpackage;
 
 /*

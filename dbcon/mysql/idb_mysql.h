@@ -45,7 +45,7 @@ template <class T> bool isnan(T);
 #ifndef ENABLED_DEBUG_SYNC
 #define ENABLED_DEBUG_SYNC
 #endif
-#define INFINIDB_DEBUG
+//#define INFINIDB_DEBUG
 #define DBUG_ON 1
 #undef  DBUG_OFF
 #else

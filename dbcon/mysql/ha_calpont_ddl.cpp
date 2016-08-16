@@ -614,14 +614,15 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 {
   SqlParser parser;
   THD *thd = current_thd;
-#ifdef INFINIDB_DEBUG
+//#ifdef INFINIDB_DEBUG
 	cout << "ProcessDDLStatement: " << schema << "." << table << ":" << ddlStatement << endl;
-#endif
+//#endif
 
   parser.setDefaultSchema(schema);
   int rc = 0;
   IDBCompressInterface idbCompress;
   parser.Parse(ddlStatement.c_str());
+  cout << "ProcessDDLStatement: finished parse " << schema << "." << table << endl;
   if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
@@ -630,6 +631,13 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
 	csc->identity(execplan::CalpontSystemCatalog::FE);
 	const ddlpackage::ParseTree &ptree = parser.GetParseTree();
+	if (UNLIKELY(ptree.fList.size() == 0))
+	{
+		// TODO: Once the crash bug is found, this should convert to "return 0"
+		cout << "***** ProcessDDLStatement has no stmt *****" << endl;
+		setError(thd, ER_CHECK_NOT_IMPLEMENTED, "DDL processed without statement");
+		return 1;
+	}
 	SqlStatement &stmt = *ptree.fList[0];
 	bool isVarbinaryAllowed = false;
 	std::string valConfig = config::Config::makeConfig()->getConfig(
@@ -1790,7 +1798,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 	  	rc = b;
 	  }
 	}
-	catch (runtime_error&)
+	catch (runtime_error& e)
 	{
 	  rc =1;
 	  thd->get_stmt_da()->set_overwrite_status(true);
@@ -2071,6 +2079,7 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	}
 	std::string stmt(query);
 	algorithm::to_upper(stmt);
+	cout << "ha_calpont_impl_delete_table: " << schema.c_str() << "." << tbl.c_str() << " " << stmt.c_str() << endl;
 	// @bug 4158 allow table name with 'restrict' in it (but not by itself)
 	std::string::size_type fpos;
 	fpos = stmt.rfind(" RESTRICT");
@@ -2096,8 +2105,11 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	stmt = thd->query();
 	stmt += ";";
 	int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
+	cout << "ProcessDDLStatement rc=" << rc << endl;
 	if (rc != 0)
+	{
 		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+	}
 	return rc;
 }
 
