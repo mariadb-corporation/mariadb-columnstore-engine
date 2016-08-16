@@ -67,7 +67,7 @@ void ddlerror (void* yyscanner, char const *error);
 char* copy_string(const char *str);
 %}
 
-%expect 15
+%expect 16
 %pure-parser
 %lex-param {void * scanner}
 %parse-param {void * scanner}
@@ -457,25 +457,29 @@ table_options:
 	}
 	;
 
+opt_equal:
+	{} | '=' {}
+	;
+
 table_option:
- 	ENGINE '=' IDENT {$$ = new pair<string,string>("engine", $3);}
+ 	ENGINE opt_equal IDENT {$$ = new pair<string,string>("engine", $3);}
 	|
- 	MAX_ROWS '=' ICONST {$$ = new pair<string,string>("max_rows", $3);}
+ 	MAX_ROWS opt_equal ICONST {$$ = new pair<string,string>("max_rows", $3);}
  	|
- 	MIN_ROWS '=' ICONST {$$ = new pair<string,string>("min_rows", $3);}
+ 	MIN_ROWS opt_equal ICONST {$$ = new pair<string,string>("min_rows", $3);}
  	|
- 	COMMENT '=' string_literal {$$ = new pair<string,string>("comment", $3);}
+ 	COMMENT opt_equal string_literal {$$ = new pair<string,string>("comment", $3);}
 	|
 	COMMENT string_literal {$$ = new pair<string,string>("comment", $2);}
  	|
-	AUTO_INCREMENT '=' ICONST
+	AUTO_INCREMENT opt_equal ICONST
     {
        $$ = new pair<string,string>("auto_increment", $3);
     }
  	|
- 	DEFAULT CHARSET '=' IDENT {$$ = new pair<string,string>("default charset", $4);}
+ 	DEFAULT CHARSET opt_equal IDENT {$$ = new pair<string,string>("default charset", $4);}
  	|
- 	DEFAULT IDB_CHAR SET '=' IDENT {$$ = new pair<string,string>("default charset", $5);}
+ 	DEFAULT IDB_CHAR SET opt_equal IDENT {$$ = new pair<string,string>("default charset", $5);}
 	;
 
 alter_table_statement:
