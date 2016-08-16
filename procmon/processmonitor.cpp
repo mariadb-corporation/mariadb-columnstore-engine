@@ -3601,7 +3601,7 @@ int ProcessMonitor::reconfigureModule(std::string reconfigureModuleName)
 	system(cmd.c_str());
 	cmd = "rm -f /etc/rc.d/rc.local";
 	system(cmd.c_str());
-	cmd = "cp /etc/rc.d/rc.local.calpontSave /etc/rc.d/rc.local >/dev/null 2>&1";
+	cmd = "cp /etc/rc.d/rc.local.columnstoreSave /etc/rc.d/rc.local >/dev/null 2>&1";
 	system(cmd.c_str());
 	if (geteuid() == 0)
 		cmd = "cat " + installDir + "/local/rc.local.calpont >> /etc/rc.d/rc.local >/dev/null 2>&1";

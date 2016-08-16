@@ -21,10 +21,10 @@
 *
 *
 * List of files being updated by post-install configure:
-*		Calpont/etc/snmpd.conf
-*		Calpont/etc/snmptrapd.conf
-*		Calpont/etc/Columnstore.xml
-*		Calpont/etc/ProcessConfig.xml
+*		mariadb/columnstore/etc/snmpd.conf
+*		mariadb/columnstore/etc/snmptrapd.conf
+*		mariadb/columnstore/etc/Columnstore.xml
+*		mariadb/columnstore/etc/ProcessConfig.xml
 *		/etc/rc.local
 *		
 ******************************************************************************************/
@@ -3777,15 +3777,15 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		string fileName = "/etc/" + files[i];
 
 		//make a backup copy before changing
-		string cmd = "rm -f " + fileName + ".calpontSave";
+		string cmd = "rm -f " + fileName + ".columnstoreSave";
 		if ( !rootUser )
-			cmd = "sudo rm -f " + fileName + ".calpontSave";
+			cmd = "sudo rm -f " + fileName + ".columnstoreSave";
 
 		system(cmd.c_str());
 
-		cmd = "cp " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+		cmd = "cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 		if ( !rootUser )
-			cmd = "sudo cp " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+			cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 
 		system(cmd.c_str());
 
@@ -3890,7 +3890,7 @@ bool updateProcessConfig(int serverTypeInstall)
 	string fileName = installDir + "/etc/ProcessConfig.xml";
 
 	//Save a copy of the original version
-	string cmd = "/bin/cp -f " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+	string cmd = "/bin/cp -f " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 	system(cmd.c_str());
 
 	ifstream oldFile (fileName.c_str());

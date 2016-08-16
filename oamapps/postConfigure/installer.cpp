@@ -80,6 +80,9 @@ string installDir;
 bool noPrompting;
 string mysqlpw = " ";
 
+bool rootUser = true;
+string USER = "root";
+
 int main(int argc, char *argv[])
 {
 	string cmd;
@@ -153,6 +156,16 @@ int main(int argc, char *argv[])
 	if ( mysqlpw == "dummymysqlpw" )
 		mysqlpw = " ";
 	pwprompt = "--password=" + mysqlpw;
+
+	//check if root-user
+	int user;
+	user = getuid();
+	if (user != 0)
+		rootUser = false;
+
+	char* p= getenv("USER");
+	if (p && *p)
+   		USER = p;
 
 	//copy Columnstore.xml.rpmsave if upgrade option is selected
 	if ( installType == "upgrade" ) {
@@ -907,20 +920,40 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		string fileName = "/etc/" + files[i];
 
 		//make a backup copy before changing
-		cmd = "rm -f " + fileName + ".calpontSave";
-		system(cmd.c_str());
+		if ( rootUser )
+		{
+		    cmd = "rm -f " + fileName + ".columnstoreSave";
+		    system(cmd.c_str());
 
-		cmd = "cp " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
-		system(cmd.c_str());
+		    cmd = "cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
+		    system(cmd.c_str());
 
-		cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
-		if (geteuid() == 0) system(cmd.c_str());
+		    cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
+		    if (geteuid() == 0) system(cmd.c_str());
 
-		cmd = "rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
-		system(cmd.c_str());
+		    cmd = "rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
+		    system(cmd.c_str());
 
-		cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1"; 
-		system(cmd.c_str());
+		    cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1"; 
+		    system(cmd.c_str());
+		}
+		else
+		{
+		    cmd = "sudo rm -f " + fileName + ".columnstoreSave";
+		    system(cmd.c_str());
+
+		    cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
+		    system(cmd.c_str());
+
+		    cmd = "sudo cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
+		    if (geteuid() == 0) system(cmd.c_str());
+
+		    cmd = "sudo rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
+		    system(cmd.c_str());
+
+		    cmd = "sudo cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1"; 
+		    system(cmd.c_str());
+		}
 	}
 
 	return allfound;
@@ -1031,7 +1064,7 @@ bool updateProcessConfig(int serverTypeInstall)
 	string fileName = installDir + "/etc/ProcessConfig.xml";
 
 	//Save a copy of the original version
-	cmd = "/bin/cp -f " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+	cmd = "/bin/cp -f " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 	system(cmd.c_str());
 
 	ifstream oldFile (fileName.c_str());

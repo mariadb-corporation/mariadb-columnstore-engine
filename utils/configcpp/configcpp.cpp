@@ -346,7 +346,7 @@ void Config::writeConfig(const string& configFile) const
 #else
 
 	const fs::path defaultCalpontConfigFileTemp("Columnstore.xml.temp");
-	const fs::path saveCalpontConfigFileTemp("Columnstore.xml.calpontSave");
+	const fs::path saveCalpontConfigFileTemp("Columnstore.xml.columnstoreSave");
 	const fs::path tmpCalpontConfigFileTemp("Columnstore.xml.temp1");
 
 	fs::path etcdir = fs::path(fInstallDir) / fs::path("etc");
