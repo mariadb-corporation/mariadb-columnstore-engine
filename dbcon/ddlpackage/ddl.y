@@ -69,7 +69,7 @@ char* copy_string(const char *str);
 %expect 15
 %pure-parser
 %lex-param {void * scanner}
-%parse-param {struct pass_to_bison * x}
+%parse-param {struct ddlpackage::pass_to_bison * x}
 %debug
 
  /* Bison uses this to generate a C union definition.  This is used to
