@@ -6269,7 +6269,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			exceptionControl("setConfig", API_FAILURE);
+			return;
 
 		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
@@ -6311,7 +6311,7 @@ namespace oam
 		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
 		system(cmd.c_str());
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			exceptionControl("distributeFstabUpdates", API_FAILURE);
+			return;
 
 		ACK_FLAG ackflag = oam::ACK_YES;
 		// build and send msg
@@ -8552,7 +8552,7 @@ namespace oam
 		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
 
 		//check if entry already exist 
-		string cmd = "grep /data" + dbrootID + " /etc/fstab /dev/null 2>&1";
+		string cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 0 )
 			return "";
