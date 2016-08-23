@@ -367,12 +367,13 @@ void pDictionaryScan::sendPrimitiveMessages()
 				if (dbRootConnectionMap->find(dbroot) == dbRootConnectionMap->end())
                 {
                     // MCOL-259 force a reload of the xml. This usualy fixes it.
-                    std::cout << "dictionary forcing reload of columnstore.xml for dbRootConnectionMap" << std::endl;
+					Logger log;
+					log.logMessage(logging::LOG_TYPE_DEBUG, "dictionary forcing reload of columnstore.xml for dbRootConnectionMap");
                     oamCache->forceReload();
                     dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
                     if (dbRootConnectionMap->find(dbroot) == dbRootConnectionMap->end())
                     {
-                        std::cout << "dictionary still not in dbRootConnectionMap" << std::endl;
+						log.logMessage(logging::LOG_TYPE_DEBUG, "dictionary still not in dbRootConnectionMap");
                         throw IDBExcept(ERR_DATA_OFFLINE);
                     }
                 }
