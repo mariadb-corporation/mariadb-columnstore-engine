@@ -152,6 +152,8 @@ uint64_t BatchInsertProc::grabTableLock(int32_t sessionId)
 		if (i >= numTries) //error out
 		{
 			logging::Message::Args args;
+			string strOp("batch insert");
+			args.add(strOp);
 			args.add(processName);
 			args.add((uint64_t)processID);
 			args.add(tmpSessionId);

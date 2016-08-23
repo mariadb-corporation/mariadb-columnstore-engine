@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -149,7 +150,7 @@ namespace dmlpackageprocessor
 			{
 				int waitPeriod = 10;
 				int sleepTime = 100; // sleep 100 milliseconds between checks
-				int numTries = 10;  // try 10 times per second
+				int numTries = 30;  // try 30 times (3 seconds)
 				waitPeriod = Config::getWaitPeriod();
 				numTries = 	waitPeriod * 10;
 				struct timespec rm_ts;
@@ -190,6 +191,8 @@ namespace dmlpackageprocessor
 				{
 					result.result = DELETE_ERROR;
 					logging::Message::Args args;
+					string strOp("delete");
+					args.add(strOp);
 					args.add(processName);
 					args.add((uint64_t)processID);
 					args.add(sessionId);

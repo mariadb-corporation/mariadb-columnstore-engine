@@ -192,7 +192,7 @@ getInstancePrivate() {
 
 
 getZone() {
-	#get from Calpont.xml if it's there, if not, get from instance then store
+	#get from Columnstore.xml if it's there, if not, get from instance then store
 	zone=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonZone`
 
 	if [ "$zone" = "unassigned" ] || [ "$zone" = "" ]; then

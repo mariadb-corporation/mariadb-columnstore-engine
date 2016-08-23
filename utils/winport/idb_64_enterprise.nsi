@@ -138,11 +138,11 @@ File win_setup_mysql_part3.1.sql
 File win_setup_mysql_part4.sql
 File win_setup_mysql_part5.sql
 File CalpontVersion.txt
-IfFileExists $INSTDIR\etc\Calpont.xml 0 CfgNotExists
-File /oname=$INSTDIR\etc\Calpont_dist.xml Calpont.xml
+IfFileExists $INSTDIR\etc\Columnstore.xml 0 CfgNotExists
+File /oname=$INSTDIR\etc\Calpont_dist.xml Columnstore.xml
 Goto CfgExists
 CfgNotExists:
-File Calpont.xml
+File Columnstore.xml
 CfgExists:
 File ..\..\utils\loggingcpp\ErrorMessage.txt
 File ..\..\utils\loggingcpp\MessageFile.txt
@@ -184,7 +184,7 @@ File ..\..\dbcon\mysql\calshowprocesslist.sql
 
 WriteRegStr HKLM Software\Calpont\InfiniDB "" $INSTDIR
 WriteRegStr HKLM Software\Calpont\InfiniDB "CalpontHome" $INSTDIR\etc
-WriteRegStr HKLM Software\Calpont\InfiniDB "ConfigFile" $INSTDIR\etc\Calpont.xml
+WriteRegStr HKLM Software\Calpont\InfiniDB "ConfigFile" $INSTDIR\etc\Columnstore.xml
 
 StrCmp $ApndSysPathChoice 'yes' 0 DontAppendSysPath
 Push "PATH"
@@ -335,7 +335,7 @@ Delete $INSTDIR\etc\win_setup_mysql_part3.1.sql
 Delete $INSTDIR\etc\win_setup_mysql_part4.sql
 Delete $INSTDIR\etc\win_setup_mysql_part5.sql
 Delete $INSTDIR\etc\Calpont_save.xml
-Rename $INSTDIR\etc\Calpont.xml $INSTDIR\etc\Calpont_save.xml
+Rename $INSTDIR\etc\Columnstore.xml $INSTDIR\etc\Calpont_save.xml
 
 RMDir /r $INSTDIR\share\charsets
 RMDir /r $INSTDIR\share\czech

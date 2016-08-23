@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -36,7 +37,7 @@
 #include "bytestream.h"
 #include "dbrm.h"
 #include "batchloader.h"
-#include "we_clients.h"
+#include "../writeengine/client/we_clients.h"
 namespace dmlprocessor 
 {
 class BatchInsertProc

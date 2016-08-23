@@ -34,7 +34,7 @@
 #include "joiner.h"
 #include "fixedallocator.h"
 #include "joblisttypes.h"
-#include "funcexpwrapper.h"
+#include "../funcexp/funcexpwrapper.h"
 #include "stlpoolallocator.h"
 #include "hasher.h"
 

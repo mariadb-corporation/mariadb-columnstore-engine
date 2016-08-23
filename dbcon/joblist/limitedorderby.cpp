@@ -34,12 +34,10 @@ using namespace logging;
 #include "rowgroup.h"
 using namespace rowgroup;
 
-#include "idborderby.h"
-using namespace ordering;
-
 #include "jlf_common.h"
 #include "limitedorderby.h"
 
+using namespace ordering;
 
 namespace joblist
 {

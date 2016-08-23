@@ -3,7 +3,7 @@ How it Works Now
 
 There is a new toplevel directory called build.  This contains a
 couple of scripts and a couple of previously (as far as I can tell)
-unmanaged files: Calpont.xml and Doxyfile.  It also contains a
+unmanaged files: Columnstore.xml and Doxyfile.  It also contains a
 top-level Makefile and a rules.tmpl, which is a template rules file
 for other makefiles to include.  More on that later.
 
@@ -23,7 +23,7 @@ these changes assume its use).
 
    b. Copies static elements into the export tree.  Static elements
       are things we use but either don't build or don't build
-      routinely.  This includes Doxyfile, Calpont.xml and
+      routinely.  This includes Doxyfile, Columnstore.xml and
       net-snmp components.
 
    c. Generates a rules.mak from build/build/rules.tmpl to pwd (which

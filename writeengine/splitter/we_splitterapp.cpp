@@ -449,17 +449,19 @@ void WESplitterApp::invokeCpimport()
 	std::vector<char*> Cmds;
 
 
+	char* ptr = 0;
     std::istringstream ss(aCmdLineStr);
     std::string arg;
-    std::vector<std::string> v2;
+	std::vector<std::string> v2(20, "");
+    unsigned int i = 0;
     while(ss >> arg)
     {
 		//we need something that works on Windows as well as linux
-		char* ptr = 0;
-        v2.push_back(arg);
-		//we're going to exec() below, so don't worry about freeing
-		ptr = strdup(v2.back().c_str());
-        Cmds.push_back(ptr);
+        v2[i++] = arg;
+    }
+    for (unsigned int j = 0; j < i; ++j)
+    {
+        Cmds.push_back(const_cast<char*>(v2[j].c_str()));
     }
 
     Cmds.push_back(0);    //null terminate

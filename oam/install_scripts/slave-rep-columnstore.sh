@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-# generic InfiniDB Slave Replication script.
+# generic MariaDB Columnstore Slave Replication script.
 #
 # Notes: This script gets run by ProcMon during installs and upgrades:
 

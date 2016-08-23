@@ -2,17 +2,17 @@
 #
 # $Id: test-002.sh 2937 2012-05-30 18:17:09Z rdempsey $
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-test -f $INFINIDB_INSTALL_DIR/post/functions && . $INFINIDB_INSTALL_DIR/post/functions
+test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
 
 scrname=`basename $0`
 tname="check-brm"

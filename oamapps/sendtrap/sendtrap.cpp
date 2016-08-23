@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -47,6 +48,7 @@ using namespace snmpmanager;
 int main(int argc, char **argv)
 {
 	Oam oam;
+    time_t now = time(0);
 
 	if (argc < 8 )
 		exit (0);
@@ -54,11 +56,11 @@ int main(int argc, char **argv)
 	const char* componentID = argv[1];
 	int alarmID = atoi(argv[2]);
 	int state = atoi(argv[3]);
-	string ModuleName = argv[4];
-	string processName = argv[5];
+	string ModuleName = (argv[4] ? argv[4] : "no ModuleName");
+	string processName = (argv[5] ? argv[5] : "no ProcesName");
 	int pid = atoi(argv[6]);
 	int tid = atoi(argv[7]);
-	string parentOAMModuleName = argv[8];
+	string parentOAMModuleName = (argv[5] ? argv[5] : "no parentOAMModuleName");
 	// Initialize Trap session
 	{
 		init_traps();
@@ -79,8 +81,9 @@ int main(int argc, char **argv)
 		}
 
 		// session initialization
-		create_trap_session(ipAdd.c_str(), 
-							SNMP_TRAP_PORT, 
+        ipAdd+=":"+SNMP_TRAP_PORT;
+		create_trap_session((char*)ipAdd.c_str(), 
+							0, 
 							"public",
 							SNMP_VERSION_1, 
 							SNMP_MSG_TRAP);

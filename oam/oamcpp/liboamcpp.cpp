@@ -47,7 +47,7 @@
 #include <sstream>
 
 #include "ddlpkg.h"
-#include "dmlpkg.h"
+#include "../../dbcon/dmlpackage/dmlpkg.h"
 #define LIBOAM_DLLEXPORT
 #include "liboamcpp.h"
 #undef LIBOAM_DLLEXPORT
@@ -123,7 +123,7 @@ namespace oam
 		if (cf != 0 && *cf != 0)
 			calpontfiledir = cf;
 
-		CalpontConfigFile = calpontfiledir + "/Calpont.xml";
+		CalpontConfigFile = calpontfiledir + "/Columnstore.xml";
 	
 		AlarmConfigFile = calpontfiledir + "/AlarmConfig.xml";
 	
@@ -1368,6 +1368,11 @@ namespace oam
 
     void Oam::getSystemStatus(SystemStatus& systemstatus, bool systemStatusOnly)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			exceptionControl("getSystemStatus", API_FAILURE);
+
 #ifdef _MSC_VER
         // TODO: Remove when we create OAM for Windows
         return;
@@ -2085,6 +2090,11 @@ namespace oam
 
     void Oam::getProcessStatus(SystemProcessStatus& systemprocessstatus, string port)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			exceptionControl("getProcessStatus", API_FAILURE);
+
         ProcessStatus processstatus;
         systemprocessstatus.processstatus.clear();
 
@@ -2182,6 +2192,12 @@ namespace oam
         // TODO: Remove when we create OAM for Windows
         return;
 #endif
+
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			exceptionControl("getProcessStatus", API_FAILURE);
+
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
 		try
@@ -2275,6 +2291,11 @@ namespace oam
 
     void Oam::setProcessStatus(const std::string process, const std::string module, const int state, pid_t PID)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			exceptionControl("setProcessStatus", API_FAILURE);
+
 		//send and wait for ack and resend if not received
 		//retry 5 time max
 		for ( int i=0; i < 5 ; i++)
@@ -2789,6 +2810,11 @@ namespace oam
 			//system("touch /var/log/mariadb/columnstore/test4");
        		exceptionControl("getMyProcessStatus", API_FAILURE);
 		}
+
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			exceptionControl("getMyProcessStatus", API_FAILURE);
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -4794,6 +4820,11 @@ namespace oam
      ********************************************************************/
 	bool Oam::switchParentOAMModule(std::string moduleName, GRACEFUL_FLAG gracefulflag)
 	{
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			exceptionControl("switchParentOAMModule", API_FAILURE);
+
 		int returnStatus;
 		// We assume that moduleName is a valid pm
 
@@ -4805,7 +4836,7 @@ namespace oam
 	
 		string cmdLine = "ping ";
 		string cmdOption = " -w 1 >> /dev/null";
-		string cmd = cmdLine + IPAddr + cmdOption;
+		cmd = cmdLine + IPAddr + cmdOption;
 		if ( system(cmd.c_str()) != 0 ) {
 			//ping failure
 			try{
@@ -5398,7 +5429,7 @@ namespace oam
 			cout << endl << "ERROR: mountDBRoot api failure" << endl;
 		}
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		return;
@@ -6209,7 +6240,7 @@ namespace oam
 			}
 		}
 	
-		//update Calpont.xml entries
+		//update Columnstore.xml entries
 		DBRootConfigList::iterator pt2 = dbrootlist.begin();
 		for( ; pt2 != dbrootlist.end() ; pt2++)
 		{
@@ -6240,7 +6271,7 @@ namespace oam
 		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
 			return;
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		//
@@ -6504,7 +6535,7 @@ namespace oam
 			exceptionControl("assignPmDbrootConfig", API_FAILURE);
 		}
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		return;
@@ -6876,7 +6907,7 @@ namespace oam
 			exceptionControl("sysConfig->write", API_FAILURE);
 		}
 
-		//get updated Calpont.xml distributed
+		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
 
 		//
@@ -6980,7 +7011,7 @@ namespace oam
      * Purpose:   set FilesPerColumnPartition
 	 *            This function takes the old DBRootCount as an input arg
 	 *            and expects that the new DBRootCount has been set in the
-	 *            Calpont.xml file.  Function assumes oldSystemDBRootCount
+	 *            Columnstore.xml file.  Function assumes oldSystemDBRootCount
 	 *            has already been validated to be > 0 (else we could get a
 	 *            divide by 0 error).
      *
@@ -8006,9 +8037,9 @@ namespace oam
 			system(cmd.c_str());
 
 			if (user == 0)
-				cmd = "/etc/init.d/" + systemlog + " " + action + " > /dev/null 2>&1";
+				cmd = "/service " + systemlog + " " + action + " > /dev/null 2>&1";
 			else
-				cmd = "sudo /etc/init.d/" + systemlog + " " + action + " > /dev/null 2>&1";
+				cmd = "sudo service" + systemlog + " " + action + " > /dev/null 2>&1";
 		}
 		// take action on syslog service
 		writeLog("syslogAction cmd: " + cmd, LOG_TYPE_DEBUG );
@@ -8209,12 +8240,17 @@ namespace oam
 					// retry failure
 					writeLog("glusterctl: GLUSTER_WHOHAS: failure, retrying (restarting gluster) " + msg, LOG_TYPE_ERROR );
 
-					string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
+					string cmd = "service glusterd restart > /dev/null 2>&1";
 					if (user != 0)
 						cmd = "sudo " + cmd;
 
 					system(cmd.c_str());
 
+					cmd = "systemctrl restart glusterd > /dev/null 2>&1";
+					if (user != 0)
+						cmd = "sudo " + cmd;
+
+					system(cmd.c_str());
 					sleep(1);
 				}
 
@@ -8516,7 +8552,7 @@ namespace oam
 		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
 
 		//check if entry already exist 
-		string cmd = "grep /data" + dbrootID + " /etc/fstab /dev/null 2>&1";
+		string cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 0 )
 			return "";
@@ -8697,6 +8733,11 @@ namespace oam
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string argument1,
         const std::string argument2, int timeout)
     {
+	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+	system(cmd.c_str());
+	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		return API_CONN_REFUSED;
+
         int returnStatus = API_SUCCESS;           //default
         ByteStream msg;
         ByteStream receivedMSG;
@@ -8795,6 +8836,11 @@ namespace oam
     int Oam::sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetworkList devicenetworklist,
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string password, const std::string mysqlpw)
     {
+	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+	system(cmd.c_str());
+	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		return API_CONN_REFUSED;
+
         int returnStatus = API_TIMEOUT;           //default
         ByteStream msg;
         ByteStream receivedMSG;
@@ -8906,6 +8952,11 @@ namespace oam
 
     int Oam::sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, AlarmList& alarmlist, const std::string date)
     {
+	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+	system(cmd.c_str());
+	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		return API_CONN_REFUSED;
+
         int returnStatus = API_SUCCESS;           //default
         ByteStream msg;
         ByteStream receivedMSG;
@@ -9004,6 +9055,11 @@ namespace oam
 		GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag,
         const std::string argument1, const std::string argument2, int timeout)
 	{
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return API_CONN_REFUSED;
+
 		int returnStatus = API_STILL_WORKING;
 		ByteStream msg;
 		ByteStream receivedMSG;
@@ -9187,6 +9243,11 @@ namespace oam
 
     void Oam::sendStatusUpdate(ByteStream obs, ByteStream::byte returnRequestType)
     {
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		system(cmd.c_str());
+		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			return;
+
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
 		try

@@ -31,8 +31,8 @@ for arg in "$@"; do
 done
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	export INFINIDB_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INFINIDB_INSTALL_DIR/lib
+	export COLUMNSTORE_INSTALL_DIR=$installdir
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib
 fi
 
 columnstoreSyslogFile=$installdir/bin/columnstoreSyslog
@@ -59,10 +59,11 @@ fi
 
 #if none running, check installed
 if [ "$daemon" = "nodaemon" ]; then
-	if [ -f /etc/init.d/syslog ]; then
+
+	if [ -f /etc/syslog.conf ]; then
 		daemon="syslog"
 		/etc/init.d/syslog start > /dev/null 2>&1
-	elif [ -f /etc/init.d/rsyslog ]; then
+	elif [ -f /etc/rsyslog.conf ]; then
 		daemon="rsyslog"
 		/etc/init.d/rsyslog start > /dev/null 2>&1
 	elif [ -f /etc/init.d/syslog-ng ]; then
@@ -75,7 +76,7 @@ fi
 if [ "$daemon" = "nodaemon" ]; then
 	echo ""
 	echo "*** No System Logging Application found (syslog, rsyslog, or syslog-ng)"
-	echo "*** For InfiniDB System Logging functionality, install a System Logging package and reinstall InfiniDB"
+	echo "*** For MariaDB Columnstore System Logging functionality, install a System Logging package and reinstall MariaDB Columnstore"
 	echo ""
 	exit 1
 fi
@@ -136,7 +137,7 @@ elif [ "$daemon" = "syslog" ]; then
 else
 	echo ""
 	echo "*** No System Logging Application found (syslog, rsyslog, or syslog-ng)"
-	echo "*** For InfiniDB System Logging functionality, install a System Logging package and reinstall InfiniDB"
+	echo "*** For MariaDB Columnstore System Logging functionality, install a System Logging package and reinstall MariaDB Columnstore"
 	echo ""
 	exit 1
 fi
@@ -226,14 +227,14 @@ fi
 check() {
 test -f $installdir/post/functions && . $installdir/post/functions
 number=$RANDOM
-cplogger -i 100 "InfiniDB Log Test: $number"
+cplogger -i 104 "MariaDB Columnstore Log Test: $number"
 sleep 3
-egrep -qs "InfiniDB Log Test: $number" /var/log/mariadb/columnstore/info.log
+egrep -qs "MariaDB Columnstore Log Test: $number" /var/log/mariadb/columnstore/info.log
 if [ $? -eq 0 ]; then
-	echo "InfiniDB System Logging working"
+	echo "MariaDB Columnstore System Logging working"
 	exit 0
 else
-	echo "InfiniDB System Logging not working"
+	echo "MariaDB Columnstore System Logging not working"
 	exit 1
 fi
 }

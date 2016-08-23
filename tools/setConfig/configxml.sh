@@ -1,20 +1,20 @@
 #!/bin/bash
 #
-# configxml	set/get an entry in Calpont.xml file
+# configxml	set/get an entry in Columnstore.xml file
 #
 #
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	test -f /etc/default/infinidb && . /etc/default/infinidb
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-InstallDir=$INFINIDB_INSTALL_DIR
+InstallDir=$COLUMNSTORE_INSTALL_DIR
 
 if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
 	export PATH=$InstallDir/bin:$InstallDir/mysql/bin:/bin:/usr/bin
@@ -32,13 +32,13 @@ case "$1" in
 	oldvalue=$($InstallDir/bin/getConfig $2 $3)
 
 	#if [ -z $oldvalue ]; then 
-	#	echo "$2 / $3 not found in Calpont.xml"	
+	#	echo "$2 / $3 not found in Columnstore.xml"	
 	#	exit 1
 	#fi
 
 	echo "Old value of $2 / $3 is $oldvalue"
 
-	calxml=$InstallDir/etc/Calpont.xml
+	calxml=$InstallDir/etc/Columnstore.xml
 
 	seconds=$(date +%s)
 	cp $calxml $calxml.$seconds
@@ -70,7 +70,7 @@ case "$1" in
 	value=$($InstallDir/bin/getConfig $2 $3)
 
 	if [ -z $value ]; then 
-		echo "$2 / $3 not found in Calpont.xml"	
+		echo "$2 / $3 not found in Columnstore.xml"	
 		exit 1
 	fi
 

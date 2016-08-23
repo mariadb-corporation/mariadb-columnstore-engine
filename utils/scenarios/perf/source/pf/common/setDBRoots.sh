@@ -4,7 +4,7 @@
 #*  Script Name:    setDBRoots.sh
 #*  Date Created:   2008.11.21
 #*  Author:         Stephen Cargile
-#*  Purpose:        Set the proper device names in Calpont.xml and then unmount & mount
+#*  Purpose:        Set the proper device names in Columnstore.xml and then unmount & mount
 #*                   the devices to the appropriate mount points
 #*
 #*  Parameters:	    setNum - 1 or 2:  dbroot set number

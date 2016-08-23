@@ -2199,7 +2199,7 @@ namespace oam
 		/**
 		*@brief Distribute Calpont Configure File
 		*/
-		EXPORT void distributeConfigFile(std::string name = "system", std::string file = "Calpont.xml");
+		EXPORT void distributeConfigFile(std::string name = "system", std::string file = "Columnstore.xml");
 
 		/**
 		*@brief Switch Parent OAM Module 

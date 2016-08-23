@@ -41,14 +41,14 @@ using namespace primitiveprocessor;
 
 int main()
 {
-	// Calpont.xml file should be configured as follows:
+	// Columnstore.xml file should be configured as follows:
 	//   um1: 10.100.4.85 and 10.100.5.85
 	//   um2: 10.101.4.85 and 10.101.5.85 
 	sockaddr_in sa = { 1, 0, {0} , {' '} };
 	char* ips[] = {"10.100.4.85", "10.100.5.85", "10.101.4.85", "10.101.5.85"};
 
 	// These are the IP addresses we use to test runtime connections
-	// "not" in the Calpont.xml file.
+	// "not" in the Columnstore.xml file.
 	sockaddr_in saUnknown = { 1, 0, {0} , {' '} };
 	char* ipsUnknown[]={"10.102.1.1", "10.102.2.1", "10.102.3.1", "10.102.4.1"};
 

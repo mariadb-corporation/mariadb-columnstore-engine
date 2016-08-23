@@ -25,7 +25,7 @@
 
 #include <stdlib.h>
 
-#include "we_dctnry.h"
+#include "../dictionary/we_dctnry.h"
 #include "we_chunkmanager.h"
 #if defined(_MSC_VER) && defined(WRITEENGINE_DLLEXPORT)
 #define EXPORT __declspec(dllexport)

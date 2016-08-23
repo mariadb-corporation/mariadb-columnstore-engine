@@ -27,7 +27,7 @@
 #include <tr1/unordered_map>
 #endif
 
-#include "simpleallocator.h"
+#include "../common/simpleallocator.h"
 
 #ifndef _HASHFIX_
 #define _HASHFIX_
@@ -54,7 +54,7 @@ namespace tr1
 #endif
 
 #define NO_DATALISTS
-#include <elementtype.h>
+#include "../joblist/elementtype.h"
 #undef NO_DATALISTS
 
 

@@ -6,17 +6,17 @@
 # Validates that FilesPerColumnPartition setting is not set lower than existing extents.
 #
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-test -f $INFINIDB_INSTALL_DIR/post/functions && . $INFINIDB_INSTALL_DIR/post/functions
+test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
 
 scrname=`basename $0`
 tname="validate-partition-size"
@@ -30,7 +30,7 @@ exit 0
 
 cplogger -i 48 $scrname "$tname"
 
-# Get the FilesPerColumnPartition setting from Calpont.xml.
+# Get the FilesPerColumnPartition setting from Columnstore.xml.
 filesPer=$(getConfig ExtentMap FilesPerColumnPartition)
 
 # Get the maximum segment number for all column files.

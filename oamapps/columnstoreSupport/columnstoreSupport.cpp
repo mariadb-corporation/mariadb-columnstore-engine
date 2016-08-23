@@ -301,11 +301,11 @@ void reportThread(string reporttype)
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "echo '################# cat /etc/Calpont.xml ################# ' >> " + outputFile;
+			cmd = "echo '################# cat /etc/Columnstore.xml ################# ' >> " + outputFile;
 			system(cmd.c_str());
 			cmd = "echo ' ' >> " + outputFile;
 			system(cmd.c_str());
-			cmd = "cat " + installDir + "/etc/Calpont.xml >> " + outputFile;
+			cmd = "cat " + installDir + "/etc/Columnstore.xml >> " + outputFile;
 			system(cmd.c_str());
 		}
 	
@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
 			cout << "It should be run on the server with the DBRM front-end." << endl;
 			cout << "Check the Admin Guide for additional information." << endl;
 			cout << endl;
-			cout << "Usage: columnstoreSupport [-h][-a][-hw][-s][-c][-db][-r][-l][-bl][-lc][-p 'root-password'][-mp 'mysql-root-password'][-de]";
+			cout << "Usage: columnstoreSupport [-h][-a][-hw][-s][-c][-db][-r][-l][-bl][-lc][-p 'root-password'][-mp 'mariadb-columnstore-root-password'][-de]";
 			// if hdfs set up print the hadoop option
 			if (!DataFilePlugin.empty())
 				cout << "[-hd]";
@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
 			cout << "			-bl Output Columnstore Bulk Log Reports only" << endl;
 			cout << "			-lc Output Reports for Local Server only" << endl;
 			cout << "			-p  password (multi-server systems), root-password or 'ssh' to use 'ssh keys'" << endl;
-			cout << "			-mp mysql root user password" << endl;
+			cout << "			-mp MariaDB Columnstore root user password" << endl;
 			cout << "			-de Debug Flag" << endl;
 			// if hdfs set up print the hadoop option
 			if (!DataFilePlugin.empty())
@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
 			else if( string("-mp") == argv[i] ) {
 				i++;
 				if ( argc == i ) {
-					cout << "ERROR: missing mysql root user password argument" << endl;
+					cout << "ERROR: missing MariaDB Columnstore root user password argument" << endl;
 					exit(-1);
 				}
 				mysqlpw = argv[i];
@@ -791,7 +791,7 @@ int main(int argc, char *argv[])
 			string pwprompt = " ";
 	
 			if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR 1045") ) {
-				cout << "NOTE: MySQL root user password is set" << endl;
+				cout << "NOTE: MariaDB Columnstore root user password is set" << endl;
 				//needs a password, was password entered on command line
 				if ( mysqlpw == " " )
 				{	//go check my.cnf
@@ -826,7 +826,7 @@ int main(int argc, char *argv[])
 					{
 						cout << "NOTE: No password provide on command line or found uncommented in my.cnf" << endl;
 						cout << endl;
-						string prompt = " *** Enter MySQL password > ";
+						string prompt = " *** Enter MariaDB Columnstore password > ";
 						mysqlpw = getpass(prompt.c_str());
 					}
 				}
@@ -838,7 +838,7 @@ int main(int argc, char *argv[])
 				system(cmd.c_str());
 
 				if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR 1045") ) {
-					cout << "FAILED: Failed login using MySQL root user password '" << mysqlpw << "'" << endl;
+					cout << "FAILED: Failed login using MariaDB Columnstore root user password '" << mysqlpw << "'" << endl;
 					FAILED = true;
 				}
 			}
@@ -852,7 +852,7 @@ int main(int argc, char *argv[])
 				if ( WEXITSTATUS(ret) == 0) {
 					// run DBMS report info
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					system("echo '******************** DBMS Columnstore Mysql Version ********************' >> columnstoreSupportReport.txt");
+					system("echo '******************** DBMS Columnstore Version ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					cmd = "echo '################# " + columnstoreMysql + " -e status ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
@@ -862,7 +862,7 @@ int main(int argc, char *argv[])
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					system("echo '******************** DBMS Mysql Columnstore System Column  ********************' >> columnstoreSupportReport.txt");
+					system("echo '******************** DBMS  Columnstore System Column  ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					cmd = "echo '################# " + columnstoreMysql + " -e desc calpontsys.syscolumn ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
@@ -872,7 +872,7 @@ int main(int argc, char *argv[])
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					system("echo '******************** DBMS Mysql Columnstore System Table  ********************' >> columnstoreSupportReport.txt");
+					system("echo '******************** DBMS  Columnstore System Table  ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					cmd = "echo '################# " + columnstoreMysql + " -e desc calpontsys.systable ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
@@ -882,7 +882,7 @@ int main(int argc, char *argv[])
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					system("echo '******************** DBMS Mysql Columnstore System Catalog Data ********************' >> columnstoreSupportReport.txt");
+					system("echo '******************** DBMS Columnstore System Catalog Data ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					cmd = "echo '################# " + columnstoreMysql + " calpontsys < " + installDir + "/mysql/dumpcat_mysql.sql ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
@@ -892,7 +892,7 @@ int main(int argc, char *argv[])
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					system("echo '******************** DBMS Mysql Columnstore System Table Data ********************' >> columnstoreSupportReport.txt");
+					system("echo '******************** DBMS Columnstore System Table Data ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					cmd = "echo '################# " + columnstoreMysql + " -e select * from calpontsys.systable ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
@@ -902,7 +902,7 @@ int main(int argc, char *argv[])
 					system(cmd.c_str());
 			
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					system("echo '******************** DBMS Mysql Columnstore Usernames ********************' >> columnstoreSupportReport.txt");
+					system("echo '******************** DBMS Columnstore Usernames ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					cmd = "echo '################# " + columnstoreMysql + " -e show databases ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
@@ -912,7 +912,7 @@ int main(int argc, char *argv[])
 					system(cmd.c_str());
 		
 					system("echo ' ' >> columnstoreSupportReport.txt");
-					system("echo '******************** DBMS Mysql Columnstore variables ********************' >> columnstoreSupportReport.txt");
+					system("echo '******************** DBMS Columnstore variables ********************' >> columnstoreSupportReport.txt");
 					system("echo ' ' >> columnstoreSupportReport.txt");
 					cmd = "echo '################# " + columnstoreMysql + " show variables ################# ' >> columnstoreSupportReport.txt";
 					system(cmd.c_str());
@@ -941,7 +941,7 @@ int main(int argc, char *argv[])
 		}
 
 		system("echo ' ' >> columnstoreSupportReport.txt");
-		system("echo '******************** DBMS Mysql Columnstore config file ********************' >> columnstoreSupportReport.txt");
+		system("echo '******************** DBMS Columnstore config file ********************' >> columnstoreSupportReport.txt");
 		system("echo ' ' >> columnstoreSupportReport.txt");
 		string cmd = "echo '################# cat /mysql/my.cnf ################# ' >> columnstoreSupportReport.txt";
 		system(cmd.c_str());

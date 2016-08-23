@@ -40,7 +40,7 @@ using namespace funcexp;
 
 long long dateGet( uint64_t time, IntervalColumn::interval_type unit, bool dateType )
 {
-	uint32_t year = 0, 
+	uint64_t year = 0, 
 			 month = 0, 
 			 day = 0, 
 			 hour = 0, 
@@ -83,6 +83,9 @@ long long dateGet( uint64_t time, IntervalColumn::interval_type unit, bool dateT
         case IntervalColumn::INTERVAL_HOUR_MINUTE: return (hour*100)+min; 
         case IntervalColumn::INTERVAL_HOUR_SECOND: return (hour*10000)+(min*100)+sec; 
         case IntervalColumn::INTERVAL_MINUTE_SECOND: return (min*100)+sec; 
+		case IntervalColumn::INTERVAL_DAY_MICROSECOND: return (((day*1000000)+(hour*10000)+(min*100)+sec)*1000000)+msec;
+		case IntervalColumn::INTERVAL_HOUR_MICROSECOND: return (((hour*10000)+(min*100)+sec)*1000000)+msec;
+		case IntervalColumn::INTERVAL_MINUTE_MICROSECOND: return (((min*100)+sec)*1000000)+msec;
         case IntervalColumn::INTERVAL_SECOND_MICROSECOND: return (sec*1000000)+msec; 
         default:
 			throw runtime_error("unit type is not supported: " + unit);

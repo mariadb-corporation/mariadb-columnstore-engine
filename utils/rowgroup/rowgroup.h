@@ -59,7 +59,7 @@
 
 #include "branchpred.h"
 
-#include "winport.h"
+#include "../winport/winport.h"
 
 namespace rowgroup
 {
@@ -756,7 +756,7 @@ inline void Row::setFloatField(float val, uint32_t colIndex)
 	//N.B. There is a bug in boost::any or in gcc where, if you store a nan, you will get back a nan,
 	//  but not necessarily the same bits that you put in. This only seems to be for float (double seems
 	//  to work).
-	if (isnan(val))
+	if (std::isnan(val))
 		setUintField<4>(joblist::FLOATNULL, colIndex);
 	else
 		*((float *) &data[offsets[colIndex]]) = val;

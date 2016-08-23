@@ -702,107 +702,13 @@ int processCommand(string* arguments)
         }
         break;
 
-        case 4: // getSystemConfig
+        case 4: // Available
         {
-            SystemSoftware systemsoftware;
-            SystemConfig systemconfig;
-            string returnValue;
-
-            if (arguments[1] == "all" || arguments[1] == "")
-            {
-
-                // get and all display System config parameters
-
-                try
-                {
-					oam.getSystemSoftware(systemsoftware);
-					oam.getSystemConfig(systemconfig);
-
-					cout << endl << "System Configuration" << endl << endl;
-
-					cout << "SystemName = " << systemconfig.SystemName << endl;
-					cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-					cout << "SoftwareRelease = " << systemsoftware.Release << endl;
-
-                    cout << "ParentOAMModuleName = " << systemconfig.ParentOAMModule << endl;
-                    cout << "StandbyOAMModuleName = " << systemconfig.StandbyOAMModule << endl;
-                    cout << "NMSIPAddr = " << systemconfig.NMSIPAddr << endl;
-                    cout << "ModuleHeartbeatPeriod = " << systemconfig.ModuleHeartbeatPeriod << endl;
-                    cout << "ModuleHeartbeatCount = " << systemconfig.ModuleHeartbeatCount << endl;
-//                    cout << "ProcessHeartbeatPeriod = " << systemconfig.ProcessHeartbeatPeriod << endl;
-                    cout << "DBRootCount = " << systemconfig.DBRootCount << endl;
-
-					std::vector<std::string>::iterator pt = systemconfig.DBRoot.begin();
-					int id=1;
-					for( ; pt != systemconfig.DBRoot.end() ; pt++)
-					{
-						string dbroot = *pt;
-                   		cout << "DBRoot" + oam.itoa(id) + " = " + dbroot << endl;
-						++id;
-					}
-
-                    cout << "DBRMRoot = " << systemconfig.DBRMRoot << endl;
-                    cout << "ExternalCriticalThreshold = " << systemconfig.ExternalCriticalThreshold << endl;
-                    cout << "ExternalMajorThreshold = " << systemconfig.ExternalMajorThreshold << endl;
-                    cout << "ExternalMinorThreshold = " << systemconfig.ExternalMinorThreshold << endl;
-                    cout << "MaxConcurrentTransactions = " << systemconfig.MaxConcurrentTransactions << endl;
-                    cout << "SharedMemoryTmpFile = " << systemconfig.SharedMemoryTmpFile << endl;
-                    cout << "NumVersionBufferFiles = " << systemconfig.NumVersionBufferFiles << endl;
-                    cout << "VersionBufferFileSize = " << systemconfig.VersionBufferFileSize << endl;
-                    cout << "OIDBitmapFile = " << systemconfig.OIDBitmapFile << endl;
-                    cout << "FirstOID = " << systemconfig.FirstOID << endl;
-                    cout << "TransactionArchivePeriod = " << systemconfig.TransactionArchivePeriod << endl;
-
-                 }
-                catch (exception& e)
-                {
-                    cout << endl << "**** getSystemConfig Failed :  " << e.what() << endl;
-                }
-            }
-            else
-            { // get a single parameter
-
-                try
-                {
-                    oam.getSystemConfig(arguments[1], returnValue);
-                    cout << endl << "   " << arguments[1] << " = " << returnValue << endl << endl;
-                }
-                catch (exception& e)
-                {
-                    cout << endl << "**** getSystemConfig Failed :  " << e.what() << endl;
-                }
-            }
         }
         break;
 
-        case 5: // setSystemConfig - parameters: Module name, Parameter name and value
+        case 5: // Available
         {
-			parentOAMModule = getParentOAMModule();
-			if ( localModule != parentOAMModule ) {
-				// exit out since not on Parent OAM Module
-                cout << endl << "**** setSystemConfig Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
-                break;
-			}
-
-            if (arguments[2] == "")
-            {
-                // need 2 arguments
-                cout << endl << "**** setSystemConfig Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
-                break;
-            }
-            try
-            {
-				if ( arguments[2] == "=" ) {
-                	cout << endl << "**** setSystemConfig Failed : Invalid Value of '=', please re-enter" << endl;
-					break;
-				}
-                oam.setSystemConfig(arguments[1], arguments[2]);
-                cout << endl << "   Successfully set " << arguments[1] << " = " << arguments[2] << endl << endl;
-            }
-            catch (exception& e)
-            {
-                cout << endl << "**** setSystemConfig Failed :  " << e.what() << endl;
-            }
         }
         break;
 
@@ -3147,7 +3053,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLRep == "y" && MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "MySQL Replication is enabled, is there a 'MySQL' Password configured in " + HOME + "/.my.cnf  (y,n): ";
+			string prompt = "MariaDB Columnstore Replication is enabled, is there a 'MariaDB Columnstore' Password configured in " + HOME + "/.my.cnf  (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -4747,7 +4653,7 @@ int processCommand(string* arguments)
 			break;
 		}
 
-        case 46: // enableMySQLReplication
+        case 46: // enableReplication
         {
 		string MySQLRep;
 		try {
@@ -4756,7 +4662,7 @@ int processCommand(string* arguments)
 		catch(...) {}
 
 		if ( MySQLRep == "y" ) {
-			string warning = "MySQL Replication Feature is already enabled";
+			string warning = "MariaDB Columnstore Replication Feature is already enabled";
 			// confirm request
 			if (confirmPrompt(warning))
 				break;
@@ -4782,7 +4688,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MySQL' Password configured on the MySQL Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
+			string prompt = "Is there a 'MariaDB Columnstore' Password configured on the MariaDB Columnstore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -4804,7 +4710,7 @@ int processCommand(string* arguments)
                 try
                 {
                     	oam.enableMySQLRep(password);
-			cout << endl << "   Successful Enabling of MySQL Replication " << endl << endl;
+			cout << endl << "   Successful Enabling of MariaDB Columnstore Replication " << endl << endl;
 
 			//display Primary UM Module / Master Node
 			string PrimaryUMModuleName;
@@ -4813,11 +4719,11 @@ int processCommand(string* arguments)
 			}
 			catch(...) {}
 
-			cout << "   MySQL Replication Master Node is " << PrimaryUMModuleName << endl << endl;
+			cout << "   MariaDB Columnstore Replication Master Node is " << PrimaryUMModuleName << endl << endl;
                 }
                 catch (exception& e)
                 {
-                    cout << endl << "**** enableMySQLRep Failed :  " << e.what() << endl;
+                    cout << endl << "**** enableRep Failed :  " << e.what() << endl;
                 }
         	break;
 	}
@@ -5715,7 +5621,7 @@ int processCommand(string* arguments)
             break;
 		}
 
-        case 51: // disableMySQLReplication
+        case 51: // disableReplication
         {
 		string MySQLRep;
 		try {
@@ -5724,7 +5630,7 @@ int processCommand(string* arguments)
 		catch(...) {}
 
 		if ( MySQLRep == "n" ) {
-			string warning = "MySQL Replication Feature is already disable";
+			string warning = "MariaDB Columnstore Replication Feature is already disable";
 			// confirm request
 			if (confirmPrompt(warning))
 				break;
@@ -5738,7 +5644,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MySQL' Password configured on the MySQL Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
+			string prompt = "Is there a 'MariaDB Columnstore' Password configured on the MariaDB Columnstore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -5760,11 +5666,11 @@ int processCommand(string* arguments)
                 try
                 {
                     oam.disableMySQLRep();
-			cout << endl << "   Successful Disable of MySQL Replication " << endl;
+			cout << endl << "   Successful Disable of MariaDB Columnstore Replication " << endl;
                 }
                 catch (exception& e)
                 {
-                    cout << endl << "**** disableMySQLRep Failed :  " << e.what() << endl;
+                    cout << endl << "**** disableRep Failed :  " << e.what() << endl;
                 }
 
             	break;
@@ -7866,13 +7772,13 @@ void printSystemStatus()
 				if ( moduletypeconfig.ModuleCount > 1 )
 				{
 					if ( PrimaryUMModuleName != oam::UnassignedName )
-						cout << "Primary Front-End MySQL Module is '" << PrimaryUMModuleName << "'" << endl;
+						cout << "Primary Front-End MariaDB Columnstore Module is '" << PrimaryUMModuleName << "'" << endl;
 				}
 			}
 			else
 			{
 				if ( PrimaryUMModuleName != oam::UnassignedName )
-					cout << "Primary Front-End MySQL Module is '" << PrimaryUMModuleName << "'" << endl;
+					cout << "Primary Front-End MariaDB Columnstore Module is '" << PrimaryUMModuleName << "'" << endl;
 			}
 		}
 
@@ -7894,7 +7800,7 @@ void printSystemStatus()
 		catch(...) {}
 
 		if ( MySQLRep == "y" )
-			cout << "MySQL Replication Feature is enabled" << endl << endl;
+			cout << "MariaDB Columnstore Replication Feature is enabled" << endl << endl;
 	}
 	catch (exception& e)
 	{

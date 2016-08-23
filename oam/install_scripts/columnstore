@@ -14,7 +14,7 @@
 # Required-Stop:     $local_fs $remote_fs $network $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start/stop InfiniDB DW DBMS
+# Short-Description: Start/stop MariaDB Columnstore DW DBMS
 ### END INIT INFO
 
 # Source function library.
@@ -22,17 +22,17 @@ if [ -f /etc/init.d/functions ]; then
 	. /etc/init.d/functions
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-InstallDir=$INFINIDB_INSTALL_DIR
+InstallDir=$COLUMNSTORE_INSTALL_DIR
 
 if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
 	export PATH=$InstallDir/bin:$InstallDir/mysql/bin:/bin:/usr/bin
@@ -40,7 +40,7 @@ if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
 fi
 
 #hadoop
-plugin=`$INFINIDB_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
+plugin=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
 if [ -n "$plugin" ]; then
 	setenv=`$InstallDir/bin/getConfig SystemConfig DataFileEnvFile`
 	. $InstallDir/bin/$setenv >/dev/null 2>&1
@@ -68,7 +68,7 @@ if [ -z "$user" ]; then
 fi
 
 checkInstallSetup() {
-	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Calpont.xml Installation InitialInstallFlag`
+	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
@@ -97,7 +97,7 @@ start() {
 	fi
 	checkInstallSetup
 
-	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Calpont.xml Installation CoreFileFlag`
+	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
 		SUDO=
 		if [ "$user" != "root" ]; then 
@@ -120,9 +120,8 @@ start() {
 stop() {
 	echo "Shutting down MariaDB Columnstore Database Platform"
 	touch /tmp/StopColumnstore
-	pkill -9 ProcMon
-	pkill -9 ProcMgr
-	pkill -9 snmptrapd
+	pkill ProcMon
+	pkill ProcMgr
 	sleep 1
 	$InstallDir/bin/clearShm
 	RETVAL=$?

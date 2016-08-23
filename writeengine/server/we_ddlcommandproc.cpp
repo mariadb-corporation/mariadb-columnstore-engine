@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -159,8 +160,8 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string &err)
 
 		getColumnsForTable(sessionID, tableName.schema,tableName.table, columns);
 
-			column_iterator = columns.begin();
-			std::string tmpStr("");
+        column_iterator = columns.begin();
+        std::string tmpStr("");
 		while (column_iterator != columns.end())
 		{
 
@@ -278,13 +279,17 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string &err)
 
 			++column_iterator;
 		}
-		//fWriteEngine.setDebugLevel(WriteEngine::DEBUG_3);
+		//fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
 		fWEWrapper.setTransId(txnID);
 		fWEWrapper.setIsInsert(true);
 		fWEWrapper.setBulkFlag(false);
 		fWEWrapper.startTransaction(txnID);
 		if (0 != colStructs.size())
 		{
+            // MCOL-66 The DBRM can't handle concurrent transactions to sys tables
+            // TODO: This may be redundant
+            static boost::mutex dbrmMutex;
+            boost::mutex::scoped_lock lk(dbrmMutex);
 			error = fWEWrapper.insertColumnRec_SYS(txnID, colStructs, colValuesList,
 											dctnryStructList, dctnryValueList, SYSCOLUMN_BASE);
 
@@ -683,7 +688,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string &err
 				colValuesList.push_back(colList[n]);
 				dctnryValueList.push_back(dctColList[n]);
 			}
-			//fWriteEngine.setDebugLevel(WriteEngine::DEBUG_3);
+			//fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
 			error = fWEWrapper.insertColumnRec_SYS(txnID, colStructs, colValuesList,
 								dctnryStructList, dctnryValueList, SYSCOLUMN_BASE);
 
@@ -1042,7 +1047,7 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string & err)
 				colValuesList.push_back(colList[n]);
 				dctnryValueList.push_back(dctColList[n]);
 			}
-			//fWriteEngine.setDebugLevel(WriteEngine::DEBUG_3);
+			//fWEWrapper.setDebugLevel(WriteEngine::DEBUG_3);
 			fWEWrapper.setTransId(txnID);
 			fWEWrapper.setIsInsert(true);
 			fWEWrapper.setBulkFlag(false);

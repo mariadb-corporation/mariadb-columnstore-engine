@@ -21,10 +21,10 @@
 *
 *
 * List of files being updated by post-install configure:
-*		Calpont/etc/snmpd.conf
-*		Calpont/etc/snmptrapd.conf
-*		Calpont/etc/Calpont.xml
-*		Calpont/etc/ProcessConfig.xml
+*		mariadb/columnstore/etc/snmpd.conf
+*		mariadb/columnstore/etc/snmptrapd.conf
+*		mariadb/columnstore/etc/Columnstore.xml
+*		mariadb/columnstore/etc/ProcessConfig.xml
 *		/etc/rc.local
 *		
 ******************************************************************************************/
@@ -284,13 +284,13 @@ int main(int argc, char *argv[])
 			cout << endl;
    			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
 			cout << "   -h  Help" << endl;
-			cout << "   -c  Config File to use to extract configuration data, default is Calpont.xml.rpmsave" << endl;
-			cout << "   -u  Upgrade, Install using the Config File from -c, default to Calpont.xml.rpmsave" << endl;
+			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
+			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
 			cout << "	 If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
-			cout << "   -mp MySQL Password" << endl;
+			cout << "   -mp MariaDB Columnstore Password" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
-			cout << "   -port MySQL Port Address" << endl;
+			cout << "   -port MariaDB Columnstore Port Address" << endl;
 			exit (0);
 		}
       		else if( string("-s") == argv[i] )
@@ -306,8 +306,8 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 			oldFileName = argv[i];
-			if ( oldFileName.find("Calpont.xml") == string::npos ) {
-				cout << "   ERROR: Config File is not a Calpont.xml file name" << endl;
+			if ( oldFileName.find("Columnstore.xml") == string::npos ) {
+				cout << "   ERROR: Config File is not a Columnstore.xml file name" << endl;
 				exit (1);
 			}			
 		}
@@ -326,12 +326,12 @@ int main(int argc, char *argv[])
 		else if( string("-mp") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
-				cout << "   ERROR: MySql Password not provided" << endl;
+				cout << "   ERROR: MariaDB Columnstore Password not provided" << endl;
 				exit (1);
 			}
 			mysqlpw = argv[i];
 			if ( mysqlpw.find("-") != string::npos ) {
-				cout << "   ERROR: Valid MySQL Password not provided" << endl;
+				cout << "   ERROR: Valid MariaDB Columnstore Password not provided" << endl;
 				exit (1);
 			}			
 			if ( mysqlpw == "dummymysqlpw" )
@@ -357,13 +357,13 @@ int main(int argc, char *argv[])
 		else if( string("-port") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
-				cout << "   ERROR: MySQL Port ID not supplied" << endl;
+				cout << "   ERROR: MariaDB Columnstore Port ID not supplied" << endl;
 				exit (1);
 			}
 			mysqlPort = argv[i];
 			if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
 			{
-				cout << "   ERROR: Invalid MySQL Port ID supplied, must be between 1000-9999" << endl;
+				cout << "   ERROR: Invalid MariaDB Columnstore Port ID supplied, must be between 1000-9999" << endl;
 				exit (1);
 			}
 		}
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	oldFileName = installDir + "/etc/Calpont.xml.rpmsave";
+	oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
 
 	cout << endl;
 	cout << "This is the MariaDB Columnstore System Configuration and Installation tool." << endl;
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
 		cout << endl;
 		cout << " 1. Root user ssh keys setup between all nodes in the system or" << endl;
 		cout << "    use the password command line option." << endl;
-		cout << " 2. A Configure File to use to retrieve configure data, default to Calpont.xml.rpmsave" << endl;
+		cout << " 2. A Configure File to use to retrieve configure data, default to Columnstore.xml.rpmsave" << endl;
 		cout << "    or use the '-c' option to point to a configuration file." << endl;
 		cout << endl;
 //		cout << " Output if being redirected to " << postConfigureLog << endl;
@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
 		if (WEXITSTATUS(rtnCode) != 0)
 			cout << "Error: Problem upgrade my.cnf, check /tmp/mycnfUpgrade.log" << endl;
 		else
-			cout << cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
+			cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
 	}
 
 	//check mysql port changes
@@ -540,20 +540,20 @@ int main(int argc, char *argv[])
 				cout << endl << "Performing the Single Server Install." << endl; 
 
 				if ( reuseConfig == "n" ) {
-					//setup to use the single server Calpont.xml file
+					//setup to use the single server Columnstore.xml file
 
 					// we know that our Config instance just timestamped itself in the getConfig
 					// call above.  if postConfigure is running non-interactively we may get here
 					// within the same second which means the changes that are about to happen
-					// when Calpont.xml gets overwritten will be ignored because of the Config
+					// when Columnstore.xml gets overwritten will be ignored because of the Config
 					// instance won't know to reload
                     			sleep(2);
 
-					cmd = "rm -f " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+					cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 					system(cmd.c_str());
-					cmd = "mv -f " + installDir + "/etc/Calpont.xml " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+					cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 					system(cmd.c_str());
-					cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml.singleserver " + installDir + "/etc/Calpont.xml  > /dev/null 2>&1";
+					cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
 					system(cmd.c_str());
 				}
 
@@ -834,11 +834,14 @@ int main(int argc, char *argv[])
 
 	in.seekg(0, std::ios::end);
 	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "command not found")) 
+	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
 	// not running on amazon with ec2-api-tools
 		amazonInstall = false;
 	else
-		amazonInstall = true;
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+			amazonInstall = false;
+		else
+			amazonInstall = true;
 
 	string amazonSubNet = oam::UnassignedName;
 
@@ -1045,7 +1048,7 @@ int main(int argc, char *argv[])
 		cout << endl << "NOTE: Local Query Feature is enabled" << endl;
 
 	if ( mysqlRep )
-		cout << endl << "NOTE: MySQL Replication Feature is enabled" << endl;
+		cout << endl << "NOTE: MariaDB Columnstore Replication Feature is enabled" << endl;
 
 	//Write out Updated System Configuration File
 	try {
@@ -1165,7 +1168,7 @@ int main(int argc, char *argv[])
 			// are we using settings from previous config file?
 			if ( reuseConfig == "n" ) {
 				if( !uncommentCalpontXml("NumBlocksPct") ) {
-					cout << "Update Calpont.xml NumBlocksPct Section" << endl;
+					cout << "Update Columnstore.xml NumBlocksPct Section" << endl;
 					exit(1);
 				}
 
@@ -1867,7 +1870,7 @@ int main(int argc, char *argv[])
 									callFree(pcommand);
 								}
 	
-								if (newModuleIPAddr == "127.0.0.1" || newModuleIPAddr == "0.0.0.0") {
+								if (newModuleIPAddr == "127.0.0.1" || newModuleIPAddr == "0.0.0.0" || newModuleIPAddr == "128.0.0.1") {
 									cout << endl << newModuleIPAddr + " is an Invalid IP Address for a multi-server system, please re-enter" << endl << endl;
 									newModuleIPAddr = "unassigned";
 									if ( noPrompting )
@@ -2735,7 +2738,7 @@ int main(int argc, char *argv[])
 
 	if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM && pmNumber == 1) {
 		//run the mysql / mysqld setup scripts
-		cout << endl << "===== Running the MariaDB Columnstore MySQL setup scripts =====" << endl << endl;
+		cout << endl << "===== Running the MariaDB Columnstore MariaDB Columnstore setup scripts =====" << endl << endl;
 
 		checkMysqlPort(mysqlPort, sysConfig);
 
@@ -2848,7 +2851,7 @@ int main(int argc, char *argv[])
 			}
 
 			//check if pkgs are located in $HOME directory
-			string version = systemsoftware.Version + "*" + systemsoftware.Release;
+			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType != "binary") {
 				string separator = "-";
 				if ( EEPackageType == "deb" )
@@ -2957,7 +2960,7 @@ int main(int argc, char *argv[])
 			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 			{
-				cout << endl << "===== Running the MariaDB Columnstore MySQL setup scripts =====" << endl << endl;
+				cout << endl << "===== Running the MariaDB Columnstore MariaDB Columnstore setup scripts =====" << endl << endl;
 
 				// call the mysql setup scripts
 				mysqlSetup();
@@ -3047,7 +3050,7 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore-MySQL login failure, password is assigned. Need MySQL password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB Columnstore  login failure, password is assigned. Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 
@@ -3063,20 +3066,20 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore-MySQL login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB Columnstore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 								}
 								else
 								{
 									if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
-										cout << endl << "ERROR: MySQL runtime error, exit..." << endl << endl;
+										cout << endl << "ERROR: MariaDB Columnstore runtime error, exit..." << endl << endl;
 										system("cat /tmp/idbmysql.log");
 										exit (1);
 									}
 									else
 									{
-										cout << endl << "Additional MySQL Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
+										cout << endl << "Additional MariaDB Columnstore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
 
 										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
 										int rtnCode = system(cmd.c_str());
@@ -3398,7 +3401,7 @@ int main(int argc, char *argv[])
 					//run remote command script
 					cout << endl << "----- Starting MariaDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
 
-					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Calpont.xml " +  installDir + "/etc/. > /dev/null 2>&1";
+					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml " +  installDir + "/etc/. > /dev/null 2>&1";
 					int rtnCode = system(cmd.c_str());
 
 					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
@@ -3435,7 +3438,7 @@ int main(int argc, char *argv[])
 	
 		string start = "y";
 		cout << "System Installation is complete." << endl;
-		cout << "If an error occurred while running the MariaDB Columnstore MySQL setup scripts," << endl;
+		cout << "If an error occurred while running the MariaDB Columnstore setup scripts," << endl;
 		cout << "this will need to be corrected and postConfigure will need to be re-run." << endl << endl;
 		while(true)
 		{
@@ -3519,7 +3522,7 @@ int main(int argc, char *argv[])
 			( mysqlRep && (umNumber > 1) ) ||
 			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
 		{
-			cout << endl << "Run MySQL Replication Setup.. ";
+			cout << endl << "Run MariaDB Columnstore Replication Setup.. ";
 			cout.flush();
 
 			//send message to procmon's to run upgrade script
@@ -3539,7 +3542,7 @@ int main(int argc, char *argv[])
 
 		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
 
-		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore MySQL console" << endl;
+		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB Columnstore Admin console" << endl << endl;
 	}
 	else
@@ -3553,16 +3556,16 @@ int main(int argc, char *argv[])
 }
 
 /*
- * Check for reuse of RPM saved Calpont.xml
+ * Check for reuse of RPM saved Columnstore.xml
  */
 bool checkSaveConfigFile()
 {
-	string rpmFileName = installDir + "/etc/Calpont.xml";
-	string newFileName = installDir + "/etc/Calpont.xml.new";
+	string rpmFileName = installDir + "/etc/Columnstore.xml";
+	string newFileName = installDir + "/etc/Columnstore.xml.new";
 
 	string extentMapCheckOnly = " ";
 
-	//check if Calpont.xml.rpmsave exist
+	//check if Columnstore.xml.rpmsave exist
 	ifstream File (oldFileName.c_str());
 	if (!File) {
 		if ( noPrompting ) {
@@ -3648,11 +3651,11 @@ bool checkSaveConfigFile()
 		string cmd;
 		if ( reuseConfig == "y" ) {
 			if ( singleServerInstall == "1") {
-				cmd = "rm -f " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+				cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 				system(cmd.c_str());
-				cmd = "mv -f " + installDir + "/etc/Calpont.xml " + installDir + "/etc/Calpont.xml.installSave  > /dev/null 2>&1";
+				cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
 				system(cmd.c_str());
-				cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml.singleserver " + installDir + "/etc/Calpont.xml  > /dev/null 2>&1";
+				cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
 				system(cmd.c_str());
 			}
 			break;
@@ -3675,7 +3678,7 @@ bool checkSaveConfigFile()
 		string cmd = "mv -f " + rpmFileName + " " + newFileName;
 		int rtnCode = system(cmd.c_str());
 		if (WEXITSTATUS(rtnCode) != 0) {
-			cout << "Error moving installed version of Calpont.xml" << endl;
+			cout << "Error moving installed version of Columnstore.xml" << endl;
 			return false;
 		}
 	
@@ -3702,7 +3705,7 @@ bool checkSaveConfigFile()
 
 		//check to see if updates were made	
 		if ( sysConfig->getConfig("ExeMgr1", "IPAddr") != "0.0.0.0") {
-			//Calpont.xml is ready to go, get feature options
+			//Columnstore.xml is ready to go, get feature options
 
 			if ( MySQLRep == "n" )
 			{
@@ -3737,7 +3740,7 @@ bool checkSaveConfigFile()
 	if ( reuseConfig == "n" )
 		return true;
 
-	cout << "ERROR: Failed to copy data to Calpont.xml" << endl;
+	cout << "ERROR: Failed to copy data to Columnstore.xml" << endl;
 	return false;
 
 }
@@ -3774,15 +3777,15 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		string fileName = "/etc/" + files[i];
 
 		//make a backup copy before changing
-		string cmd = "rm -f " + fileName + ".calpontSave";
+		string cmd = "rm -f " + fileName + ".columnstoreSave";
 		if ( !rootUser )
-			cmd = "sudo rm -f " + fileName + ".calpontSave";
+			cmd = "sudo rm -f " + fileName + ".columnstoreSave";
 
 		system(cmd.c_str());
 
-		cmd = "cp " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+		cmd = "cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 		if ( !rootUser )
-			cmd = "sudo cp " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+			cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 
 		system(cmd.c_str());
 
@@ -3887,7 +3890,7 @@ bool updateProcessConfig(int serverTypeInstall)
 	string fileName = installDir + "/etc/ProcessConfig.xml";
 
 	//Save a copy of the original version
-	string cmd = "/bin/cp -f " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+	string cmd = "/bin/cp -f " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 	system(cmd.c_str());
 
 	ifstream oldFile (fileName.c_str());
@@ -3947,11 +3950,11 @@ bool updateProcessConfig(int serverTypeInstall)
 }
 
 /*
- * Uncomment entry in Calpont.xml
+ * Uncomment entry in Columnstore.xml
  */
 bool uncommentCalpontXml( string entry)
 {
-	string fileName = installDir + "/etc/Calpont.xml";
+	string fileName = installDir + "/etc/Columnstore.xml";
 
 	ifstream oldFile (fileName.c_str());
 	if (!oldFile) return true;
@@ -4318,11 +4321,11 @@ bool storageSetup(bool amazonInstall)
 		// get Frontend Data storage type
 		//
 	
-		cout << "----- Setup User Module MySQL Data Storage Mount Configuration -----" << endl << endl;
+		cout << "----- Setup User Module MariaDB Columnstore Data Storage Mount Configuration -----" << endl << endl;
 	
 		cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
-		cout << "  'internal' -    This is specified when a local disk is used for the MySQL Data storage." << endl << endl;
-		cout << "  'external' -    This is specified when the MySQL Data directory is externally mounted." << endl << endl;
+		cout << "  'internal' -    This is specified when a local disk is used for the Data storage." << endl << endl;
+		cout << "  'external' -    This is specified when the MariaDB Columnstore Data directory is externally mounted." << endl << endl;
 	
 		try {
 			UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");

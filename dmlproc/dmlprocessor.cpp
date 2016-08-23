@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-
+   Copyright (C) 2016 MariaDB Corporation 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; version 2 of
@@ -63,6 +63,8 @@ using namespace querytele;
 extern boost::mutex mute;
 extern boost::condition_variable cond;
 
+#define MCOL_140 // Undefine to test VSS for out of order transactions
+
 namespace
 {
 const std::string myname = "DMLProc";
@@ -78,6 +80,11 @@ boost::mutex DMLProcessor::packageHandlerMapLock;
 //Map to store the BatchInsertProc object
 std::map<uint32_t, BatchInsertProc*> DMLProcessor::batchinsertProcessorMap;
 boost::mutex DMLProcessor::batchinsertProcessorMapLock;
+
+// MCOL-140 Map to hold table oids for tables being changed.
+std::map<uint32_t, PackageHandler::tableAccessQueue_t> PackageHandler::tableOidMap;
+boost::condition_variable PackageHandler::tableOidCond;
+boost::mutex PackageHandler::tableOidMutex;
 
 //------------------------------------------------------------------------------
 // A thread to periodically call dbrm to see if a user is
@@ -276,26 +283,193 @@ PackageHandler::PackageHandler(const messageqcpp::IOSocket& ios,
 							   boost::shared_ptr<messageqcpp::ByteStream> bs, 
 							   uint8_t packageType,
 							   joblist::DistributedEngineComm *ec, 
+							   bool concurrentSupport,
 							   uint64_t maxDeleteRows,
 							   uint32_t sessionID, 
 							   execplan::CalpontSystemCatalog::SCN txnId,
 							   DBRM * aDbrm,
-							   const QueryTeleClient& qtc) : 
+							   const QueryTeleClient& qtc,
+                               boost::shared_ptr<execplan::CalpontSystemCatalog> csc) : 
 		fIos(ios),
 		fByteStream(bs),
 		fPackageType(packageType),
 		fEC(ec),
+		fConcurrentSupport(concurrentSupport),
 		fMaxDeleteRows(maxDeleteRows),
 		fSessionID(sessionID),
+		fTableOid(0),
 		fTxnid(txnId),
 		fDbrm(aDbrm),
-		fQtc(qtc)
+		fQtc(qtc),
+        fcsc(csc)
 {
 }
 
 PackageHandler::~PackageHandler()
 {
 	//cout << "In destructor" << endl;
+}
+
+// MCOL-140
+// Blocks a thread if there is another trx working on the same fTableOid
+// return 1 when thread should continue.
+// return 0 if error. Right now, no error detection is implemented.
+//
+// txnid was being created before the call to this function. This caused race conditions
+// so creation is delayed until we're inside the lock here. Nothing needs it before
+// this point in the execution.
+// 
+// The algorithm is this. When the first txn for a given fTableOid arrives, start a queue 
+// containing a list of waiting or working txnId. Put this txnId into the queue (working)
+// Put the queue into a map keyed on fTableOid.
+// 
+// When the next txn for this fTableOid arrives, it finds the queue in the map and adds itself,
+// then waits for condition.
+// When a thread finishes, it removes its txnId from the queue and notifies all. If the queue is
+// empty, it removes the entry from the map.
+// Upon wakeup from wait(), a thread checks to see if it's next in the queue. If so, it is released
+// to do work. Otherwise it goes back to wait.
+// 
+// There's a chance (CTRL+C) for instance, that the txn is no longer in the queue. Release it to work.
+// Rollback will most likely be next.
+// 
+// A tranasaction for one fTableOid is not blocked by a txn for a different fTableOid.
+int PackageHandler::synchTableAccess()
+{
+	// MCOL-140 Wait for any other DML using this table.
+	std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
+	boost::unique_lock<boost::mutex> lock(tableOidMutex);
+	BRM::TxnID txnid;
+
+	if (fPackageType != dmlpackage::DML_COMMAND)
+	{
+		txnid = sessionManager.getTxnID(fSessionID);
+		if ( !txnid.valid )
+		{
+			txnid = sessionManager.newTxnID(fSessionID, true);
+			if (!txnid.valid) 
+			{
+				throw std::runtime_error( std::string("Unable to start a transaction. Check critical log.") );
+			}
+		}
+	}
+	else
+	{
+		txnid = sessionManager.getTxnID(fSessionID);
+	}
+	fTxnid = txnid.id;
+
+	if ((it=tableOidMap.find(fTableOid)) != tableOidMap.end())
+	{
+		PackageHandler::tableAccessQueue_t& tableOidQueue = it->second;
+		// There's at least one working txn on this table. We may be the same txn.
+		if (fTxnid == tableOidQueue.front())
+		{
+			return 1; // We're next in line or the same as the last. Keep working
+		}
+
+		tableOidQueue.push(fTxnid);  // Get on the waiting list.
+
+		// We need to wait
+		// tableOidQueue here is the queue holding the waitng transactions for this fTableOid
+		while (true)
+		{
+			tableOidCond.wait(lock);
+			if (tableOidQueue.front() == fTxnid)
+			{
+				break;
+			}
+			if (tableOidQueue.empty())
+			{
+				// If we had been the last txn waiting and CTRL+C was hit, then the queue is empty now.
+				// Empty queues must be erased from the map.
+				tableOidMap.erase(fTableOid);
+				break;
+			}
+			// If we're not in the queue at all, then continue. CTRL+C was probably hit.
+			PackageHandler::tableAccessQueue_t::container_type::iterator c_it = tableOidQueue.find(fTxnid);
+			if (c_it == tableOidQueue.end())
+			{
+				break;
+			}
+			// We're still in the queue and not on top. Go back and wait some more.
+		}
+	}
+	else
+	{
+		// We're the first for this tableoid. Start a new queue.
+		tableAccessQueue_t tableOidQueue;
+		tableOidQueue.push(fTxnid);
+		tableOidMap[fTableOid] = tableOidQueue;
+	}
+	return 1;
+}
+
+// MCOL-140 Called when it's time to release the next thread for this tablOid
+int PackageHandler::releaseTableAccess()
+{
+	// take us out of the queue
+	std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
+	boost::lock_guard<boost::mutex> lock(tableOidMutex);
+	if (fTableOid == 0 || (it=tableOidMap.find(fTableOid)) == tableOidMap.end())
+	{
+		// This will happen for DML_COMMAND, as we never got the tableoid or called synchTableAccess
+		return 2;  // For now, return codes are not used
+	}
+	PackageHandler::tableAccessQueue_t& tableOidQueue = it->second;
+	if (tableOidQueue.front() != fTxnid)
+	{
+		// This is a severe error. The front should be the working thread. If we're here,
+		// we're the working thread and should be front().
+		cout << fTxnid << " " << fTableOid << " We got to release and we're not on top " << tableOidQueue.front() << endl;
+		LoggingID logid(21, fSessionID, fTxnid);
+		logging::Message::Args args1;
+		logging::Message msg(1);
+		args1.add("ReleaseTableAccess: Txn being released is not the current txn in the tablOidQueue for tableid");
+		args1.add((uint64_t)fTableOid);
+		msg.format(args1);
+		logging::Logger logger(logid.fSubsysID);
+		logger.logMessage(LOG_TYPE_ERROR, msg, logid);
+	}
+	else
+	{
+		tableOidQueue.pop();  // Get off the waiting list.
+		if (tableOidQueue.empty())
+		{
+			// remove the queue from the map.
+			tableOidMap.erase(fTableOid);
+		}
+	}
+	// release the condition
+	tableOidCond.notify_all();
+	return 1;
+}
+
+int PackageHandler::forceReleaseTableAccess()
+{
+	// By removing the tcnid from the queue, the logic after the wait in
+	// synchTableAccess() will release the thread and clean up if needed.
+	std::map<uint32_t, PackageHandler::tableAccessQueue_t>::iterator it;
+	boost::lock_guard<boost::mutex> lock(tableOidMutex);
+	if (fTableOid == 0 || (it=tableOidMap.find(fTableOid)) == tableOidMap.end())
+	{
+		// This will happen for DML_COMMAND, as we never got the tableoid or called synchTableAccess
+		return 2;
+	}
+	PackageHandler::tableAccessQueue_t& tableOidQueue = it->second;
+	tableOidQueue.erase(fTxnid);
+	// release the condition
+	tableOidCond.notify_all();
+	return 1;
+}
+
+//static 
+// Called upon sighup, often because PrimProc crashed. We don't want to leave all the transactions hung,
+// though some may be because they never returned from PrimProc and will leave the table lock on.
+int PackageHandler::clearTableAccess()
+{
+	tableOidMap.clear();
+	return 1;
 }
 
 void PackageHandler::run()
@@ -310,7 +484,6 @@ void PackageHandler::run()
 
 	try
 	{
-
 		switch( fPackageType )
 		{
 			case dmlpackage::DML_INSERT:
@@ -321,6 +494,23 @@ void PackageHandler::run()
 					//boost::shared_ptr<messageqcpp::ByteStream> insertBs (new messageqcpp::ByteStream);
 					messageqcpp::ByteStream bsSave = *(fByteStream.get());
 					insertPkg.read(*(fByteStream.get()));
+#ifdef MCOL_140
+					if (fConcurrentSupport) 
+					{
+						fTableOid = insertPkg.getTableOid();
+						// Single Insert has no start like bulk does, so insertPkg.getTableOid() 
+						// isn't set. Go get it now.
+						if (fTableOid == 0)
+						{
+							CalpontSystemCatalog::TableName tableName;
+							tableName.schema =  insertPkg.get_Table()->get_SchemaName();
+							tableName.table = insertPkg.get_Table()->get_TableName();
+							CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+							fTableOid = roPair.objnum;
+						}
+						synchTableAccess();  // Blocks if another DML thread is using this fTableOid
+					}
+#endif
 					QueryTeleStats qts;
 					qts.query_uuid = QueryTeleClient::genUUID();
 					qts.msg_type = QueryTeleStats::QT_START;
@@ -553,7 +743,7 @@ void PackageHandler::run()
 							}
 							else
 							{
-								//error occured. Receive all outstanding messages nefore erroring out.
+								//error occured. Receive all outstanding messages before erroring out.
 								batchProcessor->receiveOutstandingMsg();
 								batchProcessor->sendlastBatch(); //needs to flush files
 								batchProcessor->receiveAllMsg();
@@ -638,9 +828,9 @@ void PackageHandler::run()
                             break;
 						}
 					}
-					else
+					else  // Single Insert
 					{
-						//insertPkg.readTable(*(fByteStream.get()));
+                        //insertPkg.readTable(*(fByteStream.get()));
 						insertPkg.set_TxnID(fTxnid);
 						fProcessor.reset(new dmlpackageprocessor::InsertPackageProcessor(fDbrm, insertPkg.get_SessionID()));
 						result = fProcessor->processPackage(insertPkg);
@@ -667,7 +857,23 @@ void PackageHandler::run()
 					//cout << "an UPDATE package" << endl;
 					boost::scoped_ptr<dmlpackage::UpdateDMLPackage> updatePkg(new dmlpackage::UpdateDMLPackage());
 					updatePkg->read(*(fByteStream.get()));
-					updatePkg->set_TxnID(fTxnid);
+#ifdef MCOL_140
+					if (fConcurrentSupport) 
+					{
+						fTableOid = updatePkg->getTableOid();
+						// Update generally doesn't set fTableOid in updatePkg. Go get it now.
+						if (fTableOid == 0)
+						{
+							CalpontSystemCatalog::TableName tableName;
+							tableName.schema =  updatePkg->get_Table()->get_SchemaName();
+							tableName.table = updatePkg->get_Table()->get_TableName();
+							CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+							fTableOid = roPair.objnum;
+						}
+						synchTableAccess();  // Blocks if another DML thread is using this fTableOid
+					}
+#endif
+                    updatePkg->set_TxnID(fTxnid);
 					QueryTeleStats qts;
 					qts.query_uuid = updatePkg->uuid();
 					qts.msg_type = QueryTeleStats::QT_START;
@@ -707,6 +913,22 @@ void PackageHandler::run()
 				{
 					boost::scoped_ptr<dmlpackage::DeleteDMLPackage> deletePkg(new dmlpackage::DeleteDMLPackage());
 					deletePkg->read(*(fByteStream.get()));
+#ifdef MCOL_140
+					if (fConcurrentSupport) 
+					{
+						fTableOid = deletePkg->getTableOid();
+						// Delete generally doesn't set fTableOid in updatePkg. Go get it now.
+						if (fTableOid == 0)
+						{
+							CalpontSystemCatalog::TableName tableName;
+							tableName.schema =  deletePkg->get_Table()->get_SchemaName();
+							tableName.table = deletePkg->get_Table()->get_TableName();
+							CalpontSystemCatalog::ROPair roPair = fcsc->tableRID(tableName);
+							fTableOid = roPair.objnum;
+						}
+						synchTableAccess();  // Blocks if another DML thread is using this fTableOid
+					}
+#endif
 					deletePkg->set_TxnID(fTxnid);
 					QueryTeleStats qts;
 					qts.query_uuid = deletePkg->uuid();
@@ -767,6 +989,13 @@ void PackageHandler::run()
 				}
 				break;
 		}
+#ifdef MCOL_140
+		if (fConcurrentSupport) 
+		{
+			// MCOL-140 We're done. release the next waiting txn for this fTableOid
+			releaseTableAccess();
+		}
+#endif
 		//Log errors
 		if (   (result.result != dmlpackageprocessor::DMLPackageProcessor::NO_ERROR) 
 			&& (result.result != dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING) 
@@ -785,33 +1014,92 @@ void PackageHandler::run()
 
 			ml.logWarningMessage( result.message );
 		}
-		
-		// send back the results
-		messageqcpp::ByteStream results;
-		messageqcpp::ByteStream::octbyte rowCount = result.rowCount;
-		messageqcpp::ByteStream::byte retval = result.result;
-		results << retval;
-		results << rowCount;
-		results << result.message.msg();
-		results << result.tableLockInfo; // ? connector does not get
-		// query stats
-		results << result.queryStats;
-		results << result.extendedStats;
-		results << result.miniStats;
-		result.stats.serialize(results);
-		fIos.write(results);
-		//Bug 5226. dmlprocessor thread will close the socket to mysqld.
-		//if (stmt == "CLEANUP")
-		//	fIos.close();
 	}
+    catch(std::exception& e)
+    {
+#ifdef MCOL_140
+		if (fConcurrentSupport) 
+		{
+			// MCOL-140 We're done. release the next waiting txn for this fTableOid
+			releaseTableAccess();
+		}
+#endif
+        cout << "dmlprocessor.cpp PackageHandler::run() package type(" 
+            << fPackageType << ") exception: " << e.what() << endl;
+        logging::LoggingID lid(21);
+        logging::MessageLog ml(lid);
+        logging::Message::Args args;
+        logging::Message message(1);
+        args.add("dmlprocessor.cpp PackageHandler::run() package type");
+        args.add((uint64_t)fPackageType);
+        args.add(e.what());
+        message.format(args);
+        ml.logErrorMessage(message);
+        result.result=DMLPackageProcessor::COMMAND_ERROR;
+        result.message = message;
+    }
 	catch(...)
 	{
-		fIos.close();
+#ifdef MCOL_140
+		if (fConcurrentSupport) 
+		{
+			// MCOL-140 We're done. release the next waiting txn for this fTableOid
+			releaseTableAccess();
+		}
+#endif
+        logging::LoggingID lid(21);
+        logging::MessageLog ml(lid);
+        logging::Message::Args args;
+        logging::Message message(1);
+        args.add("dmlprocessor.cpp PackageHandler::run() ... exception package type");
+        args.add((uint64_t)fPackageType);
+        message.format(args);
+        ml.logErrorMessage(message);
+        result.result=DMLPackageProcessor::COMMAND_ERROR;
+        result.message = message;
 	}
+
+	// We put the packageHandler into a map so that if we receive a
+	// message to affect the previous command, we can find it.
+	// We need to remove it from the list before sending the response back.
+	// If we remove it after sending the results, it's possible for a commit
+	// or rollback be sent and get processed before it is removed, and that
+	// will fail.
+	boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
+	DMLProcessor::packageHandlerMap.erase(getSessionID());
+	lk2.unlock();
+
+    // send back the results
+    messageqcpp::ByteStream results;
+    messageqcpp::ByteStream::octbyte rowCount = result.rowCount;
+    messageqcpp::ByteStream::byte retval = result.result;
+    results << retval;
+    results << rowCount;
+    results << result.message.msg();
+    results << result.tableLockInfo; // ? connector does not get
+    // query stats
+    results << result.queryStats;
+    results << result.extendedStats;
+    results << result.miniStats;
+    result.stats.serialize(results);
+    fIos.write(results);
+    //Bug 5226. dmlprocessor thread will close the socket to mysqld.
+    //if (stmt == "CLEANUP")
+    //	fIos.close();
 }
 
 void PackageHandler::rollbackPending()
 {
+	// Force a release of the processing from MCOL-140
+#ifdef MCOL_140
+	if (fConcurrentSupport) 
+	{
+		// MCOL-140 We're not necessarily the next in line.
+		// This forces this thread to be released anyway.
+		forceReleaseTableAccess();
+	}
+#endif
+
 	if (fProcessor.get() == NULL)
 	{
 		// This happens when batch insert
@@ -831,6 +1119,8 @@ void added_a_pm(int)
 	ResourceManager rm;
 	dec = DistributedEngineComm::instance(rm);
 	dec->Setup();
+	// MCOL-140 clear the waiting queue as all transactions are probably going to fail
+	PackageHandler::clearTableAccess();
 }
 
 DMLServer::DMLServer(int packageMaxThreads, int packageWorkQueueSize, DBRM* dbrm) :
@@ -900,12 +1190,12 @@ void DMLProcessor::operator()()
 		
 		uint64_t maxDeleteRows = rm.getDMLMaxDeleteRows();
 		
-		bool concurrentSupport = true;
+		fConcurrentSupport = true;
 		string concurrentTranStr = config::Config::makeConfig()->getConfig("SystemConfig", "ConcurrentTransactions");
 		if ( concurrentTranStr.length() != 0 )
 		{
 			if ((concurrentTranStr.compare("N") == 0) || (concurrentTranStr.compare("n") == 0))
-				concurrentSupport = false;
+				fConcurrentSupport = false;
 		}
 		
 #ifndef _MSC_VER
@@ -924,15 +1214,15 @@ void DMLProcessor::operator()()
 				bs1.reset(new messageqcpp::ByteStream(fIos.read()));
 				//cout << "received from mysql socket " << fIos.getSockID() << endl;
 			}
-			catch (std::exception&)
+			catch (std::exception& ex)
 			{
 				//This is an I/O error from InetStreamSocket::read(), just close and move on...
-				//cout << "runtime error during read on " << fIos.getSockID() << " " << ex.what() << endl;
+				cout << "runtime error during read on " << fIos.getSockID() << " " << ex.what() << endl;
 				bs1->reset();
 			}
 			catch (...)
 			{
-				//cout << "... error during read " << fIos.getSockID() << endl;
+				cout << "... error during read " << fIos.getSockID() << endl;
 				// all this throw does is cause this thread to silently go away. I doubt this is the right
 				//  thing to do...
 				throw;
@@ -940,7 +1230,7 @@ void DMLProcessor::operator()()
 
 			if (!bs1 || bs1->length() == 0)
 			{
-				//cout << "Read 0 bytes. Closing connection " << fIos.getSockID() << endl;
+				cout << "Read 0 bytes. Closing connection " << fIos.getSockID() << endl;
 				fIos.close();
 				break;
 			}
@@ -1069,8 +1359,11 @@ void DMLProcessor::operator()()
 				{
 					if (packageType == dmlpackage::DML_COMMAND)
 					{
+                        // MCOL-66 It's possible for a commit or rollback to get here if 
+                        // the timing is just right. Don't destroy its data
+                        messageqcpp::ByteStream bsctrlc(bs1);
 						dmlpackage::CommandDMLPackage commandPkg;
-						commandPkg.read(*(bs1.get()));
+						commandPkg.read(bsctrlc);
 						std::string stmt = commandPkg.get_DMLStatement();
 						boost::algorithm::to_upper(stmt);
 						trim(stmt);
@@ -1129,7 +1422,7 @@ void DMLProcessor::operator()()
 		    //cout << " package" << endl;
 			
 			BRM::TxnID txnid;
-			if (!concurrentSupport) 
+			if (!fConcurrentSupport) 
 			{
 				//Check if any other active transaction
 				bool anyOtherActiveTransaction = true;
@@ -1268,7 +1561,7 @@ void DMLProcessor::operator()()
 				{
 					//cout << "starting processing package type " << (int) packageType << " for session " << sessionID << " with id " << txnid.id << endl;
 					boost::shared_ptr<PackageHandler> php(new PackageHandler(fIos, bs1, packageType, fEC,
-						maxDeleteRows, sessionID, txnid.id, fDbrm, fQtc));
+						fConcurrentSupport, maxDeleteRows, sessionID, txnid.id, fDbrm, fQtc, csc));
 					// We put the packageHandler into a map so that if we receive a
 					// message to affect the previous command, we can find it.
 					boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, defer_lock);
@@ -1279,16 +1572,18 @@ void DMLProcessor::operator()()
 
 					php->run();		// Operates in this thread.
 
-					lk2.lock();
-					packageHandlerMap.erase(sessionID);
-					lk2.unlock();
+// Move this to the end of PackageHandler so it is removed from the map before the response is sent
+//					lk2.lock();
+//					packageHandlerMap.erase(sessionID);
+//					lk2.unlock();
 				}
 			}
 			else
 			{
+#if 0
 				if (packageType != dmlpackage::DML_COMMAND)
 				{
-					txnid = sessionManager.getTxnID(sessionID);
+                    txnid = sessionManager.getTxnID(sessionID);
 					if ( !txnid.valid )
 					{
 						txnid = sessionManager.newTxnID(sessionID, true);
@@ -1301,9 +1596,9 @@ void DMLProcessor::operator()()
 				{
 					txnid = sessionManager.getTxnID(sessionID);
 				}
-
+#endif
 				boost::shared_ptr<PackageHandler> php(new PackageHandler(fIos, bs1, packageType, fEC,
-					maxDeleteRows, sessionID, txnid.id, fDbrm, fQtc));
+					fConcurrentSupport, maxDeleteRows, sessionID, 0, fDbrm, fQtc, csc));
 				// We put the packageHandler into a map so that if we receive a
 				// message to affect the previous command, we can find it.
 				boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock, defer_lock);
@@ -1314,9 +1609,10 @@ void DMLProcessor::operator()()
 
 				php->run();		// Operates in this thread.
 
-				lk2.lock();
-				packageHandlerMap.erase(sessionID);
-				lk2.unlock();
+// Move this to the end of PackageHandler so it is removed from the map before the response is sent
+//				lk2.lock();
+//				packageHandlerMap.erase(sessionID);
+//				lk2.unlock();
 			}
 		}
     }

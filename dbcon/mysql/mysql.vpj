@@ -245,10 +245,15 @@
             <F N="../../../mariadb/sql/group_by_handler.h"/>
             <F N="../../../mariadb/sql/gstream.h"/>
             <F N="ha_calpont.h"/>
+            <F N="ha_calpont_impl.h"/>
+            <F N="ha_calpont_impl_if.h"/>
             <F N="../../../mariadb/sql/ha_partition.h"/>
+            <F N="ha_subquery.h"/>
+            <F N="ha_view.h"/>
             <F N="../../../mariadb/sql/handler.h"/>
             <F N="../../../mariadb/sql/hash_filo.h"/>
             <F N="../../../mariadb/sql/hostname.h"/>
+            <F N="idb_mysql.h"/>
             <F N="../../../mariadb/sql/init.h"/>
             <F N="../../../mariadb/sql/innodb_priv.h"/>
             <F N="../../../mariadb/sql/item.h"/>
@@ -312,6 +317,7 @@
             <F N="../../../mariadb/sql/scheduler.h"/>
             <F N="../../../mariadb/sql/set_var.h"/>
             <F N="../../../mariadb/sql/slave.h"/>
+            <F N="sm.h"/>
             <F N="../../../mariadb/sql/sp.h"/>
             <F N="../../../mariadb/sql/sp_cache.h"/>
             <F N="../../../mariadb/sql/sp_head.h"/>

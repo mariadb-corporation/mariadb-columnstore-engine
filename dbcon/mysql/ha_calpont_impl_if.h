@@ -46,7 +46,7 @@ struct st_ha_create_information;
 #include "functor.h"
 
 /** Debug macro */
-#if INFINIDB_DEBUG
+#ifdef INFINIDB_DEBUG
 #define IDEBUG(x) {x;}
 #else
 #define IDEBUG(x) {}
@@ -287,7 +287,7 @@ struct cal_connection_info
 
 typedef std::tr1::unordered_map<int, cal_connection_info> CalConnMap;
 
-const std::string infinidb_err_msg = "\nThe query includes syntax that is not supported by InfiniDB. Use 'show warnings;' to get more information. Review the Calpont InfiniDB Syntax guide for additional information on supported distributed syntax or consider changing the InfiniDB Operating Mode (infinidb_vtable_mode).";
+const std::string infinidb_err_msg = "\nThe query includes syntax that is not supported by MariaDB Columnstore. Use 'show warnings;' to get more information. Review the MariaDB Columnstore Syntax guide for additional information on supported distributed syntax or consider changing the MariaDB Columnstore Operating Mode (infinidb_vtable_mode).";
 
 int cp_get_plan(THD* thd, execplan::SCSEP& csep);
 int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_info& ti);

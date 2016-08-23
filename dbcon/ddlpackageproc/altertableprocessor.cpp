@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -335,6 +336,8 @@ AlterTableProcessor::DDLResult AlterTableProcessor::processPackage(ddlpackage::A
 			if (i >= numTries) //error out
 			{
 				logging::Message::Args args;
+				string strOp("alter");
+				args.add(strOp);
 				args.add(processName);
 				args.add((uint64_t)processID);
 				args.add(sessionId);
@@ -644,7 +647,10 @@ void AlterTableProcessor::addColumn (uint32_t sessionID, execplan::CalpontSystem
 		aColumnList.push_back(columnDefPtr);
 		bool alterFlag = true;
 		
-		if (inTableName.fSchema != CALPONT_SCHEMA)
+        // MCOL-66 The DBRM can't handle concurrent DDL					   
+        boost::mutex::scoped_lock lk(dbrmMutex);
+
+        if (inTableName.fSchema != CALPONT_SCHEMA)
 		{
 			VERBOSE_INFO("Writing meta data to SYSCOL"); //send to WES to process
 			bs.restart();
@@ -1061,6 +1067,10 @@ void AlterTableProcessor::dropColumn (uint32_t sessionID, execplan::CalpontSyste
 	OamCache * oamcache = OamCache::makeOamCache();
 	boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
 	pmNum = (*dbRootPMMap)[dbRoot];
+
+	// MCOL-66 The DBRM can't handle concurrent DDL					   
+	boost::mutex::scoped_lock lk(dbrmMutex);
+
 	try
 	{			
 		fWEClient->write(bytestream, (uint32_t)pmNum);

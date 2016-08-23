@@ -80,6 +80,9 @@ string installDir;
 bool noPrompting;
 string mysqlpw = " ";
 
+bool rootUser = true;
+string USER = "root";
+
 int main(int argc, char *argv[])
 {
 	string cmd;
@@ -154,11 +157,21 @@ int main(int argc, char *argv[])
 		mysqlpw = " ";
 	pwprompt = "--password=" + mysqlpw;
 
-	//copy Calpont.xml.rpmsave if upgrade option is selected
+	//check if root-user
+	int user;
+	user = getuid();
+	if (user != 0)
+		rootUser = false;
+
+	char* p= getenv("USER");
+	if (p && *p)
+   		USER = p;
+
+	//copy Columnstore.xml.rpmsave if upgrade option is selected
 	if ( installType == "upgrade" ) {
-		cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml " + installDir + "/etc/Calpont.xml.new 2>&1";
+		cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.new 2>&1";
 		system(cmd.c_str());
-		cmd = "/bin/cp -f " + installDir + "/etc/Calpont.xml.rpmsave " + installDir + "/etc/Calpont.xml 2>&1";
+		cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.rpmsave " + installDir + "/etc/Columnstore.xml 2>&1";
 		system(cmd.c_str());
 	}
 
@@ -758,7 +771,7 @@ int main(int argc, char *argv[])
 		if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM )
 		{
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -803,7 +816,7 @@ int main(int argc, char *argv[])
 		if ( calpont_rpm1 != "dummy.rpm" ) {
 
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -823,7 +836,7 @@ int main(int argc, char *argv[])
 			//
 
 			//run the mysql / mysqld setup scripts
-			cout << endl << "Running the MariaDB Columnstore MySQL setup scripts" << endl << endl;
+			cout << endl << "Running the MariaDB Columnstore setup scripts" << endl << endl;
 	
 			// call the mysql setup scripts
 			mysqlSetup();
@@ -865,7 +878,7 @@ int main(int argc, char *argv[])
 
 		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
 
-		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore MySQL console" << endl;
+		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB Columnstore Admin console" << endl << endl;
 	}
 	else
@@ -907,20 +920,40 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		string fileName = "/etc/" + files[i];
 
 		//make a backup copy before changing
-		cmd = "rm -f " + fileName + ".calpontSave";
-		system(cmd.c_str());
+		if ( rootUser )
+		{
+		    cmd = "rm -f " + fileName + ".columnstoreSave";
+		    system(cmd.c_str());
 
-		cmd = "cp " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
-		system(cmd.c_str());
+		    cmd = "cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
+		    system(cmd.c_str());
 
-		cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
-		if (geteuid() == 0) system(cmd.c_str());
+		    cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
+		    if (geteuid() == 0) system(cmd.c_str());
 
-		cmd = "rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
-		system(cmd.c_str());
+		    cmd = "rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
+		    system(cmd.c_str());
 
-		cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1"; 
-		system(cmd.c_str());
+		    cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1"; 
+		    system(cmd.c_str());
+		}
+		else
+		{
+		    cmd = "sudo rm -f " + fileName + ".columnstoreSave";
+		    system(cmd.c_str());
+
+		    cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
+		    system(cmd.c_str());
+
+		    cmd = "sudo cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
+		    if (geteuid() == 0) system(cmd.c_str());
+
+		    cmd = "sudo rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
+		    system(cmd.c_str());
+
+		    cmd = "sudo cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1"; 
+		    system(cmd.c_str());
+		}
 	}
 
 	return allfound;
@@ -1031,7 +1064,7 @@ bool updateProcessConfig(int serverTypeInstall)
 	string fileName = installDir + "/etc/ProcessConfig.xml";
 
 	//Save a copy of the original version
-	cmd = "/bin/cp -f " + fileName + " " + fileName + ".calpontSave > /dev/null 2>&1";
+	cmd = "/bin/cp -f " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 	system(cmd.c_str());
 
 	ifstream oldFile (fileName.c_str());
@@ -1196,11 +1229,11 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 
 
 /*
- * Uncomment entry in Calpont.xml
+ * Uncomment entry in Columnstore.xml
  */
 bool uncommentCalpontXml( string entry)
 {
-	string fileName = installDir + "/etc/Calpont.xml";
+	string fileName = installDir + "/etc/Columnstore.xml";
 
 	ifstream oldFile (fileName.c_str());
 	if (!oldFile) return true;

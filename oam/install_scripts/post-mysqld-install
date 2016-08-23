@@ -28,12 +28,12 @@ for arg in "$@"; do
 	fi
 done
 
-cd $installdir/mysql/lib64
+cd $installdir/mysql/lib
 for file in libmysqlclient libmysqlclient_r; do
 	ln -sf $file.so.18.0.0 $file.so
 	ln -sf $file.so.18.0.0 $file.so.18
 done
-cd $installdir/mysql/lib64/mysql/plugin
+cd $installdir/mysql/lib/plugin
 for file in ha_archive ha_blackhole ha_federated ha_innodb; do
 	ln -sf $file.so $file.so.0
 done
@@ -68,7 +68,7 @@ fi
 test -x /usr/local/bin/idb-testing-mysql-pre-start && /usr/local/bin/idb-testing-mysql-pre-start $installdir/mysql
 
 ### Don't give the user the notes, we'll fix them ourselves...
-$installdir/mysql/bin/mysql_install_db --rpm --user=$user --defaults-file=$installdir/mysql/my.cnf --basedir=$installdir/mysql >/dev/null
+$installdir/mysql/scripts/mysql_install_db --rpm --user=$user --defaults-file=$installdir/mysql/my.cnf --basedir=$installdir/mysql >/dev/null
 # Change permissions again to fix any new files.
 chown -R $user:$user $mysql_datadir
 
@@ -78,8 +78,6 @@ chmod -R og-rw $mysql_datadir/mysql
 
 # Change permissions again to fix any new files.
 chown -R $user.$user $installdir/mysql
-
-test -e /etc/init.d/mysql-Columnstore || cp $installdir/mysql/mysql-Columnstore /etc/init.d >/dev/null 2>&1
 
 if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1.0.0
@@ -93,7 +91,7 @@ fi
 
 if [ -n "$libcalmysql" ]; then
 
-	cd $installdir/mysql/lib64/mysql/plugin
+	cd $installdir/mysql/lib/plugin
 	ln -sf $libcalmysql libcalmysql.so
         ln -sf $libcalmysql libcalmysqlent.so
 	ln -sf $libudfsdk libudf_mysql.so

@@ -48,7 +48,7 @@ namespace execplan {
 /** @brief Identifies stale and orphaned transaction IDs.
  * 
  *
- * This class uses 2 parameters from the Calpont.xml file:
+ * This class uses 2 parameters from the Columnstore.xml file:
  * SessionManager/MaxConcurrentTransactions: defines how many active transactions the
  *		system should support.	When a new request comes in and there are already
  *		MaxConcurrentTransactions active, the new request blocks by default.  The

@@ -45,7 +45,7 @@
 2006	ERR_TABLE_NOT_IN_CATALOG	%1% does not exist in Columnstore.
 2007	ERR_DICTBUFFER_OVERFLOW	The dictionary buffer is too small for this query; increase <PrimitiveServers><DictBufferSize> and try again.
 2008	ERR_VERSIONBUFFER_OVERFLOW	The version buffer overflowed. Increase VersionBufferFileSize or limit the rows to be processed.
-2009	ERR_TABLE_LOCKED	Unable to perform the operation because %1% with PID %2% is currently holding the table lock for session %3%.
+2009	ERR_TABLE_LOCKED	Unable to perform the %1% operation because %2% with PID %3% is currently holding the table lock for session %4%.
 2010	ERR_ACTIVE_TRANSACTION	Unable to perform DDL/DML because session %1% has an active transaction.
 2011	ERR_VIOLATE_NOT_NULL Column ' %1% ' cannot be null.
 2012	ERR_EXTENT_DISK_SPACE	Not able to add extent; adding extent would exceed max file system disk usage. %1%
@@ -74,7 +74,7 @@
 2035	ERR_ASSERTION_FAILURE	An internal error occurred.  Check the error log file & contact support.
 2036	ERR_PARTITION_NO_SCHEMA	No schema is specified for this partition function.
 2037	ERR_INVALID_FUNC_ARGUMENT	%1% in function arguments.
-2038	ERR_O_DIRECT	Failed to open file.  The DirectIO setting in Calpont.xml may not be compatible with the file system.
+2038	ERR_O_DIRECT	Failed to open file.  The DirectIO setting in Columnstore.xml may not be compatible with the file system.
 2039	ERR_ENOENT	Data file does not exist, please contact your system administrator for more information.
 2040	WARN_NO_PARTITION_FOUND	No partition found for the given value range.
 2041	SYSTABLE_PARTITION	Systables' partition cannot be modified.
@@ -159,7 +159,7 @@
 7001	ERR_NON_IDB_TABLE	Non Calpont table(s) on the FROM clause.
 
 # Cross Engine Errors
-8001	ERR_CROSS_ENGINE_CONFIG	CrossEngineSupport section in Calpont.xml is not properly configured.
+8001	ERR_CROSS_ENGINE_CONFIG	CrossEngineSupport section in Columnstore.xml is not properly configured.
 8002	ERR_CROSS_ENGINE_CONNECT	Error: %1%.
 
 # Window Function Errors

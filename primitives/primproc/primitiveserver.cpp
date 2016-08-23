@@ -1146,25 +1146,26 @@ struct BPPHandler
 	BPPHandler(PrimitiveServer* ps) : fPrimitiveServerPtr(ps) { }
 
 	struct BPPHandlerFunctor : public PriorityThreadPool::Functor {
-		BPPHandlerFunctor(BPPHandler *r, SBS b) : rt(r), bs(b)
+		BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : bs(b)
 		{
+			rt = r;
 			dieTime = posix_time::second_clock::universal_time() + posix_time::seconds(100);
 		}
 
-		BPPHandler *rt;
+		boost::shared_ptr<BPPHandler> rt;
 		SBS bs;
 		posix_time::ptime dieTime;
 	};
 
 	struct LastJoiner : public BPPHandlerFunctor {
-		LastJoiner(BPPHandler *r, SBS b) : BPPHandlerFunctor(r, b) { }
+		LastJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
 		int operator()() {
 			return rt->lastJoinerMsg(*bs, dieTime);
 		}
 	};
 
 	struct Create : public BPPHandlerFunctor {
-		Create(BPPHandler *r, SBS b) : BPPHandlerFunctor(r, b) { }
+		Create(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
 		int operator()() {
 			rt->createBPP(*bs);
 			return 0;
@@ -1172,21 +1173,21 @@ struct BPPHandler
 	};
 
 	struct Destroy : public BPPHandlerFunctor {
-		Destroy(BPPHandler *r, SBS b) : BPPHandlerFunctor(r, b) { }
+		Destroy(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
 		int operator()() {
 			return rt->destroyBPP(*bs, dieTime);
 		}
 	};
 
 	struct AddJoiner : public BPPHandlerFunctor {
-		AddJoiner(BPPHandler *r, SBS b) : BPPHandlerFunctor(r, b) { }
+		AddJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
 		int operator()() {
 			return rt->addJoinerToBPP(*bs, dieTime);
 		}
 	};
 
 	struct Abort : public BPPHandlerFunctor {
-		Abort(BPPHandler *r, SBS b) : BPPHandlerFunctor(r, b) { }
+		Abort(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b) { }
 		int operator()() {
 			return rt->doAbort(*bs, dieTime);
 		}
@@ -1404,8 +1405,19 @@ struct BPPHandler
 
 		it = bppMap.find(uniqueID);
 		if (it != bppMap.end()) {
-			it->second->abort();
-			bppMap.erase(it);
+            boost::shared_ptr<BPPV> bppv = it->second;
+            if (bppv->joinDataReceived)
+            {
+                bppv->abort();
+                bppMap.erase(it);
+            }
+            else
+            {
+                // MCOL-5. On ubuntu, a crash was happening. Checking 
+                // joinDataReceived here fixes it.
+                // We're not ready for a destroy. Reschedule.
+				return -1;
+            }
 		}
 		else {
 			//cout << "got a destroy for an unknown obj " << uniqueID << endl;
@@ -1549,8 +1561,9 @@ public:
 struct ReadThread
 {
 	ReadThread(const string& serverName, IOSocket& ios, PrimitiveServer* ps) :
-		fServerName(serverName), fIos(ios), fPrimitiveServerPtr(ps), fBPPHandler(ps)
+		fServerName(serverName), fIos(ios), fPrimitiveServerPtr(ps)
 	{
+		fBPPHandler.reset(new BPPHandler(ps));
 	}
 
 	const ByteStream buildCacheOpResp(int32_t result)
@@ -1687,7 +1700,7 @@ struct ReadThread
 		if (bRotateDest) {
 			// If we tried adding an IP address not listed as UM in config
 			// file; probably a DMLProc connection.  We allow the connection
-			// but disable destination rotation since not in Calpont.xml.
+			// but disable destination rotation since not in Columnstore.xml.
 			if (!pUmSocketSelector->addConnection(outIosDefault, writeLockDefault)) {
 				bRotateDest = false;
 			}
@@ -1836,49 +1849,49 @@ struct ReadThread
 					}
 					case BATCH_PRIMITIVE_CREATE: {
 						PriorityThreadPool::Job job;
-						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Create(&fBPPHandler, bs));
+						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Create(fBPPHandler, bs));
 						OOBPool->addJob(job);
-						//fBPPHandler.createBPP(*bs);
+						//fBPPHandler->createBPP(*bs);
 						break;
 					}
 					case BATCH_PRIMITIVE_ADD_JOINER: {
 						PriorityThreadPool::Job job;
-						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::AddJoiner(&fBPPHandler, bs));
-						job.id = fBPPHandler.getUniqueID(bs, ismHdr->Command);
+						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::AddJoiner(fBPPHandler, bs));
+						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
 						OOBPool->addJob(job);
-						//fBPPHandler.addJoinerToBPP(*bs);
+						//fBPPHandler->addJoinerToBPP(*bs);
 						break;
 					}
 					case BATCH_PRIMITIVE_END_JOINER: {
 						// lastJoinerMsg can block; must do this in a different thread
-						//OOBPool->invoke(BPPHandler::LastJoiner(&fBPPHandler, bs));  // needs a threadpool that can resched
-						//boost::thread tmp(BPPHandler::LastJoiner(&fBPPHandler, bs));
+						//OOBPool->invoke(BPPHandler::LastJoiner(fBPPHandler, bs));  // needs a threadpool that can resched
+						//boost::thread tmp(BPPHandler::LastJoiner(fBPPHandler, bs));
 						PriorityThreadPool::Job job;
-						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::LastJoiner(&fBPPHandler, bs));
-						job.id = fBPPHandler.getUniqueID(bs, ismHdr->Command);
+						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::LastJoiner(fBPPHandler, bs));
+						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
 						OOBPool->addJob(job);
 						break;
 					}
 					case BATCH_PRIMITIVE_DESTROY: {
-						//OOBPool->invoke(BPPHandler::Destroy(&fBPPHandler, bs));  // needs a threadpool that can resched
-						//boost::thread tmp(BPPHandler::Destroy(&fBPPHandler, bs));
+						//OOBPool->invoke(BPPHandler::Destroy(fBPPHandler, bs));  // needs a threadpool that can resched
+						//boost::thread tmp(BPPHandler::Destroy(fBPPHandler, bs));
 						PriorityThreadPool::Job job;
-						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Destroy(&fBPPHandler, bs));
-						job.id = fBPPHandler.getUniqueID(bs, ismHdr->Command);
+						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Destroy(fBPPHandler, bs));
+						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
 						OOBPool->addJob(job);
-						//fBPPHandler.destroyBPP(*bs);
+						//fBPPHandler->destroyBPP(*bs);
 						break;
 					}
 					case BATCH_PRIMITIVE_ACK: {
-						fBPPHandler.doAck(*bs);
+						fBPPHandler->doAck(*bs);
 						break;
 					}
 					case BATCH_PRIMITIVE_ABORT: {
-						//OBPool->invoke(BPPHandler::Abort(&fBPPHandler, bs));
-						//fBPPHandler.doAbort(*bs);
+						//OBPool->invoke(BPPHandler::Abort(fBPPHandler, bs));
+						//fBPPHandler->doAbort(*bs);
 						PriorityThreadPool::Job job;
-						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Abort(&fBPPHandler, bs));
-						job.id = fBPPHandler.getUniqueID(bs, ismHdr->Command);
+						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Abort(fBPPHandler, bs));
+						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
 						OOBPool->addJob(job);
 						break;
 					}
@@ -1927,7 +1940,7 @@ struct ReadThread
 	string fServerName;
 	IOSocket fIos;
 	PrimitiveServer* fPrimitiveServerPtr;
-	BPPHandler	fBPPHandler;
+	boost::shared_ptr<BPPHandler> fBPPHandler;
 };
 
 /** @brief accept a primitive command from the user module

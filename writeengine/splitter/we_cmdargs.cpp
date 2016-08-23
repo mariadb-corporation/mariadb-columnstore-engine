@@ -1118,8 +1118,8 @@ std::string WECmdArgs::getBrmRptFileName()
 	}
 	else
 	{
-		//cout << "ERROR: Could not find TempFileDir in Calpont.xml" << endl;
-		throw(runtime_error("Could not find TempFileDir in Calpont.xml"));
+		//cout << "ERROR: Could not find TempFileDir in Columnstore.xml" << endl;
+		throw(runtime_error("Could not find TempFileDir in Columnstore.xml"));
 	}
 	setBrmRptFileName(brmRptFileName);
 
@@ -1253,7 +1253,7 @@ void WECmdArgs::checkJobIdCase()
 		if(!bulkRootPath.empty())
 			fJobPath = bulkRootPath + "/job";
 		else
-			throw runtime_error("Config Error: BulkRoot not found in Calpont.xml");
+			throw runtime_error("Config Error: BulkRoot not found in Columnstore.xml");
 	}
 	char aBuff[256];
 	if(!fJobPath.empty())

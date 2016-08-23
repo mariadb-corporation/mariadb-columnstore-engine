@@ -25,6 +25,7 @@
  *      Author: Boby Paul: bpaul@calpont.com
  */
 
+#include "config.h" // Used to pickup STRERROR_R_CHAR_P definition
 
 #include <cstdlib>
 #include <csignal>
@@ -71,7 +72,6 @@ using namespace messageqcpp;
 #include "we_cleartablelockcmd.h"
 #include "we_dataloader.h"
 #include "we_readthread.h"
-#include "config.h" // Used to pickup STRERROR_R_CHAR_P definition
 
 #include "installdir.h"
 
@@ -247,12 +247,16 @@ bool WEDataLoader::setupCpimport() // fork the cpimport
 		std::string aCmdLine = fCmdLineStr;
 		std::istringstream ss(aCmdLine);
 		std::string arg;
-		std::vector<std::string> v2;
+		std::vector<std::string> v2(20, "");
+        unsigned int i = 0;
 		while (ss >> arg)
 		{
-			v2.push_back(arg);
-			Cmds.push_back(const_cast<char*>(v2.back().c_str()));
-		}
+            v2[i++] = arg;
+        }
+        for (unsigned int j = 0; j < i; ++j)
+        {
+            Cmds.push_back(const_cast<char*>(v2[j].c_str()));
+        }
 
 		Cmds.push_back(0); //null terminate
 		//updatePrgmPath(Cmds);

@@ -99,6 +99,9 @@ void added_a_pm(int)
 	logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
 
 	Dec->Setup();
+	// MCOL-140 clear the waiting queue as all transactions are probably going to fail
+	PackageHandler::clearTableAccess();
+
 	logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
 
 	//WriteEngine::WEClients::instance(WriteEngine::WEClients::DMLPROC)->Setup();

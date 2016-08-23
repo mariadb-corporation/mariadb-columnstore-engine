@@ -39,7 +39,7 @@
 #include <iosfwd>
 #include <limits>
 
-#include "we_typeext.h"
+#include "../../writeengine/shared/we_typeext.h"
 #include "columnresult.h"
 #include "bytestream.h"
 #include "joblisttypes.h"
@@ -87,7 +87,7 @@ namespace messageqcpp
 	class MessageQueueClient;
 }
 
-// This is now set in the calpont xml file
+// This is now set in the Columnstore.xml file
 // Use, e.g., 0x500 for uid 500 so it is easy to spot in ipcs list
 //const int32_t BRM_UID = 0x0;
 

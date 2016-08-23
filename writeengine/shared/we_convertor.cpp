@@ -724,7 +724,7 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
  * of the file is <DBRoot>/<DirA>/<DirB>/<DirC>/<FName>, or
  * <DBRoot>/<DirA>/<DirB>/<DirC>/<DirD>/<part#>/<segFName>.  The <DBRoot>
  * entry must be pre-pended by the calling application after calling
- * this function.  The value for <DBRoot> is stored in the Calpont.xml
+ * this function.  The value for <DBRoot> is stored in the Columnstore.xml
  * configuration file.
  *
  * PARAMETERS:

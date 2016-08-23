@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -44,25 +45,23 @@ extern "C" int _isatty(int);
 #define yyerror dml_yyerror*/
 using namespace dmlpackage;
 
-void dmlerror(char const *s);
+void dmlerror(yyscan_t yyscanner, char const *s);
 
 namespace dmlpackage {
 int lineno = 1;
 
 
-/* Handles to the buffer that the lexer uses internally */
-static YY_BUFFER_STATE scanbufhandle;
-static char *scanbuf;
-
-static char* scanner_copy (char *str);
+static char* scanner_copy (char *str, yyscan_t yyscanner);
 
 
-	/* macro to save the text and return a token */
-#define TOK(name) { dmllval.strval = scanner_copy(dmltext); return name; }
+/* macro to save the text and return a token */
+#define TOK(name) { dmlget_lval(yyscanner)->strval = scanner_copy(dmlget_text(yyscanner), yyscanner); return name; }
 }
 
 %}
 
+%option reentrant
+%option bison-bridge
 %option noyywrap
 %option nounput
 %x inquote
@@ -199,9 +198,9 @@ WORK		TOK(WORK)
 %%
 using namespace dmlpackage;
 
-void dmlerror(char const *s)
+void dmlerror(yyscan_t yyscanner, char const *s)
 {
-	printf("yyerror: %d: %s at %s\n", lineno, s, yytext);
+	printf("yyerror: %d: %s at %s\n", lineno, s, dmlget_text(yyscanner));
 }
 
 namespace dmlpackage {
@@ -216,28 +215,30 @@ valbuf_t get_valbuffer(void)
 /*
  * Called before any actual parsing is done
  */
-void scanner_init(const char *str)
+void scanner_init(const char *str, yyscan_t yyscanner)
 {
 	size_t slen = strlen(str);
+   scan_data* pScanData = (scan_data*)dmlget_extra(yyscanner);
 
 	/*
 	 * Might be left over after ereport()
 	 */
+   struct yyguts_t * yyg = (struct yyguts_t*)yyscanner; // needed for macro YY_CURRENT_BUFFER
 	if (YY_CURRENT_BUFFER)
-		yy_delete_buffer(YY_CURRENT_BUFFER);
+	   yy_delete_buffer(YY_CURRENT_BUFFER, yyscanner); 
 
 	/*
 	 * Make a scan buffer with special termination needed by flex.
 	 */
-	scanbuf =  (char *)malloc(slen + 2);
-	memcpy(scanbuf, str, slen);
-	scanbuf[slen] = scanbuf[slen + 1] = YY_END_OF_BUFFER_CHAR;
-	scanbufhandle = yy_scan_buffer(scanbuf, slen + 2);
+	pScanData->scanbuf =  (char *)malloc(slen + 2);
+	memcpy(pScanData->scanbuf, str, slen);
+	pScanData->scanbuf[slen] = pScanData->scanbuf[slen + 1] = YY_END_OF_BUFFER_CHAR;
+	pScanData->scanbufhandle = yy_scan_buffer(pScanData->scanbuf, slen + 2, yyscanner);
 
 	BEGIN(INITIAL);
 
   
-    valbuf.clear();
+    pScanData->valbuf.clear();
 }
 
 
@@ -246,28 +247,29 @@ void scanner_init(const char *str)
  */
 
 
-void scanner_finish(void)
+void scanner_finish(yyscan_t yyscanner)
 {
-  char* str;
+   char* str;
+   scan_data* pScanData = (scan_data*)dmlget_extra(yyscanner);
 
-   yy_delete_buffer(scanbufhandle);
-   free(scanbuf);
+   yy_delete_buffer((YY_BUFFER_STATE)pScanData->scanbufhandle, yyscanner);
+   free(pScanData->scanbuf);
    unsigned int i;
-   for(i=0; i<valbuf.size(); i++) {
-     str = valbuf[i];
+   for(i=0; i<pScanData->valbuf.size(); i++) {
+     str = pScanData->valbuf[i];
      if(str) {
         //std::cout << "valbuf:(" << str << ")" << std::endl;
-        free(valbuf[i]);
+        free(pScanData->valbuf[i]);
      }
    }
-   valbuf.clear();
+   pScanData->valbuf.clear();
 }
 
-char* scanner_copy (char *str)
+char* scanner_copy (char *str, yyscan_t yyscanner)
 {
   char* nv = strdup(str);
   if(nv)
-    valbuf.push_back(nv);
+    ((scan_data*)dmlget_extra(yyscanner))->valbuf.push_back(nv);
   return nv;
 }
 

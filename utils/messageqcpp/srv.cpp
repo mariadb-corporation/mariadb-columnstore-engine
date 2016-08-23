@@ -9,7 +9,7 @@ using namespace config;
 
 int main(int argc, char** argv)
 {
-	Config* cf = Config::makeConfig("./Calpont.xml");
+	Config* cf = Config::makeConfig("./Columnstore.xml");
 	MessageQueueServer mqs("server1", cf);
 
 	cout << "server ready..." << endl;

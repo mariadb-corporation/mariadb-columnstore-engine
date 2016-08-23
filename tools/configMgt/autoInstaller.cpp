@@ -98,8 +98,8 @@ int main(int argc, char *argv[])
 			cout << endl;
 			cout << "The list of systems are located in '" << sysConfig->configFile() << "'" << endl;
 			cout << endl;
-			cout << "The 'Calpont.xml' used in the install will default to system" << endl;
-			cout << "configuration of the 'Calpont.xml' located on the system being" << endl;
+			cout << "The 'Columnstore.xml' used in the install will default to system" << endl;
+			cout << "configuration of the 'Columnstore.xml' located on the system being" << endl;
 			cout << "or can be passed as an argument into 'quickInstaller'." << endl;
 			cout << endl;
    			cout << "Usage: autoInstaller -s system [-h][-ce][-r release][-c configFile][-n][-d][-p package-type][-m mysql-password][-port mysql-port][-pr product-name]" << endl;
@@ -516,43 +516,43 @@ cout << "systemPackage = " << systemPackage << endl;
 exit(0);
 #endif
 
-	//get release and system Calpont.xml and generate a new Calpont.xml file for installation
+	//get release and system Columnstore.xml and generate a new Columnstore.xml file for installation
 	if ( configFile == "NULL" ) {
-		cout << "Get Release Calpont.xml                       " << flush;
+		cout << "Get Release Columnstore.xml                       " << flush;
 		
-		// get release Calpont.xml
-		string cmd = "cd " + systemDir + ";smbclient " + SHARED + " -WMARIADB -U root%Calpont1 -c 'cd packages/" + release + "/;prompt OFF;mget Calpont.xml' > /dev/null 2>&1";
+		// get release Columnstore.xml
+		string cmd = "cd " + systemDir + ";smbclient " + SHARED + " -WMARIADB -U root%Calpont1 -c 'cd packages/" + release + "/;prompt OFF;mget Columnstore.xml' > /dev/null 2>&1";
 		rtnCode = system(cmd.c_str());
 		if (rtnCode != 0) {
-			cout << "FAILED: no Release Calpont.xml found for release '" + release + "', exiting" << endl;
-			cerr << "FAILED: no Release Calpont.xml found for release '" + release + "', exiting" << endl;
+			cout << "FAILED: no Release Columnstore.xml found for release '" + release + "', exiting" << endl;
+			cerr << "FAILED: no Release Columnstore.xml found for release '" + release + "', exiting" << endl;
 			exit(1);
 		}
 		else 
 		{
-			cmd = "cd " + systemDir + ";mv -f Calpont.xml Calpont.xml.new > /dev/null 2>&1";
+			cmd = "cd " + systemDir + ";mv -f Columnstore.xml Columnstore.xml.new > /dev/null 2>&1";
 			rtnCode = system(cmd.c_str());
 			if (rtnCode != 0) {
-				cout << "FAILED: no Release Calpont.xml found for release '" + release + "', exiting" << endl;
-				cerr << "FAILED: no Release Calpont.xml found for release '" + release + "', exiting" << endl;
+				cout << "FAILED: no Release Columnstore.xml found for release '" + release + "', exiting" << endl;
+				cerr << "FAILED: no Release Columnstore.xml found for release '" + release + "', exiting" << endl;
 				exit(1);
 			}
 			else
 			{
 				cout << "DONE" << endl;
 
-				//get system Calpont.xml
-				cout << "Get System Calpont.xml                        " << flush;
+				//get system Columnstore.xml
+				cout << "Get System Columnstore.xml                        " << flush;
 				for ( int retry = 0 ; retry < 5 ; retry++ )
 				{
-					cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/Calpont.xml " + systemUser + " " + debug_flag;
+					cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/Columnstore.xml " + systemUser + " " + debug_flag;
 					rtnCode = system(cmd.c_str());
 					sleep(2);
 					if (rtnCode == 0) {
-						cmd = "mv Calpont.xml " + systemDir + "/.";
+						cmd = "mv Columnstore.xml " + systemDir + "/.";
 						rtnCode = system(cmd.c_str());
 						if ( rtnCode == 0 ) {
-							// Calpont.xml found
+							// Columnstore.xml found
 	
 							//try to parse it
 							Config* sysConfigOld;
@@ -566,22 +566,22 @@ exit(0);
 							    // redirect cout to /dev/null
 								cerr.rdbuf(file.rdbuf());
 
-								sysConfigOld = Config::makeConfig( systemDir + "/Calpont.xml");
+								sysConfigOld = Config::makeConfig( systemDir + "/Columnstore.xml");
 
 							   // restore cout stream buffer
 								cerr.rdbuf (strm_buffer);
 
-								//update release Calpont.xml with System Configuration info from system Calpont.xml
-								cout << "Run Calpont.xml autoConfigure                 " << flush;
+								//update release Columnstore.xml with System Configuration info from system Columnstore.xml
+								cout << "Run Columnstore.xml autoConfigure                 " << flush;
 								cmd = "cd " + systemDir + ";../../autoConfigure";
 								rtnCode = system(cmd.c_str());
 								if (rtnCode != 0) {
-									cout << "  FAILED, try Calpont.xml.rpmsave" << endl;
+									cout << "  FAILED, try Columnstore.xml.rpmsave" << endl;
 									goto RPMSAVE;
 								}
 								else {
 									cout << "DONE" << endl;
-									configFile = "Calpont.xml.new";
+									configFile = "Columnstore.xml.new";
 									goto CONFIGDONE;
 								}
 							}
@@ -597,22 +597,22 @@ exit(0);
 				}
 
 RPMSAVE:
-				//try Calpont.xml.rpmsave
-				cout << "Get System Calpont.xml.rpmsave                " << flush;
-				cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/Calpont.xml.rpmsave " + systemUser + " " + debug_flag;
+				//try Columnstore.xml.rpmsave
+				cout << "Get System Columnstore.xml.rpmsave                " << flush;
+				cmd = "./remote_scp_get.sh " + installParentModuleIPAddr + " " + password + " " + installDir + "" + installLocation + "/etc/Columnstore.xml.rpmsave " + systemUser + " " + debug_flag;
 				rtnCode = system(cmd.c_str());
 				if (rtnCode == 0) {
-					cmd = "mv Calpont.xml.rpmsave " + systemDir + "Calpont.xml";
+					cmd = "mv Columnstore.xml.rpmsave " + systemDir + "Columnstore.xml";
 					rtnCode = system(cmd.c_str());
 					if ( rtnCode != 0 ) {
-						cout << "ERROR: No system Calpont.xml or Calpont.xml.rpmsave found, exiting" << endl;
-						cerr << "ERROR: No system Calpont.xml or Calpont.xml.rpmsave found, exiting" << endl;
+						cout << "ERROR: No system Columnstore.xml or Columnstore.xml.rpmsave found, exiting" << endl;
+						cerr << "ERROR: No system Columnstore.xml or Columnstore.xml.rpmsave found, exiting" << endl;
 						exit(1);
 					}
 				}
 
-				//update release Calpont.xml with System Configuration info from system Calpont.xml.rpmsave
-				cout << "Run Calpont.xml autoConfigure                 " << flush;
+				//update release Columnstore.xml with System Configuration info from system Columnstore.xml.rpmsave
+				cout << "Run Columnstore.xml autoConfigure                 " << flush;
 				cmd = "cd " + systemDir + ";../../autoConfigure";
 				rtnCode = system(cmd.c_str());
 				if (rtnCode != 0) {
@@ -622,7 +622,7 @@ RPMSAVE:
 				}
 				else {
 					cout << "DONE" << endl;
-					configFile = "Calpont.xml.new";
+					configFile = "Columnstore.xml.new";
 				}
 			}
 		}
@@ -632,12 +632,12 @@ CONFIGDONE:
 
 	Config* sysConfigOld;
 	try {
-		sysConfigOld = Config::makeConfig( systemDir + "/Calpont.xml");
+		sysConfigOld = Config::makeConfig( systemDir + "/Columnstore.xml");
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading Calpont.xml files, exiting" << endl;
-		cerr << "ERROR: Problem reading Calpont.xml files, exiting" << endl;
+		cout << "ERROR: Problem reading Columnstore.xml files, exiting" << endl;
+		cerr << "ERROR: Problem reading Columnstore.xml files, exiting" << endl;
 		exit(1);
 	}
 
@@ -716,8 +716,8 @@ CONFIGDONE:
 	}
 
 	if ( parentOAMModuleIPAddr == "0.0.0.0" ) {
-		cout << "System Calpont.xml is un-configured, exiting" << endl;
-		cerr << "System Calpont.xml is un-configured, exiting" << endl;
+		cout << "System Columnstore.xml is un-configured, exiting" << endl;
+		cerr << "System Columnstore.xml is un-configured, exiting" << endl;
 		exit (0);
 	}
 
@@ -728,8 +728,8 @@ CONFIGDONE:
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading Calpont.xml files, exiting" << endl;
-		cerr << "ERROR: Problem reading Calpont.xml files, exiting" << endl;
+		cout << "ERROR: Problem reading Columnstore.xml files, exiting" << endl;
+		cerr << "ERROR: Problem reading Columnstore.xml files, exiting" << endl;
 		exit(1);
 	}
 

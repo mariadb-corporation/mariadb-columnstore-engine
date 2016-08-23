@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -55,7 +56,7 @@ using namespace execplan;
 
 #include "writeengine.h"
 #include "cacheutils.h"
-#include "we_clients.h"
+#include "../writeengine/client/we_clients.h"
 #include "dbrm.h"
 #include "IDBPolicy.h"
 #include "utils_utf8.h"
@@ -117,7 +118,7 @@ int main(int argc, char* argv[])
 	sigaction(SIGPIPE, &ign, 0);
 #endif
 
-    ddlprocessor::DDLProcessor ddlprocessor(5, 10);
+    ddlprocessor::DDLProcessor ddlprocessor(1, 20);
 
     {
         Oam oam;

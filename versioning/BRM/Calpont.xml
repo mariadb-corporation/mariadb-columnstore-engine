@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: Calpont.xml 410 2007-03-30 19:47:18Z dhill $ -->
+<!-- $Id: Columnstore.xml 410 2007-03-30 19:47:18Z dhill $ -->
 <Calpont Version="V1.0.0">
 	<Messageq>
 		<Dir>/var/tmp</Dir>

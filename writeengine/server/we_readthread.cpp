@@ -35,7 +35,7 @@ using namespace threadpool;
 #include "we_message_handlers.h"
 #include "we_ddlcommandproc.h"
 #include "we_dmlcommandproc.h"
-#include "we_redistribute.h"
+#include "../redistribute/we_redistribute.h"
 #include "we_config.h"
 #include "stopwatch.h"
 using namespace logging;

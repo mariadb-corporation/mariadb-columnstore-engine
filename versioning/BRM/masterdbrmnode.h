@@ -28,6 +28,7 @@
 #define MASTERDBRMNODE_H_
 
 #include <boost/thread.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include <stdint.h>
 #include "brmtypes.h"

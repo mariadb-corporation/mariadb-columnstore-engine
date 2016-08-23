@@ -34,6 +34,7 @@
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/shared_array.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "brmtypes.h"
 #include "messagequeue.h"
@@ -742,7 +743,7 @@ public:
 	 */
 	EXPORT int saveState(std::string filename) throw();
 
-	/** @brief Persistence API.  Saves all BRM structures using the filenames from Calpont.xml.
+	/** @brief Persistence API.  Saves all BRM structures using the filenames from Columnstore.xml.
 	 *
 	 * Saves all <b>local</b> BRM structures to files.
 	 *

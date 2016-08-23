@@ -39,7 +39,6 @@
 
 #include "we_brm.h"
 #include "we_colop.h"
-#include "we_dctnry.h"
 #include "we_index.h"
 #include "we_tablemetadata.h"
 #include "we_dbrootextenttracker.h"

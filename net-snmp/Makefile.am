@@ -1,6 +1,6 @@
 # $Id$
 
-.PHONY: test coverage leakcheck docs bootstrap
+.PHONY: test coverage leakcheck docs bootstrap install clean
 test:
 
 coverage:
@@ -9,7 +9,12 @@ leakcheck:
 
 docs:
 
-bootstrap:
-	cd net-snmp-5.2.1.2; \
-	./CalpontConfigure.sh --prefix=$(prefix)
+all:
+	$(MAKE) -C net-snmp
+
+install:
+	$(MAKE) -C net-snmp install
+
+clean:
+	$(MAKE) -C net-snmp clean
 

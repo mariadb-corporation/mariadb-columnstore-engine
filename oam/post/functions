@@ -2,23 +2,23 @@
 # $Id: functions 2937 2012-05-30 18:17:09Z rdempsey $
 #
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-PATH=$INFINIDB_INSTALL_DIR/bin:$PATH
+PATH=$COLUMNSTORE_INSTALL_DIR/bin:$PATH
 export PATH
 
 module_type()
 {
 (
-	sed -r 's/[0-9]+$//' $INFINIDB_INSTALL_DIR/local/module
+	sed -r 's/[0-9]+$//' $COLUMNSTORE_INSTALL_DIR/local/module
 ) 2>/dev/null
 }
 
@@ -38,13 +38,13 @@ oidbitmapfile()
 module_name()
 {
 (
-	cat $INFINIDB_INSTALL_DIR/local/module
+	cat $COLUMNSTORE_INSTALL_DIR/local/module
 ) 2>/dev/null
 }
 
 module_id()
 {
 (
-	sed -r 's/[a-zA-Z]//g' $INFINIDB_INSTALL_DIR/local/module
+	sed -r 's/[a-zA-Z]//g' $COLUMNSTORE_INSTALL_DIR/local/module
 ) 2>/dev/null
 }

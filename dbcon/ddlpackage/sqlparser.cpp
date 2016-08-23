@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -34,18 +35,19 @@
 #include "ddl-gram.h"
 #endif
 
-void scanner_finish(void);
-void scanner_init(const char *str);
-void grammar_init(ddlpackage::ParseTree *ptree, bool);
+void scanner_finish(void* yyscanner);
+void scanner_init(const char *str, void* yyscanner);
+int ddllex_init_extra(void* user_defined,void** yyscanner);
+int ddllex_destroy(void* yyscanner);
+int ddlparse(ddlpackage::pass_to_bison* x);
 void set_schema(std::string schema);
-int ddlparse();
-
 namespace ddlpackage {
 	using namespace std;
 
 	SqlParser::SqlParser() :
 		fStatus(-1),
-		fDebug(false)
+		fDebug(false),
+		x(&fParseTree)
 	{
 	}
 
@@ -57,14 +59,14 @@ namespace ddlpackage {
 
 	void SqlParser::setDefaultSchema(std::string schema)
     {
-		set_schema(schema);
+		x.fDBSchema=schema;
 	}
 
 	int SqlParser::Parse(const char* sqltext)
 	{
-		scanner_init(sqltext);
-		grammar_init(&fParseTree, fDebug);
-		fStatus = ddlparse();
+		ddllex_init_extra(&scanData, &x.scanner);
+		scanner_init(sqltext, x.scanner);
+		fStatus = ddlparse(&x);
 		return fStatus;
 	}
 	
@@ -86,7 +88,8 @@ namespace ddlpackage {
 
 	SqlParser::~SqlParser()
 	{
-		scanner_finish(); // free scanner allocated memory
+		scanner_finish(x.scanner); // free scanner allocated memory
+		ddllex_destroy(x.scanner);
 	}
 
 
@@ -100,7 +103,6 @@ namespace ddlpackage {
 	{
 		fStatus = -1;
 		
-int ddlparse();
 		ifstream ifsql;
 		ifsql.open(sqlfile.c_str());
 		if(!ifsql.is_open()) {

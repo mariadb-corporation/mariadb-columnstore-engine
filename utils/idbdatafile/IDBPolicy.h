@@ -50,7 +50,7 @@ public:
 	};
 
 	/**
-	 * Config the IDBPolicy based on the Calpont.xml
+	 * Config the IDBPolicy based on the Columnstore.xml
 	 */
 	static void configIDBPolicy();
 

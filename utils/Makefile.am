@@ -17,7 +17,7 @@
 
 # $Id: Makefile.am 4038 2013-08-07 14:02:48Z rdempsey $
 
-SUBDIRS = boost_idb startup common configcpp loggingcpp messageqcpp \
+SUBDIRS = startup common configcpp loggingcpp messageqcpp \
 	threadpool rwlock dataconvert joiner rowgroup cacheutils \
 	funcexp udfsdk compress batchloader ddlcleanup \
 	mysqlcl_idb querystats jemalloc windowfunction idbdatafile \

@@ -150,7 +150,7 @@ namespace cal_impl_if
 namespace
 {
 // Calpont vtable non-support error message
-const string infinidb_autoswitch_warning = "The query includes syntax that is not supported by InfiniDB distributed mode. The execution was switched to standard mode with downgraded performance.";
+const string infinidb_autoswitch_warning = "The query includes syntax that is not supported by MariaDB Columnstore distributed mode. The execution was switched to standard mode with downgraded performance.";
 
 // copied from item_timefunc.cc
 static const string interval_names[]=
@@ -2325,7 +2325,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
 	if (!getenv("CALPONT_CONFIG_FILE"))
 	{
-		string calpontConfigFile(home + "/Calpont/etc/Calpont.xml");
+		string calpontConfigFile(home + "/Calpont/etc/Columnstore.xml");
 		setenv("CALPONT_CONFIG_FILE", calpontConfigFile.c_str(), 1);
 	}
 
@@ -3123,6 +3123,18 @@ int ha_calpont_impl_create(const char *name, TABLE *table_arg, HA_CREATE_INFO *c
 	//@Bug 1948. Mysql calls create table to create a new table with new signature.
 	if (ci->alterTableState > 0) return 0;
 
+	// Just to be sure
+	if (!table_arg)
+	{
+		setError(thd, ER_INTERNAL_ERROR, "ha_calpont_impl_create_: table_arg is NULL");
+		return 1;
+	}
+	if (!table_arg->s)
+	{
+		setError(thd, ER_INTERNAL_ERROR, "ha_calpont_impl_create_: table_arg->s is NULL");
+		return 1;
+	}
+
 	int rc = ha_calpont_impl_create_(name, table_arg, create_info, *ci);
 
 	return rc;
@@ -3130,10 +3142,16 @@ int ha_calpont_impl_create(const char *name, TABLE *table_arg, HA_CREATE_INFO *c
 
 int ha_calpont_impl_delete_table(const char *name)
 {
+	THD *thd = current_thd;
+
+	if (!name)
+	{
+		setError(thd, ER_INTERNAL_ERROR, "Drop Table with NULL name not permitted");
+		return 1;
+	}
+
 	//if this is an InfiniDB tmp table ('#sql*.frm') just leave...
 	if (!memcmp((uchar*)name, tmp_file_prefix, tmp_file_prefix_length)) return 0;
-
-	THD *thd = current_thd;
 
 	// @bug1940 Do nothing for select query. Support of set default engine to IDB.
 	if (string(name).find("@0024vtable") != string::npos)
@@ -3156,6 +3174,11 @@ int ha_calpont_impl_delete_table(const char *name)
 	}
 
 	TABLE_LIST *first_table= (TABLE_LIST*) thd->lex->select_lex.table_list.first;
+	if (!first_table->db)
+	{
+		setError(thd, ER_INTERNAL_ERROR, "Drop Table with NULL schema not permitted");
+		return 1;
+	}
 
 	if (!ci) return 0;
 
@@ -3455,12 +3478,16 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			//cout << "aCmdLine = " << aCmdLine << endl;
 			std::istringstream ss(aCmdLine);
 			std::string arg;
-			std::vector<std::string> v2;
+			std::vector<std::string> v2(20, "");
+            unsigned int i = 0;
 			while (ss >> arg)
 			{
-				v2.push_back(arg);
-				Cmds.push_back(const_cast<char*>(v2.back().c_str()));
-			}
+                v2[i++] = arg;
+            }
+            for (unsigned int j = 0; j < i; ++j)
+            {
+                Cmds.push_back(const_cast<char*>(v2[j].c_str()));
+            }
 
 			Cmds.push_back(0); //null terminate
 				

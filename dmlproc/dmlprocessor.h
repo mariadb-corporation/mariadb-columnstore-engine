@@ -45,6 +45,41 @@
 #include "batchinsertprocessor.h"
 #include "querytele.h"
 
+template<typename T, typename Container=std::deque<T> >
+class iterable_queue : public std::queue<T,Container>
+{
+public:
+    typedef typename Container::iterator iterator;
+    typedef typename Container::const_iterator const_iterator;
+
+    iterator begin() { return this->c.begin(); }
+    iterator end() { return this->c.end(); }
+    const_iterator begin() const { return this->c.begin(); }
+    const_iterator end() const { return this->c.end(); }
+	iterator find(T t) 
+	{
+		iterator it;
+		for (it = begin(); it != end(); ++it)
+		{
+			if (*it == t)
+			{
+				break;
+			}
+		}
+		return it;
+	}
+	iterator erase(typename Container::iterator it) { return this->c.erase(it); }
+	iterator erase(T t) 
+	{ 
+		iterator it = find(t);
+		if (it != end())
+		{
+			erase(it);
+		}
+		return it; 
+	}
+};
+
 namespace dmlprocessor
 {
 
@@ -103,9 +138,9 @@ class PackageHandler
 {
 public:
     PackageHandler(const messageqcpp::IOSocket& ios, boost::shared_ptr<messageqcpp::ByteStream> bs,
-		uint8_t packageType, joblist::DistributedEngineComm *ec, uint64_t maxDeleteRows,
+		uint8_t packageType, joblist::DistributedEngineComm *ec, bool concurrentSuport, uint64_t maxDeleteRows,
 		uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnId, BRM::DBRM * aDbrm,
-		const querytele::QueryTeleClient& qtc);
+		const querytele::QueryTeleClient& qtc, boost::shared_ptr<execplan::CalpontSystemCatalog> csc);
 	~PackageHandler();
 
     void run();
@@ -113,18 +148,42 @@ public:
 	
 	execplan::CalpontSystemCatalog::SCN getTxnid() {return fTxnid;}
 	uint32_t getSessionID() {return fSessionID;}
+
 private:
     messageqcpp::IOSocket fIos;
     boost::shared_ptr<messageqcpp::ByteStream> fByteStream;
-	boost::scoped_ptr<dmlpackageprocessor::DMLPackageProcessor> fProcessor;
+    boost::scoped_ptr<dmlpackageprocessor::DMLPackageProcessor> fProcessor;
     messageqcpp::ByteStream::quadbyte fPackageType;
     joblist::DistributedEngineComm *fEC;
+	bool fConcurrentSupport;
     uint64_t fMaxDeleteRows;
-	uint32_t fSessionID;
-	execplan::CalpontSystemCatalog::SCN fTxnid;
-	execplan::SessionManager sessionManager;
-	BRM::DBRM *fDbrm;
-	querytele::QueryTeleClient fQtc;
+    uint32_t fSessionID;
+	uint32_t fTableOid;
+    execplan::CalpontSystemCatalog::SCN fTxnid;
+    execplan::SessionManager sessionManager;
+    BRM::DBRM *fDbrm;
+    querytele::QueryTeleClient fQtc;
+    boost::shared_ptr<execplan::CalpontSystemCatalog> fcsc;
+
+    // MCOL-140 A map to hold table oids so that we can wait for DML on a table.
+    // This effectively creates a table lock for transactions.
+    // Used to serialize operations because the VSS can't handle inserts
+    // or updates on the same block.
+    // When an Insert, Update or Delete command arrives, we look here
+    // for the table oid. If found, wait until it is no onger here.
+    // If this transactionID (SCN) is < the transactionID in the table, don't delay
+    // and hope for the best, as we're already out of order.
+    // When the VSS is engineered to handle transactions out of order, all MCOL-140 
+    // code is to be removed.
+	int synchTableAccess();
+	int releaseTableAccess();
+	int forceReleaseTableAccess();
+	typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
+    static std::map<uint32_t, tableAccessQueue_t> tableOidMap;
+    static boost::condition_variable tableOidCond;
+    static boost::mutex tableOidMutex;
+public:
+	static int clearTableAccess();
 };
 
 /** @brief processes dml packages as they arrive
@@ -151,6 +210,7 @@ private:
 	boost::shared_ptr<execplan::CalpontSystemCatalog> csc;
 	BRM::DBRM* fDbrm;
 	querytele::QueryTeleClient fQtc;
+	bool fConcurrentSupport;
 
 	// A map to hold pointers to all active PackageProcessors
 	typedef std::map<uint32_t, boost::shared_ptr<PackageHandler> > PackageHandlerMap_t;

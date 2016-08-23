@@ -1841,7 +1841,6 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
 	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
 	ci->expressionId = 0;
-
 }
 
 void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)

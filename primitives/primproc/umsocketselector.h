@@ -97,9 +97,9 @@ class UmSocketSelector
 		~UmSocketSelector()
 		{ };
 
-		/** @brief Accessor to total number of UM IP's in Calpont.xml.
+		/** @brief Accessor to total number of UM IP's in Columnstore.xml.
 		 *
-		 * @return Number of UM IP addresses read from Calpont.xml.
+		 * @return Number of UM IP addresses read from Columnstore.xml.
 		 */
 		uint32_t ipAddressCount() const;
 
@@ -180,9 +180,9 @@ class UmModuleIPs
 		~UmModuleIPs ( )
 		{ };
 
-		/** @brief Accessor to number of IP's from Calpont.xml for this UM.
+		/** @brief Accessor to number of IP's from Columnstore.xml for this UM.
 		 *
-		 * @return Number of IP addresses read from Calpont.xml for this UM.
+		 * @return Number of IP addresses read from Columnstore.xml for this UM.
 		 */
 		uint32_t ipAddressCount() const
 		{ return fUmIPSocketConns.size(); }

@@ -4,7 +4,9 @@
 #
 
 verbose=0
-mysqldir=$HOME/mariadb-columnstore-server/export/mysql
+prefix=/usr/local/mariadb/columnstore
+#mysqldir=$prefix/mariadb-columnstore/mysql
+columnstoredir=$prefix
 
 # set default as community
 community=true
@@ -52,18 +54,20 @@ fi
 # make the install package
 buildroot=$HOME/rpm/BUILD/mariadb-columnstore-$version.$release
 
-rm -rf $buildroot
+sudo rm -rf $buildroot
 mkdir -p $buildroot
 mkdir -p $buildroot/mariadb/columnstore
 echo -n "Writing binary files to $buildroot..."
-tar -cf - --exclude 'export/include' --exclude 'export/*.tar' export | tar -C $buildroot -xf -
-mv $buildroot/export/* $buildroot/mariadb/columnstore/.
+sudo chown -R builder:builder $columnstoredir
+/bin/cp -f -r $columnstoredir/* $buildroot/mariadb/columnstore/.
+
+/bin/cp -r build/releasenum $buildroot/mariadb/columnstore/.
 
 #get mysql server files
-pushd $mysqldir > /dev/null
-mkdir -p $buildroot/mariadb/columnstore/mysql
-cpio -pdmu --quiet $buildroot/mariadb/columnstore/mysql < files.lst
-popd >/dev/null
+#pushd $mysqldir > /dev/null
+#mkdir -p $buildroot/mariadb/columnstore/mysql
+#cpio -pdmu --quiet $buildroot/mariadb/columnstore/mysql < files.lst
+#popd >/dev/null
 
 #clean up some files from buildroot
 rm -f $buildroot/mariadb/columnstore/etc/Doxyfile

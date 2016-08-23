@@ -1,9 +1,9 @@
 #!/bin/bash
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-	INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
 # Returns 0 if the specified string contains the specified substring,
 # otherwise returns 1.
@@ -158,8 +158,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$javalibpath
 export JAVA_HOME=$JAVA_HOME
 
 #set in config file
-$INFINIDB_INSTALL_DIR/bin/setConfig -d Installation JavaHome $JAVA_HOME
-$INFINIDB_INSTALL_DIR/bin/setConfig -d Installation JavaPath $javalibpath
+$COLUMNSTORE_INSTALL_DIR/bin/setConfig -d Installation JavaHome $JAVA_HOME
+$COLUMNSTORE_INSTALL_DIR/bin/setConfig -d Installation JavaPath $javalibpath
 
 #run hadoop-config
 . $HADOOP_LIBEXEC_DIR/hadoop-config.sh

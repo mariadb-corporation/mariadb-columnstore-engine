@@ -53,7 +53,9 @@ commanddmlpackage.h \
 dmlpkg.h \
 dmlparser.h
 
-dml-gram.h dml-gram.cpp: dml.y
+dml-gram.h: dml-gram.cpp
+
+dml-gram.cpp: dml.y
 	$(YACC) -l -v -d -p dml -o dml-gram-temp.cpp dml.y
 	set +e; \
 	if [ -f dml-gram.cpp ]; \

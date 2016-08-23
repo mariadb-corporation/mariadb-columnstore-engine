@@ -34,7 +34,7 @@ for arg in "$@"; do
 done
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	export INFINIDB_INSTALL_DIR=$installdir
+	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
 	# add library config file
@@ -60,8 +60,8 @@ if [ $is64bitpkg -eq 1 -a $is64bitos -ne 1 ]; then
 	exit 1
 fi
 
-if [ ! -f $installdir/etc/Calpont.xml ]; then
-	echo "$installdir/etc/Calpont.xml not found, exiting"
+if [ ! -f $installdir/etc/Columnstore.xml ]; then
+	echo "$installdir/etc/Columnstore.xml not found, exiting"
 	exit 1
 fi
 
@@ -69,16 +69,19 @@ cd $installdir/lib || exit 1
 for lib in *.so.1.0.0; do
 	blib=`basename $lib .1.0.0`
 	ln -sf $lib $blib
+	ln -sf $lib ${blib}.1
 done
 chown -h $user.$user *.so >/dev/null 2>&1
-if [ -f libnetsnmp.so.5.2.1 ]; then
-	for lib in *.so.5.2.1; do
-		blib=`basename $lib .5.2.1`
+
+if [ -f libnetsnmp.so.30.0.3 ]; then
+	for lib in *.so.30.0.3; do
+		blib=`basename $lib .30.0.3`
 		ln -sf $lib $blib
-		ln -sf $lib ${blib}.5
+		ln -sf $lib ${blib}.30
 	done
-	chown -h $user.$user *.so *.so.5 >/dev/null 2>&1
+	chown -h $user.$user *.so *.so.30 >/dev/null 2>&1
 fi
+
 if [ -f libstdc++.so.6.0.14 ]; then
 	ln -sf libstdc++.so.6.0.14 libstdc++.so.6
 	chown -h $user.$user libstdc++.so.6 >/dev/null 2>&1
@@ -86,6 +89,9 @@ fi
 
 ln -sf libjemalloc.so.3.3.0 libjemalloc.so
 chown -h $user.$user libjemalloc.so >/dev/null 2>&1
+
+# softlink for libperl.sp, used by cplogger
+sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
 # TODO-based on early experience with HDP it doesn't install bigtop
 # so the code below will not correctly detect JAVA_HOME.  Need to 
@@ -138,35 +144,56 @@ chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
 mkdir /mnt/tmp > /dev/null 2>&1
 mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
 
-# install Calpont Log Rotate File
+# install Columnstore Log Rotate File
+sudo cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+sudo chmod 644 /etc/logrotate.d/columnstore
+
+# remove mysql archive log
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
-cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
-# delete Calpont shared memory segments
+# delete Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
 
 #setup the columnstore service script
 rm -f /etc/init.d/columnstore >/dev/null 2>&1
-cp $installdir/bin/columnstore /etc/init.d >/dev/null 2>&1
-if [ -x /sbin/chkconfig ]; then
-	/sbin/chkconfig --add columnstore > /dev/null 2>&1
-	/sbin/chkconfig columnstore on > /dev/null 2>&1
-elif [ -x /usr/sbin/update-rc.d ]; then
-	/usr/sbin/update-rc.d columnstore defaults 99 > /dev/null 2>&1
+rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
+
+systemctl=`which systemctl 2>/dev/null`
+if [ -n "$systemctl" ]; then
+
+	chmod 644 $installdir/bin/columnstore.service
+	sudo cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+	sudo cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+	systemctl enable columnstore >/dev/null 2>&1
 else
-	echo ""
-	echo "Package 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+	chkconfig=`which chkconfig 2>/dev/null`
+	if [ -n "$chkconfig" ]; then
+
+		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+		sudo chkconfig --add columnstore > /dev/null 2>&1
+		chkconfig columnstore on > /dev/null 2>&1
+	else
+		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+		updaterc=`which update-rc.d 2>/dev/null`
+		if [ -n "$updaterc" ]; then
+
+			update-rc.d columnstore defaults 99 > /dev/null 2>&1
+		else
+			echo ""
+			echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+		fi
+	fi
 fi
 
-#setup InfiniDB system logging
+#setup MariaDB Columnstore system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	chmod 777 -R /dev/shm
 	rm -f /etc/default/columnstore
 else
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
-	sudo chown $user:$user $installdir/etc/Calpont.xml
+	sudo chown $user:$user $installdir/etc/Columnstore.xml
 	sudo chmod 755 /var/log
 	sudo chmod -R 755 /var/log/mariadb/columnstore
 	sudo chmod -R 777 /dev/shm
@@ -177,7 +204,7 @@ else
 	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
 fi
 
-#check if InfiniDB system logging was setup
+#check if MariaDB Columnstore system logging was setup
 cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
 if [ $? -eq 0 ]; then
 	cat /tmp/syslog_install.log
@@ -214,17 +241,17 @@ fi
 
 #log install message
 test -f $installdir/post/functions && . $installdir/post/functions
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** InfiniDB Installed *****"
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
 
 #setup hadoop
 hadoop=`which hadoop 2>/dev/null`
-if [ -z $hadoop ]; then
+if [ -z "$hadoop" ]; then
 	#check for non-root user
 	if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 The next steps are:
 
-export INFINIDB_INSTALL_DIR=$installdir
+export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
 $installdir/bin/postConfigure -i $installdir
 
@@ -253,16 +280,16 @@ else
 		if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
-export INFINIDB_INSTALL_DIR=$installdir
+export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure -i $installdir
 
-If you are intending to install InfiniDB without Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
-export INFINIDB_INSTALL_DIR=$installdir
+export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
 $installdir/bin/postConfigure -i $installdir
 
@@ -270,12 +297,12 @@ EOD
 		else
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure
 
-If you are intending to install InfiniDB without Hadoop, the next step is:
+If you are intending to install MariaDB Columnstore without Hadoop, the next step is:
 
 $installdir/bin/postConfigure
 
@@ -292,16 +319,16 @@ EOD
 			if [ $installdir != "/usr/local/mariadb/columnstore" -a $quiet -eq 0 ]; then
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
-export INFINIDB_INSTALL_DIR=$installdir
+export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql:$libpath
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure -i $installdir
 
-If you are intending to install InfiniDB without Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
-export INFINIDB_INSTALL_DIR=$installdir
+export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
 $installdir/bin/postConfigure -i $installdir
 
@@ -309,12 +336,12 @@ EOD
 			else
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the next steps are:
+If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure
 
-If you are intending to install InfiniDB without Hadoop, the next step is:
+If you are intending to install MariaDB Columnstore without Hadoop, the next step is:
 
 $installdir/bin/postConfigure
 
@@ -323,9 +350,9 @@ EOD
 		else
 cat <<EOD
 
-If you are intending to install InfiniDB over Hadoop, the Hadoop sanity check did not pass.  
+If you are intending to install MariaDB Columnstore over Hadoop, the Hadoop sanity check did not pass.  
 Most likely there is an environment setup conflict or the hdfs services are down.
-Please Contact InfiniDB Customer Support.
+Please Contact MariaDB Columnstore Customer Support.
 EOD
 		fi
 	fi

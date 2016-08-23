@@ -43,17 +43,17 @@
 # If you change base dir, you must also change datadir. These may get
 # overwritten by settings in the MySQL configuration files.
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
     test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
-if [ -z "$INFINIDB_INSTALL_DIR" ]; then
-    INFINIDB_INSTALL_DIR=/usr/local/mariadb/columnstore
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+    COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export INFINIDB_INSTALL_DIR=$INFINIDB_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
-basedir=$INFINIDB_INSTALL_DIR/mysql
+basedir=$COLUMNSTORE_INSTALL_DIR/mysql
 datadir=$basedir/db
 
 # Default value, in seconds, afterwhich the script should timeout waiting
@@ -80,7 +80,7 @@ then
     datadir=/var/lib/mysql
   fi
   sbindir=/usr/local/sbin
-  libexecdir=/usr/local/sbin
+  bindir=/usr/local/bin
 else
   bindir="$basedir/bin"
   if test -z "$datadir"
@@ -90,9 +90,9 @@ else
   sbindir="$basedir/sbin"
   if test -f "$basedir/sbin/mysqld"
   then
-    libexecdir="$basedir/sbin"
+    bindir="$basedir/bin"
   else
-    libexecdir="$basedir/libexec"
+    bindir="$basedir/bin"
   fi
 fi
 
@@ -146,11 +146,11 @@ parse_server_arguments() {
 		    sbindir="$basedir/sbin"
                     if test -f "$basedir/sbin/mysqld"
                     then
-                      libexecdir="$basedir/sbin"
+                      bindir="$basedir/bin"
                     else
-                      libexecdir="$basedir/libexec"
+                      bindir="$basedir/bin"
                     fi
-		    #libexecdir="$basedir/libexec"
+		    #bindir="$basedir/bin"
         ;;
       --datadir=*)  datadir=`echo "$arg" | sed -e 's/^[^=]*=//'`
 		    datadir_set=1
@@ -310,7 +310,7 @@ fi
 kill_by_pid() {
   # let's see if we can kill the 2 mysql procs by hand
   # get the our mysql from ps
-  eval $(ps -ef | grep "$INFINIDB_INSTALL_DIR/mysql//sbin/mysqld" | grep -v grep | head -1 | awk '{printf "pid=%d\n", $2}')
+  eval $(ps -ef | grep "$COLUMNSTORE_INSTALL_DIR/mysql//sbin/mysqld" | grep -v grep | head -1 | awk '{printf "pid=%d\n", $2}')
 
   if [ -n "$pid" ]; then
 	ppid=$(ps -o ppid= -p $pid)
@@ -338,7 +338,7 @@ case "$mode" in
     then
       # Give extra arguments to mysqld with the my.cnf file. This script
       # may be overwritten at next upgrade.
-      $bindir/mysqld_safe --datadir="$datadir" --pid-file="$mysqld_pid_file_path" "--ledir=$libexecdir" "$@" >/dev/null 2>&1 &
+      $bindir/mysqld_safe --datadir="$datadir" --pid-file="$mysqld_pid_file_path" "--ledir=$bindir" "$@" >/dev/null 2>&1 &
       wait_for_ready; return_value=$?
 
       # Make lock for RedHat / SuSE
@@ -421,7 +421,7 @@ case "$mode" in
       fi
     else
       # Try to find appropriate mysqld process
-      mysqld_pid=`pidof $libexecdir/mysqld`
+      mysqld_pid=`pidof $bindir/mysqld`
 
       # test if multiple pids exist
       pid_count=`echo $mysqld_pid | wc -w`
@@ -446,9 +446,9 @@ case "$mode" in
     cd $basedir
     echo $echo_n "Testing MySQL configuration syntax"
     daemon=$bindir/mysqld
-    if test -x $libexecdir/mysqld
+    if test -x $bindir/mysqld
     then
-      daemon=$libexecdir/mysqld
+      daemon=$bindir/mysqld
     elif test -x $sbindir/mysqld
     then
       daemon=$sbindir/mysqld

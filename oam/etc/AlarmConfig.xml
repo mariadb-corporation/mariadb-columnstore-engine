@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id: AlarmConfig.xml 3702 2013-08-06 22:29:48Z bpaul $ -->
-<Calpont Version="V1.0.0">
+<Columnstore Version="V1.0.0">
 	<AlarmConfig1>
 		<AlarmID>1</AlarmID>
 		<BriefDesc>CPU_USAGE_HIGH</BriefDesc>
@@ -301,7 +301,7 @@
 	<AlarmConfig34>
 		<AlarmID>34</AlarmID>
 		<BriefDesc>ROLLBACK_FAILURE</BriefDesc>
-		<DetailedDesc>A Database Rollback Failure occurred, Contact Calpont Customer Support.</DetailedDesc>
+		<DetailedDesc>A Database Rollback Failure occurred, Contact MariaDB Customer Support.</DetailedDesc>
 		<Severity>1</Severity>
 		<Threshold>100</Threshold>
 		<Occurrences>0</Occurrences>
@@ -325,4 +325,4 @@
 		<Occurrences>0</Occurrences>
 		<LastIssueTime>0</LastIssueTime>		
 	</AlarmConfig36>
-</Calpont>
+</Columnstore>

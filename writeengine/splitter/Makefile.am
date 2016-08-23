@@ -32,7 +32,7 @@ we_splclient.cpp \
 we_brmupdater.cpp \
 we_tablelockgrabber.cpp \
 we_xmlgetter.cpp
-cpimport_LDFLAGS = $(idb_common_ldflags) $(idb_exec_libs) $(idb_write_libs) -lbatchloader -lthreadpool $(AM_LDFLAGS)
+cpimport_LDFLAGS = $(idb_common_ldflags) $(idb_exec_libs) $(idb_write_libs) ${abs_top_builddir}/utils/batchloader/libbatchloader.la ${abs_top_builddir}/utils/threadpool/libthreadpool.la $(AM_LDFLAGS)
 
 install_splitter: install
 

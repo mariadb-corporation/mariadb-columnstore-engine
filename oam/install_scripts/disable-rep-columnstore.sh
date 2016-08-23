@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-# generic InfiniDB Disable Replication script.
+# generic MariaDB Columnstore Disable Replication script.
 #
 # Notes: This script gets run by ProcMon:
 

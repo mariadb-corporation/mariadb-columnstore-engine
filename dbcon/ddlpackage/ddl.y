@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -43,6 +44,7 @@
    a more recent version of flex.  At the time of this writing, our
    development systems have: flex version 2.5.4
 
+   MCOL-66 Modify to be a reentrant parser
    */
 
 %{
@@ -54,19 +56,20 @@
 #include "ddl-gram.h"
 #endif
 
+#define scanner x->scanner
+
 using namespace std;
 using namespace ddlpackage;	
 
-/* The user is expect to pass a ParseTree* to grammar_init */
-static ParseTree* parseTree;
-static std::string db_schema;
-int ddllex();
-void ddlerror (char const *error);
+int ddllex(YYSTYPE* ddllval, void* yyscanner);
+void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 %}
 
 %expect 15
-
+%pure-parser
+%lex-param {void * scanner}
+%parse-param {struct ddlpackage::pass_to_bison * x}
 %debug
 
  /* Bison uses this to generate a C union definition.  This is used to
@@ -199,7 +202,7 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <sqlStmt>              trunc_table_statement
 
 %%
-stmtblock:	stmtmulti { parseTree = $1; }
+stmtblock:	stmtmulti { x->fParseTree = $1; }
 		;
 
 
@@ -216,11 +219,9 @@ stmtmulti:
 	}
 	| stmt
 	{ 
-	/* The user is supposed to supply a ParseTree* via grammar_init.
-	So, it is already there. */
 		if ($1 != NULL)
 		{
-			$$ = parseTree;
+			$$ = x->fParseTree;
 			$$->push_back($1);
 		}
 		else
@@ -597,8 +598,8 @@ table_name:
 qualified_name:
 	IDENT '.' IDENT {$$ = new QualifiedName($1, $3);}
 	| IDENT {
-				if (db_schema.size())
-					$$ = new QualifiedName((char*)db_schema.c_str(), $1);
+				if (x->fDBSchema.size())
+					$$ = new QualifiedName((char*)x->fDBSchema.c_str(), $1);
 				else
 				    $$ = new QualifiedName($1);   
 			}
@@ -1061,15 +1062,4 @@ opt_column:
 
 %%
 
-void grammar_init(ParseTree *_parseTree, bool debug)
-{
-	parseTree = _parseTree;
-	
-	if(debug)
-		yydebug = 1;
-}
 
-void set_schema(std::string schema)
-{
-	db_schema = schema;
-}
