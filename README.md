@@ -1,9 +1,9 @@
-#MariaDB ColumnStore Storage/Execution engine 1.0.6
-MariaDB ColumnStore 1.0.6 is the development version of MariaDB ColumnStore. 
-It is built by porting InfiniDB 4.6.2 on MariaDB 10.1.19 and adding entirely 
+#MariaDB ColumnStore Storage/Execution engine 1.0.1
+MariaDB ColumnStore 1.0.2 is the development version of MariaDB ColumnStore. 
+It is built by porting InfiniDB 4.6.2 on MariaDB 10.1.14 and adding entirely 
 new features not found anywhere else.
 
-#MariaDB ColumnStore 1.0.6 is an GA release. 
+#MariaDB ColumnStore 1.0.2 is an Alpha release. 
 This is the first MariaDB ColumnStore release, not all features planned for the MariaDB ColumnStore 1.0 
 series are included in this release. 
 
@@ -16,5 +16,3 @@ This repository is not meant to be built independently outside of the server.  T
 
   https://github.com/mariadb-corporation/mariadb-columnstore-server
 
-#Issue tracking
-Issue tracking of MariaDB ColumnStore happens in JIRA, https://jira.mariadb.org/browse/MCOL
