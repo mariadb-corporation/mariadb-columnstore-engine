@@ -106,19 +106,35 @@ void OamCache::checkReload()
 #if  !defined(SKIP_OAM_INIT)
 		{
 			try {
-				int state = oam::ACTIVE; bool degraded;
+				int state = oam::MAN_INIT; 
+				bool degraded;
 				char num[80];
+				int retry = 0;
+				// MCOL-259 retry for 5 seconds if the PM is in some INIT mode.
+				while ((   state == oam::BUSY_INIT 
+						|| state == oam::MAN_INIT 
+					    || state == oam::PID_UPDATE)
+				       && retry < 5)
+				{
+					snprintf(num, 80, "%d", *it);
+					try {
+						oam.getModuleStatus(string("pm") + num, state, degraded);
+					}
+					catch (...) {break;}
 
-				snprintf(num, 80, "%d", *it);
-				try {
-					oam.getModuleStatus(string("pm") + num, state, degraded);
-				}
-				catch (...) {}
-
-				if (state == oam::ACTIVE) {
-					pmToConnectionMap[*it] = i++;
-					moduleIds.push_back(*it);
+					if (state == oam::ACTIVE || state == oam::DEGRADED) {
+						pmToConnectionMap[*it] = i++;
+						moduleIds.push_back(*it);
+						break;
+					}
+					sleep(1);
 				//cout << "pm " << *it << " -> connection " << (i-1) << endl;
+				}
+				if (state != oam::ACTIVE)
+				{
+					ostringstream os;
+					os << "OamCache::checkReload shows state for pm" << num << " as " << state;
+					oam.writeLog(os.str(), logging::LOG_TYPE_WARNING);
 				}
 			}
 			catch (...) { /* doesn't get added to the connection map */ }

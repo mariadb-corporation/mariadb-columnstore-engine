@@ -1623,12 +1623,13 @@ void TupleBPS::makeJobs(vector<Job> *jobs)
 		if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
         {
             // MCOL-259 force a reload of the xml. This usualy fixes it.
-            std::cout << "forcing reload of columnstore.xml for dbRootConnectionMap" << std::endl;
+			Logger log;
+			log.logMessage(logging::LOG_TYPE_WARNING, "forcing reload of columnstore.xml for dbRootConnectionMap");
             oamCache->forceReload();
             dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
             if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
             {
-                std::cout << "still not in dbRootConnectionMap" << std::endl;
+				log.logMessage(logging::LOG_TYPE_WARNING, "dbroot still not in dbRootConnectionMap");
                 throw IDBExcept(ERR_DATA_OFFLINE);
             }
         }

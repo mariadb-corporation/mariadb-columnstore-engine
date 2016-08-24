@@ -2573,7 +2573,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 								DepProcessName, DepModuleName, LogFile);
 	
 			//Update Process Status: Update PID
-			updateProcessInfo(processName, STATE_MAX, newProcessID);
+			updateProcessInfo(processName, PID_UPDATE, newProcessID);
 		}
 
 		log.writeLog(__LINE__, processName + " PID is " + oam.itoa(newProcessID), LOG_TYPE_DEBUG);

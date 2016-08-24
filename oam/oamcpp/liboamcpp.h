@@ -273,7 +273,8 @@ namespace oam
 		STANDBY_INIT,							  // 18 = Standby init
 		BUSY_INIT, 							  	  // 19 = Busy init
 		ROLLBACK_INIT,  					  	  // 20 = Rollback during DML init
-		STATE_MAX								  // 21 = Max value
+		PID_UPDATE,  					  	      // 21 = Assigning the pid
+		STATE_MAX								  // 22 = Max value
     };
 
     /** @brief String State
@@ -2390,17 +2391,17 @@ namespace oam
 		*/
 		EXPORT void dbrmctl(std::string command);
 
-            /** @brief Wait for system to close transactions
-             *  
-             *  When a Shutdown, stop, restart or suspend operation is
-             *  requested but there are active transactions of some sort,
-             *  We wait for all transactions to close before performing
-             *  the action.
-             */
-            EXPORT bool waitForSystem(PROC_MGT_MSG_REQUEST request, messageqcpp::IOSocket& ios, messageqcpp::ByteStream& stillWorkingMsg);
+		/** @brief Wait for system to close transactions
+		 *  
+		 *  When a Shutdown, stop, restart or suspend operation is
+		 *  requested but there are active transactions of some sort,
+		 *  We wait for all transactions to close before performing
+		 *  the action.
+		 */
+		EXPORT bool waitForSystem(PROC_MGT_MSG_REQUEST request, messageqcpp::IOSocket& ios, messageqcpp::ByteStream& stillWorkingMsg);
 
-    		void amazonReattach(std::string toPM, dbrootList dbrootConfigList, bool attach = false);
-            void mountDBRoot(dbrootList dbrootConfigList, bool mount = true);
+		void amazonReattach(std::string toPM, dbrootList dbrootConfigList, bool attach = false);
+		void mountDBRoot(dbrootList dbrootConfigList, bool mount = true);
 
 		/**
 		*@brief  gluster control
@@ -2431,19 +2432,24 @@ namespace oam
 		**/
 		EXPORT bool disableMySQLRep();
 
-            	/** @brief check Gluster Log after a Gluster control call
-             	*/
-            	EXPORT int checkGlusterLog(std::string logFile, std::string& errmsg);
+		/** @brief check Gluster Log after a Gluster control call
+		*/
+		EXPORT int checkGlusterLog(std::string logFile, std::string& errmsg);
 
-            	/** @brief check and get mysql user password
-             	*/
-            	EXPORT std::string getMySQLPassword(bool bypassConfig = false);
+		/** @brief check and get mysql user password
+		*/
+		EXPORT std::string getMySQLPassword(bool bypassConfig = false);
 
-            	/** @brief update fstab with dbroot mounts
-             	*/
-            	EXPORT std::string updateFstab(std::string device, std::string dbrootID);
+		/** @brief update fstab with dbroot mounts
+		*/
+		EXPORT std::string updateFstab(std::string device, std::string dbrootID);
 
-        private:
+		/**
+		* @brief Write the message to the log
+		*/
+		void writeLog(const std::string logContent, const logging::LOG_TYPE logType = logging::LOG_TYPE_INFO);
+
+    private:
 
 	    int sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, snmpmanager::AlarmList& alarmlist, const std::string date);
 
@@ -2475,11 +2481,6 @@ namespace oam
             /** @brief send status updates to process monitor
              */
     		void sendStatusUpdate(messageqcpp::ByteStream obs, messageqcpp::ByteStream::byte returnRequestType);
-
-			/**
-			* @brief Write the message to the log
-			*/
-			void writeLog(const std::string logContent, const logging::LOG_TYPE logType = logging::LOG_TYPE_INFO);
 
 			std::string CalpontConfigFile;
 			std::string AlarmConfigFile;

@@ -1618,6 +1618,7 @@ namespace oam
 		{}
 
         // no match found
+		state = oam::UNEQUIP;
         exceptionControl("getModuleStatus", API_INVALID_PARAMETER);
     }
 
