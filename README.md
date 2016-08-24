@@ -1,4 +1,4 @@
-#MariaDB ColumnStore Storage/Execution engine 1.0.1
+#MariaDB ColumnStore Storage/Execution engine 1.0.2
 MariaDB ColumnStore 1.0.2 is the development version of MariaDB ColumnStore. 
 It is built by porting InfiniDB 4.6.2 on MariaDB 10.1.14 and adding entirely 
 new features not found anywhere else.
