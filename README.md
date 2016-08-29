@@ -16,3 +16,5 @@ This repository is not meant to be built independently outside of the server.  T
 
   https://github.com/mariadb-corporation/mariadb-columnstore-server
 
+#Issue tracking
+Issue tracking of MariaDB ColumnStore happens in JIRA, https://jira.mariadb.org/browse/MCOL
