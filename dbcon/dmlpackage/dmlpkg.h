@@ -29,6 +29,7 @@
 #include <map>
 #include <utility>
 #include <iostream>
+#include <bitset>
 #include <stdint.h>
 
 namespace dmlpackage
@@ -71,6 +72,7 @@ typedef std::vector<char*> QueryBuffer;
 typedef std::vector<std::string> ColValuesList;
 typedef std::vector<std::string> ColNameList;
 typedef std::map<uint32_t, ColValuesList> TableValuesMap;
+typedef std::bitset<4096> NullValuesBitset;
 
 std::ostream& operator<<(std::ostream& os, const SqlStatementList& ct);
 std::ostream& operator<<(std::ostream& os, const SqlStatement& stmt);

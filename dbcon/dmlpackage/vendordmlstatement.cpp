@@ -48,10 +48,10 @@ namespace dmlpackage
         {}
 
 	VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype, std::string tName, std::string schema, int rows, int columns, 
-				ColNameList& colNameList, TableValuesMap& tableValuesMap, int sessionID)
+				ColNameList& colNameList, TableValuesMap& tableValuesMap, NullValuesBitset& nullValues, int sessionID)
 		:fDMLStatement(dmlstatement), fDMLStatementType(stmttype),
         fTableName(tName), fSchema(schema), fRows(rows), fColumns(columns),
-        fColNameList(colNameList), fTableValuesMap(tableValuesMap), fSessionID(sessionID), fLogging(true),fLogending(true)
+        fColNameList(colNameList), fTableValuesMap(tableValuesMap), fNullValues(nullValues), fSessionID(sessionID), fLogging(true),fLogending(true)
         {}
 		
     VendorDMLStatement::~VendorDMLStatement()

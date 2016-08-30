@@ -88,7 +88,7 @@ public:
 	  * @param columns number of columns in the table
 	  * @param rows  number of rows to be touched
       */
-    EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows);
+    EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues);
 
     /** @brief build a InsertDMLPackage from a InsertSqlStatement
       *

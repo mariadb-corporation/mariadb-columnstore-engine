@@ -1105,13 +1105,6 @@ boost::any
 
 			case CalpontSystemCatalog::DATE:
 			{
-				if (data == "0000-00-00")  //@Bug 3210 Treat blank date as null
-				{
-					uint32_t d = joblist::DATENULL;
-					value = d;
-					break;
-				}
-
 				Date aDay;
 				if (stringToDateStruct(data, aDay))
 				{
@@ -1135,13 +1128,6 @@ boost::any
 
 			case CalpontSystemCatalog::DATETIME:
 			{
-				if (data == "0000-00-00 00:00:00")  //@Bug 3210 Treat blank date as null
-				{
-					uint64_t d = joblist::DATETIMENULL;
-					value = d;
-					break;
-				}
-
 				DateTime aDatetime;
 				if (stringToDatetimeStruct(data, aDatetime, 0))
 				{

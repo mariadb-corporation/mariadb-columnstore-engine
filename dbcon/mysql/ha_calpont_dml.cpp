@@ -187,15 +187,18 @@ uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
 	uint32_t size=0;
 	int columnPos = 0;
     double dbval;
+    ci.nullValuesBitset.reset();
 	for (Field** field = table->field; *field; field++)
     {
         if((*field)->is_null())
         {
           ci.tableValuesMap[columnPos].push_back (""); //currently, empty string is treated as null.
+          ci.nullValuesBitset[columnPos] = true;
         }
         else
         {
           bitmap_set_bit(table->read_set, (*field)->field_index);
+          ci.nullValuesBitset[columnPos] = false;
           // @bug 3798 get real value for float/double type
           if ((*field)->result_type() == REAL_RESULT)
           {
@@ -330,7 +333,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 		
 		VendorDMLStatement dmlStmts(idb_mysql_query_str(thd), DML_INSERT, table->s->table_name.str,
                 table->s->db.str, size, ci.colNameList.size(), ci.colNameList,
-                ci.tableValuesMap, sessionID);
+                ci.tableValuesMap, ci.nullValuesBitset, sessionID);
 
 		CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStmts);
 		//@Bug 2466 Move the clean up earlier to avoid the second insert in another session to get the data

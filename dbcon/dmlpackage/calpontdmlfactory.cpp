@@ -174,7 +174,7 @@ dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackageFromMysql
         {
             case DML_INSERT:
                 packagePtr = new InsertDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(), vpackage.get_DMLStatement(), vpackage.get_SessionID());
-                (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(), vpackage.get_Columns(), vpackage.get_Rows());
+                (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(), vpackage.get_Columns(), vpackage.get_Rows(), vpackage.get_nullValues());
                 break;
 			case  DML_COMMAND:
                 packagePtr = new CommandDMLPackage(vpackage.get_DMLStatement(), vpackage.get_SessionID() );
@@ -182,7 +182,7 @@ dmlpackage::CalpontDMLPackage* CalpontDMLFactory::makeCalpontDMLPackageFromMysql
 			case DML_DELETE:
                 packagePtr = new DeleteDMLPackage(vpackage.get_SchemaName(), vpackage.get_TableName(),
                                                       vpackage.get_DMLStatement(), vpackage.get_SessionID() );
-                (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(), vpackage.get_Columns(), vpackage.get_Rows());
+                (void)packagePtr->buildFromMysqlBuffer(vpackage.get_ColNames(), vpackage.get_values(), vpackage.get_Columns(), vpackage.get_Rows(), vpackage.get_nullValues());
                 break;
 			default:
                 cerr << "makeCalpontDMLPackage: invalid statement type" << endl;

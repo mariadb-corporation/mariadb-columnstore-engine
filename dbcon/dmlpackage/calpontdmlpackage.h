@@ -94,7 +94,7 @@ namespace dmlpackage
              * @param columns number of columns in the table
              * @param rows  number of rows to be touched
              */
-            virtual int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows) = 0;
+            virtual int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues) = 0;
 
             /** @brief get the table object
              */
