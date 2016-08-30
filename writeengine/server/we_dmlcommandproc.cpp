@@ -30,8 +30,6 @@ using namespace messageqcpp;
 using namespace dmlpackage;
 #include "dmlpackageprocessor.h"
 using namespace dmlpackageprocessor;
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::gregorian;
 #include "dataconvert.h"
 using namespace dataconvert;
 #include "calpontsystemcatalog.h"

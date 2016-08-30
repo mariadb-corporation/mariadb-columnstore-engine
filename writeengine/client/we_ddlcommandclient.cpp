@@ -25,8 +25,6 @@ using namespace messageqcpp;
 #include "resourcemanager.h"
 #include "ddlpkg.h"
 #include "ddlpackageprocessor.h"
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::gregorian;
 #include "dataconvert.h"
 using namespace dataconvert;
 using namespace ddlpackage;

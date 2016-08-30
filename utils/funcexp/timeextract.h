@@ -67,8 +67,7 @@ public:
 			if( dayOfWeek < 0 || !dataconvert::isDateValid( 1, 1, dateTime.year ) )
 				return returnError( dateTime );
 
-			boost::gregorian::date yearfirst( dateTime.year, 1, 1 );
-
+            uint32_t yearfirst = helpers::calc_mysql_daynr(dateTime.year, 1, 1);
 			// figure out which day of week Jan-01 is
 			uint32_t firstweekday = helpers::calc_mysql_weekday( dateTime.year, 1, 1, sundayFirst );
 
@@ -76,10 +75,8 @@ public:
 			uint32_t firstoffset = firstweekday ? ( 7 - firstweekday ) : 0;
 
 			firstoffset += ( ( weekOfYear - 1) * 7 ) + dayOfWeek - ( sundayFirst ? 0 : 1 );
-			yearfirst += boost::gregorian::date_duration( firstoffset );
-			dateTime.year = yearfirst.year();
-			dateTime.month = yearfirst.month();
-			dateTime.day = yearfirst.day();
+			yearfirst += firstoffset;
+            helpers::get_date_from_mysql_daynr(yearfirst, dateTime);
 		}
 
 		if( !dataconvert::isDateTimeValid( dateTime.hour, dateTime.minute, dateTime.second, dateTime.msecond ) )
