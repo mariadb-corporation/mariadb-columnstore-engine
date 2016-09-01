@@ -985,7 +985,6 @@ void AlterTableProcessor::addColumn (uint32_t sessionID, execplan::CalpontSystem
 			aDbrm.releaseAILock(fStartingColOID);
 			throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_EXCEED_LIMIT));
 		}
-		aDbrm.releaseAILock(fStartingColOID);
 	}
 	std::vector <CalpontSystemCatalog::OID> oidList;
 	oidList.push_back(fStartingColOID);
