@@ -133,7 +133,7 @@ void OamCache::checkReload()
 				if (state != oam::ACTIVE)
 				{
 					ostringstream os;
-					os << "OamCache::checkReload shows state for pm" << num << " as " << state;
+					os << "OamCache::checkReload shows state for pm" << num << " as " << oamState[state];
 					oam.writeLog(os.str(), logging::LOG_TYPE_WARNING);
 				}
 			}

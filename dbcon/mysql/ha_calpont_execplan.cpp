@@ -4579,11 +4579,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			// @todo process from subquery
 			if (table_ptr->derived)
 			{
-				cout << "DERIVED TABLE DEBUG" << endl;
+				// cout << "DERIVED TABLE DEBUG" << endl;
 				String str;
 				(table_ptr->derived->first_select())->print(gwi.thd, &str, QT_INFINIDB_DERIVED);
-				cout << str.ptr() << endl;
-				cout << "DERIVED TABLE DEBUG END" << endl;
+				// cout << str.ptr() << endl;
+				// cout << "DERIVED TABLE DEBUG END" << endl;
 
 				SELECT_LEX *select_cursor = table_ptr->derived->first_select();
 				FromSubQuery fromSub(gwi, select_cursor);
