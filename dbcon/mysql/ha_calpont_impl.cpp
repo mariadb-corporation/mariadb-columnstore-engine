@@ -2803,6 +2803,13 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
 			{
 				CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(make_table(table->s->db.str, table->s->table_name.str), true);
+				if (oidlist.size() != num_attr)
+				{
+					string emsg = "Size mismatch probably caused by front end out of sync";
+					setError(thd, ER_INTERNAL_ERROR, emsg);
+					CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+					goto internal_error;
+				}
 				for (unsigned int j = 0; j < oidlist.size(); j++)
 				{
 					CalpontSystemCatalog::ColType ctype = csc->colType(oidlist[j].objnum);
