@@ -34,8 +34,7 @@ using namespace messageqcpp;
 #include "we_ddlcommandproc.h"
 #include "ddlpkg.h"
 using namespace ddlpackage;
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::gregorian;
+#include <ctime>
 #include "dataconvert.h"
 using namespace dataconvert;
 //#include "we_brm.h"
@@ -188,25 +187,15 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string &err)
 			}
 			else if (CREATEDATE_COL == column.tableColName.column)
 			{
-				date d(day_clock::universal_day());
-				std::string date = to_iso_string(d);
-				Date aDay;
-				int intvalue;
-				std::string s = date.substr(0, 4);
-				if (from_string<int>(intvalue, s, std::dec))
-				{
-					aDay.year = intvalue;
-				}
-				s = date.substr(4, 2);
-				if (from_string<int>(intvalue, s, std::dec))
-				{
-					aDay.month = intvalue;
-				}
-				s = date.substr(6, 2);
-				if (from_string<int>(intvalue, s, std::dec))
-				{
-					aDay.day = intvalue;
-				}
+                time_t t;
+                struct tm tmp;
+                Date aDay;
+
+                t = time(NULL);
+                gmtime_r(&t, &tmp);
+				aDay.year = tmp.tm_year;
+				aDay.month = tmp.tm_mon+1;
+				aDay.day = tmp.tm_mday;
 
 				colTuple.data = *(reinterpret_cast<int *> (&aDay));
 

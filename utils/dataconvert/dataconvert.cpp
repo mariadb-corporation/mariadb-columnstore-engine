@@ -31,8 +31,6 @@ using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost::algorithm;
 #include <boost/tokenizer.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::gregorian;
 #include "calpontsystemcatalog.h"
 #include "calpontselectexecutionplan.h"
 #include "columnresult.h"
@@ -644,24 +642,14 @@ bool mysql_str_to_datetime( const string& input, DateTime& output, bool& isDate 
 		return false;
 	}
 
-	try
-	{
-		boost::gregorian::date d(year, mon, day);
-		// one more check - boost allows year 10000 but we want to limit at 9999
-		if( year > 9999 )
-		{
-			output.reset();
-			return false;
-		}
-		output.year = d.year();
-		output.month = d.month();
-		output.day = d.day();
-	}
-	catch (...)
+	if (!isDateValid(day, mon, year))
 	{
 		output.reset();
 		return false;
 	}
+	output.year = year;
+	output.month = mon;
+	output.day = day;
 
 	/**
 	 *  Now we need to deal with the time portion.

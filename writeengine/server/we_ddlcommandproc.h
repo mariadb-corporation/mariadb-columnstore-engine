@@ -28,7 +28,6 @@
 #include "dbrm.h"
 #include "we_message_handlers.h"
 #include "liboamcpp.h"
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include "dataconvert.h"
 #include "writeengine.h"
 

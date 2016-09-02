@@ -34,7 +34,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
 
 #include "dataconvert.h"
 #include "operator.h"
@@ -172,39 +171,81 @@ static std::string dayOfMonth[32] =
  "31st"
  };
 
+static uint8_t days_in_month[]= {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
+
 // Given a date, calculate the number of days since year 0
+// This is a mirror of calc_daynr, at a later date we should use my_time.h
 inline uint32_t calc_mysql_daynr( uint32_t year, uint32_t month, uint32_t day )
 {
+    int temp;
+    int y = year;
+    long delsum;
+
 	if( !dataconvert::isDateValid( day, month, year ) )
 		return 0;
 
-	boost::gregorian::date d( year, month, day );
-	// this is the number of days between the beginning of the
-	// Gregorian calendar (November 24, 4714 B.C.) and the starting
-	// date offset in MySQL which is year 0.
-	const uint32_t JULIAN_DAY_OFFSET = 1721060;
-    return d.julian_day() - JULIAN_DAY_OFFSET;
+    delsum= (long) (365 * y + 31 *((int) month - 1) + (int) day);
+    if (month <= 2)
+        y--;
+    else
+        delsum-= (long) ((int) month * 4 + 23) / 10;
+    temp=(int) ((y/100+1)*3)/4;
+
+    return delsum+(int) y/4-temp;
+}
+
+// used by get_date_from_mysql_daynr() and calc_mysql_week()
+inline uint32_t calc_mysql_days_in_year(uint32_t year)
+{
+    return ((year & 3) == 0 && (year%100 || (year%400 == 0 && year)) ?
+            366 : 365);
 }
 
 // convert from a MySQL day number (offset from year 0) to a date
+// This is a mirror of get_date_from_daynr, at a later date we should use sql_time.h
 inline void get_date_from_mysql_daynr(long daynr,dataconvert::DateTime & dateTime)
 {
-	// the MySQL day numbers for min/max boost supported dates
-	const int BOOST_START_OFFSET = 511340;  // 1400-01-01
-	const int BOOST_END_OFFSET   = 3652424; // 9999-12-31
+    uint32_t year, temp, leap_day, day_of_year, days_in_year;
+    uint8_t *month_pos;
+    uint32_t ret_year, ret_month, ret_day;
+    const int MAX_DAY_NUMBER= 3652424;
 
-	if( daynr < BOOST_START_OFFSET || daynr > BOOST_END_OFFSET )
-	{
-		dateTime.year= dateTime.month = dateTime.day =0;
-	}
-	else
-	{
-		boost::gregorian::date d(1400,1,1);
-		d += boost::gregorian::date_duration( daynr - BOOST_START_OFFSET );
-		dateTime.year  = d.year();
-		dateTime.month = d.month();
-		dateTime.day   = d.day();
-	}
+
+    if (daynr < 366 || daynr > MAX_DAY_NUMBER)
+    {
+        dateTime.year= dateTime.month = dateTime.day =0;
+        return;
+    }
+
+    year= (uint32_t) (daynr*100 / 36525L);
+    temp=(((year-1)/100+1)*3)/4;
+    day_of_year=(uint) (daynr - (long) year * 365L) - (year-1)/4 +temp;
+    while (day_of_year > (days_in_year= calc_mysql_days_in_year(year)))
+    {
+        day_of_year-=days_in_year;
+        (year)++;
+    }
+    leap_day=0;
+    if (days_in_year == 366)
+    {
+        if (day_of_year > 31+28)
+        {
+            day_of_year--;
+            if (day_of_year == 31+28)
+                leap_day=1;		/* Handle leapyears leapday */
+        }
+    }
+    ret_month=1;
+    for (month_pos= days_in_month ;
+         day_of_year > (uint32_t) *month_pos ;
+         day_of_year-= *(month_pos++), (ret_month)++)
+      ;
+    ret_year=year;
+    ret_day=day_of_year+leap_day;
+
+    dateTime.year = ret_year;
+    dateTime.month = ret_month;
+    dateTime.day = ret_day;
 }
 
 // Returns the weekday index for a given date:
@@ -212,14 +253,15 @@ inline void get_date_from_mysql_daynr(long daynr,dataconvert::DateTime & dateTim
 //       0 = Sunday, 1 = Monday, ..., 6 = Saturday
 //   else:
 //       0 = Monday, 1 = Tuesday, ..., 6 = Sunday
+// This is a mirror of calc_weekday, at a later date we should use sql_time.h
 inline uint32_t calc_mysql_weekday( uint32_t year, uint32_t month, uint32_t day, bool sundayFirst )
 {
 	if( !dataconvert::isDateValid( day, month, year ) )
 		return 0;
 
-	boost::gregorian::date d( year, month, day );
-	uint32_t ret = d.day_of_week();
-	return sundayFirst ? ret : (ret + 6) % 7;
+    uint32_t daynr = calc_mysql_daynr(year, month, day);
+    return ((int) ((daynr + 5L + (sundayFirst ? 1L : 0L)) % 7));
+
 }
 
 // Flags for calc_mysql_week
@@ -250,98 +292,56 @@ inline int16_t convert_mysql_mode_to_modeflags( int16_t mode )
 // that need to know the year that the week actually corresponds to -
 // see MySQL documentation for how the year returned can be different
 // than the year of the input date
+//
+// This is a mirror of calc_week, at a later date we should use sql_time.h
 inline uint32_t calc_mysql_week( uint32_t year, uint32_t month, uint32_t day,
 						   	     int16_t modeflags,
 						   	     uint32_t* weekyear = 0 )
 {
-	// need to make sure that the date is valid for boost::gregorian::date
+    // need to make sure that the date is valid
 	if( !dataconvert::isDateValid( day, month, year ) )
 		return 0;
 
-	boost::gregorian::date d( year, month, day );
 
-	// default this to the year of the input date - will update in the
-	// scenarios where it is either 1 behind or 1 ahead
-	if( weekyear )
-		*weekyear = d.year();
+    uint32_t days;
+    uint32_t daynr=calc_mysql_daynr(year,month,day);
+    uint32_t first_daynr=calc_mysql_daynr(year,1,1);
+    bool monday_first= modeflags & WEEK_MONDAY_FIRST;
+    bool week_year= modeflags & WEEK_NO_ZERO;
+    bool first_weekday= modeflags & WEEK_GT_THREE_DAYS;
 
-	// get a date object for the first day of they year in question
-	boost::gregorian::date yearfirst = boost::gregorian::date(d.year(),1,1);
+    uint32_t weekday=calc_mysql_weekday(year, 1, 1, !monday_first);
+    *weekyear=year;
 
-	// figure out which day of week Jan-01 is
-	uint32_t firstweekday = calc_mysql_weekday( d.year(), 1, 1, !( modeflags & WEEK_MONDAY_FIRST ) );
+    if (month == 1 && day <= 7-weekday)
+    {
+        if (!week_year && 
+    	((first_weekday && weekday != 0) ||
+    	 (!first_weekday && weekday >= 4)))
+            return 0;
+        week_year= 1;
+        (*weekyear)--;
+        first_daynr-= (days=calc_mysql_days_in_year(*weekyear));
+        weekday= (weekday + 53*7- days) % 7;
+    }
 
-	// calculate the offset to the first week starting day
-	uint32_t firstoffset = firstweekday ? ( 7 - firstweekday ) : 0;
+    if ((first_weekday && weekday != 0) ||
+      (!first_weekday && weekday >= 4))
+        days= daynr - (first_daynr+ (7-weekday));
+    else
+        days= daynr - (first_daynr - weekday);
 
-	// julian day number for the first day of the first week
-	uint32_t baseday = yearfirst.julian_day() + firstoffset;
-
-	// if using a modeflags where the first week must have >3 days in this year
-	// we need to check where firstweekday fell.  There are 3 cases for Jan-01
-	//    1) Jan-01 fell on week start - there are obviously at least
-	//       three days this year and baseday already correct
-	//    2) Jan-01 fell on weekday 1 - 3 - this means that our baseday is
-	//       pointing to next week but there must be at least 3 days this year
-	//       so we need to adjust baseday back by one week
-	//    3) Jan-01 fell on weekday 4 - 6 - this means there cannot be >3
-	//       days in the week with Jan 01 so our baseday is already correct
-	if( modeflags & WEEK_GT_THREE_DAYS )
-	{
-		if( firstweekday > 0 && firstweekday < 4 )
-		{
-			baseday = baseday - 7;
-		}
-	}
-
-	uint32_t weeknum = 0;
-	if( d.julian_day() < baseday && ( modeflags & WEEK_NO_ZERO ) )
-	{
-		// this is somewhat of a pain - since we aren't using a 0 week, the date
-		// is actually going to be in the last week of last year and we need to
-		// figure out which number that is.  This code is identical to above
-		// except we are compuing for last year instead of current year.
-		boost::gregorian::date lastyearfirst = boost::gregorian::date(d.year()-1,1,1);
-		firstweekday = calc_mysql_weekday( d.year()-1, 1, 1, !( modeflags & WEEK_MONDAY_FIRST ) );
-		firstoffset = firstweekday ? ( 7 - firstweekday ) : 0;
-		baseday = lastyearfirst.julian_day() + firstoffset;
-
-		// same logic as above
-		if( modeflags & WEEK_GT_THREE_DAYS )
-		{
-			if( firstweekday > 0 && firstweekday < 4 )
-			{
-				baseday = baseday - 7;
-			}
-		}
-		weeknum = (d.julian_day() - baseday)/ 7 + 1;
-
-		if( weekyear )
-			*weekyear = d.year() - 1;
-	}
-	else
-	{
-		weeknum = (d.julian_day() >= baseday) ? (d.julian_day() - baseday)/ 7 + 1 : 0;
-
-		if( ( modeflags & WEEK_GT_THREE_DAYS ) &&
-			( modeflags & WEEK_NO_ZERO ) && weeknum > 52 )
-		{
-			// if this happens we aren't sure whether the week will be 53 or 1.
-			// to get 53, we know this has to be a December date and can subtract
-			// our date from 32 to figure out how many days of this week
-			uint32_t daysthisyear = 32 - d.day();
-			uint32_t firstweekday = calc_mysql_weekday( d.year(), d.month(), d.day(), !( modeflags & 0x1 ) );
-			// to be 1st week of next year there must be > 3 days of next year
-			if( ( firstweekday + daysthisyear ) < 4 )
-			{
-				weeknum = 1;
-				if( weekyear )
-					*weekyear = d.year() + 1;
-			}
-		}
-	}
-
-	return weeknum;
+    if (week_year && days >= 52*7)
+    {
+        weekday= (weekday + calc_mysql_days_in_year(*weekyear)) % 7;
+        if ((!first_weekday && weekday < 4) ||
+    	(first_weekday && weekday == 0))
+        {
+            (*weekyear)++;
+            return 1;
+        }
+    }
+    return days/7+1;
 }
 
 inline bool calc_time_diff(int64_t time1, int64_t time2, int l_sign, long long *seconds_out, long long *microseconds_out)

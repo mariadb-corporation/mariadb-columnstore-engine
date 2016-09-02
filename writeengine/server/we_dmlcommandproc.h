@@ -33,7 +33,6 @@
 #include "calpontsystemcatalog.h"
 #include "insertdmlpackage.h"
 #include "liboamcpp.h"
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include "dataconvert.h"
 #include "writeengine.h"
 #include "we_convertor.h"

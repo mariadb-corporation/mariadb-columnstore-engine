@@ -31,9 +31,6 @@ using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost::algorithm;
 
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::gregorian;
-
 using namespace execplan;
 using namespace ddlpackage;
 using namespace logging;
