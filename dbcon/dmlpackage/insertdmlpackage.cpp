@@ -151,7 +151,7 @@ int InsertDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
     return retval;
 }
 
-int InsertDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows )
+int InsertDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues )
 {
     int retval = 1;
 
@@ -166,7 +166,7 @@ int InsertDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
 
       colValList = tableValuesMap[j];
 
-      DMLColumn* aColumn = new DMLColumn(colName, colValList, false);
+      DMLColumn* aColumn = new DMLColumn(colName, colValList, false, 0, nullValues[j]);
       (aRowPtr->get_ColumnList()).push_back(aColumn);
     }
     //build a row list for a table

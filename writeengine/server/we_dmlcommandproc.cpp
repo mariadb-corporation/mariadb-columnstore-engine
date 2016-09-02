@@ -215,7 +215,9 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 						for ( uint32_t i=0; i < origVals.size(); i++ )
 						{
 							tmpStr = origVals[i];
-							if ( tmpStr.length() == 0 )
+
+							isNULL = columnPtr->get_isnull();
+							if ( isNULL || ( tmpStr.length() == 0 ) )
 								isNULL = true;
 							else
 								isNULL = false;
@@ -266,7 +268,9 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 						for ( uint32_t i=0; i < origVals.size(); i++ )
 						{
 							indata = origVals[i];
-							if ( indata.length() == 0 )
+
+							isNULL = columnPtr->get_isnull();
+							if ( isNULL || ( indata.length() == 0 ) )
 								isNULL = true;
 							else
 								isNULL = false;
@@ -313,11 +317,6 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
 							if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
 							{
-								if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (indata =="0000-00-00")) ||
-									((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) && (indata =="0000-00-00 00:00:00")))
-								{
-									isNULL = true;
-								}
 								if (isNULL && colType.defaultValue.empty()) //error out
 								{
 									Message::Args args;
