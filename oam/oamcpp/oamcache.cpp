@@ -120,7 +120,19 @@ void OamCache::checkReload()
 					try {
 						oam.getModuleStatus(string("pm") + num, state, degraded);
 					}
-					catch (...) {break;}
+					catch (std::exception& e)
+					{
+						ostringstream os;
+						os << "OamCache::checkReload exception while getModuleStatus pm" << num << " " << e.what();
+						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+						break;
+					}
+					catch (...) {
+						ostringstream os;
+						os << "OamCache::checkReload exception while getModuleStatus pm" << num;
+						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+						break;
+					}
 
 					if (state == oam::ACTIVE || state == oam::DEGRADED) {
 						pmToConnectionMap[*it] = i++;
@@ -134,10 +146,22 @@ void OamCache::checkReload()
 				{
 					ostringstream os;
 					os << "OamCache::checkReload shows state for pm" << num << " as " << oamState[state];
-					oam.writeLog(os.str(), logging::LOG_TYPE_WARNING);
+					oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 				}
 			}
-			catch (...) { /* doesn't get added to the connection map */ }
+			catch (std::exception& e)
+			{
+				ostringstream os;
+				os << "OamCache::checkReload final exception while getModuleStatus " << e.what();
+				oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+				break;
+			}
+			catch (...) {
+				ostringstream os;
+				os << "OamCache::checkReload final exception while getModuleStatus";
+				oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+				break;
+			}
 		}
 #else
 		moduleIds.push_back(*it);

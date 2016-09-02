@@ -2482,6 +2482,8 @@ namespace oam
              */
     		void sendStatusUpdate(messageqcpp::ByteStream obs, messageqcpp::ByteStream::byte returnRequestType);
 
+			bool checkSystemRunning(const char* function);
+
 			std::string CalpontConfigFile;
 			std::string AlarmConfigFile;
 			std::string ProcessConfigFile;

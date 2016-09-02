@@ -437,7 +437,10 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
 	size_t mlread = 0;
 	
 	if (readToMagic(msecs, isTimeOut, stats) == false)	//indicates a timeout or EOF
+	{
+		logIoError("InetStreamSocket::read: timeout during readToMagic", 0);
 		return SBS(new ByteStream(0));
+	}
 
 	//FIXME: This seems like a lot of work to read 4 bytes...
 	while (mlread < sizeof(msglen))
@@ -458,6 +461,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
 			{
 				if (isTimeOut)
 					*isTimeOut = true;
+				logIoError("InetStreamSocket::read: timeout during first poll", 0);
 				return SBS(new ByteStream(0));
 			}
 		}
@@ -470,7 +474,10 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
 		if (t == 0)
 		{
 			if (timeout == NULL)
+			{
+				logIoError("InetStreamSocket::read: timeout during first read", 0);
 				return SBS(new ByteStream(0));  // don't return an incomplete message
+			}
 			else
 				throw SocketClosed("InetStreamSocket::read: Remote is closed");
 		}
@@ -518,7 +525,10 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
 			if (err == 0)  // timeout
 			{
 				if (isTimeOut)
+				{
+					logIoError("InetStreamSocket::read: timeout during second poll", 0);
 					*isTimeOut = true;
+				}
 				if (stats) 
 					stats->dataRecvd(nread);
 				return SBS(new ByteStream(0));
@@ -538,7 +548,10 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
 			if (timeout == NULL)
 				return SBS(new ByteStream(0));	// don't return an incomplete message
 			else
+			{
+				logIoError("InetStreamSocket::read: timeout during second read", 0);
 				throw SocketClosed("InetStreamSocket::read: Remote is closed");
+			}
 		}
 		if (t < 0) {
 			ostringstream oss;
