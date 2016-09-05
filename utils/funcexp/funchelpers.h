@@ -311,7 +311,10 @@ inline uint32_t calc_mysql_week( uint32_t year, uint32_t month, uint32_t day,
     bool first_weekday= modeflags & WEEK_GT_THREE_DAYS;
 
     uint32_t weekday=calc_mysql_weekday(year, 1, 1, !monday_first);
-    *weekyear=year;
+    if (weekyear)
+    {
+        *weekyear=year;
+    }
 
     if (month == 1 && day <= 7-weekday)
     {
@@ -320,8 +323,12 @@ inline uint32_t calc_mysql_week( uint32_t year, uint32_t month, uint32_t day,
     	 (!first_weekday && weekday >= 4)))
             return 0;
         week_year= 1;
-        (*weekyear)--;
-        first_daynr-= (days=calc_mysql_days_in_year(*weekyear));
+        if (weekyear)
+        {
+            (*weekyear)--;
+        }
+        year--;
+        first_daynr-= (days=calc_mysql_days_in_year(year));
         weekday= (weekday + 53*7- days) % 7;
     }
 
@@ -333,11 +340,14 @@ inline uint32_t calc_mysql_week( uint32_t year, uint32_t month, uint32_t day,
 
     if (week_year && days >= 52*7)
     {
-        weekday= (weekday + calc_mysql_days_in_year(*weekyear)) % 7;
+        weekday= (weekday + calc_mysql_days_in_year(year)) % 7;
         if ((!first_weekday && weekday < 4) ||
     	(first_weekday && weekday == 0))
         {
-            (*weekyear)++;
+            if (weekyear)
+            {
+                (*weekyear)++;
+            }
             return 1;
         }
     }
