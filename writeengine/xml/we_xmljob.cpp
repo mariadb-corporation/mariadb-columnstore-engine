@@ -195,10 +195,7 @@ void XMLJob::printJobInfo( Log& logger ) const
             oss3 << "\t\tColumn WithDefault: " << jobCol.fWithDefault << endl;
             oss3 << "\t\tColumn type       : " << jobCol.colType << endl;
             oss3 << "\t\tColumn comp type  : " << jobCol.compressionType <<endl;
-
-#ifndef SKIP_AUTOI
             oss3 << "\t\tColumn autoInc    : " << jobCol.autoIncFlag << endl;
-#endif
 
             if( jobCol.typeName == ColDataTypeStr[CalpontSystemCatalog::DECIMAL] ) {
                 oss3 << "\t\tColumn Precision  : " << jobCol.precision << endl;
@@ -268,10 +265,8 @@ void XMLJob::printJobInfoBrief( Log& logger ) const
             if( jobCol.colType == 'D' )
                 oss3 << "); DctnryOid(" << jobCol.dctnry.dctnryOid;
             oss3 << ')';
-#ifndef SKIP_AUTOI
             if (jobCol.autoIncFlag)
                 oss3 << "; autoInc";
-#endif
             if (jobCol.fNotNull)
                 oss3 << "; NotNull";
             if (jobCol.fWithDefault)
@@ -560,10 +555,6 @@ void XMLJob::setJobDataColumn( xmlNode* pNode, bool bDefaultCol )
         else
             curColumn.autoIncFlag = false;
     }
-
-#ifdef SKIP_AUTOI
-    curColumn.autoIncFlag = false;
-#endif
 
     if( getNodeAttributeStr( pNode, xmlTagTable[TAG_COL_TYPE], bufString ) ) {
         const char* buf = bufString.c_str();
@@ -896,10 +887,6 @@ void XMLJob::fillInXMLDataAsLoaded(
                 col.autoIncFlag         = true;
             else
                 col.autoIncFlag         = false;
-#ifdef SKIP_AUTOI
-            col.autoIncFlag             = false;
-#endif
-
             // Initialize NotNull and Default Value (based on data type)
             fillInXMLDataNotNullDefault( tbl.tblName, colType, col );
             
