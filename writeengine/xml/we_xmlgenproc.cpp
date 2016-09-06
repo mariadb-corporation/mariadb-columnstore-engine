@@ -312,14 +312,12 @@ bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
             xmlTextWriterWriteFormatAttribute(fWriter,
                 BAD_CAST xmlTagTable[TAG_WIDTH], "%d", col->colType.colWidth);
  
-#ifndef SKIP_AUTOI
             if (col->colType.autoincrement)
             {
                 int autoInc = 1;
                 xmlTextWriterWriteFormatAttribute(fWriter,
                     BAD_CAST xmlTagTable[TAG_AUTOINCREMENT_FLAG], "%d",autoInc);
             }
-#endif
 
             //need dictionary and decimal stuff
             if (col->colType.ddn.dictOID > 0)

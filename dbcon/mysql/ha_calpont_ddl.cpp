@@ -99,9 +99,7 @@ typedef CalpontSelectExecutionPlan::ColumnMap::value_type CMVT_;
 ResourceManager rm;
 bool useHdfs = rm.useHdfs();
 
-#ifndef SKIP_AUTOI
 #include "ha_autoi.cpp"
-#endif
 
 //convenience fcn
 inline uint32_t tid2sid(const uint32_t tid)
@@ -805,21 +803,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				}
 
 				try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+					autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					if (autoIncre)
 					{
 						//Check whether there is a column with autoincrement already
@@ -1155,21 +1139,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					}
 
 					try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+						autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					}
 					catch (runtime_error& ex)
 					{
@@ -1473,21 +1443,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
 
 					try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+						autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					}
 					catch (runtime_error& ex)
 					{
@@ -1611,21 +1567,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				if ( comment.length() > 0 )
 				{
 					try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+						autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					}
 					catch (runtime_error& ex)
 					{
