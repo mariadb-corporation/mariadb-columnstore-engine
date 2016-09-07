@@ -223,7 +223,7 @@ uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
               string val(attribute.ptr(),attribute.length());
               ci.tableValuesMap[columnPos].push_back(val);
             }
-	        }
+	      }
         }
 		
 		ci.colNameList.push_back((*field)->field_name);
@@ -816,8 +816,24 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 						fprintf(ci.filePtr, "%c", ci.delimiter);
 					}
 					else
-						fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, ci.columnTypes[colpos].colWidth, 
-						        buf, ci.enclosed_by, ci.delimiter); 
+					{
+						if (current_thd->variables.sql_mode & MODE_PAD_CHAR_TO_FULL_LENGTH)
+						{
+							// Pad to the full length of the field
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, ci.columnTypes[colpos].colWidth, 
+									buf, ci.enclosed_by, ci.delimiter); 
+						}
+						else
+						{
+							// Get the actual data length
+							Field* field = table->field[colpos];
+							bitmap_set_bit(table->read_set, field->field_index);
+							String attribute;
+							field->val_str(&attribute);
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, attribute.length(), 
+									buf, ci.enclosed_by, ci.delimiter); 
+						}
+					}
 						
 					if (ci.utf8)
 						buf += (ci.columnTypes[colpos].colWidth * 3);
