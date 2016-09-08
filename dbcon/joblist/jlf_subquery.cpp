@@ -177,6 +177,7 @@ void ssfInHaving(ParseTree* pt, void* obj)
 			// not a scalar result
 			// replace simple scalar filter with simple filters
 			delete pt->data();
+			pt->data(NULL);
 			delete parseTree;
 			jobInfo->constantFalse = true;
 		}
@@ -677,6 +678,10 @@ void preprocessHavingClause(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 	ParseTree* correlatedFilters = NULL;
 	havings->walk(getCorrelatedFilters, &correlatedFilters);
 	trim(havings);
+	if (havings == NULL)
+	{
+		csep->having(NULL);
+	}
 
 	if (correlatedFilters != NULL)
 	{
