@@ -704,6 +704,12 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
     buf  = buf + ci.headerLength;  // Number of bytes used for null bits.
     //@Bug 6122 if all columns have not null constraint, there is no information in the header
 	char nullBits = *bufHdr++;
+	if (!ci.useXbit)
+	{
+		// Skip the first bit. For some reason, mysql reserves the first bit of the first byte, unless there's a varchar column in the table.
+		nullBits = nullBits>>1;
+		++headerBit;
+	}
     while (colpos < ci.columnTypes.size()) //test bitmap for null values
     {
 		uint8_t numLoop = 7;
@@ -722,16 +728,10 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 				setError(current_thd, ER_INTERNAL_ERROR, errormsg);
 				return -1;
 			}
-				
+
 			//if a column has not null constraint, it will not be in the bit map
 			if (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT)
 			{
-				if (!ci.useXbit && (colpos == 0))
-				{
-					// Skip the first bit. For some reason, mysql reserves the first bit of the first byte, unless there's a varchar column in the table.
-					nullBits = nullBits>>1;
-					++headerBit;
-				}
 				nullVal = nullBits & 0x01;
 				nullBits = nullBits>>1;
 				++headerBit;

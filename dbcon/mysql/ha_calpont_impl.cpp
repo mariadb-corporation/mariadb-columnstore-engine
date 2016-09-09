@@ -3397,8 +3397,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			{
 				CalpontSystemCatalog::ColType ctype = csc->colType(colrids[j].objnum);
 				ci->columnTypes.push_back(ctype);
-//				if ((( ctype.colDataType == CalpontSystemCatalog::VARCHAR ) || ( ctype.colDataType == CalpontSystemCatalog::VARBINARY )) && !ci->useXbit )
-//					ci->useXbit = true;
+				if ((( ctype.colDataType == CalpontSystemCatalog::VARCHAR ) || ( ctype.colDataType == CalpontSystemCatalog::VARBINARY )) && !ci->useXbit )
+					ci->useXbit = true;
 				if (ctype.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
 					numberNotNull++;
 			}
