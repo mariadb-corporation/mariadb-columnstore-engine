@@ -8,7 +8,7 @@ set(writeengineclient_LIB_SRCS we_clients.cpp we_ddlcommandclient.cpp we_dmlcomm
 
 add_library(writeengineclient SHARED ${writeengineclient_LIB_SRCS})
 
-add_dependencies(writeengineclient libnetsnmpmibs)
+target_link_libraries(writeengineclient ${NETSNMP_LIBRARIES})
 
 set_target_properties(writeengineclient PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

@@ -8,7 +8,7 @@ set(batchloader_LIB_SRCS batchloader.cpp)
 
 add_library(batchloader SHARED ${batchloader_LIB_SRCS})
 
-add_dependencies(batchloader libnetsnmpmibs)
+target_link_libraries(batchloader ${NETSNMP_LIBRARIES})
 
 set_target_properties(batchloader PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
