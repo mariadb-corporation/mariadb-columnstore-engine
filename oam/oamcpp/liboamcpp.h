@@ -2449,6 +2449,8 @@ namespace oam
 		*/
 		void writeLog(const std::string logContent, const logging::LOG_TYPE logType = logging::LOG_TYPE_INFO);
 
+		bool checkSystemRunning();
+
     private:
 
 	    int sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, snmpmanager::AlarmList& alarmlist, const std::string date);
@@ -2481,8 +2483,6 @@ namespace oam
             /** @brief send status updates to process monitor
              */
     		void sendStatusUpdate(messageqcpp::ByteStream obs, messageqcpp::ByteStream::byte returnRequestType);
-
-			bool checkSystemRunning(const char* function);
 
 			std::string CalpontConfigFile;
 			std::string AlarmConfigFile;

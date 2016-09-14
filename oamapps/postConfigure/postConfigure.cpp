@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 	bool startOfflinePrompt = false;
 	noPrompting = false;
 	string password;
-
+	string cmd;
 //  	struct sysinfo myinfo; 
 
 	// hidden options
@@ -425,9 +425,7 @@ int main(int argc, char *argv[])
 	}
 
 	//check if MariaDB Columnstore is up and running
-	string cmd = installDir + "/bin/columnstore status > /tmp/status.log";
-	system(cmd.c_str());
-	if (oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) {
+	if (oam.checkSystemRunning()) {
 		cout << "MariaDB Columnstore is running, can't run postConfigure while MariaDB Columnstore is running. Exiting.." << endl;
 		exit (0);
 	}
