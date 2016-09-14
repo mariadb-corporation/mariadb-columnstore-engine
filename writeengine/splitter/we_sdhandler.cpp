@@ -1669,10 +1669,10 @@ void WESDHandler::onCleanupResult(int PmId, messageqcpp::SBS& Sbs) {
 					switch ((*aIt).fColType)
 					{
 					case CalpontSystemCatalog::DATE:
-						ossSatCnt << "invalid dates replaced with null: ";
+						ossSatCnt << "invalid dates replaced with zero value: ";
 						break;
 					case CalpontSystemCatalog::DATETIME:
-						ossSatCnt << "invalid date/times replaced with null: ";
+						ossSatCnt << "invalid date/times replaced with zero value: ";
 						break;
 					case CalpontSystemCatalog::CHAR:
 						ossSatCnt << "character strings truncated: ";
