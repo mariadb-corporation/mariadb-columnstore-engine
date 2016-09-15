@@ -1100,7 +1100,7 @@ boost::any
 				}
 				else
 				{
-                    value = 0;
+                    value = (uint32_t) 0;
                     pushWarning = true;
 				}
 			}
@@ -1115,7 +1115,7 @@ boost::any
 				}
 				else
 				{
-                    value = 0;
+                    value = (uint64_t) 0;
                     pushWarning = true;
 				}
 			}
