@@ -29,8 +29,10 @@ MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
 # custom packaging steps.
 OPTION(COMMUNITY_BUILD "Set to true if this is a community build" ON) 
 
-SET(CMAKE_BUILD_TYPE RELWITHDEBINFO CACHE STRING
-    "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE RELWITHDEBINFO CACHE STRING
+        "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
 #set( CMAKE_VERBOSE_MAKEFILE on )
 
