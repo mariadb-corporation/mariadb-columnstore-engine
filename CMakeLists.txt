@@ -30,7 +30,7 @@ MESSAGE(STATUS "Running cmake version ${CMAKE_VERSION}")
 OPTION(COMMUNITY_BUILD "Set to true if this is a community build" ON) 
 
 SET(CMAKE_BUILD_TYPE RELWITHDEBINFO CACHE STRING
-   "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel")
+    "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
 
 #set( CMAKE_VERBOSE_MAKEFILE on )
 
