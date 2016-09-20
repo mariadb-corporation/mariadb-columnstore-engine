@@ -195,6 +195,7 @@ typedef std::tr1::unordered_map<TABLE*, cal_table_info> CalTableMap;
 typedef std::vector<std::string> ColValuesList;
 typedef std::vector<std::string> ColNameList;
 typedef std::map<uint32_t, ColValuesList> TableValuesMap;
+typedef std::bitset<4096> NullValuesBitset;
 struct cal_connection_info
 {
 	enum AlterTableState { NOT_ALTER, ALTER_SECOND_RENAME, ALTER_FIRST_RENAME };
@@ -257,6 +258,7 @@ struct cal_connection_info
 	ha_rows rowsHaveInserted;
 	ColNameList colNameList;
 	TableValuesMap tableValuesMap;
+  	NullValuesBitset nullValuesBitset;
 	int rc;
 	uint32_t tableOid;
 	querystats::QueryStats stats;

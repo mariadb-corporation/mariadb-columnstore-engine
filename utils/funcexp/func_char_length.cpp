@@ -96,8 +96,7 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
 		case execplan::CalpontSystemCatalog::DATETIME:
 		{
 			string date = dataconvert::DataConvert::datetimeToString(parm[0]->data()->getDatetimeIntVal(row, isNull));
-			//adjust for microseconds not counted
-			return (int64_t)date.size() - 7;
+			return (int64_t)date.size();
 		}
 
 		default:

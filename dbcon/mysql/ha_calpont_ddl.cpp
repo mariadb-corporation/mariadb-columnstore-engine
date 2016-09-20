@@ -99,9 +99,7 @@ typedef CalpontSelectExecutionPlan::ColumnMap::value_type CMVT_;
 ResourceManager rm;
 bool useHdfs = rm.useHdfs();
 
-#ifndef SKIP_AUTOI
 #include "ha_autoi.cpp"
-#endif
 
 //convenience fcn
 inline uint32_t tid2sid(const uint32_t tid)
@@ -614,15 +612,14 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 {
   SqlParser parser;
   THD *thd = current_thd;
-//#ifdef INFINIDB_DEBUG
+#ifdef INFINIDB_DEBUG
 	cout << "ProcessDDLStatement: " << schema << "." << table << ":" << ddlStatement << endl;
-//#endif
+#endif
 
   parser.setDefaultSchema(schema);
   int rc = 0;
   IDBCompressInterface idbCompress;
   parser.Parse(ddlStatement.c_str());
-  cout << "ProcessDDLStatement: finished parse " << schema << "." << table << endl;
   if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
   cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
@@ -806,21 +803,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				}
 
 				try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+					autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					if (autoIncre)
 					{
 						//Check whether there is a column with autoincrement already
@@ -1156,21 +1139,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 					}
 
 					try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+						autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					}
 					catch (runtime_error& ex)
 					{
@@ -1474,21 +1443,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 
 
 					try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+						autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					}
 					catch (runtime_error& ex)
 					{
@@ -1612,21 +1567,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 				if ( comment.length() > 0 )
 				{
 					try {
-#ifndef SKIP_AUTOI
-	autoIncre = parseAutoincrementColumnComment(comment, startValue);
-#else
-	algorithm::to_upper(comment);
-	if ( comment.find("AUTOINCREMENT") != string::npos )
-	{
-		int rc = 1;
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, (IDBErrorInfo::instance()->errorMsg(ERR_CREATE_AUTOINCREMENT_NOT_SUPPORT)).c_str());
-		ci->alterTableState = cal_connection_info::NOT_ALTER;
-		ci->isAlter = false;
-		return rc;
-	}
-#endif
-
+						autoIncre = parseAutoincrementColumnComment(comment, startValue);
 					}
 					catch (runtime_error& ex)
 					{
@@ -2079,7 +2020,7 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	}
 	std::string stmt(query);
 	algorithm::to_upper(stmt);
-	cout << "ha_calpont_impl_delete_table: " << schema.c_str() << "." << tbl.c_str() << " " << stmt.c_str() << endl;
+//	cout << "ha_calpont_impl_delete_table: " << schema.c_str() << "." << tbl.c_str() << " " << stmt.c_str() << endl;
 	// @bug 4158 allow table name with 'restrict' in it (but not by itself)
 	std::string::size_type fpos;
 	fpos = stmt.rfind(" RESTRICT");
@@ -2105,7 +2046,7 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	stmt = thd->query();
 	stmt += ";";
 	int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
-	cout << "ProcessDDLStatement rc=" << rc << endl;
+//	cout << "ProcessDDLStatement rc=" << rc << endl;
 	if (rc != 0)
 	{
 		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());

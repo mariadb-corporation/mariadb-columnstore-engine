@@ -45,9 +45,6 @@ using namespace WriteEngine;
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost::algorithm;
 
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::gregorian;
-
 #include "cacheutils.h"
 using namespace cacheutils;
 

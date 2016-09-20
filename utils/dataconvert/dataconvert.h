@@ -228,11 +228,17 @@ inline
 bool isDateValid ( int day, int month, int year)
 {
     bool valid = true;
+
+	if ( year == 0 && month == 0 && year == 0 )
+	{
+		return true;
+	}
+
     int daycheck = getDaysInMonth( month );
     if( month == 2 && isLeapYear( year ) )
         //  29 days in February in a leap year
         daycheck = 29;
-    if ( ( year < 1400 ) || ( year > 9999 ) )
+    if ( ( year < 1000 ) || ( year > 9999 ) )
         valid = false;
     else if ( month < 1 || month > 12 )
         valid = false;

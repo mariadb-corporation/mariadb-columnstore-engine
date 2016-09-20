@@ -184,8 +184,8 @@ int main(int argc, char *argv[])
    {
 		if( string("-h") == argv[i] || string("--help") == argv[i]) {
 			cout << endl;
-			cout << "This is the Amazon InfiniDB AMI System Configuration and Installation tool." << endl;
-			cout << "It will Configure and startup an Amazon InfiniDB System." << endl << endl;
+			cout << "This is the Amazon columnstore AMI System Configuration and Installation tool." << endl;
+			cout << "It will Configure and startup an Amazon columnstore System." << endl << endl;
 			cout << "It will read the system configuration settings from /root/amazonConfig.xml." << endl;
 			cout << "Or user can provide a different configuration file with the -c option." << endl;
 			cout << "Or if /root/amazonConfig.xml doesn't exist, then user will be prompted for settings." << endl;
@@ -194,8 +194,8 @@ int main(int argc, char *argv[])
 			cout << "   -h  	Help" << endl;
 			cout << "   -c  	system config file, default is '/root/amazonConfig.xml'" << endl;
 			cout << "   -l  	logfile for postConfigure output to /root/postConfigure.log" << endl;
-			cout << "   -v  	InfiniDB version" << endl;
-			cout << "   -pc	postConfigure failure System Cleanup, used to run System Cleanup if InfiniDB fails to install" << endl; 
+			cout << "   -v  	columnstore version" << endl;
+			cout << "   -pc	postConfigure failure System Cleanup, used to run System Cleanup if columnstore fails to install" << endl; 
 			cout << "   -d	Delete Cluster, used to delete Instances and Volumes on a shutdowned system" << endl; 
 			cout << "   	Require argument, include name of local Amazon Configure File '-c' option" << endl; 
 			cout << "   -s	Stop Cluster, used to stop Instances on a shutdowned system" << endl; 
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 			SystemSoftware systemsoftware;
 			oam.getSystemSoftware(systemsoftware);
 
-			cout << endl << "InfiniDB Version: " << systemsoftware.Version << "-" << systemsoftware.Release << endl;
+			cout << endl << "columnstore Version: " << systemsoftware.Version << "-" << systemsoftware.Release << endl;
 			exit (0);
 		}
 		else if( string("-pc") == argv[i] ) {
@@ -246,13 +246,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	//check if InfiniDB is up and running
-	string cmd = installDir + "/bin/infinidb status > /tmp/status.log";
-	system(cmd.c_str());
-	if (oam.checkLogStatus("/tmp/status.log", "InfiniDB is running") ) {
-		cout << endl << "InfiniDB is running, can't run AmazonInstaller while InfiniDB is running. Exiting.." << endl;
+	//check if columnstore is up and running
+   if (oam.checkSystemRunning()) {
+		cout << endl << "columnstore is running, can't run AmazonInstaller while columnstore is running. Exiting.." << endl;
 		exit (0);
-	}
+   }
 
 	if ( systemCleanup || systemStop )
 	{
@@ -430,21 +428,19 @@ int main(int argc, char *argv[])
 	}
 
 	cout << endl;
-	cout << "This is the Amazon InfiniDB AMI System Configuration and Installation tool." << endl;
-	cout << "It will Configure and startup an Amazon InfiniDB System." << endl;
+	cout << "This is the Amazon columnstore AMI System Configuration and Installation tool." << endl;
+	cout << "It will Configure and startup an Amazon columnstore System." << endl;
 
-	//check if InfiniDB is up and running
-	cmd = installDir + "/bin/infinidb status > /tmp/status.log";
-	system(cmd.c_str());
-	if (oam.checkLogStatus("/tmp/status.log", "InfiniDB is running") ) {
-		cout << "InfiniDB is running, can't run amazonInstaller while InfiniDB is running. Exiting.." << endl;
+	//check if columnstore is up and running
+	if (oam.checkSystemRunning()) {
+		cout << "columnstore is running, can't run amazonInstaller while columnstore is running. Exiting.." << endl;
 		exit (0);
 	}
 
 	//backup current Columnstore.xml
 	string configFile = installDir + "/etc/Columnstore.xml";
 	string saveFile = installDir + "/etc/Columnstore.xml.save";
-	cmd = "rm -f " + saveFile;
+	string cmd = "rm -f " + saveFile;
 	system(cmd.c_str());
 	cmd = "cp " + configFile + " " + saveFile;
 	system(cmd.c_str());
@@ -573,7 +569,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Failed trying to update columnstore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -1039,7 +1035,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << endl << "ERROR: Problem setting AmazonRegion from the InfiniDB System Configuration file" << endl;
+			cout << endl << "ERROR: Problem setting AmazonRegion from the columnstore System Configuration file" << endl;
 			exit(1);
 		}
 	}
@@ -1062,7 +1058,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1271,7 +1267,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1296,7 +1292,7 @@ int main(int argc, char *argv[])
 	SystemSoftware systemsoftware;
 	oam.getSystemSoftware(systemsoftware);
 
-	cout << "InfiniDB Version = " << systemsoftware.Version << "-" << systemsoftware.Release << endl;
+	cout << "columnstore Version = " << systemsoftware.Version << "-" << systemsoftware.Release << endl;
 	cout << "System Type = " << systemType << endl;
 
 	if ( subnetID != oam::UnassignedName ) {
@@ -1392,7 +1388,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << endl << "ERROR: Problem setting SystemName from the InfiniDB System Configuration file" << endl;
+			cout << endl << "ERROR: Problem setting SystemName from the columnstore System Configuration file" << endl;
 			exit(1);
 		}
 	}
@@ -1404,7 +1400,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << endl << "ERROR: Problem setting SystemName from the InfiniDB System Configuration file" << endl;
+			cout << endl << "ERROR: Problem setting SystemName from the columnstore System Configuration file" << endl;
 			exit(1);
 		}
 	}
@@ -1415,7 +1411,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting UMSecurityGroup from the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting UMSecurityGroup from the columnstore System Configuration file" << endl;
 			exit(1);
 		}
 		
@@ -1425,7 +1421,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting InstanceType from the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting InstanceType from the columnstore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -1441,7 +1437,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting InstanceType from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting InstanceType from the columnstore System Configuration file" << endl;
 		exit(1);
 	}
 		
@@ -1465,7 +1461,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting SystemName from the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting SystemName from the columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1497,7 +1493,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update columnstore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1565,7 +1561,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update columnstore System Configuration file" << endl;
 		cleanupSystem();
 	}
 
@@ -1852,7 +1848,7 @@ int main(int argc, char *argv[])
 		cout << endl;
 	}
 
-	cout << endl << "===== InfiniDB Configuration Setup and Installation =====" << endl << endl;
+	cout << endl << "===== columnstore Configuration Setup and Installation =====" << endl << endl;
 
 	if ( systemType == "combined" ) {
 		cout << "----- Combined System Type - Setup and Install Calpont-MySQL Packages -----" << endl << endl;
@@ -1882,7 +1878,7 @@ int main(int argc, char *argv[])
 	// update /root/Columnstore.xml
 	//
 
-	cout << "----- Updating InfiniDB Configuration File (Columnstore.xml)  -----" << endl << endl;
+	cout << "----- Updating columnstore Configuration File (Columnstore.xml)  -----" << endl << endl;
 
 	//setup for multi-server install
 	try {
@@ -1910,7 +1906,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting AmazonElasticIPCount in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting AmazonElasticIPCount in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 	
@@ -1931,7 +1927,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting Volume/Device Names in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting Volume/Device Names in the columnstore System Configuration file" << endl;
 				cleanupSystem();
 			}
 	
@@ -1946,7 +1942,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRoot Count in the InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot Count in the columnstore System Configuration file" << endl;
 		cleanupSystem();
 	}
 
@@ -1959,7 +1955,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRoot Count in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRoot Count in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 	}
@@ -1980,7 +1976,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting Host Name in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting Host Name in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 
@@ -1990,7 +1986,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting IP address in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting IP address in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 	}
@@ -2011,7 +2007,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting Host Name in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting Host Name in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 
@@ -2021,7 +2017,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting IP address in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting IP address in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 
@@ -2032,7 +2028,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting dbroot count in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting dbroot count in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 
@@ -2053,7 +2049,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting DBRoot ID in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting DBRoot ID in the columnstore System Configuration file" << endl;
 				cleanupSystem();
 			}
 		}
@@ -2068,7 +2064,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting UMStorageType in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting UMStorageType in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 
@@ -2089,7 +2085,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting Volume/Device Names in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting Volume/Device Names in the columnstore System Configuration file" << endl;
 				cleanupSystem();
 			}
 
@@ -2104,7 +2100,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRootStorageType in the InfiniDB System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRootStorageType in the columnstore System Configuration file" << endl;
 			cleanupSystem();
 		}
 
@@ -2139,7 +2135,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting Volume/Device Names in the InfiniDB System Configuration file" << endl;
+				cout << "ERROR: Problem setting Volume/Device Names in the columnstore System Configuration file" << endl;
 				cleanupSystem();
 			}
 
@@ -2161,7 +2157,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Failed trying to update InfiniDB System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update columnstore System Configuration file" << endl;
 		cleanupSystem();
 	}
 
@@ -2246,7 +2242,7 @@ void snmpAppCheck()
 
 	cout << endl << "===== Setup the Network Management System (NMS) Server Configuration =====" << endl << endl;
 
-	cout << "This would be used to receive SNMP Traps from InfiniDB, like a Network Control Center" << endl;
+	cout << "This would be used to receive SNMP Traps from columnstore, like a Network Control Center" << endl;
 	cout << "Default to 0.0.0.0 to not enable snmptrap forwarding" << endl << endl;
 	prompt1 = "Enter IP Address(es) of NMS Server (0.0.0.0) > ";
 	pcommand1 = readline(prompt1.c_str());
@@ -2863,7 +2859,7 @@ void cleanupSystem(bool terminate)
 	if ( systemType == "combined" ) {
 		cout << "----- Combined System Type Uninstall Calpont-MySQL Packages -----" << endl << endl;
 
-		system("rpm -e infinidb-mysql infinidb-storage-engine");
+			system("rpm -e infinidb-mysql infinidb-storage-engine");
 	}
 
 	cout << endl << "Cleanup finished, exiting" << endl << endl;

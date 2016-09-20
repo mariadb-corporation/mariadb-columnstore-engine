@@ -199,4 +199,5 @@ ADD_SUBDIRECTORY(writeengine/server)
 ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
 
+INSTALL(FILES utils/jemalloc/libjemalloc.so.3.3.0 DESTINATION ${ENGINE_LIBDIR})
 

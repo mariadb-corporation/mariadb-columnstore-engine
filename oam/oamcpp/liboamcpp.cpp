@@ -1368,10 +1368,8 @@ namespace oam
 
     void Oam::getSystemStatus(SystemStatus& systemstatus, bool systemStatusOnly)
     {
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			exceptionControl("getSystemStatus", API_FAILURE);
+		if (!checkSystemRunning())
+			return;
 
 #ifdef _MSC_VER
         // TODO: Remove when we create OAM for Windows
@@ -1386,81 +1384,67 @@ namespace oam
         DbrootStatus dbrootstatus;
         systemstatus.systemdbrootstatus.dbrootstatus.clear();
 
-	for ( int i = 0 ; i < 2 ; i ++)
-	{
-		try
+		for ( int i = 0 ; i < 2 ; i ++)
 		{
-			MessageQueueClient processor("ProcStatusControl");
-		//			processor.syncProto(false);
-			ByteStream::byte ModuleNumber;
-			ByteStream::byte ExtDeviceNumber;
-			ByteStream::byte dbrootNumber;
-			ByteStream::byte NICNumber;
-					ByteStream::byte state;
-					std::string name;
-					std::string date;
-			ByteStream obs, ibs;
-		
-			obs << (ByteStream::byte) GET_SYSTEM_STATUS;
-			if ( systemStatusOnly )
-				obs << (ByteStream::byte) 1;
-			else
-				obs << (ByteStream::byte) 2;
-	
-			try {
-				struct timespec ts = { 3, 0 };
-				processor.write(obs, &ts);
-			}
-			catch (exception& e)
+			try
 			{
-				processor.shutdown();
-//				string error = e.what();
-//				writeLog("getSystemStatus: write exception: " + error, LOG_TYPE_ERROR);
-				exceptionControl("getSystemStatus", API_FAILURE);
-			}
-			catch(...)
-			{
-				processor.shutdown();
-//				writeLog("getSystemStatus: write exception: unknown", LOG_TYPE_ERROR);
-				exceptionControl("getSystemStatus", API_FAILURE);
-			}
-
-			// wait 30 seconds for ACK from Process Monitor
-			try {
-				struct timespec ts = { 30, 0 };
-				ibs = processor.read(&ts);
-			}
-			catch (exception& e)
-			{
-				processor.shutdown();
-				string error = e.what();
-//				writeLog("getSystemStatus: read exception: " + error, LOG_TYPE_ERROR);
-				exceptionControl("getSystemStatus", API_FAILURE);
-			}
-			catch(...)
-			{
-				processor.shutdown();
-//				writeLog("getSystemStatus: read exception: unknown", LOG_TYPE_ERROR);
-				exceptionControl("getSystemStatus", API_FAILURE);
-			}
-
-			if (ibs.length() > 0)
-			{
+				MessageQueueClient processor("ProcStatusControl");
+			//			processor.syncProto(false);
+				ByteStream::byte ModuleNumber;
+				ByteStream::byte ExtDeviceNumber;
+				ByteStream::byte dbrootNumber;
+				ByteStream::byte NICNumber;
+						ByteStream::byte state;
+						std::string name;
+						std::string date;
+				ByteStream obs, ibs;
+			
+				obs << (ByteStream::byte) GET_SYSTEM_STATUS;
 				if ( systemStatusOnly )
-				{
-					ibs >> name;
-					ibs >> state;
-					ibs >> date;
-					if ( name.find("system") != string::npos ) {
-						systemstatus.SystemOpState = state;
-						systemstatus.StateChangeDate = date;
-					}
-				}
+					obs << (ByteStream::byte) 1;
 				else
+					obs << (ByteStream::byte) 2;
+		
+				try {
+					struct timespec ts = { 3, 0 };
+					processor.write(obs, &ts);
+				}
+				catch (exception& e)
 				{
-					ibs >> ModuleNumber;
-	
-					for( int i=0 ; i < ModuleNumber ; ++i)
+					processor.shutdown();
+					string error = e.what();
+					writeLog("getSystemStatus: write exception: " + error, LOG_TYPE_ERROR);
+					exceptionControl("getSystemStatus write", API_FAILURE);
+				}
+				catch(...)
+				{
+					processor.shutdown();
+					writeLog("getSystemStatus: write exception: unknown", LOG_TYPE_ERROR);
+					exceptionControl("getSystemStatus write", API_FAILURE);
+				}
+
+				// wait 30 seconds for ACK from Process Monitor
+				try {
+					struct timespec ts = { 30, 0 };
+					ibs = processor.read(&ts);
+				}
+				catch (exception& e)
+				{
+					processor.shutdown();
+					string error = e.what();
+					writeLog("getSystemStatus: read exception: " + error, LOG_TYPE_ERROR);
+					exceptionControl("getSystemStatus read", API_FAILURE);
+				}
+				catch(...)
+				{
+					processor.shutdown();
+					writeLog("getSystemStatus: read exception: unknown", LOG_TYPE_ERROR);
+					exceptionControl("getSystemStatus read", API_FAILURE);
+				}
+
+				if (ibs.length() > 0)
+				{
+					if ( systemStatusOnly )
 					{
 						ibs >> name;
 						ibs >> state;
@@ -1469,68 +1453,93 @@ namespace oam
 							systemstatus.SystemOpState = state;
 							systemstatus.StateChangeDate = date;
 						}
-						else
+					}
+					else
+					{
+						ibs >> ModuleNumber;
+		
+						for( int i=0 ; i < ModuleNumber ; ++i)
 						{
-							modulestatus.Module = name;
-							modulestatus.ModuleOpState = state;
-							modulestatus.StateChangeDate = date;
-							systemstatus.systemmodulestatus.modulestatus.push_back(modulestatus);
+							ibs >> name;
+							ibs >> state;
+							ibs >> date;
+							if ( name.find("system") != string::npos ) {
+								systemstatus.SystemOpState = state;
+								systemstatus.StateChangeDate = date;
+							}
+							else
+							{
+								modulestatus.Module = name;
+								modulestatus.ModuleOpState = state;
+								modulestatus.StateChangeDate = date;
+								systemstatus.systemmodulestatus.modulestatus.push_back(modulestatus);
+							}
+						}
+		
+						ibs >> ExtDeviceNumber;
+		
+						for( int i=0 ; i < ExtDeviceNumber ; ++i)
+						{
+							ibs >> name;
+							ibs >> state;
+							ibs >> date;
+							extdevicestatus.Name = name;
+							extdevicestatus.OpState = state;
+							extdevicestatus.StateChangeDate = date;
+							systemstatus.systemextdevicestatus.extdevicestatus.push_back(extdevicestatus);
+						}
+		
+						ibs >> NICNumber;
+		
+						for( int i=0 ; i < NICNumber ; ++i)
+						{
+							ibs >> name;
+							ibs >> state;
+							ibs >> date;
+							nicstatus.HostName = name;
+							nicstatus.NICOpState = state;
+							nicstatus.StateChangeDate = date;
+							systemstatus.systemnicstatus.nicstatus.push_back(nicstatus);
+						}
+		
+						ibs >> dbrootNumber;
+		
+						for( int i=0 ; i < dbrootNumber ; ++i)
+						{
+							ibs >> name;
+							ibs >> state;
+							ibs >> date;
+							dbrootstatus.Name = name;
+							dbrootstatus.OpState = state;
+							dbrootstatus.StateChangeDate = date;
+							systemstatus.systemdbrootstatus.dbrootstatus.push_back(dbrootstatus);
 						}
 					}
-	
-					ibs >> ExtDeviceNumber;
-	
-					for( int i=0 ; i < ExtDeviceNumber ; ++i)
-					{
-						ibs >> name;
-						ibs >> state;
-						ibs >> date;
-						extdevicestatus.Name = name;
-						extdevicestatus.OpState = state;
-						extdevicestatus.StateChangeDate = date;
-						systemstatus.systemextdevicestatus.extdevicestatus.push_back(extdevicestatus);
-					}
-	
-					ibs >> NICNumber;
-	
-					for( int i=0 ; i < NICNumber ; ++i)
-					{
-						ibs >> name;
-						ibs >> state;
-						ibs >> date;
-						nicstatus.HostName = name;
-						nicstatus.NICOpState = state;
-						nicstatus.StateChangeDate = date;
-						systemstatus.systemnicstatus.nicstatus.push_back(nicstatus);
-					}
-	
-					ibs >> dbrootNumber;
-	
-					for( int i=0 ; i < dbrootNumber ; ++i)
-					{
-						ibs >> name;
-						ibs >> state;
-						ibs >> date;
-						dbrootstatus.Name = name;
-						dbrootstatus.OpState = state;
-						dbrootstatus.StateChangeDate = date;
-						systemstatus.systemdbrootstatus.dbrootstatus.push_back(dbrootstatus);
-					}
+
+					processor.shutdown();
+					return;
 				}
-
+				else
+				{
+					writeLog("getSystemStatus: ProcStatusControl returns 0 length", LOG_TYPE_ERROR);
+				}
+				// timeout ocurred, shutdown connection
 				processor.shutdown();
-				return;
+				writeLog("getSystemStatus: read 0 length", LOG_TYPE_ERROR);
+				exceptionControl("getSystemStatus read 0", API_FAILURE);
 			}
-			// timeout ocurred, shutdown connection
-			processor.shutdown();
-//			writeLog("getSystemStatus: read 0 length", LOG_TYPE_ERROR);
-			exceptionControl("getSystemStatus", API_FAILURE);
+			catch (exception& e)
+			{
+				string error = e.what();
+				writeLog("getSystemStatus: final exception: " + error, LOG_TYPE_ERROR);
+			}
+			catch(...)
+			{
+				writeLog("getSystemStatus: final exception: unknown", LOG_TYPE_ERROR);
+			}
 		}
-		catch(...)
-		{}
-	}
 
-	exceptionControl("getSystemStatus:MessageQueueClient-Error", API_FAILURE);
+		exceptionControl("getSystemStatus:MessageQueueClient-Error", API_FAILURE);
     }
 
     /********************************************************************
@@ -1572,6 +1581,7 @@ namespace oam
         ModuleConfig moduleconfig;
         std::vector<int> NICstates;
 		degraded = false;
+		state = oam::UNEQUIP;
 
 		try
 		{
@@ -1595,8 +1605,19 @@ namespace oam
 								getNICStatus((*pt1).HostName, state);
 								NICstates.push_back(state);
 							}
-							catch (...)
-							{}
+							catch (exception& e)
+							{
+								Oam oam;
+								ostringstream os;
+								os << "Oam::getModuleStatus exception while getNICStatus " << (*pt1).HostName << " " << e.what();
+								oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+							}
+							catch (...) {
+								Oam oam;
+								ostringstream os;
+								os << "Oam::getModuleStatus exception while getNICStatus " << (*pt1).HostName;
+								oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+							}
 						}
 						
 						vector<int>::iterator pt = NICstates.begin();
@@ -1609,16 +1630,37 @@ namespace oam
 						}
 						return;
                     }
-                    catch (...)
-                    {}
+					catch (exception& e)
+					{
+						Oam oam;
+						ostringstream os;
+						os << "Oam::getModuleStatus exception while getSystemConfig " << name << " " << e.what();
+						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+					}
+					catch (...) {
+						Oam oam;
+						ostringstream os;
+						os << "Oam::getModuleStatus exception while getSystemConfig " << name;
+						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+					}
 				}
 			}
 		}
-		catch(...)
-		{}
+		catch (exception& e)
+		{
+			Oam oam;
+			ostringstream os;
+			os << "Oam::getModuleStatus exception while getSystemStatus " << e.what();
+			oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+		}
+		catch (...) {
+			Oam oam;
+			ostringstream os;
+			os << "Oam::getModuleStatus exception while getSystemStatus";
+			oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+		}
 
         // no match found
-		state = oam::UNEQUIP;
         exceptionControl("getModuleStatus", API_INVALID_PARAMETER);
     }
 
@@ -1794,8 +1836,12 @@ namespace oam
 				}
 			}
 		}
-		catch (exception&)
+		catch (exception& e)
 		{
+			Oam oam;
+			ostringstream os;
+			os << "Oam::getNICStatus exception while getSystemStatus for " << name << " " << e.what();
+			oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 	        exceptionControl("getNICStatus", API_FAILURE);
 		}
 
@@ -2091,11 +2137,8 @@ namespace oam
 
     void Oam::getProcessStatus(SystemProcessStatus& systemprocessstatus, string port)
     {
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			exceptionControl("getProcessStatus", API_FAILURE);
-
         ProcessStatus processstatus;
         systemprocessstatus.processstatus.clear();
 
@@ -2194,9 +2237,7 @@ namespace oam
         return;
 #endif
 
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			exceptionControl("getProcessStatus", API_FAILURE);
 
 	for ( int i = 0 ; i < 5 ; i ++)
@@ -2292,11 +2333,8 @@ namespace oam
 
     void Oam::setProcessStatus(const std::string process, const std::string module, const int state, pid_t PID)
     {
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			exceptionControl("setProcessStatus", API_FAILURE);
-
 		//send and wait for ack and resend if not received
 		//retry 5 time max
 		for ( int i=0; i < 5 ; i++)
@@ -2812,9 +2850,7 @@ namespace oam
        		exceptionControl("getMyProcessStatus", API_FAILURE);
 		}
 
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			exceptionControl("getMyProcessStatus", API_FAILURE);
 
 	for ( int i = 0 ; i < 5 ; i ++)
@@ -4652,20 +4688,31 @@ namespace oam
 	{
 		ifstream file (fileName.c_str());
 	
-		char line[400];
+		if (!file.is_open())
+		{
+			ostringstream os;
+			os << "checkLogStatus error while opening file " << fileName << " " << strerror(errno);
+			writeLog(os.str(), LOG_TYPE_ERROR );
+		}
 		string buf;
 	
-		while (file.getline(line, 400))
+		while (getline(file, buf))
 		{
-			buf = line;
-	
 			string::size_type pos = buf.find(phrase,0);
 			if (pos != string::npos)
 				//found phrase
 				return true;
 		}
+		if (file.bad())
+		{
+			ostringstream os;
+			os << "checkLogStatus error while reading file " << fileName << " " << strerror(errno);
+			writeLog(os.str(), LOG_TYPE_ERROR );
+		}
 		file.close();
-	
+		ostringstream os;
+		os << "checkLogStatus failed " << fileName << " expected \"" << phrase.c_str() << "\" found \"" << buf.c_str() << "\"";
+		writeLog(os.str(), LOG_TYPE_ERROR );
 		return false;
 	}
 
@@ -4821,9 +4868,7 @@ namespace oam
      ********************************************************************/
 	bool Oam::switchParentOAMModule(std::string moduleName, GRACEFUL_FLAG gracefulflag)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			exceptionControl("switchParentOAMModule", API_FAILURE);
 
 		int returnStatus;
@@ -4837,7 +4882,7 @@ namespace oam
 	
 		string cmdLine = "ping ";
 		string cmdOption = " -w 1 >> /dev/null";
-		cmd = cmdLine + IPAddr + cmdOption;
+		string cmd = cmdLine + IPAddr + cmdOption;
 		if ( system(cmd.c_str()) != 0 ) {
 			//ping failure
 			try{
@@ -6267,10 +6312,8 @@ namespace oam
 			exceptionControl("sysConfig->write", API_FAILURE);
 		}
 
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-			return;
+		if (!checkSystemRunning())
+			exceptionControl("addDbroot", API_FAILURE);
 
 		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
@@ -6307,11 +6350,9 @@ namespace oam
      *
      ****************************************************************************/
 
-    	void Oam::distributeFstabUpdates(std::string entry, std::string toPM)
+   	void Oam::distributeFstabUpdates(std::string entry, std::string toPM)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			return;
 
 		ACK_FLAG ackflag = oam::ACK_YES;
@@ -8734,10 +8775,8 @@ namespace oam
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string argument1,
         const std::string argument2, int timeout)
     {
-	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-	system(cmd.c_str());
-	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-		return API_CONN_REFUSED;
+		if (!checkSystemRunning())
+			return API_CONN_REFUSED;
 
         int returnStatus = API_SUCCESS;           //default
         ByteStream msg;
@@ -8837,10 +8876,8 @@ namespace oam
     int Oam::sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetworkList devicenetworklist,
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string password, const std::string mysqlpw)
     {
-	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-	system(cmd.c_str());
-	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-		return API_CONN_REFUSED;
+		if (!checkSystemRunning())
+			return API_CONN_REFUSED;
 
         int returnStatus = API_TIMEOUT;           //default
         ByteStream msg;
@@ -8953,10 +8990,8 @@ namespace oam
 
     int Oam::sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, AlarmList& alarmlist, const std::string date)
     {
-	string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-	system(cmd.c_str());
-	if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
-		return API_CONN_REFUSED;
+		if (!checkSystemRunning())
+			return API_CONN_REFUSED;
 
         int returnStatus = API_SUCCESS;           //default
         ByteStream msg;
@@ -9056,9 +9091,7 @@ namespace oam
 		GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag,
         const std::string argument1, const std::string argument2, int timeout)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			return API_CONN_REFUSED;
 
 		int returnStatus = API_STILL_WORKING;
@@ -9244,9 +9277,7 @@ namespace oam
 
     void Oam::sendStatusUpdate(ByteStream obs, ByteStream::byte returnRequestType)
     {
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			return;
 
 	for ( int i = 0 ; i < 5 ; i ++)
@@ -9622,6 +9653,28 @@ namespace oam
 		return returnStatus;
 	}
 
+	bool Oam::checkSystemRunning()
+	{
+		// string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		// system(cmd.c_str());
+		struct stat st;
+		if (stat("/var/lock/subsys/columnstore", &st) == 0)
+		{
+			return true;
+		}
+		if (geteuid() != 0)
+		{
+			// not root user
+			// The stat above may fail for non-root because of permissions
+			// This is a non-optimal solution
+			string cmd = "pgrep ProcMon";
+			if (system(cmd.c_str()) != 0)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 } //namespace oam
 
 

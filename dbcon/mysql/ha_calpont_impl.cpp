@@ -2803,6 +2803,13 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
 			{
 				CalpontSystemCatalog::RIDList oidlist = csc->columnRIDs(make_table(table->s->db.str, table->s->table_name.str), true);
+				if (oidlist.size() != num_attr)
+				{
+					string emsg = "Size mismatch probably caused by front end out of sync";
+					setError(thd, ER_INTERNAL_ERROR, emsg);
+					CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+					goto internal_error;
+				}
 				for (unsigned int j = 0; j < oidlist.size(); j++)
 				{
 					CalpontSystemCatalog::ColType ctype = csc->colType(oidlist[j].objnum);
@@ -3390,8 +3397,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			{
 				CalpontSystemCatalog::ColType ctype = csc->colType(colrids[j].objnum);
 				ci->columnTypes.push_back(ctype);
-//				if ((( ctype.colDataType == CalpontSystemCatalog::VARCHAR ) || ( ctype.colDataType == CalpontSystemCatalog::VARBINARY )) && !ci->useXbit )
-//					ci->useXbit = true;
+				if ((( ctype.colDataType == CalpontSystemCatalog::VARCHAR ) || ( ctype.colDataType == CalpontSystemCatalog::VARBINARY )) && !ci->useXbit )
+					ci->useXbit = true;
 				if (ctype.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
 					numberNotNull++;
 			}

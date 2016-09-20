@@ -503,7 +503,7 @@ int processCommand(string* arguments)
 	CC_SUSPEND_ANSWER suspendAnswer = CANCEL;
 	bool bNeedsConfirm = true;
 	string password;
-
+	string cmd;
     // get command info from Command config file
     CmdID = -1;
 
@@ -1999,7 +1999,7 @@ int processCommand(string* arguments)
 		
 			if ( DBRootStorageType == "hdfs")
 			{
-				string cmd = "pdsh -a '/" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
+				cmd = "pdsh -a '/" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/cc-stop.pdsh", "exit") ) {
 					cout << endl << "ERROR: Stopping MariaDB Columnstore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
@@ -2007,7 +2007,7 @@ int processCommand(string* arguments)
 			}
 			else
 			{
-				string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
+				cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
 				system(cmd.c_str());
 			}
 		}
@@ -2017,7 +2017,7 @@ int processCommand(string* arguments)
 	
 			if ( gracefulTemp == FORCEFUL )
 			{
-				string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
+				cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
 				system(cmd.c_str());
 				cout << endl << "   Successful shutdown of System (stopped local columnstore service) " << endl << endl;
 			}
@@ -2025,7 +2025,7 @@ int processCommand(string* arguments)
 			if (Failed.find("Connection refused") != string::npos)
 			{
 				cout << endl << "**** shutdownSystem Error : ProcessManager not Active, stopping columnstore service" << endl;
-				string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
+				cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /tmp/status.log";
 				system(cmd.c_str());
 				cout << endl << "   Successful stop of local columnstore service " << endl << endl;
 			}
@@ -2044,7 +2044,7 @@ int processCommand(string* arguments)
 		
 			if ( DBRootStorageType == "hdfs")
 			{
-				string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
+				cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/cc-stop.pdsh", "exit") ) {
 					cout << endl << "ERROR: Stopping MariaDB Columnstore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
@@ -2071,9 +2071,7 @@ int processCommand(string* arguments)
 			// this would be used after a shutdownSystem command
 			// if columnstore service is up, send message to ProcMgr to start system (which starts all processes)
 
-			string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-			system(cmd.c_str());
-			if (!oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			if (!oam.checkSystemRunning())
 			{
 				cout << "startSystem command, 'columnstore' service is down, sending command to" << endl;
 				cout << "start the 'columnstore' service on all modules" << endl << endl;
@@ -2142,7 +2140,7 @@ int processCommand(string* arguments)
 				
 					if ( DBRootStorageType == "hdfs")
 					{
-						string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
+						cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
 						system(cmd.c_str());
 						if (oam.checkLogStatus("/tmp/cc-restart.pdsh", "exit") ) {
 							cout << endl << "ERROR: Restart MariaDB Columnstore Service failure, check /tmp/cc-restart.pdsh. exit..." << endl;
@@ -2289,9 +2287,7 @@ int processCommand(string* arguments)
 			// this would be used after a shutdownSystem command
 			// if columnstore service is up, send message to ProcMgr to start system (which starts all processes)
 
-			string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-			system(cmd.c_str());
-			if (!oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+			if (!oam.checkSystemRunning())
 			{
 				if (bNeedsConfirm) 
 				{
@@ -2363,7 +2359,7 @@ int processCommand(string* arguments)
 				
 					if ( DBRootStorageType == "hdfs")
 					{
-						string cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
+						cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
 						system(cmd.c_str());
 						if (oam.checkLogStatus("/tmp/cc-restart.pdsh", "exit") ) {
 							cout << endl << "ERROR: Restart MariaDB Columnstore Service failue, check /tmp/cc-restart.pdsh. exit..." << endl;
@@ -2457,7 +2453,7 @@ int processCommand(string* arguments)
 					//just kick off local server
 					cout << "   System being restarted, please wait...";
 					cout.flush();
-					string cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
+					cmd = startup::StartUp::installDir() + "/bin/columnstore restart > /tmp/start.log 2>&1";
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						cout << endl << "error with running 'columnstore start' on local module " << endl;
@@ -2712,7 +2708,7 @@ int processCommand(string* arguments)
             cout << endl << "Monitor for System Alarms" << endl;
             cout << " Enter control-C to return to command line" << endl << endl;
 
-            string cmd = "tail -n 0 -f " + snmpmanager::ALARM_FILE;
+            cmd = "tail -n 0 -f " + snmpmanager::ALARM_FILE;
             system(cmd.c_str());
         }
         break;
@@ -3287,9 +3283,7 @@ int processCommand(string* arguments)
 		}
 
 		//check the system status / service status and only allow command when System is MAN_OFFLINE
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (oam.checkSystemRunning())
 		{
 			SystemStatus systemstatus;
 			try {
@@ -3764,9 +3758,7 @@ int processCommand(string* arguments)
 		}
 
 		//check the system status / service status and only allow command when System is MAN_OFFLINE
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!oam.checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!oam.checkSystemRunning())
 		{
 			cout << endl << "**** assignDbrootPmConfig Failed,  System is down. Needs to be running" << endl;
 			break;
@@ -6584,7 +6576,7 @@ int processCommand(string* arguments)
 							oam.startModule(devicenetworklist, ackTemp);
 			
 							//reload DBRM with new configuration, needs to be done here after startModule
-							string cmd = startup::StartUp::installDir() + "/bin/dbrmctl reload > /dev/null 2>&1";
+							cmd = startup::StartUp::installDir() + "/bin/dbrmctl reload > /dev/null 2>&1";
 							system(cmd.c_str());
 							sleep(15);
 			
@@ -6643,6 +6635,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 	ACK_FLAG ackTemp = ACK_YES;
 	CC_SUSPEND_ANSWER suspendAnswer = WAIT;
 	bool bNeedsConfirm = true;
+	string cmd;
 
 	switch( CommandID )
     {
@@ -6875,7 +6868,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 							
 							//run remote command script
 							HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-							string cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " reboot " ;
+							cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " " + password + " reboot " ;
 							int rtnCode = system(cmd.c_str());
 							if (WEXITSTATUS(rtnCode) != 0) {
 								cout << "Failed with running remote_command.sh" << endl;
@@ -6979,7 +6972,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 									HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 									string ipAddr = (*pt1).IPAddr;
 									//run remote command script
-									string cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + ipAddr + " " + password + " reboot " ;
+									cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + ipAddr + " " + password + " reboot " ;
 									int rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0)
 										cout << "Failed with running remote_command.sh" << endl;

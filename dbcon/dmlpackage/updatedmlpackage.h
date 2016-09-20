@@ -92,7 +92,7 @@ namespace dmlpackage
 			* @param colNameList, tableValuesMap
 			* @param rows the number of rows in the buffer
 			*/
-			EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows);
+			EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows, NullValuesBitset& nullValues);
 			void buildUpdateFromMysqlBuffer(UpdateSqlStatement&  updateStmt );
 
 

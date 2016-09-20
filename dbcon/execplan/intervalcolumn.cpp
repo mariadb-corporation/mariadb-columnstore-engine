@@ -48,7 +48,7 @@ IntervalColumn::IntervalColumn()
 IntervalColumn::IntervalColumn(SRCP& val, int intervalType):
 	fVal(val->clone()), fIntervalType(intervalType)
 {
-	cout << "intervalType=" << fIntervalType << endl;
+//	cout << "intervalType=" << fIntervalType << endl;
 	}
 
 IntervalColumn::IntervalColumn( const IntervalColumn& rhs, const uint32_t sessionID):

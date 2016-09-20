@@ -187,15 +187,18 @@ uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
 	uint32_t size=0;
 	int columnPos = 0;
     double dbval;
+    ci.nullValuesBitset.reset();
 	for (Field** field = table->field; *field; field++)
     {
         if((*field)->is_null())
         {
           ci.tableValuesMap[columnPos].push_back (""); //currently, empty string is treated as null.
+          ci.nullValuesBitset[columnPos] = true;
         }
         else
         {
           bitmap_set_bit(table->read_set, (*field)->field_index);
+          ci.nullValuesBitset[columnPos] = false;
           // @bug 3798 get real value for float/double type
           if ((*field)->result_type() == REAL_RESULT)
           {
@@ -220,7 +223,7 @@ uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
               string val(attribute.ptr(),attribute.length());
               ci.tableValuesMap[columnPos].push_back(val);
             }
-	        }
+	      }
         }
 		
 		ci.colNameList.push_back((*field)->field_name);
@@ -330,7 +333,7 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 		
 		VendorDMLStatement dmlStmts(idb_mysql_query_str(thd), DML_INSERT, table->s->table_name.str,
                 table->s->db.str, size, ci.colNameList.size(), ci.colNameList,
-                ci.tableValuesMap, sessionID);
+                ci.tableValuesMap, ci.nullValuesBitset, sessionID);
 
 		CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStmts);
 		//@Bug 2466 Move the clean up earlier to avoid the second insert in another session to get the data
@@ -701,6 +704,12 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
     buf  = buf + ci.headerLength;  // Number of bytes used for null bits.
     //@Bug 6122 if all columns have not null constraint, there is no information in the header
 	char nullBits = *bufHdr++;
+	if (!ci.useXbit)
+	{
+		// Skip the first bit. For some reason, mysql reserves the first bit of the first byte, unless there's a varchar column in the table.
+		nullBits = nullBits>>1;
+		++headerBit;
+	}
     while (colpos < ci.columnTypes.size()) //test bitmap for null values
     {
 		uint8_t numLoop = 7;
@@ -719,16 +728,10 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 				setError(current_thd, ER_INTERNAL_ERROR, errormsg);
 				return -1;
 			}
-				
+
 			//if a column has not null constraint, it will not be in the bit map
 			if (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT)
 			{
-				if (!ci.useXbit && (colpos == 0))
-				{
-					// Skip the first bit. For some reason, mysql reserves the first bit of the first byte, unless there's a varchar column in the table.
-					nullBits = nullBits>>1;
-					++headerBit;
-				}
 				nullVal = nullBits & 0x01;
 				nullBits = nullBits>>1;
 				++headerBit;
@@ -813,8 +816,24 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 						fprintf(ci.filePtr, "%c", ci.delimiter);
 					}
 					else
-						fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, ci.columnTypes[colpos].colWidth, 
-						        buf, ci.enclosed_by, ci.delimiter); 
+					{
+						if (current_thd->variables.sql_mode & MODE_PAD_CHAR_TO_FULL_LENGTH)
+						{
+							// Pad to the full length of the field
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, ci.columnTypes[colpos].colWidth, 
+									buf, ci.enclosed_by, ci.delimiter); 
+						}
+						else
+						{
+							// Get the actual data length
+							Field* field = table->field[colpos];
+							bitmap_set_bit(table->read_set, field->field_index);
+							String attribute;
+							field->val_str(&attribute);
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, attribute.length(), 
+									buf, ci.enclosed_by, ci.delimiter); 
+						}
+					}
 						
 					if (ci.utf8)
 						buf += (ci.columnTypes[colpos].colWidth * 3);

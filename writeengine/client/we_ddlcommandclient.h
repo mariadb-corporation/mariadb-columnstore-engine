@@ -34,7 +34,6 @@
 #define EXPORT
 #endif
 
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include "dataconvert.h"
 
 namespace WriteEngine

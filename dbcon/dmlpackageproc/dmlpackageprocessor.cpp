@@ -28,8 +28,6 @@ using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost::algorithm;
 #include <boost/tokenizer.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::gregorian;
 #include <boost/shared_ptr.hpp>
 
 #include "we_messages.h"

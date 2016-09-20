@@ -2784,8 +2784,39 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							if( processName == "DBRMControllerNode") {
 							//	sleep(5);
 							//	processManager.reinitProcessType("DBRMWorkerNode");
-
+								// Wait for DBRMControllerNode to go active
+								ProcessStatus procstat;
+								uint16_t state = AUTO_OFFLINE;
+								while (state == oam::MAN_OFFLINE
+									|| state == oam::AUTO_OFFLINE
+									|| state == oam::MAN_INIT
+									|| state == oam::AUTO_INIT)
+								{
+									oam.getProcessStatus("DBRMControllerNode", config.OAMParentName(), procstat);
+									state = procstat.ProcessOpState;
+									if ( procstat.ProcessOpState == oam::ACTIVE)
+										break;
+									sleep(1);
+								}
+								processManager.restartProcessType("DDLProc");
 								processManager.restartProcessType("DMLProc");
+								sleep(1);
+								// Wait for DMLProc to be ACTIVE
+								BRM::DBRM dbrm;
+								state = AUTO_OFFLINE;
+								while (state == oam::MAN_OFFLINE
+									|| state == oam::AUTO_OFFLINE
+									|| state == oam::MAN_INIT
+									|| state == oam::AUTO_INIT
+									|| state == oam::ROLLBACK_INIT)
+								{
+									oam.getProcessStatus("DMLProc", config.OAMParentName(), procstat);
+									state = procstat.ProcessOpState;
+									if ( procstat.ProcessOpState == oam::ACTIVE)
+										break;
+									sleep(1);
+								}
+								dbrm.setSystemQueryReady(true);
 							}
 
 							// if a DDLProc was restarted, reinit DMLProc
