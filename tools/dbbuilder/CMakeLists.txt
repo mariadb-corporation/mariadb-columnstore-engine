@@ -12,5 +12,5 @@ add_dependencies(dbbuilder libnetsnmpmibs)
 
 target_link_libraries(dbbuilder ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS})
 
-install(TARGETS dbbuilder DESTINATION ${ENGINE_BINDIR})
+install(TARGETS dbbuilder DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -5,4 +5,4 @@ install(FILES  AlarmConfig.xml
                ConsoleCmds.xml 
                Columnstore.xml.singleserver 
                ProcessConfig.xml.singleserver 
-               DESTINATION ${ENGINE_ETCDIR})
+               DESTINATION ${ENGINE_ETCDIR} COMPONENT platform)

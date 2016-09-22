@@ -22,7 +22,6 @@ install(PROGRAMS post-install
                 columnstoreSyslog-ng 
                 syslogSetup.sh  
                 remote_scp_put.sh 
-                columnstoreUninstall.sh 
                 columnstore.def  
                 remotessh.exp 
                 rsync.sh 
@@ -35,7 +34,7 @@ install(PROGRAMS post-install
                 myCnf-include-args.text 
                 myCnf-exclude-args.text
                 columnstore.service
-                DESTINATION ${ENGINE_BINDIR})
+                DESTINATION ${ENGINE_BINDIR} COMPONENT platform)               
                 
-install(FILES  module DESTINATION ${ENGINE_LOCALDIR})
+install(FILES  module DESTINATION ${ENGINE_LOCALDIR} COMPONENT platform)
 

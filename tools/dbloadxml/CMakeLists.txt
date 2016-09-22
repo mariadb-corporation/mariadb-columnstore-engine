@@ -15,5 +15,5 @@ add_executable(colxml ${colxml_SRCS})
 
 target_link_libraries(colxml ${ENGINE_LDFLAGS} dbload ${ENGINE_WRITE_LIBS})
 
-install(TARGETS colxml DESTINATION ${ENGINE_BINDIR})
+install(TARGETS colxml DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -12,5 +12,5 @@ add_dependencies(columnstoreDBWrite libnetsnmpmibs)
 
 target_link_libraries(columnstoreDBWrite ${ENGINE_LDFLAGS} readline ncurses ${ENGINE_EXEC_LIBS})
 
-install(TARGETS columnstoreDBWrite DESTINATION ${ENGINE_BINDIR})
+install(TARGETS columnstoreDBWrite DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

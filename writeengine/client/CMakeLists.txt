@@ -12,6 +12,6 @@ add_dependencies(writeengineclient libnetsnmpmibs)
 
 set_target_properties(writeengineclient PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS writeengineclient DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS writeengineclient DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 

@@ -16,5 +16,5 @@ add_library(querytele SHARED ${querytele_LIB_SRCS})
 
 set_target_properties(querytele PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS querytele DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS querytele DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

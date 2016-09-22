@@ -14,5 +14,5 @@ add_dependencies(rowgroup libnetsnmpmibs)
 
 set_target_properties(rowgroup PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS rowgroup DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS rowgroup DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

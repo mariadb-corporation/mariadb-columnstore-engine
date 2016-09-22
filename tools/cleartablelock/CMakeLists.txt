@@ -12,5 +12,5 @@ add_dependencies(cleartablelock libnetsnmpmibs)
 
 target_link_libraries(cleartablelock ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS})
 
-install(TARGETS cleartablelock DESTINATION ${ENGINE_BINDIR})
+install(TARGETS cleartablelock DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

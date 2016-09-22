@@ -17,5 +17,5 @@ add_dependencies(common loggingcpp)
 
 set_target_properties(common PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS common DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

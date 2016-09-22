@@ -27,5 +27,5 @@ add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 
 set_target_properties(windowfunction PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
