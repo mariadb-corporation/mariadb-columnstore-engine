@@ -12,7 +12,7 @@ add_library(udfsdk SHARED ${udfsdk_LIB_SRCS})
 
 set_target_properties(udfsdk PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 
 
@@ -22,5 +22,5 @@ add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
 
 set_target_properties(udf_mysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS udf_mysql DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS udf_mysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
 
