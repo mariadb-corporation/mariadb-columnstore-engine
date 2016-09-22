@@ -10,5 +10,5 @@ add_executable(editem ${editem_SRCS})
 
 target_link_libraries(editem ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS editem DESTINATION ${ENGINE_BINDIR})
+install(TARGETS editem DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -1368,7 +1368,8 @@ namespace oam
 
     void Oam::getSystemStatus(SystemStatus& systemstatus, bool systemStatusOnly)
     {
-		checkSystemRunning("getSystemStatus");
+		if (!checkSystemRunning())
+			return;
 
 #ifdef _MSC_VER
         // TODO: Remove when we create OAM for Windows
@@ -2136,8 +2137,8 @@ namespace oam
 
     void Oam::getProcessStatus(SystemProcessStatus& systemprocessstatus, string port)
     {
-		checkSystemRunning("getProcessStatus");
-
+		if (!checkSystemRunning())
+			exceptionControl("getProcessStatus", API_FAILURE);
         ProcessStatus processstatus;
         systemprocessstatus.processstatus.clear();
 
@@ -2236,7 +2237,8 @@ namespace oam
         return;
 #endif
 
-		checkSystemRunning("getProcessStatus");
+		if (!checkSystemRunning())
+			exceptionControl("getProcessStatus", API_FAILURE);
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -2331,8 +2333,8 @@ namespace oam
 
     void Oam::setProcessStatus(const std::string process, const std::string module, const int state, pid_t PID)
     {
-		checkSystemRunning("setProcessStatus");
-
+		if (!checkSystemRunning())
+			exceptionControl("setProcessStatus", API_FAILURE);
 		//send and wait for ack and resend if not received
 		//retry 5 time max
 		for ( int i=0; i < 5 ; i++)
@@ -2848,7 +2850,8 @@ namespace oam
        		exceptionControl("getMyProcessStatus", API_FAILURE);
 		}
 
-		checkSystemRunning("getMyProcessStatus");
+		if (!checkSystemRunning())
+			exceptionControl("getMyProcessStatus", API_FAILURE);
 
 	for ( int i = 0 ; i < 5 ; i ++)
 	{
@@ -4865,7 +4868,8 @@ namespace oam
      ********************************************************************/
 	bool Oam::switchParentOAMModule(std::string moduleName, GRACEFUL_FLAG gracefulflag)
 	{
-		checkSystemRunning("switchParentOAMModule");
+		if (!checkSystemRunning())
+			exceptionControl("switchParentOAMModule", API_FAILURE);
 
 		int returnStatus;
 		// We assume that moduleName is a valid pm
@@ -6308,7 +6312,8 @@ namespace oam
 			exceptionControl("sysConfig->write", API_FAILURE);
 		}
 
-		checkSystemRunning("addDbroot");
+		if (!checkSystemRunning())
+			exceptionControl("addDbroot", API_FAILURE);
 
 		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
@@ -6345,11 +6350,9 @@ namespace oam
      *
      ****************************************************************************/
 
-    	void Oam::distributeFstabUpdates(std::string entry, std::string toPM)
+   	void Oam::distributeFstabUpdates(std::string entry, std::string toPM)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-		system(cmd.c_str());
-		if (!checkLogStatus("/tmp/status.log", "MariaDB Columnstore is running") ) 
+		if (!checkSystemRunning())
 			return;
 
 		ACK_FLAG ackflag = oam::ACK_YES;
@@ -8772,7 +8775,7 @@ namespace oam
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string argument1,
         const std::string argument2, int timeout)
     {
-		if (!checkSystemRunning(""))
+		if (!checkSystemRunning())
 			return API_CONN_REFUSED;
 
         int returnStatus = API_SUCCESS;           //default
@@ -8873,7 +8876,7 @@ namespace oam
     int Oam::sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetworkList devicenetworklist,
         GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag, const std::string password, const std::string mysqlpw)
     {
-		if (!checkSystemRunning(""))
+		if (!checkSystemRunning())
 			return API_CONN_REFUSED;
 
         int returnStatus = API_TIMEOUT;           //default
@@ -8987,7 +8990,7 @@ namespace oam
 
     int Oam::sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, AlarmList& alarmlist, const std::string date)
     {
-		if (!checkSystemRunning(""))
+		if (!checkSystemRunning())
 			return API_CONN_REFUSED;
 
         int returnStatus = API_SUCCESS;           //default
@@ -9088,7 +9091,7 @@ namespace oam
 		GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag,
         const std::string argument1, const std::string argument2, int timeout)
 	{
-		if (!checkSystemRunning(""))
+		if (!checkSystemRunning())
 			return API_CONN_REFUSED;
 
 		int returnStatus = API_STILL_WORKING;
@@ -9274,7 +9277,7 @@ namespace oam
 
     void Oam::sendStatusUpdate(ByteStream obs, ByteStream::byte returnRequestType)
     {
-		if (!checkSystemRunning(""))
+		if (!checkSystemRunning())
 			return;
 
 	for ( int i = 0 ; i < 5 ; i ++)
@@ -9650,8 +9653,10 @@ namespace oam
 		return returnStatus;
 	}
 
-	bool Oam::checkSystemRunning(const char* function)
+	bool Oam::checkSystemRunning()
 	{
+		// string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
+		// system(cmd.c_str());
 		struct stat st;
 		if (stat("/var/lock/subsys/columnstore", &st) == 0)
 		{
@@ -9667,13 +9672,6 @@ namespace oam
 			{
 				return true;
 			}
-		}
-		ostringstream os;
-		os << function << " system is not running: " << strerror(errno);
-		writeLog(os.str(), LOG_TYPE_ERROR );
-		if (strlen(function))
-		{
-			throw runtime_error(os.str());
 		}
 		return false;
 	}

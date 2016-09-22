@@ -284,7 +284,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libquerystats.so.1.0.0
 /usr/local/mariadb/columnstore/lib/libwriteengineredistribute.so.1.0.0
-#/usr/local/mariadb/columnstore/lib/libjemalloc.so.3.3.0
+/usr/local/mariadb/columnstore/lib/libjemalloc.so.3.3.0
 /usr/local/mariadb/columnstore/lib/libidbdatafile.so.1.0.0
 #/usr/local/mariadb/columnstore/lib/hdfs-20.so
 #/usr/local/mariadb/columnstore/lib/hdfs-12.so

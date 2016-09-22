@@ -10,5 +10,5 @@ add_executable(ProcMgr ${ProcMgr_SRCS})
 
 target_link_libraries(ProcMgr ${ENGINE_LDFLAGS} cacheutils ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR})
+install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

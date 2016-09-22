@@ -39,5 +39,5 @@ add_executable(cpimport.bin ${cpimport.bin_SRCS})
 
 target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} we_bulk we_xml)
 
-install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR})
+install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -43,5 +43,5 @@ target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
 
 set_target_properties(writeengine PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

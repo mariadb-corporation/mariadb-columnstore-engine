@@ -18,5 +18,5 @@ target_link_libraries(ddlpackageproc ${NETSNMP_LIBRARIES})
 
 set_target_properties(ddlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS ddlpackageproc DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS ddlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

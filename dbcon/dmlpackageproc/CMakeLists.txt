@@ -19,6 +19,6 @@ target_link_libraries(dmlpackageproc ${NETSNMP_LIBRARIES})
 
 set_target_properties(dmlpackageproc PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS dmlpackageproc DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS dmlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 

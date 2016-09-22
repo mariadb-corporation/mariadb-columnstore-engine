@@ -10,5 +10,5 @@ add_executable(mcsadmin ${mcsadmin_SRCS})
 
 target_link_libraries(mcsadmin ${ENGINE_LDFLAGS} readline ncurses ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS mcsadmin DESTINATION ${ENGINE_BINDIR})
+install(TARGETS mcsadmin DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

@@ -10,7 +10,7 @@ add_executable(postConfigure ${postConfigure_SRCS})
 
 target_link_libraries(postConfigure ${ENGINE_LDFLAGS} readline ncurses ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS postConfigure DESTINATION ${ENGINE_BINDIR})
+install(TARGETS postConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -21,7 +21,7 @@ add_executable(installer ${installer_SRCS})
 
 target_link_libraries(installer ${ENGINE_LDFLAGS} readline ncurses ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS installer DESTINATION ${ENGINE_BINDIR})
+install(TARGETS installer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -32,7 +32,7 @@ add_executable(getMySQLpw ${getMySQLpw_SRCS})
 
 target_link_libraries(getMySQLpw ${ENGINE_LDFLAGS} readline ncurses ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS getMySQLpw DESTINATION ${ENGINE_BINDIR})
+install(TARGETS getMySQLpw DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -43,7 +43,7 @@ add_executable(amazonInstaller ${amazonInstaller_SRCS})
 
 target_link_libraries(amazonInstaller ${ENGINE_LDFLAGS} readline ncurses ${SNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS amazonInstaller DESTINATION ${ENGINE_BINDIR})
+install(TARGETS amazonInstaller DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -54,5 +54,5 @@ add_executable(mycnfUpgrade ${mycnfUpgrade_SRCS})
 
 target_link_libraries(mycnfUpgrade ${ENGINE_LDFLAGS} readline ncurses ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS mycnfUpgrade DESTINATION ${ENGINE_BINDIR})
+install(TARGETS mycnfUpgrade DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

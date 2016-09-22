@@ -21,7 +21,7 @@ add_executable(autoConfigure ${autoConfigure_SRCS})
 
 target_link_libraries(autoConfigure ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS autoConfigure DESTINATION ${ENGINE_BINDIR})
+install(TARGETS autoConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############

@@ -924,24 +924,15 @@ void TableInfo::reportTotals(double elapsedTime)
                 fColumns[i].column.colName << "; Number of ";
             if (fColumns[i].column.dataType == CalpontSystemCatalog::DATE)
 			{
-				//bug5383
-				if(!fColumns[i].column.fNotNull)
-                	ossSatCnt <<
-                    	"invalid dates replaced with null: ";
-				else
-					ossSatCnt <<
-						"invalid dates replaced with minimum value : ";
+				ossSatCnt <<
+					"invalid dates replaced with zero value : ";
 			}
             else if (fColumns[i].column.dataType ==
                      CalpontSystemCatalog::DATETIME)
 			{
 				//bug5383
-				if(!fColumns[i].column.fNotNull)
-                	ossSatCnt <<
-                    	"invalid date/times replaced with null: ";
-				else
-					ossSatCnt <<
-						"invalid date/times replaced with minimum value : ";
+				ossSatCnt <<
+					"invalid date/times replaced with zero value : ";
 			}
             else if (fColumns[i].column.dataType == CalpontSystemCatalog::CHAR)
                 ossSatCnt <<

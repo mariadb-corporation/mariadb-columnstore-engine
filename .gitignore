@@ -98,3 +98,8 @@ utils/loggingcpp/messageids.h
 CPackConfig.cmake
 CPackSourceConfig.cmake
 build/columnstore.community.spec
+*.rpm
+install_manifest_libs.txt
+install_manifest_platform.txt
+install_manifest_storage-engine.txt
+_CPack_Packages

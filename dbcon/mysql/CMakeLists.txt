@@ -1,9 +1,6 @@
 
 include_directories( ${ENGINE_COMMON_INCLUDES}
-                     /usr/include/libxml2 
-                     ../../../mysql/include 
-                     ../../../mysql/sql 
-                     ../../../mysql/regex )
+                     /usr/include/libxml2 )
 
 
 SET ( libcalmysql_SRCS
@@ -32,16 +29,16 @@ target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_
 
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS calmysql DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS calmysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 
               calremoveuserpriority.sql 
               calshowprocesslist.sql 
               my.cnf
-              DESTINATION ${ENGINE_MYSQLDIR})
+              DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
 install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
-              DESTINATION ${ENGINE_MYSQLDIR})
+              DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
 
 
 #AM_CPPFLAGS = $(idb_common_includes) $(idb_cppflags)

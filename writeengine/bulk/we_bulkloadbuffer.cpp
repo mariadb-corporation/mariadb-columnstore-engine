@@ -965,19 +965,8 @@ void BulkLoadBuffer::convert(char *field, int fieldLength,
                         bufStats.maxBufferVal = llDate;
                 }
                 else {
-					if(!column.fNotNull)
-					{
-                    	// @bug 3375: reset invalid date/time to NULL,
-                    	//            and track as a saturated value.
-                    	llDate = joblist::DATETIMENULL;
-                    	bufStats.satCount++;
-					}
-					else
-					{
-						//Bug5383 - 4.0@1400-01-01 00:00:00 Below it is 0000-01-01 00:00:00
-						llDate = 0x578104000000000;	//394082834458869760
-                    	bufStats.satCount++;
-					}
+                   	llDate = 0;
+                   	bufStats.satCount++;
                 }
 
                 pVal = &llDate;
@@ -1262,23 +1251,8 @@ void BulkLoadBuffer::convert(char *field, int fieldLength,
                         bufStats.maxBufferVal = iDate;
                 }
                 else {
-
-
-                	if (!column.fNotNull)
-					{
-                    	// @bug 3375: reset invalid date to NULL,
-                    	//            and track as a saturated value.
-                    	iDate = joblist::DATENULL;
-                    	bufStats.satCount++;
-					}
-					else
-					{
-						// Bug5383 - 1400-01-01 
-//                        iDate = 0x5781068;		// for versions below 4.0 it is 0x1068
-						// MariaDB bug 740
-						iDate = 0x578107E;
-						bufStats.satCount++; 	
-					}
+                   	iDate = 0;
+                    bufStats.satCount++;
                 }
 
                 pVal = &iDate;

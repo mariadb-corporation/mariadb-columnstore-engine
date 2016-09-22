@@ -49,5 +49,5 @@ target_link_libraries(execplan ${NETSNMP_LIBRARIES})
 
 set_target_properties(execplan PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

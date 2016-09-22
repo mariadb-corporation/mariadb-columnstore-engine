@@ -1100,16 +1100,8 @@ boost::any
 				}
 				else
 				{
-					if ( isUpdate) //@Bug 5222 set to null for ot of range value
-					{
-						uint32_t d = joblist::DATENULL;
-						value = d;
-						pushWarning = true;
-					}
-					else
-					{
-						throw QueryDataExcept("Invalid date", formatErr);
-					}
+                    value = (uint32_t) 0;
+                    pushWarning = true;
 				}
 			}
 			break;
@@ -1123,14 +1115,8 @@ boost::any
 				}
 				else
 				{
-					if ( isUpdate) //@Bug 5222 set to null for ot of range value
-					{
-						uint64_t d = joblist::DATETIMENULL;
-						value = d;
-						pushWarning = true;
-					}
-					else
-						throw QueryDataExcept("Invalid datetime", formatErr);
+                    value = (uint64_t) 0;
+                    pushWarning = true;
 				}
 			}
 			break;

@@ -20,5 +20,5 @@ add_executable(WriteEngineServer ${WriteEngineServer_SRCS})
 
 target_link_libraries(WriteEngineServer ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute)
 
-install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR})
+install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
