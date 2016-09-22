@@ -10,5 +10,5 @@ add_executable(viewtablelock ${viewtablelock_SRCS})
 
 target_link_libraries(viewtablelock ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS viewtablelock DESTINATION ${ENGINE_BINDIR})
+install(TARGETS viewtablelock DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

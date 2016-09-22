@@ -10,5 +10,5 @@ add_executable(trapHandler ${trapHandler_SRCS})
 
 target_link_libraries(trapHandler ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS trapHandler DESTINATION ${ENGINE_BINDIR})
+install(TARGETS trapHandler DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

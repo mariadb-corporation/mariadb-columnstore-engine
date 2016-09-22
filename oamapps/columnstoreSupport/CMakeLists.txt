@@ -12,9 +12,9 @@ add_dependencies(columnstoreSupport libnetsnmpmibs)
 
 target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} readline ncurses ${ENGINE_EXEC_LIBS})
 
-install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR})
+install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 install(PROGRAMS alarmReport.sh bulklogReport.sh configReport.sh hadoopReport.sh 
     hardwareReport.sh logReport.sh resourceReport.sh softwareReport.sh 
-    DESTINATION ${ENGINE_BINDIR})
+    DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
               

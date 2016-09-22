@@ -16,5 +16,5 @@ add_library(compress SHARED ${compress_LIB_SRCS})
 
 set_target_properties(compress PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS compress DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS compress DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

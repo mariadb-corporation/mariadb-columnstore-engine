@@ -23,5 +23,5 @@ add_library(mysqlcl_idb SHARED ${mysqlcl_idb_LIB_SRCS})
 
 set_target_properties(mysqlcl_idb PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS mysqlcl_idb DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS mysqlcl_idb DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

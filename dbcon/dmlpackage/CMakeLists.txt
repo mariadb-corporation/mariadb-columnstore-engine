@@ -2,7 +2,7 @@
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ADD_CUSTOM_COMMAND(
-    OUTPUT dml-gram.cpp dml-scan.cpp
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp
     COMMAND ./dml-gram.sh ${BISON_EXECUTABLE}
     COMMAND ./dml-scan.sh ${LEX_EXECUTABLE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -32,9 +32,9 @@ set(dmlpackage_LIB_SRCS
 
 add_library(dmlpackage SHARED ${dmlpackage_LIB_SRCS})
 
-add_dependencies(dmlpackage dml-gram.cpp dml-scan.cpp)
+add_dependencies(dmlpackage ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp)
 
 set_target_properties(dmlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

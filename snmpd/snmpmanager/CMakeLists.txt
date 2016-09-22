@@ -12,6 +12,6 @@ add_dependencies(snmpmanager libnetsnmpmibs)
 
 set_target_properties(snmpmanager PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS snmpmanager DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS snmpmanager DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 

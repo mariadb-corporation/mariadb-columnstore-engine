@@ -10,5 +10,5 @@ add_executable(sendtrap ${sendtrap_SRCS})
 
 target_link_libraries(sendtrap ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS})
 
-install(TARGETS sendtrap DESTINATION ${ENGINE_BINDIR})
+install(TARGETS sendtrap DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

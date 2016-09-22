@@ -12,6 +12,6 @@ add_dependencies(batchloader libnetsnmpmibs)
 
 set_target_properties(batchloader PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS batchloader DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS batchloader DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 

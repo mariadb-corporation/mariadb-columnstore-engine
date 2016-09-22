@@ -22,5 +22,5 @@ add_dependencies(WriteEngineServer libnetsnmpmibs)
 
 target_link_libraries(WriteEngineServer ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute)
 
-install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR})
+install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

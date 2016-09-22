@@ -36,7 +36,7 @@ set_target_properties(brm PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 add_dependencies(brm libnetsnmpmibs)
 
-install(TARGETS brm DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 
 ########### next target ###############
@@ -49,7 +49,7 @@ add_dependencies(controllernode libnetsnmpmibs)
 
 target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
-install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR})
+install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -62,7 +62,7 @@ add_dependencies(workernode libnetsnmpmibs)
 
 target_link_libraries(workernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
-install(TARGETS workernode DESTINATION ${ENGINE_BINDIR})
+install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -73,7 +73,7 @@ add_executable(dbrmctl ${dbrmctl_SRCS})
 
 target_link_libraries(dbrmctl ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
-install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR})
+install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -84,7 +84,7 @@ add_executable(reset_locks ${reset_locks_SRCS})
 
 target_link_libraries(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
-install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR})
+install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -95,7 +95,7 @@ add_executable(rollback ${rollback_SRCS})
 
 target_link_libraries(rollback ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
-install(TARGETS rollback DESTINATION ${ENGINE_BINDIR})
+install(TARGETS rollback DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -106,7 +106,7 @@ add_executable(save_brm ${save_brm_SRCS})
 
 target_link_libraries(save_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
-install(TARGETS save_brm DESTINATION ${ENGINE_BINDIR})
+install(TARGETS save_brm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 ########### next target ###############
@@ -117,5 +117,5 @@ add_executable(load_brm ${load_brm_SRCS})
 
 target_link_libraries(load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${ENGINE_NETSNMP_LIBS})
 
-install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR})
+install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

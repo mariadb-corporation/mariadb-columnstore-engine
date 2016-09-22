@@ -12,5 +12,5 @@ add_dependencies(ProcMgr libnetsnmpmibs)
 
 target_link_libraries(ProcMgr ${ENGINE_LDFLAGS} cacheutils ${ENGINE_EXEC_LIBS})
 
-install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR})
+install(TARGETS ProcMgr DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

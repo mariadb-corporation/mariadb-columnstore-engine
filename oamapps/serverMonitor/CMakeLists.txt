@@ -19,5 +19,5 @@ add_executable(ServerMonitor ${ServerMonitor_SRCS})
 
 target_link_libraries(ServerMonitor ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS ServerMonitor DESTINATION ${ENGINE_BINDIR})
+install(TARGETS ServerMonitor DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

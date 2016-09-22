@@ -15,5 +15,5 @@ add_dependencies(writeengineredistribute libnetsnmpmibs)
 
 set_target_properties(writeengineredistribute PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

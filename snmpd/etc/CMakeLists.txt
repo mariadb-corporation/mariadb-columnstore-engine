@@ -5,7 +5,7 @@ install(FILES  snmpd.conf
                 snmptrapd.conf 
                 snmpd.conf.singleserver 
                 snmptrapd.conf.singleserver 
-                DESTINATION ${ENGINE_ETCDIR})
+                DESTINATION ${ENGINE_ETCDIR} COMPONENT platform)
                 
 install(FILES  CALPONT-MIB.txt  	
                 AGENTX-MIB.txt  	
@@ -63,6 +63,6 @@ install(FILES  CALPONT-MIB.txt
                 UCD-DLMOD-MIB.txt  	
                 UCD-IPFWACC-MIB.txt  	
                 UCD-SNMP-MIB.txt  	
-                UDP-MIB.txt DESTINATION ${ENGINE_MIBDIR} )
+                UDP-MIB.txt DESTINATION ${ENGINE_MIBDIR} COMPONENT platform )
                 
-install(FILES  snmpdx.conf snmpdx.conf.singleserver DESTINATION ${ENGINE_LOCALDIR})
+install(FILES  snmpdx.conf snmpdx.conf.singleserver DESTINATION ${ENGINE_LOCALDIR} COMPONENT platform)

@@ -12,5 +12,5 @@ add_dependencies(editem libnetsnmpmibs)
 
 target_link_libraries(editem ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS editem DESTINATION ${ENGINE_BINDIR})
+install(TARGETS editem DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

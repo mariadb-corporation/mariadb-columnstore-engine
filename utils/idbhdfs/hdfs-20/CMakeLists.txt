@@ -20,5 +20,5 @@ set_target_properties(hdfs-20 PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 install(TARGETS hdfs-20 DESTINATION ${ENGINE_LIBDIR})
 
-install(PROGRAMS setenv-hdfs-20 DESTINATION ${ENGINE_BINDIR})
+install(PROGRAMS setenv-hdfs-20 DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

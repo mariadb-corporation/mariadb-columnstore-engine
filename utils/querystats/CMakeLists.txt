@@ -10,5 +10,5 @@ add_library(querystats SHARED ${querystats_LIB_SRCS})
 
 set_target_properties(querystats PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS querystats DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS querystats DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
