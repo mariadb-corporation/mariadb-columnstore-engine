@@ -11,7 +11,7 @@ set(writeengineredistribute_LIB_SRCS
 
 add_library(writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
 
-add_dependencies(writeengineredistribute libnetsnmpmibs)
+target_link_libraries(writeengineredistribute ${NETSNMP_LIBRARIES})
 
 set_target_properties(writeengineredistribute PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

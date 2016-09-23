@@ -18,6 +18,6 @@ set(dbbc_STAT_SRCS
 
 add_library(dbbc STATIC ${dbbc_STAT_SRCS})
 
-add_dependencies(dbbc libnetsnmpmibs)
+target_link_libraries(dbbc ${NETSNMP_LIBRARIES})
 
 INSTALL (TARGETS dbbc DESTINATION ${ENGINE_LIBDIR})
