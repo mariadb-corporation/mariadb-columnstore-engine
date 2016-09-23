@@ -75,9 +75,10 @@ if (NOT NETSNMP_FOUND)
     MESSAGE(FATAL_ERROR "Could not find net-snmp!")
 endif()
 
-INCLUDE (FindJeMalloc)
+INCLUDE (FindJeMalloc.cmake)
 if (NOT JEMALLOC_FOUND)
-    message(WARNING "jemalloc not found! Compiling with standard malloc")
+    message(NOTICE "jemalloc not found! Compiling with standard malloc")
+    SET(JEMALLOC_LIBRARIES "")
 endif()
 
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
