@@ -2326,7 +2326,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 			log.writeLog(__LINE__, "statusControl: Set Process " + moduleName + "/" + processName +  + " State = " + oamState[state] + " PID = " + oam.itoa(PID), LOG_TYPE_DEBUG);
 
 			//update table
-			if (  state < STATE_MAX )
+			if (  state < PID_UPDATE )
 				fShmProcessStatus[shmIndex].ProcessOpState = state;
 			if (  PID != 1 )
 				fShmProcessStatus[shmIndex].ProcessID = PID;

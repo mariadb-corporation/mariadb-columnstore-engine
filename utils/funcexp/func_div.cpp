@@ -24,6 +24,8 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#define __STDC_LIMIT_MACROS
+#include <stdint.h>
 using namespace std;
 
 #include "functor_real.h"
@@ -56,6 +58,12 @@ int64_t Func_div::getIntVal(rowgroup::Row& row,
 		return 0;
 	}
 	int64_t int_val1 = (int64_t)(val1 > 0 ? val1 + 0.5 : val1 - 0.5);
+	// MCOL-176 If abs(int_val2) is small enough (like -1), then, this may cause overflow.
+	// This kludge stops the crash.
+	if (int_val1 == INT64_MIN)
+	{
+		--int_val1;
+	}
 	return int_val1 / int_val2;
 }
 
