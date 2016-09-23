@@ -204,9 +204,6 @@ ADD_SUBDIRECTORY(writeengine/server)
 ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
 
-
-INSTALL(PROGRAMS ${ENGINE_SBINDIR}/snmpd ${ENGINE_SBINDIR}/snmptrapd DESTINATION ${ENGINE_SBINDIR} COMPONENT platform)
-
 INSTALL(PROGRAMS utils/jemalloc/libjemalloc.so.3.3.0 DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 INCLUDE(cpackEngineRPM.cmake)
