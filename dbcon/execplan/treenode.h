@@ -39,7 +39,7 @@
 #include "calpontsystemcatalog.h"
 #include "exceptclasses.h"
 #include "dataconvert.h"
-namespace messageqecpp {
+namespace messageqcpp {
 class ByteStream;
 }
 
