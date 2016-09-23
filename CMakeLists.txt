@@ -205,23 +205,6 @@ ADD_SUBDIRECTORY(writeengine/bulk)
 ADD_SUBDIRECTORY(writeengine/splitter)
 
 
-#This should go away when netsnmp is removed from the builds
-INSTALL(PROGRAMS ${ENGINE_LIBDIR}/libnetsnmpagent.so.30.0.3 
-              ${ENGINE_LIBDIR}/libnetsnmpagent.so.30
-              ${ENGINE_LIBDIR}/libnetsnmpagent.so
-              ${ENGINE_LIBDIR}/libnetsnmphelpers.so.30.0.3
-              ${ENGINE_LIBDIR}/libnetsnmphelpers.so.30
-              ${ENGINE_LIBDIR}/libnetsnmphelpers.so
-              ${ENGINE_LIBDIR}/libnetsnmpmibs.so.30.0.3
-              ${ENGINE_LIBDIR}/libnetsnmpmibs.so.30
-              ${ENGINE_LIBDIR}/libnetsnmpmibs.so
-              ${ENGINE_LIBDIR}/libnetsnmp.so.30.0.3
-              ${ENGINE_LIBDIR}/libnetsnmp.so.30
-              ${ENGINE_LIBDIR}/libnetsnmp.so
-              ${ENGINE_LIBDIR}/libnetsnmptrapd.so.30.0.3
-              ${ENGINE_LIBDIR}/libnetsnmptrapd.so.30
-              ${ENGINE_LIBDIR}/libnetsnmptrapd.so 
-              DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 INSTALL(PROGRAMS ${ENGINE_SBINDIR}/snmpd ${ENGINE_SBINDIR}/snmptrapd DESTINATION ${ENGINE_SBINDIR} COMPONENT platform)
 
 INSTALL(PROGRAMS utils/jemalloc/libjemalloc.so.3.3.0 DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
