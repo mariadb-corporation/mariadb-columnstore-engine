@@ -16,7 +16,7 @@ set(idbdatafile_LIB_SRCS
 
 add_library(idbdatafile SHARED ${idbdatafile_LIB_SRCS})
 
-add_dependencies(idbdatafile libnetsnmpmibs)
+target_link_libraries(idbdatafile ${NETSNMP_LIBRARIES})
 
 set_target_properties(idbdatafile PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

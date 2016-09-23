@@ -10,7 +10,7 @@ set(processor_STAT_SRCS primitiveprocessor.cpp dictionary.cpp column.cpp)
 
 add_library(processor STATIC ${processor_STAT_SRCS})
 
-add_dependencies(processor libnetsnmpmibs)
+target_link_libraries(processor ${NETSNMP_LIBRARIES})
 
 INSTALL (TARGETS processor DESTINATION ${ENGINE_LIBDIR})
 

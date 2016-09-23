@@ -8,7 +8,7 @@ set(snmpmanager_LIB_SRCS snmpmanager.cpp alarm.cpp)
 
 add_library(snmpmanager SHARED ${snmpmanager_LIB_SRCS})
 
-add_dependencies(snmpmanager libnetsnmpmibs)
+target_link_libraries(snmpmanager ${NETSNMP_LIBRARIES})
 
 set_target_properties(snmpmanager PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
