@@ -130,7 +130,6 @@ if [ $? -ne 0 -o ! -x $prefix/Calpont/bin/PrimProc ]; then
 fi
 
 cp dbcon/mysql/my.cnf $prefix/Calpont/mysql
-cp utils/jemalloc/libjemalloc.so.3.3.0 $prefix/Calpont/lib/libjemalloc.so
 
 echo "InfiniDB binaries and libs are in $prefix/Calpont"
 
