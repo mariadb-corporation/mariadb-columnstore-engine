@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
             }
 
             // read input
-            pcommand = readline("mscadmin> ");
+            pcommand = readline("mcsadmin> ");
 
             if (!pcommand)                        // user hit <Ctrl>-D
                 pcommand = strdup("exit");
