@@ -77,7 +77,7 @@ SETA(CPACK_RPM_libs_PACKAGE_OBSOLETES "mariadb-columnstore-libs")
 SETA(CPACK_RPM_platform_PACKAGE_OBSOLETES "mariadb-columnstore-platform")
 SETA(CPACK_RPM_storage-engine_PACKAGE_OBSOLETES "mariadb-columnstore-storage-engine")
 
-SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs")
+SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "net-snmp-libs")
 SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "mariadb-columnstore-libs")
 
 SET(CPACK_RPM_platform_POST_INSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/postInstall_platform.sh)
