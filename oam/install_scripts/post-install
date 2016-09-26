@@ -87,9 +87,6 @@ if [ -f libstdc++.so.6.0.14 ]; then
 	chown -h $user.$user libstdc++.so.6 >/dev/null 2>&1
 fi
 
-ln -sf libjemalloc.so.3.3.0 libjemalloc.so
-chown -h $user.$user libjemalloc.so >/dev/null 2>&1
-
 # softlink for libperl.sp, used by cplogger
 sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 

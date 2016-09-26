@@ -46,12 +46,6 @@ if [ -n "$plugin" ]; then
 	. $InstallDir/bin/$setenv >/dev/null 2>&1
 fi
 
-if [ -e $InstallDir/lib/libjemalloc.so ]; then
-	export LD_PRELOAD=$InstallDir/lib/libjemalloc.so
-elif [ -e $InstallDir/lib/libjemalloc.so.1 ]; then
-	export LD_PRELOAD=$InstallDir/lib/libjemalloc.so.1
-fi
-
 test -f $InstallDir/post/functions && . $InstallDir/post/functions
 
 mt=`module_type`
