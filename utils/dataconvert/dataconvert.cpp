@@ -1805,6 +1805,14 @@ int64_t DataConvert::intToDate(int64_t data)
 	//snprintf( buf, 10, "%llu", (long long unsigned int)data);
 	//string date = buf;
 	char buf[21] = {0};
+  	Date aday;
+    if (data == 0)
+    {
+        aday.year = 0;
+        aday.month = 0;
+    	aday.day = 0;
+        return *(reinterpret_cast<uint32_t*>(&aday));
+    }
 	snprintf( buf, 15, "%llu", (long long unsigned int)data);
 
 	string year, month, day, hour, min, sec, msec;
@@ -1866,7 +1874,6 @@ int64_t DataConvert::intToDate(int64_t data)
 		default:
 			return -1;
 	}
-	Date aday;
 	if (year.empty())
 	{
 		// MMDD format. assume current year
