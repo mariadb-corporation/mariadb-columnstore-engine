@@ -270,15 +270,10 @@ const uint32_t WEEK_NO_ZERO       = 2;
 const uint32_t WEEK_GT_THREE_DAYS = 4;
 
 // Takes a MySQL WEEK() function mode setting and converts to a bitmask
-// used by calc_mysql_week()
+// used by calc_mysql_week() mirror of MariaDB's week_mode()
 inline int16_t convert_mysql_mode_to_modeflags( int16_t mode )
 {
-	// For some crazy reason, MySQL assigns modes 1, 3, 4, and 6 to use
-	// the setting for >3 days in first week which does not align to
-	// any particular bit.  This small piece of code sets bit 2
-	// (WEEK_GT_THREE_DAYS) for modes 1 & 3 and disables for modes
-	// 5 & 7 which is exactly what we want.
-	if( mode & WEEK_MONDAY_FIRST )
+	if(!(mode & WEEK_MONDAY_FIRST))
 		mode ^= WEEK_GT_THREE_DAYS;
 
 	return mode;
