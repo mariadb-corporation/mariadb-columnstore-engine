@@ -1900,6 +1900,20 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
 {
 	bool isDate = false;
 	char buf[21] = {0};
+    DateTime adaytime;
+    if (data == 0)
+    {
+        adaytime.year = 0;
+        adaytime.month = 0;
+    	adaytime.day = 0;
+    	adaytime.hour = 0;
+    	adaytime.minute = 0;
+    	adaytime.second = 0;
+    	adaytime.msecond = 0;
+        if (date)
+            *date = true;
+        return *(reinterpret_cast<uint64_t*>(&adaytime));
+    }
 	snprintf( buf, 15, "%llu", (long long unsigned int)data);
 	//string date = buf;
 	string year, month, day, hour, min, sec, msec;
@@ -1964,7 +1978,7 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
 		default:
 			return -1;
 	}
-	DateTime adaytime;
+
 	if (year.empty())
 	{
 		// MMDD format. assume current year
