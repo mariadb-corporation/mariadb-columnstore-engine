@@ -141,9 +141,7 @@ double Func_monthname::getDoubleVal(rowgroup::Row& row,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	uint64_t val = getIntVal(row, parm, isNull, op_ct);
-
-	return (double)val;
+    return 0;
 }
 
 execplan::IDB_Decimal Func_monthname::getDecimalVal(rowgroup::Row& row,
