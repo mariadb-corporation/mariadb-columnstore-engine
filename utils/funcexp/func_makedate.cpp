@@ -78,8 +78,15 @@ uint64_t makedate(rowgroup::Row& row,
 			isNull = true;
 			return 0;
 	}
-
-	if (year < 1000 || year > 9999) {
+    if (year < 70)
+    {
+        year = 2000 + year;
+    }
+    else if (year < 100)
+    {
+        year = 1900 + year;
+    }
+    else if (year < 1000 || year > 9999) {
 		isNull = true;
 		return 0;
 	}
