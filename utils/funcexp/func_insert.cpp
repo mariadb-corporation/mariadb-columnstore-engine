@@ -52,7 +52,7 @@ string insertStr(const string& src, int pos, int len, const string& targ)
 {
 	int64_t strLen = static_cast<int64_t>(src.length());
 
-    if ((pos <= 0) || ((pos-1) > strLen))
+    if ((pos <= 0) || ((pos-1) >= strLen))
         return src;
 
     if ((len < 0) || (len > strLen))
