@@ -257,7 +257,7 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
 			}
 			case CalpontSystemCatalog::DATETIME:
 			{
-				int64_t val = expression[i]->getIntVal(row, isNull);
+				int64_t val = expression[i]->getDatetimeIntVal(row, isNull);
 				if (isNull)
 					row.setUintField<8>(DATETIMENULL, expression[i]->outputIndex());
 				else
