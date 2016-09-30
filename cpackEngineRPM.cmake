@@ -84,6 +84,14 @@ SET(CPACK_RPM_platform_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn
 SET(CPACK_RPM_libs_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_libs.sh)
 SET(CPACK_RPM_storage-engine_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_SOURCE_DIR}/build/preUn_storage_engine.sh)
 
+SET(CPACK_RPM_SPEC_MORE_DEFINE "${CPACK_RPM_SPEC_MORE_DEFINE}
+%define ignore \#
+")
+
+SET(ignored
+    "%ignore /usr"
+    "%ignore /usr/local"
+)
 
 #SET(CPACK_RPM_SPEC_MORE_DEFINE "
 #%define _prefix ${CMAKE_INSTALL_PREFIX}
@@ -243,7 +251,8 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/post/test-001.sh"
 "/usr/local/mariadb/columnstore/post/test-002.sh"
 "/usr/local/mariadb/columnstore/post/test-003.sh"
-"/usr/local/mariadb/columnstore/post/test-004.sh")
+"/usr/local/mariadb/columnstore/post/test-004.sh"
+${ignored})
 
 SET(CPACK_RPM_libs_USER_FILELIST 
 "/usr/local/mariadb/columnstore/lib/libconfigcpp.so.1.0.0"
@@ -344,9 +353,10 @@ SET(CPACK_RPM_libs_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libthrift.so"
 "/usr/local/mariadb/columnstore/lib/libquerytele.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libquerytele.so.1"
-"/usr/local/mariadb/columnstore/lib/libquerytele.so")
+"/usr/local/mariadb/columnstore/lib/libquerytele.so"
+${ignored})
 
-SET(CPACK_RPM_storage-engine_USER_FILELIST 
+SET(CPACK_RPM_storage-engine_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libcalmysql.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libcalmysql.so.1"
 "/usr/local/mariadb/columnstore/lib/libcalmysql.so"
@@ -360,7 +370,8 @@ SET(CPACK_RPM_storage-engine_USER_FILELIST
 "/usr/local/mariadb/columnstore/mysql/dumpcat.pl"
 "/usr/local/mariadb/columnstore/mysql/calsetuserpriority.sql"
 "/usr/local/mariadb/columnstore/mysql/calremoveuserpriority.sql"
-"/usr/local/mariadb/columnstore/mysql/calshowprocesslist.sql")
+"/usr/local/mariadb/columnstore/mysql/calshowprocesslist.sql"
+${ignored})
 
 
 INCLUDE (CPack)
