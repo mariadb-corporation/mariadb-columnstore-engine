@@ -206,6 +206,7 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
 		t2.hour = 838;
 		t2.minute = 59;
 		t2.second = 59;
+        t2.msecond = 999999;
 	}
 	else
 	{
