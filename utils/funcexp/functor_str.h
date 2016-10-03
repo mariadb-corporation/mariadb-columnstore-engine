@@ -90,22 +90,37 @@ protected:
 		// Bug3788, use the shorter of fixed or scientific notation for floating point values.
 		// [ the default format in treenode.h is fixed-point notation ]
 		char buf[20];
+        double floatVal;
+        int exponent;
+        double base;
 		switch (fp->data()->resultType().colDataType)
 		{
 			case execplan::CalpontSystemCatalog::DOUBLE:
-				snprintf(buf, 20, "%.10g", fp->data()->getDoubleVal(row, isNull));
-			break;
-
+                floatVal = fp->data()->getDoubleVal(row, isNull);
+            break;
 			case execplan::CalpontSystemCatalog::FLOAT:
-				snprintf(buf, 20, "%g", fp->data()->getFloatVal(row, isNull));
-			break;
+                floatVal = fp->data()->getFloatVal(row, isNull);
+            break;
 
 			default:
 				return fp->data()->getStrVal(row, isNull);
 			break;
 		}
+        exponent = (int)floor(log10( fabs(floatVal)));
+        base = floatVal * pow(10, -1.0*exponent);
+        if (isnan(exponent) || isnan(base))
+        {
+            snprintf(buf, 20, "%f", floatVal);
+            fFloatStr = execplan::removeTrailing0(buf, 20);
+        }
+        else
+        {
+            snprintf(buf, 20, "%.5f", base);
+            fFloatStr = execplan::removeTrailing0(buf, 20);
+            snprintf(buf, 20, "e%02d", exponent);
+            fFloatStr += buf;
+        }
 
-		fFloatStr = std::string(buf);
         return fFloatStr;
 	}
 
