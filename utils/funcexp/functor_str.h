@@ -90,6 +90,7 @@ protected:
 		// Bug3788, use the shorter of fixed or scientific notation for floating point values.
 		// [ the default format in treenode.h is fixed-point notation ]
 		char buf[20];
+        char *dest, *src;
 		switch (fp->data()->resultType().colDataType)
 		{
 			case execplan::CalpontSystemCatalog::DOUBLE:
@@ -104,6 +105,18 @@ protected:
 				return fp->data()->getStrVal(row, isNull);
 			break;
 		}
+        // Strip off the '+' that %g puts before the exponent symbol
+        dest = src = buf;
+        while(*src != '\0')
+        {
+            if (*src != '+')
+            {
+                *dest = *src;
+                dest++;
+            }
+            src++;
+        }
+        *dest = '\0';
 
 		fFloatStr = std::string(buf);
         return fFloatStr;
