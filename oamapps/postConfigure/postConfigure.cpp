@@ -2854,7 +2854,7 @@ int main(int argc, char *argv[])
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				calpontPackage1 = "mariadb-columnstore-platform" + separator + version;
+				calpontPackage1 = "mariadb-columnstore-*" + separator + version;
 				calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
 				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
 				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
