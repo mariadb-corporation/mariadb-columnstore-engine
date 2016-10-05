@@ -162,7 +162,7 @@ if [ -n "$systemctl" ]; then
 	chmod 644 $installdir/bin/columnstore.service
 	sudo cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
 	sudo cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-	systemctl enable columnstore >/dev/null 2>&1
+	sudo systemctl enable columnstore >/dev/null 2>&1
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then
