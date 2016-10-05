@@ -81,11 +81,11 @@ IF (EXISTS "/etc/redhat-release")
     set(REDHAT_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "net-snmp-libs")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "net-snmp-libs" "net-snmp" "net-tools")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 else ()
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "net-snmp-libs")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "net-snmp-libs" "net-snmp" "net-tools")
 endif()
 
 SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "mariadb-columnstore-libs")

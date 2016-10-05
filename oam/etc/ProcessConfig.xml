@@ -24,8 +24,8 @@
 	<PROCESSCONFIG3>
 		<ProcessName>SNMPTrapDaemon</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>
-		<ProcessLocation>$INSTALLDIR/sbin/snmptrapd</ProcessLocation>
-		<ProcessArg1>$INSTALLDIR/sbin/snmptrapd</ProcessArg1>
+		<ProcessLocation>/sbin/snmptrapd</ProcessLocation>
+		<ProcessArg1>/sbin/snmptrapd</ProcessArg1>
 		<ProcessArg2>-M</ProcessArg2>
 		<ProcessArg3>$INSTALLDIR/share/snmp/mibs</ProcessArg3>
 		<ProcessArg4>-m</ProcessArg4>
