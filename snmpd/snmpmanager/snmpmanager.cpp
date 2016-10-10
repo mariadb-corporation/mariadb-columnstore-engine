@@ -38,6 +38,9 @@ using namespace oam;
 using namespace messageqcpp;
 using namespace logging;
 
+const unsigned int CTN_INTERVAL = 30*60;
+
+
 namespace snmpmanager {
 
 #ifdef __linux__
@@ -84,6 +87,296 @@ SNMPManager::SNMPManager()
 
 SNMPManager::~SNMPManager()
 {
+}
+
+/*****************************************************************************************
+* @brief	rewriteActiveLog
+*
+* purpose:	Update Active Alarm file, called to remove Cleared alarm
+*
+*****************************************************************************************/
+void rewriteActiveLog (const AlarmList& alarmList)
+{
+	if (CALPONT_SNMP_DEBUG) {                                        
+		LoggingID lid(11);                                        
+		MessageLog ml(lid);                                        
+		Message msg;                                        
+		Message::Args args;                                        
+		args.add("rewriteAlarmLog Called");                                 
+		msg.format(args);                                        
+		ml.logDebugMessage(msg);                        
+	}
+
+	// delete the old file
+	unlink (ACTIVE_ALARM_FILE.c_str());
+	
+	// create new file
+	int fd = open(ACTIVE_ALARM_FILE.c_str(), O_RDWR|O_CREAT, 0664);
+	
+	// Aquire an exclusive lock
+   	if (flock(fd,LOCK_EX) == -1) {
+		throw runtime_error ("Lock active alarm log file error");
+   	}
+
+   	ofstream activeAlarmFile (ACTIVE_ALARM_FILE.c_str());
+   	
+   	AlarmList::const_iterator i;
+   	for (i = alarmList.begin(); i != alarmList.end(); ++i)
+   	{
+   		activeAlarmFile << i->second;
+   	}
+
+   	activeAlarmFile.close();
+
+   	// Release lock
+	if (flock(fd,LOCK_UN)==-1)
+	{
+		throw runtime_error ("Release lock active alarm log file error");		
+	}
+	close(fd);
+}
+
+/*****************************************************************************************
+* @brief	logAlarm
+*
+* purpose:	Log Alarm in Active Alarm or Historical Alarm file
+*
+*****************************************************************************************/
+void logAlarm (const Alarm& calAlarm, const string& fileName)
+{
+        if (CALPONT_SNMP_DEBUG) {                                        
+		LoggingID lid(11);                                        
+		MessageLog ml(lid);                                        
+		Message msg;                                        
+		Message::Args args;                                        
+		args.add("logAlarm Called");                                 
+		msg.format(args);                                        
+		ml.logDebugMessage(msg);                        
+	}
+
+	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0664);
+	ofstream AlarmFile (fileName.c_str(), ios::app);
+
+	// Aquire an exclusive lock
+   	if (flock(fd,LOCK_EX) == -1) {
+		throw runtime_error ("Lock file error: " + fileName);
+   	}
+
+	AlarmFile << calAlarm;
+	AlarmFile.close();
+	
+	// Release lock
+	if (flock(fd,LOCK_UN)==-1)
+	{
+		throw runtime_error ("Release lock file error: " + fileName);		
+	}
+
+	close(fd);
+}
+
+/*****************************************************************************************
+* @brief	processAlarm
+*
+* purpose:	Process Alarm by updating Active Alarm  and Historical Alarm files
+*
+*****************************************************************************************/
+void processAlarm(const Alarm& calAlarm)
+{
+	bool logActiveFlag = (calAlarm.getState() == CLEAR ? false: true);
+	bool logHistFlag = true;
+	if (calAlarm.getState() == CLEAR )
+		logHistFlag = false;
+
+	// get active alarms
+	AlarmList alarmList;
+	SNMPManager sm;
+	sm.getActiveAlarm (alarmList);
+	
+        if (CALPONT_SNMP_DEBUG) {                                        
+		LoggingID lid(11);                                        
+		MessageLog ml(lid);                                        
+		Message msg;                                        
+		Message::Args args;                                        
+		args.add("processAlarm Called");                                 
+		msg.format(args);                                        
+		ml.logDebugMessage(msg);                        
+	}
+	
+	AlarmList::iterator i;
+   	for (i = alarmList.begin(); i != alarmList.end(); ++i)
+   	{
+		// check if matching ID
+  		if (calAlarm.getAlarmID() != (i->second).getAlarmID() ) {
+			continue;
+		}
+
+   		// check if the same fault component on same server
+   		if (calAlarm.getComponentID().compare((i->second).getComponentID()) == 0 &&
+			calAlarm.getSname().compare((i->second).getSname()) == 0)
+        {
+   			// for set alarm, don't log
+           	if (calAlarm.getState() == SET )
+           	{
+           		logActiveFlag = false;
+				logHistFlag = false;
+           		break;
+           	}
+
+           	// for clear alarm, remove the set by rewritting the file
+           	else if (calAlarm.getState() == CLEAR )
+           	{
+           		logActiveFlag = false;
+				logHistFlag = true;
+           		//cout << "size before: " << alarmList.size();
+           		alarmList.erase (i);
+           		//cout << " size after: " << alarmList.size() << endl;
+				try {
+           			rewriteActiveLog (alarmList);
+				} catch (runtime_error& e)
+				{
+					if (CALPONT_SNMP_DEBUG) {                                
+						LoggingID lid(11);                                
+						MessageLog ml(lid);                                
+						Message msg;                                
+						Message::Args args;                                
+						args.add("rewriteActiveLog error:");                                
+						args.add(e.what());                                
+						msg.format(args);                                
+						ml.logDebugMessage(msg);                                
+					}
+					exit(1);
+				}
+           		break;
+           	}
+        }
+   	} // end of for loop
+
+   	if (logActiveFlag) {
+		try {
+   			logAlarm (calAlarm, ACTIVE_ALARM_FILE);
+		} catch (runtime_error& e)
+		{
+			if (CALPONT_SNMP_DEBUG) {                                
+				LoggingID lid(11);                                
+				MessageLog ml(lid);                                
+				Message msg;                                
+				Message::Args args;                                
+				args.add("logAlarm error:");                                
+				args.add(e.what());                                
+				msg.format(args);                                
+				ml.logDebugMessage(msg);                                
+			}
+			exit(1);
+		}
+	}
+	
+   	if (logHistFlag) {
+		// log historical alarm
+		try {
+			logAlarm (calAlarm, ALARM_FILE);
+		} catch (runtime_error& e)
+		{
+			if (CALPONT_SNMP_DEBUG) {                                
+				LoggingID lid(11);                                
+				MessageLog ml(lid);                                
+				Message msg;                                
+				Message::Args args;                                
+				args.add("logAlarm error:");                                
+				args.add(e.what());                                
+				msg.format(args);                                
+				ml.logDebugMessage(msg);                                
+			}
+			exit(1);
+		}
+	}
+}
+
+/*****************************************************************************************
+* @brief	configAlarm
+*
+* purpose:	Get Config Data for Incoming alarm
+*
+*****************************************************************************************/
+void configAlarm (Alarm& calAlarm)
+{
+	int alarmID = calAlarm.getAlarmID();
+	Oam oam;
+	AlarmConfig alarmConfig;
+
+        if (CALPONT_SNMP_DEBUG) {                        
+		LoggingID lid(11);                        
+		MessageLog ml(lid);                        
+		Message msg;                        
+		Message::Args args;                        
+		args.add("configAlarm Called");                        
+		msg.format(args);                        
+		ml.logDebugMessage(msg);                
+	}
+
+	try  	
+	{ 
+  		oam.getAlarmConfig (alarmID, alarmConfig);
+  	  	
+  		calAlarm.setDesc (alarmConfig.BriefDesc);
+  		calAlarm.setSeverity (alarmConfig.Severity);
+  		calAlarm.setCtnThreshold (alarmConfig.Threshold);
+  		calAlarm.setOccurrence (alarmConfig.Occurrences);
+  		calAlarm.setLastIssueTime (alarmConfig.LastIssueTime); 
+  
+	  	// check lastIssueTime to see if it's time to clear the counter
+  		time_t now;
+  		time (&now);
+  		if ((now - calAlarm.getLastIssueTime()) >= CTN_INTERVAL)
+  		{
+  			// reset counter and set lastIssueTime
+  			oam.setAlarmConfig (alarmID, "LastIssueTime", now);
+  			oam.setAlarmConfig (alarmID, "Occurrences", 1);
+  		}
+  
+  		else
+  		{
+  			// increment counter and check the ctnThreshold
+  			calAlarm.setOccurrence (alarmConfig.Occurrences+1);
+  			oam.setAlarmConfig (alarmID, "Occurrences", calAlarm.getOccurrence());
+  		
+  			// if counter over threshold and set alarm, stop processing.
+  			if (calAlarm.getCtnThreshold() > 0 
+  				&& calAlarm.getOccurrence() >= calAlarm.getCtnThreshold()
+  				&& calAlarm.getState() == SET)
+  			{
+        			if (CALPONT_SNMP_DEBUG) {                
+					LoggingID lid(11);                
+					MessageLog ml(lid);                
+					Message msg;                
+					Message::Args args;                
+					args.add("counter over threshold and set alarm, stop processing.");                
+					args.add("threshold:");
+					args.add(calAlarm.getCtnThreshold());
+					args.add("occurances:");
+					args.add(calAlarm.getOccurrence());
+					msg.format(args);                
+					ml.logDebugMessage(msg);        
+				}
+  				return;
+  			}
+  		}
+  	} catch (runtime_error& e)
+  	{
+  		if (CALPONT_SNMP_DEBUG) {                                
+			LoggingID lid(11);                                
+			MessageLog ml(lid);                                
+			Message msg;                                
+			Message::Args args;                                
+			args.add("runtime error:");                                
+			args.add(e.what());                                
+			msg.format(args);                                
+			ml.logDebugMessage(msg);                                
+		}
+		throw;
+  	}
+  	  		
+	// process alarm
+	processAlarm (calAlarm);
 }
 
 /*****************************************************************************************
@@ -134,38 +427,6 @@ void SNMPManager::sendAlarmReport (const char* componentID, int alarmID, int sta
 	else
 		ModuleName = repModuleName;
 
-	//
-	// FILTERING: Don't process CLEAR alarms if there is no associated SET alarm
-	//
-// comment out, issues with race conditions when coded here..
-/*
-	if (state == CLEAR) {
-		// get active alarms
-		AlarmList alarmList;
-		SNMPManager sm;
-		sm.getActiveAlarm (alarmList);
-
-		bool found = false;
-		AlarmList::iterator i;
-		for (i = alarmList.begin(); i != alarmList.end(); ++i)
-		{
-			// check if matching ID
-			if (alarmID != (i->second).getAlarmID() )
-				continue;
-
-			string ScomponentID = componentID;
-			// check if the same fault component on same Module
-			if (ScomponentID.compare((i->second).getComponentID()) == 0 &&
-				ModuleName.compare((i->second).getSname()) == 0) {
-				found = true;
-				break;
-			}
-		}
-		// check is a SET alarm was found, if not return
-		if (!found)
-			return;
-	}
-*/
 	// get pid, tid info
 	int pid = getpid();	
 	int tid = gettid();	
@@ -185,13 +446,34 @@ void SNMPManager::sendAlarmReport (const char* componentID, int alarmID, int sta
 	}
 	else
 		processName = repProcessName;
+	
+	Alarm calAlarm;
+	
+	calAlarm.setAlarmID (alarmID);
+	calAlarm.setComponentID (componentID);
+	calAlarm.setState (state);
+	calAlarm.setSname (repModuleName);
+	calAlarm.setPname (processName);
+	calAlarm.setPid (pid);
+	calAlarm.setTid (tid); 
 
-	string ComponentID = componentID ? componentID : "Unknown-componentID";
-	// send Trap
-
-	string cmd = startup::StartUp::installDir() + "/bin/sendtrap " + ComponentID + " " + oam.itoa(alarmID) + " " + oam.itoa(state) + " " + ModuleName + " " + processName + " " + oam.itoa(pid) + " " + oam.itoa(tid) + " " + SNMPManager::parentOAMModuleName;
-
-	system(cmd.c_str());
+	// Get alarm configuration
+	try {
+  		configAlarm (calAlarm);
+	} catch (runtime_error& e)
+	{
+		if (CALPONT_SNMP_DEBUG) {                                
+			LoggingID lid(11);                                
+			MessageLog ml(lid);                                
+			Message msg;                                
+			Message::Args args;                                
+			args.add("configAlarm error:");                                
+			args.add(e.what());                                
+			msg.format(args);                                
+			ml.logDebugMessage(msg);                                
+		}
+		exit(1);
+	}
 
 	return;
 #endif //SKIP_SNMP
