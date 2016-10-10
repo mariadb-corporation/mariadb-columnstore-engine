@@ -22,29 +22,6 @@
 		<LogFile>off</LogFile>
 	</PROCESSCONFIG2>
 	<PROCESSCONFIG3>
-		<ProcessName>SNMPTrapDaemon</ProcessName>
-		<ModuleType>ParentOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/mariadb/columnstore/sbin/snmptrapd</ProcessLocation>
-		<ProcessArg1>/usr/local/mariadb/columnstore/sbin/snmptrapd</ProcessArg1>
-		<ProcessArg2>-M</ProcessArg2>
-                <ProcessArg3>/usr/local/mariadb/columnstore/share/snmp/mibs</ProcessArg3>
-                <ProcessArg4>-m</ProcessArg4>
-                <ProcessArg5>/usr/local/mariadb/columnstore/share/snmp/mibs/CALPONT-MIB.txt</ProcessArg5>
-                <ProcessArg6>-c</ProcessArg6>
-                <ProcessArg7>/usr/local/mariadb/columnstore/etc/snmptrapd.conf</ProcessArg7>
-                <ProcessArg8>-C</ProcessArg8>
-                <ProcessArg9>-Lf</ProcessArg9>
-                <ProcessArg10>/usr/local/mariadb/columnstore/snmptrapd.log</ProcessArg10>
-                <ProcessArg11>-p</ProcessArg11>
-                <ProcessArg12>/var/run/snmptrapd.pid</ProcessArg12>
-		<BootLaunch>1</BootLaunch>
-		<LaunchID>3</LaunchID>
-		<DepProcessName1>ProcessManager</DepProcessName1>
-		<DepModuleName1>@</DepModuleName1>
-		<RunType>SIMPLEX</RunType>
-		<LogFile>off</LogFile>
-	</PROCESSCONFIG3>
-	<PROCESSCONFIG4>
 		<ProcessName>DBRMControllerNode</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/bin/controllernode</ProcessLocation>
@@ -56,26 +33,8 @@
 		<DepModuleName1>@</DepModuleName1>
 		<RunType>SIMPLEX</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG4>
-	<PROCESSCONFIG5>
-		<ProcessName>SNMPAgent</ProcessName>
-		<ModuleType>ChildOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/mariadb/columnstore/sbin/snmpd</ProcessLocation>
-		<ProcessArg1>/usr/local/mariadb/columnstore/sbin/snmpd</ProcessArg1>
-		<ProcessArg2>-c</ProcessArg2>
-		<ProcessArg3>/usr/local/mariadb/columnstore/etc/snmpd.conf</ProcessArg3>
-		<ProcessArg4>-C</ProcessArg4>
-		<ProcessArg5>-Lf</ProcessArg5>
-		<ProcessArg6>/usr/local/mariadb/columnstore/snmpd.log</ProcessArg6>
-		<ProcessArg7>-p</ProcessArg7>
-		<ProcessArg8>/var/run/snmpd.pid</ProcessArg8>
-		<BootLaunch>0</BootLaunch>
-		<LaunchID>0</LaunchID>
-		<DepProcessName/>
-		<RunType>LOADSHARE</RunType>
-		<LogFile>off</LogFile>
-	</PROCESSCONFIG5>
-	<PROCESSCONFIG6>
+	</PROCESSCONFIG3>
+	<PROCESSCONFIG4>
 		<ProcessName>ServerMonitor</ProcessName>
 		<ModuleType>ChildOAMModule</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/bin/ServerMonitor</ProcessLocation>
@@ -85,8 +44,8 @@
 		<DepProcessName/>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG6>
-	<PROCESSCONFIG7>
+	</PROCESSCONFIG4>
+	<PROCESSCONFIG5>
 		<ProcessName>DBRMWorkerNode</ProcessName>
 		<ModuleType>ChildExtOAMModule</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/bin/workernode</ProcessLocation>
@@ -98,8 +57,8 @@
 		<DepProcessName/>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG7>
-	<PROCESSCONFIG8>
+	</PROCESSCONFIG5>
+	<PROCESSCONFIG6>
 		<ProcessName>DecomSvr</ProcessName>
 		<ModuleType>pm</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/bin/DecomSvr</ProcessLocation>
@@ -108,8 +67,8 @@
 		<DepProcessName/>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG8>
-	<PROCESSCONFIG9>
+	</PROCESSCONFIG6>
+	<PROCESSCONFIG7>
 		<ProcessName>PrimProc</ProcessName>
 		<ModuleType>pm</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/bin/PrimProc</ProcessLocation>
@@ -118,8 +77,8 @@
 		<DepProcessName/>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG9>
-	<PROCESSCONFIG10>
+	</PROCESSCONFIG7>
+	<PROCESSCONFIG8>
 		<ProcessName>ExeMgr</ProcessName>
 		<ModuleType>pm</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/bin/ExeMgr</ProcessLocation>
@@ -129,8 +88,8 @@
 		<DepModuleName1>pm*</DepModuleName1>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG10>
-	<PROCESSCONFIG11>
+	</PROCESSCONFIG8>
+	<PROCESSCONFIG9>
 		<ProcessName>WriteEngineServer</ProcessName>
 		<ModuleType>pm</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/bin/WriteEngineServer</ProcessLocation>
@@ -138,8 +97,8 @@
 		<LaunchID>40</LaunchID>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG11>
-	<PROCESSCONFIG12>
+	</PROCESSCONFIG9>
+	<PROCESSCONFIG10>
 		<ProcessName>DDLProc</ProcessName>
 		<ModuleType>um</ModuleType>
 		<ProcessLocation>$INSTALLDIR/bin/DDLProc</ProcessLocation>
@@ -153,8 +112,8 @@
 		<DepModuleName3>um*</DepModuleName3>
 		<RunType>SIMPLEX</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG12>
-	<PROCESSCONFIG13>
+	</PROCESSCONFIG10>
+	<PROCESSCONFIG11>
 		<ProcessName>DMLProc</ProcessName>
 		<ModuleType>um</ModuleType>
 		<ProcessLocation>$INSTALLDIR/bin/DMLProc</ProcessLocation>
@@ -168,8 +127,8 @@
 		<DepModuleName3>@</DepModuleName3>
 		<RunType>SIMPLEX</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG13>
-	<PROCESSCONFIG14>
+	</PROCESSCONFIG11>
+	<PROCESSCONFIG12>
 		<ProcessName>mysqld</ProcessName>
 		<ModuleType>pm</ModuleType>
 		<ProcessLocation>/usr/local/mariadb/columnstore/mysql/libexe/mysqld</ProcessLocation>
@@ -178,5 +137,5 @@
 		<DepProcessName/>
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
-	</PROCESSCONFIG14>
+	</PROCESSCONFIG12>
 </Columnstore>

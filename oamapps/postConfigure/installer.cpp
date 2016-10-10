@@ -48,12 +48,10 @@
 
 #include "liboamcpp.h"
 #include "configcpp.h"
-#include "snmpmanager.h"
 
 using namespace std;
 using namespace oam;
 using namespace config;
-using namespace snmpmanager;
 
 #include "helpers.h"
 using namespace installer;
@@ -459,23 +457,6 @@ int main(int argc, char *argv[])
 		//create associated /local/etc directory for parentOAMModuleName
 		cmd = "mkdir " + installDir + "/local/etc/" + parentOAMModuleName + " > /dev/null 2>&1";
 		system(cmd.c_str());
-
-		if (sysConfig->getConfig("Installation", "EnableSNMP") == "y")
-		{
-			//set SNMP Trap config file
-			string NMSIPAddress;
-			try {
-				NMSIPAddress = sysConfig->getConfig(SystemSection, "NMSIPAddress");
-		
-				SNMPManager sm;
-				sm.setNMSAddr(NMSIPAddress);
-			}
-			catch(...)
-			{
-				cout << "ERROR: Problem getting NMSIPAddress from MariaDB Columnstore System Configuration file" << endl;
-				exit(1);
-			}
-		}
 	}	
  
 	//Get list of configured system modules
@@ -689,9 +670,6 @@ int main(int argc, char *argv[])
 
 		cmd = "chmod 755 -R " + installDir + "/data1/systemFiles/dbrm > /dev/null 2>&1";
 		system(cmd.c_str());
-
-		SNMPManager sm;
-		sm.updateSNMPD("parentOAMIPStub", parentOAMModuleIPAddr);
 	}
 
 	string idbstartcmd = installDir + "/bin/columnstore start";
@@ -957,53 +935,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 	}
 
 	return allfound;
-}
-
-/*
- * Updated snmpd.conf with parentOAMModuleIPAddr
- */
-bool updateSNMPD(string parentOAMModuleIPAddr)
-{
-	string fileName = installDir + "/etc/snmpd.conf";
-
-	ifstream oldFile (fileName.c_str());
-	if (!oldFile) return false;
-	
-	vector <string> lines;
-	char line[200];
-	string buf;
-	string newLine;
-	string newLine1;
-	while (oldFile.getline(line, 200))
-	{
-		buf = line;
-		string::size_type pos = buf.find("parentOAMIPStub",0);
-		if (pos != string::npos)
-		{
-	        newLine = buf.substr(0, pos);
-    	    newLine.append(parentOAMModuleIPAddr);
-
-			newLine1 = buf.substr(pos+15, 200);
-			newLine.append(newLine1);
-
-			buf = newLine;
-		}
-		//output to temp file
-		lines.push_back(buf);
-	}
-	
-	oldFile.close();
-	unlink (fileName.c_str());
-   	ofstream newFile (fileName.c_str());	
-	
-	//create new file
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0666);
-	
-	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-	newFile.close();
-	
-	close(fd);
-	return true;
 }
 
 /*

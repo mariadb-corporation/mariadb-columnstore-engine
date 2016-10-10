@@ -250,18 +250,6 @@ namespace oam
         systemconfig.ParentOAMModule  = sysConfig->getConfig(Section, "ParentOAMModuleName");
         systemconfig.StandbyOAMModule  = sysConfig->getConfig(Section, "StandbyOAMModuleName");
 
-        // added by Zhixuan
-        try
-        {
-            SNMPManager sm;
-            sm.getNMSAddr (systemconfig.NMSIPAddr);
-        }
-        catch(...)
-        {
-            systemconfig.NMSIPAddr = UnassignedIpAddr;
-        }
-        // end
-
         Section = "SessionManager";
 
         systemconfig.MaxConcurrentTransactions = strtol(sysConfig->getConfig(Section, "MaxConcurrentTransactions").c_str(), 0, 0);
@@ -857,24 +845,7 @@ namespace oam
 
     void Oam::getSystemConfig(const std::string&name, std::string& value)
     {
-        // added by Zhixuan
-        // special handle to NMSIPAddr, which is in snmpdx.conf file
-        if (name.compare("NMSIPAddr") == 0)
-        {
-            try
-            {
-                SNMPManager sm;
-                sm.getNMSAddr (value);
-                return;
-            }
-            catch(...)
-            {
-                // error with SM API
-                exceptionControl("getSystemConfig", API_FAILURE);
-            }
-        }
-
-	
+ 	
         Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
 
         // get string variables
@@ -982,8 +953,6 @@ namespace oam
 
     void Oam::setSystemConfig(const std::string name, const std::string value)
     {
-        // added by Zhixuan
-        // special handle to SNMP config, which is in snmpdx.conf file
         string mem = "Mem";
         string disk = "Disk";
         string swap = "Swap";
@@ -991,21 +960,6 @@ namespace oam
         string critical = "Critical";
         string major = "Major";
         string minor = "Minor";
-
-        if (name.find("NMSIPAddr") != string::npos)
-        {
-            try
-            {
-                SNMPManager sm;
-                sm.setNMSAddr (value);
-                return;
-            }
-            catch(...)
-            {
-                // error with SM API
-                exceptionControl("setSystemConfig", API_FAILURE);
-            }
-        }
 
 	
         Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());

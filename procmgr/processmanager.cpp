@@ -8575,17 +8575,6 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 			break;
 	}
 
-	// stop local SNMPTrapDaemon
-	string EnableSNMP = "y";
-	try {
-		oam.getSystemConfig("EnableSNMP", EnableSNMP);
-	}
-	catch(...)
-	{}
-
-	if ( EnableSNMP == "y" )
-		stopProcess(config.moduleName(), "SNMPTrapDaemon", oam::FORCEFUL, true);
-
 	// start processmanager on new active node
 	startProcess(newActiveModuleName, "ProcessManager", oam::FORCEFUL);
 
