@@ -49,7 +49,6 @@ SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 SET (INSTALL_ENGINE "/usr/local/mariadb/columnstore")
 
 INCLUDE (configureEngine.cmake)
-INCLUDE (FindNetSNMP.cmake)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum @ONLY IMMEDIATE)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
@@ -69,10 +68,6 @@ INCLUDE (FindLibXml2)
 
 if (NOT LIBXML2_FOUND)
     MESSAGE(FATAL_ERROR "Could not find a usable libxml2 development environment!")
-endif()
-
-if (NOT NETSNMP_FOUND)
-    MESSAGE(FATAL_ERROR "Could not find net-snmp!")
 endif()
 
 INCLUDE (FindJeMalloc.cmake)

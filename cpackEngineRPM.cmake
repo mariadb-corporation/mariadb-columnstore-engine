@@ -81,11 +81,11 @@ IF (EXISTS "/etc/redhat-release")
     set(REDHAT_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "net-snmp-libs")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 else ()
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "net-snmp-libs")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs")
 endif()
 
 SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "mariadb-columnstore-libs")
@@ -202,63 +202,6 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/mycnfUpgrade"
 "/usr/local/mariadb/columnstore/bin/getMySQLpw"
 "/usr/local/mariadb/columnstore/bin/columnstore.conf"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/AGENTX-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/CALPONT-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/DISMAN-EVENT-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/DISMAN-SCHEDULE-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/DISMAN-SCRIPT-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/EtherLike-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/HCNUM-TC.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/HOST-RESOURCES-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/HOST-RESOURCES-TYPES.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IANAifType-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IANA-LANGUAGE-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IANA-RTPROTO-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IF-INVERTED-STACK-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IF-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/INET-ADDRESS-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IP-FORWARD-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IP-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-ICMP-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-TCP-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-TC.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/IPV6-UDP-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-AGENT-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-EXAMPLES-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-EXTEND-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/NET-SNMP-TC.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/NOTIFICATION-LOG-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/RFC1155-SMI.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/RFC1213-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/RFC-1215.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/RMON-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SMUX-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-COMMUNITY-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-FRAMEWORK-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-MPD-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-NOTIFICATION-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-PROXY-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-TARGET-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-USER-BASED-SM-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-USM-AES-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-USM-DH-OBJECTS-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-CONF.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-SMI.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-TC.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMPv2-TM.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/SNMP-VIEW-BASED-ACM-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/TCP-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/TRANSPORT-ADDRESS-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-DEMO-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-DISKIO-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-DLMOD-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-IPFWACC-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/UCD-SNMP-MIB.txt"
-"/usr/local/mariadb/columnstore/share/snmp/mibs/UDP-MIB.txt"
 "/usr/local/mariadb/columnstore/post/functions"
 "/usr/local/mariadb/columnstore/post/test-001.sh"
 "/usr/local/mariadb/columnstore/post/test-002.sh"
