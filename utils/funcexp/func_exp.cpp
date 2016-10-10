@@ -33,6 +33,11 @@ using namespace execplan;
 #include "rowgroup.h"
 using namespace rowgroup;
 
+#include "errorcodes.h"
+#include "idberrorinfo.h"
+#include "errorids.h"
+using namespace logging;
+
 namespace funcexp
 {
 
@@ -58,7 +63,14 @@ double Func_exp::getDoubleVal(Row& row,
 		if (errno == ERANGE)  // display NULL for out range value
 		{
 			if (x > 0)
+			{
 				isNull = true;
+		        Message::Args args;
+		        args.add("exp");
+		        args.add(x);
+		        unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+		        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+			}
 			else
 				ret = 0.0;
 		}
