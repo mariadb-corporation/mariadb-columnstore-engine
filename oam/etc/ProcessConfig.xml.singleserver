@@ -24,8 +24,8 @@
 	<PROCESSCONFIG3>
 		<ProcessName>SNMPTrapDaemon</ProcessName>
 		<ModuleType>ParentOAMModule</ModuleType>
-		<ProcessLocation>/usr/local/mariadb/columnstore/sbin/snmptrapd</ProcessLocation>
-		<ProcessArg1>/usr/local/mariadb/columnstore/sbin/snmptrapd</ProcessArg1>
+        <ProcessLocation>/sbin/snmptrapd</ProcessLocation>
+		<ProcessArg1>/sbin/snmptrapd</ProcessArg1>
 		<ProcessArg2>-M</ProcessArg2>
                 <ProcessArg3>/usr/local/mariadb/columnstore/share/snmp/mibs</ProcessArg3>
                 <ProcessArg4>-m</ProcessArg4>
