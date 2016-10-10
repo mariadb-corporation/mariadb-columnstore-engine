@@ -47,10 +47,10 @@
 #include "messagelog.h"
 #include "messageobj.h"
 #include "loggingid.h"
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 #include "socketclosed.h"
 #include "shmkeys.h"
-#include "snmpglobal.h"
+#include "alarmglobal.h"
 #
 
 

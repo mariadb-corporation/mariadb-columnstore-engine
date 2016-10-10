@@ -8,7 +8,7 @@ set(oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
 
 add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
 
-target_link_libraries(oamcpp ${NETSNMP_LIBRARIES})
+target_link_libraries(oamcpp )
 
 set_target_properties(oamcpp PROPERTIES VERSION 1.0.0 SOVERSION 1)
 

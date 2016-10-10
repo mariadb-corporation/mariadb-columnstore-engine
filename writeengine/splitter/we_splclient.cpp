@@ -49,8 +49,8 @@ using namespace messageqcpp;
 #include "liboamcpp.h"
 using namespace oam;
 
-#include "snmpmanager.h"
-using namespace snmpmanager;
+#include "alarmmanager.h"
+using namespace alarmmanager;
 
 #include "we_sdhandler.h"
 #include "we_splclient.h"
@@ -406,7 +406,7 @@ void WESplClient::onDisconnect()
 	try
 	{
 	// send alarm
-	SNMPManager alarmMgr;
+	ALARMManager alarmMgr;
 	//std::string alarmItem = sin_addr2String(fClnt->serv_addr().sin_addr);
 	std::string alarmItem = fClnt->addr2String();
 	alarmItem.append(" WriteEngineServer");

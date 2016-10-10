@@ -31,7 +31,7 @@
 
 #include "liboamcpp.h"
 #include "shmkeys.h"
-#include "snmpglobal.h"
+#include "alarmglobal.h"
 #include "socketclosed.h"
 
 namespace processmonitor {

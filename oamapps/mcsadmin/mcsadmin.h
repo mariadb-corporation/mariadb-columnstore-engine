@@ -47,8 +47,8 @@
 
 #include "liboamcpp.h"
 #include "configcpp.h"
-#include "snmpmanager.h"
-#include "snmpglobal.h"
+#include "alarmmanager.h"
+#include "alarmglobal.h"
 #include "calpontsystemcatalog.h"
 #include "brmtypes.h"
 

@@ -72,7 +72,7 @@ static const std::string optim("Build is "
 
 namespace fs = boost::filesystem;
 
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace config;
 using namespace std;
 using namespace messageqcpp;
@@ -2592,7 +2592,7 @@ namespace oam
 
             if (OAMParentModuleFlag) {
                 //call getAlarm API directly
-                SNMPManager sm;
+                ALARMManager sm;
                 sm.getActiveAlarm(activeAlarm);
                 return;
             }
@@ -2634,7 +2634,7 @@ namespace oam
 
             if (OAMParentModuleFlag) {
                 //call getAlarm API directly
-                SNMPManager sm;
+                ALARMManager sm;
                 sm.getAlarm(date, alarmlist);
                 return;
             }
@@ -2669,7 +2669,7 @@ namespace oam
 
             if (OAMParentModuleFlag) {
                 //call getAlarm API directly
-                SNMPManager sm;
+                ALARMManager sm;
                 sm.getActiveAlarm(activeAlarm);
             }
             else if (UseHdfs > 0)

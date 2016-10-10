@@ -25,7 +25,7 @@
 
 using namespace std;
 using namespace oam;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace logging;
 
 
@@ -216,7 +216,7 @@ void sendAlarm(string alarmItem, ALARMS alarmID, int action, float sensorValue)
 	// check if Alarm is already active, don't resend
 	if ( !( oam.checkActiveAlarm(alarmID, serverName, alarmItem)) ) {
 
-		SNMPManager alarmMgr;
+		ALARMManager alarmMgr;
 		// send alarm
 		alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 
@@ -291,7 +291,7 @@ void checkAlarm(string alarmItem, ALARMS alarmID)
 ******************************************************************************************/
 void clearAlarm(string alarmItem, ALARMS alarmID)
 {
-	SNMPManager alarmMgr;
+	ALARMManager alarmMgr;
 	alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, CLEAR);
 
 	//Log this event 

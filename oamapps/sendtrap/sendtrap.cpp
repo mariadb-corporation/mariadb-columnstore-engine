@@ -20,7 +20,7 @@
 * Author: Zhixuan Zhu
 ******************************************************************************************/
 #define SNMPMANAGER_DLLEXPORT
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 #undef SNMPMANAGER_DLLEXPORT
 
 #include <cstdio>
@@ -29,14 +29,14 @@
 #include <iterator>
 
 #include "messagequeue.h"
-#include "snmpglobal.h"
+#include "alarmglobal.h"
 #include "liboamcpp.h"
 
 using namespace std;
 using namespace oam;
 using namespace messageqcpp;
 using namespace logging;
-using namespace snmpmanager;
+using namespace alarmmanager;
 
 
 /******************************************************************************************

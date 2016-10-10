@@ -34,7 +34,7 @@ using namespace cacheutils;
 using namespace std;
 using namespace oam;
 using namespace messageqcpp;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace logging;
 using namespace config;
 
@@ -2713,7 +2713,7 @@ void 	sendAlarmThread(sendAlarmInfo_t* t)
 {
 	MonitorLog log;
 	Oam oam;
-	SNMPManager alarmMgr;
+	ALARMManager alarmMgr;
 
 	pthread_mutex_lock(&ALARM_LOCK);
 

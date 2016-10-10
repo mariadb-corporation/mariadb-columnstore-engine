@@ -46,8 +46,8 @@ using namespace config;
 
 //-----
 
-#include "snmpmanager.h"
-using namespace snmpmanager;
+#include "alarmmanager.h"
+using namespace alarmmanager;
 
 #include "messagequeue.h"
 #include "bytestream.h"

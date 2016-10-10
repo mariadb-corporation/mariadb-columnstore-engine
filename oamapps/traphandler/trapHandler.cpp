@@ -12,9 +12,9 @@
 #include <stdexcept>
 using namespace std;
 
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 #include "alarm.h"
-using namespace snmpmanager;
+using namespace alarmmanager;
 #include "liboamcpp.h"
 using namespace oam;
 #include "messagelog.h"
@@ -155,7 +155,7 @@ void processAlarm(const Alarm& calAlarm)
 
 	// get active alarms
 	AlarmList alarmList;
-	SNMPManager sm;
+	ALARMManager sm;
 	sm.getActiveAlarm (alarmList);
 	
         if (::DEBUG) {                                        

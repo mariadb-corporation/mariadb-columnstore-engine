@@ -32,11 +32,11 @@
 #include "messagelog.h"
 #include "messageobj.h"
 #include "loggingid.h"
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 
 using namespace std;
 using namespace oam;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace logging;
 
 /**
@@ -174,7 +174,7 @@ int main (int argc, char** argv)
 void sendAlarm(string alarmItem, ALARMS alarmID, int action)
 {
 	Oam oam;
-	SNMPManager alarmMgr;
+	ALARMManager alarmMgr;
 	// send alarm
 	alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 

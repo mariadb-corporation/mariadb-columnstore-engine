@@ -31,7 +31,7 @@ using namespace messageqcpp;
 using namespace processmonitor;
 using namespace oam;
 using namespace logging;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace config;
 using namespace idbdatafile;
 
