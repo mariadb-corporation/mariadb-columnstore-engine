@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -21,20 +21,20 @@
 /**
  * @file
  */
-#ifndef SNMP_MANAGER_H
-#define SNMP_MANAGER_H
+#ifndef ALARM_MANAGER_H
+#define ALARM_MANAGER_H
 
 #include <string>
 #include <map>
 #include "alarm.h"
 
-#if defined(_MSC_VER) && defined(xxxSNMPMANAGER_DLLEXPORT)
+#if defined(_MSC_VER) && defined(xxxALARMMANAGER_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
 #define EXPORT
 #endif
 
-namespace snmpmanager {
+namespace alarmmanager {
 
 /** @brief type define
  *
@@ -45,26 +45,22 @@ typedef std::multimap<int, Alarm> AlarmList;
 /** @brief constant define
  *
  */
-const std::string MASTER_AGENT = "MASTER";
-const std::string SUB_AGENT = "SUB";
-const std::string TRAPD = "TRAPD";
 
-
-/** @brief SNMPManager class interface
+/** @brief ALARMManager class interface
  *
  */
-class SNMPManager
+class ALARMManager
 {
 public:
 	/** @brief default ctor
 	 *
 	 */
-	EXPORT SNMPManager();
+	EXPORT ALARMManager();
 
 	/** @brief dtor
 	 *
 	 */
-	EXPORT virtual ~SNMPManager();
+	EXPORT virtual ~ALARMManager();
 	
 	/** @brief send an alarm
 	 *
@@ -98,73 +94,18 @@ public:
 	 *
 	 * @param addr the reference to store addr
 	 */
-	EXPORT void getNMSAddr (std::string& addr);
-	
-	/** @brief set NMS address for trapd
-	 *
-	 * @param addr the changed value
-	 */
-	EXPORT void setNMSAddr (const std::string addr);
-	
-	/** @brief get SNMP configuration in subagent config file
-	 *
-	 * @param ModuleName the Module the file resides on
-	 * @param agentName the SNMP agent config file it resides in
-	 * @param paramName the parameter to change
-	 * @param value the reference to store value
-	 */
-	EXPORT void getSNMPConfig (const std::string ModuleName, 
-                        const std::string agentName, 
-                        const std::string paramName, 
-                        std::string& value);
-
-    /** @brief set SNMP configuration in subagent config file
-	 *
-	 * @param ModuleName the Module the file resides on
-	 * @param agentName the SNMP agent config file it resides in
-	 * @param paramName the paramerter name to config
-	 * @param value the changed value
-	 */
- 	EXPORT void setSNMPConfig (const std::string ModuleName, 
-                        const std::string agentName, 
- 	                    const std::string paramName, 
- 	                    const std::string value);
-	
-    /** @brief set SNMP Module Name in subagent config file
-	 *
-	 */
- 	EXPORT void setSNMPModuleName ();
-
-    /** @brief updates Parent OAm IP address in snmpd.conf file
-	 *
-	 */
-	EXPORT void updateSNMPD(std::string oldIPAddr, std::string parentOAMModuleIPAddr);
 
 private:
 	/** @brief copy ctor. keep private for now
 	 *
 	 */
-	SNMPManager(const SNMPManager& rhs);
+	ALARMManager(const ALARMManager& rhs);
 	
 	/** @brief assign op. keep private for now
 	 *
 	 */
-	SNMPManager& operator=(const SNMPManager& rhs);
+	ALARMManager& operator=(const ALARMManager& rhs);
 	
-	/** @brief make agent configuration file name
-	 *
-	 * @param agentName the snmp agent to change config
-	 * @param fileName the reference to store the file name
-	 */
-	void makeFileName (const std::string agentName, std::string& fileName);
-
-	/** @brief make agent configuration file name
-	 *
-	 * @param agentName the snmp agent to change config
-	 * @param processName the process name for agent
-	 */
-	void makeProcessName (const std::string agentName, std::string& processName);
-
 	/**
 	 * this is to avoid running create_trap_session more than once.
 	 */

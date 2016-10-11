@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+ * Copyright (C) 2016 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -25,7 +26,7 @@
 
 using namespace std;
 using namespace oam;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace logging;
 using namespace servermonitor;
 //using namespace procheartbeat;

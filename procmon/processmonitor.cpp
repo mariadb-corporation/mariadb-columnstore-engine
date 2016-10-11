@@ -34,7 +34,7 @@ using namespace cacheutils;
 using namespace std;
 using namespace oam;
 using namespace messageqcpp;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace logging;
 using namespace config;
 
@@ -1546,27 +1546,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			break;
 		}
 
-		case UPDATESNMPD:
-		{
-			log.writeLog(__LINE__,  "MSG RECEIVED: Update snmpd.conf file ");
-
-			string oldIPAddr;
-			string newIPAddr;
-
-			msg >> oldIPAddr;
-			msg >> newIPAddr;
-
-			//update snmpd.conf
-			SNMPManager sm;
-			sm.updateSNMPD(oldIPAddr, newIPAddr);
-		
-			//reinit SNMPAgent
-			system("pkill -HUP snmpd");
-
-			log.writeLog(__LINE__, "UPDATESNMPD: ACK back to ProcMgr");
-
-			break;
-		}
 
 		case RUNUPGRADE:
 		{
@@ -2252,16 +2231,6 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 		}//end of FOR
 	}
 
-	//Don't start certain processes if local module isn't Parent OAM PM
-	if ( processName == "SNMPTrapDaemon" || 
-			processName == "DBRMControllerNode" ) {
-		if (!gOAMParentModuleFlag) {
-			log.writeLog(__LINE__, "Fail Restoral, not on Parent OAM module", LOG_TYPE_ERROR);
-			//local PM doesn't have the read/write mount
-			return oam::API_MINOR_FAILURE;
-		}
-	}
-
 	for (i=0; i < MAXARGUMENTS - 1; i++)
 	{
 		if (arg_list[i].length() == 0)
@@ -2456,13 +2425,6 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 	//sleep, give time for INIT state to be update, prevent race condition with ACTIVE
 	sleep(1);
 
-	//delete any old pid file for snmp processes
-	if (processLocation.find("snmp") != string::npos)
-	{
-		string pidFileLocation = argList[numAugs-1];
-		unlink (pidFileLocation.c_str());
-	}
-
 	//check and setup for logfile
 	time_t now;
 	now = time(NULL);
@@ -2521,60 +2483,15 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 			updateProcessInfo(processName, oam::ACTIVE, newProcessID);
 		}
 
-		if (processLocation.find("snmp") != string::npos)
-		{	// snmp app is special...........
-			// wait for up to 30 seconds for the pid file to be created
+		//FYI - NEEDS TO STAY HERE TO HAVE newProcessID
 
-			//get snmp app pid which was stored when app was launched
-			//the location is the last augument
-			// open sometimes fail, so put in a retry loop
+		//record the process information into processList 
+		config.buildList(processModuleType, processName, processLocation, arg_list, 
+							launchID, newProcessID, initType, BootLaunch, RunType,
+							DepProcessName, DepModuleName, LogFile);
 
-			newProcessID = 0;
-			string pidFileLocation = argList[numAugs-1];
-
-			int i;
-			for (i=0; i < 30 ; i++)
-			{
-				sleep(1);
-				ifstream f(pidFileLocation.c_str(), ios::in);
-					
-				if (f.good())
-				{	
-					// store pid from PID file
-					f >> newProcessID;
-					//retry if pid is 0
-					if (newProcessID == 0)
-						continue;
-
-					break;
-				}
-			}
-			if (i == 30) {
-				log.writeLog(__LINE__, "FAILURE: no valid PID stored in " + pidFileLocation, LOG_TYPE_ERROR);
-				return oam::API_MINOR_FAILURE;
-			}
-
-			//record the process information into processList 
-			config.buildList(processModuleType, processName, processLocation, arg_list, 
-								launchID, newProcessID, oam::ACTIVE, BootLaunch, RunType,
-								DepProcessName, DepModuleName, LogFile);
-	
-			//Update Process Status: Mark Process oam::ACTIVE state 
-			updateProcessInfo(processName, oam::ACTIVE, newProcessID);
-
-		}
-		else
-		{
-			//FYI - NEEDS TO STAY HERE TO HAVE newProcessID
-	
-			//record the process information into processList 
-			config.buildList(processModuleType, processName, processLocation, arg_list, 
-								launchID, newProcessID, initType, BootLaunch, RunType,
-								DepProcessName, DepModuleName, LogFile);
-	
-			//Update Process Status: Update PID
-			updateProcessInfo(processName, PID_UPDATE, newProcessID);
-		}
+		//Update Process Status: Update PID
+		updateProcessInfo(processName, PID_UPDATE, newProcessID);
 
 		log.writeLog(__LINE__, processName + " PID is " + oam.itoa(newProcessID), LOG_TYPE_DEBUG);
 
@@ -2619,8 +2536,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 		}
 
  		// open STDIN, STDOUT & STDERR for trapDaemon and DecomSvr
-		if (processName == "SNMPTrapDaemon" ||
-			processName == "DecomSvr" )
+		if (processName == "DecomSvr" )
 		{
 			open("/dev/null", O_RDONLY); //Should be fd 0
 			open("/dev/null", O_WRONLY); //Should be fd 1
@@ -2690,7 +2606,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 /******************************************************************************************
 * @brief	reinitProcess
 *
-* purpose:	re-Init a process, an SNMP agent that will go re-read it's config file
+* purpose:	re-Init a process
 *
 ******************************************************************************************/
 int ProcessMonitor::reinitProcess(pid_t processID, std::string processName, int actionIndicator)
@@ -2797,7 +2713,7 @@ void 	sendAlarmThread(sendAlarmInfo_t* t)
 {
 	MonitorLog log;
 	Oam oam;
-	SNMPManager alarmMgr;
+	ALARMManager alarmMgr;
 
 	pthread_mutex_lock(&ALARM_LOCK);
 

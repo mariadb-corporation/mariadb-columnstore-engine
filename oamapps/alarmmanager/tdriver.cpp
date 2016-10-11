@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -18,22 +18,21 @@
 #include <cstring>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 #include "liboamcpp.h"
 
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace oam;
 using namespace messageqcpp;
 using namespace std;
 
-class SNMPManagerTest : public CppUnit::TestFixture {
+class ALARMManagerTest : public CppUnit::TestFixture {
 
-CPPUNIT_TEST_SUITE( SNMPManagerTest );
+CPPUNIT_TEST_SUITE( ALARMManagerTest );
 
 CPPUNIT_TEST( test1 );
 CPPUNIT_TEST( test2 );
 //CPPUNIT_TEST( test3 );	// requires ProcMgr to be running
-CPPUNIT_TEST( test4 );
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -48,7 +47,7 @@ public:
 
 	void test1() {
 		// set alarm
-		SNMPManager sm;
+		ALARMManager sm;
 		sm.sendAlarmReport("EC-DISK-1", 4, SET);
 		AlarmList activeAlarms;
 		sm.getActiveAlarm(activeAlarms);
@@ -86,7 +85,7 @@ public:
 	
 	void test3()
 	{
-		SNMPManager sm;
+		ALARMManager sm;
 		string value;
 		sm.setSNMPConfig ("atlanta", SUB_AGENT, "DISK_CRITICAL", "2000000");
 		sm.getSNMPConfig ("atlanta", SUB_AGENT, "DISK_CRITICAL", value);
@@ -102,16 +101,9 @@ public:
 		cout << "NMS address: " << value << endl;
 	}
 
-	void test4() {
-		// set Server name in snmpdx.conf
-		SNMPManager sm;
-		sm.setSNMPModuleName();
-	}
-
-
 }; 
 
-CPPUNIT_TEST_SUITE_REGISTRATION( SNMPManagerTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( ALARMManagerTest );
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>

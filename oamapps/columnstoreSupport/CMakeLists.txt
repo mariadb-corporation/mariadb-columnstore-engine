@@ -8,7 +8,7 @@ set(columnstoreSupport_SRCS columnstoreSupport.cpp)
 
 add_executable(columnstoreSupport ${columnstoreSupport_SRCS})
 
-target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} readline ncurses ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
+target_link_libraries(columnstoreSupport ${ENGINE_LDFLAGS} readline ncurses  ${ENGINE_EXEC_LIBS})
 
 install(TARGETS columnstoreSupport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

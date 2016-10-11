@@ -31,8 +31,8 @@
 #include "boost/progress.hpp"
 using namespace std;
 
-#include "snmpglobal.h"
-#include "snmpmanager.h"
+#include "alarmglobal.h"
+#include "alarmmanager.h"
 #include "liboamcpp.h"
 
 #include <boost/scoped_ptr.hpp>
@@ -132,8 +132,8 @@ void rollbackAll(DBRM* dbrm)
 {
     Oam oam;
 	try {
-		snmpmanager::SNMPManager alarmMgr; 
-		alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, snmpmanager::CLEAR); 
+		alarmmanager::ALARMManager alarmMgr; 
+		alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, alarmmanager::CLEAR); 
 	}
 	catch (...)
 	{}
@@ -270,8 +270,8 @@ void rollbackAll(DBRM* dbrm)
 				rc = dbrm->setReadOnly(true);
 				//Raise an alarm
 				try { 
-                    snmpmanager::SNMPManager alarmMgr; 
-                    alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, snmpmanager::SET); 
+                    alarmmanager::ALARMManager alarmMgr; 
+                    alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, alarmmanager::SET); 
                 }
                 catch (...)
                 {}
@@ -396,8 +396,8 @@ void rollbackAll(DBRM* dbrm)
 				rc = dbrm->setReadOnly(true);
 				//Raise an alarm
 				try { 
-                    snmpmanager::SNMPManager alarmMgr; 
-                    alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, snmpmanager::SET); 
+                    alarmmanager::ALARMManager alarmMgr; 
+                    alarmMgr.sendAlarmReport("System", oam::ROLLBACK_FAILURE, alarmmanager::SET); 
                 }
                 catch (...)
                 {}

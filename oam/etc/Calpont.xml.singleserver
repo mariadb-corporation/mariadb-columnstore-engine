@@ -438,7 +438,6 @@
 		<rpw>unassigned</rpw>
 		<Cloud>unassigned</Cloud>
 		<EEPackageType>rpm</EEPackageType>
-		<EnableSNMP>y</EnableSNMP>
 		<AmazonAccessKey>unassigned</AmazonAccessKey>
 		<AmazonSecretKey>unassigned</AmazonSecretKey>
 		<AmazonRegion>us-east-1</AmazonRegion>

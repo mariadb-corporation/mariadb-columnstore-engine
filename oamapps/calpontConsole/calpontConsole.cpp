@@ -33,7 +33,7 @@ extern int h_errno;
 #include "dbrm.h"
 namespace fs = boost::filesystem;
 
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace std;
 using namespace oam;
 using namespace config;
@@ -2852,7 +2852,7 @@ int processCommand(string* arguments)
 						}
 					}
 
-	                SNMPManager aManager;
+	                ALARMManager aManager;
 					aManager.sendAlarmReport((i->second).getComponentID().c_str(),
 												(i->second).getAlarmID(),
 												CLEAR,

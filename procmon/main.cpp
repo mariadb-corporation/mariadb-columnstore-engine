@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@ using namespace messageqcpp;
 using namespace processmonitor;
 using namespace oam;
 using namespace logging;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace config;
 using namespace idbdatafile;
 

@@ -36,7 +36,7 @@ using namespace processmanager;
 using namespace messageqcpp;
 using namespace oam;
 using namespace logging;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace config;
 
 pthread_mutex_t STATUS_LOCK;
@@ -349,7 +349,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 	ByteStream ackMsg;
 	ByteStream::byte status = 0;
 
-	SNMPManager aManager;
+	ALARMManager aManager;
 	SystemModuleTypeConfig systemmoduletypeconfig;
 	SystemProcessConfig systemprocessconfig;
 
@@ -2949,7 +2949,7 @@ int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::stri
 
 	if ( type == GETALARMDATA ) {
 		try {
-			SNMPManager sm;
+			ALARMManager sm;
 			sm.getAlarm(date, alarmList);
 		}
 		catch(...)
@@ -2968,7 +2968,7 @@ int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::stri
 	else
 	{
 		try {
-	        SNMPManager sm;
+	        ALARMManager sm;
 			sm.getActiveAlarm(alarmList);
 		}
 		catch(...)
@@ -3066,7 +3066,7 @@ int ProcessManager::startModule(string target, messageqcpp::ByteStream::byte act
 		log.writeLog(__LINE__, target + " module is started by request.", LOG_TYPE_DEBUG);
 	
 		//clear an alarm 
-		SNMPManager aManager;
+		ALARMManager aManager;
 		aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, CLEAR);
 		aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, CLEAR);
 	}
@@ -3114,7 +3114,7 @@ int ProcessManager::stopModule(string target, ByteStream::byte actionIndicator, 
 			setModuleState(target, oam::MAN_OFFLINE);
 		
 			//Issue an alarm 
-			SNMPManager aManager;				
+			ALARMManager aManager;				
 			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
 		}
 		else
@@ -3122,7 +3122,7 @@ int ProcessManager::stopModule(string target, ByteStream::byte actionIndicator, 
 			setModuleState(target, oam::AUTO_OFFLINE);
 		
 			//Issue an alarm 
-			SNMPManager aManager;				
+			ALARMManager aManager;				
 			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
 		}
 	}
@@ -3152,7 +3152,7 @@ int ProcessManager::stopModule(string target, ByteStream::byte actionIndicator, 
 //				setModuleState(target, oam::MAN_OFFLINE);
 			
 				//Issue an alarm 
-				SNMPManager aManager;				
+				ALARMManager aManager;				
 				aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
 			}
 			else
@@ -3160,7 +3160,7 @@ int ProcessManager::stopModule(string target, ByteStream::byte actionIndicator, 
 //				setModuleState(target, oam::AUTO_OFFLINE);
 			
 				//Issue an alarm 
-				SNMPManager aManager;
+				ALARMManager aManager;
 				aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
 			}
 		}
@@ -3206,7 +3206,7 @@ int ProcessManager::shutdownModule(string target, ByteStream::byte actionIndicat
 			setProcessStates(target, oam::MAN_OFFLINE);
 
 			//Issue an alarm 
-			SNMPManager aManager;				
+			ALARMManager aManager;				
 			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
 		}
 		else
@@ -3217,7 +3217,7 @@ int ProcessManager::shutdownModule(string target, ByteStream::byte actionIndicat
 			setProcessStates(target, oam::AUTO_OFFLINE);
 
 			//Issue an alarm 
-			SNMPManager aManager;				
+			ALARMManager aManager;				
 			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
 		}
 	}
@@ -3716,7 +3716,7 @@ void ProcessManager::setSystemState(uint16_t state)
 {
 	ProcessLog log;
 	Oam oam;
-	SNMPManager aManager;
+	ALARMManager aManager;
 	Configuration config;
 
 	log.writeLog(__LINE__, "Set System State = " + oamState[state], LOG_TYPE_DEBUG);
@@ -6305,7 +6305,7 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	ProcessManager processManager(config, log);
 	Oam oam;
 	SystemModuleTypeConfig systemmoduletypeconfig;
-	SNMPManager aManager;
+	ALARMManager aManager;
 	int status = API_SUCCESS;
 	bool exitThread = false;
 	int exitThreadStatus = oam::API_SUCCESS;
@@ -6954,7 +6954,7 @@ void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	ProcessManager processManager(config, log);
 	Oam oam;
 	SystemModuleTypeConfig systemmoduletypeconfig;
-	SNMPManager aManager;
+	ALARMManager aManager;
 	int status = API_SUCCESS;
 	bool exitThread = false;
 	int exitThreadStatus = oam::API_SUCCESS;
@@ -7705,7 +7705,7 @@ int ProcessManager::updateWorkerNodeconfig()
 ******************************************************************************************/
 void ProcessManager::clearModuleAlarms(std::string moduleName)
 {
-	SNMPManager aManager;
+	ALARMManager aManager;
 	AlarmList alarmList;
 	aManager.getActiveAlarm (alarmList);
 
@@ -7734,7 +7734,7 @@ void ProcessManager::clearModuleAlarms(std::string moduleName)
 ******************************************************************************************/
 void ProcessManager::clearNICAlarms(std::string hostName)
 {
-	SNMPManager aManager;
+	ALARMManager aManager;
 	AlarmList alarmList;
 	aManager.getActiveAlarm (alarmList);
 
@@ -8406,7 +8406,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 	ProcessManager processManager(config, log);
 	Oam oam;
 	int returnStatus = oam::API_SUCCESS;
-	SNMPManager aManager;
+	ALARMManager aManager;
 
 	log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
 
@@ -8574,17 +8574,6 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 		if ( returnStatus == oam::API_SUCCESS)
 			break;
 	}
-
-	// stop local SNMPTrapDaemon
-	string EnableSNMP = "y";
-	try {
-		oam.getSystemConfig("EnableSNMP", EnableSNMP);
-	}
-	catch(...)
-	{}
-
-	if ( EnableSNMP == "y" )
-		stopProcess(config.moduleName(), "SNMPTrapDaemon", oam::FORCEFUL, true);
 
 	// start processmanager on new active node
 	startProcess(newActiveModuleName, "ProcessManager", oam::FORCEFUL);
@@ -9195,7 +9184,7 @@ int ProcessManager::OAMParentModuleChange()
 		startProcess(config.moduleName(), "SNMPTrapDaemon", oam::GRACEFUL);
 
 	// set alarm
-	SNMPManager aManager;
+	ALARMManager aManager;
 	aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, SET);
 
 	//set down Active module to disable state

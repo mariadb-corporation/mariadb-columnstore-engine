@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -28,9 +28,9 @@
 
 #include <string>
 #include <stdint.h>
-#include "snmpglobal.h"
+#include "alarmglobal.h"
 
-namespace snmpmanager {
+namespace alarmmanager {
 
 /** @brief Alarm class interface
  *

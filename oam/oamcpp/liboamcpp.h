@@ -42,7 +42,7 @@
 #include "bytestream.h"
 #include "configcpp.h"
 #include "boost/tuple/tuple.hpp"
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 #include "dbrm.h"
 
 #include "messagequeue.h"
@@ -556,7 +556,6 @@ namespace oam
 	GETDBRMDATA,
 	GETPARENTOAMMODULE,
 	OAMPARENTCOLD,
-	UPDATESNMPD,
 	GETALARMDATA,
 	GETACTIVEALARMDATA,
 	RUNUPGRADE,
@@ -1922,7 +1921,7 @@ namespace oam
              * Get's the Active Alarm list for the Calpont Database Appliance
              * @param activealarm Returned Active Alarm list Structure
              */
-            EXPORT void getActiveAlarms(snmpmanager::AlarmList& activealarm);
+            EXPORT void getActiveAlarms(alarmmanager::AlarmList& activealarm);
 
             /** @brief Get Historical Alarms
              *
@@ -1930,7 +1929,7 @@ namespace oam
 			 * @param date date of alarms, "today" or date in YYYYMMDD
              * @param activealarm Returned Alarm list Structure
              */
-            EXPORT void getAlarms(std::string date, snmpmanager::AlarmList& alarm);
+            EXPORT void getAlarms(std::string date, alarmmanager::AlarmList& alarm);
 
             /** @brief check Active Alarm
              *
@@ -1946,7 +1945,7 @@ namespace oam
              * Read the Active Alarm list from the HDFS image of activeAlarms
              * @param activealarm Returned Active Alarm list Structure
              */
-            EXPORT int readHdfsActiveAlarms(snmpmanager::AlarmList& activealarm);
+            EXPORT int readHdfsActiveAlarms(alarmmanager::AlarmList& activealarm);
 
             /** @brief update Log
              *
@@ -2453,7 +2452,7 @@ namespace oam
 
     private:
 
-	    int sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, snmpmanager::AlarmList& alarmlist, const std::string date);
+	    int sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, alarmmanager::AlarmList& alarmlist, const std::string date);
 
             /** @brief build and send request message to Process Manager
              */

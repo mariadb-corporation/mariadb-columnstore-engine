@@ -48,12 +48,12 @@
 
 #include "liboamcpp.h"
 #include "configcpp.h"
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 
 using namespace std;
 using namespace oam;
 using namespace config;
-using namespace snmpmanager;
+using namespace alarmmanager;
 
 #include "helpers.h"
 using namespace installer;
