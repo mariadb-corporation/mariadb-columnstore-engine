@@ -847,6 +847,9 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
+		if ( cloud  == oam::UnassignedName )
+		    option = "2";
+		  
 		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
 		cout << "You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
@@ -994,43 +997,54 @@ int main(int argc, char *argv[])
 
 		sleep(1);
 
-		//get subnetID
-		try {
-			amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-		}
-		catch(...)
-		{}
+		if ( amazonInstall )
+		{
+		      //get subnetID
+		      try {
+			      amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
+		      }
+		      catch(...)
+		      {}
 
-		if ( amazonSubNet == oam::UnassignedName )
-		{	
-			//check if this is a vpc system by checking for subnet setup
-			amazonSubNet = oam.getEC2LocalInstanceSubnet();
-			// cout << "amazonSubNet = " <<  amazonSubNet << endl;
-			if ( amazonSubNet == "failed" || amazonSubNet == "" )
-			{
-				amazonSubNet = oam::UnassignedName;
-				cloud = "amazon-ec2";
-			}
-			else
-			{
-				cloud = "amazon-vpc";
-			}
+		      if ( amazonSubNet == oam::UnassignedName )
+		      {	
+			      //check if this is a vpc system by checking for subnet setup
+			      amazonSubNet = oam.getEC2LocalInstanceSubnet();
+			      // cout << "amazonSubNet = " <<  amazonSubNet << endl;
+			      if ( amazonSubNet == "failed" || amazonSubNet == "" )
+			      {
+				      amazonSubNet = oam::UnassignedName;
+				      cloud = "amazon-ec2";
+			      }
+			      else
+			      {
+				      cloud = "amazon-vpc";
+			      }
 
-			//set subnetID
-			try {
-				sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-			}
-			catch(...)
-			{}
+			      //set subnetID
+			      try {
+				      sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+			      }
+			      catch(...)
+			      {}
+		      }
+		      else
+			      cloud = "amazon-vpc";
+
+		      try {
+			      sysConfig->setConfig(InstallSection, "Cloud", cloud);
+		      }
+		      catch(...)
+		      {}
 		}
 		else
-			cloud = "amazon-vpc";
-
-		try {
-			sysConfig->setConfig(InstallSection, "Cloud", cloud);
+		{
+		    try {
+			      sysConfig->setConfig(InstallSection, "Cloud", oam::UnassignedName);
+		    }
+		    catch(...)
+		    {}
 		}
-		catch(...)
-		{}
 	}
 
 	if ( pmwithum )
