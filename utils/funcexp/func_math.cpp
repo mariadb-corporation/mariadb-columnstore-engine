@@ -497,7 +497,7 @@ double Func_cot::getDoubleVal(Row& row,
                 Message::Args args;
                 args.add("cot");
                 args.add(value);
-                unsigned errcode = ERR_INCORRECT_VALUE;
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
                 throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
             }
 			if (isNull)
@@ -518,7 +518,7 @@ double Func_cot::getDoubleVal(Row& row,
                 Message::Args args;
                 args.add("cot");
                 args.add(value);
-                unsigned errcode = ERR_INCORRECT_VALUE;
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
                 throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
             }
 
@@ -540,7 +540,7 @@ double Func_cot::getDoubleVal(Row& row,
                 Message::Args args;
                 args.add("cot");
                 args.add((uint64_t)value);
-                unsigned errcode = ERR_INCORRECT_VALUE;
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
                 throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
             }
 			if (isNull)

@@ -95,6 +95,8 @@
 2051	ERR_DBJ_DATA_DISTRIBUTION	The data distribution in this query overflowed a disk-based join bucket.  If possible, raise infinidb_diskjoin_bucketsize and try again.
 2052	INFO_SWITCHING_TO_DJS	Out of UM memory, switching to disk-based join.
 
+2053	ERR_FUNC_OUT_OF_RANGE_RESULT	The result is out of range for function %1% using value(s): %2% %3%
+
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.
 3002	ERR_MORE_THAN_1_ROW	Subquery returns more than 1 row.
