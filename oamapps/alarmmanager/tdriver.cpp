@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2016 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -33,7 +33,6 @@ CPPUNIT_TEST_SUITE( ALARMManagerTest );
 CPPUNIT_TEST( test1 );
 CPPUNIT_TEST( test2 );
 //CPPUNIT_TEST( test3 );	// requires ProcMgr to be running
-CPPUNIT_TEST( test4 );
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -101,13 +100,6 @@ public:
 		sm.getNMSAddr (value);
 		cout << "NMS address: " << value << endl;
 	}
-
-	void test4() {
-		// set Server name in snmpdx.conf
-		ALARMManager sm;
-		sm.setSNMPModuleName();
-	}
-
 
 }; 
 
