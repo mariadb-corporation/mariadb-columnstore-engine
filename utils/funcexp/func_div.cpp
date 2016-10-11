@@ -34,11 +34,6 @@ using namespace std;
 #include "rowgroup.h"
 using namespace execplan;
 
-#include "errorcodes.h"
-#include "idberrorinfo.h"
-#include "errorids.h"
-using namespace logging;
-
 #include "dataconvert.h"
 
 namespace funcexp
