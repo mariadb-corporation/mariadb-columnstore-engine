@@ -523,36 +523,39 @@ void debug_walk(const Item *item, void *arg)
 	case Item::CACHE_ITEM:
 	{
 		Item_cache* isp = (Item_cache*)item;
-		String val, *str = NULL;
+		// MCOL-46 isp->val_str() can cause a call to execute a subquery. We're not set up
+		// to execute yet.
+//		String val, *str = NULL;
 		switch (item->result_type()) 
 		{
 			case STRING_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_STRING_ITEM";
 				break;
 			case REAL_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_REAL_ITEM";
 				break;
 			case INT_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_INT_ITEM";
 				break;
 			case ROW_RESULT:
-				cout << "CACHE_ROW_ITEM";
+//				cout << "CACHE_ROW_ITEM";
 				break;
 			case DECIMAL_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_DECIMAL_ITEM";
 				break;
 			default:
 				cout << "CACHE_UNKNOWN_ITEM";
 				break;
 		}
-		if (str)
-			cout << ": (" << str->c_ptr() << ')' << endl;
-		else
-			cout << ": <NULL>" << endl;
+//		if (str)
+//			cout << ": (" << str->c_ptr() << ')' << endl;
+//		else
+//			cout << ": <NULL>" << endl;
+		cout << endl;
 		break;
 	}
 	case Item::DATE_ITEM:
