@@ -207,7 +207,7 @@ void scanner_init(const char* str, yyscan_t yyscanner)
    memcpy(pScanData->scanbuf, str, slen);
 	pScanData->scanbuf[slen] = pScanData->scanbuf[slen + 1] = YY_END_OF_BUFFER_CHAR;
 	pScanData->scanbufhandle = (void*)yy_scan_buffer(pScanData->scanbuf, slen + 2, yyscanner);
-	std::cout << "scanner_init " << (uint64_t)pScanData->scanbufhandle << std::endl;
+	//std::cout << "scanner_init " << (uint64_t)pScanData->scanbufhandle << std::endl;
 
 	BEGIN(INITIAL);
 
@@ -224,7 +224,7 @@ void scanner_finish(yyscan_t yyscanner)
 {
    char* str;
    scan_data* pScanData = (scan_data*)ddlget_extra(yyscanner);
-	std::cout << "scanner_finish " << (uint64_t)pScanData->scanbufhandle << std::endl;
+	//std::cout << "scanner_finish " << (uint64_t)pScanData->scanbufhandle << std::endl;
    yy_delete_buffer((YY_BUFFER_STATE)pScanData->scanbufhandle, yyscanner);
    free(pScanData->scanbuf);
    unsigned int i;
