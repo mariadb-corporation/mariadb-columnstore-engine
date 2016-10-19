@@ -3161,6 +3161,7 @@ int ha_calpont_impl_create(const char *name, TABLE *table_arg, HA_CREATE_INFO *c
 int ha_calpont_impl_delete_table(const char *name)
 {
 	THD *thd = current_thd;
+	char *dbName = NULL;
 
 	if (!name)
 	{
@@ -3183,16 +3184,17 @@ int ha_calpont_impl_delete_table(const char *name)
 	if (!thd->lex) return 0;
 	if (!idb_mysql_query_str(thd)) return 0;
 
-	// @bug 1700.
 	if (thd->lex->sql_command == SQLCOM_DROP_DB)
 	{
-        thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,  "Non-empty database can not be dropped. ");
-		return 1;
+		dbName = thd->lex->name.str;
+	}
+	else
+	{
+		TABLE_LIST *first_table= (TABLE_LIST*) thd->lex->select_lex.table_list.first;
+		dbName = first_table->db;
 	}
 
-	TABLE_LIST *first_table= (TABLE_LIST*) thd->lex->select_lex.table_list.first;
-	if (!first_table->db)
+	if (!dbName)
 	{
 		setError(thd, ER_INTERNAL_ERROR, "Drop Table with NULL schema not permitted");
 		return 1;
@@ -3206,7 +3208,7 @@ int ha_calpont_impl_delete_table(const char *name)
 		 return 0;
 	}
 	// @bug 1793. make vtable droppable in calpontsys. "$vtable" ==> "@0024vtable" passed in as name.
-	if (strcmp(first_table->db, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
+	if (strcmp(dbName, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
 	{
 		std::string stmt(idb_mysql_query_str(thd));
 		algorithm::to_upper(stmt);
@@ -3219,7 +3221,7 @@ int ha_calpont_impl_delete_table(const char *name)
 		return 1;
 	}
 
-	int rc = ha_calpont_impl_delete_table_(first_table->db, name, *ci);
+	int rc = ha_calpont_impl_delete_table_(dbName, name, *ci);
 	return rc;
 }
 int ha_calpont_impl_write_row(uchar *buf, TABLE* table)
