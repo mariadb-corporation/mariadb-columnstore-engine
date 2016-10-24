@@ -4644,9 +4644,7 @@ namespace oam
 	
 		if (!file.is_open())
 		{
-			ostringstream os;
-			os << "checkLogStatus error while opening file " << fileName << " " << strerror(errno);
-			writeLog(os.str(), LOG_TYPE_ERROR );
+			return false;
 		}
 		string buf;
 	
@@ -4659,14 +4657,9 @@ namespace oam
 		}
 		if (file.bad())
 		{
-			ostringstream os;
-			os << "checkLogStatus error while reading file " << fileName << " " << strerror(errno);
-			writeLog(os.str(), LOG_TYPE_ERROR );
+			return false;
 		}
 		file.close();
-		ostringstream os;
-		os << "checkLogStatus failed " << fileName << " expected \"" << phrase.c_str() << "\" found \"" << buf.c_str() << "\"";
-		writeLog(os.str(), LOG_TYPE_ERROR );
 		return false;
 	}
 
