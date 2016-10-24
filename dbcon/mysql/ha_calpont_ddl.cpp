@@ -2045,9 +2045,9 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	string emsg;
 	if (thd->lex->sql_command == SQLCOM_DROP_DB)
 	{
-		std::string tableName = std::string(name);
+		std::string tableName(name);
 		tableName.erase(0,tableName.rfind("/")+1);
-		stmt = std::string("DROP TABLE ") + std::string(tableName);
+		stmt = std::string("DROP TABLE ") + tableName;
 	}
 	else
 	{
