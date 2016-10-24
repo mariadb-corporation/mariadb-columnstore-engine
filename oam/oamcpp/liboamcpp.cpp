@@ -6267,7 +6267,7 @@ namespace oam
 		}
 
 		if (!checkSystemRunning())
-			exceptionControl("addDbroot", API_FAILURE);
+			return;
 
 		//get updated Columnstore.xml distributed
 		distributeConfigFile("system");
