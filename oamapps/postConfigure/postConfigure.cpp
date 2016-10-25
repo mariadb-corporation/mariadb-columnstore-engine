@@ -2105,9 +2105,9 @@ int main(int argc, char *argv[])
 						cout << "makeRClocal error" << endl;
 	
 					//if cloud, copy fstab in module tmp dir
-//					if ( amazonInstall && moduleType == "pm")
-//						if( !copyFstab(newModuleName) )
-//							cout << "copyFstab error" << endl;
+					if ( amazonInstall && moduleType == "pm")
+						if( !copyFstab(newModuleName) )
+							cout << "copyFstab error" << endl;
 
 					//setup DBRM Processes
 					if ( newModuleName == parentOAMModuleName )
