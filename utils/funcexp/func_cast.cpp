@@ -510,20 +510,12 @@ int32_t Func_cast_date::getDateIntVal(rowgroup::Row& row,
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
 		{
-			if (parm[0]->data()->resultType().scale != 0)
-			{
+			val = dataconvert::DataConvert::intToDate(parm[0]->data()->getIntVal(row, isNull));
+			if (val == -1)
 				isNull = true;
-				break;
-			}
 			else
-			{
-				val = dataconvert::DataConvert::intToDate(parm[0]->data()->getIntVal(row, isNull));
-				if (val == -1)
-					isNull = true;
-				else
-					return val;
-				break;
-			}
+				return val;
+            break;
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
@@ -715,18 +707,11 @@ int64_t Func_cast_datetime::getDatetimeIntVal(rowgroup::Row& row,
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
 		{
-			if (parm[0]->data()->resultType().scale)
-			{
-				val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-				if (val == -1)
-					isNull = true;
-				else
-					return val;
-			}
-			else
-			{
+			val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+			if (val == -1)
 				isNull = true;
-			}
+			else
+				return val;
 			break;
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:

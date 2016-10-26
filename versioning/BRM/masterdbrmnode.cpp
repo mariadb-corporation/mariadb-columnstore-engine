@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+ * Copyright (C) 2016 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -26,8 +27,8 @@
 
 #include "sessionmanager.h"
 #include "socketclosed.h"
-#include "snmpglobal.h"
-#include "snmpmanager.h"
+#include "alarmglobal.h"
+#include "alarmmanager.h"
 #include "liboamcpp.h"
 #include "stopwatch.h"
 #include "masterdbrmnode.h"
@@ -71,14 +72,14 @@
 #if 1
 #define SEND_ALARM \
 	try { \
-		snmpmanager::SNMPManager alarmMgr; \
-		alarmMgr.sendAlarmReport("System", oam::DBRM_READ_ONLY, snmpmanager::SET); \
+		alarmmanager::ALARMManager alarmMgr; \
+		alarmMgr.sendAlarmReport("System", oam::DBRM_READ_ONLY, alarmmanager::SET); \
 	} \
 	catch (...) { }
 #define CLEAR_ALARM \
 	try { \
-		snmpmanager::SNMPManager alarmMgr; \
-		alarmMgr.sendAlarmReport("System", oam::DBRM_READ_ONLY, snmpmanager::CLEAR); \
+		alarmmanager::ALARMManager alarmMgr; \
+		alarmMgr.sendAlarmReport("System", oam::DBRM_READ_ONLY, alarmmanager::CLEAR); \
 	} \
 	catch (...) { }
 #else

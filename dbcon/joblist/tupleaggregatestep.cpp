@@ -348,10 +348,18 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
 			{
 				if (!bucketDone[c] && fAgg_mutex[c]->try_lock())
 				{
-					if (multiDist)
-						dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[c].get())->doDistinctAggregation_rowVec(rowBucketVecs[c]);
-					else
-						dynamic_cast<RowAggregationDistinct*>(fAggregators[c].get())->doDistinctAggregation_rowVec(rowBucketVecs[c][0]);
+					try
+					{
+						if (multiDist)
+							dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[c].get())->doDistinctAggregation_rowVec(rowBucketVecs[c]);
+						else
+							dynamic_cast<RowAggregationDistinct*>(fAggregators[c].get())->doDistinctAggregation_rowVec(rowBucketVecs[c][0]);
+					}
+					catch(...)
+					{
+						fAgg_mutex[c]->unlock();
+						throw;
+					}
 					fAgg_mutex[c]->unlock();
 					bucketDone[c] = true;
 					rowBucketVecs[c][0].clear();
@@ -4301,11 +4309,19 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
 					{
 						if (!fEndOfResult && !bucketDone[c] && fAgg_mutex[c]->try_lock())
 						{
-							didWork = true;
-							if (multiDist)
-								dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[c].get())->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c]);
-							else
-								fAggregators[c]->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c][0]);
+							try
+							{
+								didWork = true;
+								if (multiDist)
+									dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[c].get())->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c]);
+								else
+									fAggregators[c]->addRowGroup(&fRowGroupIns[threadID], rowBucketVecs[c][0]);
+							}
+							catch(...)
+							{
+								fAgg_mutex[c]->unlock();
+								throw;
+							}
 							fAgg_mutex[c]->unlock();
 							rowBucketVecs[c][0].clear();
 							bucketDone[c] = true;

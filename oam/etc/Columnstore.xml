@@ -449,7 +449,6 @@
 		<AmazonZone>unassigned</AmazonZone>
 		<AmazonSubNetID>unassigned</AmazonSubNetID>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
-		<EnableSNMP>y</EnableSNMP>
 		<UMInstanceType>unassigned</UMInstanceType>
 		<UMSecurityGroup>unassigned</UMSecurityGroup>
 		<UMVolumeSize>unassigned</UMVolumeSize>

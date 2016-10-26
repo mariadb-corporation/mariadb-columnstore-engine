@@ -21,8 +21,6 @@
 *
 *
 * List of files being updated by post-install configure:
-*		mariadb/columnstore/etc/snmpd.conf
-*		mariadb/columnstore/etc/snmptrapd.conf
 *		mariadb/columnstore/etc/Columnstore.xml
 *		mariadb/columnstore/etc/ProcessConfig.xml
 *		/etc/rc.local
@@ -62,12 +60,10 @@
 
 #include "liboamcpp.h"
 #include "configcpp.h"
-#include "snmpmanager.h"
 
 using namespace std;
 using namespace oam;
 using namespace config;
-using namespace snmpmanager;
 
 #include "helpers.h"
 using namespace installer;
@@ -91,13 +87,11 @@ typedef struct Performance_Module_struct
 
 typedef std::vector<PerformanceModule> PerformanceModuleList;
 
-void snmpAppCheck();
 void offLineAppCheck();
 bool setOSFiles(string parentOAMModuleName, int serverTypeInstall);
 bool checkSaveConfigFile();
 string getModuleName();
 bool setModuleName(string moduleName);
-bool updateSNMPD(string parentOAMModuleIPAddr);
 bool updateBash();
 bool makeModuleFile(string moduleName, string parentOAMModuleName);
 bool updateProcessConfig(int serverTypeInstall);
@@ -593,9 +587,6 @@ int main(int argc, char *argv[])
 				//check if dbrm data resides in older directory path and inform user if it does
 				dbrmDirCheck();
 
-				//check snmp Apps disable option
-				snmpAppCheck();
-			
 				if (startOfflinePrompt)
 					offLineAppCheck();
 
@@ -856,6 +847,9 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
+		if ( cloud  == oam::UnassignedName )
+		    option = "2";
+		  
 		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
 		cout << "You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
@@ -1003,43 +997,54 @@ int main(int argc, char *argv[])
 
 		sleep(1);
 
-		//get subnetID
-		try {
-			amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-		}
-		catch(...)
-		{}
+		if ( amazonInstall )
+		{
+		      //get subnetID
+		      try {
+			      amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
+		      }
+		      catch(...)
+		      {}
 
-		if ( amazonSubNet == oam::UnassignedName )
-		{	
-			//check if this is a vpc system by checking for subnet setup
-			amazonSubNet = oam.getEC2LocalInstanceSubnet();
-			// cout << "amazonSubNet = " <<  amazonSubNet << endl;
-			if ( amazonSubNet == "failed" || amazonSubNet == "" )
-			{
-				amazonSubNet = oam::UnassignedName;
-				cloud = "amazon-ec2";
-			}
-			else
-			{
-				cloud = "amazon-vpc";
-			}
+		      if ( amazonSubNet == oam::UnassignedName )
+		      {	
+			      //check if this is a vpc system by checking for subnet setup
+			      amazonSubNet = oam.getEC2LocalInstanceSubnet();
+			      // cout << "amazonSubNet = " <<  amazonSubNet << endl;
+			      if ( amazonSubNet == "failed" || amazonSubNet == "" )
+			      {
+				      amazonSubNet = oam::UnassignedName;
+				      cloud = "amazon-ec2";
+			      }
+			      else
+			      {
+				      cloud = "amazon-vpc";
+			      }
 
-			//set subnetID
-			try {
-				sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-			}
-			catch(...)
-			{}
+			      //set subnetID
+			      try {
+				      sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+			      }
+			      catch(...)
+			      {}
+		      }
+		      else
+			      cloud = "amazon-vpc";
+
+		      try {
+			      sysConfig->setConfig(InstallSection, "Cloud", cloud);
+		      }
+		      catch(...)
+		      {}
 		}
 		else
-			cloud = "amazon-vpc";
-
-		try {
-			sysConfig->setConfig(InstallSection, "Cloud", cloud);
+		{
+		    try {
+			      sysConfig->setConfig(InstallSection, "Cloud", oam::UnassignedName);
+		    }
+		    catch(...)
+		    {}
 		}
-		catch(...)
-		{}
 	}
 
 	if ( pmwithum )
@@ -2100,9 +2105,9 @@ int main(int argc, char *argv[])
 						cout << "makeRClocal error" << endl;
 	
 					//if cloud, copy fstab in module tmp dir
-//					if ( amazonInstall && moduleType == "pm")
-//						if( !copyFstab(newModuleName) )
-//							cout << "copyFstab error" << endl;
+					if ( amazonInstall && moduleType == "pm")
+						if( !copyFstab(newModuleName) )
+							cout << "copyFstab error" << endl;
 
 					//setup DBRM Processes
 					if ( newModuleName == parentOAMModuleName )
@@ -2711,9 +2716,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	//check snmp Apps disable option
-	snmpAppCheck();
-
 	//setup local OS Files
 	if( !setOSFiles(parentOAMModuleName, IserverTypeInstall) ) {
 		cout << "setOSFiles error" << endl;
@@ -2854,7 +2856,7 @@ int main(int argc, char *argv[])
 				string separator = "-";
 				if ( EEPackageType == "deb" )
 					separator = "_";
-				calpontPackage1 = "mariadb-columnstore-platform" + separator + version;
+				calpontPackage1 = "mariadb-columnstore-*" + separator + version;
 				calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
 				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
 				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
@@ -3804,53 +3806,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 	}
 
 	return allfound;
-}
-
-/*
- * Updated snmpdx.conf with parentOAMModuleIPAddr
- */
-bool updateSNMPD(string parentOAMModuleIPAddr)
-{
-	string fileName = installDir + "/etc/snmpd.conf";
-
-	ifstream oldFile (fileName.c_str());
-	if (!oldFile) return true;
-	
-	vector <string> lines;
-	char line[200];
-	string buf;
-	string newLine;
-	string newLine1;
-	while (oldFile.getline(line, 200))
-	{
-		buf = line;
-		string::size_type pos = buf.find("parentOAMIPStub",0);
-		if (pos != string::npos)
-		{
-			newLine = buf.substr(0, pos);
-    	    		newLine.append(parentOAMModuleIPAddr);
-
-			newLine1 = buf.substr(pos+15, 200);
-			newLine.append(newLine1);
-
-			buf = newLine;
-		}
-		//output to temp file
-		lines.push_back(buf);
-	}
-	
-	oldFile.close();
-	unlink (fileName.c_str());
-   	ofstream newFile (fileName.c_str());	
-	
-	//create new file
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0664);
-	
-	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-	newFile.close();
-	
-	close(fd);
-	return true;
 }
 
 
@@ -4990,140 +4945,6 @@ bool storageSetup(bool amazonInstall)
 	}
 
 	return true;
-}
-
-void snmpAppCheck()
-{
-	Oam oam;
-
-	cout << endl << "===== MariaDB Columnstore SNMP-Trap Process Check  =====" << endl << endl;
-	cout << "MariaDB Columnstore is packaged with an SNMP-Trap process." << endl;
-	cout << "If the system where MariaDB Columnstore is being installed already has an SNMP-Trap process" << endl;
-	cout << "running, then you have the option of disabling MariaDB Columnstore's SNMP-Trap process." << endl;
-	cout << "Not having the MariaDB Columnstore SNMP-Trap process will affect the" << endl;
-	cout << "generation of MariaDB Columnstore alarms and associated SNMP traps." << endl;
-	cout << "Please reference the MariaDB Columnstore Installation Guide for" << endl;
-	cout << "additional information." << endl << endl;
-
-	string enableSNMP = "y";
-	if (geteuid() == 0)
-		enableSNMP = sysConfig->getConfig(InstallSection, "EnableSNMP");
-	else
-		enableSNMP = "n";
-
-	if (enableSNMP.empty())
-		enableSNMP = "y";
-
-	while(true)
-	{
-		if ( enableSNMP == "y" ) {
-			string disable = "n";
-			pcommand = callReadline("MariaDB Columnstore SNMP-Trap process is enabled, would you like to disable it [y,n] (n) > ");
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) disable = pcommand;
-				callFree(pcommand);
-			}
-
-			if ( disable == "y" ) {
-				enableSNMP = "n";
-				break;
-			}
-			else if ( disable == "n" ) {
-				enableSNMP = "y";
-				break;
-			}
-	
-			cout << "Invalid Entry, please retry" << endl;
-			if ( noPrompting )
-				exit(1);
-		}
-		else
-		{
-			string enable = "n";
-			pcommand = callReadline("MariaDB Columnstore SNMP-Trap process is disabled, would you like to enable it (y,n) [n] > ");
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) enable = pcommand;
-				callFree(pcommand);
-			}
-
-			if ( enable == "y" || enable == "n" ) {
-				enableSNMP = enable;
-				break;
-			}
-
-			cout << "Invalid Entry, please retry" << endl;
-			if ( noPrompting )
-				exit(1);
-		}
-	}
-
-	sysConfig->setConfig(InstallSection, "EnableSNMP", enableSNMP);
-
-	if (enableSNMP == "y") {
-		//
-		// Configure SNMP / NMS Addresses
-		//
-		try
-		{
-			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "BootLaunch", "1");
-			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "LaunchID", "3");
-
-			cout << endl << "MariaDB Columnstore SNMP Process successfully enabled" << endl;
-		}
-		catch (exception& e)
-		{
-			cout << endl << "**** setProcessConfig Failed =  " << e.what() << endl;
-		}
-
-		//set OAM Parent IP Address in snmpd.conf
-		if( !updateSNMPD(parentOAMModuleIPAddr) )
-			cout << "updateSNMPD error" << endl;
-	
-		//get and set NMS IP address
-		string currentNMSIPAddress;
-		string NMSIPAddress;
-		SNMPManager sm;
-		sm.getNMSAddr(currentNMSIPAddress);
-	
-		NMSIPAddress = currentNMSIPAddress;
-
-		cout << endl << "===== Setup the Network Management System (NMS) Server Configuration =====" << endl << endl;
-
-		cout << "This would be used to receive SNMP Traps from MariaDB Columnstore." << endl;
-		cout <<  "0.0.0.0 defaults to not sending off the system" << endl << endl;
-		prompt = "Enter IP Address(es) of where you want the SNMP Traps went (" + currentNMSIPAddress + ") > ";
-		pcommand = callReadline(prompt.c_str());
-		if (pcommand)
-		{
-			if (strlen(pcommand) > 0) NMSIPAddress = pcommand;
-			callFree(pcommand);
-		}
-	
-		sm.setNMSAddr(NMSIPAddress);
-	}
-	else
-	{	//disabled, update config file
-		try
-		{
-			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "BootLaunch", "0");
-			oam.setProcessConfig("SNMPTrapDaemon", "ParentOAMModule", "LaunchID", "0");
-
-			cout << endl << "MariaDB Columnstore SNMP-Trap Process successfully disabled" << endl;
-		}
-		catch (exception& e)
-		{
-			cout << endl << "**** setProcessConfig Failed =  " << e.what() << endl;
-		}
-	}
-
-	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
-		exit(1);
-	}
-
-	return;
 }
 
 

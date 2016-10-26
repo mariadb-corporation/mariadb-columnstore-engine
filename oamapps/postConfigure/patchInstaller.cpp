@@ -46,7 +46,7 @@
 
 #include "liboamcpp.h"
 #include "configcpp.h"
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 
 using namespace std;
 using namespace oam;

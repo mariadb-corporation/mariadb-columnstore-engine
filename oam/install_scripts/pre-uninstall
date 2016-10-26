@@ -81,7 +81,7 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 rm -f /etc/cron.d/ps > /dev/null 2>&1
 rm -f /etc/pscollect > /dev/null 2>&1
 /etc/init.d/crond reload  > /dev/null 2>&1
-systemctl reload crond.service > /dev/null 2>&1
+sudo systemctl reload crond.service > /dev/null 2>&1
 
 # delete tmp files
 rm -f $installdir/local/*.columnstore
@@ -121,7 +121,7 @@ fi
 systemctl=`which systemctl 2>/dev/null`
 if [ -n "$systemctl" ]; then
 
-	systemctl disable columnstore >/dev/null 2>&1
+	sudo systemctl disable columnstore >/dev/null 2>&1
 	rm -f /usr/lib/systemd/system/columnstore.service
 	rm -f /lib/systemd/system/columnstore.service
 else

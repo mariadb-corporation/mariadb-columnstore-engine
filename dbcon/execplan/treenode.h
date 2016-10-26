@@ -39,7 +39,6 @@
 #include "calpontsystemcatalog.h"
 #include "exceptclasses.h"
 #include "dataconvert.h"
-
 namespace messageqcpp {
 class ByteStream;
 }
@@ -483,8 +482,24 @@ inline const std::string& TreeNode::getStrVal()
 			}
 			else
 			{
-				snprintf(tmp, 312, "%e", fResult.floatVal);
-				fResult.strVal = tmp;
+				// MCOL-299 Print scientific with 5 mantissa and no + sign for exponent
+				int exponent  = (int)floor(log10( fabs(fResult.floatVal)));  // This will round down the exponent
+				double base   = fResult.floatVal * pow(10, -1.0*exponent);
+				if (std::isnan(exponent) || std::isnan(base))
+				{
+					snprintf(tmp, 312, "%f", fResult.floatVal);
+					fResult.strVal = removeTrailing0(tmp, 312);
+				}
+				else
+				{
+					snprintf(tmp, 312, "%.5f", base);
+					fResult.strVal = removeTrailing0(tmp, 312);
+					snprintf(tmp, 312, "e%02d", exponent);
+					fResult.strVal += tmp;
+				}
+	
+//				snprintf(tmp, 312, "%e.5", fResult.floatVal);
+//				fResult.strVal = tmp;
 			}
 			break;
 		}
@@ -499,8 +514,23 @@ inline const std::string& TreeNode::getStrVal()
 			}
 			else
 			{
-				snprintf(tmp, 312, "%e", fResult.doubleVal);
-				fResult.strVal = tmp;
+				// MCOL-299 Print scientific with 9 mantissa and no + sign for exponent
+				int exponent  = (int)floor(log10( fabs(fResult.doubleVal)));  // This will round down the exponent
+				double base   = fResult.doubleVal * pow(10, -1.0*exponent);
+				if (std::isnan(exponent) || std::isnan(base))
+				{
+					snprintf(tmp, 312, "%f", fResult.doubleVal);
+					fResult.strVal = removeTrailing0(tmp, 312);
+				}
+				else
+				{
+					snprintf(tmp, 312, "%.9f", base);
+					fResult.strVal = removeTrailing0(tmp, 312);
+					snprintf(tmp, 312, "e%02d", exponent);
+					fResult.strVal += tmp;
+				}
+//				snprintf(tmp, 312, "%e", fResult.doubleVal);
+//				fResult.strVal = tmp;
 			}
 			break;
 		}

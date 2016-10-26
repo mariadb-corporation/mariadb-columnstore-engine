@@ -21,7 +21,7 @@
  */
 
 /** @file */
-
+//#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
 #include <iostream>
@@ -222,7 +222,7 @@ void debug_walk(const Item *item, void *arg)
 	{
 		Item_string* isp = (Item_string*)item;
 		String val, *str = isp->val_str(&val);
-		cout << "STRING_ITEM: >" << str->ptr() << '<' << endl;
+		cout << "STRING_ITEM: >" << str->c_ptr() << '<' << endl;
 		break;
 	}
 	case Item::REAL_ITEM:
@@ -523,36 +523,39 @@ void debug_walk(const Item *item, void *arg)
 	case Item::CACHE_ITEM:
 	{
 		Item_cache* isp = (Item_cache*)item;
-		String val, *str = NULL;
+		// MCOL-46 isp->val_str() can cause a call to execute a subquery. We're not set up
+		// to execute yet.
+//		String val, *str = NULL;
 		switch (item->result_type()) 
 		{
 			case STRING_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_STRING_ITEM";
 				break;
 			case REAL_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_REAL_ITEM";
 				break;
 			case INT_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_INT_ITEM";
 				break;
 			case ROW_RESULT:
-				cout << "CACHE_ROW_ITEM";
+//				cout << "CACHE_ROW_ITEM";
 				break;
 			case DECIMAL_RESULT:
-				str = isp->val_str(&val);
+//				str = isp->val_str(&val);
 				cout << "CACHE_DECIMAL_ITEM";
 				break;
 			default:
 				cout << "CACHE_UNKNOWN_ITEM";
 				break;
 		}
-		if (str)
-			cout << ": (" << str->ptr() << ')' << endl;
-		else
-			cout << ": <NULL>" << endl;
+//		if (str)
+//			cout << ": (" << str->c_ptr() << ')' << endl;
+//		else
+//			cout << ": <NULL>" << endl;
+		cout << endl;
 		break;
 	}
 	case Item::DATE_ITEM:
@@ -1018,9 +1021,9 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 		// @bug5811. This filter string is for cross engine to use.
 		// Use real table name.
 		ifp->print(&str, QT_INFINIDB_DERIVED);
-		//IDEBUG(cout << str.ptr() << endl);
+		//IDEBUG(cout << str.c_ptr() << endl);
 		if (str.ptr())
-			cf->data(str.ptr());
+			cf->data(str.c_ptr());
 		ParseTree* ptp = new ParseTree(cf);
 		gwip->ptWorkStack.push(ptp);
 		return true;
@@ -1099,7 +1102,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 		ifp->print(&str, QT_INFINIDB_DERIVED);
 		IDEBUG(cout << str.ptr() << endl);
 		if (str.ptr())
-			cf->data(str.ptr());
+			cf->data(str.c_ptr());
 		ParseTree* ptp = new ParseTree(cf);
 		gwip->ptWorkStack.push(ptp);
 	}
@@ -3797,9 +3800,7 @@ void gp_walk(const Item *item, void *arg)
 					string cval;
 					if (str->ptr())
 					{
-						cval = str->ptr();
-						// MariaDB doesn't always put a null terminator. Trim to proper length.
-						cval = cval.substr(0, str->length());
+						cval = str->c_ptr();
 					}
 					size_t spos = cval.find_last_not_of(" ");
 					if (spos != string::npos)
@@ -4582,7 +4583,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				// cout << "DERIVED TABLE DEBUG" << endl;
 				String str;
 				(table_ptr->derived->first_select())->print(gwi.thd, &str, QT_INFINIDB_DERIVED);
-				// cout << str.ptr() << endl;
+				// cout << str.c_ptr() << endl;
 				// cout << "DERIVED TABLE DEBUG END" << endl;
 
 				SELECT_LEX *select_cursor = table_ptr->derived->first_select();
@@ -6622,7 +6623,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
 		if (bitmap_is_set(read_set, field->field_index))
 		{
 			SimpleColumn* sc = new SimpleColumn(table->s->db.str, table->s->table_name.str, field->field_name, sessionID);
-			string alias(table->alias.ptr());
+			string alias(table->alias.c_ptr());
 			sc->tableAlias(lower(alias));
 			assert (sc);
 			boost::shared_ptr<SimpleColumn> spsc(sc);
@@ -6634,7 +6635,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
 	if (gwi->columnMap.empty())
 	{
 		CalpontSystemCatalog::TableName tn = make_table(table->s->db.str, table->s->table_name.str);
-		CalpontSystemCatalog::TableAliasName tan = make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.ptr());
+		CalpontSystemCatalog::TableAliasName tan = make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr());
 		SimpleColumn *sc = getSmallestColumn(csc, tn, tan, table, *gwi);
 		SRCP srcp(sc);
 		gwi->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
@@ -6676,7 +6677,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
 	csep->returnedCols(gwi->returnedCols);
 	csep->columnMap(gwi->columnMap);
 	CalpontSelectExecutionPlan::TableList tblist;
-	tblist.push_back(make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.ptr()));
+	tblist.push_back(make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr()));
 	csep->tableList(tblist);
 
 	// @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering

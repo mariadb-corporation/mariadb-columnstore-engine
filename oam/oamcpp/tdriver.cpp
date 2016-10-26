@@ -41,7 +41,7 @@ using namespace boost;
 #include "liboamcpp.h"
 using namespace oam;
 
-using namespace snmpmanager;
+using namespace alarmmanager;
 
 class getModuleInfoTest : public CppUnit::TestFixture {
 

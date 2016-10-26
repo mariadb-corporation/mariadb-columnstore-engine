@@ -202,6 +202,7 @@
             <F N="batchprimitiveprocessor-jl.cpp"/>
             <F N="columncommand-jl.cpp"/>
             <F N="command-jl.cpp"/>
+            <F N="crossenginestep.cpp"/>
             <F N="dictstep-jl.cpp"/>
             <F N="diskjoinstep.cpp"/>
             <F N="distributedenginecomm.cpp"/>
@@ -257,6 +258,7 @@
             <F N="columncommand-jl.h"/>
             <F N="command-jl.h"/>
             <F N="constantdatalist.h"/>
+            <F N="crossenginestep.h"/>
             <F N="datalist.h"/>
             <F N="datalistimpl.h"/>
             <F N="dictstep-jl.h"/>

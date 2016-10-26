@@ -37,6 +37,11 @@ using namespace execplan;
 #include "rowgroup.h"
 using namespace rowgroup;
 
+#include "errorcodes.h"
+#include "idberrorinfo.h"
+#include "errorids.h"
+using namespace logging;
+
 namespace funcexp
 {
 
@@ -65,7 +70,16 @@ double Func_pow::getDoubleVal(Row& row,
 
 			// @bug3490, 4461, rule out domain error, pole error and overflow range error.
 			if (!isfinite(x))
+			{
 				isNull = true;
+                Message::Args args;
+                args.add("pow");
+                args.add(base);
+                args.add(exponent);
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+			}
+
 
 			return x;
 		}

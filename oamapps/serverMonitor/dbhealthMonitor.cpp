@@ -27,7 +27,7 @@
 
 using namespace std;
 using namespace oam;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace logging;
 using namespace servermonitor;
 using namespace config;

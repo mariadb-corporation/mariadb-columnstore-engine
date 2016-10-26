@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+ * Copyright (C) 2016 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -26,7 +27,7 @@
 
 using namespace std;
 using namespace oam;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace logging;
 using namespace servermonitor;
 
@@ -91,7 +92,7 @@ void ServerMonitor::sendAlarm(string alarmItem, ALARMS alarmID, int action, floa
 	// check if Alarm is already active, don't resend
 	if ( !( oam.checkActiveAlarm(alarmID, moduleName, alarmItem)) ) {
 
-		SNMPManager alarmMgr;
+		ALARMManager alarmMgr;
 		// send alarm
 		alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 
@@ -166,7 +167,7 @@ void ServerMonitor::checkAlarm(string alarmItem, ALARMS alarmID)
 ******************************************************************************************/
 void ServerMonitor::clearAlarm(string alarmItem, ALARMS alarmID)
 {
-	SNMPManager alarmMgr;
+	ALARMManager alarmMgr;
 	alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, CLEAR);
 
 	//Log this event 
@@ -298,7 +299,7 @@ bool ServerMonitor::sendResourceAlarm(string alarmItem, ALARMS alarmID, int acti
 		// check if Alarm is already active from any module, don't resend
 		if ( !( oam.checkActiveAlarm(alarmID, "*", alarmItem)) ) {
 	
-			SNMPManager alarmMgr;
+			ALARMManager alarmMgr;
 			// send alarm
 			alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 	
@@ -316,7 +317,7 @@ bool ServerMonitor::sendResourceAlarm(string alarmItem, ALARMS alarmID, int acti
 		// check if Alarm is already active from this module, don't resend
 		if ( !( oam.checkActiveAlarm(alarmID, moduleName, alarmItem)) ) {
 	
-			SNMPManager alarmMgr;
+			ALARMManager alarmMgr;
 			// send alarm
 			alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 	

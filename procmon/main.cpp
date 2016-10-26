@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016 MariaDB Corporaton
+   Copyright (C) 2016 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@ using namespace messageqcpp;
 using namespace processmonitor;
 using namespace oam;
 using namespace logging;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace config;
 using namespace idbdatafile;
 
@@ -2326,7 +2326,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 			log.writeLog(__LINE__, "statusControl: Set Process " + moduleName + "/" + processName +  + " State = " + oamState[state] + " PID = " + oam.itoa(PID), LOG_TYPE_DEBUG);
 
 			//update table
-			if (  state < STATE_MAX )
+			if (  state < PID_UPDATE )
 				fShmProcessStatus[shmIndex].ProcessOpState = state;
 			if (  PID != 1 )
 				fShmProcessStatus[shmIndex].ProcessID = PID;

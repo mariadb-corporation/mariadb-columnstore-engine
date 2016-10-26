@@ -12,11 +12,9 @@ set(DMLProc_SRCS
 
 add_executable(DMLProc ${DMLProc_SRCS})
 
-add_dependencies(DMLProc libnetsnmpmibs)
+target_link_libraries(DMLProc ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool ddlcleanuputil batchloader)
 
-target_link_libraries(DMLProc ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool ddlcleanuputil batchloader)
-
-install(TARGETS DMLProc DESTINATION ${ENGINE_BINDIR})
+install(TARGETS DMLProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
 

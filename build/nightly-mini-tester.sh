@@ -65,12 +65,6 @@ find ${prefix}/Calpont -type f | xargs chmod +r
 
 mkdir -p ${prefix}/Calpont/data1/systemFiles/dbrm
 
-if [ ! -e ${prefix}/Calpont/lib/libjemalloc.so ]; then
-	pushd ${prefix}/Calpont/lib >/dev/null
-	ln -s libjemalloc.so.1 libjemalloc.so
-	popd >/dev/null
-fi
-
 if [ ! -f ${prefix}/Calpont/etc/Columnstore.xml.rpmsave ]; then
 	cp ${prefix}/Calpont/etc/Columnstore.xml.singleserver ${prefix}/Calpont/etc/Columnstore.xml.rpmsave
 fi

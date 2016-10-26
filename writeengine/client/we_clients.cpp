@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+ * Copyright (C) 2016 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -51,8 +52,8 @@ using namespace config;
 using namespace logging;
 
 #include "liboamcpp.h"
-#include "snmpmanager.h"
-using namespace snmpmanager;
+#include "alarmmanager.h"
+using namespace alarmmanager;
 using namespace oam;
 
 #include "we_clients.h"
@@ -364,7 +365,7 @@ Error:
 			itor++;
 		}
 		// send alarm
-		SNMPManager alarmMgr;
+		ALARMManager alarmMgr;
 //		string alarmItem = sin_addr2String(client->serv_addr().sin_addr);
 		string alarmItem = client->addr2String();
 		alarmItem.append(" WriteEngineServer");

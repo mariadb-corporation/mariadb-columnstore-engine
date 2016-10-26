@@ -362,7 +362,8 @@ int64_t Func_nullif::getDatetimeIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::DATE:
 		{
-			exp2 = parm[1]->data()->getDateIntVal(row, isNull);
+			// Upgrade to datetime for proper comparison
+			exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
 			if (isNull) {
 				isNull = false;
 				return exp1;

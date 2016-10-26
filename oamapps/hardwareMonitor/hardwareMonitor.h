@@ -38,7 +38,7 @@
 #include "messagelog.h"
 #include "messageobj.h"
 #include "loggingid.h"
-#include "snmpmanager.h"
+#include "alarmmanager.h"
 
 
 int IPMI_SUPPORT = 0;	// 0 for supported

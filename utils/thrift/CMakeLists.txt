@@ -18,5 +18,5 @@ add_library(thrift SHARED ${thrift_LIB_SRCS})
 
 set_target_properties(thrift PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS thrift DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 

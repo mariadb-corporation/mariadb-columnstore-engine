@@ -61,7 +61,7 @@ DateTime getDateTime(rowgroup::Row& row,
 			break;
 		}
 		default:
-			val = parm[0]->data()->getIntVal(row, isNull);
+			val = parm[0]->data()->getDatetimeIntVal(row, isNull);
 	}
 	
 	if (val < 0 || val > helpers::TIMESTAMP_MAX_VALUE)
@@ -146,7 +146,6 @@ int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& ct)
 {
-#if 0
 	DateTime dt = getDateTime(row, parm, isNull);
 	if (*reinterpret_cast<int64_t*>(&dt) == 0)
 	{
@@ -154,13 +153,11 @@ int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row,
 		return 0;
 	}
 	char buf[32];  // actual string guaranteed to be 22
-	snprintf( buf, 32, "%04d%02d%02d%02d%02d%02",
+	snprintf( buf, 32, "%04d%02d%02d%02d%02d%02d",
 			  dt.year, dt.month, dt.day, dt.hour,
 			  dt.minute, dt.second ); 
 	return atoll(buf);
-#endif
-	return getDatetimeIntVal(row, parm, isNull, ct);
-}								
+}
 
 double Func_from_unixtime::getDoubleVal(rowgroup::Row& row,
 									FunctionParm& parm,
@@ -181,7 +178,7 @@ double Func_from_unixtime::getDoubleVal(rowgroup::Row& row,
 				  dt.minute, dt.second, dt.msecond ); 
 		return atof(buf);
 	}
-	
+
 	return (double) atoi(getStrVal(row, parm, isNull, ct).c_str());
 }
 

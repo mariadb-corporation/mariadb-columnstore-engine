@@ -432,20 +432,17 @@ int main(int argc, char *argv[])
 	catch(...)
 	{}
 
-	//save EEPackageType and EnableSNMP
+	//save EEPackageType
 	string EEPackageType = "rpm";
-	string EnableSNMP = "y";
 
 	try {
 		EEPackageType = sysConfigOld->getConfig(InstallSection, "EEPackageType");
-		EnableSNMP = sysConfigOld->getConfig(InstallSection, "EnableSNMP");
 	}
 	catch(...)
 	{ }
 
 	try {
 		sysConfigNew->setConfig(InstallSection, "EEPackageType", EEPackageType);
-		sysConfigNew->setConfig(InstallSection, "EnableSNMP", EnableSNMP);
 	}
 	catch(...)
 	{ }
@@ -453,12 +450,8 @@ int main(int argc, char *argv[])
 	if ( EEPackageType.empty() )
 		EEPackageType = "rpm";
 
-	if ( EnableSNMP.empty() )
-		EnableSNMP = "y";
-
 	try {
 		sysConfigNew->setConfig(InstallSection, "EEPackageType", EEPackageType);
-		sysConfigNew->setConfig(InstallSection, "EnableSNMP", EnableSNMP);
 	}
 	catch(...)
 	{}

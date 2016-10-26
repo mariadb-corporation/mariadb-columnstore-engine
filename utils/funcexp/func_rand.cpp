@@ -65,7 +65,8 @@ double Func_rand::getDoubleVal(rowgroup::Row& row,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	int64_t seedParm = 0;
+    // NOTE: this function needs to use 32bit ints otherwise it will break for negative values
+	uint32_t seedParm = 0;
 	// rand with parameter. if the parm is constanct, then a column is attached for fetching
 	if (parm.size() == 1 || parm.size() == 2)
 	{
@@ -74,8 +75,8 @@ double Func_rand::getDoubleVal(rowgroup::Row& row,
 		{
 			/* Copied from item_func.cpp */
 			seedParm = parm[0]->data()->getIntVal(row, isNull);
-			fSeed1 = (uint64_t)(seedParm*0x10001L+55555555L);
-			fSeed2 = (uint64_t)(seedParm*0x10000001L);
+			fSeed1 = (uint32_t)(seedParm*0x10001L+55555555L);
+			fSeed2 = (uint32_t)(seedParm*0x10000001L);
 			fSeedSet = true;
 		}
 	}

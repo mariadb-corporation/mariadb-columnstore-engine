@@ -227,7 +227,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row,
 			dt.day = (uint32_t)((val >> 6) & 0x3f);
 			break;
 		case CalpontSystemCatalog::DATETIME:
-			val = parm[0]->data()->getIntVal(row, isNull);
+			val = parm[0]->data()->getDatetimeIntVal(row, isNull);
 			dt.year = (uint32_t)((val >> 48) & 0xffff);
 			dt.month = (uint32_t)((val >> 44) & 0xf);
 			dt.day = (uint32_t)((val >> 38) & 0x3f);

@@ -10,5 +10,5 @@ add_executable(getConfig ${getConfig_SRCS})
 
 target_link_libraries(getConfig ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS getConfig DESTINATION ${ENGINE_BINDIR})
+install(TARGETS getConfig DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

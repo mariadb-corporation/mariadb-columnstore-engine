@@ -469,7 +469,7 @@ double Func_cot::getDoubleVal(Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType&)
 {
-	switch (parm[0]->data()->resultType().colDataType)
+   	switch (parm[0]->data()->resultType().colDataType)
 	{
 		case execplan::CalpontSystemCatalog::BIGINT:
 		case execplan::CalpontSystemCatalog::INT:
@@ -492,6 +492,14 @@ double Func_cot::getDoubleVal(Row& row,
 		{
 			// null value is indicated by isNull
 			double value = parm[0]->data()->getDoubleVal(row, isNull);
+            if (value == 0)
+            {
+                Message::Args args;
+                args.add("cot");
+                args.add(value);
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+            }
 			if (isNull)
 			{
 				isNull = true;
@@ -505,6 +513,15 @@ double Func_cot::getDoubleVal(Row& row,
 		case execplan::CalpontSystemCatalog::DATE:
 		{
 			int32_t value = parm[0]->data()->getDateIntVal(row, isNull);
+            if (value == 0)
+            {
+                Message::Args args;
+                args.add("cot");
+                args.add(value);
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+            }
+
 			if (isNull)
 			{
 				isNull = true;
@@ -518,6 +535,14 @@ double Func_cot::getDoubleVal(Row& row,
 		case execplan::CalpontSystemCatalog::DATETIME:
 		{
 			int64_t value = parm[0]->data()->getDatetimeIntVal(row, isNull);
+            if (value == 0)
+            {
+                Message::Args args;
+                args.add("cot");
+                args.add((uint64_t)value);
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+            }
 			if (isNull)
 			{
 				isNull = true;
@@ -530,7 +555,7 @@ double Func_cot::getDoubleVal(Row& row,
 
 		default:
 		{
-			std::ostringstream oss;
+            std::ostringstream oss;
 			oss << "cot: datatype of " << execplan::colDataTypeToString(parm[0]->data()->resultType().colDataType);
 			throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
 		}

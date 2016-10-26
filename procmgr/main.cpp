@@ -37,7 +37,7 @@ using namespace logging;
 using namespace messageqcpp;
 using namespace processmanager;
 using namespace oam;
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace threadpool;
 //using namespace procheartbeat;
 using namespace config;
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 	ProcessLog log;
 	Configuration config;
 	ProcessManager processManager(config, log);
-	SNMPManager aManager;
+	ALARMManager aManager;
 
 	log.writeLog(__LINE__, " ");
 	log.writeLog(__LINE__, "**********Process Manager Started**********");
@@ -498,7 +498,7 @@ static void startMgrProcessThread()
 	Oam oam;
 	SystemModuleTypeConfig systemmoduletypeconfig;
 	ModuleTypeConfig PMSmoduletypeconfig;
-	SNMPManager aManager;
+	ALARMManager aManager;
 
 	log.writeLog(__LINE__, "startMgrProcessThread launched", LOG_TYPE_DEBUG);
 
@@ -815,7 +815,7 @@ void pingDeviceThread()
 	ProcessManager processManager(config, log);
 	Oam oam;
 	ModuleTypeConfig moduletypeconfig;
-	SNMPManager aManager;
+	ALARMManager aManager;
 	BRM::DBRM dbrm;
 
 	log.writeLog(__LINE__, "pingDeviceThread launched", LOG_TYPE_DEBUG);
@@ -2411,7 +2411,7 @@ static void heartbeatProcessThread()
 	Configuration config;
 	ProcessManager processManager(config, log);
 	Oam oam;
-	SNMPManager aManager;
+	ALARMManager aManager;
 
 	int processHeartbeatPeriod=60;	//default value to 60 seconds
 	

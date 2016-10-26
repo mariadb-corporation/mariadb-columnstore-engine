@@ -34,7 +34,7 @@ extern int h_errno;
 #include "dbrm.h"
 namespace fs = boost::filesystem;
 
-using namespace snmpmanager;
+using namespace alarmmanager;
 using namespace std;
 using namespace oam;
 using namespace config;
@@ -2708,7 +2708,7 @@ int processCommand(string* arguments)
             cout << endl << "Monitor for System Alarms" << endl;
             cout << " Enter control-C to return to command line" << endl << endl;
 
-            cmd = "tail -n 0 -f " + snmpmanager::ALARM_FILE;
+            cmd = "tail -n 0 -f " + alarmmanager::ALARM_FILE;
             system(cmd.c_str());
         }
         break;
@@ -2755,7 +2755,7 @@ int processCommand(string* arguments)
 						}
 					}
 
-	                SNMPManager aManager;
+	                ALARMManager aManager;
 					aManager.sendAlarmReport((i->second).getComponentID().c_str(),
 												(i->second).getAlarmID(),
 												CLEAR,

@@ -448,6 +448,17 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 						*(*f)->null_ptr &= ~(*f)->null_bit;
 					intColVal = row.getUintField<8>(s);
 					DataConvert::datetimeToString(intColVal, tmp, 255);
+
+                    /* setting the field_length is a sort-of hack. The length
+                     * at this point can be long enough to include mseconds.
+                     * ColumnStore doesn't fully support mseconds yet so if
+                     * they are requested, trim them off.
+                     * At a later date we should set this more intelligently
+                     * based on the result set.
+                     */
+                    if ((*f)->field_length > 19)
+                        (*f)->field_length = strlen(tmp);
+
 					Field_varstring* f2 = (Field_varstring*)*f;
 					f2->store(tmp, strlen(tmp), f2->charset());
 					break;

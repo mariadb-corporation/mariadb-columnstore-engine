@@ -75,6 +75,8 @@ int64_t Func_year::getIntVal(rowgroup::Row& row,
 		case CalpontSystemCatalog::SMALLINT:
 		case CalpontSystemCatalog::TINYINT:
 		case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::DOUBLE:
 			val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
 			if (val == -1)
 			{
@@ -85,7 +87,7 @@ int64_t Func_year::getIntVal(rowgroup::Row& row,
 			{
 				return (unsigned)((val >> 48) & 0xffff);
 			}
-			break;	
+			break;
 		case CalpontSystemCatalog::DECIMAL:
 			if (parm[0]->data()->resultType().scale == 0)
 			{

@@ -774,7 +774,10 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 					if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
 					{
 						fprintf(ci.filePtr, "%c", ci.delimiter);
-						buf += 8;
+                        if (table->field[colpos]->real_type() == MYSQL_TYPE_DATETIME2)
+                            buf += table->field[colpos]->pack_length();
+                        else
+                            buf += 8;
 					}
 					else
 					{

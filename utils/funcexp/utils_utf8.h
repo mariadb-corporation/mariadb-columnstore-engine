@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+ * Copyright (C) 2016 MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -36,8 +37,8 @@
 
 #include <clocale>
 
-#include "snmpmanager.h"
-using namespace snmpmanager;
+#include "alarmmanager.h"
+using namespace alarmmanager;
 
 #include "liboamcpp.h"
 using namespace oam;
@@ -78,7 +79,7 @@ std::string idb_setlocale()
 		try
 		{
 			//send alarm
-			SNMPManager alarmMgr;
+			ALARMManager alarmMgr;
 			std::string alarmItem = "system";
 			alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, SET);
 			printf("Failed to set locale : %s, Critical alarm generated\n", systemLang.c_str());
@@ -93,7 +94,7 @@ std::string idb_setlocale()
 		try
 		{
 			//send alarm
-			SNMPManager alarmMgr;
+			ALARMManager alarmMgr;
 			std::string alarmItem = "system";
 			alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::INVALID_LOCALE, CLEAR);
 		}
