@@ -69,6 +69,7 @@ CREATE FUNCTION caldroppartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
 CREATE FUNCTION caldisablepartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
 CREATE FUNCTION calenablepartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
 CREATE FUNCTION calshowpartitionsbyvalue RETURNS STRING SONAME 'libcalmysql.so';
+CREATE FUNCTION calgetsqlcount RETURNS STRING SONAME 'libcalmysql.so';
 CREATE FUNCTION idbpm RETURNS INTEGER soname 'libcalmysql.so';
 CREATE FUNCTION idbdbroot RETURNS INTEGER soname 'libcalmysql.so';
 CREATE FUNCTION idbsegment RETURNS INTEGER soname 'libcalmysql.so';
