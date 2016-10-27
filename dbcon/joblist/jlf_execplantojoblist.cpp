@@ -1674,12 +1674,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 			try
 			{
 				bool isNull = ConstantColumn::NULLDATA == cc->type();
-				if ((ct.colDataType == CalpontSystemCatalog::DATE ||
-					  ct.colDataType == CalpontSystemCatalog::DATETIME) &&
-					  constval == "0000-00-00")
-					value = 0;
-				else
-					value = convertValueNum(constval, ct, isNull, rf);
+				value = convertValueNum(constval, ct, isNull, rf);
 				if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
 				{
 					float f = cc->getFloatVal();
@@ -1715,12 +1710,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 			}
 #else
 			bool isNull = ConstantColumn::NULLDATA == cc->type();
-			if ((ct.colDataType == CalpontSystemCatalog::DATE ||
-				   ct.colDataType == CalpontSystemCatalog::DATETIME) &&
-				   constval == "0000-00-00")
-					value = 0;
-			else
-				value = convertValueNum(constval, ct, isNull, rf);
+			value = convertValueNum(constval, ct, isNull, rf);
 
 			if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
 			{
