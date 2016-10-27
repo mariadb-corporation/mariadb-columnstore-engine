@@ -21,7 +21,7 @@
  */
 
 /** @file */
-//#define DEBUG_WALK_COND
+#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
 #include <iostream>
@@ -491,9 +491,68 @@ void debug_walk(const Item *item, void *arg)
 				//ifp->cached_table->select_lex->select_number gives the select level.
 				// could be used on alias.
 				// could also be used to tell correlated join (equal level).
-				cout << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+				cout << "CACHED REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
 					'.' << ifp->field_name << endl;
 				break;
+			}
+			else if (field->type() == Item::REF_ITEM)
+			{
+				Item_ref* ifr = (Item_ref*)field;
+				string refType;
+				string realType;
+				switch (ifr->ref_type())
+				{
+					case Item_ref::REF: refType = "REF"; break;
+					case Item_ref::DIRECT_REF: refType = "DIRECT_REF"; break;
+					case Item_ref::VIEW_REF: refType = "VIEW_REF"; break;
+					case Item_ref::OUTER_REF: refType = "OUTER_REF"; break;
+					case Item_ref::AGGREGATE_REF: refType = "AGGREGATE_REF"; break;
+					default: refType = "UNKNOWN"; break;
+				}
+				switch (ifr->real_type())
+				{
+					case Item::FIELD_ITEM:
+					{
+						Item_field* ifp = (Item_field*)(*(ifr->ref));
+						realType = "FIELD_ITEM ";
+						realType += ifp->db_name;
+						realType += '.';
+						realType += bestTableName(ifp);
+						realType += '.';
+						realType += ifp->field_name;
+						break;
+					}
+					case Item::SUM_FUNC_ITEM:
+					{
+						Item_sum* isp = (Item_sum*)(*(ifr->ref));
+						if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+							realType = "GROUP_CONCAT_FUNC";
+						else
+							realType = "SUM_FUNC_ITEM";
+						break;
+					}
+					case Item::REF_ITEM:
+						// Need recursion here
+						realType = "REF_ITEM";
+						break;
+					case Item::FUNC_ITEM:
+					{
+						Item_func* ifp = (Item_func*)(*(ifr->ref));
+						realType = "FUNC_ITEM ";
+						realType += ifp->func_name();
+						break;
+					}
+					default:
+					{
+						realType = "UNKNOWN";
+					}
+				}
+				cout << "CACHED REF_ITEM: ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
+				break;
+			}
+			else
+			{
+				cout << "REF_ITEM with CACHE_ITEM type unknown " << field->type() << endl;
 			}
 		}
 		else if (ref->real_item()->type() == Item::FIELD_ITEM)
@@ -525,37 +584,105 @@ void debug_walk(const Item *item, void *arg)
 		Item_cache* isp = (Item_cache*)item;
 		// MCOL-46 isp->val_str() can cause a call to execute a subquery. We're not set up
 		// to execute yet.
-//		String val, *str = NULL;
+#if 0
 		switch (item->result_type()) 
 		{
 			case STRING_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_STRING_ITEM";
+				cout << "CACHE_STRING_ITEM" << endl;
 				break;
 			case REAL_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_REAL_ITEM";
+				cout << "CACHE_REAL_ITEM " << isp->val_real() << endl;
 				break;
 			case INT_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_INT_ITEM";
+				cout << "CACHE_INT_ITEM " << isp->val_int() << endl;
 				break;
 			case ROW_RESULT:
-//				cout << "CACHE_ROW_ITEM";
+				cout << "CACHE_ROW_ITEM" << endl;
 				break;
 			case DECIMAL_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_DECIMAL_ITEM";
+				cout << "CACHE_DECIMAL_ITEM " << isp->val_decimal() << endl;
 				break;
 			default:
-				cout << "CACHE_UNKNOWN_ITEM";
+				cout << "CACHE_UNKNOWN_ITEM" << endl;
 				break;
 		}
-//		if (str)
-//			cout << ": (" << str->c_ptr() << ')' << endl;
-//		else
-//			cout << ": <NULL>" << endl;
-		cout << endl;
+#endif
+		Item* field = isp->get_example();
+		if (field->type() == Item::FIELD_ITEM)
+		{
+			Item_field* ifp = (Item_field*)field;
+			//ifp->cached_table->select_lex->select_number gives the select level.
+			// could be used on alias.
+			// could also be used to tell correlated join (equal level).
+			cout << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+				'.' << ifp->field_name << endl;
+			break;
+		}
+		else if (field->type() == Item::REF_ITEM)
+		{
+			Item_ref* ifr = (Item_ref*)field;
+			string refType;
+			string realType;
+			switch (ifr->ref_type())
+			{
+				case Item_ref::REF: refType = "REF"; break;
+				case Item_ref::DIRECT_REF: refType = "DIRECT_REF"; break;
+				case Item_ref::VIEW_REF: refType = "VIEW_REF"; break;
+				case Item_ref::OUTER_REF: refType = "OUTER_REF"; break;
+				case Item_ref::AGGREGATE_REF: refType = "AGGREGATE_REF"; break;
+				default: refType = "UNKNOWN"; break;
+			}
+			switch (ifr->real_type())
+			{
+				case Item::FIELD_ITEM:
+				{
+					Item_field* ifp = (Item_field*)(*(ifr->ref));
+					realType = "FIELD_ITEM ";
+					realType += ifp->db_name;
+					realType += '.';
+					realType += bestTableName(ifp);
+					realType += '.';
+					realType += ifp->field_name;
+					break;
+				}
+				case Item::SUM_FUNC_ITEM:
+				{
+					Item_sum* isp = (Item_sum*)(*(ifr->ref));
+					if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+						realType = "GROUP_CONCAT_FUNC";
+					else
+						realType = "SUM_FUNC_ITEM";
+					break;
+				}
+				case Item::REF_ITEM:
+					// Need recursion here
+					realType = "REF_ITEM";
+					break;
+				case Item::FUNC_ITEM:
+				{
+					Item_func* ifp = (Item_func*)(*(ifr->ref));
+					realType = "FUNC_ITEM ";
+					realType += ifp->func_name();
+					break;
+				}
+				default:
+				{
+					realType = "UNKNOWN";
+				}
+			}
+			cout << "CACHE_ITEM ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
+			break;
+		}
+		else if (field->type() == Item::FUNC_ITEM)
+		{
+			Item_func* ifp = (Item_func*)field;
+			cout << "CACHE_ITEM FUNC_ITEM " << ifp->func_name() << endl;
+			break;
+		}
+		else
+		{
+			cout << "CACHE_ITEM type unknown " << field->type() << endl;
+		}
 		break;
 	}
 	case Item::DATE_ITEM:
