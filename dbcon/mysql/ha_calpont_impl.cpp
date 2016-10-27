@@ -20,6 +20,7 @@
  * $Id: ha_calpont_impl.cpp 9642 2013-06-24 14:57:42Z rdempsey $
  */
 
+//#define DEBUG_WALK_COND
 #include <my_config.h>
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -2293,6 +2294,70 @@ __declspec(dllexport)
 void calgetversion_deinit(UDF_INIT* initid)
 {
 }
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+const char* calgetsqlcount(UDF_INIT* initid, UDF_ARGS* args,
+					char* result, unsigned long* length,
+					char* is_null, char* error)
+{
+	sm::cpsm_conhdl_t* hndl;
+	THD* thd = current_thd;
+	if (!thd->infinidb_vtable.cal_conn_info)
+		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+	idbassert(ci != 0);
+
+	MessageQueueClient* mqc = 0;
+	mqc = new MessageQueueClient("ExeMgr1");
+
+	ByteStream msg;
+	ByteStream::quadbyte runningSql, waitingSql;
+	ByteStream::quadbyte qb = 5;
+	msg << qb;
+	mqc->write(msg);
+
+	//get ExeMgr response
+	msg.restart();
+	msg = mqc->read();
+	if (msg.length() == 0)
+	{
+		memcpy(result, "Lost connection to ExeMgr", *length);
+		return result;
+	}
+	msg >> runningSql;
+	msg >> waitingSql;
+	delete mqc;
+ 
+	char ans[128];
+	sprintf(ans, "Running SQL statements %d, Waiting SQL statments %d", runningSql, waitingSql);
+	*length = strlen(ans);
+	memcpy(result, ans, *length);
+	return result;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool calgetsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+	if (args->arg_count != 0)
+	{
+		strcpy(message,"CALGETSQLCOUNT() takes no arguments");
+		return 1;
+	}
+
+	return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void calgetsqlcount_deinit(UDF_INIT* initid)
+{
+}
+
 
 } //extern "C"
 
