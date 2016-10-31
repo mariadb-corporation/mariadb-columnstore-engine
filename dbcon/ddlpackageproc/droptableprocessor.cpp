@@ -137,7 +137,40 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackage(ddlpackage::Dro
 		CalpontSystemCatalog::TableName tableName;
 		tableName.schema = dropTableStmt.fTableName->fSchema;
 		tableName.table = dropTableStmt.fTableName->fName;
-		roPair = systemCatalogPtr->tableRID( tableName );
+
+		try
+		{
+			roPair = systemCatalogPtr->tableRID(tableName);
+		}
+		catch (IDBExcept &ie)
+		{
+			if (ie.errorCode() == ERR_TABLE_NOT_IN_CATALOG)
+			{
+				Message::Args args;
+				Message message(1);
+				args.add("Table dropped with warning ");
+				args.add("Table does not exist in columnstore engine.");
+				args.add("");
+				args.add("");
+				message.format(args);
+				result.result = WARNING;
+				result.message = message;
+				fSessionManager.rolledback(txnID);
+				return result;
+			}
+			else
+			{
+				result.result = DROP_ERROR;
+				Message::Args args;
+				Message message(9);
+				args.add("Drop table failed due to ");
+				args.add(ie.what());
+				message.format(args);
+				result.message = message;
+				fSessionManager.rolledback(txnID);
+				return result;
+			}
+		}
 
 		uint32_t  processID = ::getpid();
 		int32_t   txnid = txnID.id;
