@@ -3851,6 +3851,13 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			ci->singleInsert = true;
 			return;
 		}
+		uint32_t stateFlags;
+		dbrmp->getSystemState(stateFlags);
+	    if (stateFlags & SessionManagerServer::SS_SUSPENDED)
+	    {
+			setError(current_thd, ER_INTERNAL_ERROR, "Writing to the database is disabled.");
+			return;
+	    }
 
 		CalpontSystemCatalog::TableName tableName;
 		tableName.schema = table->s->db.str;
