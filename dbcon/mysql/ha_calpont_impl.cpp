@@ -926,16 +926,14 @@ uint32_t doUpdateDelete(THD *thd)
                 //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
                 String val, *str;
                 str = value->val_str(&val);
-//                dmlStmt += "'" + string(str->c_ptr()) + "'";
-                columnAssignmentPtr->fScalarExpression =  string(str->c_ptr()) ;
+                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                 columnAssignmentPtr->fFromCol = false;
             }
             else if ( value->type() ==  Item::VARBIN_ITEM )
             {
                 String val, *str;
                 str = value->val_str(&val);
-//                dmlStmt += "'" + string(str->c_ptr()) + "'";
-                columnAssignmentPtr->fScalarExpression =  string(str->c_ptr()) ;
+                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                 columnAssignmentPtr->fFromCol = false;
             }
             else if ( value->type() ==  Item::FUNC_ITEM )
@@ -1056,7 +1054,6 @@ uint32_t doUpdateDelete(THD *thd)
 
                 if (!tmp->field_name) //null
                 {
-//                    dmlStmt += "NULL";
                     columnAssignmentPtr->fScalarExpression = "NULL";
                     columnAssignmentPtr->fFromCol = false;
                 }
@@ -1064,8 +1061,7 @@ uint32_t doUpdateDelete(THD *thd)
                 {
                     String val, *str;
                     str = value->val_str(&val);
-//                    dmlStmt += string(str->c_ptr());
-                    columnAssignmentPtr->fScalarExpression = string(str->c_ptr());
+                    columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                     columnAssignmentPtr->fFromCol = false;
                 }
             }
@@ -1082,13 +1078,11 @@ uint32_t doUpdateDelete(THD *thd)
                 str = value->val_str(&val);
                 if (str)
                 {
-//                    dmlStmt += string(str->c_ptr());
-                    columnAssignmentPtr->fScalarExpression = string(str->c_ptr());
+                    columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                     columnAssignmentPtr->fFromCol = false;
                 }
                 else
                 {
-//                    dmlStmt += "NULL";
                     columnAssignmentPtr->fScalarExpression = "NULL";
                     columnAssignmentPtr->fFromCol = false;
                 }
@@ -2302,7 +2296,6 @@ const char* calgetsqlcount(UDF_INIT* initid, UDF_ARGS* args,
 					char* result, unsigned long* length,
 					char* is_null, char* error)
 {
-	sm::cpsm_conhdl_t* hndl;
 	THD* thd = current_thd;
 	if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
@@ -2683,8 +2676,10 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			// @bug 2547. don't need to send the plan if it's impossible where for all unions.
 			if (thd->infinidb_vtable.impossibleWhereOnUnion)
 				return 0;
-
-			csep->data(thd->infinidb_vtable.original_query.c_ptr());
+			string query;
+			query.assign(thd->infinidb_vtable.original_query.ptr(),
+							  thd->infinidb_vtable.original_query.length());
+			csep->data(query);
 			try {
 				csep->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
 			}catch (std::exception& e)
@@ -4253,7 +4248,9 @@ COND* ha_calpont_impl_cond_push(COND *cond, TABLE* table)
 		((thd->lex)->sql_command == SQLCOM_DELETE) ||
 		((thd->lex)->sql_command == SQLCOM_DELETE_MULTI))
 		return cond;
-	IDEBUG( cout << "ha_calpont_impl_cond_push: " << table->alias.c_ptr() << endl );
+	string alias;
+	alias.assign(table->alias.ptr(), table->alias.length());
+	IDEBUG( cout << "ha_calpont_impl_cond_push: " << alias << endl );
 
 	if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
@@ -4320,7 +4317,9 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 
 	// @info called for every table at the beginning and at the end of a query.
 	// used for cleaning up the tableinfo.
-	IDEBUG( cout << "external_lock for " << table->alias.c_ptr() << endl );
+	string alias;
+	alias.assign(table->alias.ptr(), table->alias.length());
+	IDEBUG( cout << "external_lock for " << alias << endl );
 	idbassert((thd->infinidb_vtable.vtable_state >= THD::INFINIDB_INIT_CONNECT &&
 	           thd->infinidb_vtable.vtable_state <= THD::INFINIDB_REDO_QUERY) ||
 	          thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR);
