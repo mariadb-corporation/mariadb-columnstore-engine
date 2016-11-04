@@ -1603,6 +1603,8 @@ uint32_t doUpdateDelete(THD *thd)
 			command = "COMMIT";
 		else if ((useHdfs) && (b != 0))
 			command = "ROLLBACK";
+        else if ((b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING) && thd->is_strict_mode())
+            command = "ROLLBACK";
 		else if ((!(current_thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) && (( b == 0 ) || (b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING)) )
 			command = "COMMIT";
 		else if (( b != 0 ) && (b != dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING) )
@@ -1666,18 +1668,28 @@ uint32_t doUpdateDelete(THD *thd)
         thd->get_stmt_da()->set_overwrite_status(true);
 		//cout << " error status " << ci->rc << endl;
 	}
-	else
+    if (b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING)
+    {
+        if (thd->is_strict_mode())
+        {
+            thd->set_row_count_func(0);
+            ci->rc = b;
+            // Turn this on as MariaDB doesn't do it until the next phase
+            thd->abort_on_warning= thd->is_strict_mode();
+        }
+        else
+        {
+            thd->set_row_count_func(dmlRowCount);
+        }
+        push_warning(thd, Sql_condition::WARN_LEVEL_WARN, ER_WARN_DATA_OUT_OF_RANGE, errorMsg.c_str());
+    }
+  	else
 	{
 //		if (dmlRowCount != 0) //Bug 5117. Handling self join.
 			thd->set_row_count_func(dmlRowCount);
 
 
 		//cout << " error status " << ci->rc << " and rowcount = " << dmlRowCount << endl;
-	}
-	if ( b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING )
-	{
-		//string errmsg ("Out of range value detected. Please check Calpont Syntax Guide for supported data range." );
-		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errorMsg.c_str());
 	}
 
 	// @bug 4027. comment out the following because this will cause mysql
