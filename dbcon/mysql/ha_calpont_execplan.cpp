@@ -4062,7 +4062,8 @@ void gp_walk(const Item *item, void *arg)
 			{
 				String val, *str = ifp->val_str(&val);
 				string valStr;
-				valStr.assign(str->ptr(), str->length());
+                if (str)
+    				valStr.assign(str->ptr(), str->length());
 				ConstantColumn *cc = NULL;
 				if (!str) //@ bug 2844 check whether parameter is defined
 				{
@@ -5248,7 +5249,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 					{
 						String val, *str = ifp->val_str(&val);
 						string valStr;
-						valStr.assign(str->ptr(), str->length());
+                        if (str)
+    						valStr.assign(str->ptr(), str->length());
 						ConstantColumn *cc = NULL;
 						if (!str)
 						{
