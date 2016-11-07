@@ -1105,7 +1105,15 @@ const JobStepVector doJoin(
 	thj->sequence2(sc2->sequence());
 	thj->column1(sc1);
 	thj->column2(sc2);
-	thj->joinId((joinInfo == 0) ? (++jobInfo.joinNum) : 0);
+    // MCOL-334 joins in views need to have higher priority than SEMI/ANTI
+	if (!view1.empty() && view1 == view2)
+	{
+		thj->joinId(-1);
+	}
+	else
+	{
+		thj->joinId((joinInfo == 0) ? (++jobInfo.joinNum) : 0);
+	}
 
 	// Check if SEMI/ANTI join.
 	// INNER/OUTER join and SEMI/ANTI are mutually exclusive,
