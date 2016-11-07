@@ -654,6 +654,14 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 		}
 		args.add(cols);
 		err = IDBErrorInfo::instance()->errorMsg(WARN_DATA_TRUNC,args);
+        // Strict mode enabled, so rollback on warning
+        if (insertPkg.get_isWarnToError())
+        {
+			string applName ("SingleInsert");
+			fWEWrapper.bulkRollback(tblOid,txnid.id,tableName.toString(),
+				applName, false, err);
+			BulkRollbackMgr::deleteMetaFile( tblOid );
+        }
 	}
 
 	return rc;
@@ -1243,7 +1251,15 @@ End-Disable use of MetaFile for bulk rollback support
 		}
 		args.add(cols);
 		err = IDBErrorInfo::instance()->errorMsg(WARN_DATA_TRUNC,args);
-		
+
+        // Strict mode enabled, so rollback on warning
+        if (insertPkg.get_isWarnToError())
+        {
+			string applName ("BatchInsert");
+			fWEWrapper.bulkRollback(tblOid,txnid.id,tableName.toString(),
+				applName, false, err);
+			BulkRollbackMgr::deleteMetaFile( tblOid );
+        }
 	}
 	//cout << "Batch insert return code " << rc << endl;
 	return rc;
