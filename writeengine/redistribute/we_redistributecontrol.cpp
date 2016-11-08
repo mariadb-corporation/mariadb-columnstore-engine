@@ -189,7 +189,7 @@ int RedistributeControl::handleStartMsg(messageqcpp::ByteStream& bs, messageqcpp
 	if (status != RED_STATE_IDLE)
 	{
 		if (status == RED_STATE_ACTIVE)
-			oss << "Redistribute is already running.  Command is ignored.  You need to stop and clear this active session before start a new one.";
+			oss << "Redistribute is already running.  Command is ignored.  You need to stop and clear this active session before starting a new one.";
 		else
 			oss << "Redistribute is not in IDLE state.  Command is ignored.  Please check the status of last session, then reset the state to IDLE using action CLEAR.";
 
@@ -338,7 +338,7 @@ int RedistributeControl::handleStopMsg(messageqcpp::ByteStream&, messageqcpp::IO
 	uint32_t status = getCurrentState();
 	if (status != RED_STATE_ACTIVE)
 	{
-		oss << "Redistribute is not running.  Command is ignored.";
+		oss << "Redistribute is not running. Command is ignored.";
 	}
 	else
 	{
@@ -362,7 +362,7 @@ int RedistributeControl::handleClearMsg(messageqcpp::ByteStream&, messageqcpp::I
 	uint32_t status = getCurrentState();
 	if (status == RED_STATE_ACTIVE)
 	{
-		oss << "Redistribute is running.  Command is ignored.  To CLEAR, you have to wait or stop the running session.";
+		oss << "Redistribute is running. Command is ignored. To CLEAR, you have to wait or stop the running session.";
 	}
 	else
 	{
