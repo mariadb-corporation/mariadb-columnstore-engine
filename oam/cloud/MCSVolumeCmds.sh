@@ -189,7 +189,7 @@ checkInfostatus() {
 
 createvolume() {
 	# get zone
-	zone=`$prefix/mariadb/columnstore/bin/IDBInstanceCmds.sh getZone`
+	zone=`$prefix/mariadb/columnstore/bin/MCSinstanceCmds.sh getZone`
 
 	if [ $moduleType == "um" ]; then
 		# get type
