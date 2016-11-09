@@ -1,5 +1,5 @@
 #! /bin/sh
-# IDBVolumeCmds.sh
+# MCSVolumeCmds.sh
 # describe, detach and attach Volume Storage from a Cloud environment
 #
 # 1. Amazon EC2

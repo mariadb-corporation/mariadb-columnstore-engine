@@ -1,5 +1,5 @@
 #! /bin/sh
-# IDBInstanceCmds.sh
+# MCSInstanceCmds.sh
 # get-local-instance-ID, get-zone, getPrivateIP from a Cloud environment
 #
 # 1. Amazon EC2
