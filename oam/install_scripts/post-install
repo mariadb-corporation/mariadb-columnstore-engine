@@ -101,7 +101,7 @@ test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columns
 test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
 # make sure trace dir is world-writable and sticky
-chmod 1755 /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+sudo chmod 1755 /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
 test -d $installdir/data1/systemFiles || mkdir $installdir/data1/systemFiles
