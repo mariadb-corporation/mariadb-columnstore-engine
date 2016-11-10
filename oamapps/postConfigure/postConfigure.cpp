@@ -3398,7 +3398,7 @@ int main(int argc, char *argv[])
 					//run remote command script
 					cout << endl << "----- Starting MariaDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
 
-					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml " +  installDir + "/etc/. > /dev/null 2>&1";
+					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
 					int rtnCode = system(cmd.c_str());
 
 					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
