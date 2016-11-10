@@ -814,10 +814,7 @@ int main(int argc, char *argv[])
 
 	//amazon install setup check
 	bool amazonInstall = false;
-	if (rootUser)
-		system("ec2-version > /tmp/amazon.log 2>&1");
-	else
-		system("sudo ec2-version > /tmp/amazon.log 2>&1");
+	system("ec2-version > /tmp/amazon.log 2>&1");
 
 	ifstream in("/tmp/amazon.log");
 
