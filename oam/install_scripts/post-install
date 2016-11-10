@@ -190,6 +190,9 @@ else
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
+
+	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
+
 fi
 
 #check if MariaDB Columnstore system logging was setup
