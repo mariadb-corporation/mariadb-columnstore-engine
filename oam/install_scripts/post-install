@@ -8,9 +8,12 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=$USER
+sudo=sudo
 if [ -z "$user" ]; then
-	user=root
+        user=root
+        sudo=" "
 fi
+
 quiet=0
 
 for arg in "$@"; do
@@ -95,13 +98,11 @@ sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&
 
 cd /
 
-test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
+test -d /var/log/mariadb/columnstore || sudo mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore/archive || sudo mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore/corefiles || sudo mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+test -h /var/log/mariadb/columnstore/data && sudo rm -f /var/log/mariadb/columnstore/data
 # make sure trace dir is world-writable and sticky
-sudo chmod 1755 /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
 test -d $installdir/data1/systemFiles || mkdir $installdir/data1/systemFiles
@@ -180,10 +181,10 @@ if [ $user = "root" ]; then
 	chmod 777 -R /dev/shm
 	rm -f /etc/default/columnstore
 else
+        sudo chmod 755 /var/log
+        sudo chmod -R 755 /var/log/mariadb/columnstore
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Columnstore.xml
-	sudo chmod 755 /var/log
-	sudo chmod -R 755 /var/log/mariadb/columnstore
 	sudo chmod -R 777 /dev/shm
 	sudo rm -f /var/lock/subsys/mysql-Columnstore
 	sudo rm -f /tmp/StopColumnstore
