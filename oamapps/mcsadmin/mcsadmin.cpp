@@ -32,13 +32,15 @@ extern int h_errno;
 #include "boost/tokenizer.hpp"
 #include "sessionmanager.h"
 #include "dbrm.h"
+#include "we_config.h" // for findObjectFile
+#include "we_fileop.h" // for findObjectFile
 namespace fs = boost::filesystem;
 
 using namespace alarmmanager;
 using namespace std;
 using namespace oam;
 using namespace config;
-
+using namespace execplan;
 #include "installdir.h"
 
 // Variables shared in both main and functions
@@ -707,8 +709,95 @@ int processCommand(string* arguments)
         }
         break;
 
-        case 5: // Available
+        case 5: // findObjectFile
         {
+			unsigned maxDBRoot = WriteEngine::Config::DBRootCount();
+			if (maxDBRoot < 1)
+			{
+				cout << endl << "getDatafileName fails because there are no dbroots defined for this server" << endl;
+				break;;
+			}
+			if (arguments[1] == "")
+			{
+				cout << endl << "getDatafileName requires one of" << endl;
+				cout << "a) oid of column for which file name is to be retrieved" << endl;
+				cout << "b) schema, table and column for which file name is to be retrieved" << endl;
+				break;
+			}
+			char* endchar;
+			int oid = strtol(arguments[1].c_str(), &endchar, 0);
+			// test to see if not all numeric
+			if (endchar < &(*arguments[1].end()))
+			{
+				oid = 0;
+			}
+			if (oid == 0)
+			{
+				// Need to convert the arguments to oid
+				boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+					execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0);
+				CalpontSystemCatalog::TableColName columnName;
+				columnName.schema = arguments[1];
+				if (arguments[2] == "")
+				{
+					cout << endl << "getDatafileName requires a table and column for schema " << arguments[1] << endl;
+					break;
+				}
+				columnName.table = arguments[2];
+				if (arguments[3] == "")
+				{
+					// No column was given. Use the first column in the table.
+					CalpontSystemCatalog::TableName tableName;
+					tableName.schema = arguments[1];
+					tableName.table = arguments[2];
+					CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
+					oid = rdlist.front().objnum;
+				}
+				else
+				{
+					columnName.column = arguments[3];
+					oid = systemCatalogPtr->lookupOID(columnName);
+				}
+			}
+
+			// Use writeengine code to get the filename
+			WriteEngine::FileOp fileOp;
+			char fileName[WriteEngine::FILE_NAME_SIZE];
+			memset(fileName, 0, WriteEngine::FILE_NAME_SIZE);
+			int rc;
+
+			if (oid < 1000)
+				rc = fileOp.getVBFileName(oid, fileName);
+			else
+				rc = fileOp.oid2DirName(oid, fileName);
+			cout << "file name for oid " << oid << ":" << endl;
+			if (strlen(fileName) > 0)
+			{
+				cout << fileName;
+			}
+			if (rc == WriteEngine::NO_ERROR)
+			{
+				// Success. No more output.
+				cout << endl;
+			}
+			else if (rc == WriteEngine::ERR_FILE_NOT_EXIST)
+			{
+				if (strlen(fileName) == 0)
+				{
+					// We couldn't get a name
+					cout << "Error: Filename could not be determined" << endl;
+				}
+				else
+				{
+					// We got a name, but the file doesn't exist
+					cout << " (OID directory not found)" << endl;
+				}
+			}
+			else
+			{
+				// Something broke
+				cerr << "WriteEngine::FileOp::oid2DirName() error. rc=" << rc << endl;
+			}
         }
         break;
 
