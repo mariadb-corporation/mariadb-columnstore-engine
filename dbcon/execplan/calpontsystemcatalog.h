@@ -431,6 +431,7 @@ public:
 		TableName(const TableAliasName& tan): schema(tan.schema), table(tan.table) {}
 		std::string schema;
 		std::string table;
+        int64_t create_date;
 		bool operator<(const TableName& rhs) const;
 		bool operator>=(const TableName& rhs) const { return !(*this < rhs); }
 		bool operator==(const TableName& rhs) const

@@ -17,7 +17,7 @@ SET ( libcalmysql_SRCS
     ha_view.cpp sm.cpp
     ha_window_function.cpp
     ha_calpont_partition.cpp
-    ha_pseudocolumn.cpp )
+    ha_pseudocolumn.cpp)
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
@@ -29,7 +29,40 @@ target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_
 
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS calmysql DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+SET ( is_columnstore_tables_SRCS
+    is_columnstore_tables.cpp
+    )
+add_library(is_columnstore_tables SHARED ${is_columnstore_tables_SRCS})
+
+target_link_libraries(is_columnstore_tables ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+
+# Don't prepend .so file with 'lib'
+set_target_properties(is_columnstore_tables PROPERTIES PREFIX "")
+set_target_properties(is_columnstore_tables PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+SET ( is_columnstore_columns_SRCS
+    is_columnstore_columns.cpp
+    )
+add_library(is_columnstore_columns SHARED ${is_columnstore_columns_SRCS})
+
+target_link_libraries(is_columnstore_columns ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+
+# Don't prepend .so file with 'lib'
+set_target_properties(is_columnstore_columns PROPERTIES PREFIX "")
+set_target_properties(is_columnstore_columns PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+SET ( is_columnstore_extents_SRCS
+    is_columnstore_extents.cpp
+    )
+add_library(is_columnstore_extents SHARED ${is_columnstore_extents_SRCS})
+
+target_link_libraries(is_columnstore_extents ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+
+# Don't prepend .so file with 'lib'
+set_target_properties(is_columnstore_extents PROPERTIES PREFIX "")
+set_target_properties(is_columnstore_extents PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+install(TARGETS calmysql is_columnstore_tables is_columnstore_columns is_columnstore_extents DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 
