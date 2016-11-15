@@ -9615,7 +9615,7 @@ namespace oam
 			// The stat above may fail for non-root because of permissions
 			// This is a non-optimal solution
 			string cmd = "pgrep ProcMon";
-			if (system(cmd.c_str()) == 0)
+			if (system(cmd.c_str()) == 1)
 			{
 				return true;
 			}
