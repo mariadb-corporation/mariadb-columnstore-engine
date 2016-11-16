@@ -38,17 +38,27 @@ $installdir/bin/columnstore stop > /dev/null 2>&1
 $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
 # uninstall OS scripts updated by postConfigure
-if test -f /root/.bashrc.columnstoreSave ; then
-	$sudo mv -f /root/.bashrc.columnstoreSave /root/.bashrc > /dev/null 2>&1
+if [ $user = "root" ]; then
+	if test -f /root/.bashrc.columnstoreSave ; then
+		mv -f /root/.bashrc.columnstoreSave /root/.bashrc > /dev/null 2>&1
+	fi
+else
+        if test -f $HOME/.bashrc.columnstoreSave ; then
+                mv -f /home/$user/.bashrc.columnstoreSave /home/$user/.bashrc > /dev/null 2>&1
+        fi
 fi
+	
+
 if test -f /etc/exports.columnstoreSave ; then
 	$sudo mv -f /etc/exports.columnstoreSave /etc/exports > /dev/null 2>&1
 else
 	$sudo rm -f /etc/exports > /dev/null 2>&1
 fi
-if test -f /etc/rc.d/rc.local.columnstoreSave ; then
+
+if test -f /etc/rc.d/rc.local.columnstoreSave ; then	
 	$sudo mv -f /etc/rc.d/rc.local.columnstoreSave /etc/rc.d/rc.local > /dev/null 2>&1
 fi
+
 if test -f /etc/rc.local.columnstoreSave ; then
 	$sudo mv -f /etc/rc.local.columnstoreSave /etc/rc.local > /dev/null 2>&1
 fi
@@ -65,23 +75,23 @@ fi
 #remove log file directories
 #rm -rf /var/log/mariadb/columnstore > /dev/null 2>&1
 #rm -f $installdir/mysql/db/*.err > /dev/null 2>&1
-rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
-rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+sudo rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
+sudo rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 sudo rm -f /etc/default/columnstore
 
 # remove Mariab Columnstore Log Rotate File abd Transaction Log File
-rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
-rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
+sudo rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
+sudo rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
 
 # delete Mariab Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
 
 # delete prat files
-rm -f /etc/cron.d/ps > /dev/null 2>&1
-rm -f /etc/pscollect > /dev/null 2>&1
-/etc/init.d/crond reload  > /dev/null 2>&1
-sudo systemctl reload crond.service > /dev/null 2>&1
+sudo rm -f /etc/cron.d/ps > /dev/null 2>&1
+sudo rm -f /etc/pscollect > /dev/null 2>&1
+sudo /etc/init.d/crond reload  > /dev/null 2>&1
+sudo sudo systemctl reload crond.service > /dev/null 2>&1
 
 # delete tmp files
 rm -f $installdir/local/*.columnstore
@@ -90,7 +100,7 @@ rm -rf /tmp/bucketreuse
 rm -f /tmp/columnstore.txt
 rm -f /tmp/dbbuilder.*
 rm -f /tmp/dbrmfiles
-rm -f /var/lock/subsys/columnstore
+sudo rm -f /var/lock/subsys/columnstore
 rm -f /tmp/pkgcheck
 rm -f /tmp/upgrade-status.log.*
 rm -f /tmp/mount.log
@@ -122,8 +132,8 @@ systemctl=`which systemctl 2>/dev/null`
 if [ -n "$systemctl" ]; then
 
 	sudo systemctl disable columnstore >/dev/null 2>&1
-	rm -f /usr/lib/systemd/system/columnstore.service
-	rm -f /lib/systemd/system/columnstore.service
+	sudo rm -f /usr/lib/systemd/system/columnstore.service
+	sudo rm -f /lib/systemd/system/columnstore.service
 else
 	chkconfig=`which chkconfig 2>/dev/null`
 	if [ -n "$chkconfig" ]; then
@@ -158,9 +168,9 @@ fi
 #remove library paths
 if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
         # remove library config file
-        rm -f /etc/ld.so.conf.d/columnstore.conf
-        rm -f /etc/ld.so.cache
-        ldconfig
+        sudo rm -f /etc/ld.so.conf.d/columnstore.conf
+        sudo rm -f /etc/ld.so.cache
+        sudo ldconfig
 fi
 
 #tell user to run post configure script

@@ -814,10 +814,7 @@ int main(int argc, char *argv[])
 
 	//amazon install setup check
 	bool amazonInstall = false;
-	if (rootUser)
-		system("ec2-version > /tmp/amazon.log 2>&1");
-	else
-		system("sudo ec2-version > /tmp/amazon.log 2>&1");
+	system("ec2-version > /tmp/amazon.log 2>&1");
 
 	ifstream in("/tmp/amazon.log");
 
@@ -3401,7 +3398,7 @@ int main(int argc, char *argv[])
 					//run remote command script
 					cout << endl << "----- Starting MariaDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
 
-					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml " +  installDir + "/etc/. > /dev/null 2>&1";
+					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
 					int rtnCode = system(cmd.c_str());
 
 					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
@@ -5044,10 +5041,10 @@ bool updateBash()
 
 	if (!rootUser)
 	{
-		string cmd = "echo export columnstore_INSTALL_DIR=" + installDir + " >> " + fileName;
+		string cmd = "echo export COLUMNSTORE_INSTALL_DIR=" + installDir + " >> " + fileName;
 		system(cmd.c_str());
 	
-		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$columnstore_INSTALL_DIR/lib:$columnstore_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
+		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
 		system(cmd.c_str());
 	}
 
