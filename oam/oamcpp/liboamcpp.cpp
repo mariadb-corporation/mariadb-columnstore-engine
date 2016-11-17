@@ -8549,8 +8549,11 @@ namespace oam
 		//update /etc/fstab with mount
 		string entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
 
-		//update local fstab	
-		cmd = "echo " + entry + " >> /etc/fstab";
+		//update local fstab
+        if (user == 0)
+			cmd = "echo " + entry + " >> /etc/fstab";
+        else
+			cmd = "sudo echo " + entry + " >> /etc/fstab";
 		system(cmd.c_str());
 
 		//use from addmodule later
