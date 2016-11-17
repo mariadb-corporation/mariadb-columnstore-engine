@@ -844,9 +844,6 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
-		if ( cloud  == oam::UnassignedName )
-		    option = "2";
-		  
 		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
 		cout << "You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
@@ -2933,8 +2930,9 @@ int main(int argc, char *argv[])
 					break;
 				}
 
-				if ( strcmp(pass1, "exit") == 0 )
+				if ( pass1 == "exit")
 					exit(0);
+
 				string p1 = pass1;
 				pass2=getpass("Confirm password > ");
 				string p2 = pass2;
