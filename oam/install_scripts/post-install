@@ -95,15 +95,9 @@ sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&
 
 cd /
 
-if [ $user != "root" ]; then
-	sudo chmod 777 /var
-	sudo chmod 777 /var/log
-fi
-
-test -d /var/log/mariadb || mkdir /var/log/mariadb >/dev/null 2>&1
-sudo chmod 777 /var/log/mariadb
-test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-sudo chmod 777 /var/log/mariadb/columnstore
+test -d /var/log/mariadb || sudo mkdir /var/log/mariadb >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore || sudo mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+sudo chmod -R 777 /var/log/mariadb
 
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
