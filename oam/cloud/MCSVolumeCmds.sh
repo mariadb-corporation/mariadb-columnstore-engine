@@ -93,7 +93,7 @@ if [ "$1" = "createTag" ]; then
 fi
 
 
-test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
+test -f $prefix/mariadb/columnstore/post/functions && . $prefix/mariadb/columnstore/post/functions
 
 ec2=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_HOME`
 
@@ -247,7 +247,7 @@ detachvolume() {
 			sleep 1
 		done
 		test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-		cplogger -w 100 "detachvolume failed: $STATUS"
+		$prefix/mariadb/columnstore/bin/cplogger -w 100 "detachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
 	fi
@@ -258,7 +258,7 @@ detachvolume() {
 	fi
 
 	test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-	cplogger -w 100 "detachvolume failed status: $STATUS"
+	$prefix/mariadb/columnstore/bin/cplogger -w 100 "detachvolume failed status: $STATUS"
 	echo $STATUS
 	exit 1
 }
@@ -282,7 +282,7 @@ attachvolume() {
 			sleep 1
 		done
 		test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-		cplogger -w 100 "attachvolume failed: $STATUS"
+		$prefix/mariadb/columnstore/bin/cplogger -w 100 "attachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
 	fi
@@ -293,7 +293,7 @@ attachvolume() {
 	fi
 
 	test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-	cplogger -w 100 "attachvolume failed: $STATUS"
+	$prefix/mariadb/columnstore/bin/cplogger -w 100 "attachvolume failed: $STATUS"
 	echo $STATUS
 	exit 1
 }
