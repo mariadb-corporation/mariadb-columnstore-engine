@@ -8550,6 +8550,9 @@ namespace oam
 		string entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
 
 		//update local fstab
+		int user;
+        user = getuid();
+
         if (user == 0)
 			cmd = "echo " + entry + " >> /etc/fstab";
         else
