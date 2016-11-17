@@ -114,8 +114,10 @@ void dbrmDirCheck()
 		dbrmroot = sysConfig->getConfig(SystemSection, "DBRMRoot");
 		dbrmrootPrev = sysConfigPrev->getConfig(SystemSection, "DBRMRoot");
 	}
-	catch(...)
-	{}
+	catch(const std::exception &exc)
+	{
+	    std::cerr << exc.what() << std::endl;
+	}
 
 	if ( dbrmrootPrev.empty() )
 		return;
@@ -259,8 +261,10 @@ void mysqlSetup()
 	try {
 		oam.actionMysqlCalpont(MYSQL_START);
 	}
-	catch(...)
-	{}
+	catch(const std::exception &exc)
+	{
+	    std::cerr << exc.what() << std::endl;
+	}
 	sleep(2);
 	
 	for (;;)
@@ -289,7 +293,10 @@ void mysqlSetup()
 			try {
 				oam.setSystemConfig("MySQLPasswordConfig", "y");
 			}
-			catch(...) {}
+			catch(const std::exception &exc)
+			{
+			    std::cerr << exc.what() << std::endl;
+			}
 		}
 		else
 		{
@@ -303,8 +310,10 @@ void mysqlSetup()
 				try {
 					oam.actionMysqlCalpont(MYSQL_STOP);
 				}
-				catch(...)
-				{}
+				catch(const std::exception &exc)
+				{
+				    std::cerr << exc.what() << std::endl;
+				}
 				unlink("/tmp/idbmysql.log");
 				break;
 			}
@@ -344,8 +353,10 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
 			if ( procstat.ProcessOpState == oam::ACTIVE)
 				break;
 		}
-		catch (exception& ex)
-		{}
+		catch(const std::exception &exc)
+		{
+		    std::cerr << exc.what() << std::endl;
+		}
 	}
 
 	SystemModuleTypeConfig systemmoduletypeconfig;
@@ -353,8 +364,10 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
 	try{
 		oam.getSystemConfig(systemmoduletypeconfig);
 	}
-	catch (exception& ex)
-	{}
+	catch(const std::exception &exc)
+	{
+	    std::cerr << exc.what() << std::endl;
+	}
 
 	ByteStream msg;
 	ByteStream::byte requestID = RUNUPGRADE;
@@ -393,8 +406,10 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
 						}
 					}
 				}
-				catch (exception& ex)
-				{}
+				catch(const std::exception &exc)
+				{
+				    std::cerr << exc.what() << std::endl;
+				}
 			}
 		}
 	}
@@ -417,8 +432,10 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 	try{
 		oam.getSystemConfig(systemmoduletypeconfig);
 	}
-	catch (exception& ex)
-	{}
+	catch(const std::exception &exc)
+	{
+	    std::cerr << exc.what() << std::endl;
+	}
 
 	//get Primary (Master) UM
 	string masterModule = oam::UnassignedName;
@@ -530,8 +547,10 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 						pt++;
 					}
 				}
-				catch (exception& ex)
-				{}
+				catch(const std::exception &exc)
+				{
+				    std::cerr << exc.what() << std::endl;
+				}
 			}
 			else
 				pt++;
@@ -593,7 +612,9 @@ int sendMsgProcMon( std::string module, ByteStream msg, int requestID, int timeo
 				try {
 					receivedMSG = mqRequest.read(&ts);
 				}
-				catch (...) {
+				catch (const std::exception &exc)
+				{
+					std::cerr << exc.what() << std::endl;
 					return returnStatus;
 				}
 	
@@ -630,8 +651,10 @@ int sendMsgProcMon( std::string module, ByteStream msg, int requestID, int timeo
 
 		mqRequest.shutdown();
 	}
-	catch (exception& ex)
-	{}
+	catch(const std::exception &exc)
+	{
+	    std::cerr << exc.what() << std::endl;
+	}
 
 	return returnStatus;
 }
@@ -651,8 +674,10 @@ void checkFilesPerPartion(int DBRootCount, Config* sysConfig)
 	try {
 		dbRoot = sysConfig->getConfig(SystemSection, "DBRoot1");
 	}
-	catch(...)
-	{}
+	catch(const std::exception &exc)
+	{
+	    std::cerr << exc.what() << std::endl;
+	}
 
 	dbRoot = dbRoot + "/000.dir";
 
@@ -661,8 +686,10 @@ void checkFilesPerPartion(int DBRootCount, Config* sysConfig)
 		string tmp = sysConfig->getConfig("ExtentMap", "FilesPerColumnPartition");
 		FilesPerColumnPartition = atoi(tmp.c_str());
 	}
-	catch(...)
-	{}
+	catch(const std::exception &exc)
+	{
+	    std::cerr << exc.what() << std::endl;
+	}
 
 	if ( fmod(FilesPerColumnPartition , (float) DBRootCount) != 0 ) {
 		ifstream oldFile (dbRoot.c_str());
@@ -738,8 +765,10 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 				try {
 					sysConfig->setConfig("Installation", "MySQLPort", mysqlPort);
 				}
-				catch(...)
-				{}
+				catch(const std::exception &exc)
+				{
+				    std::cerr << exc.what() << std::endl;
+				}
 		
 				if ( !writeConfig(sysConfig) ) {
 					cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
@@ -860,8 +889,10 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 			try {
 				sysConfig->setConfig("Installation", "MySQLPort", mysqlPort);
 			}
-			catch(...)
-			{}
+			catch(const std::exception &exc)
+			{
+			    std::cerr << exc.what() << std::endl;
+			}
 	
 			if ( !writeConfig(sysConfig) ) {
 				cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
@@ -889,8 +920,10 @@ bool writeConfig( Config* sysConfig )
 			sysConfig->write();
 			return true;
 		}
-		catch(...)
-		{}
+		catch(const std::exception &exc)
+		{
+		    std::cerr << exc.what() << std::endl;
+		}
 	}
 
 	return false;

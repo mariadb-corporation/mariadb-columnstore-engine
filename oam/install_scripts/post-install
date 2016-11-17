@@ -98,10 +98,14 @@ sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&
 
 cd /
 
+test -d /var/log/mariadb || sudo mkdir /var/log/mariadb >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore || sudo mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/archive || sudo mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/corefiles || sudo mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-test -h /var/log/mariadb/columnstore/data && sudo rm -f /var/log/mariadb/columnstore/data
+sudo chmod -R 777 /var/log/mariadb
+
+test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
 # make sure trace dir is world-writable and sticky
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
@@ -186,6 +190,8 @@ else
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Columnstore.xml
 	sudo chmod -R 777 /dev/shm
+	sudo chmod 777 /var/lock/subsys
+	sudo chmod 777 /tmp
 	sudo rm -f /var/lock/subsys/mysql-Columnstore
 	sudo rm -f /tmp/StopColumnstore
 

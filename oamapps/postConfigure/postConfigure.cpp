@@ -5041,10 +5041,10 @@ bool updateBash()
 
 	if (!rootUser)
 	{
-		string cmd = "echo export columnstore_INSTALL_DIR=" + installDir + " >> " + fileName;
+		string cmd = "echo export COLUMNSTORE_INSTALL_DIR=" + installDir + " >> " + fileName;
 		system(cmd.c_str());
 	
-		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$columnstore_INSTALL_DIR/lib:$columnstore_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
+		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
 		system(cmd.c_str());
 	}
 

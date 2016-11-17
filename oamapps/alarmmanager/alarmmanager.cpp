@@ -234,7 +234,6 @@ void processAlarm(const Alarm& calAlarm)
            			rewriteActiveLog (alarmList);
 				} catch (runtime_error& e)
 				{
-					if (ALARM_DEBUG) {                                
 						LoggingID lid(11);                                
 						MessageLog ml(lid);                                
 						Message msg;                                
@@ -242,9 +241,7 @@ void processAlarm(const Alarm& calAlarm)
 						args.add("rewriteActiveLog error:");                                
 						args.add(e.what());                                
 						msg.format(args);                                
-						ml.logDebugMessage(msg);                                
-					}
-					exit(1);
+						ml.logErrorMessage(msg);                                
 				}
            		break;
            	}
@@ -256,7 +253,6 @@ void processAlarm(const Alarm& calAlarm)
    			logAlarm (calAlarm, ACTIVE_ALARM_FILE);
 		} catch (runtime_error& e)
 		{
-			if (ALARM_DEBUG) {                                
 				LoggingID lid(11);                                
 				MessageLog ml(lid);                                
 				Message msg;                                
@@ -264,9 +260,7 @@ void processAlarm(const Alarm& calAlarm)
 				args.add("logAlarm error:");                                
 				args.add(e.what());                                
 				msg.format(args);                                
-				ml.logDebugMessage(msg);                                
-			}
-			exit(1);
+				ml.logErrorMessage(msg);                                
 		}
 	}
 	
@@ -276,7 +270,6 @@ void processAlarm(const Alarm& calAlarm)
 			logAlarm (calAlarm, ALARM_FILE);
 		} catch (runtime_error& e)
 		{
-			if (ALARM_DEBUG) {                                
 				LoggingID lid(11);                                
 				MessageLog ml(lid);                                
 				Message msg;                                
@@ -284,9 +277,7 @@ void processAlarm(const Alarm& calAlarm)
 				args.add("logAlarm error:");                                
 				args.add(e.what());                                
 				msg.format(args);                                
-				ml.logDebugMessage(msg);                                
-			}
-			exit(1);
+				ml.logErrorMessage(msg);                                
 		}
 	}
 }
@@ -462,7 +453,6 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
   		configAlarm (calAlarm);
 	} catch (runtime_error& e)
 	{
-		if (ALARM_DEBUG) {                                
 			LoggingID lid(11);                                
 			MessageLog ml(lid);                                
 			Message msg;                                
@@ -470,9 +460,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
 			args.add("configAlarm error:");                                
 			args.add(e.what());                                
 			msg.format(args);                                
-			ml.logDebugMessage(msg);                                
-		}
-		exit(1);
+			ml.logErrorMessage(msg);                                
 	}
 
 	return;
