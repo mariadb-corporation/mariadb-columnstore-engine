@@ -84,17 +84,17 @@ fi
 # softlink for libperl.sp, used by cplogger
 sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
-# TODO-based on early experience with HDP it doesn't install bigtop
-# so the code below will not correctly detect JAVA_HOME.  Need to 
-# decide how to handle
-# Autodetect JAVA_HOME if not defined
-#if [ -e /usr/libexec/bigtop-detect-javahome ]; then
-#. /usr/libexec/bigtop-detect-javahome
-#elif [ -e /usr/lib/bigtop-utils/bigtop-detect-javahome ]; then
-#. /usr/lib/bigtop-utils/bigtop-detect-javahome
-#fi
-#ln -sf $JAVA_HOME/jre/lib/amd64/server/libjvm.so
-#chown -h $user.$user libjvm.so >/dev/null 2>&1
+if [ $user != "root" ]; then
+        eval userhome=~$user
+        bashFile=$userhome/.bashrc
+        touch ${bashFile}
+	/bin/cp -f ${bashFile} ${bashFile}.columnstoreSave > /dev/null 2>&1
+
+        echo " " >> ${bashFile}
+        echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
+        echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
+        . ${bashFile}
+fi
 
 cd /
 

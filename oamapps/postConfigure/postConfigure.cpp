@@ -5033,15 +5033,6 @@ bool updateBash()
 
    	ifstream newFile (fileName.c_str());
 
-	if (!rootUser)
-	{
-		string cmd = "echo export COLUMNSTORE_INSTALL_DIR=" + installDir + " >> " + fileName;
-		system(cmd.c_str());
-	
-		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
-		system(cmd.c_str());
-	}
-
 	if ( hdfs ) 
 	{	
 		string cmd = "echo . " + installDir + "/bin/" + DataFileEnvFile + " >> " + fileName;
