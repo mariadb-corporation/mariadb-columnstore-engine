@@ -491,7 +491,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg1, requestID, 600 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Master DB Distribute, check /tmp/master-dist.logs on " << masterModule << endl;
+								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Master DB Distribute, check /tmp/master-dist*.logs on " << masterModule << endl;
 								return returnStatus;
 							}
 

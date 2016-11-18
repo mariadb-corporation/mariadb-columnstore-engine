@@ -336,17 +336,13 @@ int main(int argc, char *argv[])
 		// for backward compatibility
 		else if( string("-n") == argv[i] )
 			noPrompting = true;
-		else if( string("-i") == argv[i] ) {
+		else if( string("--installdir=") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
 				cout << "   ERROR: install dir not provided" << endl;
 				exit (1);
 			}
 			installDir = argv[i];
-			if ( installDir.find("-") != string::npos ) {
-				cout << "   ERROR: Valid install dir not provided" << endl;
-				exit (1);
-			}			
 		}
 		else if( string("-port") == argv[i] ) {
 			i++;

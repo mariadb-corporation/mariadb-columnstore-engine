@@ -250,7 +250,7 @@ The next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
-$installdir/bin/postConfigure -i $installdir
+$installdir/bin/postConfigure --installdir=$installdir
 
 EOD
 	else
@@ -282,13 +282,13 @@ If you are intending to install MariaDB Columnstore over Hadoop, the next steps 
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
 . $installdir/bin/setenv-hdfs-20
-$installdir/bin/postConfigure -i $installdir
+$installdir/bin/postConfigure --installdir=$installdir
 
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
-$installdir/bin/postConfigure -i $installdir
+$installdir/bin/postConfigure --installdir=$installdir
 
 EOD
 		else
@@ -321,13 +321,13 @@ If you are intending to install MariaDB Columnstore over Hadoop, the next steps 
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql:$libpath
 . $installdir/bin/setenv-hdfs-12
-$installdir/bin/postConfigure -i $installdir
+$installdir/bin/postConfigure --installdir=$installdir
 
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
-$installdir/bin/postConfigure -i $installdir
+$installdir/bin/postConfigure --installdir=$installdir
 
 EOD
 			else
