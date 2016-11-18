@@ -234,7 +234,7 @@ if { $INSTALLTYPE == "initial"} {
 	send_user "Run Module Installer                            "
 	send " \n"
 	send date\n
-	send "ssh $USERNAME@$SERVER '$INSTALLDIR/bin/module_installer.sh --module=$MODULETYPE --port=$MYSQLPORT --installdir=$INSTALLDIR $MODULETYPE'\n"
+	send "ssh $USERNAME@$SERVER '$INSTALLDIR/bin/module_installer.sh --module=$MODULETYPE --port=$MYSQLPORT --installdir=$INSTALLDIR'\n"
 	set timeout 10
 	expect {
 		"word: " { send "$PASSWORD\n" }

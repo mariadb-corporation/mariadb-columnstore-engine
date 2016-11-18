@@ -53,6 +53,19 @@ fi
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
 
+if [ $user != "root" ]; then
+        echo "Setup .bashrc on Module for non-root"
+
+        eval userhome=~$user
+        bashFile=$userhome/.bashrc
+        touch ${bashFile}
+
+        echo " " >> ${bashFile}
+        echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
+        echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
+	. ${bashFile}
+fi
+
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $module = "pm" ]; then
 	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
@@ -111,18 +124,6 @@ if [ $EUID -eq 0 -a -f $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore ]; th
 		sudo cp /etc/rc.local /etc/rc.local.columnstoreSave
 		sudo cat $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
 	fi
-fi
-
-if [ $user != "root" ]; then
-	echo "Setup .bashrc on Module for non-root"
-
-	eval userhome=~$user
-	bashFile=$userhome/.bashrc
-	touch ${bashFile}
-
-	echo " " >> ${bashFile}
-	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
-	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
 fi
 
 plugin=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
