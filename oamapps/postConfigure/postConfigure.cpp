@@ -336,14 +336,6 @@ int main(int argc, char *argv[])
 		// for backward compatibility
 		else if( string("-n") == argv[i] )
 			noPrompting = true;
-		else if( string("--installdir=") == argv[i] ) {
-			i++;
-			if (i >= argc ) {
-				cout << "   ERROR: install dir not provided" << endl;
-				exit (1);
-			}
-			installDir = argv[i];
-		}
 		else if( string("-port") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
@@ -357,6 +349,14 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 		}
+        else if( string("-i") == argv[i] ) {
+            i++;
+            if (i >= argc ) {
+                cout << "   ERROR: Path not provided" << endl;
+                exit (1);
+            }
+            installDir = argv[i];
+        }
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
