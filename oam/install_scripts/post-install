@@ -100,6 +100,7 @@ if [ $user != "root" ]; then
         	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
         	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
         	. ${bashFile}
+	fi
 fi
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
