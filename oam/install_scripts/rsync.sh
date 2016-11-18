@@ -6,7 +6,6 @@
 # Argument 1 - Remote Server Host Name or IP address
 # Argument 2 - Root Password of remote server
 # Argument 3 - Debug flag 1 for on, 0 for off
-set USERNAME "root@"
 set SERVER [lindex $argv 0]
 set PASSWORD [lindex $argv 1]
 set INSTALLDIR [lindex $argv 2]
@@ -15,13 +14,19 @@ set DEBUG [lindex $argv 3]
 log_user $DEBUG
 spawn -noecho /bin/bash
 
+if {[info exists env(USER)]} {
+    set USERNAME $env(USER)
+} else {
+    set USERNAME "root"
+}
+
 
 if { $PASSWORD == "ssh" } {
 	set USERNAME ""
 	set PASSWORD ""
 }
 
-set COMMAND "rsync -vopgr -e ssh --exclude=mysql/ --exclude=test/ --exclude=infinidb_vtable/ --exclude=infinidb_querystats/ --exclude=calpontsys/ --include=*/ --include=*/* --exclude=* $INSTALLDIR/mysql/db/ $USERNAME$SERVER:$INSTALLDIR/mysql/db/"
+set COMMAND "rsync -vopgr -e ssh --exclude=mysql/ --exclude=test/ --exclude=infinidb_vtable/ --exclude=infinidb_querystats/ --exclude=calpontsys/ --include=*/ --include=*/* --exclude=* $INSTALLDIR/mysql/db/ $USERNAME$@SERVER:$INSTALLDIR/mysql/db/"
 
 #
 # run command

@@ -491,7 +491,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg1, requestID, 600 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << "ERROR: Error return in running the MariaDB Columnstore Master DB Distribute, check /tmp/master-dist.logs on " << masterModule << endl;
+								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Master DB Distribute, check /tmp/master-dist.logs on " << masterModule << endl;
 								return returnStatus;
 							}
 
@@ -503,7 +503,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << "ERROR: Error return in running the MariaDB Columnstore Master replication, check /tmp/master-rep*.logs on " << masterModule << endl;
+								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Master replication, check /tmp/master-rep*.logs on " << masterModule << endl;
 								return returnStatus;
 							}
 
@@ -534,7 +534,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << "ERROR: Error return in running the MariaDB Columnstore Slave replication, check /tmp/slave-rep*.logs on " << (*pt).DeviceName << endl;
+								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Slave replication, check /tmp/slave-rep*.logs on " << (*pt).DeviceName << endl;
 								return returnStatus;
 							}
 
@@ -543,7 +543,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 					}
 					else
 					{
-						cout << "ERROR: Module not Active, replication not done on " << (*pt).DeviceName << endl;
+						cout << endl << "ERROR: Module not Active, replication not done on " << (*pt).DeviceName << endl;
 						pt++;
 					}
 				}
