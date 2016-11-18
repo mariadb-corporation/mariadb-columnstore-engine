@@ -33,22 +33,13 @@ for arg in "$@"; do
 	fi
 done
 
+. /home/$user/.bashrc
+
 #stop services
 $installdir/bin/columnstore stop > /dev/null 2>&1
 $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
 # uninstall OS scripts updated by postConfigure
-if [ $user = "root" ]; then
-	if test -f /root/.bashrc.columnstoreSave ; then
-		mv -f /root/.bashrc.columnstoreSave /root/.bashrc > /dev/null 2>&1
-	fi
-else
-        if test -f $HOME/.bashrc.columnstoreSave ; then
-                mv -f /home/$user/.bashrc.columnstoreSave /home/$user/.bashrc > /dev/null 2>&1
-        fi
-fi
-	
-
 if test -f /etc/exports.columnstoreSave ; then
 	$sudo mv -f /etc/exports.columnstoreSave /etc/exports > /dev/null 2>&1
 else
@@ -171,6 +162,17 @@ if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
         sudo rm -f /etc/ld.so.conf.d/columnstore.conf
         sudo rm -f /etc/ld.so.cache
         sudo ldconfig
+fi
+
+#cleanup .bashrc	
+if [ $user = "root" ]; then
+        if test -f /root/.bashrc.columnstoreSave ; then
+                mv -f /root/.bashrc.columnstoreSave /root/.bashrc > /dev/null 2>&1
+        fi
+else
+        if test -f $HOME/.bashrc.columnstoreSave ; then
+                mv -f /home/$user/.bashrc.columnstoreSave /home/$user/.bashrc > /dev/null 2>&1
+        fi
 fi
 
 #tell user to run post configure script

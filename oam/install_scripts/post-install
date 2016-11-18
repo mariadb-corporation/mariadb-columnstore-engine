@@ -84,16 +84,34 @@ fi
 # softlink for libperl.sp, used by cplogger
 sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
-if [ $user != "root" ]; then
-        eval userhome=~$user
-        bashFile=$userhome/.bashrc
-        touch ${bashFile}
-	/bin/cp -f ${bashFile} ${bashFile}.columnstoreSave > /dev/null 2>&1
+#setup .bashrc
+eval userhome=~$user
+bashFile=$userhome/.bashrc
+touch ${bashFile}
+/bin/cp -f ${bashFile} ${bashFile}.columnstoreSave > /dev/null 2>&1
 
+if [ $user != "root" ]; then
+
+	egrep -qs 'MariaDB Columnstore Non-Root' ${bashFile}
+	rc1=$?
+	if [ $rc1 -ne 0 ]; then
+        	echo " " >> ${bashFile}
+		echo "MariaDB Columnstore Non-Root Environment Variables" >> ${bashFile}
+        	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
+        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
+        	. ${bashFile}
+fi
+
+if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+        sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
+fi
+egrep -qs 'MariaDB Columnstore Database Platform Alias Commands' ${bashFile}
+rc1=$?
+egrep -qs 'MariaDB Columnstore Alias Commands' ${bashFile}
+rc2=$?
+if [ $rc1 -ne 0 -a $rc2 -ne 0 ]; then
+        cat $installdir/bin/columnstoreAlias >> ${bashFile}
         echo " " >> ${bashFile}
-        echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
-        echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
-        . ${bashFile}
 fi
 
 cd /
