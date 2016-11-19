@@ -259,7 +259,7 @@ getPrivateIP() {
 	if [ "$subnet" == "unassigned" ]; then
 		IpAddr=`head -n 2 /tmp/instanceInfo_$instanceName | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $14}'`
 	else
-		IpAddr=`head -n 2 /tmp/instanceInfo_$instanceName | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $13}'`
+		IpAddr=`head -n 2 /tmp/instanceInfo_$instanceName | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $14}'`
 	fi
 
 	echo $IpAddr
