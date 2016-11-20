@@ -205,13 +205,13 @@ if [ $user = "root" ]; then
 	rm -f /etc/default/columnstore
 else
 	sudo chmod 777 /tmp
-	sudo rm -f /tmp/syslog_install.log
+	sudo rm -f /tmp/*
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Columnstore.xml
 	sudo chmod -R 777 /dev/shm
 	sudo chmod 777 /var/lock/subsys
 	sudo rm -f /var/lock/subsys/mysql-Columnstore
-	sudo rm -f /tmp/StopColumnstore
+	sudo chmod 777 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
