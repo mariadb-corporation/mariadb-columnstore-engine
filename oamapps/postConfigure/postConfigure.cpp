@@ -4981,7 +4981,12 @@ void setSystemName()
  */
 bool copyFstab(string moduleName)
 {
-	string cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+	string cmd;	
+	if ( rootUser)
+   		cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+	else
+		cmd = "/sudo bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+
 	system(cmd.c_str());
 
 	return true;
