@@ -209,6 +209,7 @@ int main(int argc, char *argv[])
 	noPrompting = false;
 	string password;
 	string cmd;
+	bool disableAmazon = false;
 //  	struct sysinfo myinfo; 
 
 	// hidden options
@@ -276,15 +277,17 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i][-da]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
-			cout << "	 If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
+			cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
 			cout << "   -mp MariaDB Columnstore Password" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
 			cout << "   -port MariaDB Columnstore Port Address" << endl;
+            cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
+            cout << "   -da Disable Amazon functionality, install using Stardard Hostnames and IP Addresses" << endl;
 			exit (0);
 		}
       		else if( string("-s") == argv[i] )
@@ -349,6 +352,8 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 		}
+        else if( string("da") == argv[i] )
+            disableAmazon = true;
         else if( string("-i") == argv[i] ) {
             i++;
             if (i >= argc ) {
@@ -810,27 +815,29 @@ int main(int argc, char *argv[])
 
 	//amazon install setup check
 	bool amazonInstall = false;
-	system("ec2-version > /tmp/amazon.log 2>&1");
+	if (!disableAmazon)
+	{
+		system("ec2-version > /tmp/amazon.log 2>&1");
 
-	ifstream in("/tmp/amazon.log");
+		ifstream in("/tmp/amazon.log");
 
-	in.seekg(0, std::ios::end);
-	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
-	// not running on amazon with ec2-api-tools
-		amazonInstall = false;
-	else
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+		in.seekg(0, std::ios::end);
+		int size = in.tellg();
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
+		// not running on amazon with ec2-api-tools
 			amazonInstall = false;
 		else
-			amazonInstall = true;
+			if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+				amazonInstall = false;
+			else
+				amazonInstall = true;
 
-	string amazonSubNet = oam::UnassignedName;
+		string amazonSubNet = oam::UnassignedName;
+	}
 
 	if ( amazonInstall )
 	{
 		string cloud = oam::UnassignedName;
-		string option = "1";
 
 		try {
 			cloud = sysConfig->getConfig(InstallSection, "Cloud");
@@ -840,42 +847,7 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
-		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
-		cout << "You have 2 install options: " << endl << endl;
-		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
-		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
-		cout <<     "This option is recommended and would be use if you are setting up a MariaDB Columnstore system." << endl << endl;
-		cout << "2. Using standard hardware IDs for hostnames, IP Addresses, and Storage Devices." << endl;
-		cout <<     "Using this option, you would need to pre-create the Instances and the EBS storages" << endl;
-		cout <<     "and then provide the hostnames/IP-Addresses during the configuration and system expansion" << endl;
-		cout <<     "commands. This option would be used when you are installing on a existing system." << endl << endl;
-
-		while(true) {
-			prompt = "Select Install Option [1,2] (" + option + ") > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand) {
-				if (strlen(pcommand) > 0) option = pcommand;
-				callFree(pcommand);
-			}
-	
-			if (option == "2")
-			{
-				amazonInstall = false;
-				break;
-			}
-			else
-			{
-				if ( option != "1" )
-				{
-					cout << "Invalid Entry, please enter '1' or '2'" << endl;
-					if ( noPrompting )
-						exit(1);
-					continue;
-				}
-			}
-
-			cout << endl << "To use the EC2-api-tools, these files will need to be installed on" << endl;
-			cout << "on the local instance:" << endl << endl;
+			cout << endl << "Amazon EC2 Install, these files will need to be installed on the local instance:" << endl << endl;
 			cout << " 1. File containing the Amazon Access Key" << endl;
 			cout << " 2. File containing the Amazon Secret Key" << endl << endl;
 

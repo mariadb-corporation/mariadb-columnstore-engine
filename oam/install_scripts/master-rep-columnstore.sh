@@ -35,10 +35,13 @@ for arg in "$@"; do
 	fi
 done
 
+if { $PASSWORD == "ssh" } {
+	set PASSWORD ""
+}
+
 test -f $installdir/post/functions && . $installdir/post/functions
 
-repUser="idbrep"
-password="Calpont1"
+repUser="mcsrep"
 
 >/tmp/master-rep-status-$hostipaddr.log
 
