@@ -815,6 +815,8 @@ int main(int argc, char *argv[])
 
 	//amazon install setup check
 	bool amazonInstall = false;
+	string amazonSubNet = oam::UnassignedName;
+	string cloud = oam::UnassignedName;
 	if (!disableAmazon)
 	{
 		system("ec2-version > /tmp/amazon.log 2>&1");
@@ -831,14 +833,10 @@ int main(int argc, char *argv[])
 				amazonInstall = false;
 			else
 				amazonInstall = true;
-
-		string amazonSubNet = oam::UnassignedName;
 	}
 
 	if ( amazonInstall )
 	{
-		string cloud = oam::UnassignedName;
-
 		try {
 			cloud = sysConfig->getConfig(InstallSection, "Cloud");
 		}
@@ -847,21 +845,20 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
-			cout << endl << "Amazon EC2 Install, these files will need to be installed on the local instance:" << endl << endl;
-			cout << " 1. File containing the Amazon Access Key" << endl;
-			cout << " 2. File containing the Amazon Secret Key" << endl << endl;
+		cout << endl << "Amazon EC2 Install, these files will need to be installed on the local instance:" << endl << endl;
+		cout << " 1. File containing the Amazon Access Key" << endl;
+		cout << " 2. File containing the Amazon Secret Key" << endl << endl;
 
-			while(true) {
-				string ready = "y";
-				prompt = "Are these files installed and ready to continue [y,n] (y) > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) ready = pcommand;
-					callFree(pcommand);
-					if (ready == "n") {
-						cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
-						exit(0);
-					}
+		while(true) {
+			string ready = "y";
+			prompt = "Are these files installed and ready to continue [y,n] (y) > ";
+			pcommand = callReadline(prompt.c_str());
+			if (pcommand) {	
+				if (strlen(pcommand) > 0) ready = pcommand;
+				callFree(pcommand);
+				if (ready == "n") {
+					cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
+					exit(0);
 				}
 
 				if ( ready == "y" )
@@ -948,8 +945,6 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{}
-
-			break;
 		}
 
 		if ( !writeConfig(sysConfig) ) { 
@@ -1045,7 +1040,7 @@ int main(int argc, char *argv[])
 	catch (exception& e) {}
 
 	//get Parent OAM Module Name
-	string parentOAMModuleName = "pm1";
+	parentOAMModuleName = "pm1";
 
 	if ( localModuleName != parentOAMModuleName )
 	{
