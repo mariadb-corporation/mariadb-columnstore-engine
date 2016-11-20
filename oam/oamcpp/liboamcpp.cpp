@@ -8540,8 +8540,13 @@ namespace oam
 	{
 		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
 
-		//check if entry already exist 
-		string cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+		//check if entry already exist
+		string cmd;
+		if (user == 0)
+			cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+		else
+            cmd = "sudo grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 0 )
 			return "";
