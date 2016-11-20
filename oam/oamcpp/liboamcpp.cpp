@@ -8541,6 +8541,9 @@ namespace oam
 		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
 
 		//check if entry already exist
+        int user;
+        user = getuid();
+
 		string cmd;
 		if (user == 0)
 			cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
@@ -8555,9 +8558,6 @@ namespace oam
 		string entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
 
 		//update local fstab
-		int user;
-        user = getuid();
-
         if (user == 0)
 			cmd = "echo " + entry + " >> /etc/fstab";
         else
