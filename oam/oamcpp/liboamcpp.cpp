@@ -5984,7 +5984,15 @@ namespace oam
 
 		//format attached volume
 		writeLog("addUMdisk - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
-		string cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+
+		string cmd;
+       	int user;
+        user = getuid();
+        if (user == 0)
+			cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+		else
+            cmd = "sudo mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+
 		system(cmd.c_str());
 
 		//detach volume
@@ -6202,7 +6210,13 @@ namespace oam
 			
 				//format attached volume
 				cout << "  Formatting DBRoot #" << itoa(*pt1) << ", please wait..." << endl;
-				string cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
+		        string cmd;
+        		int user;
+    		    user = getuid();
+     			if (user == 0)
+            		cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
+        		else
+            		cmd = "sudo mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
 
 				writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
 
@@ -8555,7 +8569,11 @@ namespace oam
 			return "";
 
 		//update /etc/fstab with mount
-		string entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+		string entry;
+		if (user == 0)
+			entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+		else
+            entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto,user 0 0";
 
 		//update local fstab
         if (user == 0)

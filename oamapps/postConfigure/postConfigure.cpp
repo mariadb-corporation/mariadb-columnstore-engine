@@ -861,12 +861,12 @@ int main(int argc, char *argv[])
 					exit(0);
 				}
 
-				if ( ready == "y" )
-					break;
-
-				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-				if ( noPrompting )
-					exit(1);
+				if ( ready != "y" )
+				{
+					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+					if ( noPrompting )
+						exit(1);
+				}
 			}
 
 			try {
@@ -925,27 +925,29 @@ int main(int argc, char *argv[])
 			if( !copyKeyfiles() )
 				cout << "copyKeyfiles error" << endl;
 
-			try {
-				AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
-			}
-			catch(...)
-			{}
-
-			cout << endl;
-
-			prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand) {
-				if (strlen(pcommand) > 0) AmazonRegion = pcommand;
-				callFree(pcommand);
-			}
-	
-			try {
-				sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
-			}
-			catch(...)
-			{}
+			break;
 		}
+
+		try {
+			AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
+		}
+		catch(...)
+		{}
+
+		cout << endl;
+
+		prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
+		pcommand = callReadline(prompt.c_str());
+		if (pcommand) {
+			if (strlen(pcommand) > 0) AmazonRegion = pcommand;
+			callFree(pcommand);
+		}
+	
+		try {
+			sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
+		}
+		catch(...)
+		{}
 
 		if ( !writeConfig(sysConfig) ) { 
 			cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl; 
@@ -954,54 +956,51 @@ int main(int argc, char *argv[])
 
 		sleep(1);
 
-		if ( amazonInstall )
-		{
-		      //get subnetID
-		      try {
-			      amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-		      }
-		      catch(...)
-		      {}
+		//get subnetID
+	    try {
+		      amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
+		}
+		catch(...)
+      	{}
 
-		      if ( amazonSubNet == oam::UnassignedName )
-		      {	
-			      //check if this is a vpc system by checking for subnet setup
-			      amazonSubNet = oam.getEC2LocalInstanceSubnet();
-			      // cout << "amazonSubNet = " <<  amazonSubNet << endl;
-			      if ( amazonSubNet == "failed" || amazonSubNet == "" )
-			      {
-				      amazonSubNet = oam::UnassignedName;
-				      cloud = "amazon-ec2";
-			      }
-			      else
-			      {
-				      cloud = "amazon-vpc";
-			      }
+		if ( amazonSubNet == oam::UnassignedName )
+		{	
+			//check if this is a vpc system by checking for subnet setup
+			amazonSubNet = oam.getEC2LocalInstanceSubnet();
+			// cout << "amazonSubNet = " <<  amazonSubNet << endl;
+			if ( amazonSubNet == "failed" || amazonSubNet == "" )
+			{
+				amazonSubNet = oam::UnassignedName;
+				cloud = "amazon-ec2";
+			}
+			else
+			{
+				cloud = "amazon-vpc";
+			}
 
-			      //set subnetID
-			      try {
-				      sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-			      }
-			      catch(...)
-			      {}
-		      }
-		      else
-			      cloud = "amazon-vpc";
-
-		      try {
-			      sysConfig->setConfig(InstallSection, "Cloud", cloud);
-		      }
-		      catch(...)
-		      {}
+			//set subnetID
+			try {
+				sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+			}
+			catch(...)
+			{}
 		}
 		else
-		{
-		    try {
-			      sysConfig->setConfig(InstallSection, "Cloud", oam::UnassignedName);
-		    }
-		    catch(...)
-		    {}
+			cloud = "amazon-vpc";
+
+		try {
+			sysConfig->setConfig(InstallSection, "Cloud", cloud);
 		}
+		catch(...)
+		{}
+	}
+	else
+	{
+		try {
+			sysConfig->setConfig(InstallSection, "Cloud", oam::UnassignedName);
+		}
+		catch(...)
+		{}
 	}
 
 	if ( pmwithum )
@@ -2711,6 +2710,7 @@ int main(int argc, char *argv[])
 	/* create a thread_data_t argument array */
 	thread_data_t thr_data[childmodulelist.size()];
 
+	string install = "y";
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
@@ -2718,7 +2718,6 @@ int main(int argc, char *argv[])
 		//
 		cout << endl << "===== System Installation =====" << endl << endl;
 	
-		string install = "y";
 		cout << "System Configuration is complete, System Installation is the next step." << endl;
 
 		while(true)
@@ -2783,13 +2782,22 @@ int main(int argc, char *argv[])
 			}
 
 			if ( EEPackageType == "rpm" )
-				cout << "Performing an MariaDB Columnstore System install using RPM packages located in the " + HOME + " directory." << endl;
+			{
+				cout << "Performing an MariaDB Columnstore System install using RPM packages" << endl; 
+				cout << " located in the " + HOME + " directory." << endl;
+			}
 			else
 			{
 				if ( EEPackageType == "binary" )
-					cout << "Performing an MariaDB Columnstore System install using a Binary package located in the " + HOME + " directory." << endl;
+				{
+					cout << "Performing an MariaDB Columnstore System install using a Binary package" << endl; 
+					cout << "located in the " + HOME + " directory." << endl;
+				}
 				else
-					cout << "Performing an MariaDB Columnstore System install using using DEB packages located in the " + HOME + " directory." << endl;
+				{
+					cout << "Performing an MariaDB Columnstore System install using using DEB packages" << endl;
+					cout << "located in the " + HOME + " directory." << endl;
+				}
 			}
 	
 			//Write out Updated System Configuration File
@@ -3355,16 +3363,19 @@ int main(int argc, char *argv[])
 					string remoteModuleName = (*list1).moduleName;
 					string remoteModuleIP = (*list1).moduleIP;
 					string remoteHostName = (*list1).hostName;
-			
+		
 					//run remote command script
 					cout << endl << "----- Starting MariaDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
 
-					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
+					if ( install == "n" ) 
+					{	// didnt do a full install, push the config file
+						cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
+						system(cmd.c_str());
+					}
+
+					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart' 0";
 					int rtnCode = system(cmd.c_str());
 
-					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
-						" '" + installDir + "/bin/columnstore restart' 0";
-					rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0)
 						cout << "Error with running remote_command.sh" << endl;
 					else
