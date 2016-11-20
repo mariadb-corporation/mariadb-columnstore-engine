@@ -336,18 +336,6 @@ int main(int argc, char *argv[])
 		// for backward compatibility
 		else if( string("-n") == argv[i] )
 			noPrompting = true;
-		else if( string("-i") == argv[i] ) {
-			i++;
-			if (i >= argc ) {
-				cout << "   ERROR: install dir not provided" << endl;
-				exit (1);
-			}
-			installDir = argv[i];
-			if ( installDir.find("-") != string::npos ) {
-				cout << "   ERROR: Valid install dir not provided" << endl;
-				exit (1);
-			}			
-		}
 		else if( string("-port") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
@@ -361,6 +349,14 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 		}
+        else if( string("-i") == argv[i] ) {
+            i++;
+            if (i >= argc ) {
+                cout << "   ERROR: Path not provided" << endl;
+                exit (1);
+            }
+            installDir = argv[i];
+        }
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
@@ -844,9 +840,6 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
-		if ( cloud  == oam::UnassignedName )
-		    option = "2";
-		  
 		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
 		cout << "You have 2 install options: " << endl << endl;
 		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
@@ -2933,8 +2926,9 @@ int main(int argc, char *argv[])
 					break;
 				}
 
-				if ( strcmp(pass1, "exit") == 0 )
+				if ( pass1 == "exit")
 					exit(0);
+
 				string p1 = pass1;
 				pass2=getpass("Confirm password > ");
 				string p2 = pass2;
@@ -4987,7 +4981,12 @@ void setSystemName()
  */
 bool copyFstab(string moduleName)
 {
-	string cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+	string cmd;	
+	if ( rootUser)
+   		cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+	else
+		cmd = "/sudo bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+
 	system(cmd.c_str());
 
 	return true;
@@ -5038,15 +5037,6 @@ bool updateBash()
 	string fileName = HOME + "/.bashrc";
 
    	ifstream newFile (fileName.c_str());
-
-	if (!rootUser)
-	{
-		string cmd = "echo export COLUMNSTORE_INSTALL_DIR=" + installDir + " >> " + fileName;
-		system(cmd.c_str());
-	
-		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
-		system(cmd.c_str());
-	}
 
 	if ( hdfs ) 
 	{	
