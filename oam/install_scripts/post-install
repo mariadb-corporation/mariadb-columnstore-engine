@@ -85,8 +85,12 @@ fi
 sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
 #setup .bashrc
-eval userhome=~$user
-bashFile=$userhome/.bashrc
+if [ $user = "root" ]; then
+	bashFile=/root/.bashrc
+else
+	bashFile=$HOME/.bashrc
+fi
+
 touch ${bashFile}
 /bin/cp -f ${bashFile} ${bashFile}.columnstoreSave > /dev/null 2>&1
 

@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 		}
-        else if( string("da") == argv[i] )
+        else if( string("-da") == argv[i] )
             disableAmazon = true;
         else if( string("-i") == argv[i] ) {
             i++;
@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i][-da]" << endl;
 			exit (1);
 		}
 	}

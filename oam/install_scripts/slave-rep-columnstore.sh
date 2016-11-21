@@ -41,10 +41,6 @@ for arg in "$@"; do
 	fi
 done
 
-if { $PASSWORD == "ssh" } {
-	set PASSWORD ""
-}
-
 test -f $installdir/post/functions && . $installdir/post/functions
 
 repUser="mscrep"

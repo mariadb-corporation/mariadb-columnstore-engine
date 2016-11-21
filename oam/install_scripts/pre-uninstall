@@ -33,7 +33,11 @@ for arg in "$@"; do
 	fi
 done
 
-. /home/$user/.bashrc
+if [ $user = "root" ]; then
+	. /root/.bashrc
+else
+	. $HOME/.bashrc
+fi
 
 #stop services
 $installdir/bin/columnstore stop > /dev/null 2>&1
