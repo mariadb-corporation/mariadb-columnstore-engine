@@ -43,7 +43,8 @@ done
 
 test -f $installdir/post/functions && . $installdir/post/functions
 
-repUser="mscrep"
+repUser="idbrep"
+password="Calpont1"
 
 >/tmp/slave-rep-status.log
 
@@ -73,7 +74,6 @@ CHANGE MASTER TO
     	MASTER_PORT=$port,
    	MASTER_LOG_FILE='$masterlogfile',
     	MASTER_LOG_POS=$masterlogpos;
-	MASTER_USE_GTID=$masterlogpos;
 
 EOD
 

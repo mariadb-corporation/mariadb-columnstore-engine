@@ -37,7 +37,8 @@ done
 
 test -f $installdir/post/functions && . $installdir/post/functions
 
-repUser="mcsrep"
+repUser="idbrep"
+password="Calpont1"
 
 >/tmp/master-rep-status-$hostipaddr.log
 
