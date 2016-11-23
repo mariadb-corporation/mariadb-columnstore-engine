@@ -84,6 +84,13 @@ public:
 	 */
 	virtual off64_t size(const char* path) const = 0;
 
+    /**
+     * compressedSize() returns the decompressed size of the file
+     * speicified by path.
+     * Returns the size on success, -1 on error
+     */
+    virtual off64_t compressedSize(const char* path) const = 0;
+
 	/**
 	 * exists() checks for the existence of a particular path.
 	 * Returns true if exists, false otherwise.

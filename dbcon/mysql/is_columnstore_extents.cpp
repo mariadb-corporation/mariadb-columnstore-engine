@@ -24,13 +24,9 @@
 #include <vector>
 #include <limits>
 
-#include <boost/shared_ptr.hpp>
 #include "dbrm.h"
 #include "objectidmanager.h"
-#include "we_convertor.h"
-#include "we_define.h"
-#include "IDBPolicy.h"
-#include "we_config.h"
+
 
 // Required declaration as it isn't in a MairaDB include
 bool schema_table_store_record(THD *thd, TABLE *table);
@@ -53,8 +49,6 @@ ST_FIELD_INFO is_columnstore_extents_fields[] =
     {"STATE", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},                       // 13
     {"STATUS", 64, MYSQL_TYPE_STRING, 0, 0, 0, 0},                      // 14
     {"DATA_SIZE", 19, MYSQL_TYPE_LONGLONG, 0, 0, 0, 0},                 // 15
-    {"FILENAME", 1024, MYSQL_TYPE_STRING, 0, 0, 0, 0},                  // 16
-    {"FILE_SIZE", 19, MYSQL_TYPE_LONGLONG, 0, MY_I_S_MAYBE_NULL, 0, 0}, // 17
     {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
 };
 
@@ -65,9 +59,6 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     std::vector<struct BRM::EMEntry> entries;
    	std::vector<struct BRM::EMEntry>::iterator iter;
 	std::vector<struct BRM::EMEntry>::iterator end;
-	char oidDirName[WriteEngine::FILE_NAME_SIZE];
-	char fullFileName[WriteEngine::FILE_NAME_SIZE];
-    char dbDir[WriteEngine::MAX_DB_DIR_LEVEL][WriteEngine::MAX_DB_DIR_NAME_SIZE];
 
     BRM::DBRM *emp = new BRM::DBRM();
     if (!emp || !emp->isDBRMReady())
@@ -78,7 +69,7 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     execplan::ObjectIDManager oidm;
     BRM::OID_t MaxOID = oidm.size();
 
-    for(BRM::OID_t oid = 0; oid <= MaxOID; oid++)
+    for(BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
     {
         emp->getExtents(oid, entries, false, false, true);
         if (entries.size() == 0)
@@ -161,31 +152,20 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 default:
                     table->field[14]->store("Unknown", strlen("Unknown"), cs);
             }
-            table->field[15]->store((iter->HWM + 1) * 8192);
-
-            WriteEngine::Convertor::oid2FileName(oid, oidDirName, dbDir, iter->partitionNum, iter->segmentNum);
-            snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", WriteEngine::Config::getDBRootByNum(iter->dbRoot).c_str(), oidDirName);
-            table->field[16]->store(fullFileName, strlen(fullFileName), cs);
-
-            if (idbdatafile::IDBPolicy::exists(fullFileName))
-            {
-                table->field[17]->set_notnull();
-                table->field[17]->store(idbdatafile::IDBPolicy::size(fullFileName));
-            }
-            else
-            {
-                table->field[17]->set_null();
-            }
+            table->field[15]->store((iter->HWM - iter->blockOffset + 1) * 8192);
 
             if (schema_table_store_record(thd, table))
+            {
+                delete emp;
                 return 1;
+            }
 
             iter++;
 
         }
     }
 
-
+    delete emp;
     return 0;
 }
 

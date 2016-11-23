@@ -17,6 +17,7 @@
 
 #include "PosixFileSystem.h"
 #include "IDBLogger.h"
+#include "idbcompress.h"
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -126,6 +127,86 @@ off64_t PosixFileSystem::size(const char* path) const
 
 	errno = savedErrno;
 	return ret;
+}
+
+size_t readFillBuffer(
+	idbdatafile::IDBDataFile* pFile,
+	char*   buffer,
+	size_t  bytesReq)
+{
+	char*   pBuf = buffer;
+	ssize_t nBytes;
+	size_t  bytesToRead = bytesReq;
+	size_t  totalBytesRead = 0;
+
+	while (1)
+	{
+		nBytes = pFile->read(pBuf, bytesToRead);
+		if (nBytes > 0)
+			totalBytesRead += nBytes;
+		else
+			break;
+
+		if ((size_t)nBytes == bytesToRead)
+			break;
+
+		pBuf        += nBytes;
+		bytesToRead  =  bytesToRead - (size_t)nBytes;
+	}
+
+	return totalBytesRead;
+}
+
+off64_t PosixFileSystem::compressedSize(const char *path) const
+{
+    IDBDataFile *pFile = 0;
+    size_t nBytes;
+    off64_t dataSize = 0;
+
+    try
+    {
+        pFile = IDBDataFile::open(IDBDataFile::BUFFERED, path, "r", 0);
+
+        if (!pFile)
+        {
+            return -1;
+        }
+
+        compress::IDBCompressInterface decompressor;
+
+        char hdr1[compress::IDBCompressInterface::HDR_BUF_LEN];
+        nBytes = readFillBuffer( pFile,hdr1,compress::IDBCompressInterface::HDR_BUF_LEN);
+        if ( nBytes != compress::IDBCompressInterface::HDR_BUF_LEN )
+        {
+            return -1;
+        }
+
+        int64_t ptrSecSize = decompressor.getHdrSize(hdr1) - compress::IDBCompressInterface::HDR_BUF_LEN;
+        char* hdr2 = new char[ptrSecSize];
+        nBytes = readFillBuffer( pFile,hdr2,ptrSecSize);
+        if ( (int64_t)nBytes != ptrSecSize )
+        {
+            return -1;
+        }
+
+        compress::CompChunkPtrList chunkPtrs;
+        int rc = decompressor.getPtrList(hdr2, ptrSecSize, chunkPtrs);
+        delete[] hdr2;
+        if (rc != 0)
+        {
+            return -1;
+        }
+
+        unsigned k = chunkPtrs.size();
+        // last header's offset + length will be the data bytes
+        dataSize = chunkPtrs[k-1].first + chunkPtrs[k-1].second;
+        delete pFile;
+        return dataSize;
+    }
+    catch (...)
+    {
+        return -1;
+    }
 }
 
 bool PosixFileSystem::exists(const char *pathname) const

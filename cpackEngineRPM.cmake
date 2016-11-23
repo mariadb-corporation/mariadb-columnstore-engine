@@ -327,6 +327,9 @@ SET(CPACK_RPM_storage-engine_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/is_columnstore_tables.so"
 "/usr/local/mariadb/columnstore/lib/is_columnstore_tables.so.1"
 "/usr/local/mariadb/columnstore/lib/is_columnstore_tables.so.1.0.0"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_files.so"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_files.so.1"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_files.so.1.0.0"
 "/usr/local/mariadb/columnstore/mysql/mysql-Columnstore"
 "/usr/local/mariadb/columnstore/mysql/install_calpont_mysql.sh"
 "/usr/local/mariadb/columnstore/mysql/syscatalog_mysql.sql"
@@ -335,6 +338,7 @@ SET(CPACK_RPM_storage-engine_USER_FILELIST
 "/usr/local/mariadb/columnstore/mysql/calsetuserpriority.sql"
 "/usr/local/mariadb/columnstore/mysql/calremoveuserpriority.sql"
 "/usr/local/mariadb/columnstore/mysql/calshowprocesslist.sql"
+"/usr/local/mariadb/columnstore/mysql/columnstore_info.sql"
 ${ignored})
 
 
