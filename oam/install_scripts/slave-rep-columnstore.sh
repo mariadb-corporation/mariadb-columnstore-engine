@@ -74,7 +74,6 @@ CHANGE MASTER TO
     	MASTER_PORT=$port,
    	MASTER_LOG_FILE='$masterlogfile',
     	MASTER_LOG_POS=$masterlogpos;
-	MASTER_USE_GTID=$masterlogpos;
 
 EOD
 

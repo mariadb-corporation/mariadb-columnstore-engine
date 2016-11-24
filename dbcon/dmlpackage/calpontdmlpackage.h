@@ -226,6 +226,10 @@ namespace dmlpackage
 
             bool get_isAutocommitOn() { return fIsAutocommitOn; }
             void set_isAutocommitOn( const bool isAutocommitOn ) { fIsAutocommitOn = isAutocommitOn; }
+
+            bool get_isWarnToError() { return fIsWarnToError; }
+            void set_isWarnToError( const bool isWarnToError ) { fIsWarnToError = isWarnToError; }
+
             uint32_t getTableOid() { return fTableOid; }
             void setTableOid( const uint32_t tableOid ) { fTableOid = tableOid; }
 
@@ -254,6 +258,7 @@ namespace dmlpackage
             bool fIsInsertSelect;
             bool fIsBatchInsert;
             bool fIsAutocommitOn;
+            bool fIsWarnToError;
             uint32_t fTableOid;
             WriteEngine::ChunkManager* fCM;
     };

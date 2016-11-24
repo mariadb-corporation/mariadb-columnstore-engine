@@ -1105,7 +1105,15 @@ const JobStepVector doJoin(
 	thj->sequence2(sc2->sequence());
 	thj->column1(sc1);
 	thj->column2(sc2);
-	thj->joinId((joinInfo == 0) ? (++jobInfo.joinNum) : 0);
+    // MCOL-334 joins in views need to have higher priority than SEMI/ANTI
+	if (!view1.empty() && view1 == view2)
+	{
+		thj->joinId(-1);
+	}
+	else
+	{
+		thj->joinId((joinInfo == 0) ? (++jobInfo.joinNum) : 0);
+	}
 
 	// Check if SEMI/ANTI join.
 	// INNER/OUTER join and SEMI/ANTI are mutually exclusive,
@@ -1674,12 +1682,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 			try
 			{
 				bool isNull = ConstantColumn::NULLDATA == cc->type();
-				if ((ct.colDataType == CalpontSystemCatalog::DATE ||
-					  ct.colDataType == CalpontSystemCatalog::DATETIME) &&
-					  constval == "0000-00-00")
-					value = 0;
-				else
-					value = convertValueNum(constval, ct, isNull, rf);
+				value = convertValueNum(constval, ct, isNull, rf);
 				if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
 				{
 					float f = cc->getFloatVal();
@@ -1715,12 +1718,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 			}
 #else
 			bool isNull = ConstantColumn::NULLDATA == cc->type();
-			if ((ct.colDataType == CalpontSystemCatalog::DATE ||
-				   ct.colDataType == CalpontSystemCatalog::DATETIME) &&
-				   constval == "0000-00-00")
-					value = 0;
-			else
-				value = convertValueNum(constval, ct, isNull, rf);
+			value = convertValueNum(constval, ct, isNull, rf);
 
 			if (ct.colDataType == CalpontSystemCatalog::FLOAT && !isNull)
 			{

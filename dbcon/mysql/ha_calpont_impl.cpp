@@ -20,6 +20,7 @@
  * $Id: ha_calpont_impl.cpp 9642 2013-06-24 14:57:42Z rdempsey $
  */
 
+//#define DEBUG_WALK_COND
 #include <my_config.h>
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -925,16 +926,14 @@ uint32_t doUpdateDelete(THD *thd)
                 //@Bug 2587 use val_str to replace value->name to get rid of 255 limit
                 String val, *str;
                 str = value->val_str(&val);
-//                dmlStmt += "'" + string(str->c_ptr()) + "'";
-                columnAssignmentPtr->fScalarExpression =  string(str->c_ptr()) ;
+                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                 columnAssignmentPtr->fFromCol = false;
             }
             else if ( value->type() ==  Item::VARBIN_ITEM )
             {
                 String val, *str;
                 str = value->val_str(&val);
-//                dmlStmt += "'" + string(str->c_ptr()) + "'";
-                columnAssignmentPtr->fScalarExpression =  string(str->c_ptr()) ;
+                columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                 columnAssignmentPtr->fFromCol = false;
             }
             else if ( value->type() ==  Item::FUNC_ITEM )
@@ -1055,7 +1054,6 @@ uint32_t doUpdateDelete(THD *thd)
 
                 if (!tmp->field_name) //null
                 {
-//                    dmlStmt += "NULL";
                     columnAssignmentPtr->fScalarExpression = "NULL";
                     columnAssignmentPtr->fFromCol = false;
                 }
@@ -1063,8 +1061,7 @@ uint32_t doUpdateDelete(THD *thd)
                 {
                     String val, *str;
                     str = value->val_str(&val);
-//                    dmlStmt += string(str->c_ptr());
-                    columnAssignmentPtr->fScalarExpression = string(str->c_ptr());
+                    columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                     columnAssignmentPtr->fFromCol = false;
                 }
             }
@@ -1081,13 +1078,11 @@ uint32_t doUpdateDelete(THD *thd)
                 str = value->val_str(&val);
                 if (str)
                 {
-//                    dmlStmt += string(str->c_ptr());
-                    columnAssignmentPtr->fScalarExpression = string(str->c_ptr());
+                    columnAssignmentPtr->fScalarExpression.assign(str->ptr(), str->length());
                     columnAssignmentPtr->fFromCol = false;
                 }
                 else
                 {
-//                    dmlStmt += "NULL";
                     columnAssignmentPtr->fScalarExpression = "NULL";
                     columnAssignmentPtr->fFromCol = false;
                 }
@@ -1608,6 +1603,8 @@ uint32_t doUpdateDelete(THD *thd)
 			command = "COMMIT";
 		else if ((useHdfs) && (b != 0))
 			command = "ROLLBACK";
+        else if ((b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING) && thd->is_strict_mode())
+            command = "ROLLBACK";
 		else if ((!(current_thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) && (( b == 0 ) || (b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING)) )
 			command = "COMMIT";
 		else if (( b != 0 ) && (b != dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING) )
@@ -1671,18 +1668,28 @@ uint32_t doUpdateDelete(THD *thd)
         thd->get_stmt_da()->set_overwrite_status(true);
 		//cout << " error status " << ci->rc << endl;
 	}
-	else
+    if (b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING)
+    {
+        if (thd->is_strict_mode())
+        {
+            thd->set_row_count_func(0);
+            ci->rc = b;
+            // Turn this on as MariaDB doesn't do it until the next phase
+            thd->abort_on_warning= thd->is_strict_mode();
+        }
+        else
+        {
+            thd->set_row_count_func(dmlRowCount);
+        }
+        push_warning(thd, Sql_condition::WARN_LEVEL_WARN, ER_WARN_DATA_OUT_OF_RANGE, errorMsg.c_str());
+    }
+  	else
 	{
 //		if (dmlRowCount != 0) //Bug 5117. Handling self join.
 			thd->set_row_count_func(dmlRowCount);
 
 
 		//cout << " error status " << ci->rc << " and rowcount = " << dmlRowCount << endl;
-	}
-	if ( b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING )
-	{
-		//string errmsg ("Out of range value detected. Please check Calpont Syntax Guide for supported data range." );
-		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errorMsg.c_str());
 	}
 
 	// @bug 4027. comment out the following because this will cause mysql
@@ -2294,6 +2301,69 @@ void calgetversion_deinit(UDF_INIT* initid)
 {
 }
 
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+const char* calgetsqlcount(UDF_INIT* initid, UDF_ARGS* args,
+					char* result, unsigned long* length,
+					char* is_null, char* error)
+{
+	THD* thd = current_thd;
+	if (!thd->infinidb_vtable.cal_conn_info)
+		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+	idbassert(ci != 0);
+
+	MessageQueueClient* mqc = 0;
+	mqc = new MessageQueueClient("ExeMgr1");
+
+	ByteStream msg;
+	ByteStream::quadbyte runningSql, waitingSql;
+	ByteStream::quadbyte qb = 5;
+	msg << qb;
+	mqc->write(msg);
+
+	//get ExeMgr response
+	msg.restart();
+	msg = mqc->read();
+	if (msg.length() == 0)
+	{
+		memcpy(result, "Lost connection to ExeMgr", *length);
+		return result;
+	}
+	msg >> runningSql;
+	msg >> waitingSql;
+	delete mqc;
+ 
+	char ans[128];
+	sprintf(ans, "Running SQL statements %d, Waiting SQL statments %d", runningSql, waitingSql);
+	*length = strlen(ans);
+	memcpy(result, ans, *length);
+	return result;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool calgetsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+	if (args->arg_count != 0)
+	{
+		strcpy(message,"CALGETSQLCOUNT() takes no arguments");
+		return 1;
+	}
+
+	return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void calgetsqlcount_deinit(UDF_INIT* initid)
+{
+}
+
+
 } //extern "C"
 
 int ha_calpont_impl_open(const char *name, int mode, uint32_t test_if_locked)
@@ -2618,8 +2688,10 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 			// @bug 2547. don't need to send the plan if it's impossible where for all unions.
 			if (thd->infinidb_vtable.impossibleWhereOnUnion)
 				return 0;
-
-			csep->data(thd->infinidb_vtable.original_query.c_ptr());
+			string query;
+			query.assign(thd->infinidb_vtable.original_query.ptr(),
+							  thd->infinidb_vtable.original_query.length());
+			csep->data(query);
 			try {
 				csep->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
 			}catch (std::exception& e)
@@ -3161,6 +3233,7 @@ int ha_calpont_impl_create(const char *name, TABLE *table_arg, HA_CREATE_INFO *c
 int ha_calpont_impl_delete_table(const char *name)
 {
 	THD *thd = current_thd;
+	char *dbName = NULL;
 
 	if (!name)
 	{
@@ -3183,16 +3256,17 @@ int ha_calpont_impl_delete_table(const char *name)
 	if (!thd->lex) return 0;
 	if (!idb_mysql_query_str(thd)) return 0;
 
-	// @bug 1700.
 	if (thd->lex->sql_command == SQLCOM_DROP_DB)
 	{
-        thd->get_stmt_da()->set_overwrite_status(true);
-        thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,  "Non-empty database can not be dropped. ");
-		return 1;
+		dbName = thd->lex->name.str;
+	}
+	else
+	{
+		TABLE_LIST *first_table= (TABLE_LIST*) thd->lex->select_lex.table_list.first;
+		dbName = first_table->db;
 	}
 
-	TABLE_LIST *first_table= (TABLE_LIST*) thd->lex->select_lex.table_list.first;
-	if (!first_table->db)
+	if (!dbName)
 	{
 		setError(thd, ER_INTERNAL_ERROR, "Drop Table with NULL schema not permitted");
 		return 1;
@@ -3206,7 +3280,7 @@ int ha_calpont_impl_delete_table(const char *name)
 		 return 0;
 	}
 	// @bug 1793. make vtable droppable in calpontsys. "$vtable" ==> "@0024vtable" passed in as name.
-	if (strcmp(first_table->db, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
+	if (strcmp(dbName, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
 	{
 		std::string stmt(idb_mysql_query_str(thd));
 		algorithm::to_upper(stmt);
@@ -3219,7 +3293,7 @@ int ha_calpont_impl_delete_table(const char *name)
 		return 1;
 	}
 
-	int rc = ha_calpont_impl_delete_table_(first_table->db, name, *ci);
+	int rc = ha_calpont_impl_delete_table_(dbName, name, *ci);
 	return rc;
 }
 int ha_calpont_impl_write_row(uchar *buf, TABLE* table)
@@ -3789,6 +3863,13 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 			ci->singleInsert = true;
 			return;
 		}
+		uint32_t stateFlags;
+		dbrmp->getSystemState(stateFlags);
+	    if (stateFlags & SessionManagerServer::SS_SUSPENDED)
+	    {
+			setError(current_thd, ER_INTERNAL_ERROR, "Writing to the database is disabled.");
+			return;
+	    }
 
 		CalpontSystemCatalog::TableName tableName;
 		tableName.schema = table->s->db.str;
@@ -4186,7 +4267,9 @@ COND* ha_calpont_impl_cond_push(COND *cond, TABLE* table)
 		((thd->lex)->sql_command == SQLCOM_DELETE) ||
 		((thd->lex)->sql_command == SQLCOM_DELETE_MULTI))
 		return cond;
-	IDEBUG( cout << "ha_calpont_impl_cond_push: " << table->alias.c_ptr() << endl );
+	string alias;
+	alias.assign(table->alias.ptr(), table->alias.length());
+	IDEBUG( cout << "ha_calpont_impl_cond_push: " << alias << endl );
 
 	if (!thd->infinidb_vtable.cal_conn_info)
 		thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
@@ -4253,7 +4336,9 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 
 	// @info called for every table at the beginning and at the end of a query.
 	// used for cleaning up the tableinfo.
-	IDEBUG( cout << "external_lock for " << table->alias.c_ptr() << endl );
+	string alias;
+	alias.assign(table->alias.ptr(), table->alias.length());
+	IDEBUG( cout << "external_lock for " << alias << endl );
 	idbassert((thd->infinidb_vtable.vtable_state >= THD::INFINIDB_INIT_CONNECT &&
 	           thd->infinidb_vtable.vtable_state <= THD::INFINIDB_REDO_QUERY) ||
 	          thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR);

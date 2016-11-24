@@ -368,6 +368,16 @@ namespace oam
         ""
     };
 
+    const std::string LogFile7[] =
+    {
+        "local1.crit -/var/log/mariadb/columnstore/crit.log",
+        "local1.err -/var/log/mariadb/columnstore/err.log",
+        "local1.warning -/var/log/mariadb/columnstore/warning.log",
+        "local1.info -/var/log/mariadb/columnstore/info.log",
+        "local1.debug -/var/log/mariadb/columnstore/debug.log",
+        ""
+    };
+
     /** @brief Log Config Data map
      */
     typedef struct LogConfigData_struct

@@ -15,10 +15,10 @@ SET(CPACK_PACKAGE_NAME "mariadb-columnstore")
 SET(ENGINE_ARCH "x86_64")
 
 IF (NOT CPACK_RPM_PACKAGE_VERSION)
-SET (CPACK_RPM_PACKAGE_VERSION "1.0.0")
+SET (CPACK_RPM_PACKAGE_VERSION ${PACKAGE_VERSION})
 ENDIF()
 IF (NOT CPACK_RPM_PACKAGE_RELEASE)
-SET (CPACK_RPM_PACKAGE_RELEASE "0")
+SET (CPACK_RPM_PACKAGE_RELEASE ${PACKAGE_RELEASE})
 ENDIF()
 
 SET(CPACK_RPM_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
@@ -194,8 +194,8 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/autoConfigure"
 "/usr/local/mariadb/columnstore/bin/ddlcleanup"
 "/usr/local/mariadb/columnstore/bin/idbmeminfo"
-"/usr/local/mariadb/columnstore/bin/IDBInstanceCmds.sh"
-"/usr/local/mariadb/columnstore/bin/IDBVolumeCmds.sh"
+"/usr/local/mariadb/columnstore/bin/MCSInstanceCmds.sh"
+"/usr/local/mariadb/columnstore/bin/MCSVolumeCmds.sh"
 "/usr/local/mariadb/columnstore/bin/binary_installer.sh" 
 "/usr/local/mariadb/columnstore/bin/myCnf-include-args.text" 
 "/usr/local/mariadb/columnstore/bin/myCnf-exclude-args.text"
@@ -318,6 +318,15 @@ SET(CPACK_RPM_storage-engine_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libudf_mysql.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libudf_mysql.so.1"
 "/usr/local/mariadb/columnstore/lib/libudf_mysql.so"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_columns.so"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_columns.so.1"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_columns.so.1.0.0"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_extents.so"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_extents.so.1"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_extents.so.1.0.0"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_tables.so"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_tables.so.1"
+"/usr/local/mariadb/columnstore/lib/is_columnstore_tables.so.1.0.0"
 "/usr/local/mariadb/columnstore/mysql/mysql-Columnstore"
 "/usr/local/mariadb/columnstore/mysql/install_calpont_mysql.sh"
 "/usr/local/mariadb/columnstore/mysql/syscatalog_mysql.sql"

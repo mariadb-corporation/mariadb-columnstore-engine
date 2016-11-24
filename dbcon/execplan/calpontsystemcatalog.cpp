@@ -2599,6 +2599,7 @@ const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> >
     SimpleColumn *c1 = new SimpleColumn(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+TABLENAME_COL, fSessionID);
     SimpleColumn *c2 = new SimpleColumn(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+SCHEMA_COL, fSessionID);
     SimpleColumn *c3 = new SimpleColumn(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+OBJECTID_COL, fSessionID);
+    SimpleColumn *c4 = new SimpleColumn(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+CREATEDATE_COL, fSessionID);
     
     SRCP srcp;
     srcp.reset(c1);
@@ -2607,6 +2608,8 @@ const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> >
     colMap.insert(CMVT_(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+SCHEMA_COL, srcp));
     srcp.reset(c3);
     colMap.insert(CMVT_(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+OBJECTID_COL, srcp));
+    srcp.reset(c4);
+    colMap.insert(CMVT_(CALPONT_SCHEMA+"."+SYSTABLE_TABLE+"."+CREATEDATE_COL, srcp));
     csep.columnMapNonStatic(colMap);
         
     srcp.reset(c1->clone());
@@ -2652,6 +2655,14 @@ const vector< pair<CalpontSystemCatalog::OID, CalpontSystemCatalog::TableName> >
         for (int i = 0; i < (*it)->dataCount(); i++)
           tables[i].second.schema = (*it)->GetStringData(i);
       }
+    }
+    for (it = sysDataList.begin(); it != sysDataList.end(); it++)
+    {
+        if ((*it)->ColumnOID() == c4->oid())
+        {
+            for (int i = 0; i < (*it)->dataCount(); i++)
+                tables[i].second.create_date = (*it)->GetData(i);
+        }
     }
     
     for (it = sysDataList.begin(); it != sysDataList.end(); it++)
@@ -5277,7 +5288,7 @@ const string CalpontSystemCatalog::TableName::toString() const
 ostream& operator<<(ostream& os, const CalpontSystemCatalog::TableAliasName& rhs)
 {
     os << rhs.schema << '.' << rhs.table << "(" << rhs.alias << "/" << rhs.view 
-       << ") engineType=" << (rhs.fIsInfiniDB? "InfiniDB" : "ForeignEngine");
+       << ") engineType=" << (rhs.fIsInfiniDB? "Columnstore" : "ForeignEngine");
     return os;
 }
 

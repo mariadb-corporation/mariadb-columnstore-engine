@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
 							value = "8G";
 					}
 
-					cout << "      Setting 'TotalUmMemory' to " << percent << "% of total memory (Combined Server Install maximum value is 16G). Value set to " << value << endl;
+					cout << "      Setting 'TotalUmMemory' to " << percent << "% of total memory. Value set to " << value << endl;
 	
 					try {
 						sysConfig->setConfig("HashJoin", "TotalUmMemory", value);

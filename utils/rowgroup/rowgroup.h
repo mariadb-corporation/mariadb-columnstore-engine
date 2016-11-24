@@ -581,12 +581,9 @@ inline std::string Row::getStringField(uint32_t colIndex) const
 	if (inStringTable(colIndex))
 		return strings->getString(*((uint32_t *) &data[offsets[colIndex]]),
 				*((uint32_t *) &data[offsets[colIndex] + 4]));
-	if (types[colIndex] == execplan::CalpontSystemCatalog::VARCHAR)
-		return std::string((char *) &data[offsets[colIndex]]);
-	else   // types where we can't rely on NULL termination...
-		return std::string((char *) &data[offsets[colIndex]],
-						   strnlen((char *) &data[offsets[colIndex]], getColumnWidth(colIndex)));
-//		return std::string((char *) &data[offsets[colIndex]], getColumnWidth(colIndex));
+	// Not all CHAR/VARCHAR are NUL terminated so use length
+	return std::string((char *) &data[offsets[colIndex]],
+		    strnlen((char *) &data[offsets[colIndex]], getColumnWidth(colIndex)));
 }
 
 inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const

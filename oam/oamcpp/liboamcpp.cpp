@@ -5984,7 +5984,15 @@ namespace oam
 
 		//format attached volume
 		writeLog("addUMdisk - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
-		string cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+
+		string cmd;
+       	int user;
+        user = getuid();
+        if (user == 0)
+			cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+		else
+            cmd = "sudo mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+
 		system(cmd.c_str());
 
 		//detach volume
@@ -6202,7 +6210,13 @@ namespace oam
 			
 				//format attached volume
 				cout << "  Formatting DBRoot #" << itoa(*pt1) << ", please wait..." << endl;
-				string cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
+		        string cmd;
+        		int user;
+    		    user = getuid();
+     			if (user == 0)
+            		cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
+        		else
+            		cmd = "sudo mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
 
 				writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
 
@@ -7567,7 +7581,7 @@ namespace oam
     std::string Oam::getEC2InstanceIpAddress(std::string instanceName)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh getPrivateIP " + instanceName + " > /tmp/getCloudIP_" + instanceName;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getPrivateIP " + instanceName + " > /tmp/getCloudIP_" + instanceName;
 		system(cmd.c_str());
 
 		if (checkLogStatus("/tmp/getCloudIP_" + instanceName, "stopped") )
@@ -7604,7 +7618,7 @@ namespace oam
     std::string Oam::getEC2LocalInstance(std::string name)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh getInstance  > /tmp/getInstanceInfo_" + name;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getInstance  > /tmp/getInstanceInfo_" + name;
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) != 0 )
 			return "failed";
@@ -7635,7 +7649,7 @@ namespace oam
     std::string Oam::getEC2LocalInstanceType(std::string name)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh getType  > /tmp/getInstanceType_" + name;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getType  > /tmp/getInstanceType_" + name;
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) != 0 )
 			return "failed";
@@ -7666,7 +7680,7 @@ namespace oam
     	std::string Oam::getEC2LocalInstanceSubnet(std::string name)
 	{
 		// run script to get Instance Subnet
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh getSubnet  > /tmp/getInstanceSubnet_" + name;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getSubnet  > /tmp/getInstanceSubnet_" + name;
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) != 0 )
 			return "failed";
@@ -7698,7 +7712,7 @@ namespace oam
     std::string Oam::launchEC2Instance( const std::string name, const std::string IPAddress, const std::string type, const std::string group)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > /tmp/getInstance_" + name;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > /tmp/getInstance_" + name;
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) != 0 )
 			return "failed";
@@ -7740,7 +7754,7 @@ namespace oam
     void Oam::terminateEC2Instance(std::string instanceName)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh terminateInstance " + instanceName + " > /tmp/terminateEC2Instance_" + instanceName;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh terminateInstance " + instanceName + " > /tmp/terminateEC2Instance_" + instanceName;
 		system(cmd.c_str());
 
 		return;
@@ -7757,7 +7771,7 @@ namespace oam
     void Oam::stopEC2Instance(std::string instanceName)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh stopInstance " + instanceName + " > /tmp/stopEC2Instance_" + instanceName;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh stopInstance " + instanceName + " > /tmp/stopEC2Instance_" + instanceName;
 		system(cmd.c_str());
 
 		return;
@@ -7774,7 +7788,7 @@ namespace oam
     bool Oam::startEC2Instance(std::string instanceName)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh startInstance " + instanceName + " > /tmp/startEC2Instance_" + instanceName;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh startInstance " + instanceName + " > /tmp/startEC2Instance_" + instanceName;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
 			return false;
@@ -7793,7 +7807,7 @@ namespace oam
     bool Oam::assignElasticIP(std::string instanceName, std::string IpAddress)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > /tmp/assignElasticIP_" + instanceName;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > /tmp/assignElasticIP_" + instanceName;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
             exceptionControl("assignElasticIP", oam::API_FAILURE);
@@ -7812,7 +7826,7 @@ namespace oam
     bool Oam::deassignElasticIP(std::string IpAddress)
 	{
 		// run script to get Instance status and IP Address
-		string cmd = InstallDir + "/bin/IDBInstanceCmds.sh deassignElasticIP " + IpAddress + " > /tmp/deassignElasticIP_" + IpAddress;
+		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh deassignElasticIP " + IpAddress + " > /tmp/deassignElasticIP_" + IpAddress;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
             exceptionControl("deassignElasticIP", oam::API_FAILURE);
@@ -7831,7 +7845,7 @@ namespace oam
 	std::string Oam::getEC2VolumeStatus(std::string volumeName)
 	{
 		// run script to get Volume Status
-		string cmd = InstallDir + "/bin/IDBVolumeCmds.sh describe " + volumeName + " > /tmp/getVolumeStatus_" + volumeName;
+		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > /tmp/getVolumeStatus_" + volumeName;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
 			return "failed";
@@ -7862,7 +7876,7 @@ namespace oam
 	std::string Oam::createEC2Volume(std::string size, std::string name)
 	{
 		// run script to get Volume Status
-		string cmd = InstallDir + "/bin/IDBVolumeCmds.sh create " + size + " " + name + " > /tmp/createVolumeStatus_" + name;
+		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh create " + size + " " + name + " > /tmp/createVolumeStatus_" + name;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
 			return "failed";
@@ -7906,7 +7920,7 @@ namespace oam
 		for ( int retry = 0 ; retry < 2 ; retry++ )
 		{
 			// run script to attach Volume
-			string cmd = InstallDir + "/bin/IDBVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > /tmp/attachVolumeStatus_" + volumeName;
+			string cmd = InstallDir + "/bin/MCSVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > /tmp/attachVolumeStatus_" + volumeName;
 			ret = system(cmd.c_str());
 
 			if (WEXITSTATUS(ret) == 0 )
@@ -7933,7 +7947,7 @@ namespace oam
 	bool Oam::detachEC2Volume(std::string volumeName)
 	{
 		// run script to attach Volume
-		string cmd = InstallDir + "/bin/IDBVolumeCmds.sh detach " + volumeName + " > /tmp/detachVolumeStatus_" + volumeName;
+		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh detach " + volumeName + " > /tmp/detachVolumeStatus_" + volumeName;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
 			return false;
@@ -7952,7 +7966,7 @@ namespace oam
 	bool Oam::deleteEC2Volume(std::string volumeName)
 	{
 		// run script to delete Volume
-		string cmd = InstallDir + "/bin/IDBVolumeCmds.sh delete " + volumeName + " > /tmp/deleteVolumeStatus_" + volumeName;
+		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh delete " + volumeName + " > /tmp/deleteVolumeStatus_" + volumeName;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
 			return false;
@@ -7971,7 +7985,7 @@ namespace oam
 	bool Oam::createEC2tag(std::string resourceName, std::string tagName, std::string tagValue)
 	{
 		// run script to create a tag
-		string cmd = InstallDir + "/bin/IDBVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > /tmp/createTagStatus_" + resourceName;
+		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > /tmp/createTagStatus_" + resourceName;
 		int ret = system(cmd.c_str());
 		if (WEXITSTATUS(ret) != 0 )
 			return false;
@@ -8540,17 +8554,32 @@ namespace oam
 	{
 		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
 
-		//check if entry already exist 
-		string cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+		//check if entry already exist
+        int user;
+        user = getuid();
+
+		string cmd;
+		if (user == 0)
+			cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+		else
+            cmd = "sudo grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+
 		int status = system(cmd.c_str());
 		if (WEXITSTATUS(status) == 0 )
 			return "";
 
 		//update /etc/fstab with mount
-		string entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+		string entry;
+		if (user == 0)
+			entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+		else
+            entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto,user 0 0";
 
-		//update local fstab	
-		cmd = "echo " + entry + " >> /etc/fstab";
+		//update local fstab
+        if (user == 0)
+			cmd = "echo " + entry + " >> /etc/fstab";
+        else
+			cmd = "sudo echo " + entry + " >> /etc/fstab";
 		system(cmd.c_str());
 
 		//use from addmodule later
@@ -9614,7 +9643,7 @@ namespace oam
 			// not root user
 			// The stat above may fail for non-root because of permissions
 			// This is a non-optimal solution
-			string cmd = "pgrep ProcMon";
+			string cmd = "pgrep ProcMon > /dev/null 2>&1";
 			if (system(cmd.c_str()) == 0)
 			{
 				return true;

@@ -18,7 +18,6 @@ filter f_local1err  { facility(local1) and level(err); };
 filter f_local1warning { facility(local1) and level(warning); };
 filter f_local1info { facility(local1) and level(info); };
 filter f_local1debug { facility(local1) and level(debug); };
-filter f_local2crit { facility(local2) and level(crit); };
 
 destination d_crit{
 	file("/var/log/mariadb/columnstore/crit.log");
@@ -38,10 +37,6 @@ destination d_info{
 
 destination d_debug{       
 	file("/var/log/mariadb/columnstore/debug.log");
-};
-
-destination d_data_mods{       
-	file("/var/log/mariadb/columnstore/data/data_mods.log");
 };
 
 log{
@@ -70,9 +65,3 @@ log{
 	filter(f_local1debug);        
 	destination(d_debug);
 };
-log{        
-	source(s_columnstore);        
-	filter(f_local2crit);        
-	destination(d_data_mods);
-};
-

@@ -370,6 +370,11 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 		{
 			pDMLPackage->set_isBatchInsert( true );
 		}
+        if (thd->is_strict_mode())
+        {
+            pDMLPackage->set_isWarnToError( true );
+        }
+
 		pDMLPackage->setTableOid (ci.tableOid);
 		if (lastBatch)
 		{
@@ -514,8 +519,11 @@ int doProcessInsertValues ( TABLE* table, uint32_t size, cal_connection_info& ci
 		}
 		if ( b == dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING )
 		{
-			rc = 0;
-			push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, errormsg.c_str());
+            if (!thd->is_strict_mode())
+            {
+    			rc = 0;
+            }
+   			push_warning(thd, Sql_condition::WARN_LEVEL_WARN, ER_WARN_DATA_OUT_OF_RANGE, errormsg.c_str());
 		}
 		
 		if ( rc != 0 )

@@ -2043,7 +2043,16 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 	}
 
 	string emsg;
-	stmt = thd->query();
+	if (thd->lex->sql_command == SQLCOM_DROP_DB)
+	{
+		std::string tableName(name);
+		tableName.erase(0,tableName.rfind("/")+1);
+		stmt = std::string("DROP TABLE ") + tableName;
+	}
+	else
+	{
+		stmt = thd->query();
+	}
 	stmt += ";";
 	int rc = ProcessDDLStatement(stmt, schema, tbl, tid2sid(thd->thread_id), emsg);
 //	cout << "ProcessDDLStatement rc=" << rc << endl;

@@ -8,6 +8,7 @@ CREATE FUNCTION calgetversion RETURNS STRING SONAME 'libcalmysql.dll';
 CREATE FUNCTION calonlinealter RETURNS INTEGER SONAME 'libcalmysql.dll';
 CREATE FUNCTION calviewtablelock RETURNS STRING SONAME 'libcalmysql.dll';
 CREATE FUNCTION calcleartablelock RETURNS STRING SONAME 'libcalmysql.dll';
+CREATE FUNCTION calgetsqlcount RETURNS STRING SONAME 'libcalmysql.dll';
 
 create database if not exists calpontsys;
 use calpontsys;

@@ -222,7 +222,9 @@ void debug_walk(const Item *item, void *arg)
 	{
 		Item_string* isp = (Item_string*)item;
 		String val, *str = isp->val_str(&val);
-		cout << "STRING_ITEM: >" << str->c_ptr() << '<' << endl;
+		string valStr;
+		valStr.assign(str->ptr(), str->length());
+		cout << "STRING_ITEM: >" << valStr << '<' << endl;
 		break;
 	}
 	case Item::REAL_ITEM:
@@ -491,9 +493,68 @@ void debug_walk(const Item *item, void *arg)
 				//ifp->cached_table->select_lex->select_number gives the select level.
 				// could be used on alias.
 				// could also be used to tell correlated join (equal level).
-				cout << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+				cout << "CACHED REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
 					'.' << ifp->field_name << endl;
 				break;
+			}
+			else if (field->type() == Item::REF_ITEM)
+			{
+				Item_ref* ifr = (Item_ref*)field;
+				string refType;
+				string realType;
+				switch (ifr->ref_type())
+				{
+					case Item_ref::REF: refType = "REF"; break;
+					case Item_ref::DIRECT_REF: refType = "DIRECT_REF"; break;
+					case Item_ref::VIEW_REF: refType = "VIEW_REF"; break;
+					case Item_ref::OUTER_REF: refType = "OUTER_REF"; break;
+					case Item_ref::AGGREGATE_REF: refType = "AGGREGATE_REF"; break;
+					default: refType = "UNKNOWN"; break;
+				}
+				switch (ifr->real_type())
+				{
+					case Item::FIELD_ITEM:
+					{
+						Item_field* ifp = (Item_field*)(*(ifr->ref));
+						realType = "FIELD_ITEM ";
+						realType += ifp->db_name;
+						realType += '.';
+						realType += bestTableName(ifp);
+						realType += '.';
+						realType += ifp->field_name;
+						break;
+					}
+					case Item::SUM_FUNC_ITEM:
+					{
+						Item_sum* isp = (Item_sum*)(*(ifr->ref));
+						if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+							realType = "GROUP_CONCAT_FUNC";
+						else
+							realType = "SUM_FUNC_ITEM";
+						break;
+					}
+					case Item::REF_ITEM:
+						// Need recursion here
+						realType = "REF_ITEM";
+						break;
+					case Item::FUNC_ITEM:
+					{
+						Item_func* ifp = (Item_func*)(*(ifr->ref));
+						realType = "FUNC_ITEM ";
+						realType += ifp->func_name();
+						break;
+					}
+					default:
+					{
+						realType = "UNKNOWN";
+					}
+				}
+				cout << "CACHED REF_ITEM: ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
+				break;
+			}
+			else
+			{
+				cout << "REF_ITEM with CACHE_ITEM type unknown " << field->type() << endl;
 			}
 		}
 		else if (ref->real_item()->type() == Item::FIELD_ITEM)
@@ -525,37 +586,105 @@ void debug_walk(const Item *item, void *arg)
 		Item_cache* isp = (Item_cache*)item;
 		// MCOL-46 isp->val_str() can cause a call to execute a subquery. We're not set up
 		// to execute yet.
-//		String val, *str = NULL;
+#if 0
 		switch (item->result_type()) 
 		{
 			case STRING_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_STRING_ITEM";
+				cout << "CACHE_STRING_ITEM" << endl;
 				break;
 			case REAL_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_REAL_ITEM";
+				cout << "CACHE_REAL_ITEM " << isp->val_real() << endl;
 				break;
 			case INT_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_INT_ITEM";
+				cout << "CACHE_INT_ITEM " << isp->val_int() << endl;
 				break;
 			case ROW_RESULT:
-//				cout << "CACHE_ROW_ITEM";
+				cout << "CACHE_ROW_ITEM" << endl;
 				break;
 			case DECIMAL_RESULT:
-//				str = isp->val_str(&val);
-				cout << "CACHE_DECIMAL_ITEM";
+				cout << "CACHE_DECIMAL_ITEM " << isp->val_decimal() << endl;
 				break;
 			default:
-				cout << "CACHE_UNKNOWN_ITEM";
+				cout << "CACHE_UNKNOWN_ITEM" << endl;
 				break;
 		}
-//		if (str)
-//			cout << ": (" << str->c_ptr() << ')' << endl;
-//		else
-//			cout << ": <NULL>" << endl;
-		cout << endl;
+#endif
+		Item* field = isp->get_example();
+		if (field->type() == Item::FIELD_ITEM)
+		{
+			Item_field* ifp = (Item_field*)field;
+			//ifp->cached_table->select_lex->select_number gives the select level.
+			// could be used on alias.
+			// could also be used to tell correlated join (equal level).
+			cout << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+				'.' << ifp->field_name << endl;
+			break;
+		}
+		else if (field->type() == Item::REF_ITEM)
+		{
+			Item_ref* ifr = (Item_ref*)field;
+			string refType;
+			string realType;
+			switch (ifr->ref_type())
+			{
+				case Item_ref::REF: refType = "REF"; break;
+				case Item_ref::DIRECT_REF: refType = "DIRECT_REF"; break;
+				case Item_ref::VIEW_REF: refType = "VIEW_REF"; break;
+				case Item_ref::OUTER_REF: refType = "OUTER_REF"; break;
+				case Item_ref::AGGREGATE_REF: refType = "AGGREGATE_REF"; break;
+				default: refType = "UNKNOWN"; break;
+			}
+			switch (ifr->real_type())
+			{
+				case Item::FIELD_ITEM:
+				{
+					Item_field* ifp = (Item_field*)(*(ifr->ref));
+					realType = "FIELD_ITEM ";
+					realType += ifp->db_name;
+					realType += '.';
+					realType += bestTableName(ifp);
+					realType += '.';
+					realType += ifp->field_name;
+					break;
+				}
+				case Item::SUM_FUNC_ITEM:
+				{
+					Item_sum* isp = (Item_sum*)(*(ifr->ref));
+					if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+						realType = "GROUP_CONCAT_FUNC";
+					else
+						realType = "SUM_FUNC_ITEM";
+					break;
+				}
+				case Item::REF_ITEM:
+					// Need recursion here
+					realType = "REF_ITEM";
+					break;
+				case Item::FUNC_ITEM:
+				{
+					Item_func* ifp = (Item_func*)(*(ifr->ref));
+					realType = "FUNC_ITEM ";
+					realType += ifp->func_name();
+					break;
+				}
+				default:
+				{
+					realType = "UNKNOWN";
+				}
+			}
+			cout << "CACHE_ITEM ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
+			break;
+		}
+		else if (field->type() == Item::FUNC_ITEM)
+		{
+			Item_func* ifp = (Item_func*)field;
+			cout << "CACHE_ITEM FUNC_ITEM " << ifp->func_name() << endl;
+			break;
+		}
+		else
+		{
+			cout << "CACHE_ITEM type unknown " << field->type() << endl;
+		}
 		break;
 	}
 	case Item::DATE_ITEM:
@@ -2166,9 +2295,11 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 		case Item::VARBIN_ITEM:
 		{
 			String val, *str = item->val_str(&val);
+			string valStr;
+			valStr.assign(str->ptr(), str->length());
 			if (item->unsigned_flag)
 			{
-				//cc = new ConstantColumn(str->c_ptr(), (uint64_t)item->val_uint(), ConstantColumn::NUM);
+				//cc = new ConstantColumn(valStr, (uint64_t)item->val_uint(), ConstantColumn::NUM);
 				// It seems that str at this point is crap if val_uint() is > MAX_BIGINT. By using
 				// this constructor, ConstantColumn is built with the proper string. For whatever reason,
 				// ExeMgr converts the fConstval member to numeric, rather than using the existing numeric
@@ -2177,7 +2308,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			}
 			else
 			{
-				rc = new ConstantColumn(str->c_ptr(), (int64_t)item->val_int(), ConstantColumn::NUM);
+				rc = new ConstantColumn(valStr, (int64_t)item->val_int(), ConstantColumn::NUM);
 			}
 			//return cc;
 			break;
@@ -2185,13 +2316,17 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 		case Item::STRING_ITEM:
 		{
 			String val, *str = item->val_str(&val);
-			rc = new ConstantColumn(str->c_ptr());
+			string valStr;
+			valStr.assign(str->ptr(), str->length());
+			rc = new ConstantColumn(valStr);
 			break;
 		}
 		case Item::REAL_ITEM:
 		{
 			String val, *str = item->val_str(&val);
-			rc = new ConstantColumn(str->c_ptr(), item->val_real());
+			string valStr;
+			valStr.assign(str->ptr(), str->length());
+			rc = new ConstantColumn(valStr, item->val_real());
 			break;
 		}
 		case Item::DECIMAL_ITEM:
@@ -2224,20 +2359,25 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 				  (tmpVec.size() == 0))
 			{
 				String val, *str = ifp->val_str(&val);
+				string valStr;
+				if (str)
+				{
+					valStr.assign(str->ptr(), str->length());
+				}
 				if (!str)
 				{
 					rc = new ConstantColumn("", ConstantColumn::NULLDATA);
 				}
 				else if (ifp->result_type() == STRING_RESULT)
 				{
-					rc = new ConstantColumn(str->c_ptr(), ConstantColumn::LITERAL);
+					rc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
 					rc->resultType(colType_MysqlToIDB(item));
 				}
 				else if (ifp->result_type() == DECIMAL_RESULT)
 					rc = buildDecimalColumn(ifp, gwi);
 				else
 				{
-					rc = new ConstantColumn(str->c_ptr(), ConstantColumn::NUM);
+					rc = new ConstantColumn(valStr, ConstantColumn::NUM);
 					rc->resultType(colType_MysqlToIDB(item));
 				}
 				break;
@@ -2304,7 +2444,9 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 		case Item::DATE_ITEM:
 		{
 			String val, *str = item->val_str(&val);
-			rc = new ConstantColumn(str->c_ptr());
+			string valStr;
+			valStr.assign(str->ptr(), str->length());
+			rc = new ConstantColumn(valStr);
 			break;
 		}
 		case Item::WINDOW_FUNC_ITEM:
@@ -3079,18 +3221,20 @@ ConstantColumn* buildDecimalColumn(Item *item, gp_walk_info &gwi)
 	Item_decimal* idp = (Item_decimal*)item;
 	IDB_Decimal infinidb_decimal;
 	String val, *str = item->val_str(&val);
+	string valStr;
+	valStr.assign(str->ptr(), str->length());
 	ostringstream infinidb_decimal_val;
 	uint32_t i = 0;
-	if (str->c_ptr()[0] == '+' || str->c_ptr()[0] == '-')
+	if (str->ptr()[0] == '+' || str->ptr()[0] == '-')
 	{
-		infinidb_decimal_val << str->c_ptr()[0];
+		infinidb_decimal_val << str->ptr()[0];
 		i = 1;
 	}
 	for (; i < str->length(); i++)
 	{
-		if (str->c_ptr()[i] == '.')
+		if (str->ptr()[i] == '.')
 			continue;
-		infinidb_decimal_val << str->c_ptr()[i];
+		infinidb_decimal_val << str->ptr()[i];
 	}
 	infinidb_decimal.value = strtoll(infinidb_decimal_val.str().c_str(), 0, 10);
 
@@ -3103,7 +3247,7 @@ ConstantColumn* buildDecimalColumn(Item *item, gp_walk_info &gwi)
 	else
 		infinidb_decimal.scale = idp->decimals;
 	infinidb_decimal.precision = idp->max_length - idp->decimals;
-	return new ConstantColumn(str->c_ptr(), infinidb_decimal);
+	return new ConstantColumn(valStr, infinidb_decimal);
 }
 
 SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
@@ -3363,7 +3507,11 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 		(dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
 		parm.reset(rowCol);
 		if (gc->str_separator())
-			(dynamic_cast<GroupConcatColumn*>(ac))->separator(gc->str_separator()->c_ptr());
+		{
+			string separator;
+			separator.assign(gc->str_separator()->ptr(), gc->str_separator()->length());
+			(dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
+		}
 	}
 	else
 	{
@@ -3800,7 +3948,7 @@ void gp_walk(const Item *item, void *arg)
 					string cval;
 					if (str->ptr())
 					{
-						cval = str->c_ptr();
+						cval.assign(str->ptr(), str->length());
 					}
 					size_t spos = cval.find_last_not_of(" ");
 					if (spos != string::npos)
@@ -3913,7 +4061,9 @@ void gp_walk(const Item *item, void *arg)
 				  ifp->functype() != Item_func::MULT_EQUAL_FUNC)
 			{
 				String val, *str = ifp->val_str(&val);
-
+				string valStr;
+                if (str)
+    				valStr.assign(str->ptr(), str->length());
 				ConstantColumn *cc = NULL;
 				if (!str) //@ bug 2844 check whether parameter is defined
 				{
@@ -3921,7 +4071,7 @@ void gp_walk(const Item *item, void *arg)
 				}
 				else if (ifp->result_type() == STRING_RESULT)
 				{
-					cc = new ConstantColumn(str->c_ptr(), ConstantColumn::LITERAL);
+					cc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
 				}
 				else if (ifp->result_type() == DECIMAL_RESULT)
 				{
@@ -3929,7 +4079,7 @@ void gp_walk(const Item *item, void *arg)
 				}
 				else
 				{
-					cc = new ConstantColumn(str->c_ptr(), ConstantColumn::NUM);
+					cc = new ConstantColumn(valStr, ConstantColumn::NUM);
 					cc->resultType(colType_MysqlToIDB(item));
 				}
 
@@ -3950,7 +4100,7 @@ void gp_walk(const Item *item, void *arg)
 				else
 					gwip->rcWorkStack.push(cc);
 				if (str)
-					IDEBUG( cout << "Const F&E " << item->full_name() << " evaluate: " << str->c_ptr() << endl );
+					IDEBUG( cout << "Const F&E " << item->full_name() << " evaluate: " << valStr << endl );
 				break;
 			}
 
@@ -4580,11 +4730,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			// @todo process from subquery
 			if (table_ptr->derived)
 			{
-				// cout << "DERIVED TABLE DEBUG" << endl;
 				String str;
 				(table_ptr->derived->first_select())->print(gwi.thd, &str, QT_INFINIDB_DERIVED);
-				// cout << str.c_ptr() << endl;
-				// cout << "DERIVED TABLE DEBUG END" << endl;
 
 				SELECT_LEX *select_cursor = table_ptr->derived->first_select();
 				FromSubQuery fromSub(gwi, select_cursor);
@@ -5101,6 +5248,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						 string(ifp->func_name()) != "set_user_var")
 					{
 						String val, *str = ifp->val_str(&val);
+						string valStr;
+                        if (str)
+    						valStr.assign(str->ptr(), str->length());
 						ConstantColumn *cc = NULL;
 						if (!str)
 						{
@@ -5108,7 +5258,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						}
 						else if (ifp->result_type() == STRING_RESULT)
 						{
-							cc = new ConstantColumn(str->c_ptr(), ConstantColumn::LITERAL);
+							cc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
 						}
 						else if (ifp->result_type() == DECIMAL_RESULT)
 						{
@@ -5116,7 +5266,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						}
 						else
 						{
-							cc = new ConstantColumn(str->c_ptr(), ConstantColumn::NUM);
+							cc = new ConstantColumn(valStr, ConstantColumn::NUM);
 							cc->resultType(colType_MysqlToIDB(item));
 						}
 						SRCP srcp(cc);
@@ -5215,9 +5365,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						srcp->alias(item->name);
 
 					Item_string* isp = reinterpret_cast<Item_string*>(item);
-					String val;
-					String* str = isp->val_str(&val);
-					string name = "'" + string(str->c_ptr()) + "'" + " " + "`" + escapeBackTick(srcp->alias().c_str()) + "`";
+					String val, *str = isp->val_str(&val);
+					string valStr;
+					valStr.assign(str->ptr(), str->length());
+					string name = "'" + valStr + "'" + " " + "`" + escapeBackTick(srcp->alias().c_str()) + "`";
 
 					if (sel_cols_in_create.length() != 0)
 						sel_cols_in_create += ", ";
@@ -5239,8 +5390,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 					Item_decimal* isp = reinterpret_cast<Item_decimal*>(item);
 					String val, *str = isp->val_str(&val);
+					string valStr;
+					valStr.assign(str->ptr(), str->length());
 					ostringstream oss;
-					oss << str->c_ptr() << " `" << escapeBackTick(srcp->alias().c_str()) << "`";
+					oss << valStr.c_str() << " `" << escapeBackTick(srcp->alias().c_str()) << "`";
 					if (sel_cols_in_create.length() != 0)
 						sel_cols_in_create += ", ";
 					sel_cols_in_create += oss.str();

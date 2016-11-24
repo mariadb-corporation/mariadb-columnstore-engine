@@ -1,2 +1,2 @@
 
-install(PROGRAMS  IDBInstanceCmds.sh IDBVolumeCmds.sh DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
+install(PROGRAMS  MCSInstanceCmds.sh MCSVolumeCmds.sh DESTINATION ${ENGINE_BINDIR} COMPONENT platform)

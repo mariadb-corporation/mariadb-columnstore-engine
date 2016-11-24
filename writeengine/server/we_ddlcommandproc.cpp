@@ -193,7 +193,7 @@ uint8_t WE_DDLCommandProc::writeSystable(ByteStream& bs, std::string &err)
 
                 t = time(NULL);
                 gmtime_r(&t, &tmp);
-				aDay.year = tmp.tm_year;
+				aDay.year = tmp.tm_year + 1900;
 				aDay.month = tmp.tm_mon+1;
 				aDay.day = tmp.tm_mday;
 

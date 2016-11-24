@@ -2851,6 +2851,11 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 		return -1;
 	}
 
+	bool syslog7 = false;
+	pos = fileName.find("49",0);
+	if (pos != string::npos) {
+	      syslog7 = true;
+	}
 	vector <string> lines;
 
 	if ( level == "data" )
@@ -2883,16 +2888,15 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 
 				for( int i = 0;;i++)
 				{
-					string::size_type pos = oam::LogFile[i].find("local2",0);
-					if (pos != string::npos)
-						//skip
-						continue;
+					string localLogFile = oam::LogFile[i];
+					if (syslog7)
+						localLogFile = oam::LogFile7[i];
 
-					if ( oam::LogFile[i] == "" ) {
+					if ( localLogFile == "" ) {
 						// end of list
 						break;
 					}
-					string logFile = oam::LogFile[i];
+					string logFile = localLogFile;
 
 					pos = buf.find(logFile,0);
 					if (pos != string::npos) {
@@ -2910,7 +2914,10 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 			for( int i = 0;;i++)
 			{
 				bool found = false;
-				if ( oam::LogFile[i] == "" ) {
+				string localLogFile = oam::LogFile[i];
+				if (syslog7)
+					localLogFile = oam::LogFile7[i];
+				if ( localLogFile == "" ) {
 					// end of list
 					break;
 				}
@@ -2926,8 +2933,8 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 				}
 
 				if (!found) {
-					lines.push_back(oam::LogFile[i]);
-					log.writeLog(__LINE__, "Add in syslog.conf log file " + oam::LogFile[i], LOG_TYPE_DEBUG);
+					lines.push_back(localLogFile);
+					log.writeLog(__LINE__, "Add in syslog.conf log file " + localLogFile, LOG_TYPE_DEBUG);
 					update = true;
 				}
 			}
@@ -2950,7 +2957,10 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 				}
 				if ( level == oam::LogLevel[i] ) {
 					// match found
-					string logFile = oam::LogFile[i];
+					string localLogFile = oam::LogFile[i];
+					if (syslog7)
+						localLogFile = oam::LogFile7[i];
+					string logFile = localLogFile;
 
 					while (oldFile.getline(line, 200))
 					{
@@ -2982,16 +2992,14 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 				bool found = false;
 				for( int i = 0;;i++)
 				{
-					string::size_type pos = oam::LogFile[i].find("local2",0);
-					if (pos != string::npos)
-						//skip
-						continue;
-
-					if ( oam::LogFile[i] == "" ) {
+					string localLogFile = oam::LogFile[i];
+					if (syslog7)
+						localLogFile = oam::LogFile7[i];
+					if ( localLogFile == "" ) {
 						// end of list
 						break;
 					}
-					string logFile = oam::LogFile[i];
+					string logFile = localLogFile;
 
 					pos = buf.find(logFile,0);
 					if (pos != string::npos) {
@@ -3024,7 +3032,10 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 				}
 				if ( level == oam::LogLevel[i] ) {
 					// match found
-					string logFile = oam::LogFile[i];
+					string localLogFile = oam::LogFile[i];
+					if (syslog7)
+						localLogFile = oam::LogFile7[i];
+					string logFile = localLogFile;
 					bool found = false;
 					while (oldFile.getline(line, 200))
 					{
@@ -3086,7 +3097,7 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 		}
 		close(fd);
 
-		oam.syslogAction("sighup");
+		oam.syslogAction("restart");
 	}
 
 	//update file priviledges

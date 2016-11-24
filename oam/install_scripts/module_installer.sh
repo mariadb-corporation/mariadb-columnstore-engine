@@ -113,18 +113,6 @@ if [ $EUID -eq 0 -a -f $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore ]; th
 	fi
 fi
 
-if [ $user != "root" ]; then
-	echo "Setup .bashrc on Module for non-root"
-
-	eval userhome=~$user
-	bashFile=$userhome/.bashrc
-	touch ${bashFile}
-
-	echo " " >> ${bashFile}
-	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
-	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
-fi
-
 plugin=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
 if [ -n "$plugin" ]; then
 	echo "Setup .bashrc on Module for local-query"

@@ -40,7 +40,7 @@ namespace dmlpackage
         std::string dmlStatement, int sessionID )
         :fSchemaName(schemaName), fTableName( tableName ), fDMLStatement( dmlStatement ),
         fSessionID(sessionID), fPlan(new messageqcpp::ByteStream()), fTable(0), fHasFilter(false), fLogging(true), fIsInsertSelect(false), 
-		fIsBatchInsert(false), fIsAutocommitOn(false), fTableOid(0)
+		fIsBatchInsert(false), fIsAutocommitOn(false), fIsWarnToError(false), fTableOid(0)
     {
 
     }

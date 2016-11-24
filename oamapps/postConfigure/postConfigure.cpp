@@ -209,6 +209,7 @@ int main(int argc, char *argv[])
 	noPrompting = false;
 	string password;
 	string cmd;
+	bool disableAmazon = false;
 //  	struct sysinfo myinfo; 
 
 	// hidden options
@@ -276,15 +277,17 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i][-da]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
-			cout << "	 If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
+			cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
 			cout << "   -mp MariaDB Columnstore Password" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
 			cout << "   -port MariaDB Columnstore Port Address" << endl;
+            cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
+            cout << "   -da Disable Amazon functionality, install using Stardard Hostnames and IP Addresses" << endl;
 			exit (0);
 		}
       		else if( string("-s") == argv[i] )
@@ -336,18 +339,6 @@ int main(int argc, char *argv[])
 		// for backward compatibility
 		else if( string("-n") == argv[i] )
 			noPrompting = true;
-		else if( string("-i") == argv[i] ) {
-			i++;
-			if (i >= argc ) {
-				cout << "   ERROR: install dir not provided" << endl;
-				exit (1);
-			}
-			installDir = argv[i];
-			if ( installDir.find("-") != string::npos ) {
-				cout << "   ERROR: Valid install dir not provided" << endl;
-				exit (1);
-			}			
-		}
 		else if( string("-port") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
@@ -361,10 +352,20 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 		}
+        else if( string("-da") == argv[i] )
+            disableAmazon = true;
+        else if( string("-i") == argv[i] ) {
+            i++;
+            if (i >= argc ) {
+                cout << "   ERROR: Path not provided" << endl;
+                exit (1);
+            }
+            installDir = argv[i];
+        }
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i][-da]" << endl;
 			exit (1);
 		}
 	}
@@ -814,31 +815,28 @@ int main(int argc, char *argv[])
 
 	//amazon install setup check
 	bool amazonInstall = false;
-	if (rootUser)
+	string amazonSubNet = oam::UnassignedName;
+	string cloud = oam::UnassignedName;
+	if (!disableAmazon)
+	{
 		system("ec2-version > /tmp/amazon.log 2>&1");
-	else
-		system("sudo ec2-version > /tmp/amazon.log 2>&1");
 
-	ifstream in("/tmp/amazon.log");
+		ifstream in("/tmp/amazon.log");
 
-	in.seekg(0, std::ios::end);
-	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
-	// not running on amazon with ec2-api-tools
-		amazonInstall = false;
-	else
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+		in.seekg(0, std::ios::end);
+		int size = in.tellg();
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
+		// not running on amazon with ec2-api-tools
 			amazonInstall = false;
 		else
-			amazonInstall = true;
-
-	string amazonSubNet = oam::UnassignedName;
+			if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+				amazonInstall = false;
+			else
+				amazonInstall = true;
+	}
 
 	if ( amazonInstall )
 	{
-		string cloud = oam::UnassignedName;
-		string option = "1";
-
 		try {
 			cloud = sysConfig->getConfig(InstallSection, "Cloud");
 		}
@@ -847,67 +845,28 @@ int main(int argc, char *argv[])
 			cloud  = oam::UnassignedName;
 		}
 
-		if ( cloud  == oam::UnassignedName )
-		    option = "2";
-		  
-		cout << "===== Amazon EC2-API-TOOLS Instance Install =====" << endl << endl;
-		cout << "You have 2 install options: " << endl << endl;
-		cout << "1. Utilizing the Amazon IDs for instances and volumes which allows for features like" << endl;
-		cout <<     "automaticly launching instances and EBS volumes when configuring and system expansion." << endl;
-		cout <<     "This option is recommended and would be use if you are setting up a MariaDB Columnstore system." << endl << endl;
-		cout << "2. Using standard hardware IDs for hostnames, IP Addresses, and Storage Devices." << endl;
-		cout <<     "Using this option, you would need to pre-create the Instances and the EBS storages" << endl;
-		cout <<     "and then provide the hostnames/IP-Addresses during the configuration and system expansion" << endl;
-		cout <<     "commands. This option would be used when you are installing on a existing system." << endl << endl;
+		cout << endl << "Amazon EC2 Install, these files will need to be installed on the local instance:" << endl << endl;
+		cout << " 1. File containing the Amazon Access Key" << endl;
+		cout << " 2. File containing the Amazon Secret Key" << endl << endl;
 
 		while(true) {
-			prompt = "Select Install Option [1,2] (" + option + ") > ";
+			string ready = "y";
+			prompt = "Are these files installed and ready to continue [y,n] (y) > ";
 			pcommand = callReadline(prompt.c_str());
-			if (pcommand) {
-				if (strlen(pcommand) > 0) option = pcommand;
+			if (pcommand) {	
+				if (strlen(pcommand) > 0) ready = pcommand;
 				callFree(pcommand);
-			}
-	
-			if (option == "2")
-			{
-				amazonInstall = false;
-				break;
-			}
-			else
-			{
-				if ( option != "1" )
+				if (ready == "n") {
+					cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
+					exit(0);
+				}
+
+				if ( ready != "y" )
 				{
-					cout << "Invalid Entry, please enter '1' or '2'" << endl;
+					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
 					if ( noPrompting )
 						exit(1);
-					continue;
 				}
-			}
-
-			cout << endl << "To use the EC2-api-tools, these files will need to be installed on" << endl;
-			cout << "on the local instance:" << endl << endl;
-			cout << " 1. File containing the Amazon Access Key" << endl;
-			cout << " 2. File containing the Amazon Secret Key" << endl << endl;
-
-			while(true) {
-				string ready = "y";
-				prompt = "Are these files installed and ready to continue [y,n] (y) > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) ready = pcommand;
-					callFree(pcommand);
-					if (ready == "n") {
-						cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
-						exit(0);
-					}
-				}
-
-				if ( ready == "y" )
-					break;
-
-				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-				if ( noPrompting )
-					exit(1);
 			}
 
 			try {
@@ -966,29 +925,29 @@ int main(int argc, char *argv[])
 			if( !copyKeyfiles() )
 				cout << "copyKeyfiles error" << endl;
 
-			try {
-				AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
-			}
-			catch(...)
-			{}
-
-			cout << endl;
-
-			prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand) {
-				if (strlen(pcommand) > 0) AmazonRegion = pcommand;
-				callFree(pcommand);
-			}
-	
-			try {
-				sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
-			}
-			catch(...)
-			{}
-
 			break;
 		}
+
+		try {
+			AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
+		}
+		catch(...)
+		{}
+
+		cout << endl;
+
+		prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
+		pcommand = callReadline(prompt.c_str());
+		if (pcommand) {
+			if (strlen(pcommand) > 0) AmazonRegion = pcommand;
+			callFree(pcommand);
+		}
+	
+		try {
+			sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
+		}
+		catch(...)
+		{}
 
 		if ( !writeConfig(sysConfig) ) { 
 			cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl; 
@@ -997,54 +956,51 @@ int main(int argc, char *argv[])
 
 		sleep(1);
 
-		if ( amazonInstall )
-		{
-		      //get subnetID
-		      try {
-			      amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-		      }
-		      catch(...)
-		      {}
+		//get subnetID
+	    try {
+		      amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
+		}
+		catch(...)
+      	{}
 
-		      if ( amazonSubNet == oam::UnassignedName )
-		      {	
-			      //check if this is a vpc system by checking for subnet setup
-			      amazonSubNet = oam.getEC2LocalInstanceSubnet();
-			      // cout << "amazonSubNet = " <<  amazonSubNet << endl;
-			      if ( amazonSubNet == "failed" || amazonSubNet == "" )
-			      {
-				      amazonSubNet = oam::UnassignedName;
-				      cloud = "amazon-ec2";
-			      }
-			      else
-			      {
-				      cloud = "amazon-vpc";
-			      }
+		if ( amazonSubNet == oam::UnassignedName )
+		{	
+			//check if this is a vpc system by checking for subnet setup
+			amazonSubNet = oam.getEC2LocalInstanceSubnet();
+			// cout << "amazonSubNet = " <<  amazonSubNet << endl;
+			if ( amazonSubNet == "failed" || amazonSubNet == "" )
+			{
+				amazonSubNet = oam::UnassignedName;
+				cloud = "amazon-ec2";
+			}
+			else
+			{
+				cloud = "amazon-vpc";
+			}
 
-			      //set subnetID
-			      try {
-				      sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-			      }
-			      catch(...)
-			      {}
-		      }
-		      else
-			      cloud = "amazon-vpc";
-
-		      try {
-			      sysConfig->setConfig(InstallSection, "Cloud", cloud);
-		      }
-		      catch(...)
-		      {}
+			//set subnetID
+			try {
+				sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
+			}
+			catch(...)
+			{}
 		}
 		else
-		{
-		    try {
-			      sysConfig->setConfig(InstallSection, "Cloud", oam::UnassignedName);
-		    }
-		    catch(...)
-		    {}
+			cloud = "amazon-vpc";
+
+		try {
+			sysConfig->setConfig(InstallSection, "Cloud", cloud);
 		}
+		catch(...)
+		{}
+	}
+	else
+	{
+		try {
+			sysConfig->setConfig(InstallSection, "Cloud", oam::UnassignedName);
+		}
+		catch(...)
+		{}
 	}
 
 	if ( pmwithum )
@@ -1083,7 +1039,7 @@ int main(int argc, char *argv[])
 	catch (exception& e) {}
 
 	//get Parent OAM Module Name
-	string parentOAMModuleName = "pm1";
+	parentOAMModuleName = "pm1";
 
 	if ( localModuleName != parentOAMModuleName )
 	{
@@ -2754,6 +2710,7 @@ int main(int argc, char *argv[])
 	/* create a thread_data_t argument array */
 	thread_data_t thr_data[childmodulelist.size()];
 
+	string install = "y";
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
@@ -2761,7 +2718,6 @@ int main(int argc, char *argv[])
 		//
 		cout << endl << "===== System Installation =====" << endl << endl;
 	
-		string install = "y";
 		cout << "System Configuration is complete, System Installation is the next step." << endl;
 
 		while(true)
@@ -2826,13 +2782,22 @@ int main(int argc, char *argv[])
 			}
 
 			if ( EEPackageType == "rpm" )
-				cout << "Performing an MariaDB Columnstore System install using RPM packages located in the " + HOME + " directory." << endl;
+			{
+				cout << "Performing an MariaDB Columnstore System install using RPM packages" << endl; 
+				cout << " located in the " + HOME + " directory." << endl;
+			}
 			else
 			{
 				if ( EEPackageType == "binary" )
-					cout << "Performing an MariaDB Columnstore System install using a Binary package located in the " + HOME + " directory." << endl;
+				{
+					cout << "Performing an MariaDB Columnstore System install using a Binary package" << endl; 
+					cout << "located in the " + HOME + " directory." << endl;
+				}
 				else
-					cout << "Performing an MariaDB Columnstore System install using using DEB packages located in the " + HOME + " directory." << endl;
+				{
+					cout << "Performing an MariaDB Columnstore System install using using DEB packages" << endl;
+					cout << "located in the " + HOME + " directory." << endl;
+				}
 			}
 	
 			//Write out Updated System Configuration File
@@ -2936,8 +2901,9 @@ int main(int argc, char *argv[])
 					break;
 				}
 
-				if ( strcmp(pass1, "exit") == 0 )
+				if ( pass1 == "exit")
 					exit(0);
+
 				string p1 = pass1;
 				pass2=getpass("Confirm password > ");
 				string p2 = pass2;
@@ -3397,16 +3363,19 @@ int main(int argc, char *argv[])
 					string remoteModuleName = (*list1).moduleName;
 					string remoteModuleIP = (*list1).moduleIP;
 					string remoteHostName = (*list1).hostName;
-			
+		
 					//run remote command script
 					cout << endl << "----- Starting MariaDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
 
-					cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml " +  installDir + "/etc/. > /dev/null 2>&1";
+					if ( install == "n" ) 
+					{	// didnt do a full install, push the config file
+						cmd = installDir + "/bin/remote_scp_put.sh " + remoteModuleIP + " " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
+						system(cmd.c_str());
+					}
+
+					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart' 0";
 					int rtnCode = system(cmd.c_str());
 
-					cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password +
-						" '" + installDir + "/bin/columnstore restart' 0";
-					rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0)
 						cout << "Error with running remote_command.sh" << endl;
 					else
@@ -4990,7 +4959,12 @@ void setSystemName()
  */
 bool copyFstab(string moduleName)
 {
-	string cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+	string cmd;	
+	if ( rootUser)
+   		cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+	else
+		cmd = "/sudo bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+
 	system(cmd.c_str());
 
 	return true;
@@ -5041,15 +5015,6 @@ bool updateBash()
 	string fileName = HOME + "/.bashrc";
 
    	ifstream newFile (fileName.c_str());
-
-	if (!rootUser)
-	{
-		string cmd = "echo export columnstore_INSTALL_DIR=" + installDir + " >> " + fileName;
-		system(cmd.c_str());
-	
-		cmd = "echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$columnstore_INSTALL_DIR/lib:$columnstore_INSTALL_DIR/mysql/lib/mysql >> " + fileName;
-		system(cmd.c_str());
-	}
 
 	if ( hdfs ) 
 	{	
