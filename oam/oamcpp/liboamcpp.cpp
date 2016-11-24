@@ -1367,13 +1367,13 @@ namespace oam
 				{
 					processor.shutdown();
 					string error = e.what();
-					writeLog("getSystemStatus: write exception: " + error, LOG_TYPE_ERROR);
+					//writeLog("getSystemStatus: write exception: " + error, LOG_TYPE_ERROR);
 					exceptionControl("getSystemStatus write", API_FAILURE);
 				}
 				catch(...)
 				{
 					processor.shutdown();
-					writeLog("getSystemStatus: write exception: unknown", LOG_TYPE_ERROR);
+					//writeLog("getSystemStatus: write exception: unknown", LOG_TYPE_ERROR);
 					exceptionControl("getSystemStatus write", API_FAILURE);
 				}
 
@@ -1386,13 +1386,13 @@ namespace oam
 				{
 					processor.shutdown();
 					string error = e.what();
-					writeLog("getSystemStatus: read exception: " + error, LOG_TYPE_ERROR);
+					//writeLog("getSystemStatus: read exception: " + error, LOG_TYPE_ERROR);
 					exceptionControl("getSystemStatus read", API_FAILURE);
 				}
 				catch(...)
 				{
 					processor.shutdown();
-					writeLog("getSystemStatus: read exception: unknown", LOG_TYPE_ERROR);
+					//writeLog("getSystemStatus: read exception: unknown", LOG_TYPE_ERROR);
 					exceptionControl("getSystemStatus read", API_FAILURE);
 				}
 
@@ -1475,21 +1475,21 @@ namespace oam
 				}
 				else
 				{
-					writeLog("getSystemStatus: ProcStatusControl returns 0 length", LOG_TYPE_ERROR);
+					//writeLog("getSystemStatus: ProcStatusControl returns 0 length", LOG_TYPE_ERROR);
 				}
 				// timeout ocurred, shutdown connection
 				processor.shutdown();
-				writeLog("getSystemStatus: read 0 length", LOG_TYPE_ERROR);
+				//writeLog("getSystemStatus: read 0 length", LOG_TYPE_ERROR);
 				exceptionControl("getSystemStatus read 0", API_FAILURE);
 			}
 			catch (exception& e)
 			{
 				string error = e.what();
-				writeLog("getSystemStatus: final exception: " + error, LOG_TYPE_ERROR);
+				//writeLog("getSystemStatus: final exception: " + error, LOG_TYPE_ERROR);
 			}
 			catch(...)
 			{
-				writeLog("getSystemStatus: final exception: unknown", LOG_TYPE_ERROR);
+				//writeLog("getSystemStatus: final exception: unknown", LOG_TYPE_ERROR);
 			}
 		}
 
@@ -1564,13 +1564,13 @@ namespace oam
 								Oam oam;
 								ostringstream os;
 								os << "Oam::getModuleStatus exception while getNICStatus " << (*pt1).HostName << " " << e.what();
-								oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+								//oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 							}
 							catch (...) {
 								Oam oam;
 								ostringstream os;
 								os << "Oam::getModuleStatus exception while getNICStatus " << (*pt1).HostName;
-								oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+								//oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 							}
 						}
 						
@@ -1589,13 +1589,13 @@ namespace oam
 						Oam oam;
 						ostringstream os;
 						os << "Oam::getModuleStatus exception while getSystemConfig " << name << " " << e.what();
-						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+						//oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 					}
 					catch (...) {
 						Oam oam;
 						ostringstream os;
 						os << "Oam::getModuleStatus exception while getSystemConfig " << name;
-						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+						//oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 					}
 				}
 			}
@@ -1605,13 +1605,13 @@ namespace oam
 			Oam oam;
 			ostringstream os;
 			os << "Oam::getModuleStatus exception while getSystemStatus " << e.what();
-			oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+			//oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 		}
 		catch (...) {
 			Oam oam;
 			ostringstream os;
 			os << "Oam::getModuleStatus exception while getSystemStatus";
-			oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+			//oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 		}
 
         // no match found
@@ -1795,7 +1795,7 @@ namespace oam
 			Oam oam;
 			ostringstream os;
 			os << "Oam::getNICStatus exception while getSystemStatus for " << name << " " << e.what();
-			oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+			//oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
 	        exceptionControl("getNICStatus", API_FAILURE);
 		}
 
