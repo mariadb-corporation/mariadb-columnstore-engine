@@ -3,6 +3,7 @@
 alias mcsmysql='/usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root'
 alias ma=/usr/local/mariadb/columnstore/bin/mcsadmin
 alias mcsadmin=/usr/local/mariadb/columnstore/bin/mcsadmin
+alias cpimport=/usr/local/mariadb/columnstore/bin/cpimport
 alias home='cd /usr/local/mariadb/columnstore'
 alias log='cd /var/log/mariadb/columnstore/'
 alias core='cd /var/log/mariadb/columnstore/corefiles'
