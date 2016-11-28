@@ -50,7 +50,7 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 password=
-
+pwprompt=
 for arg in "$@"; do
 	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
 		prefix="$(echo $arg | awk -F= '{print $2}')"
@@ -59,6 +59,7 @@ for arg in "$@"; do
 		rpmmode="$(echo $arg | awk -F= '{print $2}')"
 	elif [ $(expr -- "$arg" : '--password=') -eq 11 ]; then
 		password="$(echo $arg | awk -F= '{print $2}')"
+		pwprompt="-p$password"
 	elif [ $(expr -- "$arg" : '--installdir=') -eq 13 ]; then
 		installdir="$(echo $arg | awk -F= '{print $2}')"
 		prefix=$(dirname $installdir)
