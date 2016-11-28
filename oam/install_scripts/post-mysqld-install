@@ -85,12 +85,14 @@ if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
     is_columnstore_tables=$installdir/lib/is_columnstore_tables.so.1.0.0
     is_columnstore_columns=$installdir/lib/is_columnstore_columns.so.1.0.0
     is_columnstore_extents=$installdir/lib/is_columnstore_extents.so.1.0.0
+    is_columnstore_files=$installdir/lib/is_columnstore_files.so.1.0.0
 elif [ -f $installdir/lib/libcalmysql.so.1 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1
 	libudfsdk=$installdir/lib/libudf_mysql.so.1
     is_columnstore_tables=$installdir/lib/is_columnstore_tables.so.1
     is_columnstore_columns=$installdir/lib/is_columnstore_columns.so.1
     is_columnstore_extents=$installdir/lib/is_columnstore_extents.so.1
+    is_columnstore_files=$installdir/lib/is_columnstore_files.so.1
 else
 	libcalmysql=
 fi
@@ -104,6 +106,7 @@ if [ -n "$libcalmysql" ]; then
     ln -sf $is_columnstore_tables is_columnstore_tables.so
     ln -sf $is_columnstore_columns is_columnstore_columns.so
     ln -sf $is_columnstore_extents is_columnstore_extents.so
+    ln -sf $is_columnstore_files is_columnstore_files.so
 fi
 
 # cleanup previous install mysql replication files
