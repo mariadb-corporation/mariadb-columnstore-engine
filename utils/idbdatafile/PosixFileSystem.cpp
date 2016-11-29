@@ -159,7 +159,7 @@ size_t readFillBuffer(
 
 off64_t PosixFileSystem::compressedSize(const char *path) const
 {
-    IDBDataFile *pFile = 0;
+    IDBDataFile *pFile = NULL;
     size_t nBytes;
     off64_t dataSize = 0;
 
@@ -178,6 +178,14 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
         nBytes = readFillBuffer( pFile,hdr1,compress::IDBCompressInterface::HDR_BUF_LEN);
         if ( nBytes != compress::IDBCompressInterface::HDR_BUF_LEN )
         {
+            delete pFile;
+            return -1;
+        }
+
+        // Verify we are a compressed file
+        if (decompressor.verifyHdr(hdr1) < 0)
+        {
+            delete pFile;
             return -1;
         }
 
@@ -186,6 +194,8 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
         nBytes = readFillBuffer( pFile,hdr2,ptrSecSize);
         if ( (int64_t)nBytes != ptrSecSize )
         {
+            delete[] hdr2;
+            delete pFile;
             return -1;
         }
 
@@ -194,17 +204,24 @@ off64_t PosixFileSystem::compressedSize(const char *path) const
         delete[] hdr2;
         if (rc != 0)
         {
+            delete pFile;
             return -1;
         }
 
         unsigned k = chunkPtrs.size();
         // last header's offset + length will be the data bytes
+        if (k < 1)
+        {
+            delete pFile;
+            return -1;
+        }
         dataSize = chunkPtrs[k-1].first + chunkPtrs[k-1].second;
         delete pFile;
         return dataSize;
     }
     catch (...)
     {
+        delete pFile;
         return -1;
     }
 }
