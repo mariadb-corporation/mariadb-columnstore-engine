@@ -4424,7 +4424,6 @@ int processCommand(string* arguments)
 			cout.width(20);
 			cout << "IP Address";
 			cout.width(14);
-			cout << "Status";
 			if ( AmazonElasticIPCount > 0 )
 			{
 				cout.width(20);
@@ -4503,16 +4502,6 @@ int processCommand(string* arguments)
 								cout << ipAddr;
 								cout.width(14);
 
-								try {
-									oam.getNICStatus(hostname, state);
-		
-									printState(state, " ");
-								}
-								catch (exception& e)
-								{
-									cout << INITIALSTATE;
-								}
-
 								if ( nicID == "1" && AmazonElasticIPCount > 0 )
 								{
 									int id = 1;
@@ -4579,65 +4568,6 @@ int processCommand(string* arguments)
 					}
 					catch(...) {}
 				}
-			}
-
-			cout << endl;
-
-			// get and all display Ext Devices Name config parameters
-
-			try
-			{
-	            SystemExtDeviceConfig systemextdeviceconfig;
-				oam.getSystemConfig(systemextdeviceconfig);
-		
-				if ( systemextdeviceconfig.Count == 0 )
-					break;
-
-				cout << endl << "External Device Configuration" << endl << endl;
-
-				cout.setf(ios::left);
-				cout.width(30);
-				cout << "Device Name";
-				cout.width(20);
-				cout << "IP Address";
-				cout.width(10);
-				cout << "Status";
-				cout << endl;
-				cout.width(30);
-				cout << "---------------------";
-				cout.width(20);
-				cout << "---------------";
-				cout.width(12);
-				cout << "------------";
-				cout << endl;
-
-				for ( unsigned int i = 0 ; i < systemextdeviceconfig.Count ; i++ )
-				{
-					cout.setf(ios::left);
-					cout.width(30);
-					cout << systemextdeviceconfig.extdeviceconfig[i].Name;
-					cout.width(20);
-					cout << systemextdeviceconfig.extdeviceconfig[i].IPAddr;
-					cout.width(12);
-
-					int state;
-					try {
-						oam.getExtDeviceStatus(systemextdeviceconfig.extdeviceconfig[i].Name, state);
-
-						printState(state, " ");
-					}
-					catch (exception& e)
-					{
-						cout << INITIALSTATE;
-					}
-					cout << endl;
-				}
-
-				cout << endl;
-			}
-			catch (exception& e)
-			{
-				cout << endl << "**** getextdeviceconfig Failed =  " << e.what() << endl;
 			}
 
 			cout << endl;
