@@ -15,10 +15,10 @@ checkForError() {
 			rm -f /tmp/error.check
 			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
-			exit 2;
+			exit 1;
 		fi
 		rm -f /tmp/error.check
-		return 1;
+		exit 1;
 	fi
 
 	rm -f /tmp/error.check
@@ -38,7 +38,7 @@ checkForError() {
         #
         if [ $? -ne 0 ]; then
                 echo "columnstore doesn't exist"
-                return 1
+                exit 1
         fi
 
         echo "columnstore exist"

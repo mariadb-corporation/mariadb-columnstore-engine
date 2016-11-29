@@ -146,8 +146,16 @@ fi
 if [ $module = "um" ]; then
 	echo "Run post-mysqld-install"
 	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
+	if [ $? -ne 0 ]; then
+	    echo "ERROR: post-mysqld-install failed: check /tmp/post-mysqld-install.log"
+	    exit 1
+	fi
 	echo "Run post-mysql-install"
 	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
+	if [ $? -ne 0 ]; then
+	    echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
+	    exit 1
+	fi
 fi
 
 

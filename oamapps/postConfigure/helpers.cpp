@@ -238,8 +238,11 @@ void mysqlSetup()
 	string cmd;
 	cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " > /tmp/post-mysqld-install.log 2>&1";
 	int rtnCode = system(cmd.c_str());
-	if (WEXITSTATUS(rtnCode) != 0)
+	if (WEXITSTATUS(rtnCode) != 0) {
 		cout << "Error running post-mysqld-install, check /tmp/post-mysqld-install.log" << endl;
+		  cout << "Exiting..." << endl;
+		  exit (1);
+	}
 	else
 		cout << "post-mysqld-install Successfully Completed" << endl;
 
@@ -322,11 +325,17 @@ void mysqlSetup()
 	
 	cmd = installDir + "/bin/post-mysql-install " + pwprompt + " --installdir=" + installDir + " > /tmp/post-mysql-install.log";;
 	rtnCode = system(cmd.c_str());
-	if (WEXITSTATUS(rtnCode) == 2)
+	if (WEXITSTATUS(rtnCode) == 2) {
 		cout << "Error running post-mysql-install, password is needed. check " + HOME + "/.my.cnf " << endl;
+		  cout << "Exiting..." << endl;
+		  exit (1);
+	}
 	else
-		if (WEXITSTATUS(rtnCode) == 1)
+		if (WEXITSTATUS(rtnCode) == 1) {
 			cout << "Error running post-mysql-install, /tmp/post-mysql-install.log" << endl;
+			cout << "Exiting..." << endl;
+			exit (1);
+		}
 		else
 			cout << "post-mysql-install Successfully Completed" << endl;
 
