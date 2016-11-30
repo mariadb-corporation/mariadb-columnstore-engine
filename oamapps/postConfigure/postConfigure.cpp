@@ -1866,6 +1866,8 @@ int main(int argc, char *argv[])
 										{
 											cout << endl;
 											prompt = "IP Address of '" + newModuleIPAddr + "' failed ping test, please validate. Do you want to continue or re-enter [1=continue, 2=re-enter] (2) > ";
+											if ( noPrompting )
+											  exit(1);
 											pcommand = callReadline(prompt.c_str());
 											if (pcommand)
 											{
