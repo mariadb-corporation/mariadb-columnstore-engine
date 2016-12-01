@@ -152,25 +152,10 @@ if [ $module = "um" ]; then
 	fi
 	echo "Run post-mysql-install"
 	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
-	rc=$?
-	if [ $rc -eq 2 ]; then #password issue, check for password in .my.cnf
-	    if test -f $HOME/.my.cnf ; then
-		password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
-	    	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --password=$password > /tmp/post-mysql-install.log 2>&1
-		if [ $? -ne 0 ]; then
-		  echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
-		  exit 1
-		fi
-	    else
-	    	echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
-		exit 1
-	    fi
-	elif [ $rc -ne 0 ]; then
-	    echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
-	    exit 1
-	fi
+        if [ $? -ne 0 ]; then
+            echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
+            exit 1
 fi
-
 
 echo " "
 echo "!!!Module Installation Successfully Completed!!!"
