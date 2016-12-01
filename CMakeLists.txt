@@ -36,6 +36,31 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 #set( CMAKE_VERBOSE_MAKEFILE on )
 
+IF (NOT VERSION)
+    SET (VERSION 1.0.5)
+ENDIF()
+IF (NOT RELEASE)
+    SET (RELEASE 1)
+ENDIF()
+
+SET (PACKAGE columnstore)
+SET (PACKAGE_NAME columnstore)
+SET (PACKAGE_TARNAME columnstore)
+SET (PACKAGE_BUGREPORT support@mariadb.com)
+SET (PACKAGE_URL "")
+
+IF (NOT PACKAGE_VERSION)
+    SET (PACKAGE_VERSION ${VERSION})
+ENDIF()
+IF (NOT PACKAGE_RELEASE)
+    SET (PACKAGE_RELEASE ${RELEASE})
+ENDIF()
+SET (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
+
+
+SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+SET (INSTALL_ENGINE "/usr/local/mariadb/columnstore")
+
 # use, i.e. don't skip the full RPATH for the build tree
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
@@ -43,30 +68,17 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 # (but later on when installing)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/lib")
 
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-
 # the RPATH to be used when installing, but only if it's not a system directory
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${INSTALL_ENGINE}/lib" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
-   SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/lib")
 ENDIF("${isSystemDir}" STREQUAL "-1")
-
-SET (PACKAGE columnstore)
-SET (VERSION 1.0.2)
-SET (PACKAGE_NAME columnstore)
-SET (PACKAGE_TARNAME columnstore)
-SET (PACKAGE_VERSION 1.0.2)
-SET (PACKAGE_STRING columnstore-1.0.2)
-SET (PACKAGE_BUGREPORT support@mariadb.com)
-SET (PACKAGE_URL "")
-
-SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-SET (INSTALL_ENGINE "/usr/local/mariadb/columnstore")
 
 INCLUDE (configureEngine.cmake)
 
@@ -110,7 +122,7 @@ ENDFOREACH()
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D _DEBUG -DHAVE_CONFIG_H")
 
-SET (ENGINE_LDFLAGS    "-Wl,--rpath -Wl,${INSTALL_ENGINE}/lib -Wl,--no-as-needed -Wl,--add-needed")  
+SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")  
 
 FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
 

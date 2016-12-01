@@ -34,7 +34,12 @@
 		<Arg4>STATUS to to view statistics and progress</Arg4>
 	</Cmd4>
 	<Cmd5>
-                <Name>AVAILABLE</Name>
+		<Name>findObjectFile</Name>
+		<Desc1>Get the name of the directory containing the first file of the object</Desc1>
+		<Arg1>Object ID (OID) of object</Arg1>
+		<Arg2>Schema</Arg2>
+		<Arg3>Table</Arg3>
+		<Arg4>Column</Arg4>
 	</Cmd5>
 	<Cmd6>
 		<Name>getModuleTypeConfig</Name>

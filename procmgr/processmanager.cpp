@@ -4471,7 +4471,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		if ( packageType == "deb" )
 			separator = "_";
 		//mariadb
-		calpontPackage = homedir + "/mariadb-columnstore-*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
+		calpontPackage = homedir + "/mariadb-columnstore*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 		mysqlPackage = homedir + "/mariadb-columnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 		mysqldPackage = homedir + "/mariadb-columnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
 		calpontPackage1 = homedir + "/mariadb-columnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;

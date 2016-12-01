@@ -8,9 +8,12 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=$USER
+sudo=sudo
 if [ -z "$user" ]; then
-	user=root
+        user=root
+        sudo=" "
 fi
+
 quiet=0
 
 for arg in "$@"; do
@@ -81,27 +84,52 @@ fi
 # softlink for libperl.sp, used by cplogger
 sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
-# TODO-based on early experience with HDP it doesn't install bigtop
-# so the code below will not correctly detect JAVA_HOME.  Need to 
-# decide how to handle
-# Autodetect JAVA_HOME if not defined
-#if [ -e /usr/libexec/bigtop-detect-javahome ]; then
-#. /usr/libexec/bigtop-detect-javahome
-#elif [ -e /usr/lib/bigtop-utils/bigtop-detect-javahome ]; then
-#. /usr/lib/bigtop-utils/bigtop-detect-javahome
-#fi
-#ln -sf $JAVA_HOME/jre/lib/amd64/server/libjvm.so
-#chown -h $user.$user libjvm.so >/dev/null 2>&1
+#setup .bashrc
+if [ $user = "root" ]; then
+	bashFile=/root/.bashrc
+else
+	bashFile=$HOME/.bashrc
+fi
+
+touch ${bashFile}
+/bin/cp -f ${bashFile} ${bashFile}.columnstoreSave > /dev/null 2>&1
+
+if [ $user != "root" ]; then
+
+	egrep -qs 'MariaDB Columnstore Non-Root' ${bashFile}
+	rc1=$?
+	if [ $rc1 -ne 0 ]; then
+        	echo " " >> ${bashFile}
+		echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${bashFile}
+        	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
+        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
+        	. ${bashFile}
+	fi
+fi
+
+if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+        sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
+fi
+egrep -qs 'MariaDB Columnstore Database Platform Alias Commands' ${bashFile}
+rc1=$?
+egrep -qs 'MariaDB Columnstore Alias Commands' ${bashFile}
+rc2=$?
+if [ $rc1 -ne 0 -a $rc2 -ne 0 ]; then
+        cat $installdir/bin/columnstoreAlias >> ${bashFile}
+        echo " " >> ${bashFile}
+fi
 
 cd /
 
-test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+test -d /var/log/mariadb || sudo mkdir /var/log/mariadb >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore || sudo mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+sudo chmod -R 777 /var/log/mariadb
+
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
 # make sure trace dir is world-writable and sticky
-chmod 1755 /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
 test -d $installdir/data1/systemFiles || mkdir $installdir/data1/systemFiles
@@ -180,16 +208,20 @@ if [ $user = "root" ]; then
 	chmod 777 -R /dev/shm
 	rm -f /etc/default/columnstore
 else
+	sudo chmod 777 /tmp
+	sudo rm -fr /tmp/* > /dev/null 2>&1
 	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	sudo chown $user:$user $installdir/etc/Columnstore.xml
-	sudo chmod 755 /var/log
-	sudo chmod -R 755 /var/log/mariadb/columnstore
 	sudo chmod -R 777 /dev/shm
+	sudo chmod 777 /var/lock/subsys
 	sudo rm -f /var/lock/subsys/mysql-Columnstore
-	sudo rm -f /tmp/StopColumnstore
+	sudo chmod 777 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
+
+	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
+
 fi
 
 #check if MariaDB Columnstore system logging was setup

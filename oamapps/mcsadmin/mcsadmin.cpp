@@ -36,8 +36,8 @@ extern int h_errno;
 #include "messagequeue.h"
 #include "we_messages.h"
 #include "we_redistributedef.h"
-
-
+#include "we_config.h" // for findObjectFile
+#include "we_fileop.h" // for findObjectFile
 namespace fs = boost::filesystem;
 
 using namespace alarmmanager;
@@ -46,6 +46,7 @@ using namespace oam;
 using namespace config;
 using namespace messageqcpp;
 using namespace redistribute;
+using namespace execplan;
 
 #include "installdir.h"
 
@@ -860,8 +861,95 @@ int processCommand(string* arguments)
         }
         break;
 
-        case 5: // Available
+        case 5: // findObjectFile
         {
+			unsigned maxDBRoot = WriteEngine::Config::DBRootCount();
+			if (maxDBRoot < 1)
+			{
+				cout << endl << "getDatafileName fails because there are no dbroots defined for this server" << endl;
+				break;;
+			}
+			if (arguments[1] == "")
+			{
+				cout << endl << "getDatafileName requires one of" << endl;
+				cout << "a) oid of column for which file name is to be retrieved" << endl;
+				cout << "b) schema, table and column for which file name is to be retrieved" << endl;
+				break;
+			}
+			char* endchar;
+			int oid = strtol(arguments[1].c_str(), &endchar, 0);
+			// test to see if not all numeric
+			if (endchar < &(*arguments[1].end()))
+			{
+				oid = 0;
+			}
+			if (oid == 0)
+			{
+				// Need to convert the arguments to oid
+				boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+					execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0);
+				CalpontSystemCatalog::TableColName columnName;
+				columnName.schema = arguments[1];
+				if (arguments[2] == "")
+				{
+					cout << endl << "getDatafileName requires a table and column for schema " << arguments[1] << endl;
+					break;
+				}
+				columnName.table = arguments[2];
+				if (arguments[3] == "")
+				{
+					// No column was given. Use the first column in the table.
+					CalpontSystemCatalog::TableName tableName;
+					tableName.schema = arguments[1];
+					tableName.table = arguments[2];
+					CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
+					oid = rdlist.front().objnum;
+				}
+				else
+				{
+					columnName.column = arguments[3];
+					oid = systemCatalogPtr->lookupOID(columnName);
+				}
+			}
+
+			// Use writeengine code to get the filename
+			WriteEngine::FileOp fileOp;
+			char fileName[WriteEngine::FILE_NAME_SIZE];
+			memset(fileName, 0, WriteEngine::FILE_NAME_SIZE);
+			int rc;
+
+			if (oid < 1000)
+				rc = fileOp.getVBFileName(oid, fileName);
+			else
+				rc = fileOp.oid2DirName(oid, fileName);
+			cout << "file name for oid " << oid << ":" << endl;
+			if (strlen(fileName) > 0)
+			{
+				cout << fileName;
+			}
+			if (rc == WriteEngine::NO_ERROR)
+			{
+				// Success. No more output.
+				cout << endl;
+			}
+			else if (rc == WriteEngine::ERR_FILE_NOT_EXIST)
+			{
+				if (strlen(fileName) == 0)
+				{
+					// We couldn't get a name
+					cout << "Error: Filename could not be determined" << endl;
+				}
+				else
+				{
+					// We got a name, but the file doesn't exist
+					cout << " (OID directory not found)" << endl;
+				}
+			}
+			else
+			{
+				// Something broke
+				cerr << "WriteEngine::FileOp::oid2DirName() error. rc=" << rc << endl;
+			}
         }
         break;
 
@@ -4577,7 +4665,6 @@ int processCommand(string* arguments)
 			cout.width(20);
 			cout << "IP Address";
 			cout.width(14);
-			cout << "Status";
 			if ( AmazonElasticIPCount > 0 )
 			{
 				cout.width(20);
@@ -4656,16 +4743,6 @@ int processCommand(string* arguments)
 								cout << ipAddr;
 								cout.width(14);
 
-								try {
-									oam.getNICStatus(hostname, state);
-		
-									printState(state, " ");
-								}
-								catch (exception& e)
-								{
-									cout << INITIALSTATE;
-								}
-
 								if ( nicID == "1" && AmazonElasticIPCount > 0 )
 								{
 									int id = 1;
@@ -4732,65 +4809,6 @@ int processCommand(string* arguments)
 					}
 					catch(...) {}
 				}
-			}
-
-			cout << endl;
-
-			// get and all display Ext Devices Name config parameters
-
-			try
-			{
-	            SystemExtDeviceConfig systemextdeviceconfig;
-				oam.getSystemConfig(systemextdeviceconfig);
-		
-				if ( systemextdeviceconfig.Count == 0 )
-					break;
-
-				cout << endl << "External Device Configuration" << endl << endl;
-
-				cout.setf(ios::left);
-				cout.width(30);
-				cout << "Device Name";
-				cout.width(20);
-				cout << "IP Address";
-				cout.width(10);
-				cout << "Status";
-				cout << endl;
-				cout.width(30);
-				cout << "---------------------";
-				cout.width(20);
-				cout << "---------------";
-				cout.width(12);
-				cout << "------------";
-				cout << endl;
-
-				for ( unsigned int i = 0 ; i < systemextdeviceconfig.Count ; i++ )
-				{
-					cout.setf(ios::left);
-					cout.width(30);
-					cout << systemextdeviceconfig.extdeviceconfig[i].Name;
-					cout.width(20);
-					cout << systemextdeviceconfig.extdeviceconfig[i].IPAddr;
-					cout.width(12);
-
-					int state;
-					try {
-						oam.getExtDeviceStatus(systemextdeviceconfig.extdeviceconfig[i].Name, state);
-
-						printState(state, " ");
-					}
-					catch (exception& e)
-					{
-						cout << INITIALSTATE;
-					}
-					cout << endl;
-				}
-
-				cout << endl;
-			}
-			catch (exception& e)
-			{
-				cout << endl << "**** getextdeviceconfig Failed =  " << e.what() << endl;
 			}
 
 			cout << endl;

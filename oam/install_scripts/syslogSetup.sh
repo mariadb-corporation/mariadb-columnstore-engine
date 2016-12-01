@@ -5,12 +5,20 @@
 # syslogSetup.sh - install / uninstall MariaDB Columnstore system logging configuration
 
 # no point in going any further if not root... (only works in bash)
-test $EUID -eq 0 || exit 0
+#test $EUID -eq 0 || exit 0
 
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
+
+user=$USER
+sudo=sudo
+if [ -z "$user" ]; then
+        user=root
+        sudo=" "
+fi
+
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
@@ -62,13 +70,13 @@ if [ "$daemon" = "nodaemon" ]; then
 
 	if [ -f /etc/syslog.conf ]; then
 		daemon="syslog"
-		/etc/init.d/syslog start > /dev/null 2>&1
+		sudo /etc/init.d/syslog start > /dev/null 2>&1
 	elif [ -f /etc/rsyslog.conf ]; then
 		daemon="rsyslog"
-		/etc/init.d/rsyslog start > /dev/null 2>&1
+		sudo /etc/init.d/rsyslog start > /dev/null 2>&1
 	elif [ -f /etc/init.d/syslog-ng ]; then
 		daemon="syslog-ng"
-		/etc/init.d/syslog-ng start > /dev/null 2>&1
+		sudo /etc/init.d/syslog-ng start > /dev/null 2>&1
 	fi
 fi
 
@@ -92,7 +100,7 @@ if [ "$daemon" = "syslog-ng" ]; then
 	fi
 elif [ "$daemon" = "rsyslog" ]; then
 	#check if rsyslog version 7 or greater
-	rsyslogd -v > /tmp/rsyslog.ver
+	sudo rsyslogd -v > /tmp/rsyslog.ver
 	cnt=`grep "rsyslogd 7" /tmp/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
@@ -149,30 +157,33 @@ checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
-		rm -f ${syslog_conf}.columnstoreSave
-		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
-		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
+		sudo rm -f ${syslog_conf}.columnstoreSave
+		sudo cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
+		sudo sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
 
 	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
-		#set the syslog for calpont logging
+		#set the syslog for ColumnStore logging
 		# remove older version incase it was installed by previous build
-		rm -rf /etc/rsyslog.d/columnstore.conf
+		sudo rm -rf /etc/rsyslog.d/columnstore.conf
 		if [ $rsyslog7 == 1 ]; then
-			rm -f /etc/rsyslog.d/49-columnstore.conf
-			cat  ${columnstoreSyslogFile7} >> ${syslog_conf}
-			chown syslog:adm /var/log/mariadb/columnstore
+			sudo rm -f /etc/rsyslog.d/49-columnstore.conf
+			sudo cp  ${columnstoreSyslogFile7} ${syslog_conf}
+			sudo chown syslog:adm /var/log/mariadb/columnstore >/dev/null 2>&1
 		else
-			cat  ${columnstoreSyslogFile} >> ${syslog_conf}
+			sudo cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
 	fi
 
-	pkill -hup syslogd > /dev/null 2>&1
-	pkill -hup syslog-ng  > /dev/null 2>&1
-	pkill -hup rsyslogd  > /dev/null 2>&1
-	/etc/init.d/rsyslog restart  > /dev/null 2>&1
+	sudo etc/init.d/rsyslog restart  > /dev/null 2>&1
+	sudo /etc/init.d/syslog restart  > /dev/null 2>&1
+        sudo /etc/init.d/syslog-ng restart  > /dev/null 2>&1
+
 	systemctl restart rsyslog.service > /dev/null 2>&1
+        systemctl restart syslog.service > /dev/null 2>&1
+        systemctl restart syslog-ng.service > /dev/null 2>&1
+
 fi
 
 }
@@ -185,26 +196,30 @@ if [ ! -z "$syslog_conf" ] ; then
 			egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 			if [ $? -eq 0 ]; then
 				if [ -f ${syslog_conf}.columnstoreSave ] ; then
-					#uninstall the syslog for calpont logging
-					mv -f ${syslog_conf} ${syslog_conf}.calpontBackup
-					mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
+					#uninstall the syslog for ColumnStore logging
+					sudo v -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
+					sudo mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
 					if [ ! -f ${syslog_conf} ] ; then
-						cp ${syslog_conf}.calpontBackup ${syslog_conf}
+						sudo cp ${syslog_conf}.ColumnStoreBackup ${syslog_conf}
 					fi
 				fi
 			fi
-			sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
+			sudo sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
 		else
-			rm -f "$syslog_conf"
+			sudo rm -f "$syslog_conf"
 		fi
 	else
-		rm -f "$syslog_conf"
+		sudo rm -f "$syslog_conf"
 	fi
 
-	pkill -hup syslogd > /dev/null 2>&1
-	pkill -hup syslog-ng  > /dev/null 2>&1
-	/etc/init.d/rsyslog restart  > /dev/null 2>&1
-	systemctl restart rsyslog.service > /dev/null 2>&1
+        sudo etc/init.d/rsyslog restart  > /dev/null 2>&1
+        sudo /etc/init.d/syslog restart  > /dev/null 2>&1
+        sudo /etc/init.d/syslog-ng restart  > /dev/null 2>&1
+
+        systemctl restart rsyslog.service > /dev/null 2>&1
+        systemctl restart syslog.service > /dev/null 2>&1
+        systemctl restart syslog-ng.service > /dev/null 2>&1
+
 
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile "unassigned"
 
@@ -227,7 +242,7 @@ fi
 check() {
 test -f $installdir/post/functions && . $installdir/post/functions
 number=$RANDOM
-cplogger -i 104 "MariaDB Columnstore Log Test: $number"
+$installdir/bin/cplogger -i 104 "MariaDB Columnstore Log Test: $number"
 sleep 3
 egrep -qs "MariaDB Columnstore Log Test: $number" /var/log/mariadb/columnstore/info.log
 if [ $? -eq 0 ]; then
