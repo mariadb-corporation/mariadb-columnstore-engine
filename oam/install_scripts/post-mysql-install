@@ -12,6 +12,7 @@ checkForError() {
 		if test -f $HOME/.my.cnf ; then
 			password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
 			pwprompt="-p$password"
+			return 1;
 		else
 			echo "MySQL Password file missing or incorrect, check .my.cnf file"
 			rm -f /tmp/error.check
@@ -19,12 +20,6 @@ checkForError() {
 			sleep 2
 			exit 1;
 		fi
-	else
-        	echo "MySQL access error"
-                rm -f /tmp/error.check
-                $installdir/mysql/mysql-Columnstore stop
-                sleep 2
-                exit 1;
 	fi
 
 	rm -f /tmp/error.check
@@ -120,7 +115,7 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 		$installdir/mysql/install_calpont_mysql.sh --password=$password --installdir=$installdir
 		checkForError
 		if [ $? -ne 0 ]; then
-			echo "ERROR: missing or invalid password, or InfiniDB plugin install missing"
+			echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
 			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
 			exit 1;
