@@ -22,6 +22,7 @@
 #ifndef WE_REDISTRIBUTEDEF_H
 #define WE_REDISTRIBUTEDEF_H
 
+#include <stdint.h>
 #include <time.h>
 
 namespace redistribute

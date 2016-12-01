@@ -29,9 +29,13 @@ extern int h_errno;
 #include "mcsadmin.h"
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
+#include "boost/scoped_ptr.hpp"
 #include "boost/tokenizer.hpp"
 #include "sessionmanager.h"
 #include "dbrm.h"
+#include "messagequeue.h"
+#include "we_messages.h"
+#include "we_redistributedef.h"
 #include "we_config.h" // for findObjectFile
 #include "we_fileop.h" // for findObjectFile
 namespace fs = boost::filesystem;
@@ -40,7 +44,10 @@ using namespace alarmmanager;
 using namespace std;
 using namespace oam;
 using namespace config;
+using namespace messageqcpp;
+using namespace redistribute;
 using namespace execplan;
+
 #include "installdir.h"
 
 // Variables shared in both main and functions
@@ -62,6 +69,8 @@ string HOME = "/root";
 bool repeatStop;
 
 static void checkPromptThread();
+bool connectToDBRoot1PM(Oam& oam, boost::scoped_ptr<MessageQueueClient>&  msgQueueClient);
+bool SendToWES(Oam& oam, ByteStream bs);
 
 bool waitForActive() 
 {
@@ -704,8 +713,151 @@ int processCommand(string* arguments)
         }
         break;
 
-        case 4: // Available
+        case 4: // redistribute
         {
+			set<uint32_t> removeDbroots;    // set of dbroots we want to leave empty
+			vector<uint32_t> srcDbroots;    // all of the currently configured dbroots
+			vector<uint32_t> destDbroots;   // srcDbroots - removeDbroots
+			set<int>::iterator dbiter;
+			if (arguments[1] == "start")
+			{
+				// Get a list of all the configured dbroots in the xml file.
+				DBRootConfigList dbRootConfigList;
+				std::set<int> configuredDBRoots;
+				oam.getSystemDbrootConfig(dbRootConfigList);
+				for (DBRootConfigList::iterator i = dbRootConfigList.begin(); i != dbRootConfigList.end(); ++i)
+					configuredDBRoots.insert(*i);
+
+				// The user may choose to redistribute in such a way as to 
+				// leave certain dbroots empty, presumably for later removal.
+				if (arguments[2] == "remove")
+				{
+					int dbroot;
+					bool error = false;
+					for (int i=3; arguments[i] != ""; ++i)
+					{
+						dbroot = atoi(arguments[i].c_str());
+						if (dbroot == 1)
+						{
+							cout << "Not allowed to remove dbroot-1" << endl;
+							error = true;
+						}
+						else
+						{
+							if (configuredDBRoots.find(dbroot) == configuredDBRoots.end())
+							{
+								ostringstream oss;
+								cout << "DBRoot-" << dbroot << " is not configured" << endl;
+								error = true;
+							}
+							else
+							{
+								removeDbroots.insert((uint32_t)dbroot);
+							}
+						}
+					}
+					if (error)
+					{
+						cout << "Errors encountered. Abort" << endl;
+						break;
+					}
+				}
+
+				// Create a list of source dbroots -- where the data currently resides.
+				for (dbiter = configuredDBRoots.begin(); dbiter != configuredDBRoots.end(); ++dbiter)
+					srcDbroots.push_back((uint32_t)*dbiter); 
+
+				// Create a list of destination dbroots -- where the data is to go.
+				for (dbiter = configuredDBRoots.begin(); dbiter != configuredDBRoots.end(); ++dbiter)
+				{
+					// Only use the dbroots not in the remove list
+					if (removeDbroots.find((uint32_t)*dbiter) == removeDbroots.end())
+					{
+						destDbroots.push_back((uint32_t)*dbiter); 
+					}
+				}
+				// Print out what we're about to do
+				cout << "Redistribute START ";
+				if (removeDbroots.size() > 0)
+				{
+					cout << "    Removing dbroots:";
+					set<uint32_t>::iterator iter;
+					for (iter = removeDbroots.begin(); iter != removeDbroots.end(); ++iter)
+					{
+						cout << " " << *iter;
+					}
+				}
+				cout << endl;
+				cout << "Source dbroots:";
+				vector<uint32_t>::iterator iter;
+				for (iter = srcDbroots.begin(); iter != srcDbroots.end(); ++iter)
+					cout << " " << *iter;
+				cout << endl << "Destination dbroots:";
+				for (iter = destDbroots.begin(); iter != destDbroots.end(); ++iter)
+					cout << " " << *iter;
+				cout << endl << endl;
+				
+				// Connect to PM for dbroot1
+				ByteStream bs;
+				// message WES ID, sequence #, action id
+				uint32_t sequence = time(0);
+				bs << (ByteStream::byte) WriteEngine::WE_SVR_REDISTRIBUTE;
+
+				// Send the CLEAR message to WriteEngineServer (WES). Wipes out previous state.
+				RedistributeMsgHeader header(0, 0, sequence, RED_CNTL_CLEAR);
+				bs.append((const ByteStream::byte*) &header, sizeof(header));
+				SendToWES(oam, bs);
+
+				// Send the START message
+				bs.restart();
+				sequence = time(0);
+				bs << (ByteStream::byte) WriteEngine::WE_SVR_REDISTRIBUTE;
+				header.sequenceNum=sequence;
+				header.messageId = RED_CNTL_START;
+				bs.append((const ByteStream::byte*) &header, sizeof(header));
+				uint32_t options = 0;
+				if (removeDbroots.size() > 0)
+				{
+					options |= RED_OPTN_REMOVE;
+				}
+				bs << options;
+
+				// source db roots, 
+				bs << (uint32_t) srcDbroots.size();
+				for (uint64_t i = 0; i < srcDbroots.size(); ++i)
+					bs << (uint32_t) srcDbroots[i];
+
+				// destination db roots, 
+				bs << (uint32_t) destDbroots.size();
+				for (uint64_t i = 0; i < destDbroots.size(); ++i)
+					bs << (uint32_t) destDbroots[i];
+
+				SendToWES(oam, bs);
+			}
+			else if (arguments[1] == "stop")
+			{
+				ByteStream bs;
+				// message WES ID, sequence #, action id
+				uint32_t sequence = time(0);
+				bs << (ByteStream::byte) WriteEngine::WE_SVR_REDISTRIBUTE;
+				RedistributeMsgHeader header(0, 0, sequence, RED_CNTL_STOP);
+				bs.append((const ByteStream::byte*) &header, sizeof(header));
+				SendToWES(oam, bs);
+			}
+			else if (arguments[1] == "status")
+			{
+				ByteStream bs;
+				// message WES ID, sequence #, action id
+				uint32_t sequence = time(0);
+				bs << (ByteStream::byte) WriteEngine::WE_SVR_REDISTRIBUTE;
+				RedistributeMsgHeader header(0, 0, sequence, RED_CNTL_STATUS);
+				bs.append((const ByteStream::byte*) &header, sizeof(header));
+				SendToWES(oam, bs);
+			}
+			else
+			{
+				cout << "redistribute must have one of START, STOP or STATUS" << endl;
+			}
         }
         break;
 
@@ -8413,5 +8565,78 @@ CC_SUSPEND_ANSWER AskSuspendQuestion(int CmdID)
 	}
 }
 
+// Make a connection to the PM that uses DBRoot1. Used in redistribute
+// return true if successful, false if fail.
+bool connectToDBRoot1PM(Oam& oam, boost::scoped_ptr<MessageQueueClient>&  msgQueueClient)
+{
+	int pmId = 0;
+	ModuleTypeConfig moduletypeconfig;
+
+	try
+	{
+		oam.getDbrootPmConfig(1, pmId);
+		oam.getSystemConfig("pm", moduletypeconfig);
+	}
+	catch (const std::exception& ex)
+	{
+		cerr << "Caught exception when getting DBRoot1" << ex.what() << endl;
+		return false;
+	}
+	catch (...)
+	{
+		cerr << "Caught exception when  getting DBRoot1 -- unknown" << endl;
+		return false;
+	}
+
+	// Find the PM that has dbroot1, then make connection to its WES.
+	ostringstream oss;
+	oss << "pm" << pmId << "_WriteEngineServer";
+	try
+	{
+		msgQueueClient.reset(new MessageQueueClient(oss.str()));
+	}
+	catch (const std::exception& ex)
+	{
+		cerr << "Caught exception when connecting to " << oss.str() << " : " << ex.what() << endl;
+		return false;
+	}
+	catch (...)
+	{
+		cerr << "Caught exception when connecting to " << oss.str() << " : unknown" << endl;
+	}
+
+	return true;
+}
+
+bool SendToWES(Oam& oam, ByteStream bs)
+{
+	boost::scoped_ptr<MessageQueueClient>  msgQueueClient;
+	if (!connectToDBRoot1PM(oam, msgQueueClient))
+		return false;
+	uint32_t status = RED_STATE_UNDEF;
+	msgQueueClient->write(bs);
+
+	SBS sbs;
+	sbs = msgQueueClient->read();
+	if (sbs->length() == 0)
+	{
+		cerr << "WriteEngineServer returned an empty stream. Might be a network error" << endl;
+	}
+	else if (sbs->length() < 5)
+	{
+		cerr << "WriteEngineServer returned too few bytes. Refistribute status is unknown" << endl;
+	}
+	else
+	{
+		ByteStream::byte wesMsgId;
+		*sbs >> wesMsgId;
+		*sbs >> status;
+
+		string msg;
+		*sbs >> msg;
+		cout << "WriteEngineServer returned status " << status << ": "<< msg << endl;
+	}
+	return true;
+}
 // vim:ts=4 sw=4:
 
