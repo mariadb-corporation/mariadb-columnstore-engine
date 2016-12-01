@@ -155,6 +155,7 @@ if [ $module = "um" ]; then
         if [ $? -ne 0 ]; then
             echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
             exit 1
+	fi
 fi
 
 echo " "
