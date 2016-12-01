@@ -2786,14 +2786,14 @@ int main(int argc, char *argv[])
 			if ( EEPackageType == "rpm" )
 			{
 				cout << "Performing an MariaDB Columnstore System install using RPM packages" << endl; 
-				cout << " located in the " + HOME + " directory." << endl;
+				cout << "located in the " + HOME + " directory." << endl << endl;
 			}
 			else
 			{
 				if ( EEPackageType == "binary" )
 				{
 					cout << "Performing an MariaDB Columnstore System install using a Binary package" << endl; 
-					cout << "located in the " + HOME + " directory." << endl;
+					cout << "located in the " + HOME + " directory." << endl << endl;
 				}
 				else
 				{
