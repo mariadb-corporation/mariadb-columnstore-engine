@@ -10,10 +10,10 @@ checkForError() {
 	grep "ERROR 1045" /tmp/mysql_install.log > /tmp/error.check
 	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
 		if test -f $HOME/.my.cnf ; then
-			password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'
+			password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
 			pwprompt="-p$password"
 		else
-			echo "MySQL Password missing or incorrect, check .my.cnf file"
+			echo "MySQL Password file missing or incorrect, check .my.cnf file"
 			rm -f /tmp/error.check
 			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
