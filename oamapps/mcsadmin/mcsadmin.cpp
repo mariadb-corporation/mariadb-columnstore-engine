@@ -35,7 +35,7 @@ extern int h_errno;
 #include "dbrm.h"
 #include "messagequeue.h"
 #include "we_messages.h"
-#include "we_redistributedef.h"
+#include "../../writeengine/redistribute/we_redistributedef.h"
 #include "we_config.h" // for findObjectFile
 #include "we_fileop.h" // for findObjectFile
 namespace fs = boost::filesystem;
@@ -4728,7 +4728,6 @@ int processCommand(string* arguments)
 								string ipAddr = (*pt1).IPAddr;
 								string hostname = (*pt1).HostName;
 								string nicID = oam.itoa((*pt1).NicID);
-								int state;
 
                                 if ( nicID != "1" ) { 
                                     cout.width(48); 
