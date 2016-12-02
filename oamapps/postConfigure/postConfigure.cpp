@@ -3018,7 +3018,8 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore  login failure, password is assigned. Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB Columnstore login failure, MySQL Root password is set." << endl;
+										cout <<  "Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 

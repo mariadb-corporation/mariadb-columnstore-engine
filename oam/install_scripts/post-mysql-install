@@ -11,14 +11,21 @@ checkForError() {
 	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
 		if test -f $HOME/.my.cnf ; then
 			password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
-			pwprompt="-p$password"
-			return 1;
+                	if [ ! -z $password ]; then
+                        	pwprompt="-p$password"
+ 			else
+	                        echo "MySQL Password file missing or incorrect, check .my.cnf file"
+	                        rm -f /tmp/error.check
+	                        $installdir/mysql/mysql-Columnstore stop
+	                        sleep 2
+	                        exit 2;
+			fi
 		else
 			echo "MySQL Password file missing or incorrect, check .my.cnf file"
 			rm -f /tmp/error.check
 			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
-			exit 1;
+			exit 2;
 		fi
 	fi
 
@@ -60,7 +67,9 @@ for arg in "$@"; do
 		rpmmode="$(echo $arg | awk -F= '{print $2}')"
 	elif [ $(expr -- "$arg" : '--password=') -eq 11 ]; then
 		password="$(echo $arg | awk -F= '{print $2}')"
-		pwprompt="-p$password"
+		if [ ! -z $password ]; then
+			pwprompt="-p$password"
+		fi
 	elif [ $(expr -- "$arg" : '--installdir=') -eq 13 ]; then
 		installdir="$(echo $arg | awk -F= '{print $2}')"
 		prefix=$(dirname $installdir)
@@ -118,7 +127,7 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 			echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
 			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
-			exit 1;
+			exit 2;
 		fi
 	fi
 
