@@ -123,29 +123,30 @@ if [ -x $installdir/bin/syslogSetup.sh ]; then
 fi
 
 #remove the start service command
-systemctl=`which systemctl 2>/dev/null`
-if [ -n "$systemctl" ]; then
+if [ $user = "root" ]; then
+	systemctl=`which systemctl 2>/dev/null`
+	if [ -n "$systemctl" ]; then
 
-	sudo systemctl disable columnstore >/dev/null 2>&1
-	sudo rm -f /usr/lib/systemd/system/columnstore.service
-	sudo rm -f /lib/systemd/system/columnstore.service
-else
-	chkconfig=`which chkconfig 2>/dev/null`
-	if [ -n "$chkconfig" ]; then
-
-		chkconfig columnstore off > /dev/null 2>&1
-		chkconfig --del columnstore > /dev/null 2>&1
-		rm -f /etc/init.d/columnstore > /dev/null 2>&1
+		systemctl disable columnstore >/dev/null 2>&1
+		rm -f /usr/lib/systemd/system/columnstore.service
+		rm -f /lib/systemd/system/columnstore.service
 	else
-		updaterc=`which update-rc.d 2>/dev/null`
-		if [ -n "$updaterc" ]; then
+		chkconfig=`which chkconfig 2>/dev/null`
+		if [ -n "$chkconfig" ]; then
 
-			update-rc.d -f columnstore remove > /dev/null 2>&1
-			rm -f /etc/init.d/columnstore > /dev/null 2>&1	
+			chkconfig columnstore off > /dev/null 2>&1
+			chkconfig --del columnstore > /dev/null 2>&1
+			rm -f /etc/init.d/columnstore > /dev/null 2>&1
+		else
+			updaterc=`which update-rc.d 2>/dev/null`
+			if [ -n "$updaterc" ]; then
+
+				update-rc.d -f columnstore remove > /dev/null 2>&1
+				rm -f /etc/init.d/columnstore > /dev/null 2>&1	
+			fi
 		fi
 	fi
 fi
-
 
 if [ $quiet != 1 ]; then
 	#make copy of Columnstore.xml
@@ -164,7 +165,6 @@ fi
 if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
         # remove library config file
         sudo rm -f /etc/ld.so.conf.d/columnstore.conf
-        sudo rm -f /etc/ld.so.cache
         sudo ldconfig
 fi
 
