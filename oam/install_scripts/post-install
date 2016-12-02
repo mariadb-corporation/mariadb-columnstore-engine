@@ -175,33 +175,34 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 rm -f /etc/init.d/columnstore >/dev/null 2>&1
 rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
 
-systemctl=`which systemctl 2>/dev/null`
-if [ -n "$systemctl" ]; then
+if [ $user = "root" ]; then
+	systemctl=`which systemctl 2>/dev/null`
+	if [ -n "$systemctl" ]; then
 
-	chmod 644 $installdir/bin/columnstore.service
-	sudo cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
-	sudo cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-	sudo systemctl enable columnstore >/dev/null 2>&1
-else
-	chkconfig=`which chkconfig 2>/dev/null`
-	if [ -n "$chkconfig" ]; then
-
-		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
-		sudo chkconfig --add columnstore > /dev/null 2>&1
-		chkconfig columnstore on > /dev/null 2>&1
+		chmod 644 $installdir/bin/columnstore.service
+		cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+		systemctl enable columnstore >/dev/null 2>&1
 	else
-		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
-		updaterc=`which update-rc.d 2>/dev/null`
-		if [ -n "$updaterc" ]; then
+		chkconfig=`which chkconfig 2>/dev/null`
+		if [ -n "$chkconfig" ]; then
 
-			update-rc.d columnstore defaults 99 > /dev/null 2>&1
+			cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+			chkconfig --add columnstore > /dev/null 2>&1
+			chkconfig columnstore on > /dev/null 2>&1
 		else
-			echo ""
-			echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+			cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+			updaterc=`which update-rc.d 2>/dev/null`
+			if [ -n "$updaterc" ]; then
+
+				update-rc.d columnstore defaults 99 > /dev/null 2>&1
+			else
+				echo ""
+				echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+			fi
 		fi
 	fi
 fi
-
 #setup MariaDB Columnstore system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
