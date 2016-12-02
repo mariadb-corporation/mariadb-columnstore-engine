@@ -1866,6 +1866,8 @@ int main(int argc, char *argv[])
 										{
 											cout << endl;
 											prompt = "IP Address of '" + newModuleIPAddr + "' failed ping test, please validate. Do you want to continue or re-enter [1=continue, 2=re-enter] (2) > ";
+											if ( noPrompting )
+											  exit(1);
 											pcommand = callReadline(prompt.c_str());
 											if (pcommand)
 											{
@@ -2784,14 +2786,14 @@ int main(int argc, char *argv[])
 			if ( EEPackageType == "rpm" )
 			{
 				cout << "Performing an MariaDB Columnstore System install using RPM packages" << endl; 
-				cout << " located in the " + HOME + " directory." << endl;
+				cout << "located in the " + HOME + " directory." << endl << endl;
 			}
 			else
 			{
 				if ( EEPackageType == "binary" )
 				{
 					cout << "Performing an MariaDB Columnstore System install using a Binary package" << endl; 
-					cout << "located in the " + HOME + " directory." << endl;
+					cout << "located in the " + HOME + " directory." << endl << endl;
 				}
 				else
 				{
@@ -3016,7 +3018,8 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore  login failure, password is assigned. Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB Columnstore login failure, MySQL Root password is set." << endl;
+										cout <<  "Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 

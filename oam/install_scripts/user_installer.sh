@@ -121,7 +121,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 if { $INSTALLTYPE == "uninstall" } { exit 0 }
 
 # 
-# send the InfinIDB package
+# send the MariaDB ColumnStore package
 #
 set timeout 30
 #expect -re {[$#] }
@@ -173,7 +173,7 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	# install package
 	#
-	send_user "Install InfinIDB Packages on Module               "
+	send_user "Install MariaDB ColumnStore Packages on Module               "
 	send "ssh $USERNAME@$SERVER '$PKGINSTALL ;$PKGERASE dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
@@ -284,6 +284,7 @@ if { $INSTALLTYPE == "initial"} {
 	set timeout 200
 	expect {
 		"!!!Module" 	{ send_user "DONE" }
+		"ERROR"   	{ send_user "ERROR: check /tmp logs\n" ; exit 1 }
 		"FAILED"   	{ send_user "ERROR: missing OS file\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }

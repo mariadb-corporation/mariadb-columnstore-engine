@@ -238,8 +238,11 @@ void mysqlSetup()
 	string cmd;
 	cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " > /tmp/post-mysqld-install.log 2>&1";
 	int rtnCode = system(cmd.c_str());
-	if (WEXITSTATUS(rtnCode) != 0)
+	if (WEXITSTATUS(rtnCode) != 0) {
 		cout << "Error running post-mysqld-install, check /tmp/post-mysqld-install.log" << endl;
+		  cout << "Exiting..." << endl;
+		  exit (1);
+	}
 	else
 		cout << "post-mysqld-install Successfully Completed" << endl;
 
@@ -256,77 +259,19 @@ void mysqlSetup()
 			HOME = p;
 	}
 
-	//check for password set
-	//start in the same way that mysqld will be started normally.
-	try {
-		oam.actionMysqlCalpont(MYSQL_START);
-	}
-	catch(const std::exception &exc)
-	{
-	    std::cerr << exc.what() << std::endl;
-	}
-	sleep(2);
-	
-	for (;;)
-	{
-		// check if mysql is supported and get info
-		string calpontMysql = installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root ";
-		string cmd = calpontMysql + pwprompt + " -e 'status' > /tmp/idbmysql.log 2>&1";
-		system(cmd.c_str());
-
-		if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR 1045") ) {
-			//check and get password
-			string mysqlpw = oam::UnassignedName;
-			try {
-				mysqlpw = oam.getMySQLPassword(false);
-				cout << "NOTE: Using MariaDB Columnstore password from " + HOME + "/.my.cnf" << endl;
-			}
-			catch (...)
-			{
-				cout << endl << "MariDB Columnstore login failure, password is assigned. Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on local module" << endl;
-				exit(1);
-			}
-
-			mysqlpw = "'" + mysqlpw + "'";
-			pwprompt = "--password=" + mysqlpw;
-
-			try {
-				oam.setSystemConfig("MySQLPasswordConfig", "y");
-			}
-			catch(const std::exception &exc)
-			{
-			    std::cerr << exc.what() << std::endl;
-			}
-		}
-		else
-		{
-			if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
-				cout << endl << "ERROR: MariaDB Columnstore runtime error, exit..." << endl << endl;
-				system("cat /tmp/idbmysql.log");
-				exit (1);
-			}
-			else
-			{
-				try {
-					oam.actionMysqlCalpont(MYSQL_STOP);
-				}
-				catch(const std::exception &exc)
-				{
-				    std::cerr << exc.what() << std::endl;
-				}
-				unlink("/tmp/idbmysql.log");
-				break;
-			}
-		}
-	}
-	
 	cmd = installDir + "/bin/post-mysql-install " + pwprompt + " --installdir=" + installDir + " > /tmp/post-mysql-install.log";;
 	rtnCode = system(cmd.c_str());
-	if (WEXITSTATUS(rtnCode) == 2)
+	if (WEXITSTATUS(rtnCode) == 2) {
 		cout << "Error running post-mysql-install, password is needed. check " + HOME + "/.my.cnf " << endl;
+		  cout << "Exiting..." << endl;
+		  exit (1);
+	}
 	else
-		if (WEXITSTATUS(rtnCode) == 1)
+		if (WEXITSTATUS(rtnCode) == 1) {
 			cout << "Error running post-mysql-install, /tmp/post-mysql-install.log" << endl;
+			cout << "Exiting..." << endl;
+			exit (1);
+		}
 		else
 			cout << "post-mysql-install Successfully Completed" << endl;
 
