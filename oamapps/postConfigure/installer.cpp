@@ -253,46 +253,16 @@ int main(int argc, char *argv[])
 					long long total = myinfo.totalram / 1024 / 1000;
 				
 					// adjust max memory, 25% of total memory
-					string value;
-				
-					if ( total <= 2000 )
-						value = "256M";
-					else if ( total <= 4000 )
-						value = "512M";
-					else if ( total <= 8000 )
-						value = "1G";
-					else if ( total <= 16000 )
-						value = "2G";
-					else if ( total <= 32000 )
-						value = "4G";
-					else if ( total <= 64000 )
-						value = "8G";
-					else
-						value = "16G";
-				
 					string percent = "25";
 					if ( DBRootStorageType == "hdfs")
 					{
 						percent = "12";
-	
-						if ( value == "512M")
-							value = "256M";
-						else if ( value == "1G" )
-							value = "512M";
-						else if ( value == "2G" )
-							value = "1G";
-						else if ( value == "4G" )
-							value = "2G";
-						else if ( value == "8G")
-							value = "4G";
-						else if ( value  == "16G" )
-							value = "8G";
 					}
 
-					cout << "      Setting 'TotalUmMemory' to " << percent << "% of total memory. Value set to " << value << endl;
+					cout << "      Setting 'TotalUmMemory' to " << percent << "% of total memory. " << endl;
 	
 					try {
-						sysConfig->setConfig("HashJoin", "TotalUmMemory", value);
+						sysConfig->setConfig("HashJoin", "TotalUmMemory", percent);
 					}
 					catch(...)
 					{
@@ -351,31 +321,12 @@ int main(int argc, char *argv[])
 					}
 					catch (...) {}
 			
-					//get memory stats
-					long long total = myinfo.totalram / 1024 / 1000;
-				
 					// adjust max memory, 50% of total memory
-					string value;
-				
-					if ( total <= 2000 )
-						value = "512M";
-					else if ( total <= 4000 )
-						value = "1G";
-					else if ( total <= 8000 )
-						value = "2G";
-					else if ( total <= 16000 )
-						value = "4G";
-					else if ( total <= 32000 )
-						value = "8G";
-					else if ( total <= 64000 )
-						value = "16G";
-					else
-						value = "32G";
-				
-					cout << endl << "Setting 'TotalUmMemory' to 50% of total memory. Value set to " << value << endl;
+	
+					cout << endl << "Setting 'TotalUmMemory' to 50% of total memory." << endl;
 	
 					try {
-						sysConfig->setConfig("HashJoin", "TotalUmMemory", value);
+						sysConfig->setConfig("HashJoin", "TotalUmMemory", 50);
 					}
 					catch(...)
 					{
