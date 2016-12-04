@@ -3740,10 +3740,8 @@ void ProcessManager::setSystemState(uint16_t state)
 	string system = "System";
 	if( state == oam::ACTIVE ) {
 		//clear alarms if set
-		if ( oam.checkActiveAlarm(SYSTEM_DOWN_AUTO, config.moduleName(), system) )
-			aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
-		if ( oam.checkActiveAlarm(SYSTEM_DOWN_MANUAL, config.moduleName(), system) )
-			aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
+		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
+		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
 	}
 	else {
 		if( state == oam::MAN_OFFLINE )
