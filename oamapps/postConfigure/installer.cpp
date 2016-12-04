@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 					cout << endl << "Setting 'TotalUmMemory' to 50% of total memory." << endl;
 	
 					try {
-						sysConfig->setConfig("HashJoin", "TotalUmMemory", 50);
+						sysConfig->setConfig("HashJoin", "TotalUmMemory", "50");
 					}
 					catch(...)
 					{
