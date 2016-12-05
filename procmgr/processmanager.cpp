@@ -2629,6 +2629,44 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					break;	
 				}
 
+             	case PROCESSALARM:
+                {
+                    string dbroot;
+                    msg >> dbroot;
+
+    				ByteStream::byte alarmID;
+    				std::string componentID;
+    				ByteStream::byte state;
+    				std::string ModuleName;
+    				std::string processName;
+    				ByteStream::byte pid;
+    				ByteStream::byte tid;
+
+					msg >> alarmID;
+					msg >> componentID;
+					msg >> state;
+					msg >> ModuleName;
+					msg >> processName;
+					msg >> pid;
+					msg >> tid;
+
+    				Alarm calAlarm;
+
+    				calAlarm.setAlarmID (alarmID);
+    				calAlarm.setComponentID (componentID);
+    				calAlarm.setState (state);
+    				calAlarm.setSname (ModuleName);
+    				calAlarm.setPname (processName);
+    				calAlarm.setPid (pid);
+    				calAlarm.setTid (tid);
+
+					ALARMManager aManager;
+        			aManager.processAlarmReport(calAlarm);
+
+                    break;
+                }
+
+
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
 					break;
