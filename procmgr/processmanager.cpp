@@ -2631,8 +2631,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
              	case PROCESSALARM:
                 {
-                    string dbroot;
-                    msg >> dbroot;
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
     				ByteStream::byte alarmID;
     				std::string componentID;
@@ -2839,6 +2838,18 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								processManager.restartProcessType("DDLProc");
 								processManager.restartProcessType("DMLProc");
 								sleep(1);
+
+								string DMLmodule = config.OAMParentName();
+								if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
+						        	string PrimaryUMModuleName;
+        							try {
+            							oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+        							}
+        							catch(...) {}
+									if ( !PrimaryUMModuleName.empty() )
+										DMLmodule = PrimaryUMModuleName;
+								}
+
 								// Wait for DMLProc to be ACTIVE
 								BRM::DBRM dbrm;
 								state = AUTO_OFFLINE;
@@ -2848,7 +2859,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 									|| state == oam::AUTO_INIT
 									|| state == oam::ROLLBACK_INIT)
 								{
-									oam.getProcessStatus("DMLProc", config.OAMParentName(), procstat);
+									oam.getProcessStatus("DMLProc", DMLmodule, procstat);
 									state = procstat.ProcessOpState;
 									if ( procstat.ProcessOpState == oam::ACTIVE)
 										break;
