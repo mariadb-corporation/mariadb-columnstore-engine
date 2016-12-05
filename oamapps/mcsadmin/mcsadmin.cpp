@@ -4684,8 +4684,6 @@ int processCommand(string* arguments)
 			cout << "     ";
 			cout.width(20);
 			cout << "---------------";
-			cout.width(14);
-			cout << "------------";
 			if ( AmazonElasticIPCount > 0 )
 			{
 				cout.width(20);
