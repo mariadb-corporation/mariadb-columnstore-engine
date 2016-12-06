@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
 						percent = "12%";
 					}
 
-					cout << "      Setting 'TotalUmMemory' to " << percent << "% of total memory. " << endl;
+					cout << "      Setting 'TotalUmMemory' to " << percent << " of total memory. " << endl;
 	
 					try {
 						sysConfig->setConfig("HashJoin", "TotalUmMemory", percent);
