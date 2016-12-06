@@ -283,12 +283,12 @@ void processAlarm(const Alarm& calAlarm)
 }
 
 /*****************************************************************************************
-* @brief	processAlarmReport
+* @brief	configAlarm
 *
-* purpose:	Process Alarm Report
+* purpose:	Get Config Data for Incoming alarm
 *
 *****************************************************************************************/
-void ALARMManager::processAlarmReport (Alarm& calAlarm)
+void configAlarm (Alarm& calAlarm)
 {
 	int alarmID = calAlarm.getAlarmID();
 	Oam oam;
@@ -299,7 +299,7 @@ void ALARMManager::processAlarmReport (Alarm& calAlarm)
 		MessageLog ml(lid);                        
 		Message msg;                        
 		Message::Args args;                        
-		args.add("processAlarmReport Called");                        
+		args.add("configAlarm Called");                        
 		msg.format(args);                        
 		ml.logDebugMessage(msg);                
 	}
@@ -437,33 +437,19 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
 	}
 	else
 		processName = repProcessName;
+	
+	Alarm calAlarm;
+	
+	calAlarm.setAlarmID (alarmID);
+	calAlarm.setComponentID (componentID);
+	calAlarm.setState (state);
+	calAlarm.setSname (ModuleName);
+	calAlarm.setPname (processName);
+	calAlarm.setPid (pid);
+	calAlarm.setTid (tid); 
 
-	//send request to ProcMgr to be processed
-	ByteStream msg1;
-
-    msg1 << (ByteStream::byte) REQUEST;
-    msg1 << oam::PROCESSALARM;
-    msg1 << (ByteStream::byte) alarmID;
-    msg1 << (std::string) componentID;
-    msg1 << (ByteStream::byte) state;
-    msg1 << (std::string) ModuleName;
-    msg1 << (std::string) processName;
-    msg1 << (ByteStream::byte) pid;
-    msg1 << (ByteStream::byte) tid;
-
-    try
-    {
-    	//send the msg to Process Manager
-    	MessageQueueClient procmgr("ProcMgr");
-    	procmgr.write(msg1);
-
-        procmgr.shutdown();
-    }
-    catch (...)
-    {}
-
-            //There's other reasons, but this is the most likely...
-/*	try {
+	// Get alarm configuration
+	try {
   		configAlarm (calAlarm);
 	} catch (runtime_error& e)
 	{
@@ -476,7 +462,6 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
 			msg.format(args);                                
 			ml.logErrorMessage(msg);                                
 	}
-*/
 
 	return;
 #endif //SKIP_ALARM

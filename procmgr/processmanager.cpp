@@ -2628,7 +2628,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					break;	
 				}
-
+/*
              	case PROCESSALARM:
                 {
                     log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
@@ -2665,7 +2665,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     break;
                 }
 
-
+*/
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
 					break;

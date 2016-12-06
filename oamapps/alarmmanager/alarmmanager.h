@@ -75,8 +75,6 @@ public:
 						 const int state,
 						 std::string repModuleName = "",
 						 std::string repProcessName = "");
-       
-	 EXPORT void processAlarmReport ( Alarm& calAlarm );
 
 
 	/** @brief return active alarm list
