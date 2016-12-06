@@ -2273,7 +2273,7 @@ int processCommand(string* arguments)
 			else
 			{
 				cout << endl << "**** shutdownSystem Failure : " << e.what() << endl;
-				cout << "Retry using FORCEFUL option" << endl << endl;
+				cout << "    Retry running command using FORCEFUL option" << endl << endl;
 			}
 	
 			//hdfs / hadoop config 
@@ -4683,7 +4683,7 @@ int processCommand(string* arguments)
 			}
 			cout << "     ";
 			cout.width(20);
-			//cout << "---------------";
+			cout << "---------------";
 			if ( AmazonElasticIPCount > 0 )
 			{
 				cout.width(20);

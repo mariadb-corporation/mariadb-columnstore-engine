@@ -9,7 +9,7 @@ installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=root
 sudo=" "
-if [ $USER != "root"]; then
+if [ $USER != "root" ]; then
 	user=$USER
         sudo="sudo "
 fi
