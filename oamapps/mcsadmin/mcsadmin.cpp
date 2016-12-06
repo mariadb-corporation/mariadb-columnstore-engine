@@ -713,7 +713,7 @@ int processCommand(string* arguments)
         }
         break;
 
-        case 4: // redistribute
+        case 4: // redistributeData
         {
 			set<uint32_t> removeDbroots;    // set of dbroots we want to leave empty
 			vector<uint32_t> srcDbroots;    // all of the currently configured dbroots
@@ -777,7 +777,7 @@ int processCommand(string* arguments)
 					}
 				}
 				// Print out what we're about to do
-				cout << "Redistribute START ";
+				cout << "redistributeData START ";
 				if (removeDbroots.size() > 0)
 				{
 					cout << "    Removing dbroots:";
@@ -856,7 +856,7 @@ int processCommand(string* arguments)
 			}
 			else
 			{
-				cout << "redistribute must have one of START, STOP or STATUS" << endl;
+				cout << "redistributeData must have one of START, STOP or STATUS" << endl;
 			}
         }
         break;
@@ -866,33 +866,34 @@ int processCommand(string* arguments)
 			unsigned maxDBRoot = WriteEngine::Config::DBRootCount();
 			if (maxDBRoot < 1)
 			{
-				cout << endl << "getDatafileName fails because there are no dbroots defined for this server" << endl;
+				cout << endl << "findobjectfile fails because there are no dbroots defined for this server" << endl;
 				break;;
 			}
 			if (arguments[1] == "")
 			{
-				cout << endl << "getDatafileName requires one of" << endl;
+				cout << endl << "findobjectfile requires one of" << endl;
 				cout << "a) oid of column for which file name is to be retrieved" << endl;
 				cout << "b) schema, table and column for which file name is to be retrieved" << endl;
 				break;
 			}
 			char* endchar;
 			int oid = strtol(arguments[1].c_str(), &endchar, 0);
+			boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+				execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0);
+			CalpontSystemCatalog::TableColName columnName;
+			int tableOid = 0; // If a table oid was given, we use this for the report.
 			// test to see if not all numeric
 			if (endchar < &(*arguments[1].end()))
 			{
 				oid = 0;
 			}
-			if (oid == 0)
+			if (oid == 0)  // A table or column name was entered
 			{
 				// Need to convert the arguments to oid
-				boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
-					execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0);
-				CalpontSystemCatalog::TableColName columnName;
 				columnName.schema = arguments[1];
 				if (arguments[2] == "")
 				{
-					cout << endl << "getDatafileName requires a table and column for schema " << arguments[1] << endl;
+					cout << endl << "findobjectfile requires a table and column for schema " << arguments[1] << endl;
 					break;
 				}
 				columnName.table = arguments[2];
@@ -902,15 +903,74 @@ int processCommand(string* arguments)
 					CalpontSystemCatalog::TableName tableName;
 					tableName.schema = arguments[1];
 					tableName.table = arguments[2];
-					CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
-					oid = rdlist.front().objnum;
+					try
+					{
+						CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
+						oid = rdlist.front().objnum;
+					}
+					catch (...)
+					{
+						// ignore
+					}
+					if (oid < 1)
+					{
+						cout << arguments[1] << "." << arguments[2] << " is not a columnstore table" << endl;
+						break;
+					}
 				}
 				else
 				{
 					columnName.column = arguments[3];
 					oid = systemCatalogPtr->lookupOID(columnName);
+					if (oid < 1)
+					{
+						cout << arguments[1] << "." << arguments[2] << "." << arguments[3] << " is not a columnstore column" << endl;
+						break;
+					}
 				}
 			}
+			else
+			{
+				try
+				{
+					// Verify oid is a column.
+					columnName = systemCatalogPtr->colName(oid);
+				}
+				catch (...)
+				{
+					// Ignore
+				}
+				if (columnName.schema.size() == 0 || columnName.table.size() == 0 || columnName.column.size() == 0)
+				{
+					// Not a column OID
+					// Check to see if a table oid was given. If so, find the first column.
+					CalpontSystemCatalog::TableName tableName;
+					try
+					{
+						tableName = systemCatalogPtr->tableName(oid);
+					}
+					catch (...)
+					{
+						// Ignore
+					}
+					if (tableName.schema.size() == 0 || tableName.table.size() == 0)
+					{
+						// Not a table or a column OID.
+						cout << "OID " << oid << " does not represent a table or column in columnstore" << endl;
+						break;
+					}
+					tableOid = oid;
+					try
+					{
+						CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
+						oid = rdlist.front().objnum;
+					}
+					catch (...)
+					{
+						// ignore
+					}
+				}
+ 			}
 
 			// Use writeengine code to get the filename
 			WriteEngine::FileOp fileOp;
@@ -922,7 +982,13 @@ int processCommand(string* arguments)
 				rc = fileOp.getVBFileName(oid, fileName);
 			else
 				rc = fileOp.oid2DirName(oid, fileName);
-			cout << "file name for oid " << oid << ":" << endl;
+			if (tableOid)
+			{
+				cout << "for table OID " << tableOid << ":" << endl;
+			}
+			columnName = systemCatalogPtr->colName(oid);
+			cout << "column OID " << oid << " " << columnName.schema << "." <<
+				columnName.table << "." << columnName.column << endl;
 			if (strlen(fileName) > 0)
 			{
 				cout << fileName;
@@ -942,7 +1008,7 @@ int processCommand(string* arguments)
 				else
 				{
 					// We got a name, but the file doesn't exist
-					cout << " (OID directory not found)" << endl;
+					cout << " (directory does not exist on this server)" << endl;
 				}
 			}
 			else
