@@ -1231,7 +1231,7 @@ int main(int argc, char *argv[])
 
 				string percent = "50%";
 				if (hdfs) {
-					percent = "12%";
+					percent = "25%";
 				}	
 
 				cout << "      Setting 'TotalUmMemory' to " << percent << endl;

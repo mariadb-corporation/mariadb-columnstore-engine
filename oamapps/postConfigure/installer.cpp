@@ -253,10 +253,10 @@ int main(int argc, char *argv[])
 					long long total = myinfo.totalram / 1024 / 1000;
 				
 					// adjust max memory, 25% of total memory
-					string percent = "25";
+					string percent = "25%";
 					if ( DBRootStorageType == "hdfs")
 					{
-						percent = "12";
+						percent = "12%";
 					}
 
 					cout << "      Setting 'TotalUmMemory' to " << percent << "% of total memory. " << endl;
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 					cout << endl << "Setting 'TotalUmMemory' to 50% of total memory." << endl;
 	
 					try {
-						sysConfig->setConfig("HashJoin", "TotalUmMemory", "50");
+						sysConfig->setConfig("HashJoin", "TotalUmMemory", "50%");
 					}
 					catch(...)
 					{
