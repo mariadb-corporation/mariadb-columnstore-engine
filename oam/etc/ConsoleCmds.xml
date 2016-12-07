@@ -26,8 +26,8 @@
 		<Arg1>None</Arg1>
 	</Cmd3>
 	<Cmd4>
-                <Name>redistribute</Name>
-		<Desc1>Redistribute data accross all dbroots to balance disk usage</Desc1>
+		<Name>redistributeData</Name>
+		<Desc1>Redistribute table data accross all dbroots to balance disk usage</Desc1>
 		<Arg1>START to begin a redistribution</Arg1>
 		<Arg2>START REMOVE [dbroots] to redistribute to all but the enumerated dbroots, leaving those empty</Arg2>
 		<Arg3>STOP to stop redistribution before completion</Arg3>
@@ -36,6 +36,7 @@
 	<Cmd5>
 		<Name>findObjectFile</Name>
 		<Desc1>Get the name of the directory containing the first file of the object</Desc1>
+		<Desc2>uses Object ID (OID) or Schema Table Column</Desc2>
 		<Arg1>Object ID (OID) of object</Arg1>
 		<Arg2>Schema</Arg2>
 		<Arg3>Table</Arg3>
