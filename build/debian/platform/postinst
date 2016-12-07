@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+rpmmode=install
+prefix=/usr/local
+
+test -x /usr/local/mariadb/columnstore/bin/post-install && /usr/local/mariadb/columnstore/bin/post-install --prefix=$prefix --rpmmode=$rpmmode
+
+echo "MariaDB ColumnStore install completed"
+
+exit 0

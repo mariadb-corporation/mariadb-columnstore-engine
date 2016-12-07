@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+test -x /usr/local/mariadb/columnstore/bin/pre-uninstall && /usr/local/mariadb/columnstore/bin/pre-uninstall
+
+exit 0
+
