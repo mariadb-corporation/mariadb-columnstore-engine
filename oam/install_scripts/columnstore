@@ -56,11 +56,11 @@ if [ "x$has_um" = x ]; then
 	has_um=0
 fi
 
-user=$USER
-SUDO=sudo
-if [ -z "$user" ]; then
-        user=root
-        SUDO=" "
+user=root
+SUDO=" "
+if [ $USER != "root" ]; then
+	user=$USER
+        SUDO="sudo "
 fi
 
 checkInstallSetup() {
