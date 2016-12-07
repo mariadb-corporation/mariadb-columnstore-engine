@@ -7,6 +7,10 @@ BEGIN
 
 DECLARE n INT DEFAULT 1;
 
+IF filesize IS NULL THEN
+    RETURN '0 Bytes';
+END IF;
+
 LOOP
     IF filesize < 1024 THEN
         RETURN concat(round(filesize, 2), ' ', elt(n, 'Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB', 'BB'));
@@ -32,6 +36,11 @@ BEGIN
 JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES cf ON cc.object_id = cf.object_id
 LEFT JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES ccf ON cc.dictionary_object_id = ccf.object_id
 WHERE table_name = t_name and (table_schema = t_schema or t_schema IS NULL) GROUP BY table_schema, table_name;
+    ELSEIF t_schema IS NOT NULL THEN
+    SELECT TABLE_SCHEMA, TABLE_NAME, format_filesize(sum(cf.file_size)) DATA_DISK_USAGE, format_filesize(sum(IFNULL(ccf.file_size, 0))) DICT_DISK_USAGE, format_filesize(sum(cf.file_size) + sum(IFNULL(ccf.file_size, 0))) TOTAL_USAGE FROM INFORMATION_SCHEMA.COLUMNSTORE_COLUMNS cc
+JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES cf ON cc.object_id = cf.object_id
+LEFT JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES ccf ON cc.dictionary_object_id = ccf.object_id
+WHERE table_schema = t_schema GROUP BY table_schema, table_name;
     ELSE
     SELECT TABLE_SCHEMA, TABLE_NAME, format_filesize(sum(cf.file_size)) DATA_DISK_USAGE, format_filesize(sum(IFNULL(ccf.file_size, 0))) DICT_DISK_USAGE, format_filesize(sum(cf.file_size) + sum(IFNULL(ccf.file_size, 0))) TOTAL_USAGE FROM INFORMATION_SCHEMA.COLUMNSTORE_COLUMNS cc
 JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES cf ON cc.object_id = cf.object_id
