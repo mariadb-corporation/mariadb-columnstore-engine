@@ -7,12 +7,12 @@
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
-user=$USER
-sudo=sudo
-if [ -z "$user" ]; then
-	user=root
-	sudo=" "
+SUDO=" "
+if [ $USER != "root" ]; then
+        user=$USER
+        SUDO="sudo "
 fi
+
 quiet=0
 
 for arg in "$@"; do
@@ -45,17 +45,17 @@ $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
 # uninstall OS scripts updated by postConfigure
 if test -f /etc/exports.columnstoreSave ; then
-	$sudo mv -f /etc/exports.columnstoreSave /etc/exports > /dev/null 2>&1
+	$SUDO mv -f /etc/exports.columnstoreSave /etc/exports > /dev/null 2>&1
 else
-	$sudo rm -f /etc/exports > /dev/null 2>&1
+	$SUDO rm -f /etc/exports > /dev/null 2>&1
 fi
 
 if test -f /etc/rc.d/rc.local.columnstoreSave ; then	
-	$sudo mv -f /etc/rc.d/rc.local.columnstoreSave /etc/rc.d/rc.local > /dev/null 2>&1
+	$SUDO mv -f /etc/rc.d/rc.local.columnstoreSave /etc/rc.d/rc.local > /dev/null 2>&1
 fi
 
 if test -f /etc/rc.local.columnstoreSave ; then
-	$sudo mv -f /etc/rc.local.columnstoreSave /etc/rc.local > /dev/null 2>&1
+	$SUDO mv -f /etc/rc.local.columnstoreSave /etc/rc.local > /dev/null 2>&1
 fi
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
@@ -63,30 +63,30 @@ export COLUMNSTORE_INSTALL_DIR=$installdir
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if test -f /etc/fstab ; then
-		$sudo sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
+		$SUDO sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
 	fi
 fi
  
 #remove log file directories
 #rm -rf /var/log/mariadb/columnstore > /dev/null 2>&1
 #rm -f $installdir/mysql/db/*.err > /dev/null 2>&1
-sudo rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
-sudo rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+$SUDO rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
+$SUDO rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
-sudo rm -f /etc/default/columnstore
+$SUDO rm -f /etc/default/columnstore
 
 # remove Mariab Columnstore Log Rotate File abd Transaction Log File
-sudo rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
-sudo rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
+$SUDO rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
+$SUDO rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
 
 # delete Mariab Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
 
 # delete prat files
-sudo rm -f /etc/cron.d/ps > /dev/null 2>&1
-sudo rm -f /etc/pscollect > /dev/null 2>&1
-sudo /etc/init.d/crond reload  > /dev/null 2>&1
-sudo sudo systemctl reload crond.service > /dev/null 2>&1
+$SUDO rm -f /etc/cron.d/ps > /dev/null 2>&1
+$SUDO rm -f /etc/pscollect > /dev/null 2>&1
+$SUDO /etc/init.d/crond reload  > /dev/null 2>&1
+$SUDO $SUDO systemctl reload crond.service > /dev/null 2>&1
 
 # delete tmp files
 rm -f $installdir/local/*.columnstore
@@ -95,7 +95,7 @@ rm -rf /tmp/bucketreuse
 rm -f /tmp/columnstore.txt
 rm -f /tmp/dbbuilder.*
 rm -f /tmp/dbrmfiles
-sudo rm -f /var/lock/subsys/columnstore
+$SUDO rm -f /var/lock/subsys/columnstore
 rm -f /tmp/pkgcheck
 rm -f /tmp/upgrade-status.log.*
 rm -f /tmp/mount.log
@@ -118,7 +118,7 @@ if [ -x $installdir/bin/syslogSetup.sh ]; then
 	if [ $user = "root" ]; then
 		$installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
 	else
-		sudo $installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
+		$SUDO $installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
 	fi
 fi
 
@@ -158,14 +158,14 @@ fi
 if [ $user = "root" ]; then
 	rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
 else
-	sudo rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
+	$SUDO rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
 fi
 
 #remove library paths
 if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
         # remove library config file
-        sudo rm -f /etc/ld.so.conf.d/columnstore.conf
-        sudo ldconfig
+        $SUDO rm -f /etc/ld.so.conf.d/columnstore.conf
+        $SUDO ldconfig
 fi
 
 #cleanup .bashrc	

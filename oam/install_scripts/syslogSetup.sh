@@ -13,10 +13,10 @@ syslog_conf=nofile
 rsyslog7=0
 
 user=$USER
-sudo=sudo
+SUDO=sudo
 if [ -z "$user" ]; then
         user=root
-        sudo=" "
+        SUDO=" "
 fi
 
 
@@ -70,13 +70,13 @@ if [ "$daemon" = "nodaemon" ]; then
 
 	if [ -f /etc/syslog.conf ]; then
 		daemon="syslog"
-		sudo /etc/init.d/syslog start > /dev/null 2>&1
+		$SUDO /etc/init.d/syslog start > /dev/null 2>&1
 	elif [ -f /etc/rsyslog.conf ]; then
 		daemon="rsyslog"
-		sudo /etc/init.d/rsyslog start > /dev/null 2>&1
+		$SUDO /etc/init.d/rsyslog start > /dev/null 2>&1
 	elif [ -f /etc/init.d/syslog-ng ]; then
 		daemon="syslog-ng"
-		sudo /etc/init.d/syslog-ng start > /dev/null 2>&1
+		$SUDO /etc/init.d/syslog-ng start > /dev/null 2>&1
 	fi
 fi
 
@@ -100,7 +100,7 @@ if [ "$daemon" = "syslog-ng" ]; then
 	fi
 elif [ "$daemon" = "rsyslog" ]; then
 	#check if rsyslog version 7 or greater
-	sudo rsyslogd -v > /tmp/rsyslog.ver
+	$SUDO rsyslogd -v > /tmp/rsyslog.ver
 	cnt=`grep "rsyslogd 7" /tmp/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
@@ -157,28 +157,28 @@ checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
 	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
-		sudo rm -f ${syslog_conf}.columnstoreSave
-		sudo cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
-		sudo sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
+		$SUDO rm -f ${syslog_conf}.columnstoreSave
+		$SUDO cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
+		$SUDO sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
 
 	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
 		#set the syslog for ColumnStore logging
 		# remove older version incase it was installed by previous build
-		sudo rm -rf /etc/rsyslog.d/columnstore.conf
+		$SUDO rm -rf /etc/rsyslog.d/columnstore.conf
 		if [ $rsyslog7 == 1 ]; then
-			sudo rm -f /etc/rsyslog.d/49-columnstore.conf
-			sudo cp  ${columnstoreSyslogFile7} ${syslog_conf}
-			sudo chown syslog:adm /var/log/mariadb/columnstore >/dev/null 2>&1
+			$SUDO rm -f /etc/rsyslog.d/49-columnstore.conf
+			$SUDO cp  ${columnstoreSyslogFile7} ${syslog_conf}
+			$SUDO chown syslog:adm /var/log/mariadb/columnstore >/dev/null 2>&1
 		else
-			sudo cp  ${columnstoreSyslogFile} ${syslog_conf}
+			$SUDO cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
 	fi
 
-	sudo etc/init.d/rsyslog restart  > /dev/null 2>&1
-	sudo /etc/init.d/syslog restart  > /dev/null 2>&1
-        sudo /etc/init.d/syslog-ng restart  > /dev/null 2>&1
+	$SUDO etc/init.d/rsyslog restart  > /dev/null 2>&1
+	$SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
+        $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
 	systemctl restart rsyslog.service > /dev/null 2>&1
         systemctl restart syslog.service > /dev/null 2>&1
@@ -197,24 +197,24 @@ if [ ! -z "$syslog_conf" ] ; then
 			if [ $? -eq 0 ]; then
 				if [ -f ${syslog_conf}.columnstoreSave ] ; then
 					#uninstall the syslog for ColumnStore logging
-					sudo v -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
-					sudo mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
+					$SUDO v -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
+					$SUDO mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
 					if [ ! -f ${syslog_conf} ] ; then
-						sudo cp ${syslog_conf}.ColumnStoreBackup ${syslog_conf}
+						$SUDO cp ${syslog_conf}.ColumnStoreBackup ${syslog_conf}
 					fi
 				fi
 			fi
-			sudo sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
+			$SUDO sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
 		else
-			sudo rm -f "$syslog_conf"
+			$SUDO rm -f "$syslog_conf"
 		fi
 	else
-		sudo rm -f "$syslog_conf"
+		$SUDO rm -f "$syslog_conf"
 	fi
 
-        sudo etc/init.d/rsyslog restart  > /dev/null 2>&1
-        sudo /etc/init.d/syslog restart  > /dev/null 2>&1
-        sudo /etc/init.d/syslog-ng restart  > /dev/null 2>&1
+        $SUDO etc/init.d/rsyslog restart  > /dev/null 2>&1
+        $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
+        $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
         systemctl restart rsyslog.service > /dev/null 2>&1
         systemctl restart syslog.service > /dev/null 2>&1

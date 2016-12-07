@@ -209,7 +209,6 @@ int main(int argc, char *argv[])
 	noPrompting = false;
 	string password;
 	string cmd;
-	bool disableAmazon = false;
 //  	struct sysinfo myinfo; 
 
 	// hidden options
@@ -277,7 +276,7 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i][-da]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -287,7 +286,6 @@ int main(int argc, char *argv[])
 			cout << "   -s  Single Threaded Remote Install" << endl;
 			cout << "   -port MariaDB Columnstore Port Address" << endl;
             cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
-            cout << "   -da Disable Amazon functionality, install using Stardard Hostnames and IP Addresses" << endl;
 			exit (0);
 		}
       		else if( string("-s") == argv[i] )
@@ -352,8 +350,6 @@ int main(int argc, char *argv[])
 				exit (1);
 			}
 		}
-        else if( string("-da") == argv[i] )
-            disableAmazon = true;
         else if( string("-i") == argv[i] ) {
             i++;
             if (i >= argc ) {
@@ -365,7 +361,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i][-da]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i]" << endl;
 			exit (1);
 		}
 	}
@@ -817,35 +813,80 @@ int main(int argc, char *argv[])
 	bool amazonInstall = false;
 	string amazonSubNet = oam::UnassignedName;
 	string cloud = oam::UnassignedName;
-	if (!disableAmazon)
+	system("ec2-version > /tmp/amazon.log 2>&1");
+
+	ifstream in("/tmp/amazon.log");
+
+	in.seekg(0, std::ios::end);
+	int size = in.tellg();
+	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
+	// not running on amazon with ec2-api-tools
+		amazonInstall = false;
+	else
 	{
-		system("ec2-version > /tmp/amazon.log 2>&1");
-
-		ifstream in("/tmp/amazon.log");
-
-		in.seekg(0, std::ios::end);
-		int size = in.tellg();
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
-		// not running on amazon with ec2-api-tools
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
 			amazonInstall = false;
 		else
-			if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
-				amazonInstall = false;
-			else
-				amazonInstall = true;
+			amazonInstall = true;
 	}
 
+   	try {
+    	cloud = sysConfig->getConfig(InstallSection, "Cloud");
+  	}
+   	catch(...)
+   	{
+    	cloud  = oam::UnassignedName;
+    }
+
+    if ( cloud == "disable" )
+    	amazonInstall = false;
+	
 	if ( amazonInstall )
 	{
-		try {
-			cloud = sysConfig->getConfig(InstallSection, "Cloud");
-		}
-		catch(...)
+		if ( cloud == oam::UnassignedName )
 		{
-			cloud  = oam::UnassignedName;
+        	while(true) {
+            	string enable = "y";
+            	prompt = "Amazon AMI Tools installed, do you want to have ColumnStore utilize them [y,n] (y) > ";
+            	pcommand = callReadline(prompt.c_str());
+
+            	if (pcommand) {
+                	if (strlen(pcommand) > 0) enable = pcommand;
+                	callFree(pcommand);
+                
+					if (enable == "n") {
+                    	amazonInstall = false;
+
+				        try {
+            				sysConfig->setConfig(InstallSection, "Cloud", "disable");
+        				}
+        				catch(...)
+        				{};
+  
+						break;
+					}
+                }
+
+                if ( enable != "y" )
+                {
+                    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+                    if ( noPrompting )
+                        exit(1);
+                }
+				break;
+            }
 		}
 
-		cout << endl << "Amazon EC2 Install, these files will need to be installed on the local instance:" << endl << endl;
+		if ( amazonInstall )
+		{
+            try {
+                AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
+                AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
+            }
+            catch(...)
+            {}
+
+		cout << endl << "Amazon API Tools usage, these files will need to be installed on the local instance:" << endl << endl;
 		cout << " 1. File containing the Amazon Access Key" << endl;
 		cout << " 2. File containing the Amazon Secret Key" << endl << endl;
 
@@ -1001,6 +1042,8 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{}
+	}
+
 	}
 
 	if ( pmwithum )
@@ -2757,14 +2800,19 @@ int main(int argc, char *argv[])
 
 			//Write out Updated System Configuration File
 			string EEPackageType;
-			try {
-				EEPackageType = sysConfig->getConfig(InstallSection, "EEPackageType");
-			}
-			catch(...)
+    		if ( rootUser )
 			{
-				cout << "ERROR: Problem getting EEPackageType from the MariaDB Columnstore System Configuration file" << endl;
-				exit(1);
+				try {
+					EEPackageType = sysConfig->getConfig(InstallSection, "EEPackageType");
+				}
+				catch(...)
+				{
+					cout << "ERROR: Problem getting EEPackageType from the MariaDB Columnstore System Configuration file" << endl;
+					exit(1);
+				}
 			}
+			else	//nonroot, default to binary
+				EEPackageType = "binary";
 
 			while(true) {
 				prompt = "Enter the Package Type being installed to other servers [rpm,deb,binary] (" + EEPackageType + ") > ";
@@ -3086,7 +3134,7 @@ int main(int argc, char *argv[])
 							remoteModuleIP + " " + password + " " + calpontPackage1 + " " + remoteModuleType +
 							" initial " + binservertype + " " + mysqlPort + " " + remote_installer_debug +
 							" " + installDir + " " + debug_logfile;
-
+						
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
 

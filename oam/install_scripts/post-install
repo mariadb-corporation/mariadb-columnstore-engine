@@ -7,11 +7,11 @@
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
-user=$USER
-sudo=sudo
-if [ -z "$user" ]; then
-        user=root
-        sudo=" "
+user=root
+SUDO=" "
+if [ $USER != "root" ]; then
+	user=$USER
+        SUDO="sudo "
 fi
 
 quiet=0
@@ -82,7 +82,7 @@ if [ -f libstdc++.so.6.0.14 ]; then
 fi
 
 # softlink for libperl.sp, used by cplogger
-sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
+$SUDO ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
 #setup .bashrc
 if [ $user = "root" ]; then
@@ -121,9 +121,9 @@ fi
 
 cd /
 
-test -d /var/log/mariadb || sudo mkdir /var/log/mariadb >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore || sudo mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-sudo chmod -R 777 /var/log/mariadb
+test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+$SUDO chmod -R 777 /var/log/mariadb
 
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
@@ -161,8 +161,8 @@ mkdir /mnt/tmp > /dev/null 2>&1
 mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
 
 # install Columnstore Log Rotate File
-sudo cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-sudo chmod 644 /etc/logrotate.d/columnstore
+$SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+$SUDO chmod 644 /etc/logrotate.d/columnstore
 
 # remove mysql archive log
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
@@ -209,17 +209,17 @@ if [ $user = "root" ]; then
 	chmod 777 -R /dev/shm
 	rm -f /etc/default/columnstore
 else
-	sudo chmod 777 /tmp
-	sudo rm -fr /tmp/* > /dev/null 2>&1
-	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
-	sudo chown $user:$user $installdir/etc/Columnstore.xml
-	sudo chmod -R 777 /dev/shm
-	sudo chmod 777 /var/lock/subsys
-	sudo rm -f /var/lock/subsys/mysql-Columnstore
-	sudo chmod 777 /etc/fstab	
+	$SUDO chmod 777 /tmp
+	$SUDO rm -fr /tmp/* > /dev/null 2>&1
+	$SUDO $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
+	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
+	$SUDO chmod -R 777 /dev/shm
+	$SUDO chmod 777 /var/lock/subsys
+	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
+	$SUDO chmod 777 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
-	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
+	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
 
 	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
 

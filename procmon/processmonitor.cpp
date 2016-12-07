@@ -2597,7 +2597,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 		//Update Process Status: Mark Process INIT state 
 		updateProcessInfo(processName, FAILED, newProcessID);
 
-		exit(oam::API_FAILURE);
+		return (oam::API_FAILURE);
 	} 
 
 	return newProcessID;
@@ -2811,6 +2811,11 @@ void sendProcessThread(sendProcessInfo_t* t)
 
 	try {
 		oam.setProcessStatus(processName, config.moduleName(), state, PID);
+	}
+    catch (exception& ex)
+    {
+      	string error = ex.what();
+      	log.writeLog(__LINE__, "EXCEPTION ERROR on setProcessStatus: " + error, LOG_TYPE_ERROR);
 	}
 	catch(...)
 	{

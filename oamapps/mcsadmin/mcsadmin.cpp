@@ -2339,7 +2339,7 @@ int processCommand(string* arguments)
 			else
 			{
 				cout << endl << "**** shutdownSystem Failure : " << e.what() << endl;
-				cout << "Retry using FORCEFUL option" << endl << endl;
+				cout << "    Retry running command using FORCEFUL option" << endl << endl;
 			}
 	
 			//hdfs / hadoop config 

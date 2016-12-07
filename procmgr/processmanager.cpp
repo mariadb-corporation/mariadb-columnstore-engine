@@ -2628,7 +2628,44 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					break;	
 				}
+/*
+             	case PROCESSALARM:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
+    				ByteStream::byte alarmID;
+    				std::string componentID;
+    				ByteStream::byte state;
+    				std::string ModuleName;
+    				std::string processName;
+    				ByteStream::byte pid;
+    				ByteStream::byte tid;
+
+					msg >> alarmID;
+					msg >> componentID;
+					msg >> state;
+					msg >> ModuleName;
+					msg >> processName;
+					msg >> pid;
+					msg >> tid;
+
+    				Alarm calAlarm;
+
+    				calAlarm.setAlarmID (alarmID);
+    				calAlarm.setComponentID (componentID);
+    				calAlarm.setState (state);
+    				calAlarm.setSname (ModuleName);
+    				calAlarm.setPname (processName);
+    				calAlarm.setPid (pid);
+    				calAlarm.setTid (tid);
+
+					ALARMManager aManager;
+        			aManager.processAlarmReport(calAlarm);
+
+                    break;
+                }
+
+*/
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
 					break;
@@ -2801,6 +2838,18 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								processManager.restartProcessType("DDLProc");
 								processManager.restartProcessType("DMLProc");
 								sleep(1);
+
+								string DMLmodule = config.OAMParentName();
+								if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
+						        	string PrimaryUMModuleName;
+        							try {
+            							oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+        							}
+        							catch(...) {}
+									if ( !PrimaryUMModuleName.empty() )
+										DMLmodule = PrimaryUMModuleName;
+								}
+
 								// Wait for DMLProc to be ACTIVE
 								BRM::DBRM dbrm;
 								state = AUTO_OFFLINE;
@@ -2810,7 +2859,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 									|| state == oam::AUTO_INIT
 									|| state == oam::ROLLBACK_INIT)
 								{
-									oam.getProcessStatus("DMLProc", config.OAMParentName(), procstat);
+									oam.getProcessStatus("DMLProc", DMLmodule, procstat);
 									state = procstat.ProcessOpState;
 									if ( procstat.ProcessOpState == oam::ACTIVE)
 										break;

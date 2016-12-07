@@ -9271,7 +9271,7 @@ namespace oam
 			catch(...)
 			{
 				processor.shutdown();
-				throw std::runtime_error("error");
+				throw std::runtime_error("write error");
 			}
 			
 
@@ -9282,7 +9282,7 @@ namespace oam
 			catch(...)
 			{
 				processor.shutdown();
-				throw std::runtime_error("error");
+				throw std::runtime_error("read error");
 			}
 
 			ByteStream::byte returnRequestType;
@@ -9649,6 +9649,8 @@ namespace oam
 				return true;
 			}
 		}
+      	writeLog("checkSystemRunning - system reported down", LOG_TYPE_DEBUG );
+
 		return false;
 	}
 } //namespace oam
