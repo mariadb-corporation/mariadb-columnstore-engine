@@ -78,12 +78,12 @@ for arg in "$@"; do
 	fi
 done
 
-#run to make sure library paths are setup
-sudo ldconfig
-
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+	sudo ldconfig
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
+else
+	ldconfig
 fi
 
 if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
