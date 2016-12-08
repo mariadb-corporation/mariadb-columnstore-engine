@@ -1889,6 +1889,13 @@ int processCommand(string* arguments)
 
         case 14: // addDbroot parameters: dbroot-number
         {
+            parentOAMModule = getParentOAMModule();
+            if ( localModule != parentOAMModule ) {
+                //exit out since not on Parent OAM Module
+                cout << endl << "**** addDbroot Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                break;
+            }
+            
 		string GlusterConfig = "n";
 		try {
 			oam.getSystemConfig( "GlusterConfig", GlusterConfig);
@@ -1978,6 +1985,13 @@ int processCommand(string* arguments)
 
         case 15: // removeDbroot parameters: dbroot-list
         {
+		parentOAMModule = getParentOAMModule();
+            if ( localModule != parentOAMModule ) {
+                //exit out since not on Parent OAM Module
+                cout << endl << "**** removeDbroot Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                break;
+            }
+
 		string GlusterConfig = "n";
 		try {
 			oam.getSystemConfig( "GlusterConfig", GlusterConfig);
@@ -4990,6 +5004,12 @@ int processCommand(string* arguments)
         case 48: // addModule - parameters: Module type/Module Name, Number of Modules, Server Hostnames,
 					// Server root password optional
         {
+			parentOAMModule = getParentOAMModule();
+            if ( localModule != parentOAMModule ) {
+                // exit out since not on Parent OAM Module
+                cout << endl << "**** addModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                break;
+            }
             if (arguments[1] == "")
             {
                 // need at least  arguments
@@ -6605,6 +6625,13 @@ int processCommand(string* arguments)
 
         case 65: // alterSystem-disableModule
         {
+			parentOAMModule = getParentOAMModule();
+            if ( localModule != parentOAMModule ) {
+                //exit out since not on Parent OAM Module
+                cout << endl << "**** alterSystem-disableModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                break;
+            }
+
             if (arguments[1] == "")
             {
                 // need arguments
@@ -6748,7 +6775,14 @@ int processCommand(string* arguments)
 
         case 66: // alterSystem-enableModule
         {
-            if (arguments[1] == "")
+        	parentOAMModule = getParentOAMModule();
+            if ( localModule != parentOAMModule ) {
+                //exit out since not on Parent OAM Module
+                cout << endl << "**** alterSystem-enableModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                break;
+            }
+
+		    if (arguments[1] == "")
             {
                 // need arguments
                 cout << endl << "**** alterSystem-enableModule Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
