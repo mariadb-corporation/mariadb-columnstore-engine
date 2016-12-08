@@ -144,7 +144,7 @@ expect {
         -re {[$#] } { }
 }
 
-send "scp $HOME/mariadb-columnstore*$VERSION*rpm $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/mariadb-columnstore*$VERSION*$PKGTYPE $USERNAME@$SERVER:.;$PKGERASE1 dummy\n"
 if { $PASSWORD != "ssh" } {
         set timeout 30
         expect {
@@ -172,7 +172,7 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	send_user "Install MariaDB Columnstore Packages on Module               "
 
-	send "ssh $USERNAME@$SERVER '$PKGINSTALL ;$PKGERASE dummy'\n"
+	send "ssh $USERNAME@$SERVER '$PKGINSTALL ;$PKGERASE1 dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
 		expect {

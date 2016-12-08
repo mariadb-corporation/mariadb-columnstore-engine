@@ -1889,13 +1889,6 @@ int processCommand(string* arguments)
 
         case 14: // addDbroot parameters: dbroot-number
         {
-            parentOAMModule = getParentOAMModule();
-            if ( localModule != parentOAMModule ) {
-                //exit out since not on Parent OAM Module
-                cout << endl << "**** addDbroot Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
-                break;
-            }
-            
 		string GlusterConfig = "n";
 		try {
 			oam.getSystemConfig( "GlusterConfig", GlusterConfig);
@@ -1985,12 +1978,6 @@ int processCommand(string* arguments)
 
         case 15: // removeDbroot parameters: dbroot-list
         {
-		parentOAMModule = getParentOAMModule();
-            if ( localModule != parentOAMModule ) {
-                //exit out since not on Parent OAM Module
-                cout << endl << "**** removeDbroot Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
-                break;
-            }
 
 		string GlusterConfig = "n";
 		try {
