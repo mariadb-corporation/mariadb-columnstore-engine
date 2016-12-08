@@ -119,10 +119,10 @@ typedef struct ModuleIP_struct
 std::string launchInstance(ModuleIP moduleip);
 
 string calpontPackage1;
-string calpontPackage2;
-string calpontPackage3;
-string mysqlPackage;
-string mysqldPackage;
+//string calpontPackage2;
+//string calpontPackage3;
+//string mysqlPackage;
+//string mysqldPackage;
 
 string parentOAMModuleName;
 int pmNumber = 0;
@@ -2869,13 +2869,11 @@ int main(int argc, char *argv[])
 			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType != "binary") {
 				string separator = "-";
-				if ( EEPackageType == "deb" )
-					separator = "_";
 				calpontPackage1 = "mariadb-columnstore-*" + separator + version;
-				calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
-				calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
-				mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
-				mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
+				//calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
+				//calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
+				//mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
+				//mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
 
 				if( !pkgCheck() ) {
 					exit(1);
@@ -2886,41 +2884,41 @@ int main(int argc, char *argv[])
 					calpontPackage1 = "mariadb-columnstore-*" + separator + version;
 
 					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
-					calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
-					calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
-					mysqlPackage = HOME + "/" + mysqlPackage  + "*." + EEPackageType;
-					mysqldPackage = HOME + "/" + mysqldPackage  + "*." + EEPackageType;
+					//calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
+					//calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
+					//mysqlPackage = HOME + "/" + mysqlPackage  + "*." + EEPackageType;
+					//mysqldPackage = HOME + "/" + mysqldPackage  + "*." + EEPackageType;
 				}
 			}
 			else
 			{
 				// binary
-				string fileName = installDir + "/bin/healthcheck";
-				ifstream file (fileName.c_str());
-				if (!file)	// CE
+				//string fileName = installDir + "/bin/healthcheck";
+				//ifstream file (fileName.c_str());
+				//if (!file)	// CE
 					calpontPackage1 = "mariadb-columnstore-" + version;
-				else		// EE
-					calpontPackage1 = "mariadb-columnstore-ent-" + version;
-				calpontPackage2 = "dummy";
-				calpontPackage3 = "dummy";
-				mysqlPackage = calpontPackage1;
-				mysqldPackage = calpontPackage1;
+				//else		// EE
+					//calpontPackage1 = "mariadb-columnstore-ent-" + version;
+				//calpontPackage2 = "dummy";
+				//calpontPackage3 = "dummy";
+				//mysqlPackage = calpontPackage1;
+				//mysqldPackage = calpontPackage1;
 
 				if( !pkgCheck() )
 					exit(1);
 				calpontPackage1 = HOME + "/" + calpontPackage1 + "*.bin.tar.gz";
-				calpontPackage2 = "dummy";
-				calpontPackage3 = "dummy";
+				//calpontPackage2 = "dummy";
+				//calpontPackage3 = "dummy";
 			}
 
 			//If ent pkg is not there, mark it as such
-			{
-				glob_t gt;
-				memset(&gt, 0, sizeof(gt));
-				if (glob(calpontPackage3.c_str(), 0, 0, &gt) != 0)
-					calpontPackage3 = "dummy.rpm";
-				globfree(&gt);
-			}
+			//{
+			//	glob_t gt;
+			//	memset(&gt, 0, sizeof(gt));
+			//	if (glob(calpontPackage3.c_str(), 0, 0, &gt) != 0)
+			//		calpontPackage3 = "dummy.rpm";
+			//	globfree(&gt);
+			//}
 
 			if ( password.empty() )
 			{
