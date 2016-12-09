@@ -110,7 +110,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	}
 	set timeout 120
 	expect {
-		"dummy" { send_user "DONE" }
+		"package dummy" { send_user "DONE" }
 		"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; exit 1 }
 		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
@@ -156,7 +156,7 @@ if { $PASSWORD != "ssh" } {
 }
 set timeout 120
 expect {
-	"dummy" 	{ send_user "DONE" }
+	"package dummy" 	{ send_user "DONE" }
 	"directory"  		{ send_user "ERROR\n" ; 
 				 	send_user "\n*** Installation ERROR\n" ; 
 					exit 1 }
@@ -184,7 +184,7 @@ if { $INSTALLTYPE == "initial"} {
 	}
 	set timeout 180
 	expect {
-		"dummy" 	  { send_user "DONE" }
+		"package dummy" 	  { send_user "DONE" }
 		"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
 							send_user "\n*** Installation ERROR\n" ; 
 							exit 1 }
