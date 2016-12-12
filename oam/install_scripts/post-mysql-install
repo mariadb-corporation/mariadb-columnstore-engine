@@ -13,6 +13,7 @@ checkForError() {
 			password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
                 	if [ ! -z $password ]; then
                         	pwprompt="-p$password"
+				return 1;
  			else
 	                        echo "MySQL Password file missing or incorrect, check .my.cnf file"
 	                        rm -f /tmp/error.check
