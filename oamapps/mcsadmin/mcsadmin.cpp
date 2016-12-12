@@ -5567,6 +5567,12 @@ int processCommand(string* arguments)
                 break;
 			}
 
+			if ( localModule != parentOAMModule ) {
+                // exit out since not on Parent OAM Module
+                cout << endl << "**** addModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                break;
+			}
+
 			switch ( serverInstallType ) {
 				case (oam::INSTALL_COMBINE_DM_UM_PM):
 				{
