@@ -5569,7 +5569,7 @@ int processCommand(string* arguments)
 
 			if ( localModule != parentOAMModule ) {
                 // exit out since not on Parent OAM Module
-                cout << endl << "**** addModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                cout << endl << "**** removeModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
                 break;
 			}
 
