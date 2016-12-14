@@ -27,8 +27,13 @@
 #include "we_convertor.h"
 #include "we_define.h"
 #include "IDBPolicy.h"
+#include "configcpp.h"
 #include "we_config.h"
 #include "we_brm.h"
+#include "bytestream.h"
+#include "liboamcpp.h"
+#include "messagequeue.h"
+#include "we_messages.h"
 
 // Required declaration as it isn't in a MairaDB include
 bool schema_table_store_record(THD *thd, TABLE *table);
@@ -44,6 +49,46 @@ ST_FIELD_INFO is_columnstore_files_fields[] =
     {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
 };
 
+static bool get_file_sizes(int db_root, const char *fileName, off_t *fileSize, off_t *compressedFileSize)
+{
+    oam::Oam oam_instance;
+    messageqcpp::MessageQueueClient *msgQueueClient;
+    std::ostringstream oss;
+    messageqcpp::ByteStream bs;
+    messageqcpp::ByteStream::byte rc;
+    std::string errMsg;
+    int pmId = 0;
+
+    oam_instance.getDbrootPmConfig(db_root, pmId);
+    oss << "pm" << pmId << "_WriteEngineServer";
+    try
+    {
+        msgQueueClient = new messageqcpp::MessageQueueClient(oss.str());
+    }
+    catch (...)
+    {
+        delete msgQueueClient;
+        return false;
+    }
+    bs << (messageqcpp::ByteStream::byte) WriteEngine::WE_SVR_GET_FILESIZE;
+    // header??
+    bs << fileName;
+    msgQueueClient->write(bs);
+    // namespace??
+    messageqcpp::SBS sbs;
+    sbs = msgQueueClient->read();
+    if (sbs->length() == 0)
+    {
+        delete msgQueueClient;
+        return false;
+    }
+    *sbs >> rc;
+    *sbs >> errMsg;
+    *sbs >> *fileSize;
+    *sbs >> *compressedFileSize;
+    delete msgQueueClient;
+    return true;
+}
 
 static bool is_columnstore_files_get_entries(THD *thd, TABLE_LIST *tables, BRM::OID_t oid, std::vector<struct BRM::EMEntry> &entries)
 {
@@ -53,8 +98,12 @@ static bool is_columnstore_files_get_entries(THD *thd, TABLE_LIST *tables, BRM::
     char oidDirName[WriteEngine::FILE_NAME_SIZE];
 	char fullFileName[WriteEngine::FILE_NAME_SIZE];
     char dbDir[WriteEngine::MAX_DB_DIR_LEVEL][WriteEngine::MAX_DB_DIR_NAME_SIZE];
-    WriteEngine::Config config;
-	config.initConfigCache();
+    config::Config* config = config::Config::makeConfig();
+    WriteEngine::Config we_config;
+    off_t fileSize = 0;
+    off_t compressedFileSize = 0;
+    we_config.initConfigCache();
+
 
     std::vector<struct BRM::EMEntry>::const_iterator iter = entries.begin();
     while ( iter != entries.end() ) //organize extents into files
@@ -70,18 +119,25 @@ static bool is_columnstore_files_get_entries(THD *thd, TABLE_LIST *tables, BRM::
         table->field[2]->store(iter->partitionNum);
 
         WriteEngine::Convertor::oid2FileName(oid, oidDirName, dbDir, iter->partitionNum, iter->segmentNum);
-        snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", WriteEngine::Config::getDBRootByNum(iter->dbRoot).c_str(), oidDirName);
+        std::stringstream DbRootName;
+        DbRootName << "DBRoot" << iter->dbRoot;
+        std::string DbRootPath = config->getConfig("SystemConfig", DbRootName.str());
+        fileSize = compressedFileSize = 0;
+        snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", DbRootPath.c_str(), oidDirName);
+        if (!get_file_sizes(iter->dbRoot, fullFileName, &fileSize, &compressedFileSize))
+        {
+            return 1;
+        }
         table->field[3]->store(fullFileName, strlen(fullFileName), cs);
 
-        if (idbdatafile::IDBPolicy::exists(fullFileName))
+        if (fileSize > 0)
         {
             table->field[4]->set_notnull();
-            table->field[4]->store(idbdatafile::IDBPolicy::size(fullFileName));
-            off64_t comp_size;
-            if ((comp_size = idbdatafile::IDBPolicy::compressedSize(fullFileName)) != -1)
+            table->field[4]->store(fileSize);
+            if (compressedFileSize > 0)
             {
                 table->field[5]->set_notnull();
-                table->field[5]->store(comp_size);
+                table->field[5]->store(compressedFileSize);
             }
             else
             {
