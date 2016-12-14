@@ -873,17 +873,26 @@ int processCommand(string* arguments)
 			{
 				cout << endl << "findobjectfile requires one of" << endl;
 				cout << "a) oid of column for which file name is to be retrieved" << endl;
-				cout << "b) schema, table and column for which file name is to be retrieved" << endl;
+				cout << "b) schema, table and column for which the file name is to be retrieved" << endl;
+				cout << "c) oid of table for which the file name of each column is to be retrieved" << endl;
+				cout << "d) schema and table for which the file name of each column is to be retrieved" << endl;
 				break;
 			}
 			char* endchar;
-			int oid = strtol(arguments[1].c_str(), &endchar, 0);
+			int oid = 0;
+			int tableOid = 0; // If a table report
+			int dictOid = 0;  // If a dictionary oid was given
+			std::vector<int> columnOids;
+			CalpontSystemCatalog::TableName tableName;
+			CalpontSystemCatalog::TableColName columnName;
 			boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
 				execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0);
-			CalpontSystemCatalog::TableColName columnName;
-			int tableOid = 0; // If a table oid was given, we use this for the report.
+			systemCatalogPtr->identity(execplan::CalpontSystemCatalog::FE);
+
+			// Try to get a numeric oid from the argument
+			oid = strtol(arguments[1].c_str(), &endchar, 0);
 			// test to see if not all numeric
-			if (endchar < &(*arguments[1].end()))
+			if (endchar < &(*arguments[1].end()))  // endchar from above will not point to the end if not numeric
 			{
 				oid = 0;
 			}
@@ -893,32 +902,44 @@ int processCommand(string* arguments)
 				columnName.schema = arguments[1];
 				if (arguments[2] == "")
 				{
-					cout << endl << "findobjectfile requires a table and column for schema " << arguments[1] << endl;
+					cout << endl << "findobjectfile requires a table for schema " << arguments[1] << endl;
 					break;
 				}
 				columnName.table = arguments[2];
 				if (arguments[3] == "")
 				{
-					// No column was given. Use the first column in the table.
-					CalpontSystemCatalog::TableName tableName;
+					// No column was given. Get the list of column oids for the table.
 					tableName.schema = arguments[1];
 					tableName.table = arguments[2];
 					try
 					{
-						CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
-						oid = rdlist.front().objnum;
+						tableOid = systemCatalogPtr->lookupTableOID(tableName);
+						if (tableOid)
+						{
+							CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
+							for (unsigned int i = 0; i < rdlist.size(); ++i)
+							{
+								columnOids.push_back(rdlist[i].objnum);
+							}
+						}
+						else
+						{
+							cout << arguments[1] << "." << arguments[2] << " is not a columnstore table" << endl;
+							break;
+						}
+					}
+					catch ( runtime_error& e ) 
+					{
+						cout << "error while trying to get the columns for " << tableName.schema << "." << tableName.table << ": " << e.what() << endl;
+						break;
 					}
 					catch (...)
 					{
-						// ignore
-					}
-					if (oid < 1)
-					{
-						cout << arguments[1] << "." << arguments[2] << " is not a columnstore table" << endl;
+						cout << "error while trying to get the columns for " << tableName.schema << "." << tableName.table << endl;
 						break;
 					}
 				}
-				else
+				else // A column name was given
 				{
 					columnName.column = arguments[3];
 					oid = systemCatalogPtr->lookupOID(columnName);
@@ -927,94 +948,130 @@ int processCommand(string* arguments)
 						cout << arguments[1] << "." << arguments[2] << "." << arguments[3] << " is not a columnstore column" << endl;
 						break;
 					}
+					columnOids.push_back(oid);
 				}
 			}
-			else
+			else // An oid was given
 			{
 				try
 				{
-					// Verify oid is a column.
+					// Is oid a column?
 					columnName = systemCatalogPtr->colName(oid);
 				}
-				catch (...)
-				{
-					// Ignore
-				}
+				catch (...){ /* Ignore */ }
 				if (columnName.schema.size() == 0 || columnName.table.size() == 0 || columnName.column.size() == 0)
 				{
 					// Not a column OID
-					// Check to see if a table oid was given. If so, find the first column.
-					CalpontSystemCatalog::TableName tableName;
+					// check to see if it's a dictionary oid.
 					try
 					{
-						tableName = systemCatalogPtr->tableName(oid);
+						columnName = systemCatalogPtr->dictColName(oid);
 					}
-					catch (...)
+					catch (...){ /* Ignore */ }
+					if (columnName.schema.size() == 0 || columnName.table.size() == 0 || columnName.column.size() == 0)
 					{
-						// Ignore
+						// Not a dictionary oid
+						// Check to see if a table oid was given. If so, get the column oid list.
+						try
+						{
+							tableName = systemCatalogPtr->tableName(oid);
+						}
+						catch (...){ /* Ignore */ }
+						if (tableName.schema.size() == 0 || tableName.table.size() == 0)
+						{
+							// Not a table or a column OID.
+							cout << "OID " << oid << " does not represent a table or column in columnstore" << endl;
+							break;
+						}
+						tableOid = oid;
+						try
+						{
+							CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
+							for (unsigned int i = 0; i < rdlist.size(); ++i)
+							{
+								columnOids.push_back(rdlist[i].objnum);
+							}
+						}
+						catch (...){ /* Ignore */ }
 					}
-					if (tableName.schema.size() == 0 || tableName.table.size() == 0)
+					else
 					{
-						// Not a table or a column OID.
-						cout << "OID " << oid << " does not represent a table or column in columnstore" << endl;
-						break;
+						// This is a dictionary oid
+						dictOid = oid;
+						columnOids.push_back(oid);
 					}
-					tableOid = oid;
-					try
-					{
-						CalpontSystemCatalog::RIDList rdlist = systemCatalogPtr->columnRIDs(tableName);
-						oid = rdlist.front().objnum;
-					}
-					catch (...)
-					{
-						// ignore
-					}
+				}
+				else
+				{
+					// This is a column oid
+					columnOids.push_back(oid);
 				}
  			}
 
-			// Use writeengine code to get the filename
+			// Use writeengine code to get the filenames
 			WriteEngine::FileOp fileOp;
 			char fileName[WriteEngine::FILE_NAME_SIZE];
 			memset(fileName, 0, WriteEngine::FILE_NAME_SIZE);
 			int rc;
 
-			if (oid < 1000)
-				rc = fileOp.getVBFileName(oid, fileName);
-			else
-				rc = fileOp.oid2DirName(oid, fileName);
 			if (tableOid)
 			{
-				cout << "for table OID " << tableOid << ":" << endl;
+				cout << "for table OID " << tableOid << " " 
+					 << tableName.schema << "." << tableName.table << ":" << endl;
 			}
-			columnName = systemCatalogPtr->colName(oid);
-			cout << "column OID " << oid << " " << columnName.schema << "." <<
-				columnName.table << "." << columnName.column << endl;
-			if (strlen(fileName) > 0)
+			for (unsigned int i = 0; i < columnOids.size(); ++i)
 			{
-				cout << fileName;
-			}
-			if (rc == WriteEngine::NO_ERROR)
-			{
-				// Success. No more output.
-				cout << endl;
-			}
-			else if (rc == WriteEngine::ERR_FILE_NOT_EXIST)
-			{
-				if (strlen(fileName) == 0)
+				oid = columnOids[i];
+				if (oid < 1000)
 				{
-					// We couldn't get a name
-					cout << "Error: Filename could not be determined" << endl;
+					rc = fileOp.getVBFileName(oid, fileName);
 				}
 				else
 				{
-					// We got a name, but the file doesn't exist
-					cout << " (directory does not exist on this server)" << endl;
+					rc = fileOp.oid2DirName(oid, fileName);
 				}
-			}
-			else
-			{
-				// Something broke
-				cerr << "WriteEngine::FileOp::oid2DirName() error. rc=" << rc << endl;
+				if (oid == dictOid)
+				{
+					columnName = systemCatalogPtr->dictColName(oid);
+					cout << "dictionary OID " << oid << " ";
+				}
+				else
+				{
+					columnName = systemCatalogPtr->colName(oid);
+					cout << "column OID " << oid << " ";
+				}
+				if (!tableOid)
+				{
+					cout << columnName.schema << "." << columnName.table << ".";
+				}
+				cout << columnName.column << "\t";
+				if (strlen(fileName) > 0)
+				{
+					cout << fileName;
+				}
+				if (rc == WriteEngine::NO_ERROR)
+				{
+					// Success. No more output.
+					cout << endl;
+				}
+				else if (rc == WriteEngine::ERR_FILE_NOT_EXIST)
+				{
+					if (strlen(fileName) == 0)
+					{
+						// We couldn't get a name
+						cout << "Error: Filename could not be determined" << endl;
+					}
+					else
+					{
+						// We got a name, but the file doesn't exist
+						cout << " (directory does not exist on this server)" << endl;
+					}
+				}
+				else
+				{
+					// Something broke
+					cerr << "WriteEngine::FileOp::oid2DirName() error. rc=" << rc << endl;
+				}
 			}
         }
         break;
