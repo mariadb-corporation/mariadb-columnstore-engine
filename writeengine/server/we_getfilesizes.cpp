@@ -245,6 +245,38 @@ struct ColumnThread
 	bool fReportRealUse;
 	int fKey;
 };
+
+//------------------------------------------------------------------------------
+// Get file size from file name in bytestream object
+//------------------------------------------------------------------------------
+int WE_GetFileSizes::processFileName(
+    messageqcpp::ByteStream& bs,
+    std::string& errMsg, int key)
+{
+    uint8_t rc = 0;
+    off_t fileSize;
+    off_t compressedFileSize;
+    errMsg.clear();
+
+    try
+    {
+        std::string fileName;
+
+        bs >> fileName;
+        fileSize = IDBPolicy::size(fileName.c_str());
+        compressedFileSize = IDBPolicy::compressedSize(fileName.c_str());
+    }
+	catch(std::exception& ex)
+	{
+		errMsg = ex.what();
+		rc     = 1;
+	}
+    bs.reset();
+    bs << fileSize;
+    bs << compressedFileSize;
+    return rc;
+}
+
 //------------------------------------------------------------------------------
 // Process a table size based on input from the
 // bytestream object.
