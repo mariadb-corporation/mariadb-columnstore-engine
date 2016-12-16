@@ -2506,7 +2506,20 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 		if (gwi.clauseType == SELECT || /*gwi.clauseType == HAVING || */gwi.clauseType == GROUP_BY || gwi.clauseType == FROM) // select list
 		{
 			lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+			if (!lhs->data() && (sfitempp[0]->type() == Item::FUNC_ITEM))
+			{
+				delete lhs;
+				Item_func* ifp = (Item_func*)sfitempp[0];
+				lhs = buildParseTree(ifp, gwi, nonSupport);
+			}
+
 			rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
+			if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
+			{
+				delete rhs;
+				Item_func* ifp = (Item_func*)sfitempp[1];
+				rhs = buildParseTree(ifp, gwi, nonSupport);
+			}
 		}
 		else // where clause
 		{
