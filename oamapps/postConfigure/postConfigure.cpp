@@ -101,12 +101,9 @@ bool createDbrootDirs(string DBRootStorageType);
 bool pkgCheck();
 bool storageSetup(bool amazonInstall);
 void setSystemName();
-bool checkInstanceRunning(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
-string getInstanceIP(string instanceName, string AmazonAccessKey, string AmazonSecretKey);
-bool attachVolume(string instanceName, string volumeName, string deviceName, string dbrootPath);
 bool singleServerDBrootSetup();
 bool copyFstab(string moduleName);
-bool copyKeyfiles();
+bool attachVolume(string instanceName, string volumeName, string deviceName, string dbrootPath);
 
 void remoteInstallThread(void *);
 
@@ -156,8 +153,6 @@ bool thread_remote_installer = true;
 string singleServerInstall = "1";
 string reuseConfig ="n";
 string oldFileName;
-string AmazonAccessKey;
-string AmazonSecretKey;
 string AmazonRegion;
 string glusterCopies;
 string glusterInstalled = "n";
@@ -836,139 +831,116 @@ int main(int argc, char *argv[])
    	catch(...)
    	{
     	cloud  = oam::UnassignedName;
-    }
+	}
 
-    if ( cloud == "disable" )
-    	amazonInstall = false;
+	if ( cloud == "disable" )
+	    amazonInstall = false;
 	
 	if ( amazonInstall )
 	{
 		if ( cloud == oam::UnassignedName )
 		{
-        	while(true) {
-            	string enable = "y";
-            	prompt = "Amazon AMI Tools installed, do you want to have ColumnStore utilize them [y,n] (y) > ";
-            	pcommand = callReadline(prompt.c_str());
+		    while(true) {
+			string enable = "y";
+			prompt = "Amazon AMI Tools installed, do you want to have ColumnStore utilize them [y,n] (y) > ";
+			pcommand = callReadline(prompt.c_str());
 
-            	if (pcommand) {
-                	if (strlen(pcommand) > 0) enable = pcommand;
-                	callFree(pcommand);
-                
-					if (enable == "n") {
-                    	amazonInstall = false;
+			if (pcommand) {
+			    if (strlen(pcommand) > 0) enable = pcommand;
+				  callFree(pcommand);
+			
+			    if (enable == "n") {
+				amazonInstall = false;
 
-				        try {
-            				sysConfig->setConfig(InstallSection, "Cloud", "disable");
-        				}
-        				catch(...)
-        				{};
-  
-						break;
-					}
-                }
+				try {
+				  sysConfig->setConfig(InstallSection, "Cloud", "disable");
+				}
+				  catch(...)
+				{};
 
-                if ( enable != "y" )
-                {
-                    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-                    if ( noPrompting )
-                        exit(1);
-                }
 				break;
-            }
+			    }
+			}
+
+			if ( enable != "y" )
+			{
+			    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+			    if ( noPrompting )
+				exit(1);
+			}
+			break;
+		    }
 		}
 
 		if ( amazonInstall )
 		{
-            try {
-                AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
-                AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
-            }
-            catch(...)
-            {}
-
-		cout << endl << "Amazon API Tools usage, these files will need to be installed on the local instance:" << endl << endl;
-		cout << " 1. File containing the Amazon Access Key" << endl;
-		cout << " 2. File containing the Amazon Secret Key" << endl << endl;
-
-		while(true) {
-			string ready = "y";
-			prompt = "Are these files installed and ready to continue [y,n] (y) > ";
-			pcommand = callReadline(prompt.c_str());
-			if (pcommand) {	
-				if (strlen(pcommand) > 0) ready = pcommand;
-				callFree(pcommand);
-				if (ready == "n") {
-					cout << endl << "Please Install these files and re-run postConfigure. exiting..." << endl;
-					exit(0);
-				}
-
-				if ( ready != "y" )
-				{
-					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-					if ( noPrompting )
-						exit(1);
-				}
+			bool noKey = false;
+			string AWS_ACCESS_KEY_ID;
+		    	char* p= getenv("AWS_ACCESS_KEY_ID");
+			if (p && *p) {
+			    AWS_ACCESS_KEY_ID = p;
+			    if ( AWS_ACCESS_KEY_ID.empty() )
+				noKey = true;
 			}
+			else
+			    noKey = true;
 
-			try {
-				AmazonAccessKey = sysConfig->getConfig(InstallSection, "AmazonAccessKey");
-				AmazonSecretKey = sysConfig->getConfig(InstallSection, "AmazonSecretKey");
-			}
-			catch(...)
-			{}
-
-			cout << endl;
-
-			while(true)
+			if ( !noKey )
 			{
-				prompt = "Enter file name containing the Access Key (" + AmazonAccessKey + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) AmazonAccessKey = pcommand;
-					callFree(pcommand);
-				}
-				ifstream File (AmazonAccessKey.c_str());
-				if (!File) {
-					cout << "Error: file not found, please re-enter" << endl;
-					if ( noPrompting )
-						exit(1);
+			    string AWS_SECRET_ACCESS_KEY_ID;
+			    char* p= getenv("AWS_SECRET_ACCESS_KEY_ID");
+			    if (p && *p) {
+				AWS_SECRET_ACCESS_KEY_ID = p;
+				if ( AWS_SECRET_ACCESS_KEY_ID.empty() )
+				    noKey = true;
+			    }
+			    else
+				noKey = true;
+			}
+			
+			if ( noKey )
+			{ // now call the script to see if keys were passed in IAM role
+			    string cmd = installDir + "/bin/MCSgetCredentials > /dev/null 2>&1";
+
+			    noKey = false;
+			    int rtnCode = system(cmd.c_str());
+			    if (WEXITSTATUS(rtnCode) != 0)
+				    noKey = true;
+			    else
+			    {
+				string AWS_ACCESS_KEY_ID;
+				char* p= getenv("AWS_ACCESS_KEY_ID");
+				if (p && *p) {
+				    AWS_ACCESS_KEY_ID = p;
+				    if ( AWS_ACCESS_KEY_ID.empty() )
+					noKey = true;
 				}
 				else
-					break;
-			}
+				    noKey = true;
 
-			while(true)
-			{
-				prompt = "Enter file name containing the Secret Key (" + AmazonSecretKey + ") > ";
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-					if (strlen(pcommand) > 0) AmazonSecretKey = pcommand;
-					callFree(pcommand);
-				}
-				ifstream File (AmazonSecretKey.c_str());
-				if (!File)
+				if ( !noKey )
 				{
-					cout << "Error: file not found, please re-enter" << endl;
-					if ( noPrompting )
-						exit(1);
+				    string AWS_SECRET_ACCESS_KEY_ID;
+				    char* p= getenv("AWS_SECRET_ACCESS_KEY_ID");
+				    if (p && *p) {
+					AWS_SECRET_ACCESS_KEY_ID = p;
+					if ( AWS_SECRET_ACCESS_KEY_ID.empty() )
+					    noKey = true;
+				    }
+				    else
+					noKey = true;
 				}
-				else
-					break;
+			    }
+			    
+			    if ( noKey )
+			    {
+				cout << endl << "Error returned from MCSgetCredentials" << endl;
+				cout << "No EC2 AMI Access/Secret Credituals set, check Amazon Install Doc" << endl;
+				exit(1);
+			    }
 			}
-
-			try {
-				sysConfig->setConfig(InstallSection, "AmazonAccessKey", AmazonAccessKey);
-				sysConfig->setConfig(InstallSection, "AmazonSecretKey", AmazonSecretKey);
-			}
-			catch(...)
-			{}
-
-			if( !copyKeyfiles() )
-				cout << "copyKeyfiles error" << endl;
-
-			break;
 		}
-
+			
 		try {
 			AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
 		}
@@ -1042,8 +1014,6 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{}
-	}
-
 	}
 
 	if ( pmwithum )
@@ -5014,20 +4984,6 @@ bool copyFstab(string moduleName)
 	else
 		cmd = "/sudo bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
 
-	system(cmd.c_str());
-
-	return true;
-}
-
-/*
- * Copy x.509 file
- */
-bool copyKeyfiles()
-{
-	string cmd = "/bin/cp -f " + AmazonAccessKey + " " + installDir + "/local/etc/. > /dev/null 2>&1";
-	system(cmd.c_str());
-
-	cmd = "/bin/cp -f " + AmazonSecretKey + " " + installDir + "/local/etc/. > /dev/null 2>&1";
 	system(cmd.c_str());
 
 	return true;
