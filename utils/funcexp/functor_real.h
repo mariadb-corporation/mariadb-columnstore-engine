@@ -323,6 +323,21 @@ public:
 						FunctionParm& fp,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType& op_ct);
+
+	int64_t getIntVal(rowgroup::Row& row,
+						FunctionParm& parm,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& operationColType);
+
+	uint64_t getUIntVal(rowgroup::Row& row,
+						FunctionParm& parm,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& operationColType);
+
+	std::string getStrVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 

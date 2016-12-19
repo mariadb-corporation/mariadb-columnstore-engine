@@ -176,6 +176,210 @@ double Func_mod::getDoubleVal(Row& row,
 	return mod;
 }
 
+int64_t Func_mod::getIntVal(Row& row,
+									FunctionParm& parm,
+									bool& isNull,
+									CalpontSystemCatalog::ColType& operationColType)
+{
+	if ( parm.size() < 2 ) {
+		isNull = true;
+		return 0;
+	}
+
+	int64_t div = parm[1]->data()->getIntVal(row, isNull);
+
+	if ( div == 0 ) {
+		isNull = true;
+		return 0;
+	}
+
+	int64_t mod = 0;
+
+	switch (parm[0]->data()->resultType().colDataType)
+	{
+		case execplan::CalpontSystemCatalog::BIGINT:
+		case execplan::CalpontSystemCatalog::INT:
+		case execplan::CalpontSystemCatalog::MEDINT:
+		case execplan::CalpontSystemCatalog::TINYINT:
+		case execplan::CalpontSystemCatalog::SMALLINT:
+		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::VARCHAR:
+		{
+			int64_t value = parm[0]->data()->getIntVal(row, isNull);
+
+			mod = value % div;
+		}
+		break;
+
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        {
+            uint64_t udiv = parm[1]->data()->getIntVal(row, isNull);
+            uint64_t uvalue = parm[0]->data()->getUintVal(row, isNull);
+
+            mod = uvalue % udiv;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::UDOUBLE:
+		{
+			double value = parm[0]->data()->getDoubleVal(row, isNull);
+
+			mod = fmod(value,div);
+		}
+		break;
+
+		case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::UFLOAT:
+		{
+			float value = parm[0]->data()->getFloatVal(row, isNull);
+
+			mod = fmod(value,div);
+		}
+		break;
+
+		case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+		{
+			IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+			int64_t value = d.value / helpers::power(d.scale);
+
+			mod = value % div;
+		}
+		break;
+
+		default:
+		{
+			std::ostringstream oss;
+			oss << "mod: datatype of " << execplan::colDataTypeToString(parm[0]->data()->resultType().colDataType);
+			throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+		}
+	}
+
+	return mod;
+}
+
+uint64_t Func_mod::getUIntVal(Row& row,
+									FunctionParm& parm,
+									bool& isNull,
+									CalpontSystemCatalog::ColType& operationColType)
+{
+	if ( parm.size() < 2 ) {
+		isNull = true;
+		return 0;
+	}
+
+	int64_t div = parm[1]->data()->getIntVal(row, isNull);
+
+	if ( div == 0 ) {
+		isNull = true;
+		return 0;
+	}
+
+	uint64_t mod = 0;
+
+	switch (parm[0]->data()->resultType().colDataType)
+	{
+		case execplan::CalpontSystemCatalog::BIGINT:
+		case execplan::CalpontSystemCatalog::INT:
+		case execplan::CalpontSystemCatalog::MEDINT:
+		case execplan::CalpontSystemCatalog::TINYINT:
+		case execplan::CalpontSystemCatalog::SMALLINT:
+		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::VARCHAR:
+		{
+			int64_t value = parm[0]->data()->getIntVal(row, isNull);
+
+			mod = value % div;
+		}
+		break;
+
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        {
+            uint64_t udiv = parm[1]->data()->getIntVal(row, isNull);
+            uint64_t uvalue = parm[0]->data()->getUintVal(row, isNull);
+
+            mod = uvalue % udiv;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::UDOUBLE:
+		{
+			double value = parm[0]->data()->getDoubleVal(row, isNull);
+
+			mod = fmod(value,div);
+		}
+		break;
+
+		case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::UFLOAT:
+		{
+			float value = parm[0]->data()->getFloatVal(row, isNull);
+
+			mod = fmod(value,div);
+		}
+		break;
+
+		case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+		{
+			IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+			int64_t value = d.value / helpers::power(d.scale);
+
+			mod = value % div;
+		}
+		break;
+
+		default:
+		{
+			std::ostringstream oss;
+			oss << "mod: datatype of " << execplan::colDataTypeToString(parm[0]->data()->resultType().colDataType);
+			throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+		}
+	}
+
+	return mod;
+}
+
+std::string Func_mod::getStrVal(Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						CalpontSystemCatalog::ColType& op_ct)
+{
+   	if ( fp.size() < 2 ) {
+		isNull = true;
+		return std::string();
+	}
+
+	switch (fp[0]->data()->resultType().colDataType)
+	{
+		case execplan::CalpontSystemCatalog::BIGINT:
+		case execplan::CalpontSystemCatalog::INT:
+		case execplan::CalpontSystemCatalog::MEDINT:
+		case execplan::CalpontSystemCatalog::TINYINT:
+		case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+    		return intToString(getIntVal(row, fp, isNull, op_ct));
+    		break;
+
+		default:
+			return doubleToString(getDoubleVal(row, fp, isNull, op_ct));
+			break;
+	}
+}
 
 } // namespace funcexp
 // vim:ts=4 sw=4:
