@@ -436,7 +436,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg1, requestID, 600 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Master DB Distribute, check /tmp/master-dist*.logs on " << masterModule << endl;
+								cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master DB Distribute, check /tmp/master-dist*.logs on " << masterModule << endl;
 								return returnStatus;
 							}
 
@@ -448,7 +448,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Master replication, check /tmp/master-rep*.logs on " << masterModule << endl;
+								cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master replication, check /tmp/master-rep*.logs on " << masterModule << endl;
 								return returnStatus;
 							}
 
@@ -479,7 +479,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 							returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
 			
 							if ( returnStatus != API_SUCCESS) {
-								cout << endl << "ERROR: Error return in running the MariaDB Columnstore Slave replication, check /tmp/slave-rep*.logs on " << (*pt).DeviceName << endl;
+								cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Slave replication, check /tmp/slave-rep*.logs on " << (*pt).DeviceName << endl;
 								return returnStatus;
 							}
 
@@ -677,12 +677,12 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 			int size = oldFile.tellg();
 			if ( size != 0 ) {
 				if ( noPrompting ) {
-					cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use" << endl;
+					cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use" << endl;
 					cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
 					exit(1);
 				}
 
-				cout << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use on local server" << endl;
+				cout << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use on local server" << endl;
 
 				while(true)
 				{
@@ -697,7 +697,7 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 	
 					if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
 					{
-						cout << "   ERROR: Invalid MariaDB Columnstore Port ID supplied, must be between 1000-9999" << endl;
+						cout << "   ERROR: Invalid MariaDB ColumnStore Port ID supplied, must be between 1000-9999" << endl;
 					}
 					else
 						break;
@@ -755,7 +755,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 				int size = oldFile.tellg();
 				if ( size != 0 ) {
 					if ( noPrompting ) {
-						cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use" << endl;
+						cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use" << endl;
 						cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
 						exit(1);
 					}
@@ -786,7 +786,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) == 0) {
 						if ( noPrompting ) {
-							cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use on " << remoteModuleName << endl;
+							cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use on " << remoteModuleName << endl;
 							cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
 							cout << "exiting..." << endl;
 							exit(1);
@@ -804,7 +804,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 
 		if ( inUse )
 		{
-			cout << endl << "The MariaDB Columnstore port of '" + mysqlPort + "' is already in-use on " << inUseServer << endl;
+			cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use on " << inUseServer << endl;
 
 			while(true)
 			{
@@ -819,7 +819,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 
 				if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
 				{
-					cout << "   ERROR: Invalid MariaDB Columnstore Port ID supplied, must be between 1000-9999" << endl;
+					cout << "   ERROR: Invalid MariaDB ColumnStore Port ID supplied, must be between 1000-9999" << endl;
 				}
 				else
 					break;

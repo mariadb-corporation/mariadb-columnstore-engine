@@ -258,8 +258,8 @@ int main(int argc, char *argv[])
 	{
 		if( string("-h") == argv[i] ) {
 			cout << endl;
-			cout << "This is the MariaDB Columnstore System Configuration and Installation tool." << endl;
-			cout << "It will Configure the MariaDB Columnstore System based on Operator inputs and" << endl;
+			cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
+			cout << "It will Configure the MariaDB ColumnStore System based on Operator inputs and" << endl;
 			cout << "will perform a Package Installation of all of the Modules within the" << endl;
 			cout << "System that is being configured." << endl;
 			cout << endl;
@@ -277,9 +277,9 @@ int main(int argc, char *argv[])
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
 			cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
-			cout << "   -mp MariaDB Columnstore Password" << endl;
+			cout << "   -mp MariaDB ColumnStore Password" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
-			cout << "   -port MariaDB Columnstore Port Address" << endl;
+			cout << "   -port MariaDB ColumnStore Port Address" << endl;
             cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
 			exit (0);
 		}
@@ -316,12 +316,12 @@ int main(int argc, char *argv[])
 		else if( string("-mp") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
-				cout << "   ERROR: MariaDB Columnstore Password not provided" << endl;
+				cout << "   ERROR: MariaDB ColumnStore Password not provided" << endl;
 				exit (1);
 			}
 			mysqlpw = argv[i];
 			if ( mysqlpw.find("-") != string::npos ) {
-				cout << "   ERROR: Valid MariaDB Columnstore Password not provided" << endl;
+				cout << "   ERROR: Valid MariaDB ColumnStore Password not provided" << endl;
 				exit (1);
 			}			
 			if ( mysqlpw == "dummymysqlpw" )
@@ -335,13 +335,13 @@ int main(int argc, char *argv[])
 		else if( string("-port") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
-				cout << "   ERROR: MariaDB Columnstore Port ID not supplied" << endl;
+				cout << "   ERROR: MariaDB ColumnStore Port ID not supplied" << endl;
 				exit (1);
 			}
 			mysqlPort = argv[i];
 			if ( atoi(mysqlPort.c_str()) < 1000 || atoi(mysqlPort.c_str()) > 9999)
 			{
-				cout << "   ERROR: Invalid MariaDB Columnstore Port ID supplied, must be between 1000-9999" << endl;
+				cout << "   ERROR: Invalid MariaDB ColumnStore Port ID supplied, must be between 1000-9999" << endl;
 				exit (1);
 			}
 		}
@@ -370,8 +370,8 @@ int main(int argc, char *argv[])
 	oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
 
 	cout << endl;
-	cout << "This is the MariaDB Columnstore System Configuration and Installation tool." << endl;
-	cout << "It will Configure the MariaDB Columnstore System and will perform a Package" << endl;
+	cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
+	cout << "It will Configure the MariaDB ColumnStore System and will perform a Package" << endl;
 	cout << "Installation of all of the Servers within the System that is being configured." << endl;
 	cout << endl;
 
@@ -410,9 +410,9 @@ int main(int argc, char *argv[])
 //		redirectStandardOutputToFile(postConfigureLog, false );
 	}
 
-	//check if MariaDB Columnstore is up and running
+	//check if MariaDB ColumnStore is up and running
 	if (oam.checkSystemRunning()) {
-		cout << "MariaDB Columnstore is running, can't run postConfigure while MariaDB Columnstore is running. Exiting.." << endl;
+		cout << "MariaDB ColumnStore is running, can't run postConfigure while MariaDB ColumnStore is running. Exiting.." << endl;
 		exit (0);
 	}
 
@@ -570,7 +570,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting DBRoot Count in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -585,11 +585,11 @@ int main(int argc, char *argv[])
 				checkMysqlPort(mysqlPort, sysConfig);
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 
-				cout << endl << "===== Performing Configuration Setup and MariaDB Columnstore Startup =====" << endl;
+				cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
 
 				cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
 				system(cmd.c_str());
@@ -616,12 +616,12 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting SingleServerInstall from the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -647,7 +647,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem getting ServerTypeInstall from the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem getting ServerTypeInstall from the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -678,7 +678,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting ServerTypeInstall in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting ServerTypeInstall in the MariaDB ColumnStore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -687,7 +687,7 @@ int main(int argc, char *argv[])
 			{
 				cout << "Combined Server Installation will be performed." << endl;
 				cout << "The Server will be configured as a Performance Module." << endl;
-				cout << "All MariaDB Columnstore Processes will run on the Performance Modules." << endl << endl;
+				cout << "All MariaDB ColumnStore Processes will run on the Performance Modules." << endl << endl;
 
 				//module ProcessConfig.xml to setup all apps on the dm
 				if( !updateProcessConfig(IserverTypeInstall) )
@@ -740,7 +740,7 @@ int main(int argc, char *argv[])
 				string answer = "n";
 
 				cout << "NOTE: Local Query Feature allows the ability to query data from a single Performance" << endl;
-				cout << "      Module. Check MariaDB Columnstore Admin Guide for additional information." << endl << endl;
+				cout << "      Module. Check MariaDB ColumnStore Admin Guide for additional information." << endl << endl;
 
 				while(true) {
 					if ( pmwithum ) 
@@ -800,7 +800,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !writeConfig(sysConfig) ) { 
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl; 
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 		exit(1);
 	}
 
@@ -963,7 +963,7 @@ int main(int argc, char *argv[])
 		{}
 
 		if ( !writeConfig(sysConfig) ) { 
-			cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl; 
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
 		}
 
@@ -1020,7 +1020,7 @@ int main(int argc, char *argv[])
 		cout << endl << "NOTE: Local Query Feature is enabled" << endl;
 
 	if ( mysqlRep )
-		cout << endl << "NOTE: MariaDB Columnstore Replication Feature is enabled" << endl;
+		cout << endl << "NOTE: MariaDB ColumnStore Replication Feature is enabled" << endl;
 
 	//Write out Updated System Configuration File
 	try {
@@ -1028,12 +1028,12 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting InitialInstallFlag from the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting InitialInstallFlag from the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) { 
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl; 
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 		exit(1);
 	}
 
@@ -1065,7 +1065,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting ParentOAMModuleName the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting ParentOAMModuleName the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1076,7 +1076,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting ParentStandbyOAMModuleName the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting ParentStandbyOAMModuleName the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1110,7 +1110,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem reading the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem reading the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1164,7 +1164,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting NumBlocksPct in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem setting NumBlocksPct in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -1181,12 +1181,12 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem setting TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 			}
@@ -1207,7 +1207,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 			}
@@ -1238,7 +1238,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting NumBlocksPct in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem setting NumBlocksPct in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -1254,12 +1254,12 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem setting TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 			}
@@ -1279,7 +1279,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 			}	
@@ -1293,12 +1293,12 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting InitialInstallFlag from the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting InitialInstallFlag from the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -1366,7 +1366,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting Module Count in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting Module Count in the MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
 				}
@@ -1411,7 +1411,7 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting Module Count in the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem setting Module Count in the MariaDB ColumnStore System Configuration file" << endl;
 				exit(1);
 			}
 		}
@@ -1558,7 +1558,7 @@ int main(int argc, char *argv[])
 								else 
 								{
 									string enable = "y";
-									cout << "Module '" + newModuleName + "' is Disabled. It needs to be enabled to startup MariaDB Columnstore." << endl;
+									cout << "Module '" + newModuleName + "' is Disabled. It needs to be enabled to startup MariaDB ColumnStore." << endl;
 									prompt = "Do you want to Enable it or exit? [y,exit] (y) > ";
 									pcommand = callReadline(prompt.c_str());
 									if (pcommand)
@@ -1599,12 +1599,12 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting ModuleDisableState in the MariaDB Columnstore System Configuration file" << endl;
+							cout << "ERROR: Problem setting ModuleDisableState in the MariaDB ColumnStore System Configuration file" << endl;
 							exit(1);
 						}
 	
 						if ( !writeConfig(sysConfig) ) {
-							cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+							cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 							exit(1);
 						}
 	
@@ -1807,7 +1807,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting Host Name in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting Host Name in the MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
 	
@@ -1922,7 +1922,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting IP address in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting IP address in the MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
 	
@@ -2057,7 +2057,7 @@ int main(int argc, char *argv[])
 					}
 					
 					if ( !writeConfig(sysConfig) ) {
-						cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
 
@@ -2172,12 +2172,12 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting Volume/Device Names in the MariaDB Columnstore System Configuration file" << endl;
+							cout << "ERROR: Problem setting Volume/Device Names in the MariaDB ColumnStore System Configuration file" << endl;
 							return false;
 						}
 
 						if ( !writeConfig(sysConfig) ) {
-							cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+							cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 							exit(1);
 						}
 
@@ -2211,7 +2211,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DBRoot count in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
 
@@ -2238,7 +2238,7 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting DBRoot ID in the MariaDB Columnstore System Configuration file" << endl;
+							cout << "ERROR: Problem setting DBRoot ID in the MariaDB ColumnStore System Configuration file" << endl;
 							exit(1);
 						}
 					}
@@ -2416,7 +2416,7 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting DBRoot ID in the MariaDB Columnstore System Configuration file" << endl;
+							cout << "ERROR: Problem setting DBRoot ID in the MariaDB ColumnStore System Configuration file" << endl;
 							exit(1);
 						}
 
@@ -2428,7 +2428,7 @@ int main(int argc, char *argv[])
 						}
 						catch(...)
 						{
-							cout << "ERROR: Problem setting DBRoot in the MariaDB Columnstore System Configuration file" << endl;
+							cout << "ERROR: Problem setting DBRoot in the MariaDB ColumnStore System Configuration file" << endl;
 							return false;
 						}
 
@@ -2552,12 +2552,12 @@ int main(int argc, char *argv[])
 							}
 							catch(...)
 							{
-								cout << "ERROR: Problem setting Volume/Device Names in the MariaDB Columnstore System Configuration file" << endl;
+								cout << "ERROR: Problem setting Volume/Device Names in the MariaDB ColumnStore System Configuration file" << endl;
 								return false;
 							}
 
 							if ( !writeConfig(sysConfig) ) {
-								cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+								cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 								exit(1);
 							}
 
@@ -2576,7 +2576,7 @@ int main(int argc, char *argv[])
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DBRoot count in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting DBRoot count in the MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
 					//total dbroots on the system
@@ -2584,7 +2584,7 @@ int main(int argc, char *argv[])
 				}
 
 				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 
@@ -2601,7 +2601,7 @@ int main(int argc, char *argv[])
 		}
 
 		if ( !writeConfig(sysConfig) ) {
-			cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -2612,7 +2612,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRoot Count in the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -2628,7 +2628,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting ConnectionsPerPrimProc in the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting ConnectionsPerPrimProc in the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -2683,7 +2683,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -2700,7 +2700,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 	
@@ -2709,7 +2709,7 @@ int main(int argc, char *argv[])
 
 	if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM && pmNumber == 1) {
 		//run the mysql / mysqld setup scripts
-		cout << endl << "===== Running the MariaDB Columnstore MariaDB Columnstore setup scripts =====" << endl << endl;
+		cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
 
 		checkMysqlPort(mysqlPort, sysConfig);
 
@@ -2777,7 +2777,7 @@ int main(int argc, char *argv[])
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem getting EEPackageType from the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem getting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
 			}
@@ -2803,19 +2803,19 @@ int main(int argc, char *argv[])
 
 			if ( EEPackageType == "rpm" )
 			{
-				cout << "Performing an MariaDB Columnstore System install using RPM packages" << endl; 
+				cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl; 
 				cout << "located in the " + HOME + " directory." << endl << endl;
 			}
 			else
 			{
 				if ( EEPackageType == "binary" )
 				{
-					cout << "Performing an MariaDB Columnstore System install using a Binary package" << endl; 
+					cout << "Performing an MariaDB ColumnStore System install using a Binary package" << endl; 
 					cout << "located in the " + HOME + " directory." << endl << endl;
 				}
 				else
 				{
-					cout << "Performing an MariaDB Columnstore System install using using DEB packages" << endl;
+					cout << "Performing an MariaDB ColumnStore System install using using DEB packages" << endl;
 					cout << "located in the " + HOME + " directory." << endl;
 				}
 			}
@@ -2826,12 +2826,12 @@ int main(int argc, char *argv[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting EEPackageType from the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
 				exit(1);
 			}
 		
 			if ( !writeConfig(sysConfig) ) { 
-				cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl; 
+				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 				exit(1);
 			}
 
@@ -2944,7 +2944,7 @@ int main(int argc, char *argv[])
 			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 			{
-				cout << endl << "===== Running the MariaDB Columnstore MariaDB Columnstore setup scripts =====" << endl << endl;
+				cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
 
 				// call the mysql setup scripts
 				mysqlSetup();
@@ -3034,8 +3034,8 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore login failure, MySQL Root password is set." << endl;
-										cout <<  "Need MariaDB Columnstore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB ColumnStore login failure, MySQL Root password is set." << endl;
+										cout <<  "Need MariaDB ColumnStore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 
@@ -3051,20 +3051,20 @@ int main(int argc, char *argv[])
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
 									rtnCode = system(cmd.c_str());
 									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "MariaDB Columnstore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
+										cout << endl << "MariaDB ColumnStore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
 										exit(1);
 									}
 								}
 								else
 								{
 									if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
-										cout << endl << "ERROR: MariaDB Columnstore runtime error, exit..." << endl << endl;
+										cout << endl << "ERROR: MariaDB ColumnStore runtime error, exit..." << endl << endl;
 										system("cat /tmp/idbmysql.log");
 										exit (1);
 									}
 									else
 									{
-										cout << endl << "Additional MariaDB Columnstore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
+										cout << endl << "Additional MariaDB ColumnStore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
 
 										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
 										int rtnCode = system(cmd.c_str());
@@ -3202,7 +3202,7 @@ int main(int argc, char *argv[])
 			if ( thread_remote_installer ) {
 		
 				//wait until remove install Thread Count is at zero or hit timeout
-				cout << endl << "MariaDB Columnstore Package being installed, please wait ...";
+				cout << endl << "MariaDB ColumnStore Package being installed, please wait ...";
 				cout.flush();
 			
 				/* block until all threads complete */
@@ -3227,7 +3227,7 @@ int main(int argc, char *argv[])
 
 		while(true)
 		{
-			pcommand = callReadline("Would you like to configure MariaDB Columnstore GlusterFS Data Redundancy? [y,n] (" + start + ") > ");
+			pcommand = callReadline("Would you like to configure MariaDB ColumnStore GlusterFS Data Redundancy? [y,n] (" + start + ") > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) start = pcommand;
@@ -3243,7 +3243,7 @@ int main(int argc, char *argv[])
 		}
 	
 		if ( start == "y" ) {
-			cout << endl << "===== Configuring MariaDB Columnstore Data Redundancy Functionality =====" << endl << endl;
+			cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
 			int ret = system(glusterconfig.c_str());
 			if ( WEXITSTATUS(ret) != 0 )
 			{
@@ -3261,12 +3261,12 @@ int main(int argc, char *argv[])
 	{}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
-	//check if local MariaDB Columnstore system logging is working
-	cout << endl << "===== Checking MariaDB Columnstore System Logging Functionality =====" << endl << endl;
+	//check if local MariaDB ColumnStore system logging is working
+	cout << endl << "===== Checking MariaDB ColumnStore System Logging Functionality =====" << endl << endl;
 
 	if ( rootUser)
 		cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
@@ -3282,29 +3282,29 @@ int main(int argc, char *argv[])
 
 	int ret = system(cmd.c_str());
 	if ( WEXITSTATUS(ret) != 0)
-		cerr << "WARNING: The MariaDB Columnstore system logging not correctly setup and working" << endl;
+		cerr << "WARNING: The MariaDB ColumnStore system logging not correctly setup and working" << endl;
 	else
-		cout << "The MariaDB Columnstore system logging is setup and working on local server" << endl;
+		cout << "The MariaDB ColumnStore system logging is setup and working on local server" << endl;
 
-	cout << endl << "MariaDB Columnstore System Configuration and Installation is Completed" << endl;
+	cout << endl << "MariaDB ColumnStore System Configuration and Installation is Completed" << endl;
 
 	//
-	// startup MariaDB Columnstore
+	// startup MariaDB ColumnStore
 	//
 
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
-		// perform MariaDB Columnstore system startup
+		// perform MariaDB ColumnStore system startup
 		//
-		cout << endl << "===== MariaDB Columnstore System Startup =====" << endl << endl;
+		cout << endl << "===== MariaDB ColumnStore System Startup =====" << endl << endl;
 	
 		string start = "y";
 		cout << "System Installation is complete. If any part of the install failed," << endl;
 		cout << "the problem should be investigated and resolved before continuing." << endl << endl;
 		while(true)
 		{
-			pcommand = callReadline("Would you like to startup the MariaDB Columnstore System? [y,n] (y) > ");
+			pcommand = callReadline("Would you like to startup the MariaDB ColumnStore System? [y,n] (y) > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) start = pcommand;
@@ -3323,11 +3323,11 @@ int main(int argc, char *argv[])
 	
 			if (hdfs)
 			{
-				cout << endl << "----- Starting MariaDB Columnstore Service on all Modules -----" << endl << endl;
+				cout << endl << "----- Starting MariaDB ColumnStore Service on all Modules -----" << endl << endl;
 				string cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > /tmp/postConfigure.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/postConfigure.pdsh", "exit") ) {
-					cout << endl << "ERROR: Starting MariaDB Columnstore Service failue, check /tmp/postConfigure.pdsh. exit..." << endl;
+					cout << endl << "ERROR: Starting MariaDB ColumnStore Service failue, check /tmp/postConfigure.pdsh. exit..." << endl;
 					exit (1);
 				}
 			}
@@ -3384,7 +3384,7 @@ int main(int argc, char *argv[])
 					string remoteHostName = (*list1).hostName;
 		
 					//run remote command script
-					cout << endl << "----- Starting MariaDB Columnstore on '" + remoteModuleName + "' -----" << endl << endl;
+					cout << endl << "----- Starting MariaDB ColumnStore on '" + remoteModuleName + "' -----" << endl << endl;
 
 					if ( install == "n" ) 
 					{	// didnt do a full install, push the config file
@@ -3398,39 +3398,39 @@ int main(int argc, char *argv[])
 					if (WEXITSTATUS(rtnCode) != 0)
 						cout << "Error with running remote_command.sh" << endl;
 					else
-						cout << "MariaDB Columnstore successfully started" << endl;
+						cout << "MariaDB ColumnStore successfully started" << endl;
 				}
 		
-				//start MariaDB Columnstore on local server
-				cout << endl << "----- Starting MariaDB Columnstore on local server -----" << endl << endl;
+				//start MariaDB ColumnStore on local server
+				cout << endl << "----- Starting MariaDB ColumnStore on local server -----" << endl << endl;
 				cmd = installDir + "/bin/columnstore restart > /dev/null 2>&1";
 				int rtnCode = system(cmd.c_str());
 				if (WEXITSTATUS(rtnCode) != 0) {
-					cout << "Error Starting MariaDB Columnstore local module" << endl;
+					cout << "Error Starting MariaDB ColumnStore local module" << endl;
 					cout << "Installation Failed, exiting" << endl;
 					exit (1);
 				}
 				else
-					cout << "MariaDB Columnstore successfully started" << endl;
+					cout << "MariaDB ColumnStore successfully started" << endl;
 			}
 		}
 		else
 		{
-			cout << endl << "You choose not to Start the MariaDB Columnstore Software at this time." << endl;
+			cout << endl << "You choose not to Start the MariaDB ColumnStore Software at this time." << endl;
 			exit (1);
 		}
 	}
 	else // Single Server start
 	{
-		cout << endl << "===== MariaDB Columnstore System Startup =====" << endl << endl;
+		cout << endl << "===== MariaDB ColumnStore System Startup =====" << endl << endl;
 	
 		string start = "y";
 		cout << "System Installation is complete." << endl;
-		cout << "If an error occurred while running the MariaDB Columnstore setup scripts," << endl;
+		cout << "If an error occurred while running the MariaDB ColumnStore setup scripts," << endl;
 		cout << "this will need to be corrected and postConfigure will need to be re-run." << endl << endl;
 		while(true)
 		{
-			pcommand = callReadline("Would you like to startup the MariaDB Columnstore System? [y,n] (y) > ");
+			pcommand = callReadline("Would you like to startup the MariaDB ColumnStore System? [y,n] (y) > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) start = pcommand;
@@ -3446,26 +3446,26 @@ int main(int argc, char *argv[])
 		}
 	
 		if ( start == "y" ) {
-			//start MariaDB Columnstore on local server
-			cout << endl << "----- Starting MariaDB Columnstore on local Server '" + parentOAMModuleName + "' -----" << endl << endl;
+			//start MariaDB ColumnStore on local server
+			cout << endl << "----- Starting MariaDB ColumnStore on local Server '" + parentOAMModuleName + "' -----" << endl << endl;
 			string cmd = installDir + "/bin/columnstore restart > /dev/null 2>&1";
 			int rtnCode = system(cmd.c_str());
 			if (WEXITSTATUS(rtnCode) != 0) {
-				cout << "Error Starting MariaDB Columnstore local module" << endl;
+				cout << "Error Starting MariaDB ColumnStore local module" << endl;
 				cout << "Installation Failed, exiting" << endl;
 				exit (1);
 			}
 			else
-				cout << endl << "MariaDB Columnstore successfully started" << endl;
+				cout << endl << "MariaDB ColumnStore successfully started" << endl;
 		}
 		else
 		{
-			cout << endl << "You choose not to Start the MariaDB Columnstore Software at this time." << endl;
+			cout << endl << "You choose not to Start the MariaDB ColumnStore Software at this time." << endl;
 			exit (1);
 		}
 	}
 
-	cout << endl << "MariaDB Columnstore Database Platform Starting, please wait .";
+	cout << endl << "MariaDB ColumnStore Database Platform Starting, please wait .";
 	cout.flush();
 	
 	if ( waitForActive() ) {
@@ -3491,7 +3491,7 @@ int main(int argc, char *argv[])
 //				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
 	
 //				if ( status != 0 ) {
-//					cout << endl << "MariaDB Columnstore Install Failed" << endl << endl;
+//					cout << endl << "MariaDB ColumnStore Install Failed" << endl << endl;
 //					exit(1);
 //				}
 //				else
@@ -3510,33 +3510,33 @@ int main(int argc, char *argv[])
 			( mysqlRep && (umNumber > 1) ) ||
 			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
 		{
-			cout << endl << "Run MariaDB Columnstore Replication Setup.. ";
+			cout << endl << "Run MariaDB ColumnStore Replication Setup.. ";
 			cout.flush();
 
 			//send message to procmon's to run upgrade script
 			int status = sendReplicationRequest(IserverTypeInstall, password, mysqlPort, pmwithum);
 
 			if ( status != 0 ) {
-				cout << endl << " MariaDB Columnstore Install Failed" << endl << endl;
+				cout << endl << " MariaDB ColumnStore Install Failed" << endl << endl;
 				exit(1);
 			}
 			else
 				cout << " DONE" << endl;
 		}
 
-		cout << endl << "MariaDB Columnstore Install Successfully Completed, System is Active" << endl << endl;
+		cout << endl << "MariaDB ColumnStore Install Successfully Completed, System is Active" << endl << endl;
 
-		cout << "Enter the following command to define MariaDB Columnstore Alias Commands" << endl << endl;
+		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
 		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
 
-		cout << "Enter 'mcsmysql' to access the MariaDB Columnstore SQL console" << endl;
-		cout << "Enter 'mcsadmin' to access the MariaDB Columnstore Admin console" << endl << endl;
+		cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
+		cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
 	}
 	else
 	{
 		cout << " FAILED" << endl;
-		cout << endl << "MariaDB Columnstore System failed to start, check log files in /var/log/mariadb/columnstore" << endl;
+		cout << endl << "MariaDB ColumnStore System failed to start, check log files in /var/log/mariadb/columnstore" << endl;
 		exit(1);
 	}
 
@@ -3594,14 +3594,14 @@ bool checkSaveConfigFile()
 		singleServerInstall = "2";
 
 	if ( !noPrompting ) {
-		cout << endl << "A copy of the MariaDB Columnstore Configuration file has been saved during Package install." << endl;
+		cout << endl << "A copy of the MariaDB ColumnStore Configuration file has been saved during Package install." << endl;
 		if ( singleServerInstall == "1")
 			cout << "It's Configured for a Single Server Install." << endl; 
 		else
 			cout << "It's Configured for a Multi-Server Install." << endl; 
 	
 		cout << "You have an option of utilizing the configuration data from that file or starting" << endl;
-		cout << "with the MariaDB Columnstore Configuration File that comes with the MariaDB Columnstore Package." << endl;
+		cout << "with the MariaDB ColumnStore Configuration File that comes with the MariaDB ColumnStore Package." << endl;
 		cout << "You will only want to utilize the old configuration data when performing the same" << endl;
 		cout << "type of install, i.e. Single or Multi-Server" << endl;
 	}
@@ -4116,7 +4116,7 @@ bool pkgCheck()
 	
 		while(true)
 		{
-			pcommand = callReadline("Please place a copy of the MariaDB Columnstore Packages in directory " + HOME + " and press <enter> to continue or enter 'exit' to exit the install > ");
+			pcommand = callReadline("Please place a copy of the MariaDB ColumnStore Packages in directory " + HOME + " and press <enter> to continue or enter 'exit' to exit the install > ");
 			if (pcommand) {
 				if (strcmp(pcommand, "exit") == 0)
 				{
@@ -4150,7 +4150,7 @@ bool storageSetup(bool amazonInstall)
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem getting DB Storage Data from the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem getting DB Storage Data from the MariaDB ColumnStore System Configuration file" << endl;
 		return false;
 	}
 
@@ -4203,7 +4203,7 @@ bool storageSetup(bool amazonInstall)
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DataFilePlugin in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting DataFilePlugin in the MariaDB ColumnStore System Configuration file" << endl;
 						return false;
 					}
 			
@@ -4212,12 +4212,12 @@ bool storageSetup(bool amazonInstall)
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB ColumnStore System Configuration file" << endl;
 						return false;
 					}
 
 					if ( !writeConfig(sysConfig) ) {
-						cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 						return false;
 					}
 
@@ -4262,18 +4262,18 @@ bool storageSetup(bool amazonInstall)
 		// get Frontend Data storage type
 		//
 	
-		cout << "----- Setup User Module MariaDB Columnstore Data Storage Mount Configuration -----" << endl << endl;
+		cout << "----- Setup User Module MariaDB ColumnStore Data Storage Mount Configuration -----" << endl << endl;
 	
 		cout << "There are 2 options when configuring the storage: internal and external" << endl << endl;
 		cout << "  'internal' -    This is specified when a local disk is used for the Data storage." << endl << endl;
-		cout << "  'external' -    This is specified when the MariaDB Columnstore Data directory is externally mounted." << endl << endl;
+		cout << "  'external' -    This is specified when the MariaDB ColumnStore Data directory is externally mounted." << endl << endl;
 	
 		try {
 			UMStorageType = sysConfig->getConfig(InstallSection, "UMStorageType");
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem getting UM DB Storage Data from the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem getting UM DB Storage Data from the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 	
@@ -4339,7 +4339,7 @@ bool storageSetup(bool amazonInstall)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting UMVolumeType in the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem setting UMVolumeType in the MariaDB ColumnStore System Configuration file" << endl;
 				return false;
 			}
 
@@ -4385,7 +4385,7 @@ bool storageSetup(bool amazonInstall)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting UMVolumeSize in the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem setting UMVolumeSize in the MariaDB ColumnStore System Configuration file" << endl;
 				return false;
 			}
 
@@ -4431,7 +4431,7 @@ bool storageSetup(bool amazonInstall)
 				}
 				catch(...)
 				{
-					cout << "ERROR: Problem setting UMVolumeIOPS in the MariaDB Columnstore System Configuration file" << endl;
+					cout << "ERROR: Problem setting UMVolumeIOPS in the MariaDB ColumnStore System Configuration file" << endl;
 					return false;
 				}
 			}
@@ -4442,7 +4442,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting UMStorageType in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting UMStorageType in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4453,7 +4453,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting UMStorageType in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting UMStorageType in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4621,7 +4621,7 @@ bool storageSetup(bool amazonInstall)
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRootStorageType in the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRootStorageType in the MariaDB ColumnStore System Configuration file" << endl;
 		return false;
 	}
 
@@ -4672,7 +4672,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting PMVolumeType in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting PMVolumeType in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4718,7 +4718,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting PMVolumeSize in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting PMVolumeSize in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4764,7 +4764,7 @@ bool storageSetup(bool amazonInstall)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting PMVolumeIOPS in the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem setting PMVolumeIOPS in the MariaDB ColumnStore System Configuration file" << endl;
 				return false;
 			}
 		}
@@ -4775,7 +4775,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting PMVolumeSize in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting PMVolumeSize in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4868,7 +4868,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFilePlugin in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFilePlugin in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4877,7 +4877,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4886,7 +4886,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFileLog in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFileLog in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4895,7 +4895,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting ExtentsPerSegmentFile in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting ExtentsPerSegmentFile in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -4908,7 +4908,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFilePlugin in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFilePlugin in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 
@@ -4917,18 +4917,18 @@ bool storageSetup(bool amazonInstall)
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DataFileEnvFile in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 
 		if ( !writeConfig(sysConfig) ) {
-			cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		return false;
 	}
 
@@ -4963,12 +4963,12 @@ void setSystemName()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting SystemName from the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting SystemName from the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 }
@@ -5051,7 +5051,7 @@ void offLineAppCheck()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem getting systemStartupOffline from the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem getting systemStartupOffline from the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5085,7 +5085,7 @@ void offLineAppCheck()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting systemStartupOffline in the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting systemStartupOffline in the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 }
@@ -5171,7 +5171,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRoot count in the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5194,7 +5194,7 @@ bool singleServerDBrootSetup()
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRoot ID in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRoot ID in the MariaDB ColumnStore System Configuration file" << endl;
 			exit(1);
 		}
 	}
@@ -5268,7 +5268,7 @@ bool singleServerDBrootSetup()
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRoot ID in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRoot ID in the MariaDB ColumnStore System Configuration file" << endl;
 			exit(1);
 		}
 
@@ -5280,7 +5280,7 @@ bool singleServerDBrootSetup()
 		}
 		catch(...)
 		{
-			cout << "ERROR: Problem setting DBRoot in the MariaDB Columnstore System Configuration file" << endl;
+			cout << "ERROR: Problem setting DBRoot in the MariaDB ColumnStore System Configuration file" << endl;
 			return false;
 		}
 	}
@@ -5292,7 +5292,7 @@ bool singleServerDBrootSetup()
 	}
 	catch(...)
 	{
-		cout << "ERROR: Problem setting DBRoot count in the MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Problem setting DBRoot count in the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
@@ -5300,7 +5300,7 @@ bool singleServerDBrootSetup()
 	DBRootCount = DBRootCount + dbroots.size();
 
 	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
 
