@@ -271,13 +271,12 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-s][-port][-i]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
 			cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
-			cout << "   -mp MariaDB ColumnStore Password" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
 			cout << "   -port MariaDB ColumnStore Port Address" << endl;
             cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
@@ -313,20 +312,6 @@ int main(int argc, char *argv[])
 				exit (1);
 			}			
 		}
-		else if( string("-mp") == argv[i] ) {
-			i++;
-			if (i >= argc ) {
-				cout << "   ERROR: MariaDB ColumnStore Password not provided" << endl;
-				exit (1);
-			}
-			mysqlpw = argv[i];
-			if ( mysqlpw.find("-") != string::npos ) {
-				cout << "   ERROR: Valid MariaDB ColumnStore Password not provided" << endl;
-				exit (1);
-			}			
-			if ( mysqlpw == "dummymysqlpw" )
-				mysqlpw = " ";
-		}
 		else if( string("-u") == argv[i] )
 			noPrompting = true;
 		// for backward compatibility
@@ -356,7 +341,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-mp][-s][-port][-i]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-s][-port][-i]" << endl;
 			exit (1);
 		}
 	}
