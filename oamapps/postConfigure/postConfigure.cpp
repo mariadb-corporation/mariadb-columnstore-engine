@@ -667,6 +667,66 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
+		cout << endl << "NOTE: MySQL Replication can be enabled where MariaDB ColumnStore" << endl;
+		cout <<         "      will setup the functionality across the multiple nodes." << endl;
+		cout <<         "      Or the feature can be disabled. For example, if you have replication" << endl;
+		cout <<         "      handled by another application" << endl << endl;
+
+       	try {
+        	MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
+       	}
+       	catch(...)
+        {}
+
+        if ( MySQLRep == "y" )
+        	mysqlRep = true;
+
+       	string answer = "n";
+
+        while(true) {
+        	if ( mysqlRep )
+                        prompt = "MariaDB ColumnStore MySQL Replication feature is Enabled, Do you want to disable? [y,n] (n) > ";
+                    else
+                        prompt = "MariaDB ColumnStore MySQL Replication feature? [y,n] (n) > ";
+
+                    pcommand = callReadline(prompt.c_str());
+                    if (pcommand) {
+                        if (strlen(pcommand) > 0) answer = pcommand;
+                        callFree(pcommand);
+                    }
+
+                    if ( answer == "y" || answer == "n" ) {
+                        cout << endl;
+                        break;
+                    }
+                    else
+                        cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+                    if ( noPrompting )
+                        exit(1);
+   		}
+
+                if ( mysqlRep )
+                {
+                    if ( answer == "y" ) {
+                        mysqlRep = false;
+                        MySQLRep = "n";
+                    }
+                }
+                else
+                {
+                    if ( answer == "y" ) {
+                        mysqlRep = true;
+                        MySQLRep = "y";
+                    }
+                }
+
+                try {
+                     sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
+                }
+                catch(...)
+                {}
+
+
 		switch ( IserverTypeInstall ) {
 			case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
 			{
@@ -687,16 +747,6 @@ int main(int argc, char *argv[])
 
 				pmwithum = false;
 
-				//MySQL replication
-				try {
-					MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
-				}
-				catch(...)
-				{}
-			
-				if ( MySQLRep == "y" )
-					mysqlRep = true;
-
 				break;
 			}
 			default:	// normal, separate UM and PM
@@ -711,16 +761,6 @@ int main(int argc, char *argv[])
 
 				if ( PMwithUM == "y" )
 					pmwithum = true;
-
-				//MySQL replication
-				try {
-					MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
-				}
-				catch(...)
-				{}
-			
-				if ( MySQLRep == "y" )
-					mysqlRep = true;
 
 				string answer = "n";
 
@@ -761,19 +801,11 @@ int main(int argc, char *argv[])
 					if ( answer == "y" ) {
 						pmwithum = true;
 						PMwithUM = "y";
-						mysqlRep = true;
-						MySQLRep = "y";
 					}
 				}
 
 				try {
 					 sysConfig->setConfig(InstallSection, "PMwithUM", PMwithUM);
-				}
-				catch(...)
-				{}
-
-				try {
-					 sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
 				}
 				catch(...)
 				{}
