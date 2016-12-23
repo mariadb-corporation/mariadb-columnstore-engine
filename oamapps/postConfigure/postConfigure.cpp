@@ -167,7 +167,7 @@ bool hdfs = false;
 bool gluster = false;
 bool pmwithum = false;
 bool mysqlRep = false;
-string MySQLRep = "n";
+string MySQLRep = "y";
 string PMwithUM = "n";
 bool amazonInstall = false;
 
@@ -667,9 +667,9 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		cout << endl << "NOTE: MySQL Replication can be enabled where MariaDB ColumnStore" << endl;
-		cout <<         "      will setup the functionality across the multiple nodes." << endl;
-		cout <<         "      Or the feature can be disabled. For example, if you have replication" << endl;
+		cout <<         "NOTE: MySQL Replication feature can be enabled to have MariaDB ColumnStore" << endl;
+		cout <<         "      setup the functionality of MySQL Replication on the system." << endl;
+		cout <<         "      Or the feature can be disabled, if for example, if you have replication" << endl;
 		cout <<         "      handled by another application" << endl << endl;
 
        	try {
@@ -681,13 +681,13 @@ int main(int argc, char *argv[])
         if ( MySQLRep == "y" )
         	mysqlRep = true;
 
-       	string answer = "n";
+       	string answer = "y";
 
         while(true) {
         	if ( mysqlRep )
-                        prompt = "MariaDB ColumnStore MySQL Replication feature is Enabled, Do you want to disable? [y,n] (n) > ";
+                        prompt = "MariaDB ColumnStore MySQL Replication feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
                     else
-                        prompt = "MariaDB ColumnStore MySQL Replication feature? [y,n] (n) > ";
+                        prompt = "MariaDB ColumnStore MySQL Replication feature, do you want to enable? [y,n] (y) > ";
 
                     pcommand = callReadline(prompt.c_str());
                     if (pcommand) {
@@ -706,15 +706,25 @@ int main(int argc, char *argv[])
    		}
 
                 if ( mysqlRep )
-                {
+                { // current enabled
+                    if ( answer == "y" ) {
+                        mysqlRep = true;
+                        MySQLRep = "y";
+                    }
+					else
+					{
+                        mysqlRep = false;
+                        MySQLRep = "n";
+					}
+                }
+                else
+                { // currently disabled
                     if ( answer == "y" ) {
                         mysqlRep = false;
                         MySQLRep = "n";
                     }
-                }
-                else
-                {
-                    if ( answer == "y" ) {
+                    else
+                    {
                         mysqlRep = true;
                         MySQLRep = "y";
                     }
@@ -825,7 +835,7 @@ int main(int argc, char *argv[])
 	bool amazonInstall = false;
 	string amazonSubNet = oam::UnassignedName;
 	string cloud = oam::UnassignedName;
-	system("ec2-version > /tmp/amazon.log 2>&1");
+	system("aws --version > /tmp/amazon.log 2>&1");
 
 	ifstream in("/tmp/amazon.log");
 
@@ -859,7 +869,7 @@ int main(int argc, char *argv[])
 		{
 		    while(true) {
 			string enable = "y";
-			prompt = "Amazon AMI Tools installed, do you want to have ColumnStore utilize them [y,n] (y) > ";
+			prompt = "Amazon AWS CLI Tools are installed, do you want to have ColumnStore utilize them [y,n] (y) > ";
 			pcommand = callReadline(prompt.c_str());
 
 			if (pcommand) {
@@ -892,73 +902,17 @@ int main(int argc, char *argv[])
 		if ( amazonInstall )
 		{
 			bool noKey = false;
-			string AWS_ACCESS_KEY_ID;
-		    	char* p= getenv("AWS_ACCESS_KEY_ID");
-			if (p && *p) {
-			    AWS_ACCESS_KEY_ID = p;
-			    if ( AWS_ACCESS_KEY_ID.empty() )
-				noKey = true;
-			}
-			else
-			    noKey = true;
 
-			if ( !noKey )
-			{
-			    string AWS_SECRET_ACCESS_KEY_ID;
-			    char* p= getenv("AWS_SECRET_ACCESS_KEY_ID");
-			    if (p && *p) {
-				AWS_SECRET_ACCESS_KEY_ID = p;
-				if ( AWS_SECRET_ACCESS_KEY_ID.empty() )
-				    noKey = true;
-			    }
-			    else
-				noKey = true;
-			}
-			
-			if ( noKey )
-			{ // now call the script to see if keys were passed in IAM role
-			    string cmd = installDir + "/bin/MCSgetCredentials > /dev/null 2>&1";
-
-			    noKey = false;
-			    int rtnCode = system(cmd.c_str());
-			    if (WEXITSTATUS(rtnCode) != 0)
-				    noKey = true;
-			    else
-			    {
-				string AWS_ACCESS_KEY_ID;
-				char* p= getenv("AWS_ACCESS_KEY_ID");
-				if (p && *p) {
-				    AWS_ACCESS_KEY_ID = p;
-				    if ( AWS_ACCESS_KEY_ID.empty() )
-					noKey = true;
-				}
-				else
-				    noKey = true;
-
-				if ( !noKey )
-				{
-				    string AWS_SECRET_ACCESS_KEY_ID;
-				    char* p= getenv("AWS_SECRET_ACCESS_KEY_ID");
-				    if (p && *p) {
-					AWS_SECRET_ACCESS_KEY_ID = p;
-					if ( AWS_SECRET_ACCESS_KEY_ID.empty() )
-					    noKey = true;
-				    }
-				    else
-					noKey = true;
-				}
-			    }
-			    
-			    if ( noKey )
-			    {
-				cout << endl << "Error returned from MCSgetCredentials" << endl;
-				cout << "No EC2 AMI Access/Secret Credituals set, check Amazon Install Doc" << endl;
-				exit(1);
-			    }
+			string awsCertFile = HOME + "/.aws/credentials";
+            ifstream File (awsCertFile.c_str());
+            if (!File) {
+            	cout << "Error: AWS CLI Certificate file not found, " + awsCertFile << endl;
+				cout << "Check Amazon Install Documenation for additional information, exiting" << endl;
+                exit (1);
 			}
 		}
 			
-		try {
+/*		try {
 			AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
 		}
 		catch(...)
@@ -978,7 +932,7 @@ int main(int argc, char *argv[])
 		}
 		catch(...)
 		{}
-
+*/
 		if ( !writeConfig(sysConfig) ) { 
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
@@ -1433,35 +1387,11 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if ( moduleType == "pm" ) {
+		if ( moduleType == "pm" )
 			pmNumber = moduleCount;
 
-			if ( pmNumber > 1 && ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) )
-			{
-				mysqlRep = true;
-				MySQLRep = "y";
-				try {
-					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
-				}
-				catch(...)
-				{}
-			}
-		}
-
-		if ( moduleType == "um" ) {
+		if ( moduleType == "um" ) 
 			umNumber = moduleCount;
-			
-			if ( umNumber > 1 )
-			{
-				mysqlRep = true;
-				MySQLRep = "y";
-				try {
-					sysConfig->setConfig(InstallSection, "MySQLRep", "y");
-				}
-				catch(...)
-				{}
-			}
-		}
 
 		int moduleID = 1;
 
@@ -3269,13 +3199,6 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-
-	//store mysql rep enable flag
-	try {
-		sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
-	}
-	catch(...)
-	{}
 
 	if ( !writeConfig(sysConfig) ) {
 		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;

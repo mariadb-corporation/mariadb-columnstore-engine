@@ -4,7 +4,7 @@
 #
 # 1. Amazon EC2
 
-prefix=/usr/local
+prefix=/home/mariadb-user
 
 #check command
 if [ "$1" = "" ]; then
@@ -95,22 +95,23 @@ fi
 
 test -f $prefix/mariadb/columnstore/post/functions && . $prefix/mariadb/columnstore/post/functions
 
-ec2=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_HOME`
+#ec2=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_HOME`
 
-if [ $ec2 == "unassigned" ]; then
-       STATUS="unknown"
-        RETVAL=1
-fi
+#if [ $ec2 == "unassigned" ]; then
+#       STATUS="unknown"
+#        RETVAL=1
+#fi
 
-java=`$prefix/mariadb/columnstore/bin/getConfig Installation JAVA_HOME`
-path=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_PATH`
+#java=`$prefix/mariadb/columnstore/bin/getConfig Installation JAVA_HOME`
+#path=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_PATH`
 
-export PATH=$path
-export EC2_HOME=$ec2
-export JAVA_HOME=$java
+#export PATH=$path
+#export EC2_HOME=$ec2
+#export JAVA_HOME=$java
 
-Region=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonRegion`
+#Region=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonRegion`
 
+AWSCLI="aws ec2 "
 
 checkInfostatus() {
 	#check if attached
@@ -183,9 +184,9 @@ createvolume() {
 
 	#create volume
 	if [ $volumeType == "io1" ]; then
-		volume=`ec2-create-volume  --region $Region -z $zone -s $volumeSize -t $volumeType -iops $volumeIOPS  | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType -iops $volumeIOPS  | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
 	else
-		volume=`ec2-create-volume  --region $Region -z $zone -s $volumeSize -t $volumeType | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
 	fi
 
 	echo $volume
@@ -194,7 +195,7 @@ createvolume() {
 
 describevolume() {
 	#describe volume
-	ec2-describe-volumes  --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI describe-volumes --volume-ids  $volumeName > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	echo $STATUS
@@ -203,14 +204,14 @@ describevolume() {
 
 detachvolume() {
 	#detach volume
-	ec2-detach-volume  --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI detach-volume --volume-id  $volumeName > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "detaching" ]; then
 		retries=1
 		while [ $retries -ne 60 ]; do
 			#retry until it's attached
-			ec2-detach-volume  --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+			$AWSCLI detach-volume --volume-id  $volumeName > /tmp/volumeInfo_$volumeName 2>&1
 		
 			checkInfostatus
 			if [ $STATUS == "available" ]; then
@@ -240,7 +241,7 @@ detachvolume() {
 attachvolume() {
 
 	#detach volume
-	ec2-attach-volume  --region $Region $volumeName -i $instanceName -d $deviceName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI attach-volume --volume-id  $volumeName --instance-id $instanceName --device $deviceName > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "attaching" -o $STATUS == "already-attached" ]; then
@@ -274,13 +275,13 @@ attachvolume() {
 
 deletevolume() {
 	#delete volume
-	ec2-delete-volume  --region $Region $volumeName > /tmp/deletevolume_$volumeName 2>&1
+	$AWSCLI delete-volume --volume-id  $volumeName > /tmp/deletevolume_$volumeName 2>&1
 	return
 }
 
 createTag() {
 	#create tag
-	ec2-create-tags  --region $Region $resourceName --tag $tagName=$tagValue > /tmp/createTag_$volumeName 2>&1
+	$AWSCLI create-tags --resources  $resourceName --tags Key=$tagName,Value=$tagValue > /tmp/createTag_$volumeName 2>&1
 	return
 }
 
