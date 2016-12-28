@@ -2506,7 +2506,20 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 		if (gwi.clauseType == SELECT || /*gwi.clauseType == HAVING || */gwi.clauseType == GROUP_BY || gwi.clauseType == FROM) // select list
 		{
 			lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+			if (!lhs->data() && (sfitempp[0]->type() == Item::FUNC_ITEM))
+			{
+				delete lhs;
+				Item_func* ifp = (Item_func*)sfitempp[0];
+				lhs = buildParseTree(ifp, gwi, nonSupport);
+			}
+
 			rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
+			if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
+			{
+				delete rhs;
+				Item_func* ifp = (Item_func*)sfitempp[1];
+				rhs = buildParseTree(ifp, gwi, nonSupport);
+			}
 		}
 		else // where clause
 		{
@@ -3546,6 +3559,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 					if (ac->aggOp() == AggregateColumn::COUNT)
 						ac->aggOp(AggregateColumn::COUNT_ASTERISK);
 
+                    // MCOL-301: treat SUM(1) as MAX(1) to get constant result
+                    if (ac->aggOp() == AggregateColumn::SUM)
+                        ac->aggOp(AggregateColumn::MAX);
+
 					ac->constCol(SRCP(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError)));
 					break;
 				}
@@ -3584,6 +3601,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 							ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
 							if (dynamic_cast<ConstantColumn*>(rc))
 							{
+                                // MCOL-301: treat SUM(1) as MAX(1) to get constant result
+                                if (ac->aggOp() == AggregateColumn::SUM)
+                                    ac->aggOp(AggregateColumn::MAX);
+
 								//@bug5229. handle constant function on aggregate argument
 								ac->constCol(SRCP(rc));
 								break;
