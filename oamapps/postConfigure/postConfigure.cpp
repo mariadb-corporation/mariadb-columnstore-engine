@@ -1727,7 +1727,7 @@ int main(int argc, char *argv[])
 									else
 									{
 										if (newModuleIPAddr == "terminated") {
-											cout << "ERROR: Instance " + newModuleHostName + " doesn't have an Private IP Address, please correct and hit 'enter'" << endl << endl;
+											cout << "ERROR: Instance " + newModuleHostName + " doesn't have an Private IP Address, retrying" << endl << endl;
 											if ( noPrompting )
 												exit(1);
 											continue;

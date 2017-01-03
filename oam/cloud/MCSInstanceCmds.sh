@@ -108,25 +108,14 @@ describeInstance() {
 describeInstance
 
 getInstance() {
-	if [ "$instance" != "" ]; then
-		echo $instance
+	if [ "$instanceiName" != "" ]; then
+		echo $instanceName
 		return
 	fi
 	
-	instance=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+	instanceName=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 
-	echo $instance
-	return
-}
-
-getInstancePrivate() {
-	if [ "$instance" != "" ]; then
-		echo $instance
-		return
-	fi
-	
-	instance=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-	
+	echo $instanceName
 	return
 }
 
@@ -139,30 +128,19 @@ getZone() {
 }
 
 getPrivateIP() {
-	#get instance info
-	grep -B1 -A7 -m 1 $instanceName $describeInstanceFile > /tmp/instanceInfo_$instanceName 2>&1
-	if [ `cat /tmp/instanceInfo_$instanceName | wc -c` -eq 0 ]; then
-		describeInstance
-	fi
-	grep -B1 -A7 -m 1 $instanceName $describeInstanceFile > /tmp/instanceInfo_$instanceName 2>&1
-
 	#check if running or terminated
-	cat /tmp/instanceInfo_$instanceName | grep STATE > /tmp/instanceStatus_$instanceName
-	if [ `cat /tmp/instanceStatus_$instanceName | wc -c` -ne 0 ]; then
+	state=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].State.Name'`
+	if [ "$state" != "running" ]; then
 		# not running
-		cat /tmp/instanceInfo_$instanceName | grep pending > /tmp/instanceStatus_$instanceName
-		if [ `cat /tmp/instanceStatus_$instanceName | wc -c` -ne 0 ]; then
-			describeInstance
+		if [ "$state" != "stopped" ]; then
 			echo "stopped"
 			exit 1
 		else
-			cat /tmp/instanceInfo_$instanceName | grep terminated > /tmp/instanceStatus_$instanceName
-			if [ `cat /tmp/instanceStatus_$instanceName | wc -c` -ne 0 ]; then
+			if [ "$state" != "terminated" ]; then
 				echo "terminated"
 				exit 1
 			else
-				cat /tmp/instanceInfo_$instanceName | grep shutting-down > /tmp/instanceStatus_$instanceName
-				if [ `cat /tmp/instanceStatus_$instanceName | wc -c` -ne 0 ]; then
+				if [ "$state" != "shutting-down" ]; then
 					echo "terminated"
 					exit 1
 				else
@@ -174,7 +152,7 @@ getPrivateIP() {
 	fi
 	
 	#running, get priviate IP Address
-	IpAddr=`head -n 2 /tmp/instanceInfo_$instanceName | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $13}'`
+	IpAddr=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].PrivateIpAddress'`
 
 	echo $IpAddr
 	exit 0
@@ -190,13 +168,9 @@ getType() {
 
 getKey() {
 	#get local Instance ID
-	getInstancePrivate >/dev/null 2>&1
-	#get Key
-	if [ "$key" == "" ]; then
-		describeInstance
-	fi
+	getInstance >/dev/null 2>&1
 	
-	key=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $10}'`
+	key=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].KeyName'`
 
 	echo $key
 	return
@@ -204,13 +178,9 @@ getKey() {
 
 getVpc() {
         #get local Instance ID
-        getInstancePrivate >/dev/null 2>&1
+        getInstance >/dev/null 2>&1
         #get VCP
-        if [ "$vcp" == "" ]; then
-                describeInstance
-        fi
-
-        vpc=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $21}'`
+        vpc=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].VpcId'`
 
         echo $vpc
         return
@@ -225,14 +195,8 @@ getAMI() {
 }
 
 getGroup() {
-	# get vpc
-	getVpc  >/dev/null 2>&1
-
-	#get group name 
-	group=`curl -s http://169.254.169.254/latest/meta-data/security-groups`
-
 	#get group id
-	groupid=`aws ec2 describe-security-groups --group-names | grep -A 1 $group | grep -m 1 $vpc | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
+	groupid=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].SecurityGroups[*].GroupId'`
 	echo $groupid
 	return
 }
@@ -269,29 +233,29 @@ launchInstance() {
 		if [ "$instanceProfile" = "" ] || [ "$instanceProfile" = "default-hvm" ]; then
 			if [ "$groupid" != "default" ]; then
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ] ; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --image-id $ami --security-group-ids $groupid | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --image-id $ami --security-group-ids $groupid --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			else
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --image-id $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances - --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances - --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			fi
 		else
 			if [ "$groupid" != "default" ]; then
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			else
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami | grep  -m 1 INSTANCE | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $7}'`
+					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			fi
 		fi
@@ -356,13 +320,9 @@ deassignElasticIP() {
 
 getSubnet() {
         #get local Instance ID
-        getInstancePrivate >/dev/null 2>&1
+        getInstance >/dev/null 2>&1
         #get Subnet
-        subnet=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $19}'`
-        if [ "$subnet" == "" ]; then
-                describeInstance
-        fi
-        subnet=`cat $describeInstanceFile | grep -m 1 $instance |  awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $19}'`
+        subnet=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].SubnetId'`
 
 	if [[ $subnet == *"subnet"* ]]
 	then

@@ -95,22 +95,6 @@ fi
 
 test -f $prefix/mariadb/columnstore/post/functions && . $prefix/mariadb/columnstore/post/functions
 
-#ec2=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_HOME`
-
-#if [ $ec2 == "unassigned" ]; then
-#       STATUS="unknown"
-#        RETVAL=1
-#fi
-
-#java=`$prefix/mariadb/columnstore/bin/getConfig Installation JAVA_HOME`
-#path=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_PATH`
-
-#export PATH=$path
-#export EC2_HOME=$ec2
-#export JAVA_HOME=$java
-
-#Region=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonRegion`
-
 AWSCLI="aws ec2 "
 
 checkInfostatus() {
@@ -184,9 +168,9 @@ createvolume() {
 
 	#create volume
 	if [ $volumeType == "io1" ]; then
-		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType -iops $volumeIOPS  | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
+		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType -iops $volumeIOPS --output text --query VolumeId`
 	else
-		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $6}'`
+		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType --output text --query VolumeId`
 	fi
 
 	echo $volume
