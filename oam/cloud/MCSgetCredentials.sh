@@ -1,6 +1,11 @@
 #! /bin/sh
 # Get Amazon EC2 security-credentials, access and secret access keys
 #
+#first check for local versions, then meta-data versions
+if [ -f $HOME/.aws/credentials ]; then
+	exit 0
+fi
+
 instance_profile=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 #
 

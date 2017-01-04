@@ -4,11 +4,11 @@
 #
 # 1. Amazon EC2
 
-prefix=/home/mariadb-user
+prefix=/usr/local
 
 #check command
 if [ "$1" = "" ]; then
-	echo "Enter Command Name: {launchInstance|getInstance|getZone|getPrivateIP|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc}
+	echo "Enter Command Name: {launchInstance|getInstance|getZone|getPrivateIP|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc|getRegion}
 }"
 	exit 1
 fi
@@ -88,27 +88,24 @@ if [ "$1" = "deassignElasticIP" ]; then
 fi
 
 
-test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
+$prefix/mariadb/columnstore/bin/MCSgetCredentials.sh >/dev/null 2>&1
 
-subnet=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonSubNetID`
+test -f $prefix//mariadb/columnstore/post/functions && . $prefix//mariadb/columnstore/post/functions
 
 #default instance to null
 instance=""
 
-describeInstanceFile="/tmp/describeInstance.txt"
-touch $describeInstanceFile
-
 AWSCLI="aws ec2 "
 
-describeInstance() {
-	$AWSCLI describe-instances   > $describeInstanceFile 2>&1
+getRegion() {
+        region=`curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document/region | grep region | cut -d':' -f2 | sed 's/\"//g' | sed -e 's/^[ \t]*//'`
+
+        echo $region
+        return
 }
 
-#call at start up
-describeInstance
-
 getInstance() {
-	if [ "$instanceiName" != "" ]; then
+	if [ "$instanceName" != "" ]; then
 		echo $instanceName
 		return
 	fi
@@ -128,8 +125,11 @@ getZone() {
 }
 
 getPrivateIP() {
+        #get region
+        getRegion >/dev/null 2>&1
+
 	#check if running or terminated
-	state=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].State.Name'`
+	state=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].State.Name'`
 	if [ "$state" != "running" ]; then
 		# not running
 		if [ "$state" != "stopped" ]; then
@@ -152,7 +152,7 @@ getPrivateIP() {
 	fi
 	
 	#running, get priviate IP Address
-	IpAddr=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].PrivateIpAddress'`
+	IpAddr=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].PrivateIpAddress'`
 
 	echo $IpAddr
 	exit 0
@@ -167,20 +167,27 @@ getType() {
 }
 
 getKey() {
+	#get region
+        getRegion >/dev/null 2>&1
+
 	#get local Instance ID
 	getInstance >/dev/null 2>&1
 	
-	key=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].KeyName'`
+	key=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].KeyName'`
 
 	echo $key
 	return
 }
 
 getVpc() {
+        #get region
+        getRegion >/dev/null 2>&1
+
         #get local Instance ID
         getInstance >/dev/null 2>&1
+
         #get VCP
-        vpc=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].VpcId'`
+        vpc=`aws ec2 describe-instances --instance-ids $instanceName --output text --region $Region --query 'Reservations[*].Instances[*].VpcId'`
 
         echo $vpc
         return
@@ -195,13 +202,19 @@ getAMI() {
 }
 
 getGroup() {
+        #get region
+        getRegion >/dev/null 2>&1
+
 	#get group id
-	groupid=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].SecurityGroups[*].GroupId'`
+	groupid=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].SecurityGroups[*].GroupId'`
 	echo $groupid
 	return
 }
 
 getProfile() {
+        #get region
+        getRegion >/dev/null 2>&1
+
 	# get profile	
 	instanceProfile=`curl -s http://169.254.169.254/latest/meta-data/profile`
 
@@ -210,6 +223,9 @@ getProfile() {
 }
 
 launchInstance() {
+        #get region
+        getRegion >/dev/null 2>&1
+
 	#get publickey
 	getKey >/dev/null 2>&1
 	if [ "$groupid" = "unassigned" ]; then
@@ -233,29 +249,29 @@ launchInstance() {
 		if [ "$instanceProfile" = "" ] || [ "$instanceProfile" = "default-hvm" ]; then
 			if [ "$groupid" != "default" ]; then
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ] ; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --image-id $ami --security-group-ids $groupid --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --image-id $ami --security-group-ids $groupid --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			else
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances - --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			fi
 		else
 			if [ "$groupid" != "default" ]; then
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			else
 				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				else
-					newInstance=`$AWSCLI run-instances  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 				fi
 			fi
 		fi
@@ -265,20 +281,29 @@ launchInstance() {
 }
 
 terminateInstance() {
+        #get region
+        getRegion >/dev/null 2>&1
+
 	#terminate Instance
-	$AWSCLI terminate-instances --instance-ids $instanceName > /tmp/termInstanceInfo_$instanceName 2>&1
+	$AWSCLI terminate-instances --instance-ids $instanceName --region $Region > /tmp/termInstanceInfo_$instanceName 2>&1
 	return
 }
 
 stopInstance() {
+        #get region
+        getRegion >/dev/null 2>&1
+
 	#terminate Instance
-	$AWSCLI stop-instances --instance-ids $instanceName > /tmp/stopInstanceInfo_$instanceName 2>&1
+	$AWSCLI stop-instances --instance-ids $instanceName --region $Region > /tmp/stopInstanceInfo_$instanceName 2>&1
 	return
 }
 
 startInstance() {
+        #get region
+        getRegion >/dev/null 2>&1
+
 	#terminate Instance
-	$AWSCLI start-instances --instance-ids $instanceName > /tmp/startInstanceInfo_$instanceName 2>&1
+	$AWSCLI start-instances --instance-ids $instanceName --region $Region > /tmp/startInstanceInfo_$instanceName 2>&1
 
 	cat /tmp/startInstanceInfo_$instanceName | grep INSTANCE > /tmp/startInstanceStatus_$instanceName
 	if [ `cat /tmp/startInstanceStatus_$instanceName | wc -c` -eq 0 ]; then
@@ -319,10 +344,13 @@ deassignElasticIP() {
 }
 
 getSubnet() {
+        #get region
+        getRegion >/dev/null 2>&1
+
         #get local Instance ID
         getInstance >/dev/null 2>&1
         #get Subnet
-        subnet=`aws ec2 describe-instances --instance-ids $instanceName --output text --query 'Reservations[*].Instances[*].SubnetId'`
+        subnet=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].SubnetId'`
 
 	if [[ $subnet == *"subnet"* ]]
 	then
@@ -384,8 +412,12 @@ case "$1" in
   getVpc)
 	getVpc
 	;;
+  getRegion)
+        getRegion
+        ;;
+
   *)
-	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc}"
+	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc|getRegion}"
 	exit 1
 esac
 

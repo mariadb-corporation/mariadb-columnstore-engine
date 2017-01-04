@@ -4,7 +4,7 @@
 #
 # 1. Amazon EC2
 
-prefix=/home/mariadb-user
+prefix=/usr/local
 
 #check command
 if [ "$1" = "" ]; then
@@ -97,6 +97,11 @@ test -f $prefix/mariadb/columnstore/post/functions && . $prefix/mariadb/columnst
 
 AWSCLI="aws ec2 "
 
+$prefix/mariadb/columnstore/bin/MCSgetCredentials.sh >/dev/null 2>&1 
+
+#get Region
+Region=`$prefix/mariadb/columnstore/bin/MCSInstanceCmds.sh getRegion`
+
 checkInfostatus() {
 	#check if attached
 	cat /tmp/volumeInfo_$volumeName | grep attached > /tmp/volumeStatus_$volumeName
@@ -168,9 +173,9 @@ createvolume() {
 
 	#create volume
 	if [ $volumeType == "io1" ]; then
-		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType --iops $volumeIOPS --output text --query VolumeId`
+		volume=`$AWSCLI create-volume --region $Region   --availability-zone $zone --size $volumeSize --volume-type $volumeType --iops $volumeIOPS --output text --query VolumeId`
 	else
-		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType --output text --query VolumeId`
+		volume=`$AWSCLI create-volume --region $Region   --availability-zone $zone --size $volumeSize --volume-type $volumeType --output text --query VolumeId`
 	fi
 
 	echo $volume
@@ -179,7 +184,7 @@ createvolume() {
 
 describevolume() {
 	#describe volume
-	$AWSCLI describe-volumes --volume-ids  $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI describe-volumes --volume-ids  $volumeName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	echo $STATUS
@@ -188,14 +193,14 @@ describevolume() {
 
 detachvolume() {
 	#detach volume
-	$AWSCLI detach-volume --volume-id  $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI detach-volume --volume-id  $volumeName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "detaching" ]; then
 		retries=1
 		while [ $retries -ne 60 ]; do
 			#retry until it's attached
-			$AWSCLI detach-volume --volume-id  $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+			$AWSCLI detach-volume --volume-id  $volumeName --region $Region > /tmp/volumeInfo_$volumeName 2>&1
 		
 			checkInfostatus
 			if [ $STATUS == "available" ]; then
@@ -225,7 +230,7 @@ detachvolume() {
 attachvolume() {
 
 	#detach volume
-	$AWSCLI attach-volume --volume-id  $volumeName --instance-id $instanceName --device $deviceName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI attach-volume --volume-id  $volumeName --instance-id $instanceName --device $deviceName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "attaching" -o $STATUS == "already-attached" ]; then
@@ -259,13 +264,13 @@ attachvolume() {
 
 deletevolume() {
 	#delete volume
-	$AWSCLI delete-volume --volume-id  $volumeName > /tmp/deletevolume_$volumeName 2>&1
+	$AWSCLI delete-volume --volume-id  $volumeName --region $Region  > /tmp/deletevolume_$volumeName 2>&1
 	return
 }
 
 createTag() {
 	#create tag
-	$AWSCLI create-tags --resources  $resourceName --tags Key=$tagName,Value=$tagValue > /tmp/createTag_$volumeName 2>&1
+	$AWSCLI create-tags --resources  $resourceName --tags Key=$tagName,Value=$tagValue --region $Region > /tmp/createTag_$volumeName 2>&1
 	return
 }
 

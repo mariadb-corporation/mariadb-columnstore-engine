@@ -249,16 +249,11 @@ if [ $rc1 -ne 0 -a $rc2 -ne 0 ]; then
 	echo " " >> ${bashFile}
 fi
 
-#check and get amazon EC2 env variables
-#if [ -n "$EC2_HOME" ]; then
-#	$installdir/bin/setConfig -d Installation EC2_HOME $EC2_HOME
-
-#	if [ -n "$EC2_HOME" ]; then
-#		$installdir/bin/setConfig -d Installation JAVA_HOME $JAVA_HOME
-#	fi
-
-#	$installdir/bin/setConfig -d Installation EC2_PATH $PATH:/home/ec2/bin:/opt/aws/bin
-#fi
+#check and get amazon env variables
+aws=`which aws 2>/dev/null`
+if [ -z "aws" ]; then
+	$installdir/bin/MCSgetCredentials.sh
+fi
 
 #log install message
 test -f $installdir/post/functions && . $installdir/post/functions

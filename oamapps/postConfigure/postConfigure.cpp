@@ -905,36 +905,15 @@ int main(int argc, char *argv[])
 		{
 			bool noKey = false;
 
-			string awsCertFile = HOME + "/.aws/credentials";
-            ifstream File (awsCertFile.c_str());
-            if (!File) {
-            	cout << "Error: AWS CLI Certificate file not found, " + awsCertFile << endl;
-				cout << "Check Amazon Install Documenation for additional information, exiting" << endl;
+			string cmd="bin/MCSgetCredentials.sh"
+         	int rtnCode = system(cmd.c_str());
+            	if ( WEXITSTATUS(rtnCode) != 0 ) {
+            	cout << "Error: No IAM Profile with Security Certificates or AWS CLI Certificate file configured" << endl;
+				cout << "Check Amazon Install Documenation for additional information, exiting..." << endl;
                 exit (1);
 			}
 		}
 			
-/*		try {
-			AmazonRegion = sysConfig->getConfig(InstallSection, "AmazonRegion");
-		}
-		catch(...)
-		{}
-
-		cout << endl;
-
-		prompt = "Enter Amazon Region you are running in (" + AmazonRegion + ") > ";
-		pcommand = callReadline(prompt.c_str());
-		if (pcommand) {
-			if (strlen(pcommand) > 0) AmazonRegion = pcommand;
-			callFree(pcommand);
-		}
-	
-		try {
-			sysConfig->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
-		}
-		catch(...)
-		{}
-*/
 		if ( !writeConfig(sysConfig) ) { 
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);

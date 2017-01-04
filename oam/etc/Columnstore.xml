@@ -445,7 +445,6 @@
 		<Cloud>unassigned</Cloud>
 		<AmazonAccessKey>unassigned</AmazonAccessKey>
 		<AmazonSecretKey>unassigned</AmazonSecretKey>
-		<AmazonRegion>us-east-1</AmazonRegion>
 		<AmazonZone>unassigned</AmazonZone>
 		<AmazonSubNetID>unassigned</AmazonSubNetID>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
