@@ -4241,6 +4241,11 @@ bool storageSetup(bool amazonInstall)
 			UMStorageType = "internal";
 		else
 		{
+			
+			cout << "NOTE: The volume type. This can be gp2 for General Purpose  SSD,  io1  for" << endl;
+          	cout << "      Provisioned IOPS SSD, st1 for Throughput Optimized HDD, sc1 for Cold" << endl;
+          	cout << "      HDD, or standard for Magnetic volumes." << endl << endl;
+
 			UMStorageType = "external";
 
 			cout << endl;
@@ -4255,7 +4260,7 @@ bool storageSetup(bool amazonInstall)
 
 			while(true)
 			{
-				string prompt = "Enter EBS Volume Type (standard, gp2, io1) : (" + UMVolumeType + ") > ";
+				string prompt = "Enter EBS Volume Type (standard, gp2, io1, sc1, st1) : (" + UMVolumeType + ") > ";
 				pcommand = callReadline(prompt);
 				if (pcommand)
 				{
@@ -4263,7 +4268,7 @@ bool storageSetup(bool amazonInstall)
 					callFree(pcommand);
 				}
 
-				if ( UMVolumeType == "standard" || UMVolumeType == "gp2" || UMVolumeType == "io1" )
+				if ( UMVolumeType == "standard" || UMVolumeType == "gp2" || UMVolumeType == "io1" || UMVolumeType == "sc1" || UMVolumeType == "st1")
 					break;
 				else
 				{
@@ -4288,6 +4293,12 @@ bool storageSetup(bool amazonInstall)
 
 			if (UMVolumeType == "io1")
 				minSize = "4";
+
+            if (UMVolumeType == "sc1" || UMVolumeType == "st1")
+                minSize = "500";
+
+            if (UMVolumeType == "standard")
+                maxSize = "1024";
 
 			cout << endl;
 			try {
@@ -4576,6 +4587,10 @@ bool storageSetup(bool amazonInstall)
 	// if external and amazon, prompt for storage size
 	if ( storageType == "2" && amazonInstall)
 	{
+		cout << "NOTE: The volume type. This can be gp2 for General Purpose  SSD,  io1  for" << endl;
+       	cout << "      Provisioned IOPS SSD, st1 for Throughput Optimized HDD, sc1 for Cold" << endl;
+      	cout << "      HDD, or standard for Magnetic volumes." << endl << endl;
+
 		cout << endl;
 		try {
 			oam.getSystemConfig("PMVolumeType", PMVolumeType);
@@ -4588,7 +4603,7 @@ bool storageSetup(bool amazonInstall)
 
 		while(true)
 		{
-			string prompt = "Enter EBS Volume Type (standard, gp2, io1) : (" + PMVolumeType + ") > ";
+			string prompt = "Enter EBS Volume Type (standard, gp2, io1, sc1, st1) : (" + PMVolumeType + ") > ";
 			pcommand = callReadline(prompt);
 			if (pcommand)
 			{
@@ -4596,7 +4611,7 @@ bool storageSetup(bool amazonInstall)
 				callFree(pcommand);
 			}
 
-			if ( PMVolumeType == "standard" || PMVolumeType == "gp2" || PMVolumeType == "io1" )
+			if ( PMVolumeType == "standard" || PMVolumeType == "gp2" || PMVolumeType == "io1" || PMVolumeType == "gp2" || PMVolumeType == "io1")
 				break;
 			else
 			{
@@ -4631,6 +4646,12 @@ bool storageSetup(bool amazonInstall)
 
 		if (PMVolumeType == "io1")
 			minSize = "4";
+
+       	if (PMVolumeType == "sc1" || PMVolumeType == "st1")
+        	minSize = "500";
+
+      	if (PMVolumeType == "standard")
+          	maxSize = "1024";
 
 		while(true)
 		{

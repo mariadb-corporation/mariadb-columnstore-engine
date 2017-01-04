@@ -168,7 +168,7 @@ createvolume() {
 
 	#create volume
 	if [ $volumeType == "io1" ]; then
-		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType -iops $volumeIOPS --output text --query VolumeId`
+		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType --iops $volumeIOPS --output text --query VolumeId`
 	else
 		volume=`$AWSCLI create-volume   --availability-zone $zone --size $volumeSize --volume-type $volumeType --output text --query VolumeId`
 	fi
