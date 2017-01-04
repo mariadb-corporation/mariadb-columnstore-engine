@@ -898,6 +898,8 @@ int main(int argc, char *argv[])
 			break;
 		    }
 		}
+		else
+			cout << "NOTE: Configured to have ColumnStore use the Amazon AWS CLI Tools" << endl << endl;
 
 		if ( amazonInstall )
 		{
