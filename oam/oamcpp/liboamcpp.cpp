@@ -5964,6 +5964,9 @@ namespace oam
 		catch(...) {}
 
 		writeLog("addUMdisk - Create new Volume for um" + itoa(moduleID), LOG_TYPE_DEBUG);
+
+        cout << "  Create AWS Volume for UM #" << itoa(moduleID) << endl;
+
 		volumeName = createEC2Volume(UMVolumeSize, "um");
 		if ( volumeName == "failed" ) {
 			writeLog("addModule: create volume failed", LOG_TYPE_CRITICAL);
@@ -5984,6 +5987,7 @@ namespace oam
 
 		//format attached volume
 		writeLog("addUMdisk - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
+        cout << "  Formatting disk for UM #" << itoa(moduleID) << ", please wait..." << endl;
 
 		string cmd;
        	int user;

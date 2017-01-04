@@ -2103,7 +2103,6 @@ int main(int argc, char *argv[])
 						{
 							//create new UM volume
 							try{
-
     								oam.addUMdisk(moduleID, volumeName, deviceName, UMVolumeSize);
 							}
 							catch(...) {
@@ -4242,9 +4241,9 @@ bool storageSetup(bool amazonInstall)
 		else
 		{
 			
-			cout << "NOTE: The volume type. This can be gp2 for General Purpose  SSD,  io1  for" << endl;
+			cout << endl << "NOTE: The volume type. This can be gp2 for General Purpose  SSD,  io1  for" << endl;
           	cout << "      Provisioned IOPS SSD, st1 for Throughput Optimized HDD, sc1 for Cold" << endl;
-          	cout << "      HDD, or standard for Magnetic volumes." << endl << endl;
+          	cout << "      HDD, or standard for Magnetic volumes." << endl;
 
 			UMStorageType = "external";
 
@@ -4256,11 +4255,11 @@ bool storageSetup(bool amazonInstall)
 			{}
 
 			if ( UMVolumeType.empty() || UMVolumeType == "")
-				UMVolumeType = "standard";
+				UMVolumeType = "gp2";
 
 			while(true)
 			{
-				string prompt = "Enter EBS Volume Type (standard, gp2, io1, sc1, st1) : (" + UMVolumeType + ") > ";
+				string prompt = "Enter EBS Volume Type (gp2, io1, sc1, st1, standard) : (" + UMVolumeType + ") > ";
 				pcommand = callReadline(prompt);
 				if (pcommand)
 				{
@@ -4587,9 +4586,9 @@ bool storageSetup(bool amazonInstall)
 	// if external and amazon, prompt for storage size
 	if ( storageType == "2" && amazonInstall)
 	{
-		cout << "NOTE: The volume type. This can be gp2 for General Purpose  SSD,  io1  for" << endl;
+		cout << endl << "NOTE: The volume type. This can be gp2 for General Purpose  SSD,  io1  for" << endl;
        	cout << "      Provisioned IOPS SSD, st1 for Throughput Optimized HDD, sc1 for Cold" << endl;
-      	cout << "      HDD, or standard for Magnetic volumes." << endl << endl;
+      	cout << "      HDD, or standard for Magnetic volumes." << endl;
 
 		cout << endl;
 		try {
@@ -4599,11 +4598,11 @@ bool storageSetup(bool amazonInstall)
 		{}
 
 		if ( PMVolumeType.empty() || PMVolumeType == "")
-			PMVolumeType = "standard";
+			PMVolumeType = "gp2";
 
 		while(true)
 		{
-			string prompt = "Enter EBS Volume Type (standard, gp2, io1, sc1, st1) : (" + PMVolumeType + ") > ";
+			string prompt = "Enter EBS Volume Type (gp2, io1, sc1, st1, standard) : (" + PMVolumeType + ") > ";
 			pcommand = callReadline(prompt);
 			if (pcommand)
 			{
