@@ -6,22 +6,22 @@ if [ -f $HOME/.aws/credentials ]; then
 	exit 0
 fi
 
-instance_profile=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/`
+instance_profile=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 #
 
 if [ -z "$instance_profile" ]; then
 	exit 1;
 fi
 
-aws_access_key_id=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/${instance_profile} | grep AccessKeyId | cut -d':' -f2 | sed 's/[^0-9A-Z]*//g'`
+aws_access_key_id=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/${instance_profile} | grep AccessKeyId | cut -d':' -f2 | sed 's/[^0-9A-Z]*//g'`
 
 if [ -z "$aws_access_key_id" ]; then
         exit 1;
 fi
 
-aws_secret_access_key=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/${instance_profile} | grep SecretAccessKey | cut -d':' -f2 | sed 's/[^0-9A-Za-z/+=]*//g'`
+aws_secret_access_key=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/${instance_profile} | grep SecretAccessKey | cut -d':' -f2 | sed 's/[^0-9A-Za-z/+=]*//g'`
 
-if [ -z "$aws_secret_access_key_id" ]; then
+if [ -z "$aws_secret_access_key" ]; then
         exit 1;
 fi
 
