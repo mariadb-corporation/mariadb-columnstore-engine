@@ -451,11 +451,11 @@
 		<UMInstanceType>unassigned</UMInstanceType>
 		<UMSecurityGroup>unassigned</UMSecurityGroup>
 		<UMVolumeSize>unassigned</UMVolumeSize>
-		<UMVolumeType>standard</UMVolumeType>
+		<UMVolumeType>gp2</UMVolumeType>
 		<UMVolumeIOPS>unassigned</UMVolumeIOPS>
 		<PMInstanceType>unassigned</PMInstanceType>
 		<PMVolumeSize>unassigned</PMVolumeSize>
-		<PMVolumeType>standard</PMVolumeType>
+		<PMVolumeType>gp2</PMVolumeType>
 		<PMVolumeIOPS>unassigned</PMVolumeIOPS>
 		<AmazonPMFailover>y</AmazonPMFailover>
 		<AmazonAutoTagging>y</AmazonAutoTagging>
