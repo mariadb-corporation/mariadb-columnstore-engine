@@ -867,9 +867,11 @@ int main(int argc, char *argv[])
 	{
 		if ( cloud == oam::UnassignedName )
 		{
+			cout << "NOTE: Amazon AWS CLI Tools are installed and allow MariaDB ColumnStore to create Instances and ABS Volumes" << endl << endl;
+
 		    while(true) {
 			string enable = "y";
-			prompt = "Amazon AWS CLI Tools are installed, do you want to have ColumnStore utilize them [y,n] (y) > ";
+			prompt = "Do you want to have ColumnStore use the Amazon AWS CLI Tools [y,n] (y) > ";
 			pcommand = callReadline(prompt.c_str());
 
 			if (pcommand) {
