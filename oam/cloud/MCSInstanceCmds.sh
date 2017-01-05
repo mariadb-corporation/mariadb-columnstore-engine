@@ -98,9 +98,9 @@ instance=""
 AWSCLI="aws ec2 "
 
 getRegion() {
-        region=`curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document/region | grep region | cut -d':' -f2 | sed 's/\"//g' | sed -e 's/^[ \t]*//'`
+        Region=`curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document/region | grep region | cut -d':' -f2 | sed 's/\"//g' | sed -e 's/^[ \t]*//'`
 
-        echo $region
+        echo $Region
         return
 }
 
@@ -206,7 +206,7 @@ getGroup() {
         getRegion >/dev/null 2>&1
 
 	#get group id
-	groupid=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].SecurityGroups[*].GroupId'`
+	groupid=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].SecurityGroups[*].GroupId' | grep -m 1 sg`
 	echo $groupid
 	return
 }
@@ -305,7 +305,7 @@ startInstance() {
 	#terminate Instance
 	$AWSCLI start-instances --instance-ids $instanceName --region $Region > /tmp/startInstanceInfo_$instanceName 2>&1
 
-	cat /tmp/startInstanceInfo_$instanceName | grep INSTANCE > /tmp/startInstanceStatus_$instanceName
+	cat /tmp/startInstanceInfo_$instanceName | grep InstanceId > /tmp/startInstanceStatus_$instanceName
 	if [ `cat /tmp/startInstanceStatus_$instanceName | wc -c` -eq 0 ]; then
 		echo "Failed, check /tmp/startInstanceInfo_$instanceName"
 		exit 1
@@ -315,9 +315,12 @@ startInstance() {
 }
 
 assignElasticIP() {
-	EIP=`$AWSCLI describe-addresses --public-ips  $IPAddress | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+        #get region
+        getRegion >/dev/null 2>&1
+
+	EIP=`$AWSCLI describe-addresses --region $Region --public-ips  $IPAddress --query 'Addresses[*].AllocationId' --output text`
         
-	$AWSCLI associate-address --instance-id $instanceName --allocation-id $EIP > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+	$AWSCLI associate-address --region $Region  --instance-id $instanceName --allocation-id $EIP > /tmp/assignElasticIPInfo_$IPAddress 2>&1
 
 	cat /tmp/assignElasticIPInfo_$IPAddress | grep error > /tmp/assignElasticIPStatus_$IPAddress
 	if [ `cat /tmp/assignElasticIPStatus_$IPAddress | wc -c` -ne 0 ]; then
@@ -330,9 +333,12 @@ assignElasticIP() {
 }
 
 deassignElasticIP() {
-	EIP=`$AWSCLI describe-addresses --public-ips  $IPAddress | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
+        #get region
+        getRegion >/dev/null 2>&1
 
-	$AWSCLI disassociate-address --association-id $EIP > /tmp/deassignElasticIPInfo_$IPAddress 2>&1
+	EIP=`$AWSCLI describe-addresses --region $Region --public-ips  $IPAddress --query 'Addresses[*].AssociationId' --output text`
+
+	$AWSCLI disassociate-address --region $Region --association-id $EIP > /tmp/deassignElasticIPInfo_$IPAddress 2>&1
 	cat /tmp/deassignElasticIPInfo_$IPAddress | grep error > /tmp/deassignElasticIPStatus_$IPAddress
 	if [ `cat /tmp/deassignElasticIPStatus_$IPAddress | wc -c` -ne 0 ]; then
 		echo "Failed, check /tmp/deassignElasticIPStatus_$IPAddress"
