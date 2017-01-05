@@ -8,8 +8,7 @@ prefix=/usr/local
 
 #check command
 if [ "$1" = "" ]; then
-	echo "Enter Command Name: {launchInstance|getInstance|getZone|getPrivateIP|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc|getRegion}
-}"
+	echo "Enter Command Name: {launchInstance|getInstance|getZone|getPrivateIP|getKey|getAMI|getType|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc|getRegion|getRole}"
 	exit 1
 fi
 
@@ -101,6 +100,24 @@ getRegion() {
         Region=`curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document/region | grep region | cut -d':' -f2 | sed 's/\"//g' | sed -e 's/^[ \t]*//'`
 
         echo $Region
+        return
+}
+
+getRole() {
+	#check for iam folder
+	iam=`curl -s http://169.254.169.254/latest/meta-data/ | grep iam`
+
+	if [ -z "$iam" ]; then
+        	exit 1;
+	fi
+
+	Role=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
+
+	if [ -z "$role" ]; then
+		exit 1;
+	fi
+
+        echo $Role
         return
 }
 
@@ -232,49 +249,52 @@ launchInstance() {
 		#get group
 		getGroup >/dev/null 2>&1
 	fi
+
 	#get AMI
 	getAMI >/dev/null 2>&1
+
 	#get Zone
 	getZone >/dev/null 2>&1
 	if [ "$instanceType" = "unassigned" ]; then
 		#get type
 		getType >/dev/null 2>&1
 	fi
-	#get AMI Profile
-	getProfile >/dev/null 2>&1
 
 	#get Subnet
 	getSubnet >/dev/null 2>&1
 
-		if [ "$instanceProfile" = "" ] || [ "$instanceProfile" = "default-hvm" ]; then
-			if [ "$groupid" != "default" ]; then
-				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ] ; then
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --image-id $ami --security-group-ids $groupid --query 'Instances[*].InstanceId' --output text`
-				else
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
-				fi
+	#get IAM Role
+	getRole >/dev/null 2>&1
+
+	if [ "$Role" = "" ] || [ "$Role" = "default" ]; then
+		if [ "$groupid" != "default" ]; then
+			if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ] ; then
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --image-id $ami --security-group-ids $groupid --query 'Instances[*].InstanceId' --output text`
 			else
-				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
-				else
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
-				fi
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone   --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 			fi
 		else
-			if [ "$groupid" != "default" ]; then
-				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
-				else
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
-				fi
+			if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 			else
-				if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
-				else
-					newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $instanceProfile  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
-				fi
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 			fi
 		fi
+	else
+		if [ "$groupid" != "default" ]; then
+			if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
+			else
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+			fi
+		else
+			if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
+			else
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+			fi
+		fi
+	fi
 	
 	echo $newInstance
 	return
@@ -421,9 +441,11 @@ case "$1" in
   getRegion)
         getRegion
         ;;
-
+  getRole)
+        getRole
+        ;;
   *)
-	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc|getRegion}"
+	echo $"Usage: $0 {launchInstance|getInstance|getZone|getPrivateIP|getType|getKey|getAMI|terminateInstance|startInstance|assignElasticIP|deassignElasticIP|getProfile|stopInstance|getGroup|getSubnet|getVpc|getRegion|getRole}"
 	exit 1
 esac
 
