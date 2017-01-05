@@ -1829,7 +1829,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		algorithm::to_upper(tablecomment);
 	}
 	//@Bug 2553 Add a parenthesis around option to group them together
-	string alterpatstr("ALTER[[:space:]]+TABLE[[:space:]]+.*[[:space:]]+((ADD)|(DROP)|(CHANGE)|(ALTER))[[:space:]]+");
+	string alterpatstr("ALTER[[:space:]]+TABLE[[:space:]]+.*[[:space:]]+(((ADD)|(DROP)|(CHANGE)|(ALTER)|(COMMENT))[[:space:]]+|(COMMENT=))");
 	string createpatstr("CREATE[[:space:]]+TABLE[[:space:]]");
 	bool schemaSyncOnly = false;
 	bool isCreate = true;

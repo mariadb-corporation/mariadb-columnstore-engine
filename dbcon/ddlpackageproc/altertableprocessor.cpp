@@ -27,6 +27,8 @@
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
+#include <boost/regex.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include "altertableprocessor.h"
 
@@ -435,6 +437,11 @@ AlterTableProcessor::DDLResult AlterTableProcessor::processPackage(ddlpackage::A
 				renameColumn (alterTableStmt.fSessionID, txnID.id, result, *(dynamic_cast<AtaRenameColumn*> (*action_iterator)), *(alterTableStmt.fTableName), uniqueId);
 
 			}
+            else if (s.find(AlterActionString[11]) != string::npos)
+            {
+                // Table Comment
+                tableComment (alterTableStmt.fSessionID, txnID.id, result, *(dynamic_cast<AtaTableComment*> (*action_iterator)), *(alterTableStmt.fTableName), uniqueId);
+            }
 			else
 			{
 				throw std::runtime_error("Altertable: Error in the action type");
@@ -1788,6 +1795,106 @@ cout << "create table got unknown exception" << endl;
 		
 	if (rc != 0)
 		throw std::runtime_error(errorMsg);
+}
+
+void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
+	DDLResult& result, ddlpackage::AtaTableComment& ataTableComment, 
+	ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId)
+{
+    // Currently only process autoincrement values in table comments during alter
+    SUMMARY_INFO("AlterTableProcessor::tableComment");
+    uint64_t nextVal;
+    BRM::OID_t sysOid = 1001;
+    ByteStream::byte rc = 0;
+    boost::shared_ptr<messageqcpp::ByteStream> bsIn;
+    uint16_t dbRoot;
+    std::string errorMsg;
+    int pmNum = 1;
+    rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
+    OamCache * oamcache = OamCache::makeOamCache();
+    boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
+    pmNum = (*dbRootPMMap)[dbRoot];
+    if (rc != 0)
+        throw std::runtime_error("Error while calling getSysCatDBRoot");
+
+    boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
+        CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+
+    boost::algorithm::to_upper(ataTableComment.fTableComment);
+    boost::regex compat("[[:space:]]*AUTOINCREMENT[[:space:]]*=[[:space:]]*", boost::regex_constants::extended);
+    boost::match_results<std::string::const_iterator> what;
+    std::string::const_iterator start, end;
+    start = ataTableComment.fTableComment.begin();
+    end = ataTableComment.fTableComment.end();
+    boost::match_flag_type flags = boost::match_default;
+    if (boost::regex_search(start, end, what, compat, flags) && what[0].matched)
+    {
+        std::string params(&(*(what[0].second)));
+        char *ep = NULL;
+        const char *str = params.c_str();
+        errno = 0;
+        nextVal = strtoull(str, &ep, 10);
+        if ((ep == str) || (*ep != '\0') || (errno != 0))
+        {
+            throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
+        }
+    }
+    else
+    {
+        throw std::runtime_error("Invalid table comment");
+    }
+
+    // Get the OID for autoinc (if exists)
+    CalpontSystemCatalog::TableName tableName;
+    tableName.schema = fTableName.fSchema;
+    tableName.table = fTableName.fName;
+    CalpontSystemCatalog::TableInfo tblInfo = systemCatalogPtr->tableInfo(tableName);
+    if (tblInfo.tablewithautoincr != 1)
+    {
+        throw std::runtime_error("Table does not have an autoincrement column");
+    }
+    int32_t oid = systemCatalogPtr->autoColumOid(tableName);
+    fDbrm->resetAISequence(oid, nextVal);
+    ByteStream bs;
+    bs.restart();
+	bs << (ByteStream::byte) WE_SVR_UPDATE_SYSCOLUMN_AUTOVAL;
+    bs << uniqueId;
+    bs << oid;
+    bs << nextVal;
+    bs << sessionID;
+    try
+	{
+		fWEClient->write(bs, (uint32_t)pmNum);
+		while (1)
+		{
+			bsIn.reset(new ByteStream());
+			fWEClient->read(uniqueId, bsIn);
+			if ( bsIn->length() == 0 ) //read error
+			{
+				rc = NETWORK_ERROR;
+				errorMsg = "Lost connection to Write Engine Server while updating SYSTABLES";
+				break;
+			}
+			else {
+				*bsIn >> rc;
+				*bsIn >> errorMsg;
+				break;
+			}
+		}
+	}
+	catch (runtime_error& ex) //write error
+	{
+		rc = NETWORK_ERROR;
+		errorMsg = ex.what();
+	}
+	catch (...)
+	{
+		rc = NETWORK_ERROR;
+		errorMsg = " Unknown exception caught while updating SYSTABLE.";
+	}
+	if (rc != 0)
+		throw std::runtime_error(errorMsg);
+
 }
 
 void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,

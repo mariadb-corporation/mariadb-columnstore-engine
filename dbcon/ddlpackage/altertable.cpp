@@ -185,6 +185,22 @@ namespace ddlpackage {
 
 
 
+	AtaTableComment::AtaTableComment(const char *tableComment) :
+		fTableComment(tableComment)
+	{
+	}
+
+	AtaTableComment::~AtaTableComment()
+	{
+	}
+
+
+	std::ostream& AtaTableComment::put(std::ostream& os) const
+	{
+		os << "TableComment: " << fTableComment << endl;
+		return os;
+	}
+
 
 	AtaAddColumns::~AtaAddColumns()
 	{

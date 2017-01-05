@@ -282,7 +282,8 @@ const std::string AlterActionString[] =
         "AtaDropTableConstraint",
         "AtaRenameTable",
         "AtaModifyColumnType",
-        "AtaRenameColumn"
+        "AtaRenameColumn",
+        "AtaTableComment"
     };
 /** @brief Datatype Length list
  *
@@ -340,6 +341,7 @@ enum DDL_SERIAL_TYPE {
     DDL_ATA_RENAME_TABLE,
     DDL_ATA_RENAME_COLUMN,
     DDL_ATA_MODIFY_COLUMN_TYPE,
+    DDL_ATA_TABLE_COMMENT,
     DDL_COLUMN_TYPE,
     DDL_COLUMN_DEFAULT_VALUE,
     DDL_TABLE_UNIQUE_CONSTRAINT_DEF,
@@ -853,6 +855,28 @@ struct AtaRenameTable : public AlterTableAction
     virtual ~AtaRenameTable();
 
     QualifiedName *fQualifiedName;
+};
+
+/** alter table comment */
+struct AtaTableComment : public AlterTableAction
+{
+    /** @brief Deserialize from ByteStream */
+    virtual int unserialize(messageqcpp::ByteStream& bs);
+
+    /** @brief Serialize to ByteStream */
+    virtual int serialize(messageqcpp::ByteStream& bs);
+
+    /** @brief Ctor for deserialization */
+	AtaTableComment() : fTableComment("")
+    {}
+    AtaTableComment(const char *tableComment);
+
+    /** @brief Dump to stdout. */
+    std::ostream& put(std::ostream& os) const;
+
+    virtual ~AtaTableComment();
+
+    std::string fTableComment;
 };
 
 
