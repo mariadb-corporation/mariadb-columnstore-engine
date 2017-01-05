@@ -1,18 +1,23 @@
 #! /bin/sh
 # Get Amazon EC2 security-credentials, access and secret access keys
 #
-prefix=/usr/local
-
 #first check for local versions, then meta-data versions
 if [ -f $HOME/.aws/credentials ]; then
 	exit 0
 fi
 
 #get IAM Role
-Role=`$prefix/mariadb/columnstore/bin/MCSInstanceCmds.sh getRole`
+#check for iam folder
+iam=`curl -s http://169.254.169.254/latest/meta-data/ | grep iam`
+
+if [ -z "$iam" ]; then
+	exit 1;
+fi
+
+Role=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 
 if [ -z "$Role" ]; then
-        exit 1;
+	exit 1;
 fi
 
 aws_access_key_id=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/${Role} | grep AccessKeyId | cut -d':' -f2 | sed 's/[^0-9A-Z]*//g'`
