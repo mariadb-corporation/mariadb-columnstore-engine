@@ -6,6 +6,14 @@ if [ -f $HOME/.aws/credentials ]; then
 	exit 0
 fi
 
+#check for iam folder
+iam=`curl -s http://169.254.169.254/latest/meta-data/ | grep iam`
+
+
+if [ -z "$iam" ]; then
+        exit 1;
+fi
+
 instance_profile=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 #
 
