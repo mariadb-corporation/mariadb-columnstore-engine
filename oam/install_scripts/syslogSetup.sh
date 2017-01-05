@@ -176,7 +176,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		fi
 	fi
 
-	$SUDO etc/init.d/rsyslog restart  > /dev/null 2>&1
+	$SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
 	$SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
@@ -212,7 +212,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		$SUDO rm -f "$syslog_conf"
 	fi
 
-        $SUDO etc/init.d/rsyslog restart  > /dev/null 2>&1
+        $SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
