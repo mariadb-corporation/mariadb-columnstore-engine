@@ -66,7 +66,7 @@ void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 %}
 
-%expect 16
+%expect 17
 %pure-parser
 %lex-param {void * scanner}
 %parse-param {struct ddlpackage::pass_to_bison * x}
@@ -162,6 +162,7 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <str>                  literal
 %type <matchType>            opt_match_type
 %type <matchType>            match_type
+%type <ata>                  alter_table_comment
 %type <ata>                  modify_column
 %type <columnType>           numeric_type
 %type <constraintList>       column_qualifier_list
@@ -484,10 +485,6 @@ alter_table_statement:
 	{
 		$$ = new AlterTableStatement($3, $4);
 	}
-	| ALTER TABLE table_name alter_table_actions COMMENT string_literal
-	{
-		$$ = new AlterTableStatement($3, $4);
-	}
 	;
 
 alter_table_actions:
@@ -524,7 +521,17 @@ alter_table_action:
 	| ata_rename_table
 	| modify_column
 	| rename_column
+    | alter_table_comment
 	;
+
+alter_table_comment:
+    COMMENT opt_equal string_literal
+    {$$ = new AtaTableComment($3);}
+    |
+    COMMENT string_literal
+    {$$ = new AtaTableComment($2);}
+    ;
+
 
 
 modify_column:
