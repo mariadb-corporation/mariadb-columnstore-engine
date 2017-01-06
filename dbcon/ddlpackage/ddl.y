@@ -981,6 +981,16 @@ approximate_numeric_type:
 		$$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
 		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
 	}
+    | DOUBLE PRECISION opt_display_precision_scale_null
+	{
+		$$ = new ColumnType(DDL_DOUBLE);
+		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+	}
+	| DOUBLE PRECISION opt_display_precision_scale_null UNSIGNED
+	{
+		$$ = new ColumnType(DDL_UNSIGNED_DOUBLE);
+		$$->fLength = DDLDatatypeLength[DDL_DOUBLE];
+	}
 	| REAL opt_display_precision_scale_null
 	{
 		$$ = new ColumnType(DDL_DOUBLE);
