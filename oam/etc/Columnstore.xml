@@ -443,10 +443,6 @@
 		<SystemLogConfigFile>unassigned</SystemLogConfigFile>
 		<rpw>mariadb1</rpw>
 		<Cloud>unassigned</Cloud>
-		<AmazonAccessKey>unassigned</AmazonAccessKey>
-		<AmazonSecretKey>unassigned</AmazonSecretKey>
-		<AmazonZone>unassigned</AmazonZone>
-		<AmazonSubNetID>unassigned</AmazonSubNetID>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
 		<UMInstanceType>unassigned</UMInstanceType>
 		<UMSecurityGroup>unassigned</UMSecurityGroup>
@@ -466,8 +462,6 @@
 		<GlusterCopies>0</GlusterCopies>
 		<GlusterStorageType>unassigned</GlusterStorageType>
 		<CoreFileFlag>n</CoreFileFlag>
-		<JavaHome>unassigned</JavaHome>
-		<JavaPath>unassigned</JavaPath>
 		<MySQLPort>3306</MySQLPort>
 		<MySQLPasswordConfig>unassigned</MySQLPasswordConfig>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>

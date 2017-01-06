@@ -4863,16 +4863,6 @@ int processCommand(string* arguments)
 				}
 				catch(...) {}
 
-				if ( cloud == "amazon-vpc" )
-				{
-					string AmazonSubNetID = oam::UnassignedName;
-					try{
-						oam.getSystemConfig("AmazonSubNetID", AmazonSubNetID);
-	
-						cout << "AmazonSubNetID = " << AmazonSubNetID << endl;
-					}
-					catch(...) {}
-				}
 			}
 
 			cout << endl;

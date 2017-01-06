@@ -153,7 +153,6 @@ bool thread_remote_installer = true;
 string singleServerInstall = "1";
 string reuseConfig ="n";
 string oldFileName;
-string AmazonRegion;
 string glusterCopies;
 string glusterInstalled = "n";
 string hadoopInstalled = "n";
@@ -833,7 +832,6 @@ int main(int argc, char *argv[])
 
 	//amazon install setup check
 	bool amazonInstall = false;
-	string amazonSubNet = oam::UnassignedName;
 	string cloud = oam::UnassignedName;
 	system("aws --version > /tmp/amazon.log 2>&1");
 
@@ -870,43 +868,41 @@ int main(int argc, char *argv[])
 			cout << "NOTE: Amazon AWS CLI Tools are installed and allow MariaDB ColumnStore to create Instances and ABS Volumes" << endl << endl;
 
 		    while(true) {
-			string enable = "y";
-			prompt = "Do you want to have ColumnStore use the Amazon AWS CLI Tools [y,n] (y) > ";
-			pcommand = callReadline(prompt.c_str());
+				string enable = "y";
+				prompt = "Do you want to have ColumnStore use the Amazon AWS CLI Tools [y,n] (y) > ";
+				pcommand = callReadline(prompt.c_str());
 
-			if (pcommand) {
-			    if (strlen(pcommand) > 0) enable = pcommand;
-				  callFree(pcommand);
+				if (pcommand) {
+			    	if (strlen(pcommand) > 0) enable = pcommand;
+				  		callFree(pcommand);
 			
-			    if (enable == "n") {
-				amazonInstall = false;
+			    	if (enable == "n") {
+						amazonInstall = false;
 
-				try {
-				  sysConfig->setConfig(InstallSection, "Cloud", "disable");
-				}
-				  catch(...)
-				{};
+						try {
+				  		sysConfig->setConfig(InstallSection, "Cloud", "disable");
+						}
+				  		catch(...)
+						{};
 
+						break;
+			    	}	
+				}	
+
+				if ( enable != "y" )
+				{
+			    	cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+			    	if ( noPrompting )
+						exit(1);
+				}	
 				break;
-			    }
 			}
-
-			if ( enable != "y" )
-			{
-			    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-			    if ( noPrompting )
-				exit(1);
-			}
-			break;
-		    }
-		}
+		}	
 		else
 			cout << "NOTE: Configured to have ColumnStore use the Amazon AWS CLI Tools" << endl << endl;
 
 		if ( amazonInstall )
 		{
-			bool noKey = false;
-
 			string cmd = installDir + "/bin/MCSgetCredentials.sh >/dev/null 2>&1";
          	int rtnCode = system(cmd.c_str());
             	if ( WEXITSTATUS(rtnCode) != 0 ) {
@@ -921,55 +917,13 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		sleep(1);
-
-		//get subnetID
-	    try {
-		      amazonSubNet = sysConfig->getConfig(InstallSection, "AmazonSubNetID");
-		}
-		catch(...)
-      	{}
-
-		if ( amazonSubNet == oam::UnassignedName )
-		{	
-			//check if this is a vpc system by checking for subnet setup
-			amazonSubNet = oam.getEC2LocalInstanceSubnet();
-			// cout << "amazonSubNet = " <<  amazonSubNet << endl;
-			if ( amazonSubNet == "failed" || amazonSubNet == "" )
-			{
-				amazonSubNet = oam::UnassignedName;
-				cloud = "amazon-ec2";
-			}
-			else
-			{
-				cloud = "amazon-vpc";
-			}
-
-			//set subnetID
-			try {
-				sysConfig->setConfig(InstallSection, "AmazonSubNetID", amazonSubNet);
-			}
-			catch(...)
-			{}
-		}
-		else
-			cloud = "amazon-vpc";
-
 		try {
-			sysConfig->setConfig(InstallSection, "Cloud", cloud);
+			sysConfig->setConfig(InstallSection, "Cloud", "amazon-vpc");
 		}
 		catch(...)
 		{}
 	}
-	else
-	{
-		try {
-			sysConfig->setConfig(InstallSection, "Cloud", oam::UnassignedName);
-		}
-		catch(...)
-		{}
-	}
-
+	
 	if ( pmwithum )
 		cout << endl << "NOTE: Local Query Feature is enabled" << endl;
 
@@ -993,6 +947,7 @@ int main(int argc, char *argv[])
 
 	cout << endl;
 
+	// prompt for system name
 	setSystemName();
 
 	cout << endl;
