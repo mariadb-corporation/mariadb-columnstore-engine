@@ -252,7 +252,7 @@ fi
 #check and get amazon env variables
 aws=`which aws 2>/dev/null`
 if [ -z "aws" ]; then
-	$installdir/bin/MCSgetCredentials.sh
+	$installdir/bin/MCSgetCredentials.sh >/dev/null 2>&1
 fi
 
 #log install message

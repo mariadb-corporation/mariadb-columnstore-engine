@@ -113,7 +113,7 @@ getRole() {
 
 	Role=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 
-	if [ -z "$role" ]; then
+	if [ -z "$Role" ]; then
 		exit 1;
 	fi
 
@@ -283,15 +283,15 @@ launchInstance() {
 	else
 		if [ "$groupid" != "default" ]; then
 			if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile "Name=$Role"  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 			else
-				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key  --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile "Name=$Role"  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 			fi
 		else
 			if [ "$IPaddress" = "autoassign" ] || [ "$IPaddress" = "unassigned" ]; then
-				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile "Name=$Role"  --subnet-id $subnet --image-id $ami --query 'Instances[*].InstanceId' --output text`
 			else
-				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile $Role  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
+				newInstance=`$AWSCLI run-instances --region $Region  --key-name $key --instance-type $instanceType --placement AvailabilityZone=$zone --iam-instance-profile "Name=$Role"  --subnet-id $subnet --private-ip-address $IPaddress --image-id $ami --query 'Instances[*].InstanceId' --output text`
 			fi
 		fi
 	fi

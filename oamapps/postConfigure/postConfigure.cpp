@@ -907,10 +907,10 @@ int main(int argc, char *argv[])
 		{
 			bool noKey = false;
 
-			string cmd = installDir + "/bin/MCSgetCredentials.sh";
+			string cmd = installDir + "/bin/MCSgetCredentials.sh >/dev/null 2>&1";
          	int rtnCode = system(cmd.c_str());
             	if ( WEXITSTATUS(rtnCode) != 0 ) {
-            	cout << "Error: No IAM Profile with Security Certificates or AWS CLI Certificate file configured" << endl;
+            	cout << endl << "Error: No IAM Profile with Security Certificates used or AWS CLI Certificate file configured" << endl;
 				cout << "Check Amazon Install Documenation for additional information, exiting..." << endl;
                 exit (1);
 			}
