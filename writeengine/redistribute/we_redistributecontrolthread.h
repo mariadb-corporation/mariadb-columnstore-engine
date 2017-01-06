@@ -99,7 +99,7 @@ class RedistributeControlThread
 
 	int  connectToWes(int);
 	void dumpPlanToFile(uint64_t, vector<PartitionInfo>&, int);
-
+	void displayPlan();
 
 	uint32_t                      fAction;
 	oam::OamCache*                fOamCache;
@@ -108,7 +108,7 @@ class RedistributeControlThread
 
 	std::set<int> fSourceSet;
 	std::set<int> fTargetSet;
-	std::set<int> fDbrootSet;
+	std::set<int> fDbrootSet;  // Union of fSourceSet and fTargetSet
 	int           fMaxDbroot;
 	uint32_t      fEntryCount;
 	std::string   fErrorMsg;

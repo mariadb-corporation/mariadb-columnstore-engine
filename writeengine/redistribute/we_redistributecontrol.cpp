@@ -413,6 +413,7 @@ bool RedistributeControl::getStartOptions(messageqcpp::ByteStream& bs)
 		bs >> fOptions;
 
 		bs >> n;
+		fSourceList.clear();
 		fSourceList.reserve(n);
 		for (uint32_t i = 0; i < n; i++)
 		{
@@ -420,6 +421,7 @@ bool RedistributeControl::getStartOptions(messageqcpp::ByteStream& bs)
 			fSourceList.push_back(d);
 		}
 		bs >> n;
+		fDestinationList.clear();
 		fDestinationList.reserve(n);
 		for (uint32_t i = 0; i < n; i++)
 		{
