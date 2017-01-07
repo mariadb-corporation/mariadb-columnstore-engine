@@ -97,7 +97,7 @@ instance=""
 AWSCLI="aws ec2 "
 
 getRegion() {
-        Region=`curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document/region | grep region | cut -d':' -f2 | sed 's/\"//g' | sed -e 's/^[ \t]*//'`
+        Region=`curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document/region | grep region | cut -d':' -f2 | sed 's/\"//g'  | sed 's/\,//g' | sed -e 's/^[ \t]*//'`
 
         echo $Region
         return
