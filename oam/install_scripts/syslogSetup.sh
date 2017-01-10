@@ -12,13 +12,12 @@ installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
 
-user=$USER
-SUDO=sudo
-if [ -z "$user" ]; then
-        user=root
-        SUDO=" "
+user=root
+SUDO=" "
+if [ $USER != "root" ]; then
+        user=$USER
+        SUDO="sudo "
 fi
-
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then

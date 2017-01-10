@@ -303,28 +303,6 @@ if { $INSTALLTYPE == "initial"} {
 	}
 }
 
-#
-# check MariaDB Columnstore syslog functionality
-#
-send_user "Check MariaDB Columnstore system logging functionality     "
-send " \n"
-send date\n
-send "ssh $USERNAME@$SERVER '$INSTALLDIR/bin/syslogSetup.sh check'\n"
-set timeout 10
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
-}
-set timeout 30
-expect {
-	"Logging working" { send_user "DONE" }
-	timeout { send_user "DONE" }
-	"not working" { send_user "WARNING: MariaDB Columnstore system logging functionality not working" }
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-}
-send_user "\n"
 
 send_user "\nInstallation Successfully Completed on '$MODULE'\n"
 exit 0
