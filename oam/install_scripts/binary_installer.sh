@@ -250,6 +250,7 @@ if { $INSTALLTYPE == "initial"} {
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 		"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }
+        	"WARNING"   { send_user "WARNING: SYSLOG setup failed\n" }
 	}
 	send_user "\n"
 	sleep 10
