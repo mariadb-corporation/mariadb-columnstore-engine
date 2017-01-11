@@ -5964,11 +5964,25 @@ namespace oam
 		catch(...) {}
 
 		writeLog("addUMdisk - Create new Volume for um" + itoa(moduleID), LOG_TYPE_DEBUG);
-		volumeName = createEC2Volume(UMVolumeSize, "um");
-		if ( volumeName == "failed" ) {
-			writeLog("addModule: create volume failed", LOG_TYPE_CRITICAL);
-			exceptionControl("addUMdisk", API_FAILURE);
-		}
+
+        cout << "  Create AWS Volume for UM #" << itoa(moduleID) << endl;
+
+       	int retry = 0;
+      	for ( ; retry < 5 ; retry++ )
+      	{
+         	volumeName = createEC2Volume(UMVolumeSize, "um");
+
+           	if ( volumeName == "failed" || volumeName.empty() )
+             	retry = retry;
+          	else
+             	break;
+        }
+
+       	if ( retry >= 5 )
+       	{
+        	cout << " *** ERROR: Failed to create a Volume for um1 " << moduleID << endl;
+           	exceptionControl("addUMdisk", API_FAILURE);
+        }
 
 		//attach and format volumes
 		device = "/dev/sdf";
@@ -5976,14 +5990,26 @@ namespace oam
 		string localInstance = getEC2LocalInstance();
 
 		//attach volumes to local instance
-		writeLog("addUMdisk - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
-		if (!attachEC2Volume(volumeName, device, localInstance)) {
-			writeLog("addUMdisk: volume failed to attach to local instance", LOG_TYPE_CRITICAL);
-			exceptionControl("addUMdisk", API_FAILURE);
-		}
+        writeLog("addUMdisk - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
+
+      	retry = 0;
+       	for ( ; retry < 5 ; retry++ )
+       	{
+        	if (!attachEC2Volume(volumeName, device, localInstance))
+            	detachEC2Volume(volumeName);
+           	else
+            	break;
+        }
+
+      	if ( retry >= 5 )
+       	{
+        	cout << " *** ERROR: Volume " << volumeName << " failed to attach to local instance" << endl;
+            exceptionControl("addUMdisk", API_FAILURE);
+      	}
 
 		//format attached volume
 		writeLog("addUMdisk - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
+        cout << "  Formatting disk for UM #" << itoa(moduleID) << ", please wait..." << endl;
 
 		string cmd;
        	int user;

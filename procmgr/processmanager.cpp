@@ -4816,13 +4816,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		sysConfig->setConfig(Section, "Port", "8622");
 	}
 
-	bool setMysqlRep = false;
-
 	if ( moduleType == "um" ||
 		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 		( moduleType == "pm" && PMwithUM == "y") ) {
-
-		setMysqlRep = true;
 
 		listPT = devicenetworklist.begin();
 		for( ; listPT != devicenetworklist.end() ; listPT++)
@@ -5311,22 +5307,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	if (amazon) {
 		log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
 		sleep(30);
-	}
-
-	//check and add MySQL Replication slave
-	string MySQLRep;
-	try {
-		oam.getSystemConfig("MySQLRep", MySQLRep);
-	}
-	catch(...) {
-		MySQLRep = "n";
-	}
-
-	if ( MySQLRep == "n" && setMysqlRep ) {
-		try {
-			oam.setSystemConfig("MySQLRep", "y");
-		}
-		catch(...) {}
 	}
 
 	//distribute config file

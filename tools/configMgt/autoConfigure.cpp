@@ -147,20 +147,7 @@ int main(int argc, char *argv[])
 	{}
 
 	bool build40 = false;
-	if ( !CoreFileFlag.empty() )
-		build40 = true;
-
-	//build 4.0.1 flag
-	string AmazonSubNetID;
-	try {
-		AmazonSubNetID = sysConfigNew->getConfig(InstallSection, "AmazonSubNetID");
-	}
-	catch(...)
-	{}
-
-	bool build401 = false;
-	if ( !AmazonSubNetID.empty() )
-		build401 = true;
+	bool build401 = true;
 
 	//set install config flag
 	try {
@@ -1283,18 +1270,13 @@ int main(int argc, char *argv[])
 	// 
 	if (build3) {
 		//setup cloud parameters
-		string x509Cert;
-		string x509PriKey;
 		string UMStorageType;
-		string rpw;
 		string PMInstanceType;
 		string UMInstanceType;
 		string UMSecurityGroup;
 		string UMVolumeSize;
 		string PMVolumeSize;
 		string AmazonAutoTagging;
-		string AmazonRegion;
-		string AmazonZone;
 		string AmazonVPCNextPrivateIP;
 		string AmazonDeviceName;
 		string UMVolumeType;
@@ -1305,20 +1287,14 @@ int main(int argc, char *argv[])
 
 		try {
 			cloud = sysConfigOld->getConfig(InstallSection, "Cloud");
-			x509Cert = sysConfigOld->getConfig(InstallSection, "AmazonX509Certificate");
-			x509PriKey = sysConfigOld->getConfig(InstallSection, "AmazonX509PrivateKey");
 			UMStorageType = sysConfigOld->getConfig(InstallSection, "UMStorageType");
-			rpw = sysConfigOld->getConfig(InstallSection, "rpw");
 			PMInstanceType = sysConfigOld->getConfig(InstallSection, "PMInstanceType");
 			UMInstanceType = sysConfigOld->getConfig(InstallSection, "UMInstanceType");
 			UMSecurityGroup = sysConfigOld->getConfig(InstallSection, "UMSecurityGroup");
 			UMVolumeSize = sysConfigOld->getConfig(InstallSection, "UMVolumeSize");
 			PMVolumeSize = sysConfigOld->getConfig(InstallSection, "PMVolumeSize");
 			AmazonAutoTagging = sysConfigOld->getConfig(InstallSection, "AmazonAutoTagging");
-			AmazonRegion = sysConfigOld->getConfig(InstallSection, "AmazonRegion");
-			AmazonZone = sysConfigOld->getConfig(InstallSection, "AmazonZone");
 			AmazonVPCNextPrivateIP = sysConfigOld->getConfig(InstallSection, "AmazonVPCNextPrivateIP");
-			AmazonSubNetID = sysConfigOld->getConfig(InstallSection, "AmazonSubNetID");
 			AmazonDeviceName = sysConfigOld->getConfig(InstallSection, "AmazonDeviceName");
 			UMVolumeType = sysConfigOld->getConfig(InstallSection, "UMVolumeType");
 			UMVolumeIOPS = sysConfigOld->getConfig(InstallSection, "UMVolumeIOPS");
@@ -1355,13 +1331,10 @@ int main(int argc, char *argv[])
 				cloud = oam::UnassignedName;
 			if ( cloud == "amazon")
 				cloud = "amazon-ec2";
-			if ( AmazonSubNetID.empty() )
-				AmazonSubNetID = oam::UnassignedName;
 			if ( AmazonVPCNextPrivateIP.empty() )
 				AmazonVPCNextPrivateIP = oam::UnassignedName;
 
 			try {
-				sysConfigNew->setConfig(InstallSection, "AmazonSubNetID", AmazonSubNetID);
 				sysConfigNew->setConfig(InstallSection, "AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 			}
 			catch(...)
@@ -1373,18 +1346,13 @@ int main(int argc, char *argv[])
 
 		try {
 			sysConfigNew->setConfig(InstallSection, "Cloud", cloud);
-			sysConfigNew->setConfig(InstallSection, "AmazonX509Certificate", x509Cert);
-			sysConfigNew->setConfig(InstallSection, "AmazonX509PrivateKey", x509PriKey);
 			sysConfigNew->setConfig(InstallSection, "UMStorageType", UMStorageType);
-			sysConfigNew->setConfig(InstallSection, "rpw", rpw);
 			sysConfigNew->setConfig(InstallSection, "PMInstanceType", PMInstanceType);
 			sysConfigNew->setConfig(InstallSection, "UMInstanceType", UMInstanceType);
 			sysConfigNew->setConfig(InstallSection, "UMSecurityGroup", UMSecurityGroup);
 			sysConfigNew->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
 			sysConfigNew->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
 			sysConfigNew->setConfig(InstallSection, "AmazonAutoTagging", AmazonAutoTagging);
-			sysConfigNew->setConfig(InstallSection, "AmazonRegion", AmazonRegion);
-			sysConfigNew->setConfig(InstallSection, "AmazonZone", AmazonZone);
 			sysConfigNew->setConfig(InstallSection, "AmazonDeviceName", AmazonDeviceName);
 
 			sysConfigNew->setConfig(InstallSection, "UMVolumeType", UMVolumeType);

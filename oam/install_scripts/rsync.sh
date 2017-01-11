@@ -22,7 +22,6 @@ if {[info exists env(USER)]} {
 
 
 if { $PASSWORD == "ssh" } {
-	set USERNAME ""
 	set PASSWORD ""
 }
 

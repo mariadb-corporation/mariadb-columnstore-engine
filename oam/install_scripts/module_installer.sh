@@ -54,10 +54,10 @@ fi
 export COLUMNSTORE_INSTALL_DIR=$installdir
 
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
-if [ $module = "pm" ]; then
-	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
-		cp $COLUMNSTORE_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
-	
+if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+	cp $COLUMNSTORE_INSTALL_DIR/local/etc/*.pem $HOME/. > /dev/null 2>&1
+
+	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
 			echo "Setup fstab on Module"
 			touch /etc/fstab
