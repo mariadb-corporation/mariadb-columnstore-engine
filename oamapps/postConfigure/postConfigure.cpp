@@ -894,7 +894,16 @@ int main(int argc, char *argv[])
 			    	cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
 			    	if ( noPrompting )
 						exit(1);
-				}	
+				}
+				else
+				{
+        			try {
+            			sysConfig->setConfig(InstallSection, "Cloud", "amazon-vpc");
+        			}
+        			catch(...)
+        			{}
+ 				}
+
 				break;
 			}
 		}	
@@ -916,12 +925,6 @@ int main(int argc, char *argv[])
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
 		}
-
-		try {
-			sysConfig->setConfig(InstallSection, "Cloud", "amazon-vpc");
-		}
-		catch(...)
-		{}
 	}
 	
 	if ( pmwithum )
