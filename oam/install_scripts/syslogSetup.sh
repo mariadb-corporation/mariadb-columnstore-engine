@@ -14,7 +14,7 @@ rsyslog7=0
 
 user=root
 SUDO=" "
-if [ $USER != "root" ]; then
+if [ "$USER" != "root" ]; then
         user=$USER
         SUDO="sudo "
 fi
