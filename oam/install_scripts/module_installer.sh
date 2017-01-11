@@ -158,7 +158,17 @@ if [ $module = "um" ]; then
 	fi
 fi
 
-echo " "
+$COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh check > /tmp/syslogSetup-check.log 2>&1
+if [ $? -ne 0 ]; then
+	# try setup again
+	$COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh install > /tmp/syslogSetup-install.log 2>&1
+	if [ $? -ne 0 ]; then
+		echo "WARNING: syslogSetup.sh check failed: check /tmp/syslogSetup-check.log"
+       		exit 2
+	fi
+fi
+ 
+
 echo "!!!Module Installation Successfully Completed!!!"
 
 exit 0
