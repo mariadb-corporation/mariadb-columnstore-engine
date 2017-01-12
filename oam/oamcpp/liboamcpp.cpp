@@ -278,11 +278,11 @@ namespace oam
         const string MODULE_TYPE = "ModuleType";
         systemmoduletypeconfig.moduletypeconfig.clear();
 
+        Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
+
         for (int moduleTypeID = 1; moduleTypeID < MAX_MODULE_TYPE+1; moduleTypeID++)
         {
         	ModuleTypeConfig moduletypeconfig;
-	
-            Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
 
             // get Module info
 
@@ -375,7 +375,7 @@ namespace oam
 
 				int moduleFound = 0;
 				//get NIC IP address/hostnames
-				for (int moduleID = 1; moduleID < MAX_MODULE ; moduleID++)
+				for (int moduleID = 1; moduleID <= moduletypeconfig.ModuleCount ; moduleID++)
 				{
 					DeviceNetworkConfig devicenetworkconfig;
 					HostConfig hostconfig;
@@ -385,7 +385,9 @@ namespace oam
 						string ModuleIpAddr = MODULE_IP_ADDR + itoa(moduleID) + "-" + itoa(nicID) + "-" + itoa(moduleTypeID);
 	
 						string ipAddr = sysConfig->getConfig(Section, ModuleIpAddr);
-						if (ipAddr.empty() || ipAddr == UnassignedIpAddr )
+						if (ipAddr.empty())
+                            break;
+                        else if (ipAddr == UnassignedIpAddr )
 							continue;
 	
 						string ModuleHostName = MODULE_SERVER_NAME + itoa(moduleID) + "-" + itoa(nicID) + "-" + itoa(moduleTypeID);
@@ -428,7 +430,7 @@ namespace oam
 
 				// get dbroot IDs
 				moduleFound = 0;
-				for (int moduleID = 1; moduleID < MAX_MODULE+1 ; moduleID++)
+				for (int moduleID = 1; moduleID <= moduletypeconfig.ModuleCount ; moduleID++)
 				{
 					string ModuleDBRootCount = MODULE_DBROOT_COUNT + itoa(moduleID) + "-" + itoa(moduleTypeID);
 					string temp = sysConfig->getConfig(Section, ModuleDBRootCount).c_str();
@@ -1925,11 +1927,11 @@ namespace oam
         const string SECTION_NAME = "PROCESSCONFIG";
         systemprocessconfig.processconfig.clear();
 
+        Config* proConfig = Config::makeConfig(ProcessConfigFile.c_str());
+
         for (int processID = 1; processID < MAX_PROCESS+1; processID++)
         {
 	        ProcessConfig processconfig;
-
-            Config* proConfig = Config::makeConfig(ProcessConfigFile.c_str());
 
             // get process info
 
