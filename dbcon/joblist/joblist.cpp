@@ -18,7 +18,8 @@
 
 //  $Id: joblist.cpp 9655 2013-06-25 23:08:13Z xlou $
 
-
+// Cross engine needs to be at the top due to MySQL includes
+#include "crossenginestep.h"
 #include "errorcodes.h"
 #include <iterator>
 #include <stdexcept>
@@ -34,7 +35,6 @@ using namespace execplan;
 #include "errorids.h"
 #include "jobstep.h"
 #include "primitivestep.h"
-#include "crossenginestep.h"
 #include "subquerystep.h"
 #include "tupleaggregatestep.h"
 #include "tupleannexstep.h"

@@ -19,6 +19,9 @@
 
 
 //#define NDEBUG
+// Cross engine needs to be at top due to MySQL includes
+#include "crossenginestep.h"
+
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -61,7 +64,6 @@ using namespace querytele;
 #include "primitivestep.h"
 #include "subquerystep.h"
 #include "tuplehashjoin.h"
-#include "crossenginestep.h"
 #include "tupleaggregatestep.h"
 
 //#include "stopwatch.cpp"

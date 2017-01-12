@@ -21,13 +21,15 @@
 #ifndef JOBLIST_CROSSENGINESTEP_H
 #define JOBLIST_CROSSENGINESTEP_H
 
+#include <my_config.h>
+#include <mysql.h>
+
 #include <boost/scoped_array.hpp>
 
 #include "jobstep.h"
 #include "primitivestep.h"
 
-#include "libdrizzle-2.0/drizzle.h"
-#include "libdrizzle-2.0/drizzle_client.h"
+using namespace std;
 
 // forward reference
 namespace  execplan
@@ -44,11 +46,11 @@ class FuncExp;
 namespace joblist
 {
 
-class DrizzleMySQL
+class LibMySQL
 {
 public:
-	DrizzleMySQL();
-	~DrizzleMySQL();
+	LibMySQL();
+	~LibMySQL();
 
 	// init:   host          port        username      passwd         db
 	int init(const char*, unsigned int, const char*, const char*, const char*);
@@ -56,16 +58,15 @@ public:
 	// run the query
 	int run(const char* q);
 
-	int getFieldCount()      { return drizzle_result_column_count(fDrzrp); }
-	int getRowCount()        { return drizzle_result_row_count(fDrzrp); }
-	char** nextRow()   { return drizzle_row_next(fDrzrp); }
-	const string& getError() { return fErrStr; }
+	int getFieldCount()      { return mysql_num_fields(fRes); }
+	int getRowCount()        { return mysql_num_rows(fRes); }
+	char** nextRow()   { return mysql_fetch_row(fRes); }
+	const std::string& getError() { return fErrStr; }
 
 private:
-	drizzle_st*        fDrzp;
-	drizzle_con_st*    fDrzcp;
-	drizzle_result_st* fDrzrp;
-	string             fErrStr;
+	MYSQL*        fCon;
+	MYSQL_RES*    fRes;
+    std::string             fErrStr;
 };
 
 /** @brief class CrossEngineStep
@@ -212,7 +213,7 @@ protected:
 	rowgroup::RowGroup fRowGroupFe3;
 
 	funcexp::FuncExp* fFeInstance;
-    DrizzleMySQL* drizzle;
+    LibMySQL* mysql;
 };
 
 

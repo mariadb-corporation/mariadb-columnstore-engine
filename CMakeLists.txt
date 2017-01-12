@@ -57,7 +57,7 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 # (but later on when installing)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
-SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/lib")
+SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/lib;${INSTALL_ENGINE}/mysql/lib")
 
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
@@ -67,6 +67,11 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${INSTALL_ENGINE}/lib" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
     SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/lib")
+ENDIF("${isSystemDir}" STREQUAL "-1")
+
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${SERVER_SOURCE_ROOT_DIR}/libmysql/" isSystemDir)
+IF("${isSystemDir}" STREQUAL "-1")
+    SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/mysql/lib")
 ENDIF("${isSystemDir}" STREQUAL "-1")
 
 INCLUDE (configureEngine.cmake)
@@ -130,7 +135,7 @@ SET (ENGINE_TOOLSDIR   "${INSTALL_ENGINE}/tools")
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot ${Boost_LIBRARIES} xml2 pthread rt)
 SET (ENGINE_OAM_LIBS        oamcpp alarmmanager)
 SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
-SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk dataconvert common compress mysqlcl_idb querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
+SET (ENGINE_EXEC_LIBS       joblist execplan windowfunction joiner rowgroup funcexp udfsdk dataconvert common compress querystats querytele thrift threadpool ${ENGINE_BRM_LIBS})
 SET (ENGINE_WRITE_LIBS      ddlpackageproc ddlpackage dmlpackageproc dmlpackage writeengine writeengineclient idbdatafile cacheutils ${ENGINE_EXEC_LIBS})
 
 SET (ENGINE_COMMON_LDFLAGS  "")
