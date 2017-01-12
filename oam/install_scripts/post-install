@@ -231,6 +231,9 @@ if [ $? -eq 0 ]; then
 	cat /tmp/syslog_install.log
 fi
 
+#backup copy of Alarm Config File
+/bin/cp -f $installdir/etc/AlarmConfig.xml $installdir/etc/AlarmConfig.xml.installSave > /dev/null 2>&1
+
 #setup alias commands
 eval userhome=~$user
 bashFile=$userhome/.bashrc
