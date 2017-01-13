@@ -4551,7 +4551,7 @@ bool storageSetup(bool amazonInstall)
 				callFree(pcommand);
 			}
 
-			if ( PMVolumeType == "standard" || PMVolumeType == "gp2" || PMVolumeType == "io1" || PMVolumeType == "gp2" || PMVolumeType == "io1")
+			if ( PMVolumeType == "standard" || PMVolumeType == "gp2" || PMVolumeType == "io1" || PMVolumeType == "sc1" || PMVolumeType == "st1")
 				break;
 			else
 			{
