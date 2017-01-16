@@ -136,6 +136,7 @@ namespace joblist
      *
      */
     EXPORT ResourceManager(bool runningInExeMgr=false);
+    static ResourceManager* instance(bool runningInExeMgr=false);
 //     ResourceManager(const config::Config *cf);
 //     ResourceManager(const std::string& config);
 //passed by ExeMgr and DistributedEngineComm to MessageQueueServer or -Client
@@ -364,7 +365,7 @@ namespace joblist
 	/*static	const*/ std::string fBatchInsertStr;
 	static	const std::string fOrderByLimitStr;
     config::Config* fConfig;
-
+    static ResourceManager* fInstance;
     uint32_t fTraceFlags;
 
     unsigned fNumCores;

@@ -442,7 +442,7 @@ LargeHashJoin::LargeHashJoin(JoinType joinType,
 			uint32_t sessionId,
 			uint32_t txnId,
 			uint32_t statementId,
-			   ResourceManager& rm ):
+			   ResourceManager* rm ):
 	fSessionId(sessionId), fTxnId(txnId),
 	fStepId(0), fStatementId(statementId), fTableOID1(0), fTableOID2(0),
 	fJoinType(joinType), fRm(rm), fAlias1(), fAlias2()
@@ -717,7 +717,7 @@ StringHashJoinStep::StringHashJoinStep(JoinType joinType,
 		uint32_t sessionId,
 		uint32_t txnId,
 		uint32_t statementId,
-		ResourceManager& rm):
+		ResourceManager* rm):
 	LargeHashJoin(joinType, sessionId, txnId, statementId, rm)
 {
 }

@@ -108,7 +108,7 @@ class LargeDataList : public DataListImpl<container_t, element_t>
 		LargeDataList(uint32_t numConsumers,
 			uint32_t elementSaveSize1,
 			uint32_t elementSaveSize2,
-			const ResourceManager& rm);
+			const ResourceManager* rm);
 		virtual ~LargeDataList();
 
 		virtual void endOfInput();
@@ -191,7 +191,7 @@ class LargeDataList : public DataListImpl<container_t, element_t>
 };
 
 template<typename container_t, typename element_t>
-LargeDataList<container_t, element_t>::LargeDataList(uint32_t nc, uint32_t elementSaveSize1st, uint32_t elementSaveSize2nd, const ResourceManager& rm):
+LargeDataList<container_t, element_t>::LargeDataList(uint32_t nc, uint32_t elementSaveSize1st, uint32_t elementSaveSize2nd, const ResourceManager* rm):
 		base(nc), path(rm.getScTempDiskPath()), fTraceOn(false), fReUse(false), fSaveForReuse(false), fRestoreInfo(NULL)
 {
 // 	config::Config *config = config::Config::makeConfig();

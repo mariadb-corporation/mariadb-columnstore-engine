@@ -61,7 +61,7 @@ class BucketDL : public DataList<element_t>
          * @param hash The function object that calculates which bucket an elements goes into on insertion.
          */
 
-        BucketDL(uint32_t numBuckets, uint32_t numConsumers, uint32_t maxElementsPerBucket, ResourceManager& rm,
+        BucketDL(uint32_t numBuckets, uint32_t numConsumers, uint32_t maxElementsPerBucket, ResourceManager* rm,
             boost::function<uint32_t (const char *data, uint32_t len)> hash = utils::Hasher());
 
         virtual ~BucketDL();
@@ -146,7 +146,7 @@ class BucketDL : public DataList<element_t>
         explicit BucketDL(const BucketDL<element_t> &);
 		BucketDL<element_t>& operator=(const BucketDL<element_t> &);
 
-	ResourceManager& fRm;
+	ResourceManager* fRm;
         WSDL<element_t> **buckets;
         WSDL<RIDElementType> **rbuckets;
         TWSVec fTBuckets;
@@ -169,7 +169,7 @@ class BucketDL : public DataList<element_t>
 };
 
 template<typename element_t>
-BucketDL<element_t>::BucketDL(uint32_t nb, uint32_t nc, uint32_t me, ResourceManager& rm,
+BucketDL<element_t>::BucketDL(uint32_t nb, uint32_t nc, uint32_t me, ResourceManager* rm,
     boost::function<uint32_t (const char *data, uint32_t len)> hash)
     : base(), fRm(rm), buckets(0), rbuckets(0), fTraceOn(false), fHashLen(0), fElementLen(0),
       bucketDoneCount(0), fReuseControl(NULL)

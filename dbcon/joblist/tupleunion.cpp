@@ -103,7 +103,7 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
 
 TupleUnion::~TupleUnion()
 {
-	rm.returnMemory(memUsage, sessionMemLimit);
+	rm->returnMemory(memUsage, sessionMemLimit);
 	if (!runRan && output)
 		output->endOfInput();
 }
@@ -227,7 +227,7 @@ void TupleUnion::readInput(uint32_t which)
 					memDiff += (memUsageAfter - memUsageBefore);
 					memUsage += memDiff;
 				}
-				if (!rm.getMemory(memDiff, sessionMemLimit)) {
+				if (!rm->getMemory(memDiff, sessionMemLimit)) {
 					fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_UNION_TOO_BIG);
 					if (status() == 0) // preserve existing error code
 					{
@@ -789,7 +789,7 @@ void TupleUnion::join()
 	runners.clear();
 	uniquer->clear();
 	rowMemory.clear();
-	rm.returnMemory(memUsage, sessionMemLimit);
+	rm->returnMemory(memUsage, sessionMemLimit);
 	memUsage = 0;
 }
 

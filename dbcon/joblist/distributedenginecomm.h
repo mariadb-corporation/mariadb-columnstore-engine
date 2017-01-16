@@ -89,7 +89,7 @@ public:
 	 */
 	EXPORT virtual ~DistributedEngineComm();
 
-	EXPORT static DistributedEngineComm* instance(ResourceManager& rm, bool isExeMgr=false);
+	EXPORT static DistributedEngineComm* instance(ResourceManager* rm, bool isExeMgr=false);
 
 	/** @brief delete the static instance
 	 *  This has the effect of causing the connection to be rebuilt
@@ -217,7 +217,7 @@ private:
 	//The mapping of session ids to StepMsgQueueLists
 	typedef std::map<unsigned, boost::shared_ptr<MQE> > MessageQueueMap;
 
-	explicit DistributedEngineComm(ResourceManager& rm, bool isExeMgr);
+	explicit DistributedEngineComm(ResourceManager* rm, bool isExeMgr);
 
 	void StartClientListener(boost::shared_ptr<messageqcpp::MessageQueueClient> cl, uint32_t connIndex);
 
@@ -234,7 +234,7 @@ private:
 		uint32_t senderID = std::numeric_limits<uint32_t>::max(), bool doInterleaving=false);
 
 	static DistributedEngineComm* fInstance;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 
 	ClientList fPmConnections; // all the pm servers
 	ReaderList fPmReader;	// all the reader threads for the pm servers

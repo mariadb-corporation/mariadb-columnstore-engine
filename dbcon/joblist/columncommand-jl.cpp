@@ -103,8 +103,8 @@ ColumnCommandJL::ColumnCommandJL(const pColStep &step)
 	OID = step.fOid;
 	colName = step.fName;
 	fIsDict = step.fIsDict;
-	ResourceManager rm;
-	numDBRoots = rm.getDBRootCount();
+	ResourceManager *rm = ResourceManager::instance();
+	numDBRoots = rm->getDBRootCount();
 
 	// grab the last LBID for this column.  It's a _minor_ optimization for the block loader.
 	//dbrm.getLastLocalHWM((BRM::OID_t)OID, dbroot, partNum, segNum, lastHWM);

@@ -171,7 +171,7 @@ namespace joblist
   DistributedEngineComm* DistributedEngineComm::fInstance = 0;
 
   /*static*/
-  DistributedEngineComm* DistributedEngineComm::instance(ResourceManager& rm, bool isExeMgr)
+  DistributedEngineComm* DistributedEngineComm::instance(ResourceManager* rm, bool isExeMgr)
   {
     if (fInstance == 0)
         fInstance = new DistributedEngineComm(rm, isExeMgr);
@@ -186,9 +186,9 @@ namespace joblist
 	fInstance = 0;
   }
 
-  DistributedEngineComm::DistributedEngineComm(ResourceManager& rm, bool isExeMgr) :
+  DistributedEngineComm::DistributedEngineComm(ResourceManager* rm, bool isExeMgr) :
 	fRm(rm),
-	fLBIDShift(fRm.getPsLBID_Shift()),
+	fLBIDShift(fRm->getPsLBID_Shift()),
 	pmCount(0),
     fIsExeMgr(isExeMgr)
   {
@@ -219,10 +219,10 @@ void DistributedEngineComm::Setup()
 	newClients.clear();
 	newLocks.clear();
 
-	throttleThreshold = fRm.getDECThrottleThreshold();
-    uint32_t newPmCount = fRm.getPsCount();
-    int cpp = (fIsExeMgr ? fRm.getPsConnectionsPerPrimProc() : 1);
-    tbpsThreadCount = fRm.getJlNumScanReceiveThreads();
+	throttleThreshold = fRm->getDECThrottleThreshold();
+    uint32_t newPmCount = fRm->getPsCount();
+    int cpp = (fIsExeMgr ? fRm->getPsConnectionsPerPrimProc() : 1);
+    tbpsThreadCount = fRm->getJlNumScanReceiveThreads();
     unsigned numConnections = newPmCount * cpp;
     oam::Oam oam;
     ModuleTypeConfig moduletypeconfig;
@@ -246,7 +246,7 @@ void DistributedEngineComm::Setup()
         string fServer (oss.str());
 
         boost::shared_ptr<MessageQueueClient>
-			cl(new MessageQueueClient(fServer, fRm.getConfig()));
+			cl(new MessageQueueClient(fServer, fRm->getConfig()));
         boost::shared_ptr<boost::mutex> nl(new boost::mutex());
         try {
             if (cl->connect()) {

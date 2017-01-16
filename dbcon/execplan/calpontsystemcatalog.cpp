@@ -795,7 +795,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep,
 	ByteStream bs;
 	uint32_t status;
 
-	ResourceManager rm(true);
+	ResourceManager *rm = ResourceManager::instance(true);
 	DistributedEngineComm* fEc = DistributedEngineComm::instance(rm);
 	SJLP jl = JobListFactory::makeJobList(&csep, rm, true);
 	//@bug 2221. Work around to prevent DMLProc crash.
@@ -5349,8 +5349,8 @@ void CalpontSystemCatalog::buildSysColinfomap()
     aCol.precision = 10;
 	aCol.compressionType = 0;
 	
-	ResourceManager rm;
-	if( rm.useHdfs() )	
+	ResourceManager *rm = ResourceManager::instance();
+	if( rm->useHdfs() )	
 		aCol.compressionType = 2;
 		
 	DictOID notDict;
