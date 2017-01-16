@@ -96,8 +96,8 @@ namespace
 {
 
 typedef CalpontSelectExecutionPlan::ColumnMap::value_type CMVT_;
-ResourceManager rm;
-bool useHdfs = rm.useHdfs();
+ResourceManager *rm = ResourceManager::instance();
+bool useHdfs = rm->useHdfs();
 
 #include "ha_autoi.cpp"
 

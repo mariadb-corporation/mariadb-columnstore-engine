@@ -68,9 +68,9 @@ void SystemCatalog::build()
   uint32_t partition = 0;
   uint16_t segment=0;
   
-  ResourceManager rm;
+  ResourceManager *rm = ResourceManager::instance();
    std::map<uint32_t,uint32_t> oids;
-  if( rm.useHdfs() )
+  if( rm->useHdfs() )
   {
 	compressionType = 2;
 	oids[OID_SYSTABLE_TABLENAME] = OID_SYSTABLE_TABLENAME;
@@ -191,7 +191,7 @@ void SystemCatalog::build()
   //  dbRoot = 1;
 
   //SYSCOLUMN
-  if( rm.useHdfs() )
+  if( rm->useHdfs() )
   {
 	oids[OID_SYSCOLUMN_SCHEMA] = OID_SYSCOLUMN_SCHEMA;
 	oids[DICTOID_SYSCOLUMN_SCHEMA] = DICTOID_SYSCOLUMN_SCHEMA;

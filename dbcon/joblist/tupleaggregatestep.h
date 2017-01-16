@@ -168,7 +168,7 @@ private:
 
 	boost::scoped_ptr<boost::thread> fRunner;
 	bool fUmOnly;
-	ResourceManager& fRm;
+	ResourceManager *fRm;
 
 	// multi-threaded
 	uint32_t fNumOfThreads;

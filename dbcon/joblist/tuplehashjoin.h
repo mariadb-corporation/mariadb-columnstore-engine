@@ -244,7 +244,7 @@ private:
 	std::vector<std::vector<uint32_t> > largeSideKeys;
 	std::vector<std::vector<uint32_t> > smallSideKeys;
 
-	ResourceManager& resourceManager;
+	ResourceManager* resourceManager;
 	volatile uint64_t totalUMMemoryUsage;
 
 	struct JoinerSorter {

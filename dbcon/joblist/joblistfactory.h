@@ -65,7 +65,7 @@ public:
 	 */
 	EXPORT static SJLP makeJobList(
 		execplan::CalpontExecutionPlan* cplan,
-		ResourceManager& rm,
+		ResourceManager* rm,
 		bool tryTuple=false,
 		bool isExeMgr = false);
 

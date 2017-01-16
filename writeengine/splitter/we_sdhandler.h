@@ -193,7 +193,7 @@ public:	// for multi-table support
 
 private:
     unsigned int fQId;
-    joblist::ResourceManager fRm;
+    joblist::ResourceManager *fRm;
     oam::Oam fOam;
     oam::ModuleTypeConfig fModuleTypeConfig;
     int fDebugLvl;

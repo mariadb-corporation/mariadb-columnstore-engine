@@ -417,7 +417,7 @@ int64_t CrossEngineStep::convertValueNum(
 
 void CrossEngineStep::getMysqldInfo(const JobInfo& jobInfo)
 {
-	if (jobInfo.rm.getMysqldInfo(fHost, fUser, fPasswd, fPort) == false)
+	if (jobInfo.rm->getMysqldInfo(fHost, fUser, fPasswd, fPort) == false)
 		throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_CROSS_ENGINE_CONFIG),
 						ERR_CROSS_ENGINE_CONFIG);
 }

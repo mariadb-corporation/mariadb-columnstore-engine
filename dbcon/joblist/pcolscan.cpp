@@ -123,7 +123,7 @@ pColScanStep::pColScanStep(
 	const JobInfo& jobInfo) :
 		JobStep(jobInfo),
 		fRm(jobInfo.rm),
-		fNumThreads(fRm.getJlNumScanReceiveThreads()),
+		fNumThreads(fRm->getJlNumScanReceiveThreads()),
 		fFilterCount(0),
 		fOid(o),
 		fTableOid(t),
@@ -131,8 +131,8 @@ pColScanStep::pColScanStep(
 		fBOP(BOP_OR),
 		sentCount(0),
 		recvCount(0),
-		fScanLbidReqLimit(fRm.getJlScanLbidReqLimit()),
-		fScanLbidReqThreshold(fRm.getJlScanLbidReqThreshold()),
+		fScanLbidReqLimit(fRm->getJlScanLbidReqLimit()),
+		fScanLbidReqThreshold(fRm->getJlScanLbidReqThreshold()),
 		fStopSending(false),
 		fSingleThread(false),
 		fPhysicalIO(0),
@@ -198,7 +198,7 @@ pColScanStep::pColScanStep(
 		throw runtime_error("pColScan: BRM HWM lookup failure (4)");
 	sort(extents.begin(), extents.end(), BRM::ExtentSorter());
 	numExtents = extents.size();
-	extentSize = (fRm.getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
+	extentSize = (fRm->getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
 
 	if (fOid>3000) {
 		lbidList.reset(new LBIDList(fOid, 0));
@@ -982,7 +982,7 @@ pColScanStep::pColScanStep(const pColStep& rhs) :
 	JobStep(rhs),
 	fRm(rhs.resourceManager())
 {
-	fNumThreads = fRm.getJlNumScanReceiveThreads();
+	fNumThreads = fRm->getJlNumScanReceiveThreads();
 	fFilterCount = rhs.filterCount();
 	fFilterString = rhs.filterString();
 	isFilterFeeder = rhs.getFeederFlag();
@@ -993,8 +993,8 @@ pColScanStep::pColScanStep(const pColStep& rhs) :
 	fIsDict = rhs.isDictCol();
 	sentCount = 0;
 	recvCount = 0;
-	fScanLbidReqLimit = fRm.getJlScanLbidReqLimit();
-	fScanLbidReqThreshold = fRm.getJlScanLbidReqThreshold();
+	fScanLbidReqLimit = fRm->getJlScanLbidReqLimit();
+	fScanLbidReqThreshold = fRm->getJlScanLbidReqThreshold();
 	fStopSending = false;
 	fSingleThread = false;
 	fPhysicalIO = 0;
@@ -1022,7 +1022,7 @@ pColScanStep::pColScanStep(const pColStep& rhs) :
 		throw runtime_error("pColScan: BRM HWM lookup failure (4)");
 	sort(extents.begin(), extents.end(), BRM::ExtentSorter());
 	numExtents = extents.size();
-	extentSize = (fRm.getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
+	extentSize = (fRm->getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
 	lbidList=rhs.lbidList;
 	//pthread_mutex_init(&mutex, NULL);
 	//pthread_mutex_init(&dlMutex, NULL);

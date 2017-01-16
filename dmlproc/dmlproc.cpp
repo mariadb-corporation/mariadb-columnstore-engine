@@ -567,7 +567,7 @@ int main(int argc, char* argv[])
     catch (...)
     {
     }
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	Dec = DistributedEngineComm::instance(rm);
 
 #ifndef _MSC_VER

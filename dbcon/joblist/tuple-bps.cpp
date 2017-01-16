@@ -163,9 +163,9 @@ void TupleBPS::initializeConfigParms()
 	//...    rids must fall below, before the producer can send more rids.
 
 	//These could go in constructor
-	fRequestSize = fRm.getJlRequestSize();
-	fMaxOutstandingRequests = fRm.getJlMaxOutstandingRequests();
-	fProcessorThreadsPerScan = fRm.getJlProcessorThreadsPerScan();
+	fRequestSize = fRm->getJlRequestSize();
+	fMaxOutstandingRequests = fRm->getJlMaxOutstandingRequests();
+	fProcessorThreadsPerScan = fRm->getJlProcessorThreadsPerScan();
 	fNumThreads = 0;
 
 	config::Config* cf = config::Config::makeConfig();
@@ -176,7 +176,7 @@ void TupleBPS::initializeConfigParms()
 	if (fRequestSize >= fMaxOutstandingRequests)
 		fRequestSize = 1;
 	if ((fSessionId & 0x80000000) == 0)
-		fMaxNumThreads = fRm.getJlNumScanReceiveThreads();
+		fMaxNumThreads = fRm->getJlNumScanReceiveThreads();
 	else
 		fMaxNumThreads = 1;
 
@@ -896,7 +896,7 @@ bool TupleBPS::goodExtentCount()
 
 void TupleBPS::initExtentMarkers()
 {
-	numDBRoots = fRm.getDBRootCount();
+	numDBRoots = fRm->getDBRootCount();
 	lastExtent.resize(numDBRoots);
 	lastScannedLBID.resize(numDBRoots);
 

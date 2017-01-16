@@ -50,6 +50,8 @@ static int is_columnstore_tables_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
 
+    systemCatalogPtr->identity(execplan::CalpontSystemCatalog::FE);
+
     const std::vector< std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> > catalog_tables
         = systemCatalogPtr->getTables();
 

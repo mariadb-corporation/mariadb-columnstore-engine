@@ -135,8 +135,8 @@ pDictionaryScan::pDictionaryScan(
 	ridCount(0),
 	ridList(0),
 	colType(ct),
-	fScanLbidReqLimit(jobInfo.rm.getJlScanLbidReqLimit()),
-	fScanLbidReqThreshold(jobInfo.rm.getJlScanLbidReqThreshold()),
+	fScanLbidReqLimit(jobInfo.rm->getJlScanLbidReqLimit()),
+	fScanLbidReqThreshold(jobInfo.rm->getJlScanLbidReqThreshold()),
 	fStopSending(false),
 	fSingleThread(false),
 	fPhysicalIO(0),
@@ -169,7 +169,7 @@ pDictionaryScan::pDictionaryScan(
 	}
 	sort(extents.begin(), extents.end(), ExtentSorter());
 	numExtents = extents.size();
-	extentSize = (fRm.getExtentRows()*8)/BLOCK_SIZE;
+	extentSize = (fRm->getExtentRows()*8)/BLOCK_SIZE;
 
 	uint64_t i = 1, mask = 1;
 	for (; i <= 32; i++)
@@ -209,7 +209,7 @@ pDictionaryScan::~pDictionaryScan()
 //------------------------------------------------------------------------------
 void pDictionaryScan::initializeConfigParms()
 {
-	fLogicalBlocksPerScan = fRm.getJlLogicalBlocksPerScan();
+	fLogicalBlocksPerScan = fRm->getJlLogicalBlocksPerScan();
 }
 
 void pDictionaryScan::startPrimitiveThread()
