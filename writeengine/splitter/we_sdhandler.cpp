@@ -995,7 +995,6 @@ void WESDHandler::onNakResponse(int PmId) {
 void WESDHandler::onEodResponse(int PmId) {
 	if (getDebugLvl())
 		cout << "Received a EOD from " << PmId << endl;
-	fWeSplClients[PmId]->setRdSecTo(fPmCount); //Set Rd T/O to 1 sec
 
 	if (fRef.fCmdArgs.getMode() == 0)
 	{
