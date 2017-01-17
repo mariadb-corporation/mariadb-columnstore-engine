@@ -4248,7 +4248,7 @@ bool storageSetup(bool amazonInstall)
 			{}
 	
 			if ( UMVolumeSize.empty() || UMVolumeSize == "" || UMVolumeSize == oam::UnassignedName)
-				UMVolumeSize = "10";
+				UMVolumeSize = minSize;
 
 			while(true)
 			{
@@ -4572,14 +4572,6 @@ bool storageSetup(bool amazonInstall)
 		}
 
 		cout << endl;
-		try {
-			oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
-		}
-		catch(...)
-		{}
-
-		if ( PMVolumeSize.empty() || PMVolumeSize == "" || PMVolumeSize == oam::UnassignedName)
-			PMVolumeSize = "100";
 
 		string minSize = "1";
 		string maxSize = "16384";
@@ -4592,6 +4584,15 @@ bool storageSetup(bool amazonInstall)
 
       	if (PMVolumeType == "standard")
           	maxSize = "1024";
+
+        try {
+            oam.getSystemConfig("PMVolumeSize", PMVolumeSize);
+        }
+        catch(...)
+        {}
+
+        if ( PMVolumeSize.empty() || PMVolumeSize == "" || PMVolumeSize == oam::UnassignedName)
+            PMVolumeSize = minSize;
 
 		while(true)
 		{
