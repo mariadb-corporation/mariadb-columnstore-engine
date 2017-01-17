@@ -58,7 +58,7 @@ SET(CPACK_DEBIAN_LIBS_PACKAGE_PROVIDES "mariadb-columnstore-libs")
 SET(CPACK_DEBIAN_PLATFORM_PACKAGE_PROVIDES "mariadb-columnstore-platform")
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_PROVIDES "mariadb-columnstore-storage-engine")
 
-SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, libboost-all-dev, mariadb-columnstore-libs")
+SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, libboost-all-dev, mariadb-columnstore-libs libsnappy1v5")
 
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DEPENDS "mariadb-columnstore-libs")
 
