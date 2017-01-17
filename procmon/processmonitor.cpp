@@ -5809,7 +5809,7 @@ int ProcessMonitor::checkDataMount()
 			string fileName = dbroot + "/OAMdbrootCheck";
 			ofstream fout(fileName.c_str());
 			if (!fout) {
-				log.writeLog(__LINE__, "ERROR: Failed test write to DBRoot: "  + dbroot, LOG_TYPE_ERROR);
+				log.writeLog(__LINE__, "ERROR: Failed test write to DBRoot: "  + dbroot + " " + strerror(errno), LOG_TYPE_ERROR);
 
 				return API_FAILURE;
 			}

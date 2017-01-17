@@ -804,6 +804,7 @@ int processCommand(string* arguments)
 					cout << "The system must be in read only mode for redistribeData to work" << endl;
 					cout << "You must run suspendDatabaseWrites before running redistributeData" << endl;
 					cout << "Be sure to run resumeDatabaseWrites when redistributeData status shows complete" << endl;
+					break;
 				}
 #if 0
 				// This can be used when redistributeData doesn't return until complete.
