@@ -91,6 +91,11 @@ if (NOT LIBXML2_FOUND)
     MESSAGE(FATAL_ERROR "Could not find a usable libxml2 development environment!")
 endif()
 
+INCLUDE (FindSnappy.cmake)
+if (NOT SNAPPY_FOUND)
+    MESSAGE(FATAL_ERROR "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
+endif()
+
 FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
 if(NOT AWK_EXECUTABLE)
     message(FATAL_ERROR "awk not found!")
