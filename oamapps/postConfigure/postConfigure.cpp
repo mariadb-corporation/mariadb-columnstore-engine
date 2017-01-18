@@ -666,10 +666,9 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		cout <<         "NOTE: MySQL Replication feature can be enabled to have MariaDB ColumnStore" << endl;
-		cout <<         "      setup the functionality of MySQL Replication on the system." << endl;
-		cout <<         "      Or the feature can be disabled, if for example, if you have replication" << endl;
-		cout <<         "      handled by another application" << endl << endl;
+		cout <<         "NOTE: The MariaDB ColumnStore Schema Sync feature will replicate all of the" << endl;
+     	cout <<         "      schemas and InnoDB tables across the User Module nodes. This feature can be enabled" << endl;
+     	cout <<         "      or disabled, for example, if you wish to configure your own replication post installation." << endl << endl;
 
        	try {
         	MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
@@ -684,9 +683,9 @@ int main(int argc, char *argv[])
 
         while(true) {
         	if ( mysqlRep )
-                        prompt = "MariaDB ColumnStore MySQL Replication feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
+                        prompt = "MariaDB ColumnStore Schema Sync feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
                     else
-                        prompt = "MariaDB ColumnStore MySQL Replication feature, do you want to enable? [y,n] (y) > ";
+                        prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (y) > ";
 
                     pcommand = callReadline(prompt.c_str());
                     if (pcommand) {
