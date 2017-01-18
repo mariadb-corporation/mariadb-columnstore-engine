@@ -797,6 +797,40 @@ int processCommand(string* arguments)
 					cout << " " << *iter;
 				cout << endl << endl;
 				
+				BRM::DBRM dbrm;
+				// Ready to start the redistribute. The system must SuspendDataBaseWrites for the duration.
+				if (dbrm.isReadWrite() == BRM::ERR_OK)
+				{
+					cout << "The system must be in read only mode for redistribeData to work" << endl;
+					cout << "You must run suspendDatabaseWrites before running redistributeData" << endl;
+					cout << "Be sure to run resumeDatabaseWrites when redistributeData status shows complete" << endl;
+					break;
+				}
+#if 0
+				// This can be used when redistributeData doesn't return until complete.
+				if (dbrm.isReadWrite() == ERR_OK)
+				{
+					// System not in suspenddatabasewrites
+					// If there are bulkloads, ddl or dml happening, refuse the request
+					execplan::SessionManager sessionManager; 
+					BRM::SIDTIDEntry blockingsid;
+					std::vector<BRM::TableLockInfo> tableLocks = dbrm.getAllTableLocks();
+					bool bActiveTransactions = false;
+					if (!tableLocks.empty())
+					{
+						cout << "There are active table locks. Redistribute won't run." << endl;
+						oam.DisplayLockedTables(tableLocks, &dbrm);
+						break;
+					}
+					else if (sessionManager.checkActiveTransaction(0, bIsDbrmUp, blockingsid))
+					{
+						cout << endl << "There are active transactions being processed. Redistribute won't run" << endl;
+						break;
+					}
+				}
+				// stop writes to MariaDB Columnstore Database
+				oam.SuspendWrites(gracefulTemp, ackTemp);
+#endif
 				// Connect to PM for dbroot1
 				ByteStream bs;
 				// message WES ID, sequence #, action id
