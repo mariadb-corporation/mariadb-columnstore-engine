@@ -1838,6 +1838,12 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
         {
             throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
         }
+        // Checks if zero and throws appropriate error (despite message name)
+        // negative checks are below
+        if (nextVal == 0)
+        {
+            throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE));
+        }
     }
     else
     {
@@ -1854,6 +1860,68 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
         throw std::runtime_error("Table does not have an autoincrement column");
     }
     int32_t oid = systemCatalogPtr->autoColumOid(tableName);
+
+    CalpontSystemCatalog::ColType type = systemCatalogPtr->colType(oid);
+
+    bool validated = true;
+    bool negative = false;
+
+    switch (type.colDataType)
+    {
+        case CalpontSystemCatalog::BIGINT:
+            if (static_cast<int64_t>(nextVal) > MAX_BIGINT)
+                validated = false;
+            if (static_cast<int64_t>(nextVal) < 1)
+                negative = true;
+            break;
+        case CalpontSystemCatalog::UBIGINT:
+            if (nextVal > MAX_UBIGINT)
+                validated = false;
+            break;
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::MEDINT:
+            if (static_cast<int64_t>(nextVal) > MAX_INT)
+                validated = false;
+            if (static_cast<int64_t>(nextVal) < 1)
+                negative = true;
+            break;
+        case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UMEDINT:
+            if (nextVal > MAX_UINT)
+                validated = false;
+            break;
+        case CalpontSystemCatalog::SMALLINT:
+            if (static_cast<int64_t>(nextVal) > MAX_SMALLINT)
+                validated = false;
+            if (static_cast<int64_t>(nextVal) < 1)
+                negative = true;
+            break;
+        case CalpontSystemCatalog::USMALLINT:
+            if (nextVal > MAX_USMALLINT)
+                validated = false;
+            break;
+        case CalpontSystemCatalog::TINYINT:
+            if (static_cast<int64_t>(nextVal) > MAX_TINYINT)
+                validated = false;
+            if (static_cast<int64_t>(nextVal) < 1)
+                negative = true;
+            break;
+        case CalpontSystemCatalog::UTINYINT:
+            if (nextVal > MAX_UTINYINT)
+                validated = false;
+            break;
+        default:
+            break;
+    }
+    if (!validated)
+    {
+        throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
+    }
+    if (negative)
+    {
+        throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE));
+    }
+
     fDbrm->resetAISequence(oid, nextVal);
     ByteStream bs;
     bs.restart();
