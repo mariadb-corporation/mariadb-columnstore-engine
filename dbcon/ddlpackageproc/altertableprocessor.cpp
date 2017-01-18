@@ -1838,6 +1838,12 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
         {
             throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_INVALID_START_VALUE));
         }
+        // Checks if zero and throws appropriate error (despite message name)
+        // negative checks are below
+        if (nextVal == 0)
+        {
+            throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_NEGATIVE_STARTVALUE));
+        }
     }
     else
     {
