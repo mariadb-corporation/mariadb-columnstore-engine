@@ -10054,15 +10054,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		try {
 			Config* sysConfig = Config::makeConfig();
 			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
-				//disable mysqlrep
-				log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
-				try {
-					oam.setSystemConfig("MySQLRep", "n");
-				}
-				catch(...) {}
-
-				enable = false;
-				distributeDB = true;
+				return oam::API_SUCCESS;
 			}
 		}
 		catch(...)
@@ -10080,17 +10072,9 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		catch(...)
 		{}
 	
-		if ( moduletypeconfig.ModuleCount < 1 )
+		if ( moduletypeconfig.ModuleCount < 2 )
 		{
-			//disable mysqlrep
-			log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
-			try {
-				oam.setSystemConfig("MySQLRep", "n");
-			}
-			catch(...) {}
-
-			enable = false;
-			distributeDB = true;
+			return oam::API_SUCCESS;
 		}
 	}
 
