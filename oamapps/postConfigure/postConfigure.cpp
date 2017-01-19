@@ -703,37 +703,26 @@ int main(int argc, char *argv[])
                         exit(1);
    		}
 
-                if ( mysqlRep )
-                { // current enabled
-                    if ( answer == "y" ) {
-                        mysqlRep = true;
-                        MySQLRep = "y";
-                    }
-					else
-					{
-                        mysqlRep = false;
-                        MySQLRep = "n";
-					}
-                }
-                else
-                { // currently disabled
-                    if ( answer == "y" ) {
-                        mysqlRep = false;
-                        MySQLRep = "n";
-                    }
-                    else
-                    {
-                        mysqlRep = true;
-                        MySQLRep = "y";
-                    }
-                }
+       	if ( answer == "y" ) {
+        	mysqlRep = true;
+            MySQLRep = "y";
+        }
+		else
+		{
+        	mysqlRep = false;
+            MySQLRep = "n";
+		}
 
-                try {
-                     sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
-                }
-                catch(...)
-                {}
+       	try {
+        	sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
+        }
+        catch(...)
+       	{}
 
+    	if ( !writeConfig(sysConfig) ) {
+        	cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+        	exit(1);
+    	}
 
 		switch ( IserverTypeInstall ) {
 			case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
