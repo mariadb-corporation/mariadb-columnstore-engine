@@ -799,7 +799,7 @@ int processCommand(string* arguments)
 				
 				BRM::DBRM dbrm;
 				// Ready to start the redistribute. The system must SuspendDataBaseWrites for the duration.
-				if (dbrm.isReadWrite() == BRM::ERR_OK)
+				if (dbrm.getSystemSuspended() == BRM::ERR_OK)
 				{
 					cout << "The system must be in read only mode for redistribeData to work" << endl;
 					cout << "You must run suspendDatabaseWrites before running redistributeData" << endl;
@@ -808,7 +808,7 @@ int processCommand(string* arguments)
 				}
 #if 0
 				// This can be used when redistributeData doesn't return until complete.
-				if (dbrm.isReadWrite() == ERR_OK)
+				if (dbrm.getSystemSuspended() == ERR_OK)
 				{
 					// System not in suspenddatabasewrites
 					// If there are bulkloads, ddl or dml happening, refuse the request
