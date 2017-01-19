@@ -152,7 +152,15 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 default:
                     table->field[14]->store("Unknown", strlen("Unknown"), cs);
             }
-            table->field[15]->store((iter->HWM - iter->blockOffset + 1) * 8192);
+            // MCOL-454: special case, sometimes blockOffset can be > 0 and HWM can be 0
+            if (iter->HWM == 0)
+            {
+                table->field[15]->store(8192);
+            }
+            else
+            {
+                table->field[15]->store((iter->HWM - iter->blockOffset + 1) * 8192);
+            }
 
             if (schema_table_store_record(thd, table))
             {
