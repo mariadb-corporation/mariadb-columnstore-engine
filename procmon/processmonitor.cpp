@@ -4835,11 +4835,6 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				}
 			}
 
-			pos = buf.find("slave-skip-errors=all",0);
-			if ( pos != string::npos ) {
-				buf = "# slave-skip-errors=all";
-			}
-
 			//output to temp file
 			lines.push_back(buf);
 		}
