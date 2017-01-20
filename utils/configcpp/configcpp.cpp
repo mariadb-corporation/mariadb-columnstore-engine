@@ -32,6 +32,7 @@ using namespace std;
 
 #include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/unordered_map.hpp>
 using namespace boost;
 namespace fs=boost::filesystem;
 
@@ -82,8 +83,9 @@ Config* Config::makeConfig(const char* cf)
 {
 	mutex::scoped_lock lk(fInstanceMapMutex);
 
-	string configFile;
-	string installDir = startup::StartUp::installDir();
+	static string installDir;
+    if (installDir.empty())
+        installDir = startup::StartUp::installDir();
 
 	if (cf == 0)
 	{
@@ -96,18 +98,22 @@ Config* Config::makeConfig(const char* cf)
 #endif
 		if (cf == 0 || *cf == 0)
 		{
-			fs::path configFilePath = fs::path(installDir) / fs::path("etc") / defaultCalpontConfigFile;
-			configFile = configFilePath.string();
-		}
-		else
-		{
-			configFile = cf;
+            static string defaultFilePath;
+            if (defaultFilePath.empty())
+            {
+                fs::path configFilePath;
+                configFilePath = fs::path(installDir) / fs::path("etc") / defaultCalpontConfigFile;
+                defaultFilePath = configFilePath.string();
+            }
+            if (fInstanceMap.find(defaultFilePath) == fInstanceMap.end())
+        	{
+        		Config* instance = new Config(defaultFilePath, installDir);
+        		fInstanceMap[defaultFilePath] = instance;
+        	}
+            return fInstanceMap[defaultFilePath];
 		}
 	}
-	else
-	{
-		configFile = cf;
-	}
+	string configFile(cf);
 
 	if (fInstanceMap.find(configFile) == fInstanceMap.end())
 	{
@@ -241,7 +247,7 @@ const string Config::getConfig(const string& section, const string& name)
 		}
 	}
 
-	return fParser.getConfig(fDoc, section, name);
+    return fParser.getConfig(fDoc, section, name);
 }
 
 void Config::getConfig(const string& section, const string& name, vector<string>& values)

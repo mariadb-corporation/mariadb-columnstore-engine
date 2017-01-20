@@ -12,13 +12,12 @@ installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
 
-user=$USER
-SUDO=sudo
-if [ -z "$user" ]; then
-        user=root
-        SUDO=" "
+user=root
+SUDO=" "
+if [ "$USER" != "root" ]; then
+        user=$USER
+        SUDO="sudo "
 fi
-
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
@@ -176,7 +175,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		fi
 	fi
 
-	$SUDO etc/init.d/rsyslog restart  > /dev/null 2>&1
+	$SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
 	$SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
@@ -212,7 +211,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		$SUDO rm -f "$syslog_conf"
 	fi
 
-        $SUDO etc/init.d/rsyslog restart  > /dev/null 2>&1
+        $SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 

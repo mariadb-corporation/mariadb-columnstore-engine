@@ -278,11 +278,11 @@ namespace oam
         const string MODULE_TYPE = "ModuleType";
         systemmoduletypeconfig.moduletypeconfig.clear();
 
+        Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
+
         for (int moduleTypeID = 1; moduleTypeID < MAX_MODULE_TYPE+1; moduleTypeID++)
         {
         	ModuleTypeConfig moduletypeconfig;
-	
-            Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
 
             // get Module info
 
@@ -375,7 +375,7 @@ namespace oam
 
 				int moduleFound = 0;
 				//get NIC IP address/hostnames
-				for (int moduleID = 1; moduleID < MAX_MODULE ; moduleID++)
+				for (int moduleID = 1; moduleID <= moduletypeconfig.ModuleCount ; moduleID++)
 				{
 					DeviceNetworkConfig devicenetworkconfig;
 					HostConfig hostconfig;
@@ -385,7 +385,9 @@ namespace oam
 						string ModuleIpAddr = MODULE_IP_ADDR + itoa(moduleID) + "-" + itoa(nicID) + "-" + itoa(moduleTypeID);
 	
 						string ipAddr = sysConfig->getConfig(Section, ModuleIpAddr);
-						if (ipAddr.empty() || ipAddr == UnassignedIpAddr )
+						if (ipAddr.empty())
+                            break;
+                        else if (ipAddr == UnassignedIpAddr )
 							continue;
 	
 						string ModuleHostName = MODULE_SERVER_NAME + itoa(moduleID) + "-" + itoa(nicID) + "-" + itoa(moduleTypeID);
@@ -428,7 +430,7 @@ namespace oam
 
 				// get dbroot IDs
 				moduleFound = 0;
-				for (int moduleID = 1; moduleID < MAX_MODULE+1 ; moduleID++)
+				for (int moduleID = 1; moduleID <= moduletypeconfig.ModuleCount ; moduleID++)
 				{
 					string ModuleDBRootCount = MODULE_DBROOT_COUNT + itoa(moduleID) + "-" + itoa(moduleTypeID);
 					string temp = sysConfig->getConfig(Section, ModuleDBRootCount).c_str();
@@ -1925,11 +1927,11 @@ namespace oam
         const string SECTION_NAME = "PROCESSCONFIG";
         systemprocessconfig.processconfig.clear();
 
+        Config* proConfig = Config::makeConfig(ProcessConfigFile.c_str());
+
         for (int processID = 1; processID < MAX_PROCESS+1; processID++)
         {
 	        ProcessConfig processconfig;
-
-            Config* proConfig = Config::makeConfig(ProcessConfigFile.c_str());
 
             // get process info
 
@@ -5964,11 +5966,25 @@ namespace oam
 		catch(...) {}
 
 		writeLog("addUMdisk - Create new Volume for um" + itoa(moduleID), LOG_TYPE_DEBUG);
-		volumeName = createEC2Volume(UMVolumeSize, "um");
-		if ( volumeName == "failed" ) {
-			writeLog("addModule: create volume failed", LOG_TYPE_CRITICAL);
-			exceptionControl("addUMdisk", API_FAILURE);
-		}
+
+        cout << "  Create AWS Volume for UM #" << itoa(moduleID) << endl;
+
+       	int retry = 0;
+      	for ( ; retry < 5 ; retry++ )
+      	{
+         	volumeName = createEC2Volume(UMVolumeSize, "um");
+
+           	if ( volumeName == "failed" || volumeName.empty() )
+             	retry = retry;
+          	else
+             	break;
+        }
+
+       	if ( retry >= 5 )
+       	{
+        	cout << " *** ERROR: Failed to create a Volume for um1 " << moduleID << endl;
+           	exceptionControl("addUMdisk", API_FAILURE);
+        }
 
 		//attach and format volumes
 		device = "/dev/sdf";
@@ -5976,14 +5992,26 @@ namespace oam
 		string localInstance = getEC2LocalInstance();
 
 		//attach volumes to local instance
-		writeLog("addUMdisk - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
-		if (!attachEC2Volume(volumeName, device, localInstance)) {
-			writeLog("addUMdisk: volume failed to attach to local instance", LOG_TYPE_CRITICAL);
-			exceptionControl("addUMdisk", API_FAILURE);
-		}
+        writeLog("addUMdisk - Attach new Volume to local instance: " + volumeName, LOG_TYPE_DEBUG);
+
+      	retry = 0;
+       	for ( ; retry < 5 ; retry++ )
+       	{
+        	if (!attachEC2Volume(volumeName, device, localInstance))
+            	detachEC2Volume(volumeName);
+           	else
+            	break;
+        }
+
+      	if ( retry >= 5 )
+       	{
+        	cout << " *** ERROR: Volume " << volumeName << " failed to attach to local instance" << endl;
+            exceptionControl("addUMdisk", API_FAILURE);
+      	}
 
 		//format attached volume
 		writeLog("addUMdisk - Format new Volume for: " + volumeName, LOG_TYPE_DEBUG);
+        cout << "  Formatting disk for UM #" << itoa(moduleID) << ", please wait..." << endl;
 
 		string cmd;
        	int user;

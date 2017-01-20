@@ -245,6 +245,11 @@ void DmlReadThread::operator()()
                     rc = fWeDDLprocessor->updateSyscolumnNextvalCol(ibs, errMsg);
                     break;
                 }
+            case WE_SVR_UPDATE_SYSCOLUMN_AUTOVAL:
+                {
+                    rc = fWeDDLprocessor->updateSyscolumnNextval(ibs, errMsg);
+                    break;
+                }
             case WE_SVR_UPDATE_SYSCOLUMN_DEFAULTVAL:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnSetDefault(ibs, errMsg);

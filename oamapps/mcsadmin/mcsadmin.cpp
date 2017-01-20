@@ -176,7 +176,7 @@ bool waitForStop()
 //------------------------------------------------------------------------------
 void handleSigTerm(int i)
 {
-    std::cout << "Received SIGTERM to terminate MariaDB Columnstore Console..." << std::endl;
+    std::cout << "Received SIGTERM to terminate MariaDB ColumnStore Console..." << std::endl;
 
 }
 
@@ -336,9 +336,9 @@ int main(int argc, char *argv[])
     }
     else
     {
-        cout << endl << "MariaDB Columnstore Admin Console" << endl;
+        cout << endl << "MariaDB ColumnStore Admin Console" << endl;
         cout << "   enter 'help' for list of commands" << endl;
-        cout << "   enter 'exit' to exit the MariaDB Columnstore Command Console" << endl;
+        cout << "   enter 'exit' to exit the MariaDB ColumnStore Command Console" << endl;
         cout << "   use up/down arrows to recall commands" << endl << endl;
 
 		// output current active alarm stats
@@ -707,7 +707,7 @@ int processCommand(string* arguments)
             // close the log file
             writeLog("End of a command session!!!");
             logFile.close();
-            cout << "Exiting the MariaDB Columnstore Admin Console" << endl;
+            cout << "Exiting the MariaDB ColumnStore Admin Console" << endl;
 
             exit (0);
         }
@@ -2182,7 +2182,7 @@ int processCommand(string* arguments)
 				break;
             }
 
-			cout << endl << "This command stops the processing of applications on all Modules within the MariaDB Columnstore System" << endl;
+			cout << endl << "This command stops the processing of applications on all Modules within the MariaDB ColumnStore System" << endl;
 
             try
             {
@@ -2299,7 +2299,7 @@ int processCommand(string* arguments)
 		bool bDBRMReady = dbrm.isDBRMReady();
             	getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 
-		cout << endl << "This command stops the processing of applications on all Modules within the MariaDB Columnstore System" << endl;
+		cout << endl << "This command stops the processing of applications on all Modules within the MariaDB ColumnStore System" << endl;
 
 		try
 		{
@@ -2401,7 +2401,7 @@ int processCommand(string* arguments)
 				cmd = "pdsh -a '/" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/cc-stop.pdsh", "exit") ) {
-					cout << endl << "ERROR: Stopping MariaDB Columnstore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
+					cout << endl << "ERROR: Stopping MariaDB ColumnStore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
 				}
 			}
 			else
@@ -2446,7 +2446,7 @@ int processCommand(string* arguments)
 				cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore stop' > /tmp/cc-stop.pdsh 2>&1";
 				system(cmd.c_str());
 				if (oam.checkLogStatus("/tmp/cc-stop.pdsh", "exit") ) {
-					cout << endl << "ERROR: Stopping MariaDB Columnstore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
+					cout << endl << "ERROR: Stopping MariaDB ColumnStore Service failure, check /tmp/cc-stop.pdsh. exit..." << endl;
 					break;
 				}
 			}
@@ -2542,7 +2542,7 @@ int processCommand(string* arguments)
 						cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
 						system(cmd.c_str());
 						if (oam.checkLogStatus("/tmp/cc-restart.pdsh", "exit") ) {
-							cout << endl << "ERROR: Restart MariaDB Columnstore Service failure, check /tmp/cc-restart.pdsh. exit..." << endl;
+							cout << endl << "ERROR: Restart MariaDB ColumnStore Service failure, check /tmp/cc-restart.pdsh. exit..." << endl;
 							break;
 						}
 					}
@@ -2761,7 +2761,7 @@ int processCommand(string* arguments)
 						cmd = "pdsh -a '" + startup::StartUp::installDir() + "/bin/columnstore restart' > /tmp/cc-restart.pdsh 2>&1";
 						system(cmd.c_str());
 						if (oam.checkLogStatus("/tmp/cc-restart.pdsh", "exit") ) {
-							cout << endl << "ERROR: Restart MariaDB Columnstore Service failue, check /tmp/cc-restart.pdsh. exit..." << endl;
+							cout << endl << "ERROR: Restart MariaDB ColumnStore Service failue, check /tmp/cc-restart.pdsh. exit..." << endl;
 							break;
 						}
 					}
@@ -3448,7 +3448,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLRep == "y" && MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "MariaDB Columnstore Replication is enabled, is there a 'MariaDB Columnstore' Password configured in " + HOME + "/.my.cnf  (y,n): ";
+			string prompt = "MariaDB ColumnStore Replication is enabled, is there a 'MariaDB ColumnStore' Password configured in " + HOME + "/.my.cnf  (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -3616,7 +3616,7 @@ int processCommand(string* arguments)
 				string configFileName;
 				oam.getSystemConfig("SystemLogConfigFile", configFileName);
 
-                cout << endl << "MariaDB Columnstore System Log Configuration Data" << endl << endl;
+                cout << endl << "MariaDB ColumnStore System Log Configuration Data" << endl << endl;
 
 				cout << "System Logging Configuration File being used: " <<  configFileName << endl << endl;
 
@@ -3937,7 +3937,7 @@ int processCommand(string* arguments)
 			BRM::DBRM dbrm;
 			getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 
-			cout << endl << "This command suspends the DDL/DML writes to the MariaDB Columnstore Database" << endl;
+			cout << endl << "This command suspends the DDL/DML writes to the MariaDB ColumnStore Database" << endl;
             try
             {
 
@@ -4018,7 +4018,7 @@ int processCommand(string* arguments)
                         break;
                 }
 
-                // stop writes to MariaDB Columnstore Database
+                // stop writes to MariaDB ColumnStore Database
                 oam.SuspendWrites(gracefulTemp, ackTemp);
             }
 			catch (exception& e)
@@ -4036,11 +4036,11 @@ int processCommand(string* arguments)
         case 33: // resumeDatabaseWrites
         {
 			if ( arguments[1] != "y" ) {
-				if (confirmPrompt("This command resumes the DDL/DML writes to the MariaDB Columnstore Database"))
+				if (confirmPrompt("This command resumes the DDL/DML writes to the MariaDB ColumnStore Database"))
 					break;
 			}
 
-			// resume writes to MariaDB Columnstore Database
+			// resume writes to MariaDB ColumnStore Database
 
 			try{
 				SystemProcessStatus systemprocessstatus;
@@ -4065,7 +4065,7 @@ int processCommand(string* arguments)
 					}
 				}
 				oam.setSystemStatus(ACTIVE);
-				cout << endl << "Resume MariaDB Columnstore Database Writes Request successfully completed" << endl;
+				cout << endl << "Resume MariaDB ColumnStore Database Writes Request successfully completed" << endl;
 			}
 			catch (exception& e)
 			{
@@ -4627,7 +4627,7 @@ int processCommand(string* arguments)
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting AmazonElasticModule in the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem setting AmazonElasticModule in the MariaDB ColumnStore System Configuration file" << endl;
 				break;
 			}
 
@@ -4741,7 +4741,7 @@ int processCommand(string* arguments)
 					}
 					catch(...)
 					{
-						cout << "ERROR: Problem setting AmazonElasticModule in the MariaDB Columnstore System Configuration file" << endl;
+						cout << "ERROR: Problem setting AmazonElasticModule in the MariaDB ColumnStore System Configuration file" << endl;
 						break;
 					}
 				}
@@ -4954,16 +4954,6 @@ int processCommand(string* arguments)
 				}
 				catch(...) {}
 
-				if ( cloud == "amazon-vpc" )
-				{
-					string AmazonSubNetID = oam::UnassignedName;
-					try{
-						oam.getSystemConfig("AmazonSubNetID", AmazonSubNetID);
-	
-						cout << "AmazonSubNetID = " << AmazonSubNetID << endl;
-					}
-					catch(...) {}
-				}
 			}
 
 			cout << endl;
@@ -4980,7 +4970,7 @@ int processCommand(string* arguments)
 		catch(...) {}
 
 		if ( MySQLRep == "y" ) {
-			string warning = "MariaDB Columnstore Replication Feature is already enabled";
+			string warning = "MariaDB ColumnStore Replication Feature is already enabled";
 			// confirm request
 			if (confirmPrompt(warning))
 				break;
@@ -5006,7 +4996,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MariaDB Columnstore' Password configured on the MariaDB Columnstore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
+			string prompt = "Is there a 'MariaDB ColumnStore' Password configured on the MariaDB ColumnStore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -5028,7 +5018,7 @@ int processCommand(string* arguments)
                 try
                 {
                     	oam.enableMySQLRep(password);
-			cout << endl << "   Successful Enabling of MariaDB Columnstore Replication " << endl << endl;
+			cout << endl << "   Successful Enabling of MariaDB ColumnStore Replication " << endl << endl;
 
 			//display Primary UM Module / Master Node
 			string PrimaryUMModuleName;
@@ -5037,7 +5027,7 @@ int processCommand(string* arguments)
 			}
 			catch(...) {}
 
-			cout << "   MariaDB Columnstore Replication Master Node is " << PrimaryUMModuleName << endl << endl;
+			cout << "   MariaDB ColumnStore Replication Master Node is " << PrimaryUMModuleName << endl << endl;
                 }
                 catch (exception& e)
                 {
@@ -5660,7 +5650,7 @@ int processCommand(string* arguments)
 
 			if ( localModule != parentOAMModule ) {
                 // exit out since not on Parent OAM Module
-                cout << endl << "**** addModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
+                cout << endl << "**** removeModule Failed : only should be run on the Parent OAM Module, which is '" << parentOAMModule << "'" << endl;
                 break;
 			}
 
@@ -5687,7 +5677,7 @@ int processCommand(string* arguments)
 
 				if ( arguments[3] != "y") {
 					cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-					string warning = "This command does a remove a module from the MariaDB Columnstore System";
+					string warning = "This command does a remove a module from the MariaDB ColumnStore System";
 					// confirm request
 					if (confirmPrompt(warning))
 						break;
@@ -5752,7 +5742,7 @@ int processCommand(string* arguments)
 
 				if ( arguments[2] != "y") {
 					cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-					string warning = "This command does a stop and remove a module from the MariaDB Columnstore System";
+					string warning = "This command does a stop and remove a module from the MariaDB ColumnStore System";
 					// confirm request
 					if (confirmPrompt(warning))
 						break;
@@ -5960,7 +5950,7 @@ int processCommand(string* arguments)
 		catch(...) {}
 
 		if ( MySQLRep == "n" ) {
-			string warning = "MariaDB Columnstore Replication Feature is already disable";
+			string warning = "MariaDB ColumnStore Replication Feature is already disable";
 			// confirm request
 			if (confirmPrompt(warning))
 				break;
@@ -5974,7 +5964,7 @@ int processCommand(string* arguments)
 	
 		if ( MySQLPasswordConfig == oam::UnassignedName ) {
 			cout << endl;
-			string prompt = "Is there a 'MariaDB Columnstore' Password configured on the MariaDB Columnstore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
+			string prompt = "Is there a 'MariaDB ColumnStore' Password configured on the MariaDB ColumnStore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
 			MySQLPasswordConfig = dataPrompt(prompt);
 		}
 
@@ -5996,7 +5986,7 @@ int processCommand(string* arguments)
                 try
                 {
                     oam.disableMySQLRep();
-			cout << endl << "   Successful Disable of MariaDB Columnstore Replication " << endl;
+			cout << endl << "   Successful Disable of MariaDB ColumnStore Replication " << endl;
                 }
                 catch (exception& e)
                 {
@@ -6753,7 +6743,7 @@ int processCommand(string* arguments)
 		{
 			// confirm request
 			if ( arguments[2] != "y" ) {
-				if (confirmPrompt("This command stops the processing of applications on a Module within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command stops the processing of applications on a Module within the MariaDB ColumnStore System"))
 					break;
 			}
 		}
@@ -6879,7 +6869,7 @@ int processCommand(string* arguments)
 
             // confirm request
 			if ( arguments[2] != "y" ) {
-				if (confirmPrompt("This command starts the processing of applications on a Module within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command starts the processing of applications on a Module within the MariaDB ColumnStore System"))
 					break;
 			}
 
@@ -7025,7 +7015,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			{
 				// give warning for Process-Monitor
 				if ( arguments[1] == "ProcessManager" ) {
-            		if (confirmPrompt("ProcessManager is the Interface for the Console and should only be removed as part of a MariaDB Columnstore Package installation"))
+            		if (confirmPrompt("ProcessManager is the Interface for the Console and should only be removed as part of a MariaDB ColumnStore Package installation"))
                 		break;
 				}
 				else
@@ -7033,7 +7023,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 					if ( arguments[3] != "y" ) {
 						getFlags(arguments, gracefulTemp, ackTemp, suspendAnswer, bNeedsConfirm);
 						// confirm request
-						if (confirmPrompt("This command stops the processing of an application on a Module within the MariaDB Columnstore System"))
+						if (confirmPrompt("This command stops the processing of an application on a Module within the MariaDB ColumnStore System"))
 							break;
 					}
 				}
@@ -7088,7 +7078,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
             if (arguments[3] != "y")
             {
 	            // confirm request
-        	    if (confirmPrompt("This command restarts the processing of an application on a Module within the MariaDB Columnstore System"))
+        	    if (confirmPrompt("This command restarts the processing of an application on a Module within the MariaDB ColumnStore System"))
                 	break;
             }
 
@@ -7153,7 +7143,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			string password = arguments[1];
 			if ( arguments[2] != "y") {
 				cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-				string warning = "This command stops the Processing of applications and reboots all modules within the MariaDB Columnstore System";
+				string warning = "This command stops the Processing of applications and reboots all modules within the MariaDB ColumnStore System";
 				// confirm request
 				if (confirmPrompt(warning))
 					break;
@@ -7245,7 +7235,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 					// close the log file
 					writeLog("End of a command session!!!");
 					logFile.close();
-					cout << endl << "Exiting the MariaDB Columnstore Command Console" << endl;
+					cout << endl << "Exiting the MariaDB ColumnStore Command Console" << endl;
 					exit (0);
 				}
 			}
@@ -7276,7 +7266,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			string password = arguments[2];
 			if ( arguments[3] != "y") {
 				cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-				string warning = "This command reboots a node within the MariaDB Columnstore System";
+				string warning = "This command reboots a node within the MariaDB ColumnStore System";
 				// confirm request
 				if (confirmPrompt(warning))
 					break;
@@ -7315,7 +7305,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 										// close the log file
 										writeLog("End of a command session!!!");
 										logFile.close();
-										cout << endl << "Exiting the MariaDB Columnstore Command Console" << endl;
+										cout << endl << "Exiting the MariaDB ColumnStore Command Console" << endl;
 										exit (0);
 									}
 								}
@@ -7349,7 +7339,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command stops the dbrm processes within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command stops the dbrm processes within the MariaDB ColumnStore System"))
 					break;
 			}
 
@@ -7383,7 +7373,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command restarts the dbrm processes within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command restarts the dbrm processes within the MariaDB ColumnStore System"))
 					break;
 			}
 
@@ -7417,7 +7407,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem getting systemStartupOffline from the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem getting systemStartupOffline from the MariaDB ColumnStore System Configuration file" << endl;
 				return 1;
 			}
 		
@@ -7449,7 +7439,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
 			}
 			catch(...)
 			{
-				cout << "ERROR: Problem setting systemStartupOffline in the MariaDB Columnstore System Configuration file" << endl;
+				cout << "ERROR: Problem setting systemStartupOffline in the MariaDB ColumnStore System Configuration file" << endl;
 				exit(-1);
 			}
             cout << endl << "   Successful setting of systemStartupOffline to '" << systemStartupOffline << "'" << endl << endl;
@@ -7460,7 +7450,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command stops the PrimProc processes within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command stops the PrimProc processes within the MariaDB ColumnStore System"))
 					break;
 			}
 
@@ -7494,7 +7484,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command restarts the PrimProc processes within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command restarts the PrimProc processes within the MariaDB ColumnStore System"))
 					break;
 			}
 
@@ -7514,7 +7504,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command stops the ExeMgr processes within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command stops the ExeMgr processes within the MariaDB ColumnStore System"))
 					break;
 			}
 
@@ -7548,7 +7538,7 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
         {
 			if ( arguments[1] != "y" ) {
 				// confirm request
-				if (confirmPrompt("This command restarts the ExeMgr processes within the MariaDB Columnstore System"))
+				if (confirmPrompt("This command restarts the ExeMgr processes within the MariaDB ColumnStore System"))
 					break;
 			}
 
@@ -7580,11 +7570,11 @@ int ProcessSupportCommand(int CommandID, std::string arguments[])
             try
             {
 				oam.distributeConfigFile(name);
-                cout << endl << "   Successful Distribution of MariaDB Columnstore Config File" << endl << endl;
+                cout << endl << "   Successful Distribution of MariaDB ColumnStore Config File" << endl << endl;
             }
             catch (exception& e)
             {
-                cout << endl << "**** Distribution of MariaDB Columnstore Config File Failed :  " << e.what() << endl;
+                cout << endl << "**** Distribution of MariaDB ColumnStore Config File Failed :  " << e.what() << endl;
             }
         }
         break;
@@ -8117,13 +8107,13 @@ void printSystemStatus()
 				if ( moduletypeconfig.ModuleCount > 1 )
 				{
 					if ( PrimaryUMModuleName != oam::UnassignedName )
-						cout << "Primary Front-End MariaDB Columnstore Module is '" << PrimaryUMModuleName << "'" << endl;
+						cout << "Primary Front-End MariaDB ColumnStore Module is '" << PrimaryUMModuleName << "'" << endl;
 				}
 			}
 			else
 			{
 				if ( PrimaryUMModuleName != oam::UnassignedName )
-					cout << "Primary Front-End MariaDB Columnstore Module is '" << PrimaryUMModuleName << "'" << endl;
+					cout << "Primary Front-End MariaDB ColumnStore Module is '" << PrimaryUMModuleName << "'" << endl;
 			}
 		}
 
@@ -8145,7 +8135,7 @@ void printSystemStatus()
 		catch(...) {}
 
 		if ( MySQLRep == "y" )
-			cout << "MariaDB Columnstore Replication Feature is enabled" << endl << endl;
+			cout << "MariaDB ColumnStore Replication Feature is enabled" << endl << endl;
 	}
 	catch (exception& e)
 	{
@@ -8208,7 +8198,7 @@ void printProcessStatus(std::string port)
 		}
 	}
 
-	cout << endl << "MariaDB Columnstore Process statuses" << endl << endl;
+	cout << endl << "MariaDB ColumnStore Process statuses" << endl << endl;
 	cout << "Process             Module    Status            Last Status Change        Process ID" << endl;
 	cout << "------------------  ------    ---------------   ------------------------  ----------" << endl;
 	try

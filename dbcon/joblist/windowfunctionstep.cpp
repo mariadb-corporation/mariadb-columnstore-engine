@@ -156,7 +156,7 @@ WindowFunctionStep::WindowFunctionStep(const JobInfo& jobInfo) :
 	fRm(jobInfo.rm),
 	fSessionMemLimit(jobInfo.umMemLimit)
 {
-	fTotalThreads = fRm.windowFunctionThreads();
+	fTotalThreads = fRm->windowFunctionThreads();
 	fExtendedInfo = "WFS: ";
 	fQtc.stepParms().stepType = StepTeleStats::T_WFS;
 }
@@ -165,7 +165,7 @@ WindowFunctionStep::WindowFunctionStep(const JobInfo& jobInfo) :
 WindowFunctionStep::~WindowFunctionStep()
 {
 	if (fMemUsage > 0)
-		fRm.returnMemory(fMemUsage, fSessionMemLimit);
+		fRm->returnMemory(fMemUsage, fSessionMemLimit);
 }
 
 
@@ -782,7 +782,7 @@ void WindowFunctionStep::execute()
 			{
 				fInRowGroupData.push_back(rgData);
 				uint64_t memAdd = fRowGroupIn.getSizeWithStrings() + rowCnt * sizeof(RowPosition);
-				if (fRm.getMemory(memAdd, fSessionMemLimit) == false)
+				if (fRm->getMemory(memAdd, fSessionMemLimit) == false)
 					throw IDBExcept(ERR_WF_DATA_SET_TOO_BIG);
 				fMemUsage += memAdd;
 
@@ -917,7 +917,7 @@ void WindowFunctionStep::doFunction()
 		while (((i = nextFunctionIndex()) < fFunctionCount) && !cancelled())
 		{
 			uint64_t memAdd = fRows.size() * sizeof(RowPosition);
-			if (fRm.getMemory(memAdd, fSessionMemLimit) == false)
+			if (fRm->getMemory(memAdd, fSessionMemLimit) == false)
 				throw IDBExcept(ERR_WF_DATA_SET_TOO_BIG);
 			fMemUsage += memAdd;
 			fFunctions[i]->setCallback(this, i);

@@ -57,7 +57,7 @@ LimitedOrderBy::~LimitedOrderBy()
 
 void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo)
 {
-	fRm = &jobInfo.rm;
+	fRm = jobInfo.rm;
 	fSessionMemLimit = jobInfo.umMemLimit;
 	fErrorCode = ERR_LIMIT_TOO_BIG;
 

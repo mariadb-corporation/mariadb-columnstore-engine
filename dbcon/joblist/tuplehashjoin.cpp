@@ -91,12 +91,12 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo) :
 		should stay the same for other element sizes.
 	*/
 
-	pmMemLimit = resourceManager.getHjPmMaxMemorySmallSide(fSessionId);
-	uniqueLimit = resourceManager.getHjCPUniqueLimit();
+	pmMemLimit = resourceManager->getHjPmMaxMemorySmallSide(fSessionId);
+	uniqueLimit = resourceManager->getHjCPUniqueLimit();
 
 	fExtendedInfo = "THJS: ";
 	joinType = INIT;
-	joinThreadCount = resourceManager.getJlNumScanReceiveThreads();
+	joinThreadCount = resourceManager->getJlNumScanReceiveThreads();
 	largeBPS = NULL;
 	moreInput = true;
 	fQtc.stepParms().stepType = StepTeleStats::T_HJS;
@@ -128,7 +128,7 @@ TupleHashJoinStep::~TupleHashJoinStep()
 	if (ownsOutputDL)
 		delete outputDL;
 	if (totalUMMemoryUsage != 0)
-		resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+		resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 	//cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
 }
 
@@ -245,7 +245,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
 			joiner->setInUM();
 		}
 
-		resourceManager.getMemory(joiner->getMemUsage(), sessionMemLimit, false);
+		resourceManager->getMemory(joiner->getMemUsage(), sessionMemLimit, false);
 		(void)atomicops::atomicAdd(&totalUMMemoryUsage, joiner->getMemUsage());
 		memUsedByEachJoin[index] += joiner->getMemUsage();
 
@@ -280,7 +280,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
 				memUseAfter = joiner->getMemUsage() + rgDataSize;
 			}
 
-			gotMem = resourceManager.getMemory(memUseAfter - memUseBefore, sessionMemLimit, false);
+			gotMem = resourceManager->getMemory(memUseAfter - memUseBefore, sessionMemLimit, false);
 			atomicops::atomicAdd(&totalUMMemoryUsage, memUseAfter - memUseBefore);
 			memUsedByEachJoin[index] += memUseAfter - memUseBefore;
 			/* This is kind of kludgy and overlaps with segreateJoiners() atm.
@@ -599,7 +599,7 @@ void TupleHashJoinStep::hjRunner()
 		try {
 			for (i = 0; !cancelled() && i < smallSideCount; i++) {
 				vector<RGData> empty;
-				resourceManager.returnMemory(memUsedByEachJoin[djsJoinerMap[i]], sessionMemLimit);
+				resourceManager->returnMemory(memUsedByEachJoin[djsJoinerMap[i]], sessionMemLimit);
 				atomicops::atomicSub(&totalUMMemoryUsage, memUsedByEachJoin[djsJoinerMap[i]]);
 				djs[i].loadExistingData(rgData[djsJoinerMap[i]]);
 				rgData[djsJoinerMap[i]].swap(empty);
@@ -686,7 +686,7 @@ void TupleHashJoinStep::hjRunner()
 				joiners.clear();
 				tbpsJoiners.clear();
 				rgData.reset();
-				resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+				resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 				totalUMMemoryUsage = 0;
 			}
 		}
@@ -836,7 +836,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream &bs)
 				more = dl->next(it, &oneRG);
 			joiners.clear();
 			rgData.reset();
-			resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+			resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 			totalUMMemoryUsage = 0;
 			return 0;
 		}
@@ -852,7 +852,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream &bs)
 			if (status() != 0)
 				cout << " -- returning error status " << deliveredRG->getStatus() << endl;
 			deliveredRG->serializeRGData(bs);
-			resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+			resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 			totalUMMemoryUsage = 0;
 			return 0;
 		}

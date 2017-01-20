@@ -65,10 +65,12 @@ static int is_columnstore_columns_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     const std::vector< std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> > catalog_tables
         = systemCatalogPtr->getTables();
 
+    systemCatalogPtr->identity(execplan::CalpontSystemCatalog::FE);
+
     for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >::const_iterator it = catalog_tables.begin();
          it != catalog_tables.end(); ++it)
     {
-        execplan::CalpontSystemCatalog::RIDList column_rid_list = systemCatalogPtr->columnRIDs((*it).second);
+        execplan::CalpontSystemCatalog::RIDList column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true);
         for (size_t col_num = 0; col_num < column_rid_list.size(); col_num++)
         {
             execplan::CalpontSystemCatalog::TableColName tcn = systemCatalogPtr->colName(column_rid_list[col_num].objnum);

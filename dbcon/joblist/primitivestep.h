@@ -253,7 +253,7 @@ public:
 	//...to define abstract method in base class, but if start adding to other
 	//...classes, then should consider adding pure virtual method to JobStep.
 	uint64_t blksSkipped           () const { return fNumBlksSkipped; }
-	ResourceManager& resourceManager() const { return fRm; }
+	ResourceManager* resourceManager() const { return fRm; }
 
 	SP_LBIDList getlbidList() const { return lbidList;}
 
@@ -281,7 +281,7 @@ private:
 	uint64_t getLBID(uint64_t rid, bool& scan);
 	uint64_t getFBO(uint64_t lbid);
 
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 	boost::shared_ptr<execplan::CalpontSystemCatalog> sysCat;
 	execplan::CalpontSystemCatalog::OID fOid;
 	execplan::CalpontSystemCatalog::OID fTableOid;
@@ -440,7 +440,7 @@ public:
 
 	virtual execplan::CalpontSystemCatalog::OID tableOid() const { return fTableOid; }
 	const execplan::CalpontSystemCatalog::ColType& colType() const { return fColType; }
-	ResourceManager& resourceManager() const { return fRm; }
+	ResourceManager* resourceManager() const { return fRm; }
 
 	virtual uint64_t phyIOCount    () const { return fPhysicalIO; }
 	virtual uint64_t cacheIOCount  () const { return fCacheIO;    }
@@ -483,7 +483,7 @@ private:
 	uint64_t getFBO(uint64_t lbid);
 	bool isEmptyVal(const uint8_t *val8) const;
 
-	ResourceManager& fRm;
+	ResourceManager* fRm;
     ColByScanRangeRequestHeader fMsgHeader;
     SPTHD fConsumerThread;
     /// number of threads on the receive side
@@ -652,7 +652,7 @@ private:
 	uint64_t fMsgBytesIn;   // total byte count for incoming messages
 	uint64_t fMsgBytesOut;  // total byte count for outcoming messages
 	uint32_t uniqueID;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 
     //@bug 3128 change ParseTree* to vector<Filter*>
 	std::vector<const execplan::Filter*> fFilters;
@@ -797,7 +797,7 @@ private:
     uint32_t fMsgsToPm;     // total number of messages sent to PMs
 	uint32_t fMsgsExpect;   // total blocks to scan
 	uint32_t uniqueID;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 	BPSOutputType fOutType;
 	rowgroup::RowGroup fOutputRowGroup;
 	uint64_t fRidResults;
@@ -1108,7 +1108,7 @@ private:
 	std::vector<bool> scanFlags; // use to keep track of which extents to eliminate from this step
 	bool BPPIsAllocated;
 	uint32_t uniqueID;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 
 	/* HashJoin support */
 
@@ -1307,7 +1307,7 @@ public:
 	bool isDictCol() const { return isDictColumn; }
 	bool isExeMgr() const { return isEM; }
 	const execplan::CalpontSystemCatalog::ColType& colType() const { return fColType; }
-	ResourceManager& resourceManager() const { return fRm; }
+	ResourceManager* resourceManager() const { return fRm; }
 
 	void pseudoType(uint32_t p) { fPseudoType = p; }
 	uint32_t pseudoType() const { return fPseudoType; }
@@ -1338,7 +1338,7 @@ private:
 	// @bug 663 - Added fSwallowRows for calpont.caltrace(16) which is TRACE_FLAGS::TRACE_NO_ROWS4.
 	// 	      Running with this one will swallow rows at projection.
 	bool fSwallowRows;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 	friend class PassThruCommandJL;
 	friend class RTSCommandJL;
 	friend class BatchPrimitiveStep;

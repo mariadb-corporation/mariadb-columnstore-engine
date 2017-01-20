@@ -122,8 +122,8 @@ pColStep::pColStep(
 	ridCount(0),
 	fFlushInterval(jobInfo.flushInterval),
 	fSwallowRows(false),
-	fProjectBlockReqLimit(fRm.getJlProjectBlockReqLimit()),
-	fProjectBlockReqThreshold(fRm.getJlProjectBlockReqThreshold()),
+	fProjectBlockReqLimit(fRm->getJlProjectBlockReqLimit()),
+	fProjectBlockReqThreshold(fRm->getJlProjectBlockReqThreshold()),
 	fStopSending(false),
 	isFilterFeeder(false),
 	fPhysicalIO(0),
@@ -191,7 +191,7 @@ pColStep::pColStep(
 	ridsPerBlock = BLOCK_SIZE/fColType.colWidth;
 
 	/* calculate some shortcuts for extent and block based arithmetic */
-	extentSize = (fRm.getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
+	extentSize = (fRm->getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
 	for (i = 1, mask = 1, modMask = 0; i <= 32; i++) {
 		mask <<= 1;
 		modMask = (modMask << 1) | 1;
@@ -265,8 +265,8 @@ pColStep::pColStep(const pColScanStep& rhs) :
 	// Per Cindy, it's save to put fFlushInterval to be 0
 	fFlushInterval(0),
 	fSwallowRows(false),
-	fProjectBlockReqLimit(fRm.getJlProjectBlockReqLimit()),
-	fProjectBlockReqThreshold(fRm.getJlProjectBlockReqThreshold()),
+	fProjectBlockReqLimit(fRm->getJlProjectBlockReqLimit()),
+	fProjectBlockReqThreshold(fRm->getJlProjectBlockReqThreshold()),
 	fStopSending(false),
 	fPhysicalIO(0),
 	fCacheIO(0),
@@ -285,7 +285,7 @@ pColStep::pColStep(const pColScanStep& rhs) :
 
 	ridsPerBlock = rhs.getRidsPerBlock();
 	/* calculate some shortcuts for extent and block based arithmetic */
-	extentSize = (fRm.getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
+	extentSize = (fRm->getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
 	for (i = 1, mask = 1, modMask = 0; i <= 32; i++) {
 		mask <<= 1;
 		modMask = (modMask << 1) | 1;
@@ -360,8 +360,8 @@ pColStep::pColStep(const PassThruStep& rhs) :
 	// Per Cindy, it's save to put fFlushInterval to be 0
 	fFlushInterval(0),
 	fSwallowRows(false),
-	fProjectBlockReqLimit(fRm.getJlProjectBlockReqLimit()),
-	fProjectBlockReqThreshold(fRm.getJlProjectBlockReqThreshold()),
+	fProjectBlockReqLimit(fRm->getJlProjectBlockReqLimit()),
+	fProjectBlockReqThreshold(fRm->getJlProjectBlockReqThreshold()),
 	fStopSending(false),
 	fPhysicalIO(0),
 	fCacheIO(0),
@@ -380,7 +380,7 @@ pColStep::pColStep(const PassThruStep& rhs) :
 
 	ridsPerBlock = BLOCK_SIZE/fColType.colWidth;
 	/* calculate some shortcuts for extent and block based arithmetic */
-	extentSize = (fRm.getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
+	extentSize = (fRm->getExtentRows()*fColType.colWidth)/BLOCK_SIZE;
 	for (i = 1, mask = 1, modMask = 0; i <= 32; i++) {
 		mask <<= 1;
 		modMask = (modMask << 1) | 1;

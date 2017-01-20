@@ -1589,7 +1589,7 @@ namespace
 
 SJLP makeJobList_(
 	CalpontExecutionPlan* cplan,
-	ResourceManager& rm,
+	ResourceManager* rm,
 	bool isExeMgr,
 	unsigned& errCode, string& emsg)
 {
@@ -1609,7 +1609,7 @@ SJLP makeJobList_(
 	jl->setPMsConfigured(pmsConfigured);
 	jl->priority(csep->priority());
 	jl->errorInfo(errorInfo);
-	rm.setTraceFlags(csep->traceFlags());
+	rm->setTraceFlags(csep->traceFlags());
 
 	//Stuff a util struct with some stuff we always need
 	JobInfo jobInfo(rm);
@@ -1792,7 +1792,7 @@ namespace joblist
 /* static */
 SJLP JobListFactory::makeJobList(
 	CalpontExecutionPlan* cplan,
-	ResourceManager& rm,
+	ResourceManager* rm,
 	bool tryTuple,
 	bool isExeMgr)
 {

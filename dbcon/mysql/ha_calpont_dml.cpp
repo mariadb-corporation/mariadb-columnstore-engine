@@ -77,9 +77,9 @@ using namespace joblist;
 
 namespace
 {
-ResourceManager rm;
-uint64_t fBatchInsertGroupRows = rm.getRowsPerBatch();
-bool useHdfs = rm.useHdfs();
+ResourceManager *rm = ResourceManager::instance();
+uint64_t fBatchInsertGroupRows = rm->getRowsPerBatch();
+bool useHdfs = rm->useHdfs();
 
 //convenience fcn
 inline uint32_t tid2sid(const uint32_t tid)

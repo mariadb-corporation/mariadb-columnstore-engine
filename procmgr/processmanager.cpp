@@ -4816,13 +4816,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		sysConfig->setConfig(Section, "Port", "8622");
 	}
 
-	bool setMysqlRep = false;
-
 	if ( moduleType == "um" ||
 		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 		( moduleType == "pm" && PMwithUM == "y") ) {
-
-		setMysqlRep = true;
 
 		listPT = devicenetworklist.begin();
 		for( ; listPT != devicenetworklist.end() ; listPT++)
@@ -5311,22 +5307,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	if (amazon) {
 		log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
 		sleep(30);
-	}
-
-	//check and add MySQL Replication slave
-	string MySQLRep;
-	try {
-		oam.getSystemConfig("MySQLRep", MySQLRep);
-	}
-	catch(...) {
-		MySQLRep = "n";
-	}
-
-	if ( MySQLRep == "n" && setMysqlRep ) {
-		try {
-			oam.setSystemConfig("MySQLRep", "y");
-		}
-		catch(...) {}
 	}
 
 	//distribute config file
@@ -10074,15 +10054,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		try {
 			Config* sysConfig = Config::makeConfig();
 			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
-				//disable mysqlrep
-				log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
-				try {
-					oam.setSystemConfig("MySQLRep", "n");
-				}
-				catch(...) {}
-
-				enable = false;
-				distributeDB = true;
+				return oam::API_SUCCESS;
 			}
 		}
 		catch(...)
@@ -10100,17 +10072,9 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		catch(...)
 		{}
 	
-		if ( moduletypeconfig.ModuleCount < 1 )
+		if ( moduletypeconfig.ModuleCount < 2 )
 		{
-			//disable mysqlrep
-			log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
-			try {
-				oam.setSystemConfig("MySQLRep", "n");
-			}
-			catch(...) {}
-
-			enable = false;
-			distributeDB = true;
+			return oam::API_SUCCESS;
 		}
 	}
 

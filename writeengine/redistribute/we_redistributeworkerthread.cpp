@@ -356,6 +356,7 @@ int RedistributeWorkerThread::buildEntryList()
 					if (firstOid)
 						fSegments.insert(j->segmentNum);
 				}
+#if 0
 				else if (j->dbRoot == target && j->partitionNum == partition)
 				{
 					// the partition already exists on the target dbroot
@@ -367,7 +368,7 @@ int RedistributeWorkerThread::buildEntryList()
 					logMessage(fErrorMsg, __LINE__);
 					return fErrorCode;
 				}
-
+#endif
 				// workaround for HWM_0 of highest extents of the oid on target dbroot.
 				if (j->dbRoot == target)
 				{
@@ -1235,7 +1236,7 @@ void RedistributeWorkerThread::handleDataStart(SBS& sbs, size_t& size)
 			ostringstream oss;
 			oss << "=>redistributing: " << fileName << ", oid=" << dc.oid << ", db=" << dc.dbroot
 				<< ", part=" << dc.partition << ", seg=" << dc.segment << " from db="
-				<< fMsgHeader.destination;  // fMsgHeader has swapped source and destination.
+				<< fMsgHeader.source;
 			logMessage(oss.str(), __LINE__);
 		}
 		else

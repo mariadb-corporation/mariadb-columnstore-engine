@@ -141,29 +141,7 @@ uint32_t CGroupConfigurator::getNumCoresFromProc()
 	GetSystemInfo(&siSysInfo);
 	return siSysInfo.dwNumberOfProcessors;
 #else
-	ifstream cpuinfo("/proc/cpuinfo");
-
-	if (!cpuinfo.good())
-		return 0;
-
-	unsigned nc = 0;
-
-	regex re("Processor\\s*:\\s*[0-9]+", regex::normal|regex::icase);
-
-	string line;
-
-	getline(cpuinfo, line);
-
-	unsigned i = 0;
-	while (i < 10000 && cpuinfo.good() && !cpuinfo.eof())
-	{
-		if (regex_match(line, re))
-			nc++;
-
-		getline(cpuinfo, line);
-
-		++i;
-	}
+    uint32_t nc = sysconf(_SC_NPROCESSORS_ONLN);
 
 	return nc;
 #endif

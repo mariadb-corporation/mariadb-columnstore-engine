@@ -109,7 +109,7 @@ DiskJoinStep::DiskJoinStep(TupleHashJoinStep *t, int djsIndex, int joinIndex, bo
 	if (largeLimit == 0)
 		largeLimit = numeric_limits<int64_t>::max();
 
-	uint64_t totalUMMemory = thjs->resourceManager.getConfiguredUMMemLimit();
+	uint64_t totalUMMemory = thjs->resourceManager->getConfiguredUMMemLimit();
 	jp.reset(new JoinPartition(largeRG, smallRG, smallKeyCols, largeKeyCols, typeless,
 		(joinType & ANTI) && (joinType & MATCHNULLS), (bool) fe, totalUMMemory, partitionSize));
 

@@ -95,48 +95,12 @@ fi
 
 test -f $prefix/mariadb/columnstore/post/functions && . $prefix/mariadb/columnstore/post/functions
 
-ec2=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_HOME`
+AWSCLI="aws ec2 "
 
-if [ $ec2 == "unassigned" ]; then
-       STATUS="unknown"
-        RETVAL=1
-fi
+$prefix/mariadb/columnstore/bin/MCSgetCredentials.sh >/dev/null 2>&1 
 
-java=`$prefix/mariadb/columnstore/bin/getConfig Installation JAVA_HOME`
-path=`$prefix/mariadb/columnstore/bin/getConfig Installation EC2_PATH`
-
-export PATH=$path
-export EC2_HOME=$ec2
-export JAVA_HOME=$java
-
-# get Keys and region
-AmazonAccessKeyFile=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonAccessKey`
-if [ $AmazonAccessKeyFile == "unassigned" ]; then
-	echo "FAILED: missing Config Setting AmazonAccessKey : $AmazonAccessKeyfile"
-	exit 1
-fi
-
-AmazonSecretKeyFile=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonSecretKey`
-if [ $AmazonSecretKeyFile == "unassigned" ]; then
-	echo "FAILED: missing Config Setting AmazonSecretKeyFile : $AmazonSecretKeyFile"
-	exit 1
-fi
-
-AmazonAccessKey=`cat $AmazonAccessKeyFile`
-AmazonSecretKey=`cat $AmazonSecretKeyFile`
-
-if test ! -f $AmazonAccessKeyfile ; then
-	echo "FAILED: missing AmazonAccessKeyfile : $AmazonAccessKeyfile"
-	exit 1
-fi
-
-if test ! -f $AmazonSecretKeyfile ; then
-	echo "FAILED: missing AmazonSecretKeyfile : $AmazonSecretKeyfile"
-	exit 1
-fi
-
-Region=`$prefix/mariadb/columnstore/bin/getConfig Installation AmazonRegion`
-
+#get Region
+Region=`$prefix/mariadb/columnstore/bin/MCSInstanceCmds.sh getRegion`
 
 checkInfostatus() {
 	#check if attached
@@ -209,9 +173,9 @@ createvolume() {
 
 	#create volume
 	if [ $volumeType == "io1" ]; then
-		volume=`ec2-create-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -z $zone -s $volumeSize -t $volumeType -iops $volumeIOPS  | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+		volume=`$AWSCLI create-volume --region $Region   --availability-zone $zone --size $volumeSize --volume-type $volumeType --iops $volumeIOPS --output text --query VolumeId`
 	else
-		volume=`ec2-create-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region -z $zone -s $volumeSize -t $volumeType | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $2}'`
+		volume=`$AWSCLI create-volume --region $Region   --availability-zone $zone --size $volumeSize --volume-type $volumeType --output text --query VolumeId`
 	fi
 
 	echo $volume
@@ -220,7 +184,7 @@ createvolume() {
 
 describevolume() {
 	#describe volume
-	ec2-describe-volumes -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI describe-volumes --volume-ids  $volumeName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	echo $STATUS
@@ -229,14 +193,14 @@ describevolume() {
 
 detachvolume() {
 	#detach volume
-	ec2-detach-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI detach-volume --volume-id  $volumeName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "detaching" ]; then
 		retries=1
 		while [ $retries -ne 60 ]; do
 			#retry until it's attached
-			ec2-detach-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/volumeInfo_$volumeName 2>&1
+			$AWSCLI detach-volume --volume-id  $volumeName --region $Region > /tmp/volumeInfo_$volumeName 2>&1
 		
 			checkInfostatus
 			if [ $STATUS == "available" ]; then
@@ -266,7 +230,7 @@ detachvolume() {
 attachvolume() {
 
 	#detach volume
-	ec2-attach-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName -i $instanceName -d $deviceName > /tmp/volumeInfo_$volumeName 2>&1
+	$AWSCLI attach-volume --volume-id  $volumeName --instance-id $instanceName --device $deviceName --region $Region  > /tmp/volumeInfo_$volumeName 2>&1
 
 	checkInfostatus
 	if [ $STATUS == "attaching" -o $STATUS == "already-attached" ]; then
@@ -300,13 +264,13 @@ attachvolume() {
 
 deletevolume() {
 	#delete volume
-	ec2-delete-volume -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $volumeName > /tmp/deletevolume_$volumeName 2>&1
+	$AWSCLI delete-volume --volume-id  $volumeName --region $Region  > /tmp/deletevolume_$volumeName 2>&1
 	return
 }
 
 createTag() {
 	#create tag
-	ec2-create-tags -O $AmazonAccessKey -W $AmazonSecretKey --region $Region $resourceName --tag $tagName=$tagValue > /tmp/createTag_$volumeName 2>&1
+	$AWSCLI create-tags --resources  $resourceName --tags Key=$tagName,Value=$tagValue --region $Region > /tmp/createTag_$volumeName 2>&1
 	return
 }
 

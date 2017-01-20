@@ -282,6 +282,7 @@ if { $INSTALLTYPE == "initial"} {
 		"FAILED"   { send_user "ERROR: missing OS file\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }
+        "WARNING"   { send_user "WARNING: SYSLOG setup failed\n" }
 	}
 	send_user "\n"
 }
@@ -289,28 +290,6 @@ if { $INSTALLTYPE == "initial"} {
 #
 # check MariaDB Columnstore syslog functionality
 #
-set timeout 30
-#expect -re {[$#] }
-
-send_user "Check MariaDB Columnstore system logging functionality     "
-send " \n"
-send date\n
-send "ssh $USERNAME@$SERVER '$BASH $INSTALLDIR/bin/syslogSetup.sh check'\n"
-if { $PASSWORD != "ssh" } {
-	set timeout 30
-	expect {
-		"word: " { send "$PASSWORD\n" }
-		"passphrase" { send "$PASSWORD\n" }
-	}
-}
-set timeout 30
-expect {
-	"Logging working" { send_user "DONE" }
-	timeout { send_user "DONE" } 
-	"not working" { send_user "WARNING: MariaDB Columnstore system logging functionality not working" }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-}
-send_user "\n"
 
 #
 send_user "\nInstallation Successfully Completed on '$MODULE'\n"

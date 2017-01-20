@@ -800,7 +800,14 @@ int64_t Row::getSignedNullValue(uint32_t colIndex) const
 
 RowGroup::RowGroup() : columnCount(0), data(NULL), rgData(NULL), strings(NULL),
 	useStringTable(true), hasLongStringField(false), sTableThreshold(20)
-{ }
+{
+    oldOffsets.reserve(1024);
+    oids.reserve(1024);
+    keys.reserve(1024);
+    types.reserve(1024);
+    scale.reserve(1024);
+    precision.reserve(1024);
+}
 
 RowGroup::RowGroup(uint32_t colCount,
 	const vector<uint32_t> &positions,

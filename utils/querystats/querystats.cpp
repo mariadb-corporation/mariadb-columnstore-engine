@@ -192,16 +192,16 @@ void QueryStats::unserialize(ByteStream& b)
  */
 void QueryStats::insert()
 {
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	// check if query stats is enabled in Columnstore.xml
-	if (!rm.queryStatsEnabled())
+	if (!rm->queryStatsEnabled())
 		return;
 	
 	// get configure for every query to allow only changing of connect info
 	string host, user, pwd;
 	uint32_t port;
 
-	if (rm.getMysqldInfo(host, user, pwd, port) == false)
+	if (rm->getMysqldInfo(host, user, pwd, port) == false)
 		throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_CROSS_ENGINE_CONFIG),
 			ERR_CROSS_ENGINE_CONFIG);
 

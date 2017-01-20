@@ -136,7 +136,7 @@ ActiveStatementCounter *statementsRunningCount;
 
 DistributedEngineComm *ec;
 
-ResourceManager rm(true);
+ResourceManager *rm = ResourceManager::instance(true);
 
 int toInt(const string& val)
 {
@@ -240,7 +240,7 @@ class SessionThread
 {
 public:
 
-	SessionThread(const IOSocket& ios, DistributedEngineComm* ec, ResourceManager& rm) :
+	SessionThread(const IOSocket& ios, DistributedEngineComm* ec, ResourceManager* rm) :
 		fIos(ios), fEc(ec),
 		fRm(rm),
 		fStatsRetrieved(false),
@@ -253,7 +253,7 @@ private:
 
 	IOSocket fIos;
 	DistributedEngineComm *fEc;
-	ResourceManager&  fRm;
+	ResourceManager*  fRm;
 	querystats::QueryStats fStats;
 
 	// Variables used to store return stats
@@ -464,12 +464,12 @@ private:
 			{
 				case PMSMALLSIDEMEMORY:
 				{
-					fRm.addHJPmMaxSmallSideMap(it->sessionId, it->value);
+					fRm->addHJPmMaxSmallSideMap(it->sessionId, it->value);
 					break;
 				}
 				case UMSMALLSIDEMEMORY:
 				{
-					fRm.addHJUmMaxSmallSideMap(it->sessionId, it->value);
+					fRm->addHJUmMaxSmallSideMap(it->sessionId, it->value);
 					break;
 				}
 				default: ;
@@ -1206,7 +1206,7 @@ void added_a_pm(int)
 
 void printTotalUmMemory(int sig)
 {
-    int64_t num = rm.availableMemory();
+    int64_t num = rm->availableMemory();
     cout << "Total UM memory available: " << num << endl;
 }
 
@@ -1232,9 +1232,9 @@ void setupSignalHandlers()
 #endif
 }
 
-void setupCwd(ResourceManager& rm)
+void setupCwd(ResourceManager* rm)
 {
-    string workdir = rm.getScWorkingDir();
+    string workdir = rm->getScWorkingDir();
     (void)chdir(workdir.c_str());
     if (access(".", W_OK) != 0)
         (void)chdir("/tmp");
@@ -1366,11 +1366,11 @@ int main(int argc, char* argv[])
 
 	MessageQueueServer* mqs;
 
-	statementsRunningCount = new ActiveStatementCounter(rm.getEmExecQueueSize());
+	statementsRunningCount = new ActiveStatementCounter(rm->getEmExecQueueSize());
 	for (;;)
 	{
 		try {
-			mqs = new MessageQueueServer(ExeMgr, rm.getConfig(), ByteStream::BlockSize, 64);
+			mqs = new MessageQueueServer(ExeMgr, rm->getConfig(), ByteStream::BlockSize, 64);
 			break;
 		}
 		catch (runtime_error& re) {
@@ -1391,11 +1391,11 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	int serverThreads = rm.getEmServerThreads();
-	int serverQueueSize = rm.getEmServerQueueSize();
-	int maxPct = rm.getEmMaxPct();
-	int pauseSeconds = rm.getEmSecondsBetweenMemChecks();
-	int priority = rm.getEmPriority();
+	int serverThreads = rm->getEmServerThreads();
+	int serverQueueSize = rm->getEmServerQueueSize();
+	int maxPct = rm->getEmMaxPct();
+	int pauseSeconds = rm->getEmSecondsBetweenMemChecks();
+	int priority = rm->getEmPriority();
 
 	if (maxPct > 0)
 		startRssMon(maxPct, pauseSeconds);
@@ -1404,10 +1404,10 @@ int main(int argc, char* argv[])
 	setpriority(PRIO_PROCESS, 0, priority);
 #endif
 
-	string teleServerHost(rm.getConfig()->getConfig("QueryTele", "Host"));
+	string teleServerHost(rm->getConfig()->getConfig("QueryTele", "Host"));
 	if (!teleServerHost.empty())
 	{
-		int teleServerPort = toInt(rm.getConfig()->getConfig("QueryTele", "Port"));
+		int teleServerPort = toInt(rm->getConfig()->getConfig("QueryTele", "Port"));
 		if (teleServerPort > 0)
 		{
 			gTeleServerParms.host = teleServerHost;
@@ -1416,8 +1416,8 @@ int main(int argc, char* argv[])
 	}
 
 	cout << "Starting ExeMgr: st = " << serverThreads << ", sq = " <<
-		serverQueueSize << ", qs = " << rm.getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
-		rm.getConfig()->configFile() << endl;
+		serverQueueSize << ", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
+		rm->getConfig()->configFile() << endl;
 
 	//set ACTIVE state
 	{

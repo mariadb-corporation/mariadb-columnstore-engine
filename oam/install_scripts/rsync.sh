@@ -22,7 +22,6 @@ if {[info exists env(USER)]} {
 
 
 if { $PASSWORD == "ssh" } {
-	set USERNAME ""
 	set PASSWORD ""
 }
 
@@ -53,7 +52,7 @@ expect {
 	-re "failed" { send_user "           FAILED: Failure, check tmp log\n" ; exit 1 }
 	-re "Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
 	-re "total size" { exit 0 }
-	}
+	
 }
 
 exit 0

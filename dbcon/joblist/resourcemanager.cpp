@@ -55,6 +55,17 @@ namespace joblist {
   //const string ResourceManager::fBatchInsertStr("BatchInsert");
   const string ResourceManager::fOrderByLimitStr("OrderByLimit");
 
+  ResourceManager* ResourceManager::fInstance = NULL;
+  mutex mx;
+
+  ResourceManager* ResourceManager::instance(bool runningInExeMgr)
+  {
+    mutex::scoped_lock lk(mx);
+    if (!fInstance)
+        fInstance = new ResourceManager(runningInExeMgr);
+    return fInstance;
+  }
+
   ResourceManager::ResourceManager(bool runningInExeMgr) :
     fExeMgrStr("ExeMgr1"),
     fSystemConfigStr("SystemConfig"),

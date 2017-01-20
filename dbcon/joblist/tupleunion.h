@@ -142,7 +142,7 @@ private:
 	uint32_t rowLength;
 	rowgroup::Row row, row2;
 	std::vector<bool> distinctFlags;
-	ResourceManager& rm;
+	ResourceManager* rm;
 	utils::STLPoolAllocator<RowPosition> allocator;
 	boost::scoped_array<rowgroup::RGData> normalizedData;
 

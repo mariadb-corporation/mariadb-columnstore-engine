@@ -2233,6 +2233,10 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
 					ct.colDataType = CalpontSystemCatalog::DATETIME;
 					ct.colWidth = 8;
 				}
+                if (item->field_type() == MYSQL_TYPE_BLOB)
+                {
+                    throw runtime_error ("BLOB/TEXT data types are not supported by ColumnStore.");
+                }
 			}
 			break;
 /* FIXME:

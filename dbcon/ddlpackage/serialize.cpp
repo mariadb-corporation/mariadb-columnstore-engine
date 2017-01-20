@@ -184,6 +184,11 @@ int AlterTableStatement::unserialize(ByteStream& bytestream)
 			ata->unserialize(bytestream);
 			fActions.push_back( ata );
 			break;
+        case DDL_ATA_TABLE_COMMENT:
+            ata = new AtaTableComment();
+            ata->unserialize(bytestream);
+            fActions.push_back( ata );
+            break;
 		default:
 			throw("Bad typecode for AlterTableAction");
 			break;
@@ -912,6 +917,33 @@ int AtaDropTableConstraint::serialize(ByteStream& bytestream)
 	bytestream << (quadbyte) DDL_ATA_DROP_TABLE_CONSTRAINT;
 	bytestream << fConstraintName;
 	bytestream << (quadbyte) fDropBehavior;
+
+    return ret;
+}
+
+
+///////////////////////////////////////
+/// AtaTableComment Serialization
+///////////////////////////////////////
+
+/** @brief Construct from Bytestream */
+int AtaTableComment::unserialize(ByteStream& bytestream)
+{
+    int ret=1;
+
+	// read table constraint
+	bytestream >> fTableComment;
+
+    return ret;
+}
+
+/** @brief Serialize to ByteStream */
+int AtaTableComment::serialize(ByteStream& bytestream)
+{
+    int ret=1;
+
+    bytestream << (quadbyte) DDL_ATA_TABLE_COMMENT;
+	bytestream << fTableComment;
 
     return ret;
 }
