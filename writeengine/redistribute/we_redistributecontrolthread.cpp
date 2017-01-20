@@ -316,7 +316,7 @@ int RedistributeControlThread::makeRedistributePlan()
 					targetDbroots.insert(*j);
 				}
 			}
-			// At this point, there are two concepts of target. (1)Those fTargetSet, which is the
+			// At this point, there are two concepts of target. (1)Those in fTargetSet, which is the
 			// set of dbroots the user wants partitions on and (2) those in targetDbroots, a subset of
 			// fTargetSet, which is those that actually have room, based on average, for more data.
 
@@ -423,6 +423,7 @@ int RedistributeControlThread::makeRedistributePlan()
 						if (dbPartVec[*targetDbroot].size() < partCount)
 						{
 							tdbroot = *targetDbroot;
+							partCount = dbPartVec[*targetDbroot].size();
 						}
 					}
 					if (tdbroot == 0)
@@ -495,15 +496,22 @@ void RedistributeControlThread::dumpPlanToFile(uint64_t oid, vector<PartitionInf
 void RedistributeControlThread::displayPlan()
 {
 	// start from the first entry
-	rewind(fControl->fPlanFilePtr);
-
-	ByteStream bs;
-	uint32_t entryId = 0;
-	long entrySize = sizeof(RedistributePlanEntry);
-	fControl->logMessage(string("Redistribution Plan:"));
-	while (entryId++ < fEntryCount)
+	try
 	{
-		try
+		if (!fControl->fPlanFilePtr)
+		{
+			ostringstream oss;
+			oss << "No data is schefuled to be moved" << endl;
+			fControl->logMessage(oss.str());
+			return;
+		}
+		rewind(fControl->fPlanFilePtr);
+
+		ByteStream bs;
+		uint32_t entryId = 0;
+		long entrySize = sizeof(RedistributePlanEntry);
+		fControl->logMessage(string("Redistribution Plan:"));
+		while (entryId++ < fEntryCount)
 		{
 			RedistributePlanEntry entry;
 			errno = 0;
@@ -522,14 +530,18 @@ void RedistributeControlThread::displayPlan()
 				 << " moves from dbroot " << entry.source << " to " << entry.destination << endl;
 			fControl->logMessage(oss.str());
 		}
-		catch (std::exception &e)
-		{
-			cout << "exception during display of plan: " << e.what() << endl;
-		}
-		catch (...)
-		{
-			cout << "exception during display of plan" << endl;
-		}
+	}
+	catch (std::exception &e)
+	{
+		ostringstream oss;
+		oss << "exception during display of plan: " << e.what() << endl;
+		fControl->logMessage(oss.str());
+	}
+	catch (...)
+	{
+		ostringstream oss;
+		oss << "exception during display of plan" << endl;
+		fControl->logMessage(oss.str());
 	}
 }
 
