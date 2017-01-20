@@ -719,6 +719,11 @@ int processCommand(string* arguments)
 			vector<uint32_t> srcDbroots;    // all of the currently configured dbroots
 			vector<uint32_t> destDbroots;   // srcDbroots - removeDbroots
 			set<int>::iterator dbiter;
+			if (!oam.checkSystemRunning())
+			{
+				cout << "Mariadb ColumnStore is not running" << endl;
+				break;
+			}
 			if (arguments[1] == "start")
 			{
 				// Get a list of all the configured dbroots in the xml file.
