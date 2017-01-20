@@ -501,7 +501,7 @@ void RedistributeControlThread::displayPlan()
 		if (!fControl->fPlanFilePtr)
 		{
 			ostringstream oss;
-			oss << "No data is scheduled to be moved" << endl;
+			oss << "No data is schefuled to be moved" << endl;
 			fControl->logMessage(oss.str());
 			return;
 		}
