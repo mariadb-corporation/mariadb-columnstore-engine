@@ -5501,7 +5501,12 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 	
 		string status = oam.getEC2VolumeStatus(volumeName);
 		if ( status == "attached" ) {
-			string cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /dev/null";
+			string cmd;
+			if ( rootUser)
+				cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
+			else
+				cmd = "sudo mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
+
 			system(cmd.c_str());
 			log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
