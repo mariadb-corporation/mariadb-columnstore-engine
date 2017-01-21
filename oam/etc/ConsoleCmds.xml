@@ -31,6 +31,7 @@
 		<Arg1>START to begin a redistribution</Arg1>
 		<Arg2>STOP to stop redistribution before completion</Arg2>
 		<Arg3>STATUS to to view statistics and progress</Arg3>
+                <Arg4>START REMOVE to redistribute and move data off the given dbroot to other dbroots</Arg4>
 	</Cmd4>
 	<Cmd5>
 		<Name>findObjectFile</Name>
