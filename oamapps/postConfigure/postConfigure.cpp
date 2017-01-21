@@ -666,64 +666,6 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		cout <<         "NOTE: The MariaDB ColumnStore Schema Sync feature will replicate all of the" << endl;
-     	cout <<         "      schemas and InnoDB tables across the User Module nodes. This feature can be enabled" << endl;
-     	cout <<         "      or disabled, for example, if you wish to configure your own replication post installation." << endl << endl;
-
-       	try {
-        	MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
-       	}
-       	catch(...)
-        {}
-
-        if ( MySQLRep == "y" )
-        	mysqlRep = true;
-
-       	string answer = "y";
-
-        while(true) {
-        	if ( mysqlRep )
-                        prompt = "MariaDB ColumnStore Schema Sync feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
-                    else
-                        prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (y) > ";
-
-                    pcommand = callReadline(prompt.c_str());
-                    if (pcommand) {
-                        if (strlen(pcommand) > 0) answer = pcommand;
-                        callFree(pcommand);
-                    }
-
-                    if ( answer == "y" || answer == "n" ) {
-                        cout << endl;
-                        break;
-                    }
-                    else
-                        cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-                    if ( noPrompting )
-                        exit(1);
-   		}
-
-       	if ( answer == "y" ) {
-        	mysqlRep = true;
-            MySQLRep = "y";
-        }
-		else
-		{
-        	mysqlRep = false;
-            MySQLRep = "n";
-		}
-
-       	try {
-        	sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
-        }
-        catch(...)
-       	{}
-
-    	if ( !writeConfig(sysConfig) ) {
-        	cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-        	exit(1);
-    	}
-
 		switch ( IserverTypeInstall ) {
 			case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
 			{
@@ -811,6 +753,75 @@ int main(int argc, char *argv[])
 			}
 		}
 		break;
+	}
+
+	// check for Schema Schema is Local Query wasnt selected
+	if (!pmwithum)
+	{
+	    cout <<         "NOTE: The MariaDB ColumnStore Schema Sync feature will replicate all of the" << endl;
+	    cout <<         "      schemas and InnoDB tables across the User Module nodes. This feature can be enabled" << endl;
+	    cout <<         "      or disabled, for example, if you wish to configure your own replication post installation." << endl << endl;
+
+	    try {
+		    MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
+	    }
+	    catch(...)
+	    {}
+
+	    if ( MySQLRep == "y" )
+		  mysqlRep = true;
+
+	    string answer = "y";
+
+	    while(true) {
+		  if ( mysqlRep )
+			  prompt = "MariaDB ColumnStore Schema Sync feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
+		  else
+			  prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (y) > ";
+
+		  pcommand = callReadline(prompt.c_str());
+		  if (pcommand) {
+		      if (strlen(pcommand) > 0) answer = pcommand;
+		      callFree(pcommand);
+		  }
+
+		  if ( answer == "y" || answer == "n" ) {
+		      cout << endl;
+		      break;
+		  }
+		  else
+		      cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+
+		  if ( noPrompting )
+			  exit(1);
+	    }
+
+	    if ( answer == "y" ) {
+		  mysqlRep = true;
+		MySQLRep = "y";
+	    }
+	    else
+	    {
+	      mysqlRep = false;
+	      MySQLRep = "n";
+	    }
+
+	    try {
+		  sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
+	    }
+	    catch(...)
+	    {}
+	}
+	else
+	{	//Schema Sync is default as on when Local Query is Selected
+		mysqlRep = true;
+		MySQLRep = "y";
+	      
+		try {
+		    sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
+		}
+		catch(...)
+		{}
 	}
 
 	if ( !writeConfig(sysConfig) ) { 
