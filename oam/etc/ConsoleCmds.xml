@@ -29,9 +29,9 @@
 		<Name>redistributeData</Name>
 		<Desc1>Redistribute table data accross all dbroots to balance disk usage</Desc1>
 		<Arg1>START to begin a redistribution</Arg1>
-		<Arg2>START REMOVE [dbroots] to redistribute to all but the enumerated dbroots, leaving those empty</Arg2>
-		<Arg3>STOP to stop redistribution before completion</Arg3>
-		<Arg4>STATUS to to view statistics and progress</Arg4>
+		<Arg2>STOP to stop redistribution before completion</Arg2>
+		<Arg3>STATUS to to view statistics and progress</Arg3>
+                <Arg4>START REMOVE to redistribute and move data off the given dbroot to other dbroots</Arg4>
 	</Cmd4>
 	<Cmd5>
 		<Name>findObjectFile</Name>
