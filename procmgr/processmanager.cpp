@@ -2628,7 +2628,44 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					break;	
 				}
+/*
+             	case PROCESSALARM:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
+    				ByteStream::byte alarmID;
+    				std::string componentID;
+    				ByteStream::byte state;
+    				std::string ModuleName;
+    				std::string processName;
+    				ByteStream::byte pid;
+    				ByteStream::byte tid;
+
+					msg >> alarmID;
+					msg >> componentID;
+					msg >> state;
+					msg >> ModuleName;
+					msg >> processName;
+					msg >> pid;
+					msg >> tid;
+
+    				Alarm calAlarm;
+
+    				calAlarm.setAlarmID (alarmID);
+    				calAlarm.setComponentID (componentID);
+    				calAlarm.setState (state);
+    				calAlarm.setSname (ModuleName);
+    				calAlarm.setPname (processName);
+    				calAlarm.setPid (pid);
+    				calAlarm.setTid (tid);
+
+					ALARMManager aManager;
+        			aManager.processAlarmReport(calAlarm);
+
+                    break;
+                }
+
+*/
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
 					break;
@@ -2801,6 +2838,18 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								processManager.restartProcessType("DDLProc");
 								processManager.restartProcessType("DMLProc");
 								sleep(1);
+
+								string DMLmodule = config.OAMParentName();
+								if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
+						        	string PrimaryUMModuleName;
+        							try {
+            							oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+        							}
+        							catch(...) {}
+									if ( !PrimaryUMModuleName.empty() )
+										DMLmodule = PrimaryUMModuleName;
+								}
+
 								// Wait for DMLProc to be ACTIVE
 								BRM::DBRM dbrm;
 								state = AUTO_OFFLINE;
@@ -2810,7 +2859,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 									|| state == oam::AUTO_INIT
 									|| state == oam::ROLLBACK_INIT)
 								{
-									oam.getProcessStatus("DMLProc", config.OAMParentName(), procstat);
+									oam.getProcessStatus("DMLProc", DMLmodule, procstat);
 									state = procstat.ProcessOpState;
 									if ( procstat.ProcessOpState == oam::ACTIVE)
 										break;
@@ -3740,10 +3789,8 @@ void ProcessManager::setSystemState(uint16_t state)
 	string system = "System";
 	if( state == oam::ACTIVE ) {
 		//clear alarms if set
-		if ( oam.checkActiveAlarm(SYSTEM_DOWN_AUTO, config.moduleName(), system) )
-			aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
-		if ( oam.checkActiveAlarm(SYSTEM_DOWN_MANUAL, config.moduleName(), system) )
-			aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
+		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
+		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
 	}
 	else {
 		if( state == oam::MAN_OFFLINE )
@@ -4769,13 +4816,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		sysConfig->setConfig(Section, "Port", "8622");
 	}
 
-	bool setMysqlRep = false;
-
 	if ( moduleType == "um" ||
 		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 		( moduleType == "pm" && PMwithUM == "y") ) {
-
-		setMysqlRep = true;
 
 		listPT = devicenetworklist.begin();
 		for( ; listPT != devicenetworklist.end() ; listPT++)
@@ -5264,22 +5307,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	if (amazon) {
 		log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
 		sleep(30);
-	}
-
-	//check and add MySQL Replication slave
-	string MySQLRep;
-	try {
-		oam.getSystemConfig("MySQLRep", MySQLRep);
-	}
-	catch(...) {
-		MySQLRep = "n";
-	}
-
-	if ( MySQLRep == "n" && setMysqlRep ) {
-		try {
-			oam.setSystemConfig("MySQLRep", "y");
-		}
-		catch(...) {}
 	}
 
 	//distribute config file
@@ -10027,15 +10054,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		try {
 			Config* sysConfig = Config::makeConfig();
 			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
-				//disable mysqlrep
-				log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
-				try {
-					oam.setSystemConfig("MySQLRep", "n");
-				}
-				catch(...) {}
-
-				enable = false;
-				distributeDB = true;
+				return oam::API_SUCCESS;
 			}
 		}
 		catch(...)
@@ -10053,17 +10072,9 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		catch(...)
 		{}
 	
-		if ( moduletypeconfig.ModuleCount < 1 )
+		if ( moduletypeconfig.ModuleCount < 2 )
 		{
-			//disable mysqlrep
-			log.writeLog(__LINE__, "Disable MySQL Replication", LOG_TYPE_DEBUG);
-			try {
-				oam.setSystemConfig("MySQLRep", "n");
-			}
-			catch(...) {}
-
-			enable = false;
-			distributeDB = true;
+			return oam::API_SUCCESS;
 		}
 	}
 

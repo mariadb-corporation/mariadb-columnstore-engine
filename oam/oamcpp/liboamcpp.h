@@ -518,7 +518,8 @@ namespace oam
 	ENABLEMYSQLREP,
 	DISABLEMYSQLREP,
 	GLUSTERASSIGN,
-	GLUSTERUNASSIGN
+	GLUSTERUNASSIGN,
+		PROCESSALARM
     };
 
     /** @brief Process Management - Mgr to Mon request options

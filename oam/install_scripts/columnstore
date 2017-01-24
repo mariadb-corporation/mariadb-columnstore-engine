@@ -56,11 +56,11 @@ if [ "x$has_um" = x ]; then
 	has_um=0
 fi
 
-user=$USER
-sudo=sudo
-if [ -z "$user" ]; then
-        user=root
-        sudo=" "
+user=root
+SUDO=" "
+if [ "$USER" != "root" ]; then
+	user=$USER
+        SUDO="sudo "
 fi
 
 checkInstallSetup() {
@@ -68,7 +68,7 @@ checkInstallSetup() {
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
-		sudo rm -f /var/lock/subsys/columnstore
+		$SUDO rm -f /var/lock/subsys/columnstore
 		exit 1
 	fi
 }
@@ -81,13 +81,13 @@ start() {
 		exit 0
 	fi
 
-	(sudo mkdir -p /var/lock/subsys && touch /var/lock/subsys/columnstore) >/dev/null 2>&1
+	($SUDO mkdir -p /var/lock/subsys && $SUDO chmod 777 /var/lock/subsys && $SUDO touch /var/lock/subsys/columnstore) >/dev/null 2>&1
 
 	if [ -x $InstallDir/bin/columnstore.pre-start ]; then
 		$InstallDir/bin/columnstore.pre-start
 		if [ $? -ne 0 ]; then
 			echo "Error running MariaDB Columnstore pre-start script, not starting MariaDB Columnstore"
-			sudo rm -f /var/lock/subsys/columnstore
+			$SUDO rm -f /var/lock/subsys/columnstore
 			exit 1
 		fi
 	fi
@@ -97,7 +97,7 @@ start() {
 	if [ $CoreFileFlag = "y" ]; then
 		SUDO=
 		if [ "$user" != "root" ]; then 
-			SUDO="sudo"
+			SUDO="$SUDO"
 		fi
 
 		#columnstore core files
@@ -108,21 +108,21 @@ start() {
 
 	RETVAL=0
 	echo "Starting MariaDB Columnstore Database Platform"
-	sudo rm -f /tmp/StopColumnstore
+	$SUDO rm -f /tmp/StopColumnstore
 	exec $InstallDir/bin/run.sh $InstallDir/bin/ProcMon  > /dev/null 2>&1 &
 
 	return $RETVAL
 }	
 stop() {
 	echo "Shutting down MariaDB Columnstore Database Platform"
-	sudo touch /tmp/StopColumnstore
-	sudo pkill ProcMon
-	sudo pkill ProcMgr
+	$SUDO touch /tmp/StopColumnstore
+	$SUDO pkill ProcMon
+	$SUDO pkill ProcMgr
 	sleep 1
 	$InstallDir/bin/clearShm
 	RETVAL=$?
-	sudo rm -f /var/lock/subsys/columnstore
-	sudo fuser -k 8604/tcp > /dev/null 2>&1
+	$SUDO rm -f /var/lock/subsys/columnstore
+	$SUDO fuser -k 8604/tcp > /dev/null 2>&1
 	test -f $InstallDir/mysql/mysql-Columnstore || return $RETVAL
 	$InstallDir/mysql/mysql-Columnstore stop > /dev/null 2>&1
 	if [ -x $InstallDir/bin/columnstore.post-stop ]; then

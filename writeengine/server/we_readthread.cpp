@@ -245,6 +245,11 @@ void DmlReadThread::operator()()
                     rc = fWeDDLprocessor->updateSyscolumnNextvalCol(ibs, errMsg);
                     break;
                 }
+            case WE_SVR_UPDATE_SYSCOLUMN_AUTOVAL:
+                {
+                    rc = fWeDDLprocessor->updateSyscolumnNextval(ibs, errMsg);
+                    break;
+                }
             case WE_SVR_UPDATE_SYSCOLUMN_DEFAULTVAL:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnSetDefault(ibs, errMsg);
@@ -733,6 +738,11 @@ void GetFileSizeThread::operator()()
                 rc = fWeGetFileSizes->processTable(fIbs, errMsg, key);
                 break;
             }
+        case WE_SVR_GET_FILESIZE:
+            {
+                rc = fWeGetFileSizes->processFileName(fIbs, errMsg, key);
+                break;
+            }
         default:
             {
                 break;
@@ -845,6 +855,7 @@ void ReadThreadFactory::CreateReadThread(ThreadPool& Tp, IOSocket& Ios, BRM::DBR
         }
         break;
 	case WE_SVR_GET_FILESIZES:
+    case WE_SVR_GET_FILESIZE:
         {
             GetFileSizeThread getFileSizeThread(Ios, aBs, dbrm);
             Tp.invoke(getFileSizeThread);

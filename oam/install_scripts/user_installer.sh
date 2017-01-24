@@ -121,7 +121,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 if { $INSTALLTYPE == "uninstall" } { exit 0 }
 
 # 
-# send the InfinIDB package
+# send the MariaDB ColumnStore package
 #
 set timeout 30
 #expect -re {[$#] }
@@ -146,7 +146,7 @@ expect {
 	-re {[$#] } { }
 }
 
-send "scp $HOME/mariadb-columnstore*$VERSION*rpm $USERNAME@$SERVER:.;$PKGERASE dummy\n"
+send "scp $HOME/mariadb-columnstore*$VERSION*$PKGTYPE $USERNAME@$SERVER:.;$PKGERASE1 dummy\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {
@@ -173,8 +173,8 @@ if { $INSTALLTYPE == "initial"} {
 	#
 	# install package
 	#
-	send_user "Install InfinIDB Packages on Module               "
-	send "ssh $USERNAME@$SERVER '$PKGINSTALL ;$PKGERASE dummy'\n"
+	send_user "Install MariaDB ColumnStore Packages on Module               "
+	send "ssh $USERNAME@$SERVER '$PKGINSTALL ;$PKGERASE1 dummy'\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
 		expect {
@@ -284,38 +284,17 @@ if { $INSTALLTYPE == "initial"} {
 	set timeout 200
 	expect {
 		"!!!Module" 	{ send_user "DONE" }
+		"ERROR"   	{ send_user "ERROR: check /tmp logs\n" ; exit 1 }
 		"FAILED"   	{ send_user "ERROR: missing OS file\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }
+        "WARNING"   { send_user "WARNING: SYSLOG setup failed\n" }
 	}
 	send_user "\n"
 	set timeout 30
 	#expect -re {[$#] }
 }
 
-#
-# check MariaDB Columnstore syslog functionality
-#
-
-send_user "Check MariaDB Columnstore system logging functionality     "
-send " \n"
-send date\n
-send "ssh $USERNAME@$SERVER '$BASH $INSTALLDIR/bin/syslogSetup.sh check'\n"
-if { $PASSWORD != "ssh" } {
-	set timeout 30
-	expect {
-		"word: " { send "$PASSWORD\n" }
-		"passphrase" { send "$PASSWORD\n" }
-	}
-}
-set timeout 30
-expect {
-	"Logging working" { send_user "DONE" }
-	timeout { send_user "DONE" }
-	"not working" { send_user "WARNING: MariaDB Columnstore system logging functionality not working" }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-}
-send_user "\n"
 
 send_user "\nInstallation Successfully Completed on '$MODULE'\n"
 exit 0

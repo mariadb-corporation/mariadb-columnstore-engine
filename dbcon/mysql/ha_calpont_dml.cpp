@@ -729,17 +729,17 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 			if (colpos == ci.columnTypes.size())
 				break;
 
-			if (ci.headerLength > 0 && headerByte >= ci.headerLength)
-			{
-				// We've used more null bits than allowed. Something is seriously wrong.
-				std::string errormsg = "Null bit header is wrong size";
-				setError(current_thd, ER_INTERNAL_ERROR, errormsg);
-				return -1;
-			}
-
 			//if a column has not null constraint, it will not be in the bit map
 			if (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT)
 			{
+       			if (ci.headerLength > 0 && headerByte >= ci.headerLength)
+	    		{
+		    		// We've used more null bits than allowed. Something is seriously wrong.
+			    	std::string errormsg = "Null bit header is wrong size";
+    				setError(current_thd, ER_INTERNAL_ERROR, errormsg);
+	    			return -1;
+		    	}
+
 				nullVal = nullBits & 0x01;
 				nullBits = nullBits>>1;
 				++headerBit;

@@ -73,6 +73,12 @@ drizzle_return_t drizzle_state_packet_read(drizzle_con_st *con)
 
   con->packet_size= drizzle_get_byte3(con->buffer_ptr);
 
+  if (con->buffer_size < con->packet_size + 4)
+  {
+    drizzle_state_push(con, drizzle_state_read);
+    return DRIZZLE_RETURN_OK;
+  }
+
   if (con->packet_number != con->buffer_ptr[3])
   {
     drizzle_set_error(con->drizzle, "drizzle_state_packet_read",

@@ -33,6 +33,7 @@ INSTALL PLUGIN infinidb SONAME 'libcalmysql.so';
 INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
 INSTALL PLUGIN columnstore_columns SONAME 'is_columnstore_columns.so';
 INSTALL PLUGIN columnstore_extents SONAME 'is_columnstore_extents.so';
+INSTALL PLUGIN columnstore_files SONAME 'is_columnstore_files.so';
 -- these are deprecated names
 DELETE FROM mysql.func WHERE name='caldisablepartition';
 DELETE FROM mysql.func WHERE name='caldroppartition';
@@ -133,6 +134,7 @@ $installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/d
 $installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/calsetuserpriority.sql
 $installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/calremoveuserpriority.sql
 $installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/calshowprocesslist.sql
+$installdir/mysql/bin/mysql --defaults-file=$df --user=root $pwprompt mysql 2>/dev/null <$installdir/mysql/columnstore_info.sql
 
 sed -i 's/infinidb_compression_type=1/infinidb_compression_type=2/' $installdir/mysql/my.cnf >/dev/null 2>&1
 

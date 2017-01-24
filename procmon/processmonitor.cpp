@@ -2597,7 +2597,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 		//Update Process Status: Mark Process INIT state 
 		updateProcessInfo(processName, FAILED, newProcessID);
 
-		exit(oam::API_FAILURE);
+		return (oam::API_FAILURE);
 	} 
 
 	return newProcessID;
@@ -2811,6 +2811,11 @@ void sendProcessThread(sendProcessInfo_t* t)
 
 	try {
 		oam.setProcessStatus(processName, config.moduleName(), state, PID);
+	}
+    catch (exception& ex)
+    {
+      	string error = ex.what();
+      	log.writeLog(__LINE__, "EXCEPTION ERROR on setProcessStatus: " + error, LOG_TYPE_ERROR);
 	}
 	catch(...)
 	{
@@ -5266,6 +5271,8 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 
 		string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > /tmp/master-dist_" + slaveModule + ".log";
 		system(cmd.c_str());
+
+     	log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 	
 		string logFile = "/tmp/master-dist_" + slaveModule + ".log";
 		if (!oam.checkLogStatus(logFile, "FAILED"))
@@ -5496,12 +5503,49 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 	
 		string status = oam.getEC2VolumeStatus(volumeName);
 		if ( status == "attached" ) {
-			string cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /dev/null";
+			string cmd;
+			if ( rootUser)
+				cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,noauto > /tmp/um_mount.log";
+			else
+				cmd = "sudo mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,noauto,user > /tmp/um_mount.log";
+
 			system(cmd.c_str());
 			log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
-			cmd = "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+			if ( rootUser)
+				cmd = "chown -R mysql:mysql " + startup::StartUp::installDir() + "/mysql/db";
+			else
+				cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/mysql/db";
+
 			system(cmd.c_str());
+			log.writeLog(__LINE__, "chown cmd: " + cmd, LOG_TYPE_DEBUG);
+
+			//check for setup files in mysq/db, if not, create them for a new install
+			string file = startup::StartUp::installDir() + "/mysql/db/mysql";
+           	ifstream new_file (file.c_str());
+           	if (!new_file) {
+        		string cmd;
+        		cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install --installdir=" + startup::StartUp::installDir() + " > /tmp/post-mysqld-install.log 2>&1";
+              	log.writeLog(__LINE__, "cmd: " + cmd, LOG_TYPE_DEBUG);
+
+        		int rtnCode = system(cmd.c_str());
+        		if (WEXITSTATUS(rtnCode) != 0) {
+					log.writeLog(__LINE__, "amazonVolumeCheck function failed, post-mysqld-install error" , LOG_TYPE_ERROR);
+                  	return false;
+        		}
+        		else
+                    log.writeLog(__LINE__, "amazonVolumeCheck function, post-mysqld-install passed" , LOG_TYPE_DEBUG);
+	
+        		cmd = startup::StartUp::installDir() + "/bin/post-mysql-install  --installdir=" + startup::StartUp::installDir() + " > /tmp/post-mysql-install.log";;
+                log.writeLog(__LINE__, "cmd: " + cmd, LOG_TYPE_DEBUG);
+                rtnCode = system(cmd.c_str());
+                if (WEXITSTATUS(rtnCode) != 0) {
+                    log.writeLog(__LINE__, "amazonVolumeCheck function failed, post-mysql-install error" , LOG_TYPE_ERROR);
+                    return false;
+                }
+                else
+                    log.writeLog(__LINE__, "amazonVolumeCheck function, post-mysql-install passed" , LOG_TYPE_DEBUG);
+			}
 
 			log.writeLog(__LINE__, "amazonVolumeCheck function successfully completed, volume attached: " + volumeName, LOG_TYPE_DEBUG);
 			return true;
@@ -5526,12 +5570,49 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 			{}
 	
 			if (oam.attachEC2Volume(volumeName, deviceName, instanceName)) {
-				string cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /dev/null";
+				string cmd;
+	            if ( rootUser)
+    	            cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,noauto > /tmp/um_mount.log";
+        	    else
+            	    cmd = "sudo mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,noauto,user > /tmp/um_mount.log";
+
 				system(cmd.c_str());
 				log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
-				cmd = "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+	            if ( rootUser)
+    	            cmd = "chown -R mysql:mysql " + startup::StartUp::installDir() + "/mysql/db";
+        	    else
+            	    cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/mysql/db";
+
 				system(cmd.c_str());
+				log.writeLog(__LINE__, "chown cmd: " + cmd, LOG_TYPE_DEBUG);
+
+            	//check for setup files in mysq/db, if not, create them for a new install
+    	        string file = startup::StartUp::installDir() + "/mysql/db/mysql";
+        	    ifstream new_file (file.c_str());
+	            if (!new_file) {
+            	    string cmd;
+	                cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install --installdir=" + startup::StartUp::installDir() + " > /tmp/post-mysqld-install.log 2>&1";
+					log.writeLog(__LINE__, "cmd: " + cmd, LOG_TYPE_DEBUG);
+    	            int rtnCode = system(cmd.c_str());
+        	        if (WEXITSTATUS(rtnCode) != 0) {
+            	        log.writeLog(__LINE__, "amazonVolumeCheck function failed, post-mysqld-install error" , LOG_TYPE_ERROR);
+                	    return false;
+                	}
+                	else
+	                    log.writeLog(__LINE__, "amazonVolumeCheck function, post-mysqld-install passed" , LOG_TYPE_DEBUG);
+
+                	cmd = startup::StartUp::installDir() + "/bin/post-mysql-install  --installdir=" + startup::StartUp::installDir() + " > /tmp/post-mysql-install.log";;
+                    log.writeLog(__LINE__, "cmd: " + cmd, LOG_TYPE_DEBUG);
+
+                    rtnCode = system(cmd.c_str());
+                	if (WEXITSTATUS(rtnCode) != 0) {
+                    	log.writeLog(__LINE__, "amazonVolumeCheck function failed, post-mysql-install error" , LOG_TYPE_ERROR);
+                    	return false;
+                	}
+                	else
+	                    log.writeLog(__LINE__, "amazonVolumeCheck function, post-mysql-install passed" , LOG_TYPE_DEBUG);
+           		}	 	
 
 				return true;
 			}

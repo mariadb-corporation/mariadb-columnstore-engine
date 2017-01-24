@@ -54,10 +54,10 @@ fi
 export COLUMNSTORE_INSTALL_DIR=$installdir
 
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
-if [ $module = "pm" ]; then
-	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
-		cp $COLUMNSTORE_INSTALL_DIR/local/etc/*.pem /root/. > /dev/null 2>&1
-	
+if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+	cp $COLUMNSTORE_INSTALL_DIR/local/etc/*.pem $HOME/. > /dev/null 2>&1
+
+	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
 			echo "Setup fstab on Module"
 			touch /etc/fstab
@@ -146,12 +146,29 @@ fi
 if [ $module = "um" ]; then
 	echo "Run post-mysqld-install"
 	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
+	if [ $? -ne 0 ]; then
+	    echo "ERROR: post-mysqld-install failed: check /tmp/post-mysqld-install.log"
+	    exit 1
+	fi
 	echo "Run post-mysql-install"
 	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
+        if [ $? -ne 0 ]; then
+            echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
+            exit 1
+	fi
 fi
 
+$COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh check > /tmp/syslogSetup-check.log 2>&1
+if [ $? -ne 0 ]; then
+	# try setup again
+	$COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh install > /tmp/syslogSetup-install.log 2>&1
+	if [ $? -ne 0 ]; then
+		echo "WARNING: syslogSetup.sh check failed: check /tmp/syslogSetup-check.log"
+       		exit 2
+	fi
+fi
+ 
 
-echo " "
 echo "!!!Module Installation Successfully Completed!!!"
 
 exit 0

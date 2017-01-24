@@ -60,33 +60,8 @@ using namespace querytele;
 #include "libdrizzle-2.0/drizzle.h"
 #include "libdrizzle-2.0/drizzle_client.h"
 
-// wrapper for drizzle
-namespace
+namespace joblist
 {
-
-class DrizzleMySQL
-{
-public:
-	DrizzleMySQL();
-	~DrizzleMySQL();
-
-	// init:   host          port        username      passwd         db
-	int init(const char*, unsigned int, const char*, const char*, const char*);
-
-	// run the query
-	int run(const char* q);
-
-	int getFieldCount()      { return drizzle_result_column_count(fDrzrp); }
-	int getRowCount()        { return drizzle_result_row_count(fDrzrp); }
-	char** nextRow()   { return drizzle_row_next(fDrzrp); }
-	const string& getError() { return fErrStr; }
-
-private:
-	drizzle_st*        fDrzp;
-	drizzle_con_st*    fDrzcp;
-	drizzle_result_st* fDrzrp;
-	string             fErrStr;
-};
 
 DrizzleMySQL::DrizzleMySQL() : fDrzp(NULL), fDrzcp(NULL), fDrzrp(NULL)
 {
@@ -168,12 +143,6 @@ int DrizzleMySQL::run(const char* query)
 }
 
 
-}
-
-
-namespace joblist
-{
-
 CrossEngineStep::CrossEngineStep(
 	const string& schema,
 	const string& table,
@@ -195,17 +164,19 @@ CrossEngineStep::CrossEngineStep(
 	fExtendedInfo = "CES: ";
 	getMysqldInfo(jobInfo);
 	fQtc.stepParms().stepType = StepTeleStats::T_CES;
+    drizzle = new DrizzleMySQL();
 }
 
 
 CrossEngineStep::~CrossEngineStep()
 {
+    delete drizzle;
 }
 
 
 void CrossEngineStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
 {
-	fRowGroupOut = fRowGroupDelivered = rg;
+	fRowGroupOut = fRowGroupDelivered = fRowGroupAdded = rg;
 }
 
 
@@ -304,15 +275,15 @@ inline void CrossEngineStep::addRow(RGData &data)
 {
 	fRowDelivered.setRid(fRowsReturned%fRowsPerGroup);
 	fRowDelivered.nextRow();
-	fRowGroupDelivered.incRowCount();
+	fRowGroupAdded.incRowCount();
 
 	if (++fRowsReturned%fRowsPerGroup == 0)
 	{
 		fOutputDL->insert(data);
-		data.reinit(fRowGroupDelivered, fRowsPerGroup);
-		fRowGroupDelivered.setData(&data);
-		fRowGroupDelivered.resetRowGroup(fRowsReturned);
-		fRowGroupDelivered.getRow(0, &fRowDelivered);
+		data.reinit(fRowGroupAdded, fRowsPerGroup);
+		fRowGroupAdded.setData(&data);
+		fRowGroupAdded.resetRowGroup(fRowsReturned);
+		fRowGroupAdded.getRow(0, &fRowDelivered);
 	}
 }
 
@@ -481,7 +452,6 @@ void CrossEngineStep::join()
 
 void CrossEngineStep::execute()
 {
-	DrizzleMySQL drizzle;
 	int ret = 0;
 	StepTeleStats sts;
 	sts.query_uuid = fQueryUuid;
@@ -493,30 +463,30 @@ void CrossEngineStep::execute()
 		sts.total_units_of_work = 1;
 		postStepStartTele(sts);
 
-		ret = drizzle.init(fHost.c_str(), fPort, fUser.c_str(), fPasswd.c_str(), fSchema.c_str());
+		ret = drizzle->init(fHost.c_str(), fPort, fUser.c_str(), fPasswd.c_str(), fSchema.c_str());
 		if (ret != 0)
-			handleMySqlError(drizzle.getError().c_str(), ret);
+			handleMySqlError(drizzle->getError().c_str(), ret);
 
 		string query(makeQuery());
 		fLogger->logMessage(logging::LOG_TYPE_INFO, "QUERY to foreign engine: " + query);
 		if (traceOn())
 			cout << "QUERY: " << query << endl;
 
-		ret = drizzle.run(query.c_str());
+		ret = drizzle->run(query.c_str());
 		if (ret != 0)
-			handleMySqlError(drizzle.getError().c_str(), ret);
+			handleMySqlError(drizzle->getError().c_str(), ret);
 
-		int num_fields = drizzle.getFieldCount();
+		int num_fields = drizzle->getFieldCount();
 
 		char** rowIn;                            // input
 		//shared_array<uint8_t> rgDataDelivered;      // output
 		RGData rgDataDelivered;
-		fRowGroupDelivered.initRow(&fRowDelivered);
+		fRowGroupAdded.initRow(&fRowDelivered);
 		// use getDataSize() i/o getMaxDataSize() to make sure there are 8192 rows.
-		rgDataDelivered.reinit(fRowGroupDelivered, fRowsPerGroup);
-		fRowGroupDelivered.setData(&rgDataDelivered);
-		fRowGroupDelivered.resetRowGroup(0);
-		fRowGroupDelivered.getRow(0, &fRowDelivered);
+		rgDataDelivered.reinit(fRowGroupAdded, fRowsPerGroup);
+		fRowGroupAdded.setData(&rgDataDelivered);
+		fRowGroupAdded.resetRowGroup(0);
+		fRowGroupAdded.getRow(0, &fRowDelivered);
 
 		if (traceOn())
 			dlTimes.setFirstReadTime();
@@ -527,7 +497,7 @@ void CrossEngineStep::execute()
 		bool doFE3 =  (fFeSelects.size() > 0);
 		if (!doFE1 && !doFE3)
 		{
-			while ((rowIn = drizzle.nextRow()) && !cancelled())
+			while ((rowIn = drizzle->nextRow()) && !cancelled())
 			{
 				for(int i = 0; i < num_fields; i++)
 					setField(i, rowIn[i], fRowDelivered);
@@ -544,7 +514,7 @@ void CrossEngineStep::execute()
 			rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
 			rowFe1.setData(rgDataFe1.get());
 
-			while ((rowIn = drizzle.nextRow()) && !cancelled())
+			while ((rowIn = drizzle->nextRow()) && !cancelled())
 			{
 				// Parse the columns used in FE1 first, the other column may not need be parsed.
 				for(int i = 0; i < num_fields; i++)
@@ -579,7 +549,7 @@ void CrossEngineStep::execute()
 			rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
 			rowFe3.setData(rgDataFe3.get());
 
-			while ((rowIn = drizzle.nextRow()) && !cancelled())
+			while ((rowIn = drizzle->nextRow()) && !cancelled())
 			{
 				for(int i = 0; i < num_fields; i++)
 					setField(i, rowIn[i], rowFe3);
@@ -607,7 +577,7 @@ void CrossEngineStep::execute()
 			rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
 			rowFe3.setData(rgDataFe3.get());
 
-			while ((rowIn = drizzle.nextRow()) && !cancelled())
+			while ((rowIn = drizzle->nextRow()) && !cancelled())
 			{
 				// Parse the columns used in FE1 first, the other column may not need be parsed.
 				for(int i = 0; i < num_fields; i++)
@@ -639,7 +609,7 @@ void CrossEngineStep::execute()
 
 		//INSERT_ADAPTER(fOutputDL, rgDataDelivered);
 		fOutputDL->insert(rgDataDelivered);
-		fRowsRetrieved = drizzle.getRowCount();
+		fRowsRetrieved = drizzle->getRowCount();
 	}
 	catch (IDBExcept& iex)
 	{
@@ -922,8 +892,7 @@ void CrossEngineStep::formatMiniStats()
 	fMiniInfo += oss.str();
 }
 
-
-}   //namespace
+}
 // vim:ts=4 sw=4:
 
 

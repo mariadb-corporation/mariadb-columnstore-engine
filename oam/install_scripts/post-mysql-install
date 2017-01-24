@@ -9,16 +9,25 @@ checkForError() {
 	# check for password error
 	grep "ERROR 1045" /tmp/mysql_install.log > /tmp/error.check
 	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
-		password=`$installdir/bin/getMySQLpw`
-		if [ $? -ne 0 ]; then
-			echo "MySQL Password missing or incorrect"
+		if test -f $HOME/.my.cnf ; then
+			password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
+                	if [ ! -z $password ]; then
+                        	pwprompt="-p$password"
+				return 1;
+ 			else
+	                        echo "MySQL Password file missing or incorrect, check .my.cnf file"
+	                        rm -f /tmp/error.check
+	                        $installdir/mysql/mysql-Columnstore stop
+	                        sleep 2
+	                        exit 2;
+			fi
+		else
+			echo "MySQL Password file missing or incorrect, check .my.cnf file"
 			rm -f /tmp/error.check
 			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
 			exit 2;
 		fi
-		rm -f /tmp/error.check
-		return 1;
 	fi
 
 	rm -f /tmp/error.check
@@ -38,7 +47,7 @@ checkForError() {
         #
         if [ $? -ne 0 ]; then
                 echo "columnstore doesn't exist"
-                return 1
+                exit 1
         fi
 
         echo "columnstore exist"
@@ -50,7 +59,7 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 password=
-
+pwprompt=
 for arg in "$@"; do
 	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
 		prefix="$(echo $arg | awk -F= '{print $2}')"
@@ -59,6 +68,9 @@ for arg in "$@"; do
 		rpmmode="$(echo $arg | awk -F= '{print $2}')"
 	elif [ $(expr -- "$arg" : '--password=') -eq 11 ]; then
 		password="$(echo $arg | awk -F= '{print $2}')"
+		if [ ! -z $password ]; then
+			pwprompt="-p$password"
+		fi
 	elif [ $(expr -- "$arg" : '--installdir=') -eq 13 ]; then
 		installdir="$(echo $arg | awk -F= '{print $2}')"
 		prefix=$(dirname $installdir)
@@ -67,12 +79,12 @@ for arg in "$@"; do
 	fi
 done
 
-#run to make sure library paths are setup
-sudo ldconfig
-
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+	sudo ldconfig
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
+else
+	ldconfig
 fi
 
 if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
@@ -113,10 +125,10 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 		$installdir/mysql/install_calpont_mysql.sh --password=$password --installdir=$installdir
 		checkForError
 		if [ $? -ne 0 ]; then
-			echo "ERROR: missing or invalid password, or InfiniDB plugin install missing"
+			echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"
 			$installdir/mysql/mysql-Columnstore stop
 			sleep 2
-			exit 1;
+			exit 2;
 		fi
 	fi
 

@@ -138,7 +138,9 @@ int main(int argc, char **argv)
 
 	if ( cloud == "amazon-ec2" ) {
 		if(!aMonitor.amazonIPCheck()) {
-			string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+			log.writeLog(__LINE__, "ERROR: amazonIPCheck failed, exiting", LOG_TYPE_CRITICAL);
+			sleep(2);
+			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
 			system(cmd.c_str());
 			exit(1);
 		}
@@ -377,7 +379,7 @@ int main(int argc, char **argv)
 	if ( config.OAMParentName() == oam::UnassignedName ) {
 		cerr << endl << "OAMParentModuleName == oam::UnassignedName, exiting " << endl;
 		log.writeLog(__LINE__, "OAMParentModuleName == oam::UnassignedName, exiting", LOG_TYPE_CRITICAL);
-		exit (-1);
+		exit (1);
 	}
 
 	//check if module is in a DISABLED state
@@ -562,8 +564,8 @@ int main(int argc, char **argv)
 			}
 			catch(...)
 			{
-				log.writeLog(__LINE__, "Problem getting the ParentOAMModuleName key from the Calpont System Configuration file", LOG_TYPE_ERROR);
-				exit(-1);
+				log.writeLog(__LINE__, "Problem getting the ParentOAMModuleName key from the Columnstore System Configuration file", LOG_TYPE_CRITICAL);
+				exit(1);
 			}
 		}
 
@@ -1673,7 +1675,7 @@ static void statusControlThread()
 	fProcStatMapreg.swap(region);
 	fShmProcessStatus = static_cast<shmProcessStatus*>(fProcStatMapreg.get_address());
 	if (fShmProcessStatus == 0) {
-		log.writeLog(__LINE__, "*****ProcessStatusTable shmat failed.", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "*****ProcessStatusTable shmat failed.", LOG_TYPE_CRITICAL);
 		exit(1);
 	}
 
@@ -1735,7 +1737,7 @@ static void statusControlThread()
 	fSysStatMapreg.swap(region2);
 	fShmSystemStatus = static_cast<shmDeviceStatus*>(fSysStatMapreg.get_address());
 	if (fShmSystemStatus == 0) {
-		log.writeLog(__LINE__, "*****SystemStatusTable shmat failed.", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "*****SystemStatusTable shmat failed.", LOG_TYPE_CRITICAL);
 		exit(1);
 	}
 
@@ -1839,7 +1841,7 @@ static void statusControlThread()
 	fShmNICStatus = static_cast<shmDeviceStatus*>(fNICStatMapreg.get_address());
 
 	if (fShmNICStatus == 0) {
-		log.writeLog(__LINE__, "*****NICStatusTable shmat failed.", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "*****NICStatusTable shmat failed.", LOG_TYPE_CRITICAL);
 		exit(1);
 	}
 
@@ -1925,7 +1927,7 @@ static void statusControlThread()
 	fShmExtDeviceStatus = static_cast<shmDeviceStatus*>(fExtStatMapreg.get_address());
 
 	if (fShmExtDeviceStatus == 0) {
-		log.writeLog(__LINE__, "*****ExtDeviceStatusTable shmat failed.", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "*****ExtDeviceStatusTable shmat failed.", LOG_TYPE_CRITICAL);
 		exit(1);
 	}
 
@@ -2003,7 +2005,7 @@ static void statusControlThread()
 	fShmDbrootStatus = static_cast<shmDeviceStatus*>(fdDbrootStatMapreg.get_address());
 
 	if (fShmDbrootStatus == 0) {
-		log.writeLog(__LINE__, "*****DbrootStatusTable shmat failed.", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "*****DbrootStatusTable shmat failed.", LOG_TYPE_CRITICAL);
 		exit(1);
 	}
 

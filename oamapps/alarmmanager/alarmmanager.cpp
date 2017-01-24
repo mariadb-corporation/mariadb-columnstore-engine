@@ -443,7 +443,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
 	calAlarm.setAlarmID (alarmID);
 	calAlarm.setComponentID (componentID);
 	calAlarm.setState (state);
-	calAlarm.setSname (repModuleName);
+	calAlarm.setSname (ModuleName);
 	calAlarm.setPname (processName);
 	calAlarm.setPid (pid);
 	calAlarm.setTid (tid); 

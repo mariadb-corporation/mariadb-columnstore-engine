@@ -136,6 +136,17 @@ namespace ddlpackageprocessor
                 ddlpackage::AtaRenameColumn& ataRenameColumn,
                 ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId);
 
+            /** @brief change a table autoincrement via a comment
+             *
+             * @param result the result of the operation
+             * @param ataTableComment the AtaTableComment object
+             * @param fTableName the QualifiedName for the table
+             */
+            EXPORT void tableComment(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID, DDLResult& result,
+                ddlpackage::AtaTableComment& ataTableComment,
+                ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId);
+
+
         protected:
 	    void rollBackAlter(const std::string& error, BRM::TxnID txnID, int sessionId, DDLResult& result, uint64_t uniqueId);
 

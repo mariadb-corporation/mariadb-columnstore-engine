@@ -26,10 +26,21 @@
 		<Arg1>None</Arg1>
 	</Cmd3>
 	<Cmd4>
-                <Name>AVAILABLE</Name>
+		<Name>redistributeData</Name>
+		<Desc1>Redistribute table data accross all dbroots to balance disk usage</Desc1>
+		<Arg1>START to begin a redistribution</Arg1>
+                <Arg2>START REMOVE n to being a redistribution where data is removed from dbroot 'n'</Arg2>
+		<Arg3>STOP to stop redistribution before completion</Arg3>
+		<Arg4>STATUS to to view statistics and progress</Arg4>
 	</Cmd4>
 	<Cmd5>
-                <Name>AVAILABLE</Name>
+		<Name>findObjectFile</Name>
+		<Desc1>Get the name of the directory containing the first file of the object</Desc1>
+		<Desc2>uses Object ID (OID) or Schema Table Column</Desc2>
+		<Arg1>Object ID (OID) of object</Arg1>
+		<Arg2>Schema</Arg2>
+		<Arg3>Table</Arg3>
+		<Arg4>Column</Arg4>
 	</Cmd5>
 	<Cmd6>
 		<Name>getModuleTypeConfig</Name>

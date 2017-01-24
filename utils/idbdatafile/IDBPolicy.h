@@ -115,6 +115,7 @@ public:
 	 */
 	static int mkdir(const char *pathname);
 	static off64_t size(const char* path);
+    static off64_t compressedSize(const char* path);
 	static int remove(const char *pathname);
 	static int rename(const char *oldpath, const char *newpath);
 	static bool exists(const char* pathname);
@@ -173,6 +174,12 @@ inline
 off64_t IDBPolicy::size(const char* path)
 {
 	return IDBPolicy::getFs( path ).size( path );
+}
+
+inline
+off64_t IDBPolicy::compressedSize(const char* path)
+{
+    return IDBPolicy::getFs( path ).compressedSize( path );
 }
 
 inline

@@ -38,7 +38,7 @@ class WE_GetFileSizes
 public:
 	
 	static int processTable(messageqcpp::ByteStream& bs, std::string& errMsg, int key);
-
+    static int processFileName(messageqcpp::ByteStream& bs, std::string& errMsg, int key);
 };
 
 class ActiveThreadCounter

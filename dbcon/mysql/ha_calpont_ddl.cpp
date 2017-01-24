@@ -754,16 +754,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 						ci->isAlter = false;
 						return rc;
 					}
-					if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (createTable->fTableDef->fColumns[i]->fDefaultValue->fValue =="0000-00-00")) ||
-									((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) && (createTable->fTableDef->fColumns[i]->fDefaultValue->fValue =="0000-00-00 00:00:00")))
-					{
-						rc = 1;
-						thd->get_stmt_da()->set_overwrite_status(true);
-						thd->raise_error_printf(ER_INTERNAL_ERROR, "The default value is out of range for the specified data type.");
-						ci->alterTableState = cal_connection_info::NOT_ALTER;
-						ci->isAlter = false;
-						return rc;
-					}
 				}
 			}
 
@@ -1084,16 +1074,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							ci->isAlter = false;
 							return rc;
 						}
-						if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (addColumnPtr->fColumnDef->fDefaultValue->fValue =="0000-00-00")) ||
-									((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) && (addColumnPtr->fColumnDef->fDefaultValue->fValue =="0000-00-00 00:00:00")))
-						{
-							rc = 1;
-							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(ER_INTERNAL_ERROR, "The default value is out of range for the specified data type.");
-							ci->alterTableState = cal_connection_info::NOT_ALTER;
-							ci->isAlter = false;
-							return rc;
-						}
 					}
 				}
 				//Handle compression type
@@ -1386,16 +1366,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
 							return rc;
 						}
 						if (pushWarning)
-						{
-							rc = 1;
-							thd->get_stmt_da()->set_overwrite_status(true);
-							thd->raise_error_printf(ER_INTERNAL_ERROR, "The default value is out of range for the specified data type.");
-							ci->alterTableState = cal_connection_info::NOT_ALTER;
-							ci->isAlter = false;
-							return rc;
-						}
-						if (((colType.colDataType == execplan::CalpontSystemCatalog::DATE) && (addColumnsPtr->fColumns[0]->fDefaultValue->fValue =="0000-00-00")) ||
-									((colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) && (addColumnsPtr->fColumns[0]->fDefaultValue->fValue =="0000-00-00 00:00:00")))
 						{
 							rc = 1;
 							thd->get_stmt_da()->set_overwrite_status(true);
@@ -1859,7 +1829,7 @@ int ha_calpont_impl_create_(const char *name, TABLE *table_arg, HA_CREATE_INFO *
 		algorithm::to_upper(tablecomment);
 	}
 	//@Bug 2553 Add a parenthesis around option to group them together
-	string alterpatstr("ALTER[[:space:]]+TABLE[[:space:]]+.*[[:space:]]+((ADD)|(DROP)|(CHANGE)|(ALTER))[[:space:]]+");
+	string alterpatstr("ALTER[[:space:]]+TABLE[[:space:]]+.*[[:space:]]+(((ADD)|(DROP)|(CHANGE)|(ALTER)|(COMMENT))[[:space:]]+|(COMMENT=))");
 	string createpatstr("CREATE[[:space:]]+TABLE[[:space:]]");
 	bool schemaSyncOnly = false;
 	bool isCreate = true;

@@ -31,6 +31,7 @@ public:
 
 	/* virtual */ int mkdir(const char *pathname);
 	/* virtual */ off64_t size(const char* path) const;
+    /* virtual */ off64_t compressedSize(const char *path) const;
 	/* virtual */ int remove(const char *pathname);
 	/* virtual */ int rename(const char *oldpath, const char *newpath);
 	/* virtual */ bool exists(const char* pathname) const;

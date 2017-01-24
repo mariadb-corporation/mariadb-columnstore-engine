@@ -62,12 +62,25 @@ target_link_libraries(is_columnstore_extents ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LI
 set_target_properties(is_columnstore_extents PROPERTIES PREFIX "")
 set_target_properties(is_columnstore_extents PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS calmysql is_columnstore_tables is_columnstore_columns is_columnstore_extents DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
+SET ( is_columnstore_files_SRCS
+    is_columnstore_files.cpp
+    )
+add_library(is_columnstore_files SHARED ${is_columnstore_files_SRCS})
+
+target_link_libraries(is_columnstore_files ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool)
+
+# Don't prepend .so file with 'lib'
+set_target_properties(is_columnstore_files PROPERTIES PREFIX "")
+set_target_properties(is_columnstore_files PROPERTIES VERSION 1.0.0 SOVERSION 1)
+
+
+install(TARGETS calmysql is_columnstore_tables is_columnstore_columns is_columnstore_extents is_columnstore_files DESTINATION ${ENGINE_LIBDIR} COMPONENT storage-engine)
 install(FILES syscatalog_mysql.sql 
               dumpcat_mysql.sql 
               calsetuserpriority.sql 
               calremoveuserpriority.sql 
               calshowprocesslist.sql 
+              columnstore_info.sql
               my.cnf
               DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
 install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore dumpcat.pl

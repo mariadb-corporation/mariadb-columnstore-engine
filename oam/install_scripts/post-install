@@ -7,11 +7,11 @@
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
-user=$USER
-sudo=sudo
-if [ -z "$user" ]; then
-        user=root
-        sudo=" "
+user=root
+SUDO=" "
+if [ $USER != "root" ]; then
+	user=$USER
+        SUDO="sudo "
 fi
 
 quiet=0
@@ -82,7 +82,7 @@ if [ -f libstdc++.so.6.0.14 ]; then
 fi
 
 # softlink for libperl.sp, used by cplogger
-sudo ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
+$SUDO ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
 #setup .bashrc
 if [ $user = "root" ]; then
@@ -121,9 +121,9 @@ fi
 
 cd /
 
-test -d /var/log/mariadb || sudo mkdir /var/log/mariadb >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore || sudo mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-sudo chmod -R 777 /var/log/mariadb
+test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+$SUDO chmod -R 777 /var/log/mariadb
 
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
@@ -161,8 +161,8 @@ mkdir /mnt/tmp > /dev/null 2>&1
 mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
 
 # install Columnstore Log Rotate File
-sudo cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-sudo chmod 644 /etc/logrotate.d/columnstore
+$SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+$SUDO chmod 644 /etc/logrotate.d/columnstore
 
 # remove mysql archive log
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
@@ -175,50 +175,51 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 rm -f /etc/init.d/columnstore >/dev/null 2>&1
 rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
 
-systemctl=`which systemctl 2>/dev/null`
-if [ -n "$systemctl" ]; then
+if [ $user = "root" ]; then
+	systemctl=`which systemctl 2>/dev/null`
+	if [ -n "$systemctl" ]; then
 
-	chmod 644 $installdir/bin/columnstore.service
-	sudo cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
-	sudo cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
-	sudo systemctl enable columnstore >/dev/null 2>&1
-else
-	chkconfig=`which chkconfig 2>/dev/null`
-	if [ -n "$chkconfig" ]; then
-
-		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
-		sudo chkconfig --add columnstore > /dev/null 2>&1
-		chkconfig columnstore on > /dev/null 2>&1
+		chmod 644 $installdir/bin/columnstore.service
+		cp $installdir/bin/columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
+		cp $installdir/bin/columnstore.service /lib/systemd/system/. >/dev/null 2>&1
+		systemctl enable columnstore >/dev/null 2>&1
 	else
-		sudo cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
-		updaterc=`which update-rc.d 2>/dev/null`
-		if [ -n "$updaterc" ]; then
+		chkconfig=`which chkconfig 2>/dev/null`
+		if [ -n "$chkconfig" ]; then
 
-			update-rc.d columnstore defaults 99 > /dev/null 2>&1
+			cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+			chkconfig --add columnstore > /dev/null 2>&1
+			chkconfig columnstore on > /dev/null 2>&1
 		else
-			echo ""
-			echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+			cp $installdir/bin/columnstore /etc/init.d/. >/dev/null 2>&1
+			updaterc=`which update-rc.d 2>/dev/null`
+			if [ -n "$updaterc" ]; then
+
+				update-rc.d columnstore defaults 99 > /dev/null 2>&1
+			else
+				echo ""
+				echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"	
+			fi
 		fi
 	fi
 fi
-
 #setup MariaDB Columnstore system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	chmod 777 -R /dev/shm
 	rm -f /etc/default/columnstore
 else
-	sudo chmod 777 /tmp
-	sudo rm -fr /tmp/* > /dev/null 2>&1
-	sudo $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
-	sudo chown $user:$user $installdir/etc/Columnstore.xml
-	sudo chmod -R 777 /dev/shm
-	sudo chmod 777 /var/lock/subsys
-	sudo rm -f /var/lock/subsys/mysql-Columnstore
-	sudo chmod 777 /etc/fstab	
+	$SUDO chmod 777 /tmp
+	$SUDO rm -fr /tmp/* > /dev/null 2>&1
+	$SUDO $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
+	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
+	$SUDO chmod -R 777 /dev/shm
+	$SUDO chmod 777 /var/lock/subsys
+	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
+	$SUDO chmod 777 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
-	sudo cp $installdir/bin/columnstore.def /etc/default/columnstore
+	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
 
 	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
 
@@ -229,6 +230,9 @@ cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
 if [ $? -eq 0 ]; then
 	cat /tmp/syslog_install.log
 fi
+
+#backup copy of Alarm Config File
+/bin/cp -f $installdir/etc/AlarmConfig.xml $installdir/etc/AlarmConfig.xml.installSave > /dev/null 2>&1
 
 #setup alias commands
 eval userhome=~$user
@@ -248,15 +252,10 @@ if [ $rc1 -ne 0 -a $rc2 -ne 0 ]; then
 	echo " " >> ${bashFile}
 fi
 
-#check and get amazon EC2 env variables
-if [ -n "$EC2_HOME" ]; then
-	$installdir/bin/setConfig -d Installation EC2_HOME $EC2_HOME
-
-	if [ -n "$EC2_HOME" ]; then
-		$installdir/bin/setConfig -d Installation JAVA_HOME $JAVA_HOME
-	fi
-
-	$installdir/bin/setConfig -d Installation EC2_PATH $PATH:/home/ec2/bin:/opt/aws/bin
+#check and get amazon env variables
+aws=`which aws 2>/dev/null`
+if [ -z "aws" ]; then
+	$installdir/bin/MCSgetCredentials.sh >/dev/null 2>&1
 fi
 
 #log install message
