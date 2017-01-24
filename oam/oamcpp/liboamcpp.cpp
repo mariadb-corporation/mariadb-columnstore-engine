@@ -5987,7 +5987,7 @@ namespace oam
         }
 
 		//attach and format volumes
-		device = "/dev/sdf";
+		device = "/dev/xvdf";
 
 		string localInstance = getEC2LocalInstance();
 
