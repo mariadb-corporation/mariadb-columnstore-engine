@@ -97,6 +97,8 @@ using namespace querytele;
 #include "utils_utf8.h"
 #include "boost/filesystem.hpp"
 
+#include "threadpool.h"
+
 namespace {
 
 //If any flags other than the table mode flags are set, produce output to screeen
@@ -1431,12 +1433,14 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	threadpool::ThreadPool exeMgrThreadPool(serverThreads, serverQueueSize);
 	for (;;)
 	{
 		IOSocket ios;
 		ios = mqs->accept();
-		boost::thread thd(SessionThread(ios, ec, rm));
+		exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
 	}
+	exeMgrThreadPool.wait();
 
 	return 0;
 }
