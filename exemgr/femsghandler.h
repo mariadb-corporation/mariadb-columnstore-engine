@@ -20,6 +20,7 @@
 
 #include "joblist.h"
 #include "inetstreamsocket.h"
+#include "threadpool.h"
 
 class FEMsgHandler
 {
@@ -40,8 +41,14 @@ private:
 	bool die, running, sawData;
 	messageqcpp::IOSocket *sock;
 	boost::shared_ptr<joblist::JobList> jl;
-	boost::thread thr;
 	boost::mutex mutex;
+//	boost::thread thr;
+	static threadpool::ThreadPool threadPool;
+
+	// Because we can't join() a thread from a thread pool, threadFcn will
+	// unlock when it exits and the destructor can block until the thread is done.
+	boost::mutex joinMutex;
+
 };
 
 #endif /* FEMSGHANDLER_H_ */
