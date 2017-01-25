@@ -17,7 +17,8 @@
 
 //  $Id: jlf_tuplejoblist.cpp 9728 2013-07-26 22:08:20Z xlou $
 
-
+// Cross engine needs to be at the top due to MySQL includes
+#include "crossenginestep.h"
 #include <iostream>
 #include <stack>
 #include <iterator>
@@ -55,7 +56,6 @@ using namespace dataconvert;
 #include "limitedorderby.h"
 #include "jobstep.h"
 #include "primitivestep.h"
-#include "crossenginestep.h"
 #include "expressionstep.h"
 #include "subquerystep.h"
 #include "tupleaggregatestep.h"
