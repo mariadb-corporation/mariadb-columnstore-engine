@@ -61,7 +61,7 @@ set(joblist_LIB_SRCS
 
 add_library(joblist SHARED ${joblist_LIB_SRCS})
 
-target_link_libraries(joblist ${NETSNMP_LIBRARIES} -L${SERVER_SOURCE_ROOT_DIR}/libmysql/ libmysqlclient_r.so)
+target_link_libraries(joblist ${NETSNMP_LIBRARIES} -L${SERVER_BUILD_INCLUDE_DIR}/../libmysql/ libmysqlclient_r.so)
 
 set_target_properties(joblist PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
