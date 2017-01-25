@@ -1,5 +1,7 @@
-CREATE DATABASE columnstore_info;
+CREATE DATABASE IF NOT EXISTS columnstore_info;
 USE columnstore_info;
+
+DROP FUNCTION IF EXISTS `format_filesize`;
 
 DELIMITER //
 CREATE FUNCTION `format_filesize`(filesize FLOAT) RETURNS varchar(20) CHARSET utf8 DETERMINISTIC
@@ -21,6 +23,7 @@ END LOOP;
 
 END //
 
+DROP PROCEDURE IF EXISTS `total_usage` //
 
 CREATE PROCEDURE total_usage ()
 BEGIN
@@ -29,25 +32,44 @@ BEGIN
         (SELECT format_filesize(sum(file_size)) TOTAL_DISK_USAGE FROM INFORMATION_SCHEMA.COLUMNSTORE_FILES) TOTAL_DISK_USAGE;
 END //
 
+DROP PROCEDURE IF EXISTS `table_usage` //
+
 CREATE PROCEDURE table_usage (IN t_schema char(64), IN t_name char(64))
 BEGIN
+    DROP TABLE IF EXISTS columnstore_info.columnstore_columns;
+    DROP TABLE IF EXISTS columnstore_info.columnstore_files;
+    CREATE TABLE columnstore_info.columnstore_columns engine=myisam as (select * from information_schema.columnstore_columns);
+    ALTER TABLE columnstore_info.columnstore_columns ADD INDEX `object_id` (`object_id`);
+    ALTER TABLE columnstore_info.columnstore_columns ADD INDEX `dictionary_object_id` (`dictionary_object_id`);
+    CREATE TABLE columnstore_info.columnstore_files engine=myisam as (select * from information_schema.columnstore_files);
+    ALTER TABLE columnstore_info.columnstore_files ADD INDEX `object_id` (`object_id`);
     IF t_name IS NOT NULL THEN
-    SELECT TABLE_SCHEMA, TABLE_NAME, format_filesize(sum(cf.file_size)) DATA_DISK_USAGE, format_filesize(sum(IFNULL(ccf.file_size, 0))) DICT_DISK_USAGE, format_filesize(sum(cf.file_size) + sum(IFNULL(ccf.file_size, 0))) TOTAL_USAGE FROM INFORMATION_SCHEMA.COLUMNSTORE_COLUMNS cc
-JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES cf ON cc.object_id = cf.object_id
-LEFT JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES ccf ON cc.dictionary_object_id = ccf.object_id
-WHERE table_name = t_name and (table_schema = t_schema or t_schema IS NULL) GROUP BY table_schema, table_name;
+SELECT TABLE_SCHEMA, TABLE_NAME, data as DATA_DISK_USAGE, dict as DICT_DISK_USAGE, data + dict as TOTAL_USAGE FROM (
+SELECT TABLE_SCHEMA, TABLE_NAME, (SELECT sum(cf.file_size) as data FROM columnstore_info.columnstore_columns cc JOIN columnstore_info.columnstore_files cf ON cc.object_id = cf.object_id WHERE table_name = ics.table_name and table_schema = ics.table_schema) as data, (SELECT sum(cf.file_size) as dict FROM columnstore_info.columnstore_columns cc JOIN columnstore_info.columnstore_files cf ON cc.dictionary_object_id = cf.object_id WHERE table_name = ics.table_name and table_schema = ics.table_schema GROUP BY table_schema, table_name) as dict
+FROM
+columnstore_info.columnstore_columns ics where table_name = t_name and (table_schema = t_schema or t_schema IS NULL)
+group by table_schema, table_name
+) q;
     ELSEIF t_schema IS NOT NULL THEN
-    SELECT TABLE_SCHEMA, TABLE_NAME, format_filesize(sum(cf.file_size)) DATA_DISK_USAGE, format_filesize(sum(IFNULL(ccf.file_size, 0))) DICT_DISK_USAGE, format_filesize(sum(cf.file_size) + sum(IFNULL(ccf.file_size, 0))) TOTAL_USAGE FROM INFORMATION_SCHEMA.COLUMNSTORE_COLUMNS cc
-JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES cf ON cc.object_id = cf.object_id
-LEFT JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES ccf ON cc.dictionary_object_id = ccf.object_id
-WHERE table_schema = t_schema GROUP BY table_schema, table_name;
+SELECT TABLE_SCHEMA, TABLE_NAME, data as DATA_DISK_USAGE, dict as DICT_DISK_USAGE, data + dict as TOTAL_USAGE FROM (
+SELECT TABLE_SCHEMA, TABLE_NAME, (SELECT sum(cf.file_size) as data FROM columnstore_info.columnstore_columns cc JOIN columnstore_info.columnstore_files cf ON cc.object_id = cf.object_id WHERE table_name = ics.table_name and table_schema = ics.table_schema) as data, (SELECT sum(cf.file_size) as dict FROM columnstore_info.columnstore_columns cc JOIN columnstore_info.columnstore_files cf ON cc.dictionary_object_id = cf.object_id WHERE table_name = ics.table_name and table_schema = ics.table_schema GROUP BY table_schema, table_name) as dict
+FROM
+columnstore_info.columnstore_columns ics where table_schema = t_schema
+group by table_schema, table_name
+) q;
     ELSE
-    SELECT TABLE_SCHEMA, TABLE_NAME, format_filesize(sum(cf.file_size)) DATA_DISK_USAGE, format_filesize(sum(IFNULL(ccf.file_size, 0))) DICT_DISK_USAGE, format_filesize(sum(cf.file_size) + sum(IFNULL(ccf.file_size, 0))) TOTAL_USAGE FROM INFORMATION_SCHEMA.COLUMNSTORE_COLUMNS cc
-JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES cf ON cc.object_id = cf.object_id
-LEFT JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES ccf ON cc.dictionary_object_id = ccf.object_id
-GROUP BY table_schema, table_name;
+SELECT TABLE_SCHEMA, TABLE_NAME, data as DATA_DISK_USAGE, dict as DICT_DISK_USAGE, data + dict as TOTAL_USAGE FROM (
+SELECT TABLE_SCHEMA, TABLE_NAME, (SELECT sum(cf.file_size) as data FROM columnstore_info.columnstore_columns cc JOIN columnstore_info.columnstore_files cf ON cc.object_id = cf.object_id WHERE table_name = ics.table_name and table_schema = ics.table_schema) as data, (SELECT sum(cf.file_size) as dict FROM columnstore_info.columnstore_columns cc JOIN columnstore_info.columnstore_files cf ON cc.dictionary_object_id = cf.object_id WHERE table_name = ics.table_name and table_schema = ics.table_schema GROUP BY table_schema, table_name) as dict
+FROM
+columnstore_info.columnstore_columns ics
+group by table_schema, table_name
+) q;
     END IF;
+    DROP TABLE IF EXISTS columnstore_info.columnstore_columns;
+    DROP TABLE IF EXISTS columnstore_info.columnstore_files;
 END //
+
+DROP PROCEDURE IF EXISTS `compression_ratio` //
 
 CREATE PROCEDURE compression_ratio()
 BEGIN
