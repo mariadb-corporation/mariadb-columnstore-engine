@@ -35,7 +35,15 @@ END //
 DROP PROCEDURE IF EXISTS `table_usage` //
 
 CREATE PROCEDURE table_usage (IN t_schema char(64), IN t_name char(64))
-BEGIN
+`table_usage`: BEGIN
+
+    DECLARE `locker` TINYINT UNSIGNED DEFAULT IS_USED_LOCK('table_usage');
+
+    IF `locker` IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error acuqiring table_usage lock';
+        LEAVE `table_usage`;
+    END IF;
+    DO GET_LOCK('table_usage', 0);
     DROP TABLE IF EXISTS columnstore_info.columnstore_columns;
     DROP TABLE IF EXISTS columnstore_info.columnstore_files;
     CREATE TABLE columnstore_info.columnstore_columns engine=myisam as (select * from information_schema.columnstore_columns);
@@ -67,6 +75,7 @@ group by table_schema, table_name
     END IF;
     DROP TABLE IF EXISTS columnstore_info.columnstore_columns;
     DROP TABLE IF EXISTS columnstore_info.columnstore_files;
+    DO RELEASE_LOCK('table_usage');
 END //
 
 DROP PROCEDURE IF EXISTS `compression_ratio` //
