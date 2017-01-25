@@ -4,6 +4,7 @@
 #
 
 verbose=0
+
 prefix=/usr/local/mariadb/columnstore
 #mysqldir=$prefix/mariadb-columnstore/mysql
 columnstoredir=$prefix
