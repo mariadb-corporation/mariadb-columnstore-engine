@@ -73,6 +73,7 @@ void ThreadPool::init()
     fStop = false;
 //     fThreadCreated = new NoOp();
     fNextFunctor = fWaitingFunctors.end();
+	fNextHandle=1;
 }
 
 void ThreadPool::setQueueSize(size_t queueSize)
@@ -115,10 +116,35 @@ void ThreadPool::wait()
     }
 }
 
-void ThreadPool::invoke(const Functor_T &threadfunc)
+void ThreadPool::join(uint64_t thrHandle)
 {
     boost::mutex::scoped_lock lock1(fMutex);
 
+    while (waitingFunctorsSize > 0)
+    {
+		Container_T::iterator iter;
+		Container_T::iterator end = fWaitingFunctors.end();
+		bool foundit = false;
+		for (iter = fWaitingFunctors.begin(); iter != end; ++iter)
+		{
+			if (iter->first == thrHandle)
+			{
+				foundit = true;
+				break;
+			}
+		}
+		if (!foundit)
+		{
+			break;
+		}
+        fThreadAvailable.wait(lock1);
+    }
+}
+
+int64_t ThreadPool::invoke(const Functor_T &threadfunc)
+{
+    boost::mutex::scoped_lock lock1(fMutex);
+	int64_t thrHandle=0;
     for(;;)
     {
 
@@ -128,7 +154,7 @@ void ThreadPool::invoke(const Functor_T &threadfunc)
             {
                 // Don't create a thread unless it's needed.  There
                 // is a thread available to service this request.
-                addFunctor(threadfunc);
+                thrHandle = addFunctor(threadfunc);
                 lock1.unlock();
                 break;
             }
@@ -138,7 +164,7 @@ void ThreadPool::invoke(const Functor_T &threadfunc)
             if ( waitingFunctorsSize < fQueueSize)
             {
                 // Don't create a thread unless you have to
-                addFunctor(threadfunc);
+                thrHandle = addFunctor(threadfunc);
                 bAdded = true;
             }
 
@@ -175,6 +201,7 @@ void ThreadPool::invoke(const Functor_T &threadfunc)
     }
 
     fNeedThread.notify_one();
+	return thrHandle;
 }
 
 void ThreadPool::beginThread() throw()
@@ -218,7 +245,7 @@ void ThreadPool::beginThread() throw()
 
 				for (i = 0; i < num; i++) {
 					try {
-	                    (*todoList[i])();
+	                    (*todoList[i]).second();
 					}
 					catch(exception &e) {
 						++fFunctorErrors;
@@ -290,24 +317,23 @@ void ThreadPool::beginThread() throw()
         catch(...)
         {
         }
-
     }
-
 }
 
-void ThreadPool::addFunctor(const Functor_T &func)
+int64_t ThreadPool::addFunctor(const Functor_T &func)
 {
     bool bAtEnd = false;
 
     if (fNextFunctor == fWaitingFunctors.end())
         bAtEnd = true;
 
-    fWaitingFunctors.push_back(func);
+    fWaitingFunctors.push_back(make_pair(fNextHandle, func));
 	waitingFunctorsSize++;
     if (bAtEnd)
     {
         --fNextFunctor;
     }
+	return fNextHandle++;
 }
 
 void ThreadPool::dump()

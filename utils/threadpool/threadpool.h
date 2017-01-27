@@ -60,6 +60,7 @@ class ThreadPool
 {
 public:
     typedef boost::function0<void> Functor_T;
+	typedef pair<int64_t, Functor_T> PoolFunction_T;
 
     /*********************************************
      *  ctor/dtor
@@ -132,7 +133,7 @@ public:
       * queueSize tasks already waiting, invoke() will block until a slot in the
       * queue comes free.
       */
-    EXPORT void invoke(const Functor_T &threadfunc);
+    EXPORT int64_t invoke(const Functor_T &threadfunc);
 
     /** @brief stop the threads
       */
@@ -142,7 +143,11 @@ public:
       */
     EXPORT void wait();
 
-    /** @brief for use in debugging
+    /** @brief Wait for a specific thread
+      */
+    EXPORT void join(uint64_t thrHandle);
+
+	/** @brief for use in debugging
       */
     EXPORT void dump();
 
@@ -155,7 +160,7 @@ private:
 
     /** @brief add a functor to the list
       */
-    void addFunctor(const Functor_T &func);
+    int64_t addFunctor(const Functor_T &func);
 
     /** @brief thread entry point
       */
@@ -191,7 +196,7 @@ private:
     size_t fMaxThreads;
     size_t fQueueSize;
 
-    typedef std::list<Functor_T> Container_T;
+    typedef std::list<PoolFunction_T> Container_T;
     Container_T fWaitingFunctors;
     Container_T::iterator fNextFunctor;
 //     Functor_T	* fThreadCreated;
@@ -206,6 +211,7 @@ private:
     long 	fGeneralErrors;
     long	fFunctorErrors;
 	uint32_t 	waitingFunctorsSize;
+	uint64_t fNextHandle;
 
 };
 
