@@ -1421,7 +1421,7 @@ inline void copyRow(const Row &in, Row *out, uint32_t colCount)
 	}
 
 	for (uint32_t i = 0; i < colCount; i++) {
-		if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY))
+		if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY || in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB))
 			out->setVarBinaryField(in.getVarBinaryStringField(i), i);
 		else if (UNLIKELY(in.isLongString(i)))
 			//out->setStringField(in.getStringField(i), i);

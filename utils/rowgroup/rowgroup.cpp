@@ -365,7 +365,8 @@ string Row::toString() const
 		else
 			switch (types[i]) {
 				case CalpontSystemCatalog::CHAR:
-				case CalpontSystemCatalog::VARCHAR: {
+				case CalpontSystemCatalog::VARCHAR:
+				{
 					const string &tmp = getStringField(i);
 					os << "(" << getStringLength(i) << ") '" << tmp << "' ";
 					break;
@@ -381,7 +382,9 @@ string Row::toString() const
 				case CalpontSystemCatalog::LONGDOUBLE:
 					os << getLongDoubleField(i) << " ";
 					break;
-				case CalpontSystemCatalog::VARBINARY: {
+				case CalpontSystemCatalog::VARBINARY:
+				case CalpontSystemCatalog::BLOB:
+				{
 					uint32_t len = getVarBinaryLength(i);
 					const uint8_t* val = getVarBinaryField(i);
 					os << "0x" << hex;
@@ -429,7 +432,9 @@ string Row::toCSV() const
 				case CalpontSystemCatalog::LONGDOUBLE:
 					os << getLongDoubleField(i);
 					break;
-				case CalpontSystemCatalog::VARBINARY: {
+				case CalpontSystemCatalog::VARBINARY:
+				case CalpontSystemCatalog::BLOB:
+				{
 					uint32_t len = getVarBinaryLength(i);
 					const uint8_t* val = getVarBinaryField(i);
 					os << "0x" << hex;
@@ -532,6 +537,11 @@ void Row::initToNull()
 				memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
 				break;
 			}
+			case CalpontSystemCatalog::BLOB: {
+				// TODO: no NULL value for long double yet, this is a nan.
+				memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
+				break;
+			}
 			default:
 				ostringstream os;
 				os << "Row::initToNull(): got bad column type (" << types[i] <<
@@ -603,6 +613,7 @@ bool Row::isNullValue(uint32_t colIndex) const
 			}
 			break;
 		}
+		case CalpontSystemCatalog::BLOB:
 		case CalpontSystemCatalog::VARBINARY: {
 			uint32_t pos = offsets[colIndex];
 			if (inStringTable(colIndex)) {
@@ -1100,7 +1111,7 @@ void applyMapping(const int *mapping, const Row &in, Row *out)
 				//out->setStringField(in.getStringField(i), mapping[i]);
 			else if (UNLIKELY(in.isShortString(i)))
 				out->setUintField(in.getUintField(i), mapping[i]);
-			else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY))
+			else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY || in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB))
 				out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
 			else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
 				out->setLongDoubleField(in.getLongDoubleField(i), mapping[i]);

@@ -467,6 +467,7 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 				case CalpontSystemCatalog::CHAR:
 				case CalpontSystemCatalog::VARCHAR:
 				{
+					// TODO: use getStringPointer instead of getStringField to stop the string copies
 					Field_varstring* f2 = (Field_varstring*)*f;
 					switch (colType.colWidth)
 					{
@@ -620,6 +621,14 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 				{
 					intColVal = row.getIntField(s);
 					storeNumericField(f, intColVal, colType);
+					break;
+				}
+				case CalpontSystemCatalog::BLOB:
+				{
+					Field_blob *f2 = (Field_blob*)*f;
+					f2->set_ptr(row.getVarBinaryLength(s), (unsigned char*)row.getVarBinaryField(s));
+					if ((*f)->null_ptr)
+						*(*f)->null_ptr &= ~(*f)->null_bit;
 					break;
 				}
 				default:	// treat as int64
