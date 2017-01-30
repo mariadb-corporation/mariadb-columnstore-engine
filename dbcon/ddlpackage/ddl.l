@@ -156,6 +156,14 @@ EXISTS {return EXISTS;}
 CHANGE {return CHANGE;}
 TRUNCATE {return TRUNCATE;}
 VARBINARY {return VARBINARY;}
+TINYBLOB {return TINYBLOB;}
+BLOB {return BLOB;}
+MEDIUMBLOB {return MEDIUMBLOB;}
+LONGBLOB {return LONGBLOB;}
+TINYTEXT {return TINYTEXT;}
+TEXT {return TEXT;}
+MEDIUMTEXT {return MEDIUMTEXT;}
+LONGTEXT {return LONGTEXT;}
 
 \n { lineno++;}
 
