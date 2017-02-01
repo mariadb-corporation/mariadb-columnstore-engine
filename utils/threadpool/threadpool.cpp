@@ -20,7 +20,7 @@
 *
 *
 ***********************************************************************/
-
+#define NOLOGGING
 #include <stdexcept>
 using namespace std;
 
@@ -127,12 +127,49 @@ void ThreadPool::join(uint64_t thrHandle)
 		bool foundit = false;
 		for (iter = fWaitingFunctors.begin(); iter != end; ++iter)
 		{
+			foundit = false;
 			if (iter->first == thrHandle)
 			{
 				foundit = true;
 				break;
 			}
 		}
+		if (!foundit)
+		{
+			break;
+		}
+        fThreadAvailable.wait(lock1);
+    }
+}
+
+void ThreadPool::join(std::vector<uint64_t> thrHandle)
+{
+    boost::mutex::scoped_lock lock1(fMutex);
+
+    while (waitingFunctorsSize > 0)
+    {
+		Container_T::iterator iter;
+		Container_T::iterator end = fWaitingFunctors.end();
+		bool foundit = false;
+		for (iter = fWaitingFunctors.begin(); iter != end; ++iter)
+		{
+			foundit = false;
+			std::vector<uint64_t>::iterator thrIter;
+			std::vector<uint64_t>::iterator thrEnd = thrHandle.end();
+			for (thrIter = thrHandle.begin(); thrIter != thrEnd; ++thrIter)
+			{
+				if (iter->first == *thrIter)
+				{
+					foundit = true;
+					break;
+				}
+			}
+			if (foundit == true)
+			{
+				break;
+			}
+		}
+		// If we didn't find any of the handles, then all are complete
 		if (!foundit)
 		{
 			break;
@@ -276,6 +313,7 @@ void ThreadPool::beginThread() throw()
         // Log the exception and exit this thread
         try
         {
+#ifndef NOLOGGING
             logging::Message::Args args;
             logging::Message message(5);
             args.add("beginThread: Caught exception: ");
@@ -287,7 +325,7 @@ void ThreadPool::beginThread() throw()
             logging::MessageLog ml(lid);
 
             ml.logErrorMessage( message );
-
+#endif
         }
         catch(...)
         {
@@ -302,6 +340,7 @@ void ThreadPool::beginThread() throw()
         // Log the exception and exit this thread
         try
         {
+#ifndef NOLOGGING
             logging::Message::Args args;
             logging::Message message(6);
             args.add("beginThread: Caught unknown exception!");
@@ -312,7 +351,7 @@ void ThreadPool::beginThread() throw()
             logging::MessageLog ml(lid);
 
             ml.logErrorMessage( message );
-
+#endif
         }
         catch(...)
         {

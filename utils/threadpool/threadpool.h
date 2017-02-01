@@ -147,7 +147,11 @@ public:
       */
     EXPORT void join(uint64_t thrHandle);
 
-	/** @brief for use in debugging
+    /** @brief Wait for a specific thread
+      */
+    EXPORT void join(std::vector<uint64_t> thrHandle);
+
+    /** @brief for use in debugging
       */
     EXPORT void dump();
 
