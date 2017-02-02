@@ -55,12 +55,10 @@ namespace threadpool
   * executing tasks. It is responsible for creating threads and tracking which threads are "busy"
   * and which are idle. Idle threads are utilized as "work" is added to the system.
   */
-
 class ThreadPool
 {
 public:
     typedef boost::function0<void> Functor_T;
-	typedef pair<int64_t, Functor_T> PoolFunction_T;
 
     /*********************************************
      *  ctor/dtor
@@ -158,6 +156,13 @@ public:
 protected:
 
 private:
+    // Used internally to keep a handle associated with each functor for join()
+    struct PoolFunction_T
+    {
+        int64_t hndl;
+        Functor_T functor;
+    };
+
     /** @brief initialize data memebers
       */
     void init();
@@ -193,8 +198,8 @@ private:
     struct NoOp
     {
         void operator () () const
-        {}}
-    ;
+        {}
+    };
 
     size_t fThreadCount;
     size_t fMaxThreads;
@@ -205,7 +210,7 @@ private:
     Container_T::iterator fNextFunctor;
 //     Functor_T	* fThreadCreated;
 
-	uint32_t issued;
+    uint32_t issued;
     boost::mutex fMutex;
     boost::condition fThreadAvailable; // triggered when a thread is available
     boost::condition fNeedThread;      // triggered when a thread is needed

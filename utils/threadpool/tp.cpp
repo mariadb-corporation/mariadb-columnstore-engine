@@ -56,13 +56,14 @@ struct foo
 	int64_t fData;
 	int64_t fThd;
 	string start;
+	bool running;
 
 	void operator ()()
 	{
 		start = timeNow();
 
 		std::cout << "foo thd = " << fThd << " start " << start << std::endl;
-		for (int64_t i = 0; i < 1024*1024*fThd*128; i++)
+		for (int64_t i = 0; i < 1024*1024*(fThd+0)*128; i++)
 			// simulate some work
 			fData++;
 
@@ -70,11 +71,11 @@ struct foo
 		std::cout << "foo thd = " << fThd << " start " << start << " fin " << timeNow() << std::endl;
 	}
 
-	foo(int64_t i) : fThd(i), fData(i) {start=timeNow();}
+	foo(int64_t i) : fThd(i), fData(i), running(true) {start=timeNow();}
 
-	foo(const foo& copy) : fData(copy.fData), fThd(copy.fThd), start(copy.start) {std::cout << "new foo" << endl;}
+	foo(const foo& copy) : fData(copy.fData), fThd(copy.fThd), start(copy.start), running(copy.running) {std::cout << "new foo " << fThd << endl;}
 
-	~foo() {}
+	~foo() {running=false;}
 };
 
 
@@ -87,11 +88,18 @@ int main( int argc, char **argv)
    int t1 = hndl.capacity();
    uint64_t testHndl;
    uint64_t thdhndl=999;
-   for (int64_t y = 0; y < 20; y++)
+   int64_t thd = 1;
+   boost::function0<void> foofunc;
+   boost::function0<void> foofunc2;
+   for (int64_t y = 0; y < 1; y++)
    {
         foo bar(y);
-//        for (int64_t i = 0; i < 10; ++i)
+//		foofunc = bar;
+//		foofunc2 = foofunc;
+		std::cout << "Done with assign" << std::endl;
+        for (int64_t i = 0; i < 1; ++i)
         {
+			bar.fThd=thd++;
 			thdhndl = pool.invoke(bar);
 			if (y<10)
 			{
@@ -117,5 +125,6 @@ int main( int argc, char **argv)
    std::cout << "*** WAIT ***" << std::endl;
    pool.wait();
    pool.dump();
+   sleep(2);
    return 0;
 }

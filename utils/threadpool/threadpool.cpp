@@ -20,7 +20,6 @@
 *
 *
 ***********************************************************************/
-#define NOLOGGING
 #include <stdexcept>
 using namespace std;
 
@@ -128,7 +127,7 @@ void ThreadPool::join(uint64_t thrHandle)
 		for (iter = fWaitingFunctors.begin(); iter != end; ++iter)
 		{
 			foundit = false;
-			if (iter->first == thrHandle)
+			if (iter->hndl == thrHandle)
 			{
 				foundit = true;
 				break;
@@ -158,7 +157,7 @@ void ThreadPool::join(std::vector<uint64_t> thrHandle)
 			std::vector<uint64_t>::iterator thrEnd = thrHandle.end();
 			for (thrIter = thrHandle.begin(); thrIter != thrEnd; ++thrIter)
 			{
-				if (iter->first == *thrIter)
+				if (iter->hndl == *thrIter)
 				{
 					foundit = true;
 					break;
@@ -282,7 +281,7 @@ void ThreadPool::beginThread() throw()
 
 				for (i = 0; i < num; i++) {
 					try {
-	                    (*todoList[i]).second();
+	                    (*todoList[i]).functor();
 					}
 					catch(exception &e) {
 						++fFunctorErrors;
@@ -366,7 +365,11 @@ int64_t ThreadPool::addFunctor(const Functor_T &func)
     if (fNextFunctor == fWaitingFunctors.end())
         bAtEnd = true;
 
-    fWaitingFunctors.push_back(make_pair(fNextHandle, func));
+//	PoolFunction_T poolFunction(fNextHandle, func);
+	PoolFunction_T poolFunction;
+	poolFunction.hndl = fNextHandle;
+	poolFunction.functor = func;
+	fWaitingFunctors.push_back(poolFunction);
 	waitingFunctorsSize++;
     if (bAtEnd)
     {
