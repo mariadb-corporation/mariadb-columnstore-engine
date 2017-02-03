@@ -1438,7 +1438,8 @@ int main(int argc, char* argv[])
 	{
 		IOSocket ios;
 		ios = mqs->accept();
-		exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
+		boost::thread thd(SessionThread(ios, ec, rm));
+		//exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
 	}
 	exeMgrThreadPool.wait();
 

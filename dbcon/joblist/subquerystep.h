@@ -230,7 +230,7 @@ protected:
 
 		SubAdapterStep* fStep;
 	};
-	boost::scoped_ptr<boost::thread>				 fRunner;
+	uint64_t				                         fRunner; // thread pool handle
 
 	boost::scoped_ptr<funcexp::FuncExpWrapper>       fExpression;
 };

@@ -134,6 +134,8 @@ pDictionaryScan::pDictionaryScan(
 	sendWaiting(false),
 	ridCount(0),
 	ridList(0),
+	pThread(0),
+	cThread(0),
 	colType(ct),
 	fScanLbidReqLimit(jobInfo.rm->getJlScanLbidReqLimit()),
 	fScanLbidReqThreshold(jobInfo.rm->getJlScanLbidReqThreshold()),
@@ -214,12 +216,12 @@ void pDictionaryScan::initializeConfigParms()
 
 void pDictionaryScan::startPrimitiveThread()
 {
-	pThread.reset(new boost::thread(pDictionaryScanPrimitive(this)));
+	pThread = jobstepThreadPool.invoke(pDictionaryScanPrimitive(this));
 }
 
 void pDictionaryScan::startAggregationThread()
 {
-	cThread.reset(new boost::thread(pDictionaryScanAggregator(this)));
+	cThread = jobstepThreadPool.invoke(pDictionaryScanAggregator(this));
 }
 
 void pDictionaryScan::run()
@@ -243,8 +245,8 @@ void pDictionaryScan::run()
 
 void pDictionaryScan::join()
 {
-	pThread->join();
-	cThread->join();
+	jobstepThreadPool.join(pThread);
+	jobstepThreadPool.join(cThread);
 	if (isEquality && fDec) {
 		destroyEqualityFilter();
 		isEquality = false;

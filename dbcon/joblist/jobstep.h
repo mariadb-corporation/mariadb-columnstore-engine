@@ -42,7 +42,7 @@
 #include "timestamp.h"
 #include "rowgroup.h"
 #include "querytele.h"
-
+#include "threadpool.h"
 #include "atomicops.h"
 
 #include "branchpred.h"
@@ -53,6 +53,7 @@
 #  endif
 #endif
 
+using namespace threadpool;
 
 namespace joblist
 {
@@ -234,6 +235,7 @@ public:
 	void onClauseFilter(bool b) { fOnClauseFilter = b;    }
 
 protected:
+	static ThreadPool jobstepThreadPool;
 
 	//@bug6088, for telemetry posting
 	static const int64_t STEP_TELE_INTERVAL = 5000;  // now, this is the browser refresh rate

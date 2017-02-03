@@ -55,6 +55,8 @@ namespace joblist
 {
 boost::mutex JobStep::fLogMutex; //=PTHREAD_MUTEX_INITIALIZER;
 
+ThreadPool JobStep::jobstepThreadPool(100,200);
+
 ostream& operator<<(ostream& os, const JobStep* rhs)
 {
     os << rhs->toString();
@@ -100,6 +102,7 @@ JobStep::JobStep(const JobInfo& j) :
 	fQtc.serverParms(tsp);
 	//fStepUuid = bu::random_generator()();
 	fStepUuid = QueryTeleClient::genUUID();
+	jobstepThreadPool.setDebug(true);
 }
 
 //------------------------------------------------------------------------------

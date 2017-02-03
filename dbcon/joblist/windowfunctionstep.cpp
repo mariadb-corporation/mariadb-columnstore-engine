@@ -140,6 +140,7 @@ namespace joblist
 
 WindowFunctionStep::WindowFunctionStep(const JobInfo& jobInfo) :
 	JobStep(jobInfo),
+	fRunner(0),
 	fCatalog(jobInfo.csc),
 	fRowsReturned(0),
 	fEndOfResult(false),
@@ -192,14 +193,14 @@ void WindowFunctionStep::run()
 		fOutputIterator = fOutputDL->getIterator();
 	}
 
-	fRunner.reset(new boost::thread(Runner(this)));
+	fRunner = jobstepThreadPool.invoke(Runner(this));
 }
 
 
 void WindowFunctionStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 
@@ -855,13 +856,13 @@ void WindowFunctionStep::execute()
 			if (fTotalThreads > fFunctionCount)
 				fTotalThreads = fFunctionCount;
 
+			fFunctionThreads.clear();
+			fFunctionThreads.reserve(fTotalThreads);
 			for (uint64_t i = 0; i < fTotalThreads && !cancelled(); i++)
-				fFunctionThreads.push_back(
-					boost::shared_ptr<boost::thread>(new boost::thread(WFunction(this))));
+				fFunctionThreads.push_back(jobstepThreadPool.invoke(WFunction(this)));
 
-			// If cancelled, not all thread is started.
-			for (uint64_t i = 0; i < fFunctionThreads.size(); i++)
-				fFunctionThreads[i]->join();
+			// If cancelled, not all threads are started.
+			jobstepThreadPool.join(fFunctionThreads);
 		}
 
 		if (!(cancelled()))

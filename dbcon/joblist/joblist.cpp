@@ -108,6 +108,35 @@ JobList::~JobList()
 				joiners[i]->join();
 				delete joiners[i];
 			}
+#if 0
+			// Stop all the query steps
+			end = fQuery.end();
+			for (iter = fQuery.begin(); iter != end; ++iter)
+			{
+				(*iter)->abort();
+			}
+
+			// Stop all the projection steps
+			end = fProject.end();
+			for (iter = fProject.begin(); iter != end; ++iter)
+			{
+				(*iter)->abort();
+			}
+
+			// Wait for all the query steps to end
+			end = fQuery.end();
+			for (iter = fQuery.begin(); iter != end; ++iter)
+			{
+				(*iter)->join();
+			}
+
+			// Wait for all the projection steps to end
+			end = fProject.end();
+			for (iter = fProject.begin(); iter != end; ++iter)
+			{
+				(*iter)->join();
+			}
+#endif
 		}
 	}
 	catch (exception& ex)

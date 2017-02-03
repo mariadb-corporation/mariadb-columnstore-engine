@@ -166,7 +166,7 @@ void TupleHashJoinStep::run()
 	}
 
 	joiners.resize(smallDLs.size());
-	mainRunner.reset(new boost::thread(HJRunner(this)));
+	mainRunner = jobstepThreadPool.invoke(HJRunner(this));
 }
 
 void TupleHashJoinStep::join()
@@ -175,12 +175,12 @@ void TupleHashJoinStep::join()
 	if (joinRan)
 		return;
 	joinRan = true;
-	mainRunner->join();
+	jobstepThreadPool.join(mainRunner);
 	if (djs) {
 		for (int i = 0; i < (int) djsJoiners.size(); i++)
 			djs[i].join();
-		djsReader.join();
-		djsRelay.join();
+		jobstepThreadPool.join(djsReader);
+		jobstepThreadPool.join(djsRelay);
 		//cout << "THJS: joined all DJS threads, shared usage = " << *djsSmallUsage << endl;
 	}
 }
@@ -544,9 +544,10 @@ void TupleHashJoinStep::hjRunner()
 			}
 		}
 
+		smallRunners.clear();
+		smallRunners.reserve(smallDLs.size());
 		for (i = 0; i < smallDLs.size(); i++)
-			smallRunners.push_back(boost::shared_ptr<boost::thread>
-			  (new boost::thread(SmallRunner(this, i))));
+			smallRunners.push_back(jobstepThreadPool.invoke(SmallRunner(this, i)));
 	}
 	catch (thread_resource_error&) {
 		string emsg = "TupleHashJoin caught a thread resource error, aborting...\n";
@@ -557,8 +558,7 @@ void TupleHashJoinStep::hjRunner()
 		deliverMutex.unlock();
 	}
 
-	for (i = 0; i < smallRunners.size(); i++)
-		smallRunners[i]->join();
+	jobstepThreadPool.join(smallRunners);
 	smallRunners.clear();
 
 	for (i = 0; i < feIndexes.size() && joiners.size() > 0; i++)
@@ -629,9 +629,9 @@ void TupleHashJoinStep::hjRunner()
 		/* If an error happened loading the existing data, these threads are necessary
 		to finish the abort */
 		try {
-			djsRelay = boost::thread(DJSRelay(this));
+			djsRelay = jobstepThreadPool.invoke(DJSRelay(this));
 			relay = true;
-			djsReader = boost::thread(DJSReader(this, smallSideCount));
+			djsReader = jobstepThreadPool.invoke(DJSReader(this, smallSideCount));
 			reader = true;
 			for (i = 0; i < smallSideCount; i++)
 				djs[i].run();
@@ -1091,7 +1091,7 @@ void TupleHashJoinStep::startJoinThreads()
 	bool more = true;
 	RGData oneRG;
 
-	if (joinRunners)
+	if (joinRunners.size() > 0)
 		return;
 
 	//@bug4836, in error case, stop process, and unblock the next step.
@@ -1142,13 +1142,11 @@ void TupleHashJoinStep::startJoinThreads()
 	makeDupList(fe2 ? fe2Output : outputRG);
 
 	/* Start join runners */
-	joinRunners.reset(new boost::shared_ptr<boost::thread>[joinThreadCount]);
+	joinRunners.reserve(joinThreadCount);
 	for (i = 0; i < joinThreadCount; i++)
-		joinRunners[i].reset(new boost::thread(JoinRunner(this, i)));
-
+		joinRunners.push_back(jobstepThreadPool.invoke(JoinRunner(this, i)));
 	/* Join them and call endOfInput */
-	for (i = 0; i < joinThreadCount; i++)
-		joinRunners[i]->join();
+	jobstepThreadPool.join(joinRunners);
 
 	if (lastSmallOuterJoiner != (uint32_t) -1)
 		finishSmallOuterJoin();

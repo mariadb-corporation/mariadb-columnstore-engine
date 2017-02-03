@@ -767,9 +767,9 @@ void TupleUnion::run()
 		}
 	}
 
+	runners.reserve(inputs.size());
 	for (i = 0; i < inputs.size(); i++) {
-		boost::shared_ptr<boost::thread> th(new boost::thread(Runner(this, i)));
-		runners.push_back(th);
+		runners.push_back(jobstepThreadPool.invoke(Runner(this, i)));
 	}
 }
 
@@ -784,8 +784,7 @@ void TupleUnion::join()
 	joinRan = true;
 	lk.unlock();
 
-	for (i = 0; i < runners.size(); i++)
-		runners[i]->join();
+	jobstepThreadPool.join(runners);
 	runners.clear();
 	uniquer->clear();
 	rowMemory.clear();

@@ -177,10 +177,10 @@ void ThreadPool::join(std::vector<uint64_t> thrHandle)
     }
 }
 
-int64_t ThreadPool::invoke(const Functor_T &threadfunc)
+uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
 {
     boost::mutex::scoped_lock lock1(fMutex);
-	int64_t thrHandle=0;
+	uint64_t thrHandle=0;
     for(;;)
     {
 
@@ -210,6 +210,22 @@ int64_t ThreadPool::invoke(const Functor_T &threadfunc)
 
                 lock1.unlock();
                 fThreads.create_thread(beginThreadFunc(*this));
+				
+				if (fDebug)
+				{
+					logging::Message::Args args;
+					logging::Message message(5);
+					args.add("invoke: Starting thread ");
+					args.add(fThreadCount);
+					args.add(" max ");
+					args.add(fMaxThreads);
+					args.add(" queue ");
+					args.add(fQueueSize);
+					message.format( args );
+					logging::LoggingID lid(22);
+					logging::MessageLog ml(lid);
+					ml.logWarningMessage( message );
+				}
 
                 if (bAdded)
                     break;
@@ -227,7 +243,20 @@ int64_t ThreadPool::invoke(const Functor_T &threadfunc)
                 break;
             }
 
-            fThreadAvailable.wait(lock1);
+			if (fDebug)
+			{
+				logging::Message::Args args;
+				logging::Message message(5);
+				args.add("invoke: Blocked waiting for thread. Count ");
+				args.add(fThreadCount);
+				args.add("max ");
+				args.add(fMaxThreads);
+				message.format( args );
+				logging::LoggingID lid(22);
+				logging::MessageLog ml(lid);
+				ml.logWarningMessage( message );
+				fThreadAvailable.wait(lock1);
+			}
         }
         catch(...)
         {
@@ -358,7 +387,7 @@ void ThreadPool::beginThread() throw()
     }
 }
 
-int64_t ThreadPool::addFunctor(const Functor_T &func)
+uint64_t ThreadPool::addFunctor(const Functor_T &func)
 {
     bool bAtEnd = false;
 

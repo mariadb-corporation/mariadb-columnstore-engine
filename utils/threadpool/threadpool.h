@@ -131,7 +131,7 @@ public:
       * queueSize tasks already waiting, invoke() will block until a slot in the
       * queue comes free.
       */
-    EXPORT int64_t invoke(const Functor_T &threadfunc);
+    EXPORT uint64_t invoke(const Functor_T &threadfunc);
 
     /** @brief stop the threads
       */
@@ -153,13 +153,15 @@ public:
       */
     EXPORT void dump();
 
+	EXPORT void setDebug(bool d) {fDebug = d;}
+
 protected:
 
 private:
     // Used internally to keep a handle associated with each functor for join()
     struct PoolFunction_T
     {
-        int64_t hndl;
+        uint64_t hndl;
         Functor_T functor;
     };
 
@@ -169,7 +171,7 @@ private:
 
     /** @brief add a functor to the list
       */
-    int64_t addFunctor(const Functor_T &func);
+    uint64_t addFunctor(const Functor_T &func);
 
     /** @brief thread entry point
       */
@@ -222,6 +224,7 @@ private:
 	uint32_t 	waitingFunctorsSize;
 	uint64_t fNextHandle;
 
+	bool fDebug;
 };
 
 } // namespace threadpool
