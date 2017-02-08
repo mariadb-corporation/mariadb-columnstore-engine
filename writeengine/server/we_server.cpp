@@ -130,7 +130,26 @@ int main(int argc, char** argv)
     idbdatafile::IDBPolicy::configIDBPolicy();
 #endif
 	Config weConfig;
-	setupResources();
+    int err = setupResources();
+    switch (err)
+    {
+        case -1:
+        case -3:
+            cerr << "Error getting file limits, please see non-root install documentation" << endl;
+            return -1;
+            break;
+        case -2:
+            cerr << "Error setting file limits, please see non-root install documentation" << endl;
+            return -1;
+            break;
+        case -4:
+            cerr << "Could not install file limits to required value, please see non-root install documentation" << endl;
+            return -1;
+            break;
+        default:
+            break;
+    }
+
 	
 	ostringstream serverParms;
 	serverParms << "pm" << weConfig.getLocalModuleID() << "_WriteEngineServer";
