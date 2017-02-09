@@ -81,12 +81,17 @@ IF (EXISTS "/etc/redhat-release")
     set(REDHAT_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "snappy")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 else ()
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs" "snappy")
+    if (${REDHAT_VERSION_NUMBER} EQUAL 7)
+        SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs")
+   else ()
+        SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel" "mariadb-columnstore-libs")
+   endif()
 endif()
+
 
 SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "mariadb-columnstore-libs")
 
@@ -291,6 +296,9 @@ SET(CPACK_RPM_libs_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so.1"
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so"
+"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1.0.0"
+"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1"
+"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so.1"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so"
