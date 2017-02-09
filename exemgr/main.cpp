@@ -1433,13 +1433,19 @@ int main(int argc, char* argv[])
 		}
 	}
 
+//	if (!JobStep::jobstepThreadPool.debug())
+//	{
+//		JobStep::jobstepThreadPool.setName("ExeMgr");
+//		JobStep::jobstepThreadPool.setDebug(true);
+//		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+//	}
+
 	threadpool::ThreadPool exeMgrThreadPool(serverThreads, serverQueueSize);
 	for (;;)
 	{
 		IOSocket ios;
 		ios = mqs->accept();
-		boost::thread thd(SessionThread(ios, ec, rm));
-		//exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
+		exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
 	}
 	exeMgrThreadPool.wait();
 

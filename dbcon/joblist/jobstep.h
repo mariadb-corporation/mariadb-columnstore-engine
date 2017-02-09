@@ -234,8 +234,8 @@ public:
 	bool onClauseFilter() const { return fOnClauseFilter; }
 	void onClauseFilter(bool b) { fOnClauseFilter = b;    }
 
-protected:
 	static ThreadPool jobstepThreadPool;
+protected:
 
 	//@bug6088, for telemetry posting
 	static const int64_t STEP_TELE_INTERVAL = 5000;  // now, this is the browser refresh rate

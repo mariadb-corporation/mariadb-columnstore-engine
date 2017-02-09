@@ -20,6 +20,7 @@
 #include <string>
 using namespace std;
 
+#include <stdlib.h>
 #include <boost/thread.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -102,7 +103,6 @@ JobStep::JobStep(const JobInfo& j) :
 	fQtc.serverParms(tsp);
 	//fStepUuid = bu::random_generator()();
 	fStepUuid = QueryTeleClient::genUUID();
-	jobstepThreadPool.setDebug(true);
 }
 
 //------------------------------------------------------------------------------

@@ -636,8 +636,8 @@ private:
 	uint32_t recvWaiting;
 	int64_t ridCount;
 	execplan::CalpontSystemCatalog::ColType fColType;
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
-	boost::shared_ptr<boost::thread> cThread;  //producer thread
+	uint64_t pThread;  //producer thread
+	uint64_t cThread;  //producer thread
 
 	messageqcpp::ByteStream fFilterString;
 	uint32_t fFilterCount;
@@ -1331,7 +1331,7 @@ private:
 	bool isDictColumn;
 	bool isEM;
 
-	boost::thread* fPTThd;
+//	boost::thread* fPTThd;
 
 	// @bug 663 - Added fSwallowRows for calpont.caltrace(16) which is TRACE_FLAGS::TRACE_NO_ROWS4.
 	// 	      Running with this one will swallow rows at projection.

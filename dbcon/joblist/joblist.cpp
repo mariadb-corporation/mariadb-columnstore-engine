@@ -81,7 +81,7 @@ JobList::~JobList()
 		{
 			JobStepVector::iterator iter;
 			JobStepVector::iterator end;
-
+#if 0
 			iter = fQuery.begin();
 			end = fQuery.end();
 
@@ -108,7 +108,7 @@ JobList::~JobList()
 				joiners[i]->join();
 				delete joiners[i];
 			}
-#if 0
+#endif
 			// Stop all the query steps
 			end = fQuery.end();
 			for (iter = fQuery.begin(); iter != end; ++iter)
@@ -136,7 +136,6 @@ JobList::~JobList()
 			{
 				(*iter)->join();
 			}
-#endif
 		}
 	}
 	catch (exception& ex)

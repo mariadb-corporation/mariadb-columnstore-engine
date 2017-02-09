@@ -31,7 +31,7 @@
 #define THREADPOOL_H
 
 #include <string>
-#include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
@@ -153,8 +153,16 @@ public:
       */
     EXPORT void dump();
 
+	EXPORT std::string& name() {return fName;}
+
+	EXPORT void setName(std::string name) {fName = name;}
+	EXPORT void setName(const char* name) {fName = name;}
+
+	EXPORT bool debug() {return fDebug;}
+
 	EXPORT void setDebug(bool d) {fDebug = d;}
 
+	friend class ThreadPoolMonitor;
 protected:
 
 private:
@@ -224,7 +232,34 @@ private:
 	uint32_t 	waitingFunctorsSize;
 	uint64_t fNextHandle;
 
+	std::string fName;  // Optional to add a name to the pool for debugging.
 	bool fDebug;
+};
+
+// This class, if instantiated, will continuously log details about the indicated threadpool
+// The log will end up in /var/log/mariadb/columnstore/trace/threadpool_<name>.log
+class ThreadPoolMonitor
+{
+public:
+	ThreadPoolMonitor(ThreadPool* pool) : fPool(pool), fLog(NULL)
+	{
+	}
+
+	~ThreadPoolMonitor()
+	{
+		if (fLog)
+		{
+			delete fLog;
+		}
+	}
+
+	void operator()();
+private:
+	//defaults okay
+	//ThreadPoolMonitor(const ThreadPoolMonitor& rhs);
+	//ThreadPoolMonitor& operator=(const ThreadPoolMonitor& rhs);
+	ThreadPool* fPool;
+	std::ofstream* fLog;
 };
 
 } // namespace threadpool

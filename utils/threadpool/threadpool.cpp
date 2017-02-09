@@ -27,10 +27,9 @@ using namespace std;
 #include "messagelog.h"
 using namespace logging;
 
-#define THREADPOOL_DLLEXPORT
 #include "threadpool.h"
-#undef THREADPOOL_DLLEXPORT
-
+#include <iomanip>
+#include <sstream>
 namespace threadpool
 {
 
@@ -69,6 +68,7 @@ void ThreadPool::init()
     fFunctorErrors = 0;
 	waitingFunctorsSize = 0;
 	issued = 0;
+	fDebug = false;
     fStop = false;
 //     fThreadCreated = new NoOp();
     fNextFunctor = fWaitingFunctors.end();
@@ -213,14 +213,12 @@ uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
 				
 				if (fDebug)
 				{
+					ostringstream oss;
+					oss << "invoke: Starting thread " << fThreadCount << " max " << fMaxThreads
+						 << " queue " << fQueueSize;
 					logging::Message::Args args;
-					logging::Message message(5);
-					args.add("invoke: Starting thread ");
-					args.add(fThreadCount);
-					args.add(" max ");
-					args.add(fMaxThreads);
-					args.add(" queue ");
-					args.add(fQueueSize);
+					logging::Message message(0);
+					args.add(oss.str());
 					message.format( args );
 					logging::LoggingID lid(22);
 					logging::MessageLog ml(lid);
@@ -255,8 +253,8 @@ uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
 				logging::LoggingID lid(22);
 				logging::MessageLog ml(lid);
 				ml.logWarningMessage( message );
-				fThreadAvailable.wait(lock1);
 			}
+			fThreadAvailable.wait(lock1);
         }
         catch(...)
         {
@@ -414,4 +412,50 @@ void ThreadPool::dump()
     std::cout << "Waiting functors: " << fWaitingFunctors.size() << std::endl;
 }
 
+
+void ThreadPoolMonitor::operator()()
+{
+	ostringstream filename;
+	filename << "/var/log/mariadb/columnstore/trace/ThreadPool_" << fPool->name() << ".log";
+	fLog = new ofstream(filename.str().c_str());
+	for (;;)
+	{
+		if (!fLog || !fLog->is_open())
+		{
+			ostringstream oss;
+			oss << "ThreadPoolMonitor " << fPool->name() << " has no file ";
+			logging::Message::Args args;
+			logging::Message message(0);
+			args.add(oss.str());
+			message.format( args );
+			logging::LoggingID lid(22);
+			logging::MessageLog ml(lid);
+			ml.logWarningMessage( message );
+			return;
+		}
+		// Get a timestamp for output.
+		struct tm tm;
+		struct timeval tv;
+
+		gettimeofday(&tv, 0);
+		localtime_r(&tv.tv_sec, &tm);
+
+		(*fLog) << setfill('0')
+		<< setw(2) << tm.tm_hour << ':'
+		<< setw(2) << tm.tm_min << ':'
+		<< setw(2) << tm.tm_sec
+		<< '.'
+		<< setw(4) << tv.tv_usec/100
+		<< " Name " << fPool->fName
+		<< " Active " << fPool->waitingFunctorsSize
+		<< " Most " << fPool->fThreadCount
+		<< " Max " << fPool->fMaxThreads
+		<< " Q " << fPool->fQueueSize
+		<< endl;
+
+//		struct timespec req = { 0, 1000 * 100 }; //100 usec
+//		nanosleep(&req, 0);
+		sleep(2);
+	}
+}
 } // namespace threadpool
