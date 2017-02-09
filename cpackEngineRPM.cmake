@@ -73,7 +73,8 @@ SETA(CPACK_RPM_libs_PACKAGE_PROVIDES "mariadb-columnstore-libs")
 SETA(CPACK_RPM_platform_PACKAGE_PROVIDES "mariadb-columnstore-platform")
 SETA(CPACK_RPM_storage-engine_PACKAGE_PROVIDES "mariadb-columnstore-storage-engine")
 
-# Boost is a source build in CentOS 6 so don't require it as a package
+
+ost is a source build in CentOS 6 so don't require it as a package
 SET(REDHAT_VERSION_NUMBER OFF)
 SET(SUSE_VERSION_NUMBER OFF)
 IF (EXISTS "/etc/redhat-release")
@@ -299,9 +300,6 @@ SET(CPACK_RPM_libs_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so.1"
 "/usr/local/mariadb/columnstore/lib/libbatchloader.so"
-"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1.0.0"
-"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so.1"
-"/usr/local/mariadb/columnstore/lib/libmysqlcl_idb.so"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so.1"
 "/usr/local/mariadb/columnstore/lib/libquerystats.so"
