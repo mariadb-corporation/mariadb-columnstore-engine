@@ -75,23 +75,26 @@ SETA(CPACK_RPM_storage-engine_PACKAGE_PROVIDES "mariadb-columnstore-storage-engi
 
 # Boost is a source build in CentOS 6 so don't require it as a package
 SET(REDHAT_VERSION_NUMBER OFF)
+SET(SUSE_VERSION_NUMBER OFF)
 IF (EXISTS "/etc/redhat-release")
     file (READ "/etc/redhat-release" REDHAT_VERSION)
     string(REGEX MATCH "release ([0-9]+)" CENTOS "${REDHAT_VERSION}")
     set(REDHAT_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
+IF (EXISTS "/etc/SuSE-release")
+    file (READ "/etc/SuSE-release" SUSE_VERSION)
+    string(REGEX MATCH "VERSION = ([0-9]+)" SUSE "${SUSE_VERSION}")
+    set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
+ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
     SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
+elseif (${SUSE_VERSION_NUMBER} EQUAL 12)
+   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel >= 1.54.0" "mariadb-columnstore-libs")
 else ()
-    if (${REDHAT_VERSION_NUMBER} EQUAL 7)
-        SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs")
-   else ()
-        SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost-devel" "mariadb-columnstore-libs")
-   endif()
+   SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "boost >= 1.53.0" "mariadb-columnstore-libs")
 endif()
-
 
 SETA(CPACK_RPM_storage-engine_PACKAGE_REQUIRES "mariadb-columnstore-libs")
 
