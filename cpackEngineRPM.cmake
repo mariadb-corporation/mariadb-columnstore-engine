@@ -74,7 +74,7 @@ SETA(CPACK_RPM_platform_PACKAGE_PROVIDES "mariadb-columnstore-platform")
 SETA(CPACK_RPM_storage-engine_PACKAGE_PROVIDES "mariadb-columnstore-storage-engine")
 
 
-ost is a source build in CentOS 6 so don't require it as a package
+#boost is a source build in CentOS 6 so don't require it as a package
 SET(REDHAT_VERSION_NUMBER OFF)
 SET(SUSE_VERSION_NUMBER OFF)
 IF (EXISTS "/etc/redhat-release")
