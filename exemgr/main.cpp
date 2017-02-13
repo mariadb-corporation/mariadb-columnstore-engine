@@ -1393,6 +1393,20 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	// It's possible that PM modules use this threadpool. Only ExeMgr creates
+	// massive amounts of threads and needs to be settable. It's also possible that
+	// other process on this UM module use this threadpool. In this case, they share.
+	// We can't call rm functions during the static creation because rm has a isExeMgr
+	// flag that is set upon first creation. For the pool, who has no idea if it is ExeMgr,
+	// to create the singleton rm would be wrong, no matter which way we set the flag.
+	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+	JobStep::jobstepThreadPool.setName("ExeMgr");
+	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
+	{
+		JobStep::jobstepThreadPool.setDebug(true);
+		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+	}
+	
 	int serverThreads = rm->getEmServerThreads();
 	int serverQueueSize = rm->getEmServerQueueSize();
 	int maxPct = rm->getEmMaxPct();
@@ -1432,13 +1446,6 @@ int main(int argc, char* argv[])
 		{
 		}
 	}
-
-//	if (!JobStep::jobstepThreadPool.debug())
-//	{
-//		JobStep::jobstepThreadPool.setName("ExeMgr");
-//		JobStep::jobstepThreadPool.setDebug(true);
-//		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
-//	}
 
 	threadpool::ThreadPool exeMgrThreadPool(serverThreads, serverQueueSize);
 	for (;;)

@@ -74,7 +74,10 @@ public:
       * @param maxThreads the maximum number of threads in this pool. This is the maximum number
       *        of simultaneuous operations that can go on.
       * @param queueSize  the maximum number of work tasks in the queue. This is the maximum
-      *        number of jobs that can queue up in the work list before invoke() blocks.
+	  *        number of jobs that can queue up in the work list before invoke() blocks.
+	  *        If 0, then threads never block and total threads may
+	  *        exceed maxThreads. Nothing waits. Thread count will
+	  *        idle down to maxThreads when less work is required.
       */
     EXPORT explicit ThreadPool( size_t maxThreads, size_t queueSize );
 
@@ -107,11 +110,6 @@ public:
     /** @brief get the maximum number of threads
       */
     inline size_t getMaxThreads() const { return fMaxThreads; }
-
-    /** @brief register a functor to be called when a new thread
-      *  is created
-      */
-    EXPORT void setThreadCreatedListener(const Functor_T &f) ;
 
     /** @brief queue size accessor
       *
@@ -218,9 +216,8 @@ private:
     typedef std::list<PoolFunction_T> Container_T;
     Container_T fWaitingFunctors;
     Container_T::iterator fNextFunctor;
-//     Functor_T	* fThreadCreated;
 
-    uint32_t issued;
+    uint32_t fIssued;
     boost::mutex fMutex;
     boost::condition fThreadAvailable; // triggered when a thread is available
     boost::condition fNeedThread;      // triggered when a thread is needed

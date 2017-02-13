@@ -74,7 +74,7 @@ JobList::JobList(bool isEM) :
 JobList::~JobList()
 {
 	vector<boost::thread *> joiners;
-	boost::thread *tmp;
+//	boost::thread *tmp;
 	try
 	{
 		if (fIsRunning)
