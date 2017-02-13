@@ -33,7 +33,6 @@ if { $TTYOPT != "" } {
 }
 log_user $DEBUG
 spawn -noecho /bin/bash
-expect -re {[$#] }
 
 if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
