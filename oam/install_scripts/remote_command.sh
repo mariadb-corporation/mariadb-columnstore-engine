@@ -56,13 +56,10 @@ expect {
 						}
 	"word: " { send "$PASSWORD\n" }
 	"passphrase" { send "$PASSWORD\n" }
-	-re {[$#] } { exit 0 }
 }
 expect {
-	-re {[$#] } { exit 0 }
 	"Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
 	"(y or n)"  { send "y\n" 
-					  expect -re {[$#] } { exit 0 }
 					}
 }
 exit 0
