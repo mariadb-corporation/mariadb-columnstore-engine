@@ -21,13 +21,14 @@ set NODEPS [lindex $argv 6]
 set MYSQLPW [lindex $argv 7]
 set MYSQLPORT [lindex $argv 8]
 set DEBUG [lindex $argv 9]
+set DEPLOY_PACKAGES [lindex $argv 10]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 10]
+set IDIR [lindex $argv 11]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
 set USERNAME "root"
-set UNM [lindex $argv 11]
+set UNM [lindex $argv 12]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
@@ -35,7 +36,6 @@ if { $UNM != "" } {
 if { $MYSQLPW == "none" } {
 	set MYSQLPW " "
 } 
-set DEPLOY_PACKAGES [lindex $argv 12]
 
 set BASH "/bin/bash "
 #if { $DEBUG == "1" } {

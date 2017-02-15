@@ -19,17 +19,17 @@ set INSTALLTYPE [lindex $argv 4]
 set PKGTYPE [lindex $argv 5]
 set NODEPS [lindex $argv 6]
 set DEBUG [lindex $argv 7]
+set DEPLOY_PACKAGES [lindex $argv 8]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 8]
+set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
 set USERNAME "root"
-set UNM [lindex $argv 13]
+set UNM [lindex $argv 10]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
-set DEPLOY_PACKAGES [lindex $argv 14]
 
 set BASH "/bin/bash "
 if { $DEBUG == "1" } {
