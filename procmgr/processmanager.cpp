@@ -5066,7 +5066,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
 				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password +
-                        " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 " + managePackages + " > /tmp/user_installer.log";
+					" " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 " + managePackages + " > /tmp/user_installer.log";
 
 				log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 

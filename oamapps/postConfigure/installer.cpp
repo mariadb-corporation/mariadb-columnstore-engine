@@ -568,9 +568,9 @@ int main(int argc, char *argv[])
 						
 					cout << endl << "----- Performing Uninstall on Module '" + remoteModuleName + "' -----" << endl << endl;
 					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
-                          password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm +
-                          " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt +
-                          " " + installer_debug + " " + managePackages;
+						password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm +
+						" " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt +
+						" " + installer_debug + " " + managePackages;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						cout << endl << "ERROR: returned from user_installer.sh" << endl;
@@ -665,9 +665,9 @@ int main(int argc, char *argv[])
 						
 					cout << endl << "----- Performing Install on Module '" + remoteModuleName + "' -----" << endl << endl;
 					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password +
-                            " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " +
-                            mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt +
-                            " " + installer_debug + managePackages;
+        					" " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " +
+						mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt +
+						" " + installer_debug + managePackages;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						cout << endl << "ERROR returned from user_installer.sh" << endl;
