@@ -47,7 +47,7 @@ set HOME "$env(HOME)"
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     if { $PKGTYPE == "rpm" } {
         set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^mariadb-columnstore')"
         set PKGERASE1 "rpm -e --nodeps "
@@ -97,7 +97,7 @@ send_user "\n"
 #BUG 5749 - SAS: didn't work on their system until I added the sleep 60
 sleep 60
 
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
         #
         # erase MariaDB Columnstore packages
@@ -124,7 +124,7 @@ if { $DEPLOY_PACKAGES } {
 
 if { $INSTALLTYPE == "uninstall" } { exit 0 }
 
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
 
     send "scp $HOME/mariadb-columnstore*$VERSION*$PKGTYPE $USERNAME@$SERVER:.;$PKGERASE1 dummy\n"
     if { $PASSWORD != "ssh" } {

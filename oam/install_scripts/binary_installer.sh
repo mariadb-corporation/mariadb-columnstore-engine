@@ -47,7 +47,7 @@ if { $DEBUG == "1" } {
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
         #
         # remove MariaDB Columnstore files
@@ -83,7 +83,7 @@ if { $DEPLOY_PACKAGES } {
 if { $INSTALLTYPE == "uninstall" } {
 	exit 0
 }
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     sleep 10
     #
     # send the MariaDB Columnstore package
