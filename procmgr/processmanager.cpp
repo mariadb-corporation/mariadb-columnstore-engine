@@ -5065,7 +5065,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			if ( packageType != "binary" ) {
 				log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
-				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 " + managePackages + " > /tmp/user_installer.log";
+				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password +
+                        " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 " + managePackages + " > /tmp/user_installer.log";
 
 				log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -5075,7 +5076,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						// if log file size is zero, retry
-						ifstream in("/tmp/user_installer.log");
+						ifstream in("/tmp/"
+						"user_installer.log");
 						in.seekg(0, std::ios::end);
 						int size = in.tellg();
 						if ( size == 0 )
@@ -5110,7 +5112,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				string binservertype = oam.itoa(config.ServerInstallType());
 				if ( PMwithUM == "y" )
 					binservertype = "pmwithum";
-				string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+				string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
+                        password + " " + calpontPackage + " " + remoteModuleType + " initial " +  binservertype + " " +
+                        MySQLPort + " 1 " + " " +  managePackages + binaryInstallDir + " > /tmp/binary_installer.log";
 
 				log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5201,7 +5205,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					if ( PMwithUM == "y" )
 						binservertype = "pmwithum";
 
-					string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+					string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
+                            " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " + binservertype +
+                            " " + MySQLPort + " 1 " + " " +  managePackages + binaryInstallDir + " > /tmp/binary_installer.log";
 
 					log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
