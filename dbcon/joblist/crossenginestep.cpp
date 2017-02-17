@@ -88,7 +88,10 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
 	fCon = mysql_init(NULL);
 	if (fCon != NULL)
 	{
-		if (mysql_real_connect(fCon, h, u, w, d, p, NULL, 0) == NULL)
+        unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
+        mysql_options(fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
+
+        if (mysql_real_connect(fCon, h, u, w, d, p, NULL, 0) == NULL)
 		{
 			fErrStr = "fatal error in mysql_real_connect()";
             ret = mysql_errno(fCon);
