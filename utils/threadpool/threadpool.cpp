@@ -274,7 +274,7 @@ void ThreadPool::beginThread() throw()
             if (fNextFunctor == fWaitingFunctors.end())
             {
                 // Wait until someone needs a thread
-                // Add the timed waait for queueSize == 0 so we can idle away threads
+                // Add the timed wait for queueSize == 0 so we can idle away threads
                 // over fMaxThreads
                 if (fQueueSize > 0)
                 {
@@ -392,7 +392,6 @@ uint64_t ThreadPool::addFunctor(const Functor_T &func)
     if (fNextFunctor == fWaitingFunctors.end())
         bAtEnd = true;
 
-//	PoolFunction_T poolFunction(fNextHandle, func);
     PoolFunction_T poolFunction;
     poolFunction.hndl = fNextHandle;
     poolFunction.functor = func;

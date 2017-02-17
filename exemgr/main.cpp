@@ -1393,7 +1393,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-    // jobstepThreadPool is used by other processes. We can't call 
+    // class jobstepThreadPool is used by other processes. We can't call 
     // resourcemanaager (rm) functions during the static creation of threadpool 
     // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
     // From  the pools perspective, it has no idea if it is ExeMgr doing the 
