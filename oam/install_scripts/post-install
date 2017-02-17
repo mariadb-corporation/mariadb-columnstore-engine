@@ -41,8 +41,8 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
 	# add library config file
-	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
-	ldconfig
+	$SUDO /bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
+	$SUDO ldconfig
 fi
 
 #check 64-bit OS compatiable

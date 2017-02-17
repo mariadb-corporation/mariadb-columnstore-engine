@@ -7,8 +7,9 @@
 # Argument 2 - Remote Server password
 # Argument 3 - Command
 # Argument 4 - debug flag
-# Argument 5 - Remote user name (optional)
-# Argument 6 - Force a tty to be allocated (optional)
+# Argument 5 - Command Line Prompt (optional)
+# Argument 6 - Remote user name (optional)
+# Argument 7 - Force a tty to be allocated (optional)
 set stty_init {cols 512 -opost};
 set timeout 30
 set SERVER [lindex $argv 0]
@@ -38,6 +39,11 @@ if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
 }
 
+set PROMPT1 "# "
+set PROMPT2 "$ "
+set PROMPT3 "> "
+set PROMPT4 "# "
+
 # 
 # send command
 #
@@ -56,11 +62,23 @@ expect {
 						}
 	"word: " { send "$PASSWORD\n" }
 	"passphrase" { send "$PASSWORD\n" }
+	"$PROMPT1" { exit 0 }
+        "$PROMPT2" { exit 0 }
+        "$PROMPT3" { exit 0 }
+        "$PROMPT4" { exit 0 }
 }
 expect {
+        "$PROMPT1" { exit 0 }
+        "$PROMPT2" { exit 0 }
+        "$PROMPT3" { exit 0 }
+        "$PROMPT4" { exit 0 }
 	"Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
-	"(y or n)"  { send "y\n" 
-					}
+			"(y or n)"  { send "y\n" 
+	        		"$PROMPT1" { exit 0 }
+        			"$PROMPT2" { exit 0 }
+        			"$PROMPT3" { exit 0 }
+       	 			"$PROMPT4" { exit 0 }
+	}
 }
 exit 0
 
