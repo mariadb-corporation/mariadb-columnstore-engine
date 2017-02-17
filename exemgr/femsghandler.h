@@ -37,18 +37,14 @@ public:
 
 	void threadFcn();
 
+    static threadpool::ThreadPool threadPool;
+
 private:
 	bool die, running, sawData;
 	messageqcpp::IOSocket *sock;
 	boost::shared_ptr<joblist::JobList> jl;
 	boost::mutex mutex;
-//	boost::thread thr;
-	static threadpool::ThreadPool threadPool;
-
-	// Because we can't join() a thread from a thread pool, threadFcn will
-	// unlock when it exits and the destructor can block until the thread is done.
-	boost::mutex joinMutex;
-
+	uint64_t thr;
 };
 
 #endif /* FEMSGHANDLER_H_ */

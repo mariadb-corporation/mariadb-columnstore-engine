@@ -330,6 +330,20 @@ public:
 	virtual bool  deliverStringTableRowGroup() const = 0;
 };
 
+class NullStep : public JobStep
+{
+public:
+    /** @brief virtual void Run method
+     */
+    virtual void run(){}
+    /** @brief virtual void join method
+     */
+    virtual void join(){}
+    /** @brief virtual string toString method
+     */
+    virtual const std::string toString() const {return "NullStep";}
+};
+
 // calls rhs->toString()
 std::ostream& operator<<(std::ostream& os, const JobStep* rhs);
 

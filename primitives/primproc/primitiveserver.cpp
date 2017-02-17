@@ -2032,6 +2032,7 @@ PrimitiveServer::PrimitiveServer(int serverThreads,
 	fCacheCount=cacheCount;
 	fServerpool.setMaxThreads(fServerThreads);
 	fServerpool.setQueueSize(fServerQueueSize);
+    fServerpool.setName("PrimitiveServer");
 
 	fProcessorPool.reset(new threadpool::PriorityThreadPool(fProcessorWeight, highPriorityThreads,
 						 medPriorityThreads, lowPriorityThreads, 0));

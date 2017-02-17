@@ -24,7 +24,7 @@ using namespace std;
 using namespace joblist;
 using namespace messageqcpp;
 
-threadpool::ThreadPool FEMsgHandler::threadPool(100,200);
+threadpool::ThreadPool FEMsgHandler::threadPool(50,100);
 
 namespace {
 
@@ -52,15 +52,14 @@ FEMsgHandler::FEMsgHandler(boost::shared_ptr<JobList> j, IOSocket *s) :
 FEMsgHandler::~FEMsgHandler()
 {
 	stop();
-//	thr.join();
-	boost::unique_lock<boost::mutex> lk(joinMutex);
+	threadPool.join(thr);
 }
 
 void FEMsgHandler::start()
 {
 	if (!running) {
 		running = true;
-		threadPool.invoke(Runner(this));
+		thr = threadPool.invoke(Runner(this));
 	}
 }
 
@@ -109,7 +108,6 @@ bool FEMsgHandler::aborted()
 void FEMsgHandler::threadFcn()
 {
 	int err = 0;
-	boost::unique_lock<boost::mutex> lk(joinMutex);
 	int connectionNum = sock->getConnectionNum();
 
 	/* This waits for the next readable event on sock.  An abort is signaled

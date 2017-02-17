@@ -283,42 +283,28 @@ void ThreadPool::beginThread() throw()
                 else
                 {
                     // Wait no more than 10 minutes
-                    if (fNeedThread.timed_wait(lock1, timeout) == boost::cv_status::timeout)
+                    if (!fNeedThread.timed_wait(lock1, timeout)) // false means it timed out
                     {
                         if (fThreadCount > fMaxThreads)
                         {
                             --fThreadCount;
                             return;
                         }
+                        timeout = boost::get_system_time()+boost::posix_time::minutes(10);
                     }
                 }
             }
             else
             {
-                /* Need to tune these magic #s */
-                vector<Container_T::iterator> todoList;
-                int i, num;
-                Container_T::const_iterator iter;
-
-                /* Use num to control how many jobs are issued to a single thread
-                   should you want to batch more than one */
-                num = (waitingFunctorsSize - fIssued >= 1 ? 1 : 0);
-
-                for (i = 0; i < num; i++)
-                    todoList.push_back(fNextFunctor++);
-
-                fIssued += num;
-// 				cerr << "got " << num << " jobs." << endl;
-//   				cerr << "got " << num << " jobs. waitingFunctorsSize=" <<
-//   					waitingFunctorsSize << " fIssued=" << fIssued << " fThreadCount=" <<
-//   					fThreadCount << endl;
-                lock1.unlock();
-
-                for (i = 0; i < num; i++)
+                // If there's anything waiting, run it
+                if (waitingFunctorsSize - fIssued > 0)
                 {
+                    Container_T::iterator todo = fNextFunctor++;
+                    ++fIssued;
+                    lock1.unlock();
                     try
                     {
-                        (*todoList[i]).functor();
+                        todo->functor();
                     }
                     catch (exception &e)
                     {
@@ -334,18 +320,12 @@ void ThreadPool::beginThread() throw()
                         ml.logErrorMessage( message );
 #endif
                     }
+                    lock1.lock();
+                    --fIssued;
+                    --waitingFunctorsSize;
+                    fWaitingFunctors.erase(todo);
                 }
-                lock1.lock();
 
-                fIssued -= num;
-                waitingFunctorsSize -= num;
-                for (i = 0; i < num; i++)
-                    fWaitingFunctors.erase(todoList[i]);
-/*
-                if (waitingFunctorsSize != fWaitingFunctors.size())
-                    cerr << "size mismatch!  fake size=" << waitingFunctorsSize <<
-                        " real size=" << fWaitingFunctors.size() << endl;
-*/
                 timeout = boost::get_system_time()+boost::posix_time::minutes(10);
                 fThreadAvailable.notify_all();
             }

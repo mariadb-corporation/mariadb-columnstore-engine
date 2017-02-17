@@ -515,7 +515,7 @@ public:
 		SJLP jl;
 		bool incSessionThreadCnt = true;
 
-		bool selfJoin = false;
+		bool selfJoin = false; 
 		bool tryTuples = false;
 		bool usingTuples = false;
 		bool stmtCounted = false;
@@ -1393,19 +1393,18 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// It's possible that PM modules use this threadpool. Only ExeMgr creates
-	// massive amounts of threads and needs to be settable. It's also possible that
-	// other process on this UM module use this threadpool. In this case, they share.
-	// We can't call rm functions during the static creation because rm has a isExeMgr
-	// flag that is set upon first creation. For the pool, who has no idea if it is ExeMgr,
-	// to create the singleton rm would be wrong, no matter which way we set the flag.
+    // jobstepThreadPool is used by other processes. We can't call 
+    // resourcemanaager (rm) functions during the static creation of threadpool 
+    // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
+    // From  the pools perspective, it has no idea if it is ExeMgr doing the 
+    // creation, so it has no idea which way to set the flag. So we set the max here.
 	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
-	JobStep::jobstepThreadPool.setName("ExeMgr");
-	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
-	{
-		JobStep::jobstepThreadPool.setDebug(true);
-		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
-	}
+    JobStep::jobstepThreadPool.setName("ExeMgrJobList");
+//	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
+//	{
+//		JobStep::jobstepThreadPool.setDebug(true);
+//		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+//	}
 	
 	int serverThreads = rm->getEmServerThreads();
 	int serverQueueSize = rm->getEmServerQueueSize();
@@ -1413,7 +1412,11 @@ int main(int argc, char* argv[])
 	int pauseSeconds = rm->getEmSecondsBetweenMemChecks();
 	int priority = rm->getEmPriority();
 
-	if (maxPct > 0)
+    FEMsgHandler::threadPool.setMaxThreads(serverThreads);
+    FEMsgHandler::threadPool.setQueueSize(serverQueueSize);
+    FEMsgHandler::threadPool.setName("FEMsgHandler");
+    
+    if (maxPct > 0)
 		startRssMon(maxPct, pauseSeconds);
 
 #ifndef _MSC_VER
@@ -1448,6 +1451,7 @@ int main(int argc, char* argv[])
 	}
 
 	threadpool::ThreadPool exeMgrThreadPool(serverThreads, serverQueueSize);
+    exeMgrThreadPool.setName("ExeMgrServer");
 	for (;;)
 	{
 		IOSocket ios;

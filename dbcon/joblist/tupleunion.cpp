@@ -775,9 +775,7 @@ void TupleUnion::run()
 
 void TupleUnion::join()
 {
-	uint32_t i;
 	mutex::scoped_lock lk(jlLock);
-	Uniquer_t::iterator it;
 
 	if (joinRan)
 		return;

@@ -28,7 +28,6 @@
 using namespace std;
 
 #include "joblist.h"
-
 #include "calpontsystemcatalog.h"
 using namespace execplan;
 
@@ -73,23 +72,26 @@ JobList::JobList(bool isEM) :
 
 JobList::~JobList()
 {
-	vector<boost::thread *> joiners;
-//	boost::thread *tmp;
 	try
 	{
 		if (fIsRunning)
 		{
-			JobStepVector::iterator iter;
-			JobStepVector::iterator end;
 #if 0
+            // This logic creates a set of threads to wind down the query
+            vector<uint64_t> joiners;
+            joiners.reserve(20);
+            NullStep nullStep;  // For access to the static jobstepThreadPool.
+
+            JobStepVector::iterator iter;
+			JobStepVector::iterator end;
+
 			iter = fQuery.begin();
 			end = fQuery.end();
 
 			// Wait for all the query steps to finish
 			while (iter != end)
 			{
-				tmp = new boost::thread(JSJoiner(iter->get()));
-				joiners.push_back(tmp);
+				joiners.push_back(nullStep.jobstepThreadPool.invoke(JSJoiner(iter->get())));
 				++iter;
 			}
 
@@ -99,17 +101,15 @@ JobList::~JobList()
 			// wait for the projection steps
 			while (iter != end)
 			{
-				tmp = new boost::thread(JSJoiner(iter->get()));
-				joiners.push_back(tmp);
+                joiners.push_back(nullStep.jobstepThreadPool.invoke(JSJoiner(iter->get())));
 				++iter;
 			}
 
-			for (uint32_t i = 0; i < joiners.size(); i++) {
-				joiners[i]->join();
-				delete joiners[i];
-			}
+            nullStep.jobstepThreadPool.join(joiners);
 #endif
-			// Stop all the query steps
+            // This logic stops the query steps one at a time
+            JobStepVector::iterator iter;
+            JobStepVector::iterator end;
 			end = fQuery.end();
 			for (iter = fQuery.begin(); iter != end; ++iter)
 			{
