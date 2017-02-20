@@ -558,8 +558,23 @@ int main(int argc, char* argv[])
     }
 
 	DMLServer dmlserver(serverThreads, serverQueueSize,&dbrm);
+    ResourceManager *rm = ResourceManager::instance();
 
-	//set ACTIVE state
+    // jobstepThreadPool is used by other processes. We can't call 
+    // resourcemanaager (rm) functions during the static creation of threadpool 
+    // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
+    // From  the pools perspective, it has no idea if it is ExeMgr doing the 
+    // creation, so it has no idea which way to set the flag. So we set the max here.
+    JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+    JobStep::jobstepThreadPool.setName("DMLProcJobList");
+    
+//    if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
+//   {
+//        JobStep::jobstepThreadPool.setDebug(true);
+//        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+//    }
+
+    //set ACTIVE state
     try
     {
         oam.processInitComplete("DMLProc", ACTIVE);
@@ -567,7 +582,6 @@ int main(int argc, char* argv[])
     catch (...)
     {
     }
-	ResourceManager *rm = ResourceManager::instance();
 	Dec = DistributedEngineComm::instance(rm);
 
 #ifndef _MSC_VER

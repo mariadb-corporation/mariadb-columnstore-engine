@@ -1130,6 +1130,7 @@ DMLServer::DMLServer(int packageMaxThreads, int packageWorkQueueSize, DBRM* dbrm
 
 	fDmlPackagepool.setMaxThreads(fPackageMaxThreads);
 	fDmlPackagepool.setQueueSize(fPackageWorkQueueSize);
+    fDmlPackagepool.setName("DmlPackagepool");
 }
 
 void DMLServer::start()

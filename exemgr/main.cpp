@@ -97,6 +97,8 @@ using namespace querytele;
 #include "utils_utf8.h"
 #include "boost/filesystem.hpp"
 
+#include "threadpool.h"
+
 namespace {
 
 //If any flags other than the table mode flags are set, produce output to screeen
@@ -513,7 +515,7 @@ public:
 		SJLP jl;
 		bool incSessionThreadCnt = true;
 
-		bool selfJoin = false;
+		bool selfJoin = false; 
 		bool tryTuples = false;
 		bool usingTuples = false;
 		bool stmtCounted = false;
@@ -1410,13 +1412,30 @@ int main(int argc, char* argv[])
 		}
 	}
 
+    // class jobstepThreadPool is used by other processes. We can't call 
+    // resourcemanaager (rm) functions during the static creation of threadpool 
+    // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
+    // From  the pools perspective, it has no idea if it is ExeMgr doing the 
+    // creation, so it has no idea which way to set the flag. So we set the max here.
+	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+    JobStep::jobstepThreadPool.setName("ExeMgrJobList");
+//	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
+//	{
+//		JobStep::jobstepThreadPool.setDebug(true);
+//		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+//	}
+	
 	int serverThreads = rm->getEmServerThreads();
 	int serverQueueSize = rm->getEmServerQueueSize();
 	int maxPct = rm->getEmMaxPct();
 	int pauseSeconds = rm->getEmSecondsBetweenMemChecks();
 	int priority = rm->getEmPriority();
 
-	if (maxPct > 0)
+    FEMsgHandler::threadPool.setMaxThreads(serverThreads);
+    FEMsgHandler::threadPool.setQueueSize(serverQueueSize);
+    FEMsgHandler::threadPool.setName("FEMsgHandler");
+    
+    if (maxPct > 0)
 		startRssMon(maxPct, pauseSeconds);
 
 #ifndef _MSC_VER
@@ -1450,12 +1469,15 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	threadpool::ThreadPool exeMgrThreadPool(serverThreads, serverQueueSize);
+    exeMgrThreadPool.setName("ExeMgrServer");
 	for (;;)
 	{
 		IOSocket ios;
 		ios = mqs->accept();
-		boost::thread thd(SessionThread(ios, ec, rm));
+		exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
 	}
+	exeMgrThreadPool.wait();
 
 	return 0;
 }

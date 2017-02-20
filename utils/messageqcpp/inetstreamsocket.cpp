@@ -436,15 +436,15 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
 	uint8_t* msglenp = reinterpret_cast<uint8_t*>(&msglen);
 	size_t mlread = 0;
 	
-	bool myIsTimeOut = false;
-	if (readToMagic(msecs, &myIsTimeOut, stats) == false)	//indicates a timeout or EOF
+	if (readToMagic(msecs, isTimeOut, stats) == false)	//indicates a timeout or EOF
 	{
-	    if (!myIsTimeOut)
-	        logIoError("InetStreamSocket::read: EOF during readToMagic", 0);
-	    if (isTimeOut)
-	    {
-	        *isTimeOut = myIsTimeOut;
-	    }
+		// MCOL-480 The connector calls with timeout in a loop so that
+		// it can check a killed flag. This means that for a long running query,
+		// the following fills the warning log.
+//		if (isTimeOut && *isTimeOut)
+//		{
+//			logIoError("InetStreamSocket::read: timeout during readToMagic", 0);
+//		}
 	    return SBS(new ByteStream(0));
 	}
 

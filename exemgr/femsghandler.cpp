@@ -24,6 +24,8 @@ using namespace std;
 using namespace joblist;
 using namespace messageqcpp;
 
+threadpool::ThreadPool FEMsgHandler::threadPool(50,100);
+
 namespace {
 
 class Runner
@@ -50,14 +52,14 @@ FEMsgHandler::FEMsgHandler(boost::shared_ptr<JobList> j, IOSocket *s) :
 FEMsgHandler::~FEMsgHandler()
 {
 	stop();
-	thr.join();
+	threadPool.join(thr);
 }
 
 void FEMsgHandler::start()
 {
 	if (!running) {
 		running = true;
-		thr = boost::thread(Runner(this));
+		thr = threadPool.invoke(Runner(this));
 	}
 }
 

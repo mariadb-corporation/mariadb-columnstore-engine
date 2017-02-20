@@ -184,6 +184,7 @@ TupleAggregateStep::TupleAggregateStep(
 		fAggregator(agg),
 		fRowGroupOut(rgOut),
 		fRowGroupIn(rgIn),
+		fRunner(0),
 		fUmOnly(false),
 		fRm(jobInfo.rm),
 		fBucketNum(0),
@@ -254,7 +255,7 @@ void TupleAggregateStep::run()
 {
 	if (fDelivery == false)
 	{
-		fRunner.reset(new thread(Aggregator(this)));
+		fRunner = jobstepThreadPool.invoke(Aggregator(this));
 	}
 }
 
@@ -262,7 +263,7 @@ void TupleAggregateStep::run()
 void TupleAggregateStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 
@@ -4210,13 +4211,14 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                         // and if there is more data to read, the
                         // first thread will start another thread until the
                         // maximum number is reached.
+#if 0
                         if (threadID == 0 && fFirstPhaseThreadCount < fNumOfThreads &&
-                          dlIn->more(fInputIter)) {
-                            fFirstPhaseRunners[fFirstPhaseThreadCount].reset
-                                (new boost::thread(ThreadedAggregator(this, fFirstPhaseThreadCount)));
+                          dlIn->more(fInputIter)) 
+						{
+                            fFirstPhaseRunners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, fFirstPhaseThreadCount)));
                             fFirstPhaseThreadCount++;
                         }
-
+#endif
 						fRowGroupIns[threadID].setData(&rgData);
 						fMemUsage[threadID] += fRowGroupIns[threadID].getSizeWithStrings();
 						if (!fRm->getMemory(fRowGroupIns[threadID].getSizeWithStrings(), fSessionMemLimit))
@@ -4479,29 +4481,29 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 		if (!fDoneAggregate)
 		{
 			initializeMultiThread();
-/*
-//          This block of code starts all threads at the start
+
+//        This block of code starts all threads at the start
           fFirstPhaseThreadCount = fNumOfThreads;
-          boost::shared_ptr<boost::thread> runner;
+		  fFirstPhaseRunners.clear();
+		  fFirstPhaseRunners.reserve(fNumOfThreads); // to prevent a resize during use
           for (i = 0; i < fNumOfThreads; i++)
-          {
-              runner.reset(new boost::thread(ThreadedAggregator(this, i)));
-              fFirstPhaseRunners.push_back(runner);
+    	  {
+		      fFirstPhaseRunners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, i)));
           }
-*/
 
+#if 0
 //          This block of code starts one thread, relies on doThreadedAggregation()
+//          For reasons unknown, this doesn't work right with threadpool
 //          to start more as needed
-            fFirstPhaseRunners.resize(fNumOfThreads); // to prevent a resize during use
+			fFirstPhaseRunners.clear();
+            fFirstPhaseRunners.reserve(fNumOfThreads); // to prevent a resize during use
             fFirstPhaseThreadCount = 1;
-            for (i = 1; i < fNumOfThreads; i++)
-                // fill with valid thread objects to make joining work
-                fFirstPhaseRunners[i].reset(new boost::thread());
-            fFirstPhaseRunners[0].reset(new boost::thread(ThreadedAggregator(this, 0)));
+			fFirstPhaseRunners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, 0)));
+#endif
 
-            for (i = 0; i < fNumOfThreads; i++)
-                fFirstPhaseRunners[i]->join();
-            fFirstPhaseRunners.clear();
+			// Now wait for that thread plus all the threads it may have spawned
+			jobstepThreadPool.join(fFirstPhaseRunners);
+			fFirstPhaseRunners.clear();
         }
 
 		if (dynamic_cast<RowAggregationDistinct*>(fAggregator.get()) && fAggregator->aggMapKeyLength() > 0)
@@ -4511,8 +4513,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 			{
 				if (!fDoneAggregate)
 				{
-					vector<boost::shared_ptr<thread> > runners;
-					boost::shared_ptr<thread> runner;
+					vector<uint64_t> runners; // thread pool handles
 					fRowGroupsDeliveredData.resize(fNumOfBuckets);
 
                     uint32_t bucketsPerThread = fNumOfBuckets/fNumOfThreads;
@@ -4521,13 +4522,12 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
                     //uint32_t bucketsPerThread = 1;
                     //uint32_t numThreads = fNumOfBuckets;
 
+					runners.reserve(numThreads);
                     for (i = 0; i < numThreads; i++)
                     {
-                        runner.reset(new boost::thread(ThreadedSecondPhaseAggregator(this, i*bucketsPerThread, bucketsPerThread)));
-                        runners.push_back(runner);
+                        runners.push_back(jobstepThreadPool.invoke(ThreadedSecondPhaseAggregator(this, i*bucketsPerThread, bucketsPerThread)));
                     }
-                    for (i = 0; i < numThreads; i++)
-                        runners[i]->join();
+					jobstepThreadPool.join(runners);
                 }
 
 				fDoneAggregate = true;

@@ -137,6 +137,7 @@ CrossEngineStep::CrossEngineStep(
 		fRowsPerGroup(256),
 		fOutputDL(NULL),
 		fOutputIterator(0),
+		fRunner(0),
 		fEndOfResult(false),
 		fSchema(schema),
 		fTable(table),
@@ -422,14 +423,14 @@ void CrossEngineStep::run()
         fOutputIterator = fOutputDL->getIterator();
     }
 
-	fRunner.reset(new boost::thread(Runner(this)));
+	fRunner = jobstepThreadPool.invoke(Runner(this));
 }
 
 
 void CrossEngineStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 

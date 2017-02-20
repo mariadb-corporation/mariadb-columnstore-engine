@@ -150,6 +150,7 @@ SubAdapterStep::SubAdapterStep(SJSTEP& s, const JobInfo& jobInfo)
 	, fEndOfResult(false)
 	, fInputIterator(0)
 	, fOutputIterator(0)
+	, fRunner(0)
 {
 	fAlias = s->alias();
 	fView = s->view();
@@ -191,14 +192,14 @@ void SubAdapterStep::run()
 	if (fDelivery)
 		fOutputIterator = fOutputDL->getIterator();
 
-	fRunner.reset(new boost::thread(Runner(this)));
+	fRunner = jobstepThreadPool.invoke(Runner(this));
 }
 
 
 void SubAdapterStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 

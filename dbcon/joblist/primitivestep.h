@@ -321,8 +321,8 @@ private:
 
 	BRM::DBRM dbrm;
 
-	boost::shared_ptr<boost::thread> cThread;  //consumer thread
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
+	// boost::shared_ptr<boost::thread> cThread;  //consumer thread
+	// boost::shared_ptr<boost::thread> pThread;  //producer thread
 	boost::mutex mutex;
 	boost::condition condvar;
 	boost::condition flushed;
@@ -636,8 +636,8 @@ private:
 	uint32_t recvWaiting;
 	int64_t ridCount;
 	execplan::CalpontSystemCatalog::ColType fColType;
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
-	boost::shared_ptr<boost::thread> cThread;  //producer thread
+	uint64_t pThread;  //producer thread
+	uint64_t cThread;  //producer thread
 
 	messageqcpp::ByteStream fFilterString;
 	uint32_t fFilterCount;
@@ -772,8 +772,8 @@ private:
 	DataList<ElementType> *ridList;
 	messageqcpp::ByteStream fFilterString;
 	execplan::CalpontSystemCatalog::ColType colType;
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
-	boost::shared_ptr<boost::thread> cThread;  //producer thread
+	uint64_t pThread;  //producer thread. thread pool handle
+	uint64_t cThread;  //consumer thread. thread pool handle
 	DataList_t* requestList;
 	//StringDataList* stringList;
 	boost::mutex mutex;
@@ -1036,8 +1036,6 @@ protected:
 private:
 	void formatMiniStats();
 
-    typedef boost::shared_ptr<boost::thread> SPTHD;
-	typedef boost::shared_array<SPTHD> SATHD;
     void startPrimitiveThread();
     void startAggregationThread();
     void initializeConfigParms();
@@ -1060,7 +1058,7 @@ private:
 	uint32_t fNumThreads;
 	PrimitiveStepType ffirstStepType;
 	bool isFilterFeeder;
-    SATHD fProducerThread;
+    std::vector<uint64_t> fProducerThreads; // thread pool handles
 	messageqcpp::ByteStream fFilterString;
 	uint32_t fFilterCount;
 	execplan::CalpontSystemCatalog::ColType fColType;
@@ -1097,8 +1095,8 @@ private:
 	uint64_t fMsgBytesOut;  // total byte count for outcoming messages
 	uint64_t fBlockTouched; // total blocks touched
     uint32_t fExtentsPerSegFile;//config num of Extents Per Segment File
-    boost::shared_ptr<boost::thread> cThread;  //consumer thread
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
+    // uint64_t cThread;  //consumer thread. thread handle from thread pool
+	uint64_t pThread;  //producer thread. thread handle from thread pool
 	boost::mutex tplMutex;
 	boost::mutex dlMutex;
 	boost::mutex cpMutex;
@@ -1251,7 +1249,7 @@ private:
     execplan::CalpontSystemCatalog::OID fTableOID;
 	execplan::CalpontSystemCatalog::ColType fColType;
     int8_t fBOP;
-    boost::shared_ptr<boost::thread> runner;    // @bug 686
+    // int64_t runner;    // thread handle from thread pool
 
 	// @bug 687 Add data and friend declarations for concurrent filter steps.
 	std::vector<ElementType> fSortedA; // used to internally sort input data
@@ -1333,7 +1331,7 @@ private:
 	bool isDictColumn;
 	bool isEM;
 
-	boost::thread* fPTThd;
+//	boost::thread* fPTThd;
 
 	// @bug 663 - Added fSwallowRows for calpont.caltrace(16) which is TRACE_FLAGS::TRACE_NO_ROWS4.
 	// 	      Running with this one will swallow rows at projection.

@@ -340,6 +340,7 @@ DDLProcessor::DDLProcessor( int packageMaxThreads, int packageWorkQueueSize )
 {
     fDdlPackagepool.setMaxThreads(fPackageMaxThreads);
     fDdlPackagepool.setQueueSize(fPackageWorkQueueSize);
+    fDdlPackagepool.setName("DdlPackagepool");
 	csc = CalpontSystemCatalog::makeCalpontSystemCatalog();
 	csc->identity(CalpontSystemCatalog::EC);
 	string teleServerHost(config::Config::makeConfig()->getConfig("QueryTele", "Host"));

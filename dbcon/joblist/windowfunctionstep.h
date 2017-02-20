@@ -153,7 +153,7 @@ private:
 		WindowFunctionStep* fStep;
 	};
 
-	boost::scoped_ptr<boost::thread> fRunner;
+	uint64_t fRunner; // thread pool handle
 
 	boost::shared_ptr<execplan::CalpontSystemCatalog>  fCatalog;
 	uint64_t                         fRowsReturned;
@@ -188,7 +188,7 @@ private:
 
 		WindowFunctionStep* fStep;
 	};
-	std::vector<boost::shared_ptr<boost::thread> > fFunctionThreads;
+	std::vector<uint64_t> fFunctionThreads;
 
 	std::vector<RowPosition>         fRows;
 	std::vector<boost::shared_ptr<windowfunction::WindowFunction> > fFunctions;

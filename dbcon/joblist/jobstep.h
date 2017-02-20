@@ -42,7 +42,7 @@
 #include "timestamp.h"
 #include "rowgroup.h"
 #include "querytele.h"
-
+#include "threadpool.h"
 #include "atomicops.h"
 
 #include "branchpred.h"
@@ -53,6 +53,7 @@
 #  endif
 #endif
 
+using namespace threadpool;
 
 namespace joblist
 {
@@ -233,6 +234,7 @@ public:
 	bool onClauseFilter() const { return fOnClauseFilter; }
 	void onClauseFilter(bool b) { fOnClauseFilter = b;    }
 
+	static ThreadPool jobstepThreadPool;
 protected:
 
 	//@bug6088, for telemetry posting
@@ -326,6 +328,20 @@ public:
     virtual const rowgroup::RowGroup& getDeliveredRowGroup() const = 0;
 	virtual void  deliverStringTableRowGroup(bool b) = 0;
 	virtual bool  deliverStringTableRowGroup() const = 0;
+};
+
+class NullStep : public JobStep
+{
+public:
+    /** @brief virtual void Run method
+     */
+    virtual void run(){}
+    /** @brief virtual void join method
+     */
+    virtual void join(){}
+    /** @brief virtual string toString method
+     */
+    virtual const std::string toString() const {return "NullStep";}
 };
 
 // calls rhs->toString()

@@ -97,7 +97,7 @@ protected:
 		TupleHavingStep* fStep;
 	};
 
-	boost::scoped_ptr<boost::thread> fRunner;
+	uint64_t fRunner;  // thread pool handle
 
 	uint64_t fRowsReturned;
 	bool     fEndOfResult;

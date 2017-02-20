@@ -20,6 +20,7 @@
 
 #include "joblist.h"
 #include "inetstreamsocket.h"
+#include "threadpool.h"
 
 class FEMsgHandler
 {
@@ -36,12 +37,14 @@ public:
 
 	void threadFcn();
 
+    static threadpool::ThreadPool threadPool;
+
 private:
 	bool die, running, sawData;
 	messageqcpp::IOSocket *sock;
 	boost::shared_ptr<joblist::JobList> jl;
-	boost::thread thr;
 	boost::mutex mutex;
+	uint64_t thr;
 };
 
 #endif /* FEMSGHANDLER_H_ */

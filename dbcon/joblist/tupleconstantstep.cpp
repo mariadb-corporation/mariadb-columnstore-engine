@@ -81,6 +81,7 @@ TupleConstantStep::TupleConstantStep(const JobInfo& jobInfo) :
 		fInputDL(NULL),
 		fOutputDL(NULL),
 		fInputIterator(0),
+		fRunner(0),
 		fEndOfResult(false)
 {
 	fExtendedInfo = "TCS: ";
@@ -290,7 +291,7 @@ void TupleConstantStep::run()
 		if (fOutputDL == NULL)
 			throw logic_error("Output is not a RowGroup data list.");
 
-		fRunner.reset(new boost::thread(Runner(this)));
+		fRunner = jobstepThreadPool.invoke(Runner(this));
 	}
 }
 
@@ -298,7 +299,7 @@ void TupleConstantStep::run()
 void TupleConstantStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 

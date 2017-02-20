@@ -60,7 +60,8 @@ namespace joblist
   const uint64_t defaultHUATotalMem = 8 * 1024 * 1024 * 1024ULL;
 
   const uint32_t defaultTupleDLMaxSize = 64 * 1024;
-  const uint32_t defaultTupleMaxBuckets = 256;
+
+  const uint32_t defaultJLThreadPoolSize = 100;
 
   //pcolscan.cpp
   const uint32_t defaultScanLbidReqLimit  = 10000;
@@ -160,13 +161,17 @@ namespace joblist
     unsigned  	getHjNumThreads() const { return  fHjNumThreads; } //getUintVal(fHashJoinStr, "NumThreads", defaultNumThreads); }
     uint64_t  	getHjMaxElems()  const { return  getUintVal(fHashJoinStr, "MaxElems", defaultHJMaxElems); }
     uint32_t  	getHjFifoSizeLargeSide() const { return  getUintVal(fHashJoinStr, "FifoSizeLargeSide", defaultHJFifoSizeLargeSide); }
-	uint32_t 		getHjCPUniqueLimit() const { return getUintVal(fHashJoinStr, "CPUniqueLimit", defaultHjCPUniqueLimit); }
+	uint32_t 	getHjCPUniqueLimit() const { return getUintVal(fHashJoinStr, "CPUniqueLimit", defaultHjCPUniqueLimit); }
 	uint64_t	getPMJoinMemLimit() const { return pmJoinMemLimit; }
 
     uint32_t  	getJLFlushInterval() const { return  getUintVal(fJobListStr, "FlushInterval", defaultFlushInterval); }
     uint32_t  	getJlFifoSize() const { return  getUintVal(fJobListStr, "FifoSize", defaultFifoSize); }
     uint32_t  	getJlScanLbidReqLimit() const { return  getUintVal(fJobListStr, "ScanLbidReqLimit",defaultScanLbidReqLimit); }
     uint32_t  	getJlScanLbidReqThreshold() const { return  getUintVal(fJobListStr,"ScanLbidReqThreshold", defaultScanLbidReqThreshold); }
+
+	// @MCOL-513 - Added threadpool to JobSteps
+	uint32_t  	getJLThreadPoolSize() const { return  getUintVal(fJobListStr, "ThreadPoolSize", defaultJLThreadPoolSize); }
+	std::string	getJlThreadPoolDebug() const { return  getStringVal(fJobListStr, "ThreadPoolDebug", "N"); }
 
     // @bug 1264 - Added LogicalBlocksPerScan configurable which determines the number of blocks contained in each BPS scan request.
     uint32_t    getJlLogicalBlocksPerScan() const { return  getUintVal(fJobListStr,"LogicalBlocksPerScan", defaultLogicalBlocksPerScan); }
@@ -180,9 +185,9 @@ namespace joblist
     uint32_t  	getJlMaxOutstandingRequests() const { return  getUintVal(fJobListStr,"MaxOutstandingRequests", defaultMaxOutstandingRequests);}
     uint32_t  	getJlJoinerChunkSize() const { return  getUintVal(fJobListStr,"JoinerChunkSize", defaultJoinerChunkSize);}
 
-    int	      	getPsCount() const { return  getUintVal(fPrimitiveServersStr, "Count", defaultPSCount ); }
+	int	      	getPsCount() const { return  getUintVal(fPrimitiveServersStr, "Count", defaultPSCount ); }
     int	      	getPsConnectionsPerPrimProc() const { return getUintVal(fPrimitiveServersStr, "ConnectionsPerPrimProc", defaultConnectionsPerPrimProc); }
-    uint32_t      	getPsLBID_Shift() const { return  getUintVal(fPrimitiveServersStr, "LBID_Shift", defaultLBID_Shift ); }
+    uint32_t   	getPsLBID_Shift() const { return  getUintVal(fPrimitiveServersStr, "LBID_Shift", defaultLBID_Shift ); }
 
     std::string getScTempDiskPath() const { return  getStringVal(fSystemConfigStr, "TempDiskPath", defaultTempDiskPath  ); }
     uint64_t  	getScTempSaveSize() const { return  getUintVal(fSystemConfigStr, "TempSaveSize", defaultTempSaveSize); }

@@ -118,7 +118,7 @@ private:
 		Runner(TupleUnion *t, uint32_t in) : tu(t), index(in) { }
 		void operator()() { tu->readInput(index); }
 	};
-	std::vector<boost::shared_ptr<boost::thread> > runners;
+	std::vector<uint64_t> runners; //thread pool handles
 
 	struct Hasher {
 		TupleUnion *ts;

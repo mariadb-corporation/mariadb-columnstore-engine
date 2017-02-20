@@ -182,7 +182,7 @@ protected:
 		CrossEngineStep* fStep;
 	};
 
-	boost::scoped_ptr<boost::thread> fRunner;
+	uint64_t fRunner;  // thread pool handle
 	OIDVector fOIDVector;
 	bool fEndOfResult;
 	bool fRunExecuted;
