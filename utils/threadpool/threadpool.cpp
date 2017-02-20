@@ -134,7 +134,7 @@ void ThreadPool::join(uint64_t thrHandle)
     }
 }
 
-void ThreadPool::join(std::vector<uint64_t> thrHandle)
+void ThreadPool::join(std::vector<uint64_t>& thrHandle)
 {
     boost::mutex::scoped_lock lock1(fMutex);
 
