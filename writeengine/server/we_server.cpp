@@ -130,27 +130,7 @@ int main(int argc, char** argv)
     idbdatafile::IDBPolicy::configIDBPolicy();
 #endif
 	Config weConfig;
-    int err = setupResources();
-    switch (err)
-    {
-        case -1:
-        case -3:
-            cerr << "Error getting file limits, please see non-root install documentation" << endl;
-            return -1;
-            break;
-        case -2:
-            cerr << "Error setting file limits, please see non-root install documentation" << endl;
-            return -1;
-            break;
-        case -4:
-            cerr << "Could not install file limits to required value, please see non-root install documentation" << endl;
-            return -1;
-            break;
-        default:
-            break;
-    }
 
-	
 	ostringstream serverParms;
 	serverParms << "pm" << weConfig.getLocalModuleID() << "_WriteEngineServer";
 
@@ -204,6 +184,45 @@ int main(int argc, char** argv)
 			}
 		}
 	}
+
+    int err = setupResources();
+    string errMsg;
+    switch (err)
+    {
+        case -1:
+        case -3:
+            errMsg = "Error getting file limits, please see non-root install documentation";
+            break;
+        case -2:
+            errMsg = "Error setting file limits, please see non-root install documentation";
+            break;
+        case -4:
+            errMsg = "Could not install file limits to required value, please see non-root install documentation";
+            break;
+        default:
+            break;
+    }
+    if (err < 0)
+    {
+        Oam oam;
+        logging::Message::Args args;
+        logging::Message message;
+        args.add( errMsg );
+        message.format(args);
+        logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
+        logging::MessageLog ml(lid);
+        ml.logCriticalMessage( message );
+        cerr << errMsg << endl;
+        try
+        {
+            oam.processInitFailure();
+        }
+        catch (...)
+        {
+        }
+        return 2;
+    }
+
 
 	IOSocket ios;
 	size_t mt = 20;

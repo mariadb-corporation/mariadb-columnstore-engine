@@ -297,23 +297,35 @@ int main(int argc, char* argv[])
 	mlp = new primitiveprocessor::Logger();
 
     int err = setupResources();
+    string errMsg;
     switch (err)
     {
         case -1:
         case -3:
-            cerr << "Error getting file limits, please see non-root install documentation" << endl;
-            return -1;
+            errMsg = "Error getting file limits, please see non-root install documentation";
             break;
         case -2:
-            cerr << "Error setting file limits, please see non-root install documentation" << endl;
-            return -1;
+            errMsg = "Error setting file limits, please see non-root install documentation";
             break;
         case -4:
-            cerr << "Could not install file limits to required value, please see non-root install documentation" << endl;
-            return -1;
+            errMsg = "Could not install file limits to required value, please see non-root install documentation";
             break;
         default:
             break;
+    }
+    if (err < 0)
+    {
+        Oam oam;
+        mlp->logMessage(errMsg);
+        cerr << errMsg << endl;
+        try
+        {
+            oam.processInitFailure();
+        }
+        catch (...)
+        {
+        }
+        return 2;
     }
 
 	int serverThreads = 1;
