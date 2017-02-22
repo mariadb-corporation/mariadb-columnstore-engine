@@ -24,8 +24,9 @@ set PKGTYPE "binary"
 set SERVERTYPE [lindex $argv 6]
 set MYSQLPORT [lindex $argv 7]
 set DEBUG [lindex $argv 8]
+set DEPLOY_PACKAGES [lindex $argv 9]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 9]
+set IDIR [lindex $argv 10]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
@@ -33,11 +34,10 @@ set env(COLUMNSTORE_INSTALL_DIR) $INSTALLDIR
 set PREFIX [file dirname $INSTALLDIR]
 set PREFIX [file dirname $PREFIX]
 set USERNAME $env(USER)
-set UNM [lindex $argv 10]
+set UNM [lindex $argv 11]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
-set DEPLOY_PACKAGES [lindex $argv 11]
 
 set BASH "/bin/bash "
 if { $DEBUG == "1" } {
@@ -47,7 +47,7 @@ if { $DEBUG == "1" } {
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
         #
         # remove MariaDB Columnstore files
@@ -83,7 +83,7 @@ if { $DEPLOY_PACKAGES } {
 if { $INSTALLTYPE == "uninstall" } {
 	exit 0
 }
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     sleep 10
     #
     # send the MariaDB Columnstore package

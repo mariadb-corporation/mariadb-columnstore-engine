@@ -2883,7 +2883,10 @@ int main(int argc, char *argv[])
 							temppwprompt = "none";
 
 						//run remote installer script
-						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile + " " + managePackages;
+						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
+								password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt +
+								" " + mysqlPort + " " + remote_installer_debug + " " + managePackages + " " + installDir +
+                                " " + debug_logfile;
 
 //cout << cmd << endl;
 						if ( thread_remote_installer ) {
@@ -2995,8 +2998,8 @@ int main(int argc, char *argv[])
 
 						cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
 							remoteModuleIP + " " + password + " " + calpontPackage1 + " " + remoteModuleType +
-							" initial " + binservertype + " " + mysqlPort + " " + remote_installer_debug +
-							" " + installDir + " " + debug_logfile + " " + managePackages;
+							" initial " + binservertype + " " + mysqlPort + " " + remote_installer_debug + " " + managePackages +
+							" " + installDir + " " + debug_logfile;
 
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
@@ -3065,8 +3068,8 @@ int main(int argc, char *argv[])
 								binservertype = "pmwithum";
 							cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
 								" " + password + " " + calpontPackage1 + " " + remoteModuleType + " initial " +
-								binservertype + " " + mysqlPort + " " + remote_installer_debug + " " + installDir + " " +
-								debug_logfile + " " + managePackages;
+								binservertype + " " + mysqlPort + " " + remote_installer_debug + " " + managePackages +
+                                " " + installDir + " " + debug_logfile + " " + installDir;
 
 							if ( thread_remote_installer ) {
 								thr_data[thread_id].command = cmd;

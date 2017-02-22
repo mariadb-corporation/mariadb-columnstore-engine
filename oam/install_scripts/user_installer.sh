@@ -21,13 +21,14 @@ set NODEPS [lindex $argv 6]
 set MYSQLPW [lindex $argv 7]
 set MYSQLPORT [lindex $argv 8]
 set DEBUG [lindex $argv 9]
+set DEPLOY_PACKAGES [lindex $argv 10]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 10]
+set IDIR [lindex $argv 11]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
 set USERNAME "root"
-set UNM [lindex $argv 11]
+set UNM [lindex $argv 12]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
@@ -35,7 +36,6 @@ if { $UNM != "" } {
 if { $MYSQLPW == "none" } {
 	set MYSQLPW " "
 } 
-set DEPLOY_PACKAGES [lindex $argv 12]
 
 set BASH "/bin/bash "
 #if { $DEBUG == "1" } {
@@ -47,7 +47,7 @@ set HOME "$env(HOME)"
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     if { $PKGTYPE == "rpm" } {
         set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^mariadb-columnstore')"
         set PKGERASE1 "rpm -e --nodeps "
@@ -97,7 +97,7 @@ send_user "\n"
 #BUG 5749 - SAS: didn't work on their system until I added the sleep 60
 sleep 60
 
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
     if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
         #
         # erase MariaDB Columnstore packages
@@ -124,7 +124,7 @@ if { $DEPLOY_PACKAGES } {
 
 if { $INSTALLTYPE == "uninstall" } { exit 0 }
 
-if { $DEPLOY_PACKAGES } {
+if { $DEPLOY_PACKAGES == 1 } {
 
     send "scp $HOME/mariadb-columnstore*$VERSION*$PKGTYPE $USERNAME@$SERVER:.;$PKGERASE1 dummy\n"
     if { $PASSWORD != "ssh" } {
