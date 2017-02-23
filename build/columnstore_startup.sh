@@ -22,5 +22,5 @@ for arg in "$@"; do
 done
 
 $installdir/bin/post-install --installdir=/usr/local/mariadb/columnstore
-echo -e "1\ncs-1\n1\n1\n" | $installdir/bin/postConfigure -i $installdir
+echo -e "1\n1\n1\n1\n1\n1\n" | $installdir/bin/postConfigure -i $installdir
 exit 0
