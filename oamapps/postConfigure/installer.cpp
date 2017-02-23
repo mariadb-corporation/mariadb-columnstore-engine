@@ -99,7 +99,6 @@ int main(int argc, char *argv[])
 	string nodeps = "-h";
 	string installer_debug = "0";
 	string packageType = "rpm";
-	string managePackages = "1";
 
 	Config* sysConfig = Config::makeConfig();
 	string SystemSection = "SystemConfig";
@@ -127,7 +126,6 @@ int main(int argc, char *argv[])
 		installDir = argv[12];
 	else
 		installDir = "/usr/local/mariadb/columnstore";
-    managePackages = argv[13];
 
     ofstream file("/dev/null");
 
@@ -385,16 +383,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	//Have we to manage packages ?
-	try{
-		managePackages = sysConfig->getConfig(InstallSection, "managePackages");
-	}
-	catch(...)
-	{
-		cout << "ERROR: Problem getting managePackages" << endl;
-		exit(1);
-	}
-
 	//get Parent OAM Module Name and setup of it's Custom OS files
 	string parentOAMModuleName;
 	try{
@@ -567,10 +555,7 @@ int main(int argc, char *argv[])
 						temppwprompt = "none";
 						
 					cout << endl << "----- Performing Uninstall on Module '" + remoteModuleName + "' -----" << endl << endl;
-					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
-						password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm +
-						" " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt +
-						" " + installer_debug + " " + managePackages;
+					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						cout << endl << "ERROR: returned from user_installer.sh" << endl;
@@ -581,7 +566,7 @@ int main(int argc, char *argv[])
 				{	// do a binary package install
 					cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
 						password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType + " " +
-						serverTypeInstall + " " + installer_debug + " " + managePackages + " " + installDir;
+						serverTypeInstall + " " + installer_debug + " " + installDir;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						cout << endl << "ERROR: returned from binary_installer.sh" << endl;
@@ -596,7 +581,7 @@ int main(int argc, char *argv[])
 					if ( packageType != "binary" ) {
 						//run remote installer script
 						cout << endl << "----- Performing Uninstall on Module '" + remoteModuleName + "' -----" << endl << endl;
-						cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug + " " + managePackages;
+						cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
 						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
 							cout << endl << "ERROR returned from performance_installer.sh" << endl;
@@ -607,7 +592,7 @@ int main(int argc, char *argv[])
 					{	// do a binary package install
 						cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
 							" " + password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType + " " +
-							serverTypeInstall + " " + installer_debug + " " + managePackages + " " + installDir;
+							serverTypeInstall + " " + installer_debug + " " + installDir;
 						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
 							cout << endl << "ERROR returned from binary_installer.sh" << endl;
@@ -664,10 +649,7 @@ int main(int argc, char *argv[])
 						temppwprompt = "none";
 						
 					cout << endl << "----- Performing Install on Module '" + remoteModuleName + "' -----" << endl << endl;
-					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password +
-        					" " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " +
-						mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt +
-						" " + installer_debug + managePackages;
+					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						cout << endl << "ERROR returned from user_installer.sh" << endl;
@@ -678,7 +660,7 @@ int main(int argc, char *argv[])
 				{	// do a binary package install
 					cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " +
 						password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType + " " +
-						serverTypeInstall + " " + installer_debug + " " + managePackages + " " + installDir;
+						serverTypeInstall + " " + installer_debug + " " + installDir;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						cout << endl << "ERROR returned from binary_installer.sh" << endl;
@@ -693,7 +675,7 @@ int main(int argc, char *argv[])
 					//run remote installer script
 					if ( packageType != "binary" ) {
 						cout << endl << "----- Performing Install on Module '" + remoteModuleName + "' -----" << endl << endl;
-						cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug + " "+ managePackages;
+						cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
 						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
 							cout << endl << "ERROR returned from performance_installer.sh" << endl;
@@ -704,7 +686,7 @@ int main(int argc, char *argv[])
 					{	// do a binary package install
 						cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
 							" " + password + " " + calpont_rpm1 + " " + remoteModuleType + " " + installType +
-							" " + serverTypeInstall + " " + installer_debug + " " + managePackages + " " + installDir;
+							" " + serverTypeInstall + " " + installer_debug + " " + installDir;
 						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
 							cout << endl << "ERROR returned from binary_installer.sh" << endl;
