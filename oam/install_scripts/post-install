@@ -220,6 +220,7 @@ else
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
+	$SUDO chown $user:$user /etc/default/columnstore
 
 	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
 
