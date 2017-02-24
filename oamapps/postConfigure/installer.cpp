@@ -814,7 +814,10 @@ int main(int argc, char *argv[])
 	{
 		cout << " FAILED" << endl;
 		cout << endl << "ERROR: MariaDB ColumnStore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
+		exit (1);
 	}
+
+	exit (0);
 }
 
 
