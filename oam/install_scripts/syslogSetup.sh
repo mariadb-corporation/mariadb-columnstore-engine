@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 #
 # $Id: syslogSetup.sh 421 2007-04-05 15:46:55Z dhill $
 #
