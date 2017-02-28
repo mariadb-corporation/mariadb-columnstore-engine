@@ -52,6 +52,15 @@
 #include <cstring>
 #include <glob.h>
 
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <string.h> /* for strncpy */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "boost/filesystem/operations.hpp"
@@ -400,6 +409,7 @@ int main(int argc, char *argv[])
 //		redirectStandardOutputToFile(postConfigureLog, false );
 	}
 
+
 	//check if MariaDB ColumnStore is up and running
 	if (oam.checkSystemRunning()) {
 		cout << "MariaDB ColumnStore is running, can't run postConfigure while MariaDB ColumnStore is running. Exiting.." << endl;
@@ -428,6 +438,52 @@ int main(int argc, char *argv[])
 		cout << "ERROR: Configuration File not setup" << endl;
 		exit(1);
 	}
+
+	//check for local ip address as pm1
+    ModuleConfig moduleconfig;
+
+    try
+    {
+        oam.getSystemConfig("pm1", moduleconfig);
+        HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+        string PM1ipAdd = (*pt1).IPAddr;
+
+		if ( PM1ipAdd != "127.0.0.1")
+		{
+			// now get the local ip address
+ 			int fd;
+ 			struct ifreq ifr;
+	
+ 			fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+ 			/* I want to get an IPv4 IP address */
+ 			ifr.ifr_addr.sa_family = AF_INET;
+
+ 			/* I want IP address attached to "eth0" */
+ 			strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+
+ 			ioctl(fd, SIOCGIFADDR, &ifr);
+
+ 			close(fd);
+
+ 			string localIPAddr = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+
+			if ( PM1ipAdd != localIPAddr )
+			// configure pm1 and local ip address don't match, error out
+			// can only install from pm1
+			{		
+				cout << endl << endl;
+	    		cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
+ 				cout << "Designed node. The configured PM1 IP address doesn't match the local" << endl;
+				cout << "IP Address. exiting..." << endl;
+	       		exit(1);
+			}
+		}
+	}
+	catch(...)
+	{}
+
+
 
 	// run my.cnf upgrade script
 	if ( reuseConfig == "y" )
