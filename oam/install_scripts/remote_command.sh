@@ -34,15 +34,11 @@ if { $TTYOPT != "" } {
 }
 log_user $DEBUG
 spawn -noecho /bin/bash
+expect -re {[$#>] }
 
 if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
 }
-
-set PROMPT1 "# "
-set PROMPT2 "$ "
-set PROMPT3 "> "
-set PROMPT4 "# "
 
 # 
 # send command
@@ -62,22 +58,13 @@ expect {
 						}
 	"word: " { send "$PASSWORD\n" }
 	"passphrase" { send "$PASSWORD\n" }
-	"$PROMPT1" { exit 0 }
-        "$PROMPT2" { exit 0 }
-        "$PROMPT3" { exit 0 }
-        "$PROMPT4" { exit 0 }
+	-re {[$#>] }
 }
 expect {
-        "$PROMPT1" { exit 0 }
-        "$PROMPT2" { exit 0 }
-        "$PROMPT3" { exit 0 }
-        "$PROMPT4" { exit 0 }
+	-re {[$#>] }
 	"Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
 			"(y or n)"  { send "y\n" 
-	        		"$PROMPT1" { exit 0 }
-        			"$PROMPT2" { exit 0 }
-        			"$PROMPT3" { exit 0 }
-       	 			"$PROMPT4" { exit 0 }
+					expect -re {[$#>] }
 	}
 }
 exit 0
