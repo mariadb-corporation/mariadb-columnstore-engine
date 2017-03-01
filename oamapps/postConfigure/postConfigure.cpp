@@ -181,7 +181,6 @@ bool amazonInstall = false;
 
 string DataFileEnvFile;
 
-string managePackages;
 string installDir;
 string HOME = "/root";
 
@@ -213,14 +212,13 @@ int main(int argc, char *argv[])
 	noPrompting = false;
 	string password;
 	string cmd;
-//  	struct sysinfo myinfo;
+//  	struct sysinfo myinfo; 
 
 	// hidden options
 	// -f for force use nodeps on rpm install
 	// -o to prompt for process to start offline
 
 	//default
-	managePackages = "0";
 	installDir = installDir + "";
 	//see if we can determine our own location
 	ostringstream oss;
@@ -290,7 +288,6 @@ int main(int argc, char *argv[])
 			cout << "   -s  Single Threaded Remote Install" << endl;
 			cout << "   -port MariaDB ColumnStore Port Address" << endl;
             cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
-			cout << "   -m When specified, postConfigure won't try to deploy, install or uninstall packages" << endl;
 			exit (0);
 		}
       		else if( string("-s") == argv[i] )
@@ -309,7 +306,7 @@ int main(int argc, char *argv[])
 			if ( oldFileName.find("Columnstore.xml") == string::npos ) {
 				cout << "   ERROR: Config File is not a Columnstore.xml file name" << endl;
 				exit (1);
-			}
+			}			
 		}
 		else if( string("-p") == argv[i] ) {
 			i++;
@@ -321,7 +318,7 @@ int main(int argc, char *argv[])
 			if ( password.find("-") != string::npos ) {
 				cout << "   ERROR: Valid Password not provided" << endl;
 				exit (1);
-			}
+			}			
 		}
 		else if( string("-u") == argv[i] )
 			noPrompting = true;
@@ -349,13 +346,10 @@ int main(int argc, char *argv[])
             }
             installDir = argv[i];
         }
-		else if( string("-m") == argv[i] ) {
-			managePackages = "0";
-		}
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-m][-u][-p][-s][-port][-i]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-s][-port][-i]" << endl;
 			exit (1);
 		}
 	}
@@ -409,7 +403,6 @@ int main(int argc, char *argv[])
 //		redirectStandardOutputToFile(postConfigureLog, false );
 	}
 
-
 	//check if MariaDB ColumnStore is up and running
 	if (oam.checkSystemRunning()) {
 		cout << "MariaDB ColumnStore is running, can't run postConfigure while MariaDB ColumnStore is running. Exiting.." << endl;
@@ -439,8 +432,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	//check for local ip address as pm1
-    ModuleConfig moduleconfig;
+    //check for local ip address as pm1
+        ModuleConfig moduleconfig;
 
     try
     {
@@ -448,41 +441,40 @@ int main(int argc, char *argv[])
         HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
         string PM1ipAdd = (*pt1).IPAddr;
 
-		if ( PM1ipAdd != "127.0.0.1")
-		{
-			// now get the local ip address
- 			int fd;
- 			struct ifreq ifr;
-	
- 			fd = socket(AF_INET, SOCK_DGRAM, 0);
+        if ( PM1ipAdd != "127.0.0.1")
+        {
+            // now get the local ip address
+                        int fd;
+            struct ifreq ifr;
 
- 			/* I want to get an IPv4 IP address */
- 			ifr.ifr_addr.sa_family = AF_INET;
+            fd = socket(AF_INET, SOCK_DGRAM, 0);
 
- 			/* I want IP address attached to "eth0" */
- 			strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+            /* I want to get an IPv4 IP address */
+            ifr.ifr_addr.sa_family = AF_INET;
 
- 			ioctl(fd, SIOCGIFADDR, &ifr);
+            /* I want IP address attached to "eth0" */
+            strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
 
- 			close(fd);
+            ioctl(fd, SIOCGIFADDR, &ifr);
 
- 			string localIPAddr = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+            close(fd);
 
-			if ( PM1ipAdd != localIPAddr )
-			// configure pm1 and local ip address don't match, error out
-			// can only install from pm1
-			{		
-				cout << endl << endl;
-	    		cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
- 				cout << "Designed node. The configured PM1 IP address doesn't match the local" << endl;
-				cout << "IP Address. exiting..." << endl;
-	       		exit(1);
-			}
-		}
-	}
-	catch(...)
-	{}
+            string localIPAddr = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 
+            if ( PM1ipAdd != localIPAddr )
+            // configure pm1 and local ip address don't match, error out
+            // can only install from pm1
+            {
+                cout << endl;
+                cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
+                cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
+                cout << "IP Address. exiting..." << endl;
+                exit(1);
+            }
+        }
+    }
+    catch(...)
+    {}
 
 
 	// run my.cnf upgrade script
@@ -560,14 +552,14 @@ int main(int argc, char *argv[])
 		pcommand = callReadline(prompt.c_str());
 		string temp;
 		if (pcommand) {
-			if (strlen(pcommand) > 0)
+			if (strlen(pcommand) > 0) 
 				temp = pcommand;
 			else
 				temp = singleServerInstall;
 			callFree(pcommand);
 			if (temp == "1") {
 				singleServerInstall = temp;
-				cout << endl << "Performing the Single Server Install." << endl;
+				cout << endl << "Performing the Single Server Install." << endl; 
 
 				if ( reuseConfig == "n" ) {
 					//setup to use the single server Columnstore.xml file
@@ -738,7 +730,7 @@ int main(int argc, char *argv[])
 				//module ProcessConfig.xml to setup all apps on the dm
 				if( !updateProcessConfig(IserverTypeInstall) )
 					cout << "Update ProcessConfig.xml error" << endl;
-
+	
 				//store local query flag
 				try {
 					sysConfig->setConfig(InstallSection, "PMwithUM", "n");
@@ -769,7 +761,7 @@ int main(int argc, char *argv[])
 				cout << "      Module. Check MariaDB ColumnStore Admin Guide for additional information." << endl << endl;
 
 				while(true) {
-					if ( pmwithum )
+					if ( pmwithum ) 
 						prompt = "Local Query feature is Enabled, Do you want to disable? [y,n] (n) > ";
 					else
 						prompt = "Enable Local Query feature? [y,n] (n) > ";
@@ -779,7 +771,7 @@ int main(int argc, char *argv[])
 						if (strlen(pcommand) > 0) answer = pcommand;
 						callFree(pcommand);
 					}
-
+			
 					if ( answer == "y" || answer == "n" ) {
 						cout << endl;
 						break;
@@ -878,7 +870,7 @@ int main(int argc, char *argv[])
 	{	//Schema Sync is default as on when Local Query is Selected
 		mysqlRep = true;
 		MySQLRep = "y";
-
+	      
 		try {
 		    sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
 		}
@@ -886,8 +878,8 @@ int main(int argc, char *argv[])
 		{}
 	}
 
-	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+	if ( !writeConfig(sysConfig) ) { 
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 		exit(1);
 	}
 
@@ -900,12 +892,12 @@ int main(int argc, char *argv[])
 
 	in.seekg(0, std::ios::end);
 	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found"))
+	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
 	// not running on amazon with ec2-api-tools
 		amazonInstall = false;
 	else
 	{
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed"))
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
 			amazonInstall = false;
 		else
 			amazonInstall = true;
@@ -921,7 +913,7 @@ int main(int argc, char *argv[])
 
 	if ( cloud == "disable" )
 	    amazonInstall = false;
-
+	
 	if ( amazonInstall )
 	{
 		if ( cloud == oam::UnassignedName )
@@ -936,7 +928,7 @@ int main(int argc, char *argv[])
 				if (pcommand) {
 			    	if (strlen(pcommand) > 0) enable = pcommand;
 				  		callFree(pcommand);
-
+			
 			    	if (enable == "n") {
 						amazonInstall = false;
 
@@ -947,8 +939,8 @@ int main(int argc, char *argv[])
 						{};
 
 						break;
-			    	}
-				}
+			    	}	
+				}	
 
 				if ( enable != "y" )
 				{
@@ -967,7 +959,7 @@ int main(int argc, char *argv[])
 
 				break;
 			}
-		}
+		}	
 		else
 			cout << "NOTE: Configured to have ColumnStore use the Amazon AWS CLI Tools" << endl << endl;
 
@@ -981,13 +973,13 @@ int main(int argc, char *argv[])
                 exit (1);
 			}
 		}
-
-		if ( !writeConfig(sysConfig) ) {
-			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+			
+		if ( !writeConfig(sysConfig) ) { 
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
 		}
 	}
-
+	
 	if ( pmwithum )
 		cout << endl << "NOTE: Local Query Feature is enabled" << endl;
 
@@ -1004,8 +996,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+	if ( !writeConfig(sysConfig) ) { 
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 		exit(1);
 	}
 
@@ -1087,7 +1079,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	//
+	// 
 	// setup storage
 	//
 
@@ -1173,7 +1165,7 @@ int main(int argc, char *argv[])
 						cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
 					else
 						cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
-
+					
 					string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
 
 					cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory <<  endl;
@@ -1218,7 +1210,7 @@ int main(int argc, char *argv[])
 				string percent = "50%";
 				if (hdfs) {
 					percent = "25%";
-				}
+				}	
 
 				cout << "      Setting 'TotalUmMemory' to " << percent << endl;
 
@@ -1255,7 +1247,7 @@ int main(int argc, char *argv[])
 					cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
 					exit(1);
 				}
-			}
+			}	
 			break;
 		}
 	}
@@ -1294,7 +1286,7 @@ int main(int argc, char *argv[])
 		for( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
 		{
 			HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-
+	
 			if ( (*listPT).DeviceName == parentOAMModuleName ) {
 				parentOAMModuleIPAddr = (*pt1).IPAddr;
 				parentOAMModuleHostName = (*pt1).HostName;
@@ -1392,7 +1384,7 @@ int main(int argc, char *argv[])
 		if ( moduleType == "pm" )
 			pmNumber = moduleCount;
 
-		if ( moduleType == "um" )
+		if ( moduleType == "um" ) 
 			umNumber = moduleCount;
 
 		int moduleID = 1;
@@ -1408,7 +1400,7 @@ int main(int argc, char *argv[])
 				if ( !(sysConfig->getConfig(ModuleSection, ModuleIPAddr).empty()) ) {
 					if ( j+1 < moduleID || j+1 > moduleID + (moduleCount-1) ) {
 						string ModuleHostName = "ModuleHostName" + oam.itoa(j+1) + "-" + oam.itoa(k) + "-" + oam.itoa(i+1);
-
+	
 						sysConfig->setConfig(ModuleSection, ModuleIPAddr, oam::UnassignedIpAddr);
 						sysConfig->setConfig(ModuleSection, ModuleHostName, oam::UnassignedName);
 					}
@@ -1442,20 +1434,20 @@ int main(int argc, char *argv[])
 
 				string moduleNameDesc = moduleDesc + " #" + oam.itoa(moduleID);
 				PerformanceModule performancemodule;
-
+	
 				if ( newModuleName == parentOAMModuleName )
 					cout << endl << "*** Parent OAM Module " << moduleNameDesc << " Configuration ***" << endl << endl;
 				else
 					cout << endl << "*** " << moduleNameDesc << " Configuration ***" << endl << endl;
-
+	
 				moduleDisableState = oam::ENABLEDSTATE;
-
+	
 				//setup HostName/IPAddress for each NIC
 				for( unsigned int nicID=1 ; nicID < MAX_NIC+1 ; nicID++ )
 				{
 					string moduleHostName = oam::UnassignedName;
 					string moduleIPAddr = oam::UnassignedIpAddr;
-
+		
 					DeviceNetworkList::iterator listPT = sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();
 					for( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
 					{
@@ -1467,7 +1459,7 @@ int main(int argc, char *argv[])
 									moduleDisableState == oam::AUTODISABLEDSTATE )
 									moduleDisableState = oam::ENABLEDSTATE;
 							}
-
+	
 							HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
 							for( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
 							{
@@ -1479,7 +1471,7 @@ int main(int argc, char *argv[])
 							}
 						}
 					}
-
+	
 					if ( nicID == 1 ) {
 						if ( moduleDisableState != oam::ENABLEDSTATE ) {
 							string disabled = "y";
@@ -1504,7 +1496,7 @@ int main(int argc, char *argv[])
 										exit(1);
 									disabled = "y";
 								}
-								else
+								else 
 								{
 									string enable = "y";
 									cout << "Module '" + newModuleName + "' is Disabled. It needs to be enabled to startup MariaDB ColumnStore." << endl;
@@ -1534,13 +1526,13 @@ int main(int argc, char *argv[])
 									}
 								}
 							}
-
+	
 							if ( disabled == "n" )
 								moduleDisableState = oam::ENABLEDSTATE;
-							else
+							else 
 								enableModuleCount--;
 						}
-
+		
 						//set Module Disable State
 						string moduleDisableStateParm = "ModuleDisableState" + oam.itoa(moduleID) + "-" + oam.itoa(i+1);
 						try {
@@ -1551,12 +1543,12 @@ int main(int argc, char *argv[])
 							cout << "ERROR: Problem setting ModuleDisableState in the MariaDB ColumnStore System Configuration file" << endl;
 							exit(1);
 						}
-
+	
 						if ( !writeConfig(sysConfig) ) {
 							cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 							exit(1);
 						}
-
+	
 						//skip configuration if if DISABLED state
 						if ( moduleDisableState != oam::ENABLEDSTATE)
 							break;
@@ -1567,17 +1559,17 @@ int main(int argc, char *argv[])
 						moduleHostNameFound = true;
 						moduleHostName = oam::UnassignedName;
 					}
-
+	
 					if (moduleIPAddr.empty())
 						moduleIPAddr = oam::UnassignedIpAddr;
-
+		
 					string newModuleIPAddr;
-
+	
 					while (true)
 					{
 						newModuleHostName = moduleHostName;
 						if (amazonInstall) {
-							if ( moduleHostName == oam::UnassignedName &&
+							if ( moduleHostName == oam::UnassignedName && 
 								newModuleName == "pm1" && nicID == 1)
 							{
 								//get local instance name (pm1)
@@ -1600,7 +1592,7 @@ int main(int argc, char *argv[])
 								{
 									//check if need to create instance or user enter ID
 									string create = "y";
-
+			
 									while(true)
 									{
 										pcommand = callReadline("Create Instance for " + newModuleName + " [y,n] (y) > ");
@@ -1617,27 +1609,27 @@ int main(int argc, char *argv[])
 										if ( noPrompting )
 											exit(1);
 									}
-
-
+								
+			
 									if ( create == "y" ) {
 										ModuleIP moduleip;
 										moduleip.moduleName = newModuleName;
-
+	
 										string AmazonVPCNextPrivateIP = "autoassign";
 										try {
 											oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 										}
 										catch(...) {}
-
+	
 										moduleip.IPaddress = AmazonVPCNextPrivateIP;
-
+							
 										newModuleHostName = launchInstance(moduleip);
 										if ( newModuleHostName == oam::UnassignedName )
 										{
 											cout << "launch Instance failed for " + newModuleName << endl;
 											exit (1);
 										}
-
+	
 										prompt = "";
 									}
 									else
@@ -1649,8 +1641,8 @@ int main(int argc, char *argv[])
 						}
 						else
 						{
-							if ( moduleHostName == oam::UnassignedName &&
-								newModuleName == "pm1" && nicID == 1)
+							if ( moduleHostName == oam::UnassignedName && 
+								newModuleName == "pm1" && nicID == 1) 
 							{
 								char hostname[128];
 								gethostname(hostname, sizeof hostname);
@@ -1665,11 +1657,11 @@ int main(int argc, char *argv[])
 							pcommand = callReadline(prompt.c_str());
 							if (pcommand)
 							{
-								if (strlen(pcommand) > 0)
+								if (strlen(pcommand) > 0) 
 									newModuleHostName = pcommand;
 								else
 									newModuleHostName = moduleHostName;
-
+	
 								callFree(pcommand);
 							}
 						}
@@ -1748,7 +1740,7 @@ int main(int argc, char *argv[])
 							break;
 						}
 					}
-
+	
 					//set New Module Host Name
 					string moduleHostNameParm = "ModuleHostName" + oam.itoa(moduleID) + "-" + oam.itoa(nicID) + "-" + oam.itoa(i+1);
 					try {
@@ -1759,7 +1751,7 @@ int main(int argc, char *argv[])
 						cout << "ERROR: Problem setting Host Name in the MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
-
+	
 					if ( newModuleHostName == oam::UnassignedName )
 						newModuleIPAddr = oam::UnassignedIpAddr;
 					else
@@ -1787,10 +1779,10 @@ int main(int argc, char *argv[])
 								pcommand = callReadline(prompt.c_str());
 								if (pcommand)
 								{
-									if (strlen(pcommand) > 0) newModuleIPAddr = pcommand;
+									if (strlen(pcommand) > 0) newModuleIPAddr = pcommand;	
 									callFree(pcommand);
 								}
-
+	
 								if (newModuleIPAddr == "127.0.0.1" || newModuleIPAddr == "0.0.0.0" || newModuleIPAddr == "128.0.0.1") {
 									cout << endl << newModuleIPAddr + " is an Invalid IP Address for a multi-server system, please re-enter" << endl << endl;
 									newModuleIPAddr = "unassigned";
@@ -1798,7 +1790,7 @@ int main(int argc, char *argv[])
 										exit(1);
 									continue;
 								}
-
+	
 								if (oam.isValidIP(newModuleIPAddr)) {
 									//check and see if hostname already used
 									bool matchFound = false;
@@ -1815,7 +1807,7 @@ int main(int argc, char *argv[])
 									}
 									if ( matchFound )
 										continue;
-
+	
 									// run ping test to validate
 									string cmdLine = "ping ";
 									string cmdOption = " -c 1 -w 5 >> /dev/null";
@@ -1833,10 +1825,10 @@ int main(int argc, char *argv[])
 											pcommand = callReadline(prompt.c_str());
 											if (pcommand)
 											{
-												if (strlen(pcommand) > 0) temp = pcommand;
+												if (strlen(pcommand) > 0) temp = pcommand;	
 												callFree(pcommand);
 											}
-
+							
 											if ( temp == "1" || temp == "2")
 												break;
 											else
@@ -1863,7 +1855,7 @@ int main(int argc, char *argv[])
 							}
 						}
 					}
-
+	
 					//set Module IP address
 					string moduleIPAddrNameParm = "ModuleIPAddr" + oam.itoa(moduleID) + "-" + oam.itoa(nicID) + "-" + oam.itoa(i+1);
 					try {
@@ -1874,13 +1866,13 @@ int main(int argc, char *argv[])
 						cout << "ERROR: Problem setting IP address in the MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
 					}
-
+	
 					if ( newModuleHostName == oam::UnassignedName && moduleHostNameFound )
 						// exit out to next module ID
 						break;
-
+	
 					if (moduleType == "pm" && moduleDisableState == oam::ENABLEDSTATE) {
-
+		
 						switch(nicID) {
 							case 1:
 								performancemodule.moduleIP1 = newModuleIPAddr;
@@ -1898,13 +1890,13 @@ int main(int argc, char *argv[])
 						if ( maxPMNicCount < nicID )
 							maxPMNicCount = nicID;
 					}
-
+	
 					//save Nic host name and IP
 					childmodule.moduleName = newModuleName;
 					childmodule.moduleIP = newModuleIPAddr;
 					childmodule.hostName = newModuleHostName;
 					niclist.push_back(childmodule);
-
+	
 					if ( nicID > 1 )
 						continue;
 
@@ -1915,7 +1907,7 @@ int main(int argc, char *argv[])
 						childmodule.hostName = newModuleHostName;
 						childmodulelist.push_back(childmodule);
 					}
-
+	
 					//set port addresses
 					if ( newModuleName == parentOAMModuleName ) {
 						parentOAMModuleHostName = newModuleHostName;
@@ -1933,12 +1925,12 @@ int main(int argc, char *argv[])
 						string portName = parentOAMModuleName + "_WriteEngineServer";
 						sysConfig->setConfig(portName, "IPAddr", parentOAMModuleIPAddr);
 						sysConfig->setConfig(portName, "Port", "8630");
-
+	
 						if( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) {
-
+	
 							//set User Module's IP Addresses
 							string Section = "ExeMgr" + oam.itoa(moduleID);
-
+			
 							sysConfig->setConfig(Section, "IPAddr", newModuleIPAddr);
 							sysConfig->setConfig(Section, "Port", "8601");
 							sysConfig->setConfig(Section, "Module", parentOAMModuleName);
@@ -1951,13 +1943,13 @@ int main(int argc, char *argv[])
 						//set User Module's IP Addresses
 						if ( pmwithum ) {
 							string Section = "ExeMgr" + oam.itoa(moduleID+umNumber);
-
+		
 							sysConfig->setConfig(Section, "IPAddr", newModuleIPAddr);
 							sysConfig->setConfig(Section, "Port", "8601");
 							sysConfig->setConfig(Section, "Module", parentOAMModuleName);
 
 						}
-
+		
 						//setup rc.local file in module tmp dir
 						if( !makeRClocal(moduleType , newModuleName, IserverTypeInstall) )
 							cout << "makeRClocal error" << endl;
@@ -1967,21 +1959,21 @@ int main(int argc, char *argv[])
 						//set child Process Monitor Port IP Address
 						string portName = newModuleName + "_ProcessMonitor";
 						sysConfig->setConfig(portName, "IPAddr", newModuleIPAddr);
-
+	
 						sysConfig->setConfig(portName, "Port", "8800");
-
+	
 						//set child Server Monitor Port IP Address
 						portName = newModuleName + "_ServerMonitor";
 						sysConfig->setConfig(portName, "IPAddr", newModuleIPAddr);
 						sysConfig->setConfig(portName, "Port", "8622");
-
+		
 						//set Performance Module WriteEngineServer Port IP Address
 						if ( moduleType == "pm" ) {
 							portName = newModuleName + "_WriteEngineServer";
 							sysConfig->setConfig(portName, "IPAddr", newModuleIPAddr);
 							sysConfig->setConfig(portName, "Port", "8630");
 						}
-
+	
 						//set User Module's IP Addresses
 						if ( moduleType == "um" ||
 							( moduleType == "pm" && IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
@@ -1992,19 +1984,19 @@ int main(int argc, char *argv[])
 							string Section = "ExeMgr" + oam.itoa(moduleID);
 							if ( moduleType == "pm" && pmwithum )
 								Section = "ExeMgr" + oam.itoa(moduleID+umNumber);
-
+		
 							sysConfig->setConfig(Section, "IPAddr", newModuleIPAddr);
 							sysConfig->setConfig(Section, "Port", "8601");
 							sysConfig->setConfig(Section, "Module", newModuleName);
 						}
-
+		
 						//set Performance Module's IP's to first NIC IP entered
 						if ( newModuleName == "um1" ) {
 							sysConfig->setConfig("DDLProc", "IPAddr", newModuleIPAddr);
 							sysConfig->setConfig("DMLProc", "IPAddr", newModuleIPAddr);
 						}
 					}
-
+					
 					if ( !writeConfig(sysConfig) ) {
 						cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 						exit(1);
@@ -2013,17 +2005,17 @@ int main(int argc, char *argv[])
 					//create associated local/etc directory for module
 					string cmd = "mkdir " + installDir + "/local/etc/" + newModuleName + " > /dev/null 2>&1";
 					system(cmd.c_str());
-
-					if ( newModuleName != parentOAMModuleName) {
+			
+					if ( newModuleName != parentOAMModuleName) {		
 						//make module file in local/etc/"modulename"
 						if( !makeModuleFile(newModuleName, parentOAMModuleName) )
 							cout << "makeModuleFile error" << endl;
 					}
-
+	
 					//setup rc.local file in module tmp dir
 					if( !makeRClocal(moduleType , newModuleName, IserverTypeInstall) )
 						cout << "makeRClocal error" << endl;
-
+	
 					//if cloud, copy fstab in module tmp dir
 					if ( amazonInstall && moduleType == "pm")
 						if( !copyFstab(newModuleName) )
@@ -2032,13 +2024,13 @@ int main(int argc, char *argv[])
 					//setup DBRM Processes
 					if ( newModuleName == parentOAMModuleName )
 						sysConfig->setConfig("DBRM_Controller", "IPAddr", newModuleIPAddr);
-
+	
 					if ( moduleDisableState == oam::ENABLEDSTATE ) {
 						DBRMworkernodeID++;
 						string DBRMSection = "DBRM_Worker" + oam.itoa(DBRMworkernodeID);
 						sysConfig->setConfig(DBRMSection, "IPAddr", newModuleIPAddr);
 						sysConfig->setConfig(DBRMSection, "Module", newModuleName);
-					}
+					}	
 
 					// only support 1 nic ID per Amazon instance
 					if (amazonInstall)
@@ -2088,16 +2080,16 @@ int main(int argc, char *argv[])
 									exit(1);
 							}
 						}
-
+					
 						if ( create == "n" ) {
 							prompt = "Enter Volume ID assigned to module '" + newModuleName + "' (" + volumeName + ") > ";
 							pcommand = callReadline(prompt.c_str());
 							if (pcommand)
 							{
-								if (strlen(pcommand) > 0) volumeName = pcommand;
+								if (strlen(pcommand) > 0) volumeName = pcommand;	
 								callFree(pcommand);
 							}
-
+	
 							//get device name based on DBRoot ID
 							deviceName = "/dev/sdf";
 						}
@@ -2141,7 +2133,7 @@ int main(int argc, char *argv[])
 
 				//if upgrade, get list of configure dbroots
 				DBRootConfigList dbrootConfigList;
-				if ( reuseConfig == "y" )
+				if ( reuseConfig == "y" ) 
 				{
 					try {
 						oam.getSystemDbrootConfig(dbrootConfigList);
@@ -2262,7 +2254,7 @@ int main(int argc, char *argv[])
 							std::vector<std::string>::iterator list = dbroots.begin();
 							for (; list != dbroots.end() ; list++)
 							{
-								if ( *list == "1" )
+								if ( *list == "1" ) 
 								{
 									found = true;
 									break;
@@ -2298,7 +2290,7 @@ int main(int argc, char *argv[])
 
 							if ( inUse)
 								break;
-							else
+							else 
 							{	// if upgrade, dont allow a new DBRoot id to be entered
 								if ( reuseConfig == "y" )
 								{
@@ -2318,7 +2310,7 @@ int main(int argc, char *argv[])
 											oam.getUnassignedDbroot(undbrootlist);
 										}
 										catch(...) {}
-
+						
 										if ( !undbrootlist.empty() )
 										{
 											DBRootConfigList::iterator pt1 = undbrootlist.begin();
@@ -2370,7 +2362,7 @@ int main(int argc, char *argv[])
 
 						string DBrootID = "DBRoot" + *it;
 						string pathID = installDir + "/data" + *it;
-
+				
 						try {
 							sysConfig->setConfig(SystemSection, DBrootID, pathID);
 						}
@@ -2408,7 +2400,7 @@ int main(int argc, char *argv[])
 							if ( reuseConfig == "n"  && ( volumeName == oam::UnassignedName || volumeName.empty() || volumeName == "" ) )
 							{
 								string create = "y";
-
+		
 								cout << "*** NOTE: You have the option to provide an" << endl;
 								cout << "          existing EBS Volume ID or have a Volume created" << endl << endl;
 
@@ -2428,13 +2420,13 @@ int main(int argc, char *argv[])
 									if ( noPrompting )
 										exit(1);
 								}
-
+	
 								if ( create == "n" ) {
 									prompt = "Enter Volume ID for '" + DBrootID + "' (" + volumeName + ") > ";
 									pcommand = callReadline(prompt.c_str());
 									if (pcommand)
 									{
-										if (strlen(pcommand) > 0) volumeName = pcommand;
+										if (strlen(pcommand) > 0) volumeName = pcommand;	
 										callFree(pcommand);
 									}
 
@@ -2444,7 +2436,7 @@ int main(int argc, char *argv[])
 										st = oam.getAWSdeviceName( atoi((*it).c_str()) );
 									}
 									catch(...) {}
-
+					
 									deviceName = boost::get<0>(st);
 									amazondeviceName = boost::get<1>(st);
 
@@ -2458,9 +2450,9 @@ int main(int argc, char *argv[])
 									{
 										DBRootConfigList dbrootlist;
 										dbrootlist.push_back(atoi((*it).c_str()));
-
+	
 										oam.addDbroot(1, dbrootlist, PMVolumeSize);
-
+							
 										sleep(2);
 										try {
 											volumeName = sysConfig->getConfig(InstallSection, volumeNameID);
@@ -2483,7 +2475,7 @@ int main(int argc, char *argv[])
 								pcommand = callReadline(prompt.c_str());
 								if (pcommand)
 								{
-									if (strlen(pcommand) > 0) volumeName = pcommand;
+									if (strlen(pcommand) > 0) volumeName = pcommand;	
 									callFree(pcommand);
 								}
 
@@ -2597,7 +2589,7 @@ int main(int argc, char *argv[])
 			for (unsigned int j = 1 ; j < maxPMNicCount+1 ; j++)
 			{
 				PerformanceModuleList::iterator list1 = performancemodulelist.begin();
-
+		
 				for (; list1 != performancemodulelist.end() ; list1++)
 				{
 					string pmName = PM + oam.itoa(pmsID);
@@ -2651,7 +2643,7 @@ int main(int argc, char *argv[])
 		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
-
+	
 	//check if dbrm data resides in older directory path and inform user if it does
 	dbrmDirCheck();
 
@@ -2669,18 +2661,18 @@ int main(int argc, char *argv[])
 	int thread_id = 0;
 
 	pthread_t thr[childmodulelist.size()];
-
+	
 	/* create a thread_data_t argument array */
 	thread_data_t thr_data[childmodulelist.size()];
 
 	string install = "y";
-	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
+	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
 		// perform remote install of other servers in the system
 		//
 		cout << endl << "===== System Installation =====" << endl << endl;
-
+	
 		cout << "System Configuration is complete, System Installation is the next step." << endl;
 
 		while(true)
@@ -2699,11 +2691,11 @@ int main(int argc, char *argv[])
 			if ( noPrompting )
 				exit(1);
 		}
-
+	
 		if ( install == "y" ) {
-
+	
 			SystemSoftware systemsoftware;
-
+		
 			try
 			{
 				oam.getSystemSoftware(systemsoftware);
@@ -2732,114 +2724,111 @@ int main(int argc, char *argv[])
 			else	//nonroot, default to binary
 				EEPackageType = "binary";
 
-			string version = systemsoftware.Version + "-" + systemsoftware.Release;
-			if ( managePackages == "1")
-			{
-				while(true) {
-					prompt = "Enter the Package Type being installed to other servers [rpm,deb,binary] (" + EEPackageType + ") > ";
-					pcommand = callReadline(prompt);
-					if (pcommand) {
-						if (strlen(pcommand) > 0) EEPackageType = pcommand;
-						callFree(pcommand);
-					}
-
-					if ( EEPackageType == "rpm" || EEPackageType == "deb" || EEPackageType == "binary"  ) {
-						break;
-					}
-					cout << "Invalid Package Type, please re-enter" << endl;
-					EEPackageType = "rpm";
-					if ( noPrompting )
-						exit(1);
+			while(true) {
+				prompt = "Enter the Package Type being installed to other servers [rpm,deb,binary] (" + EEPackageType + ") > ";
+				pcommand = callReadline(prompt);
+				if (pcommand) {
+					if (strlen(pcommand) > 0) EEPackageType = pcommand;
+					callFree(pcommand);
 				}
 
-				if ( EEPackageType == "rpm" )
+				if ( EEPackageType == "rpm" || EEPackageType == "deb" || EEPackageType == "binary"  ) {
+					break;
+				}
+				cout << "Invalid Package Type, please re-enter" << endl;
+				EEPackageType = "rpm";
+				if ( noPrompting )
+					exit(1);
+			}
+
+			if ( EEPackageType == "rpm" )
+			{
+				cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl; 
+				cout << "located in the " + HOME + " directory." << endl << endl;
+			}
+			else
+			{
+				if ( EEPackageType == "binary" )
 				{
-					cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl;
+					cout << "Performing an MariaDB ColumnStore System install using a Binary package" << endl; 
 					cout << "located in the " + HOME + " directory." << endl << endl;
 				}
 				else
 				{
-					if ( EEPackageType == "binary" )
-					{
-						cout << "Performing an MariaDB ColumnStore System install using a Binary package" << endl;
-						cout << "located in the " + HOME + " directory." << endl << endl;
-					}
-					else
-					{
-						cout << "Performing an MariaDB ColumnStore System install using using DEB packages" << endl;
-						cout << "located in the " + HOME + " directory." << endl;
-					}
+					cout << "Performing an MariaDB ColumnStore System install using using DEB packages" << endl;
+					cout << "located in the " + HOME + " directory." << endl;
 				}
+			}
+	
+			//Write out Updated System Configuration File
+			try {
+				sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
+				exit(1);
+			}
+		
+			if ( !writeConfig(sysConfig) ) { 
+				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
+				exit(1);
+			}
 
-				//Write out Updated System Configuration File
-				try {
-					sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
-				}
-				catch(...)
-				{
-					cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
+			//check if pkgs are located in $HOME directory
+			string version = systemsoftware.Version + "-" + systemsoftware.Release;
+			if ( EEPackageType != "binary") {
+				string separator = "-";
+				calpontPackage1 = "mariadb-columnstore-*" + separator + version;
+				//calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
+				//calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
+				//mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
+				//mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
+
+				if( !pkgCheck() ) {
 					exit(1);
-				}
-
-				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-					exit(1);
-				}
-
-				//check if pkgs are located in $HOME directory
-				if ( EEPackageType != "binary") {
-					string separator = "-";
-					calpontPackage1 = "mariadb-columnstore-*" + separator + version;
-					//calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
-					//calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
-					//mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
-					//mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
-
-					if( !pkgCheck() ) {
-						exit(1);
-					}
-					else
-					{
-					//mariadb
-						calpontPackage1 = "mariadb-columnstore-*" + separator + version;
-
-						calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
-						//calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
-						//calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
-						//mysqlPackage = HOME + "/" + mysqlPackage  + "*." + EEPackageType;
-						//mysqldPackage = HOME + "/" + mysqldPackage  + "*." + EEPackageType;
-					}
 				}
 				else
 				{
-					// binary
-					//string fileName = installDir + "/bin/healthcheck";
-					//ifstream file (fileName.c_str());
-					//if (!file)	// CE
-						calpontPackage1 = "mariadb-columnstore-" + version;
-					//else		// EE
-						//calpontPackage1 = "mariadb-columnstore-ent-" + version;
-					//calpontPackage2 = "dummy";
-					//calpontPackage3 = "dummy";
-					//mysqlPackage = calpontPackage1;
-					//mysqldPackage = calpontPackage1;
+				//mariadb
+					calpontPackage1 = "mariadb-columnstore-*" + separator + version;
 
-					if( !pkgCheck() )
-						exit(1);
-					calpontPackage1 = HOME + "/" + calpontPackage1 + "*.bin.tar.gz";
-					//calpontPackage2 = "dummy";
-					//calpontPackage3 = "dummy";
+					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
+					//calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
+					//calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
+					//mysqlPackage = HOME + "/" + mysqlPackage  + "*." + EEPackageType;
+					//mysqldPackage = HOME + "/" + mysqldPackage  + "*." + EEPackageType;
 				}
-
-				//If ent pkg is not there, mark it as such
-				//{
-				//	glob_t gt;
-				//	memset(&gt, 0, sizeof(gt));
-				//	if (glob(calpontPackage3.c_str(), 0, 0, &gt) != 0)
-				//		calpontPackage3 = "dummy.rpm";
-				//	globfree(&gt);
-				//}
 			}
+			else
+			{
+				// binary
+				//string fileName = installDir + "/bin/healthcheck";
+				//ifstream file (fileName.c_str());
+				//if (!file)	// CE
+					calpontPackage1 = "mariadb-columnstore-" + version;
+				//else		// EE
+					//calpontPackage1 = "mariadb-columnstore-ent-" + version;
+				//calpontPackage2 = "dummy";
+				//calpontPackage3 = "dummy";
+				//mysqlPackage = calpontPackage1;
+				//mysqldPackage = calpontPackage1;
+
+				if( !pkgCheck() )
+					exit(1);
+				calpontPackage1 = HOME + "/" + calpontPackage1 + "*.bin.tar.gz";
+				//calpontPackage2 = "dummy";
+				//calpontPackage3 = "dummy";
+			}
+
+			//If ent pkg is not there, mark it as such
+			//{
+			//	glob_t gt;
+			//	memset(&gt, 0, sizeof(gt));
+			//	if (glob(calpontPackage3.c_str(), 0, 0, &gt) != 0)
+			//		calpontPackage3 = "dummy.rpm";
+			//	globfree(&gt);
+			//}
 
 			if ( password.empty() )
 			{
@@ -2850,7 +2839,7 @@ int main(int argc, char *argv[])
 			}
 
 			while(true)
-			{
+			{	
 				char  *pass1, *pass2;
 
 				if ( noPrompting ) {
@@ -2915,7 +2904,7 @@ int main(int argc, char *argv[])
 				string remoteModuleIP = (*list1).moduleIP;
 				string remoteHostName = (*list1).hostName;
 				string remoteModuleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
-
+	
 				string debug_logfile;
 				string logfile;
 				if ( remote_installer_debug == "1" ) {
@@ -2939,14 +2928,14 @@ int main(int argc, char *argv[])
 							temppwprompt = "none";
 
 						//run remote installer script
-						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile + " " + managePackages;
+						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
 
 //cout << cmd << endl;
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
 
 							int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-
+					
 							if ( status != 0 )
 							{
 								cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
@@ -2979,7 +2968,7 @@ int main(int argc, char *argv[])
 									cout << endl << "Error returned from remote_command.sh" << endl;
 									exit(1);
 								}
-
+	
 								if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR .my.cnf") ) {
 									// password needed check and get password from remote UM
 									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
@@ -3027,7 +3016,7 @@ int main(int argc, char *argv[])
 										break;
 									}
 								}
-
+	
 								//re-run post-mysql-install with password
 								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "' < /tmp/post-mysql-install.log";
 								rtnCode = system(cmd.c_str());
@@ -3052,19 +3041,19 @@ int main(int argc, char *argv[])
 						cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
 							remoteModuleIP + " " + password + " " + calpontPackage1 + " " + remoteModuleType +
 							" initial " + binservertype + " " + mysqlPort + " " + remote_installer_debug +
-							" " + installDir + " " + debug_logfile + " " + managePackages;
-
+							" " + installDir + " " + debug_logfile;
+						
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
 
 							int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-
+					
 							if ( status != 0 )
 							{
 								cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
 								exit (1);
 							}
-
+					
 							thread_id++;
 						}
 						else
@@ -3089,20 +3078,20 @@ int main(int argc, char *argv[])
 
 						if ( EEPackageType != "binary" ) {
 							//run remote installer script
-							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile + " " + managePackages;
+							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
 //cout << cmd << endl;
 							if ( thread_remote_installer ) {
 								thr_data[thread_id].command = cmd;
 
 								int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-
+						
 								if ( status != 0 )
 								{
 									cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
 									exit (1);
 								}
-
+						
 								thread_id++;
 							}
 							else
@@ -3114,7 +3103,7 @@ int main(int argc, char *argv[])
 								}
 							}
 						}
-						else
+						else	
 						{	// do a binary package install
 							string binservertype = serverTypeInstall;
 							if ( pmwithum )
@@ -3122,7 +3111,7 @@ int main(int argc, char *argv[])
 							cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
 								" " + password + " " + calpontPackage1 + " " + remoteModuleType + " initial " +
 								binservertype + " " + mysqlPort + " " + remote_installer_debug + " " + installDir + " " +
-								debug_logfile + " " + managePackages;
+								debug_logfile;
 
 							if ( thread_remote_installer ) {
 								thr_data[thread_id].command = cmd;
