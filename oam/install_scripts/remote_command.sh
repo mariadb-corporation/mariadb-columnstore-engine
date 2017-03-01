@@ -61,7 +61,7 @@ expect {
 	-re {[$#] } { exit 0 }
 }
 expect {
-	-re {[$#>] }
+	-re {[$#>] } { exit 0 }
 	"Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
 			"(y or n)"  { send "y\n" 
 			-re {[$#] } { exit 0 }
