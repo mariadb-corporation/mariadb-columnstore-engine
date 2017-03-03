@@ -1160,7 +1160,7 @@ uint32_t doUpdateDelete(THD *thd)
 		{
 			multi_delete* deleteTable = (multi_delete*)((thd->lex->select_lex.join)->result);
 			first_table= (TABLE_LIST*) deleteTable->get_tables();
-			if (deleteTable->num_of_tables == 1)
+			if (deleteTable->get_num_of_tables() == 1)
 			{
 				schemaName = first_table->db;
 				tableName = first_table->table_name;
@@ -4434,15 +4434,5 @@ int ha_calpont_impl_rnd_pos(uchar *buf, uchar *pos)
 	return ER_INTERNAL_ERROR;
 }
 
-// Called from mysql parser to set IDB error for window functions
-void ha_calpont_impl_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint32_t argCount)
-{
-	IDEBUG( cout << "ha_calpont_impl_ser_error" << endl);
-	Message::Args arguments;
-	for (uint32_t i = 0; i < argCount; i++)
-		arguments.add(args[i].str);
-	string emsg = logging::IDBErrorInfo::instance()->errorMsg(errCode, arguments);
-	setError(thd, ER_INTERNAL_ERROR, emsg);
-}
 // vim:sw=4 ts=4:
 

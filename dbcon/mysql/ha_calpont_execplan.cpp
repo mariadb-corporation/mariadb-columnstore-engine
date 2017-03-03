@@ -699,11 +699,13 @@ void debug_walk(const Item *item, void *arg)
 			cout << ": <NULL>" << endl;
 		break;
 	}
+#if 0
 	case Item::WINDOW_FUNC_ITEM:
 	{
 		cout << "Window Function Item" << endl;
 		break;
 	}
+#endif
 	default:
 	{
 		cout << "UNKNOWN_ITEM type " << item->type() << endl;
@@ -2453,6 +2455,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			rc = new ConstantColumn(valStr);
 			break;
 		}
+#if 0
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			return buildWindowFunctionColumn(item, gwi, nonSupport);
@@ -2469,6 +2472,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			rc->resultType(srcp->resultType());
 			break;
 		}
+#endif
 		case Item::SUBSELECT_ITEM:
 		{
 			gwi.hasSubSelect = true;
@@ -3500,23 +3504,24 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 		     end=order_item + gc->order_field();order_item < end;
 		     order_item++)
 		{
-				Item *ord_col= *(*order_item)->item;
-				if (ord_col->type() == Item::INT_ITEM)
-				{
-					Item_int* id = (Item_int*)ord_col;
-					if (id->val_int() > (int)selCols.size())
-					{
-						gwi.fatalParseError = true;
-						return NULL;
-					}
-					rc = selCols[id->val_int()-1]->clone();
-					rc->orderPos(id->val_int()-1);
-				}
-				else
-				{
-					rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
-				}
-			rc->asc((*order_item)->asc);
+            Item *ord_col= *(*order_item)->item;
+            if (ord_col->type() == Item::INT_ITEM)
+            {
+                Item_int* id = (Item_int*)ord_col;
+                if (id->val_int() > (int)selCols.size())
+                {
+                    gwi.fatalParseError = true;
+                    return NULL;
+                }
+                rc = selCols[id->val_int()-1]->clone();
+                rc->orderPos(id->val_int()-1);
+            }
+            else
+            {
+                rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
+            }
+            // 10.2 TODO: direction is now a tri-state flag
+			rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);
 			orderCols.push_back(SRCP(rc));
 		}
 
@@ -4431,6 +4436,7 @@ void gp_walk(const Item *item, void *arg)
 			gwip->rcWorkStack.push(buildReturnedColumn(itp, *gwip, gwip->fatalParseError));
 			break;
 		}
+#if 0
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			gwip->hasWindowFunc = true;
@@ -4440,6 +4446,7 @@ void gp_walk(const Item *item, void *arg)
 				gwip->rcWorkStack.push(af);
 			break;
 		}
+#endif
 		case Item::COPY_STR_ITEM:
 			printf("********** received COPY_STR_ITEM *********\n");
 			break;
@@ -4623,9 +4630,11 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 			setError(item->thd(), ER_CHECK_NOT_IMPLEMENTED, parseErrorText);
 			break;
 		}
+#if 0
 		case Item::WINDOW_FUNC_ITEM:
 			parseInfo |= AF_BIT;
 			break; 
+#endif
 		default:
 			break;
 	}
@@ -5515,6 +5524,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 				return ER_CHECK_NOT_IMPLEMENTED;
 			}
+#if 0
 			case Item::WINDOW_FUNC_ITEM:
 			{
 				SRCP srcp(buildWindowFunctionColumn(item, gwi, gwi.fatalParseError));
@@ -5528,6 +5538,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				gwi.returnedCols.push_back(srcp);
 				break;
 			}
+#endif
 			default:
 			{
 				break;
@@ -5680,6 +5691,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 		// check if window functions are in order by. InfiniDB process order by list if
 		// window functions are involved, either in order by or projection.
+#if 0
 		bool hasWindowFunc = gwi.hasWindowFunc;
 		gwi.hasWindowFunc = false;
 		for (; groupcol; groupcol= groupcol->next)
@@ -5695,7 +5707,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 		gwi.hasWindowFunc = hasWindowFunc;
-
+#endif
 		groupcol = reinterpret_cast<ORDER*>(select_lex.group_list.first);
 
 		for (; groupcol; groupcol= groupcol->next)
@@ -5941,12 +5953,13 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 		// check if window functions are in order by. InfiniDB process order by list if
 		// window functions are involved, either in order by or projection.
+#if 0
 		for (; ordercol; ordercol= ordercol->next)
 		{
 			if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
 				gwi.hasWindowFunc = true;
 		}
-
+#endif
 		// re-visit the first of ordercol list
 		ordercol = reinterpret_cast<ORDER*>(order_list.first);
 
@@ -5997,7 +6010,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						return ER_CHECK_NOT_IMPLEMENTED;
 					}
 				}
-				if (ordercol->asc)
+                if (ordercol->direction == ORDER::ORDER_ASC)
  					rc->asc(true);
 				else
 					rc->asc(false);
@@ -6030,7 +6043,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ostringstream oss;
 						oss << ordercol->counter;
 						ord_cols += oss.str();
-						if (!ordercol->asc)
+						if (!ordercol->direction == ORDER::ORDER_ASC)
 							ord_cols += " desc";
 						continue;
 					}
@@ -6155,7 +6168,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 								gwi.returnedCols.push_back(srcp);
 								ord_cols += " `" + escapeBackTick(str.c_ptr()) + "`";
 							}
-							if (!ordercol->asc)
+							if (!ordercol->direction == ORDER::ORDER_ASC)
 								ord_cols += " desc";
 							continue;
 						}
@@ -6219,7 +6232,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ord_item->print(&str, QT_INFINIDB);
 						ord_cols += str.c_ptr();
 					}
-					if (!ordercol->asc)
+					if (!ordercol->direction == ORDER::ORDER_ASC)
 						ord_cols += " desc";
 				}
 			}
@@ -6559,7 +6572,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ord_item->print(&str, QT_INFINIDB_NO_QUOTE);
 						ord_cols += string(str.c_ptr());
 					}
-					if (!ordercol->asc)
+					if (!ordercol->direction == ORDER::ORDER_ASC)
 						ord_cols += " desc";
 				}
 			}

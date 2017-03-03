@@ -48,7 +48,6 @@ extern int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type);
 extern int ha_calpont_impl_update_row();
 extern int ha_calpont_impl_delete_row();
 extern int ha_calpont_impl_rnd_pos(uchar *buf, uchar *pos);
-extern void ha_calpont_impl_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint32_t argCount);
 #endif
 
 #ifdef NEED_CALPONT_INTERFACE

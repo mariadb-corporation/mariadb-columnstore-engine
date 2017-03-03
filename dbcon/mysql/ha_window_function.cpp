@@ -63,6 +63,7 @@ ReturnedColumn* nullOnError(gp_walk_info& gwi)
 	return NULL;
 }
 
+#if 0
 WF_FRAME frame(BOUND& bound)
 {
 	switch (bound)
@@ -81,7 +82,7 @@ WF_FRAME frame(BOUND& bound)
 		return WF_UNKNOWN;
 	}
 }
-
+#endif
 ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi)
 {
 	if (!(gwi.thd->infinidb_vtable.cal_conn_info))
@@ -188,12 +189,13 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
 
 	gwi.hasWindowFunc = true;
-	Item_func_window* wf = (Item_func_window*)item;
-	string funcName = wf->func_name();
+//	Item_func_window* wf = (Item_func_window*)item;
+	string funcName /*= wf->func_name()*/;
 	WindowFunctionColumn* ac = new WindowFunctionColumn(funcName);
-	ac->distinct(wf->isDistinct());
-	Window_context *wf_ctx = wf->window_ctx();
+//	ac->distinct(wf->isDistinct());
+//	Window_context *wf_ctx = wf->window_ctx();
 	SRCP srcp;
+#if 0
 
 	// arguments
 	vector<SRCP> funcParms;
@@ -433,6 +435,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 	
 	// put ac on windowFuncList
 	gwi.windowFuncList.push_back(ac);
+#endif
 	return ac;
 	
 }
