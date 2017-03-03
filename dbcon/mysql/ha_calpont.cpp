@@ -121,7 +121,6 @@ static int calpont_commit(handlerton *hton, THD* thd, bool all);
 
 static int calpont_rollback(handlerton *hton, THD* thd, bool all);                                      
 static int calpont_close_connection ( handlerton *hton, THD* thd );
-static void calpont_set_error( THD*, uint64_t, LEX_STRING*, uint32_t);
 handlerton *calpont_hton;
 
 /* Variables for example share methods */
@@ -219,7 +218,6 @@ static int columnstore_init_func(void *p)
   calpont_hton->commit= calpont_commit;
   calpont_hton->rollback= calpont_rollback;
   calpont_hton->close_connection = calpont_close_connection;
-  calpont_hton->set_error= calpont_set_error;
   DBUG_RETURN(0);
 }
 
@@ -248,7 +246,6 @@ static int infinidb_init_func(void *p)
 	calpont_hton->commit= calpont_commit;
 	calpont_hton->rollback= calpont_rollback;
 	calpont_hton->close_connection = calpont_close_connection;
-	calpont_hton->set_error= calpont_set_error;
 	DBUG_RETURN(0);
 }
 
@@ -370,11 +367,6 @@ static int calpont_close_connection ( handlerton *hton, THD* thd )
 {
 	int rc = ha_calpont_impl_close_connection( hton, thd);
 	return rc;
-}
-
-static void calpont_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint32_t argCount)
-{
-	return ha_calpont_impl_set_error(thd, errCode, args, argCount);
 }
 
 ha_calpont::ha_calpont(handlerton *hton, TABLE_SHARE *table_arg) :
