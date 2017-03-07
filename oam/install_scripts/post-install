@@ -214,7 +214,8 @@ else
 	$SUDO $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
 	$SUDO chmod -R 777 /dev/shm
-	$SUDO chmod 777 /var/lock/subsys
+	$SUDO mkdir /var/lock/subsys > /dev/null 2>&1
+	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
 	$SUDO chmod 777 /etc/fstab	
 
