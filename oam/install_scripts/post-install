@@ -215,7 +215,7 @@ else
 	$SUDO mkdir /var/lock/subsys > /dev/null 2>&1
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
-	$SUDO chmod 644 /etc/fstab	
+	$SUDO chmod 666 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore

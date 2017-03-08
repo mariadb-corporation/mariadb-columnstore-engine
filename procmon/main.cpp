@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 	// change permissions on /dev/shm
 	if ( !rootUser)
 	{
-		string cmd = "sudo chmod 755 /dev/shm >/dev/null 2>&1";
+		string cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
 		system(cmd.c_str());
 	}
 

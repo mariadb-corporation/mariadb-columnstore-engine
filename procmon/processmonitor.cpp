@@ -952,7 +952,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					// change permissions on /dev/shm
 					if ( !rootUser)
 					{
-						cmd = "sudo chmod 755 /dev/shm >/dev/null 2>&1";				
+						cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";				
 						system(cmd.c_str());
 					}
 
