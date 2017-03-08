@@ -950,11 +950,11 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					log.writeLog(__LINE__,  "MSG RECEIVED: Start All process request...");
 
 					// change permissions on /dev/shm
-					string cmd = "chmod 755 /dev/shm >/dev/null 2>&1";
 					if ( !rootUser)
-						cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
-				
-					system(cmd.c_str());
+					{
+						cmd = "sudo chmod 755 /dev/shm >/dev/null 2>&1";				
+						system(cmd.c_str());
+					}
 
 					//start the mysql daemon 
 					try {

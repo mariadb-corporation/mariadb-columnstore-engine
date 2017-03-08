@@ -123,7 +123,7 @@ cd /
 
 test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-$SUDO chmod -R 777 /var/log/mariadb
+$SUDO chmod -R 755 /var/log/mariadb
 
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
@@ -206,24 +206,22 @@ fi
 #setup MariaDB Columnstore system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
-	chmod 777 -R /dev/shm
 	rm -f /etc/default/columnstore
 else
-	$SUDO chmod 777 /tmp
+	$SUDO chmod 755 /tmp
 	$SUDO rm -fr /tmp/* > /dev/null 2>&1
 	$SUDO $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
-	$SUDO chmod -R 777 /dev/shm
+	$SUDO chmod -R 755 /dev/shm
 	$SUDO mkdir /var/lock/subsys > /dev/null 2>&1
-	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
+	$SUDO chmod 755 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
-	$SUDO chmod 777 /etc/fstab	
+	$SUDO chmod 755 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
 
 	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
-
 fi
 
 #check if MariaDB Columnstore system logging was setup
