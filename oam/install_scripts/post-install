@@ -123,7 +123,11 @@ cd /
 
 test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-$SUDO chmod -R 755 /var/log/mariadb
+
+if [ $user != "root" ]; then
+	$SUDO chmod -R 755 /var/log/mariadb >/dev/null 2>&1
+	$SUDO chown -R $user:$user /var/log/mariadb >/dev/null 2>&1
+fi
 
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
