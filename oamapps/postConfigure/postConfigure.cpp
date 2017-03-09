@@ -53,10 +53,11 @@
 #include <glob.h>
 
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
 #include <stdio.h>
 #include <string.h> /* for strncpy */
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <net/if.h>
@@ -433,48 +434,58 @@ int main(int argc, char *argv[])
 	}
 
     //check for local ip address as pm1
-        ModuleConfig moduleconfig;
+    ModuleConfig moduleconfig;
 
     try
     {
         oam.getSystemConfig("pm1", moduleconfig);
-        HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-        string PM1ipAdd = (*pt1).IPAddr;
-
-        if ( PM1ipAdd != "127.0.0.1")
+        if (moduleconfig.hostConfigList.size() > 0 )
         {
-            // now get the local ip address
-                        int fd;
-            struct ifreq ifr;
+            HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+            string PM1ipAdd = (*pt1).IPAddr;
+            cout << PM1ipAdd << endl;
 
-            fd = socket(AF_INET, SOCK_DGRAM, 0);
-
-            /* I want to get an IPv4 IP address */
-            ifr.ifr_addr.sa_family = AF_INET;
-
-            /* I want IP address attached to "eth0" */
-            strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
-
-            ioctl(fd, SIOCGIFADDR, &ifr);
-
-            close(fd);
-
-            string localIPAddr = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
-
-            if ( PM1ipAdd != localIPAddr )
-            // configure pm1 and local ip address don't match, error out
-            // can only install from pm1
+            if ( PM1ipAdd != "127.0.0.1" && PM1ipAdd != "0.0.0.0")
             {
-                cout << endl;
-                cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
-                cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
-                cout << "IP Address. exiting..." << endl;
-                exit(1);
+                struct ifaddrs *ifap, *ifa;
+                struct sockaddr_in *sa;
+                char *addr;
+                bool found = false;
+
+                getifaddrs (&ifap);
+                for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+                    if (ifa->ifa_addr->sa_family==AF_INET) {
+                        sa = (struct sockaddr_in *) ifa->ifa_addr;
+                        addr = inet_ntoa(sa->sin_addr);
+                        printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
+
+                        if ( PM1ipAdd == addr )
+                        {
+							//match
+                            found = true;
+                        }
+                    }
+
+                    if (found)
+                        break;
+                }
+
+                freeifaddrs(ifap);
+
+                if (!found)
+                {
+                    cout << endl;
+                    cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
+                    cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
+                    cout << "IP Address. exiting..." << endl;
+                    exit(1);
+                }
             }
         }
     }
     catch(...)
     {}
+
 
 
 	// run my.cnf upgrade script
