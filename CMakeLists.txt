@@ -71,7 +71,7 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${SERVER_SOURCE_ROOT_DIR}/libmysql/" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
-    SET(CMAKE_INSTALL_RPATH "${INSTALL_ENGINE}/mysql/lib")
+    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${INSTALL_ENGINE}/mysql/lib")
 ENDIF("${isSystemDir}" STREQUAL "-1")
 
 INCLUDE (configureEngine.cmake)
