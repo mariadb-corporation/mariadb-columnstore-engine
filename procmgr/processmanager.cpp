@@ -4481,7 +4481,14 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	string systemID;
 	string packageType = "rpm";
 
-	oam.getSystemConfig("EEPackageType", packageType);
+	try
+        {
+		oam.getSystemConfig("EEPackageType", packageType);
+        }
+        catch (...) 
+	{
+                log.writeLog(__LINE__, "addModule - ERROR: get EEPackageType", LOG_TYPE_ERROR);
+	}
 
 	//
 	// check for RPM package
@@ -4509,11 +4516,11 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			homedir = p;
 	}
 
-	if ( packageType != "rpm")
+	if ( packageType == "rpm")
 		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
 	else
-		if ( packageType != "deb") 
-        	calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
+		if ( packageType == "deb") 
+        		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
 		else
 			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
 
