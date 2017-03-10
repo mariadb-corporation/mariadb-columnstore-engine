@@ -5361,6 +5361,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 	}
 
 	//validate the module list to be removed
+	listPT = devicenetworklist.begin();
 	for( ; listPT != devicenetworklist.end() ; listPT++)
 	{
 		int returnStatus = oam.validateModule((*listPT).DeviceName);
@@ -5374,6 +5375,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 	if(manualFlag)
 	{
 		//stopModules being removed with the REMOVE option, which will stop process
+		listPT = devicenetworklist.begin();
 		for( ; listPT != devicenetworklist.end() ; listPT++)
 		{
 			string moduleName = (*listPT).DeviceName;
@@ -5675,9 +5677,6 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 	{
 		rpw = "root";
 	}
-
-	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
-	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
 	return API_SUCCESS;
 }
