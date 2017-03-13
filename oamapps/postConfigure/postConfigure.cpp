@@ -2676,7 +2676,42 @@ int main(int argc, char *argv[])
 	/* create a thread_data_t argument array */
 	thread_data_t thr_data[childmodulelist.size()];
 
+	// determine package type
+       	string EEPackageType;
+
+        if (!rootUser)
+		EEPackageType = "binary";
+	else
+	{
+       		system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+       		if (oam.checkLogStatus("/tmp/columnstore.txt", "Name"))
+        		EEPackageType = "rpm";
+        	else {
+        		system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+             		if (oam.checkLogStatus("/tmp/columnstore.txt", "Status: install"))
+                		EEPackageType = "deb";
+                	else
+                        	EEPackageType = "binary";
+		}		
+	}
+
+      	try {
+        	sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
+       	}
+       	catch(...)
+     	{
+        	cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
+            	exit(1);
+     	}
+
+    	if ( !writeConfig(sysConfig) ) {
+        	cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+                exit(1);
+       	}
+
+	
 	string install = "y";
+
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
@@ -2719,22 +2754,6 @@ int main(int argc, char *argv[])
 
 			cout << endl;
 
-			//Write out Updated System Configuration File
-			string EEPackageType;
-    		if ( rootUser )
-			{
-				try {
-					EEPackageType = sysConfig->getConfig(InstallSection, "EEPackageType");
-				}
-				catch(...)
-				{
-					cout << "ERROR: Problem getting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-					exit(1);
-				}
-			}
-			else	//nonroot, default to binary
-				EEPackageType = "binary";
-
 			while(true) {
 				prompt = "Enter the Package Type being installed to other servers [rpm,deb,binary] (" + EEPackageType + ") > ";
 				pcommand = callReadline(prompt);
@@ -2775,21 +2794,6 @@ int main(int argc, char *argv[])
 				}
 			}
 	
-			//Write out Updated System Configuration File
-			try {
-				sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
-			}
-			catch(...)
-			{
-				cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-				exit(1);
-			}
-		
-			if ( !writeConfig(sysConfig) ) { 
-				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
-				exit(1);
-			}
-
 			//check if pkgs are located in $HOME directory
 			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType == "rpm")
