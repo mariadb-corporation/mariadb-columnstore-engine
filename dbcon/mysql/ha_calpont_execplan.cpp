@@ -423,7 +423,7 @@ void debug_walk(const Item *item, void *arg)
 		char* item_name = item->name;
 		if (!item_name)
 		{
-			item_name = "<NULL>";
+			item_name = (char*)"<NULL>";
 		}
 		switch (isp->sum_func())
 		{
@@ -1111,6 +1111,15 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
 bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 {
 	boost::shared_ptr<Operator> sop(new PredicateOperator(ifp->func_name()));
+    if (ifp->functype() == Item_func::LIKE_FUNC)
+    {
+        // Starting with MariaDB 10.2, LIKE uses a negated flag instead of FUNC_NOT
+        // Further processing is done below as before for LIKE
+        if (((Item_func_like*)ifp)->negated)
+        {
+            sop->reverseOp();
+        }
+    }
 	if (!(gwip->thd->infinidb_vtable.cal_conn_info))
 		gwip->thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
 	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwip->thd->infinidb_vtable.cal_conn_info);
@@ -6043,7 +6052,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ostringstream oss;
 						oss << ordercol->counter;
 						ord_cols += oss.str();
-						if (!ordercol->direction == ORDER::ORDER_ASC)
+						if (ordercol->direction != ORDER::ORDER_ASC)
 							ord_cols += " desc";
 						continue;
 					}
@@ -6168,7 +6177,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 								gwi.returnedCols.push_back(srcp);
 								ord_cols += " `" + escapeBackTick(str.c_ptr()) + "`";
 							}
-							if (!ordercol->direction == ORDER::ORDER_ASC)
+							if (ordercol->direction != ORDER::ORDER_ASC)
 								ord_cols += " desc";
 							continue;
 						}
@@ -6232,7 +6241,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ord_item->print(&str, QT_INFINIDB);
 						ord_cols += str.c_ptr();
 					}
-					if (!ordercol->direction == ORDER::ORDER_ASC)
+					if (ordercol->direction != ORDER::ORDER_ASC)
 						ord_cols += " desc";
 				}
 			}
@@ -6572,7 +6581,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ord_item->print(&str, QT_INFINIDB_NO_QUOTE);
 						ord_cols += string(str.c_ptr());
 					}
-					if (!ordercol->direction == ORDER::ORDER_ASC)
+					if (ordercol->direction != ORDER::ORDER_ASC)
 						ord_cols += " desc";
 				}
 			}

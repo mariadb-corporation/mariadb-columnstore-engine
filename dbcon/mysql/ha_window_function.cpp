@@ -186,7 +186,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 	//cout << str.c_ptr() << endl;
 	if (!(gwi.thd->infinidb_vtable.cal_conn_info))
 		gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
-	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+//	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
 
 	gwi.hasWindowFunc = true;
 //	Item_func_window* wf = (Item_func_window*)item;
