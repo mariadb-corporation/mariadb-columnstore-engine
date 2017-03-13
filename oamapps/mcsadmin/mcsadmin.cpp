@@ -5011,7 +5011,7 @@ int processCommand(string* arguments)
 				if (oam.checkLogStatus("/tmp/columnstore.txt", "Name"))
 					system("cat /tmp/columnstore.txt");
 				else {
-					system("dpkg -s mariadb-columnstore > /tmp/columnstore.txt 2>&1");
+					system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
 					if (oam.checkLogStatus("/tmp/columnstore.txt", "Status: install"))
 						system("cat /tmp/columnstore.txt");
 					else {
