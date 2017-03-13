@@ -27,7 +27,7 @@
 1008	ERR_CREATE_DATATYPE_NOT_SUPPORT	The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
 1010	ERR_AGGREGATE_TYPE_NOT_SUPPORT	'%1%' for column type '%2%' isn't supported.
 1011	ERR_DML_VIEW	%1% on VIEW is currently not supported.
-#1012	ERR_UPDATE_NOT_SUPPORT_FEATURE	This version of Columstore supports update of only one table at a time.
+1012	ERR_UPDATE_NOT_SUPPORT_FEATURE	This version of Columnstore supports update of only one table at a time.
 1014	ERR_ROLLUP_NOT_SUPPORT	Rollup is currently not supported.
 1015	ERR_OUTER_JOIN_SUBSELECT	Subquery on OUTER JOIN ON clause is currently not supported.
 1016	ERR_PARTITION_BY_RANGE	The column type %1% is currently  not supported in %2% function.

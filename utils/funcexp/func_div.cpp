@@ -55,7 +55,7 @@ int64_t Func_div::getIntVal(rowgroup::Row& row,
 	if (int_val2 == 0)
 	{
 		isNull = true;
-        return NULL;
+        return 0;
 	}
 	int64_t int_val1 = (int64_t)(val1 > 0 ? val1 + 0.5 : val1 - 0.5);
 	// MCOL-176 If abs(int_val2) is small enough (like -1), then, this may cause overflow.
@@ -78,7 +78,7 @@ uint64_t Func_div::getUintVal(rowgroup::Row& row,
 	if (val2 == 0)
 	{
 		isNull = true;
-        return NULL;
+        return 0;
 	}
 	return val1 / val2;
 }
