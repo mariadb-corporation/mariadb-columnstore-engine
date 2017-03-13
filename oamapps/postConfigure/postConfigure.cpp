@@ -2750,7 +2750,7 @@ int main(int argc, char *argv[])
 				if ( rootUser )
 					EEPackageType = "rpm";
 				else
-	                EEPackageType = "binary";
+	                		EEPackageType = "binary";
 
 				if ( noPrompting )
 					exit(1);
@@ -2793,16 +2793,16 @@ int main(int argc, char *argv[])
 			//check if pkgs are located in $HOME directory
 			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType == "rpm")
-                    columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm.tar.gz";
+                    		columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm.tar.gz";
 			else
-	            if ( EEPackageType == "deb") 
+	            		if ( EEPackageType == "deb") 
 					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb.tar.gz";
 				else
-                    columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm.tar.gz";
+                    			columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 
 
-  	       	if( !pkgCheck(columnstorePackage) )
-            	exit(1);
+  	       		if( !pkgCheck(columnstorePackage) )
+            		exit(1);
  
 			if ( password.empty() )
 			{
