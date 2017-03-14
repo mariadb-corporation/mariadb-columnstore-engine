@@ -2754,27 +2754,6 @@ int main(int argc, char *argv[])
 
 			cout << endl;
 
-			while(true) {
-				prompt = "Enter the Package Type being installed to other servers [rpm,deb,binary] (" + EEPackageType + ") > ";
-				pcommand = callReadline(prompt);
-				if (pcommand) {
-					if (strlen(pcommand) > 0) EEPackageType = pcommand;
-					callFree(pcommand);
-				}
-
-				if ( EEPackageType == "rpm" || EEPackageType == "deb" || EEPackageType == "binary"  ) {
-					break;
-				}
-				cout << "Invalid Package Type, please re-enter" << endl;
-				if ( rootUser )
-					EEPackageType = "rpm";
-				else
-	                		EEPackageType = "binary";
-
-				if ( noPrompting )
-					exit(1);
-			}
-
 			if ( EEPackageType == "rpm" )
 			{
 				cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl; 
