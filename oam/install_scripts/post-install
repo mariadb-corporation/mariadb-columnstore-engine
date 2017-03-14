@@ -125,7 +125,7 @@ test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
 
 if [ $user != "root" ]; then
-	$SUDO chmod -R 755 /var/log/mariadb >/dev/null 2>&1
+	$SUDO chmod -R 777 /var/log/mariadb >/dev/null 2>&1
 	$SUDO chown -R $user:$user /var/log/mariadb >/dev/null 2>&1
 fi
 
@@ -151,7 +151,6 @@ mkdir -p $installdir/data/bulk/job >/dev/null 2>&1
 mkdir -p $installdir/data/bulk/rollback >/dev/null 2>&1
 mkdir -p $installdir/data/bulk/tmpjob >/dev/null 2>&1
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
-chmod -R 755 $installdir/data/bulk >/dev/null 2>&1
 
 #create columnstore temp file directory
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
