@@ -9677,7 +9677,6 @@ namespace oam
 				return true;
 			}
 		}
-      		//writeLog("checkSystemRunning - system reported down", LOG_TYPE_DEBUG );
 
 		return false;
 	}
