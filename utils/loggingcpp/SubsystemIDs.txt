@@ -15,7 +15,7 @@
 08 - oamcpp 
 09 - servermonitor 
 10 - traphandler 
-11 - snmpmanager 
+11 - alarmmanager 
 12 - configcpp 
 13 - loggingcpp 
 14 - messageqcpp 
