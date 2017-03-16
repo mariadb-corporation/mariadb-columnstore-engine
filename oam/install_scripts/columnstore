@@ -81,11 +81,7 @@ start() {
 		exit 0
 	fi
 
-	if [ "$user" == "root" ]; then
-		(mkdir -p /var/lock/subsys && touch /var/lock/subsys/columnstore) >/dev/null 2>&1
-	else
-                ($SUDO mkdir -p /var/lock/subsys && $SUDO chmod 777 /var/lock/subsys $SUDO touch /var/lock/subsys/columnstore) >/dev/null 2>&1
-	fi
+        ($SUDO mkdir -p /var/lock/subsys && $SUDO chmod 777 /var/lock/subsys && $SUDO touch /var/lock/subsys/columnstore) >/dev/null 2>&1
 
 	if [ -x $InstallDir/bin/columnstore.pre-start ]; then
 		$InstallDir/bin/columnstore.pre-start
