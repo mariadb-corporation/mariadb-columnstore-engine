@@ -2683,12 +2683,12 @@ int main(int argc, char *argv[])
 		EEPackageType = "binary";
 	else
 	{
-       		system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-       		if (oam.checkLogStatus("/tmp/columnstore.txt", "Name"))
+       		int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+           	if (WEXITSTATUS(rtnCode) == 0)
         		EEPackageType = "rpm";
         	else {
-        		system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-             		if (oam.checkLogStatus("/tmp/columnstore.txt", "Status: install"))
+        		rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+	            if (WEXITSTATUS(rtnCode) == 0)
                 		EEPackageType = "deb";
                 	else
                         	EEPackageType = "binary";
