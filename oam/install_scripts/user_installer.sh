@@ -67,15 +67,15 @@ if { $PKGTYPE == "rpm" } {
 # check and see if remote server has ssh keys setup, set PASSWORD if so
 send_user " "
 send "ssh $USERNAME@$SERVER 'time'\n"
-set timeout 60
+set timeout 20
 expect {
 	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
 	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
 	"authenticity" { send "yes\n" 
-						expect {
-							"word: " { send "$PASSWORD\n" }
-							"passphrase" { send "$PASSWORD\n" }
-						}
+				expect {
+					"word: " { send "$PASSWORD\n" }
+					"passphrase" { send "$PASSWORD\n" }
+				}
 	}
 	"sys" { set PASSWORD "ssh" }
 	"word: " { send "$PASSWORD\n" }
@@ -86,14 +86,14 @@ expect {
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 }
-set timeout 30
+set timeout 10
 expect {
 	-re {[$#] }        {  }
 	"sys" {  }
 }
 send_user "\n"
 #BUG 5749 - SAS: didn't work on their system until I added the sleep 60
-sleep 60
+#sleep 60
 
 if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	# 
@@ -110,7 +110,8 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	}
 	set timeout 120
 	expect {
-		"package dummy" { send_user "DONE" }
+		"error: --purge needs at least one package" { send_user "DONE" }
+		"dummy" { send_user "DONE" }
 		"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; exit 1 }
 		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
@@ -156,7 +157,7 @@ if { $PASSWORD != "ssh" } {
 }
 set timeout 120
 expect {
-	"package dummy" 	{ send_user "DONE" }
+	"dummy" 	{ send_user "DONE" }
 	"directory"  		{ send_user "ERROR\n" ; 
 				 	send_user "\n*** Installation ERROR\n" ; 
 					exit 1 }
@@ -184,7 +185,7 @@ if { $INSTALLTYPE == "initial"} {
 	}
 	set timeout 180
 	expect {
-		"package dummy" 	  { send_user "DONE" }
+		"dummy" 	  { send_user "DONE" }
 		"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
 							send_user "\n*** Installation ERROR\n" ; 
 							exit 1 }

@@ -109,7 +109,7 @@ bool updateProcessConfig(int serverTypeInstall);
 bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
 bool createDbrootDirs(string DBRootStorageType);
-bool pkgCheck();
+bool pkgCheck(std::string columnstorePackage);
 bool storageSetup(bool amazonInstall);
 void setSystemName();
 bool singleServerDBrootSetup();
@@ -126,7 +126,7 @@ typedef struct ModuleIP_struct
 
 std::string launchInstance(ModuleIP moduleip);
 
-string calpontPackage1;
+string columnstorePackage;
 //string calpontPackage2;
 //string calpontPackage3;
 //string mysqlPackage;
@@ -2676,7 +2676,42 @@ int main(int argc, char *argv[])
 	/* create a thread_data_t argument array */
 	thread_data_t thr_data[childmodulelist.size()];
 
+	// determine package type
+       	string EEPackageType;
+
+        if (!rootUser)
+		EEPackageType = "binary";
+	else
+	{
+       		int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+           	if (WEXITSTATUS(rtnCode) == 0)
+        		EEPackageType = "rpm";
+        	else {
+        		rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+	            if (WEXITSTATUS(rtnCode) == 0)
+                		EEPackageType = "deb";
+                	else
+                        	EEPackageType = "binary";
+		}		
+	}
+
+      	try {
+        	sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
+       	}
+       	catch(...)
+     	{
+        	cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
+            	exit(1);
+     	}
+
+    	if ( !writeConfig(sysConfig) ) {
+        	cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+                exit(1);
+       	}
+
+	
 	string install = "y";
+
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
@@ -2719,39 +2754,6 @@ int main(int argc, char *argv[])
 
 			cout << endl;
 
-			//Write out Updated System Configuration File
-			string EEPackageType;
-    		if ( rootUser )
-			{
-				try {
-					EEPackageType = sysConfig->getConfig(InstallSection, "EEPackageType");
-				}
-				catch(...)
-				{
-					cout << "ERROR: Problem getting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-					exit(1);
-				}
-			}
-			else	//nonroot, default to binary
-				EEPackageType = "binary";
-
-			while(true) {
-				prompt = "Enter the Package Type being installed to other servers [rpm,deb,binary] (" + EEPackageType + ") > ";
-				pcommand = callReadline(prompt);
-				if (pcommand) {
-					if (strlen(pcommand) > 0) EEPackageType = pcommand;
-					callFree(pcommand);
-				}
-
-				if ( EEPackageType == "rpm" || EEPackageType == "deb" || EEPackageType == "binary"  ) {
-					break;
-				}
-				cout << "Invalid Package Type, please re-enter" << endl;
-				EEPackageType = "rpm";
-				if ( noPrompting )
-					exit(1);
-			}
-
 			if ( EEPackageType == "rpm" )
 			{
 				cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl; 
@@ -2771,76 +2773,20 @@ int main(int argc, char *argv[])
 				}
 			}
 	
-			//Write out Updated System Configuration File
-			try {
-				sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
-			}
-			catch(...)
-			{
-				cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-				exit(1);
-			}
-		
-			if ( !writeConfig(sysConfig) ) { 
-				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
-				exit(1);
-			}
-
 			//check if pkgs are located in $HOME directory
 			string version = systemsoftware.Version + "-" + systemsoftware.Release;
-			if ( EEPackageType != "binary") {
-				string separator = "-";
-				calpontPackage1 = "mariadb-columnstore-*" + separator + version;
-				//calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
-				//calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
-				//mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
-				//mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
-
-				if( !pkgCheck() ) {
-					exit(1);
-				}
-				else
-				{
-				//mariadb
-					calpontPackage1 = "mariadb-columnstore-*" + separator + version;
-
-					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
-					//calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
-					//calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
-					//mysqlPackage = HOME + "/" + mysqlPackage  + "*." + EEPackageType;
-					//mysqldPackage = HOME + "/" + mysqldPackage  + "*." + EEPackageType;
-				}
-			}
+			if ( EEPackageType == "rpm")
+                    		columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm.tar.gz";
 			else
-			{
-				// binary
-				//string fileName = installDir + "/bin/healthcheck";
-				//ifstream file (fileName.c_str());
-				//if (!file)	// CE
-					calpontPackage1 = "mariadb-columnstore-" + version;
-				//else		// EE
-					//calpontPackage1 = "mariadb-columnstore-ent-" + version;
-				//calpontPackage2 = "dummy";
-				//calpontPackage3 = "dummy";
-				//mysqlPackage = calpontPackage1;
-				//mysqldPackage = calpontPackage1;
+	            		if ( EEPackageType == "deb") 
+					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb.tar.gz";
+				else
+                    			columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 
-				if( !pkgCheck() )
-					exit(1);
-				calpontPackage1 = HOME + "/" + calpontPackage1 + "*.bin.tar.gz";
-				//calpontPackage2 = "dummy";
-				//calpontPackage3 = "dummy";
-			}
 
-			//If ent pkg is not there, mark it as such
-			//{
-			//	glob_t gt;
-			//	memset(&gt, 0, sizeof(gt));
-			//	if (glob(calpontPackage3.c_str(), 0, 0, &gt) != 0)
-			//		calpontPackage3 = "dummy.rpm";
-			//	globfree(&gt);
-			//}
-
+  	       		if( !pkgCheck(columnstorePackage) )
+            		exit(1);
+ 
 			if ( password.empty() )
 			{
 				cout << endl;
@@ -3050,7 +2996,7 @@ int main(int argc, char *argv[])
 //						checkRemoteMysqlPort(remoteModuleIP, remoteModuleName, USER, password, mysqlPort, sysConfig);
 
 						cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
-							remoteModuleIP + " " + password + " " + calpontPackage1 + " " + remoteModuleType +
+							remoteModuleIP + " " + password + " " + columnstorePackage + " " + remoteModuleType +
 							" initial " + binservertype + " " + mysqlPort + " " + remote_installer_debug +
 							" " + installDir + " " + debug_logfile;
 						
@@ -3120,7 +3066,7 @@ int main(int argc, char *argv[])
 							if ( pmwithum )
 								binservertype = "pmwithum";
 							cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
-								" " + password + " " + calpontPackage1 + " " + remoteModuleType + " initial " +
+								" " + password + " " + columnstorePackage + " " + remoteModuleType + " initial " +
 								binservertype + " " + mysqlPort + " " + remote_installer_debug + " " + installDir + " " +
 								debug_logfile;
 
@@ -4033,14 +3979,14 @@ bool createDbrootDirs(string DBRootStorageType)
 /*
  * pkgCheck 
  */
-bool pkgCheck()
+bool pkgCheck(string columnstorePackage)
 {
 	while(true) 
 	{
-		string cmd = "ls " + HOME + " | grep " + calpontPackage1 + " > /tmp/calpontpkgs";
+		string cmd = "ls " + columnstorePackage + " > /tmp/calpontpkgs";
 		system(cmd.c_str());
 	
-		string pkg = calpontPackage1;
+		string pkg = columnstorePackage;
 		string fileName = "/tmp/calpontpkgs";
 		ifstream oldFile (fileName.c_str());
 		if (oldFile) {
