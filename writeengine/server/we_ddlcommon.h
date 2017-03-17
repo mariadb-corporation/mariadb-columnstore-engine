@@ -316,6 +316,7 @@ inline boost::any getNullValueForType(const execplan::CalpontSystemCatalog::ColT
 
 			}
 			break;
+        case execplan::CalpontSystemCatalog::BLOB:
 		case execplan::CalpontSystemCatalog::VARBINARY:
 			{
 				std::string charnull;

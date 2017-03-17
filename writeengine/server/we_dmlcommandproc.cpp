@@ -2071,6 +2071,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 								break;
 							}
 							case CalpontSystemCatalog::VARBINARY:
+							case CalpontSystemCatalog::BLOB:
 							{
 								value = row.getVarBinaryStringField(fetchColPos);
 								break;
@@ -2356,6 +2357,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 									break;
 								}
 								case CalpontSystemCatalog::VARBINARY:
+								case CalpontSystemCatalog::BLOB:
 								{
 									value = row.getVarBinaryStringField(fetchColPos);
 									break;

@@ -561,7 +561,8 @@ void AlterTableProcessor::addColumn (uint32_t sessionID, execplan::CalpontSystem
 		
 	if ((columnDefPtr->fType->fType == CalpontSystemCatalog::CHAR && columnDefPtr->fType->fLength > 8) ||
 				 (columnDefPtr->fType->fType == CalpontSystemCatalog::VARCHAR && columnDefPtr->fType->fLength > 7) ||
-				 (columnDefPtr->fType->fType == CalpontSystemCatalog::VARBINARY && columnDefPtr->fType->fLength > 7))
+				 (columnDefPtr->fType->fType == CalpontSystemCatalog::VARBINARY && columnDefPtr->fType->fLength > 7) ||
+                 (columnDefPtr->fType->fType == CalpontSystemCatalog::BLOB))
 	{
 		isDict = true;
 	}

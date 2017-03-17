@@ -1454,6 +1454,7 @@ int ColumnOp::addExtent(
                 //pOldVal = &((double *) oldValArray)[i]; 
                 break;
             case WriteEngine::WR_VARBINARY :   // treat same as char for now
+            case WriteEngine::WR_BLOB :
             case WriteEngine::WR_CHAR :   
                 if (!bDelete)
                 {
@@ -1588,6 +1589,7 @@ int ColumnOp::addExtent(
                 //pOldVal = &((double *) oldValArray)[i]; 
                 break;
             case WriteEngine::WR_VARBINARY :   // treat same as char for now
+            case WriteEngine::WR_BLOB :
             case WriteEngine::WR_CHAR :   
                 if (!bDelete)
                 {
@@ -1717,6 +1719,7 @@ int ColumnOp::addExtent(
                 pVal = &((double *) valArray)[i]; 
                 break;
             case WriteEngine::WR_VARBINARY :   // treat same as char for now
+            case WriteEngine::WR_BLOB :
             case WriteEngine::WR_CHAR :   
                 {
                     memcpy(charTmpBuf, (char*)valArray+i*8, 8);

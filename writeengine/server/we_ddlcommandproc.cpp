@@ -450,7 +450,8 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string &err
 			bool hasDict = false;
 			if ( (dataType == CalpontSystemCatalog::CHAR && colDefPtr->fType->fLength > 8) ||
 				 (dataType == CalpontSystemCatalog::VARCHAR && colDefPtr->fType->fLength > 7) ||
-				 (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength > 7) )
+				 (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength > 7) ||
+                 (dataType == CalpontSystemCatalog::BLOB && colDefPtr->fType->fLength > 7) )
 			{
 				hasDict = true;
 				dictOID.compressionType = colDefPtr->fType->fCompressiontype;
@@ -459,17 +460,20 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string &err
 				dictcol++;
 
 				//@Bug 2534. Take away the limit of 255 and set the limit to 8000.
-				if (colDefPtr->fType->fLength > 8000)
+				if ((colDefPtr->fType->fLength > 8000) &&
+                    (dataType != CalpontSystemCatalog::BLOB))
 				{
 					ostringstream os;
 					os << "char, varchar and varbinary length may not exceed 8000";
 					throw std::runtime_error(os.str());
 				}
 			}
-			else if (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength <= 7)
+			else if ((dataType == CalpontSystemCatalog::VARBINARY
+                    || dataType == CalpontSystemCatalog::BLOB)
+                    && colDefPtr->fType->fLength <= 7)
 			{
 				ostringstream os;
-				os << "varbinary length may not be less than 8";
+				os << "varbinary and blob length may not be less than 8";
 				throw std::runtime_error(os.str());
 			}
 
@@ -514,7 +518,8 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string &err
 					//@Bug 2089 Disallow zero length char and varch column to be created
 					if (dataType == CalpontSystemCatalog::CHAR ||
 						dataType == CalpontSystemCatalog::VARCHAR ||
-						dataType == CalpontSystemCatalog::VARBINARY)
+						dataType == CalpontSystemCatalog::VARBINARY ||
+                        dataType == CalpontSystemCatalog::BLOB)
 					{
 						if (colDefPtr->fType->fLength <= 0)
 						{
@@ -829,17 +834,20 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string & err)
 			dictOID.dictOID = dictoid;
 
 			//@Bug 2534. Take away the limit of 255 and set the limit to 8000.
-			if (colDefPtr->fType->fLength > 8000)
+			if ((colDefPtr->fType->fLength > 8000) &&
+                (dataType != CalpontSystemCatalog::BLOB))
 			{
 				ostringstream os;
 				os << "char, varchar and varbinary length may not exceed 8000";
 				throw std::runtime_error(os.str());
 			}
 		}
-		else if (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength <= 7)
+		else if ((dataType == CalpontSystemCatalog::VARBINARY
+                || dataType == CalpontSystemCatalog::BLOB)
+                && colDefPtr->fType->fLength <= 7)
 		{
 			ostringstream os;
-			os << "varbinary length may not be less than 8";
+			os << "varbinary and blob length may not be less than 8";
 			throw std::runtime_error(os.str());
 		}
 
@@ -885,7 +893,8 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string & err)
 					//@Bug 2089 Disallow zero length char and varch column to be created
 					if (dataType == CalpontSystemCatalog::CHAR ||
 						dataType == CalpontSystemCatalog::VARCHAR ||
-						dataType == CalpontSystemCatalog::VARBINARY)
+						dataType == CalpontSystemCatalog::VARBINARY ||
+                        dataType == CalpontSystemCatalog::BLOB)
 					{
 						if (colDefPtr->fType->fLength <= 0)
 						{
@@ -2242,6 +2251,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string 
 				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::VARBINARY
 				&& column.colType.colWidth > 7)
+			|| (column.colType.colDataType == CalpontSystemCatalog::BLOB
+				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::DECIMAL
 				&& column.colType.precision > 18)
 			|| (column.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -2997,6 +3008,8 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 			|| (column.colType.colDataType == CalpontSystemCatalog::VARCHAR
 				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::VARBINARY
+				&& column.colType.colWidth > 7)
+			|| (column.colType.colDataType == CalpontSystemCatalog::BLOB
 				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::DECIMAL
 				&& column.colType.precision > 18)
@@ -3878,6 +3891,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 			&& column.colType.colWidth > 7)
 		|| (column.colType.colDataType == CalpontSystemCatalog::VARBINARY
 			&& column.colType.colWidth > 7)
+		|| (column.colType.colDataType == CalpontSystemCatalog::BLOB
+			&& column.colType.colWidth > 7)
 		|| (column.colType.colDataType == CalpontSystemCatalog::DECIMAL
 			&& column.colType.precision > 18)
 		|| (column.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -4146,6 +4161,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 			&& column1.colType.colWidth > 7)
 		|| (column1.colType.colDataType == CalpontSystemCatalog::VARBINARY
 			&& column1.colType.colWidth > 7)
+		|| (column1.colType.colDataType == CalpontSystemCatalog::BLOB
+			&& column1.colType.colWidth > 7)
 		|| (column1.colType.colDataType == CalpontSystemCatalog::DECIMAL
 			&& column1.colType.precision > 18)
 		|| (column1.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -4335,6 +4352,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 		|| (column5.colType.colDataType == CalpontSystemCatalog::VARCHAR
 			&& column5.colType.colWidth > 7)
 		|| (column5.colType.colDataType == CalpontSystemCatalog::VARBINARY
+			&& column5.colType.colWidth > 7)
+		|| (column5.colType.colDataType == CalpontSystemCatalog::BLOB
 			&& column5.colType.colWidth > 7)
 		|| (column5.colType.colDataType == CalpontSystemCatalog::DECIMAL
 			&& column5.colType.precision > 18)
