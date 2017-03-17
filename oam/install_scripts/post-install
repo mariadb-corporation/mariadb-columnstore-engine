@@ -153,6 +153,7 @@ mkdir -p $installdir/data/bulk/tmpjob >/dev/null 2>&1
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 
 #create columnstore temp file directory
+$SUDO chmod 777 /tmp
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
