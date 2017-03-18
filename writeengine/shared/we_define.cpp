@@ -135,7 +135,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
    
     // Dictionary error
     fErrorCodes[ERR_DICT_NO_SPACE_INSERT] = " no space for a dictionary insert";
-    fErrorCodes[ERR_DICT_SIZE_GT_8000] = " the dictionary size was  >8000";
+    fErrorCodes[ERR_DICT_SIZE_GT_2G] = " the dictionary size was > 2GB";
     fErrorCodes[ERR_DICT_NO_OP_DELETE] = " in the dictionary no op delete";
     fErrorCodes[ERR_DICT_NO_OFFSET_DELETE] = " a dictionary bad Delete offset";
     fErrorCodes[ERR_DICT_INVALID_HDR] = " a dictionary bad Delete Hdr";

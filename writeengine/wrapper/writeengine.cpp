@@ -624,7 +624,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
 
       DctnryTuple dctnryTuple;
       DctColTupleList dctColTuples;
-      memcpy(dctnryTuple.sigValue, tmpStr.c_str(), tmpStr.length());
+      dctnryTuple.sigValue = (unsigned char*)tmpStr.c_str();
       dctnryTuple.sigSize = tmpStr.length();
       dctnryTuple.isNull = true;
       dctColTuples.push_back (dctnryTuple);
@@ -1200,7 +1200,7 @@ timer.stop("allocRowId");
 timer.start("tokenize");
 #endif
                  DctnryTuple dctTuple;
-                 memcpy(dctTuple.sigValue, dctStr_iter->c_str(), dctStr_iter->length());
+                 dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
                  dctTuple.sigSize = dctStr_iter->length();
                  dctTuple.isNull = false;
                    rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -1248,7 +1248,7 @@ timer.stop("tokenize");
 timer.start("tokenize");
 #endif
                  DctnryTuple dctTuple;
-                 memcpy(dctTuple.sigValue, dctStr_iter->c_str(), dctStr_iter->length());
+                 dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
                  dctTuple.sigSize = dctStr_iter->length();
                  dctTuple.isNull = false;
                  rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
@@ -1710,7 +1710,7 @@ timer.start("allocRowId");
 timer.start("tokenize");
 #endif
                  DctnryTuple dctTuple;
-                 memcpy(dctTuple.sigValue, dctStr_iter->c_str(), dctStr_iter->length());
+                 dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
                  dctTuple.sigSize = dctStr_iter->length();
                  dctTuple.isNull = false;
                    rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -1776,7 +1776,7 @@ timer.stop("tokenize");
 timer.start("tokenize");
 #endif
                  DctnryTuple dctTuple;
-                 memcpy(dctTuple.sigValue, dctStr_iter->c_str(), dctStr_iter->length());
+                 dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
                  dctTuple.sigSize = dctStr_iter->length();
                  dctTuple.isNull = false;
                  rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);
@@ -2333,7 +2333,7 @@ timer.stop("allocRowId");
 timer.start("tokenize");
 #endif
 						DctnryTuple dctTuple;
-						memcpy(dctTuple.sigValue, dctStr_iter->c_str(), dctStr_iter->length());
+						dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
 						dctTuple.sigSize = dctStr_iter->length();
 						dctTuple.isNull = false;
 						rc = tokenize(txnid,
@@ -2403,7 +2403,7 @@ timer.stop("tokenize");
 timer.start("tokenize");
 #endif
 						DctnryTuple dctTuple;
-						memcpy(dctTuple.sigValue, dctStr_iter->c_str(), dctStr_iter->length());
+						dctTuple.sigValue = (unsigned char*)dctStr_iter->c_str();
 						dctTuple.sigSize = dctStr_iter->length();
 						dctTuple.isNull = false;
 						rc = tokenize(txnid,

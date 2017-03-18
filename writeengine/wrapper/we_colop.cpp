@@ -692,7 +692,7 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
 							dctnryStruct.colWidth = dictColWidth;
 							dctnryStruct.fCompressionType = column.compressionType;
 							DctnryTuple dctnryTuple;
-							memcpy(dctnryTuple.sigValue, defaultValStr.c_str(), defaultValStr.length());
+							dctnryTuple.sigValue = (unsigned char*)defaultValStr.c_str();
 							dctnryTuple.sigSize = defaultValStr.length();
 								
 							rc = dctnry->openDctnry(dctnryStruct.dctnryOid,
@@ -761,7 +761,7 @@ int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, voi
 								dctnryStruct.colWidth = dictColWidth;
 								dctnryStruct.fCompressionType = column.compressionType;
 								DctnryTuple dctnryTuple;
-								memcpy(dctnryTuple.sigValue, defaultValStr.c_str(), defaultValStr.length());
+								dctnryTuple.sigValue = (unsigned char*)defaultValStr.c_str();
 								//WriteEngineWrapper wrapper;
 								dctnryTuple.sigSize = defaultValStr.length();
 								//rc = wrapper.tokenize(txnid, dctnryStruct, dctnryTuple);

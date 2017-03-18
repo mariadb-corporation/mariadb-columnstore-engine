@@ -2304,7 +2304,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string 
 
 	//It's the same string for each column, so we just need one dictionary struct
 	memset(&dictTuple, 0, sizeof(dictTuple));
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	dictTuple.isNull = false;
 	dctColList = dictTuple;
@@ -2639,7 +2639,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string &
 	dictStruct.columnOid = column.colType.columnOID;
 	WriteEngine::DctnryTuple  dictTuple;
 	dictTuple.isNull = false;
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 
 	if (idbdatafile::IDBPolicy::useHdfs())
@@ -2855,7 +2855,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 	dictStruct.columnOid = column.colType.columnOID;
 	WriteEngine::DctnryTuple  dictTuple;
 	dictTuple.isNull = false;
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	//int error = NO_ERROR;
 	//if (NO_ERROR != (error = fWEWrapper.tokenize(txnID, dictStruct, dictTuple)))
@@ -3028,7 +3028,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 	//Tokenize the data value
 	dictStruct.dctnryOid = column.colType.ddn.dictOID;
 	dictStruct.columnOid = column.colType.columnOID;
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	dictTuple.isNull = false;
 	/*
@@ -3079,7 +3079,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 
 	//It's the same string for each column, so we just need one dictionary struct
 	memset(&dictTuple, 0, sizeof(dictTuple));
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	dictTuple.isNull = false;
 	dctColList = dictTuple;
@@ -3921,7 +3921,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 		else
 		{
 			WriteEngine::DctnryTuple  dictTuple;
-			memcpy(dictTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+			dictTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 			dictTuple.sigSize = defaultvalue.length();
 			dictTuple.isNull = false;
 			int error = NO_ERROR;
@@ -3967,7 +3967,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 	WriteEngine::DctnryTuple  dctnryTuple;
 	if(defaultvalue.length() > 0)
 	{
-		memcpy(dctnryTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+		dctnryTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 		dctnryTuple.sigSize = defaultvalue.length();
 		dctnryTuple.isNull = false;
 	}
@@ -4187,7 +4187,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 		dictStruct.dctnryOid = column1.colType.ddn.dictOID;
 		dictStruct.columnOid = column1.colType.columnOID;
 		WriteEngine::DctnryTuple  dictTuple;
-		memcpy(dictTuple.sigValue, colNewName.c_str(), colNewName.length());
+		dictTuple.sigValue = (unsigned char*)colNewName.c_str();
 		dictTuple.sigSize = colNewName.length();
 		dictTuple.isNull = false;
 		int error = NO_ERROR;
@@ -4238,7 +4238,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 	colValuesList.push_back(aColList1);
 	WriteEngine::DctnryTuple dctnryTuple;
 	boost::to_lower(colNewName);
-	memcpy(dctnryTuple.sigValue, colNewName.c_str(), colNewName.length());
+	dctnryTuple.sigValue = (unsigned char*)colNewName.c_str();
 	dctnryTuple.sigSize = colNewName.length();
 	dctnryTuple.isNull = false;
 	dctColList = dctnryTuple;
@@ -4388,7 +4388,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 		else
 		{
 			WriteEngine::DctnryTuple  dictTuple;
-			memcpy(dictTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+			dictTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 			dictTuple.sigSize = defaultvalue.length();
 			dictTuple.isNull = false;
 			int error = NO_ERROR;
@@ -4437,7 +4437,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 
 	if(defaultvalue.length() > 0)
 	{
-		memcpy(dctnryTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+		dctnryTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 		dctnryTuple.sigSize = defaultvalue.length();
 		dctnryTuple.isNull = false;
 	}

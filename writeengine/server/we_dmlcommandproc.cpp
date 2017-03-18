@@ -2027,7 +2027,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 										nameNeeded = true;
 								}
 								WriteEngine::DctnryTuple dctTuple;
-								memcpy(dctTuple.sigValue, value.c_str(), value.length());
+								dctTuple.sigValue = (unsigned char*)value.c_str();
 								dctTuple.sigSize = value.length();
 								dctTuple.isNull = false;
 
@@ -2204,7 +2204,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 						}
 
 						WriteEngine::DctnryTuple dctTuple;
-						memcpy(dctTuple.sigValue, value.c_str(), value.length());
+						dctTuple.sigValue = (unsigned char*)value.c_str();
 						dctTuple.sigSize = value.length();
 						dctTuple.isNull = false;
 
@@ -2254,7 +2254,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 									nameNeeded = true;
 							}
 							WriteEngine::DctnryTuple dctTuple;
-							memcpy(dctTuple.sigValue, value.c_str(), value.length());
+							dctTuple.sigValue = (unsigned char*)value.c_str();
 							dctTuple.sigSize = value.length();
 							dctTuple.isNull = false;
 							error = fWEWrapper.tokenize(txnId, dctTuple, colType.compressionType);
@@ -2294,7 +2294,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 								nameNeeded = true;
 						}
 						WriteEngine::DctnryTuple dctTuple;
-						memcpy(dctTuple.sigValue, value.c_str(), value.length());
+						dctTuple.sigValue = (unsigned char*)value.c_str();
 						dctTuple.sigSize = value.length();
 						dctTuple.isNull = false;
 						error = fWEWrapper.tokenize(txnId, dctTuple, colType.compressionType);

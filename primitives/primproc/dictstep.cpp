@@ -332,7 +332,7 @@ void DictStep::_execute()
 	i = 0;
 	while (i < bpp->ridCount) {
 		l_lbid = ((int64_t) newRidList[i].token) >> 10;
-		primMsg->LBID = l_lbid;
+		primMsg->LBID = (l_lbid == -1) ? l_lbid : l_lbid & 0xFFFFFFFFFL;
 		primMsg->NVALS = 0;
 
 		/* When this is used as a filter, the strings can be thrown out.  JLF currently
@@ -399,7 +399,7 @@ void DictStep::_project()
 	i = 0;
 	while (i < bpp->ridCount) {
 		l_lbid = ((int64_t) newRidList[i].token) >> 10;
-		primMsg->LBID = l_lbid;
+		primMsg->LBID = (l_lbid == -1) ? l_lbid : l_lbid & 0xFFFFFFFFFL;
 		primMsg->NVALS = 0;
 		primMsg->OutputType = OT_DATAVALUE;
 		pt = (OldGetSigParams *) (primMsg->tokens);
@@ -456,7 +456,7 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
 	//cout << "DS: projectingToRG rids: " << bpp->ridCount << endl;
 	while (i < bpp->ridCount) {
 		l_lbid = ((int64_t) newRidList[i].token) >> 10;
-		primMsg->LBID = l_lbid;
+		primMsg->LBID = (l_lbid == -1) ? l_lbid : l_lbid & 0xFFFFFFFFFL;
 		primMsg->NVALS = 0;
 		primMsg->OutputType = OT_DATAVALUE;
 		pt = (OldGetSigParams *) (primMsg->tokens);
@@ -499,7 +499,7 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
 		}
 
 		if (((int64_t)primMsg->LBID)<0 && o_lbid>0)
-			primMsg->LBID = o_lbid;
+			primMsg->LBID = o_lbid & 0xFFFFFFFFFL;
 
 		memcpy(&pt[primMsg->NVALS], filterString.buf(), filterString.length());
 		issuePrimitive(false);

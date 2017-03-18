@@ -673,7 +673,7 @@ boost::any DDLPackageProcessor::tokenizeData(execplan::CalpontSystemCatalog::SCN
 			//added for multifiles per oid
 			dictStruct.columnOid = colType.columnOID;
 			WriteEngine::DctnryTuple  dictTuple;
-			memcpy(dictTuple.sigValue, str.c_str(), str.length());
+			dictTuple.sigValue = (unsigned char*)str.c_str();
 			dictTuple.sigSize = str.length();
 			int error = NO_ERROR;
 			if (NO_ERROR != (error = fWriteEngine.tokenize(txnID, dictStruct, dictTuple, false))) // @bug 5572 HDFS tmp file

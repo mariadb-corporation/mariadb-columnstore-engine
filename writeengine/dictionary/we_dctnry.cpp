@@ -630,7 +630,7 @@ void Dctnry::insertDctnry2(Signature& sig)
 
     sig.token.fbo = m_curLbid;
     sig.token.op  = m_curOp;
-    sig.token.spare = 0U;
+    sig.token.bc = 0U;
 }
 
 /*******************************************************************************
@@ -705,8 +705,7 @@ int Dctnry::insertDctnry(const char* buf,
         // it is too late to reject the row.  However, as a precaution, we
         // still check against max size & set to null token if needed.
         if ((curSig.size == 0) ||
-            (curSig.size == COLPOSPAIR_NULL_TOKEN_OFFSET) ||
-            (curSig.size >  MAX_SIGNATURE_SIZE))
+            (curSig.size == COLPOSPAIR_NULL_TOKEN_OFFSET))
         {
             if (m_defVal.length() > 0) // use default string if available
             {
@@ -736,7 +735,8 @@ int Dctnry::insertDctnry(const char* buf,
         }
 
         //...Search for the string in our string cache
-        if (m_arraySize < MAX_STRING_CACHE_SIZE)
+        if ((m_arraySize < MAX_STRING_CACHE_SIZE) &&
+            (curSig.size <= MAX_SIGNATURE_SIZE))
         {
             //Stats::startParseEvent("getTokenFromArray");
             found = getTokenFromArray(curSig);
@@ -778,7 +778,9 @@ int Dctnry::insertDctnry(const char* buf,
             }
 
             //...Add string to cache, if we have not exceeded cache limit
-            if (m_arraySize < MAX_STRING_CACHE_SIZE)
+            // Don't cache big blobs
+            if ((m_arraySize < MAX_STRING_CACHE_SIZE) &&
+                (curSig.size <= MAX_SIGNATURE_SIZE))
             {
                 addToStringCache( curSig );
             }
@@ -885,7 +887,8 @@ int Dctnry::insertDctnry(const char* buf,
                 startPos++;
 
                 //...Add string to cache, if we have not exceeded cache limit
-                if (m_arraySize < MAX_STRING_CACHE_SIZE)
+                if ((m_arraySize < MAX_STRING_CACHE_SIZE) &&
+                    (curSig.size <= MAX_SIGNATURE_SIZE))
                 {
                     addToStringCache( curSig );
                 }
@@ -943,9 +946,12 @@ int Dctnry::insertDctnry(const int& sgnature_size,
     int i;
     unsigned char* value = NULL;
     int size;
-    if (sgnature_size > MAX_SIGNATURE_SIZE)
+    int write_size;
+    bool lbid_in_token = false;
+    // Round down for safety. In theory we can take 262143 * 8176 bytes
+    if (sgnature_size > (2100000000))
     {
-        return ERR_DICT_SIZE_GT_8000;
+        return ERR_DICT_SIZE_GT_2G;
     }
     if (sgnature_size == 0)
     {
@@ -960,23 +966,41 @@ int Dctnry::insertDctnry(const int& sgnature_size,
 
     size = sgnature_size;
     value = (unsigned char*)sgnature_value;
+    token.bc = 0;
 
     for (i = m_lastFbo; i < m_numBlocks; i++)
     {
         // @bug 3960: Add MAX_OP_COUNT check to handle case after bulk rollback
-        if( (m_freeSpace>= (size + HDR_UNIT_SIZE)) &&
+        if( ((m_freeSpace>= (size + m_totalHdrBytes)) ||
+            ((size > 8176) && (m_freeSpace > m_totalHdrBytes))) &&
             (m_curOp    <  (MAX_OP_COUNT-1)) )
         { // found the perfect block; signature size fit in this block
-            insertDctnryHdr(m_curBlock.data, size);
-            insertSgnture(m_curBlock.data, size, value);
+            if (size > (m_freeSpace - m_totalHdrBytes))
+            {
+                write_size = (m_freeSpace - m_totalHdrBytes);
+            }
+            else
+            {
+                write_size = size;
+            }
+            insertDctnryHdr(m_curBlock.data, write_size);
+            insertSgnture(m_curBlock.data, write_size, value);
+            size -= write_size;
+            value += write_size;
             m_curBlock.state = BLK_WRITE;
 
-            token.fbo = m_curLbid;
-            token.op  = m_curOp;
-            token.spare = 0;
+            // We only want the start LBID for a multi-block dict in the token
+            if (!lbid_in_token)
+            {
+                token.fbo = m_curLbid;
+                token.op  = m_curOp;
+                lbid_in_token = true;
+            }
+            if (size > 0)
+                token.bc++;
             m_lastFbo = i;
             m_curFbo = m_lastFbo;
-            if (m_curOp < (MAX_OP_COUNT-1))
+            if ((m_curOp < (MAX_OP_COUNT-1)) && (size <= 0))
                 return NO_ERROR;
         }//end Found
 

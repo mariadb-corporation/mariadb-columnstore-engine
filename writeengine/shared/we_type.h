@@ -290,7 +290,7 @@ namespace WriteEngine
 
     struct DctnryTuple                      /** @brief Dictionary Tuple struct*/
     {
-        unsigned char   sigValue[MAX_SIGNATURE_SIZE];   /** @brief dictionary signature value*/
+        unsigned char   *sigValue;          /** @brief dictionary signature value*/
         int             sigSize;            /** @brief dictionary signature size */
         Token           token;              /** @brief dictionary token */
         bool            isNull;
