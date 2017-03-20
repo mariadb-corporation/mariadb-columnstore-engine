@@ -108,13 +108,13 @@ getRole() {
 	iam=`curl -s http://169.254.169.254/latest/meta-data/ | grep iam`
 
 	if [ -z "$iam" ]; then
-        	exit 1;
+        	return "";
 	fi
 
 	Role=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 
 	if [ -z "$Role" ]; then
-		exit 1;
+		return "";
 	fi
 
         echo $Role
