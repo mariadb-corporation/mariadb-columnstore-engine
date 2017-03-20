@@ -627,7 +627,7 @@ int Dctnry::insertDctnry2(Signature& sig)
 {
     int rc = 0;
     int write_size;
-    bool lbid_in_token;
+    bool lbid_in_token = false;
 
     sig.token.bc = 0;
 
@@ -647,6 +647,7 @@ int Dctnry::insertDctnry2(Signature& sig)
         
         sig.size -= write_size;
         sig.signature += write_size;
+        m_curFbo = m_lastFbo;
 
         if (!lbid_in_token)
         {
@@ -662,7 +663,7 @@ int Dctnry::insertDctnry2(Signature& sig)
             cb.file.pFile = m_dFile;
             sig.token.bc++;
             
-            RETURN_ON_ERROR( writeDBFile(cb, &m_curBlock, m_curLbid) );
+            RETURN_ON_ERROR( writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo) );
             memset( m_curBlock.data, 0, sizeof(m_curBlock.data));
             memcpy( m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
             m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;

@@ -425,7 +425,7 @@ again:
 				//  is larger than the number of signatures in this block. Return a "special" string so that
 				//  the query keeps going, but that can be recognized as an internal error upon inspection.
 				//@Bug 2534. Change the length check to 8000
-				if (ret->len < 0 || ret->len > 8001)
+				if (ret->len < 0 || ret->len > 8176)
 				{
 					ret->data = reinterpret_cast<const uint8_t*>(signatureNotFound);
 					ret->len = strlen(reinterpret_cast<const char*>(ret->data));
