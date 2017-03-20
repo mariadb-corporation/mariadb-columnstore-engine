@@ -1106,13 +1106,13 @@ void applyMapping(const int *mapping, const Row &in, Row *out)
 	for (i = 0; i < in.getColumnCount(); i++)
 		if (mapping[i] != -1)
 		{
-			if (UNLIKELY(in.isLongString(i)))
+            if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY || in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB))
+				out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
+            else if (UNLIKELY(in.isLongString(i)))
 				out->setStringField(in.getStringPointer(i), in.getStringLength(i), mapping[i]);
 				//out->setStringField(in.getStringField(i), mapping[i]);
 			else if (UNLIKELY(in.isShortString(i)))
 				out->setUintField(in.getUintField(i), mapping[i]);
-			else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY || in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB))
-				out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
 			else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
 				out->setLongDoubleField(in.getLongDoubleField(i), mapping[i]);
 			else if (in.isUnsigned(i))

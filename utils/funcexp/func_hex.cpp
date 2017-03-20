@@ -96,6 +96,7 @@ string Func_hex::getStrVal(rowgroup::Row& row,
 			break;
 		}
 		case CalpontSystemCatalog::VARBINARY:
+        case CalpontSystemCatalog::BLOB:
 		{
 			const string& arg = parm[0]->data()->getStrVal(row, isNull);
 			uint64_t hexLen = arg.size() * 2;

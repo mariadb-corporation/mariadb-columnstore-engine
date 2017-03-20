@@ -797,7 +797,8 @@ inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
 
 inline void Row::copyField(Row &out, uint32_t destIndex, uint32_t srcIndex) const
 {
-	if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY))
+	if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
+                 types[srcIndex] == execplan::CalpontSystemCatalog::BLOB))
 		out.setVarBinaryField(getVarBinaryStringField(srcIndex), destIndex);
 	else if (UNLIKELY(isLongString(srcIndex)))
 		out.setStringField(getStringPointer(srcIndex), getStringLength(srcIndex), destIndex);
@@ -1268,7 +1269,8 @@ inline bool RowGroup::isLongString(uint32_t colIndex) const
 {
 	return ((getColumnWidth(colIndex) > 7 && types[colIndex] == execplan::CalpontSystemCatalog::VARCHAR) ||
 		(getColumnWidth(colIndex) > 8 && types[colIndex] == execplan::CalpontSystemCatalog::CHAR) ||
-		types[colIndex] == execplan::CalpontSystemCatalog::VARBINARY);
+		types[colIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
+        types[colIndex] == execplan::CalpontSystemCatalog::BLOB);
 }
 
 inline bool RowGroup::usesStringTable() const

@@ -48,7 +48,8 @@ int64_t Func_length::getIntVal(rowgroup::Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType&)
 {
-	if (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::VARBINARY)
+	if ((fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::VARBINARY) ||
+        (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::BLOB))
 		return fp[0]->data()->getStrVal(row, isNull).length();
 
 	return strlen(fp[0]->data()->getStrVal(row, isNull).c_str());

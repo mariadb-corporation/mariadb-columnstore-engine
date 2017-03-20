@@ -509,7 +509,8 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
 
 		// bug 4901 - move this inside the loop and call incrementally
 		// to save the unnecessary string copy
-		if (rg.getColTypes()[col] != execplan::CalpontSystemCatalog::VARBINARY) {
+		if ((rg.getColTypes()[col] != execplan::CalpontSystemCatalog::VARBINARY) &&
+            (rg.getColTypes()[col] != execplan::CalpontSystemCatalog::BLOB)) {
 			for (i = curResultCounter; i < tmpResultCounter; i++) {
 				rg.getRow(newRidList[i].pos, &r);
 				//cout << "serializing " << tmpStrings[i] << endl;
@@ -517,9 +518,39 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
 			}
 		}
 		else {
-			for (i = curResultCounter; i < tmpResultCounter; i++) {
+            uint32_t firstTmpResultCounter = tmpResultCounter;
+			for (i = curResultCounter; i < firstTmpResultCounter; i++) {
 				rg.getRow(newRidList[i].pos, &r);
-				r.setVarBinaryField(tmpStrings[i].ptr, tmpStrings[i].len, col);
+                // If this is a multi-block blob, get all the blocks
+                // We do string copy here, should maybe have a RowGroup
+                // function to append strings or something?
+                if ((newRidList[i].token != 0xffffffffffffffffLL) &&
+                    ((newRidList[i].token >> 46) > 0))
+                {
+                    StringPtr multi_part[1];
+                    uint16_t old_offset = primMsg->tokens[0].offset;
+                    string result((char*)tmpStrings[i].ptr, tmpStrings[i].len);
+                    uint64_t origin_lbid = primMsg->LBID;
+                    uint32_t lbid_count = newRidList[i].token >> 46;
+                    primMsg->tokens[0].offset = 1; // first offset of a sig
+                    for (uint32_t j = 1; j <= lbid_count; j++)
+                    {
+                        tmpResultCounter = 0;
+                        primMsg->LBID = origin_lbid + j;
+                        primMsg->NVALS = 1;
+                        primMsg->tokens[0].LBID = origin_lbid + j;
+                        issuePrimitive(false);
+                        projectResult(multi_part);
+                        result.append((char*)multi_part[0].ptr, multi_part[0].len);
+                    }
+                    primMsg->tokens[0].offset = old_offset;
+                    tmpResultCounter = firstTmpResultCounter;
+                    r.setVarBinaryField((unsigned char*)result.c_str(), result.length(), col);
+                }
+                else
+                {
+                    r.setVarBinaryField(tmpStrings[i].ptr, tmpStrings[i].len, col);
+                }
 			}
 		}
 		curResultCounter = tmpResultCounter;
