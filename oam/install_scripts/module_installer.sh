@@ -57,15 +57,22 @@ fi
 
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
-	cp $COLUMNSTORE_INSTALL_DIR/local/etc/*.pem $HOME/. > /dev/null 2>&1
+	cp $COLUMNSTORE_INSTALL_DIR/local/etc/credentials $HOME/.aws/. > /dev/null 2>&1
 
 	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
 			echo "Setup fstab on Module"
-			touch /etc/fstab
-			rm -f /etc/fstab.columnstoreSave
-			cp /etc/fstab /etc/fstab.columnstoreSave
-			cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
+        		if [ $user = "root" ]; then
+				touch /etc/fstab
+				rm -f /etc/fstab.columnstoreSave
+				cp /etc/fstab /etc/fstab.columnstoreSave
+				cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
+			else
+                                sudo touch /etc/fstab
+                                sudo rm -f /etc/fstab.columnstoreSave
+                                sudo cp /etc/fstab /etc/fstab.columnstoreSave
+                                sudo cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
+			fi
 		fi
 	fi
 fi

@@ -3683,6 +3683,14 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		system(cmd.c_str());
 	}
 
+	//check and do the amazon credentials file
+	string fileName = HOME + "/.aws/credentials";
+   	ifstream oldFile (fileName.c_str());
+    if (!oldFile)
+   		return allfound;
+
+   	string cmd = "cp " + fileName + " " + installDir + "/local/etc/. > /dev/null 2>&1";
+   	system(cmd.c_str());
 	return allfound;
 }
 
