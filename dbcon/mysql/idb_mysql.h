@@ -65,6 +65,7 @@ template <class T> bool isnan(T);
 
 #include "sql_table.h"
 #include "sql_select.h"
+#include "item_windowfunc.h"
 
 // Now clean up the pollution as best we can...
 #undef min
