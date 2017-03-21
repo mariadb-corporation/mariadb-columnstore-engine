@@ -57,7 +57,7 @@ class BatchPrimitiveProcessorJL
 {
 public:
 	/* Constructor used by the JobStep */
-	explicit BatchPrimitiveProcessorJL(const ResourceManager& rm);
+	explicit BatchPrimitiveProcessorJL(const ResourceManager* rm);
 	~BatchPrimitiveProcessorJL();
 
 	/* Interface used by the JobStep */

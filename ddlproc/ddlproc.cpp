@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
     idbdatafile::IDBPolicy::configIDBPolicy();
 #endif
 
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	Dec = DistributedEngineComm::instance(rm);
 #ifndef _MSC_VER
 	/* set up some signal handlers */

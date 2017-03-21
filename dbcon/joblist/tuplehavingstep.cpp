@@ -63,6 +63,7 @@ TupleHavingStep::TupleHavingStep(const JobInfo& jobInfo) :
 		fInputDL(NULL),
 		fOutputDL(NULL),
 		fInputIterator(0),
+		fRunner(0),
 		fRowsReturned(0),
 		fEndOfResult(false),
 		fFeInstance(funcexp::FuncExp::instance())
@@ -151,7 +152,7 @@ void TupleHavingStep::run()
 		if (fOutputDL == NULL)
 			throw logic_error("Output is not a RowGroup data list.");
 
-		fRunner.reset(new boost::thread(Runner(this)));
+		fRunner = jobstepThreadPool.invoke(Runner(this));
 	}
 }
 
@@ -159,7 +160,7 @@ void TupleHavingStep::run()
 void TupleHavingStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 

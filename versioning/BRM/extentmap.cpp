@@ -4205,6 +4205,8 @@ void ExtentMap::getExtents(int OID, vector<struct EMEntry>& entries,
 
 	grabEMEntryTable(READ);
 	emEntries = fEMShminfo->allocdSize/sizeof(struct EMEntry);
+    // Pre-expand entries to stop lots of small allocs
+    entries.reserve(emEntries);
 	if (incOutOfService) {
 		for (i = 0 ; i < emEntries; i++)
 			if ((fExtentMap[i].fileID == OID) &&

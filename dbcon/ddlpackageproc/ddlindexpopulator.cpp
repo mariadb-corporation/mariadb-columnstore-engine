@@ -65,7 +65,7 @@ namespace ddlpackageprocessor
   {
     CalpontSelectExecutionPlan csep;
     makeCsep(csep);
-    ResourceManager rm;
+    ResourceManager *rm;
     if (! fEC) 
     {
 		fEC = DistributedEngineComm::instance(rm);

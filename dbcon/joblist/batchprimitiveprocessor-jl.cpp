@@ -52,7 +52,7 @@ using namespace joiner;
 namespace joblist
 {
 
-BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager& rm) :
+BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm) :
 	ot(BPS_ELEMENT_TYPE),
 	needToSetLBID(true),
 	count(1),
@@ -75,7 +75,7 @@ BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager& rm) 
 	bop(BOP_AND),
 	forHJ(false),
 	threadCount(1),
-	fJoinerChunkSize(rm.getJlJoinerChunkSize()),
+	fJoinerChunkSize(rm->getJlJoinerChunkSize()),
 	hasSmallOuterJoin(false),
 	_priority(1)
 {

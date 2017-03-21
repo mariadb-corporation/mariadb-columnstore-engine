@@ -134,9 +134,11 @@ pDictionaryScan::pDictionaryScan(
 	sendWaiting(false),
 	ridCount(0),
 	ridList(0),
-	colType(ct),
-	fScanLbidReqLimit(jobInfo.rm.getJlScanLbidReqLimit()),
-	fScanLbidReqThreshold(jobInfo.rm.getJlScanLbidReqThreshold()),
+    colType(ct),
+	pThread(0),
+	cThread(0),
+	fScanLbidReqLimit(jobInfo.rm->getJlScanLbidReqLimit()),
+	fScanLbidReqThreshold(jobInfo.rm->getJlScanLbidReqThreshold()),
 	fStopSending(false),
 	fSingleThread(false),
 	fPhysicalIO(0),
@@ -169,7 +171,7 @@ pDictionaryScan::pDictionaryScan(
 	}
 	sort(extents.begin(), extents.end(), ExtentSorter());
 	numExtents = extents.size();
-	extentSize = (fRm.getExtentRows()*8)/BLOCK_SIZE;
+	extentSize = (fRm->getExtentRows()*8)/BLOCK_SIZE;
 
 	uint64_t i = 1, mask = 1;
 	for (; i <= 32; i++)
@@ -209,17 +211,17 @@ pDictionaryScan::~pDictionaryScan()
 //------------------------------------------------------------------------------
 void pDictionaryScan::initializeConfigParms()
 {
-	fLogicalBlocksPerScan = fRm.getJlLogicalBlocksPerScan();
+	fLogicalBlocksPerScan = fRm->getJlLogicalBlocksPerScan();
 }
 
 void pDictionaryScan::startPrimitiveThread()
 {
-	pThread.reset(new boost::thread(pDictionaryScanPrimitive(this)));
+	pThread = jobstepThreadPool.invoke(pDictionaryScanPrimitive(this));
 }
 
 void pDictionaryScan::startAggregationThread()
 {
-	cThread.reset(new boost::thread(pDictionaryScanAggregator(this)));
+	cThread = jobstepThreadPool.invoke(pDictionaryScanAggregator(this));
 }
 
 void pDictionaryScan::run()
@@ -243,8 +245,8 @@ void pDictionaryScan::run()
 
 void pDictionaryScan::join()
 {
-	pThread->join();
-	cThread->join();
+	jobstepThreadPool.join(pThread);
+	jobstepThreadPool.join(cThread);
 	if (isEquality && fDec) {
 		destroyEqualityFilter();
 		isEquality = false;

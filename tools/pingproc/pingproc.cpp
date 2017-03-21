@@ -681,7 +681,7 @@ void doColScan(OidOperation& OidOp) {
 if (debug) cout << "beginning doColScan\n";
 	BRM::LBIDRange_v lbidRanges;
 	HWM_t hwm=0;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
 	struct timespec ts1;
 	struct timespec ts2;
@@ -862,7 +862,7 @@ void doColStep(OidOperation& OidOp) {
   	OID_t tmp;
   	uint32_t fbo;
   	uint32_t totalBlks=0;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
 	ThdFcn f1;
 
@@ -976,7 +976,7 @@ void doBatchOp_scan(OidOperation &OidOp)
 {
 	struct timespec ts1, ts2, diff;
 	JobStepAssociation injs, outjs;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
 	ThdFcn f1;
 	boost::shared_ptr<CalpontSystemCatalog> sysCat = execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(getpid());
@@ -1086,7 +1086,7 @@ void doBatchOp_filt(OidOperation &OidOp)
 {
 	struct timespec ts1, ts2, diff;
 	JobStepAssociation injs, outjs;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
 	ThdFcn f1;
 	boost::shared_ptr<CalpontSystemCatalog> sysCat = CalpontSystemCatalog::makeCalpontSystemCatalog(getpid());
@@ -1227,7 +1227,7 @@ void doBatchQueryOp(OperationList& OidOps)
 
 
 	f1.fSessionid = sessionId;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
 // 	dec->addSession(sessionId);
 // 	dec->addStep(sessionId, sessionId);
@@ -1394,7 +1394,7 @@ void doBatchOp_step(OidOperation &OidOp)
   	OID_t tmp;
   	uint32_t fbo;
   	uint32_t totalBlks=0;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
 	ThdFcn f1;
 	JobStepAssociation injs, outjs;
@@ -1581,7 +1581,7 @@ void doLoopBack(const uint64_t loopcount)
 	struct timespec diff;
 	uint32_t sessionid = getpid();
 	DBRM dbrm;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
 	ThdFcn f1;
 

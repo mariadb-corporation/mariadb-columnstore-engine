@@ -105,6 +105,8 @@ pDictionaryStep::pDictionaryStep(
 	recvWaiting(false),
 	ridCount(0),
 	fColType(ct),
+	pThread(0),
+	cThread(0),
 	fFilterCount(0),
 	requestList(0),
 	fInterval(jobInfo.flushInterval),

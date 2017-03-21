@@ -97,6 +97,8 @@ using namespace querytele;
 #include "utils_utf8.h"
 #include "boost/filesystem.hpp"
 
+#include "threadpool.h"
+
 namespace {
 
 //If any flags other than the table mode flags are set, produce output to screeen
@@ -136,7 +138,7 @@ ActiveStatementCounter *statementsRunningCount;
 
 DistributedEngineComm *ec;
 
-ResourceManager rm(true);
+ResourceManager *rm = ResourceManager::instance(true);
 
 int toInt(const string& val)
 {
@@ -240,7 +242,7 @@ class SessionThread
 {
 public:
 
-	SessionThread(const IOSocket& ios, DistributedEngineComm* ec, ResourceManager& rm) :
+	SessionThread(const IOSocket& ios, DistributedEngineComm* ec, ResourceManager* rm) :
 		fIos(ios), fEc(ec),
 		fRm(rm),
 		fStatsRetrieved(false),
@@ -253,7 +255,7 @@ private:
 
 	IOSocket fIos;
 	DistributedEngineComm *fEc;
-	ResourceManager&  fRm;
+	ResourceManager*  fRm;
 	querystats::QueryStats fStats;
 
 	// Variables used to store return stats
@@ -464,12 +466,12 @@ private:
 			{
 				case PMSMALLSIDEMEMORY:
 				{
-					fRm.addHJPmMaxSmallSideMap(it->sessionId, it->value);
+					fRm->addHJPmMaxSmallSideMap(it->sessionId, it->value);
 					break;
 				}
 				case UMSMALLSIDEMEMORY:
 				{
-					fRm.addHJUmMaxSmallSideMap(it->sessionId, it->value);
+					fRm->addHJUmMaxSmallSideMap(it->sessionId, it->value);
 					break;
 				}
 				default: ;
@@ -513,7 +515,7 @@ public:
 		SJLP jl;
 		bool incSessionThreadCnt = true;
 
-		bool selfJoin = false;
+		bool selfJoin = false; 
 		bool tryTuples = false;
 		bool usingTuples = false;
 		bool stmtCounted = false;
@@ -1206,7 +1208,7 @@ void added_a_pm(int)
 
 void printTotalUmMemory(int sig)
 {
-    int64_t num = rm.availableMemory();
+    int64_t num = rm->availableMemory();
     cout << "Total UM memory available: " << num << endl;
 }
 
@@ -1232,9 +1234,9 @@ void setupSignalHandlers()
 #endif
 }
 
-void setupCwd(ResourceManager& rm)
+void setupCwd(ResourceManager* rm)
 {
-    string workdir = rm.getScWorkingDir();
+    string workdir = rm->getScWorkingDir();
     (void)chdir(workdir.c_str());
     if (access(".", W_OK) != 0)
         (void)chdir("/tmp");
@@ -1342,7 +1344,45 @@ int main(int argc, char* argv[])
 		setenv("CALPONT_CSC_IDENT", "um", 1);
 #endif
 	setupSignalHandlers();
-	setupResources();
+    int err = setupResources();
+    string errMsg;
+    switch (err)
+    {
+        case -1:
+        case -3:
+            errMsg = "Error getting file limits, please see non-root install documentation";
+            break;
+        case -2:
+            errMsg = "Error setting file limits, please see non-root install documentation";
+            break;
+        case -4:
+            errMsg = "Could not install file limits to required value, please see non-root install documentation";
+            break;
+        default:
+            break;
+    }
+
+    if (err < 0)
+    {
+        Oam oam;
+        logging::Message::Args args;
+        logging::Message message;
+        args.add( errMsg );
+        message.format(args);
+        logging::LoggingID lid(16);
+        logging::MessageLog ml(lid);
+        ml.logCriticalMessage( message );
+        cerr << errMsg << endl;
+        try
+        {
+            oam.processInitFailure();
+        }
+        catch (...)
+        {
+        }
+        return 2;
+    }
+
 
 	setupCwd(rm);
 
@@ -1366,11 +1406,11 @@ int main(int argc, char* argv[])
 
 	MessageQueueServer* mqs;
 
-	statementsRunningCount = new ActiveStatementCounter(rm.getEmExecQueueSize());
+	statementsRunningCount = new ActiveStatementCounter(rm->getEmExecQueueSize());
 	for (;;)
 	{
 		try {
-			mqs = new MessageQueueServer(ExeMgr, rm.getConfig(), ByteStream::BlockSize, 64);
+			mqs = new MessageQueueServer(ExeMgr, rm->getConfig(), ByteStream::BlockSize, 64);
 			break;
 		}
 		catch (runtime_error& re) {
@@ -1391,23 +1431,40 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	int serverThreads = rm.getEmServerThreads();
-	int serverQueueSize = rm.getEmServerQueueSize();
-	int maxPct = rm.getEmMaxPct();
-	int pauseSeconds = rm.getEmSecondsBetweenMemChecks();
-	int priority = rm.getEmPriority();
+    // class jobstepThreadPool is used by other processes. We can't call 
+    // resourcemanaager (rm) functions during the static creation of threadpool 
+    // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
+    // From  the pools perspective, it has no idea if it is ExeMgr doing the 
+    // creation, so it has no idea which way to set the flag. So we set the max here.
+	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+    JobStep::jobstepThreadPool.setName("ExeMgrJobList");
+//	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
+//	{
+//		JobStep::jobstepThreadPool.setDebug(true);
+//		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+//	}
+	
+	int serverThreads = rm->getEmServerThreads();
+	int serverQueueSize = rm->getEmServerQueueSize();
+	int maxPct = rm->getEmMaxPct();
+	int pauseSeconds = rm->getEmSecondsBetweenMemChecks();
+	int priority = rm->getEmPriority();
 
-	if (maxPct > 0)
+    FEMsgHandler::threadPool.setMaxThreads(serverThreads);
+    FEMsgHandler::threadPool.setQueueSize(serverQueueSize);
+    FEMsgHandler::threadPool.setName("FEMsgHandler");
+    
+    if (maxPct > 0)
 		startRssMon(maxPct, pauseSeconds);
 
 #ifndef _MSC_VER
 	setpriority(PRIO_PROCESS, 0, priority);
 #endif
 
-	string teleServerHost(rm.getConfig()->getConfig("QueryTele", "Host"));
+	string teleServerHost(rm->getConfig()->getConfig("QueryTele", "Host"));
 	if (!teleServerHost.empty())
 	{
-		int teleServerPort = toInt(rm.getConfig()->getConfig("QueryTele", "Port"));
+		int teleServerPort = toInt(rm->getConfig()->getConfig("QueryTele", "Port"));
 		if (teleServerPort > 0)
 		{
 			gTeleServerParms.host = teleServerHost;
@@ -1416,8 +1473,8 @@ int main(int argc, char* argv[])
 	}
 
 	cout << "Starting ExeMgr: st = " << serverThreads << ", sq = " <<
-		serverQueueSize << ", qs = " << rm.getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
-		rm.getConfig()->configFile() << endl;
+		serverQueueSize << ", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
+		rm->getConfig()->configFile() << endl;
 
 	//set ACTIVE state
 	{
@@ -1431,12 +1488,15 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	threadpool::ThreadPool exeMgrThreadPool(serverThreads, serverQueueSize);
+    exeMgrThreadPool.setName("ExeMgrServer");
 	for (;;)
 	{
 		IOSocket ios;
 		ios = mqs->accept();
-		boost::thread thd(SessionThread(ios, ec, rm));
+		exeMgrThreadPool.invoke(SessionThread(ios, ec, rm));
 	}
+	exeMgrThreadPool.wait();
 
 	return 0;
 }

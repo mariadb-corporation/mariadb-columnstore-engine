@@ -169,8 +169,8 @@ const unsigned NONSUPPORTED_ERR_THRESH = 2000;
 
 //TODO: make this session-safe (put in connMap?)
 vector<RMParam> rmParms;
-ResourceManager rm;
-bool useHdfs = rm.useHdfs();
+ResourceManager *rm = ResourceManager::instance();
+bool useHdfs = rm->useHdfs();
 //convenience fcn
 inline uint32_t tid2sid(const uint32_t tid)
 {
@@ -1859,8 +1859,8 @@ const char* calsetparms(UDF_INIT* initid, UDF_ARGS* args,
 	algorithm::to_lower(pstr);
 	if (pstr == PmSmallSideMaxMemory)
 	{
-	  joblist::ResourceManager rm;
-		if (rm.getHjTotalUmMaxMemorySmallSide() >= value)
+	  joblist::ResourceManager *rm = joblist::ResourceManager::instance();
+		if (rm->getHjTotalUmMaxMemorySmallSide() >= value)
 		{
 			rmParms.push_back(RMParam(sessionID, execplan::PMSMALLSIDEMEMORY, value));
 
@@ -1869,7 +1869,7 @@ const char* calsetparms(UDF_INIT* initid, UDF_ARGS* args,
 		}
 		else
 		{
-			msg = invalidParmSizeMessage(rm.getHjTotalUmMaxMemorySmallSide(), mlen);
+			msg = invalidParmSizeMessage(rm->getHjTotalUmMaxMemorySmallSide(), mlen);
 			includeInput = false;
 		}
 	}

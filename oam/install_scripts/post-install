@@ -41,8 +41,8 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
 	# add library config file
-	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
-	ldconfig
+	$SUDO /bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
+	$SUDO ldconfig
 fi
 
 #check 64-bit OS compatiable
@@ -214,12 +214,14 @@ else
 	$SUDO $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
 	$SUDO chmod -R 777 /dev/shm
-	$SUDO chmod 777 /var/lock/subsys
+	$SUDO mkdir /var/lock/subsys  > /dev/null 2>&1
+	$SUDO chmod 777 /var/lock/subsys  > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
 	$SUDO chmod 777 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
+	$SUDO chown $user:$user /etc/default/columnstore
 
 	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
 

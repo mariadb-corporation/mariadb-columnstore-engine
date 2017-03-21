@@ -106,6 +106,7 @@ TupleAnnexStep::TupleAnnexStep(const JobInfo& jobInfo) :
 		fOutputDL(NULL),
 		fInputIterator(0),
 		fOutputIterator(0),
+		fRunner(0),
 		fRowsProcessed(0),
 		fRowsReturned(0),
 		fLimitStart(0),
@@ -205,14 +206,14 @@ void TupleAnnexStep::run()
 		fOutputIterator = fOutputDL->getIterator();
 	}
 
-	fRunner.reset(new boost::thread(Runner(this)));
+	fRunner = jobstepThreadPool.invoke(Runner(this));
 }
 
 
 void TupleAnnexStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 

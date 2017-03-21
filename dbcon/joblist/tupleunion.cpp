@@ -103,7 +103,7 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
 
 TupleUnion::~TupleUnion()
 {
-	rm.returnMemory(memUsage, sessionMemLimit);
+	rm->returnMemory(memUsage, sessionMemLimit);
 	if (!runRan && output)
 		output->endOfInput();
 }
@@ -227,7 +227,7 @@ void TupleUnion::readInput(uint32_t which)
 					memDiff += (memUsageAfter - memUsageBefore);
 					memUsage += memDiff;
 				}
-				if (!rm.getMemory(memDiff, sessionMemLimit)) {
+				if (!rm->getMemory(memDiff, sessionMemLimit)) {
 					fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_UNION_TOO_BIG);
 					if (status() == 0) // preserve existing error code
 					{
@@ -767,29 +767,26 @@ void TupleUnion::run()
 		}
 	}
 
+	runners.reserve(inputs.size());
 	for (i = 0; i < inputs.size(); i++) {
-		boost::shared_ptr<boost::thread> th(new boost::thread(Runner(this, i)));
-		runners.push_back(th);
+		runners.push_back(jobstepThreadPool.invoke(Runner(this, i)));
 	}
 }
 
 void TupleUnion::join()
 {
-	uint32_t i;
 	mutex::scoped_lock lk(jlLock);
-	Uniquer_t::iterator it;
 
 	if (joinRan)
 		return;
 	joinRan = true;
 	lk.unlock();
 
-	for (i = 0; i < runners.size(); i++)
-		runners[i]->join();
+	jobstepThreadPool.join(runners);
 	runners.clear();
 	uniquer->clear();
 	rowMemory.clear();
-	rm.returnMemory(memUsage, sessionMemLimit);
+	rm->returnMemory(memUsage, sessionMemLimit);
 	memUsage = 0;
 }
 

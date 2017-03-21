@@ -91,12 +91,12 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo) :
 		should stay the same for other element sizes.
 	*/
 
-	pmMemLimit = resourceManager.getHjPmMaxMemorySmallSide(fSessionId);
-	uniqueLimit = resourceManager.getHjCPUniqueLimit();
+	pmMemLimit = resourceManager->getHjPmMaxMemorySmallSide(fSessionId);
+	uniqueLimit = resourceManager->getHjCPUniqueLimit();
 
 	fExtendedInfo = "THJS: ";
 	joinType = INIT;
-	joinThreadCount = resourceManager.getJlNumScanReceiveThreads();
+	joinThreadCount = resourceManager->getJlNumScanReceiveThreads();
 	largeBPS = NULL;
 	moreInput = true;
 	fQtc.stepParms().stepType = StepTeleStats::T_HJS;
@@ -128,7 +128,7 @@ TupleHashJoinStep::~TupleHashJoinStep()
 	if (ownsOutputDL)
 		delete outputDL;
 	if (totalUMMemoryUsage != 0)
-		resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+		resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 	//cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
 }
 
@@ -166,7 +166,7 @@ void TupleHashJoinStep::run()
 	}
 
 	joiners.resize(smallDLs.size());
-	mainRunner.reset(new boost::thread(HJRunner(this)));
+	mainRunner = jobstepThreadPool.invoke(HJRunner(this));
 }
 
 void TupleHashJoinStep::join()
@@ -175,12 +175,12 @@ void TupleHashJoinStep::join()
 	if (joinRan)
 		return;
 	joinRan = true;
-	mainRunner->join();
+	jobstepThreadPool.join(mainRunner);
 	if (djs) {
 		for (int i = 0; i < (int) djsJoiners.size(); i++)
 			djs[i].join();
-		djsReader.join();
-		djsRelay.join();
+		jobstepThreadPool.join(djsReader);
+		jobstepThreadPool.join(djsRelay);
 		//cout << "THJS: joined all DJS threads, shared usage = " << *djsSmallUsage << endl;
 	}
 }
@@ -245,7 +245,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
 			joiner->setInUM();
 		}
 
-		resourceManager.getMemory(joiner->getMemUsage(), sessionMemLimit, false);
+		resourceManager->getMemory(joiner->getMemUsage(), sessionMemLimit, false);
 		(void)atomicops::atomicAdd(&totalUMMemoryUsage, joiner->getMemUsage());
 		memUsedByEachJoin[index] += joiner->getMemUsage();
 
@@ -280,7 +280,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
 				memUseAfter = joiner->getMemUsage() + rgDataSize;
 			}
 
-			gotMem = resourceManager.getMemory(memUseAfter - memUseBefore, sessionMemLimit, false);
+			gotMem = resourceManager->getMemory(memUseAfter - memUseBefore, sessionMemLimit, false);
 			atomicops::atomicAdd(&totalUMMemoryUsage, memUseAfter - memUseBefore);
 			memUsedByEachJoin[index] += memUseAfter - memUseBefore;
 			/* This is kind of kludgy and overlaps with segreateJoiners() atm.
@@ -544,9 +544,10 @@ void TupleHashJoinStep::hjRunner()
 			}
 		}
 
+		smallRunners.clear();
+		smallRunners.reserve(smallDLs.size());
 		for (i = 0; i < smallDLs.size(); i++)
-			smallRunners.push_back(boost::shared_ptr<boost::thread>
-			  (new boost::thread(SmallRunner(this, i))));
+			smallRunners.push_back(jobstepThreadPool.invoke(SmallRunner(this, i)));
 	}
 	catch (thread_resource_error&) {
 		string emsg = "TupleHashJoin caught a thread resource error, aborting...\n";
@@ -557,8 +558,7 @@ void TupleHashJoinStep::hjRunner()
 		deliverMutex.unlock();
 	}
 
-	for (i = 0; i < smallRunners.size(); i++)
-		smallRunners[i]->join();
+	jobstepThreadPool.join(smallRunners);
 	smallRunners.clear();
 
 	for (i = 0; i < feIndexes.size() && joiners.size() > 0; i++)
@@ -599,7 +599,7 @@ void TupleHashJoinStep::hjRunner()
 		try {
 			for (i = 0; !cancelled() && i < smallSideCount; i++) {
 				vector<RGData> empty;
-				resourceManager.returnMemory(memUsedByEachJoin[djsJoinerMap[i]], sessionMemLimit);
+				resourceManager->returnMemory(memUsedByEachJoin[djsJoinerMap[i]], sessionMemLimit);
 				atomicops::atomicSub(&totalUMMemoryUsage, memUsedByEachJoin[djsJoinerMap[i]]);
 				djs[i].loadExistingData(rgData[djsJoinerMap[i]]);
 				rgData[djsJoinerMap[i]].swap(empty);
@@ -629,9 +629,9 @@ void TupleHashJoinStep::hjRunner()
 		/* If an error happened loading the existing data, these threads are necessary
 		to finish the abort */
 		try {
-			djsRelay = boost::thread(DJSRelay(this));
+			djsRelay = jobstepThreadPool.invoke(DJSRelay(this));
 			relay = true;
-			djsReader = boost::thread(DJSReader(this, smallSideCount));
+			djsReader = jobstepThreadPool.invoke(DJSReader(this, smallSideCount));
 			reader = true;
 			for (i = 0; i < smallSideCount; i++)
 				djs[i].run();
@@ -686,7 +686,7 @@ void TupleHashJoinStep::hjRunner()
 				joiners.clear();
 				tbpsJoiners.clear();
 				rgData.reset();
-				resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+				resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 				totalUMMemoryUsage = 0;
 			}
 		}
@@ -836,7 +836,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream &bs)
 				more = dl->next(it, &oneRG);
 			joiners.clear();
 			rgData.reset();
-			resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+			resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 			totalUMMemoryUsage = 0;
 			return 0;
 		}
@@ -852,7 +852,7 @@ uint32_t TupleHashJoinStep::nextBand(messageqcpp::ByteStream &bs)
 			if (status() != 0)
 				cout << " -- returning error status " << deliveredRG->getStatus() << endl;
 			deliveredRG->serializeRGData(bs);
-			resourceManager.returnMemory(totalUMMemoryUsage, sessionMemLimit);
+			resourceManager->returnMemory(totalUMMemoryUsage, sessionMemLimit);
 			totalUMMemoryUsage = 0;
 			return 0;
 		}
@@ -1091,7 +1091,7 @@ void TupleHashJoinStep::startJoinThreads()
 	bool more = true;
 	RGData oneRG;
 
-	if (joinRunners)
+	if (joinRunners.size() > 0)
 		return;
 
 	//@bug4836, in error case, stop process, and unblock the next step.
@@ -1142,13 +1142,11 @@ void TupleHashJoinStep::startJoinThreads()
 	makeDupList(fe2 ? fe2Output : outputRG);
 
 	/* Start join runners */
-	joinRunners.reset(new boost::shared_ptr<boost::thread>[joinThreadCount]);
+	joinRunners.reserve(joinThreadCount);
 	for (i = 0; i < joinThreadCount; i++)
-		joinRunners[i].reset(new boost::thread(JoinRunner(this, i)));
-
+		joinRunners.push_back(jobstepThreadPool.invoke(JoinRunner(this, i)));
 	/* Join them and call endOfInput */
-	for (i = 0; i < joinThreadCount; i++)
-		joinRunners[i]->join();
+	jobstepThreadPool.join(joinRunners);
 
 	if (lastSmallOuterJoiner != (uint32_t) -1)
 		finishSmallOuterJoin();

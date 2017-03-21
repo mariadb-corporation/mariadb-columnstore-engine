@@ -282,7 +282,6 @@ if { $INSTALLTYPE == "initial"} {
 		"FAILED"   { send_user "ERROR: missing OS file\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }
-        "WARNING"   { send_user "WARNING: SYSLOG setup failed\n" }
 	}
 	send_user "\n"
 }

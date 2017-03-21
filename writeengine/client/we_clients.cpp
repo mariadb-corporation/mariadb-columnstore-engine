@@ -179,7 +179,7 @@ namespace WriteEngine {
 void WEClients::Setup()
 {
     makeBusy(true);
-    joblist::ResourceManager rm;
+    joblist::ResourceManager *rm = joblist::ResourceManager::instance();
     oam::Oam oam;
     string ipAddress;
     ModuleTypeConfig moduletypeconfig; 
@@ -224,7 +224,7 @@ void WEClients::Setup()
         string fServer (buff);
 
         boost::shared_ptr<MessageQueueClient>
-			cl(new MessageQueueClient(fServer, rm.getConfig()));
+			cl(new MessageQueueClient(fServer, rm->getConfig()));
         boost::shared_ptr<boost::mutex> nl(new boost::mutex());
 		//Bug 5224. Take out the retrys. If connection fails, we assume the server is down.
         try {

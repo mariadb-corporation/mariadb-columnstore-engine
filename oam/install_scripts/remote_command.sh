@@ -7,8 +7,9 @@
 # Argument 2 - Remote Server password
 # Argument 3 - Command
 # Argument 4 - debug flag
-# Argument 5 - Remote user name (optional)
-# Argument 6 - Force a tty to be allocated (optional)
+# Argument 5 - Command Line Prompt (optional)
+# Argument 6 - Remote user name (optional)
+# Argument 7 - Force a tty to be allocated (optional)
 set stty_init {cols 512 -opost};
 set timeout 30
 set SERVER [lindex $argv 0]
@@ -33,7 +34,7 @@ if { $TTYOPT != "" } {
 }
 log_user $DEBUG
 spawn -noecho /bin/bash
-expect -re {[$#] }
+expect -re {[$#>] }
 
 if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
@@ -60,11 +61,11 @@ expect {
 	-re {[$#] } { exit 0 }
 }
 expect {
-	-re {[$#] } { exit 0 }
+	-re {[$#>] } { exit 0 }
 	"Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
-	"(y or n)"  { send "y\n" 
-					  expect -re {[$#] } { exit 0 }
-					}
+			"(y or n)"  { send "y\n" 
+			-re {[$#] } { exit 0 }
+	}
 }
 exit 0
 

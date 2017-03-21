@@ -179,9 +179,9 @@ if [ ! -z "$syslog_conf" ] ; then
 	$SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
-	systemctl restart rsyslog.service > /dev/null 2>&1
-        systemctl restart syslog.service > /dev/null 2>&1
-        systemctl restart syslog-ng.service > /dev/null 2>&1
+	$SUDO systemctl restart rsyslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
 
 fi
 
@@ -215,9 +215,9 @@ if [ ! -z "$syslog_conf" ] ; then
         $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
-        systemctl restart rsyslog.service > /dev/null 2>&1
-        systemctl restart syslog.service > /dev/null 2>&1
-        systemctl restart syslog-ng.service > /dev/null 2>&1
+        $SUDO systemctl restart rsyslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
 
 
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile "unassigned"

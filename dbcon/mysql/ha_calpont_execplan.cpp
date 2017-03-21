@@ -6364,7 +6364,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				// select * from derived table case
 				if (gwi.selectCols.empty())
 					sel_cols_in_create = " * ";
-				create_query = "create temporary table " + vtb.str() + " as select " + sel_cols_in_create + " from ";
+				create_query = "create temporary table " + vtb.str() + " engine = aria as select " + sel_cols_in_create + " from ";
 				TABLE_LIST* table_ptr = select_lex.get_table_list();
 
 				bool firstTb = true;

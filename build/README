@@ -1,6 +1,7 @@
 How it Works Now
 ----------------
 
+
 There is a new toplevel directory called build.  This contains a
 couple of scripts and a couple of previously (as far as I can tell)
 unmanaged files: Columnstore.xml and Doxyfile.  It also contains a

@@ -21,6 +21,8 @@
 *
 ***********************************************************************/
 
+#include <my_config.h>
+#include <mysql.h>
 #include <string>
 using namespace std;
 
@@ -37,28 +39,24 @@ using namespace logging;
 
 #include "querystats.h"
 
-#include "libdrizzle-2.0/drizzle.h"
-#include "libdrizzle-2.0/drizzle_client.h"
-
 namespace querystats
 {
 	
 const string SCHEMA = "infinidb_querystats";
 
-struct IDB_Drizzle
+struct IDB_MySQL
 {
-	IDB_Drizzle(): drzp(NULL), drzcp(NULL), drzrp(NULL) {}
-	~IDB_Drizzle() 
+	IDB_MySQL(): fCon(NULL), fRes(NULL) {}
+	~IDB_MySQL()
 	{
-		// The following API all checks NULL in the implementation.
-		drizzle_result_free(drzrp);
-		drizzle_con_close(drzcp);
-		drizzle_con_free(drzcp);
-		drizzle_free(drzp);
+        if (fRes)
+            mysql_free_result(fRes);
+
+        if (fCon)
+            mysql_close(fCon);
 	}
-	drizzle_st* drzp;
-	drizzle_con_st* drzcp;
-	drizzle_result_st* drzrp;
+	MYSQL* fCon;
+	MYSQL_RES* fRes;
 };
 
 QueryStats::QueryStats()
@@ -192,39 +190,33 @@ void QueryStats::unserialize(ByteStream& b)
  */
 void QueryStats::insert()
 {
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	// check if query stats is enabled in Columnstore.xml
-	if (!rm.queryStatsEnabled())
+	if (!rm->queryStatsEnabled())
 		return;
 	
 	// get configure for every query to allow only changing of connect info
 	string host, user, pwd;
 	uint32_t port;
 
-	if (rm.getMysqldInfo(host, user, pwd, port) == false)
+	if (rm->getMysqldInfo(host, user, pwd, port) == false)
 		throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_CROSS_ENGINE_CONFIG),
 			ERR_CROSS_ENGINE_CONFIG);
 
 	// insert stats to querystats table
-	IDB_Drizzle drizzle;
+	IDB_MySQL mysql;
 
-	drizzle.drzp = drizzle_create();
-	if (drizzle.drzp == 0)
+	mysql.fCon = mysql_init(NULL);
+	if (mysql.fCon == NULL)
 		handleMySqlError("fatal error initializing querystats lib", -1);
 
-	drizzle.drzcp = drizzle_con_add_tcp(drizzle.drzp, host.c_str(), port, user.c_str(), pwd.c_str(),
-		SCHEMA.c_str(), DRIZZLE_CON_MYSQL);
-	if (drizzle.drzcp == 0)
-		handleMySqlError("fatal error setting up parms in querystats lib", -1);
-
-	drizzle_return_t drzret;
-	drzret = drizzle_con_connect(drizzle.drzcp);
-	if (drzret != 0)
-		handleMySqlError("fatal error connecting to InfiniDB in querystats lib", drzret);
+    if (mysql_real_connect(mysql.fCon, host.c_str(), user.c_str(), pwd.c_str(),
+		SCHEMA.c_str(), port, NULL, 0) == NULL)
+		handleMySqlError("fatal error setting up parms in querystats lib", mysql_errno(mysql.fCon));
 
 	// escape quote characters
 	boost::scoped_array<char> query(new char[fQuery.length()*2+1]);
-	drizzle_escape_string(query.get(), fQuery.length()*2, fQuery.c_str(), fQuery.length());
+    mysql_real_escape_string(mysql.fCon, query.get(), fQuery.c_str(), fQuery.length());
 
 	ostringstream insert;
 	insert << "insert delayed into querystats values (0, ";
@@ -248,14 +240,10 @@ void QueryStats::insert()
 	insert << fBlocksChanged << ", ";
 	insert << fNumFiles << ", ";
 	insert << fFileBytes << ")"; // the last 2 fields are not populated yet
-	
-	drizzle.drzrp = drizzle_query_str(drizzle.drzcp, drizzle.drzrp, insert.str().c_str(), &drzret);
-	if (drzret != 0 || drizzle.drzrp == 0)
-		handleMySqlError("fatal error executing query in querystats lib", drzret);
 
-	drzret = drizzle_result_buffer(drizzle.drzrp);
-	if (drzret != 0)
-		handleMySqlError("fatal error reading results from InfiniDB in querystats lib", drzret);
+	int ret = mysql_query(mysql.fCon, insert.str().c_str());
+	if (ret != 0)
+		handleMySqlError("fatal error executing query in querystats lib", ret);
 }
 
 void QueryStats::handleMySqlError(const char* errStr, unsigned int errCode)
@@ -294,19 +282,14 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
 			ERR_CROSS_ENGINE_CONFIG);
 
 	// get user priority
-	IDB_Drizzle drizzle;
-	drizzle.drzp = drizzle_create();
-	if (drizzle.drzp == 0)
+	IDB_MySQL mysql;
+	mysql.fCon = mysql_init(NULL);
+	if (mysql.fCon == NULL)
 		handleMySqlError("fatal error initializing querystats lib", -1);
 
-	drizzle.drzcp = drizzle_con_add_tcp(drizzle.drzp, host.c_str(), port, user.c_str(), pwd.c_str(),
-		SCHEMA.c_str(), DRIZZLE_CON_MYSQL);
-	if (drizzle.drzcp == 0)
-		handleMySqlError("fatal error setting up parms in querystats lib", -1);
-	drizzle_return_t drzret;
-	drzret = drizzle_con_connect(drizzle.drzcp);
-	if (drzret != 0)
-		handleMySqlError("fatal error connecting to InfiniDB in querystats lib", drzret);
+    if (mysql_real_connect(mysql.fCon, host.c_str(), user.c_str(), pwd.c_str(),
+		SCHEMA.c_str(), port, NULL, 0) == NULL)
+		handleMySqlError("fatal error connecting to InfiniDB in querystats lib", mysql_errno(mysql.fCon));
 	
 	// get the part of host string befor ':' if there is.
 	size_t pos = _host.find(':', 0);
@@ -324,16 +307,18 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
 	      << _user 
 	      << "') and upper(a.priority) = upper(b.priority)";
 
-	drizzle.drzrp = drizzle_query_str(drizzle.drzcp, drizzle.drzrp, query.str().c_str(), &drzret);
-	if (drzret != 0 || drizzle.drzrp == 0)
-		handleMySqlError("fatal error executing query in querystats lib", drzret);
-	drzret = drizzle_result_buffer(drizzle.drzrp);
-	if (drzret != 0)
-		handleMySqlError("fatal error reading results from InfiniDB in querystats lib", drzret);
+    int ret =mysql_query(mysql.fCon, query.str().c_str());
+    if (ret != 0)
+		handleMySqlError("fatal error executing query in querystats lib", ret);
+    // Using mysql_store_result here as for mysql_use_result we would need to get every row
+    // Maybe limit 1 on the query in the future?
+    mysql.fRes = mysql_store_result(mysql.fCon);
+	if (mysql.fRes == NULL)
+		handleMySqlError("fatal error reading results from InfiniDB in querystats lib", mysql_errno(mysql.fCon));
 
 	// only fetch one row. if duplicate user name in the table, the first one will be got.
-	drizzle_row_t row;
-	row = drizzle_row_next(drizzle.drzrp);
+	MYSQL_ROW row;
+	row = mysql_fetch_row(mysql.fRes);
 	if (row)
 	{
 		fPriority = row[0];

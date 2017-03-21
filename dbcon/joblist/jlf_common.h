@@ -165,23 +165,23 @@ struct TupleKeyInfo
 //------------------------------------------------------------------------------
 struct JobInfo
 {
-	JobInfo(ResourceManager& r) :
+	JobInfo(ResourceManager* r) :
 		rm(r),
 		sessionId(0),
 		txnId(0),
 		statementId(0),
-		maxBuckets(rm.getHjMaxBuckets()),
-		maxElems(rm.getHjMaxElems()),
-		flushInterval(rm.getJLFlushInterval()),
-		fifoSize(rm.getJlFifoSize()),
-		fifoSizeLargeSideHj(rm.getHjFifoSizeLargeSide()),
-		scanLbidReqLimit(rm.getJlScanLbidReqLimit()),
-		scanLbidReqThreshold(rm.getJlScanLbidReqThreshold()),
-		tempSaveSize(rm.getScTempSaveSize()),
+		maxBuckets(rm->getHjMaxBuckets()),
+		maxElems(rm->getHjMaxElems()),
+		flushInterval(rm->getJLFlushInterval()),
+		fifoSize(rm->getJlFifoSize()),
+		fifoSizeLargeSideHj(rm->getHjFifoSizeLargeSide()),
+		scanLbidReqLimit(rm->getJlScanLbidReqLimit()),
+		scanLbidReqThreshold(rm->getJlScanLbidReqThreshold()),
+		tempSaveSize(rm->getScTempSaveSize()),
 		logger(new Logger()),
 		traceFlags(0),
-		tupleDLMaxSize(rm.getTwMaxSize()),
-		tupleMaxBuckets(rm.getTwMaxBuckets()),
+		tupleDLMaxSize(rm->getTwMaxSize()),
+		tupleMaxBuckets(rm->getTwMaxBuckets()),
 		projectingTableOID(0),
 		isExeMgr(false),
 		trace(false),
@@ -202,7 +202,7 @@ struct JobInfo
 		wfqLimitStart(0),
 		wfqLimitCount(-1)
 	{ }
-	ResourceManager& rm;
+	ResourceManager* rm;
 	uint32_t  sessionId;
 	uint32_t  txnId;
 	BRM::QueryContext  verId;

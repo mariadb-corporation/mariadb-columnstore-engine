@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 prefix=/usr/local
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then

@@ -166,9 +166,9 @@ private:
 			uint32_t bucketCount;
 	};
 
-	boost::scoped_ptr<boost::thread> fRunner;
+	uint64_t fRunner; // thread pool handle
 	bool fUmOnly;
-	ResourceManager& fRm;
+	ResourceManager *fRm;
 
 	// multi-threaded
 	uint32_t fNumOfThreads;
@@ -186,7 +186,7 @@ private:
 	bool fIsMultiThread;
 	int fInputIter; // iterator
 	boost::scoped_array<uint64_t> fMemUsage;
-	vector<boost::shared_ptr<boost::thread> > fFirstPhaseRunners;
+	std::vector<uint64_t> fFirstPhaseRunners; // thread pool handles
 	uint32_t fFirstPhaseThreadCount;
 
 	boost::shared_ptr<int64_t> fSessionMemLimit;

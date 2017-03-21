@@ -474,7 +474,7 @@ int PackageHandler::clearTableAccess()
 
 void PackageHandler::run()
 {
-	ResourceManager frm;
+	ResourceManager *frm = ResourceManager::instance();
 	dmlpackageprocessor::DMLPackageProcessor::DMLResult result;
 	result.result = dmlpackageprocessor::DMLPackageProcessor::NO_ERROR;
 	//cout << "PackageHandler handling ";
@@ -890,7 +890,7 @@ void PackageHandler::run()
 					//session to take advantage of cache. 
 					fProcessor.reset(new dmlpackageprocessor::UpdatePackageProcessor(fDbrm, updatePkg->get_SessionID()));
 					fProcessor->setEngineComm(fEC);
-					fProcessor->setRM( &frm);
+					fProcessor->setRM( frm);
 					idbassert( fTxnid != 0);
 					result = fProcessor->processPackage(*(updatePkg.get())) ;
 					qts.msg_type = QueryTeleStats::QT_SUMMARY;
@@ -945,7 +945,7 @@ void PackageHandler::run()
 					//@Bug 1341. Don't remove calpontsystemcatalog from this session to take advantage of cache.
 					fProcessor.reset(new dmlpackageprocessor::DeletePackageProcessor(fDbrm, deletePkg->get_SessionID()));
 					fProcessor->setEngineComm(fEC);
-					fProcessor->setRM( &frm);
+					fProcessor->setRM( frm);
 					idbassert( fTxnid != 0);
 					result = fProcessor->processPackage(*(deletePkg.get())) ;
 					qts.msg_type = QueryTeleStats::QT_SUMMARY;
@@ -1116,7 +1116,7 @@ void PackageHandler::rollbackPending()
 void added_a_pm(int)
 {
 	DistributedEngineComm *dec;
-	ResourceManager rm;
+	ResourceManager *rm = ResourceManager::instance();
 	dec = DistributedEngineComm::instance(rm);
 	dec->Setup();
 	// MCOL-140 clear the waiting queue as all transactions are probably going to fail
@@ -1130,6 +1130,7 @@ DMLServer::DMLServer(int packageMaxThreads, int packageWorkQueueSize, DBRM* dbrm
 
 	fDmlPackagepool.setMaxThreads(fPackageMaxThreads);
 	fDmlPackagepool.setQueueSize(fPackageWorkQueueSize);
+    fDmlPackagepool.setName("DmlPackagepool");
 }
 
 void DMLServer::start()
@@ -1185,10 +1186,10 @@ void DMLProcessor::operator()()
 		//messageqcpp::ByteStream bs;
         uint8_t packageType;
 
-		ResourceManager rm;
+		ResourceManager *rm = ResourceManager::instance();
 		DistributedEngineComm* fEC = DistributedEngineComm::instance(rm);
 		
-		uint64_t maxDeleteRows = rm.getDMLMaxDeleteRows();
+		uint64_t maxDeleteRows = rm->getDMLMaxDeleteRows();
 		
 		fConcurrentSupport = true;
 		string concurrentTranStr = config::Config::makeConfig()->getConfig("SystemConfig", "ConcurrentTransactions");

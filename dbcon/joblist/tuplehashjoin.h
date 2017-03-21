@@ -244,7 +244,7 @@ private:
 	std::vector<std::vector<uint32_t> > largeSideKeys;
 	std::vector<std::vector<uint32_t> > smallSideKeys;
 
-	ResourceManager& resourceManager;
+	ResourceManager* resourceManager;
 	volatile uint64_t totalUMMemoryUsage;
 
 	struct JoinerSorter {
@@ -276,8 +276,8 @@ private:
 		uint32_t index;
 	};
 
-	boost::shared_ptr<boost::thread> mainRunner;
-	std::vector<boost::shared_ptr<boost::thread> > smallRunners;
+	int64_t mainRunner; // thread handle from thread pool
+	std::vector<uint64_t> smallRunners; // thread handles from thread pool
 
 	// for notify TupleAggregateStep PM hashjoin
 	// Ideally, hashjoin and delivery communicate with RowGroupDL,
@@ -347,7 +347,7 @@ private:
 	void processDupList(uint32_t threadID, rowgroup::RowGroup &ingrp,
 		std::vector<rowgroup::RGData> *rowData);
 
-	boost::scoped_array<boost::shared_ptr<boost::thread> > joinRunners;
+	std::vector<uint64_t> joinRunners; // thread handles from thread pool
 	boost::mutex inputDLLock, outputDLLock;
 	boost::shared_array<boost::shared_array<int> > columnMappings, fergMappings;
 	boost::shared_array<int> fe2Mapping;
@@ -375,7 +375,7 @@ private:
 	boost::scoped_array<DiskJoinStep> djs;
 	boost::scoped_array<boost::shared_ptr<RowGroupDL> > fifos;
 	void djsReaderFcn(int index);
-	boost::thread djsReader;
+	uint64_t djsReader; // thread handle from thread pool
 	struct DJSReader {
 		DJSReader(TupleHashJoinStep *hj, uint32_t i) : HJ(hj), index(i) { }
 		void operator()() { HJ->djsReaderFcn(index); }
@@ -383,7 +383,7 @@ private:
 		uint32_t index;
 	};
 
-	boost::thread djsRelay;
+	uint64_t djsRelay; // thread handle from thread pool
 	void djsRelayFcn();
 	struct DJSRelay {
 		DJSRelay(TupleHashJoinStep *hj) : HJ(hj) { }

@@ -19,6 +19,9 @@
 
 
 //#define NDEBUG
+// Cross engine needs to be at top due to MySQL includes
+#include "crossenginestep.h"
+
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -61,7 +64,6 @@ using namespace querytele;
 #include "primitivestep.h"
 #include "subquerystep.h"
 #include "tuplehashjoin.h"
-#include "crossenginestep.h"
 #include "tupleaggregatestep.h"
 
 //#include "stopwatch.cpp"
@@ -182,6 +184,7 @@ TupleAggregateStep::TupleAggregateStep(
 		fAggregator(agg),
 		fRowGroupOut(rgOut),
 		fRowGroupIn(rgIn),
+		fRunner(0),
 		fUmOnly(false),
 		fRm(jobInfo.rm),
 		fBucketNum(0),
@@ -197,9 +200,9 @@ TupleAggregateStep::TupleAggregateStep(
 	fIsMultiThread = (multiAgg || fAggregator->aggMapKeyLength() > 0);
 
 	// initialize multi-thread variables
-	fNumOfThreads = fRm.aggNumThreads();
-	fNumOfBuckets = fRm.aggNumBuckets();
-	fNumOfRowGroups = fRm.aggNumRowGroups();
+	fNumOfThreads = fRm->aggNumThreads();
+	fNumOfBuckets = fRm->aggNumBuckets();
+	fNumOfRowGroups = fRm->aggNumRowGroups();
 	fMemUsage.reset(new uint64_t[fNumOfThreads]);
 	memset(fMemUsage.get(), 0, fNumOfThreads * sizeof(uint64_t));
 
@@ -211,7 +214,7 @@ TupleAggregateStep::TupleAggregateStep(
 TupleAggregateStep::~TupleAggregateStep()
 {
 	for (uint32_t i = 0; i < fNumOfThreads; i++)
-		fRm.returnMemory(fMemUsage[i], fSessionMemLimit);
+		fRm->returnMemory(fMemUsage[i], fSessionMemLimit);
 	for (uint32_t i = 0; i < fAgg_mutex.size(); i++)
 		delete fAgg_mutex[i];
 }
@@ -252,7 +255,7 @@ void TupleAggregateStep::run()
 {
 	if (fDelivery == false)
 	{
-		fRunner.reset(new thread(Aggregator(this)));
+		fRunner = jobstepThreadPool.invoke(Aggregator(this));
 	}
 }
 
@@ -260,7 +263,7 @@ void TupleAggregateStep::run()
 void TupleAggregateStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 
@@ -1311,7 +1314,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
 		posAgg.push_back(posAgg[i] + widthAgg[i]);
 	RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, scaleAgg, precisionAgg,
 		jobInfo.stringTableThreshold);
-	SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, &jobInfo.rm, jobInfo.umMemLimit));
+	SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit));
 	rowgroups.push_back(aggRG);
 	aggregators.push_back(rowAgg);
 
@@ -2111,14 +2114,14 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 		posAgg.push_back(posAgg[i] + widthAgg[i]);
 	RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, scaleAgg, precisionAgg,
 		jobInfo.stringTableThreshold);
-	SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec1, &jobInfo.rm, jobInfo.umMemLimit));
+	SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec1, jobInfo.rm, jobInfo.umMemLimit));
 
 	posAggDist.push_back(2);   // rid
 	for (uint64_t i = 0; i < oidsAggDist.size(); i++)
 		posAggDist.push_back(posAggDist[i] + widthAggDist[i]);
 	RowGroup aggRgDist(oidsAggDist.size(), posAggDist, oidsAggDist, keysAggDist, typeAggDist,
 		scaleAggDist, precisionAggDist, jobInfo.stringTableThreshold);
-	SP_ROWAGG_DIST rowAggDist(new RowAggregationDistinct(groupByNoDist, functionVec2, &jobInfo.rm, jobInfo.umMemLimit));
+	SP_ROWAGG_DIST rowAggDist(new RowAggregationDistinct(groupByNoDist, functionVec2, jobInfo.rm, jobInfo.umMemLimit));
 
 	// mapping the group_concat columns, if any.
 	if (jobInfo.groupConcatInfo.groupConcat().size() > 0)
@@ -2133,7 +2136,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 	if (jobInfo.distinctColVec.size() > 1)
 	{
 		RowAggregationMultiDistinct* multiDistinctAggregator =
-			new RowAggregationMultiDistinct(groupByNoDist, functionVec2, &jobInfo.rm, jobInfo.umMemLimit);
+			new RowAggregationMultiDistinct(groupByNoDist, functionVec2, jobInfo.rm, jobInfo.umMemLimit);
 		rowAggDist.reset(multiDistinctAggregator);
 		rowAggDist->groupConcat(jobInfo.groupConcatInfo.groupConcat());
 
@@ -2244,7 +2247,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
 			// construct sub-aggregator
 			SP_ROWAGG_UM_t subAgg(
-							new RowAggregationSubDistinct(groupBySub, functionSub1, &jobInfo.rm, jobInfo.umMemLimit));
+							new RowAggregationSubDistinct(groupBySub, functionSub1, jobInfo.rm, jobInfo.umMemLimit));
 			subAgg->groupConcat(jobInfo.groupConcatInfo.groupConcat());
 
 			// add to rowAggDist
@@ -2298,7 +2301,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
 				// construct sub-aggregator
 				SP_ROWAGG_UM_t subAgg(
-					new RowAggregationUM(groupBySubNoDist, functionSub1, &jobInfo.rm, jobInfo.umMemLimit));
+					new RowAggregationUM(groupBySubNoDist, functionSub1, jobInfo.rm, jobInfo.umMemLimit));
 				subAgg->groupConcat(jobInfo.groupConcatInfo.groupConcat());
 
 				// add to rowAggDist
@@ -2926,7 +2929,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 		posAggUm.push_back(posAggUm[i] + widthAggUm[i]);
 	RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, scaleAggUm,
 		precisionAggUm, jobInfo.stringTableThreshold);
-	SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, &jobInfo.rm, jobInfo.umMemLimit));
+	SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionVecUm, jobInfo.rm, jobInfo.umMemLimit));
 	rowgroups.push_back(aggRgUm);
 	aggregators.push_back(rowAggUm);
 
@@ -3716,21 +3719,21 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 		posAggUm.push_back(posAggUm[i] + widthAggUm[i]);
 	RowGroup aggRgUm(oidsAggUm.size(), posAggUm, oidsAggUm, keysAggUm, typeAggUm, scaleAggUm,
 		precisionAggUm, jobInfo.stringTableThreshold);
-	SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionNoDistVec, &jobInfo.rm, jobInfo.umMemLimit));
+	SP_ROWAGG_UM_t rowAggUm(new RowAggregationUMP2(groupByUm, functionNoDistVec, jobInfo.rm, jobInfo.umMemLimit));
 
 	posAggDist.push_back(2);   // rid
 	for (uint64_t i = 0; i < oidsAggDist.size(); i++)
 		posAggDist.push_back(posAggDist[i] + widthAggDist[i]);
 	RowGroup aggRgDist(oidsAggDist.size(), posAggDist, oidsAggDist, keysAggDist, typeAggDist,
 		scaleAggDist, precisionAggDist, jobInfo.stringTableThreshold);
-	SP_ROWAGG_DIST rowAggDist(new RowAggregationDistinct(groupByNoDist, functionVecUm, &jobInfo.rm, jobInfo.umMemLimit));
+	SP_ROWAGG_DIST rowAggDist(new RowAggregationDistinct(groupByNoDist, functionVecUm, jobInfo.rm, jobInfo.umMemLimit));
 
 	// if distinct key word applied to more than one aggregate column, reset rowAggDist
 	vector<RowGroup> subRgVec;
 	if (jobInfo.distinctColVec.size() > 1)
 	{
 		RowAggregationMultiDistinct* multiDistinctAggregator =
-			new RowAggregationMultiDistinct(groupByNoDist, functionVecUm, &jobInfo.rm, jobInfo.umMemLimit);
+			new RowAggregationMultiDistinct(groupByNoDist, functionVecUm, jobInfo.rm, jobInfo.umMemLimit);
 		rowAggDist.reset(multiDistinctAggregator);
 
 		// construct and add sub-aggregators to rowAggDist
@@ -3840,7 +3843,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 			}
 
 			// construct sub-aggregator
-			SP_ROWAGG_UM_t subAgg(new RowAggregationSubDistinct(groupBySub, functionSub1, &jobInfo.rm, jobInfo.umMemLimit));
+			SP_ROWAGG_UM_t subAgg(new RowAggregationSubDistinct(groupBySub, functionSub1, jobInfo.rm, jobInfo.umMemLimit));
 
 			// add to rowAggDist
 			multiDistinctAggregator->addSubAggregator(subAgg, subRg, functionSub2);
@@ -3892,7 +3895,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
 				// construct sub-aggregator
 				SP_ROWAGG_UM_t subAgg(
-					new RowAggregationUMP2(groupBySubNoDist, functionSub1, &jobInfo.rm, jobInfo.umMemLimit));
+					new RowAggregationUMP2(groupBySubNoDist, functionSub1, jobInfo.rm, jobInfo.umMemLimit));
 
 				// add to rowAggDist
 				multiDistinctAggregator->addSubAggregator(subAgg, aggRgUm, functionSub2);
@@ -4208,16 +4211,17 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
                         // and if there is more data to read, the
                         // first thread will start another thread until the
                         // maximum number is reached.
+#if 0
                         if (threadID == 0 && fFirstPhaseThreadCount < fNumOfThreads &&
-                          dlIn->more(fInputIter)) {
-                            fFirstPhaseRunners[fFirstPhaseThreadCount].reset
-                                (new boost::thread(ThreadedAggregator(this, fFirstPhaseThreadCount)));
+                          dlIn->more(fInputIter)) 
+						{
+                            fFirstPhaseRunners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, fFirstPhaseThreadCount)));
                             fFirstPhaseThreadCount++;
                         }
-
+#endif
 						fRowGroupIns[threadID].setData(&rgData);
 						fMemUsage[threadID] += fRowGroupIns[threadID].getSizeWithStrings();
-						if (!fRm.getMemory(fRowGroupIns[threadID].getSizeWithStrings(), fSessionMemLimit))
+						if (!fRm->getMemory(fRowGroupIns[threadID].getSizeWithStrings(), fSessionMemLimit))
 						{
 							rgDatas.clear();    // to short-cut the rest of processing
 							abort();
@@ -4335,7 +4339,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
 						usleep(1000);   // avoid using all CPU during busy wait
 				}
 				rgDatas.clear();
-				fRm.returnMemory(fMemUsage[threadID], fSessionMemLimit);
+				fRm->returnMemory(fMemUsage[threadID], fSessionMemLimit);
 				fMemUsage[threadID] = 0;
 
 				if (cancelled())
@@ -4477,29 +4481,29 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 		if (!fDoneAggregate)
 		{
 			initializeMultiThread();
-/*
-//          This block of code starts all threads at the start
+
+//        This block of code starts all threads at the start
           fFirstPhaseThreadCount = fNumOfThreads;
-          boost::shared_ptr<boost::thread> runner;
+		  fFirstPhaseRunners.clear();
+		  fFirstPhaseRunners.reserve(fNumOfThreads); // to prevent a resize during use
           for (i = 0; i < fNumOfThreads; i++)
-          {
-              runner.reset(new boost::thread(ThreadedAggregator(this, i)));
-              fFirstPhaseRunners.push_back(runner);
+    	  {
+		      fFirstPhaseRunners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, i)));
           }
-*/
 
+#if 0
 //          This block of code starts one thread, relies on doThreadedAggregation()
+//          For reasons unknown, this doesn't work right with threadpool
 //          to start more as needed
-            fFirstPhaseRunners.resize(fNumOfThreads); // to prevent a resize during use
+			fFirstPhaseRunners.clear();
+            fFirstPhaseRunners.reserve(fNumOfThreads); // to prevent a resize during use
             fFirstPhaseThreadCount = 1;
-            for (i = 1; i < fNumOfThreads; i++)
-                // fill with valid thread objects to make joining work
-                fFirstPhaseRunners[i].reset(new boost::thread());
-            fFirstPhaseRunners[0].reset(new boost::thread(ThreadedAggregator(this, 0)));
+			fFirstPhaseRunners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, 0)));
+#endif
 
-            for (i = 0; i < fNumOfThreads; i++)
-                fFirstPhaseRunners[i]->join();
-            fFirstPhaseRunners.clear();
+			// Now wait for that thread plus all the threads it may have spawned
+			jobstepThreadPool.join(fFirstPhaseRunners);
+			fFirstPhaseRunners.clear();
         }
 
 		if (dynamic_cast<RowAggregationDistinct*>(fAggregator.get()) && fAggregator->aggMapKeyLength() > 0)
@@ -4509,8 +4513,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 			{
 				if (!fDoneAggregate)
 				{
-					vector<boost::shared_ptr<thread> > runners;
-					boost::shared_ptr<thread> runner;
+					vector<uint64_t> runners; // thread pool handles
 					fRowGroupsDeliveredData.resize(fNumOfBuckets);
 
                     uint32_t bucketsPerThread = fNumOfBuckets/fNumOfThreads;
@@ -4519,13 +4522,12 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
                     //uint32_t bucketsPerThread = 1;
                     //uint32_t numThreads = fNumOfBuckets;
 
+					runners.reserve(numThreads);
                     for (i = 0; i < numThreads; i++)
                     {
-                        runner.reset(new boost::thread(ThreadedSecondPhaseAggregator(this, i*bucketsPerThread, bucketsPerThread)));
-                        runners.push_back(runner);
+                        runners.push_back(jobstepThreadPool.invoke(ThreadedSecondPhaseAggregator(this, i*bucketsPerThread, bucketsPerThread)));
                     }
-                    for (i = 0; i < numThreads; i++)
-                        runners[i]->join();
+					jobstepThreadPool.join(runners);
                 }
 
 				fDoneAggregate = true;

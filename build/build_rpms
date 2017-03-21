@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# $Id: build_rpms 1734 2012-10-25 18:07:16Z dhill $
+# $Id: build_rpms 1734 2012-10-25 18:07:16Z dlhill $
 #
 
 verbose=0
+
 prefix=/usr/local/mariadb/columnstore
 #mysqldir=$prefix/mariadb-columnstore/mysql
 columnstoredir=$prefix

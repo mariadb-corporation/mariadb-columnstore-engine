@@ -503,6 +503,7 @@
 			  as many threads are available across all PMs.  -->
 		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> --> 
 		<MaxOutstandingRequests>20</MaxOutstandingRequests> 
+		<ThreadPoolSize>100</ThreadPoolSize>
 	</JobList>
 	<TupleWSDL>
 		<MaxSize>1M</MaxSize>                   <!-- Max size in bytes per bucket -->
@@ -515,9 +516,9 @@
 		<!-- <RowAggrRowGroupsPerThread>20</RowAggrRowGroupsPerThread> --> <!-- Default value is 20 -->
 	</RowAggregation>
 	<CrossEngineSupport>
-		<Host>unassigned</Host>
+		<Host>127.0.0.1</Host>
 		<Port>3306</Port>
-		<User>unassigned</User>
+		<User>root</User>
 		<Password></Password>
 	</CrossEngineSupport>
 	<QueryStats>

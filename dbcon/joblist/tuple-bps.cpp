@@ -163,9 +163,9 @@ void TupleBPS::initializeConfigParms()
 	//...    rids must fall below, before the producer can send more rids.
 
 	//These could go in constructor
-	fRequestSize = fRm.getJlRequestSize();
-	fMaxOutstandingRequests = fRm.getJlMaxOutstandingRequests();
-	fProcessorThreadsPerScan = fRm.getJlProcessorThreadsPerScan();
+	fRequestSize = fRm->getJlRequestSize();
+	fMaxOutstandingRequests = fRm->getJlMaxOutstandingRequests();
+	fProcessorThreadsPerScan = fRm->getJlProcessorThreadsPerScan();
 	fNumThreads = 0;
 
 	config::Config* cf = config::Config::makeConfig();
@@ -176,18 +176,17 @@ void TupleBPS::initializeConfigParms()
 	if (fRequestSize >= fMaxOutstandingRequests)
 		fRequestSize = 1;
 	if ((fSessionId & 0x80000000) == 0)
-		fMaxNumThreads = fRm.getJlNumScanReceiveThreads();
+		fMaxNumThreads = fRm->getJlNumScanReceiveThreads();
 	else
 		fMaxNumThreads = 1;
 
-	fProducerThread.reset(new SPTHD[fMaxNumThreads]);
-	// Make maxnum thread objects even if they don't get used to make join() safe.
-	for (uint32_t i = 0; i < fMaxNumThreads; i++)
-		fProducerThread[i].reset(new thread());
+	// Reserve the max number of thread space. A bit of an optimization.
+	fProducerThreads.clear();
+	fProducerThreads.reserve(fMaxNumThreads);
 }
 
 TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo) :
-	BatchPrimitive(jobInfo), fRm(jobInfo.rm)
+	BatchPrimitive(jobInfo), pThread(0), fRm(jobInfo.rm)
 {
 	fInputJobStepAssociation = rhs.inputAssociation();
 	fOutputJobStepAssociation = rhs.outputAssociation();
@@ -800,7 +799,7 @@ void TupleBPS::storeCasualPartitionInfo(const bool estimateRowCounts)
 
 void TupleBPS::startPrimitiveThread()
 {
-	pThread.reset(new boost::thread(TupleBPSPrimitive(this)));
+	pThread = jobstepThreadPool.invoke(TupleBPSPrimitive(this));
 }
 
 void TupleBPS::startAggregationThread()
@@ -809,13 +808,13 @@ void TupleBPS::startAggregationThread()
 //     fMaxNumThreads = 1;
 //     fNumThreads = fMaxNumThreads;
 //     for (uint32_t i = 0; i < fMaxNumThreads; i++)
-//             fProducerThread[i].reset(new boost::thread(TupleBPSAggregators(this, i)));
+//             fProducerThreads.push_back(jobstepThreadPool.invoke(TupleBPSAggregators(this, i)));
 
 //  This block of code starts one thread at a time
 	if (fNumThreads >= fMaxNumThreads)
 		return;
 	fNumThreads++;
-	fProducerThread[fNumThreads-1].reset(new boost::thread(TupleBPSAggregators(this, fNumThreads-1)));
+	fProducerThreads.push_back(jobstepThreadPool.invoke(TupleBPSAggregators(this, fNumThreads-1)));
 }
 
 //#include "boost/date_time/posix_time/posix_time.hpp"
@@ -896,7 +895,7 @@ bool TupleBPS::goodExtentCount()
 
 void TupleBPS::initExtentMarkers()
 {
-	numDBRoots = fRm.getDBRootCount();
+	numDBRoots = fRm->getDBRootCount();
 	lastExtent.resize(numDBRoots);
 	lastScannedLBID.resize(numDBRoots);
 
@@ -1117,6 +1116,8 @@ void TupleBPS::run()
 			serializeJoiner();
 		prepCasualPartitioning();
 		startPrimitiveThread();
+		fProducerThreads.clear();
+		fProducerThreads.reserve(fMaxNumThreads);
 		startAggregationThread();
 	}
 	catch (const std::exception& e)
@@ -1153,10 +1154,10 @@ void TupleBPS::join()
 		}
 
 		if (pThread)
-			pThread->join();
+			jobstepThreadPool.join(pThread);
 
-		for (uint32_t i = 0; i < fMaxNumThreads; i++)
-			fProducerThread[i]->join();
+		jobstepThreadPool.join(fProducerThreads);
+
 		if (BPPIsAllocated) {
 			ByteStream bs;
 			fDec->removeDECEventListener(this);

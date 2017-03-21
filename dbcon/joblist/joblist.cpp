@@ -18,7 +18,8 @@
 
 //  $Id: joblist.cpp 9655 2013-06-25 23:08:13Z xlou $
 
-
+// Cross engine needs to be at the top due to MySQL includes
+#include "crossenginestep.h"
 #include "errorcodes.h"
 #include <iterator>
 #include <stdexcept>
@@ -27,14 +28,12 @@
 using namespace std;
 
 #include "joblist.h"
-
 #include "calpontsystemcatalog.h"
 using namespace execplan;
 
 #include "errorids.h"
 #include "jobstep.h"
 #include "primitivestep.h"
-#include "crossenginestep.h"
 #include "subquerystep.h"
 #include "tupleaggregatestep.h"
 #include "tupleannexstep.h"
@@ -73,13 +72,17 @@ JobList::JobList(bool isEM) :
 
 JobList::~JobList()
 {
-	vector<boost::thread *> joiners;
-	boost::thread *tmp;
 	try
 	{
 		if (fIsRunning)
 		{
-			JobStepVector::iterator iter;
+#if 0
+            // This logic creates a set of threads to wind down the query
+            vector<uint64_t> joiners;
+            joiners.reserve(20);
+            NullStep nullStep;  // For access to the static jobstepThreadPool.
+
+            JobStepVector::iterator iter;
 			JobStepVector::iterator end;
 
 			iter = fQuery.begin();
@@ -88,8 +91,7 @@ JobList::~JobList()
 			// Wait for all the query steps to finish
 			while (iter != end)
 			{
-				tmp = new boost::thread(JSJoiner(iter->get()));
-				joiners.push_back(tmp);
+				joiners.push_back(nullStep.jobstepThreadPool.invoke(JSJoiner(iter->get())));
 				++iter;
 			}
 
@@ -99,14 +101,40 @@ JobList::~JobList()
 			// wait for the projection steps
 			while (iter != end)
 			{
-				tmp = new boost::thread(JSJoiner(iter->get()));
-				joiners.push_back(tmp);
+                joiners.push_back(nullStep.jobstepThreadPool.invoke(JSJoiner(iter->get())));
 				++iter;
 			}
 
-			for (uint32_t i = 0; i < joiners.size(); i++) {
-				joiners[i]->join();
-				delete joiners[i];
+            nullStep.jobstepThreadPool.join(joiners);
+#endif
+            // This logic stops the query steps one at a time
+            JobStepVector::iterator iter;
+            JobStepVector::iterator end;
+			end = fQuery.end();
+			for (iter = fQuery.begin(); iter != end; ++iter)
+			{
+				(*iter)->abort();
+			}
+
+			// Stop all the projection steps
+			end = fProject.end();
+			for (iter = fProject.begin(); iter != end; ++iter)
+			{
+				(*iter)->abort();
+			}
+
+			// Wait for all the query steps to end
+			end = fQuery.end();
+			for (iter = fQuery.begin(); iter != end; ++iter)
+			{
+				(*iter)->join();
+			}
+
+			// Wait for all the projection steps to end
+			end = fProject.end();
+			for (iter = fProject.begin(); iter != end; ++iter)
+			{
+				(*iter)->join();
 			}
 		}
 	}

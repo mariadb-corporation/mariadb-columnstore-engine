@@ -83,7 +83,7 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
 		groupConcat->fSeparator = gcc->separator();
 		groupConcat->fDistinct = gcc->distinct();
 		groupConcat->fSize = gcc->resultType().colWidth;
-		groupConcat->fRm = &(jobInfo.rm);
+		groupConcat->fRm = jobInfo.rm;
 		groupConcat->fSessionMemLimit = jobInfo.umMemLimit;
 
 		int key = -1;

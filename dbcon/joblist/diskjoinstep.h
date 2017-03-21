@@ -49,7 +49,6 @@ class DiskJoinStep : public JobStep
 
 		boost::shared_array<int> LOMapping, SOMapping, SjoinFEMapping, LjoinFEMapping;
 		TupleHashJoinStep *thjs;
-		boost::shared_ptr<boost::thread> runner;
 		boost::shared_ptr<funcexp::FuncExpWrapper> fe;
 		bool typeless;
 		JoinType joinType;
@@ -69,7 +68,7 @@ class DiskJoinStep : public JobStep
 		bool lastLargeIteration;
 		uint32_t largeIterationCount;
 
-		boost::shared_ptr<boost::thread> mainThread;
+		uint64_t mainThread; // thread handle from thread pool
 
 		/* Loader structs */
 		struct LoaderOutput {
@@ -85,8 +84,6 @@ class DiskJoinStep : public JobStep
 			DiskJoinStep *djs;
 		};
 		void loadFcn();
-
-		boost::shared_ptr<boost::thread> loadThread;
 
 		/* Builder structs */
 		struct BuilderOutput {
@@ -104,7 +101,6 @@ class DiskJoinStep : public JobStep
 			DiskJoinStep *djs;
 		};
 		void buildFcn();
-		boost::shared_ptr<boost::thread> buildThread;
 
 		/* Joining structs */
 		struct Joiner {
@@ -113,7 +109,6 @@ class DiskJoinStep : public JobStep
 			DiskJoinStep *djs;
 		};
 		void joinFcn();
-		boost::shared_ptr<boost::thread> joinThread;
 
 		// limits & usage
 		boost::shared_ptr<int64_t> smallUsage;

@@ -173,7 +173,7 @@ int main(int argc, char** argv)
 		csep.verID(sm.verID());
  
 		csep.traceFlags(0);
-		ResourceManager rm;
+		ResourceManager *rm = ResourceManager::instance();
 		jl = JobListFactory::makeJobList(&csep, rm);
 		csep.traceFlags(tlvl);
 

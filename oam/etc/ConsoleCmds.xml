@@ -29,7 +29,7 @@
 		<Name>redistributeData</Name>
 		<Desc1>Redistribute table data accross all dbroots to balance disk usage</Desc1>
 		<Arg1>START to begin a redistribution</Arg1>
-                <Arg2>START REMOVE n to being a redistribution where data is removed from dbroot 'n'</Arg2>
+		<Arg2>START REMOVE [dbroots] to redistribute to all but the enumerated dbroots, leaving those empty</Arg2>
 		<Arg3>STOP to stop redistribution before completion</Arg3>
 		<Arg4>STATUS to to view statistics and progress</Arg4>
 	</Cmd4>

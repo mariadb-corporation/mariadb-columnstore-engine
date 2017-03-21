@@ -58,7 +58,7 @@ namespace joblist {
 DiskJoinStep::DiskJoinStep() { }
 
 DiskJoinStep::DiskJoinStep(TupleHashJoinStep *t, int djsIndex, int joinIndex, bool lastOne) : JobStep(*t), thjs(t),
-	joinerIndex(joinIndex), closedOutput(false)
+	mainThread(0), joinerIndex(joinIndex), closedOutput(false)
 {
 	/*
 		grab all relevant vars from THJS
@@ -109,7 +109,7 @@ DiskJoinStep::DiskJoinStep(TupleHashJoinStep *t, int djsIndex, int joinIndex, bo
 	if (largeLimit == 0)
 		largeLimit = numeric_limits<int64_t>::max();
 
-	uint64_t totalUMMemory = thjs->resourceManager.getConfiguredUMMemLimit();
+	uint64_t totalUMMemory = thjs->resourceManager->getConfiguredUMMemLimit();
 	jp.reset(new JoinPartition(largeRG, smallRG, smallKeyCols, largeKeyCols, typeless,
 		(joinType & ANTI) && (joinType & MATCHNULLS), (bool) fe, totalUMMemory, partitionSize));
 
@@ -130,9 +130,10 @@ DiskJoinStep::DiskJoinStep(TupleHashJoinStep *t, int djsIndex, int joinIndex, bo
 DiskJoinStep::~DiskJoinStep()
 {
 	abort();
-	if (mainThread) {
-		mainThread->join();
-		mainThread.reset();
+	if (mainThread)
+	{
+		jobstepThreadPool.join(mainThread);
+		mainThread = 0;
 	}
 	if (jp)
 		atomicops::atomicSub(smallUsage.get(), jp->getSmallSideDiskUsage());
@@ -151,13 +152,16 @@ void DiskJoinStep::loadExistingData(vector<RGData> &data)
 
 void DiskJoinStep::run()
 {
-	mainThread.reset(new boost::thread(Runner(this)));
+	mainThread = jobstepThreadPool.invoke(Runner(this));
 }
 
 void DiskJoinStep::join()
 {
 	if (mainThread)
-		mainThread->join();
+	{
+		jobstepThreadPool.join(mainThread);
+		mainThread = 0;
+	}
 	if (jp) {
 		atomicops::atomicSub(smallUsage.get(), jp->getSmallSideDiskUsage());
 		//int64_t memUsage;
@@ -479,12 +483,12 @@ void DiskJoinStep::mainRunner()
 			loadFIFO.reset(new FIFO<boost::shared_ptr<LoaderOutput> >(1, 1));   // double buffering should be good enough
 			buildFIFO.reset(new FIFO<boost::shared_ptr<BuilderOutput> >(1, 1));
 
-			loadThread.reset(new boost::thread(Loader(this)));
-			buildThread.reset(new boost::thread(Builder(this)));
-			joinThread.reset(new boost::thread(Joiner(this)));
-			loadThread->join();
-			buildThread->join();
-			joinThread->join();
+			std::vector<uint64_t> thrds;
+			thrds.reserve(3);
+			thrds.push_back(jobstepThreadPool.invoke(Loader(this)));
+			thrds.push_back(jobstepThreadPool.invoke(Builder(this)));
+			thrds.push_back(jobstepThreadPool.invoke(Joiner(this)));
+			jobstepThreadPool.join(thrds);
 		}
 	}
 	CATCH_AND_LOG;

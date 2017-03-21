@@ -253,7 +253,7 @@ public:
 	//...to define abstract method in base class, but if start adding to other
 	//...classes, then should consider adding pure virtual method to JobStep.
 	uint64_t blksSkipped           () const { return fNumBlksSkipped; }
-	ResourceManager& resourceManager() const { return fRm; }
+	ResourceManager* resourceManager() const { return fRm; }
 
 	SP_LBIDList getlbidList() const { return lbidList;}
 
@@ -281,7 +281,7 @@ private:
 	uint64_t getLBID(uint64_t rid, bool& scan);
 	uint64_t getFBO(uint64_t lbid);
 
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 	boost::shared_ptr<execplan::CalpontSystemCatalog> sysCat;
 	execplan::CalpontSystemCatalog::OID fOid;
 	execplan::CalpontSystemCatalog::OID fTableOid;
@@ -321,8 +321,8 @@ private:
 
 	BRM::DBRM dbrm;
 
-	boost::shared_ptr<boost::thread> cThread;  //consumer thread
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
+	// boost::shared_ptr<boost::thread> cThread;  //consumer thread
+	// boost::shared_ptr<boost::thread> pThread;  //producer thread
 	boost::mutex mutex;
 	boost::condition condvar;
 	boost::condition flushed;
@@ -440,7 +440,7 @@ public:
 
 	virtual execplan::CalpontSystemCatalog::OID tableOid() const { return fTableOid; }
 	const execplan::CalpontSystemCatalog::ColType& colType() const { return fColType; }
-	ResourceManager& resourceManager() const { return fRm; }
+	ResourceManager* resourceManager() const { return fRm; }
 
 	virtual uint64_t phyIOCount    () const { return fPhysicalIO; }
 	virtual uint64_t cacheIOCount  () const { return fCacheIO;    }
@@ -483,7 +483,7 @@ private:
 	uint64_t getFBO(uint64_t lbid);
 	bool isEmptyVal(const uint8_t *val8) const;
 
-	ResourceManager& fRm;
+	ResourceManager* fRm;
     ColByScanRangeRequestHeader fMsgHeader;
     SPTHD fConsumerThread;
     /// number of threads on the receive side
@@ -636,8 +636,8 @@ private:
 	uint32_t recvWaiting;
 	int64_t ridCount;
 	execplan::CalpontSystemCatalog::ColType fColType;
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
-	boost::shared_ptr<boost::thread> cThread;  //producer thread
+	uint64_t pThread;  //producer thread
+	uint64_t cThread;  //producer thread
 
 	messageqcpp::ByteStream fFilterString;
 	uint32_t fFilterCount;
@@ -652,7 +652,7 @@ private:
 	uint64_t fMsgBytesIn;   // total byte count for incoming messages
 	uint64_t fMsgBytesOut;  // total byte count for outcoming messages
 	uint32_t uniqueID;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 
     //@bug 3128 change ParseTree* to vector<Filter*>
 	std::vector<const execplan::Filter*> fFilters;
@@ -772,8 +772,8 @@ private:
 	DataList<ElementType> *ridList;
 	messageqcpp::ByteStream fFilterString;
 	execplan::CalpontSystemCatalog::ColType colType;
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
-	boost::shared_ptr<boost::thread> cThread;  //producer thread
+	uint64_t pThread;  //producer thread. thread pool handle
+	uint64_t cThread;  //consumer thread. thread pool handle
 	DataList_t* requestList;
 	//StringDataList* stringList;
 	boost::mutex mutex;
@@ -797,7 +797,7 @@ private:
     uint32_t fMsgsToPm;     // total number of messages sent to PMs
 	uint32_t fMsgsExpect;   // total blocks to scan
 	uint32_t uniqueID;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 	BPSOutputType fOutType;
 	rowgroup::RowGroup fOutputRowGroup;
 	uint64_t fRidResults;
@@ -1036,8 +1036,6 @@ protected:
 private:
 	void formatMiniStats();
 
-    typedef boost::shared_ptr<boost::thread> SPTHD;
-	typedef boost::shared_array<SPTHD> SATHD;
     void startPrimitiveThread();
     void startAggregationThread();
     void initializeConfigParms();
@@ -1060,7 +1058,7 @@ private:
 	uint32_t fNumThreads;
 	PrimitiveStepType ffirstStepType;
 	bool isFilterFeeder;
-    SATHD fProducerThread;
+    std::vector<uint64_t> fProducerThreads; // thread pool handles
 	messageqcpp::ByteStream fFilterString;
 	uint32_t fFilterCount;
 	execplan::CalpontSystemCatalog::ColType fColType;
@@ -1097,8 +1095,8 @@ private:
 	uint64_t fMsgBytesOut;  // total byte count for outcoming messages
 	uint64_t fBlockTouched; // total blocks touched
     uint32_t fExtentsPerSegFile;//config num of Extents Per Segment File
-    boost::shared_ptr<boost::thread> cThread;  //consumer thread
-	boost::shared_ptr<boost::thread> pThread;  //producer thread
+    // uint64_t cThread;  //consumer thread. thread handle from thread pool
+	uint64_t pThread;  //producer thread. thread handle from thread pool
 	boost::mutex tplMutex;
 	boost::mutex dlMutex;
 	boost::mutex cpMutex;
@@ -1108,7 +1106,7 @@ private:
 	std::vector<bool> scanFlags; // use to keep track of which extents to eliminate from this step
 	bool BPPIsAllocated;
 	uint32_t uniqueID;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 
 	/* HashJoin support */
 
@@ -1251,7 +1249,7 @@ private:
     execplan::CalpontSystemCatalog::OID fTableOID;
 	execplan::CalpontSystemCatalog::ColType fColType;
     int8_t fBOP;
-    boost::shared_ptr<boost::thread> runner;    // @bug 686
+    // int64_t runner;    // thread handle from thread pool
 
 	// @bug 687 Add data and friend declarations for concurrent filter steps.
 	std::vector<ElementType> fSortedA; // used to internally sort input data
@@ -1307,7 +1305,7 @@ public:
 	bool isDictCol() const { return isDictColumn; }
 	bool isExeMgr() const { return isEM; }
 	const execplan::CalpontSystemCatalog::ColType& colType() const { return fColType; }
-	ResourceManager& resourceManager() const { return fRm; }
+	ResourceManager* resourceManager() const { return fRm; }
 
 	void pseudoType(uint32_t p) { fPseudoType = p; }
 	uint32_t pseudoType() const { return fPseudoType; }
@@ -1333,12 +1331,12 @@ private:
 	bool isDictColumn;
 	bool isEM;
 
-	boost::thread* fPTThd;
+//	boost::thread* fPTThd;
 
 	// @bug 663 - Added fSwallowRows for calpont.caltrace(16) which is TRACE_FLAGS::TRACE_NO_ROWS4.
 	// 	      Running with this one will swallow rows at projection.
 	bool fSwallowRows;
-	ResourceManager& fRm;
+	ResourceManager* fRm;
 	friend class PassThruCommandJL;
 	friend class RTSCommandJL;
 	friend class BatchPrimitiveStep;

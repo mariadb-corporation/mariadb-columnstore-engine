@@ -118,7 +118,7 @@ private:
 		Runner(TupleUnion *t, uint32_t in) : tu(t), index(in) { }
 		void operator()() { tu->readInput(index); }
 	};
-	std::vector<boost::shared_ptr<boost::thread> > runners;
+	std::vector<uint64_t> runners; //thread pool handles
 
 	struct Hasher {
 		TupleUnion *ts;
@@ -142,7 +142,7 @@ private:
 	uint32_t rowLength;
 	rowgroup::Row row, row2;
 	std::vector<bool> distinctFlags;
-	ResourceManager& rm;
+	ResourceManager* rm;
 	utils::STLPoolAllocator<RowPosition> allocator;
 	boost::scoped_array<rowgroup::RGData> normalizedData;
 

@@ -20,6 +20,7 @@
 #include <string>
 using namespace std;
 
+#include <stdlib.h>
 #include <boost/thread.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -54,6 +55,8 @@ int toInt(const string& val)
 namespace joblist
 {
 boost::mutex JobStep::fLogMutex; //=PTHREAD_MUTEX_INITIALIZER;
+
+ThreadPool JobStep::jobstepThreadPool(defaultJLThreadPoolSize, 0);
 
 ostream& operator<<(ostream& os, const JobStep* rhs)
 {

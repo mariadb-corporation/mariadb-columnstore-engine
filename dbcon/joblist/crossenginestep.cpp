@@ -17,6 +17,7 @@
 
 //  $Id: crossenginestep.cpp 9709 2013-07-20 06:08:46Z xlou $
 
+#include "crossenginestep.h"
 #include <unistd.h>
 //#define NDEBUG
 #include <cassert>
@@ -55,89 +56,71 @@ using namespace querytele;
 
 #include "jobstep.h"
 #include "jlf_common.h"
-#include "crossenginestep.h"
-
-#include "libdrizzle-2.0/drizzle.h"
-#include "libdrizzle-2.0/drizzle_client.h"
 
 namespace joblist
 {
 
-DrizzleMySQL::DrizzleMySQL() : fDrzp(NULL), fDrzcp(NULL), fDrzrp(NULL)
+LibMySQL::LibMySQL() : fCon(NULL), fRes(NULL)
 {
 }
 
 
-DrizzleMySQL::~DrizzleMySQL()
+LibMySQL::~LibMySQL()
 {
-	if (fDrzrp)
+	if (fRes)
 	{
-		drizzle_result_free(fDrzrp);
+		mysql_free_result(fRes);
 	}
-	fDrzrp = NULL;
+	fRes = NULL;
 
-	if (fDrzcp)
+	if (fCon)
 	{
-		drizzle_con_close(fDrzcp);
-		drizzle_con_free(fDrzcp);
+		mysql_close(fCon);
 	}
-	fDrzcp = NULL;
-
-	if (fDrzp)
-	{
-		drizzle_free(fDrzp);
-	}
-	fDrzp = NULL;
+	fCon = NULL;
 }
 
 
-int DrizzleMySQL::init(const char* h, unsigned int p, const char* u, const char* w, const char* d)
+int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, const char* d)
 {
-	int ret = -1;
+	int ret = 0;
 
-	fDrzp = drizzle_create();
-	if (fDrzp != NULL)
+	fCon = mysql_init(NULL);
+	if (fCon != NULL)
 	{
-		fDrzcp = drizzle_con_add_tcp(fDrzp, h, p, u, w, d, DRIZZLE_CON_MYSQL);
-		if (fDrzcp != NULL)
+        unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
+        mysql_options(fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
+
+        if (mysql_real_connect(fCon, h, u, w, d, p, NULL, 0) == NULL)
 		{
-			ret = drizzle_con_connect(fDrzcp);
-			if (ret != 0)
-				fErrStr = "fatal error in drizzle_con_connect()";
-		}
-		else
-		{
-			fErrStr = "fatal error in drizzle_con_add_tcp()";
+			fErrStr = "fatal error in mysql_real_connect()";
+            ret = mysql_errno(fCon);
 		}
 	}
 	else
 	{
-		fErrStr = "fatal error in drizzle_create()";
+		fErrStr = "fatal error in mysql_init()";
+        ret = -1;
 	}
 
 	return ret;
 }
 
 
-int DrizzleMySQL::run(const char* query)
+int LibMySQL::run(const char* query)
 {
 	int ret = 0;
-	drizzle_return_t drzret;
-	fDrzrp = drizzle_query_str(fDrzcp, fDrzrp, query, &drzret);
-	if (drzret == 0 && fDrzrp != NULL)
+    if (mysql_query(fCon, query) != 0)
 	{
-		ret = drzret = drizzle_result_buffer(fDrzrp);
-		if (drzret != 0)
-			fErrStr = "fatal error reading result from crossengine client lib";
+		fErrStr = "fatal error reading result from crossengine client lib";
+        ret = -1;
 	}
-	else
-	{
-		fErrStr = "fatal error executing query in crossengine client lib";
-		if (drzret != 0)
-			ret = drzret;
-		else
-			ret = -1;
-	}
+    fRes = mysql_use_result(fCon);
+    if (fRes == NULL)
+    {
+		fErrStr = "fatal error reading result from crossengine client lib";
+        ret = -1;
+    }
 
 	return ret;
 }
@@ -154,6 +137,7 @@ CrossEngineStep::CrossEngineStep(
 		fRowsPerGroup(256),
 		fOutputDL(NULL),
 		fOutputIterator(0),
+		fRunner(0),
 		fEndOfResult(false),
 		fSchema(schema),
 		fTable(table),
@@ -164,13 +148,13 @@ CrossEngineStep::CrossEngineStep(
 	fExtendedInfo = "CES: ";
 	getMysqldInfo(jobInfo);
 	fQtc.stepParms().stepType = StepTeleStats::T_CES;
-    drizzle = new DrizzleMySQL();
+    mysql = new LibMySQL();
 }
 
 
 CrossEngineStep::~CrossEngineStep()
 {
-    delete drizzle;
+    delete mysql;
 }
 
 
@@ -417,7 +401,7 @@ int64_t CrossEngineStep::convertValueNum(
 
 void CrossEngineStep::getMysqldInfo(const JobInfo& jobInfo)
 {
-	if (jobInfo.rm.getMysqldInfo(fHost, fUser, fPasswd, fPort) == false)
+	if (jobInfo.rm->getMysqldInfo(fHost, fUser, fPasswd, fPort) == false)
 		throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ERR_CROSS_ENGINE_CONFIG),
 						ERR_CROSS_ENGINE_CONFIG);
 }
@@ -439,14 +423,14 @@ void CrossEngineStep::run()
         fOutputIterator = fOutputDL->getIterator();
     }
 
-	fRunner.reset(new boost::thread(Runner(this)));
+	fRunner = jobstepThreadPool.invoke(Runner(this));
 }
 
 
 void CrossEngineStep::join()
 {
 	if (fRunner)
-		fRunner->join();
+		jobstepThreadPool.join(fRunner);
 }
 
 
@@ -463,20 +447,20 @@ void CrossEngineStep::execute()
 		sts.total_units_of_work = 1;
 		postStepStartTele(sts);
 
-		ret = drizzle->init(fHost.c_str(), fPort, fUser.c_str(), fPasswd.c_str(), fSchema.c_str());
+		ret = mysql->init(fHost.c_str(), fPort, fUser.c_str(), fPasswd.c_str(), fSchema.c_str());
 		if (ret != 0)
-			handleMySqlError(drizzle->getError().c_str(), ret);
+			handleMySqlError(mysql->getError().c_str(), ret);
 
 		string query(makeQuery());
 		fLogger->logMessage(logging::LOG_TYPE_INFO, "QUERY to foreign engine: " + query);
 		if (traceOn())
 			cout << "QUERY: " << query << endl;
 
-		ret = drizzle->run(query.c_str());
+		ret = mysql->run(query.c_str());
 		if (ret != 0)
-			handleMySqlError(drizzle->getError().c_str(), ret);
+			handleMySqlError(mysql->getError().c_str(), ret);
 
-		int num_fields = drizzle->getFieldCount();
+		int num_fields = mysql->getFieldCount();
 
 		char** rowIn;                            // input
 		//shared_array<uint8_t> rgDataDelivered;      // output
@@ -497,7 +481,7 @@ void CrossEngineStep::execute()
 		bool doFE3 =  (fFeSelects.size() > 0);
 		if (!doFE1 && !doFE3)
 		{
-			while ((rowIn = drizzle->nextRow()) && !cancelled())
+			while ((rowIn = mysql->nextRow()) && !cancelled())
 			{
 				for(int i = 0; i < num_fields; i++)
 					setField(i, rowIn[i], fRowDelivered);
@@ -514,7 +498,7 @@ void CrossEngineStep::execute()
 			rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
 			rowFe1.setData(rgDataFe1.get());
 
-			while ((rowIn = drizzle->nextRow()) && !cancelled())
+			while ((rowIn = mysql->nextRow()) && !cancelled())
 			{
 				// Parse the columns used in FE1 first, the other column may not need be parsed.
 				for(int i = 0; i < num_fields; i++)
@@ -549,7 +533,7 @@ void CrossEngineStep::execute()
 			rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
 			rowFe3.setData(rgDataFe3.get());
 
-			while ((rowIn = drizzle->nextRow()) && !cancelled())
+			while ((rowIn = mysql->nextRow()) && !cancelled())
 			{
 				for(int i = 0; i < num_fields; i++)
 					setField(i, rowIn[i], rowFe3);
@@ -577,7 +561,7 @@ void CrossEngineStep::execute()
 			rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
 			rowFe3.setData(rgDataFe3.get());
 
-			while ((rowIn = drizzle->nextRow()) && !cancelled())
+			while ((rowIn = mysql->nextRow()) && !cancelled())
 			{
 				// Parse the columns used in FE1 first, the other column may not need be parsed.
 				for(int i = 0; i < num_fields; i++)
@@ -609,7 +593,7 @@ void CrossEngineStep::execute()
 
 		//INSERT_ADAPTER(fOutputDL, rgDataDelivered);
 		fOutputDL->insert(rgDataDelivered);
-		fRowsRetrieved = drizzle->getRowCount();
+		fRowsRetrieved = mysql->getRowCount();
 	}
 	catch (IDBExcept& iex)
 	{
