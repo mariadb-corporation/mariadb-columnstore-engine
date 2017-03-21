@@ -38,6 +38,7 @@
 using namespace std;
 
 #include <boost/shared_array.hpp>
+#include <boost/shared_ptr.hpp>
 using namespace boost;
 
 #include "bytestream.h"
@@ -73,9 +74,9 @@ StringStore::~StringStore()
 	uint64_t inUse = 0, allocated = 0;
 
 	for (i = 0; i < mem.size(); i++) {
-		MemChunk *tmp = (MemChunk *) mem.back().get();
-		inUse += tmp->currentSize;
-		allocated += tmp->capacity;
+		std::string *tmp = mem.back().get();
+		inUse += tmp->length();
+		allocated += tmp->length();
 	}
 	if (allocated > 0)
 		cout << "~SS: " << inUse << "/" << allocated << " = " << (float) inUse/(float) allocated << endl;
@@ -84,7 +85,6 @@ StringStore::~StringStore()
 
 uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
 {
-	MemChunk *lastMC = NULL;
 	uint32_t ret = 0;
 
 	empty = false;   // At least a NULL is being stored.
@@ -102,31 +102,10 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
 	if (fUseStoreStringMutex)
 		lk.lock();
 
-	if (mem.size() > 0)
-		lastMC = (MemChunk *) mem.back().get();
+    shared_ptr<std::string> newString(new std::string((char*)data, len));
+    mem.push_back(newString);
 
-	if ((lastMC == NULL) || (lastMC->capacity - lastMC->currentSize < len)) {
-		// mem usage debugging
-		//if (lastMC)
-		//cout << "Memchunk efficiency = " << lastMC->currentSize << "/" << lastMC->capacity << endl;
-		shared_array<uint8_t> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
-		mem.push_back(newOne);
-		lastMC = (MemChunk *) mem.back().get();
-		lastMC->currentSize = 0;
-		lastMC->capacity = CHUNK_SIZE;
-		memset(lastMC->data, 0, CHUNK_SIZE);
-	}
-
-	ret = ((mem.size()-1) * CHUNK_SIZE) + lastMC->currentSize;
-	memcpy(&(lastMC->data[lastMC->currentSize]), data, len);
-	/*
-	cout << "stored: '" << hex;
-	for (uint32_t i = 0; i < len ; i++) {
-		cout << (char) lastMC->data[lastMC->currentSize + i];
-	}
-	cout << "' at position " << lastMC->currentSize << " len " << len << dec << endl;
-	*/
-	lastMC->currentSize += len;
+	ret = mem.size();
 
 	return ret;
 }
@@ -134,16 +113,17 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
 void StringStore::serialize(ByteStream &bs) const
 {
 	uint32_t i;
-	MemChunk *mc;
-
+	std::string empty_str;
+    
 	bs << (uint32_t) mem.size();
 	bs << (uint8_t) empty;
 	for (i = 0; i < mem.size(); i++) {
-		mc = (MemChunk *) mem[i].get();
-		bs << (uint32_t) mc->currentSize;
+        if (mem[i].get() == NULL)
+            bs << empty_str;
+        else
+            bs << *mem[i].get();
 		//cout << "serialized " << mc->currentSize << " bytes\n";
-		bs.append(mc->data, mc->currentSize);
-	}
+    }
 }
 
 uint32_t StringStore::deserialize(ByteStream &bs)
@@ -151,27 +131,22 @@ uint32_t StringStore::deserialize(ByteStream &bs)
 	uint32_t i;
 	uint32_t count;
 	uint32_t size;
-	uint8_t *buf;
-	MemChunk *mc;
+	std::string buf;
 	uint8_t tmp8;
 	uint32_t ret = 0;
 
 	//mem.clear();
 	bs >> count;
-	mem.resize(count);
+	mem.reserve(count);
 	bs >> tmp8;
 	empty = (bool) tmp8;
 	ret += 5;
 	for (i = 0; i < count; i++) {
-		bs >> size;
 		//cout << "deserializing " << size << " bytes\n";
-		buf = bs.buf();
-		mem[i].reset(new uint8_t[size + sizeof(MemChunk)]);
-		mc = (MemChunk *) mem[i].get();
-		mc->currentSize = size;
-		mc->capacity = size;
-		memcpy(mc->data, buf, size);
-		bs.advance(size);
+        bs >> buf;
+        shared_ptr<std::string> newString(new std::string(buf));
+		mem.push_back(newString);
+		//bs.advance(size);
 		ret += (size + 4);
 	}
 	return ret;
@@ -179,7 +154,7 @@ uint32_t StringStore::deserialize(ByteStream &bs)
 
 void StringStore::clear()
 {
-	vector<shared_array<uint8_t> > emptyv;
+	vector<shared_ptr<std::string> > emptyv;
 	mem.swap(emptyv);
 	empty = true;
 }

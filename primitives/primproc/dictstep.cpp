@@ -435,7 +435,7 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
 	int64_t l_lbid=0;
 	int64_t o_lbid=0;
 	OldGetSigParams *pt;
-	StringPtr tmpStrings[LOGICAL_BLOCK_RIDS];
+	StringPtr *tmpStrings = new StringPtr[LOGICAL_BLOCK_RIDS];
 	rowgroup::Row r;
 	boost::scoped_array<OrderedToken> newRidList;
 
@@ -524,12 +524,12 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
                 // If this is a multi-block blob, get all the blocks
                 // We do string copy here, should maybe have a RowGroup
                 // function to append strings or something?
-                if ((newRidList[i].token != 0xffffffffffffffffLL) &&
+                if (((newRidList[i].token >> 46) < 0x3FFFF) &&
                     ((newRidList[i].token >> 46) > 0))
                 {
                     StringPtr multi_part[1];
                     uint16_t old_offset = primMsg->tokens[0].offset;
-                    string result((char*)tmpStrings[i].ptr, tmpStrings[i].len);
+                    string *result = new string((char*)tmpStrings[i].ptr, tmpStrings[i].len);
                     uint64_t origin_lbid = primMsg->LBID;
                     uint32_t lbid_count = newRidList[i].token >> 46;
                     primMsg->tokens[0].offset = 1; // first offset of a sig
@@ -541,11 +541,12 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
                         primMsg->tokens[0].LBID = origin_lbid + j;
                         issuePrimitive(false);
                         projectResult(multi_part);
-                        result.append((char*)multi_part[0].ptr, multi_part[0].len);
+                        result->append((char*)multi_part[0].ptr, multi_part[0].len);
                     }
                     primMsg->tokens[0].offset = old_offset;
                     tmpResultCounter = firstTmpResultCounter;
-                    r.setVarBinaryField((unsigned char*)result.c_str(), result.length(), col);
+                    r.setVarBinaryField((unsigned char*)result->c_str(), result->length(), col);
+                    delete result;
                 }
                 else
                 {
@@ -559,6 +560,7 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
 	//cout << "_projectToRG() total length = " << totalResultLength << endl;
 	idbassert(tmpResultCounter == bpp->ridCount);
 
+    delete [] tmpStrings;
 	//cout << "DS: /projectingToRG l: " << (int64_t)primMsg->LBID
 	//	<< " len: " << tmpResultCounter
 	//	<<  endl;

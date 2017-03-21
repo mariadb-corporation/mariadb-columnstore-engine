@@ -895,7 +895,7 @@ blob_type:
 	| LONGBLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
-		$$->fLength = 4294967295;
+		$$->fLength = 2100000000;
 	}
 	;
 
@@ -923,7 +923,7 @@ text_type:
 	| LONGTEXT
 	{
 		$$ = new ColumnType(DDL_BLOB);
-		$$->fLength = 4294967295;
+		$$->fLength = 2100000000;
 	}
 	;
 
