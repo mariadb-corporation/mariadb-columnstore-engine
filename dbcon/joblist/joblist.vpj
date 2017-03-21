@@ -248,6 +248,7 @@
             <F N="tupleunion.cpp"/>
             <F N="unique32generator.cpp"/>
             <F N="virtualtable.cpp"/>
+            <F N="windowfunctionstep.cpp"/>
         </Folder>
         <Folder
             Name="Header Files"
@@ -305,6 +306,7 @@
             <F N="tupleunion.h"/>
             <F N="unique32generator.h"/>
             <F N="virtualtable.h"/>
+            <F N="windowfunctionstep.h"/>
         </Folder>
         <Folder
             Name="Resource Files"

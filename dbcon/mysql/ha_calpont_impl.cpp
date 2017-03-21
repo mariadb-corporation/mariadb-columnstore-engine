@@ -3007,7 +3007,7 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 		rc = fetchNextRow(buf, ti, ci);
 	} catch (std::exception& e)
 	{
-		string emsg = string("Lost connection to ExeMgr while fetching: ") + e.what();
+		string emsg = string("Error while fetching from ExeMgr: ") + e.what();
 		setError(thd, ER_INTERNAL_ERROR, emsg);
 		CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
 		return ER_INTERNAL_ERROR;

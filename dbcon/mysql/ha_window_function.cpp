@@ -63,26 +63,26 @@ ReturnedColumn* nullOnError(gp_walk_info& gwi)
 	return NULL;
 }
 
-#if 0
-WF_FRAME frame(BOUND& bound)
+WF_FRAME frame(Window_frame_bound::Bound_precedence_type bound, Item* offset)
 {
 	switch (bound)
 	{
-	case PRECEDING:
-		return WF_PRECEDING;
-	case FOLLOWING:
-		return WF_FOLLOWING;
-	case UNBOUNDED_PRECEDING:
-		return WF_UNBOUNDED_PRECEDING;
-	case UNBOUNDED_FOLLOWING:
-		return WF_UNBOUNDED_FOLLOWING;
-	case CURRENT_ROW:
+    case Window_frame_bound::PRECEDING:
+        if (offset)
+            return WF_PRECEDING;
+        else
+            return WF_UNBOUNDED_PRECEDING;
+    case Window_frame_bound::FOLLOWING:
+        if (offset)
+            return WF_FOLLOWING;
+        else
+        	return WF_UNBOUNDED_FOLLOWING;
+    case Window_frame_bound::CURRENT:  // Offset is meaningless
 		return WF_CURRENT_ROW;
 	default:
 		return WF_UNKNOWN;
 	}
 }
-#endif
 ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi)
 {
 	if (!(gwi.thd->infinidb_vtable.cal_conn_info))
@@ -178,6 +178,96 @@ ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi
 	return rc;
 }
 
+// Since columnstore implemented Windows Functions before MariaDB, we need
+// map from the enum MariaDB uses to the string that columnstore uses to
+// identify the function type.
+string ConvertFuncName(Item_sum* item)
+{
+    switch (item->sum_func())
+    {
+    case Item_sum::COUNT_FUNC:
+        if (!item->arguments()[0]->name)
+            return "COUNT(*)";
+        return "COUNT";
+        break;
+    case Item_sum::COUNT_DISTINCT_FUNC:
+        return "COUNT_DISTINCT";
+        break;
+    case Item_sum::SUM_FUNC:
+        return "SUM";
+        break;
+    case Item_sum::SUM_DISTINCT_FUNC:
+        return "SUM_DISTINCT";
+        break;
+    case Item_sum::AVG_FUNC:
+        return "AVG";
+        break;
+    case Item_sum::AVG_DISTINCT_FUNC:
+        return "AVG_DISTINCT";
+        break;
+    case Item_sum::MIN_FUNC:
+        return "MIN";
+        break;
+    case Item_sum::MAX_FUNC:
+        return "MAX";
+        break;
+    case Item_sum::STD_FUNC:
+        return "STDDEV_POP";
+        break;
+    case Item_sum::VARIANCE_FUNC:
+        return "VAR_POP";
+        break;
+    case Item_sum::SUM_BIT_FUNC:
+        if (strcmp(item->func_name(), "bit_or(") == 0)
+            return "BIT_OR";
+        if (strcmp(item->func_name(), "bit_and(") == 0)
+            return "BIT_AND";
+        if (strcmp(item->func_name(), "bit_xor(") == 0)
+            return "BIT_XOR";
+        break;
+    case Item_sum::UDF_SUM_FUNC:
+        return "UDF_SUM_FUNC";  // Not supported
+        break;
+    case Item_sum::GROUP_CONCAT_FUNC:
+        return "GROUP_CONCAT";  // Not supported
+        break;
+    case Item_sum::ROW_NUMBER_FUNC:
+        return "ROW_NUMBER";
+        break;
+    case Item_sum::RANK_FUNC:
+        return "RANK";
+        break;
+    case Item_sum::DENSE_RANK_FUNC:
+        return "DENSE_RANK";
+        break;
+    case Item_sum::PERCENT_RANK_FUNC:
+        return "PERCENT_RANK";
+        break;
+    case Item_sum::CUME_DIST_FUNC:
+        return "CUME_DIST";
+        break;
+    case Item_sum::NTILE_FUNC:
+        return "NTILE";
+        break;
+    case Item_sum::FIRST_VALUE_FUNC:
+        return "FIRST_VALUE";
+        break;
+    case Item_sum::LAST_VALUE_FUNC:
+        return "LAST_VALUE";
+        break;
+    case Item_sum::NTH_VALUE_FUNC:
+        return "NTH_VALUE";
+        break;
+    case Item_sum::LEAD_FUNC:
+        return "LEAD";
+        break;
+    case Item_sum::LAG_FUNC:
+        return "LAG";
+        break;
+    };
+    return "";
+}
+
 ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& nonSupport)
 {
 	//@todo fix print for create view
@@ -186,37 +276,82 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 	//cout << str.c_ptr() << endl;
 	if (!(gwi.thd->infinidb_vtable.cal_conn_info))
 		gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
-//	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
 
 	gwi.hasWindowFunc = true;
-//	Item_func_window* wf = (Item_func_window*)item;
-	string funcName /*= wf->func_name()*/;
+	Item_window_func* wf = (Item_window_func*)item;
+	string funcName = ConvertFuncName(wf->window_func());
 	WindowFunctionColumn* ac = new WindowFunctionColumn(funcName);
-//	ac->distinct(wf->isDistinct());
-//	Window_context *wf_ctx = wf->window_ctx();
+	ac->distinct(wf->window_func()->has_with_distinct());
+	Window_spec *win_spec = wf->window_spec;
 	SRCP srcp;
-#if 0
+    // arguments
+    vector<SRCP> funcParms;
+    Item_sum* item_sum = (Item_sum*)wf->arguments()[0];
+    for (uint32_t i = 0; i < item_sum->argument_count(); i++)
+    {
+        srcp.reset(buildReturnedColumn((item_sum->arguments()[i]), gwi, nonSupport));
+        if (!srcp)
+            return nullOnError(gwi);
+        funcParms.push_back(srcp);
+        if (gwi.clauseType == WHERE && !gwi.rcWorkStack.empty())
+            gwi.rcWorkStack.pop();
+    }
+    // Some functions, such as LEAD/LAG don't have all parameters implemented in the 
+    // front end. Add dummies here to make the backend use defaults.
+    // Some of these will be temporary until they are implemented in the front end.
+    // Others need to stay because the back end expects them, but the front end
+    // no longer sends them.
+    // This case is kept in enum order in hopes the compiler can optimize
+    switch (wf->window_func()->sum_func())
+    {
+    case Item_sum::COUNT_FUNC:
+    case Item_sum::COUNT_DISTINCT_FUNC:
+        break;
+    case Item_sum::FIRST_VALUE_FUNC:
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // OFFSET (always one)
+        funcParms.push_back(srcp);
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // FROM_FIRST
+        funcParms.push_back(srcp);
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+        funcParms.push_back(srcp);
+        break;
+    case Item_sum::LAST_VALUE_FUNC:
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // OFFSET (always one)
+        funcParms.push_back(srcp);
+        srcp.reset(new ConstantColumn("0", (uint64_t)0, ConstantColumn::NUM)); // FROM_LAST
+        funcParms.push_back(srcp);
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+        funcParms.push_back(srcp);
+        break;
+    case Item_sum::NTH_VALUE_FUNC:
+        // When the front end supports these paramters, this needs modification
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // FROM FIRST/LAST 1 => FIRST
+        funcParms.push_back(srcp);
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+        funcParms.push_back(srcp);
+        break;
+    case Item_sum::LEAD_FUNC:
+    case Item_sum::LAG_FUNC:
+        // When the front end supports these paramters, this needs modification
+        srcp.reset(new ConstantColumn("", ConstantColumn::NULLDATA)); // Default to fill in for NULL values
+        funcParms.push_back(srcp);
+        srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+        funcParms.push_back(srcp);
+        break;
+    default:
+        break;
+    };
 
-	// arguments
-	vector<SRCP> funcParms;
-	for (uint32_t i = 0; i < wf->argument_count(); i++)
-	{
-		srcp.reset(buildReturnedColumn(wf->arguments()[i], gwi, nonSupport));
-		if (!srcp)
-			return nullOnError(gwi);
-		funcParms.push_back(srcp);
-		if (gwi.clauseType == WHERE && !gwi.rcWorkStack.empty())
-			gwi.rcWorkStack.pop();
-	}
-	ac->functionParms(funcParms);
+    ac->functionParms(funcParms);
 
 	// Partition by
-	if (wf_ctx)
+	if (win_spec)
 	{
 		vector<SRCP> partitions;
-		for (uint32_t i = 0; i < wf_ctx->partition_count; i++)
+        for (ORDER *ord= win_spec->partition_list->first; ord; ord=ord->next)
 		{
-			srcp.reset(buildReturnedColumn(wf_ctx->partitions[i], gwi, nonSupport));
+			srcp.reset(buildReturnedColumn(*ord->item, gwi, nonSupport));
 			if (!srcp)
 				return nullOnError(gwi);
 			partitions.push_back(srcp);
@@ -224,40 +359,42 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 		ac->partitions(partitions);
 
 		// Order by
-		if (wf_ctx->ordering)
+		if (win_spec->order_list)
 		{
 			WF_OrderBy orderBy;
 			// order columns
-			if (wf_ctx->ordering->orders)
+			if (win_spec->order_list)
 			{
 				vector<SRCP> orders;
-				ORDER* orderCol = reinterpret_cast<ORDER*>(wf_ctx->ordering->orders->first);
+				ORDER* orderCol = reinterpret_cast<ORDER*>(win_spec->order_list->first);
 				for (; orderCol; orderCol= orderCol->next)
 				{
 					Item* orderItem = *(orderCol->item);
 					srcp.reset(buildReturnedColumn(orderItem, gwi, nonSupport));
 					if (!srcp)
 						return nullOnError(gwi);
-					srcp->asc(orderCol->asc);
-					srcp->nullsFirst(orderCol->nulls); // nulls 1-nulls first 0-nulls last
-					orders.push_back(srcp);
+                    srcp->asc(orderCol->direction == ORDER::ORDER_ASC ? true : false);
+//					srcp->nullsFirst(orderCol->nulls); // nulls 2-default, 1-nulls first, 0-nulls last
+					srcp->nullsFirst(1); // WINDOWS TODO: implement NULLS FIRST/LAST in 10.2 front end
+                    orders.push_back(srcp);
 				}
 				orderBy.fOrders = orders;
 			}
 
 			// window frame
 			WF_Frame frm;
-			if (wf_ctx->ordering->frame)
+			if (win_spec->window_frame)
 			{
-				frm.fIsRange = wf_ctx->ordering->frame->isRange;
+				frm.fIsRange = win_spec->window_frame->units == Window_frame::UNITS_RANGE;
 				// start
-				if (wf_ctx->ordering->frame->start)
+				if (win_spec->window_frame->top_bound)
 				{
-					frm.fStart.fFrame = frame(wf_ctx->ordering->frame->start->bound);
+					frm.fStart.fFrame = frame(win_spec->window_frame->top_bound->precedence_type, 
+                                              win_spec->window_frame->top_bound->offset);  // offset NULL means UNBOUNDED
 
-					if (wf_ctx->ordering->frame->start->item)
+					if (win_spec->window_frame->top_bound->offset)
 					{
-						frm.fStart.fVal.reset(buildReturnedColumn(wf_ctx->ordering->frame->start->item, gwi, nonSupport));
+						frm.fStart.fVal.reset(buildReturnedColumn(win_spec->window_frame->top_bound->offset, gwi, nonSupport));
 						if (!frm.fStart.fVal)
 							return nullOnError(gwi);
 
@@ -294,12 +431,13 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 				}
 
 				// end
-				if (wf_ctx->ordering->frame->end)
+				if (win_spec->window_frame->bottom_bound)
 				{
-					frm.fEnd.fFrame = frame(wf_ctx->ordering->frame->end->bound);
-					if (wf_ctx->ordering->frame->end->item)
+					frm.fEnd.fFrame = frame(win_spec->window_frame->bottom_bound->precedence_type,
+                                            win_spec->window_frame->bottom_bound->offset);
+					if (win_spec->window_frame->bottom_bound->offset)
 					{
-						frm.fEnd.fVal.reset(buildReturnedColumn(wf_ctx->ordering->frame->end->item, gwi, nonSupport));
+						frm.fEnd.fVal.reset(buildReturnedColumn(win_spec->window_frame->bottom_bound->offset, gwi, nonSupport));
 						if (!frm.fEnd.fVal)
 							return nullOnError(gwi);
 
@@ -406,8 +544,57 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 			}
 			else
 			{
-				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-				frm.fEnd.fFrame = WF_CURRENT_ROW;
+				// Certain function types have different default boundaries
+                // This case is kept in enum order in hopes the compiler can optimize
+                switch (wf->window_func()->sum_func())
+                {
+                case Item_sum::COUNT_FUNC:
+                case Item_sum::COUNT_DISTINCT_FUNC:
+                case Item_sum::SUM_FUNC:
+                case Item_sum::SUM_DISTINCT_FUNC:
+                case Item_sum::AVG_FUNC:
+                case Item_sum::AVG_DISTINCT_FUNC:
+                case Item_sum::MIN_FUNC:
+                case Item_sum::MAX_FUNC:
+                case Item_sum::STD_FUNC:
+                case Item_sum::VARIANCE_FUNC:
+                case Item_sum::SUM_BIT_FUNC:
+                case Item_sum::UDF_SUM_FUNC:
+                case Item_sum::GROUP_CONCAT_FUNC:
+                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+                    frm.fEnd.fFrame = WF_CURRENT_ROW;
+                    break;
+                case Item_sum::ROW_NUMBER_FUNC:
+                case Item_sum::RANK_FUNC:
+                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+                    frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
+                    break;
+                case Item_sum::DENSE_RANK_FUNC:
+                case Item_sum::PERCENT_RANK_FUNC:
+                case Item_sum::CUME_DIST_FUNC:
+                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+                    frm.fEnd.fFrame = WF_CURRENT_ROW;
+                    break;
+                case Item_sum::NTILE_FUNC:
+                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+                    frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
+                    break;
+                case Item_sum::FIRST_VALUE_FUNC:
+                case Item_sum::LAST_VALUE_FUNC:
+                case Item_sum::NTH_VALUE_FUNC:
+                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+                    frm.fEnd.fFrame = WF_CURRENT_ROW;
+                    break;
+                case Item_sum::LEAD_FUNC:
+                case Item_sum::LAG_FUNC:
+                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+                    frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
+                    break;
+                default:
+                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+                    frm.fEnd.fFrame = WF_CURRENT_ROW;
+                    break;
+                };
 			}
 
 			orderBy.fFrame = frm;
@@ -423,8 +610,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 		return NULL;
 	}
 
-	ac->resultType(colType_MysqlToIDB(wf));
-
+	ac->resultType(colType_MysqlToIDB(wf->arguments()[0]));
 	// bug5736. Make the result type double for some window functions when
 	// infinidb_double_for_decimal_math is set.
 	ac->adjustResultType();
@@ -435,7 +621,6 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 	
 	// put ac on windowFuncList
 	gwi.windowFuncList.push_back(ac);
-#endif
 	return ac;
 	
 }

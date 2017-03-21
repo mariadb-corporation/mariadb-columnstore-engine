@@ -21,7 +21,7 @@
  */
 
 /** @file */
-//#define DEBUG_WALK_COND
+#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
 #include <iostream>
@@ -38,7 +38,6 @@
 #include <cerrno>
 #include <cstring>
 #include <time.h>
-//#define NDEBUG
 #include <cassert>
 #include <vector>
 #include <map>
@@ -699,13 +698,11 @@ void debug_walk(const Item *item, void *arg)
 			cout << ": <NULL>" << endl;
 		break;
 	}
-#if 0
 	case Item::WINDOW_FUNC_ITEM:
 	{
 		cout << "Window Function Item" << endl;
 		break;
 	}
-#endif
 	default:
 	{
 		cout << "UNKNOWN_ITEM type " << item->type() << endl;
@@ -2464,11 +2461,11 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			rc = new ConstantColumn(valStr);
 			break;
 		}
-#if 0
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			return buildWindowFunctionColumn(item, gwi, nonSupport);
 		}
+#if INTERVAL_ITEM
 		case Item::INTERVAL_ITEM:
 		{
 			Item_interval* interval = (Item_interval*)item;
@@ -2481,7 +2478,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			rc->resultType(srcp->resultType());
 			break;
 		}
-#endif
+#endif        
 		case Item::SUBSELECT_ITEM:
 		{
 			gwi.hasSubSelect = true;
@@ -4445,17 +4442,15 @@ void gp_walk(const Item *item, void *arg)
 			gwip->rcWorkStack.push(buildReturnedColumn(itp, *gwip, gwip->fatalParseError));
 			break;
 		}
-#if 0
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			gwip->hasWindowFunc = true;
-			Item_func_window* ifa = (Item_func_window*)item;
+			Item_window_func* ifa = (Item_window_func*)item;
 			ReturnedColumn* af = buildWindowFunctionColumn(ifa, *gwip, gwip->fatalParseError);
 			if (af)
 				gwip->rcWorkStack.push(af);
 			break;
 		}
-#endif
 		case Item::COPY_STR_ITEM:
 			printf("********** received COPY_STR_ITEM *********\n");
 			break;
@@ -4639,11 +4634,9 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 			setError(item->thd(), ER_CHECK_NOT_IMPLEMENTED, parseErrorText);
 			break;
 		}
-#if 0
 		case Item::WINDOW_FUNC_ITEM:
 			parseInfo |= AF_BIT;
 			break; 
-#endif
 		default:
 			break;
 	}
@@ -5533,7 +5526,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
 				return ER_CHECK_NOT_IMPLEMENTED;
 			}
-#if 0
 			case Item::WINDOW_FUNC_ITEM:
 			{
 				SRCP srcp(buildWindowFunctionColumn(item, gwi, gwi.fatalParseError));
@@ -5547,7 +5539,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				gwi.returnedCols.push_back(srcp);
 				break;
 			}
-#endif
 			default:
 			{
 				break;
@@ -5700,7 +5691,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 		// check if window functions are in order by. InfiniDB process order by list if
 		// window functions are involved, either in order by or projection.
-#if 0
 		bool hasWindowFunc = gwi.hasWindowFunc;
 		gwi.hasWindowFunc = false;
 		for (; groupcol; groupcol= groupcol->next)
@@ -5716,7 +5706,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 		gwi.hasWindowFunc = hasWindowFunc;
-#endif
 		groupcol = reinterpret_cast<ORDER*>(select_lex.group_list.first);
 
 		for (; groupcol; groupcol= groupcol->next)
@@ -5962,13 +5951,11 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 		// check if window functions are in order by. InfiniDB process order by list if
 		// window functions are involved, either in order by or projection.
-#if 0
 		for (; ordercol; ordercol= ordercol->next)
 		{
 			if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
 				gwi.hasWindowFunc = true;
 		}
-#endif
 		// re-visit the first of ordercol list
 		ordercol = reinterpret_cast<ORDER*>(order_list.first);
 
