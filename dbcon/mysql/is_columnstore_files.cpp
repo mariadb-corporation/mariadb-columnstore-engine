@@ -109,7 +109,6 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     messageqcpp::MessageQueueClient *msgQueueClient;
     oam::Oam oam_instance;
     int pmId = 0;
-    std::ostringstream oss;
 
     if (!emp || !emp->isDBRMReady())
     {
@@ -155,6 +154,7 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
             if (!msgQueueClient)
             {
                 oam_instance.getDbrootPmConfig(iter->dbRoot, pmId);
+                std::ostringstream oss;
                 oss << "pm" << pmId << "_WriteEngineServer";
                 try
                 {
