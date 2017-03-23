@@ -235,8 +235,8 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, R
 {
 	CalpontSystemCatalog::ColDataType colType = row.getColType(i);
 
-	if (((colType == CalpontSystemCatalog::CHAR || colType == CalpontSystemCatalog::VARCHAR) &&
-		row.getColumnWidth(i) > 8))
+	if ((colType == CalpontSystemCatalog::CHAR || colType == CalpontSystemCatalog::VARCHAR) &&
+		row.getColumnWidth(i) > 8)
 	{
 		if (value != NULL)
 			row.setStringField(value, i);
