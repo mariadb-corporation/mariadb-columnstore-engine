@@ -265,7 +265,9 @@ void FuncExp::evaluate(rowgroup::Row& row, std::vector<execplan::SRCP>& expressi
 				break;
 			}
 			case CalpontSystemCatalog::CHAR:
-			case CalpontSystemCatalog::VARCHAR:			
+			case CalpontSystemCatalog::VARCHAR:
+            // TODO: might not be right thing for BLOB
+            case CalpontSystemCatalog::BLOB:
 			{			
 				const std::string& val = expression[i]->getStrVal(row, isNull);
 				if (isNull)

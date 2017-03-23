@@ -904,7 +904,9 @@ const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, 
  */
 inline bool isCharType(const execplan::CalpontSystemCatalog::ColDataType type)
 {
-	return (execplan::CalpontSystemCatalog::VARCHAR == type || execplan::CalpontSystemCatalog::CHAR == type);
+	return (execplan::CalpontSystemCatalog::VARCHAR == type ||
+			execplan::CalpontSystemCatalog::CHAR == type ||
+            execplan::CalpontSystemCatalog::BLOB == type);
 }
 
 /** convenience function to determine if column type is an

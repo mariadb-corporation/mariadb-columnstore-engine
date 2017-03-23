@@ -583,6 +583,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
 			break;
 		}
 		case CalpontSystemCatalog::VARBINARY:
+        case CalpontSystemCatalog::BLOB:
 		{
 			fResult.strVal = row.getVarBinaryStringField(fInputIndex);
 			break;

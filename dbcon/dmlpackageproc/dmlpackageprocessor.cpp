@@ -131,7 +131,7 @@ boost::any DMLPackageProcessor::tokenizeData( execplan::CalpontSystemCatalog::SC
 			dictStruct.dctnryOid = colType.ddn.dictOID;
 			//cout << "Dictionary OIDs: " << colType.ddn.treeOID << " " << colType.ddn.listOID << endl;
 			WriteEngine::DctnryTuple  dictTuple;
-			memcpy(dictTuple.sigValue, data.c_str(), data.length());
+			dictTuple.sigValue = data.c_str();
 			dictTuple.sigSize = data.length();
 			int error = NO_ERROR;
 			if ( NO_ERROR != (error = fWriteEngine.tokenize( txnID, dictStruct, dictTuple)) )

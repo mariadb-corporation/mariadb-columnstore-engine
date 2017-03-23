@@ -110,12 +110,14 @@ char* copy_string(const char *str);
 
 %}
 
-%token ACTION ADD ALTER AUTO_INCREMENT BIGINT BIT IDB_BLOB CASCADE IDB_CHAR CHARACTER CHECK CLOB COLUMN
+%token ACTION ADD ALTER AUTO_INCREMENT BIGINT BIT BLOB IDB_BLOB CASCADE IDB_CHAR
+CHARACTER CHECK CLOB COLUMN
 COLUMNS COMMENT CONSTRAINT CONSTRAINTS CREATE CURRENT_USER DATETIME DEC
 DECIMAL DEFAULT DEFERRABLE DEFERRED IDB_DELETE DROP ENGINE
-FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY MATCH MAX_ROWS
+FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY LONGBLOB LONGTEXT
+MATCH MAX_ROWS MEDIUMBLOB MEDIUMTEXT
 MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
-REFERENCES RENAME RESTRICT SET SMALLINT TABLE TIME 
+REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TIME TINYBLOB TINYTEXT
 TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
 VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 
@@ -136,6 +138,8 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <ata>                  ata_rename_table
 %type <columnType>           character_string_type
 %type <columnType>           binary_string_type
+%type <columnType>           blob_type
+%type <columnType>           text_type
 %type <str>                  check_constraint_def
 %type <columnConstraintDef>  column_constraint
 %type <columnConstraintDef>  column_constraint_def
@@ -704,6 +708,8 @@ data_type:
 	| binary_string_type
 	| numeric_type
 	| datetime_type
+	| blob_type
+	| text_type
 	| IDB_BLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
@@ -862,6 +868,62 @@ binary_string_type:
 	{
 		$$ = new ColumnType(DDL_VARBINARY);
 		$$->fLength = atoi($3);
+	}
+	;
+
+blob_type:
+	BLOB '(' ICONST ')'
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = atol($3);
+	}
+	| BLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 65535;
+	}
+	| TINYBLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 255;
+	}
+	| MEDIUMBLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 16777215;
+	}
+	| LONGBLOB
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 2100000000;
+	}
+	;
+
+text_type:
+	TEXT '(' ICONST ')'
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = atol($3);
+	}
+	| TEXT
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 65535;
+	}
+	| TINYTEXT
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 255;
+	}
+	| MEDIUMTEXT
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 16777215;
+	}
+	| LONGTEXT
+	{
+		$$ = new ColumnType(DDL_BLOB);
+		$$->fLength = 2100000000;
 	}
 	;
 

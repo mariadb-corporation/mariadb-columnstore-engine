@@ -1008,7 +1008,7 @@ struct ColumnType
     int fType;
 
     /** @brief Length of datatype in bytes */
-    int fLength;
+    long fLength;
 
     /** @brief SQL precision. This is the number of digits in the representation. */
     int fPrecision;

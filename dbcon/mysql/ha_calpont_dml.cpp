@@ -1585,6 +1585,49 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 					buf += ci.columnTypes[colpos].colWidth;					
 				break;
 			}
+            case CalpontSystemCatalog::BLOB:
+			{
+                int dataLength = 0;
+                uintptr_t *dataptr;
+                uchar *ucharptr;
+            
+                if (ci.columnTypes[colpos].colWidth < 256)
+                {
+                    dataLength = *(int8_t*) buf;
+                    buf++;
+                }
+                else if (ci.columnTypes[colpos].colWidth < 65535)
+                {
+                    dataLength = *(int16_t*) buf;
+                    buf = buf + 2 ;
+                }
+                else if (ci.columnTypes[colpos].colWidth < 16777216)
+                {
+                    dataLength = *(int32_t*) buf;
+                    buf = buf + 3 ;
+                }
+                else
+                {
+                    dataLength = *(int32_t*) buf;
+                    buf = buf + 4 ;
+                }
+                
+                // buf contains pointer to blob, for example:
+                // (gdb) p (char*)*(uintptr_t*)buf
+                // $43 = 0x7f68500c58f8 "hello world"
+
+                dataptr = (uintptr_t*)buf;
+                ucharptr = (uchar*)*dataptr;
+                buf+= sizeof(uintptr_t);
+                for (int32_t i=0; i<dataLength; i++)
+                {
+                    fprintf(ci.filePtr, "%02x", *(uint8_t*)ucharptr); 
+                    ucharptr++;
+                }
+                fprintf(ci.filePtr, "%c", ci.delimiter);
+                break;
+                        
+            }
 			default:	// treat as int64
 			{
 				break;

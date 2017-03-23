@@ -282,7 +282,7 @@ namespace ddlpackageprocessor
 	dictStruct.treeOid = colType.ddn.treeOID;
 	dictStruct.listOid = colType.ddn.listOID;
 	dictStruct.dctnryOid = colType.ddn.dictOID;
-	memcpy(dictTuple.sigValue, data.c_str(), data.length());
+	dictTuple.sigValue = data.c_str();
 	dictTuple.sigSize = data.length();
 	int error = NO_ERROR;
 	if ( NO_ERROR != (error = fWriteEngine->tokenize( fTxnID, dictStruct, dictTuple)) )

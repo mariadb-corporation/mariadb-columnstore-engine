@@ -450,7 +450,8 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string &err
 			bool hasDict = false;
 			if ( (dataType == CalpontSystemCatalog::CHAR && colDefPtr->fType->fLength > 8) ||
 				 (dataType == CalpontSystemCatalog::VARCHAR && colDefPtr->fType->fLength > 7) ||
-				 (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength > 7) )
+				 (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength > 7) ||
+                 (dataType == CalpontSystemCatalog::BLOB && colDefPtr->fType->fLength > 7) )
 			{
 				hasDict = true;
 				dictOID.compressionType = colDefPtr->fType->fCompressiontype;
@@ -459,17 +460,20 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string &err
 				dictcol++;
 
 				//@Bug 2534. Take away the limit of 255 and set the limit to 8000.
-				if (colDefPtr->fType->fLength > 8000)
+				if ((colDefPtr->fType->fLength > 8000) &&
+                    (dataType != CalpontSystemCatalog::BLOB))
 				{
 					ostringstream os;
 					os << "char, varchar and varbinary length may not exceed 8000";
 					throw std::runtime_error(os.str());
 				}
 			}
-			else if (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength <= 7)
+			else if ((dataType == CalpontSystemCatalog::VARBINARY
+                    || dataType == CalpontSystemCatalog::BLOB)
+                    && colDefPtr->fType->fLength <= 7)
 			{
 				ostringstream os;
-				os << "varbinary length may not be less than 8";
+				os << "varbinary and blob length may not be less than 8";
 				throw std::runtime_error(os.str());
 			}
 
@@ -514,7 +518,8 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string &err
 					//@Bug 2089 Disallow zero length char and varch column to be created
 					if (dataType == CalpontSystemCatalog::CHAR ||
 						dataType == CalpontSystemCatalog::VARCHAR ||
-						dataType == CalpontSystemCatalog::VARBINARY)
+						dataType == CalpontSystemCatalog::VARBINARY ||
+                        dataType == CalpontSystemCatalog::BLOB)
 					{
 						if (colDefPtr->fType->fLength <= 0)
 						{
@@ -829,17 +834,20 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string & err)
 			dictOID.dictOID = dictoid;
 
 			//@Bug 2534. Take away the limit of 255 and set the limit to 8000.
-			if (colDefPtr->fType->fLength > 8000)
+			if ((colDefPtr->fType->fLength > 8000) &&
+                (dataType != CalpontSystemCatalog::BLOB))
 			{
 				ostringstream os;
 				os << "char, varchar and varbinary length may not exceed 8000";
 				throw std::runtime_error(os.str());
 			}
 		}
-		else if (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength <= 7)
+		else if ((dataType == CalpontSystemCatalog::VARBINARY
+                || dataType == CalpontSystemCatalog::BLOB)
+                && colDefPtr->fType->fLength <= 7)
 		{
 			ostringstream os;
-			os << "varbinary length may not be less than 8";
+			os << "varbinary and blob length may not be less than 8";
 			throw std::runtime_error(os.str());
 		}
 
@@ -885,7 +893,8 @@ uint8_t WE_DDLCommandProc::writeSyscolumn(ByteStream& bs, std::string & err)
 					//@Bug 2089 Disallow zero length char and varch column to be created
 					if (dataType == CalpontSystemCatalog::CHAR ||
 						dataType == CalpontSystemCatalog::VARCHAR ||
-						dataType == CalpontSystemCatalog::VARBINARY)
+						dataType == CalpontSystemCatalog::VARBINARY ||
+                        dataType == CalpontSystemCatalog::BLOB)
 					{
 						if (colDefPtr->fType->fLength <= 0)
 						{
@@ -2242,6 +2251,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string 
 				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::VARBINARY
 				&& column.colType.colWidth > 7)
+			|| (column.colType.colDataType == CalpontSystemCatalog::BLOB
+				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::DECIMAL
 				&& column.colType.precision > 18)
 			|| (column.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -2293,7 +2304,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnTablename(ByteStream& bs, std::string 
 
 	//It's the same string for each column, so we just need one dictionary struct
 	memset(&dictTuple, 0, sizeof(dictTuple));
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	dictTuple.isNull = false;
 	dctColList = dictTuple;
@@ -2628,7 +2639,7 @@ uint8_t WE_DDLCommandProc::updateSystableTablename(ByteStream& bs, std::string &
 	dictStruct.columnOid = column.colType.columnOID;
 	WriteEngine::DctnryTuple  dictTuple;
 	dictTuple.isNull = false;
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 
 	if (idbdatafile::IDBPolicy::useHdfs())
@@ -2844,7 +2855,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 	dictStruct.columnOid = column.colType.columnOID;
 	WriteEngine::DctnryTuple  dictTuple;
 	dictTuple.isNull = false;
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	//int error = NO_ERROR;
 	//if (NO_ERROR != (error = fWEWrapper.tokenize(txnID, dictStruct, dictTuple)))
@@ -2998,6 +3009,8 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::VARBINARY
 				&& column.colType.colWidth > 7)
+			|| (column.colType.colDataType == CalpontSystemCatalog::BLOB
+				&& column.colType.colWidth > 7)
 			|| (column.colType.colDataType == CalpontSystemCatalog::DECIMAL
 				&& column.colType.precision > 18)
 			|| (column.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -3015,7 +3028,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 	//Tokenize the data value
 	dictStruct.dctnryOid = column.colType.ddn.dictOID;
 	dictStruct.columnOid = column.colType.columnOID;
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	dictTuple.isNull = false;
 	/*
@@ -3066,7 +3079,7 @@ uint8_t WE_DDLCommandProc::updateSystablesTablename(ByteStream& bs, std::string 
 
 	//It's the same string for each column, so we just need one dictionary struct
 	memset(&dictTuple, 0, sizeof(dictTuple));
-	memcpy(dictTuple.sigValue, newTablename.c_str(), newTablename.length());
+	dictTuple.sigValue = (unsigned char*)newTablename.c_str();
 	dictTuple.sigSize = newTablename.length();
 	dictTuple.isNull = false;
 	dctColList = dictTuple;
@@ -3878,6 +3891,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 			&& column.colType.colWidth > 7)
 		|| (column.colType.colDataType == CalpontSystemCatalog::VARBINARY
 			&& column.colType.colWidth > 7)
+		|| (column.colType.colDataType == CalpontSystemCatalog::BLOB
+			&& column.colType.colWidth > 7)
 		|| (column.colType.colDataType == CalpontSystemCatalog::DECIMAL
 			&& column.colType.precision > 18)
 		|| (column.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -3906,7 +3921,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 		else
 		{
 			WriteEngine::DctnryTuple  dictTuple;
-			memcpy(dictTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+			dictTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 			dictTuple.sigSize = defaultvalue.length();
 			dictTuple.isNull = false;
 			int error = NO_ERROR;
@@ -3952,7 +3967,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnSetDefault(messageqcpp::ByteStream& bs
 	WriteEngine::DctnryTuple  dctnryTuple;
 	if(defaultvalue.length() > 0)
 	{
-		memcpy(dctnryTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+		dctnryTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 		dctnryTuple.sigSize = defaultvalue.length();
 		dctnryTuple.isNull = false;
 	}
@@ -4146,6 +4161,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 			&& column1.colType.colWidth > 7)
 		|| (column1.colType.colDataType == CalpontSystemCatalog::VARBINARY
 			&& column1.colType.colWidth > 7)
+		|| (column1.colType.colDataType == CalpontSystemCatalog::BLOB
+			&& column1.colType.colWidth > 7)
 		|| (column1.colType.colDataType == CalpontSystemCatalog::DECIMAL
 			&& column1.colType.precision > 18)
 		|| (column1.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -4170,7 +4187,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 		dictStruct.dctnryOid = column1.colType.ddn.dictOID;
 		dictStruct.columnOid = column1.colType.columnOID;
 		WriteEngine::DctnryTuple  dictTuple;
-		memcpy(dictTuple.sigValue, colNewName.c_str(), colNewName.length());
+		dictTuple.sigValue = (unsigned char*)colNewName.c_str();
 		dictTuple.sigSize = colNewName.length();
 		dictTuple.isNull = false;
 		int error = NO_ERROR;
@@ -4221,7 +4238,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 	colValuesList.push_back(aColList1);
 	WriteEngine::DctnryTuple dctnryTuple;
 	boost::to_lower(colNewName);
-	memcpy(dctnryTuple.sigValue, colNewName.c_str(), colNewName.length());
+	dctnryTuple.sigValue = (unsigned char*)colNewName.c_str();
 	dctnryTuple.sigSize = colNewName.length();
 	dctnryTuple.isNull = false;
 	dctColList = dctnryTuple;
@@ -4336,6 +4353,8 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 			&& column5.colType.colWidth > 7)
 		|| (column5.colType.colDataType == CalpontSystemCatalog::VARBINARY
 			&& column5.colType.colWidth > 7)
+		|| (column5.colType.colDataType == CalpontSystemCatalog::BLOB
+			&& column5.colType.colWidth > 7)
 		|| (column5.colType.colDataType == CalpontSystemCatalog::DECIMAL
 			&& column5.colType.precision > 18)
 		 || (column5.colType.colDataType == CalpontSystemCatalog::UDECIMAL
@@ -4369,7 +4388,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 		else
 		{
 			WriteEngine::DctnryTuple  dictTuple;
-			memcpy(dictTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+			dictTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 			dictTuple.sigSize = defaultvalue.length();
 			dictTuple.isNull = false;
 			int error = NO_ERROR;
@@ -4418,7 +4437,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnRenameColumn(messageqcpp::ByteStream& 
 
 	if(defaultvalue.length() > 0)
 	{
-		memcpy(dctnryTuple.sigValue, defaultvalue.c_str(), defaultvalue.length());
+		dctnryTuple.sigValue = (unsigned char*)defaultvalue.c_str();
 		dctnryTuple.sigSize = defaultvalue.length();
 		dctnryTuple.isNull = false;
 	}

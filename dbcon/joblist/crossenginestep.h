@@ -60,13 +60,20 @@ public:
 
 	int getFieldCount()      { return mysql_num_fields(fRes); }
 	int getRowCount()        { return mysql_num_rows(fRes); }
-	char** nextRow()   { return mysql_fetch_row(fRes); }
+	char** nextRow()
+	{
+		char** row = mysql_fetch_row(fRes);
+		fieldLengths = mysql_fetch_lengths(fRes);
+		return row;
+	}
+	long getFieldLength(int field) { return fieldLengths[field]; }
 	const std::string& getError() { return fErrStr; }
 
 private:
 	MYSQL*        fCon;
 	MYSQL_RES*    fRes;
     std::string             fErrStr;
+	unsigned long *fieldLengths;
 };
 
 /** @brief class CrossEngineStep
@@ -150,7 +157,7 @@ protected:
 	virtual void makeMappings();
 	virtual void addFilterStr(const std::vector<const execplan::Filter*>&, const std::string&);
 	virtual std::string makeQuery();
-	virtual void setField(int, const char*, rowgroup::Row&);
+	virtual void setField(int, const char*, unsigned long, rowgroup::Row&);
 	inline void addRow(rowgroup::RGData &);
 	//inline  void addRow(boost::shared_array<uint8_t>&);
 	virtual int64_t convertValueNum(

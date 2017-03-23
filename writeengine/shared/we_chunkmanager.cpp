@@ -1587,6 +1587,9 @@ int ChunkManager::calculateHeaderSize(int width)
         int rowsPerExtent = BRMWrapper::getInstance()->getExtentRows();
         int rowsPerFile = rowsPerExtent * extentsPerFile;
         int stringsPerBlock = 8180 / (width + 2);  // 8180 = 8192 - 12
+        // BLOB is 1 string per block
+        if (stringsPerBlock == 0)
+            stringsPerBlock = 1;
         int blocksNeeded = rowsPerFile / stringsPerBlock;
         int blocksPerChunk = UNCOMPRESSED_CHUNK_SIZE / BYTE_PER_BLOCK;
         lldiv_t chunks = lldiv(blocksNeeded, blocksPerChunk);

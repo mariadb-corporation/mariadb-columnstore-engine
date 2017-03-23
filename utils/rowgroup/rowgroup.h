@@ -119,14 +119,8 @@ private:
 
 	// This is an overlay b/c the underlying data needs to be any size,
 	// and alloc'd in one chunk.  data can't be a sepatate dynamic chunk.
-	struct MemChunk
-	{
-		uint32_t currentSize;
-		uint32_t capacity;
-		uint8_t data[];
-	};
-
-	std::vector<boost::shared_array<uint8_t> > mem;
+	
+	std::vector<boost::shared_ptr<std::string> > mem;
 	bool empty;
 	bool fUseStoreStringMutex; //@bug6065, make StringStore::storeString() thread safe
 	boost::mutex fMutex;
@@ -797,7 +791,8 @@ inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
 
 inline void Row::copyField(Row &out, uint32_t destIndex, uint32_t srcIndex) const
 {
-	if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY))
+	if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
+                 types[srcIndex] == execplan::CalpontSystemCatalog::BLOB))
 		out.setVarBinaryField(getVarBinaryStringField(srcIndex), destIndex);
 	else if (UNLIKELY(isLongString(srcIndex)))
 		out.setStringField(getStringPointer(srcIndex), getStringLength(srcIndex), destIndex);
@@ -1268,7 +1263,8 @@ inline bool RowGroup::isLongString(uint32_t colIndex) const
 {
 	return ((getColumnWidth(colIndex) > 7 && types[colIndex] == execplan::CalpontSystemCatalog::VARCHAR) ||
 		(getColumnWidth(colIndex) > 8 && types[colIndex] == execplan::CalpontSystemCatalog::CHAR) ||
-		types[colIndex] == execplan::CalpontSystemCatalog::VARBINARY);
+		types[colIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
+        types[colIndex] == execplan::CalpontSystemCatalog::BLOB);
 }
 
 inline bool RowGroup::usesStringTable() const
@@ -1421,7 +1417,7 @@ inline void copyRow(const Row &in, Row *out, uint32_t colCount)
 	}
 
 	for (uint32_t i = 0; i < colCount; i++) {
-		if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY))
+		if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY || in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB))
 			out->setVarBinaryField(in.getVarBinaryStringField(i), i);
 		else if (UNLIKELY(in.isLongString(i)))
 			//out->setStringField(in.getStringField(i), i);
@@ -1445,17 +1441,13 @@ inline std::string StringStore::getString(uint32_t off, uint32_t len) const
 	if (off == std::numeric_limits<uint32_t>::max())
 		return joblist::CPNULLSTRMARK;
 
-	MemChunk *mc;
-	uint32_t chunk = off / CHUNK_SIZE;
-	uint32_t offset = off % CHUNK_SIZE;
-	// this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
-	// what gets returned, it just can't go out of bounds.
-	if (mem.size() <= chunk)
+	if ((mem.size() < off) || off == 0)
 		return joblist::CPNULLSTRMARK;
-	mc = (MemChunk *) mem[chunk].get();
-	if ((offset + len) > mc->currentSize)
-		return joblist::CPNULLSTRMARK;
-	return std::string((char *) &(mc->data[offset]), len);
+    
+    if (mem[off-1].get() == NULL)    
+        return joblist::CPNULLSTRMARK;
+
+	return *mem[off-1].get();
 }
 
 inline const uint8_t * StringStore::getPointer(uint32_t off) const
@@ -1463,17 +1455,15 @@ inline const uint8_t * StringStore::getPointer(uint32_t off) const
 	if (off == std::numeric_limits<uint32_t>::max())
 		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
 
-	uint32_t chunk = off / CHUNK_SIZE;
-	uint32_t offset = off % CHUNK_SIZE;
-	MemChunk *mc;
 	// this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
 	// what gets returned, it just can't go out of bounds.
-	if (UNLIKELY(mem.size() <= chunk))
+	if (UNLIKELY(mem.size() < off))
 		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
-	mc = (MemChunk *) mem[chunk].get();
-	if (offset > mc->currentSize)
-		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
-	return &(mc->data[offset]);
+        
+    if (off == 0 || (mem[off-1].get() == NULL))
+        return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
+
+	return (uint8_t*)mem[off-1].get()->c_str();
 }
 
 inline bool StringStore::isNullValue(uint32_t off, uint32_t len) const
@@ -1484,17 +1474,15 @@ inline bool StringStore::isNullValue(uint32_t off, uint32_t len) const
 	if (len < 8)
 		return false;
 
-	uint32_t chunk = off / CHUNK_SIZE;
-	uint32_t offset = off % CHUNK_SIZE;
-	MemChunk *mc;
-	if (mem.size() <=  chunk)
+	if ((mem.size() < off) || off == 0)
 		return true;
-	mc = (MemChunk *) mem[chunk].get();
-	if ((offset + len) > mc->currentSize)
-		return true;
-	if (mc->data[offset] == 0)    // "" = NULL string for some reason...
-		return true;
-	return (*((uint64_t *) &mc->data[offset]) == *((uint64_t *) joblist::CPNULLSTRMARK.c_str()));
+
+	if (mem[off-1].get() == NULL)
+        return true;
+
+	if (mem[off-1].get()->empty()) // Empty string is NULL
+        return true;
+	return (mem[off-1].get()->compare(joblist::CPNULLSTRMARK) == 0);
 }
 
 inline bool StringStore::equals(const std::string &str, uint32_t off, uint32_t len) const
@@ -1502,15 +1490,13 @@ inline bool StringStore::equals(const std::string &str, uint32_t off, uint32_t l
 	if (off == std::numeric_limits<uint32_t>::max() || len == 0)
 		return str == joblist::CPNULLSTRMARK;
 
-	uint32_t chunk = off / CHUNK_SIZE;
-	uint32_t offset = off % CHUNK_SIZE;
-	if (mem.size() <=  chunk)
-		return false;
-	MemChunk *mc = (MemChunk *) mem[chunk].get();
-	if ((offset + len) > mc->currentSize)
+	if ((mem.size() < off) || off == 0)
 		return false;
 
-	return (strncmp(str.c_str(), (const char *) &mc->data[offset], len) == 0);
+	if (mem[off-1].get() == NULL)
+		return false;
+
+	return (mem[off-1].get()->compare(str) == 0);
 }
 
 inline bool StringStore::isEmpty() const
@@ -1522,11 +1508,9 @@ inline uint64_t StringStore::getSize() const
 {
 	uint32_t i;
 	uint64_t ret = 0;
-	MemChunk *mc;
-
+	
 	for (i = 0; i < mem.size(); i++) {
-		mc = (MemChunk *) mem[i].get();
-		ret += mc->capacity;
+		ret+= mem[i].get()->length();
 	}
 	return ret;
 }

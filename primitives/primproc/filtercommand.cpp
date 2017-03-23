@@ -94,7 +94,8 @@ Command* FilterCommand::makeFilterCommand(ByteStream& bs, vector<SCommand>& cmds
 		// char[] is stored as int, but cannot directly compare if length is different
 		// due to endian issue
 		if (cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::CHAR ||
-			cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::VARCHAR)
+			cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::VARCHAR ||
+            cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::BLOB)
 		{
 			StrFilterCmd* sc = new StrFilterCmd();
 			sc->setCompareFunc(CC);

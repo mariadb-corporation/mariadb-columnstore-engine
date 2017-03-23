@@ -176,6 +176,7 @@ const string SimpleFilter::data() const
 	if (dynamic_cast<ConstantColumn*>(fRhs) &&
 		  (fRhs->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::CHAR ||
+           fRhs->resultType().colDataType == CalpontSystemCatalog::BLOB ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
@@ -185,6 +186,7 @@ const string SimpleFilter::data() const
 	if (dynamic_cast<ConstantColumn*>(fLhs) &&
 		  (fLhs->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::CHAR ||
+           fLhs->resultType().colDataType == CalpontSystemCatalog::BLOB ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))

@@ -45,12 +45,12 @@ namespace WriteEngine
     struct Token {
         uint64_t op       :  10;   // ordinal position within a block
         uint64_t fbo      :  36;   // file block number
-        uint64_t spare    :  18;   // spare
+        uint64_t bc       :  18;   // block count
         Token()                   // constructor, set to null value
         {
             op  = 0x3FE;
             fbo = 0xFFFFFFFFFLL;
-            spare = 0x3FFFF;
+            bc = 0x3FFFF;
         }
    };
 

@@ -231,7 +231,7 @@ namespace WriteEngine
     // Dictionary error
     //--------------------------------------------------------------------------
     const int   ERR_DICT_NO_SPACE_INSERT= ERR_DCTNRYBASE+ 1; // ins no space
-    const int   ERR_DICT_SIZE_GT_8000   = ERR_DCTNRYBASE+ 2; // ins size >8000
+    const int   ERR_DICT_SIZE_GT_2G     = ERR_DCTNRYBASE+ 2; // ins size >8000
     const int   ERR_DICT_NO_OP_DELETE   = ERR_DCTNRYBASE+ 3; // del no op
     const int   ERR_DICT_NO_OFFSET_DELETE=ERR_DCTNRYBASE+ 4; // del bad offset
     const int   ERR_DICT_INVALID_HDR    = ERR_DCTNRYBASE+ 5; // Delete Hdr

@@ -239,7 +239,7 @@ protected:
     // insertDctnryHdr inserts the new value info into the header.
     // insertSgnture   inserts the new value into the block.
     //
-    void         insertDctnry2(Signature& sig);
+    int          insertDctnry2(Signature& sig);
     void         insertDctnryHdr( unsigned char* blockBuf, const int& size);
     void         insertSgnture(unsigned char* blockBuf,
                                const int& size, unsigned char*value);
