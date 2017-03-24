@@ -155,11 +155,6 @@ install() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
-	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
-		$SUDO rm -f ${syslog_conf}.columnstoreSave
-		$SUDO cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
-		$SUDO sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
-	fi
 
 	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
@@ -179,9 +174,9 @@ if [ ! -z "$syslog_conf" ] ; then
 	$SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
-	systemctl restart rsyslog.service > /dev/null 2>&1
-        systemctl restart syslog.service > /dev/null 2>&1
-        systemctl restart syslog-ng.service > /dev/null 2>&1
+	$SUDO systemctl restart rsyslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
 
 fi
 
@@ -215,9 +210,9 @@ if [ ! -z "$syslog_conf" ] ; then
         $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
         $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 
-        systemctl restart rsyslog.service > /dev/null 2>&1
-        systemctl restart syslog.service > /dev/null 2>&1
-        systemctl restart syslog-ng.service > /dev/null 2>&1
+        $SUDO systemctl restart rsyslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog.service > /dev/null 2>&1
+        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
 
 
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile "unassigned"
