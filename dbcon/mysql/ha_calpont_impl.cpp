@@ -624,6 +624,7 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 					break;
 				}
 				case CalpontSystemCatalog::BLOB:
+				case CalpontSystemCatalog::TEXT:
 				{
 					Field_blob *f2 = (Field_blob*)*f;
 					f2->set_ptr(row.getVarBinaryLength(s), (unsigned char*)row.getVarBinaryField(s));

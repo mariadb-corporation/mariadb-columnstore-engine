@@ -414,6 +414,10 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType,
         case CalpontSystemCatalog::BLOB :
             internalType = WriteEngine::WR_BLOB; break;
 
+        // Map TEXT to WR_TEXT
+        case CalpontSystemCatalog::TEXT :
+            internalType = WriteEngine::WR_TEXT; break;
+
         // Map VARBINARY to WR_VARBINARY
         case CalpontSystemCatalog::VARBINARY:
             internalType = WriteEngine::WR_VARBINARY; break;
@@ -496,6 +500,10 @@ void Convertor::convertWEColType(ColType internalType,
         // Map BLOB to WR_BLOB
         case WriteEngine::WR_BLOB :
             dataType = CalpontSystemCatalog::BLOB; break;
+
+        // Map TEXT to WR_TEXT
+        case WriteEngine::WR_TEXT :
+            dataType = CalpontSystemCatalog::TEXT; break;
 
         // Map VARBINARY to WR_VARBINARY
         case WriteEngine::WR_VARBINARY:
@@ -597,6 +605,10 @@ void Convertor::convertColType(ColStruct* curStruct)
         // Map BLOB to WR_BLOB
         case CalpontSystemCatalog::BLOB :
             *internalType = WriteEngine::WR_BLOB; break;
+
+        // Map TEXT to WR_TEXT
+        case CalpontSystemCatalog::TEXT :
+            *internalType = WriteEngine::WR_TEXT; break;
 
         // Map VARBINARY to WR_VARBINARY
         case CalpontSystemCatalog::VARBINARY:

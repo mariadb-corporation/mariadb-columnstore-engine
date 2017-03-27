@@ -243,7 +243,9 @@ void CrossEngineStep::setField(int i, const char* value, unsigned long length, R
 		else
 			row.setStringField("", i);
 	}
-	else if ((colType == CalpontSystemCatalog::BLOB) || (colType == CalpontSystemCatalog::VARBINARY))
+	else if ((colType == CalpontSystemCatalog::BLOB) ||
+            (colType == CalpontSystemCatalog::TEXT) ||
+            (colType == CalpontSystemCatalog::VARBINARY))
 	{
 		if (value != NULL)
 			row.setVarBinaryField((const uint8_t*)value, length, i);
@@ -369,6 +371,7 @@ int64_t CrossEngineStep::convertValueNum(
 		case CalpontSystemCatalog::VARCHAR:
 		case CalpontSystemCatalog::VARBINARY:
 		case CalpontSystemCatalog::BLOB:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::CLOB:
 			{
 				string i = boost::any_cast<string>(anyVal);

@@ -317,6 +317,7 @@ inline boost::any getNullValueForType(const execplan::CalpontSystemCatalog::ColT
 			}
 			break;
         case execplan::CalpontSystemCatalog::BLOB:
+        case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::VARBINARY:
 			{
 				std::string charnull;
@@ -423,6 +424,10 @@ inline int convertDataType(int dataType)
 
 		case ddlpackage::DDL_BLOB:
 			calpontDataType = CalpontSystemCatalog::BLOB;
+			break;
+
+		case ddlpackage::DDL_TEXT:
+			calpontDataType = CalpontSystemCatalog::TEXT;
 			break;
 
         case ddlpackage::DDL_UNSIGNED_TINYINT:

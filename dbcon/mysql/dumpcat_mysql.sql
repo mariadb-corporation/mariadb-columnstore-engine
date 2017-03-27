@@ -18,6 +18,7 @@ select
 	              when 12 then 'VARCHAR'
 	              when 13 then 'CLOB'
 	              when 14 then 'BLOB'
+	              when 15 then 'TEXT'
 	              end DATATYPE, 
 	SCALE, PREC, COLUMNLENGTH COLLEN, COLUMNPOSITION POS, COMPRESSIONTYPE CT
 from

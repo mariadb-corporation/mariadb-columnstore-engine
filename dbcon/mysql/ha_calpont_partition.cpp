@@ -141,6 +141,8 @@ string name(CalpontSystemCatalog::ColType& ct)
 			return "VARBINARY";
 		case CalpontSystemCatalog::BLOB:
 			return "BLOB";
+		case CalpontSystemCatalog::TEXT:
+			return "TEXT";
 		case CalpontSystemCatalog::CLOB:
 			return "CLOB";
 		case CalpontSystemCatalog::UINT:
@@ -318,6 +320,7 @@ const int64_t IDB_format(char* str, CalpontSystemCatalog::ColType& ct, uint8_t& 
 	case CalpontSystemCatalog::VARCHAR:
 	case CalpontSystemCatalog::VARBINARY:
 	case CalpontSystemCatalog::BLOB:
+	case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::CLOB:
 		{
 			string i = boost::any_cast<string>(anyVal);

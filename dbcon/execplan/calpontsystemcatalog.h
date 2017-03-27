@@ -155,7 +155,8 @@ public:
 			UDOUBLE,		/*!< Unsigned DOUBLE type */
 			NUM_OF_COL_DATA_TYPE,
 			LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
-			STRINT			/* @bug3532, string as int for fast comparison */
+			STRINT,			/* @bug3532, string as int for fast comparison */
+            TEXT            /*!< TEXT type */
 	};
 
 	/** the set of column constraint types
@@ -906,7 +907,8 @@ inline bool isCharType(const execplan::CalpontSystemCatalog::ColDataType type)
 {
 	return (execplan::CalpontSystemCatalog::VARCHAR == type ||
 			execplan::CalpontSystemCatalog::CHAR == type ||
-            execplan::CalpontSystemCatalog::BLOB == type);
+            execplan::CalpontSystemCatalog::BLOB == type ||
+            execplan::CalpontSystemCatalog::TEXT == type);
 }
 
 /** convenience function to determine if column type is an

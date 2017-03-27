@@ -510,7 +510,8 @@ void DictStep::_projectToRG(RowGroup &rg, uint32_t col)
 		// bug 4901 - move this inside the loop and call incrementally
 		// to save the unnecessary string copy
 		if ((rg.getColTypes()[col] != execplan::CalpontSystemCatalog::VARBINARY) &&
-            (rg.getColTypes()[col] != execplan::CalpontSystemCatalog::BLOB)) {
+            (rg.getColTypes()[col] != execplan::CalpontSystemCatalog::BLOB) &&
+            (rg.getColTypes()[col] != execplan::CalpontSystemCatalog::TEXT)) {
 			for (i = curResultCounter; i < tmpResultCounter; i++) {
 				rg.getRow(newRidList[i].pos, &r);
 				//cout << "serializing " << tmpStrings[i] << endl;

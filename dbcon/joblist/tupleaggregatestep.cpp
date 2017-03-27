@@ -137,6 +137,7 @@ inline string colTypeIdString(CalpontSystemCatalog::ColDataType type)
 		case CalpontSystemCatalog::VARCHAR:   return string("VARCHAR");
 		case CalpontSystemCatalog::CLOB:      return string("CLOB");
 		case CalpontSystemCatalog::BLOB:      return string("BLOB");
+		case CalpontSystemCatalog::TEXT:      return string("TEXT");
 		case CalpontSystemCatalog::UTINYINT:  return string("UTINYINT");
 		case CalpontSystemCatalog::USMALLINT: return string("USMALLINT");
 		case CalpontSystemCatalog::UDECIMAL:  return string("UDECIMAL");

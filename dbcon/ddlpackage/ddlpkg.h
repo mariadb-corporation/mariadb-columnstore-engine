@@ -229,6 +229,7 @@ enum DDL_DATATYPES {
     DDL_UNSIGNED_FLOAT,
     DDL_UNSIGNED_DOUBLE,
     DDL_UNSIGNED_NUMERIC,
+    DDL_TEXT,
     DDL_INVALID_DATATYPE
 };
 
@@ -265,6 +266,7 @@ const std::string DDLDatatypeString[] =
         "unsigned-float",
         "unsigned-double",
         "unsigned-numeric",
+        "text",
         ""
     };
 
@@ -318,7 +320,8 @@ const int  DDLDatatypeLength[] =
         2,      // UNSIGNED_DECIMAL, 
         4,      // UNSIGNED_FLOAT,   
         8,      // UNSIGNED_DOUBLE,  
-        2,      // UNSIGNED_NUMERIC, 
+        2,      // UNSIGNED_NUMERIC,
+        8,      // TEXT 
         -1		// INVALID LENGTH
     };
 

@@ -172,7 +172,8 @@ pColScanStep::pColScanStep(
 
 	//If this is a dictionary column, fudge the numbers...
 	if ((fColType.colDataType == CalpontSystemCatalog::VARBINARY)
-        || (fColType.colDataType == CalpontSystemCatalog::BLOB))
+        || (fColType.colDataType == CalpontSystemCatalog::BLOB)
+        || (fColType.colDataType == CalpontSystemCatalog::TEXT))
 	{
 		fColType.colWidth = 8;
 		fIsDict = true;

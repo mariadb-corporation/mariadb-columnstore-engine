@@ -244,6 +244,7 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* value, boost:
       case WriteEngine::WR_VARBINARY : // treat same as char for now
       case WriteEngine::WR_CHAR :
       case WriteEngine::WR_BLOB :
+      case WriteEngine::WR_TEXT :
                                     curStr = boost::any_cast<string>(data);
                                     if ((int) curStr.length() > MAX_COLUMN_BOUNDARY)
                                        curStr = curStr.substr(0, MAX_COLUMN_BOUNDARY);
@@ -363,7 +364,8 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
                                        break;
          case WriteEngine::WR_VARBINARY : // treat same as char for now
          case WriteEngine::WR_CHAR :
-         case WriteEngine::WR_BLOB :   curStr = boost::any_cast<string>(data);
+         case WriteEngine::WR_BLOB :
+         case WriteEngine::WR_TEXT :   curStr = boost::any_cast<string>(data);
                                        if ((int) curStr.length() > MAX_COLUMN_BOUNDARY)
                                           curStr = curStr.substr(0, MAX_COLUMN_BOUNDARY);
                                        memcpy((char*)valArray + pos * MAX_COLUMN_BOUNDARY, curStr.c_str(), curStr.length());
@@ -413,7 +415,8 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
                                        break;
          case WriteEngine::WR_VARBINARY : // treat same as char for now
          case WriteEngine::WR_CHAR :
-         case WriteEngine::WR_BLOB :   char tmp[10];
+         case WriteEngine::WR_BLOB :
+         case WriteEngine::WR_TEXT :   char tmp[10];
                                        memcpy(tmp, (char*)valArray + pos*8, 8);
                                        curStr = tmp;
                                        data = curStr;
@@ -687,6 +690,7 @@ int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStru
 				case WriteEngine::WR_VARBINARY : // treat same as char for now
 				case WriteEngine::WR_CHAR:
 				case WriteEngine::WR_BLOB:
+                case WriteEngine::WR_TEXT:
 					valArray = (char*) calloc(sizeof(char), 1 * MAX_COLUMN_BOUNDARY);
 					break;
 				case WriteEngine::WR_FLOAT:
@@ -3314,6 +3318,7 @@ int WriteEngineWrapper::writeColumnRecords(const TxnID& txnid,
          case WriteEngine::WR_VARBINARY : // treat same as char for now
          case WriteEngine::WR_CHAR:
          case WriteEngine::WR_BLOB:
+         case WriteEngine::WR_TEXT:
             valArray = (char*) calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY);
             break;
          case WriteEngine::WR_FLOAT:
@@ -3519,6 +3524,7 @@ StopWatch timer;
                case WriteEngine::WR_VARBINARY : // treat same as char for now
                case WriteEngine::WR_CHAR:
                case WriteEngine::WR_BLOB:
+               case WriteEngine::WR_TEXT:
                   valArray = (char*) calloc(sizeof(char), totalRow1 * MAX_COLUMN_BOUNDARY);
                   break;
                case WriteEngine::WR_FLOAT:
@@ -3664,6 +3670,7 @@ timer.stop("writeRow ");
             case WriteEngine::WR_VARBINARY : // treat same as char for now
             case WriteEngine::WR_CHAR:
             case WriteEngine::WR_BLOB:
+            case WriteEngine::WR_TEXT:
                valArray = (char*) calloc(sizeof(char), totalRow2 * MAX_COLUMN_BOUNDARY);
                break;
             case WriteEngine::WR_FLOAT:
@@ -3806,6 +3813,7 @@ timer.stop("writeRow ");
             case WriteEngine::WR_VARBINARY : // treat same as char for now
             case WriteEngine::WR_CHAR:
             case WriteEngine::WR_BLOB:
+            case WriteEngine::WR_TEXT:
                valArray = (char*) calloc(sizeof(char), totalRow1 * MAX_COLUMN_BOUNDARY);
                break;
             case WriteEngine::WR_FLOAT:
@@ -4068,6 +4076,7 @@ StopWatch timer;
          case WriteEngine::WR_VARBINARY : // treat same as char for now
          case WriteEngine::WR_CHAR:
          case WriteEngine::WR_BLOB:
+         case WriteEngine::WR_TEXT:
             valArray = (char*) calloc(sizeof(char), 1 * MAX_COLUMN_BOUNDARY);
             break;
          case WriteEngine::WR_FLOAT:

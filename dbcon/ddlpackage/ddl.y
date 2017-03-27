@@ -902,27 +902,27 @@ blob_type:
 text_type:
 	TEXT '(' ICONST ')'
 	{
-		$$ = new ColumnType(DDL_BLOB);
+		$$ = new ColumnType(DDL_TEXT);
 		$$->fLength = atol($3);
 	}
 	| TEXT
 	{
-		$$ = new ColumnType(DDL_BLOB);
+		$$ = new ColumnType(DDL_TEXT);
 		$$->fLength = 65535;
 	}
 	| TINYTEXT
 	{
-		$$ = new ColumnType(DDL_BLOB);
+		$$ = new ColumnType(DDL_TEXT);
 		$$->fLength = 255;
 	}
 	| MEDIUMTEXT
 	{
-		$$ = new ColumnType(DDL_BLOB);
+		$$ = new ColumnType(DDL_TEXT);
 		$$->fLength = 16777215;
 	}
 	| LONGTEXT
 	{
-		$$ = new ColumnType(DDL_BLOB);
+		$$ = new ColumnType(DDL_TEXT);
 		$$->fLength = 2100000000;
 	}
 	;

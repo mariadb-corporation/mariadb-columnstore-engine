@@ -267,6 +267,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 							case CalpontSystemCatalog::VARCHAR:
 							case CalpontSystemCatalog::VARBINARY:
 							case CalpontSystemCatalog::BLOB:
+							case CalpontSystemCatalog::TEXT:
 							case CalpontSystemCatalog::CLOB:
 								boundTypeErr = true;
 								break;
@@ -309,6 +310,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 							case CalpontSystemCatalog::VARCHAR:
 							case CalpontSystemCatalog::VARBINARY:
 							case CalpontSystemCatalog::BLOB:
+							case CalpontSystemCatalog::TEXT:
 							case CalpontSystemCatalog::CLOB:
 								boundTypeErr = true;
 								break;
@@ -358,6 +360,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 							case CalpontSystemCatalog::VARCHAR:
 							case CalpontSystemCatalog::VARBINARY:
 							case CalpontSystemCatalog::BLOB:
+                            case CalpontSystemCatalog::TEXT:
 							case CalpontSystemCatalog::CLOB:
 								orderTypeErr = true;
 								break;
