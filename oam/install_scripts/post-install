@@ -41,8 +41,8 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
 else
 	# add library config file
-	$SUDO /bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
-	$SUDO ldconfig
+	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/.
+	ldconfig
 fi
 
 #check 64-bit OS compatiable
@@ -123,7 +123,11 @@ cd /
 
 test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-$SUDO chmod -R 777 /var/log/mariadb
+
+if [ $user != "root" ]; then
+	$SUDO chmod -R 777 /var/log/mariadb >/dev/null 2>&1
+	$SUDO chown -R $user:$user /var/log/mariadb >/dev/null 2>&1
+fi
 
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
@@ -147,9 +151,9 @@ mkdir -p $installdir/data/bulk/job >/dev/null 2>&1
 mkdir -p $installdir/data/bulk/rollback >/dev/null 2>&1
 mkdir -p $installdir/data/bulk/tmpjob >/dev/null 2>&1
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
-chmod -R 755 $installdir/data/bulk >/dev/null 2>&1
 
 #create columnstore temp file directory
+$SUDO chmod 777 /tmp
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
@@ -206,25 +210,21 @@ fi
 #setup MariaDB Columnstore system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
-	chmod 777 -R /dev/shm
 	rm -f /etc/default/columnstore
 else
-	$SUDO chmod 777 /tmp
 	$SUDO rm -fr /tmp/* > /dev/null 2>&1
-	$SUDO $installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
+	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
 	$SUDO chmod -R 777 /dev/shm
-	$SUDO mkdir /var/lock/subsys  > /dev/null 2>&1
-	$SUDO chmod 777 /var/lock/subsys  > /dev/null 2>&1
+	$SUDO mkdir /var/lock/subsys > /dev/null 2>&1
+	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
-	$SUDO chmod 777 /etc/fstab	
+	$SUDO chmod 666 /etc/fstab	
 
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
-	$SUDO chown $user:$user /etc/default/columnstore
 
 	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
-
 fi
 
 #check if MariaDB Columnstore system logging was setup
