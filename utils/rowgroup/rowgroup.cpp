@@ -359,6 +359,7 @@ string Row::toString() const
 					break;
 				case CalpontSystemCatalog::VARBINARY:
 				case CalpontSystemCatalog::BLOB:
+				case CalpontSystemCatalog::TEXT:
 				{
 					uint32_t len = getVarBinaryLength(i);
 					const uint8_t* val = getVarBinaryField(i);
@@ -409,6 +410,7 @@ string Row::toCSV() const
 					break;
 				case CalpontSystemCatalog::VARBINARY:
 				case CalpontSystemCatalog::BLOB:
+				case CalpontSystemCatalog::TEXT:
 				{
 					uint32_t len = getVarBinaryLength(i);
 					const uint8_t* val = getVarBinaryField(i);
@@ -512,8 +514,8 @@ void Row::initToNull()
 				memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
 				break;
 			}
-			case CalpontSystemCatalog::BLOB: {
-				// TODO: no NULL value for long double yet, this is a nan.
+			case CalpontSystemCatalog::BLOB:
+            case CalpontSystemCatalog::TEXT: {
 				memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
 				break;
 			}
@@ -589,6 +591,7 @@ bool Row::isNullValue(uint32_t colIndex) const
 			break;
 		}
 		case CalpontSystemCatalog::BLOB:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARBINARY: {
 			uint32_t pos = offsets[colIndex];
 			if (inStringTable(colIndex)) {
@@ -1081,7 +1084,9 @@ void applyMapping(const int *mapping, const Row &in, Row *out)
 	for (i = 0; i < in.getColumnCount(); i++)
 		if (mapping[i] != -1)
 		{
-            if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY || in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB))
+            if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
+                in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
+                in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
 				out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
             else if (UNLIKELY(in.isLongString(i)))
 				out->setStringField(in.getStringPointer(i), in.getStringLength(i), mapping[i]);

@@ -250,6 +250,7 @@ inline bool isEmptyVal<8>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::DATETIME:
 	case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 		return (*val == joblist::CHAR8EMPTYROW);
 	case CalpontSystemCatalog::UBIGINT:
 		return (joblist::UBIGINTEMPTYROW == *val);
@@ -273,6 +274,7 @@ inline bool isEmptyVal<4>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::DATE:
 	case CalpontSystemCatalog::DATETIME:
 		return (joblist::CHAR4EMPTYROW == *val);
@@ -295,6 +297,7 @@ inline bool isEmptyVal<2>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::DATE:
 	case CalpontSystemCatalog::DATETIME:
 		return (joblist::CHAR2EMPTYROW == *val);
@@ -317,6 +320,7 @@ inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::DATE:
 	case CalpontSystemCatalog::DATETIME:
 		return (*val == joblist::CHAR1EMPTYROW);
@@ -348,6 +352,7 @@ inline bool isNullVal<8>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::DATETIME:
 	case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 		//@bug 339 might be a token here
 		//TODO: what's up with the second const here?
 		return (*val == joblist::CHAR8NULL || 0xFFFFFFFFFFFFFFFELL == *val);
@@ -373,6 +378,7 @@ inline bool isNullVal<4>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 		return (joblist::CHAR4NULL == *val);
 	case CalpontSystemCatalog::DATE:
 	case CalpontSystemCatalog::DATETIME:
@@ -396,6 +402,7 @@ inline bool isNullVal<2>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::DATE:
 	case CalpontSystemCatalog::DATETIME:
 		return (joblist::CHAR2NULL == *val);
@@ -418,6 +425,7 @@ inline bool isNullVal<1>(uint8_t type, const uint8_t* ival)
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::BLOB:
+    case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::DATE:
 	case CalpontSystemCatalog::DATETIME:
 		return (*val == joblist::CHAR1NULL);
@@ -460,6 +468,7 @@ inline bool isMinMaxValid(const NewColRequestHeader *in) {
 			return (in->DataSize<9);
 		case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::BLOB:
+        case CalpontSystemCatalog::TEXT:
 			return (in->DataSize<8);
 		case CalpontSystemCatalog::TINYINT:
 		case CalpontSystemCatalog::SMALLINT:
@@ -514,7 +523,8 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
 		return colCompare_(dVal1, dVal2, COP);
 	}
 
-	else if ( (type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::VARCHAR || type == CalpontSystemCatalog::BLOB) && !isNull )
+	else if ( (type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::VARCHAR ||
+            type == CalpontSystemCatalog::BLOB || type == CalpontSystemCatalog::TEXT) && !isNull )
 	{
 		if (!regex.used && !rf)
 			return colCompare_(order_swap(val1), order_swap(val2), COP);
@@ -1189,7 +1199,8 @@ inline void p_Col_ridArray(NewColRequestHeader *in,
 		if (out->ValidMinMax && !isNull && !isEmpty)
 		{
 
-			if ((in->DataType == CalpontSystemCatalog::CHAR || in->DataType == CalpontSystemCatalog::VARCHAR || in->DataType == CalpontSystemCatalog::BLOB ) && 1 < W)
+			if ((in->DataType == CalpontSystemCatalog::CHAR || in->DataType == CalpontSystemCatalog::VARCHAR ||
+                in->DataType == CalpontSystemCatalog::BLOB || in->DataType == CalpontSystemCatalog::TEXT ) && 1 < W)
 			{
 				if (colCompare(out->Min, val, COMPARE_GT, false, in->DataType, W, placeholderRegex))
 					out->Min = val;

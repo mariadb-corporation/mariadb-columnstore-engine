@@ -104,6 +104,7 @@ namespace WriteEngine
         WR_USHORT           = 14,           /** @brief Unsigned Short */
         WR_UINT             = 15,           /** @brief Unsigned Int */
         WR_ULONGLONG        = 16,           /** @brief Unsigned Long long*/
+        WR_TEXT             = 17            /** @brief TEXT */
     };
 
     // Describes relation of field to column for a bulk load

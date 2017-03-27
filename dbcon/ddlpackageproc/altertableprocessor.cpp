@@ -174,6 +174,7 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
 	case (CalpontSystemCatalog::CLOB):
 		break;
 	case (CalpontSystemCatalog::BLOB):
+	case (CalpontSystemCatalog::TEXT):
 		break;
 	default:
 		break;

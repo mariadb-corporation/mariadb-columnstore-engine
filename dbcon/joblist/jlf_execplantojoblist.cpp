@@ -197,6 +197,7 @@ int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct)
 	case CalpontSystemCatalog::VARCHAR:
 	case CalpontSystemCatalog::VARBINARY:
 	case CalpontSystemCatalog::BLOB:
+	case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::CLOB:
 	case CalpontSystemCatalog::CHAR:
 
@@ -348,6 +349,7 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
 	case CalpontSystemCatalog::VARCHAR:
 	case CalpontSystemCatalog::VARBINARY:
 	case CalpontSystemCatalog::BLOB:
+	case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::CLOB:
 		{
 			string i = boost::any_cast<string>(anyVal);

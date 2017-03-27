@@ -89,6 +89,7 @@ map<int, string> colType2String = assign::map_list_of
 	(CalpontSystemCatalog::UDOUBLE, "UNSIGNED DOUBLE")
 	(CalpontSystemCatalog::LONGDOUBLE, "INTERNAL LONG DOUBLE")
 	(CalpontSystemCatalog::STRINT, "INTERNAL SHORT STRING")
+	(CalpontSystemCatalog::TEXT, "TEXT")
 ;
 
 

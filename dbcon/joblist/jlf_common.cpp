@@ -336,6 +336,7 @@ bool isCharCol(const CalpontSystemCatalog::ColType& colType)
 	case CalpontSystemCatalog::VARCHAR:
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::BLOB:
+	case CalpontSystemCatalog::TEXT:
 	case CalpontSystemCatalog::CLOB:
 		return true;
 		break;

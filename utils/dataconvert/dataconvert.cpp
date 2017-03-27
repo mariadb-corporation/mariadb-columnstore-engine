@@ -1122,6 +1122,7 @@ boost::any
 			break;
 
 			case CalpontSystemCatalog::BLOB:
+            case CalpontSystemCatalog::TEXT:
 			case CalpontSystemCatalog::CLOB:
 				value = data;
 			break;

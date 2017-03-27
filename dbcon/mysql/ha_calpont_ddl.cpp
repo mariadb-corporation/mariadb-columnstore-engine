@@ -182,6 +182,10 @@ uint32_t convertDataType(int dataType)
 			calpontDataType = CalpontSystemCatalog::BLOB;
 			break;
 
+		case ddlpackage::DDL_TEXT:
+			calpontDataType = CalpontSystemCatalog::TEXT;
+			break;
+
 		case ddlpackage::DDL_UNSIGNED_TINYINT:
 			calpontDataType = CalpontSystemCatalog::UTINYINT;
 			break;

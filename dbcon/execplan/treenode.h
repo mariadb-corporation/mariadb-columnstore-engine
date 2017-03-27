@@ -395,6 +395,7 @@ inline bool TreeNode::getBoolVal()
 		//FIXME: Huh???
 		case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
+        case CalpontSystemCatalog::TEXT:
 			if (fResultType.colWidth <= 7)
 				return (atoi((char*)(&fResult.origIntVal)) != 0);
 			return (atoi(fResult.strVal.c_str()) != 0);
@@ -442,6 +443,7 @@ inline const std::string& TreeNode::getStrVal()
 		//FIXME: ???
 		case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
+        case CalpontSystemCatalog::TEXT:
 			if (fResultType.colWidth <= 7)
 				fResult.strVal = (char*)(&fResult.origIntVal);
 			break;
@@ -576,6 +578,7 @@ inline int64_t TreeNode::getIntVal()
 		//FIXME: ???
 		case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
+        case CalpontSystemCatalog::TEXT:
 			if (fResultType.colWidth <= 7)
 				return fResult.intVal;
 			return atoll(fResult.strVal.c_str());
@@ -660,6 +663,7 @@ inline float TreeNode::getFloatVal()
 		//FIXME: ???
 		case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
+        case CalpontSystemCatalog::TEXT:
 			if (fResultType.colWidth <= 7)
 				return atof((char*)(&fResult.origIntVal));
 			return atof(fResult.strVal.c_str());
@@ -708,6 +712,7 @@ inline double TreeNode::getDoubleVal()
 		//FIXME: ???
 		case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
+        case CalpontSystemCatalog::TEXT:
 			if (fResultType.colWidth <= 7)
 				return strtod((char*)(&fResult.origIntVal), NULL);
 			return strtod(fResult.strVal.c_str(), NULL);
@@ -749,6 +754,7 @@ inline IDB_Decimal TreeNode::getDecimalVal()
 	{
 		case CalpontSystemCatalog::CHAR:
 		case CalpontSystemCatalog::VARCHAR:
+        case CalpontSystemCatalog::TEXT:
 			throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from string");
 		case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:

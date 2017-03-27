@@ -155,6 +155,9 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
 	case CalpontSystemCatalog::BLOB:
 		return "blob";
 		break;
+	case CalpontSystemCatalog::TEXT:
+		return "text";
+		break;
     case CalpontSystemCatalog::UTINYINT:
         return "utinyint";
         break;

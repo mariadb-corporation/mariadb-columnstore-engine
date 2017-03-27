@@ -867,6 +867,7 @@ const uint64_t ColumnCommand::getEmptyRowValue( const execplan::CalpontSystemCat
 	case execplan::CalpontSystemCatalog::DATETIME :
 	case execplan::CalpontSystemCatalog::VARBINARY :
     case execplan::CalpontSystemCatalog::BLOB :
+    case execplan::CalpontSystemCatalog::TEXT :
 	default:
 		emptyVal = joblist::CHAR1EMPTYROW;
 		if ( width == (2 + offset) )

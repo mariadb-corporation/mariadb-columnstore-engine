@@ -95,7 +95,8 @@ Command* FilterCommand::makeFilterCommand(ByteStream& bs, vector<SCommand>& cmds
 		// due to endian issue
 		if (cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::CHAR ||
 			cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::VARCHAR ||
-            cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::BLOB)
+            cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::BLOB ||
+            cmd0->getColType().colDataType == execplan::CalpontSystemCatalog::TEXT)
 		{
 			StrFilterCmd* sc = new StrFilterCmd();
 			sc->setCompareFunc(CC);

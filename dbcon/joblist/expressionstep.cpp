@@ -325,8 +325,9 @@ void ExpressionStep::populateColumnInfo(ReturnedColumn* rc, JobInfo& jobInfo)
 {
 	// As of bug3695, make sure varbinary is not used in function expression.
 	if ((rc->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
-         rc->resultType().colDataType == CalpontSystemCatalog::BLOB) && !fVarBinOK)
-		throw runtime_error("VARBINARY in filter or function is not supported.");
+         rc->resultType().colDataType == CalpontSystemCatalog::BLOB ||
+         rc->resultType().colDataType == CalpontSystemCatalog::TEXT) && !fVarBinOK)
+		throw runtime_error("VARBINARY/BLOB in filter or function is not supported.");
 
 	SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 	WindowFunctionColumn* wc = NULL;
@@ -346,8 +347,9 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
 {
 	// As of bug3695, make sure varbinary is not used in function expression.
 	if ((sc->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
-         sc->resultType().colDataType == CalpontSystemCatalog::BLOB) && !fVarBinOK)
-		throw runtime_error ("VARBINARY in filter or function is not supported.");
+         sc->resultType().colDataType == CalpontSystemCatalog::BLOB ||
+         sc->resultType().colDataType == CalpontSystemCatalog::TEXT) && !fVarBinOK)
+		throw runtime_error ("VARBINARY/BLOB in filter or function is not supported.");
 
 	CalpontSystemCatalog::OID tblOid = joblist::tableOid(sc, jobInfo.csc);
 	string alias = extractTableAlias(sc);
@@ -412,8 +414,9 @@ void ExpressionStep::populateColumnInfo(WindowFunctionColumn* wc, JobInfo& jobIn
 {
 	// As of bug3695, make sure varbinary is not used in function expression.
 	if ((wc->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
-         wc->resultType().colDataType == CalpontSystemCatalog::BLOB) && !fVarBinOK)
-		throw runtime_error("VARBINARY in filter or function is not supported.");
+         wc->resultType().colDataType == CalpontSystemCatalog::BLOB ||
+         wc->resultType().colDataType == CalpontSystemCatalog::TEXT) && !fVarBinOK)
+		throw runtime_error("VARBINARY/BLOB in filter or function is not supported.");
 
 	// This is for window function in IN/EXISTS sub-query.
 	// In 4.0 implementation, the window function is cloned to where clause in a simple filter.
@@ -438,8 +441,9 @@ void ExpressionStep::populateColumnInfo(AggregateColumn* ac, JobInfo& jobInfo)
 {
 	// As of bug3695, make sure varbinary is not used in function expression.
 	if ((ac->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
-         ac->resultType().colDataType == CalpontSystemCatalog::BLOB) && !fVarBinOK)
-		throw runtime_error("VARBINARY in filter or function is not supported.");
+         ac->resultType().colDataType == CalpontSystemCatalog::BLOB ||
+         ac->resultType().colDataType == CalpontSystemCatalog::TEXT) && !fVarBinOK)
+		throw runtime_error("VARBINARY/BLOB in filter or function is not supported.");
 
 	// This is for aggregate function in IN/EXISTS sub-query.
 	TupleInfo ti(setExpTupleInfo(ac->resultType(), ac->expressionId(), ac->alias(), jobInfo));

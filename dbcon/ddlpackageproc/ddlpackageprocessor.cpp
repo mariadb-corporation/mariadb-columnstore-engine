@@ -238,6 +238,10 @@ execplan::CalpontSystemCatalog::ColDataType DDLPackageProcessor::convertDataType
 			colDataType = CalpontSystemCatalog::BLOB;
 			break;
 
+		case ddlpackage::DDL_TEXT:
+			colDataType = CalpontSystemCatalog::TEXT;
+			break;
+
 		default:
 			throw runtime_error("Unsupported datatype!");
 

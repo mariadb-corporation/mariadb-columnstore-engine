@@ -245,7 +245,8 @@ keepGoing:
 			if ( (dataType == CalpontSystemCatalog::CHAR && tableDef.fColumns[i]->fType->fLength > 8) ||
 				 (dataType == CalpontSystemCatalog::VARCHAR && tableDef.fColumns[i]->fType->fLength > 7) ||
 				 (dataType == CalpontSystemCatalog::VARBINARY && tableDef.fColumns[i]->fType->fLength > 7) ||
-                 (dataType == CalpontSystemCatalog::BLOB && tableDef.fColumns[i]->fType->fLength > 7) )			 
+                 (dataType == CalpontSystemCatalog::BLOB && tableDef.fColumns[i]->fType->fLength > 7) ||
+                 (dataType == CalpontSystemCatalog::TEXT && tableDef.fColumns[i]->fType->fLength > 7) )			 
 				 numDictCols++;
 		}
 		fStartingColOID = fObjectIDManager.allocOIDs(numColumns+numDictCols+1); //include column, oids,dictionary oids and tableoid
@@ -535,7 +536,8 @@ cout << fTxnid.id << " Create table WE_SVR_WRITE_CREATE_SYSCOLUMN: " << errorMsg
 			if ( (dataType == CalpontSystemCatalog::CHAR && colDefPtr->fType->fLength > 8) ||
 				 (dataType == CalpontSystemCatalog::VARCHAR && colDefPtr->fType->fLength > 7) ||
 				 (dataType == CalpontSystemCatalog::VARBINARY && colDefPtr->fType->fLength > 7) ||
-                 (dataType == CalpontSystemCatalog::BLOB && colDefPtr->fType->fLength > 7) )
+                 (dataType == CalpontSystemCatalog::BLOB && colDefPtr->fType->fLength > 7) ||
+                 (dataType == CalpontSystemCatalog::TEXT && colDefPtr->fType->fLength > 7) )
 			{
 				bytestream << (uint32_t) (fStartingColOID+numColumns+(dictNum++)+1);
 				bytestream << (uint8_t) dataType;
