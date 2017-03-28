@@ -4477,15 +4477,18 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	}
 
 	string calpontPackage;
-	string mysqlPackage;
-	string mysqldPackage;
-	string calpontPackage1;
-	string calpontPackage2;
 
 	string systemID;
 	string packageType = "rpm";
 
-	oam.getSystemConfig("EEPackageType", packageType);
+	try
+        {
+		oam.getSystemConfig("EEPackageType", packageType);
+        }
+        catch (...) 
+	{
+                log.writeLog(__LINE__, "addModule - ERROR: get EEPackageType", LOG_TYPE_ERROR);
+	}
 
 	//
 	// check for RPM package
@@ -4513,23 +4516,13 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			homedir = p;
 	}
 
-	if ( packageType != "binary") {
-		string separator = "-";
-		if ( packageType == "deb" )
-			separator = "_";
-		//mariadb
-		calpontPackage = homedir + "/mariadb-columnstore*" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqlPackage = homedir + "/mariadb-columnstore-storage-engine" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		mysqldPackage = homedir + "/mariadb-columnstore-mysql" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage1 = homedir + "/mariadb-columnstore-libs" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-		calpontPackage2 = homedir + "/mariadb-columnstore-enterprise" + separator + systemsoftware.Version + "-" + systemsoftware.Release + "*." + packageType;
-	}
+	if ( packageType == "rpm")
+		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
 	else
-	{
-		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
-		mysqlPackage = calpontPackage;
-		mysqldPackage = calpontPackage;
-	}
+		if ( packageType == "deb") 
+        		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
+		else
+			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
 
 	string cmd = "ls " + calpontPackage + " > /dev/null 2>&1";
 	int rtnCode = system(cmd.c_str());
@@ -5368,6 +5361,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 	}
 
 	//validate the module list to be removed
+	listPT = devicenetworklist.begin();
 	for( ; listPT != devicenetworklist.end() ; listPT++)
 	{
 		int returnStatus = oam.validateModule((*listPT).DeviceName);
@@ -5381,6 +5375,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 	if(manualFlag)
 	{
 		//stopModules being removed with the REMOVE option, which will stop process
+		listPT = devicenetworklist.begin();
 		for( ; listPT != devicenetworklist.end() ; listPT++)
 		{
 			string moduleName = (*listPT).DeviceName;
@@ -5682,9 +5677,6 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 	{
 		rpw = "root";
 	}
-
-	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
-	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
 	return API_SUCCESS;
 }

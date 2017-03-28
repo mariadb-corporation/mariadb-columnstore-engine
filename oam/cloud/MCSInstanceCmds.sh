@@ -149,15 +149,15 @@ getPrivateIP() {
 	state=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].State.Name'`
 	if [ "$state" != "running" ]; then
 		# not running
-		if [ "$state" != "stopped" ]; then
+		if [ "$state" == "stopped" ]; then
 			echo "stopped"
 			exit 1
 		else
-			if [ "$state" != "terminated" ]; then
+			if [ "$state" == "terminated" ]; then
 				echo "terminated"
 				exit 1
 			else
-				if [ "$state" != "shutting-down" ]; then
+				if [ "$state" == "shutting-down" ]; then
 					echo "terminated"
 					exit 1
 				else
