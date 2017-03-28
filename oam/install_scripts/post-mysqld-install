@@ -28,11 +28,11 @@ for arg in "$@"; do
 	fi
 done
 
-cd $installdir/mysql/lib
-for file in libmysqlclient libmysqlclient_r; do
-	ln -sf $file.so.18.0.0 $file.so
-	ln -sf $file.so.18.0.0 $file.so.18
-done
+#cd $installdir/mysql/lib
+#for file in libmysqlclient libmysqlclient_r; do
+#	ln -sf $file.so.18.0.0 $file.so
+#	ln -sf $file.so.18.0.0 $file.so.18
+#done
 cd $installdir/mysql/lib/plugin
 for file in ha_archive ha_blackhole ha_federated ha_innodb; do
 	ln -sf $file.so $file.so.0
