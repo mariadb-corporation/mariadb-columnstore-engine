@@ -496,6 +496,11 @@ void debug_walk(const Item *item, void *arg)
 					'.' << ifp->field_name << endl;
 				break;
 			}
+            else if (field->type() == Item::FUNC_ITEM)
+            {
+                Item_func* ifp = (Item_func*)field;
+                cout << "CACHED REF FUNC_ITEM " << ifp->func_name() << endl;
+            }
 			else if (field->type() == Item::REF_ITEM)
 			{
 				Item_ref* ifr = (Item_ref*)field;
@@ -563,7 +568,20 @@ void debug_walk(const Item *item, void *arg)
 				ifp->field_name << endl;
 			break;
 		}
-		cout << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
+        else if (ref->real_item()->type() == Item::FUNC_ITEM)
+        {
+            Item_func* ifp = (Item_func*)ref->real_item();
+            cout << "REF FUNC_ITEM " << ifp->func_name() << endl;
+        }
+        else if (ref->real_item()->type() == Item::WINDOW_FUNC_ITEM)
+        {
+            Item_window_func* ifp = (Item_window_func*)ref->real_item();
+            cout << "REF WINDOW_FUNC_ITEM " << ifp->window_func()->func_name() << endl;
+        }
+        else
+        {
+            cout << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
+        }
 		break;
 	}
 	case Item::ROW_ITEM:
@@ -700,7 +718,8 @@ void debug_walk(const Item *item, void *arg)
 	}
 	case Item::WINDOW_FUNC_ITEM:
 	{
-		cout << "Window Function Item" << endl;
+        Item_window_func* ifp = (Item_window_func*)item;
+		cout << "Window Function Item " << ifp->window_func()->func_name() << endl;
 		break;
 	}
 	default:
@@ -2407,18 +2426,19 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 		case Item::REF_ITEM:
 		{
 			Item_ref* ref = (Item_ref*)item;
-			if ((*(ref->ref))->type() == Item::SUM_FUNC_ITEM)
-			{
+            switch ((*(ref->ref))->type())
+            {
+            case Item::SUM_FUNC_ITEM:
 				return buildAggregateColumn(*(ref->ref), gwi);
-			}
-			else if ((*(ref->ref))->type() == Item::FIELD_ITEM)
+            case Item::FIELD_ITEM:
 				return buildReturnedColumn(*(ref->ref), gwi, nonSupport);
-			else if ((*(ref->ref))->type() == Item::REF_ITEM)
+            case Item::REF_ITEM:
 				return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport);
-			else if ((*(ref->ref))->type() == Item::FUNC_ITEM)
+            case Item::FUNC_ITEM:
 				return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport);
-			else
-			{
+		    case Item::WINDOW_FUNC_ITEM:
+    			return buildWindowFunctionColumn(*(ref->ref), gwi, nonSupport);
+            default:
 				gwi.fatalParseError = true;
 				gwi.parseErrorText = "Unknown REF item";
 				break;
@@ -4398,8 +4418,6 @@ void gp_walk(const Item *item, void *arg)
 				gwip->subQuery = orig;
 				gwip->lastSub = existsSub;
 			}
-
-#if MYSQL_VERSION_ID >= 50172
 			else if (sub->substype() == Item_subselect::IN_SUBS)
 			{
 				if (!((Item_in_subselect*)sub)->getOptimizer() && gwip->thd->derived_tables_processing)
@@ -4411,7 +4429,6 @@ void gp_walk(const Item *item, void *arg)
 					break;
 				}
 			}
-#endif
 			// store a dummy subselect object. the transform is handled in item_func.
 			SubSelect *subselect = new SubSelect();
 			gwip->rcWorkStack.push(subselect);
@@ -4603,6 +4620,11 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 					item = (*(ref->ref));
 					continue;
 				}
+                else if ((*(ref->ref))->type() == Item::WINDOW_FUNC_ITEM)
+                {
+                    parseInfo |= AF_BIT;
+                    break;
+                }
 				else
 				{
 					cout << "UNKNOWN REF Item" << endl;

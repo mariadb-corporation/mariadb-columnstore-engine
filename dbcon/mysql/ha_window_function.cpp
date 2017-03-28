@@ -212,10 +212,16 @@ string ConvertFuncName(Item_sum* item)
         return "MAX";
         break;
     case Item_sum::STD_FUNC:
-        return "STDDEV_POP";
+		if (((Item_sum_variance*)item)->sample)
+			return "STDDEV_SAMP";
+		else
+			return "STDDEV_POP";
         break;
-    case Item_sum::VARIANCE_FUNC:
-        return "VAR_POP";
+	case Item_sum::VARIANCE_FUNC:
+		if (((Item_sum_variance*)item)->sample)
+			return "VAR_SAMP";
+		else
+			return "VAR_POP";
         break;
     case Item_sum::SUM_BIT_FUNC:
         if (strcmp(item->func_name(), "bit_or(") == 0)
@@ -375,7 +381,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 						return nullOnError(gwi);
                     srcp->asc(orderCol->direction == ORDER::ORDER_ASC ? true : false);
 //					srcp->nullsFirst(orderCol->nulls); // nulls 2-default, 1-nulls first, 0-nulls last
-					srcp->nullsFirst(1); // WINDOWS TODO: implement NULLS FIRST/LAST in 10.2 front end
+					srcp->nullsFirst(orderCol->direction == ORDER::ORDER_ASC ? 1 : 0); // WINDOWS TODO: implement NULLS FIRST/LAST in 10.2 front end
                     orders.push_back(srcp);
 				}
 				orderBy.fOrders = orders;
@@ -554,8 +560,15 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
                 case Item_sum::SUM_DISTINCT_FUNC:
                 case Item_sum::AVG_FUNC:
                 case Item_sum::AVG_DISTINCT_FUNC:
+					frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+					frm.fEnd.fFrame = WF_CURRENT_ROW;
+					break;
                 case Item_sum::MIN_FUNC:
                 case Item_sum::MAX_FUNC:
+					frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+//					frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
+					frm.fEnd.fFrame = WF_CURRENT_ROW;
+					break;
                 case Item_sum::STD_FUNC:
                 case Item_sum::VARIANCE_FUNC:
                 case Item_sum::SUM_BIT_FUNC:
@@ -566,15 +579,9 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
                     break;
                 case Item_sum::ROW_NUMBER_FUNC:
                 case Item_sum::RANK_FUNC:
-                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-                    frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
-                    break;
                 case Item_sum::DENSE_RANK_FUNC:
                 case Item_sum::PERCENT_RANK_FUNC:
                 case Item_sum::CUME_DIST_FUNC:
-                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-                    frm.fEnd.fFrame = WF_CURRENT_ROW;
-                    break;
                 case Item_sum::NTILE_FUNC:
                     frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
                     frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
