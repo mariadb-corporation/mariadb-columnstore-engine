@@ -52,6 +52,7 @@ typedef std::vector<std::string> PrivateIPList;
 
 string password = "ssh"; 
 string OS = "centos7";
+string user = "root";
 
 char* pcommand1 = 0;
 string prompt1;
@@ -68,7 +69,8 @@ int main(int argc, char *argv[])
 		cout << "It will run a set of test to check the checkup of the system." << endl;
 		cout << "This can be run prior to the install to make sure the servers/nodes" << endl;
 		cout << "are configured properly" << endl;
-		cout << "User will be prompted to provide the server/node IP Addresses, OS and password" << endl;
+		cout << "User will be prompted to provide the server/node IP Addresses, OS" << endl; 
+		cout << "Root/Non-root user install name, and password" << endl;
 		cout << "Items that are checked:" << endl;
 		cout << "	Dependent packages installed" << endl;
 		cout << "	OS version" << endl;
@@ -87,7 +89,7 @@ int main(int argc, char *argv[])
 
 	cout << endl;
 	string IPaddresses;
-	//get Elasitic UP list
+	//get Ip Addresses
 	prompt1 = "Enter List of IP Addresses of each server/node starting with the local first (x.x.x.x,y.y.y.y) > ";
 	pcommand1 = readline(prompt1.c_str());
 	if (pcommand1) {
@@ -96,7 +98,6 @@ int main(int argc, char *argv[])
 		pcommand1 = 0;
 	}
 
-	//get Elastic IP to module assignments
 	if ( IPaddresses.empty )
 	{
 		cout << "Error: no IP addresses where entered, exit..." << endl;
@@ -124,10 +125,25 @@ int main(int argc, char *argv[])
 		pcommand1 = 0;
 	}
 
-	//get Elastic IP to module assignments
 	if ( OS.empty )
 	{
 		cout << "Error: no OS Version was entered, exit..." << endl;
+		exit (1);
+	}
+
+	cout << endl;
+	//get User
+	prompt1 = "Enter Install user (root or 'non-root user name') > ";
+	pcommand1 = readline(prompt1.c_str());
+	if (pcommand1) {
+		if (strlen(pcommand1) > 0) user = pcommand1;
+		free(pcommand1);
+		pcommand1 = 0;
+	}
+
+	if ( user.empty )
+	{
+		cout << "Error: no User type was entered, exit..." << endl;
 		exit (1);
 	}
 
@@ -214,24 +230,6 @@ void setRootPassword()
 	{
 		string instance = (*list2).instanceName;
 		string module = (*list2).moduleName;
-
-		if ( module == "pm1" ) {
-			string cmd = "/root/updatePassword.sh " + rootPassword + " > /dev/null 2>&1";
-			int rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) != 0) {
-				cout << "ERROR: failed update root of password on " + module << endl;
-				cleanupSystem();
-			}
-			continue;
-		}
-
-		//get IP Address of pm instance
-		string ipAddress = oam.getEC2InstanceIpAddress(instance);
-
-		if (ipAddress == "stopped" || ipAddress == "terminated" ) {
-			cout << "ERROR: Instance " << instance << " failed to get private IP Address" << endl;
-			cleanupSystem();
-		}
 
 		string cmd = installDir + "/bin/remote_command.sh " + ipAddress + " " + AMIrootPassword + "  '/root/updatePassword.sh " + rootPassword + "' > /dev/null 2>&1";
 		int rtnCode = system(cmd.c_str());
