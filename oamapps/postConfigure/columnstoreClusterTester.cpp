@@ -32,6 +32,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include <string.h>
 #include <limits.h>
 #include <sstream>
 #include <exception>
@@ -45,24 +46,45 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "liboamcpp.h"
+#include "configcpp.h"
+#include "alarmmanager.h"
+
+using namespace std;
+using namespace oam;
+using namespace config;
+using namespace alarmmanager;
+
+#include "helpers.h"
+using namespace installer;
 
 using namespace std;
 
-typedef std::vector<std::string> PrivateIPList;
+typedef struct ModuleIP_struct
+{
+	std::string     IPaddress;
+	std::string     status;
+} ModuleIP;
 
-string password = "ssh"; 
-string OS = "centos7";
-string user = "root";
+typedef std::vector<ModuleIP> ModuleIPList;
 
-char* pcommand1 = 0;
-string prompt1;
+char* pcommand = 0;
+string prompt;
+
+void checkSuccess( bool pass);
+
 
 int main(int argc, char *argv[])
 {
+    ModuleIPList moduleiplist;
 
+    string IPaddresses = "";
+    string OS = "";
+    string user = "";
+    string password = ""; 
 
-   for( int i = 1; i < argc; i++ )
-   {
+    for( int i = 1; i < argc; i++ )
+    {
 	if( string("-h") == argv[i] || string("--help") == argv[i]) {
 		cout << endl;
 		cout << "This is the MariaDB Columnstore Cluster System Test tool." << endl;
@@ -70,37 +92,77 @@ int main(int argc, char *argv[])
 		cout << "This can be run prior to the install to make sure the servers/nodes" << endl;
 		cout << "are configured properly" << endl;
 		cout << "User will be prompted to provide the server/node IP Addresses, OS" << endl; 
-		cout << "Root/Non-root user install name, and password" << endl;
+		cout << "Root/Non-root user install name, and password" << endl << endl;
 		cout << "Items that are checked:" << endl;
-		cout << "	Dependent packages installed" << endl;
+		cout << "	Node ping test" << endl;
+		cout << "	Node SSH test" << endl;
 		cout << "	OS version" << endl;
 		cout << "	Firewall settings" << endl;
 		cout << "	Locale settings" << endl;
-		cout << "	Node ping test" << endl;
-		cout << "	Node SSH test" << endl;
+		cout << "	Dependent packages installed" << endl;
 		cout << "	ColumnStore Port test" << endl << endl;
 		cout << "Usage: columnstoreClusterTester -h " << endl;
 		cout << "   -h  	Help" << endl;
+		cout << "   -i  	IP Addresses, starting with local (x.x.x.x,y.y.y.y)" << endl;
+		cout << "   -o  	OS Version (centos6, centos7, debian8, suse12, ubuntu16)" << endl;
+		cout << "   -u  	Username (root or 'non-root username')" << endl;		
+		cout << "   -p  	Password (User Password or 'ssh' if using SSH-KEYS)" << endl;		
+		cout << "Dependent package : 'nmap' and 'readline' packages need to be installed locally" << endl;
 		exit (0);
 	}
-
-	cout << endl;
-	cout << "This is the MariaDB Columnstore Cluster System test tool." << endl;
-
-	cout << endl;
-	string IPaddresses;
-	//get Ip Addresses
-	prompt1 = "Enter List of IP Addresses of each server/node starting with the local first (x.x.x.x,y.y.y.y) > ";
-	pcommand1 = readline(prompt1.c_str());
-	if (pcommand1) {
-		if (strlen(pcommand1) > 0) IPaddresses = pcommand1;
-		free(pcommand1);
-		pcommand1 = 0;
+	else if( string("-i") == argv[i] ) {
+		i++;
+		if (i >= argc ) {
+			cout << "   ERROR: IP Addresses not provided" << endl;
+			exit (1);
+		}
+		IPaddresses = argv[i];
 	}
+	else if( string("-o") == argv[i] ) {
+		i++;
+		if (i >= argc ) {
+			cout << "   ERROR: OS type not provided" << endl;
+			exit (1);
+		}
+		OS = argv[i];
+	}
+	else if( string("-u") == argv[i] ) {
+		i++;
+		if (i >= argc ) {
+			cout << "   ERROR: Username not provided" << endl;
+			exit (1);
+		}
+		user = argv[i];
+	}
+	else if( string("-p") == argv[i] ) {
+		i++;
+		if (i >= argc ) {
+			cout << "   ERROR: Password not provided" << endl;
+			exit (1);
+		}
+		password = argv[i];
+	}
+    }
+    
+	cout << endl;
+	cout << "*** This is the MariaDB Columnstore Cluster System test tool ***" << endl << endl;
 
-	if ( IPaddresses.empty )
+	if ( IPaddresses.empty() )
 	{
-		cout << "Error: no IP addresses where entered, exit..." << endl;
+	    cout << endl;
+	    //get Ip Addresses
+	    prompt = "Enter List of IP Addresses of each server/node starting with the local first (x.x.x.x,y.y.y.y) > ";
+	    pcommand = readline(prompt.c_str());
+	    if (pcommand) {
+		    if (strlen(pcommand) > 0) IPaddresses = pcommand;
+		    free(pcommand);
+		    pcommand = 0;
+	    }
+	}
+	
+	if ( IPaddresses.empty() )
+	{
+		cout << "Error: no IP addresses where entered, exiting..." << endl;
 		exit (1);
 	}
 	else
@@ -111,131 +173,1066 @@ int main(int argc, char *argv[])
 				it != tokens.end();
 				++it)
 		{
-		      PrivateIPList.push_back(*it);
+			ModuleIP moduleip;
+			moduleip.IPaddress = *it;
+			if ( it == tokens.begin() )
+			  moduleip.status = "local";
+			else
+			  moduleip.status = "pass";
+			moduleiplist.push_back(moduleip);
 		}
 	}
 
-	cout << endl;
-	//get OS
-	prompt1 = "Enter OS version (centos6, centos7, debian8, suse12, ubuntu16) > ";
-	pcommand1 = readline(prompt1.c_str());
-	if (pcommand1) {
-		if (strlen(pcommand1) > 0) OS = pcommand1;
-		free(pcommand1);
-		pcommand1 = 0;
-	}
-
-	if ( OS.empty )
+	if ( OS.empty() )
 	{
-		cout << "Error: no OS Version was entered, exit..." << endl;
+	    cout << endl;
+	    //get OS
+	    prompt = "Enter OS version (centos6, centos7, debian8, suse12, ubuntu16) > ";
+	    pcommand = readline(prompt.c_str());
+	    if (pcommand) {
+		    if (strlen(pcommand) > 0) OS = pcommand;
+		    free(pcommand);
+		    pcommand = 0;
+	    }
+	}
+	
+	if ( OS.empty() )
+	{
+		cout << "Error: no OS Version was entered, exiting..." << endl;
 		exit (1);
 	}
 
-	cout << endl;
-	//get User
-	prompt1 = "Enter Install user (root or 'non-root user name') > ";
-	pcommand1 = readline(prompt1.c_str());
-	if (pcommand1) {
-		if (strlen(pcommand1) > 0) user = pcommand1;
-		free(pcommand1);
-		pcommand1 = 0;
-	}
-
-	if ( user.empty )
+	if ( user.empty() )
 	{
-		cout << "Error: no User type was entered, exit..." << endl;
+	    cout << endl;
+	    //get User
+	    prompt = "Enter Install user (root or 'non-root username') > ";
+	    pcommand = readline(prompt.c_str());
+	    if (pcommand) {
+		    if (strlen(pcommand) > 0) user = pcommand;
+		    free(pcommand);
+		    pcommand = 0;
+	    }
+	}
+	
+	if ( user.empty() )
+	{
+		cout << "Error: no User type was entered, exiting..." << endl;
 		exit (1);
 	}
 
-	cout << endl;
-	//get root password
-	prompt1 = "Enter User Password or 'ssh' if using SSH-KEYS, which is used to access other nodes > ";
-	pcommand1 = readline(prompt1.c_str());
-	if (pcommand1) {
-		if (strlen(pcommand1) > 0) password = pcommand1;
-		free(pcommand1);
-		pcommand1 = 0;
-	}
 
-	//get Elastic IP to module assignments
-	if ( password.empty )
+	if ( password.empty() )
 	{
-		cout << "Error: no password or 'ssh' was entered, exit..." << endl;
+	    cout << endl;
+	    //get root password
+	    prompt = "Enter User Password or 'ssh' if using SSH-KEYS, which is used to access other nodes > ";
+	    pcommand = readline(prompt.c_str());
+	    if (pcommand) {
+		    if (strlen(pcommand) > 0) password = pcommand;
+		    free(pcommand);
+		    pcommand = 0;
+	    }
+	}
+	
+	if ( password.empty() )
+	{
+		cout << "Error: no password or 'ssh' was entered, exiting..." << endl;
 		exit (1);
 	}
 
+	//
+	// ping test
+	//
+	cout << "Run Ping access Test" << endl << endl;
 	
+	string cmdLine = "ping ";
+	string cmdOption = " -c 1 -w 5 >> /dev/null";
+	string cmd;
+
+	bool pass = true;
+	ModuleIPList::iterator  list = moduleiplist.begin();
+	for (; list != moduleiplist.end() ; list++)
+	{
+	    string ipAddress = (*list).IPaddress;
+	    string status = (*list).status;
+	    cout << " Testing " + ipAddress + " : ";
+	    
+	    // perform login test
+	    string cmd = "./remote_command.sh " + ipAddress + " " + password + " ls";
+	    int rtnCode = system(cmd.c_str());
+	    if  (WEXITSTATUS(rtnCode) == 0 )
+		cout << " PASSED" << endl;
+	    else
+	    {
+		ModuleIP moduleip;
+		moduleip.IPaddress = ipAddress;
+		moduleip.status = "failed";
+		
+		moduleiplist.erase(list);
+		moduleiplist.insert(list, moduleip);
+
+		cout << " FAILED, check connection" << endl;
+		pass = false;
+	    }
+	}
+
+	checkSuccess(pass);
+
+	//
+	// ssh login test
+	//
+	cout << endl << "Run Login access Test" << endl << endl;
 	
-	***********************************************************************************************
+	pass = true;
+	list = moduleiplist.begin();
+	for (; list != moduleiplist.end() ; list++)
+	{
+	    string ipAddress = (*list).IPaddress;
+	    string status = (*list).status;
+	    if ( status == "local" || status == "failed" )
+	      continue;
+	    
+	    cout << " Testing " + ipAddress + " : ";
+	    
+	    // perform ping test
+	    cmd = cmdLine + ipAddress + cmdOption;
+	    int rtnCode = system(cmd.c_str());
+	    if  (WEXITSTATUS(rtnCode) == 0 )
+		cout << " PASSED" << endl;
+	    else
+	    {
+		cout << " FAILED, check password or ssh-key setup" << endl;
+		pass = false;
+	    }
+	}
+
+	checkSuccess(pass);
 	
+	//
+	// OS compare
+	//
+	cout << endl << "Getting OS versions" << endl << endl;
 	
-			string cmd = installDir + "/bin/remote_command.sh " + ipAddress + " " + AMIrootPassword + "  '/root/updatePassword.sh " + rootPassword + "' > /dev/null 2>&1";
+	string OScmd = "./os_check.sh > /tmp/os_check 2>&1";
+
+	pass = true;
+	list = moduleiplist.begin();
+	for (; list != moduleiplist.end() ; list++)
+	{
+	    string ipAddress = (*list).IPaddress;
+	    string status = (*list).status;
+	    if ( status == "failed" )
+	      continue;
+	    
+	    if ( status == "local" )
+	    {
+		int rtnCode = system(OScmd.c_str());
+		if  (WEXITSTATUS(rtnCode) == 0 )
+		{
+		    cout << "Local OS Version : ";
+		    cout.flush();
+		    system("cat /tmp/os_check");
+		}
+		else
+		{
+		    cout << " FAILED, os_check.sh failed, check /tmp/os_check" << endl;
+		    pass = false;
+		}
+	    }
+	    else
+	    {
+		cout << "OS version for " << ipAddress << " :";
+		// push os_check to remote node
+		string cmd = "./remote_scp_put.sh " + ipAddress + " " + password + " os_check.sh 1 > /tmp/put_os_check.log";
 		int rtnCode = system(cmd.c_str());
-		if (WEXITSTATUS(rtnCode) != 0) {
-			cout << "ERROR: failed update of root password on " + module << endl;
-			cleanupSystem();
-		}
-
-	
-				string cmd = installDir + "/bin/remote_scp_put.sh " + ipAddress + " " + AMIrootPassword + " "  + x509Cert + " > /tmp/scp.log_" + instanceName;
+		if (WEXITSTATUS(rtnCode) == 0) 
+		{  
+		    //run command
+		    string cmd = "./remote_command.sh " + ipAddress + " " + password + " '" + OScmd + "' > /tmp/run_os_check.log";
+cout << cmd << endl;
+		    int rtnCode = system(cmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			//get results
+			string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/os_check 1 > /tmp/get_os_check.log";
 			int rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) == 0) {
-				pass = true;
-				break;
-			}
-
-			//assign um Instances
-			std::vector<std::string>::iterator list = existinguminstance.begin();
-			for (; list != existinguminstance.end() ; list++)
+			if (WEXITSTATUS(rtnCode) == 0)
 			{
-				string module = "um" + oam.itoa(um);
-		
-				cout << "Assigning Instance for " + module;
-		
-				string instanceName = *list;
+			    system("cat os_check");
+			    
+			    //compare with local
+			    int rtnCode = system("diff /tmp/os_check os_check");
+			    if (WEXITSTATUS(rtnCode) != 0)
+			    {
+				cout << " FAILED, doesn't match local servers OS version" << endl;
+				pass = false;
+			    }
+			    
+			    //unlink("os_check");
 			}
+			else
+			{
+			    cout << " FAILED, check /tmp/get_os_check.log" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			cout << " FAILED, check /tmp/run_os_check.log" << endl;
+			pass = false;
+		    }
 		}
+		else
+		{
+		    cout << " FAILED, /tmp/put_os_check.log" << endl;
+		    pass = false;
+		}
+	    }
+	}
+
+	checkSuccess(pass);
+	
+	
+	//
+	// Locale compare
+	//
+	cout << endl << "Getting Locale" << endl << endl;
+	
+	string Localecmd = "./locale | grep 'LANG=' > /tmp/locale_check 2>&1";
+
+	pass = true;
+	list = moduleiplist.begin();
+	for (; list != moduleiplist.end() ; list++)
+	{
+	    string ipAddress = (*list).IPaddress;
+	    string status = (*list).status;
+	    if ( status == "failed" )
+	      continue;
+	    
+	    cout << " Getting Locale for " + ipAddress + " : ";
+	    
+	    if ( status == "local" )
+	    {
+		int rtnCode = system(Localecmd.c_str());
+		if  (WEXITSTATUS(rtnCode) == 0 )
+		    system("cat /tmp/locale_check");
+		else
+		{
+		    cout << " FAILED, locale command failed, check /tmp/locale_check" << endl;
+		    pass = false;
+		}
+	    }
+	    else
+	    {
+		//run command
+		string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + Localecmd + " > /tmp/run_locale.log";
+		int rtnCode = system(cmd.c_str());
+		if  (WEXITSTATUS(rtnCode) == 0 )
+		{
+		    //get results
+		    string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/locale_check > /tmp/get_locale_check.log";
+		    int rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) == 0)
+		    {
+			system("cat locale_check");
+		
+			//compare with local
+			int rtnCode = system("diff /tmp/locale_check locale_check");
+			if (WEXITSTATUS(rtnCode) != 0)
+			{
+			    cout << " FAILED, doesn't match local servers Locale" << endl;
+			    pass = false;
+			}
+			
+			unlink("locale_check");
+		    }
+		    else
+		    {
+			cout << " FAILED, check /tmp/get_locale_check.log" << endl;
+			pass = false;
+		    }
+		}
+		else
+		{
+		    cout << " FAILED, check /tmp/run_locale.log" << endl;
+		    pass = false;
+		}
+	    }
+	}
+
+	checkSuccess(pass);
 	
 
-void setRootPassword()
+	//
+	// Check SELINUX
+	//
+	cout << "Checking Firewall setting - SELINUX should be disabled" << endl << endl;
+	
+	string SELINUXcmd = "cat /etc/selinex/config | grep SELINUX | grep enforcing > /tmp/selinux_check 2>&1";
+	string SELINUXREMOTEcmd = "cat /etc/selinex/config > /tmp/selinux_check 2>&1";
+	string SELINUXREMOTECHECKcmd = "cat selinux_check | grep SELINUX | grep enforcing > /tmp/selinux_check 2>&1";
+
+	pass = true;
+	list = moduleiplist.begin();
+	for (; list != moduleiplist.end() ; list++)
+	{
+	    string ipAddress = (*list).IPaddress;
+	    string status = (*list).status;
+	    if ( status == "failed" )
+	      continue;
+	    
+	    cout << " Checking SELINUX for " + ipAddress + " : ";
+	    
+	    if ( status == "local" )
+	    {
+		int rtnCode = system(SELINUXcmd.c_str());
+		if  (WEXITSTATUS(rtnCode) == 0 )
+		{
+		    cout << " FAILED, /etc/selinex/config is enabled, please disable" << endl;
+		    pass = false;
+		}
+		else
+		{
+		    cout << " PASSED" << endl;
+		}
+	    }
+	    else
+	    {
+		//run command
+		string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + SELINUXREMOTEcmd + " > /tmp/run_selinux.log";
+		int rtnCode = system(cmd.c_str());
+		if  (WEXITSTATUS(rtnCode) == 0 )
+		{
+		    //get results
+		    string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/selinux_check > /tmp/get_selinux_check.log";
+		    int rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) == 0)
+		    {
+			int rtnCode = system(SELINUXREMOTECHECKcmd.c_str());
+			if  (WEXITSTATUS(rtnCode) == 0 )
+			{
+			    cout << " FAILED, /etc/selinex/config is enabled, please disable" << endl;
+			    pass = false;
+			}
+			else
+			{
+			    cout << " PASSED" << endl;
+			}
+
+			unlink("selinux_check");
+		    }
+		    else
+		    {
+			cout << " FAILED, check /tmp/get_selinux_check.log" << endl;
+			pass = false;
+		    }
+		}
+		else
+		{
+		    cout << " FAILED, check /tmp/run_selinux.log" << endl;
+		    pass = false;
+		}
+	    }
+	}
+
+	checkSuccess(pass);
+	
+	//
+	// Check IPTABLES for Centos6
+	//
+	if ( OS == "centos6")
+	{
+	    cout << "Checking Firewall setting - IPTABLES should be disabled" << endl << endl;
+	    
+	    string IPTABLEScmd = "chkconfig | grep iptables | grep on > /tmp/iptables_check 2>&1";
+	    string IPTABLESREMOTEcmd = "chkconfig > /tmp/iptables_check 2>&1";
+	    string IPTABLESREMOTECHECKcmd = "cat iptables_check | grep iptables | grep on > /tmp/iptables_check 2>&1";
+
+	    pass = true;
+	    list = moduleiplist.begin();
+	    for (; list != moduleiplist.end() ; list++)
+	    {
+		string ipAddress = (*list).IPaddress;
+		string status = (*list).status;
+		if ( status == "failed" )
+		  continue;
+		
+		cout << " Checking IPTABLES for " + ipAddress + " : ";
+		
+		if ( status == "local" )
+		{
+		    int rtnCode = system(IPTABLEScmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			cout << " FAILED, iptables is enabled, please disable" << endl;
+			pass = false;
+		    }
+		    else
+		    {
+			cout << " PASSED" << endl;
+		    }
+		}
+		else
+		{
+		    //run command
+		    string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + IPTABLESREMOTEcmd + " > /tmp/run_iptables.log";
+		    int rtnCode = system(cmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			//get results
+			string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/iptables_check > /tmp/get_iptables_check.log";
+			int rtnCode = system(cmd.c_str());
+			if (WEXITSTATUS(rtnCode) == 0)
+			{
+			    int rtnCode = system(IPTABLESREMOTECHECKcmd.c_str());
+			    if  (WEXITSTATUS(rtnCode) == 0 )
+			    {
+				cout << " FAILED, iptables is enabled, please disable" << endl;
+				pass = false;
+			    }
+			    else
+			    {
+				cout << " PASSED" << endl;
+			    }
+
+			    unlink("iptables_check");
+			}
+			else
+			{
+			    cout << " FAILED, check /tmp/get_iptables_check.log" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			cout << " FAILED, check /tmp/run_iptables.log" << endl;
+			pass = false;
+		    }
+		}
+	    }
+
+	    checkSuccess(pass);
+	}
+	
+	//
+	// Check UFW for ubuntu 16
+	//
+	if ( OS == "ubuntu16")
+	{
+	    cout << "Checking Firewall setting - UFW should be disabled" << endl << endl;
+	    
+	    string UFWcmd = "chkconfig | grep ufw | grep on > /tmp/ufw_check 2>&1";
+	    string UFWREMOTEcmd = "chkconfig > /tmp/ufw_check 2>&1";
+	    string UFWREMOTECHECKcmd = "cat ufw_check | grep iptables | grep on > /tmp/ufw_check 2>&1";
+
+	    pass = true;
+	    list = moduleiplist.begin();
+	    for (; list != moduleiplist.end() ; list++)
+	    {
+		string ipAddress = (*list).IPaddress;
+		string status = (*list).status;
+		if ( status == "failed" )
+		  continue;
+		
+		cout << " Checking UFW for " + ipAddress + " : ";
+		
+		if ( status == "local" )
+		{
+		    int rtnCode = system(UFWcmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			cout << " FAILED, ufw is enabled, please disable" << endl;
+			pass = false;
+		    }
+		    else
+		    {
+			cout << " PASSED" << endl;
+		    }
+		}
+		else
+		{
+		    //run command
+		    string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + UFWREMOTEcmd + " > /tmp/run_ufw.log";
+		    int rtnCode = system(cmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			//get results
+			string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/iptables_check > /tmp/get_ufw_check.log";
+			int rtnCode = system(cmd.c_str());
+			if (WEXITSTATUS(rtnCode) == 0)
+			{
+			    int rtnCode = system(UFWREMOTECHECKcmd.c_str());
+			    if  (WEXITSTATUS(rtnCode) == 0 )
+			    {
+				cout << " FAILED, ufw is enabled, please disable" << endl;
+				pass = false;
+			    }
+			    else
+			    {
+				cout << " PASSED" << endl;
+			    }
+
+			    unlink("ufw_check");
+			}
+			else
+			{
+			    cout << " FAILED, check /tmp/get_ufw_check.log" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			cout << " FAILED, check /tmp/run_ufw.log" << endl;
+			pass = false;
+		    }
+		}
+	    }
+
+	    checkSuccess(pass);
+	}
+	
+	//
+	// Check filewalls for SUSE
+	//
+	if ( OS == "suse12")
+	{
+	    cout << "Checking Firewall setting - rcSuSEfirewall2 should be disabled" << endl << endl;
+	    
+	    string rcSuSEfirewall2cmd = "/sbin/rcSuSEfirewall2 status | grep active > /tmp/rcSuSEfirewall2_check 2>&1";
+	    string rcSuSEfirewall2REMOTEcmd = "/sbin/rcSuSEfirewall2 status > /tmp/rcSuSEfirewall2_check 2>&1";
+	    string rcSuSEfirewall2REMOTECHECKcmd = "cat rcSuSEfirewall2_check | grep active > /tmp/rcSuSEfirewall2_check 2>&1";
+
+	    pass = true;
+	    list = moduleiplist.begin();
+	    for (; list != moduleiplist.end() ; list++)
+	    {
+		string ipAddress = (*list).IPaddress;
+		string status = (*list).status;
+		if ( status == "failed" )
+		  continue;
+		
+		cout << " Checking rcSuSEfirewall2 for " + ipAddress + " : ";
+		
+		if ( status == "local" )
+		{
+		    int rtnCode = system(rcSuSEfirewall2cmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			cout << " FAILED, rcSuSEfirewall2 is enabled, please disable" << endl;
+			pass = false;
+		    }
+		    else
+		    {
+			cout << " PASSED" << endl;
+		    }
+		}
+		else
+		{
+		    //run command
+		    string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + rcSuSEfirewall2REMOTEcmd + " > /tmp/run_rcSuSEfirewall2.log";
+		    int rtnCode = system(cmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			//get results
+			string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/firewalld_check > /tmp/get_rcSuSEfirewall2_check.log";
+			int rtnCode = system(cmd.c_str());
+			if (WEXITSTATUS(rtnCode) == 0)
+			{
+			    int rtnCode = system(rcSuSEfirewall2REMOTECHECKcmd.c_str());
+			    if  (WEXITSTATUS(rtnCode) == 0 )
+			    {
+				cout << " FAILED, rcSuSEfirewall2 is enabled, please disable" << endl;
+				pass = false;
+			    }
+			    else
+			    {
+				cout << " PASSED" << endl;
+			    }
+
+			    unlink("rcSuSEfirewall2_check");
+			}
+			else
+			{
+			    cout << " FAILED, check /tmp/rcSuSEfirewall2_check.log" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			cout << " FAILED, check /tmp/run_rcSuSEfirewall2.log" << endl;
+			pass = false;
+		    }
+		}
+	    }
+
+	    checkSuccess(pass);
+	}
+	
+	//
+	// Check filewalls for non-Centos6
+	//
+	if ( OS != "centos6")
+	{
+	    cout << "Checking Firewall setting - firewalld should be disabled" << endl << endl;
+	    
+	    string FIREWALLDcmd = "systemctl status firewalld | grep running > /tmp/firewalld_check 2>&1";
+	    string FIREWALLDREMOTEcmd = "systemctl status firewalld > /tmp/firewalld_check 2>&1";
+	    string FIREWALLDREMOTECHECKcmd = "cat firewalld_check | grep running > /tmp/firewalld_check 2>&1";
+
+	    pass = true;
+	    list = moduleiplist.begin();
+	    for (; list != moduleiplist.end() ; list++)
+	    {
+		string ipAddress = (*list).IPaddress;
+		string status = (*list).status;
+		if ( status == "failed" )
+		  continue;
+		
+		cout << " Checking IPTABLES for " + ipAddress + " : ";
+		
+		if ( status == "local" )
+		{
+		    int rtnCode = system(FIREWALLDcmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			cout << " FAILED, firewalld is enabled, please disable" << endl;
+			pass = false;
+		    }
+		    else
+		    {
+			cout << " PASSED" << endl;
+		    }
+		}
+		else
+		{
+		    //run command
+		    string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + FIREWALLDREMOTEcmd + " > /tmp/run_firewalld.log";
+		    int rtnCode = system(cmd.c_str());
+		    if  (WEXITSTATUS(rtnCode) == 0 )
+		    {
+			//get results
+			string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/firewalld_check > /tmp/get_firewalld_check.log";
+			int rtnCode = system(cmd.c_str());
+			if (WEXITSTATUS(rtnCode) == 0)
+			{
+			    int rtnCode = system(FIREWALLDREMOTECHECKcmd.c_str());
+			    if  (WEXITSTATUS(rtnCode) == 0 )
+			    {
+				cout << " FAILED, firewalld is enabled, please disable" << endl;
+				pass = false;
+			    }
+			    else
+			    {
+				cout << " PASSED" << endl;
+			    }
+
+			    unlink("firewalld_check");
+			}
+			else
+			{
+			    cout << " FAILED, check /tmp/firewalld_check.log" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			cout << " FAILED, check /tmp/run_firewalld.log" << endl;
+			pass = false;
+		    }
+		}
+	    }
+
+	    checkSuccess(pass);
+	}
+	
+	//
+	// Dependent package install check
+	//
+
+	bool nmapPass = true;
+
+	//centos
+	
+	const std::string centosPgk[] = {	
+	    "boost",
+	    "expect", 
+	    "perl",
+	    "perl-DBI", 
+	    "openssl",
+	    "zlib",
+	    "file",
+	    "sudo",
+	    "perl-DBD-MySQL", 
+	    "libaio",
+	    "rsync",
+	    "snappy",
+	    "net-tools",
+	    ""
+	};
+
+	if ( OS == "centos6" || OS == "centos7")
+	{
+	    cout << "Checking Dependent Package installations" << endl << endl;
+	    
+	    string pgkcmd1 = "yum list installed ";
+	    string pgkcmd2 = " | grep Installed > /tmp/pkg_check 2>&1";
+	    string pgkREMOTEcmd1 = "yum list installed ";
+	    string pgkREMOTEcmd2 = " > /tmp/pgk_check 2>&1";
+	    string pgkREMOTECHECKcmd = "cat pgk_check | grep Installed > /tmp/pgk_check 2>&1";
+
+	    pass = true;
+	    list = moduleiplist.begin();
+	    for (; list != moduleiplist.end() ; list++)
+	    {
+		string ipAddress = (*list).IPaddress;
+		string status = (*list).status;
+		if ( status == "failed" )
+		  continue;
+		
+		cout << " Checking Dependent Package Installations for " + ipAddress << endl;
+		
+		for( int i = 0;;i++)
+		{
+		    if ( centosPgk[i] == "" )
+		    {
+			// end of section list, check for nmap which is needed for port testing
+			string pkgCMD = pgkcmd1 + "nmap" + pgkcmd2;
+			
+			int rtnCode = system(pkgCMD.c_str());
+			if  (WEXITSTATUS(rtnCode) != 0 )
+			{
+			    cout << " FAILED, Package 'nmap' isn't installed, please install for port testing" << endl;
+			    nmapPass = false;
+			}
+		      
+			break;
+		    }
+
+		    string pkg = centosPgk[i];
+
+		    string pkgCMD = pgkcmd1 + pkg + pgkcmd2;
+		    string pkgREMOTECMD = pgkREMOTEcmd1 + pkg + pgkREMOTEcmd2;
+		    
+		    if ( status == "local" )
+		    {
+			int rtnCode = system(pkgCMD.c_str());
+			if  (WEXITSTATUS(rtnCode) != 0 )
+			{
+			    cout << " FAILED, Package " + pkg + " isn't installed, please install" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			//run command
+			string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + pkgREMOTECMD + " > /tmp/run_pgk.log";
+			int rtnCode = system(cmd.c_str());
+			if  (WEXITSTATUS(rtnCode) == 0 )
+			{
+			    //get results
+			    string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/pgk_check > /tmp/get_pgk_check.log";
+			    int rtnCode = system(cmd.c_str());
+			    if (WEXITSTATUS(rtnCode) == 0)
+			    {
+				int rtnCode = system(pgkREMOTECHECKcmd.c_str());
+				if  (WEXITSTATUS(rtnCode) == 0 )
+				if  (WEXITSTATUS(rtnCode) != 0 )
+				{
+				    cout << " FAILED, Package " + pkg + " isn't installed, please install" << endl;
+				    pass = false;
+				}
+
+				unlink("pgk_check");
+			    }
+			    else
+			    {
+				cout << " FAILED, check /tmp/pgk_check.log" << endl;
+				pass = false;
+			    }
+			}
+			else
+			{
+			    cout << " FAILED, check /tmp/run_pgk.log" << endl;
+			    pass = false;
+			}
+		    }
+		}
+		
+		if (!pass) 
+		    cout << " Passed, all dependent packages are installed" << endl << endl;
+	    }
+
+	    checkSuccess(pass);
+	}
+
+	// suse
+	if ( OS == "suse12" )
+	{
+	    cout << "Checking Dependent Package installations" << endl << endl;
+	    
+	    string pgkcmd1 = "zypper list installed ";
+	    string pgkcmd2 = " | grep Installed > /tmp/pkg_check 2>&1";
+	    string pgkREMOTEcmd1 = "zypper list installed ";
+	    string pgkREMOTEcmd2 = " > /tmp/pgk_check 2>&1";
+	    string pgkREMOTECHECKcmd = "cat pgk_check | grep Installed > /tmp/pgk_check 2>&1";
+
+	    pass = true;
+	    list = moduleiplist.begin();
+	    for (; list != moduleiplist.end() ; list++)
+	    {
+		string ipAddress = (*list).IPaddress;
+		string status = (*list).status;
+		if ( status == "failed" )
+		  continue;
+		
+		cout << " Checking Dependent Package Installations for " + ipAddress << endl;
+		
+		for( int i = 0;;i++)
+		{
+		    if ( centosPgk[i] == "" )
+		    {
+			// end of section list, check for nmap which is needed for port testing
+			string pkgCMD = pgkcmd1 + "nmap" + pgkcmd2;
+			
+			int rtnCode = system(pkgCMD.c_str());
+			if  (WEXITSTATUS(rtnCode) != 0 )
+			{
+			    cout << " FAILED, Package 'nmap' isn't installed, please install for port testing" << endl;
+			    nmapPass = false;
+			}
+		      
+			break;
+		    }
+
+		    string pkg = centosPgk[i];
+
+		    string pkgCMD = pgkcmd1 + pkg + pgkcmd2;
+		    string pkgREMOTECMD = pgkREMOTEcmd1 + pkg + pgkREMOTEcmd2;
+		    
+		    if ( status == "local" )
+		    {
+			int rtnCode = system(pkgCMD.c_str());
+			if  (WEXITSTATUS(rtnCode) != 0 )
+			{
+			    cout << " FAILED, Package " + pkg + " isn't installed, please install" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			//run command
+			string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + pkgREMOTECMD + " > /tmp/run_pgk.log";
+			int rtnCode = system(cmd.c_str());
+			if  (WEXITSTATUS(rtnCode) == 0 )
+			{
+			    //get results
+			    string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/pgk_check > /tmp/get_pgk_check.log";
+			    int rtnCode = system(cmd.c_str());
+			    if (WEXITSTATUS(rtnCode) == 0)
+			    {
+				int rtnCode = system(pgkREMOTECHECKcmd.c_str());
+				if  (WEXITSTATUS(rtnCode) == 0 )
+				if  (WEXITSTATUS(rtnCode) != 0 )
+				{
+				    cout << " FAILED, Package " + pkg + " isn't installed, please install" << endl;
+				    pass = false;
+				}
+
+				unlink("pgk_check");
+			    }
+			    else
+			    {
+				cout << " FAILED, check /tmp/pgk_check.log" << endl;
+				pass = false;
+			    }
+			}
+			else
+			{
+			    cout << " FAILED, check /tmp/run_pgk.log" << endl;
+			    pass = false;
+			}
+		    }
+		}
+		
+		if (!pass) 
+		    cout << " Passed, all dependent packages are installed" << endl << endl;
+	    }
+
+	    checkSuccess(pass);
+	}
+
+
+	//ubuntu and debian
+	
+	const std::string ubuntuPgk[] = {
+	    "libboost-all-dev",
+	    "expect", 
+	    "libdbi-perl",
+	    "perl", 
+	    "openssl",
+	    "libreadline-dev",
+	    "file",
+	    "sudo",
+	    "libaio",
+	    "rsync",
+	    "libsnappy1",
+	    "net-tools",
+	    ""
+	};
+	
+	if ( OS == "ubuntu16" || OS == "debian8" )
+	{
+	    cout << "Checking Dependent Package installations" << endl << endl;
+	    
+	    string pgkcmd1 = "dpkg -s ";
+	    string pgkcmd2 = " | grep installed > /tmp/pkg_check 2>&1";
+	    string pgkREMOTEcmd1 = "dpkg -s ";
+	    string pgkREMOTEcmd2 = " > /tmp/pgk_check 2>&1";
+	    string pgkREMOTECHECKcmd = "cat pgk_check | grep installed > /tmp/pgk_check 2>&1";
+
+	    pass = true;
+	    list = moduleiplist.begin();
+	    for (; list != moduleiplist.end() ; list++)
+	    {
+		string ipAddress = (*list).IPaddress;
+		string status = (*list).status;
+		if ( status == "failed" )
+		  continue;
+		
+		cout << " Checking Dependent Package Installations for " + ipAddress << endl;
+		
+		for( int i = 0;;i++)
+		{
+		    if ( ubuntuPgk[i] == "" )
+		    {
+			// end of section list, check for nmap which is needed for port testing
+			string pkgCMD = pgkcmd1 + "nmap" + pgkcmd2;
+			
+			int rtnCode = system(pkgCMD.c_str());
+			if  (WEXITSTATUS(rtnCode) != 0 )
+			{
+			    cout << " FAILED, Package 'nmap' isn't installed, please install for port testing" << endl;
+			    nmapPass = false;
+			}
+		      
+			break;
+		    }
+
+		    string pkg = ubuntuPgk[i];
+
+		    string pkgCMD = pgkcmd1 + pkg + pgkcmd2;
+		    string pkgREMOTECMD = pgkREMOTEcmd1 + pkg + pgkREMOTEcmd2;
+		    
+		    if ( status == "local" )
+		    {
+			int rtnCode = system(pkgCMD.c_str());
+			if  (WEXITSTATUS(rtnCode) != 0 )
+			{
+			    cout << " FAILED, Package " + pkg + " isn't installed, please install" << endl;
+			    pass = false;
+			}
+		    }
+		    else
+		    {
+			//run command
+			string cmd = "./remote_command.sh " + ipAddress + " " + password + " " + pkgREMOTECMD + " > /tmp/run_pgk.log";
+			int rtnCode = system(cmd.c_str());
+			if  (WEXITSTATUS(rtnCode) == 0 )
+			{
+			    //get results
+			    string cmd = "./remote_scp_get.sh " + ipAddress + " " + password + " /tmp/pgk_check > /tmp/get_pgk_check.log";
+			    int rtnCode = system(cmd.c_str());
+			    if (WEXITSTATUS(rtnCode) == 0)
+			    {
+				int rtnCode = system(pgkREMOTECHECKcmd.c_str());
+				if  (WEXITSTATUS(rtnCode) == 0 )
+				if  (WEXITSTATUS(rtnCode) != 0 )
+				{
+				    cout << " FAILED, Package " + pkg + " isn't installed, please install" << endl;
+				    pass = false;
+				}
+
+				unlink("pgk_check");
+			    }
+			    else
+			    {
+				cout << " FAILED, check /tmp/pgk_check.log" << endl;
+				pass = false;
+			    }
+			}
+			else
+			{
+			    cout << " FAILED, check /tmp/run_pgk.log" << endl;
+			    pass = false;
+			}
+		    }
+		}
+		
+		if (!pass) 
+		    cout << " Passed, all dependent packages are installed" << endl << endl;
+	    }
+
+	    checkSuccess(pass);
+	}
+
+	// port testing
+	if (!nmapPass)
+	{
+	    cout << "Package 'nmap' isn't installed, skipping the port testing" << endl;
+	    exit (0);
+	}
+
+	cout << "Checking Port availibility that MariaDb ColumnStore will use" << endl << endl;
+	
+	string nmapcmd1 = "nmap ";
+	string nmapcmd2 = " -p 8602 | grep 'closed unknown' > /tmp/nmap_check 2>&1";
+
+	pass = true;
+	list = moduleiplist.begin();
+	for (; list != moduleiplist.end() ; list++)
+	{
+	    string ipAddress = (*list).IPaddress;
+	    string status = (*list).status;
+	    if ( status == "failed" || status == "local")
+		continue;
+	    
+	    cout << " Checking Ports using /nmap' for " + ipAddress + " : ";
+	    
+	    string nmapcmd = nmapcmd1 + ipAddress + nmapcmd2;
+	    
+	    //run command
+	    int rtnCode = system(nmapcmd.c_str());
+	    if  (WEXITSTATUS(rtnCode) != 0 )
+		cout << " FAILED, iptables is enabled, please disable" << endl;
+	    else
+		cout << " PASSED" << endl;
+	}
+    
+	cout << endl << endl << "Finished Validation of the Cluster, correct any failures" << endl;
+	exit(0);
+    
+}
+
+
+void checkSuccess( bool pass)
 {
-	Oam oam;
-
-	cout << endl << "--- Updating Root Password on all Instance(s) ---" << endl << endl;
-
-	InstanceList::iterator list1 = uminstancelist.begin();
-	for (; list1 != uminstancelist.end() ; list1++)
-	{
-		string instance = (*list1).instanceName;
-		string module = (*list1).moduleName;
-
-		//get IP Address of um instance
-		string ipAddress = oam.getEC2InstanceIpAddress(instance);
-
-		if (ipAddress == "stopped" || ipAddress == "terminated" ) {
-			cout << "ERROR: Instance " << instance << " failed to get private IP Address" << endl;
-			cleanupSystem();
-		}
-
-		string cmd = installDir + "/bin/remote_command.sh " + ipAddress + " " + AMIrootPassword + "  '/root/updatePassword.sh " + rootPassword + "' > /dev/null 2>&1";
-		int rtnCode = system(cmd.c_str());
-		if (WEXITSTATUS(rtnCode) != 0) {
-			cout << "ERROR: failed update of root password on " + module << endl;
-			cleanupSystem();
-		}
+    if (!pass)
+    {
+	cout << endl;
+	string answer = "y";
+	prompt = "Failure Occurred, do you want to continue? (y,n) > ";
+	pcommand = readline(prompt.c_str());
+	if (pcommand) {
+		if (strlen(pcommand) > 0) answer = pcommand;
+		free(pcommand);
+		pcommand = 0;
 	}
 
-	InstanceList::iterator list2 = pminstancelist.begin();
-	for (; list2 != pminstancelist.end() ; list2++)
+	if ( answer == "n" )
 	{
-		string instance = (*list2).instanceName;
-		string module = (*list2).moduleName;
-
-		string cmd = installDir + "/bin/remote_command.sh " + ipAddress + " " + AMIrootPassword + "  '/root/updatePassword.sh " + rootPassword + "' > /dev/null 2>&1";
-		int rtnCode = system(cmd.c_str());
-		if (WEXITSTATUS(rtnCode) != 0) {
-			cout << "ERROR: failed update root of password on " + module << endl;
-			cleanupSystem();
-		}
+		cout << "Exiting..." << endl;
+		exit (1);
 	}
+    }
 }
