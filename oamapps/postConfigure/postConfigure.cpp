@@ -640,7 +640,7 @@ int main(int argc, char *argv[])
 
 				cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
 
-				cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+				cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps '" + mysqlpw + "' 1 " + installDir;
 				system(cmd.c_str());
 				exit(0);
 			}
