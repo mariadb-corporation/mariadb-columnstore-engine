@@ -1256,7 +1256,7 @@ int setupResources()
         return -1;
     }
 
-    rlim.rlim_cur = rlim.rlim_max = 65536;
+    rlim.rlim_cur = rlim.rlim_max = 1024*1024;
     if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
         return -2;
     }
@@ -1265,7 +1265,7 @@ int setupResources()
         return -3;
     }
 
-    if (rlim.rlim_cur != 65536) {
+    if (rlim.rlim_cur != 1024*1024) {
         return -4;
     }
 #endif
