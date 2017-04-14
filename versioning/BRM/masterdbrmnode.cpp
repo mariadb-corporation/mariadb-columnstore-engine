@@ -32,7 +32,7 @@
 #include "liboamcpp.h"
 #include "stopwatch.h"
 #include "masterdbrmnode.h"
-
+#include "messagequeuepool.h"
 // #define BRM_VERBOSE
 
 // minor improvement to code clarity...
@@ -163,7 +163,8 @@ void MasterDBRMNode::initMsgQueues(config::Config *config)
 	serverLock.unlock();
 	for (i = 1; i <= NumWorkers; i++) {
 		snprintf(ctmp, 50, "DBRM_Worker%d", i);
-		slaves.push_back(new MessageQueueClient(ctmp, config));
+        std::string module(ctmp);
+		slaves.push_back(MessageQueueClientPool::getInstance(module));
 	}
 }
 
@@ -882,8 +883,8 @@ void MasterDBRMNode::finalCleanup()
 	cerr << "Closing connections" << endl;
 #endif
 	for (sIt = slaves.begin(); sIt != slaves.end(); sIt++) {
-		(*sIt)->shutdown();
-		delete *sIt;
+		MessageQueueClientPool::releaseInstance(*sIt);
+		*sIt = NULL;
 	}
  	slaves.clear();
 
@@ -1036,8 +1037,8 @@ void MasterDBRMNode::doReload(messageqcpp::IOSocket *sock)
 	}
 
 	for (i = 0; i < (int) slaves.size(); i++) {
-		slaves[i]->shutdown();
-		delete slaves[i];
+		MessageQueueClientPool::releaseInstance(slaves[i]);
+		slaves[i] = NULL;
 	}
 	slaves.clear();
 
@@ -1045,7 +1046,8 @@ void MasterDBRMNode::doReload(messageqcpp::IOSocket *sock)
 
 	for (i = 1; i <= NumWorkers; i++) {
 		snprintf(ctmp, 50, "DBRM_Worker%d", i);
-		slaves.push_back(new MessageQueueClient(ctmp, config));
+        std::string module(ctmp);
+		slaves.push_back(MessageQueueClientPool::getInstance(module));
 	}
 	
 	iSlave = slaves.end();

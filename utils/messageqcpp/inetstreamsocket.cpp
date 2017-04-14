@@ -70,6 +70,7 @@ either expressed or implied, of the FreeBSD Project.
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #endif
 #include <sys/types.h>
 #include <sys/time.h>
@@ -1068,6 +1069,45 @@ int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* tim
 #endif
 
 	return 0;
+}
+
+bool InetStreamSocket::isConnected() const
+{
+    int error = 0;
+    socklen_t len = sizeof(error);
+    int retval = getsockopt(fSocketParms.sd(), SOL_SOCKET, SO_ERROR, &error, &len);
+    
+    if (error || retval)
+        return false;
+        
+    struct pollfd pfd[1];
+    pfd[0].fd = fSocketParms.sd();
+    pfd[0].events = POLLIN;
+    pfd[0].revents = 0;
+
+    error = poll(pfd, 1, 0);
+    if ((error < 0) || (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR))) {
+        return false;
+    }
+    
+    return true;
+}
+
+bool InetStreamSocket::hasData() const
+{
+    int count;
+    char buf[1];
+    ssize_t retval;
+    ioctl(fSocketParms.sd(), FIONREAD, &count);
+    if (count)
+        return true;
+        
+    // EAGAIN | EWOULDBLOCK means the socket is clear. Anything else is data or error
+    retval = recv(fSocketParms.sd(), buf, 1, MSG_DONTWAIT);
+    if (retval & (EAGAIN | EWOULDBLOCK))
+        return false;
+        
+    return true;
 }
 
 } //namespace messageqcpp
