@@ -33,6 +33,7 @@
 #include "bytestream.h"
 #include "liboamcpp.h"
 #include "messagequeue.h"
+#include "messagequeuepool.h"
 #include "we_messages.h"
 
 // Required declaration as it isn't in a MairaDB include
@@ -81,15 +82,6 @@ static bool get_file_sizes(messageqcpp::MessageQueueClient *msgQueueClient, cons
     }
 }
 
-static void cleanup(std::map<int, messageqcpp::MessageQueueClient*> &clients)
-{
-    for(std::map<int, messageqcpp::MessageQueueClient*>::iterator itr = clients.begin(); itr != clients.end(); itr++)
-    {
-        delete itr->second;
-    }
-}
-
-
 static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
 {
     BRM::DBRM *emp = new BRM::DBRM();
@@ -105,7 +97,6 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     off_t fileSize = 0;
     off_t compressedFileSize = 0;
     we_config.initConfigCache();
-    std::map<int, messageqcpp::MessageQueueClient*> clients;
     messageqcpp::MessageQueueClient *msgQueueClient;
     oam::Oam oam_instance;
     int pmId = 0;
@@ -143,37 +134,15 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
             std::string DbRootPath = config->getConfig("SystemConfig", DbRootName.str());
             fileSize = compressedFileSize = 0;
             snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", DbRootPath.c_str(), oidDirName);
-            try
-            {
-                msgQueueClient = clients.at(iter->dbRoot);
-            }
-            catch (...)
-            {
-                msgQueueClient = NULL;
-            }
-            if (!msgQueueClient)
-            {
-                oam_instance.getDbrootPmConfig(iter->dbRoot, pmId);
-                std::ostringstream oss;
-                oss << "pm" << pmId << "_WriteEngineServer";
-                try
-                {
-                    msgQueueClient = new messageqcpp::MessageQueueClient(oss.str());
-                }
-                catch (...)
-                {
-                    delete msgQueueClient;
-                    cleanup(clients);
-                    delete emp;
-                    return 1;
-                }
-                clients[iter->dbRoot] = msgQueueClient;
-            }
-
-
+            oam_instance.getDbrootPmConfig(iter->dbRoot, pmId);
+            std::ostringstream oss;
+            oss << "pm" << pmId << "_WriteEngineServer";
+            std::string client = oss.str();
+            msgQueueClient = messageqcpp::MessageQueueClientPool::getInstance(oss.str());
+        
             if (!get_file_sizes(msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
             {
-                cleanup(clients);
+                messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
                 delete emp;
                 return 1;
             }
@@ -201,11 +170,13 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
 
             if (schema_table_store_record(thd, table))
             {
-                cleanup(clients);
+                messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
                 delete emp;
                 return 1;
             }
             iter++;
+            messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
+            msgQueueClient = NULL;
         }
     }
     delete emp;

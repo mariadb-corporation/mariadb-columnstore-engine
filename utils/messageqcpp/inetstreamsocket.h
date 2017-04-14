@@ -196,6 +196,13 @@ public:
 	 */
 	EXPORT static int ping(const std::string& ipaddr, const struct timespec* timeout=0);
 
+    // Check if we are still connected
+    virtual bool isConnected() const;
+    
+    // Check if the socket still has data pending
+    
+    virtual bool hasData() const;
+    
 	/*
 	 * allow test suite access to private data for OOB test
 	 */
