@@ -74,6 +74,7 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			exp2 = parm[1]->data()->getIntVal(row, isNull);
 			if (isNull) {
@@ -177,6 +178,7 @@ uint64_t Func_nullif::getUintVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UDECIMAL:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			int64_t iexp2 = parm[1]->data()->getIntVal(row, isNull);
 			if (isNull || iexp2 < 0) {
@@ -290,6 +292,7 @@ int32_t Func_nullif::getDateIntVal(rowgroup::Row& row,
 		case execplan::CalpontSystemCatalog::DECIMAL:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			exp2 = parm[1]->data()->getIntVal(row, isNull);
 			if (isNull) {
@@ -352,6 +355,7 @@ int64_t Func_nullif::getDatetimeIntVal(rowgroup::Row& row,
 		case execplan::CalpontSystemCatalog::DECIMAL:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			exp2 = parm[1]->data()->getIntVal(row, isNull);
 			if (isNull) {
@@ -415,6 +419,7 @@ double Func_nullif::getDoubleVal(rowgroup::Row& row,
 		case execplan::CalpontSystemCatalog::DECIMAL:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			exp2 = parm[1]->data()->getDoubleVal(row, isNull);
 			if (isNull) {
@@ -491,6 +496,7 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row,
 	
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			int64_t value = parm[1]->data()->getIntVal(row, isNull);
 			if (isNull) {

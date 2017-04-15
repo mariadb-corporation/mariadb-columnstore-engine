@@ -82,6 +82,7 @@ int64_t Func_unix_timestamp::getIntVal(rowgroup::Row& row,
 			break;
 		case CalpontSystemCatalog::CHAR:
 		case CalpontSystemCatalog::VARCHAR:
+		case CalpontSystemCatalog::TEXT:
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)
 			{

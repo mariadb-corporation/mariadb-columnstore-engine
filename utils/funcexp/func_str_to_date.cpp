@@ -86,6 +86,7 @@ dataconvert::DateTime getDateTime (rowgroup::Row& row,
 			break;
 		}
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 		{
 			const string& valref = parm[0]->data()->getStrVal(row, isNull);

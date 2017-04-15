@@ -63,6 +63,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
 		case CalpontSystemCatalog::DOUBLE:
 		case CalpontSystemCatalog::FLOAT:
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 		{
 			double value = parm[0]->data()->getDoubleVal(row, isNull);
@@ -96,6 +97,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
 		case CalpontSystemCatalog::DOUBLE:
 		case CalpontSystemCatalog::FLOAT:
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 		{
 			double value = parm[1]->data()->getDoubleVal(row, isNull);
@@ -135,6 +137,7 @@ string Func_maketime::getStrVal(rowgroup::Row& row,
 		case CalpontSystemCatalog::DOUBLE:
 		case CalpontSystemCatalog::FLOAT:
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 		{
 			double value = parm[2]->data()->getDoubleVal(row, isNull);

@@ -101,6 +101,7 @@ inline uint64_t simple_case_cmp(Row& row,
         }
 
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		{
    			const string& ev = parm[n]->data()->getStrVal(row, isNull);
@@ -252,6 +253,7 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
 			{
 				// the case expression
 				if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
+					fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
 					fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
 				{
 					PredicateOperator op;
@@ -267,6 +269,7 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
 		}
 
 		if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
+            fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
 			fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
 		{
 			// this is not a string column
@@ -280,6 +283,7 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
 
 			// If any parm is of string type, the result type should be string. (same as if)
 			else if (rct.colDataType != CalpontSystemCatalog::CHAR &&
+                        rct.colDataType != CalpontSystemCatalog::TEXT &&
 						rct.colDataType != CalpontSystemCatalog::VARCHAR)
 			{
 				op.setOpType(rct, fp[i]->data()->resultType());

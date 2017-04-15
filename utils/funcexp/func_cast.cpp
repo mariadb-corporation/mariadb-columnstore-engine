@@ -134,6 +134,7 @@ int64_t Func_cast_signed::getIntVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			const string& value = parm[0]->data()->getStrVal(row, isNull);
 			if (isNull)
@@ -243,6 +244,7 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			const string& value = parm[0]->data()->getStrVal(row, isNull);
 			if (isNull)
@@ -358,6 +360,7 @@ string Func_cast_char::getStrVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			const string& value = parm[0]->data()->getStrVal(row, isNull);
 			if (isNull)
@@ -519,6 +522,7 @@ int32_t Func_cast_date::getDateIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
 		{
 			val = dataconvert::DataConvert::stringToDate(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)
@@ -588,6 +592,7 @@ int64_t Func_cast_date::getDatetimeIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
 		{
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)
@@ -716,6 +721,7 @@ int64_t Func_cast_datetime::getDatetimeIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)
@@ -893,6 +899,7 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
         {
             const string& strValue = parm[0]->data()->getStrVal(row, isNull);
             const char* str = strValue.c_str();

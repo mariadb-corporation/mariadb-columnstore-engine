@@ -169,6 +169,7 @@ namespace
 			}
 			case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
 			case execplan::CalpontSystemCatalog::CHAR:
+			case execplan::CalpontSystemCatalog::TEXT:
 			{
 				const string& val = pm[0]->data()->getStrVal(row, isNull);
 				if (isNull)
@@ -211,7 +212,8 @@ CalpontSystemCatalog::ColType Func_in::operationType( FunctionParm& fp, CalpontS
 	{
 		//op.setOpType(op.operationType(), fp[i]->data()->resultType());
 		if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
-			fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
+			fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR &&
+            fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT)
 		{
 			allString = false;
 			op.setOpType(ct, fp[i]->data()->resultType());
@@ -222,6 +224,8 @@ CalpontSystemCatalog::ColType Func_in::operationType( FunctionParm& fp, CalpontS
 			if ((fp[i]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR && 
 				  fp[i]->data()->resultType().colWidth > 8) || 
 				  (fp[i]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR &&
+				  fp[i]->data()->resultType().colWidth >= 8) || 
+				  (fp[i]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT &&
 				  fp[i]->data()->resultType().colWidth >= 8))
 				  allNonToken = false;
 		}

@@ -72,6 +72,7 @@ string Func_time_format::getStrVal(rowgroup::Row& row,
 			break;
 		case CalpontSystemCatalog::CHAR:
 		case CalpontSystemCatalog::VARCHAR:
+		case CalpontSystemCatalog::TEXT:
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)
 			{

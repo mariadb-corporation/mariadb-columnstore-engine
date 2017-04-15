@@ -68,6 +68,7 @@ bool Func_isnull::getBoolVal(Row& row,
 			parm[0]->data()->getDecimalVal(row, isNull);
 			break;
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 			parm[0]->data()->getStrVal(row, isNull);
 			break;

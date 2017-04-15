@@ -47,6 +47,7 @@ bool boolVal(SPTP& parm, Row& row, bool& isNull)
 		switch (parm->data()->resultType().colDataType)
 		{
 			case CalpontSystemCatalog::CHAR:
+			case CalpontSystemCatalog::TEXT:
 			case CalpontSystemCatalog::VARCHAR:
 				ret = (atoi((char*)(parm->data()->getStrVal().c_str())) != 0);
             case CalpontSystemCatalog::FLOAT:
@@ -95,7 +96,9 @@ CalpontSystemCatalog::ColType Func_if::operationType(FunctionParm& fp, CalpontSy
 	// If any parm is of string type, the result type should be string.
 	if (fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
 		  fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
+		  fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
 		  fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
+		  fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
 		  fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR)
 	{
 		CalpontSystemCatalog::ColType ct;

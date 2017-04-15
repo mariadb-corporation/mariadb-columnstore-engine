@@ -60,6 +60,7 @@ string Func_elt::getStrVal(rowgroup::Row& row,
 		case CalpontSystemCatalog::DOUBLE:
 		case CalpontSystemCatalog::FLOAT:
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 		{
 			double value = parm[0]->data()->getDoubleVal(row, isNull);

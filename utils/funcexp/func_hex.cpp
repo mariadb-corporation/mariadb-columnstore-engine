@@ -72,6 +72,7 @@ string Func_hex::getStrVal(rowgroup::Row& row,
 	switch (parm[0]->data()->resultType().colDataType)
 	{
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 		case CalpontSystemCatalog::DATETIME:
 		case CalpontSystemCatalog::DATE:
@@ -97,7 +98,6 @@ string Func_hex::getStrVal(rowgroup::Row& row,
 		}
 		case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
-        case CalpontSystemCatalog::TEXT:
 		{
 			const string& arg = parm[0]->data()->getStrVal(row, isNull);
 			uint64_t hexLen = arg.size() * 2;

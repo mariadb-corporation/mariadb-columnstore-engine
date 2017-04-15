@@ -62,6 +62,7 @@ int64_t Func_microsecond::getIntVal(rowgroup::Row& row,
 			microSecond = (uint32_t)((val & 0xfffff));
 			break;
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)

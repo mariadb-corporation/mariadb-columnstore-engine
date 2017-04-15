@@ -121,6 +121,7 @@ string Func_char::getStrVal(Row& row,
 
         case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
 		{

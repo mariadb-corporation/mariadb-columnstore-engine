@@ -73,6 +73,7 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
 		{
