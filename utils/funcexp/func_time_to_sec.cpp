@@ -68,6 +68,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
 			sec = (uint32_t)((val >> 20) & 0x3f);
 			break;
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::VARCHAR:
             {
                 std::string strVal = parm[0]->data()->getStrVal(row, isNull);

@@ -116,6 +116,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 			break;
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 			val1 = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull), &isDate1);
 			break;
 		case execplan::CalpontSystemCatalog::BIGINT:
@@ -151,6 +152,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 			break;
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 			val2 = dataconvert::DataConvert::stringToDatetime(parm[1]->data()->getStrVal(row, isNull), &isDate2);
 			break;
 		case execplan::CalpontSystemCatalog::BIGINT:

@@ -283,6 +283,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row,
 		case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			int64_t s = 0;
 			double  p = 1;

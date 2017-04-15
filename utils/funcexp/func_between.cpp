@@ -174,6 +174,7 @@ namespace
 			}
 			case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
 			case execplan::CalpontSystemCatalog::CHAR:
+            case execplan::CalpontSystemCatalog::TEXT:
 			{
 				const string& val = pm[0]->data()->getStrVal(row, isNull);
 				if (notBetween)
@@ -215,6 +216,7 @@ CalpontSystemCatalog::ColType Func_between::operationType( FunctionParm& fp, Cal
 		ct = op.operationType();
 
 		if ((fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
+			fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT && 
 			fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR) || 
 			ct.colDataType == CalpontSystemCatalog::DATE ||
 			ct.colDataType == CalpontSystemCatalog::DATETIME)

@@ -159,6 +159,7 @@ double Func_mod::getDoubleVal(Row& row,
 		
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			double value = parm[0]->data()->getDoubleVal(row, isNull);
 			mod = fmod(value,div);
@@ -203,6 +204,7 @@ int64_t Func_mod::getIntVal(Row& row,
 		case execplan::CalpontSystemCatalog::TINYINT:
 		case execplan::CalpontSystemCatalog::SMALLINT:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		{
 			int64_t value = parm[0]->data()->getIntVal(row, isNull);
@@ -290,6 +292,7 @@ uint64_t Func_mod::getUIntVal(Row& row,
 		case execplan::CalpontSystemCatalog::TINYINT:
 		case execplan::CalpontSystemCatalog::SMALLINT:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		{
 			int64_t value = parm[0]->data()->getIntVal(row, isNull);

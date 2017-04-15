@@ -61,6 +61,7 @@ int64_t Func_quarter::getIntVal(rowgroup::Row& row,
 			month = (val >> 44) & 0xf;
 			break;
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:			
 		{
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));

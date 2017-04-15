@@ -85,6 +85,7 @@ bool getUIntValFromParm(
 
         case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			value = parm->data()->getIntVal(row, isNull);
 			if (isNull)

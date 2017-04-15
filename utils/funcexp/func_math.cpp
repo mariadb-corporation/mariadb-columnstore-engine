@@ -104,6 +104,7 @@ double Func_acos::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         case execplan::CalpontSystemCatalog::UBIGINT:
@@ -189,6 +190,7 @@ double Func_asin::getDoubleVal(Row& row,
 		case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
@@ -275,6 +277,7 @@ double Func_atan::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
@@ -396,6 +399,7 @@ double Func_cos::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
@@ -481,6 +485,7 @@ double Func_cot::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
@@ -674,6 +679,7 @@ double Func_log::getDoubleVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			isNull = true;
 			return doubleNullVal();
@@ -763,6 +769,7 @@ double Func_log2::getDoubleVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			isNull = true;
 			return doubleNullVal();
@@ -852,6 +859,7 @@ double Func_log10::getDoubleVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			isNull = true;
 			return doubleNullVal();
@@ -895,6 +903,7 @@ double Func_sin::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         case execplan::CalpontSystemCatalog::UBIGINT:
@@ -980,6 +989,7 @@ double Func_sqrt::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         case execplan::CalpontSystemCatalog::UBIGINT:
@@ -1065,6 +1075,7 @@ double Func_tan::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         case execplan::CalpontSystemCatalog::UBIGINT:
@@ -1166,6 +1177,7 @@ string Func_format::getStrVal(Row& row,
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			double rawValue = parm[0]->data()->getDoubleVal(row, isNull);
 
@@ -1355,6 +1367,7 @@ double Func_radians::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
@@ -1440,6 +1453,7 @@ double Func_degrees::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:

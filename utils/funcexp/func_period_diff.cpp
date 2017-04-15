@@ -86,6 +86,7 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			period1 = atoi(parm[0]->data()->getStrVal(row, isNull).c_str());
 			break;
@@ -129,6 +130,7 @@ int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			period2 = atoi(parm[1]->data()->getStrVal(row, isNull).c_str());
 			break;

@@ -70,6 +70,7 @@ namespace
 			case execplan::CalpontSystemCatalog::USMALLINT:
 			case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
 			case execplan::CalpontSystemCatalog::CHAR:
+			case execplan::CalpontSystemCatalog::TEXT:
 			case execplan::CalpontSystemCatalog::DOUBLE:
             case execplan::CalpontSystemCatalog::UDOUBLE:
 			case execplan::CalpontSystemCatalog::FLOAT:
@@ -129,6 +130,7 @@ namespace
 			case execplan::CalpontSystemCatalog::FLOAT:
             case execplan::CalpontSystemCatalog::UFLOAT:
 			case execplan::CalpontSystemCatalog::CHAR:
+			case execplan::CalpontSystemCatalog::TEXT:
 			{
 				pattern = pm[1]->data()->getStrVal(row, isNull);
 				break;

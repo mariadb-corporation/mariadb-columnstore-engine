@@ -118,6 +118,7 @@ int64_t Func_extract::getIntVal(rowgroup::Row& row,
 		break;
 	case CalpontSystemCatalog::VARCHAR:
 	case CalpontSystemCatalog::CHAR:
+	case CalpontSystemCatalog::TEXT:
 	{
 		const string& val = parm[0]->data()->getStrVal(row, isNull);
 		time = dataconvert::DataConvert::stringToDatetime(val);

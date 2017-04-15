@@ -661,6 +661,7 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			break;
@@ -693,6 +694,7 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row,
 	ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(parm[3]->data());
 	execplan::CalpontSystemCatalog::ColType ct3 = parm[3]->data()->resultType();
 	if ((ct3.colDataType == execplan::CalpontSystemCatalog::CHAR ||
+         ct3.colDataType == execplan::CalpontSystemCatalog::TEXT ||
 	     ct3.colDataType == execplan::CalpontSystemCatalog::VARCHAR) &&
 	    constCol != NULL && constCol->constval().compare("SUB") == 0)
 		funcType = OP_SUB;

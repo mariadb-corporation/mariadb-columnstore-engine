@@ -84,6 +84,7 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR: // including CHAR'
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			const string& value = parm[0]->data()->getStrVal(row, isNull);
 			int64_t val = 0;

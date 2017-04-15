@@ -85,6 +85,7 @@ int64_t Func_bitand::getIntVal(Row& row,
 	
 			case execplan::CalpontSystemCatalog::VARCHAR:
 			case execplan::CalpontSystemCatalog::CHAR:
+			case execplan::CalpontSystemCatalog::TEXT:
 			{
 				int64_t value = parm[i]->data()->getIntVal(row, isNull);
 				if (isNull)

@@ -118,6 +118,7 @@ int64_t Func_floor::getIntVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			const string& str = parm[0]->data()->getStrVal(row, isNull);
 			if (!isNull)
@@ -200,6 +201,7 @@ uint64_t Func_floor::getUintVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			const string& str = parm[0]->data()->getStrVal(row, isNull);
 			if (!isNull)
@@ -252,7 +254,8 @@ double Func_floor::getDoubleVal(Row& row,
 		ret = floor(parm[0]->data()->getDoubleVal(row, isNull));
 	}
 	else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-			 op_ct.colDataType == CalpontSystemCatalog::CHAR)
+			 op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+			 op_ct.colDataType == CalpontSystemCatalog::TEXT)
 	{
 		const string& str = parm[0]->data()->getStrVal(row, isNull);
 		if (!isNull)
@@ -278,7 +281,8 @@ string Func_floor::getStrVal(Row& row,
 		op_ct.colDataType == CalpontSystemCatalog::FLOAT ||
 		op_ct.colDataType == CalpontSystemCatalog::UFLOAT ||
 		op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-		op_ct.colDataType == CalpontSystemCatalog::CHAR)
+		op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+		op_ct.colDataType == CalpontSystemCatalog::TEXT)
 	{
 		snprintf(tmp, 511, "%f", getDoubleVal(row, parm, isNull, op_ct));
 

@@ -58,6 +58,7 @@ int64_t Func_day::getIntVal(rowgroup::Row& row,
 			val = parm[0]->data()->getIntVal(row, isNull);
 			return (uint32_t)((val >> 38) & 0x3f);
 		case CalpontSystemCatalog::CHAR:
+		case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR:
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)

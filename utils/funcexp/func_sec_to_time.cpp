@@ -138,6 +138,7 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row,
 		
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			val = parm[0]->data()->getIntVal(row, isNull);
 	        

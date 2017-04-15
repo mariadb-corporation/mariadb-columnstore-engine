@@ -78,6 +78,7 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
 		{
 			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
 			if (val == -1)
