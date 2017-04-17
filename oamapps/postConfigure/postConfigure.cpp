@@ -4858,7 +4858,6 @@ bool storageSetup(bool amazonInstall)
 
 void setSystemName()
 {
-	Oam oam;
 	//setup System Name
 	try {
 		systemName = sysConfig->getConfig(SystemSection, "SystemName");
@@ -4881,7 +4880,6 @@ void setSystemName()
 
 	try {
 		 sysConfig->setConfig(SystemSection, "SystemName", systemName);
-		 oam.changeMyCnf( "server_audit_syslog_info", systemName );
 	}
 	catch(...)
 	{
