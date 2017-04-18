@@ -56,14 +56,5 @@ target_link_libraries(mycnfUpgrade ${ENGINE_LDFLAGS} readline ncurses  ${ENGINE_
 
 install(TARGETS mycnfUpgrade DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
-########### next target ###############
-
-set(columnstoreClusterTester_SRCS columnstoreClusterTester.cpp)
-
-add_executable(columnstoreClusterTester ${columnstoreClusterTester_SRCS})
-
-target_link_libraries(columnstoreClusterTester ${ENGINE_LDFLAGS} readline ncurses ${SNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS columnstoreClusterTester DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 
