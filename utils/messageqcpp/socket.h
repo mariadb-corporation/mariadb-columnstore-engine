@@ -158,6 +158,9 @@ public:
 	 */
 	virtual const bool isSameAddr(const Socket* rhs) const = 0;
 
+	virtual bool isConnected() const = 0;
+    virtual bool hasData() const = 0;
+
 	/*
 	 * allow test suite access to private data for OOB test
 	 */

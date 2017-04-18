@@ -174,7 +174,9 @@ public:
 	 */
 	virtual void connectionTimeout(const struct timespec* timeout) { fSocket->connectionTimeout(timeout); }
 	
-	
+	inline virtual bool isConnected() const;
+    inline virtual bool hasData() const;
+    
 	friend class ::MessageQTestSuite;
 
 protected:
@@ -208,6 +210,8 @@ inline const SocketParms IOSocket::socketParms() const { idbassert(fSocket); ret
 inline void IOSocket::socketParms(const SocketParms& socketParms) { idbassert(fSocket); fSocket->socketParms(socketParms); }
 inline void IOSocket::setSocketImpl(Socket* socket) { delete fSocket; fSocket = socket; }
 inline const int IOSocket::getConnectionNum() const { return fSocket->getConnectionNum(); }
+inline bool IOSocket::isConnected() const { return fSocket->isConnected(); }
+inline bool IOSocket::hasData() const { return fSocket->hasData(); }
 
 /**
  * stream an IOSocket rep to any ostream

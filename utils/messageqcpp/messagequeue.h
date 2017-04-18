@@ -249,6 +249,9 @@ public:
 	 */
 	inline const bool isSameAddr(const MessageQueueClient& rhs) const;
 
+    bool isConnected() { return fClientSock.isConnected(); }
+    
+    bool hasData() { return fClientSock.hasData(); }
 	/*
 	 * allow test suite access to private data for OOB test
 	 */
