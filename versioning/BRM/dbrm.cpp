@@ -40,6 +40,7 @@
 #include "socketclosed.h"
 #include "configcpp.h"
 #include "sessionmanagerserver.h"
+#include "messagequeuepool.h"
 #define DBRM_DLLEXPORT
 #include "dbrm.h"
 #undef DBRM_DLLEXPORT
@@ -53,7 +54,7 @@
 #endif
 
 #define DO_ERR_NETWORK \
-	delete msgClient; \
+	MessageQueueClientPool::releaseInstance(msgClient); \
 	msgClient = NULL; \
 	mutex.unlock(); \
 	return ERR_NETWORK;
@@ -97,8 +98,7 @@ DBRM::DBRM(const DBRM& brm)
 DBRM::~DBRM() throw()
 {
 	if (msgClient != NULL)
-		msgClient->shutdown();
-	delete msgClient;
+		MessageQueueClientPool::releaseInstance(msgClient);
 }
 
 DBRM& DBRM::operator=(const DBRM& brm)
@@ -742,7 +742,7 @@ reconnect:
 
 	if (msgClient == NULL)
 		try {
-			msgClient = new MessageQueueClient(masterName);
+			msgClient = MessageQueueClientPool::getInstance(masterName);
 		}
 		catch(exception &e) {
 			cerr << "class DBRM failed to create a MessageQueueClient: " << 
@@ -766,7 +766,7 @@ reconnect:
 		cerr << "DBRM::send_recv caught: " << e.what() << endl;
 		if (firstAttempt) {
 			firstAttempt = false;
-			delete msgClient;
+			MessageQueueClientPool::releaseInstance(msgClient);
 			msgClient = NULL;
 			goto reconnect;
 		}
@@ -776,7 +776,7 @@ reconnect:
 		cerr << "DBRM::send_recv: controller node closed the connection" << endl;
 		if (firstAttempt) {
 			firstAttempt = false;
-			delete msgClient;
+			MessageQueueClientPool::releaseInstance(msgClient);
 			msgClient = NULL;
 			sleep(10);
 			goto reconnect;
@@ -3222,7 +3222,7 @@ bool DBRM::isDBRMReady() throw()
 			{
 				if (msgClient == NULL)
 				{
-					msgClient = new MessageQueueClient(masterName);
+					msgClient = MessageQueueClientPool::getInstance(masterName);
 				}
 				if (msgClient->connect())
 				{
@@ -3232,7 +3232,7 @@ bool DBRM::isDBRMReady() throw()
 			catch (...) 
 			{
 			}
-			delete msgClient;
+			MessageQueueClientPool::releaseInstance(msgClient);
 			msgClient = NULL;
 			sleep(1);
 		}
