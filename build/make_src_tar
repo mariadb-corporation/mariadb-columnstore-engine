@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: make_src_tar 1932 2013-06-20 18:26:27Z dhill $
+# $Id:  make_src_tar 1932 2013-06-20 18:26:27Z dhill $
 #
 
 # basedir is the working dir for all the activity
