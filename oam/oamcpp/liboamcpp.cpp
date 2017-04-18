@@ -8336,7 +8336,7 @@ namespace oam
 	/******************************************************************************************
 	* @brief	changeMyCnf
 	*
-	* purpose:	change my.cnf
+	* purpose:	change my.cnf and add if value is not present to mysqld section
 	*
 	******************************************************************************************/
 	bool Oam::changeMyCnf( std::string paramater, std::string value )
@@ -8351,24 +8351,43 @@ namespace oam
 		vector <string> lines;
 		char line[200];
 		string buf;
+		bool foundIt = false;
 		while (file.getline(line, 200))
 		{
 			buf = line;
-			// change port
-			if ( paramater == "port" )
+			string::size_type pos = buf.find(paramater,0);
+			if ( pos == 0 )
 			{
-				string::size_type pos = buf.find(paramater,0);
-				if ( pos == 0 ) {
-					string::size_type pos = buf.find("=",0);
-					if ( pos != string::npos )
-						buf = "port = " + value;
+				string::size_type pos = buf.find("=",0);
+				if ( pos != string::npos )
+				{
+					buf = paramater + " = " + value;
+					foundIt = true;
 				}
 			}
 	
 			//output to temp file
 			lines.push_back(buf);
 		}
-	
+		if (!foundIt)
+		{
+			// Its not in the file go back to beginning of file
+			file.clear();
+			file.seekg(0, ios::beg);
+			lines.clear();
+			while (file.getline(line, 200))
+			{
+				buf = line;
+				string::size_type pos = buf.find("[mysqld]",0);
+				if ( pos != string::npos )
+				{
+					lines.push_back(buf);
+					buf = "loose-" + paramater + " = " + value;
+				}
+				//output to temp file
+				lines.push_back(buf);
+			}
+		}
 		file.close();
 		unlink (mycnfFile.c_str());
 		ofstream newFile (mycnfFile.c_str());	
