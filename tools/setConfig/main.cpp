@@ -129,7 +129,13 @@ int main(int argc, char** argv)
 	if (xflg)
 		cf->delConfig(argv[optind + 0], argv[optind + 1]);
 	else
+	{
 		cf->setConfig(argv[optind + 0], argv[optind + 1], argv[optind + 2]);
+		if (strcmp(argv[optind + 1],"SystemName") == 0)
+		{
+			oam.changeMyCnf( "server_audit_syslog_info", argv[optind + 2] );
+		}
+	}
 	cf->write();
 
 	if (dflg || serverInstallType == oam::INSTALL_COMBINE_DM_UM_PM)
