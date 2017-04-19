@@ -153,11 +153,11 @@ public:
 			UFLOAT,			/*!< Unsigned FLOAT type */
 			UBIGINT,		/*!< Unsigned BIGINT type */
 			UDOUBLE,		/*!< Unsigned DOUBLE type */
-			NUM_OF_COL_DATA_TYPE,
+            TEXT,           /*!< TEXT type */
+			NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
 			LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
-			STRINT,			/* @bug3532, string as int for fast comparison */
-            TEXT            /*!< TEXT type */
-	};
+			STRINT			/* @bug3532, string as int for fast comparison */
+   	};
 
 	/** the set of column constraint types
 	 *

@@ -1597,7 +1597,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
                     dataLength = *(int8_t*) buf;
                     buf++;
                 }
-                else if (ci.columnTypes[colpos].colWidth < 65535)
+                else if (ci.columnTypes[colpos].colWidth < 65536)
                 {
                     dataLength = *(int16_t*) buf;
                     buf = buf + 2 ;
@@ -1612,7 +1612,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
                     dataLength = *(int32_t*) buf;
                     buf = buf + 4 ;
                 }
-                
+
                 // buf contains pointer to blob, for example:
                 // (gdb) p (char*)*(uintptr_t*)buf
                 // $43 = 0x7f68500c58f8 "hello world"
@@ -1620,22 +1620,22 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
                 dataptr = (uintptr_t*)buf;
                 ucharptr = (uchar*)*dataptr;
                 buf+= sizeof(uintptr_t);
-                for (int32_t i=0; i<dataLength; i++)
+                if (ci.columnTypes[colpos].colDataType == CalpontSystemCatalog::BLOB)
                 {
-                    if (ci.columnTypes[colpos].colDataType == CalpontSystemCatalog::BLOB)
+                    for (int32_t i=0; i<dataLength; i++)
                     {
-                        fprintf(ci.filePtr, "%02x", *(uint8_t*)ucharptr); 
+                        fprintf(ci.filePtr, "%02x", *(uint8_t*)ucharptr);
+                        ucharptr++;
                     }
-                    else
-                    {
-                        // TEXT Column
-                        fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, dataLength, ucharptr, ci.enclosed_by, ci.delimiter); 
-                    }
-                    ucharptr++;
+                    fprintf(ci.filePtr, "%c", ci.delimiter);
                 }
-                fprintf(ci.filePtr, "%c", ci.delimiter);
+                else
+                {
+                    // TEXT Column
+                    fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, dataLength, ucharptr, ci.enclosed_by, ci.delimiter);
+                }
                 break;
-                        
+
             }
 			default:	// treat as int64
 			{
