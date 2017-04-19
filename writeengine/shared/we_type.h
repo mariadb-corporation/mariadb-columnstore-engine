@@ -152,7 +152,8 @@ namespace WriteEngine
                 "unsigned-int",
                 "unsigned-float",
                 "unsigned-bigint",
-                "unsigned-double"
+                "unsigned-double",
+                "text"
          };
 
     enum FuncType { FUNC_WRITE_ENGINE, FUNC_INDEX, FUNC_DICTIONARY };
