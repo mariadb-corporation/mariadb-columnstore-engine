@@ -1374,7 +1374,9 @@ int  Dctnry::updateDctnry(unsigned char* sigValue, int& sigSize,
     sig.size = sigSize;
 
     // Look for string in cache
-    if (m_arraySize < MAX_STRING_CACHE_SIZE)
+    // As long as the string <= 8000 bytes
+    if ((m_arraySize < MAX_STRING_CACHE_SIZE) &&
+        (sigSize <= MAX_SIGNATURE_SIZE))
     {
         bool found = false;
         found = getTokenFromArray(sig);
@@ -1389,7 +1391,9 @@ int  Dctnry::updateDctnry(unsigned char* sigValue, int& sigSize,
     rc = insertDctnry(sigSize, sigValue, token);
 
     //Add the new signature and token into cache
-    if (m_arraySize < MAX_STRING_CACHE_SIZE)
+    //As long as the string is <= 8000 bytes
+    if ((m_arraySize < MAX_STRING_CACHE_SIZE) &&
+        (sigSize <= MAX_SIGNATURE_SIZE))
     {
         Signature sig;
         sig.size = sigSize;
