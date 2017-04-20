@@ -1588,28 +1588,28 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
             case CalpontSystemCatalog::BLOB:
             case CalpontSystemCatalog::TEXT:
 			{
-                int dataLength = 0;
+                uint32_t dataLength = 0;
                 uintptr_t *dataptr;
                 uchar *ucharptr;
-            
+
                 if (ci.columnTypes[colpos].colWidth < 256)
                 {
-                    dataLength = *(int8_t*) buf;
+                    dataLength = *(uint8_t*) buf;
                     buf++;
                 }
                 else if (ci.columnTypes[colpos].colWidth < 65536)
                 {
-                    dataLength = *(int16_t*) buf;
+                    dataLength = *(uint16_t*) buf;
                     buf = buf + 2 ;
                 }
                 else if (ci.columnTypes[colpos].colWidth < 16777216)
                 {
-                    dataLength = *(int32_t*) buf;
+                    dataLength = *(uint32_t*) buf;
                     buf = buf + 3 ;
                 }
                 else
                 {
-                    dataLength = *(int32_t*) buf;
+                    dataLength = *(uint32_t*) buf;
                     buf = buf + 4 ;
                 }
 
@@ -1622,7 +1622,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
                 buf+= sizeof(uintptr_t);
                 if (ci.columnTypes[colpos].colDataType == CalpontSystemCatalog::BLOB)
                 {
-                    for (int32_t i=0; i<dataLength; i++)
+                    for (uint32_t i=0; i<dataLength; i++)
                     {
                         fprintf(ci.filePtr, "%02x", *(uint8_t*)ucharptr);
                         ucharptr++;
