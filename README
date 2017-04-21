@@ -1,6 +1,6 @@
 This is MariaDB ColumnStore 1.0.6
 MariaDB ColumnStore 1.0.6 is the development version of MariaDB ColumnStore. 
-It is built by porting InfiniDB 4.6.2 on MariaDB 10.1.19 and adding entirely 
+It is built by porting InfiniDB 4.6.7 on MariaDB 10.1.19 and adding entirely 
 new features not found anywhere else.
 
 MariaDB ColumnStore 1.0.6 is an GA release. This is the first MariaDB 
