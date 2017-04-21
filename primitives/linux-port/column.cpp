@@ -524,7 +524,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
 	}
 
 	else if ( (type == CalpontSystemCatalog::CHAR || type == CalpontSystemCatalog::VARCHAR ||
-            type == CalpontSystemCatalog::BLOB || type == CalpontSystemCatalog::TEXT) && !isNull )
+            type == CalpontSystemCatalog::TEXT) && !isNull )
 	{
 		if (!regex.used && !rf)
 			return colCompare_(order_swap(val1), order_swap(val2), COP);

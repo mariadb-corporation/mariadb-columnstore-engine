@@ -401,6 +401,7 @@ void TupleUnion::normalize(const Row &in, Row *out)
                         out->setUintField(in.getUintField(i), i);
                         break;
 					case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
 					case CalpontSystemCatalog::VARCHAR: {
 						ostringstream os;
 						if (in.getScale(i)) {
@@ -482,6 +483,7 @@ dec1:					uint64_t val = in.getIntField(i);
                         out->setUintField(in.getUintField(i), i);
                         break;
                     case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
                     case CalpontSystemCatalog::VARCHAR: {
                         ostringstream os;
                         if (in.getScale(i)) {
@@ -541,9 +543,11 @@ dec2:					uint64_t val = in.getIntField(i);
                 }
                 break;
 			case CalpontSystemCatalog::CHAR:
+            case CalpontSystemCatalog::TEXT:
 			case CalpontSystemCatalog::VARCHAR:
 				switch (out->getColTypes()[i]) {
 					case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
 					case CalpontSystemCatalog::VARCHAR:
 						out->setStringField(in.getStringField(i), i);
 						break;
@@ -568,6 +572,7 @@ dec2:					uint64_t val = in.getIntField(i);
 						break;
 					}
 					case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
 					case CalpontSystemCatalog::VARCHAR: {
 						string d = DataConvert::dateToString(in.getUintField(i));
 						out->setStringField(d, i);
@@ -593,6 +598,7 @@ dec2:					uint64_t val = in.getIntField(i);
 						break;
 					}
 					case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
 					case CalpontSystemCatalog::VARCHAR: {
 						string d = DataConvert::datetimeToString(in.getUintField(i));
 						out->setStringField(d, i);
@@ -639,6 +645,7 @@ dec2:					uint64_t val = in.getIntField(i);
 						out->setDoubleField(val, i);
 						break;
 					case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
 					case CalpontSystemCatalog::VARCHAR: {
 						ostringstream os;
 						os.precision(15);  // to match mysql's output
@@ -706,6 +713,7 @@ dec3:					/* have to pick a scale to use for the double. using 5... */
 						break;
 					}
 					case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
 					case CalpontSystemCatalog::VARCHAR:
 					default: {
 						char buf[50];
@@ -722,6 +730,7 @@ dec3:					/* have to pick a scale to use for the double. using 5... */
 				}
 				break;
 			}
+            case CalpontSystemCatalog::BLOB:
 			case CalpontSystemCatalog::VARBINARY: {
 				// out->setVarBinaryField(in.getVarBinaryStringField(i), i);  // not efficient
 				out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), i);
@@ -856,6 +865,7 @@ void TupleUnion::writeNull(Row *out, uint32_t col)
 		case CalpontSystemCatalog::DATETIME:
 			out->setUintField<8>(joblist::DATETIMENULL, col); break;
 		case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
 		case CalpontSystemCatalog::VARCHAR: {
 			uint32_t len = out->getColumnWidth(col);
 			switch (len) {
@@ -872,6 +882,7 @@ void TupleUnion::writeNull(Row *out, uint32_t col)
 			}
 			break;
 		}
+        case CalpontSystemCatalog::BLOB:
 		case CalpontSystemCatalog::VARBINARY:
 			// could use below if zero length and NULL are treated the same
 			// out->setVarBinaryField("", col); break;

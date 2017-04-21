@@ -300,9 +300,11 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         fOperationType.colWidth = 8;
     }
 	else if ((l.colDataType == execplan::CalpontSystemCatalog::CHAR ||
-		       l.colDataType == execplan::CalpontSystemCatalog::VARCHAR) &&
+		       l.colDataType == execplan::CalpontSystemCatalog::VARCHAR ||
+               l.colDataType == execplan::CalpontSystemCatalog::TEXT) &&
 		       (r.colDataType == execplan::CalpontSystemCatalog::CHAR ||
-		       r.colDataType == execplan::CalpontSystemCatalog::VARCHAR))
+		       r.colDataType == execplan::CalpontSystemCatalog::VARCHAR ||
+               r.colDataType == execplan::CalpontSystemCatalog::TEXT))
 	{
 		if ( ( (l.colDataType == execplan::CalpontSystemCatalog::CHAR && l.colWidth <= 8) ||
 			  (l.colDataType == execplan::CalpontSystemCatalog::VARCHAR && l.colWidth < 8) ) &&

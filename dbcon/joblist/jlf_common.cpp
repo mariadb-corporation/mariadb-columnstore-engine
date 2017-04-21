@@ -133,9 +133,9 @@ uint32_t fudgeWidth(const CalpontSystemCatalog::ColType& ict, CalpontSystemCatal
 {
 	CalpontSystemCatalog::OID dictOid = isDictCol(ict);
 	CalpontSystemCatalog::ColType ct = ict;
-	if (ct.colDataType != CalpontSystemCatalog::VARBINARY)
+	if (ct.colDataType != CalpontSystemCatalog::VARBINARY && ct.colDataType != CalpontSystemCatalog::BLOB)
 	{
-		if (ct.colDataType == CalpontSystemCatalog::VARCHAR)
+		if (ct.colDataType == CalpontSystemCatalog::VARCHAR || ct.colDataType == CalpontSystemCatalog::TEXT)
 			ct.colWidth++;
 
 		//Round colWidth up
@@ -319,7 +319,9 @@ CalpontSystemCatalog::OID isDictCol(const CalpontSystemCatalog::ColType& colType
 	if (colType.colWidth > 8) return colType.ddn.dictOID;
 	if (colType.colDataType == CalpontSystemCatalog::VARCHAR &&
 		colType.colWidth > 7) return colType.ddn.dictOID;
-	if (colType.colDataType == CalpontSystemCatalog::VARBINARY)
+	if (colType.colDataType == CalpontSystemCatalog::VARBINARY ||
+        colType.colDataType == CalpontSystemCatalog::BLOB ||
+        colType.colDataType == CalpontSystemCatalog::TEXT)
 		return colType.ddn.dictOID;
 
 	return 0;
@@ -748,13 +750,17 @@ bool compatibleColumnTypes(const CalpontSystemCatalog::ColDataType& dt1, uint32_
 		break;
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
+    case CalpontSystemCatalog::TEXT:
 		// @bug 1495 compound/string join
 		if (dt2 != CalpontSystemCatalog::VARCHAR &&
-			dt2 != CalpontSystemCatalog::CHAR)
+			dt2 != CalpontSystemCatalog::CHAR &&
+            dt2 != CalpontSystemCatalog::TEXT)
 			return false;
 		break;
 	case CalpontSystemCatalog::VARBINARY:
-		if (dt2 != CalpontSystemCatalog::VARBINARY) return false;
+    case CalpontSystemCatalog::BLOB:
+		if (dt2 != CalpontSystemCatalog::VARBINARY &&
+            dt2 != CalpontSystemCatalog::BLOB) return false;
 		break;
 	case CalpontSystemCatalog::FLOAT:
 	case CalpontSystemCatalog::UFLOAT:
