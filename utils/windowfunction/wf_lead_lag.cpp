@@ -153,32 +153,6 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 	idbassert(cc != NULL);
 	bool isNull = false;  // dummy, harded coded
 	fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
-#if 0
-	// parms[1]: offset
-    for (std::vector<execplan::SRCP>::size_type i = 1/*ignore 0th element*/; i < parms.size(); ++i)
-    {
-    	ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[i].get());
-    	if (cc != NULL)
-    	{
-    		fOffset = cc->getIntVal(fRow, fOffsetNull) * fLead;  // row not used, no need to setData.
-            continue;
-    	}
-        
-    	cc = dynamic_cast<ConstantColumn*>(parms[i].get());
-    	if (cc != NULL)
-    	{
-    		getConstValue(cc, fDefault, fDefNull);
-            continue;
-    	}
-        // IGNORE/RESPECT nulls is currently broken in the front end
-        cc = dynamic_cast<ConstantColumn*>(parms[i].get());
-        if (cc != NULL)
-        {
-            bool isNull = false;  // dummy, harded coded
-            fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
-        }
-    }
-#endif    
 }
 
 

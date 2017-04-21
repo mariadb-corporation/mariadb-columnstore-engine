@@ -4380,10 +4380,11 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 		// table mode
 		if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
 		{
-			if (ci->traceFlags & 1)
-				push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, mapiter->second.conn_hndl->queryStats.c_str());
 			if (mapiter->second.conn_hndl)
 			{
+				if (ci->traceFlags & 1)
+					push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, mapiter->second.conn_hndl->queryStats.c_str());
+
 				ci->queryStats = mapiter->second.conn_hndl->queryStats;
 				ci->extendedStats = mapiter->second.conn_hndl->extendedStats;
 				ci->miniStats = mapiter->second.conn_hndl->miniStats;
@@ -4407,11 +4408,12 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 		{
 			if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE)
 			{
+				if (!ci->cal_conn_hndl)
+					return 0;
+
 				if (ci->traceFlags & 1)
 					push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, ci->cal_conn_hndl->queryStats.c_str());
 
-				if (!ci->cal_conn_hndl)
-					return 0;
 				ci->queryStats = ci->cal_conn_hndl->queryStats;
 				ci->extendedStats = ci->cal_conn_hndl->extendedStats;
 				ci->miniStats = ci->cal_conn_hndl->miniStats;
