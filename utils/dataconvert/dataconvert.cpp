@@ -1072,6 +1072,7 @@ boost::any
 
 			case CalpontSystemCatalog::CHAR:
 			case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
 			{
 				//check data length
 				if ( data.length() > (unsigned int)colType.colWidth )
@@ -1122,7 +1123,6 @@ boost::any
 			break;
 
 			case CalpontSystemCatalog::BLOB:
-            case CalpontSystemCatalog::TEXT:
 			case CalpontSystemCatalog::CLOB:
 				value = data;
 			break;
@@ -1263,6 +1263,7 @@ boost::any
 			}
 			break;
 			case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
 			{
 				std::string charnull;
 				if (colType.colWidth == 1 )
@@ -1291,6 +1292,7 @@ boost::any
 			}
 			break;
 			case CalpontSystemCatalog::VARBINARY:
+            case CalpontSystemCatalog::BLOB:
 			{
 				WriteEngine::Token nullToken;
 				value = nullToken;

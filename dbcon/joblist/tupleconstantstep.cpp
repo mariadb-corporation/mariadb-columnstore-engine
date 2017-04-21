@@ -192,7 +192,8 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
 		if (cc->type() == ConstantColumn::NULLDATA)
 		{
 			if (types[*i] == CalpontSystemCatalog::CHAR ||
-				types[*i] == CalpontSystemCatalog::VARCHAR)
+				types[*i] == CalpontSystemCatalog::VARCHAR ||
+                types[*i] == CalpontSystemCatalog::TEXT)
 			{
 				fRowConst.setStringField("", *i);
 			}
@@ -246,6 +247,7 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
 
 			case CalpontSystemCatalog::CHAR:
 			case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
 			{
 				fRowConst.setStringField(c.strVal, *i);
 				break;

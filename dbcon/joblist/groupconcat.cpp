@@ -354,7 +354,8 @@ void GroupConcatAgUM::applyMapping(const boost::shared_array<int>& mapping, cons
 	{
 		if (fRow.getColumnWidth(i) > 8 &&
 			(fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::CHAR ||
-			 fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR))
+			 fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
+             fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
 		{
 			fRow.setStringField(row.getStringPointer(mapping[i]), row.getStringLength(mapping[i]), i);
 		}
@@ -453,6 +454,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 			}
             case CalpontSystemCatalog::CHAR:
 			case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
 			{
 				oss << row.getStringField(*i).c_str();
 				//oss << row.getStringField(*i);
@@ -567,6 +569,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
 			}
 			case CalpontSystemCatalog::CHAR:
 			case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
 			{
 				int64_t colWidth = row.getStringLength(*i);
 				fieldLen += colWidth;   // getStringLength() does the same thing as below

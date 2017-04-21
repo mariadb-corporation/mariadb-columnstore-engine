@@ -217,7 +217,9 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
 			// skip char/varchar/varbinary column because the colWidth in row is fudged.
 			if (colDataTypeInRg != CalpontSystemCatalog::VARCHAR &&
 				colDataTypeInRg != CalpontSystemCatalog::CHAR &&
-				colDataTypeInRg != CalpontSystemCatalog::VARBINARY)
+				colDataTypeInRg != CalpontSystemCatalog::VARBINARY &&
+                colDataTypeInRg != CalpontSystemCatalog::TEXT &&
+                colDataTypeInRg != CalpontSystemCatalog::BLOB)
 			{
 				ct.colWidth = row.getColumnWidth(i);
 				ct.colDataType = row.getColTypes()[i];

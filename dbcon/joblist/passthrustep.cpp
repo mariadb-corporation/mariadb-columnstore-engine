@@ -222,7 +222,9 @@ PassThruStep::PassThruStep(
 	colWidth = colType.colWidth;
 	realWidth = colType.colWidth;
 	isDictColumn = ((colType.colDataType == CalpontSystemCatalog::VARCHAR && colType.colWidth > 7)
-					|| (colType.colDataType == CalpontSystemCatalog::CHAR && colType.colWidth > 8));
+					|| (colType.colDataType == CalpontSystemCatalog::CHAR && colType.colWidth > 8)
+                    || (colType.colDataType == CalpontSystemCatalog::TEXT)
+                    || (colType.colDataType == CalpontSystemCatalog::BLOB));
 	fColType = colType;
 	fPseudoType = 0;
 

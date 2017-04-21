@@ -1521,7 +1521,9 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 			pcs->schema(sc->schemaName());
 			pcs->cardinality(sc->cardinality());
 
-			if (filterWithDictionary(dictOid, jobInfo.stringScanThreshold))
+			if (ct.colDataType == execplan::CalpontSystemCatalog::TEXT ||
+                ct.colDataType == execplan::CalpontSystemCatalog::BLOB ||
+                filterWithDictionary(dictOid, jobInfo.stringScanThreshold))
 			{
 				pDictionaryStep* pds = new pDictionaryStep(dictOid, tbl_oid, ct, jobInfo);
 				jobInfo.keyInfo->dictOidToColOid[dictOid] = sc->oid();
@@ -1668,6 +1670,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 		else if ( CalpontSystemCatalog::CHAR != ct.colDataType &&
 				 CalpontSystemCatalog::VARCHAR != ct.colDataType &&
 				 CalpontSystemCatalog::VARBINARY != ct.colDataType &&
+                 CalpontSystemCatalog::TEXT != ct.colDataType &&
+                 CalpontSystemCatalog::BLOB != ct.colDataType &&
 				 ConstantColumn::NULLDATA != cc->type() &&
 				 (cop & COMPARE_LIKE) ) // both like and not like
 		{
@@ -2520,7 +2524,9 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
 			pcs->schema(sc->schemaName());
 			pcs->cardinality(sc->cardinality());
 
-			if (filterWithDictionary(dictOid, jobInfo.stringScanThreshold))
+			if (ct.colDataType == execplan::CalpontSystemCatalog::TEXT ||
+                ct.colDataType == execplan::CalpontSystemCatalog::BLOB ||
+                filterWithDictionary(dictOid, jobInfo.stringScanThreshold))
 			{
 				pDictionaryStep* pds = new pDictionaryStep(dictOid, tbOID, ct, jobInfo);
 				jobInfo.keyInfo->dictOidToColOid[dictOid] = sc->oid();

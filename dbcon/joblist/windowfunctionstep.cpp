@@ -540,7 +540,8 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 		{
 			CalpontSystemCatalog::ColType rt = wc->resultType();
 			if ((types[ridx] == CalpontSystemCatalog::CHAR || 
-			     types[ridx] == CalpontSystemCatalog::VARCHAR) &&
+			     types[ridx] == CalpontSystemCatalog::VARCHAR ||
+                 types[ridx] == CalpontSystemCatalog::TEXT) &&
 			    rg.getColumnWidth(ridx) >= jobInfo.stringTableThreshold)
 			{
 				wfsUpdateStringTable++;
