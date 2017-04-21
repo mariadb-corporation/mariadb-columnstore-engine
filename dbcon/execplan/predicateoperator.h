@@ -337,6 +337,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
 		case execplan::CalpontSystemCatalog::VARCHAR: 
 		case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
 		{
 			if (fOp == OP_ISNULL)
 			{
@@ -365,7 +366,8 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 		}
 
 		//FIXME: ???
-		case execplan::CalpontSystemCatalog::VARBINARY: 
+		case execplan::CalpontSystemCatalog::VARBINARY:
+        case execplan::CalpontSystemCatalog::BLOB:
 			return false;
 			break;
 

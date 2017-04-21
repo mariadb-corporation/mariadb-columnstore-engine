@@ -1375,7 +1375,7 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps,
 
 			TupleInfo ti1 = getTupleInfo(key1, jobInfo);
 			TupleInfo ti2 = getTupleInfo(key2, jobInfo);
-			if (ti1.dtype==CalpontSystemCatalog::CHAR || ti1.dtype==CalpontSystemCatalog::VARCHAR)
+			if (ti1.dtype==CalpontSystemCatalog::CHAR || ti1.dtype==CalpontSystemCatalog::VARCHAR || ti1.dtype==CalpontSystemCatalog::TEXT)
 				m1->second.fTypeless = m2->second.fTypeless = true;  // ti2 is compatible
 			else
 				m1->second.fTypeless = m2->second.fTypeless = false;

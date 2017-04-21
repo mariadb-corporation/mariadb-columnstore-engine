@@ -1120,6 +1120,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
 			{
 				if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 					typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                    typeProj[colProj] == CalpontSystemCatalog::BLOB ||
+                    typeProj[colProj] == CalpontSystemCatalog::TEXT ||
 					typeProj[colProj] == CalpontSystemCatalog::DATE ||
 					typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 				{
@@ -1186,6 +1188,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
 			{
 				if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 					typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                    typeProj[colProj] == CalpontSystemCatalog::TEXT ||
+                    typeProj[colProj] == CalpontSystemCatalog::BLOB ||
 					typeProj[colProj] == CalpontSystemCatalog::DATE ||
 					typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 				{
@@ -1548,6 +1552,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 				{
 					if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 						typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                        typeProj[colProj] == CalpontSystemCatalog::BLOB ||
+                        typeProj[colProj] == CalpontSystemCatalog::TEXT ||
 						typeProj[colProj] == CalpontSystemCatalog::DATE ||
 						typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 					{
@@ -1608,6 +1614,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 				{
 					if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 						typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                        typeProj[colProj] == CalpontSystemCatalog::BLOB ||
+                        typeProj[colProj] == CalpontSystemCatalog::TEXT ||
 						typeProj[colProj] == CalpontSystemCatalog::DATE ||
 						typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 					{
@@ -1745,6 +1753,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 				{
 					if (typeAgg[colAgg] == CalpontSystemCatalog::CHAR ||
 						typeAgg[colAgg] == CalpontSystemCatalog::VARCHAR ||
+                        typeAgg[colAgg] == CalpontSystemCatalog::BLOB ||
+                        typeAgg[colAgg] == CalpontSystemCatalog::TEXT ||
 						typeAgg[colAgg] == CalpontSystemCatalog::DATE ||
 						typeAgg[colAgg] == CalpontSystemCatalog::DATETIME)
 					{
@@ -2528,6 +2538,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
 				{
 					if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 						typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                        typeProj[colProj] == CalpontSystemCatalog::BLOB ||
+                        typeProj[colProj] == CalpontSystemCatalog::TEXT ||
 						typeProj[colProj] == CalpontSystemCatalog::DATE ||
 						typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 					{
@@ -2599,6 +2611,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
 				{
 					if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 						typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                        typeProj[colProj] == CalpontSystemCatalog::BLOB ||
+                        typeProj[colProj] == CalpontSystemCatalog::TEXT ||
 						typeProj[colProj] == CalpontSystemCatalog::DATE ||
 						typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 					{
@@ -3181,6 +3195,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 				{
 					if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 						typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                        typeProj[colProj] == CalpontSystemCatalog::BLOB ||
+                        typeProj[colProj] == CalpontSystemCatalog::TEXT ||
 						typeProj[colProj] == CalpontSystemCatalog::DATE ||
 						typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 					{
@@ -3241,6 +3257,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 				{
 					if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
 						typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
+                        typeProj[colProj] == CalpontSystemCatalog::BLOB ||
+                        typeProj[colProj] == CalpontSystemCatalog::TEXT ||
 						typeProj[colProj] == CalpontSystemCatalog::DATE ||
 						typeProj[colProj] == CalpontSystemCatalog::DATETIME)
 					{
@@ -3395,6 +3413,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 				{
 					if (typeAggUm[colUm] == CalpontSystemCatalog::CHAR ||
 						typeAggUm[colUm] == CalpontSystemCatalog::VARCHAR ||
+                        typeAggUm[colUm] == CalpontSystemCatalog::BLOB ||
+                        typeAggUm[colUm] == CalpontSystemCatalog::TEXT ||
 						typeAggUm[colUm] == CalpontSystemCatalog::DATE ||
 						typeAggUm[colUm] == CalpontSystemCatalog::DATETIME)
 					{

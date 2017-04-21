@@ -111,6 +111,7 @@ uint64_t RowEstimator::adjustValue(const execplan::CalpontSystemCatalog::ColType
         	// TODO:  Use dictionary column HWM for dictionary columns.
 		case CalpontSystemCatalog::CHAR:
 		case CalpontSystemCatalog::VARCHAR:
+        case CalpontSystemCatalog::TEXT:
 			// Last byte is the first character in the string.
 			return (0xFF & value);
 		default:
