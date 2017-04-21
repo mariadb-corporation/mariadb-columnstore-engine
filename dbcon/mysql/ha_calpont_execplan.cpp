@@ -21,7 +21,7 @@
  */
 
 /** @file */
-#define DEBUG_WALK_COND
+//#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
 #include <iostream>
