@@ -1578,6 +1578,70 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector joinSteps, JobI
 			cout << endl;
 		}
 
+        // Check that join is compatible
+		set<string> views1;
+        set<string> tables1;
+		string errStr;
+
+        vector<uint32_t>::iterator k = joinedTables.begin();
+
+        k = joinedTables.begin();
+        for (; k != joinedTables.end(); k++)
+        {
+            if (jobInfo.keyInfo->tupleKeyVec[*k].fView.empty())
+                tables1.insert(jobInfo.keyInfo->tupleKeyToName[*k]);
+            else
+                views1.insert(jobInfo.keyInfo->tupleKeyVec[*k].fView);
+
+            if (jobInfo.incompatibleJoinMap.find(*k) != jobInfo.incompatibleJoinMap.end())
+            {
+                errcode = ERR_INCOMPATIBLE_JOIN;
+
+                uint32_t key2 = jobInfo.incompatibleJoinMap[*k];
+                if (jobInfo.keyInfo->tupleKeyVec[*k].fView.length() > 0)
+                {
+                    string view2 = jobInfo.keyInfo->tupleKeyVec[key2].fView;
+                    if (jobInfo.keyInfo->tupleKeyVec[*k].fView == view2)
+                    {
+                        //  same view
+                        errStr += "Tables in '" + view2 + "' have";
+                    }
+                    else if (view2.empty())
+                    {
+                        // view and real table
+                        errStr += "'" + jobInfo.keyInfo->tupleKeyVec[*k].fView + "' and '" +
+                                    jobInfo.keyInfo->tupleKeyToName[key2] + "' have";
+                    }
+                    else
+                    {
+                        // two views
+                        errStr += "'" + jobInfo.keyInfo->tupleKeyVec[*k].fView + "' and '" +
+                                    view2 + "' have";
+                    }
+                }
+                else
+                {
+                    string view2 = jobInfo.keyInfo->tupleKeyVec[key2].fView;
+                    if (view2.empty())
+                    {
+                        // two real tables
+                        errStr += "'" + jobInfo.keyInfo->tupleKeyToName[*k] + "' and '" +
+                                    jobInfo.keyInfo->tupleKeyToName[key2] + "' have";
+                    }
+                    else
+                    {
+                        // real table and view
+                        errStr += "'" + jobInfo.keyInfo->tupleKeyToName[*k] + "' and '" +
+                                    view2 + "' have";
+                    }
+                }
+                args.add(errStr);
+                spanningTree = false;
+                break;
+            }
+
+        }
+
 		// 1c. check again if all tables are joined after pulling in function joins.
 		if (joinedTables.size() < tableInfoMap.size())
 		{
@@ -1588,74 +1652,15 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector joinSteps, JobI
 					notJoinedTables.push_back(i->first);
 			}
 
-			vector<uint32_t>::iterator k = joinedTables.begin();
-			set<string> views1;
-			set<string> tables1;
-			for (; k != joinedTables.end(); k++)
-			{
-				if (jobInfo.keyInfo->tupleKeyVec[*k].fView.empty())
-					tables1.insert(jobInfo.keyInfo->tupleKeyToName[*k]);
-				else
-					views1.insert(jobInfo.keyInfo->tupleKeyVec[*k].fView);
-			}
-
-			k = notJoinedTables.begin();
 			set<string> views2;
 			set<string> tables2;
-			string errStr;
-			for (; k != notJoinedTables.end(); k++)
+            k = notJoinedTables.begin();
+            for (; k != notJoinedTables.end(); k++)
 			{
 				if (jobInfo.keyInfo->tupleKeyVec[*k].fView.empty())
 					tables2.insert(jobInfo.keyInfo->tupleKeyToName[*k]);
 				else
 					views2.insert(jobInfo.keyInfo->tupleKeyVec[*k].fView);
-
-				if (jobInfo.incompatibleJoinMap.find(*k) != jobInfo.incompatibleJoinMap.end())
-				{
-					errcode = ERR_INCOMPATIBLE_JOIN;
-
-					uint32_t key2 = jobInfo.incompatibleJoinMap[*k];
-					if (jobInfo.keyInfo->tupleKeyVec[*k].fView.length() > 0)
-					{
-						string view2 = jobInfo.keyInfo->tupleKeyVec[key2].fView;
-						if (jobInfo.keyInfo->tupleKeyVec[*k].fView == view2)
-						{
-							//  same view
-							errStr += "Tables in '" + view2 + "' have";
-						}
-						else if (view2.empty())
-						{
-							// view and real table
-							errStr += "'" + jobInfo.keyInfo->tupleKeyVec[*k].fView + "' and '" +
-										jobInfo.keyInfo->tupleKeyToName[key2] + "' have";
-						}
-						else
-						{
-							// two views
-							errStr += "'" + jobInfo.keyInfo->tupleKeyVec[*k].fView + "' and '" +
-										view2 + "' have";
-						}
-					}
-					else
-					{
-						string view2 = jobInfo.keyInfo->tupleKeyVec[key2].fView;
-						if (view2.empty())
-						{
-							// two real tables
-							errStr += "'" + jobInfo.keyInfo->tupleKeyToName[*k] + "' and '" +
-										jobInfo.keyInfo->tupleKeyToName[key2] + "' have";
-						}
-						else
-						{
-							// real table and view
-							errStr += "'" + jobInfo.keyInfo->tupleKeyToName[*k] + "' and '" +
-										view2 + "' have";
-						}
-					}
-
-					break;
-				}
-
 			}
 
 			if (errStr.empty())
@@ -1717,11 +1722,11 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector joinSteps, JobI
 					}
 
 					errStr = set1 + "' and " + set2 + "' are";
+           			args.add(errStr);
+                    spanningTree = false;
 				}
 			}
 
-			args.add(errStr);
-			spanningTree = false;
 		}
 
 		// 2. no cycles
