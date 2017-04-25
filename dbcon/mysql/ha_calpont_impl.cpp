@@ -457,7 +457,8 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
                      * At a later date we should set this more intelligently
                      * based on the result set.
                      */
-                    if ((*f)->field_length > 19)
+                    /* MCOL-683: UTF-8 datetime no msecs is 57, this sometimes happens! */
+                    if (((*f)->field_length > 19) && ((*f)->field_length != 57))
                         (*f)->field_length = strlen(tmp);
 
 					Field_varstring* f2 = (Field_varstring*)*f;
