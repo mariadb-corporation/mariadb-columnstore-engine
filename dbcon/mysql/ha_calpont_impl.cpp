@@ -1171,7 +1171,7 @@ uint32_t doUpdateDelete(THD *thd)
 		{
 			multi_delete* deleteTable = (multi_delete*)((thd->lex->select_lex.join)->result);
 			first_table= (TABLE_LIST*) deleteTable->get_tables();
-			if (deleteTable->num_of_tables == 1)
+			if (deleteTable->get_num_of_tables() == 1)
 			{
 				schemaName = first_table->db;
 				tableName = first_table->table_name;
@@ -3018,7 +3018,7 @@ int ha_calpont_impl_rnd_next(uchar *buf, TABLE* table)
 		rc = fetchNextRow(buf, ti, ci);
 	} catch (std::exception& e)
 	{
-		string emsg = string("Lost connection to ExeMgr while fetching: ") + e.what();
+		string emsg = string("Error while fetching from ExeMgr: ") + e.what();
 		setError(thd, ER_INTERNAL_ERROR, emsg);
 		CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
 		return ER_INTERNAL_ERROR;
@@ -4391,10 +4391,11 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 		// table mode
 		if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
 		{
-			if (ci->traceFlags & 1)
-				push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, mapiter->second.conn_hndl->queryStats.c_str());
 			if (mapiter->second.conn_hndl)
 			{
+				if (ci->traceFlags & 1)
+					push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, mapiter->second.conn_hndl->queryStats.c_str());
+
 				ci->queryStats = mapiter->second.conn_hndl->queryStats;
 				ci->extendedStats = mapiter->second.conn_hndl->extendedStats;
 				ci->miniStats = mapiter->second.conn_hndl->miniStats;
@@ -4418,11 +4419,12 @@ int ha_calpont_impl_external_lock(THD *thd, TABLE* table, int lock_type)
 		{
 			if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE)
 			{
+				if (!ci->cal_conn_hndl)
+					return 0;
+
 				if (ci->traceFlags & 1)
 					push_warning(thd, Sql_condition::WARN_LEVEL_NOTE, 9999, ci->cal_conn_hndl->queryStats.c_str());
 
-				if (!ci->cal_conn_hndl)
-					return 0;
 				ci->queryStats = ci->cal_conn_hndl->queryStats;
 				ci->extendedStats = ci->cal_conn_hndl->extendedStats;
 				ci->miniStats = ci->cal_conn_hndl->miniStats;
@@ -4445,15 +4447,5 @@ int ha_calpont_impl_rnd_pos(uchar *buf, uchar *pos)
 	return ER_INTERNAL_ERROR;
 }
 
-// Called from mysql parser to set IDB error for window functions
-void ha_calpont_impl_set_error(THD* thd, uint64_t errCode, LEX_STRING* args, uint32_t argCount)
-{
-	IDEBUG( cout << "ha_calpont_impl_ser_error" << endl);
-	Message::Args arguments;
-	for (uint32_t i = 0; i < argCount; i++)
-		arguments.add(args[i].str);
-	string emsg = logging::IDBErrorInfo::instance()->errorMsg(errCode, arguments);
-	setError(thd, ER_INTERNAL_ERROR, emsg);
-}
 // vim:sw=4 ts=4:
 

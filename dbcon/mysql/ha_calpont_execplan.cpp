@@ -38,7 +38,6 @@
 #include <cerrno>
 #include <cstring>
 #include <time.h>
-//#define NDEBUG
 #include <cassert>
 #include <vector>
 #include <map>
@@ -423,7 +422,7 @@ void debug_walk(const Item *item, void *arg)
 		char* item_name = item->name;
 		if (!item_name)
 		{
-			item_name = "<NULL>";
+			item_name = (char*)"<NULL>";
 		}
 		switch (isp->sum_func())
 		{
@@ -497,6 +496,11 @@ void debug_walk(const Item *item, void *arg)
 					'.' << ifp->field_name << endl;
 				break;
 			}
+            else if (field->type() == Item::FUNC_ITEM)
+            {
+                Item_func* ifp = (Item_func*)field;
+                cout << "CACHED REF FUNC_ITEM " << ifp->func_name() << endl;
+            }
 			else if (field->type() == Item::REF_ITEM)
 			{
 				Item_ref* ifr = (Item_ref*)field;
@@ -564,7 +568,20 @@ void debug_walk(const Item *item, void *arg)
 				ifp->field_name << endl;
 			break;
 		}
-		cout << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
+        else if (ref->real_item()->type() == Item::FUNC_ITEM)
+        {
+            Item_func* ifp = (Item_func*)ref->real_item();
+            cout << "REF FUNC_ITEM " << ifp->func_name() << endl;
+        }
+        else if (ref->real_item()->type() == Item::WINDOW_FUNC_ITEM)
+        {
+            Item_window_func* ifp = (Item_window_func*)ref->real_item();
+            cout << "REF WINDOW_FUNC_ITEM " << ifp->window_func()->func_name() << endl;
+        }
+        else
+        {
+            cout << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
+        }
 		break;
 	}
 	case Item::ROW_ITEM:
@@ -701,7 +718,8 @@ void debug_walk(const Item *item, void *arg)
 	}
 	case Item::WINDOW_FUNC_ITEM:
 	{
-		cout << "Window Function Item" << endl;
+        Item_window_func* ifp = (Item_window_func*)item;
+		cout << "Window Function Item " << ifp->window_func()->func_name() << endl;
 		break;
 	}
 	default:
@@ -1109,6 +1127,15 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
 bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 {
 	boost::shared_ptr<Operator> sop(new PredicateOperator(ifp->func_name()));
+    if (ifp->functype() == Item_func::LIKE_FUNC)
+    {
+        // Starting with MariaDB 10.2, LIKE uses a negated flag instead of FUNC_NOT
+        // Further processing is done below as before for LIKE
+        if (((Item_func_like*)ifp)->negated)
+        {
+            sop->reverseOp();
+        }
+    }
 	if (!(gwip->thd->infinidb_vtable.cal_conn_info))
 		gwip->thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
 	cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwip->thd->infinidb_vtable.cal_conn_info);
@@ -2399,18 +2426,19 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 		case Item::REF_ITEM:
 		{
 			Item_ref* ref = (Item_ref*)item;
-			if ((*(ref->ref))->type() == Item::SUM_FUNC_ITEM)
-			{
+            switch ((*(ref->ref))->type())
+            {
+            case Item::SUM_FUNC_ITEM:
 				return buildAggregateColumn(*(ref->ref), gwi);
-			}
-			else if ((*(ref->ref))->type() == Item::FIELD_ITEM)
+            case Item::FIELD_ITEM:
 				return buildReturnedColumn(*(ref->ref), gwi, nonSupport);
-			else if ((*(ref->ref))->type() == Item::REF_ITEM)
+            case Item::REF_ITEM:
 				return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport);
-			else if ((*(ref->ref))->type() == Item::FUNC_ITEM)
+            case Item::FUNC_ITEM:
 				return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport);
-			else
-			{
+		    case Item::WINDOW_FUNC_ITEM:
+    			return buildWindowFunctionColumn(*(ref->ref), gwi, nonSupport);
+            default:
 				gwi.fatalParseError = true;
 				gwi.parseErrorText = "Unknown REF item";
 				break;
@@ -2457,6 +2485,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 		{
 			return buildWindowFunctionColumn(item, gwi, nonSupport);
 		}
+#if INTERVAL_ITEM
 		case Item::INTERVAL_ITEM:
 		{
 			Item_interval* interval = (Item_interval*)item;
@@ -2469,6 +2498,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			rc->resultType(srcp->resultType());
 			break;
 		}
+#endif        
 		case Item::SUBSELECT_ITEM:
 		{
 			gwi.hasSubSelect = true;
@@ -3500,23 +3530,24 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 		     end=order_item + gc->order_field();order_item < end;
 		     order_item++)
 		{
-				Item *ord_col= *(*order_item)->item;
-				if (ord_col->type() == Item::INT_ITEM)
-				{
-					Item_int* id = (Item_int*)ord_col;
-					if (id->val_int() > (int)selCols.size())
-					{
-						gwi.fatalParseError = true;
-						return NULL;
-					}
-					rc = selCols[id->val_int()-1]->clone();
-					rc->orderPos(id->val_int()-1);
-				}
-				else
-				{
-					rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
-				}
-			rc->asc((*order_item)->asc);
+            Item *ord_col= *(*order_item)->item;
+            if (ord_col->type() == Item::INT_ITEM)
+            {
+                Item_int* id = (Item_int*)ord_col;
+                if (id->val_int() > (int)selCols.size())
+                {
+                    gwi.fatalParseError = true;
+                    return NULL;
+                }
+                rc = selCols[id->val_int()-1]->clone();
+                rc->orderPos(id->val_int()-1);
+            }
+            else
+            {
+                rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
+            }
+            // 10.2 TODO: direction is now a tri-state flag
+			rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);
 			orderCols.push_back(SRCP(rc));
 		}
 
@@ -4379,8 +4410,6 @@ void gp_walk(const Item *item, void *arg)
 				gwip->subQuery = orig;
 				gwip->lastSub = existsSub;
 			}
-
-#if MYSQL_VERSION_ID >= 50172
 			else if (sub->substype() == Item_subselect::IN_SUBS)
 			{
 				if (!((Item_in_subselect*)sub)->getOptimizer() && gwip->thd->derived_tables_processing)
@@ -4392,7 +4421,6 @@ void gp_walk(const Item *item, void *arg)
 					break;
 				}
 			}
-#endif
 			// store a dummy subselect object. the transform is handled in item_func.
 			SubSelect *subselect = new SubSelect();
 			gwip->rcWorkStack.push(subselect);
@@ -4426,7 +4454,7 @@ void gp_walk(const Item *item, void *arg)
 		case Item::WINDOW_FUNC_ITEM:
 		{
 			gwip->hasWindowFunc = true;
-			Item_func_window* ifa = (Item_func_window*)item;
+			Item_window_func* ifa = (Item_window_func*)item;
 			ReturnedColumn* af = buildWindowFunctionColumn(ifa, *gwip, gwip->fatalParseError);
 			if (af)
 				gwip->rcWorkStack.push(af);
@@ -4584,6 +4612,11 @@ void parse_item (Item *item, vector<Item_field*>& field_vec, bool& hasNonSupport
 					item = (*(ref->ref));
 					continue;
 				}
+                else if ((*(ref->ref))->type() == Item::WINDOW_FUNC_ITEM)
+                {
+                    parseInfo |= AF_BIT;
+                    break;
+                }
 				else
 				{
 					cout << "UNKNOWN REF Item" << endl;
@@ -5687,7 +5720,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			return ER_CHECK_NOT_IMPLEMENTED;
 		}
 		gwi.hasWindowFunc = hasWindowFunc;
-
 		groupcol = reinterpret_cast<ORDER*>(select_lex.group_list.first);
 
 		for (; groupcol; groupcol= groupcol->next)
@@ -5938,7 +5970,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
 				gwi.hasWindowFunc = true;
 		}
-
 		// re-visit the first of ordercol list
 		ordercol = reinterpret_cast<ORDER*>(order_list.first);
 
@@ -5989,7 +6020,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						return ER_CHECK_NOT_IMPLEMENTED;
 					}
 				}
-				if (ordercol->asc)
+                if (ordercol->direction == ORDER::ORDER_ASC)
  					rc->asc(true);
 				else
 					rc->asc(false);
@@ -6022,7 +6053,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ostringstream oss;
 						oss << ordercol->counter;
 						ord_cols += oss.str();
-						if (!ordercol->asc)
+						if (ordercol->direction != ORDER::ORDER_ASC)
 							ord_cols += " desc";
 						continue;
 					}
@@ -6147,7 +6178,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 								gwi.returnedCols.push_back(srcp);
 								ord_cols += " `" + escapeBackTick(str.c_ptr()) + "`";
 							}
-							if (!ordercol->asc)
+							if (ordercol->direction != ORDER::ORDER_ASC)
 								ord_cols += " desc";
 							continue;
 						}
@@ -6211,7 +6242,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ord_item->print(&str, QT_INFINIDB);
 						ord_cols += str.c_ptr();
 					}
-					if (!ordercol->asc)
+					if (ordercol->direction != ORDER::ORDER_ASC)
 						ord_cols += " desc";
 				}
 			}
@@ -6551,7 +6582,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						ord_item->print(&str, QT_INFINIDB_NO_QUOTE);
 						ord_cols += string(str.c_ptr());
 					}
-					if (!ordercol->asc)
+					if (ordercol->direction != ORDER::ORDER_ASC)
 						ord_cols += " desc";
 				}
 			}

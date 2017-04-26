@@ -121,6 +121,11 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 {
 	// lead | lag
 	fLead = 1;
+    fRespectNulls = true;
+    fDefNull = false;
+    fDefault = (T)0;
+    fOffsetNull = false;
+    fOffset = 0;
 	if (fFunctionId == WF__LAG)
 		fLead = -1;
 

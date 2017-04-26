@@ -41,7 +41,7 @@ class ByteStream;
  */
 namespace execplan { 
 
-// This enum is made consistant with mysql item_func_window
+// This enum is made consistant with mysql Item_window_func
 enum WF_FRAME
 {
 	WF_PRECEDING = 0,
