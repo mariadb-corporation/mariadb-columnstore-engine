@@ -5953,7 +5953,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 	if (gwi.thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
 	{
-		SQL_LIST order_list = select_lex.order_list;
+		SQL_I_List<ORDER> order_list = select_lex.order_list;
 		ORDER* ordercol = reinterpret_cast<ORDER*>(order_list.first);
 		string create_query(gwi.thd->infinidb_vtable.create_vtable_query.c_ptr());
 		string select_query(gwi.thd->infinidb_vtable.select_vtable_query.c_ptr());
