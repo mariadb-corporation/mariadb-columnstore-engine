@@ -277,7 +277,7 @@ int main(int argc, char **argv)
 					log.writeLog(__LINE__, "ERROR: makeConfig failed", LOG_TYPE_ERROR);
 				}
 
-				// get updated Columnstore.xml, retry in case ProcMgr isn't up yet
+				// get updated Columnstore.xml and ProcessConfig.xml, retry in case ProcMgr isn't up yet
 				if (!HDFS)
 				{
 					int count = 0;
@@ -286,6 +286,9 @@ int main(int argc, char **argv)
 						try {
 							oam.distributeConfigFile(config.moduleName());
 							log.writeLog(__LINE__, "Successfull return from distributeConfigFile", LOG_TYPE_DEBUG);
+
+							oam.distributeConfigFile(config.moduleName(), "ProcessConfig.xml");
+							log.writeLog(__LINE__, "Successfull return from distributeProcessFile", LOG_TYPE_DEBUG);
 							break;
 						}
 						catch(...) {
@@ -337,6 +340,10 @@ int main(int argc, char **argv)
 				try {
 					oam.distributeConfigFile(config.moduleName());
 					log.writeLog(__LINE__, "Successfull return from distributeConfigFile", LOG_TYPE_DEBUG);
+					
+					oam.distributeConfigFile(config.moduleName(), "ProcessConfig.xml");
+					log.writeLog(__LINE__, "Successfull return from distributeProcessFile", LOG_TYPE_DEBUG);
+		
 					break;
 				}
 				catch(...) {
