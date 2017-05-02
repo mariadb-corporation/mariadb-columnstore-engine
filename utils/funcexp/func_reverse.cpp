@@ -49,13 +49,6 @@ void reverse( char *start, char *end )
     }
 }
 
-char *reverse_char( char *start )
-{
-    char *end = start;
-    while( (end[1] & 0xC0) == 0x80 ) end++;
-    reverse( start, end );
-    return( end+1 );
-}
 }
 
 namespace funcexp
@@ -74,11 +67,20 @@ std::string Func_reverse::getStrVal(rowgroup::Row& row,
 {
 	string str = stringValue(fp[0], row, isNull);
 
-    char *end = (char*) str.c_str();
-    while( *end ) end = reverse_char( end );
-    reverse( (char*) str.c_str(), end-1 );
-
-	return str;
+	// We used to reverse in the string buffer, but that doesn't
+	// work for all compilers as some re-use the buffer on simple
+	// string assignment and implement a ref-count. Reversing in the
+	// string buffer has the affect of reversing all strings from
+	// which this one derived.
+	int len = str.length();
+	char* pbuf = new char[len+1];
+	strncpy(pbuf, str.c_str(), len);
+	pbuf[len] = 0;
+    char *end = pbuf+len-1;
+	reverse(pbuf, end);
+	string rstr = pbuf;
+	delete [] pbuf;
+	return rstr;
 }
 
 
