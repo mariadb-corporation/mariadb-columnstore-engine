@@ -109,7 +109,9 @@ TupleJoiner::TupleJoiner(
 
 	for (uint32_t i = keyLength = 0; i < smallKeyColumns.size(); i++) {
 		if (smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::CHAR ||
-          smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::VARCHAR)
+          smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::VARCHAR
+          ||
+          smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::TEXT)
             keyLength += smallRG.getColumnWidth(smallKeyColumns[i]) + 1;  // +1 null char
        else
 			keyLength += 8;
@@ -611,7 +613,9 @@ TypelessData makeTypelessKey(const Row &r, const vector<uint32_t> &keyCols,
 	ret.data = (uint8_t *) fa->allocate();
 	for (i = 0; i < keyCols.size(); i++) {
 		type = r.getColTypes()[keyCols[i]];
-		if (type == CalpontSystemCatalog::VARCHAR || type == CalpontSystemCatalog::CHAR) {
+		if (type == CalpontSystemCatalog::VARCHAR ||
+            type == CalpontSystemCatalog::CHAR ||
+            type == CalpontSystemCatalog::TEXT) {
 			// this is a string, copy a normalized version
 			const uint8_t *str = r.getStringPointer(keyCols[i]);
 			uint32_t width = r.getStringLength(keyCols[i]);
@@ -664,7 +668,9 @@ TypelessData makeTypelessKey(const Row &r, const vector<uint32_t> &keyCols, Pool
 	ret.data = (uint8_t *) fa->allocate(keylen);
 	for (i = 0; i < keyCols.size(); i++) {
 		type = r.getColTypes()[keyCols[i]];
-		if (type == CalpontSystemCatalog::VARCHAR || type == CalpontSystemCatalog::CHAR) {
+		if (type == CalpontSystemCatalog::VARCHAR ||
+            type == CalpontSystemCatalog::CHAR ||
+            type == CalpontSystemCatalog::TEXT) {
 			// this is a string, copy a normalized version
 			const uint8_t *str = r.getStringPointer(keyCols[i]);
 			uint32_t width = r.getStringLength(keyCols[i]);
@@ -698,7 +704,9 @@ uint64_t getHashOfTypelessKey(const Row &r, const vector<uint32_t> &keyCols, uin
 
 	for (i = 0; i < keyCols.size(); i++) {
 		type = r.getColTypes()[keyCols[i]];
-		if (type == CalpontSystemCatalog::VARCHAR || type == CalpontSystemCatalog::CHAR) {
+		if (type == CalpontSystemCatalog::VARCHAR ||
+            type == CalpontSystemCatalog::CHAR ||
+            type == CalpontSystemCatalog::TEXT) {
 			// this is a string, copy a normalized version
 			const uint8_t *str = r.getStringPointer(keyCols[i]);
 			uint32_t len = r.getStringLength(keyCols[i]);
