@@ -112,7 +112,12 @@ TupleJoiner::TupleJoiner(
           smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::VARCHAR
           ||
           smallRG.getColTypes()[smallKeyColumns[i]] == CalpontSystemCatalog::TEXT)
+        {
             keyLength += smallRG.getColumnWidth(smallKeyColumns[i]) + 1;  // +1 null char
+            // MCOL-698: if we don't do this LONGTEXT allocates 32TB RAM
+            if (keyLength > 65536)
+                keyLength = 65536;
+        }
        else
 			keyLength += 8;
        // Set bSignedUnsignedJoin if one or more join columns are signed to unsigned compares.
