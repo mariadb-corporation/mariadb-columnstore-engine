@@ -624,6 +624,10 @@ TypelessData makeTypelessKey(const Row &r, const vector<uint32_t> &keyCols,
 			// this is a string, copy a normalized version
 			const uint8_t *str = r.getStringPointer(keyCols[i]);
 			uint32_t width = r.getStringLength(keyCols[i]);
+            if (width > 65536)
+            {
+                throw runtime_error("Cannot join strings greater than 64KB");
+            }
 			for (j = 0; j < width && str[j] != 0; j++) {
                 if (off >= keylen)
                     goto toolong;
@@ -679,6 +683,10 @@ TypelessData makeTypelessKey(const Row &r, const vector<uint32_t> &keyCols, Pool
 			// this is a string, copy a normalized version
 			const uint8_t *str = r.getStringPointer(keyCols[i]);
 			uint32_t width = r.getStringLength(keyCols[i]);
+            if (width > 65536)
+            {
+                throw runtime_error("Cannot join strings greater than 64KB");
+            }
 			for (j = 0; j < width && str[j] != 0; j++)
 				ret.data[off++] = str[j];
 			ret.data[off++] = 0;
