@@ -944,6 +944,9 @@ const JobStepVector doFilterExpression(const SimpleColumn* sc1, const SimpleColu
 const JobStepVector doJoin(
 	SimpleColumn* sc1, SimpleColumn* sc2, JobInfo& jobInfo, const SOP& sop, SimpleFilter* sf)
 {
+  	if ((sc1->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
+         sc1->resultType().colDataType == CalpontSystemCatalog::BLOB))
+		throw runtime_error("VARBINARY/BLOB in join is not supported.");
 	//The idea here is to take the two SC's and pipe them into a HJ step. The output of the HJ step
 	// is 2 DL's (one for each table) that are the minimum rid list for each side of the join.
 	CalpontSystemCatalog::OID tableOid1 = tableOid(sc1, jobInfo.csc);
@@ -1201,6 +1204,9 @@ const JobStepVector doJoin(
 
 const JobStepVector doSemiJoin(const SimpleColumn* sc, const ReturnedColumn* rc, JobInfo& jobInfo)
 {
+   	if ((sc->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
+         sc->resultType().colDataType == CalpontSystemCatalog::BLOB))
+		throw runtime_error("VARBINARY/BLOB in join is not supported.");
 	CalpontSystemCatalog::OID tableOid1 = tableOid(sc, jobInfo.csc);
 	CalpontSystemCatalog::OID tableOid2 = execplan::CNX_VTABLE_ID;
 	string alias1(extractTableAlias(sc));

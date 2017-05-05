@@ -555,7 +555,10 @@ void ExpressionStep::substitute(uint64_t i, const SSC& ssc)
 
 void ExpressionStep::functionJoinCheck(SimpleFilter* sf, JobInfo& jobInfo)
 {
-	// only handle one & only one table at each side, and not the same table
+	if ((sf->lhs()->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
+         sf->lhs()->resultType().colDataType == CalpontSystemCatalog::BLOB) && !fVarBinOK)
+		throw runtime_error("VARBINARY/BLOB in join is not supported.");
+    // only handle one & only one table at each side, and not the same table
 	fFunctionJoinInfo.reset(new FunctionJoinInfo);
 	if ((parseFuncJoinColumn(sf->lhs(), jobInfo) == false) ||
 	    (parseFuncJoinColumn(sf->rhs(), jobInfo) == false) ||
