@@ -1121,40 +1121,37 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 		gwip->rcWorkStack.pop();
 		ReturnedColumn* lhs = gwip->rcWorkStack.top();
 		gwip->rcWorkStack.pop();
+        ReturnedColumn* filterCol = gwip->rcWorkStack.top();
 		gwip->rcWorkStack.pop(); // pop gwip->scsp;
 		Item_func_opt_neg* inp = (Item_func_opt_neg*)ifp;
-		ConstantFilter* cf = 0;
+		SimpleFilter* sfr = 0;
+		SimpleFilter* sfl = 0;
 		if (inp->negated)
 		{
 			sop.reset(new PredicateOperator(">"));
-			sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
-			cf = new ConstantFilter(sop, gwip->scsp->clone(), rhs);
-			sop.reset(new LogicOperator("or"));
-			cf->op(sop);
+			sop->setOpType(filterCol->resultType(), rhs->resultType());
+            sfr = new SimpleFilter(sop, filterCol, rhs);
 			sop.reset(new PredicateOperator("<"));
-			sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
+            sop->setOpType(filterCol->resultType(), lhs->resultType());
+            sfl = new SimpleFilter(sop, filterCol->clone(), lhs);
+            ParseTree* ptp = new ParseTree(new LogicOperator("or"));
+            ptp->left(sfr);
+            ptp->right(sfl);
+            gwip->ptWorkStack.push(ptp);
 		}
 		else
 		{
 			sop.reset(new PredicateOperator("<="));
-			sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
-			cf = new ConstantFilter(sop, gwip->scsp->clone(), rhs);
-			sop.reset(new LogicOperator("and"));
-			cf->op(sop);
+			sop->setOpType(filterCol->resultType(), rhs->resultType());
+            sfr = new SimpleFilter(sop, filterCol, rhs);
 			sop.reset(new PredicateOperator(">="));
-			sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
+            sop->setOpType(filterCol->resultType(), lhs->resultType());
+            sfl = new SimpleFilter(sop, filterCol->clone(), lhs);
+            ParseTree* ptp = new ParseTree(new LogicOperator("and"));
+            ptp->left(sfr);
+            ptp->right(sfl);
+            gwip->ptWorkStack.push(ptp);
 		}
-		cf->pushFilter(new SimpleFilter(sop, gwip->scsp->clone(), lhs));
-		cf->functionName(gwip->funcName);
-		String str;
-		// @bug5811. This filter string is for cross engine to use.
-		// Use real table name.
-		ifp->print(&str, QT_INFINIDB_DERIVED);
-		//IDEBUG(cout << str.c_ptr() << endl);
-		if (str.ptr())
-			cf->data(str.c_ptr());
-		ParseTree* ptp = new ParseTree(cf);
-		gwip->ptWorkStack.push(ptp);
 		return true;
 	}
 	else if (ifp->functype() == Item_func::IN_FUNC)
@@ -2721,7 +2718,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 	else if ((functor = funcExp->getFunctor(funcName)))
 	{
 		// where clause isnull still treated as predicate operator
-		if ((funcName == "isnull" || funcName == "isnotnull") &&
+        // MCOL-686: between also a predicate operator so that extent elimination can happen
+		if ((funcName == "isnull" || funcName == "isnotnull" || funcName == "between") &&
 			  (gwi.clauseType == WHERE || gwi.clauseType == HAVING))
 			  return NULL;
 		if (funcName == "in" || funcName == " IN " || funcName == "between")
