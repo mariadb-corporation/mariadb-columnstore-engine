@@ -79,8 +79,8 @@ for arg in "$@"; do
 	fi
 done
 
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	sudo ldconfig
+if [ $USER != "root" ]; then
+	sudo ldconfig >/dev/null 2>&1
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
 else
