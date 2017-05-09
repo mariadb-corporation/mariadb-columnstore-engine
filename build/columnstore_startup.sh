@@ -23,4 +23,8 @@ done
 
 $installdir/bin/post-install --installdir=/usr/local/mariadb/columnstore
 echo -e "1\n1\n1\n1\n1\n1\n" | $installdir/bin/postConfigure -i $installdir
-exit 0
+if [ $? -eq 0 ]; then
+	exit 0
+else
+	exit 1
+fi
