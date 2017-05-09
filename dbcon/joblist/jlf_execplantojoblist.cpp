@@ -1673,12 +1673,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 				jsv.push_back(sjstep);
 			}
 		}
-		else if ( CalpontSystemCatalog::CHAR != ct.colDataType &&
-				 CalpontSystemCatalog::VARCHAR != ct.colDataType &&
-				 CalpontSystemCatalog::VARBINARY != ct.colDataType &&
-                 CalpontSystemCatalog::TEXT != ct.colDataType &&
-                 CalpontSystemCatalog::BLOB != ct.colDataType &&
-				 ConstantColumn::NULLDATA != cc->type() &&
+		else if ( ConstantColumn::NULLDATA != cc->type() &&
 				 (cop & COMPARE_LIKE) ) // both like and not like
 		{
 			return doExpressionFilter(sf, jobInfo);
