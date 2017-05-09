@@ -1392,6 +1392,44 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 		gwip->ptWorkStack.push(pt);
 #endif
 	}
+    else if (ifp->functype() == Item_func::EQUAL_FUNC)
+    {
+        // a = b OR (a IS NULL AND b IS NULL)
+        idbassert (gwip->rcWorkStack.size() >= 2);
+		ReturnedColumn* rhs = gwip->rcWorkStack.top();
+		gwip->rcWorkStack.pop();
+		ReturnedColumn* lhs = gwip->rcWorkStack.top();
+		gwip->rcWorkStack.pop();
+        SimpleFilter* sfn1 = 0;
+        SimpleFilter* sfn2 = 0;
+        SimpleFilter* sfo = 0;
+        // b IS NULL
+        ConstantColumn *nlhs1 = new ConstantColumn("", ConstantColumn::NULLDATA);
+        sop.reset(new PredicateOperator("isnull"));
+        sop->setOpType(lhs->resultType(), rhs->resultType());
+        sfn1 = new SimpleFilter(sop, rhs, nlhs1);
+        ParseTree* ptpl = new ParseTree(sfn1);
+        // a IS NULL
+        ConstantColumn *nlhs2 = new ConstantColumn("", ConstantColumn::NULLDATA);
+        sop.reset(new PredicateOperator("isnull"));
+        sop->setOpType(lhs->resultType(), rhs->resultType());
+        sfn2 = new SimpleFilter(sop, lhs, nlhs2);
+        ParseTree* ptpr = new ParseTree(sfn2);
+        // AND them both
+        ParseTree* ptpn = new ParseTree(new LogicOperator("and"));
+        ptpn->left(ptpl);
+        ptpn->right(ptpr);
+        // a = b
+        sop.reset(new PredicateOperator("="));
+        sop->setOpType(lhs->resultType(), lhs->resultType());
+        sfo = new SimpleFilter(sop, lhs->clone(), rhs->clone());
+        // OR with the NULL comparison tree
+        ParseTree* ptp = new ParseTree(new LogicOperator("or"));
+        ptp->left(sfo);
+        ptp->right(ptpn);
+        gwip->ptWorkStack.push(ptp);
+		return true;
+    }
 	else //std rel ops (incl "like")
 	{
 		if (gwip->rcWorkStack.size() < 2)
@@ -3035,7 +3073,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 		ifp->functype() == Item_func::IN_FUNC ||
 		ifp->functype() == Item_func::ISNULL_FUNC ||
 		ifp->functype() == Item_func::ISNOTNULL_FUNC ||
-		ifp->functype() == Item_func::NOT_FUNC)
+		ifp->functype() == Item_func::NOT_FUNC ||
+        ifp->functype() == Item_func::EQUAL_FUNC)
 	{
 		return NULL;
 	}
