@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
 	//check if MariaDB ColumnStore is up and running
 	if (oam.checkSystemRunning()) {
 		cout << "MariaDB ColumnStore is running, can't run postConfigure while MariaDB ColumnStore is running. Exiting.." << endl;
-		exit (0);
+		exit (1);
 	}
 
 	//if InitialInstallFlag is set, then an install has been done
