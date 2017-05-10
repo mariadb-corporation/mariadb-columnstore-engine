@@ -535,14 +535,20 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
    //Bug 1703,1705
    bool isToken = false;
    if (((dataType == CalpontSystemCatalog::VARCHAR) && (dataWidth > 7)) ||
-      ((dataType == CalpontSystemCatalog::CHAR) && (dataWidth > 8)) || (dataType == CalpontSystemCatalog::VARBINARY) )
+      ((dataType == CalpontSystemCatalog::CHAR) && (dataWidth > 8)) ||
+      (dataType == CalpontSystemCatalog::VARBINARY) ||
+      (dataType == CalpontSystemCatalog::BLOB) ||
+      (dataType == CalpontSystemCatalog::TEXT))
    {
       isToken = true;
    }
    Convertor::convertColType(dataType, newColType, isToken);
 
    if (((refColDataType == CalpontSystemCatalog::VARCHAR) && (refColWidth > 7)) ||
-      ((refColDataType == CalpontSystemCatalog::CHAR) && (refColWidth > 8)) || (refColDataType == CalpontSystemCatalog::VARBINARY))
+      ((refColDataType == CalpontSystemCatalog::CHAR) && (refColWidth > 8)) ||
+      (refColDataType == CalpontSystemCatalog::VARBINARY) ||
+      (dataType == CalpontSystemCatalog::BLOB) ||
+      (dataType == CalpontSystemCatalog::TEXT))
    {
       isToken = true;
    }
