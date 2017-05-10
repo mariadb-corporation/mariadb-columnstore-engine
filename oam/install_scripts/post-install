@@ -36,10 +36,6 @@ for arg in "$@"; do
 		echo "post-install: ignoring unknown argument: $arg" 1>&2
 	fi
 done
-
-echo $installdir
-echo $prefix
-exit 0
  
 if [ $user != "root" ]; then
 	export COLUMNSTORE_INSTALL_DIR=$installdir
