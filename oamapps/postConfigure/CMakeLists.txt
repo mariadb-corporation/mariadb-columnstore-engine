@@ -56,3 +56,5 @@ target_link_libraries(mycnfUpgrade ${ENGINE_LDFLAGS} readline ncurses  ${ENGINE_
 
 install(TARGETS mycnfUpgrade DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
+
+
