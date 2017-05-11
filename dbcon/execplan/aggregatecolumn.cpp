@@ -307,6 +307,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
 	case CalpontSystemCatalog::CHAR:
 	case CalpontSystemCatalog::VARCHAR:
 	case CalpontSystemCatalog::STRINT:
+    case CalpontSystemCatalog::TEXT:
 		switch (row.getColumnWidth(fInputIndex))
 		{
 		case 1:
@@ -461,6 +462,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
 		}
 		break;
 	case CalpontSystemCatalog::VARBINARY:
+    case CalpontSystemCatalog::BLOB:
 		isNull = true;
 		break;
 	default:	// treat as int64

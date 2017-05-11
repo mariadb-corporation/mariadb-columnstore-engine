@@ -102,6 +102,7 @@ inline uint64_t getUintNullValue(int colType, int colWidth = 0)
 			break;
 		}
 		case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
 		{
 			if (colWidth < 3) return joblist::CHAR2NULL;
 			else if (colWidth < 5) return joblist::CHAR4NULL;
@@ -485,6 +486,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
 		}
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
 		{
 			int colWidth = pRowGroup->getColumnWidth(col);
 			// bug 1853, use token to check null
@@ -587,6 +589,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
 			break;
 		}
 		case execplan::CalpontSystemCatalog::VARBINARY:
+        case execplan::CalpontSystemCatalog::BLOB:
 		{
 			ret = (row.equals("", col) || row.equals(joblist::CPNULLSTRMARK, col));
 			break;
@@ -943,6 +946,7 @@ void RowAggregation::initMapData(const Row& rowIn)
 			}
 			case execplan::CalpontSystemCatalog::CHAR:
 			case execplan::CalpontSystemCatalog::VARCHAR:
+            case execplan::CalpontSystemCatalog::TEXT:
 			{
 				int colWidth = fRowGroupIn.getColumnWidth(colIn);
 				if (colWidth <= 8)
@@ -1060,6 +1064,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
 			}
 			case execplan::CalpontSystemCatalog::CHAR:
 			case execplan::CalpontSystemCatalog::VARCHAR:
+            case execplan::CalpontSystemCatalog::TEXT:
 			{
 				int colWidth = fRowGroupOut->getColumnWidth(colOut);
 				if (colWidth <= 8)
@@ -1149,6 +1154,7 @@ void RowAggregation::doMinMaxSum(const Row& rowIn, int64_t colIn, int64_t colOut
 		}
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
 		{
 			if (funcType == ROWAGG_SUM)
 			{
@@ -1281,6 +1287,7 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
 
 		case execplan::CalpontSystemCatalog::CHAR:
 		case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
 		{
 			string str = rowIn.getStringField(colIn);
 			valIn = strtoll(str.c_str(), NULL, 10);
@@ -2358,6 +2365,7 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 
 				case execplan::CalpontSystemCatalog::CHAR:
 				case execplan::CalpontSystemCatalog::VARCHAR:
+                case execplan::CalpontSystemCatalog::TEXT:
 				default:
 				{
 					fRow.setStringField("", colOut);
@@ -2478,6 +2486,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
 				case execplan::CalpontSystemCatalog::CHAR:
 				case execplan::CalpontSystemCatalog::VARCHAR:
+                case execplan::CalpontSystemCatalog::TEXT:
 				default:
 				{
 					fRow.setStringField(aggData.fConstValue, colOut);
@@ -2562,6 +2571,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 				case execplan::CalpontSystemCatalog::DATETIME:
 				case execplan::CalpontSystemCatalog::CHAR:
 				case execplan::CalpontSystemCatalog::VARCHAR:
+                case execplan::CalpontSystemCatalog::TEXT:
 				default:
 				{
 					// will not be here, checked in tupleaggregatestep.cpp.
@@ -2626,6 +2636,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
 				case execplan::CalpontSystemCatalog::CHAR:
 				case execplan::CalpontSystemCatalog::VARCHAR:
+                case execplan::CalpontSystemCatalog::TEXT:
 				default:
 				{
 					fRow.setStringField(0, colOut);
