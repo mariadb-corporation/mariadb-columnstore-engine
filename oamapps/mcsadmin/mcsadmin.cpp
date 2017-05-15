@@ -8342,7 +8342,11 @@ void printModuleDisk(ModuleDisk moduledisk)
 				moduledisk.diskusage[i].DeviceName.find(etcdir, 0) == string::npos ) {
 			cout.setf(ios::left);
 			cout.width(31);
-			cout << moduledisk.diskusage[i].DeviceName;
+			if (moduledisk.diskusage[i].DeviceName.length() > 29) { 
+				cout << "..." + moduledisk.diskusage[i].DeviceName.substr(moduledisk.diskusage[i].DeviceName.length()-26);
+			} else {
+				cout << moduledisk.diskusage[i].DeviceName;
+			}
 			cout.width(14);
 			cout << moduledisk.diskusage[i].TotalBlocks;
 			cout.width(17);
