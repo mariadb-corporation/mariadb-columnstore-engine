@@ -267,6 +267,16 @@ public:
 						FunctionParm& fp,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int32_t getDateIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
+
+	int64_t getDatetimeIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -296,6 +306,16 @@ public:
 						execplan::CalpontSystemCatalog::ColType& op_ct);
 
 	execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int32_t getDateIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getDatetimeIntVal(rowgroup::Row& row,
 						FunctionParm& fp,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType& op_ct);
