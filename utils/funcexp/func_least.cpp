@@ -137,6 +137,44 @@ IDB_Decimal Func_least::getDecimalVal(Row& row,
 	return leastStr;
 }
 
+int32_t Func_least::getDateIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+	int32_t str = fp[0]->data()->getDateIntVal(row, isNull);
+
+	int32_t leastStr = str;
+	for (uint32_t i = 1; i < fp.size(); i++)
+	{
+		int32_t str1 = fp[i]->data()->getDateIntVal(row, isNull);
+
+		if ( leastStr > str1 )
+			leastStr = str1;
+	}
+
+	return leastStr;
+}
+
+int64_t Func_least::getDatetimeIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+	int64_t str = fp[0]->data()->getDatetimeIntVal(row, isNull);
+
+	int64_t leastStr = str;
+	for (uint32_t i = 1; i < fp.size(); i++)
+	{
+		int64_t str1 = fp[i]->data()->getDatetimeIntVal(row, isNull);
+
+		if ( leastStr > str1 )
+			leastStr = str1;
+	}
+
+	return leastStr;
+}
+
 
 
 } // namespace funcexp
