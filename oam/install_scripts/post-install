@@ -39,7 +39,7 @@ done
  
 if [ $user != "root" ]; then
 	export COLUMNSTORE_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 else
 	# add library config file
 	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/. >/dev/null 2>&1
@@ -274,7 +274,7 @@ cat <<EOD
 The next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
 
 EOD
@@ -305,14 +305,14 @@ cat <<EOD
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure -i $installdir
 
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
 
 EOD
@@ -344,14 +344,14 @@ cat <<EOD
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql:$libpath
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib:$libpath
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure -i $installdir
 
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
 
 EOD

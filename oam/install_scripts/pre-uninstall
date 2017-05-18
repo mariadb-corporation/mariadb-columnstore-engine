@@ -164,10 +164,11 @@ else
 fi
 
 #remove library paths
-if [ $installdir == "/usr/local/mariadb/columnstore" ]; then
-        # remove library config file
-        $SUDO rm -f /etc/ld.so.conf.d/columnstore.conf
-        $SUDO ldconfig
+if [ $user = "root" ]; then
+        rm -f /etc/ld.so.conf.d/columnstore.conf
+        ldconfig
+else
+	$SUDO rm -f /etc/defaults/columnstore
 fi
 
 #cleanup .bashrc	
