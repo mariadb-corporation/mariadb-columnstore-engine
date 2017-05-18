@@ -25,6 +25,7 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+                prefix=`dirname $prefix`
 	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
 		user="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
@@ -35,10 +36,10 @@ for arg in "$@"; do
 		echo "post-install: ignoring unknown argument: $arg" 1>&2
 	fi
 done
-
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
+ 
+if [ $user != "root" ]; then
 	export COLUMNSTORE_INSTALL_DIR=$installdir
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 else
 	# add library config file
 	/bin/cp -f $installdir/bin/columnstore.conf /etc/ld.so.conf.d/. >/dev/null 2>&1
@@ -224,7 +225,7 @@ else
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
 
-	sed -i -e s@prefix=/usr/local@prefix=$HOME@g $installdir/bin/*
+	sed -i -e s@prefix=/usr/local@prefix=$prefix@g $installdir/bin/*
 fi
 
 #check if MariaDB Columnstore system logging was setup
@@ -273,7 +274,7 @@ cat <<EOD
 The next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
 
 EOD
@@ -304,14 +305,14 @@ cat <<EOD
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure -i $installdir
 
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
 
 EOD
@@ -343,14 +344,14 @@ cat <<EOD
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql:$libpath
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib:$libpath
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure -i $installdir
 
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib/mysql
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
 
 EOD
