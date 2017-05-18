@@ -159,6 +159,44 @@ IDB_Decimal Func_greatest::getDecimalVal(Row& row,
 	return greatestStr;
 }
 
+int32_t Func_greatest::getDateIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& ct)
+{
+	int32_t str = fp[0]->data()->getDateIntVal(row, isNull);
+
+	int32_t greatestStr = str;
+	for (uint32_t i = 1; i < fp.size(); i++)
+	{
+		int32_t str1 = fp[i]->data()->getDateIntVal(row, isNull);
+
+		if ( greatestStr < str1 )
+			greatestStr = str1;
+	}
+
+	return greatestStr;
+}
+
+int64_t Func_greatest::getDatetimeIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& ct)
+{
+	int64_t str = fp[0]->data()->getDatetimeIntVal(row, isNull);
+
+	int64_t greatestStr = str;
+	for (uint32_t i = 1; i < fp.size(); i++)
+	{
+		int64_t str1 = fp[i]->data()->getDatetimeIntVal(row, isNull);
+
+		if ( greatestStr < str1 )
+			greatestStr = str1;
+	}
+
+	return greatestStr;
+}
+
 } // namespace funcexp
 // vim:ts=4 sw=4:
 
