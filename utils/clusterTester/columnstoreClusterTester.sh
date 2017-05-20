@@ -70,7 +70,7 @@ helpPrint () {
     echo "OPTIONS:"
     echo  "   -h,--help			Help" 
     echo  "   --ipaddr=[ipaddresses]	Remote Node IP-Addresses/Hostnames, if not provide, will only check local node"
-    echo  "                             examples: 192.168.1.1,192.168.1.2 or serverum1,serverpm2"
+    echo  "                           	examples: 192.168.1.1,192.168.1.2 or serverum1,serverpm2"
     echo  "   --os=[os]			Optional: Set OS Version (centos6, centos7, debian8, suse12, ubuntu16)" 
     echo  "   --password=[password]	Provide a user password. (Default: ssh-keys setup will be assumed)" 
     echo  "   -c,--continue		Continue on failures"
@@ -532,35 +532,33 @@ checkFirewalls()
   # FIREWALL checks
   #
   echo ""
-  echo "** Run Firewall Services check - Firewall Services should to be disabled on all nodes"
+  echo "** Run Firewall Services check - Firewall Services should to be Inactive on all nodes"
   echo ""
 
   declare -a FIREWALL_LIST=("iptables" "ufw" "firewalld" "firewall")
 
   fpass=true
   #check local FIREWALLS
-  `chkconfig > /tmp/firewall_check 2>&1`
   for firewall in "${FIREWALL_LIST[@]}"; do
     pass=true
-    `cat /tmp/firewall_check | grep $firewall | grep on > /dev/null 2>&1`
+    `service  $firewall status > /tmp/firewall1_check 2>&1`
     if [ "$?" -eq 0 ]; then
-      echo "${bold}Failed${normal}, Local Node $firewall service is Enabled in chkconfig, please disable"
+      echo "${bold}Failed${normal}, Local Node $firewall service is Active, please disable"
       pass=false
       fpass=false
       REPORTPASS=false
-    fi
-
-    `systemctl status $firewall > /tmp/firewall1_check 2>&1`
-    `cat /tmp/firewall1_check | grep "Active: active" > /dev/null 2>&1`
-    if [ "$?" -eq 0 ]; then
-      echo "${bold}Failed${normal}, Local Node $firewall service is Enabled in systemctl, please disable"
-      pass=false
-      fpass=false
-      REPORTPASS=false
+    else
+      `systemctl status $firewall > /tmp/firewall1_check 2>&1`
+      if [ "$?" -eq 0 ]; then
+        echo "${bold}Failed${normal}, Local Node $firewall service is Active, please disable"
+        pass=false
+        fpass=false
+        REPORTPASS=false
+      fi
     fi
 
     if $pass ; then
-      echo "Local Node $firewall service is Not Enabled"
+      echo "Local Node $firewall service is Not Active"
     fi
   done
 
@@ -571,79 +569,29 @@ checkFirewalls()
   echo ""
   fpass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `./remote_command.sh $ipadd $PASSWORD 'chkconfig > /tmp/firewall_check 2>&1' 1 > /tmp/remote_command_check`
-     rc="$?"
-     if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-	`./remote_scp_get.sh $ipadd $PASSWORD /tmp/firewall_check > /tmp/remote_scp_get_check 2>&1`
-	if [ "$?" -ne 0 ]; then
-	  echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
-	else
-	  for firewall in "${FIREWALL_LIST[@]}"; do
-	    pass=true
-	    `cat firewall_check | grep $firewall | grep on > /dev/null 2>&1`
-	    if [ "$?" -eq 0 ]; then
-	      echo "${bold}Failed${normal}, $ipadd Node $firewall service is Enabled in chkconfig, please disable"
-	      pass=false
-	      fpass=false
-	      REPORTPASS=false
-	    fi
-
-	    `./remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > /tmp/firewall1_check 2>&1" 1 > /tmp/remote_command_check`
-	    rc="$?"
-	    if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-	      `./remote_scp_get.sh $ipadd $PASSWORD /tmp/firewall1_check > /tmp/remote_scp_get_check 2>&1`
-	      if [ "$?" -ne 0 ]; then
-		echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
-	      else
-		`cat firewall1_check | grep "Active: active" > /dev/null 2>&1`
-		if [ "$?" -eq 0 ]; then
-		  echo "${bold}Failed${normal}, $ipadd Node $firewall service is Enabled in systemctl, please disable"
-		  pass=false
-		  fpass=false
-		  REPORTPASS=false
-		fi
-		`rm -f firewall1_check`
-	      fi
-	    fi
-
-	    if $pass ; then
-	      echo "$ipadd Node $firewall service is Not Enabled"
-	    fi
-	  done
-	    
-	  `rm -f firewall_check`
-	fi
-    else
       # 'sysconfig not on remote node
       for firewall in "${FIREWALL_LIST[@]}"; do
 	pass=true
-	`./remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > /tmp/firewall1_check 2>&1" 1 > /tmp/remote_command_check`
-	rc="$?"
-	if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-	  `./remote_scp_get.sh $ipadd $PASSWORD /tmp/firewall1_check > /tmp/remote_scp_get_check 2>&1`
-	  if [ "$?" -ne 0 ]; then
-	    echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
-	  else
-	    `cat firewall1_check | grep "Active: active" > /dev/null 2>&1`
-	    if [ "$?" -eq 0 ]; then
-	      echo "${bold}Failed${normal}, $ipadd Node $firewall service is Enabled in systemctl, please disable"
+        `./remote_command.sh $ipadd $PASSWORD "service '$firewall' status > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
+        if [ "$?" -eq 0 ]; then
+              echo "${bold}Failed${normal}, $ipadd Node $firewall service is Active, please disable"
+              pass=false
+              fpass=false
+              REPORTPASS=false
+        else
+	  `./remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
+	  if [ "$?" -eq 0 ]; then
+	      echo "${bold}Failed${normal}, $ipadd Node $firewall service is Active, please disable"
 	      pass=false
 	      fpass=false
 	      REPORTPASS=false
-	    fi
-	    `rm -f firewall1_check`
-	    
-	    if $pass ; then
-	      echo "$ipadd Node $firewall service is Not Enabled"
-	    fi
 	  fi
-	fi
+        fi  
 
 	if $pass ; then
 	  echo "$ipadd Node $firewall service is Not Enabled"
 	fi
       done
-    fi
 
   echo ""
   done
@@ -656,14 +604,14 @@ checkFirewalls()
     # rcSuSEfirewall2 check
     #
     echo ""
-    echo "** Run rcSuSEfirewall2 check - Service should to be disabled on all nodes"
+    echo "** Run rcSuSEfirewall2 check - Service should to be Inactive on all nodes"
     echo ""
     
     pass=true
     #check local IPTABLES
     `/sbin/rcSuSEfirewall2 status > /tmp/rcSuSEfirewall2_check 2>&1`
     if [ "$?" -eq 0 ]; then
-      echo "${bold}Failed${normal}, Local Node rcSuSEfirewall2 service is Enabled, please disable"
+      echo "${bold}Failed${normal}, Local Node rcSuSEfirewall2 service is Active, please disable"
       pass=false
       REPORTPASS=false
     else
@@ -674,7 +622,7 @@ checkFirewalls()
       `./remote_command.sh $ipadd $PASSWORD '/sbin/rcSuSEfirewall2 status > /tmp/rcSuSEfirewall2_check 2>&1' 1 > /tmp/remote_command_check`
       rc="$?"
       if  [ $rc -eq 0 ] ; then
-	echo "${bold}Failed${normal}, $ipadd Node rcSuSEfirewall2 service is Enabled, please disable"
+	echo "${bold}Failed${normal}, $ipadd Node rcSuSEfirewall2 service is Active, please disable"
 	pass=false
 	REPORTPASS=false
       else
@@ -927,7 +875,7 @@ checkPackages()
       for PKG in "${UBUNTU_PKG[@]}"; do
         `./remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
         rc="$?"
-        if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
+        if  [ $rc -eq 0 ] ; then
           `./remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
             if [ "$?" -ne 0 ]; then
               echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
@@ -998,16 +946,30 @@ checkPackages()
       for PKG in "${DEBIAN_PKG[@]}"; do
         `./remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
         rc="$?"
-        if  [ $rc -eq 2 ] ; then
-          echo "${bold}Failed${normal}, $ipadd Node, 'dpkg' not installed"
+        if  [ $rc -eq 0 ] ; then
+          `./remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
+            if [ "$?" -ne 0 ]; then
+              echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
+            else
+              `cat /tmp/remote_command_check | grep 'command not found' > /dev/null 2>&1`
+              if [ "$?" -eq 0 ]; then
+                echo "${bold}Failed${normal}, $ipadd Node ${bold}dpkg${normal} package not installed"
+                pass=false
+                break
+              else
+                `cat pkg_check | grep 'install ok installed' > /dev/null 2>&1`
+                if [ "$?" -ne 0 ]; then
+                  echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
+                  pass=false
+                fi
+
+                `rm -f pkg_check`
+              fi
+            fi
+        else
+          echo "Error running remote_command.sh to $ipadd Node, check /tmp/remote_command_check"
           pass=false
-          REPORTPASS=false
-          break
-        elif [ $rc -eq 1 ] ; then
-          echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
-          pass=false
-          REPORTPASS=false
-       fi
+        fi
       done
 
       if $pass; then
