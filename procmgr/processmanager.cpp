@@ -5052,7 +5052,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		if (amazon) {
 			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
 			log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
-			rtnCode = system(cmd.c_str());
+			int rtnCode = system(cmd.c_str());
 			if (WEXITSTATUS(rtnCode) == 0)
 				log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
 			else
@@ -5091,7 +5091,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				bool passed = false;
 				for ( int retry = 0 ; retry < 20 ; retry++ )
 				{
-					rtnCode = system(cmd.c_str());
+					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						// if log file size is zero, retry
 						ifstream in("/tmp/user_installer.log");
@@ -5136,7 +5136,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				bool passed = false;
 				for ( int retry = 0 ; retry < 20 ; retry++ )
 				{
-					rtnCode = system(cmd.c_str());
+					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
 						// if log file size is zero, retry
 						ifstream in("/tmp/binary_installer.log");
@@ -5176,12 +5176,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + + " --nodeps 1 > /tmp/performance_installer.log";
 					log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
-					rtnCode = system(cmd.c_str());
+					int rtnCode = system(cmd.c_str());
 
 					bool passed = false;
 					for ( int retry = 0 ; retry < 20 ; retry++ )
 					{
-						rtnCode = system(cmd.c_str());
+						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
 							// if log file size is zero, retry
 							ifstream in("/tmp/performance_installer.log");
