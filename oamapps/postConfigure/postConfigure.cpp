@@ -169,6 +169,7 @@ string glusterInstalled = "n";
 string hadoopInstalled = "n";
 string mysqlPort = oam::UnassignedName;
 string systemName;
+string DistributedInstall = "n";
 
 bool noPrompting = false;
 bool rootUser = true;
@@ -536,6 +537,26 @@ int main(int argc, char *argv[])
 	}
 	catch(...) {}
 
+	if ( nonDistribute )
+	{
+	    try {
+		oam.setSystemConfig("DistributedInstall", "n");
+	    }
+	    catch(...) {}
+	}
+	else
+	{
+	    //get Distributed Install
+	    try {
+		    DistributedInstall = sysConfig->getConfig(InstallSection, "DistributedInstall");
+	    }
+	    catch(...)
+	    {}
+	    
+	    if ( DistributedInstall == "n" )
+		nonDistribute = true;
+	}
+	
 	cout << endl;
 
 	cout << "===== Setup System Server Type Configuration =====" << endl << endl;
@@ -2891,7 +2912,7 @@ int main(int argc, char *argv[])
 				    {
 					cout << endl << "----- Performing Install Check on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
 
-				      	//check of releasenum file exist, which shows package is installed
+				      	//check of post-install file exist, which shows package is installed
 					string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {

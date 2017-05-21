@@ -4490,6 +4490,18 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                 log.writeLog(__LINE__, "addModule - ERROR: get EEPackageType", LOG_TYPE_ERROR);
 	}
 
+	//get Distributed Install
+	string DistributedInstall = "y";
+
+	try
+        {
+		oam.getSystemConfig("DistributedInstall", DistributedInstall);
+        }
+        catch (...) 
+	{
+                log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+	}
+
 	//
 	// check for RPM package
 	//
@@ -4507,8 +4519,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		return API_FAILURE;
 	}
 
-
-	//check if pkgs are located in /root directory
 	string homedir = "/root";
 	if (!rootUser) {
 		char* p= getenv("HOME");
@@ -4524,15 +4534,19 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		else
 			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
 
-	string cmd = "ls " + calpontPackage + " > /dev/null 2>&1";
-	int rtnCode = system(cmd.c_str());
-	if (WEXITSTATUS(rtnCode) != 0) {
-		log.writeLog(__LINE__, "addModule - ERROR: Package not found: " + calpontPackage, LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FILE_OPEN_ERROR;
+	if ( DistributedInstall == "n" )
+	{
+	  //check if pkgs are located in /root directory
+	    string cmd = "ls " + calpontPackage + " > /dev/null 2>&1";
+	    int rtnCode = system(cmd.c_str());
+	    if (WEXITSTATUS(rtnCode) != 0) {
+		    log.writeLog(__LINE__, "addModule - ERROR: Package not found: " + calpontPackage, LOG_TYPE_ERROR);
+		    pthread_mutex_unlock(&THREAD_LOCK);
+		    return API_FILE_OPEN_ERROR;
+	    }
+	    log.writeLog(__LINE__, "addModule - Calpont Package found:" + calpontPackage, LOG_TYPE_DEBUG);
 	}
-	log.writeLog(__LINE__, "addModule - Calpont Package found:" + calpontPackage, LOG_TYPE_DEBUG);
-
+	
 	//
 	// Verify Host IP and Password
 	//
@@ -5048,6 +5062,20 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		//default
 		string binaryInstallDir = installDir;
 
+		string installType = "initial";
+		if ( DistributedInstall == "n" ) {
+		    installType = "nonDistribute";
+		    
+		    //check of post-install file exist, which shows package is installed
+		    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
+		    int rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) != 0) {
+			log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
+			pthread_mutex_unlock(&THREAD_LOCK);
+			return API_FAILURE;
+		    }
+		}
+
 		//run installer on remote module
 		if ( remoteModuleType == "um" ||
 			( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
@@ -5101,7 +5129,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				string binservertype = oam.itoa(config.ServerInstallType());
 				if ( PMwithUM == "y" )
 					binservertype = "pmwithum";
-				string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+				string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + "  " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
 
 				log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5192,7 +5220,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					if ( PMwithUM == "y" )
 						binservertype = "pmwithum";
 
-					string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " initial " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+					string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + " " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
 
 					log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
