@@ -4417,6 +4417,18 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 	pthread_mutex_lock(&THREAD_LOCK);
 
+	//get Distributed Install
+	string DistributedInstall = "y";
+
+	try
+        {
+		oam.getSystemConfig("DistributedInstall", DistributedInstall);
+        }
+        catch (...) 
+	{
+                log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+	}
+
 	int AddModuleCount = devicenetworklist.size();
 	DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 	string moduleType = (*listPT).DeviceName.substr(0,MAX_MODULE_TYPE_SIZE);
@@ -4490,18 +4502,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                 log.writeLog(__LINE__, "addModule - ERROR: get EEPackageType", LOG_TYPE_ERROR);
 	}
 
-	//get Distributed Install
-	string DistributedInstall = "y";
-
-	try
-        {
-		oam.getSystemConfig("DistributedInstall", DistributedInstall);
-        }
-        catch (...) 
-	{
-                log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-	}
-
 	//
 	// check for RPM package
 	//
@@ -4544,7 +4544,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    pthread_mutex_unlock(&THREAD_LOCK);
 		    return API_FILE_OPEN_ERROR;
 	    }
-	    log.writeLog(__LINE__, "addModule - Calpont Package found:" + calpontPackage, LOG_TYPE_DEBUG);
+	    log.writeLog(__LINE__, "addModule - ColumnStore Package found:" + calpontPackage, LOG_TYPE_DEBUG);
 	}
 	
 	//

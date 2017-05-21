@@ -537,6 +537,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...) {}
 
+	//check for non-Distributed Install
 	if ( nonDistribute )
 	{
 	    try {
@@ -2702,7 +2703,7 @@ int main(int argc, char *argv[])
 	// determine package type
        	string EEPackageType;
 
-        if (!rootUser)
+        if (!rootUser || nonDistribute)
 		EEPackageType = "binary";
 	else
 	{
