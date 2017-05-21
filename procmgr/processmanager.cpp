@@ -5176,7 +5176,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + + " --nodeps 1 > /tmp/performance_installer.log";
 					log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
-					int rtnCode = system(cmd.c_str());
+					system(cmd.c_str());
 
 					bool passed = false;
 					for ( int retry = 0 ; retry < 20 ; retry++ )
@@ -5227,7 +5227,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					bool passed = false;
 					for ( int retry = 0 ; retry < 20 ; retry++ )
 					{
-						rtnCode = system(cmd.c_str());
+						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
 							// if log file size is zero, retry
 							ifstream in("/tmp/binary_installer.log");
