@@ -4534,7 +4534,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		else
 			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
 
-	if ( DistributedInstall == "n" )
+	if ( DistributedInstall == "y" )
 	{
 	  //check if pkgs are located in /root directory
 	    string cmd = "ls " + calpontPackage + " > /dev/null 2>&1";
