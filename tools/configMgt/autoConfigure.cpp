@@ -1843,6 +1843,24 @@ int main(int argc, char *argv[])
 	catch(...)
 	{}
 
+	try {
+		string DistributedInstall = sysConfigOld->getConfig("Installation", "DistributedInstall");
+
+		if ( !DistributedInstall.empty() )
+		{
+			try {
+				sysConfigNew->setConfig("Installation", "DistributedInstall", DistributedInstall);
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting DistributedInstall in the Calpont System Configuration file" << endl;
+				exit(-1);
+			}
+		}
+	}
+	catch(...)
+	{}
+
 	//Write out Updated System Configuration File
 	sysConfigNew->write();
 }

@@ -913,9 +913,20 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 					log.writeLog(__LINE__, "STOPALL: ACK back to ProcMgr, return status = " + oam.itoa((int) requestStatus));
 
-					//Remove Calpont RPM on REMOVE option
-					if ( actIndicator == oam::REMOVE ) {
-						log.writeLog(__LINE__,  "STOPALL: uninstall Calpont RPMs", LOG_TYPE_DEBUG);
+					//Remove MariaDB ColumnStore PGK on REMOVE option if distubuted install
+					string DistributedInstall = "y";
+
+					try
+					{
+						oam.getSystemConfig("DistributedInstall", DistributedInstall);
+					}
+					catch (...) 
+					{
+						log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+					}
+
+					if ( actIndicator == oam::REMOVE && ( DistributedInstall == "y" )) {
+						log.writeLog(__LINE__,  "STOPALL: uninstall MariaDB ColumnStore PGKs", LOG_TYPE_DEBUG);
 						if ( config.moduleType() == "um" ) {
 							system("rpm -e --nodeps $(rpm -qa | grep '^mariadb-columnstore')");
 							system("dpkg -P $(dpkg --get-selections | grep '^mariadb-columnstore')");

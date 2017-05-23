@@ -58,9 +58,11 @@ expect {
 						}
 	"word: " { send "$PASSWORD\n" }
 	"passphrase" { send "$PASSWORD\n" }
+	"No such file" { send_user "FAILED: File doesn't exist\n" ; exit 1}
 	-re {[$#] } { exit 0 }
 }
 expect {
+	"No such file" { send_user "FAILED: File doesn't exist\n" ; exit 1}
 	-re {[$#>] } { exit 0 }
 	"Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
 			"(y or n)"  { send "y\n" 

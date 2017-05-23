@@ -52,6 +52,17 @@
 #include <cstring>
 #include <glob.h>
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <stdio.h>
+
+#include <string.h> /* for strncpy */
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "boost/filesystem/operations.hpp"
@@ -98,7 +109,7 @@ bool updateProcessConfig(int serverTypeInstall);
 bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
 bool createDbrootDirs(string DBRootStorageType);
-bool pkgCheck();
+bool pkgCheck(std::string columnstorePackage);
 bool storageSetup(bool amazonInstall);
 void setSystemName();
 bool singleServerDBrootSetup();
@@ -115,7 +126,7 @@ typedef struct ModuleIP_struct
 
 std::string launchInstance(ModuleIP moduleip);
 
-string calpontPackage1;
+string columnstorePackage;
 //string calpontPackage2;
 //string calpontPackage3;
 //string mysqlPackage;
@@ -158,6 +169,7 @@ string glusterInstalled = "n";
 string hadoopInstalled = "n";
 string mysqlPort = oam::UnassignedName;
 string systemName;
+string DistributedInstall = "n";
 
 bool noPrompting = false;
 bool rootUser = true;
@@ -169,6 +181,7 @@ bool mysqlRep = false;
 string MySQLRep = "y";
 string PMwithUM = "n";
 bool amazonInstall = false;
+bool nonDistribute = false;
 
 string DataFileEnvFile;
 
@@ -270,7 +283,7 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-s][-port][-i]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-s][-port][-i][-n]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -278,7 +291,8 @@ int main(int argc, char *argv[])
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
 			cout << "   -s  Single Threaded Remote Install" << endl;
 			cout << "   -port MariaDB ColumnStore Port Address" << endl;
-            cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
+			cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
+			cout << "   -n Non-distributed install, meaning it will not install the remote nodes" << endl;
 			exit (0);
 		}
       		else if( string("-s") == argv[i] )
@@ -315,7 +329,7 @@ int main(int argc, char *argv[])
 			noPrompting = true;
 		// for backward compatibility
 		else if( string("-n") == argv[i] )
-			noPrompting = true;
+			nonDistribute = true;
 		else if( string("-port") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
@@ -423,6 +437,60 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+    //check for local ip address as pm1
+	ModuleConfig moduleconfig;
+
+    try
+    {
+        oam.getSystemConfig("pm1", moduleconfig);
+		if (moduleconfig.hostConfigList.size() > 0 )
+		{
+        	HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+        	string PM1ipAdd = (*pt1).IPAddr;
+			//cout << PM1ipAdd << endl;
+
+        	if ( PM1ipAdd != "127.0.0.1" && PM1ipAdd != "0.0.0.0")
+        	{
+				struct ifaddrs *ifap, *ifa;
+    			struct sockaddr_in *sa;
+    			char *addr;
+				bool found = false;
+
+    			getifaddrs (&ifap);
+    			for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        			if (ifa->ifa_addr->sa_family==AF_INET) {
+            			sa = (struct sockaddr_in *) ifa->ifa_addr;
+            			addr = inet_ntoa(sa->sin_addr);
+            			//printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
+	
+	            		if ( PM1ipAdd == addr )
+						{
+							//match
+							found = true;
+						}
+	        		}
+	
+					if (found)
+						break;		
+	    		}
+	
+				freeifaddrs(ifap);
+	
+				if (!found)
+				{
+                	cout << endl;
+                	cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
+                	cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
+                	cout << "IP Address. exiting..." << endl;
+                	exit(1);
+				}	
+        	}		
+		}
+    }
+    catch(...)
+    {}
+
+
 	// run my.cnf upgrade script
 	if ( reuseConfig == "y" )
 	{
@@ -469,6 +537,27 @@ int main(int argc, char *argv[])
 	}
 	catch(...) {}
 
+	//check for non-Distributed Install
+	if ( nonDistribute )
+	{
+	    try {
+		oam.setSystemConfig("DistributedInstall", "n");
+	    }
+	    catch(...) {}
+	}
+	else
+	{
+	    //get Distributed Install
+	    try {
+		    DistributedInstall = sysConfig->getConfig(InstallSection, "DistributedInstall");
+	    }
+	    catch(...)
+	    {}
+	    
+	    if ( DistributedInstall == "n" )
+		nonDistribute = true;
+	}
+	
 	cout << endl;
 
 	cout << "===== Setup System Server Type Configuration =====" << endl << endl;
@@ -666,64 +755,6 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		cout <<         "NOTE: The MariaDB ColumnStore Schema Sync feature will replicate all of the" << endl;
-     	cout <<         "      schemas and InnoDB tables across the User Module nodes. This feature can be enabled" << endl;
-     	cout <<         "      or disabled, for example, if you wish to configure your own replication post installation." << endl << endl;
-
-       	try {
-        	MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
-       	}
-       	catch(...)
-        {}
-
-        if ( MySQLRep == "y" )
-        	mysqlRep = true;
-
-       	string answer = "y";
-
-        while(true) {
-        	if ( mysqlRep )
-                        prompt = "MariaDB ColumnStore Schema Sync feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
-                    else
-                        prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (y) > ";
-
-                    pcommand = callReadline(prompt.c_str());
-                    if (pcommand) {
-                        if (strlen(pcommand) > 0) answer = pcommand;
-                        callFree(pcommand);
-                    }
-
-                    if ( answer == "y" || answer == "n" ) {
-                        cout << endl;
-                        break;
-                    }
-                    else
-                        cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-                    if ( noPrompting )
-                        exit(1);
-   		}
-
-       	if ( answer == "y" ) {
-        	mysqlRep = true;
-            MySQLRep = "y";
-        }
-		else
-		{
-        	mysqlRep = false;
-            MySQLRep = "n";
-		}
-
-       	try {
-        	sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
-        }
-        catch(...)
-       	{}
-
-    	if ( !writeConfig(sysConfig) ) {
-        	cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-        	exit(1);
-    	}
-
 		switch ( IserverTypeInstall ) {
 			case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
 			{
@@ -811,6 +842,75 @@ int main(int argc, char *argv[])
 			}
 		}
 		break;
+	}
+
+	// check for Schema Schema is Local Query wasnt selected
+	if (!pmwithum)
+	{
+	    cout <<         "NOTE: The MariaDB ColumnStore Schema Sync feature will replicate all of the" << endl;
+	    cout <<         "      schemas and InnoDB tables across the User Module nodes. This feature can be enabled" << endl;
+	    cout <<         "      or disabled, for example, if you wish to configure your own replication post installation." << endl << endl;
+
+	    try {
+		    MySQLRep = sysConfig->getConfig(InstallSection, "MySQLRep");
+	    }
+	    catch(...)
+	    {}
+
+	    if ( MySQLRep == "y" )
+		  mysqlRep = true;
+
+	    string answer = "y";
+
+	    while(true) {
+		  if ( mysqlRep )
+			  prompt = "MariaDB ColumnStore Schema Sync feature is Enabled, do you want to leave enabled? [y,n] (y) > ";
+		  else
+			  prompt = "MariaDB ColumnStore Schema Sync feature, do you want to enable? [y,n] (y) > ";
+
+		  pcommand = callReadline(prompt.c_str());
+		  if (pcommand) {
+		      if (strlen(pcommand) > 0) answer = pcommand;
+		      callFree(pcommand);
+		  }
+
+		  if ( answer == "y" || answer == "n" ) {
+		      cout << endl;
+		      break;
+		  }
+		  else
+		      cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+
+		  if ( noPrompting )
+			  exit(1);
+	    }
+
+	    if ( answer == "y" ) {
+		  mysqlRep = true;
+		MySQLRep = "y";
+	    }
+	    else
+	    {
+	      mysqlRep = false;
+	      MySQLRep = "n";
+	    }
+
+	    try {
+		  sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
+	    }
+	    catch(...)
+	    {}
+	}
+	else
+	{	//Schema Sync is default as on when Local Query is Selected
+		mysqlRep = true;
+		MySQLRep = "y";
+	      
+		try {
+		    sysConfig->setConfig(InstallSection, "MySQLRep", MySQLRep);
+		}
+		catch(...)
+		{}
 	}
 
 	if ( !writeConfig(sysConfig) ) { 
@@ -2600,7 +2700,42 @@ int main(int argc, char *argv[])
 	/* create a thread_data_t argument array */
 	thread_data_t thr_data[childmodulelist.size()];
 
+	// determine package type
+       	string EEPackageType;
+
+        if (!rootUser || nonDistribute)
+		EEPackageType = "binary";
+	else
+	{
+       		int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+           	if (WEXITSTATUS(rtnCode) == 0)
+        		EEPackageType = "rpm";
+        	else {
+        		rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+	            if (WEXITSTATUS(rtnCode) == 0)
+                		EEPackageType = "deb";
+                	else
+                        	EEPackageType = "binary";
+		}		
+	}
+
+      	try {
+        	sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
+       	}
+       	catch(...)
+     	{
+        	cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
+            	exit(1);
+     	}
+
+    	if ( !writeConfig(sysConfig) ) {
+        	cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+                exit(1);
+       	}
+
+	
 	string install = "y";
+
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 		//
@@ -2643,128 +2778,50 @@ int main(int argc, char *argv[])
 
 			cout << endl;
 
-			//Write out Updated System Configuration File
-			string EEPackageType;
-    		if ( rootUser )
-			{
-				try {
-					EEPackageType = sysConfig->getConfig(InstallSection, "EEPackageType");
-				}
-				catch(...)
-				{
-					cout << "ERROR: Problem getting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-					exit(1);
-				}
-			}
-			else	//nonroot, default to binary
-				EEPackageType = "binary";
-
-			while(true) {
-				prompt = "Enter the Package Type being installed to other servers [rpm,deb,binary] (" + EEPackageType + ") > ";
-				pcommand = callReadline(prompt);
-				if (pcommand) {
-					if (strlen(pcommand) > 0) EEPackageType = pcommand;
-					callFree(pcommand);
-				}
-
-				if ( EEPackageType == "rpm" || EEPackageType == "deb" || EEPackageType == "binary"  ) {
-					break;
-				}
-				cout << "Invalid Package Type, please re-enter" << endl;
-				EEPackageType = "rpm";
-				if ( noPrompting )
-					exit(1);
-			}
-
-			if ( EEPackageType == "rpm" )
-			{
-				cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl; 
-				cout << "located in the " + HOME + " directory." << endl << endl;
-			}
-			else
-			{
-				if ( EEPackageType == "binary" )
-				{
-					cout << "Performing an MariaDB ColumnStore System install using a Binary package" << endl; 
-					cout << "located in the " + HOME + " directory." << endl << endl;
-				}
-				else
-				{
-					cout << "Performing an MariaDB ColumnStore System install using using DEB packages" << endl;
-					cout << "located in the " + HOME + " directory." << endl;
-				}
-			}
-	
-			//Write out Updated System Configuration File
-			try {
-				sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
-			}
-			catch(...)
-			{
-				cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-				exit(1);
-			}
-		
-			if ( !writeConfig(sysConfig) ) { 
-				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
-				exit(1);
-			}
-
-			//check if pkgs are located in $HOME directory
 			string version = systemsoftware.Version + "-" + systemsoftware.Release;
-			if ( EEPackageType != "binary") {
-				string separator = "-";
-				calpontPackage1 = "mariadb-columnstore-*" + separator + version;
-				//calpontPackage2 = "mariadb-columnstore-libs" + separator + version;
-				//calpontPackage3 = "mariadb-columnstore-enterprise" + separator + version;
-				//mysqlPackage = "mariadb-columnstore-storage-engine" + separator + version;
-				//mysqldPackage = "mariadb-columnstore-mysql" + separator + version;
 
-				if( !pkgCheck() ) {
-					exit(1);
-				}
-				else
-				{
-				//mariadb
-					calpontPackage1 = "mariadb-columnstore-*" + separator + version;
+			string installType = "initial";
+			if ( !nonDistribute )
+			{
+			    if ( EEPackageType == "rpm" )
+			    {
+				    cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl; 
+				    cout << "located in the " + HOME + " directory." << endl << endl;
+			    }
+			    else
+			    {
+				    if ( EEPackageType == "binary" )
+				    {
+					    cout << "Performing an MariaDB ColumnStore System install using a Binary package" << endl; 
+					    cout << "located in the " + HOME + " directory." << endl << endl;
+				    }
+				    else
+				    {
+					    cout << "Performing an MariaDB ColumnStore System install using using DEB packages" << endl;
+					    cout << "located in the " + HOME + " directory." << endl;
+				    }
+			    }
+			
+			    //check if pkgs are located in $HOME directory
+			    if ( EEPackageType == "rpm")
+				    columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm.tar.gz";
+			    else
+				    if ( EEPackageType == "deb") 
+					    columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb.tar.gz";
+				    else
+					    columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 
-					calpontPackage1 = HOME + "/" + calpontPackage1 + "*." + EEPackageType;
-					//calpontPackage2 = HOME + "/" + calpontPackage2 + "*." + EEPackageType;
-					//calpontPackage3 = HOME + "/" + calpontPackage3 + "*." + EEPackageType;
-					//mysqlPackage = HOME + "/" + mysqlPackage  + "*." + EEPackageType;
-					//mysqldPackage = HOME + "/" + mysqldPackage  + "*." + EEPackageType;
-				}
+
+			    if( !pkgCheck(columnstorePackage) )
+			    exit(1);
 			}
 			else
 			{
-				// binary
-				//string fileName = installDir + "/bin/healthcheck";
-				//ifstream file (fileName.c_str());
-				//if (!file)	// CE
-					calpontPackage1 = "mariadb-columnstore-" + version;
-				//else		// EE
-					//calpontPackage1 = "mariadb-columnstore-ent-" + version;
-				//calpontPackage2 = "dummy";
-				//calpontPackage3 = "dummy";
-				//mysqlPackage = calpontPackage1;
-				//mysqldPackage = calpontPackage1;
-
-				if( !pkgCheck() )
-					exit(1);
-				calpontPackage1 = HOME + "/" + calpontPackage1 + "*.bin.tar.gz";
-				//calpontPackage2 = "dummy";
-				//calpontPackage3 = "dummy";
+			    EEPackageType = "binary";
+			    installType = "nonDistribute";
+			    columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 			}
-
-			//If ent pkg is not there, mark it as such
-			//{
-			//	glob_t gt;
-			//	memset(&gt, 0, sizeof(gt));
-			//	if (glob(calpontPackage3.c_str(), 0, 0, &gt) != 0)
-			//		calpontPackage3 = "dummy.rpm";
-			//	globfree(&gt);
-			//}
-
+			
 			if ( password.empty() )
 			{
 				cout << endl;
@@ -2852,6 +2909,20 @@ int main(int argc, char *argv[])
 					(remoteModuleType == "pm" && IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ||
 					(remoteModuleType == "pm" && pmwithum) )
 				{
+				    if ( nonDistribute )
+				    {
+					cout << endl << "----- Performing Install Check on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
+
+				      	//check of post-install file exist, which shows package is installed
+					string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
+					int rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						cout << endl << "Error: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName << endl;
+						cout << "Install and re-run postConfigure. Exiting..." << endl << endl; 
+						exit(1);
+					}
+				    }
+				    else
 					cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
 
 					if ( remote_installer_debug == "1" )
@@ -2865,7 +2936,6 @@ int main(int argc, char *argv[])
 						//run remote installer script
 						cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
 
-//cout << cmd << endl;
 						if ( thread_remote_installer ) {
 							thr_data[thread_id].command = cmd;
 
@@ -2970,12 +3040,9 @@ int main(int argc, char *argv[])
 						if ( pmwithum )
 							binservertype = "pmwithum";
 
-						//check my.cnf port in-user on remote node
-//						checkRemoteMysqlPort(remoteModuleIP, remoteModuleName, USER, password, mysqlPort, sysConfig);
-
 						cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
-							remoteModuleIP + " " + password + " " + calpontPackage1 + " " + remoteModuleType +
-							" initial " + binservertype + " " + mysqlPort + " " + remote_installer_debug +
+							remoteModuleIP + " " + password + " " + columnstorePackage + " " + remoteModuleType +
+							" " + installType + " " + binservertype + " " + mysqlPort + " " + remote_installer_debug +
 							" " + installDir + " " + debug_logfile;
 						
 						if ( thread_remote_installer ) {
@@ -3006,7 +3073,21 @@ int main(int argc, char *argv[])
 					if ( (remoteModuleType == "pm" && IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) ||
 						(remoteModuleType == "pm" && !pmwithum ) )
 					{
-						cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
+					    if ( nonDistribute )
+					    {
+						cout << endl << "----- Performing Install Check on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
+
+						//check of releasenum file exist, which shows package is installed
+						string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
+						int rtnCode = system(cmd.c_str());
+						if (WEXITSTATUS(rtnCode) != 0) {
+							cout << endl << "Error: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName << endl;
+							cout << "Install and re-run postConfigure. Exiting..." << endl << endl; 
+							exit(1);
+						}
+					    }
+						else
+						  cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
 
 						if ( remote_installer_debug == "1" )
 							cout << "Install log file is located here: " + logfile << endl << endl;
@@ -3015,7 +3096,6 @@ int main(int argc, char *argv[])
 							//run remote installer script
 							cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
-//cout << cmd << endl;
 							if ( thread_remote_installer ) {
 								thr_data[thread_id].command = cmd;
 
@@ -3044,7 +3124,7 @@ int main(int argc, char *argv[])
 							if ( pmwithum )
 								binservertype = "pmwithum";
 							cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
-								" " + password + " " + calpontPackage1 + " " + remoteModuleType + " initial " +
+								" " + password + " " + columnstorePackage + " " + remoteModuleType + " " + installType + " " +
 								binservertype + " " + mysqlPort + " " + remote_installer_debug + " " + installDir + " " +
 								debug_logfile;
 
@@ -3661,6 +3741,14 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		system(cmd.c_str());
 	}
 
+	//check and do the amazon credentials file
+	string fileName = HOME + "/.aws/credentials";
+   	ifstream oldFile (fileName.c_str());
+    if (!oldFile)
+   		return allfound;
+
+   	string cmd = "cp " + fileName + " " + installDir + "/local/etc/. > /dev/null 2>&1";
+   	system(cmd.c_str());
 	return allfound;
 }
 
@@ -3957,14 +4045,14 @@ bool createDbrootDirs(string DBRootStorageType)
 /*
  * pkgCheck 
  */
-bool pkgCheck()
+bool pkgCheck(string columnstorePackage)
 {
 	while(true) 
 	{
-		string cmd = "ls " + HOME + " | grep " + calpontPackage1 + " > /tmp/calpontpkgs";
+		string cmd = "ls " + columnstorePackage + " > /tmp/calpontpkgs";
 		system(cmd.c_str());
 	
-		string pkg = calpontPackage1;
+		string pkg = columnstorePackage;
 		string fileName = "/tmp/calpontpkgs";
 		ifstream oldFile (fileName.c_str());
 		if (oldFile) {
@@ -4828,6 +4916,7 @@ bool storageSetup(bool amazonInstall)
 
 void setSystemName()
 {
+	Oam oam;
 	//setup System Name
 	try {
 		systemName = sysConfig->getConfig(SystemSection, "SystemName");
@@ -4850,6 +4939,7 @@ void setSystemName()
 
 	try {
 		 sysConfig->setConfig(SystemSection, "SystemName", systemName);
+		 oam.changeMyCnf( "server_audit_syslog_info", systemName );
 	}
 	catch(...)
 	{
