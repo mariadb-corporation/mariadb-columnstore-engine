@@ -5074,6 +5074,23 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			pthread_mutex_unlock(&THREAD_LOCK);
 			return API_FAILURE;
 		    }
+		    
+		    //check version that is installed
+		    cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + password + " " + installDir + "/releasenum > /dev/null 2>&1";
+		    rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) != 0) {
+			log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
+			pthread_mutex_unlock(&THREAD_LOCK);
+			return API_FAILURE;
+		    }
+		    cmd = "diff " +  installDir + "/releasenum releasenum > /dev/null 2>&1";
+		    rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) != 0) {
+			log.writeLog(__LINE__, "addModule - ERROR: Local version of MariaDB ColumnStore doesn't match installed version on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
+			pthread_mutex_unlock(&THREAD_LOCK);
+			return API_FAILURE;
+		    }
+
 		}
 
 		//run installer on remote module

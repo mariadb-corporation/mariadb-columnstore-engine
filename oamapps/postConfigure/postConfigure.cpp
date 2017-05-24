@@ -2917,8 +2917,23 @@ int main(int argc, char *argv[])
 					string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
-						cout << endl << "Error: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName << endl;
+						cout << "Error: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName << endl;
 						cout << "Install and re-run postConfigure. Exiting..." << endl << endl; 
+						exit(1);
+					}
+					//check version that is installed
+					cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + password + " " + installDir + "/releasenum > /dev/null 2>&1";
+					rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						cout << "Error: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName << endl;
+						cout << "Install and re-run postConfigure. Exiting..." << endl << endl; 
+						exit(1);
+					}
+					cmd = "diff " +  installDir + "/releasenum releasenum > /dev/null 2>&1";
+					rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						cout << "Error: Local version of MariaDB ColumnStore doesn't match installed version on " + remoteModuleName + " / " + remoteHostName << endl;
+						cout << "Install matching version and re-run postConfigure. Exiting..." << endl << endl; 
 						exit(1);
 					}
 				    }
