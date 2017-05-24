@@ -898,6 +898,8 @@ checkPackages()
 
                 `rm -f pkg_check`
               fi
+	    fi
+      done
 
       if $pass; then
         echo "$ipadd Node - Passed, all dependency packages are installed"
