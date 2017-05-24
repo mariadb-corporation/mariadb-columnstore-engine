@@ -789,7 +789,7 @@ checkPackages()
     fi
   fi
 
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-MySQL")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-mysql")
 
   if [ "$OS" == "suse12" ]; then
     if [ ! `which rpm 2>/dev/null` ] ; then
@@ -886,14 +886,8 @@ checkPackages()
               else
                 `cat pkg_check | grep 'install ok installed' > /dev/null 2>&1`
                 if [ "$?" -ne 0 ]; then
-                  echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
-                  pass=false
-                else
-                  `cat pkg_check | grep 'not installed' > /dev/null 2>&1`
-                  if [ "$?" -ne 0 ]; then
                     echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
                     pass=false
-                  fi
                 fi
 
                 `rm -f pkg_check`
@@ -957,15 +951,10 @@ checkPackages()
               else
                 `cat pkg_check | grep 'install ok installed' > /dev/null 2>&1`
                 if [ "$?" -ne 0 ]; then
-                  echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
-                  pass=false
-		else
-                  `cat pkg_check | grep 'not installed' > /dev/null 2>&1`
-                  if [ "$?" -ne 0 ]; then
                     echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
                     pass=false
-                  fi
                 fi
+
                 `rm -f pkg_check`
               fi
             fi
