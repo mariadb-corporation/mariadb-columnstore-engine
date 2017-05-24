@@ -23,4 +23,4 @@ add_subdirectory(idbhdfs)
 add_subdirectory(winport)
 add_subdirectory(thrift)
 add_subdirectory(querytele)
-
+add_subdirectory(clusterTester)
