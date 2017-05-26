@@ -213,7 +213,7 @@ if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	rm -f /etc/default/columnstore
 else
-	$SUDO rm -fr /tmp/* > /dev/null 2>&1
+	$SUDO rm -f /tmp/* > /dev/null 2>&1
 	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
 	$SUDO chmod -R 777 /dev/shm
