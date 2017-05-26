@@ -3783,7 +3783,6 @@ void ProcessManager::setSystemState(uint16_t state)
 	{
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
 	}
-	pthread_mutex_unlock(&STATUS_LOCK);
 
 	// Process Alarms
 	string system = "System";
@@ -3798,7 +3797,11 @@ void ProcessManager::setSystemState(uint16_t state)
 		else
 			if ( state == oam::AUTO_OFFLINE )
 				aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, SET);
+		//this alarm doesnt get clear by reporter, so clear on stopage
+		aManager.sendAlarmReport(system.c_str(), CONN_FAILURE, CLEAR);
 	}
+	
+	pthread_mutex_unlock(&STATUS_LOCK);
 }
 
 /******************************************************************************************

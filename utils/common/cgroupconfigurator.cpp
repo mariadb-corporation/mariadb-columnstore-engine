@@ -173,9 +173,6 @@ uint64_t CGroupConfigurator::getTotalMemory()
 {
     uint64_t ret;
 
-    if (totalMemory != 0)
-        return totalMemory;
-
     if (!cGroupDefined)
         ret = getTotalMemoryFromProc();
     else {
@@ -183,7 +180,11 @@ uint64_t CGroupConfigurator::getTotalMemory()
         if (ret == 0)
             ret = getTotalMemoryFromProc();
     }
-    //cout << "Total mem available is " << ret << endl;
+    //ostringstream os;
+    //os << "Total mem available is " << ret;
+    //cerr << os.str() << endl;
+    //log(logging::LOG_TYPE_WARNING, os.str());
+
     totalMemory = ret;
     return totalMemory;
 }
@@ -216,16 +217,30 @@ uint64_t CGroupConfigurator::getTotalMemoryFromProc()
 	input[79] = '\0';
 	pclose(cmdPipe);
 	memTot = atoi(input);
+
+	//ostringstream os;
+	//os << "FreeBSD Total mem available is " << memTot;
+	//cerr << os.str() << endl;
+	//log(logging::LOG_TYPE_WARNING, os.str());
 #else
 	ifstream in("/proc/meminfo");
 	string x;
 
 	in >> x;
 	in >> memTot;
+
+	//ostringstream os;
+	//os << "meminfo Total mem available is " << memTot;
+	//cerr << os.str() << endl;
+	//log(logging::LOG_TYPE_WARNING, os.str());
 #endif
 
 	//memTot is now in KB, convert to bytes
 	memTot *= 1024;
+
+	//os << "meminfo Total bytes mem available is " << memTot;
+	//cerr << os.str() << endl;
+	//log(logging::LOG_TYPE_WARNING, os.str());
 
 	return memTot;
 }
@@ -307,9 +322,8 @@ uint64_t CGroupConfigurator::getMemUsageFromCGroup()
 uint64_t CGroupConfigurator::getFreeMemoryFromProc()
 {
 	uint64_t memFree  = 0;
-	uint64_t buffers  = 0;
-	uint64_t cached   = 0;
-    uint64_t memTotal = 0;
+	uint64_t memAvailable  = 0;
+	uint64_t memTotal = 0;
 
 #if defined(_MSC_VER)
 	MEMORYSTATUSEX memStat;
@@ -338,18 +352,15 @@ uint64_t CGroupConfigurator::getFreeMemoryFromProc()
 	in >> memFree;
 	in >> x;         // kB
 
-	in >> x;         // Buffers:
-	in >> buffers;
+	in >> x;         // MemAvailable:
+	in >> memAvailable;
 	in >> x;         // kB
 
-	in >> x;         // Cached:
-	in >> cached;
 #endif
 
 	// amount available for application
-	memFree = memFree + buffers + cached;
-	memFree *= 1024;
-    return memFree;
+	memAvailable *= 1024;
+    return memAvailable;
 }
 
 uint64_t CGroupConfigurator::getTotalSwapSpace()

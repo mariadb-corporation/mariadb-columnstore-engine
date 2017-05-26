@@ -155,6 +155,7 @@ rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 
 #create columnstore temp file directory
 $SUDO chmod 777 /tmp
+$SUDO rm -f /tmp/* > /dev/null 2>&1
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
@@ -213,7 +214,6 @@ if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	rm -f /etc/default/columnstore
 else
-	$SUDO rm -fr /tmp/* > /dev/null 2>&1
 	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
 	$SUDO chmod -R 777 /dev/shm
