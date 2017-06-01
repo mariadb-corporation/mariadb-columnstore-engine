@@ -714,8 +714,11 @@ checkPackages()
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
 
-  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools" "perl-DBD-MySQL")
+  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools")
+  # packages that need to be removed, MCS doesnt work with these packaged installed
+  declare -a CENTOS_PKG_UNINSTALL=("mariadb-libs")
 
+  #check local packages
   if [ "$OS" == "centos6" ] || [ "$OS" == "centos7" ]; then
     if [ ! `which yum 2>/dev/null` ] ; then
       echo "${bold}Failed${normal}, Local Node ${bold}yum${normal} package not installed"
@@ -750,6 +753,27 @@ checkPackages()
       checkContinue
     fi
 
+    #check the packages that should exist
+      pass=true
+      #check centos packages that should be removed on local node
+      for PKG in "${CENTOS_PKG_UNINSTALL[@]}"; do
+          `yum list installed "$PKG" > /tmp/pkg_check 2>&1`
+          `cat /tmp/pkg_check | grep Installed > /dev/null 2>&1`
+          if [ "$?" -eq 0 ]; then
+            echo "${bold}Failed${normal}, Local Node package ${bold}${PKG}${normal} is installed which can cause issues with MCS, please uninstall"
+            pass=false
+            REPORTPASS=false
+          fi
+      done
+    
+    if [ $pass == true ] ; then
+      echo ""
+      echo "Local Node - Passed, all packages that should not be installed are uninstalled"
+    else
+      checkContinue
+    fi
+
+    # check remote packages
     echo ""
     pass=true
     if [ "$IPADDRESSES" != "" ]; then
@@ -784,12 +808,32 @@ checkPackages()
 	  checkContinue
 	  pass=true
 	fi
+
+	#check package that shouldn't be installed
+        for PKG in "${CENTOS_PKG_UNINSTALL[@]}"; do
+            `./remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+            rc="$?"
+            if [ $rc -eq 0 ] ; then
+                echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is installed which can cause issues with MCS, please unstall"
+                pass=false
+                REPORTPASS=false
+            fi
+        done
+
+        if $pass; then
+	  echo ""
+          echo "$ipadd Node - Passed, all packages that should not be installed are uninstalled"
+        else
+          checkContinue
+          pass=true
+        fi
+
 	echo ""
       done
     fi
   fi
 
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-mysql")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools")
 
   if [ "$OS" == "suse12" ]; then
     if [ ! `which rpm 2>/dev/null` ] ; then
@@ -841,7 +885,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "snappy" "net-tools" "libdbd-mysql-perl")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "snappy" "net-tools")
 
   if [ "$OS" == "ubuntu16" ] ; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -906,7 +950,7 @@ checkPackages()
    fi
   fi
 
-  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libdbd-mysql-perl")
+  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools")
 
   if [ "$OS" == "debian8" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
