@@ -60,6 +60,7 @@ public:
 	int getRowCount()        { return drizzle_result_row_count(fDrzrp); }
 	char** nextRow()   { return drizzle_row_next(fDrzrp); }
 	const string& getError() { return fErrStr; }
+    drizzle_column_st* getField(int field) { return drizzle_column_index(fDrzrp, field); }
 
 private:
 	drizzle_st*        fDrzp;
@@ -149,7 +150,7 @@ protected:
 	virtual void makeMappings();
 	virtual void addFilterStr(const std::vector<const execplan::Filter*>&, const std::string&);
 	virtual std::string makeQuery();
-	virtual void setField(int, const char*, rowgroup::Row&);
+	virtual void setField(int, const char*, drizzle_column_st*, rowgroup::Row&);
 	inline void addRow(rowgroup::RGData &);
 	//inline  void addRow(boost::shared_array<uint8_t>&);
 	virtual int64_t convertValueNum(

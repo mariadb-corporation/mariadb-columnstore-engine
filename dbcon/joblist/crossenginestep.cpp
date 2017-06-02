@@ -247,7 +247,7 @@ void CrossEngineStep::makeMappings()
 }
 
 
-void CrossEngineStep::setField(int i, const char* value, Row& row)
+void CrossEngineStep::setField(int i, const char* value, drizzle_column_st* field, Row& row)
 {
 	CalpontSystemCatalog::ColDataType colType = row.getColType(i);
 
@@ -263,9 +263,17 @@ void CrossEngineStep::setField(int i, const char* value, Row& row)
 	{
 		CalpontSystemCatalog::ColType ct;
 		ct.colDataType = colType;
-		ct.colWidth = row.getColumnWidth(i);
-		ct.scale = row.getScale(i);
-		ct.precision = row.getPrecision(i);
+        ct.colWidth = row.getColumnWidth(i);
+        if (colType == CalpontSystemCatalog::DECIMAL)
+        {
+            ct.scale = field->decimals;
+            ct.precision = field->size;
+        }
+        else
+        {
+    		ct.scale = row.getScale(i);
+    		ct.precision = row.getPrecision(i);
+        }
 		row.setIntField(convertValueNum(value, ct, row.getSignedNullValue(i)), i);
 	}
 }
@@ -500,7 +508,7 @@ void CrossEngineStep::execute()
 			while ((rowIn = drizzle->nextRow()) && !cancelled())
 			{
 				for(int i = 0; i < num_fields; i++)
-					setField(i, rowIn[i], fRowDelivered);
+					setField(i, rowIn[i], drizzle->getField(i), fRowDelivered);
 
 				addRow(rgDataDelivered);
 			}
@@ -520,7 +528,7 @@ void CrossEngineStep::execute()
 				for(int i = 0; i < num_fields; i++)
 				{
 					if (fFe1Column[i] != -1)
-						setField(fFe1Column[i], rowIn[i], rowFe1);
+						setField(fFe1Column[i], rowIn[i], drizzle->getField(i), rowFe1);
 				}
 
 				if (fFeFilters && fFeInstance->evaluate(rowFe1, fFeFilters.get()) == false)
@@ -534,7 +542,7 @@ void CrossEngineStep::execute()
 				for(int i = 0; i < num_fields; i++)
 				{
 					if (fFe1Column[i] == -1)
-						setField(i, rowIn[i], fRowDelivered);
+						setField(i, rowIn[i], drizzle->getField(i), fRowDelivered);
 				}
 
 				addRow(rgDataDelivered);
@@ -552,7 +560,7 @@ void CrossEngineStep::execute()
 			while ((rowIn = drizzle->nextRow()) && !cancelled())
 			{
 				for(int i = 0; i < num_fields; i++)
-					setField(i, rowIn[i], rowFe3);
+					setField(i, rowIn[i], drizzle->getField(i), rowFe3);
 
 				fFeInstance->evaluate(rowFe3, fFeSelects);
 				fFeInstance->evaluate(rowFe3, fFeSelects);
@@ -583,7 +591,7 @@ void CrossEngineStep::execute()
 				for(int i = 0; i < num_fields; i++)
 				{
 					if (fFe1Column[i] != -1)
-						setField(fFe1Column[i], rowIn[i], rowFe1);
+						setField(fFe1Column[i], rowIn[i], drizzle->getField(i), rowFe1);
 				}
 
 				if (fFeFilters && fFeInstance->evaluate(rowFe1, fFeFilters.get()) == false)
@@ -597,7 +605,7 @@ void CrossEngineStep::execute()
 				for(int i = 0; i < num_fields; i++)
 				{
 					if (fFe1Column[i] == -1)
-						setField(i, rowIn[i], rowFe3);
+						setField(i, rowIn[i], drizzle->getField(i), rowFe3);
 				}
 
 				fFeInstance->evaluate(rowFe3, fFeSelects);
