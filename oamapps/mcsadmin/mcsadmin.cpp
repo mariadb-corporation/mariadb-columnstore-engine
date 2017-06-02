@@ -5774,7 +5774,7 @@ int processCommand(string* arguments)
 					{}
 					
 					if ( !dbrootConfigList.empty() ) {
-						cout << "**** removeModule Failed : " << (*pt).DeviceName << " has dbroots still assigned. Please run movePmDbrootConfig or unassignPmDbrootConfig.";
+						cout << "**** removeModule Failed : " << (*pt).DeviceName << " has dbroots still assigned. Please run movePmDbrootConfig or unassignDbrootPmConfig.";
 						quit = true;
 						cout << endl;
 						break;
@@ -6747,7 +6747,7 @@ int processCommand(string* arguments)
 				{}
 
 				if ( !dbrootConfigList.empty() ) {
-					cout << endl << "**** alterSystem-disableModule Failed : " << (*pt).DeviceName << " has dbroots still assigned and will not be disabled. Please run movePmDbrootConfig or unassignPmDbrootConfig.";
+					cout << endl << "**** alterSystem-disableModule Failed : " << (*pt).DeviceName << " has dbroots still assigned and will not be disabled. Please run movePmDbrootConfig or unassignDbrootPmConfig.";
 					quit = true;
 					cout << endl;
 					break;
