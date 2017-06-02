@@ -64,14 +64,17 @@ public:
 	{
 		char** row = mysql_fetch_row(fRes);
 		fieldLengths = mysql_fetch_lengths(fRes);
+		fFields = mysql_fetch_fields(fRes);
 		return row;
 	}
 	long getFieldLength(int field) { return fieldLengths[field]; }
+	MYSQL_FIELD* getField(int field) { return &fFields[field]; }
 	const std::string& getError() { return fErrStr; }
 
 private:
 	MYSQL*        fCon;
 	MYSQL_RES*    fRes;
+	MYSQL_FIELD*  fFields;
     std::string             fErrStr;
 	unsigned long *fieldLengths;
 };
@@ -157,7 +160,7 @@ protected:
 	virtual void makeMappings();
 	virtual void addFilterStr(const std::vector<const execplan::Filter*>&, const std::string&);
 	virtual std::string makeQuery();
-	virtual void setField(int, const char*, unsigned long, rowgroup::Row&);
+	virtual void setField(int, const char*, unsigned long, MYSQL_FIELD*, rowgroup::Row&);
 	inline void addRow(rowgroup::RGData &);
 	//inline  void addRow(boost::shared_array<uint8_t>&);
 	virtual int64_t convertValueNum(
