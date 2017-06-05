@@ -437,55 +437,86 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-    //check for local ip address as pm1
+	//check for local ip address as pm1
 	ModuleConfig moduleconfig;
 
-    try
-    {
-        oam.getSystemConfig("pm1", moduleconfig);
-		if (moduleconfig.hostConfigList.size() > 0 )
-		{
-        	HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-        	string PM1ipAdd = (*pt1).IPAddr;
-			//cout << PM1ipAdd << endl;
+	try
+	{
+	    oam.getSystemConfig("pm1", moduleconfig);
+	    if (moduleconfig.hostConfigList.size() > 0 )
+	    {
+	      HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+	      string PM1ipAdd = (*pt1).IPAddr;
+	      //cout << PM1ipAdd << endl;
 
-        	if ( PM1ipAdd != "127.0.0.1" && PM1ipAdd != "0.0.0.0")
-        	{
-				struct ifaddrs *ifap, *ifa;
-    			struct sockaddr_in *sa;
-    			char *addr;
-				bool found = false;
+	      if ( PM1ipAdd != "127.0.0.1" )
+	      {
+		  if ( PM1ipAdd != "0.0.0.0")
+		  {
+		      struct ifaddrs *ifap, *ifa;
+		      struct sockaddr_in *sa;
+		      char *addr;
+		      bool found = false;
 
-    			getifaddrs (&ifap);
-    			for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-        			if (ifa->ifa_addr->sa_family==AF_INET) {
-            			sa = (struct sockaddr_in *) ifa->ifa_addr;
-            			addr = inet_ntoa(sa->sin_addr);
-            			//printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
-	
-	            		if ( PM1ipAdd == addr )
-						{
-							//match
-							found = true;
-						}
-	        		}
-	
-					if (found)
-						break;		
-	    		}
-	
-				freeifaddrs(ifap);
-	
-				if (!found)
-				{
-                	cout << endl;
-                	cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
-                	cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
-                	cout << "IP Address. exiting..." << endl;
-                	exit(1);
-				}	
-        	}		
-		}
+		      getifaddrs (&ifap);
+		      for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+			      if (ifa->ifa_addr->sa_family==AF_INET) {
+				  sa = (struct sockaddr_in *) ifa->ifa_addr;
+				  addr = inet_ntoa(sa->sin_addr);
+				  //printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
+	  
+				  if ( PM1ipAdd == addr )
+				  {
+					  //match
+					  found = true;
+				  }
+			      }
+      
+			      if (found)
+			      break;		
+		      }
+      
+		      freeifaddrs(ifap);
+
+		      if (!found)
+		      {
+			
+			  string answer = "y";
+
+			  while(true) {
+				cout << endl << "The Configured PM1 IP Address of " << PM1ipAdd << " does match any of the" << endl; 
+				cout <<         "Server Ethernet IP addresses there were detected, do you want to continue?" << endl;
+				cout <<         "This is to make sure that you arent running postConfigure from a non-PM1 node." << endl;
+				prompt = "Enter 'y' to continue using Configured IP address [y,n] (y) > ";
+
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand) {
+				    if (strlen(pcommand) > 0) answer = pcommand;
+				    callFree(pcommand);
+				}
+
+				if ( answer == "y" || answer == "n" ) {
+				    cout << endl;
+				    break;
+				}
+				else
+				    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+
+				if ( noPrompting )
+					exit(1);
+			  }
+
+			  if ( answer == "n" ) {
+			      cout << endl;
+			      cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
+			      cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
+			      cout << "IP Address. exiting..." << endl;
+			      exit(1);
+			  }
+		      }	
+		  }
+	      }
+	  }
     }
     catch(...)
     {}
