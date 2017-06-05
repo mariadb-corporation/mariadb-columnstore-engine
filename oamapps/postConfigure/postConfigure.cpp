@@ -3591,7 +3591,7 @@ bool checkSaveConfigFile()
 	}
 	else
 	{
-		cout << "The Calpont Configuration Data is taken from " << oldFileName << endl;
+		cout << "The MariaDB ColumnStore Configuration Data is taken from " << oldFileName << endl;
 	}
 
 	cout << endl;
