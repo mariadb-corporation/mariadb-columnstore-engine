@@ -362,6 +362,7 @@ void MasterDBRMNode::msgProcessor()
 			case SETREADONLY: doSetReadOnly(p->sock, true); continue;
 			case SETREADWRITE: doSetReadOnly(p->sock, false); continue;
 			case GETREADONLY: doGetReadOnly(p->sock); continue;
+			case GET_SYSTEM_CATALOG: doGetSystemCatalog(msg, p); continue;
 		}
 
 		/* Process SessionManager calls */
@@ -1087,6 +1088,66 @@ void MasterDBRMNode::doVerID(ByteStream &msg, ThreadParams *p)
 
 	reply << (uint8_t) ERR_OK;
 	reply << context;
+	try {
+		p->sock->write(reply);
+	}
+	catch (exception&) { }
+}
+
+void MasterDBRMNode::doGetSystemCatalog(ByteStream &msg, ThreadParams *p)
+{
+	ByteStream reply;
+
+	reply << (uint8_t) ERR_OK;
+
+	boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+            execplan::CalpontSystemCatalog::makeCalpontSystemCatalog();
+        const std::vector< std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> > catalog_tables
+        	= systemCatalogPtr->getTables();
+
+        reply << (uint32_t) catalog_tables.size();
+        for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >::const_iterator it = catalog_tables.begin();
+         	it != catalog_tables.end(); ++it)
+    	{
+    		execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second);
+    		reply << (uint32_t)(*it).first;
+		reply << (*it).second.schema;
+		reply << (*it).second.table;
+		reply << (uint32_t)tb_info.numOfCols;
+		execplan::CalpontSystemCatalog::RIDList column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true);
+        	for (size_t col_num = 0; col_num < column_rid_list.size(); col_num++)
+        	{
+			execplan::CalpontSystemCatalog::TableColName tcn = systemCatalogPtr->colName(column_rid_list[col_num].objnum);
+			execplan::CalpontSystemCatalog::ColType ct = systemCatalogPtr->colType(column_rid_list[col_num].objnum);
+			reply << (uint32_t)column_rid_list[col_num].objnum;
+			reply << tcn.column;
+			if (ct.ddn.dictOID == std::numeric_limits<int32_t>::min())
+			{
+				reply << (uint32_t) 0;
+			}
+			else
+			{
+				reply << (uint32_t) ct.ddn.dictOID;
+			}
+			reply << (uint8_t) ct.colDataType;
+			reply << (uint32_t) ct.colWidth;
+			reply << (uint32_t) ct.colPosition;
+			reply << ct.defaultValue;
+			reply << (uint8_t) ct.autoincrement;
+			reply << (uint32_t) ct.precision;
+			reply << (uint32_t) ct.scale;
+			if (ct.constraintType != execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
+			{
+				reply << (uint8_t) 1;
+			}
+			else
+			{
+				reply << (uint8_t) 0;
+			}
+			reply << (uint8_t) ct.compressionType;
+        	}
+    	}
+
 	try {
 		p->sock->write(reply);
 	}

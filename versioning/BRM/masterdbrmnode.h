@@ -180,6 +180,7 @@ private:
 	/* SessionManager interface */
 	SessionManagerServer sm;
 	void doVerID(messageqcpp::ByteStream &msg, ThreadParams *p);
+	void doGetSystemCatalog(messageqcpp::ByteStream &msg, ThreadParams *p);
 	void doSysCatVerID(messageqcpp::ByteStream &msg, ThreadParams *p);
 	void doNewTxnID(messageqcpp::ByteStream &msg, ThreadParams *p);
 	void doCommitted(messageqcpp::ByteStream &msg, ThreadParams *p);
