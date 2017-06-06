@@ -1105,7 +1105,7 @@ void MasterDBRMNode::doGetSystemCatalog(ByteStream &msg, ThreadParams *p)
         const std::vector< std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> > catalog_tables
         	= systemCatalogPtr->getTables();
 
-        reply << (uint32_t) systemCatalogPtr->getTableCount();
+        reply << (uint32_t) catalog_tables.size();
         for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >::const_iterator it = catalog_tables.begin();
          	it != catalog_tables.end(); ++it)
     	{
