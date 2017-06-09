@@ -7,10 +7,9 @@
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
-user=root
+user=`whoami 2>/dev/null`
 SUDO=" "
-if [ $USER != "root" ]; then
-	user=$USER
+if [ $user != "root" ]; then
         SUDO="sudo "
 fi
 

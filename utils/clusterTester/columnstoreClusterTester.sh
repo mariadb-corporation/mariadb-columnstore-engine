@@ -192,6 +192,8 @@ if [ "$IPADDRESSES" != "" ]; then
   fi
 fi  
 
+USER=`whoami 2>/dev/null`
+
 checkLocalOS()
 {
   echo "** Validate local OS is supported"

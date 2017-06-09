@@ -32,7 +32,11 @@ if { $IDIR != "" } {
 set env(COLUMNSTORE_INSTALL_DIR) $INSTALLDIR
 set PREFIX [file dirname $INSTALLDIR]
 set PREFIX [file dirname $PREFIX]
-set USERNAME $env(USER)
+
+exec whoami >/tmp/whoami.tmp
+set USERNAME [exec cat /tmp/whoami.tmp]
+exec rm -f /tmp/whoami.tmp
+
 set UNM [lindex $argv 10]
 if { $UNM != "" } {
 	set USERNAME $UNM

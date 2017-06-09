@@ -12,10 +12,7 @@
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
-user=$USER
-if [ -z "$user" ]; then
-	user=root
-fi
+user=`whoami 2>/dev/null`
 quiet=0
 shiftcnt=0
 

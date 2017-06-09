@@ -13,6 +13,7 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
+USER=`whoami 2>/dev/null`
 if [ $USER = "hdfs" ]; then
 	SUDO=" "
 else

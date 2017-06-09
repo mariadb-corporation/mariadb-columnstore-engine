@@ -12,10 +12,10 @@ installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
 
-user=root
+user=`whoami 2>/dev/null`
+
 SUDO=" "
-if [ "$USER" != "root" ]; then
-        user=$USER
+if [ "$user" != "root" ]; then
         SUDO="sudo "
 fi
 

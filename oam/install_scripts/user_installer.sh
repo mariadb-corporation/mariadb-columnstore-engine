@@ -26,7 +26,11 @@ set IDIR [lindex $argv 10]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
-set USERNAME "root"
+
+exec whoami >/tmp/whoami.tmp
+set USERNAME [exec cat /tmp/whoami.tmp]
+exec rm -f /tmp/whoami.tmp
+
 set UNM [lindex $argv 11]
 if { $UNM != "" } {
 	set USERNAME $UNM
