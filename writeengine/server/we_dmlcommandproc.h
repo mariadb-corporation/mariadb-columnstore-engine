@@ -79,6 +79,7 @@ class WE_DMLCommandProc
 		EXPORT uint8_t rollbackBlocks(messageqcpp::ByteStream& bs, std::string & err);
 		EXPORT uint8_t rollbackVersion(messageqcpp::ByteStream& bs, std::string & err);
 		EXPORT uint8_t processBatchInsert(messageqcpp::ByteStream& bs, std::string & err, ByteStream::quadbyte & PMId);
+		EXPORT uint8_t processBatchInsertBinary(messageqcpp::ByteStream& bs, std::string & err, ByteStream::quadbyte & PMId);
 		EXPORT uint8_t commitBatchAutoOn(messageqcpp::ByteStream& bs, std::string & err);
 		EXPORT uint8_t commitBatchAutoOff(messageqcpp::ByteStream& bs, std::string & err);
 		EXPORT uint8_t rollbackBatchAutoOn(messageqcpp::ByteStream& bs, std::string & err);

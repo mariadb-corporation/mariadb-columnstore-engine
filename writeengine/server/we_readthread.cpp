@@ -149,6 +149,11 @@ void DmlReadThread::operator()()
 					//cout << "fWeDMLprocessor " << fWeDMLprocessor << " is processing batchinsert ..." << endl;
                     break;
                 }
+	    case WE_SVR_BATCH_INSERT_BINARY:
+	        {
+	            rc = fWeDMLprocessor->processBatchInsertBinary(ibs, errMsg, PMId);
+	            break;
+	        }
             case WE_SVR_BATCH_INSERT_END:
                 {
                     rc = fWeDMLprocessor->processBatchInsertHwm(ibs, errMsg);
