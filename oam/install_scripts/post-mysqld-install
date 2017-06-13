@@ -9,6 +9,7 @@ installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=mysql
 if [ $EUID -ne 0 ]; then
+	USER=`whoami 2>/dev/null`
 	user=$USER
 fi
 

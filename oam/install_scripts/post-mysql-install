@@ -79,6 +79,7 @@ for arg in "$@"; do
 	fi
 done
 
+USER=`whoami 2>/dev/null`
 if [ $USER != "root" ]; then
 	sudo ldconfig >/dev/null 2>&1
 	export COLUMNSTORE_INSTALL_DIR=$installdir

@@ -14,12 +14,9 @@ set DEBUG [lindex $argv 3]
 log_user $DEBUG
 spawn -noecho /bin/bash
 
-if {[info exists env(USER)]} {
-    set USERNAME $env(USER)
-} else {
-    set USERNAME "root"
-}
-
+exec whoami >/tmp/whoami.tmp
+set USERNAME [exec cat /tmp/whoami.tmp]
+exec rm -f /tmp/whoami.tmp
 
 if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
