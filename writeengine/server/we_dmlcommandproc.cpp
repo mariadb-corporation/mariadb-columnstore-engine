@@ -1522,12 +1522,12 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 		bs >> valuesPerColumn;
 		try
 		{
-			WriteEngine::ColTupleList colTuples;
-			WriteEngine::DctColTupleList dctColTuples;
 			bool pushWarning = false;
 			for (uint32_t j = 0; j < columnCount; j++)
 			{
-				tableColName.column = colNames[j];
+    			WriteEngine::ColTupleList colTuples;
+	    		WriteEngine::DctColTupleList dctColTuples;
+                tableColName.column = colNames[j];
 				CalpontSystemCatalog::OID oid = colStructs[j].dataOid;
 
 				CalpontSystemCatalog::ColType colType;
