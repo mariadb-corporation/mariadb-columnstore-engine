@@ -1177,7 +1177,10 @@ timer.stop("allocRowId");
 	//--------------------------------------------------------------------------
 	// Tokenize data if needed
 	//--------------------------------------------------------------------------
-   BRMWrapper::setUseVb( true );
+   if (insertSelect)
+       BRMWrapper::setUseVb( false );
+   else
+       BRMWrapper::setUseVb( true );
    dictStr::iterator dctStr_iter;
    ColTupleList::iterator col_iter;
    for (i = 0; i < colStructList.size(); i++)
@@ -1282,7 +1285,10 @@ timer.stop("tokenize");
          }
       }
    }
-	BRMWrapper::setUseVb( true );
+   if (insertSelect)
+       BRMWrapper::setUseVb( false );
+   else
+	   BRMWrapper::setUseVb( true );
 
 	//--------------------------------------------------------------------------
 	// Update column info structure @Bug 1862 set hwm, and
