@@ -193,6 +193,8 @@ private:
 	void doSetSystemState(messageqcpp::ByteStream &msg, ThreadParams *p);
 	void doClearSystemState(messageqcpp::ByteStream &msg, ThreadParams *p);
 	void doSessionManagerReset(messageqcpp::ByteStream &msg, ThreadParams *p);
+    void doGetUncommittedLbids(messageqcpp::ByteStream &msg, ThreadParams *p);
+
 
 	/* OID Manager interface */
 	OIDServer oids;

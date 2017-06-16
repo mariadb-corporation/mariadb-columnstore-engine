@@ -438,6 +438,7 @@ const uint8_t GET_SYSTEM_STATE = 54;
 const uint8_t SET_SYSTEM_STATE = 55;
 const uint8_t GET_UNIQUE_UINT64 = 56;
 const uint8_t CLEAR_SYSTEM_STATE = 57;
+const uint8_t GET_UNCOMMITTED_LBIDS = 58;
 
 /* OID Manager interface */
 const uint8_t ALLOC_OIDS = 60;
