@@ -331,9 +331,16 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		// not active Parent, get updated Columnstore.xml, retry in case ProcMgr isn't up yet
+		bool fresh = false;
+
+			// not active Parent, get updated Columnstore.xml, retry in case ProcMgr isn't up yet
 		if (!HDFS)
 		{
+			//check if this is a fresh install, meaning the Columnstore.xml file is not setup
+			string procmgrIpadd = sysConfig->getConfig("ProcMgr", "IPAddr");
+			if ( procmgrIpadd == "0.0.0.0" )
+			    fresh = true;
+			
 			int count = 0;
 			while(true)
 			{
@@ -358,6 +365,26 @@ int main(int argc, char **argv)
 			//re-read local system info with new Columnstore.xml
 			sleep(1);
 			MonitorConfig config;
+		}
+
+		//get Distributed Install
+		string DistributedInstall = "y";
+
+		try
+		{
+			oam.getSystemConfig("DistributedInstall", DistributedInstall);
+		}
+		catch (...) 
+		{
+			log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+		}
+
+		//check for a fresh install on a non-distrubuted install setup
+		if ( DistributedInstall == "n" && fresh )
+		{
+		    //run the module install script
+		    string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + config.moduleType() + " > /dev/null 2>&1";
+		    system(cmd.c_str());
 		}
 
 		// not OAM parent module, delay starting until a successful get status is performed
