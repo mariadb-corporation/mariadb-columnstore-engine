@@ -16,11 +16,9 @@ set PASSWORD [lindex $argv 1]
 set COMMAND [lindex $argv 2]
 set DEBUG [lindex $argv 3]
 
-if {[info exists env(USER)]} {
-    set USERNAME $env(USER)
-} else {
-    set USERNAME "root"
-}
+exec whoami >/tmp/whoami.tmp
+set USERNAME [exec cat /tmp/whoami.tmp]
+exec rm -f /tmp/whoami.tmp
 
 set UNM [lindex $argv 4]
 if { $UNM != "" && $UNM != "-" } {
