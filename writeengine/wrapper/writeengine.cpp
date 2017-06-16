@@ -1177,7 +1177,7 @@ timer.stop("allocRowId");
 	//--------------------------------------------------------------------------
 	// Tokenize data if needed
 	//--------------------------------------------------------------------------
-   if (insertSelect)
+   if (insertSelect && isAutoCommitOn)
        BRMWrapper::setUseVb( false );
    else
        BRMWrapper::setUseVb( true );
@@ -1285,7 +1285,7 @@ timer.stop("tokenize");
          }
       }
    }
-   if (insertSelect)
+   if (insertSelect && isAutoCommitOn)
        BRMWrapper::setUseVb( false );
    else
 	   BRMWrapper::setUseVb( true );
