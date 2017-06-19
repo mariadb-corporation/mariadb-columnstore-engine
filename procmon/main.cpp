@@ -130,6 +130,53 @@ int main(int argc, char **argv)
 
     	setlocale(LC_ALL, systemLang.c_str());
 
+	// if amazon cloud, check and update Instance IP Addresses and volumes
+	try {
+		oam.getSystemConfig( "Cloud", cloud);
+	}
+	catch(...) {}
+
+	if ( cloud == "amazon-ec2" ) {
+		if(!aMonitor.amazonIPCheck()) {
+			log.writeLog(__LINE__, "ERROR: amazonIPCheck failed, exiting", LOG_TYPE_CRITICAL);
+			sleep(2);
+			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+			system(cmd.c_str());
+			exit(1);
+		}
+	}
+
+	//get gluster config
+	try {
+		oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+	}
+	catch(...)
+	{
+		GlusterConfig = "n";
+	}
+
+	if ( GlusterConfig == "y" ) {
+		system("mount -a > /dev/null 2>&1");
+	}
+
+	//hdfs / hadoop config 
+	string DBRootStorageType;
+	try {
+		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+	}
+	catch(...) {}
+
+	if ( DBRootStorageType == "hdfs" )
+		HDFS = true;
+
+	//PMwithUM config 
+	try {
+		oam.getSystemConfig( "PMwithUM", PMwithUM);
+	}
+	catch(...) {
+		PMwithUM = "n";
+	}
+
 	//define entry if missing
 	Config* sysConfig = Config::makeConfig();
 	if ( gOAMParentModuleFlag )
@@ -284,16 +331,9 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		bool fresh = false;
-
 		// not active Parent, get updated Columnstore.xml, retry in case ProcMgr isn't up yet
 		if (!HDFS)
 		{
-			//check if this is a fresh install, meaning the Columnstore.xml file is not setup
-			string procmgrIpadd = sysConfig->getConfig("ProcMgr", "IPAddr");
-			if ( procmgrIpadd == "0.0.0.0" )
-			    fresh = true;
-			
 			int count = 0;
 			while(true)
 			{
@@ -318,26 +358,6 @@ int main(int argc, char **argv)
 			//re-read local system info with new Columnstore.xml
 			sleep(1);
 			MonitorConfig config;
-		}
-
-		//get Distributed Install
-		string DistributedInstall = "y";
-
-		try
-		{
-			oam.getSystemConfig("DistributedInstall", DistributedInstall);
-		}
-		catch (...) 
-		{
-			log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-		}
-
-		//check for a fresh install on a non-distrubuted install setup
-		if ( DistributedInstall == "n" && fresh )
-		{
-		    //run the module install script
-		    string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + config.moduleType() + " > /dev/null 2>&1";
-		    system(cmd.c_str());
 		}
 
 		// not OAM parent module, delay starting until a successful get status is performed
@@ -367,53 +387,6 @@ int main(int argc, char **argv)
 		cerr << endl << "OAMParentModuleName == oam::UnassignedName, exiting " << endl;
 		log.writeLog(__LINE__, "OAMParentModuleName == oam::UnassignedName, exiting", LOG_TYPE_CRITICAL);
 		exit (1);
-	}
-
-	// if amazon cloud, check and update Instance IP Addresses and volumes
-	try {
-		oam.getSystemConfig( "Cloud", cloud);
-	}
-	catch(...) {}
-
-	if ( cloud == "amazon-ec2" ) {
-		if(!aMonitor.amazonIPCheck()) {
-			log.writeLog(__LINE__, "ERROR: amazonIPCheck failed, exiting", LOG_TYPE_CRITICAL);
-			sleep(2);
-			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
-			system(cmd.c_str());
-			exit(1);
-		}
-	}
-
-	//get gluster config
-	try {
-		oam.getSystemConfig( "GlusterConfig", GlusterConfig);
-	}
-	catch(...)
-	{
-		GlusterConfig = "n";
-	}
-
-	if ( GlusterConfig == "y" ) {
-		system("mount -a > /dev/null 2>&1");
-	}
-
-	//hdfs / hadoop config 
-	string DBRootStorageType;
-	try {
-		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
-	}
-	catch(...) {}
-
-	if ( DBRootStorageType == "hdfs" )
-		HDFS = true;
-
-	//PMwithUM config 
-	try {
-		oam.getSystemConfig( "PMwithUM", PMwithUM);
-	}
-	catch(...) {
-		PMwithUM = "n";
 	}
 
 	//check if module is in a DISABLED state

@@ -4983,374 +4983,371 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		}
 	}
 
-	if ( DistributedInstall == "y" ) {
-
-	    //PMwithUM config
-	    string PMwithUM = "n";
-	    try {
-		    oam.getSystemConfig( "PMwithUM", PMwithUM);
-	    }
-	    catch(...) {
-		    PMwithUM = "n";
-	    }
-
-	    //check mysql port changes
-	    string MySQLPort;
-	    try {
-		    oam.getSystemConfig( "MySQLPort", MySQLPort);
-	    }
-	    catch(...)
-	    {}
-
-	    if ( MySQLPort.empty() || MySQLPort == "" || MySQLPort == oam::UnassignedName )
-		    MySQLPort = "3306";
-
-	    string version = systemsoftware.Version + "-" + systemsoftware.Release;
-
-	    //setup and push custom OS files
-	    listPT = devicenetworklist.begin();
-	    for( ; listPT != devicenetworklist.end() ; listPT++)
-	    {
-		    string remoteModuleName = (*listPT).DeviceName;
-		    string remoteModuleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
-		    HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		    string remoteModuleIP = (*pt1).IPAddr;
-		    string remoteHostName = (*pt1).HostName;
-
-		    //create and copy custom OS
-		    //run remote installer script
-		    string dir = installDir + "/local/etc/" + remoteModuleName;
-
-		    string cmd = "mkdir " + dir + " > /dev/null 2>&1";
-		    system(cmd.c_str());
-
-		    if ( remoteModuleType == "um" ) {
-			    cmd = "cp " + installDir + "/local/etc/um1/* " + dir + "/.";
-			    system(cmd.c_str());
-		    }
-		    else
-		    {
-			    if ( remoteModuleType == "pm") {
-				    cmd = "cp " + installDir + "/local/etc/pm1/* " + dir + "/.";
-				    system(cmd.c_str());
-			    }
-		    }
-		    log.writeLog(__LINE__, "addModule - created directory and custom OS files for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-		    //create module file 
-		    if( !createModuleFile(remoteModuleName) ) {
-			    log.writeLog(__LINE__, "addModule - ERROR: createModuleFile failed", LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-		    }
-		    log.writeLog(__LINE__, "addModule - create module file for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-		    if ( remoteModuleType == "pm" ) {
-			    //setup Standby OAM Parent, if needed
-			    if ( config.OAMStandbyName() == oam::UnassignedName )
-				    setStandbyModule(remoteModuleName, false);
-		    }
-
-		    //set root password
-		    if (amazon) {
-			    cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
-			    log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
-			    int rtnCode = system(cmd.c_str());
-			    if (WEXITSTATUS(rtnCode) == 0)
-				    log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
-			    else
-				    log.writeLog(__LINE__, "addModule - ERROR: update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
-		    }
-
-		    //default
-		    string binaryInstallDir = installDir;
-
-		    string installType = "initial";
-		    if ( DistributedInstall == "n" ) {
-			installType = "nonDistribute";
-			
-			//check of post-install file exist, which shows package is installed
-			string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
-			int rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) != 0) {
-			    log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-			}
-			
-			//check version that is installed
-			cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + password + " " + installDir + "/releasenum > /dev/null 2>&1";
-			rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) != 0) {
-			    log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-			}
-			cmd = "diff " +  installDir + "/releasenum releasenum > /dev/null 2>&1";
-			rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) != 0) {
-			    log.writeLog(__LINE__, "addModule - ERROR: Local version of MariaDB ColumnStore doesn't match installed version on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-			}
-
-		    }
-
-		    //run installer on remote module
-		    if ( remoteModuleType == "um" ||
-			    ( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-			    ( remoteModuleType == "pm" && PMwithUM == "y" ) ) {
-			    //run remote installer script
-			    if ( packageType != "binary" ) {
-				    log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 > /tmp/user_installer.log";
-
-				    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
-
-				    bool passed = false;
-				    for ( int retry = 0 ; retry < 20 ; retry++ )
-				    {
-					    int rtnCode = system(cmd.c_str());
-					    if (WEXITSTATUS(rtnCode) != 0) {
-						    // if log file size is zero, retry
-						    ifstream in("/tmp/user_installer.log");
-						    in.seekg(0, std::ios::end);
-						    int size = in.tellg();
-						    if ( size == 0 )
-						    {
-							    log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed, retry", LOG_TYPE_DEBUG);
-							    sleep(5);
-							    continue;
-						    }
-						    else
-							    break;
-					    }
-					    else
-					    {
-						    passed = true;
-						    break;
-					    }
-				    }
-
-				    if ( !passed )
-				    {
-					    log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed", LOG_TYPE_ERROR);
-					    pthread_mutex_unlock(&THREAD_LOCK);
-					    system("/bin/cp -f /tmp/user_installer.log /tmp/user_installer.log.failed");
-					    processManager.setModuleState(remoteModuleName, oam::FAILED);
-					    return API_FAILURE;
-				    }
-			    }
-			    else
-			    {	// do a binary package install
-				    log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-				    string binservertype = oam.itoa(config.ServerInstallType());
-				    if ( PMwithUM == "y" )
-					    binservertype = "pmwithum";
-				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + "  " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
-
-				    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
-
-				    bool passed = false;
-				    for ( int retry = 0 ; retry < 20 ; retry++ )
-				    {
-					    int rtnCode = system(cmd.c_str());
-					    if (WEXITSTATUS(rtnCode) != 0) {
-						    // if log file size is zero, retry
-						    ifstream in("/tmp/binary_installer.log");
-						    in.seekg(0, std::ios::end);
-						    int size = in.tellg();
-						    if ( size == 0 )
-						    {
-							    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
-							    sleep(5);
-							    continue;
-						    }
-						    else
-							    break;
-					    }
-					    else
-					    {
-						    passed = true;
-						    break;
-					    }
-				    }
-
-				    if ( !passed )
-				    {
-					    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
-					    pthread_mutex_unlock(&THREAD_LOCK);
-					    system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
-					    processManager.setModuleState(remoteModuleName, oam::FAILED);
-					    return API_FAILURE;
-				    }
-			    }
-		    }
-		    else
-		    {
-			    if ( remoteModuleType == "pm" ) {
-				    if ( packageType != "binary" ) {
-					    log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + + " --nodeps 1 > /tmp/performance_installer.log";
-					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
-
-					    system(cmd.c_str());
-
-					    bool passed = false;
-					    for ( int retry = 0 ; retry < 20 ; retry++ )
-					    {
-						    int rtnCode = system(cmd.c_str());
-						    if (WEXITSTATUS(rtnCode) != 0) {
-							    // if log file size is zero, retry
-							    ifstream in("/tmp/performance_installer.log");
-							    in.seekg(0, std::ios::end);
-							    int size = in.tellg();
-							    if ( size == 0 )
-							    {
-								    log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed, retry", LOG_TYPE_DEBUG);
-								    sleep(5);
-								    continue;
-							    }
-							    else
-								    break;
-						    }
-						    else
-						    {
-							    passed = true;
-							    break;
-						    }
-					    }
-	    
-					    if ( !passed )
-					    {
-						    log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed", LOG_TYPE_ERROR);
-						    pthread_mutex_unlock(&THREAD_LOCK);
-						    system("/bin/cp -f /tmp/performance_installer.log /tmp/performance_installer.log.failed");
-						    processManager.setModuleState(remoteModuleName, oam::FAILED);
-						    return API_FAILURE;
-					    }
-				    }
-				    else
-				    {	// do a binary package install
-					    log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-					    string binservertype = oam.itoa(config.ServerInstallType());
-					    if ( PMwithUM == "y" )
-						    binservertype = "pmwithum";
-
-					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + " " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
-
-					    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
-
-					    bool passed = false;
-					    for ( int retry = 0 ; retry < 20 ; retry++ )
-					    {
-						    int rtnCode = system(cmd.c_str());
-						    if (WEXITSTATUS(rtnCode) != 0) {
-							    // if log file size is zero, retry
-							    ifstream in("/tmp/binary_installer.log");
-							    in.seekg(0, std::ios::end);
-							    int size = in.tellg();
-							    if ( size == 0 )
-							    {
-								    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
-								    sleep(5);
-								    continue;
-							    }
-							    else
-								    break;
-						    }
-						    else
-						    {
-							    passed = true;
-							    break;
-						    }
-					    }
-	    
-					    if ( !passed )
-					    {
-						    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
-						    pthread_mutex_unlock(&THREAD_LOCK);
-						    system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
-						    processManager.setModuleState(remoteModuleName, oam::FAILED);
-						    return API_FAILURE;
-					    }
-				    }
-			    }
-		    }
-	    }
-
-	    //Start new modules by starting up local Process-Monitor
-	    listPT = devicenetworklist.begin();
-	    for( ; listPT != devicenetworklist.end() ; listPT++)
-	    {
-		    string remoteModuleName = (*listPT).DeviceName;
-
-		    if (manualFlag)
-			    //set new module to disable state if manual add
-			    disableModule(remoteModuleName, true);
-
-		    HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		    string remoteModuleIP = (*pt1).IPAddr;
-		    string remoteHostName = (*pt1).HostName;
-
-		    //send start service commands
-		    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
-		    system(cmd.c_str());
-		    log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-		    // add to monitor list
-		    moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
-		    if (amazon) {
-			    //check and assign Elastic IP Address
-			    int AmazonElasticIPCount = 0;
-			    try{
-				    oam.getSystemConfig("AmazonElasticIPCount", AmazonElasticIPCount);
-			    }
-			    catch(...) {
-				    AmazonElasticIPCount = 0;
-			    }
-	    
-			    for ( int id = 1 ; id < AmazonElasticIPCount+1 ; id++ )
-			    {
-				    string AmazonElasticModule = "AmazonElasticModule" + oam.itoa(id);
-				    string ELmoduleName;
-				    try{
-					    oam.getSystemConfig(AmazonElasticModule, ELmoduleName);
-				    }
-				    catch(...) {}
-	    
-				    if ( ELmoduleName == remoteModuleName )
-				    {	//match found assign Elastic IP Address
-					    string AmazonElasticIPAddr = "AmazonElasticIPAddr" + oam.itoa(id);
-					    string ELIPaddress;
-					    try{
-						    oam.getSystemConfig(AmazonElasticIPAddr, ELIPaddress);
-					    }
-					    catch(...) {}
-	    
-					    try{
-						    oam.assignElasticIP(remoteHostName, ELIPaddress);
-						    log.writeLog(__LINE__, "addModule - Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_DEBUG);
-					    }
-					    catch(...) {
-						    log.writeLog(__LINE__, "addModule - Failed to Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_ERROR);
-					    }
-					    break;
-				    }
-			    }
-		    }
-	    }
-
-	    //if amazon, delay to give time for ProcMon to start
-	    if (amazon) {
-		    log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
-		    sleep(30);
-	    }
+	//PMwithUM config
+	string PMwithUM = "n";
+	try {
+		oam.getSystemConfig( "PMwithUM", PMwithUM);
 	}
+	catch(...) {
+		PMwithUM = "n";
+	}
+
+	//check mysql port changes
+	string MySQLPort;
+	try {
+		oam.getSystemConfig( "MySQLPort", MySQLPort);
+	}
+	catch(...)
+	{}
+
+	if ( MySQLPort.empty() || MySQLPort == "" || MySQLPort == oam::UnassignedName )
+		MySQLPort = "3306";
+
+	string version = systemsoftware.Version + "-" + systemsoftware.Release;
+
+	//setup and push custom OS files
+	listPT = devicenetworklist.begin();
+	for( ; listPT != devicenetworklist.end() ; listPT++)
+	{
+		string remoteModuleName = (*listPT).DeviceName;
+		string remoteModuleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
+		HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+		string remoteModuleIP = (*pt1).IPAddr;
+		string remoteHostName = (*pt1).HostName;
+
+		//create and copy custom OS
+		//run remote installer script
+		string dir = installDir + "/local/etc/" + remoteModuleName;
+
+		string cmd = "mkdir " + dir + " > /dev/null 2>&1";
+		system(cmd.c_str());
+
+		if ( remoteModuleType == "um" ) {
+			cmd = "cp " + installDir + "/local/etc/um1/* " + dir + "/.";
+			system(cmd.c_str());
+		}
+		else
+		{
+			if ( remoteModuleType == "pm") {
+				cmd = "cp " + installDir + "/local/etc/pm1/* " + dir + "/.";
+				system(cmd.c_str());
+			}
+		}
+		log.writeLog(__LINE__, "addModule - created directory and custom OS files for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+		//create module file 
+		if( !createModuleFile(remoteModuleName) ) {
+			log.writeLog(__LINE__, "addModule - ERROR: createModuleFile failed", LOG_TYPE_ERROR);
+			pthread_mutex_unlock(&THREAD_LOCK);
+			return API_FAILURE;
+		}
+		log.writeLog(__LINE__, "addModule - create module file for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+		if ( remoteModuleType == "pm" ) {
+			//setup Standby OAM Parent, if needed
+			if ( config.OAMStandbyName() == oam::UnassignedName )
+				setStandbyModule(remoteModuleName, false);
+		}
+
+		//set root password
+		if (amazon) {
+			cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
+			log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
+			int rtnCode = system(cmd.c_str());
+			if (WEXITSTATUS(rtnCode) == 0)
+				log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
+			else
+				log.writeLog(__LINE__, "addModule - ERROR: update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
+		}
+
+		//default
+		string binaryInstallDir = installDir;
+
+		string installType = "initial";
+		if ( DistributedInstall == "n" ) {
+		    installType = "nonDistribute";
+		    
+		    //check of post-install file exist, which shows package is installed
+		    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
+		    int rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) != 0) {
+			log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
+			pthread_mutex_unlock(&THREAD_LOCK);
+			return API_FAILURE;
+		    }
+		    
+		    //check version that is installed
+		    cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + password + " " + installDir + "/releasenum > /dev/null 2>&1";
+		    rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) != 0) {
+			log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
+			pthread_mutex_unlock(&THREAD_LOCK);
+			return API_FAILURE;
+		    }
+		    cmd = "diff " +  installDir + "/releasenum releasenum > /dev/null 2>&1";
+		    rtnCode = system(cmd.c_str());
+		    if (WEXITSTATUS(rtnCode) != 0) {
+			log.writeLog(__LINE__, "addModule - ERROR: Local version of MariaDB ColumnStore doesn't match installed version on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
+			pthread_mutex_unlock(&THREAD_LOCK);
+			return API_FAILURE;
+		    }
+
+		}
+
+		//run installer on remote module
+		if ( remoteModuleType == "um" ||
+			( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+			( remoteModuleType == "pm" && PMwithUM == "y" ) ) {
+			//run remote installer script
+			if ( packageType != "binary" ) {
+				log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+				string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 > /tmp/user_installer.log";
+
+				log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
+
+				bool passed = false;
+				for ( int retry = 0 ; retry < 20 ; retry++ )
+				{
+					int rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						// if log file size is zero, retry
+						ifstream in("/tmp/user_installer.log");
+						in.seekg(0, std::ios::end);
+						int size = in.tellg();
+						if ( size == 0 )
+						{
+							log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							sleep(5);
+							continue;
+						}
+						else
+							break;
+					}
+					else
+					{
+						passed = true;
+						break;
+					}
+				}
+
+				if ( !passed )
+				{
+					log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed", LOG_TYPE_ERROR);
+					pthread_mutex_unlock(&THREAD_LOCK);
+					system("/bin/cp -f /tmp/user_installer.log /tmp/user_installer.log.failed");
+					processManager.setModuleState(remoteModuleName, oam::FAILED);
+					return API_FAILURE;
+				}
+			}
+			else
+			{	// do a binary package install
+				log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+				string binservertype = oam.itoa(config.ServerInstallType());
+				if ( PMwithUM == "y" )
+					binservertype = "pmwithum";
+				string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + "  " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+
+				log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
+
+				bool passed = false;
+				for ( int retry = 0 ; retry < 20 ; retry++ )
+				{
+					int rtnCode = system(cmd.c_str());
+					if (WEXITSTATUS(rtnCode) != 0) {
+						// if log file size is zero, retry
+						ifstream in("/tmp/binary_installer.log");
+						in.seekg(0, std::ios::end);
+						int size = in.tellg();
+						if ( size == 0 )
+						{
+							log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							sleep(5);
+							continue;
+						}
+						else
+							break;
+					}
+					else
+					{
+						passed = true;
+						break;
+					}
+				}
+
+				if ( !passed )
+				{
+					log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
+					pthread_mutex_unlock(&THREAD_LOCK);
+					system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
+					processManager.setModuleState(remoteModuleName, oam::FAILED);
+					return API_FAILURE;
+				}
+			}
+		}
+		else
+		{
+			if ( remoteModuleType == "pm" ) {
+				if ( packageType != "binary" ) {
+					log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+					string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + + " --nodeps 1 > /tmp/performance_installer.log";
+					log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
+
+					system(cmd.c_str());
+
+					bool passed = false;
+					for ( int retry = 0 ; retry < 20 ; retry++ )
+					{
+						int rtnCode = system(cmd.c_str());
+						if (WEXITSTATUS(rtnCode) != 0) {
+							// if log file size is zero, retry
+							ifstream in("/tmp/performance_installer.log");
+							in.seekg(0, std::ios::end);
+							int size = in.tellg();
+							if ( size == 0 )
+							{
+								log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								sleep(5);
+								continue;
+							}
+							else
+								break;
+						}
+						else
+						{
+							passed = true;
+							break;
+						}
+					}
 	
+					if ( !passed )
+					{
+						log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed", LOG_TYPE_ERROR);
+						pthread_mutex_unlock(&THREAD_LOCK);
+						system("/bin/cp -f /tmp/performance_installer.log /tmp/performance_installer.log.failed");
+						processManager.setModuleState(remoteModuleName, oam::FAILED);
+						return API_FAILURE;
+					}
+				}
+				else
+				{	// do a binary package install
+					log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+					string binservertype = oam.itoa(config.ServerInstallType());
+					if ( PMwithUM == "y" )
+						binservertype = "pmwithum";
+
+					string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + " " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+
+					log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
+
+					bool passed = false;
+					for ( int retry = 0 ; retry < 20 ; retry++ )
+					{
+						int rtnCode = system(cmd.c_str());
+						if (WEXITSTATUS(rtnCode) != 0) {
+							// if log file size is zero, retry
+							ifstream in("/tmp/binary_installer.log");
+							in.seekg(0, std::ios::end);
+							int size = in.tellg();
+							if ( size == 0 )
+							{
+								log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								sleep(5);
+								continue;
+							}
+							else
+								break;
+						}
+						else
+						{
+							passed = true;
+							break;
+						}
+					}
+	
+					if ( !passed )
+					{
+						log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
+						pthread_mutex_unlock(&THREAD_LOCK);
+						system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
+						processManager.setModuleState(remoteModuleName, oam::FAILED);
+						return API_FAILURE;
+					}
+				}
+			}
+		}
+	}
+
+	//Start new modules by starting up local Process-Monitor
+	listPT = devicenetworklist.begin();
+	for( ; listPT != devicenetworklist.end() ; listPT++)
+	{
+		string remoteModuleName = (*listPT).DeviceName;
+
+		if (manualFlag)
+			//set new module to disable state if manual add
+			disableModule(remoteModuleName, true);
+
+		HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+		string remoteModuleIP = (*pt1).IPAddr;
+		string remoteHostName = (*pt1).HostName;
+
+		//send start service commands
+		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
+		system(cmd.c_str());
+		log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+		// add to monitor list
+		moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
+		if (amazon) {
+			//check and assign Elastic IP Address
+			int AmazonElasticIPCount = 0;
+			try{
+				oam.getSystemConfig("AmazonElasticIPCount", AmazonElasticIPCount);
+			}
+			catch(...) {
+				AmazonElasticIPCount = 0;
+			}
+	
+			for ( int id = 1 ; id < AmazonElasticIPCount+1 ; id++ )
+			{
+				string AmazonElasticModule = "AmazonElasticModule" + oam.itoa(id);
+				string ELmoduleName;
+				try{
+					oam.getSystemConfig(AmazonElasticModule, ELmoduleName);
+				}
+				catch(...) {}
+	
+				if ( ELmoduleName == remoteModuleName )
+				{	//match found assign Elastic IP Address
+					string AmazonElasticIPAddr = "AmazonElasticIPAddr" + oam.itoa(id);
+					string ELIPaddress;
+					try{
+						oam.getSystemConfig(AmazonElasticIPAddr, ELIPaddress);
+					}
+					catch(...) {}
+	
+					try{
+						oam.assignElasticIP(remoteHostName, ELIPaddress);
+						log.writeLog(__LINE__, "addModule - Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_DEBUG);
+					}
+					catch(...) {
+						log.writeLog(__LINE__, "addModule - Failed to Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_ERROR);
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	//if amazon, delay to give time for ProcMon to start
+	if (amazon) {
+		log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
+		sleep(30);
+	}
+
 	//distribute config file
 	distributeConfigFile("system");
 
