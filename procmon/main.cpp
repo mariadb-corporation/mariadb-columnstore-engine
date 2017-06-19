@@ -168,8 +168,14 @@ int main(int argc, char **argv)
 
 	int moduleStatus = oam::ACTIVE;
 
+	string DBRootStorageType;
 	//check if currently configured as Parent OAM Module on startup
 	if ( gOAMParentModuleFlag ) {
+		try {
+			oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+		}
+		catch(...) {}
+
 		if ( ( config.OAMStandbyName() != oam::UnassignedName ) &&
 			DBRootStorageType != "internal" ) {
 			//try for 20 minutes checking if the standby node is up
@@ -337,6 +343,9 @@ int main(int argc, char **argv)
 		{
 		    //run the module install script
 		    string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + config.moduleType() + " > /dev/null 2>&1";
+		    log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
+		    log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
+
 		    system(cmd.c_str());
 		}
 
@@ -357,7 +366,7 @@ int main(int argc, char **argv)
 			}
 			catch(...)
 			{
-				log.writeLog(__LINE__, "wating for good return from getModuleStatus", LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "waiting for good return from getModuleStatus", LOG_TYPE_DEBUG);
 				sleep (1);
 			}
 		}
@@ -399,7 +408,6 @@ int main(int argc, char **argv)
 	}
 
 	//hdfs / hadoop config 
-	string DBRootStorageType;
 	try {
 		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
 	}
