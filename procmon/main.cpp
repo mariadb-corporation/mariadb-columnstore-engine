@@ -169,13 +169,7 @@ int main(int argc, char **argv)
 	int moduleStatus = oam::ACTIVE;
 
 	//check if currently configured as Parent OAM Module on startup
-	string DBRootStorageType;
 	if ( gOAMParentModuleFlag ) {
-		try {
-			oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
-
 		if ( ( config.OAMStandbyName() != oam::UnassignedName ) &&
 			DBRootStorageType != "internal" ) {
 			//try for 20 minutes checking if the standby node is up
@@ -405,6 +399,7 @@ int main(int argc, char **argv)
 	}
 
 	//hdfs / hadoop config 
+	string DBRootStorageType;
 	try {
 		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
 	}
