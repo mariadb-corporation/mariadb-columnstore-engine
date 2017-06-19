@@ -4,7 +4,7 @@
 #
 # Post-install steps for columnstore install
 
-prefix=/usr/local/
+prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=`whoami 2>/dev/null`
