@@ -1292,7 +1292,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 	WriteEngine::ColStructList colStructs;
 	WriteEngine::DctnryStructList dctnryStructList;
 	WriteEngine::DctnryValueList dctnryValueList;
-	WriteEngine::ColValueList colValuesList;
+    std::vector<uint64_t> colValuesList;
     WriteEngine::DictStrList dicStringList ;
 	CalpontSystemCatalog::TableName tableName;
 	CalpontSystemCatalog::TableColName tableColName;
@@ -1520,12 +1520,12 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 		std::string tmpStr("");
 		uint32_t valuesPerColumn;
 		bs >> valuesPerColumn;
+        colValuesList.reserve(columnCount * valuesPerColumn);
 		try
 		{
 			bool pushWarning = false;
 			for (uint32_t j = 0; j < columnCount; j++)
 			{
-    			WriteEngine::ColTupleList colTuples;
 	    		WriteEngine::DctColTupleList dctColTuples;
                 tableColName.column = colNames[j];
 				CalpontSystemCatalog::OID oid = colStructs[j].dataOid;
@@ -1533,7 +1533,6 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 				CalpontSystemCatalog::ColType colType;
 				colType = systemCatalogPtr->colType(oid);
 
-				boost::any datavalue;
 				bool isNULL = false;
 				WriteEngine::dictStr dicStrings;
 				// token
@@ -1569,14 +1568,10 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 							if ( !pushWarning )
 								pushWarning = true;
 						}
-						WriteEngine::ColTuple colTuple;
-						colTuple.data = datavalue;
-
-						colTuples.push_back(colTuple);
+                        colValuesList.push_back(0);
 						//@Bug 2515. Only pass string values to write engine
 						dicStrings.push_back( tmpStr );
 					}
-					colValuesList.push_back(colTuples);
 					//@Bug 2515. Only pass string values to write engine
 					dicStringList.push_back( dicStrings );
 				}
@@ -1606,67 +1601,48 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 						bs >> tmp8;
 						isNULL = tmp8;
 
-						int8_t val8;
-						int16_t val16;
-						int32_t val32;
-						int64_t val64;
+                        uint8_t val8;
+                        uint16_t val16;
+                        uint32_t val32;
+                        uint64_t val64;
+                        uint64_t colValue;
 						float valF;
 						double valD;
 						std::string valStr;
 						bool valZero = false; // Needed for autoinc check
-						switch (colType.colDataType)
+                        switch (colType.colDataType)
 						{
 							case execplan::CalpontSystemCatalog::TINYINT:
-								bs >> val8;
+                            case execplan::CalpontSystemCatalog::UTINYINT:
+                                bs >> val8;
 								if (val8 == 0)
 									valZero = true;
-								datavalue = (char)val8;
+                                colValue = val8;
 								break;
 							case execplan::CalpontSystemCatalog::SMALLINT:
-								bs >> val16;
+                            case execplan::CalpontSystemCatalog::DATE:
+                            case execplan::CalpontSystemCatalog::USMALLINT:
+                                bs >> val16;
 								if (val16 == 0)
 									valZero = true;
-								datavalue = (short)val16;
+                                colValue = val16;
 								break;
 							case execplan::CalpontSystemCatalog::MEDINT:
 							case execplan::CalpontSystemCatalog::INT:
-								bs >> val32;
+                            case execplan::CalpontSystemCatalog::UMEDINT:
+                            case execplan::CalpontSystemCatalog::UINT:
+                                bs >> val32;
 								if (val32 == 0)
 									valZero = true;
-								datavalue = (int)val32;
+                                colValue = val32;
 								break;
 							case execplan::CalpontSystemCatalog::BIGINT:
-								bs >> val64;
+                            case execplan::CalpontSystemCatalog::DATETIME:
+                            case execplan::CalpontSystemCatalog::UBIGINT:
+                                bs >> val64;
 								if (val64 == 0)
 									valZero = true;
-								datavalue = (long long)val64;
-								break;
-							case execplan::CalpontSystemCatalog::UTINYINT:
-								bs >> val8;
-								if (val8 == 0)
-									valZero = true;
-								datavalue = (uint8_t)val8;
-								break;
-							case execplan::CalpontSystemCatalog::DATE:
-							case execplan::CalpontSystemCatalog::USMALLINT:
-								bs >> val16;
-								if (val16 == 0)
-									valZero = true;
-								datavalue = (uint16_t)val16;
-								break;
-							case execplan::CalpontSystemCatalog::UMEDINT:
-							case execplan::CalpontSystemCatalog::UINT:
-								bs >> val32;
-								if (val32 == 0)
-									valZero = true;
-								datavalue = (uint32_t)val32;
-								break;
-							case execplan::CalpontSystemCatalog::DATETIME:
-							case execplan::CalpontSystemCatalog::UBIGINT:
-								bs >> val64;
-								if (val64 == 0)
-									valZero = true;
-								datavalue = (uint64_t)val64;
+                                colValue = val64;
 								break;
 							case execplan::CalpontSystemCatalog::DECIMAL:
 								switch (colType.colWidth)
@@ -1674,25 +1650,25 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 									case 1:
 									{
 										bs >> val8;
-										datavalue = (char) val8;
+                                        colValue = val8;
 										break;
 									}
 									case 2:
 									{
 										bs >> val16;
-										datavalue = (short) val16;
+                                        colValue = val16;
 										break;
 									}
 									case 4:
 									{
 										bs >> val32;
-										datavalue = (int) val32;
+                                        colValue = val32;
 										break;
 									}
 									default:
 									{
 										bs >> val64;
-										datavalue = (long long) val64;
+                                        colValue = val64;
 										break;
 									}
 								}
@@ -1710,7 +1686,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 										val8 = 0;
 										pushWarning = true;
 									}
-									datavalue = (char)val8;
+                                    colValue = val8;
 								}
 								else if (colType.colWidth == 2)
 								{
@@ -1722,7 +1698,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 										val16 = 0;
 										pushWarning = true;
 									}
-									datavalue = (short)val16;
+                                    colValue = val16;
 								}
 								else if (colType.colWidth == 4)
 								{
@@ -1734,7 +1710,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 										val32 = 0;
 										pushWarning = true;
 									}
-									datavalue = (int)val32;
+                                    colValue = val32;
 								}
 								else if (colType.colWidth == 8)
 								{
@@ -1746,13 +1722,12 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 										val64 = 0;
 										pushWarning = true;
 									}
-									datavalue = (long long)val64;
+                                    colValue = val64;
 								}
 								break;
 							case execplan::CalpontSystemCatalog::DOUBLE:
 								bs >> val64;
-								memcpy(&valD, &val64, 8);
-								datavalue = valD;
+                                colValue = val64;
 								break;
 							case execplan::CalpontSystemCatalog::UDOUBLE:
 								bs >> val64;
@@ -1763,12 +1738,11 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 									pushWarning = true;
 								}
 
-								datavalue = valD;
+                                colValue = val64;
 								break;
 							case execplan::CalpontSystemCatalog::FLOAT:
 								bs >> val32;
-								memcpy(&valF, &val32, 4);
-								datavalue = valF;
+                                colValue = val32;
 								break;
 							case execplan::CalpontSystemCatalog::UFLOAT:
 								bs >> val32;
@@ -1779,7 +1753,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 									pushWarning = true;
 								}
 
-								datavalue = valF;
+                                colValue = val32;
 								break;
 
 							case execplan::CalpontSystemCatalog::CHAR:
@@ -1800,7 +1774,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 										valStr.resize(colType.colWidth, 0);
 									}
 								}
-								datavalue = valStr;
+                                memcpy(&colValue, valStr.c_str(), valStr.length());
 								break;
 							default:
 								rc = 1;
@@ -1830,28 +1804,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 								rc = 1;
 								return rc;
 							}
-							switch (colType.colDataType)
-							{
-								case execplan::CalpontSystemCatalog::TINYINT:
-								case execplan::CalpontSystemCatalog::UTINYINT:
-									datavalue = (uint8_t) nextVal;
-									break;
-								case execplan::CalpontSystemCatalog::SMALLINT:
-								case execplan::CalpontSystemCatalog::USMALLINT:
-									datavalue = (uint16_t) nextVal;
-									break;
-								case execplan::CalpontSystemCatalog::MEDINT:
-								case execplan::CalpontSystemCatalog::UMEDINT:
-								case execplan::CalpontSystemCatalog::INT:
-								case execplan::CalpontSystemCatalog::UINT:
-									datavalue = (uint32_t) nextVal;
-									break;
-								case execplan::CalpontSystemCatalog::BIGINT:
-								case execplan::CalpontSystemCatalog::UBIGINT:
-								default:
-									datavalue = (uint64_t) nextVal;
-									break;
-							}
+                            colValue = nextVal;
 						}
 
 						if (colType.constraintType == CalpontSystemCatalog::NOTNULL_CONSTRAINT)
@@ -1866,7 +1819,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 							}
 							else if (isNULL && !(colType.defaultValue.empty()))
 							{
-								datavalue = colType.defaultValue;
+                                memcpy(&colValue, colType.defaultValue.c_str(), colType.defaultValue.length());
 								isNULL = false;
 							}
 						}
@@ -1878,14 +1831,11 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 						if ( pushWarning && ( rc != dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING ) )
 							rc = dmlpackageprocessor::DMLPackageProcessor::IDBRANGE_WARNING;
 
-						WriteEngine::ColTuple colTuple;
-						colTuple.data = datavalue;
 
-						colTuples.push_back(colTuple);
+                        colValuesList.push_back(colValue);
 						//@Bug 2515. Only pass string values to write engine
 						dicStrings.push_back( valStr );
 					}
-					colValuesList.push_back(colTuples);
 					dicStringList.push_back( dicStrings );
 				}
 
@@ -1910,31 +1860,28 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 	//cout << "Batch inserting a row with transaction id " << txnid.id << endl;
 	if (colValuesList.size() > 0)
 	{
-		if (colValuesList[0].size() > 0)
-		{
-			if (NO_ERROR !=
-			(error = fWEWrapper.insertColumnRecs(txnid.id, colStructs, colValuesList, dctnryStructList, dicStringList,
-						dbRootExtTrackerVec, 0, bFirstExtentOnThisPM, isInsertSelect, isAutocommitOn, roPair.objnum, fIsFirstBatchPm)))
-			{
-				if (error == ERR_BRM_DEAD_LOCK)
-				{
-					rc = dmlpackageprocessor::DMLPackageProcessor::DEAD_LOCK_ERROR;
-					WErrorCodes ec;
-					err = ec.errorString(error);
-				}
-				else if ( error == ERR_BRM_VB_OVERFLOW )
-				{
-					rc = dmlpackageprocessor::DMLPackageProcessor::VB_OVERFLOW_ERROR;
-					err = IDBErrorInfo::instance()->errorMsg(ERR_VERSIONBUFFER_OVERFLOW);
-				}
-				else
-				{
-					rc = dmlpackageprocessor::DMLPackageProcessor::INSERT_ERROR;
-					WErrorCodes ec;
-					err = ec.errorString(error);
-				}
-			}
-		}
+        if (NO_ERROR !=
+        (error = fWEWrapper.insertColumnRecsBinary(txnid.id, colStructs, colValuesList, dctnryStructList, dicStringList,
+                    dbRootExtTrackerVec, 0, bFirstExtentOnThisPM, isInsertSelect, isAutocommitOn, roPair.objnum, fIsFirstBatchPm)))
+        {
+            if (error == ERR_BRM_DEAD_LOCK)
+            {
+                rc = dmlpackageprocessor::DMLPackageProcessor::DEAD_LOCK_ERROR;
+                WErrorCodes ec;
+                err = ec.errorString(error);
+            }
+            else if ( error == ERR_BRM_VB_OVERFLOW )
+            {
+                rc = dmlpackageprocessor::DMLPackageProcessor::VB_OVERFLOW_ERROR;
+                err = IDBErrorInfo::instance()->errorMsg(ERR_VERSIONBUFFER_OVERFLOW);
+            }
+            else
+            {
+                rc = dmlpackageprocessor::DMLPackageProcessor::INSERT_ERROR;
+                WErrorCodes ec;
+                err = ec.errorString(error);
+            }
+        }
 	}
 	if (fIsFirstBatchPm && isAutocommitOn)
 	{
