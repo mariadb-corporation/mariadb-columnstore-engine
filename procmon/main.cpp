@@ -296,8 +296,8 @@ int main(int argc, char **argv)
 		if (!HDFS)
 		{
 			//check if this is a fresh install, meaning the Columnstore.xml file is not setup
-			string procmgrIpadd = sysConfig->getConfig("ProcMgr", "IPAddr");
-			if ( procmgrIpadd == "0.0.0.0" )
+			string exemgrIpadd = sysConfig->getConfig("ExeMgr1", "IPAddr");
+			if ( exemgrIpadd == "0.0.0.0" )
 			    fresh = true;
 			
 			int count = 0;
@@ -341,8 +341,12 @@ int main(int argc, char **argv)
 		//check for a fresh install on a non-distrubuted install setup
 		if ( DistributedInstall == "n" && fresh )
 		{
+		    string modType = config.moduleType();
+		    if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
+			modType = "um";
+			
 		    //run the module install script
-		    string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + config.moduleType() + " > /dev/null 2>&1";
+		    string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /dev/null 2>&1";
 		    log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
 		    log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 
@@ -372,9 +376,10 @@ int main(int argc, char **argv)
 		}
 	}
 
+	// this will occur on non-distributed installs the first time ProcMon runs
 	if ( config.OAMParentName() == oam::UnassignedName ) {
 		cerr << endl << "OAMParentModuleName == oam::UnassignedName, exiting " << endl;
-		log.writeLog(__LINE__, "OAMParentModuleName == oam::UnassignedName, exiting", LOG_TYPE_CRITICAL);
+		log.writeLog(__LINE__, "OAMParentModuleName == oam::UnassignedName, restarting");
 		exit (1);
 	}
 
