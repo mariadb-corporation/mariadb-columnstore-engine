@@ -57,6 +57,7 @@ bool processInitComplete = false;
 bool rootUser = true;
 string USER = "root";
 string PMwithUM = "n";
+bool startProcMon = false;
 
 //extern std::string gOAMParentModuleName;
 extern bool gOAMParentModuleFlag;
@@ -96,6 +97,7 @@ int main(int argc, char **argv)
 	MonitorLog log;
 	MonitorConfig config;
 	ProcessMonitor aMonitor(config, log);
+	Config* sysConfig = Config::makeConfig();
 
 	log.writeLog(__LINE__, " ");
 	log.writeLog(__LINE__, "**********Process Monitor Started**********");
@@ -130,8 +132,82 @@ int main(int argc, char **argv)
 
     	setlocale(LC_ALL, systemLang.c_str());
 
+	// create message thread
+	pthread_t MessageThread;
+	int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*)) &messageThread, &config);
+	if ( ret != 0 ) {
+		log.writeLog(__LINE__, "pthread_create failed, exiting..., return code = " + oam.itoa(ret), LOG_TYPE_CRITICAL);
+		exit (1);
+	}
+
+	//check if this is a fresh install, meaning the Columnstore.xml file is not setup
+	//if so, wait for messages from Procmgr to start us up
+	string exemgrIpadd = sysConfig->getConfig("ExeMgr1", "IPAddr");
+	if ( exemgrIpadd == "0.0.0.0" )
+	{
+	      int count = 0;
+	      while(true)
+	      {
+		    if ( startProcMon )
+			break;
+		    else
+		    {
+			count++;
+			if (count > 10 ) {
+				count = 0;
+				log.writeLog(__LINE__, "Waiting for ProcMgr to start us up", LOG_TYPE_DEBUG);
+			}
+			sleep(1);
+		    }
+	      }
+	      
+	      //re-read local system info with updated Columnstore.xml
+	      sleep(1);
+	      MonitorConfig config;
+
+	      //get Distributed Install
+	      string DistributedInstall = "y";
+
+	      try
+	      {
+		      oam.getSystemConfig("DistributedInstall", DistributedInstall);
+	      }
+	      catch (...) 
+	      {
+		      log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+	      }
+
+	      //check for a non-distrubuted install setup
+	      if ( DistributedInstall == "n" )
+	      {
+		  //PMwithUM config 
+		  try {
+			  oam.getSystemConfig( "PMwithUM", PMwithUM);
+		  }
+		  catch(...) {
+			  PMwithUM = "n";
+		  }
+
+		  string modType = config.moduleType();
+		  if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+		      ( PMwithUM == "y") )
+		      modType = "um";
+		      
+		  //run the module install script
+		  string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /dev/null 2>&1";
+		  log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
+		  log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
+
+		  system(cmd.c_str());
+
+		  //exit to allow ProcMon to restart in a setup state
+		  log.writeLog(__LINE__, "restarting for a non-distrubuted install", LOG_TYPE_DEBUG);
+
+		  exit (0);
+	      }
+	}
+
 	//define entry if missing
-	Config* sysConfig = Config::makeConfig();
 	if ( gOAMParentModuleFlag )
 	{
 		string PrimaryUMModuleName;
@@ -151,12 +227,6 @@ int main(int argc, char **argv)
 		else
 			log.writeLog(__LINE__, "ProcMon: Starting as NON-ACTIVE Parent", LOG_TYPE_DEBUG);
 	}
-
-	// create message thread
-	pthread_t MessageThread;
-	int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*)) &messageThread, &config);
-	if ( ret != 0 )
-		log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
 
 	//create and mount data directories
 	aMonitor.createDataDirs(cloud);
@@ -290,16 +360,9 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		bool fresh = false;
-
 		// not active Parent, get updated Columnstore.xml, retry in case ProcMgr isn't up yet
 		if (!HDFS)
 		{
-			//check if this is a fresh install, meaning the Columnstore.xml file is not setup
-			string exemgrIpadd = sysConfig->getConfig("ExeMgr1", "IPAddr");
-			if ( exemgrIpadd == "0.0.0.0" )
-			    fresh = true;
-			
 			int count = 0;
 			while(true)
 			{
@@ -324,33 +387,6 @@ int main(int argc, char **argv)
 			//re-read local system info with new Columnstore.xml
 			sleep(1);
 			MonitorConfig config;
-		}
-
-		//get Distributed Install
-		string DistributedInstall = "y";
-
-		try
-		{
-			oam.getSystemConfig("DistributedInstall", DistributedInstall);
-		}
-		catch (...) 
-		{
-			log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-		}
-
-		//check for a fresh install on a non-distrubuted install setup
-		if ( DistributedInstall == "n" && fresh )
-		{
-		    string modType = config.moduleType();
-		    if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
-			modType = "um";
-			
-		    //run the module install script
-		    string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /dev/null 2>&1";
-		    log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
-		    log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
-
-		    system(cmd.c_str());
 		}
 
 		// not OAM parent module, delay starting until a successful get status is performed

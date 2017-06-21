@@ -2771,6 +2771,8 @@ namespace oam
 		// Get Server Type Install ID
 	
 		serverTypeInstall = atoi(sysConfig->getConfig("Installation", "ServerTypeInstall").c_str());
+		
+		sysConfig;
 	}
 	catch (...) {}
 

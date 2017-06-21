@@ -416,6 +416,11 @@ public:
 	int addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool manualFlag = true);
 
     /**
+     *@brief Configure Module
+     */
+	int configureModule(std::string moduleName);
+
+    /**
      *@brief Reconfigure Module
      */
 	int reconfigureModule(oam::DeviceNetworkList devicenetworklist);

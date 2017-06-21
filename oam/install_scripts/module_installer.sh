@@ -104,21 +104,6 @@ if [ $module = "pm" ]; then
 	done
 fi
 
-echo "Setup rc.local on Module"
-if [ $EUID -eq 0 -a -f $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore ]; then
-	if [ $user = "root" ]; then
-		touch /etc/rc.local
-		rm -f /etc/rc.local.columnstoreSave
-		cp /etc/rc.local /etc/rc.local.columnstoreSave
-		cat $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
-	else
-		sudo touch /etc/rc.local
-		sudo rm -f /etc/rc.local.columnstoreSave
-		sudo cp /etc/rc.local /etc/rc.local.columnstoreSave
-		sudo cat $COLUMNSTORE_INSTALL_DIR/local/rc.local.columnstore >> /etc/rc.local
-	fi
-fi
-
 plugin=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
 if [ -n "$plugin" ]; then
 	echo "Setup .bashrc on Module for local-query"

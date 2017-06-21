@@ -3169,6 +3169,18 @@ int main(int argc, char *argv[])
 				cout << "  DONE" << endl;
 			}
 		    }
+		    else
+		    {
+		      	if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
+			{
+				cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
+
+				// call the mysql setup scripts
+				mysqlSetup();
+				sleep(5);
+			}
+		    }
 		}
 	}
 
@@ -3460,7 +3472,7 @@ int main(int argc, char *argv[])
 		}
 
 		//set mysql replication, if wasn't setup before on system
-		if ( ( mysqlRep && pmwithum ) || 
+/*		if ( ( mysqlRep && pmwithum ) || 
 			( mysqlRep && (umNumber > 1) ) ||
 			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
 		{
@@ -3477,7 +3489,7 @@ int main(int argc, char *argv[])
 			else
 				cout << " DONE" << endl;
 		}
-
+*/
 		cout << endl << "MariaDB ColumnStore Install Successfully Completed, System is Active" << endl << endl;
 
 		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;

@@ -4983,6 +4983,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		}
 	}
 
+	//distribute config file
+	distributeConfigFile("system");
+
 	if ( DistributedInstall == "y" ) {
 
 	    //PMwithUM config
@@ -5350,10 +5353,17 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    sleep(30);
 	    }
 	}
-	
-	//distribute config file
-	distributeConfigFile("system");
+	else
+	{
+	    listPT = devicenetworklist.begin();
+	    for( ; listPT != devicenetworklist.end() ; listPT++)
+	    {
+		string moduleName = (*listPT).DeviceName;
 
+	  	processManager.configureModule(moduleName);
+	    }
+	}
+	
 	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
 	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
@@ -6052,6 +6062,40 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 
 	//distribute config file
 	distributeConfigFile("system");	
+
+	return API_SUCCESS;
+}
+
+/******************************************************************************************
+* @brief	configureModule
+*
+* purpose:	Configure Module sends message to procmon to setup modulename
+*
+******************************************************************************************/
+int ProcessManager::configureModule(std::string moduleName)
+{
+	//distribute config file
+	distributeConfigFile(moduleName);
+
+	//
+	//Send Configure msg to Module's Process-Monitor being reconfigured
+	//
+	ByteStream msg;
+	ByteStream::byte requestID = CONFIGURE;
+
+	msg << requestID;
+	msg << moduleName;
+
+	int returnStatus = sendMsgProcMon( moduleName, msg, requestID );
+
+	if ( returnStatus == API_SUCCESS)
+		//log the event 
+		log.writeLog(__LINE__, "configureModule - procmon configure successful", LOG_TYPE_DEBUG);
+	else
+	{
+		log.writeLog(__LINE__, "configureModule - procmon configure failed", LOG_TYPE_ERROR);
+		return API_FAILURE;
+	}
 
 	return API_SUCCESS;
 }

@@ -50,14 +50,6 @@ else
 	$SUDO rm -f /etc/exports > /dev/null 2>&1
 fi
 
-if test -f /etc/rc.d/rc.local.columnstoreSave ; then	
-	$SUDO mv -f /etc/rc.d/rc.local.columnstoreSave /etc/rc.d/rc.local > /dev/null 2>&1
-fi
-
-if test -f /etc/rc.local.columnstoreSave ; then
-	$SUDO mv -f /etc/rc.local.columnstoreSave /etc/rc.local > /dev/null 2>&1
-fi
-
 export COLUMNSTORE_INSTALL_DIR=$installdir
 
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`

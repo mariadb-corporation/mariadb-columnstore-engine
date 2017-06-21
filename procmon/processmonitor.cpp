@@ -51,6 +51,7 @@ extern bool rootUser;
 extern string USER;
 extern bool HDFS;
 extern string PMwithUM;
+extern bool startProcMon;
 
 //std::string gOAMParentModuleName;
 bool gOAMParentModuleFlag;
@@ -1357,6 +1358,29 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			ackMsg << (ByteStream::byte) LOCALHEARTBEAT;
 			ackMsg << (ByteStream::byte) API_SUCCESS;
 			mq.write(ackMsg);
+			break;
+		}
+
+		case CONFIGURE:
+		{
+			log.writeLog(__LINE__,  "MSG RECEIVED: Configure Module");
+			string configureModuleName;
+			msg >> configureModuleName;
+
+			uint16_t rtnCode;
+			int requestStatus = API_SUCCESS;
+
+			configureModule(configureModuleName);
+
+			ackMsg << (ByteStream::byte) ACK;
+			ackMsg << (ByteStream::byte) CONFIGURE;
+			ackMsg << (ByteStream::byte) requestStatus;
+			mq.write(ackMsg);
+
+			log.writeLog(__LINE__, "CONFIGURE: ACK back to ProcMgr, return status = " + oam.itoa((int) requestStatus));
+
+			//set startmodule flag
+			startProcMon = true;
 			break;
 		}
 
@@ -3537,21 +3561,6 @@ int ProcessMonitor::reconfigureModule(std::string reconfigureModuleName)
 		system(cmd.c_str());
 	}
 
-	//copy and apply new rc.local.calpont from pm1
-	cmd = "rm -f " + installDir + "/local/rc.local.calpont";
-	system(cmd.c_str());
-	cmd = "cp " + installDir + "/local/etc/" + reconfigureModuleName + "/rc.local.calpont " + installDir + "/local/.";
-	system(cmd.c_str());
-	cmd = "rm -f /etc/rc.d/rc.local";
-	system(cmd.c_str());
-	cmd = "cp /etc/rc.d/rc.local.columnstoreSave /etc/rc.d/rc.local >/dev/null 2>&1";
-	system(cmd.c_str());
-	if (geteuid() == 0)
-		cmd = "cat " + installDir + "/local/rc.local.calpont >> /etc/rc.d/rc.local >/dev/null 2>&1";
-	system(cmd.c_str());
-	cmd = "/etc/rc.d/rc.local >/dev/null 2>&1";
-	system(cmd.c_str());
-
 	//update module file
 	string fileName = installDir + "/local/module";
 
@@ -3559,6 +3568,32 @@ int ProcessMonitor::reconfigureModule(std::string reconfigureModuleName)
    	ofstream newFile (fileName.c_str());
 
 	cmd = "echo " + reconfigureModuleName + " > " + fileName;
+	system(cmd.c_str());
+
+	newFile.close();
+
+	return API_SUCCESS;
+}
+
+/******************************************************************************************
+* @brief	configureModule
+*
+* purpose:	configure Module functionality
+*			Edit the moduleFile file with new Module Name
+*
+******************************************************************************************/
+int ProcessMonitor::configureModule(std::string configureModuleName)
+{
+	Oam oam;
+	string installDir = startup::StartUp::installDir();
+
+	//update module file
+	string fileName = installDir + "/local/module";
+
+	unlink (fileName.c_str());
+   	ofstream newFile (fileName.c_str());
+
+	string cmd = "echo " + configureModuleName + " > " + fileName;
 	system(cmd.c_str());
 
 	newFile.close();
