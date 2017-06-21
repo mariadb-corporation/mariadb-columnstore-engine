@@ -1288,7 +1288,7 @@ timer.stop("tokenize");
    if (insertSelect && isAutoCommitOn)
        BRMWrapper::setUseVb( false );
    else
-	   BRMWrapper::setUseVb( true );
+       BRMWrapper::setUseVb( true );
 
 	//--------------------------------------------------------------------------
 	// Update column info structure @Bug 1862 set hwm, and
@@ -2083,7 +2083,8 @@ timer.start("writeColumnRec");
         //----------------------------------------------------------------------
         // Write row(s) to database file(s)
         //----------------------------------------------------------------------
-        rc = writeColumnRecBinary(txnid, colStructList, colValueList, rowIdArray, newColStructList, tableOid, useTmpSuffix); // @bug 5572 HDFS tmp file
+        bool versioning = !(isAutoCommitOn && insertSelect);
+        rc = writeColumnRecBinary(txnid, colStructList, colValueList, rowIdArray, newColStructList, tableOid, useTmpSuffix, versioning); // @bug 5572 HDFS tmp file
     }
    return rc;
 }
@@ -2304,6 +2305,7 @@ timer.start("allocRowId");
        }
    }
 
+   BRMWrapper::setUseVb(true);
    //Tokenize data if needed
    dictStr::iterator dctStr_iter;
    ColTupleList::iterator col_iter;
@@ -4550,7 +4552,6 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                                        bool useTmpSuffix,
                                        bool versioning)
 {
-   bool           bExcp;
    int            rc = 0;
    void*          valArray;
    string         segFile;
@@ -4575,7 +4576,6 @@ StopWatch timer;
     TableMetaData* aTbaleMetaData = TableMetaData::makeTableMetaData(tableOid);
     for (i = 0; i < totalColumn; i++)
     {
-        RID * secondPart = rowIdArray + totalRow;
          //@Bug 2205 Check if all rows go to the new extent
         //Write the first batch
         RID * firstPart = rowIdArray;
@@ -4636,8 +4636,6 @@ StopWatch timer;
         uint8_t tmp8;
         uint16_t tmp16;
         uint32_t tmp32;
-        float tmpF;
-        double tmpD;
         for (size_t j = 0; j < totalRow; j++)
         {
             uint64_t curValue = colValueList[(totalRow*i) + j];
