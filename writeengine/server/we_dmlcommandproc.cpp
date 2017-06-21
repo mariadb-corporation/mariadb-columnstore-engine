@@ -3410,6 +3410,47 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
 	return rc;
 }
 
+uint8_t WE_DMLCommandProc::getWrittenLbids(messageqcpp::ByteStream& bs, std::string & err, ByteStream::quadbyte & PMId)
+{
+    uint8_t rc = 0;
+    uint32_t txnId;
+    vector<LBID_t> lbidList;
+
+    bs >> txnId;
+    std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>::iterator mapIter;
+    std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t>  m_txnLBIDMap = fWEWrapper.getTxnMap();
+    try
+    {
+        mapIter = m_txnLBIDMap.find(txnId);
+        if (mapIter != m_txnLBIDMap.end())
+        {
+            SP_TxnLBIDRec_t spTxnLBIDRec = (*mapIter).second;
+            std::tr1::unordered_map<BRM::LBID_t, uint32_t> ::iterator listIter = spTxnLBIDRec->m_LBIDMap.begin();
+            while (listIter != spTxnLBIDRec->m_LBIDMap.end())
+            {
+                lbidList.push_back(listIter->first);
+                listIter++;
+            }
+        }
+    }
+    catch(...) {}
+    bs.restart();
+    try
+    {
+        serializeInlineVector (bs, lbidList);
+    }
+    catch (exception& ex)
+    {
+        // Append to errmsg in case we already have an error
+        if (err.length() > 0)
+            err += "; ";
+        err += ex.what();
+        rc = 1;
+        return rc;
+    }
+    return rc;
+}
+
 uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::string & err)
 {
 	uint8_t rc = 0;

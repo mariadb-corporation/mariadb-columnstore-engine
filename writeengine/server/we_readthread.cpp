@@ -149,11 +149,16 @@ void DmlReadThread::operator()()
 					//cout << "fWeDMLprocessor " << fWeDMLprocessor << " is processing batchinsert ..." << endl;
                     break;
                 }
-	    case WE_SVR_BATCH_INSERT_BINARY:
+            case WE_SVR_BATCH_INSERT_BINARY:
 	        {
 	            rc = fWeDMLprocessor->processBatchInsertBinary(ibs, errMsg, PMId);
 	            break;
 	        }
+            case WE_SVR_GET_WRITTEN_LBIDS:
+            {
+                rc = fWeDMLprocessor->getWrittenLbids(ibs, errMsg, PMId);
+                break;
+            }
             case WE_SVR_BATCH_INSERT_END:
                 {
                     rc = fWeDMLprocessor->processBatchInsertHwm(ibs, errMsg);
@@ -383,7 +388,7 @@ void DmlReadThread::operator()()
 			obs << errMsg;
 		}
 
-        if ((msgId == WE_SVR_COMMIT_BATCH_AUTO_ON) || (msgId ==WE_SVR_BATCH_INSERT_END) || (msgId == WE_SVR_FETCH_DDL_LOGS))
+        if ((msgId == WE_SVR_COMMIT_BATCH_AUTO_ON) || (msgId ==WE_SVR_BATCH_INSERT_END) || (msgId == WE_SVR_FETCH_DDL_LOGS) || (msgId == WE_SVR_GET_WRITTEN_LBIDS))
         {
             obs += ibs;
             //cout << " sending back hwm info with ibs length " << endl;
