@@ -5285,6 +5285,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    }
 	    }
 
+	    //distribute config file
+	    distributeConfigFile("system");
+
 	    //Start new modules by starting up local Process-Monitor
 	    listPT = devicenetworklist.begin();
 	    for( ; listPT != devicenetworklist.end() ; listPT++)
@@ -5300,9 +5303,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    string remoteHostName = (*pt1).HostName;
 
 		    //send start service commands
-		    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
-		    system(cmd.c_str());
-		    log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
+//		    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
+//		    system(cmd.c_str());
+//		    log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
 
 		    // add to monitor list
 		    moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
@@ -5345,6 +5348,15 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    }
 			    }
 		    }
+	    }
+
+	    listPT = devicenetworklist.begin();
+	    for( ; listPT != devicenetworklist.end() ; listPT++)
+	    {
+		string moduleName = (*listPT).DeviceName;
+
+	  	processManager.configureModule(moduleName);
+		sleep(10);
 	    }
 
 	    //if amazon, delay to give time for ProcMon to start

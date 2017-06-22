@@ -2076,7 +2076,7 @@ int main(int argc, char *argv[])
 					system(cmd.c_str());
 			
 					if ( newModuleName != parentOAMModuleName) {		
-						//make module file in local/etc/"modulename"
+						//make module file in local/module
 						if( !makeModuleFile(newModuleName, parentOAMModuleName) )
 							cout << "makeModuleFile error" << endl;
 					}
@@ -3301,7 +3301,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-			    if ( !nonDistribute )
+/*			    if ( !nonDistribute )
 			    {
 				if ( password.empty() ) {
 					while(true)
@@ -3371,7 +3371,7 @@ int main(int argc, char *argv[])
 						cout << "MariaDB ColumnStore successfully started" << endl;
 				}
 			    }
-			    
+*/    
 			    //start MariaDB ColumnStore on local server
 			    cout << endl << "----- Starting MariaDB ColumnStore on local server -----" << endl << endl;
 			    cmd = installDir + "/bin/columnstore restart > /dev/null 2>&1";
@@ -3767,7 +3767,7 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 	//check and do the amazon credentials file
 	string fileName = HOME + "/.aws/credentials";
    	ifstream oldFile (fileName.c_str());
-    if (!oldFile)
+	if (!oldFile)
    		return allfound;
 
    	string cmd = "cp " + fileName + " " + installDir + "/local/etc/. > /dev/null 2>&1";
@@ -3951,7 +3951,7 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 				mount1 = "/mnt\\/tmp/";
 			else
 				if ( moduleType == "pm" )
-					mount1 = "/Calpont\\/data/";
+					mount1 = "/columnstore\\/data/";
 				else
 					return true;
 			break;
@@ -3960,28 +3960,7 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 		{
 			if ( moduleType == "pm" ) {
 				mount1 = "/mnt\\/tmp/";
-				mount2 = "/Calpont\\/data/";
-			}
-			else
-				return true;
-			break;
-		}
-		case (oam::INSTALL_COMBINE_DM_UM):	// combined #2 dm/um on a same server
-		{
-			if ( moduleType == "um" )
-				mount1 = "/mnt\\/tmp/";
-			else
-				if ( moduleType == "pm" )
-					mount1 = "/Calpont\\/data/";
-				else
-					return true;
-			break;
-		}
-		case (oam::INSTALL_COMBINE_PM_UM):	// combined #3 um/pm on a same server
-		{
-			if ( moduleType == "pm" ) {
-				mount1 = "/mnt\\/tmp/";
-				mount2 = "/Calpont\\/data/";
+				mount2 = "/columnstore\\/data/";
 			}
 			else
 				return true;
@@ -5002,8 +4981,8 @@ bool makeModuleFile(string moduleName, string parentOAMModuleName)
 	if ( moduleName == parentOAMModuleName)
 		fileName = installDir + "/local/module";
 	else
-		fileName = installDir + "/local/etc/" + moduleName + "/module";
-
+	    return true;
+	
 	unlink (fileName.c_str());
    	ofstream newFile (fileName.c_str());
 

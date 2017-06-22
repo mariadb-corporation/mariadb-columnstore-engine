@@ -168,6 +168,36 @@ expect {
 	"postConfigure" { send_user "DONE" }
 }
 send_user "\n"
+
+# start service
+if { $INSTALLTYPE == "initial" } {
+    send_user "\n"
+    send_user "Start columnstore service script             "
+    send " \n"
+    send date\n
+    send "ssh $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore start'\n"
+    set timeout 10
+    expect {
+	    "word: " { send "$PASSWORD\n" }
+	    "passphrase" { send "$PASSWORD\n" }
+    }
+    set timeout 60
+    # check return
+    expect {
+	    "No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	    "MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	    "Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	    "Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+	    "Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	    "Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	    "No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	    "Starting MariaDB" { send_user "DONE" }
+    }
+}
+
+send_user "\nInstallation Successfully Completed on '$MODULE'\n"
+exit 0
+
 sleep 10
 #
 if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "nonDistribute" } {

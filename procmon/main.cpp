@@ -166,20 +166,20 @@ int main(int argc, char **argv)
 	      MonitorConfig config;
 
 	      //get Distributed Install
-	      string DistributedInstall = "y";
+//	      string DistributedInstall = "y";
 
-	      try
-	      {
-		      oam.getSystemConfig("DistributedInstall", DistributedInstall);
-	      }
-	      catch (...) 
-	      {
-		      log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-	      }
+//	      try
+//	      {
+//		      oam.getSystemConfig("DistributedInstall", DistributedInstall);
+//	      }
+//	      catch (...) 
+//	      {
+//		      log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+//	      }
 
 	      //check for a non-distrubuted install setup
-	      if ( DistributedInstall == "n" )
-	      {
+//	      if ( DistributedInstall == "n" )
+//	      {
 		  //PMwithUM config 
 		  try {
 			  oam.getSystemConfig( "PMwithUM", PMwithUM);
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 		  log.writeLog(__LINE__, "restarting for a non-distrubuted install", LOG_TYPE_DEBUG);
 
 		  exit (0);
-	      }
+//	      }
 	}
 
 	//define entry if missing

@@ -565,7 +565,7 @@ static void startMgrProcessThread()
 	}
 
 	//send out moduleName to remote nodes on non-distrubuted install
-	if ( DistributedInstall == "n" )
+//	if ( DistributedInstall == "n" )
 	{
 	      int status = API_SUCCESS;
 	      int k = 0;
