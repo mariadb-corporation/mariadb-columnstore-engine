@@ -2772,6 +2772,10 @@ int main(int argc, char *argv[])
 
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
+	
+	    //skip interface with remote servers and perform install
+	    if ( !nonDistribute )
+	    {
 		//
 		// perform remote install of other servers in the system
 		//
@@ -2797,11 +2801,7 @@ int main(int argc, char *argv[])
 		}
 	
 		if ( install == "y" ) {
-	
-		    //skip interface with remote servers and perform install
-		    if ( !nonDistribute )
-		    {
-			  SystemSoftware systemsoftware;
+			SystemSoftware systemsoftware;
 		
 			try
 			{
@@ -3169,19 +3169,19 @@ int main(int argc, char *argv[])
 				cout << "  DONE" << endl;
 			}
 		    }
-		    else
-		    {
-		      	if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
-			{
-				cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
+	    }
+	    else
+	    {
+		if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+			( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
+		{
+			cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
 
-				// call the mysql setup scripts
-				mysqlSetup();
-				sleep(5);
-			}
-		    }
+			// call the mysql setup scripts
+			mysqlSetup();
+			sleep(5);
 		}
+	    }
 	}
 
 	//configure data redundancy
@@ -3265,6 +3265,11 @@ int main(int argc, char *argv[])
 		string start = "y";
 		cout << "System Installation is complete. If any part of the install failed," << endl;
 		cout << "the problem should be investigated and resolved before continuing." << endl << endl;
+
+		if ( nonDistribute )
+		    cout << "Non-Distrubuted Install: make sure all other modules have MariaDB ColumnStore" << endl;
+		    cout << "package installed and the associated service started."<< endl << endl;
+
 		while(true)
 		{
 			pcommand = callReadline("Would you like to startup the MariaDB ColumnStore System? [y,n] (y) > ");

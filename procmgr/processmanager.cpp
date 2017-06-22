@@ -618,11 +618,11 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							oam.dbrmctl("resume");
 							log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
-							processManager.restartProcessType("ExeMgr");
+//							processManager.restartProcessType("ExeMgr");
 
 							//setup MySQL Replication for started modules
-							log.writeLog(__LINE__, "Setup MySQL Replication for module being started", LOG_TYPE_DEBUG);
-							processManager.setMySQLReplication(startdevicenetworklist);
+//							log.writeLog(__LINE__, "Setup MySQL Replication for module being started", LOG_TYPE_DEBUG);
+//							processManager.setMySQLReplication(startdevicenetworklist);
 						}
 					}
 					else
@@ -4546,48 +4546,48 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    return API_FILE_OPEN_ERROR;
 	    }
 	    log.writeLog(__LINE__, "addModule - ColumnStore Package found:" + calpontPackage, LOG_TYPE_DEBUG);
+	
+	      //
+	      // Verify Host IP and Password
+	      //
+
+	      if ( password == "ssh" && amazon )
+	      {	// check if there is a root password stored
+		      string rpw = oam::UnassignedName;
+		      try
+		      {
+			      oam.getSystemConfig("rpw", rpw);
+		      }
+		      catch(...)
+		      {
+			      rpw = "mariadb1";
+		      }
+
+		      if (rpw != oam::UnassignedName)
+			      password = rpw;
+	      }
+
+	      listPT = devicenetworklist.begin();
+	      for( ; listPT != devicenetworklist.end() ; listPT++)
+	      {
+		      HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+		      string newHostName = (*pt1).HostName;
+		      if ( newHostName == oam::UnassignedName )
+			      continue;
+
+		      string newIPAddr = (*pt1).IPAddr;
+		      string cmd = installDir + "/bin/remote_command.sh " + newIPAddr + " " + password + " ls";
+		      log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
+		      int rtnCode = system(cmd.c_str());
+		      if (WEXITSTATUS(rtnCode) != 0) {
+			      log.writeLog(__LINE__, "addModule - ERROR: Remote login test failed, Invalid IP / Password " + newIPAddr, LOG_TYPE_ERROR);
+			      pthread_mutex_unlock(&THREAD_LOCK);
+			      return API_FAILURE;
+		      }
+		      log.writeLog(__LINE__, "addModule - Remote login test successful: " + newIPAddr, LOG_TYPE_DEBUG);
+	      }
 	}
 	
-	//
-	// Verify Host IP and Password
-	//
-
-	if ( password == "ssh" && amazon )
-	{	// check if there is a root password stored
-		string rpw = oam::UnassignedName;
-		try
-		{
-			oam.getSystemConfig("rpw", rpw);
-		}
-		catch(...)
-		{
-			rpw = "mariadb1";
-		}
-
-		if (rpw != oam::UnassignedName)
-			password = rpw;
-	}
-
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		string newHostName = (*pt1).HostName;
-		if ( newHostName == oam::UnassignedName )
-			continue;
-
-		string newIPAddr = (*pt1).IPAddr;
-		string cmd = installDir + "/bin/remote_command.sh " + newIPAddr + " " + password + " ls";
-		log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
-		int rtnCode = system(cmd.c_str());
-		if (WEXITSTATUS(rtnCode) != 0) {
-			log.writeLog(__LINE__, "addModule - ERROR: Remote login test failed, Invalid IP / Password " + newIPAddr, LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_FAILURE;
-		}
-		log.writeLog(__LINE__, "addModule - Remote login test successful: " + newIPAddr, LOG_TYPE_DEBUG);
-	}
-
 	//
 	//Get System Configuration file
 	//
@@ -5361,6 +5361,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string moduleName = (*listPT).DeviceName;
 
 	  	processManager.configureModule(moduleName);
+		sleep(10);
 	    }
 	}
 	
