@@ -56,10 +56,9 @@ if [ "x$has_um" = x ]; then
 	has_um=0
 fi
 
-user=root
+user=`whoami 2>/dev/null`
 SUDO=" "
-if [ "$USER" != "root" ]; then
-	user=$USER
+if [ $user != "root" ]; then
         SUDO="sudo "
 fi
 

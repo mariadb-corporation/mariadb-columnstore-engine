@@ -165,46 +165,30 @@ int main(int argc, char **argv)
 	      sleep(1);
 	      MonitorConfig config;
 
-	      //get Distributed Install
-//	      string DistributedInstall = "y";
+	      //PMwithUM config 
+	      try {
+		      oam.getSystemConfig( "PMwithUM", PMwithUM);
+	      }
+	      catch(...) {
+		      PMwithUM = "n";
+	      }
 
-//	      try
-//	      {
-//		      oam.getSystemConfig("DistributedInstall", DistributedInstall);
-//	      }
-//	      catch (...) 
-//	      {
-//		      log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-//	      }
+	      string modType = config.moduleType();
+	      if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+		  ( PMwithUM == "y") )
+		  modType = "um";
+		  
+	      //run the module install script
+	      string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /dev/null 2>&1";
+	      log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
+	      log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 
-	      //check for a non-distrubuted install setup
-//	      if ( DistributedInstall == "n" )
-//	      {
-		  //PMwithUM config 
-		  try {
-			  oam.getSystemConfig( "PMwithUM", PMwithUM);
-		  }
-		  catch(...) {
-			  PMwithUM = "n";
-		  }
+	      system(cmd.c_str());
 
-		  string modType = config.moduleType();
-		  if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-		      ( PMwithUM == "y") )
-		      modType = "um";
-		      
-		  //run the module install script
-		  string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /dev/null 2>&1";
-		  log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
-		  log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
+	      //exit to allow ProcMon to restart in a setup state
+	      log.writeLog(__LINE__, "restarting for a initial setup", LOG_TYPE_DEBUG);
 
-		  system(cmd.c_str());
-
-		  //exit to allow ProcMon to restart in a setup state
-		  log.writeLog(__LINE__, "restarting for a non-distrubuted install", LOG_TYPE_DEBUG);
-
-		  exit (0);
-//	      }
+	      exit (0);
 	}
 
 	//define entry if missing
@@ -529,7 +513,8 @@ int main(int argc, char **argv)
 		oam.getSystemStatus(systemstatus, false);
 	}
 	catch(...)
-	{}
+	{
+	}
 
 	// determine Standby OAM Module, if needed
 	if ( gOAMParentModuleFlag &&
