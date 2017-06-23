@@ -32,11 +32,7 @@ if { $IDIR != "" } {
 set env(COLUMNSTORE_INSTALL_DIR) $INSTALLDIR
 set PREFIX [file dirname $INSTALLDIR]
 set PREFIX [file dirname $PREFIX]
-
-exec whoami >/tmp/whoami.tmp
-set USERNAME [exec cat /tmp/whoami.tmp]
-exec rm -f /tmp/whoami.tmp
-
+set USERNAME $env(USER)
 set UNM [lindex $argv 10]
 if { $UNM != "" } {
 	set USERNAME $UNM
@@ -58,7 +54,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	send_user "Uninstall MariaDB Columnstore Package                       "
 	send " \n"
 	send date\n
-	send "ssh $USERNAME@$SERVER 'rm -f /etc/init.d/columnstore /etc/init.d/mysql-Columnstore $INSTALLDIR/releasenum >/dev/null 2>&1'\n"
+	send "ssh -v $USERNAME@$SERVER 'rm -f /etc/init.d/columnstore /etc/init.d/mysql-Columnstore $INSTALLDIR/releasenum >/dev/null 2>&1'\n"
 	set timeout 20
 	expect {
 		"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
@@ -74,11 +70,13 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 		"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
+                "Exit status 0" { send_user "DONE" }
 	}
 	set timeout 30
 	expect {
 		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 		"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
+                "Exit status 0" { send_user "DONE" }
 	}
 	send_user "\n"
 }
@@ -86,7 +84,6 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 if { $INSTALLTYPE == "uninstall" } { 
 	exit 0 
 }
-sleep 5
 
 if { $INSTALLTYPE == "initial" } { 
     # 
@@ -95,7 +92,7 @@ if { $INSTALLTYPE == "initial" } {
     send_user "Copy New MariaDB Columnstore Package to Module              "
     send " \n"
     send date\n
-    send "scp $CALPONTPKG $USERNAME@$SERVER:$CALPONTPKG\n"
+    send "scp -v $CALPONTPKG $USERNAME@$SERVER:$CALPONTPKG\n"
     set timeout 10
     expect {
 	    "word: " { send "$PASSWORD\n" }
@@ -103,8 +100,9 @@ if { $INSTALLTYPE == "initial" } {
     }
     set timeout 120
     expect {
+            "Exit status 0" { send_user "DONE" }
 	    "100%" 				{ send_user "DONE" }
-	    "scp:"  			{ send_user "ERROR\n" ; 
+	    "scp :"  			{ send_user "ERROR\n" ; 
 							    send_user "\n*** Installation ERROR\n" ; 
 							    exit 1 }
 	    "Permission denied, please try again"         { send_user "ERROR: Invalid password\n" ; exit 1 }
@@ -116,15 +114,13 @@ if { $INSTALLTYPE == "initial" } {
 	    timeout { send_user "ERROR: Timeout\n" ; exit 1 }
     }
     send_user "\n"
-    #sleep to make sure it's finished
-    sleep 5
     #
     # install package
     #
     send_user "Install MariaDB Columnstore Package on Module               "
     send " \n"
     send date\n
-    send "ssh $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG;cat $INSTALLDIR/releasenum'\n"
+    send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG;cat $INSTALLDIR/releasenum'\n"
     set timeout 10
     expect {
 	    "word: " { send "$PASSWORD\n" }
@@ -132,6 +128,7 @@ if { $INSTALLTYPE == "initial" } {
     }
     set timeout 120
     expect {
+            "Exit status 0" { send_user "DONE" }
 	    "release=" 		  	{ send_user "DONE" }
 	    "No such file" 		  { send_user "ERROR: Binary Install Failed, binary/releasenum not found\n" ; exit 1 }
 	    "Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
@@ -141,15 +138,13 @@ if { $INSTALLTYPE == "initial" } {
 	    "No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	    timeout { send_user "ERROR: Timeout\n" ; exit 1 }
     }
-    #sleep to give time for cat MariaDB Columnstore/releasenum to complete
-    sleep 5
 }
 
 send_user "\n"
 send_user "Run post-install script                         "
 send " \n"
 send date\n
-send "ssh $USERNAME@$SERVER '$INSTALLDIR/bin/post-install --installdir=$INSTALLDIR'\n"
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/post-install --installdir=$INSTALLDIR'\n"
 set timeout 10
 expect {
 	"word: " { send "$PASSWORD\n" }
@@ -158,6 +153,7 @@ expect {
 set timeout 60
 # check return
 expect {
+        "Exit status 0" { send_user "DONE" }
 	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
 	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
@@ -167,33 +163,32 @@ expect {
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	"postConfigure" { send_user "DONE" }
 }
-send_user "\n"
 
-# start service
-if { $INSTALLTYPE == "initial" } {
-    send_user "\n"
-    send_user "Start columnstore service script             "
-    send " \n"
-    send date\n
-    send "ssh $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore start'\n"
-    set timeout 10
-    expect {
-	    "word: " { send "$PASSWORD\n" }
-	    "passphrase" { send "$PASSWORD\n" }
-    }
-    set timeout 60
-    # check return
-    expect {
-	    "No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	    "MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
-	    "Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	    "Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	    "Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	    "Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	    "No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	    "Starting MariaDB" { send_user "DONE" }
-    }
+send_user "\n"
+send_user "Start ColumnStore service                       "
+send " \n"
+send date\n
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore start'\n"
+set timeout 10
+expect {
+	"word: " { send "$PASSWORD\n" }
+	"passphrase" { send "$PASSWORD\n" }
 }
+set timeout 60
+# check return
+expect {
+        "Exit status 0" { send_user "DONE" }
+	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	"Starting MariaDB" { send_user "DONE" }
+}
+send_user "\n"
 
 send_user "\nInstallation Successfully Completed on '$MODULE'\n"
 exit 0
+

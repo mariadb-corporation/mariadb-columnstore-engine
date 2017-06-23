@@ -283,13 +283,13 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
 
 EOD
-	else
-cat <<EOD
-The next step is:
+#	else
+#cat <<EOD
+#The next step is:
 
-$installdir/bin/postConfigure
+#$installdir/bin/postConfigure
 
-EOD
+#EOD
 	fi
         exit 0
 else
