@@ -136,13 +136,13 @@ fi
 # if um, run mysql install scripts
 if [ $module = "um" ]; then
 	echo "Run post-mysqld-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysqld-install.log 2>&1
 	if [ $? -ne 0 ]; then
 	    echo "ERROR: post-mysqld-install failed: check /tmp/post-mysqld-install.log"
 	    exit 1
 	fi
 	echo "Run post-mysql-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysql-install.log 2>&1
         if [ $? -ne 0 ]; then
             echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
             exit 1
@@ -159,6 +159,38 @@ if [ $? -ne 0 ]; then
 	fi
 fi
  
+#setup rc.local
+if [ $module = "um" ]; then
+	if [ $user = "root" ]; then
+		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
+		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
+		echo "done" >> /etc/rc.local
+	else
+		sudo chmod 666 /etc/rc.local
+                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
+                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
+                sudo echo "done" >> /etc/rc.local
+	fi
+else
+        if [ $user = "root" ]; then
+		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
+		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
+		echo "done" >> /etc/rc.local
+
+		echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
+		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
+		echo "done" >> /etc/rc.local
+	else
+		sudo chmod 666 /etc/rc.local
+                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
+                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
+                sudo echo "done" >> /etc/rc.local
+
+                sudo echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
+                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
+                sudo echo "done" >> /etc/rc.local
+	fi
+fi
 
 echo "!!!Module Installation Successfully Completed!!!"
 

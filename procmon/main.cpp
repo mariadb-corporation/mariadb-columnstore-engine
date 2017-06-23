@@ -172,14 +172,23 @@ int main(int argc, char **argv)
 	      catch(...) {
 		      PMwithUM = "n";
 	      }
-
+      
 	      string modType = config.moduleType();
 	      if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 		  ( PMwithUM == "y") )
 		  modType = "um";
-		  
+	      
+	      string MySQLPort = "3306";
+	      //MariaDB port
+	      try {
+		      oam.getSystemConfig( "MySQLPort", MySQLPort);
+	      }
+	      catch(...) {
+		      MySQLPort = "3306";
+	      }
+
 	      //run the module install script
-	      string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /dev/null 2>&1";
+	      string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " --port=" + MySQLPort + " > /tmp/module_installer.log 2>&1";
 	      log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
 	      log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 
