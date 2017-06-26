@@ -6897,6 +6897,9 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	        processManager.setSystemState(rtn);
 	}
 
+	//run command to build system table if they don't already exist
+	processManager.buildSystemTables("pm1");
+
 	// exit thread
 	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
 	startsystemthreadStatus = status;
