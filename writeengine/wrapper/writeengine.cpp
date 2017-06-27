@@ -4641,14 +4641,6 @@ StopWatch timer;
             uint64_t curValue = colValueList[(totalRow*i) + j];
             switch (colStructList[i].colType)
             {
-               case WriteEngine::WR_INT:
-                  tmp32 = curValue;
-                  ((int*)valArray)[j] = tmp32;
-                  break;
-               case WriteEngine::WR_UINT:
-                  tmp32 = curValue;
-                  ((uint32_t*)valArray)[j] = tmp32;
-                  break;
                case WriteEngine::WR_VARBINARY : // treat same as char for now
                case WriteEngine::WR_CHAR:
                case WriteEngine::WR_BLOB:
@@ -4664,47 +4656,40 @@ StopWatch timer;
                           ((uint16_t*)valArray)[j] = tmp16;
                           break;
                       case 3:
+                      case 4:
                           tmp32 = curValue;
                           ((uint32_t*)valArray)[j] = tmp32;
                           break;
-                      case 4:
-                          ((uint32_t*)valArray)[j] = curValue;
+                      case 5:
+                      case 6:
+                      case 7:
+                      case 8:
+                          ((uint64_t*)valArray)[j] = curValue;
                           break;
                   }
 
                   break;
+               case WriteEngine::WR_INT:
+               case WriteEngine::WR_UINT:
                case WriteEngine::WR_FLOAT:
                     tmp32 = curValue;
-                    memcpy(&((float*)valArray)[j], &tmp32, 4);
+                    ((uint32_t*)valArray)[j] = tmp32;
                     break;
+               case WriteEngine::WR_ULONGLONG:
+               case WriteEngine::WR_LONGLONG:
                case WriteEngine::WR_DOUBLE:
-                    memcpy(&((double*)valArray)[j], &curValue, 8);
+               case WriteEngine::WR_TOKEN:
+                    ((uint64_t*)valArray)[j] = curValue;
                     break;
                case WriteEngine::WR_BYTE:
-                    tmp8 = curValue;
-                    ((char*)valArray)[j] = tmp8;
-                    break;
                case WriteEngine::WR_UBYTE:
                     tmp8 = curValue;
                     ((uint8_t*)valArray)[j] = tmp8;
                     break;
                case WriteEngine::WR_SHORT:
-                    tmp16 = curValue;
-                    ((short*)valArray)[j] = tmp16;
-                    break;
                case WriteEngine::WR_USHORT:
-                    tmp32 = curValue;
+                    tmp16 = curValue;
                     ((uint16_t*)valArray)[j] = tmp16;
-                    break;
-               case WriteEngine::WR_LONGLONG:
-                    tmp32 = curValue;
-                    ((long long*)valArray)[j] = tmp32;
-                    break;
-               case WriteEngine::WR_ULONGLONG:
-                    ((uint64_t*)valArray)[j] = curValue;
-                    break;
-               case WriteEngine::WR_TOKEN:
-                    memcpy(&((Token*)valArray)[j], &curValue, 8);
                     break;
             }
         }

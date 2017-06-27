@@ -1620,13 +1620,13 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
                                 colValue = val8;
 								break;
 							case execplan::CalpontSystemCatalog::SMALLINT:
-                            case execplan::CalpontSystemCatalog::DATE:
                             case execplan::CalpontSystemCatalog::USMALLINT:
                                 bs >> val16;
 								if (val16 == 0)
 									valZero = true;
                                 colValue = val16;
 								break;
+                            case execplan::CalpontSystemCatalog::DATE:
 							case execplan::CalpontSystemCatalog::MEDINT:
 							case execplan::CalpontSystemCatalog::INT:
                             case execplan::CalpontSystemCatalog::UMEDINT:
