@@ -4997,18 +4997,11 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    PMwithUM = "n";
 	    }
 
-	    //check mysql port changes
-	    string MySQLPort;
-	    try {
-		    oam.getSystemConfig( "MySQLPort", MySQLPort);
-	    }
-	    catch(...)
-	    {}
-
-	    if ( MySQLPort.empty() || MySQLPort == "" || MySQLPort == oam::UnassignedName )
-		    MySQLPort = "3306";
-
 	    string version = systemsoftware.Version + "-" + systemsoftware.Release;
+
+	    string AmazonInstall = "0";
+	    if ( amazon )
+		  AmazonInstall = "1";
 
 	    //setup and push custom OS files
 	    listPT = devicenetworklist.begin();
@@ -5069,35 +5062,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    string binaryInstallDir = installDir;
 
 		    string installType = "initial";
-		    if ( DistributedInstall == "n" ) {
-			installType = "nonDistribute";
-			
-			//check of post-install file exist, which shows package is installed
-			string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " 'ls " + installDir + "/bin/post-install' > /tmp/install_check.log";
-			int rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) != 0) {
-			    log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-			}
-			
-			//check version that is installed
-			cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + password + " " + installDir + "/releasenum > /dev/null 2>&1";
-			rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) != 0) {
-			    log.writeLog(__LINE__, "addModule - ERROR: MariaDB ColumnStore not installed on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-			}
-			cmd = "diff " +  installDir + "/releasenum releasenum > /dev/null 2>&1";
-			rtnCode = system(cmd.c_str());
-			if (WEXITSTATUS(rtnCode) != 0) {
-			    log.writeLog(__LINE__, "addModule - ERROR: Local version of MariaDB ColumnStore doesn't match installed version on " + remoteModuleName + " / " + remoteHostName , LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-			}
-
-		    }
 
 		    //run installer on remote module
 		    if ( remoteModuleType == "um" ||
@@ -5107,7 +5071,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			    if ( packageType != "binary" ) {
 				    log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
-				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + " --nodeps none " + MySQLPort + " 1 > /tmp/user_installer.log";
+				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps none  1 > /tmp/user_installer.log";
 
 				    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -5152,7 +5116,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    string binservertype = oam.itoa(config.ServerInstallType());
 				    if ( PMwithUM == "y" )
 					    binservertype = "pmwithum";
-				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + "  " +  binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
 
 				    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5196,7 +5160,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			    if ( remoteModuleType == "pm" ) {
 				    if ( packageType != "binary" ) {
 					    log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + packageType + + " --nodeps 1 > /tmp/performance_installer.log";
+					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > /tmp/performance_installer.log";
 					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					    system(cmd.c_str());
@@ -5243,7 +5207,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    if ( PMwithUM == "y" )
 						    binservertype = "pmwithum";
 
-					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + " " + binservertype + " " + MySQLPort + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + installType + AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
 
 					    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5302,10 +5266,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    string remoteModuleIP = (*pt1).IPAddr;
 		    string remoteHostName = (*pt1).HostName;
 
-		    //send start service commands
-//		    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
-//		    system(cmd.c_str());
-//		    log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
 
 		    // add to monitor list
 		    moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));

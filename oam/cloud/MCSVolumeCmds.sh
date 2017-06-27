@@ -4,7 +4,11 @@
 #
 # 1. Amazon EC2
 
-prefix=/usr/local
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
+fi
+
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
 #check command
 if [ "$1" = "" ]; then
@@ -93,14 +97,14 @@ if [ "$1" = "createTag" ]; then
 fi
 
 
-test -f $prefix/mariadb/columnstore/post/functions && . $prefix/mariadb/columnstore/post/functions
+test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
 
 AWSCLI="aws ec2 "
 
-$prefix/mariadb/columnstore/bin/MCSgetCredentials.sh >/dev/null 2>&1 
+$COLUMNSTORE_INSTALL_DIR/MCSgetCredentials.sh >/dev/null 2>&1 
 
 #get Region
-Region=`$prefix/mariadb/columnstore/bin/MCSInstanceCmds.sh getRegion`
+Region=`$COLUMNSTORE_INSTALL_DIR/bin/MCSInstanceCmds.sh getRegion`
 
 checkInfostatus() {
 	#check if attached
@@ -153,21 +157,21 @@ checkInfostatus() {
 
 createvolume() {
 	# get zone
-	zone=`$prefix/mariadb/columnstore/bin/MCSInstanceCmds.sh getZone`
+	zone=`$COLUMNSTORE_INSTALL_DIR/bin/MCSInstanceCmds.sh getZone`
 
 	if [ $moduleType == "um" ]; then
 		# get type
-		volumeType=`$prefix/mariadb/columnstore/bin/getConfig Installation UMVolumeType`
+		volumeType=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMVolumeType`
 		if [ $volumeType == "io1" ]; then
 			# get IOPS
-			volumeIOPS=`$prefix/mariadb/columnstore/bin/getConfig Installation UMVolumeIOPS`
+			volumeIOPS=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMVolumeIOPS`
 		fi
 	else	# pm
 		# get type
-		volumeType=`$prefix/mariadb/columnstore/bin/getConfig Installation PMVolumeType`
+		volumeType=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation PMVolumeType`
 		if [ $volumeType == "io1" ]; then
 			# get IOPS
-			volumeIOPS=`$prefix/mariadb/columnstore/bin/getConfig Installation PMVolumeIOPS`
+			volumeIOPS=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation PMVolumeIOPS`
 		fi
 	fi
 
@@ -211,7 +215,7 @@ detachvolume() {
 			sleep 1
 		done
 		test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-		$prefix/mariadb/columnstore/bin/cplogger -w 100 "detachvolume failed: $STATUS"
+		$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "detachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
 	fi
@@ -221,8 +225,8 @@ detachvolume() {
 		exit 0
 	fi
 
-	test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-	$prefix/mariadb/columnstore/bin/cplogger -w 100 "detachvolume failed status: $STATUS"
+	test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
+	$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "detachvolume failed status: $STATUS"
 	echo $STATUS
 	exit 1
 }
@@ -245,8 +249,8 @@ attachvolume() {
 			((retries++))
 			sleep 1
 		done
-		test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-		$prefix/mariadb/columnstore/bin/cplogger -w 100 "attachvolume failed: $STATUS"
+		test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
+		$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "attachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
 	fi
@@ -256,8 +260,8 @@ attachvolume() {
 		exit 0
 	fi
 
-	test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-	$prefix/mariadb/columnstore/bin/cplogger -w 100 "attachvolume failed: $STATUS"
+	test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
+	$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "attachvolume failed: $STATUS"
 	echo $STATUS
 	exit 1
 }

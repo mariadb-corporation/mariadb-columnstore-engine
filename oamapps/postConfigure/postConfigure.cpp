@@ -484,7 +484,7 @@ int main(int argc, char *argv[])
 			  string answer = "y";
 
 			  while(true) {
-				cout << endl << "The Configured PM1 IP Address of " << PM1ipAdd << " does match any of the" << endl; 
+				cout << endl << "The Configured PM1 IP Address of " << PM1ipAdd << " does not match any of the" << endl; 
 				cout <<         "Server Ethernet IP addresses there were detected, do you want to continue?" << endl;
 				cout <<         "This is to make sure that you arent running postConfigure from a non-PM1 node." << endl;
 				prompt = "Enter 'y' to continue using Configured IP address [y,n] (y) > ";
@@ -2821,19 +2821,19 @@ int main(int argc, char *argv[])
 
 			if ( EEPackageType == "rpm" )
 			{
-				cout << "Performing an MariaDB ColumnStore System install using RPM packages" << endl; 
+				cout << "Performing a MariaDB ColumnStore System install using RPM packages" << endl; 
 				cout << "located in the " + HOME + " directory." << endl << endl;
 			}
 			else
 			{
 				if ( EEPackageType == "binary" )
 				{
-					cout << "Performing an MariaDB ColumnStore System install using a Binary package" << endl; 
+					cout << "Performing a MariaDB ColumnStore System install using a Binary package" << endl; 
 					cout << "located in the " + HOME + " directory." << endl << endl;
 				}
 				else
 				{
-					cout << "Performing an MariaDB ColumnStore System install using using DEB packages" << endl;
+					cout << "Performing a MariaDB ColumnStore System install using using DEB packages" << endl;
 					cout << "located in the " + HOME + " directory." << endl;
 				}
 			}
@@ -2911,12 +2911,10 @@ int main(int argc, char *argv[])
 				mysqlSetup();
 				sleep(5);
 			}
-
-			if ( mysqlpw != oam::UnassignedName || mysqlpw != " " )
-			{
-				mysqlpw = "'" + mysqlpw + "'";
-				pwprompt = "--password=" + mysqlpw;
-			}
+			
+			string AmazonInstall = "0";
+			if ( amazonInstall )
+			      AmazonInstall = "1";
 
 			ChildModuleList::iterator list1 = childmodulelist.begin();
 			for (; list1 != childmodulelist.end() ; list1++)
@@ -2949,7 +2947,7 @@ int main(int argc, char *argv[])
 						    temppwprompt = "none";
 
 					    //run remote installer script
-					    cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + temppwprompt + " " + mysqlPort + " " + remote_installer_debug + " " + debug_logfile;
+					    cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
 					    if ( thread_remote_installer ) {
 						    thr_data[thread_id].command = cmd;
@@ -3056,8 +3054,7 @@ int main(int argc, char *argv[])
 						    binservertype = "pmwithum";
 
 					    cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
-						    remoteModuleIP + " " + password + " " + columnstorePackage + " " + remoteModuleType +
-						    " " + installType + " " + binservertype + " " + mysqlPort + " " + remote_installer_debug +
+						    remoteModuleIP + " " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " + remote_installer_debug +
 						    " " + installDir + " " + debug_logfile;
 					    
 					    if ( thread_remote_installer ) {
@@ -3095,7 +3092,7 @@ int main(int argc, char *argv[])
 
 					    if ( EEPackageType != "binary" ) {
 						    //run remote installer script
-						    cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+						    cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
 						    if ( thread_remote_installer ) {
 							    thr_data[thread_id].command = cmd;
@@ -3125,8 +3122,8 @@ int main(int argc, char *argv[])
 						    if ( pmwithum )
 							    binservertype = "pmwithum";
 						    cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
-							    " " + password + " " + columnstorePackage + " " + remoteModuleType + " " + installType + " " +
-							    binservertype + " " + mysqlPort + " " + remote_installer_debug + " " + installDir + " " +
+							    " " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " +
+							    remote_installer_debug + " " + installDir + " " +
 							    debug_logfile;
 
 						    if ( thread_remote_installer ) {

@@ -16,16 +16,17 @@ set SERVER [lindex $argv 1]
 set PASSWORD [lindex $argv 2]
 set VERSION [lindex $argv 3]
 set INSTALLTYPE [lindex $argv 4]
-set PKGTYPE [lindex $argv 5]
-set NODEPS [lindex $argv 6]
-set DEBUG [lindex $argv 7]
+set AMAZONINSTALL [lindex $argv 5]
+set PKGTYPE [lindex $argv 6]
+set NODEPS [lindex $argv 7]
+set DEBUG [lindex $argv 8]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 8]
+set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
 set USERNAME "root"
-set UNM [lindex $argv 13]
+set UNM [lindex $argv 10]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
@@ -205,6 +206,32 @@ expect {
 	"Starting MariaDB" { send_user "DONE" }
 }
 send_user "\n"
+
+if { $AMAZONINSTALL == "1" } { 
+	#
+	# copy over customer OS files
+	#
+	send_user "Copy MariaDB Columnstore OS files to Module                 "
+	send " \n"
+	send date\n
+	send "scp -v -r $INSTALLDIR/local/etc/*  $USERNAME@$SERVER:$INSTALLDIR/local\n"
+	set timeout 10
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+	}
+	set timeout 60
+	expect {
+                "Exit status 0" { send_user "DONE" }
+		-re {[$#] } 		  		  { send_user "DONE" }
+		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+		"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	}
+}
+
 
 send_user "\nInstallation Successfully Completed on '$MODULE'\n"
 exit 0
