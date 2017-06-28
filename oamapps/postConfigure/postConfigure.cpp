@@ -3982,7 +3982,7 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 	if ( lines.begin() == lines.end())
 		return true;
 	
-	string fileName = "/etc/rc.local";
+	string fileName = "/tmp/rc.local";
 
    	ofstream newFile (fileName.c_str());	
 
@@ -3993,7 +3993,14 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 	newFile.close();
 	
 	close(fd);
+	
+	if (rootUser)
+	    system("cat /tmp/rc.local >> /etc/rc.local > /dev/null");
+	else
+	    system("sudo cat /tmp/rc.local >> /etc/rc.local > /dev/null");
 
+	unlink(fileName.c_str());
+	  
 	return true;
 }
 
