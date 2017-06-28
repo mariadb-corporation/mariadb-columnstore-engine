@@ -214,7 +214,7 @@ if { $AMAZONINSTALL == "1" } {
 	send_user "Copy MariaDB Columnstore OS files to Module                 "
 	send " \n"
 	send date\n
-	send "scp -v -r $INSTALLDIR/local/etc/*  $USERNAME@$SERVER:$INSTALLDIR/local\n"
+	send "scp -v -r $INSTALLDIR/local/etc  $USERNAME@$SERVER:$INSTALLDIR/local\n"
 	set timeout 10
 	expect {
 		"word: " { send "$PASSWORD\n" }

@@ -52,9 +52,17 @@ else
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 fi
 
+PMwithUM=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation PMwithUM`
+ServerTypeInstall=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation ServerTypeInstall`
+
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	cp $COLUMNSTORE_INSTALL_DIR/local/etc/credentials $HOME/.aws/. > /dev/null 2>&1
+	if [ $user = "root" ]; then
+		sed -i -e s/#runuser/runuser/g /etc/rc.local
+	else
+                sudo sed -i -e s/#runuser/runuser/g /etc/rc.local
+	fi
 
 	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
@@ -66,6 +74,7 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 				cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
 			else
                                 sudo touch /etc/fstab
+				sudo chmod 666 /etc/fstab
                                 sudo rm -f /etc/fstab.columnstoreSave
                                 sudo cp /etc/fstab /etc/fstab.columnstoreSave
                                 sudo cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
@@ -129,12 +138,13 @@ if [ $MySQLRep = "y" ]; then
 fi
 
 if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
+	mysqlPort=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation MySQLPort`
 	echo "Run Mysql Port update on my.cnf on Module"
 	$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > /tmp/mycnfUpgrade_port.log 2>&1
 fi
 
 # if um, run mysql install scripts
-if [ $module = "um" ]; then
+if [ $module = "um" ] || ( [ $module = "pm" ] && [ PMwithUM = "y" ] ) || [ $ServerTypeInstall = "2" ]; then
 	echo "Run post-mysqld-install"
 	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysqld-install.log 2>&1
 	if [ $? -ne 0 ]; then

@@ -974,7 +974,7 @@ int main(int argc, char *argv[])
   	}
    	catch(...)
    	{
-    	cloud  = oam::UnassignedName;
+	    cloud  = oam::UnassignedName;
 	}
 
 	if ( cloud == "disable" )
@@ -992,20 +992,20 @@ int main(int argc, char *argv[])
 				pcommand = callReadline(prompt.c_str());
 
 				if (pcommand) {
-			    	if (strlen(pcommand) > 0) enable = pcommand;
-				  		callFree(pcommand);
-			
-			    	if (enable == "n") {
-						amazonInstall = false;
+				      if (strlen(pcommand) > 0) enable = pcommand;
+						      callFree(pcommand);
+			      
+				      if (enable == "n") {
+					    amazonInstall = false;
 
-						try {
-				  		sysConfig->setConfig(InstallSection, "Cloud", "disable");
-						}
-				  		catch(...)
-						{};
+					    try {
+						sysConfig->setConfig(InstallSection, "Cloud", "disable");
+					    }
+					    catch(...)
+					    {};
 
-						break;
-			    	}	
+					    break;
+				      }	
 				}	
 
 				if ( enable != "y" )
@@ -1032,11 +1032,11 @@ int main(int argc, char *argv[])
 		if ( amazonInstall )
 		{
 			string cmd = installDir + "/bin/MCSgetCredentials.sh >/dev/null 2>&1";
-         	int rtnCode = system(cmd.c_str());
-            	if ( WEXITSTATUS(rtnCode) != 0 ) {
-            	cout << endl << "Error: No IAM Profile with Security Certificates used or AWS CLI Certificate file configured" << endl;
-				cout << "Check Amazon Install Documenation for additional information, exiting..." << endl;
-                exit (1);
+			int rtnCode = system(cmd.c_str());
+			if ( WEXITSTATUS(rtnCode) != 0 ) {
+			      cout << endl << "Error: No IAM Profile with Security Certificates used or AWS CLI Certificate file configured" << endl;
+			      cout << "Check Amazon Install Documenation for additional information, exiting..." << endl;
+			      exit (1);
 			}
 		}
 			
@@ -1044,6 +1044,9 @@ int main(int argc, char *argv[])
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
 		}
+		
+		// setup to start on reboot
+		system("sudo sed -i -e s/#runuser/runuser/g /etc/rc.local >/dev/null 2>&1");
 	}
 	
 	if ( pmwithum )
@@ -3707,7 +3710,6 @@ bool checkSaveConfigFile()
 
 // /etc OS Files to be updated
 string files[] = {
-	"rc.local",
 	" "
 };
 
@@ -3721,14 +3723,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		if ( files[i] == " ")
 			//end of list
 			break;
-
-		//create or update date on file to make sure on exist
-		if ( files[i] == "rc.local") {
-			string cmd = "touch " + installDir + "/local/etc/" + parentOAMModuleName + "/rc.local.calpont > /dev/null 2>&1"; 
-			if ( !rootUser )
-				cmd = "sudo touch " + installDir + "/local/etc/" + parentOAMModuleName + "/rc.local.calpont > /dev/null 2>&1"; 
-			system(cmd.c_str());
-		}
 
 		string fileName = "/etc/" + files[i];
 
@@ -3934,8 +3928,6 @@ bool uncommentCalpontXml( string entry)
  */
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 {
-	string fileName = installDir + "/local/etc/" + moduleName + "/rc.local.calpont";
-
 	vector <string> lines;
 
 	string mount1;
@@ -3987,13 +3979,10 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 		}
 	}
 
-	unlink (fileName.c_str());
-
-	if ( lines.begin() == lines.end()) {
-		string cmd = "touch " + fileName;
-		system(cmd.c_str());
+	if ( lines.begin() == lines.end())
 		return true;
-	}
+	
+	string fileName = "/etc/rc.local";
 
    	ofstream newFile (fileName.c_str());	
 

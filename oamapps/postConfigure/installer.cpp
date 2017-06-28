@@ -824,7 +824,6 @@ int main(int argc, char *argv[])
 
 // /etc OS Files to be updated
 string files[] = {
-	"rc.local",
 	" "
 };
 
@@ -839,12 +838,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 		if ( files[i] == " ")
 			//end of list
 			break;
-
-		//create or update date on file to make sure on exist
-		if ( files[i] == "rc.local") {
-			cmd = "touch " + installDir + "/local/etc/" + parentOAMModuleName + "/rc.local.calpont"; 
-			system(cmd.c_str());
-		}
 
 		string fileName = "/etc/" + files[i];
 
@@ -1012,7 +1005,6 @@ bool updateProcessConfig(int serverTypeInstall)
 bool makeRClocal(string moduleName, int IserverTypeInstall)
 {
 	string cmd;
-	string fileName = installDir + "/local/etc/" + moduleName + "/rc.local.calpont";
 
 	string moduleType = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
 
@@ -1088,13 +1080,10 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 		}
 	}
 
-	unlink (fileName.c_str());
-
-	if ( lines.begin() == lines.end()) {
-		cmd = "touch " + fileName + " >/dev/null 2>&1";
-		system(cmd.c_str());
+	if ( lines.begin() == lines.end())
 		return true;
-	}
+
+	string fileName = "etc/rc.local";
 
    	ofstream newFile (fileName.c_str());	
 	

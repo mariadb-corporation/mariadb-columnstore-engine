@@ -97,7 +97,6 @@ int main(int argc, char **argv)
 	MonitorLog log;
 	MonitorConfig config;
 	ProcessMonitor aMonitor(config, log);
-	Config* sysConfig = Config::makeConfig();
 
 	log.writeLog(__LINE__, " ");
 	log.writeLog(__LINE__, "**********Process Monitor Started**********");
@@ -142,6 +141,7 @@ int main(int argc, char **argv)
 
 	//check if this is a fresh install, meaning the Columnstore.xml file is not setup
 	//if so, wait for messages from Procmgr to start us up
+	Config* sysConfig = Config::makeConfig();
 	string exemgrIpadd = sysConfig->getConfig("ExeMgr1", "IPAddr");
 	if ( exemgrIpadd == "0.0.0.0" )
 	{
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 			count++;
 			if (count > 10 ) {
 				count = 0;
-				log.writeLog(__LINE__, "Waiting for ProcMgr to start us up", LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "Waiting for ProcMgr to start up", LOG_TYPE_DEBUG);
 			}
 			sleep(1);
 		    }
@@ -174,21 +174,9 @@ int main(int argc, char **argv)
 	      }
       
 	      string modType = config.moduleType();
-	      if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-		  ( PMwithUM == "y") )
-		  modType = "um";
 	      
-	      string MySQLPort = "3306";
-	      //MariaDB port
-	      try {
-		      oam.getSystemConfig( "MySQLPort", MySQLPort);
-	      }
-	      catch(...) {
-		      MySQLPort = "3306";
-	      }
-
 	      //run the module install script
-	      string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " --port=" + MySQLPort + " > /tmp/module_installer.log 2>&1";
+	      string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /tmp/module_installer.log 2>&1";
 	      log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
 	      log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 
@@ -198,6 +186,54 @@ int main(int argc, char **argv)
 	      log.writeLog(__LINE__, "restarting for a initial setup", LOG_TYPE_DEBUG);
 
 	      exit (0);
+	}
+
+	// if amazon cloud, check and update Instance IP Addresses and volumes
+	try {
+		oam.getSystemConfig( "Cloud", cloud);
+		log.writeLog(__LINE__, "Cloud setting = " + cloud, LOG_TYPE_DEBUG);
+	}
+	catch(...) {}
+
+	if ( cloud == "amazon-ec2" ) {
+		if(!aMonitor.amazonIPCheck()) {
+			log.writeLog(__LINE__, "ERROR: amazonIPCheck failed, exiting", LOG_TYPE_CRITICAL);
+			sleep(2);
+			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+			system(cmd.c_str());
+			exit(1);
+		}
+	}
+
+	//get gluster config
+	try {
+		oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+	}
+	catch(...)
+	{
+		GlusterConfig = "n";
+	}
+
+	if ( GlusterConfig == "y" ) {
+		system("mount -a > /dev/null 2>&1");
+	}
+
+	//hdfs / hadoop config 
+	string DBRootStorageType;
+	try {
+		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+	}
+	catch(...) {}
+
+	if ( DBRootStorageType == "hdfs" )
+		HDFS = true;
+
+	//PMwithUM config 
+	try {
+		oam.getSystemConfig( "PMwithUM", PMwithUM);
+	}
+	catch(...) {
+		PMwithUM = "n";
 	}
 
 	//define entry if missing
@@ -231,7 +267,6 @@ int main(int argc, char **argv)
 
 	int moduleStatus = oam::ACTIVE;
 
-	string DBRootStorageType;
 	//check if currently configured as Parent OAM Module on startup
 	if ( gOAMParentModuleFlag ) {
 		try {
@@ -410,52 +445,6 @@ int main(int argc, char **argv)
 		cerr << endl << "OAMParentModuleName == oam::UnassignedName, exiting " << endl;
 		log.writeLog(__LINE__, "OAMParentModuleName == oam::UnassignedName, restarting");
 		exit (1);
-	}
-
-	// if amazon cloud, check and update Instance IP Addresses and volumes
-	try {
-		oam.getSystemConfig( "Cloud", cloud);
-	}
-	catch(...) {}
-
-	if ( cloud == "amazon-ec2" ) {
-		if(!aMonitor.amazonIPCheck()) {
-			log.writeLog(__LINE__, "ERROR: amazonIPCheck failed, exiting", LOG_TYPE_CRITICAL);
-			sleep(2);
-			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
-			system(cmd.c_str());
-			exit(1);
-		}
-	}
-
-	//get gluster config
-	try {
-		oam.getSystemConfig( "GlusterConfig", GlusterConfig);
-	}
-	catch(...)
-	{
-		GlusterConfig = "n";
-	}
-
-	if ( GlusterConfig == "y" ) {
-		system("mount -a > /dev/null 2>&1");
-	}
-
-	//hdfs / hadoop config 
-	try {
-		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
-	}
-	catch(...) {}
-
-	if ( DBRootStorageType == "hdfs" )
-		HDFS = true;
-
-	//PMwithUM config 
-	try {
-		oam.getSystemConfig( "PMwithUM", PMwithUM);
-	}
-	catch(...) {
-		PMwithUM = "n";
 	}
 
 	//check if module is in a DISABLED state

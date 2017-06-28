@@ -62,17 +62,16 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 								"word: " { send "$PASSWORD\n" }
 								"passphrase" { send "$PASSWORD\n" }
 							}
-		}
+        			expect {
+                		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+                		"MariaDB Columnstore uninstall completed"       { send_user "DONE" }
+                		"Exit status 0" { send_user "DONE" }
+        			}
+		}	
 		"word: " { send "$PASSWORD\n" }
 		"passphrase" { send "$PASSWORD\n" }
 		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-		"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
-                "Exit status 0" { send_user "DONE" }
-	}
-	set timeout 30
-	expect {
-		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 		"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
                 "Exit status 0" { send_user "DONE" }
 	}
@@ -151,15 +150,14 @@ expect {
 set timeout 60
 # check return
 expect {
-        "Exit status 0" { send_user "DONE" }
 	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; abort }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	"postConfigure" { send_user "DONE" }
+	"columnstore start" { send_user "DONE" }
 }
 
 send_user "\n"
@@ -194,7 +192,7 @@ if { $AMAZONINSTALL == "1" } {
 	send_user "Copy MariaDB Columnstore OS files to Module                 "
 	send " \n"
 	send date\n
-	send "scp -v -r $INSTALLDIR/local/etc/*  $USERNAME@$SERVER:$INSTALLDIR/local\n"
+	send "scp -v -r $INSTALLDIR/local/etc  $USERNAME@$SERVER:$INSTALLDIR/local\n"
 	set timeout 10
 	expect {
 		"word: " { send "$PASSWORD\n" }
