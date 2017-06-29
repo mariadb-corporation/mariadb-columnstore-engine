@@ -44,6 +44,54 @@ log_user $DEBUG
 spawn -noecho /bin/bash
 #
 
+# check and see if remote server has ssh keys setup, set PASSWORD if so
+send_user " "
+send "ssh -v $USERNAME@$SERVER 'time'\n"
+set timeout 20
+expect {
+	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
+	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+	"authenticity" { send "yes\n" 
+				expect {
+					"word: " { send "$PASSWORD\n" }
+					"passphrase" { send "$PASSWORD\n" }
+				}
+	}
+	"sys" { set PASSWORD "ssh" }
+	"word: " { send "$PASSWORD\n" }
+	"passphrase" { send "$PASSWORD\n" }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
+	"Exit status 0" { send_user "DONE" }
+}
+send_user "\n"
+
+send_user "Stop ColumnStore service                       "
+send date\n
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
+set timeout 10
+expect {
+	"word: " { send "$PASSWORD\n" }
+	"passphrase" { send "$PASSWORD\n" }
+}
+set timeout 60
+# check return
+expect {
+        "Exit status 0" { send_user "DONE" }
+	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+}
+send_user "\n"
+
+
 if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	#
 	# remove MariaDB Columnstore files
@@ -52,23 +100,15 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	send " \n"
 	send date\n
 	send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/pre-uninstall --installdir=$INSTALLDIR >/dev/null 2>&1'\n"
+	set timeout 10
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 	set timeout 20
 	expect {
 		"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
 		"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1}
-		"authenticity" { send "yes\n" 
-							expect {
-								"word: " { send "$PASSWORD\n" }
-								"passphrase" { send "$PASSWORD\n" }
-							}
-        			expect {
-                		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-                		"MariaDB Columnstore uninstall completed"       { send_user "DONE" }
-                		"Exit status 0" { send_user "DONE" }
-        			}
-		}	
-		"word: " { send "$PASSWORD\n" }
-		"passphrase" { send "$PASSWORD\n" }
 		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 		"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
@@ -162,7 +202,7 @@ send_user "\n"
 send_user "Start ColumnStore service                       "
 send " \n"
 send date\n
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore start'\n"
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
 set timeout 10
 expect {
 	"word: " { send "$PASSWORD\n" }

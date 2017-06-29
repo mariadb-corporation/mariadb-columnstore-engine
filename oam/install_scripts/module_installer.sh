@@ -144,7 +144,7 @@ if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
 fi
 
 # if um, run mysql install scripts
-if [ $module = "um" ] || ( [ $module = "pm" ] && [ PMwithUM = "y" ] ) || [ $ServerTypeInstall = "2" ]; then
+if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $ServerTypeInstall = "2" ]; then
 	echo "Run post-mysqld-install"
 	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysqld-install.log 2>&1
 	if [ $? -ne 0 ]; then

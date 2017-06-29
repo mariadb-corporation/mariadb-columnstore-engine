@@ -84,9 +84,30 @@ expect {
 	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
         "Exit status 0" { send_user "DONE" }
 }
+
 send_user "\n"
-#BUG 5749 - SAS: didn't work on their system until I added the sleep 60
-#sleep 60
+
+send_user "Stop ColumnStore service                       "
+send date\n
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
+set timeout 10
+expect {
+	"word: " { send "$PASSWORD\n" }
+	"passphrase" { send "$PASSWORD\n" }
+}
+set timeout 60
+# check return
+expect {
+        "Exit status 0" { send_user "DONE" }
+	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+}
+send_user "\n"
 
 if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	# 
@@ -186,7 +207,7 @@ send_user "\n"
 send_user "Start ColumnStore service                       "
 send " \n"
 send date\n
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore start'\n"
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
 set timeout 10
 expect {
 	"word: " { send "$PASSWORD\n" }
