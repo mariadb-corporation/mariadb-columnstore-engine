@@ -1729,17 +1729,28 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string entry;
 			msg >> entry;
 
-			//check if entry already exist 
+			//check if entry already exist in /etc/fstab
 			string cmd = "grep " + entry + " /etc/fstab /dev/null 2>&1";
 			int status = system(cmd.c_str());
-			if (WEXITSTATUS(status) == 0 )
-				break;
+			if (WEXITSTATUS(status) != 0 )
+			{
+			    cmd = "echo " + entry + " >> /etc/fstab";
+			    system(cmd.c_str());
 
-			cmd = "echo " + entry + " >> /etc/fstab";
-			system(cmd.c_str());
+			    log.writeLog(__LINE__, "Add line entry to /etc/fstab : " + entry);
+			}
+			
+			//check if entry already exist in ../local/etc/pm1/fstab
+			cmd = "grep " + entry + " " + startup::StartUp::installDir() + "/local/etc/pm1/fstab /dev/null 2>&1";
+			status = system(cmd.c_str());
+			if (WEXITSTATUS(status) != 0 )
+			{
+			    cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+			    system(cmd.c_str());
 
-			log.writeLog(__LINE__, "Add line entry to /etc/fstab : " + entry);
-
+			    log.writeLog(__LINE__, "Add line entry to ../local/etc/pm1/fstab : " + entry);
+			}
+			
 			//mkdir on entry directory
 			string::size_type pos = entry.find(" ",0);
 			string::size_type pos1 = entry.find(" ",pos+1);

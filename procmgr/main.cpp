@@ -569,7 +569,7 @@ static void startMgrProcessThread()
 	{
 	      int status = API_SUCCESS;
 	      int k = 0;
-	      for( ; k < 1200 ; k++ )
+	      for( ; k < 180 ; k++ )
 	      {
 		      if ( startsystemthreadStop ) {
 			      processManager.setSystemState(oam::MAN_OFFLINE);
@@ -608,7 +608,7 @@ static void startMgrProcessThread()
 		      sleep(1);
 	      }
 
-	      if ( k == 1200 || status == API_FAILURE) {
+	      if ( k == 180 || status == API_FAILURE) {
 		      // system didn't successfull restart
 		      processManager.setSystemState(oam::FAILED);
 		      // exit thread
@@ -705,7 +705,7 @@ static void startMgrProcessThread()
 	//now wait until all procmons are up and validate rpms on each module
 	int status = API_SUCCESS;
 	int k = 0;
-	for( ; k < 1200 ; k++ )
+	for( ; k < 180 ; k++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -822,7 +822,7 @@ static void startMgrProcessThread()
 		}
 	}
 
-	if ( k == 1200 || status == API_FAILURE) {
+	if ( k == 180 || status == API_FAILURE) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 		// exit thread

@@ -7,8 +7,7 @@
 # Argument 2 - Remote Server Host Name or IP address
 # Argument 3 - User Password of remote server
 # Argument 4 - Package name being installed
-# Argument 5 - Module type?
-# Argument 6 - Install Type, "initial", "upgrade", "uninstall", "nonDistribute"
+# Argument 6 - Install Type, "initial", "upgrade", "uninstall"
 # Argument 7 - Server type?
 # Argument 8 - Debug flag 1 for on, 0 for off
 # Argument 9 - install dir (optional)
@@ -52,7 +51,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 	send_user "Uninstall MariaDB Columnstore Package                       "
 	send " \n"
 	send date\n
-	send "ssh -v $USERNAME@$SERVER 'rm -f /etc/init.d/columnstore /etc/init.d/mysql-Columnstore $INSTALLDIR/releasenum >/dev/null 2>&1'\n"
+	send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/pre-uninstall --installdir=$INSTALLDIR >/dev/null 2>&1'\n"
 	set timeout 20
 	expect {
 		"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
@@ -117,7 +116,7 @@ if { $INSTALLTYPE == "initial" } {
     send_user "Install MariaDB Columnstore Package on Module               "
     send " \n"
     send date\n
-    send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG;cat $INSTALLDIR/releasenum'\n"
+    send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG'\n"
     set timeout 10
     expect {
 	    "word: " { send "$PASSWORD\n" }
@@ -126,7 +125,6 @@ if { $INSTALLTYPE == "initial" } {
     set timeout 120
     expect {
             "Exit status 0" { send_user "DONE" }
-	    "release=" 		  	{ send_user "DONE" }
 	    "No such file" 		  { send_user "ERROR: Binary Install Failed, binary/releasenum not found\n" ; exit 1 }
 	    "Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	    "Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
@@ -151,7 +149,7 @@ set timeout 60
 # check return
 expect {
 	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; abort }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }

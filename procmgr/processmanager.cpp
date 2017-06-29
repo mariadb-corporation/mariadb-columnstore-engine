@@ -4527,6 +4527,13 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			homedir = p;
 	}
 
+	//clear out the known_host file, sometimes causes a failure on amazon during addModule
+	if ( amazon )
+	{
+	    string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+	    system(cmd.c_str());
+	}
+	  
 	if ( packageType == "rpm")
 		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
 	else
@@ -5061,8 +5068,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    //default
 		    string binaryInstallDir = installDir;
 
-		    string installType = "initial";
-
 		    //run installer on remote module
 		    if ( remoteModuleType == "um" ||
 			    ( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
@@ -5071,7 +5076,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			    if ( packageType != "binary" ) {
 				    log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
-				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps none  1 > /tmp/user_installer.log";
+				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps none  1 > /tmp/" + remoteModuleName + "_user_installer.log";
 
 				    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -5116,7 +5121,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    string binservertype = oam.itoa(config.ServerInstallType());
 				    if ( PMwithUM == "y" )
 					    binservertype = "pmwithum";
-				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + remoteModuleType + " " + installType + AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " +  AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/" + remoteModuleName + "_binary_installer.log";
 
 				    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5160,7 +5165,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			    if ( remoteModuleType == "pm" ) {
 				    if ( packageType != "binary" ) {
 					    log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > /tmp/performance_installer.log";
+					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > /tmp/" + remoteModuleName + "_performance_installer.log";
 					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					    system(cmd.c_str());
@@ -5207,7 +5212,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    if ( PMwithUM == "y" )
 						    binservertype = "pmwithum";
 
-					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " " + installType + AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/binary_installer.log";
+					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " + AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/" + remoteModuleName + "_binary_installer.log";
 
 					    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5320,10 +5325,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	    }
 
 	    //if amazon, delay to give time for ProcMon to start
-	    if (amazon) {
-		    log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
-		    sleep(30);
-	    }
+//	    if (amazon) {
+//		    log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
+//		    sleep(30);
+//	    }
 	}
 	else
 	{
@@ -5636,6 +5641,20 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 		return API_FAILURE;
 	}
 
+	//clear out the known_host file, sometimes causes a failure on amazon during addModule
+	if ( amazon )
+	{
+	    string homedir = "/root";
+	    if (!rootUser) {
+		    char* p= getenv("HOME");
+		    if (p && *p)
+			    homedir = p;
+	    }
+
+	    string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+	    system(cmd.c_str());
+	}
+	  
 	pthread_mutex_unlock(&THREAD_LOCK);
 
 	//check if any removed modules was Standby OAM or Active OAM
