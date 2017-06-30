@@ -5074,9 +5074,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 			    ( remoteModuleType == "pm" && PMwithUM == "y" ) ) {
 			    //run remote installer script
 			    if ( packageType != "binary" ) {
+				    string logFile = "/tmp/" + remoteModuleName + "_user_installer.log";
 				    log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
-				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps none  1 > /tmp/" + remoteModuleName + "_user_installer.log";
+				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps none  1 > " + logFile;
 
 				    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -5086,12 +5087,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    int rtnCode = system(cmd.c_str());
 					    if (WEXITSTATUS(rtnCode) != 0) {
 						    // if log file size is zero, retry
-						    ifstream in("/tmp/user_installer.log");
+						    ifstream in(logFile.c_str());
 						    in.seekg(0, std::ios::end);
 						    int size = in.tellg();
 						    if ( size == 0 )
 						    {
-							    log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
 							    sleep(5);
 							    continue;
 						    }
@@ -5107,21 +5108,23 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 				    if ( !passed )
 				    {
-					    log.writeLog(__LINE__, "addModule - ERROR: user_installer.sh failed", LOG_TYPE_ERROR);
+					    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + "  failed", LOG_TYPE_ERROR);
 					    pthread_mutex_unlock(&THREAD_LOCK);
-					    system("/bin/cp -f /tmp/user_installer.log /tmp/user_installer.log.failed");
+					    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+					    system(cmd.c_str());
 					    processManager.setModuleState(remoteModuleName, oam::FAILED);
 					    return API_FAILURE;
 				    }
 			    }
 			    else
 			    {	// do a binary package install
+				    string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
 				    log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
 				    string binservertype = oam.itoa(config.ServerInstallType());
 				    if ( PMwithUM == "y" )
 					    binservertype = "pmwithum";
-				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " +  AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/" + remoteModuleName + "_binary_installer.log";
+				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " +  AmazonInstall + " 1 " + binaryInstallDir + " > " + logFile; 
 
 				    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5131,12 +5134,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    int rtnCode = system(cmd.c_str());
 					    if (WEXITSTATUS(rtnCode) != 0) {
 						    // if log file size is zero, retry
-						    ifstream in("/tmp/binary_installer.log");
+						    ifstream in(logFile.c_str());
 						    in.seekg(0, std::ios::end);
 						    int size = in.tellg();
 						    if ( size == 0 )
 						    {
-							    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+							    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
 							    sleep(5);
 							    continue;
 						    }
@@ -5152,9 +5155,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 				    if ( !passed )
 				    {
-					    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
+					    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
 					    pthread_mutex_unlock(&THREAD_LOCK);
-					    system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
+					    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+					    system(cmd.c_str());
 					    processManager.setModuleState(remoteModuleName, oam::FAILED);
 					    return API_FAILURE;
 				    }
@@ -5164,8 +5168,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    {
 			    if ( remoteModuleType == "pm" ) {
 				    if ( packageType != "binary" ) {
+					    string logFile = "/tmp/" + remoteModuleName + "_performance_installer.log";
 					    log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > /tmp/" + remoteModuleName + "_performance_installer.log";
+					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > " + logFile; 
 					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					    system(cmd.c_str());
@@ -5176,12 +5181,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 						    int rtnCode = system(cmd.c_str());
 						    if (WEXITSTATUS(rtnCode) != 0) {
 							    // if log file size is zero, retry
-							    ifstream in("/tmp/performance_installer.log");
+							    ifstream in(logFile.c_str());
 							    in.seekg(0, std::ios::end);
 							    int size = in.tellg();
 							    if ( size == 0 )
 							    {
-								    log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
 								    sleep(5);
 								    continue;
 							    }
@@ -5197,22 +5202,24 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	    
 					    if ( !passed )
 					    {
-						    log.writeLog(__LINE__, "addModule - ERROR: performance_installer.sh failed", LOG_TYPE_ERROR);
+						    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
 						    pthread_mutex_unlock(&THREAD_LOCK);
-						    system("/bin/cp -f /tmp/performance_installer.log /tmp/performance_installer.log.failed");
+						    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+						    system(cmd.c_str());
 						    processManager.setModuleState(remoteModuleName, oam::FAILED);
 						    return API_FAILURE;
 					    }
 				    }
 				    else
 				    {	// do a binary package install
+					    string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
 					    log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
 					    string binservertype = oam.itoa(config.ServerInstallType());
 					    if ( PMwithUM == "y" )
 						    binservertype = "pmwithum";
 
-					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " + AmazonInstall + " 1 " + binaryInstallDir + " > /tmp/" + remoteModuleName + "_binary_installer.log";
+					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " + AmazonInstall + " 1 " + binaryInstallDir + " > " + logFile; 
 
 					    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
@@ -5222,12 +5229,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 						    int rtnCode = system(cmd.c_str());
 						    if (WEXITSTATUS(rtnCode) != 0) {
 							    // if log file size is zero, retry
-							    ifstream in("/tmp/binary_installer.log");
+							    ifstream in(logFile.c_str());
 							    in.seekg(0, std::ios::end);
 							    int size = in.tellg();
 							    if ( size == 0 )
 							    {
-								    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed, retry", LOG_TYPE_DEBUG);
+								    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
 								    sleep(5);
 								    continue;
 							    }
@@ -5243,9 +5250,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	    
 					    if ( !passed )
 					    {
-						    log.writeLog(__LINE__, "addModule - ERROR: binary_installer.sh failed", LOG_TYPE_ERROR);
+						    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
 						    pthread_mutex_unlock(&THREAD_LOCK);
-						    system("/bin/cp -f /tmp/binary_installer.log /tmp/binary_installer.log.failed");
+						    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+						    system(cmd.c_str());
 						    processManager.setModuleState(remoteModuleName, oam::FAILED);
 						    return API_FAILURE;
 					    }
