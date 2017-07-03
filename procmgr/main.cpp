@@ -502,8 +502,6 @@ static void startMgrProcessThread()
 
 	log.writeLog(__LINE__, "startMgrProcessThread launched", LOG_TYPE_DEBUG);
 
-//	processManager.setSystemState(oam::MAN_INIT);
-
 	//get calpont software version and release
 	SystemSoftware systemsoftware;
 	string softwareVersion;
@@ -564,8 +562,31 @@ static void startMgrProcessThread()
                 log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
 	}
 
-	//send out moduleName to remote nodes on non-distrubuted install
-//	if ( DistributedInstall == "n" )
+	//if non-distrubuted install, send out a start service just to make sure Columnstore is runing on remote nodes
+	//note this only works for systems with ssh-keys
+	if ( DistributedInstall == "n" )
+	{
+	      for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+	      {
+		      int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+		      if( moduleCount == 0)
+			      continue;
+
+		      DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+		      for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+		      {
+			    HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
+			    for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
+			    {
+				    //run remote command script
+				    string cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " ssh '" + startup::StartUp::installDir() + "/bin/columnstore restart' 0";
+				    system(cmd.c_str());
+			    }
+		      }
+	      }
+	}
+	
+	//send out moduleName to remote nodes, this will be used to startup new installed nodes
 	{
 	      int status = API_SUCCESS;
 	      int k = 0;
@@ -702,7 +723,7 @@ static void startMgrProcessThread()
 		//distribute config file
 		processManager.distributeConfigFile("system");
 
-	//now wait until all procmons are up and validate rpms on each module
+	//now wait until all procmons are ACTIVE and validate rpms on each module
 	int status = API_SUCCESS;
 	int k = 0;
 	for( ; k < 180 ; k++ )
