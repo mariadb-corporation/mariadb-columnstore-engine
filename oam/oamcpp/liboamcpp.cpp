@@ -2771,6 +2771,8 @@ namespace oam
 		// Get Server Type Install ID
 	
 		serverTypeInstall = atoi(sysConfig->getConfig("Installation", "ServerTypeInstall").c_str());
+		
+		sysConfig;
 	}
 	catch (...) {}
 
@@ -8602,36 +8604,47 @@ namespace oam
 		writeLog("updateFstab called: " + device + ":" + dbrootID, LOG_TYPE_DEBUG );
 
 		//check if entry already exist
-        int user;
-        user = getuid();
+		int user;
+		user = getuid();
+
+		string entry;
+		if (user == 0)
+			entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+		else
+			entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto,user 0 0";
 
 		string cmd;
 		if (user == 0)
 			cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
 		else
-            cmd = "sudo grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+			cmd = "sudo grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
 
 		int status = system(cmd.c_str());
-		if (WEXITSTATUS(status) == 0 )
-			return "";
+		if (WEXITSTATUS(status) != 0 )
+		{
+		      //update /etc/fstab with mount
 
-		//update /etc/fstab with mount
-		string entry;
+		      //update local fstab
+		      if (user == 0)
+			      cmd = "echo " + entry + " >> /etc/fstab";
+		      else
+			      cmd = "sudo echo " + entry + " >> /etc/fstab";
+
+		      system(cmd.c_str());
+		}
+
 		if (user == 0)
-			entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto 0 0";
+			cmd = "grep /data" + dbrootID + " " + InstallDir + "/local/etc/pm1/fstab > /dev/null 2>&1";
 		else
-            entry = device + " " + InstallDir + "/data" + dbrootID + " ext2 noatime,nodiratime,noauto,user 0 0";
+			cmd = "sudo grep /data" + dbrootID + " " + InstallDir + "/local/etc/pm1/fstab > /dev/null 2>&1";
 
-		//update local fstab
-        if (user == 0)
-			cmd = "echo " + entry + " >> /etc/fstab";
-        else
-			cmd = "sudo echo " + entry + " >> /etc/fstab";
-		system(cmd.c_str());
-
-		//use from addmodule later
-		cmd = "touch " + InstallDir + "/local/etc/pm1/fstab;echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
-		system(cmd.c_str());
+		status = system(cmd.c_str());
+		if (WEXITSTATUS(status) != 0 )
+		{
+		    //use from addmodule later
+		    cmd = "touch " + InstallDir + "/local/etc/pm1/fstab;echo " + entry + " >> " + InstallDir + "/local/etc/pm1/fstab";
+		    system(cmd.c_str());
+		}
 
 		return entry;
 	}

@@ -4,7 +4,12 @@
 #
 # 1. Amazon EC2
 
-prefix=/usr/local
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
+fi
+
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
+
 
 #check command
 if [ "$1" = "" ]; then
@@ -87,9 +92,9 @@ if [ "$1" = "deassignElasticIP" ]; then
 fi
 
 
-$prefix/mariadb/columnstore/bin/MCSgetCredentials.sh >/dev/null 2>&1
+$COLUMNSTORE_INSTALL_DIR/bin/MCSgetCredentials.sh >/dev/null 2>&1
 
-test -f $prefix//mariadb/columnstore/post/functions && . $prefix//mariadb/columnstore/post/functions
+test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
 
 #default instance to null
 instance=""

@@ -57,6 +57,7 @@ bool processInitComplete = false;
 bool rootUser = true;
 string USER = "root";
 string PMwithUM = "n";
+bool startProcMon = false;
 
 //extern std::string gOAMParentModuleName;
 extern bool gOAMParentModuleFlag;
@@ -130,9 +131,67 @@ int main(int argc, char **argv)
 
     	setlocale(LC_ALL, systemLang.c_str());
 
+	// create message thread
+	pthread_t MessageThread;
+	int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*)) &messageThread, &config);
+	if ( ret != 0 ) {
+		log.writeLog(__LINE__, "pthread_create failed, exiting..., return code = " + oam.itoa(ret), LOG_TYPE_CRITICAL);
+		exit (1);
+	}
+
+	//check if this is a fresh install, meaning the Columnstore.xml file is not setup
+	//if so, wait for messages from Procmgr to start us up
+	Config* sysConfig = Config::makeConfig();
+	string exemgrIpadd = sysConfig->getConfig("ExeMgr1", "IPAddr");
+	if ( exemgrIpadd == "0.0.0.0" )
+	{
+	      int count = 0;
+	      while(true)
+	      {
+		    if ( startProcMon )
+			break;
+		    else
+		    {
+			count++;
+			if (count > 10 ) {
+				count = 0;
+				log.writeLog(__LINE__, "Waiting for ProcMgr to start up", LOG_TYPE_DEBUG);
+			}
+			sleep(1);
+		    }
+	      }
+	      
+	      //re-read local system info with updated Columnstore.xml
+	      sleep(1);
+	      MonitorConfig config;
+
+	      //PMwithUM config 
+	      try {
+		      oam.getSystemConfig( "PMwithUM", PMwithUM);
+	      }
+	      catch(...) {
+		      PMwithUM = "n";
+	      }
+      
+	      string modType = config.moduleType();
+	      
+	      //run the module install script
+	      string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /tmp/module_installer.log 2>&1";
+	      log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
+	      log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
+
+	      system(cmd.c_str());
+
+	      //exit to allow ProcMon to restart in a setup state
+	      log.writeLog(__LINE__, "restarting for a initial setup", LOG_TYPE_DEBUG);
+
+	      exit (0);
+	}
+
 	// if amazon cloud, check and update Instance IP Addresses and volumes
 	try {
 		oam.getSystemConfig( "Cloud", cloud);
+		log.writeLog(__LINE__, "Cloud setting = " + cloud, LOG_TYPE_DEBUG);
 	}
 	catch(...) {}
 
@@ -178,7 +237,6 @@ int main(int argc, char **argv)
 	}
 
 	//define entry if missing
-	Config* sysConfig = Config::makeConfig();
 	if ( gOAMParentModuleFlag )
 	{
 		string PrimaryUMModuleName;
@@ -199,12 +257,6 @@ int main(int argc, char **argv)
 			log.writeLog(__LINE__, "ProcMon: Starting as NON-ACTIVE Parent", LOG_TYPE_DEBUG);
 	}
 
-	// create message thread
-	pthread_t MessageThread;
-	int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*)) &messageThread, &config);
-	if ( ret != 0 )
-		log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
-
 	//create and mount data directories
 	aMonitor.createDataDirs(cloud);
 
@@ -217,6 +269,11 @@ int main(int argc, char **argv)
 
 	//check if currently configured as Parent OAM Module on startup
 	if ( gOAMParentModuleFlag ) {
+		try {
+			oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+		}
+		catch(...) {}
+
 		if ( ( config.OAMStandbyName() != oam::UnassignedName ) &&
 			DBRootStorageType != "internal" ) {
 			//try for 20 minutes checking if the standby node is up
@@ -377,15 +434,16 @@ int main(int argc, char **argv)
 			}
 			catch(...)
 			{
-				log.writeLog(__LINE__, "wating for good return from getModuleStatus", LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "waiting for good return from getModuleStatus", LOG_TYPE_DEBUG);
 				sleep (1);
 			}
 		}
 	}
 
+	// this will occur on non-distributed installs the first time ProcMon runs
 	if ( config.OAMParentName() == oam::UnassignedName ) {
 		cerr << endl << "OAMParentModuleName == oam::UnassignedName, exiting " << endl;
-		log.writeLog(__LINE__, "OAMParentModuleName == oam::UnassignedName, exiting", LOG_TYPE_CRITICAL);
+		log.writeLog(__LINE__, "OAMParentModuleName == oam::UnassignedName, restarting");
 		exit (1);
 	}
 
@@ -453,7 +511,8 @@ int main(int argc, char **argv)
 		oam.getSystemStatus(systemstatus, false);
 	}
 	catch(...)
-	{}
+	{
+	}
 
 	// determine Standby OAM Module, if needed
 	if ( gOAMParentModuleFlag &&

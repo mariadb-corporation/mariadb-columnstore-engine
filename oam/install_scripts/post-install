@@ -225,8 +225,7 @@ else
 	$SUDO mkdir /var/lock/subsys > /dev/null 2>&1
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
-	$SUDO chmod 644 /etc/fstab	
-
+	$SUDO chmod 666 /etc/fstab
 fi
 
 # install Columnstore Log Rotate File
@@ -278,16 +277,31 @@ if [ -z "$hadoop" ]; then
 cat <<EOD
 The next steps are:
 
+If installing on a pm1 node:
+
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
+
+If installing on a non-pm1 using the non-distrubuted option:
+
+export COLUMNSTORE_INSTALL_DIR=$installdir
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+$installdir/bin/columnstore start
 
 EOD
 	else
 cat <<EOD
 The next step is:
 
+If installing on a pm1 node:
+
 $installdir/bin/postConfigure
+
+If installing on a non-pm1 using the non-distrubuted option:
+
+$installdir/bin/columnstore start
+
 
 EOD
 	fi
@@ -309,16 +323,32 @@ cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
+If installing on a pm1 node:
+
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure -i $installdir
 
+If installing on a non-pm1 using the non-distrubuted option:
+
+export COLUMNSTORE_INSTALL_DIR=$installdir
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+$installdir/bin/columnstore start
+
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
+
+If installing on a pm1 node:
 
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 $installdir/bin/postConfigure -i $installdir
+
+If installing on a non-pm1 using the non-distrubuted option:
+
+export COLUMNSTORE_INSTALL_DIR=$installdir
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+$installdir/bin/columnstore start
 
 EOD
 		else
@@ -329,9 +359,20 @@ If you are intending to install MariaDB Columnstore over Hadoop, the next steps 
 . $installdir/bin/setenv-hdfs-20
 $installdir/bin/postConfigure
 
+If installing on a non-pm1 using the non-distrubuted option:
+
+. $installdir/bin/setenv-hdfs-20
+$installdir/bin/columnstore start
+
 If you are intending to install MariaDB Columnstore without Hadoop, the next step is:
 
+If installing on a pm1 node:
+
 $installdir/bin/postConfigure
+
+If installing on a non-pm1 using the non-distrubuted option:
+
+$installdir/bin/columnstore start
 
 EOD
 		fi
@@ -348,6 +389,8 @@ cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
+If installing on a pm1 node:
+
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib:$libpath
 . $installdir/bin/setenv-hdfs-12
@@ -355,8 +398,11 @@ $installdir/bin/postConfigure -i $installdir
 
 If you are intending to install MariaDB Columnstore without Hadoop, the next steps are:
 
+If installing on a pm1 node:
+
 export COLUMNSTORE_INSTALL_DIR=$installdir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+. $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure -i $installdir
 
 EOD
@@ -365,12 +411,25 @@ cat <<EOD
 
 If you are intending to install MariaDB Columnstore over Hadoop, the next steps are:
 
+If installing on a pm1 node:
+
 . $installdir/bin/setenv-hdfs-12
 $installdir/bin/postConfigure
 
+If installing on a non-pm1 using the non-distrubuted option:
+
+. $installdir/bin/setenv-hdfs-12
+$installdir/bin/columnstore start
+
 If you are intending to install MariaDB Columnstore without Hadoop, the next step is:
 
+If installing on a pm1 node:
+
 $installdir/bin/postConfigure
+
+If installing on a non-pm1 using the non-distrubuted option:
+
+$installdir/bin/columnstore start
 
 EOD
 			fi

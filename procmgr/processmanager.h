@@ -286,7 +286,7 @@ public:
      /**
      *@brief Stop all processes on the specified module
      */
-    int stopModule(std::string target, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout = 240 );
+    int stopModule(std::string target, messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout = 60 );
 
     /**
      *@brief power off the specified module
@@ -414,6 +414,11 @@ public:
      *@brief Add Module
      */
 	int addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool manualFlag = true);
+
+    /**
+     *@brief Configure Module
+     */
+	int configureModule(std::string moduleName);
 
     /**
      *@brief Reconfigure Module

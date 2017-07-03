@@ -399,6 +399,11 @@ public:
 	int  buildSystemTables();
 
     /**
+     *@brief  configure Module fucntionality
+     */
+	int configureModule(std::string configureModuleName);
+
+    /**
      *@brief  reconfigure Module fucntionality
      */
 	int reconfigureModule(std::string reconfigureModuleName);

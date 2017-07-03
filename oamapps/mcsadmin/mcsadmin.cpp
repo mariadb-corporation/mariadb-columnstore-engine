@@ -5067,12 +5067,14 @@ int processCommand(string* arguments)
 			string cloud = oam::UnassignedName;
 			string GlusterStorageType;
 			string AmazonVPCNextPrivateIP;
+			string DistributedInstall = "y";
 			try {
 				oam.getSystemConfig("Cloud", cloud);
 				oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 				oam.getSystemConfig("GlusterConfig", GlusterConfig);
 				oam.getSystemConfig("GlusterCopies", GlusterCopies);
 				oam.getSystemConfig("GlusterStorageType", GlusterStorageType);
+				oam.getSystemConfig("DistributedInstall", DistributedInstall);
 			}
 			catch(...) {}
 
@@ -5107,15 +5109,20 @@ int processCommand(string* arguments)
 				moduleType = arguments[1];
 				moduleCount = atoi(arguments[2].c_str());
 				hostArg = 3;
-				if (arguments[4] != "")
-					password = arguments[4];
-				else
-				{
-					cout << endl;
-					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
-					password = dataPrompt(prompt);
-				}
 
+				//check for a non-distrubuted install setup, dont need password
+				if ( DistributedInstall == "y" )
+				{
+				    if (arguments[4] != "")
+					    password = arguments[4];
+				    else
+				    {
+					    cout << endl;
+					    string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+					    password = dataPrompt(prompt);
+				    }
+				}
+				
 				if (arguments[5] != "")
 					dbrootPerPM = atoi(arguments[5].c_str());
 			}
@@ -5133,15 +5140,20 @@ int processCommand(string* arguments)
 				moduleType = arguments[1].substr(0,MAX_MODULE_TYPE_SIZE);
 				moduleCount = 1;
 				hostArg = 2;
-				if (arguments[3] != "")
-					password = arguments[3];
-				else
-				{
-					cout << endl;
-					string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
-					password = dataPrompt(prompt);
-				}
 
+				//check for a non-distrubuted install setup, dont need password
+				if ( DistributedInstall == "y" )
+				{
+				    if (arguments[3] != "")
+					    password = arguments[3];
+				    else
+				    {
+					    cout << endl;
+					    string prompt = "Enter the 'User' Password or 'ssh' if configured with ssh-keys";
+					    password = dataPrompt(prompt);
+				    }
+				}
+				
 				if (arguments[4] != "")
 					dbrootPerPM = atoi(arguments[4].c_str());
 			}

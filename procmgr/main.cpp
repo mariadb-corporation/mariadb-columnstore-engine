@@ -552,6 +552,72 @@ static void startMgrProcessThread()
 		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
 	}
 
+	//get Distributed Install
+	string DistributedInstall = "y";
+
+	try
+        {
+		oam.getSystemConfig("DistributedInstall", DistributedInstall);
+        }
+        catch (...) 
+	{
+                log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+	}
+
+	//send out moduleName to remote nodes on non-distrubuted install
+//	if ( DistributedInstall == "n" )
+	{
+	      int status = API_SUCCESS;
+	      int k = 0;
+	      for( ; k < 180 ; k++ )
+	      {
+		      if ( startsystemthreadStop ) {
+			      processManager.setSystemState(oam::MAN_OFFLINE);
+	      
+			      // exit thread
+			      log.writeLog(__LINE__, "startMgrProcessThread Exit with a stop system flag", LOG_TYPE_DEBUG);
+			      pthread_exit(0);
+		      }
+
+		      status = API_SUCCESS;
+		      for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+		      {
+			      int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+			      if( moduleCount == 0)
+				      continue;
+
+			      DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+			      for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+			      {
+				      string moduleName = (*pt).DeviceName;
+				      if ( (*pt).DisableState == oam::MANDISABLEDSTATE ||
+						      (*pt).DisableState == oam::AUTODISABLEDSTATE )
+					      continue;
+
+				      int ret = processManager.configureModule(moduleName);
+				      if ( ret != API_SUCCESS )
+					  status = ret;
+			      }
+		      }
+
+		      //get out of loop if all modules updated
+		      if( status == API_SUCCESS )
+			      break;
+
+		      //retry after sleeping for a bit
+		      sleep(1);
+	      }
+
+	      if ( k == 180 || status == API_FAILURE) {
+		      // system didn't successfull restart
+		      processManager.setSystemState(oam::FAILED);
+		      // exit thread
+		      log.writeLog(__LINE__, "startMgrProcessThread Exit with a failure, not all ProcMons running", LOG_TYPE_CRITICAL);
+		      log.writeLog(__LINE__, "startMgrProcessThread Exit - failure", LOG_TYPE_DEBUG);
+		      pthread_exit(0);
+	      }
+	}
+	
 	//wait until all modules are up after a system reboot
 	int i = 0;
 	for( ; i < 100 ; i++ )
@@ -639,7 +705,7 @@ static void startMgrProcessThread()
 	//now wait until all procmons are up and validate rpms on each module
 	int status = API_SUCCESS;
 	int k = 0;
-	for( ; k < 1200 ; k++ )
+	for( ; k < 180 ; k++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -756,7 +822,7 @@ static void startMgrProcessThread()
 		}
 	}
 
-	if ( k == 1200 || status == API_FAILURE) {
+	if ( k == 180 || status == API_FAILURE) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 		// exit thread
