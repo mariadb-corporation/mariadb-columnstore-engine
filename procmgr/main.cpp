@@ -575,6 +575,10 @@ static void startMgrProcessThread()
 		      DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
 		      for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
 		      {
+			    //skip OAM Parent module
+			    if ( (*pt).DeviceName == config.moduleName() )
+				    continue;
+
 			    HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 			    for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
 			    {
@@ -590,7 +594,7 @@ static void startMgrProcessThread()
 	{
 	      int status = API_SUCCESS;
 	      int k = 0;
-	      for( ; k < 180 ; k++ )
+	      for( ; k < 30 ; k++ )
 	      {
 		      if ( startsystemthreadStop ) {
 			      processManager.setSystemState(oam::MAN_OFFLINE);
@@ -611,6 +615,11 @@ static void startMgrProcessThread()
 			      for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
 			      {
 				      string moduleName = (*pt).DeviceName;
+
+				      //skip OAM Parent module
+				      if ( (*pt).DeviceName == config.moduleName() )
+					  continue;
+
 				      if ( (*pt).DisableState == oam::MANDISABLEDSTATE ||
 						      (*pt).DisableState == oam::AUTODISABLEDSTATE )
 					      continue;
@@ -629,7 +638,7 @@ static void startMgrProcessThread()
 		      sleep(1);
 	      }
 
-	      if ( k == 180 || status == API_FAILURE) {
+	      if ( k == 30 || status == API_FAILURE) {
 		      // system didn't successfull restart
 		      processManager.setSystemState(oam::FAILED);
 		      // exit thread
@@ -641,7 +650,7 @@ static void startMgrProcessThread()
 	
 	//wait until all modules are up after a system reboot
 	int i = 0;
-	for( ; i < 100 ; i++ )
+	for( ; i < 60 ; i++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -707,7 +716,7 @@ static void startMgrProcessThread()
 			break;
 	}
 
-	if ( i == 100 ) {
+	if ( i == 60 ) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 
@@ -726,7 +735,7 @@ static void startMgrProcessThread()
 	//now wait until all procmons are ACTIVE and validate rpms on each module
 	int status = API_SUCCESS;
 	int k = 0;
-	for( ; k < 180 ; k++ )
+	for( ; k < 60 ; k++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -802,6 +811,10 @@ static void startMgrProcessThread()
 					continue;
 				}
 
+				//skip OAM Parent module
+				if ( moduleName == config.moduleName() )
+					continue;
+
 				//ProcMon ACTIVE, validate the software release and version of that module
 				ByteStream msg;
 				ByteStream::byte requestID = GETSOFTWAREINFO;
@@ -814,7 +827,7 @@ static void startMgrProcessThread()
 				if ( localSoftwareInfo != moduleSoftwareInfo ) {
 					// module not running on same Calpont Software build as this local Director
 					// alarm and fail the module
-					log.writeLog(__LINE__, "Software Info mismatch : " + moduleName + "/" + localSoftwareInfo + "/" + moduleSoftwareInfo, LOG_TYPE_ERROR);	
+					log.writeLog(__LINE__, "Software Version mismatch : " + moduleName + "/" + localSoftwareInfo + "/" + moduleSoftwareInfo, LOG_TYPE_CRITICAL);	
 
 					aManager.sendAlarmReport(moduleName.c_str(), INVALID_SW_VERSION, SET);
 					processManager.setModuleState(moduleName, oam::FAILED);
@@ -843,7 +856,7 @@ static void startMgrProcessThread()
 		}
 	}
 
-	if ( k == 180 || status == API_FAILURE) {
+	if ( k == 60 || status == API_FAILURE) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 		// exit thread
