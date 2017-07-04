@@ -313,12 +313,12 @@ public:
     */
    int copyVB(IDBDataFile* pSource, const BRM::VER_t txnD, const OID oid, std::vector<uint32_t>& fboList,
                std::vector<BRM::LBIDRange>& rangeList);
-protected:
-
    /**
     * @brief close column file
     */
    EXPORT virtual void closeColumnFile(Column& column) const;
+
+protected:
 
    /**
     * @brief populate readBuf with data in block #lbid
