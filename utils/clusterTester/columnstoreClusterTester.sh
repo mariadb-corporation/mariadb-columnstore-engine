@@ -62,9 +62,10 @@ helpPrint () {
     echo  "	OS version" 
     echo  "	Locale settings" 
     echo  "	Firewall settings"
-    echo  "     Date/time settings"
+    echo  "	Date/time settings"
+    echo  "	MariaDB port 3306 availability"
     echo  "	Dependent packages installed"
-    echo  "     For non-root user install - test permissions on /tmp and /dev/shm"
+    echo  "	For non-root user install - test permissions on /tmp and /dev/shm"
     echo ""
     echo  "Usage: $0 [options]" 
     echo "OPTIONS:"
@@ -1018,6 +1019,40 @@ checkPackages()
   fi
 }
 
+checkMySQLPort()
+{
+  # MySQL Port Usage check
+  #
+  echo ""
+  echo "** Run MariaDB Port Usage check - port 3306 shouldn't be in-use"
+  echo ""
+  
+  pass=true
+  `netstat -na | grep -e ":3306 " | grep LISTEN > /dev/null 2>&1`
+  if [ "$?" -eq 0 ]; then
+    echo "${bold}Failed${normal}, Local Node - MariaDB port 3306 is being used. Recommend stopping the process that is using that port"
+    pass=false
+  else
+    echo "Local Node - MariaDB port 3306 is not in-use"
+  fi
+
+  if [ "$IPADDRESSES" != "" ]; then
+    for ipadd in "${NODE_IPADDRESS[@]}"; do
+      `./remote_command.sh $ipadd $PASSWORD "netstat -na | grep -e ":3306 " | grep LISTEN > /dev/null 2>&1" 1 > /tmp/remote_command_check 2>&1`
+      if [ "$?" -eq 0 ]; then
+	echo "${bold}Failed${normal}, $ipadd MariaDB port 3306 is being used. Recommend stopping the process that is using that port"
+	pass=false
+      else
+	echo "$ipadd MariaDB port 3306 is not in-use"
+      fi
+    done
+  fi
+  
+  if ! $pass; then
+    checkContinue
+  fi
+}
+
 echo ""  
 echo "*** This is the MariaDB Columnstore Cluster System test tool ***"
 echo ""
@@ -1035,6 +1070,7 @@ if [ "$IPADDRESSES" != "" ]; then
   checkPorts
   checkTime
 fi
+checkMySQLPort
 checkPackages
 
 if [ $REPORTPASS == true ] ; then
