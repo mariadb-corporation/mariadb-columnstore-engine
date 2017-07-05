@@ -303,6 +303,20 @@ public:
                                bool isAutoCommitOn = false,
                                OID tableOid = 0,
                                bool isFirstBatchPm = false);
+
+   EXPORT int insertColumnRecsBinary(const TxnID& txnid,
+                               ColStructList& colStructList,
+                               std::vector<uint64_t>& colValueList,
+                               DctnryStructList& dctnryStructList,
+                               DictStrList& dictStrList,
+                               std::vector<boost::shared_ptr<DBRootExtentTracker> > & dbRootExtentTrackers,
+                               RBMetaWriter* fRBMetaWriter,
+                               bool bFirstExtentOnThisPM,
+                               bool insertSelect = false,
+                               bool isAutoCommitOn = false,
+                               OID tableOid = 0,
+                               bool isFirstBatchPm = false);
+
    
    /**
     * @brief Insert values into systables
@@ -646,6 +660,11 @@ private:
                        ColValueList& newColValueList, const int32_t tableOid,
 					   bool useTmpSuffix, bool versioning = true);
 
+    int writeColumnRecBinary(const TxnID& txnid, const ColStructList& colStructList,
+                       std::vector<uint64_t>& colValueList,
+                       RID* rowIdArray, const ColStructList& newColStructList,
+                       const int32_t tableOid,
+                       bool useTmpSuffix, bool versioning = true);
 
 
     //@Bug 1886,2870 pass the address of ridList vector
