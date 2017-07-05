@@ -4266,7 +4266,7 @@ bool storageSetup(bool amazonInstall)
 			catch(...)
 			{}
 
-			if ( UMVolumeType.empty() || UMVolumeType == "")
+			if ( UMVolumeType.empty() || UMVolumeType == "" || UMVolumeType == oam::UnassignedName)
 				UMVolumeType = "gp2";
 
 			while(true)
@@ -4364,7 +4364,7 @@ bool storageSetup(bool amazonInstall)
 				catch(...)
 				{}
 
-				if ( UMVolumeIOPS.empty() || UMVolumeIOPS == "")
+				if ( UMVolumeIOPS.empty() || UMVolumeIOPS == "" || UMVolumeIOPS == oam::UnassignedName)
 					UMVolumeIOPS = maxIOPS;
 
 				while(true)
@@ -4792,7 +4792,7 @@ bool storageSetup(bool amazonInstall)
 			DataFileEnvFile = "setenv-hdfs-20";
 		}
 
-		if (DataFileEnvFile.empty() || DataFileEnvFile == "")
+		if (DataFileEnvFile.empty() || DataFileEnvFile == "" || DataFileEnvFile == oam::UnassignedName)
 			DataFileEnvFile = "setenv-hdfs-20";
 
 		cout << endl;
