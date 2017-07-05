@@ -342,7 +342,6 @@ SET(CPACK_RPM_storage-engine_USER_FILELIST
 "/usr/local/mariadb/columnstore/mysql/install_calpont_mysql.sh"
 "/usr/local/mariadb/columnstore/mysql/syscatalog_mysql.sql"
 "/usr/local/mariadb/columnstore/mysql/dumpcat_mysql.sql"
-"/usr/local/mariadb/columnstore/mysql/dumpcat.pl"
 "/usr/local/mariadb/columnstore/mysql/calsetuserpriority.sql"
 "/usr/local/mariadb/columnstore/mysql/calremoveuserpriority.sql"
 "/usr/local/mariadb/columnstore/mysql/calshowprocesslist.sql"

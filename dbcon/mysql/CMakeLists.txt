@@ -83,7 +83,7 @@ install(FILES syscatalog_mysql.sql
               columnstore_info.sql
               my.cnf
               DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
-install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore dumpcat.pl
+install(PROGRAMS install_calpont_mysql.sh mysql-Columnstore
               DESTINATION ${ENGINE_MYSQLDIR} COMPONENT storage-engine)
 
 
