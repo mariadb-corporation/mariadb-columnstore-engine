@@ -69,6 +69,7 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 				cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
 			else
                                 sudo touch /etc/fstab
+				sudo chmod 666 /etc/fstab
                                 sudo rm -f /etc/fstab.columnstoreSave
                                 sudo cp /etc/fstab /etc/fstab.columnstoreSave
                                 sudo cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
