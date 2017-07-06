@@ -65,6 +65,7 @@ string parentOAMModule;
 string localModule;
 bool rootUser = true;
 string HOME = "/root";
+string SingleServerInstall;
 
 bool repeatStop;
 
@@ -259,7 +260,12 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 
- 	//check if root-user
+	try {
+		oam.getSystemConfig("SingleServerInstall", SingleServerInstall);
+	}
+	catch(...) {}
+
+	//check if root-user
 	int user;
 	user = getuid();
 	if (user != 0)
@@ -5038,6 +5044,12 @@ int processCommand(string* arguments)
         case 48: // addModule - parameters: Module type/Module Name, Number of Modules, Server Hostnames,
 					// Server root password optional
         {
+            if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** addModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
+
 			parentOAMModule = getParentOAMModule();
             if ( localModule != parentOAMModule ) {
                 // exit out since not on Parent OAM Module
@@ -5600,6 +5612,12 @@ int processCommand(string* arguments)
 
         case 49: // removeModule - parameters: Module name/type, number-of-modules
         {
+            if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** removeModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
+
             if (arguments[1] == "")
             {
                 // need atleast 1 arguments
@@ -6665,6 +6683,11 @@ int processCommand(string* arguments)
 
         case 65: // alterSystem-disableModule
         {
+	    if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** alterSystem-disableModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
 			parentOAMModule = getParentOAMModule();
             if ( localModule != parentOAMModule ) {
                 //exit out since not on Parent OAM Module
@@ -6815,6 +6838,11 @@ int processCommand(string* arguments)
 
         case 66: // alterSystem-enableModule
         {
+	    if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** alterSystem-enableModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
         	parentOAMModule = getParentOAMModule();
             if ( localModule != parentOAMModule ) {
                 //exit out since not on Parent OAM Module
