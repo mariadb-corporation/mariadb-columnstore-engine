@@ -6501,6 +6501,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						oss << ordercol->counter;
 						ord_cols += oss.str();
 					}
+                    else if (ord_item->type() == Item::NULL_ITEM)
+                    {
+                        // MCOL-793 Do nothing for an ORDER BY NULL
+                    }
 					else if (ord_item->type() == Item::SUM_FUNC_ITEM)
 					{
 						Item_sum* ifp = (Item_sum*)(*(ordercol->item));
