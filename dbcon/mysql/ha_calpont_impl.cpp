@@ -1038,8 +1038,8 @@ uint32_t doUpdateDelete(THD *thd)
             }
             else if ( value->type() == Item::SUBSELECT_ITEM )
             {
-//                isFromCol = true;
-//                columnAssignmentPtr->fFromCol = true;
+                isFromCol = true;
+                columnAssignmentPtr->fFromCol = true;
 //                Item_field* setIt = reinterpret_cast<Item_field*> (value);
 //                string sectableName = string(setIt->table_name);
 //                string secschemaName = string(setIt->db_name);
