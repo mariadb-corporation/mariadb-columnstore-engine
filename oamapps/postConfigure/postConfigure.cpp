@@ -3159,13 +3159,6 @@ int main(int argc, char *argv[])
 	cout << endl << "===== Checking MariaDB ColumnStore System Logging Functionality =====" << endl << endl;
 
 	if ( rootUser)
-		cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
-	else
-		cmd = "sudo " + installDir + "/bin/syslogSetup.sh --installdir=" + installDir + " install  > /dev/null 2>&1";
-
-	system(cmd.c_str());
-
-	if ( rootUser)
 		cmd = installDir + "/bin/syslogSetup.sh status  > /dev/null 2>&1";
 	else
 		cmd = "sudo " + installDir + "/bin/syslogSetup.sh --installdir=" + installDir + " status  > /dev/null 2>&1";

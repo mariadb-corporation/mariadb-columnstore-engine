@@ -12,10 +12,10 @@ installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
 
-user=root
+user=`whoami 2>/dev/null`
+
 SUDO=" "
-if [ "$USER" != "root" ]; then
-        user=$USER
+if [ "$user" != "root" ]; then
         SUDO="sudo "
 fi
 
@@ -155,6 +155,11 @@ install() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
+	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
+		$SUDO rm -f ${syslog_conf}.columnstoreSave
+		$SUDO cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
+		$SUDO sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
+	fi
 
 	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
@@ -170,14 +175,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		fi
 	fi
 
-	$SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
-	$SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
-        $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
-
-	$SUDO systemctl restart rsyslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
-
+	restartSyslog
 fi
 
 }
@@ -206,16 +204,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		$SUDO rm -f "$syslog_conf"
 	fi
 
-        $SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
-        $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
-        $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
-
-        $SUDO systemctl restart rsyslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
-
-
-	$installdir/bin/setConfig -d Installation SystemLogConfigFile "unassigned"
+	restartSyslog
 
 fi
 
@@ -248,6 +237,28 @@ else
 fi
 }
 
+restartSyslog() {
+
+	if [ "$daemon" = "syslog-ng" ]; then
+		if [ -f /etc/init.d/syslog-ng ]; then
+			$SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
+		else
+		        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
+		fi
+	elif [ "$daemon" = "rsyslog" ]; then
+                if [ -f /etc/init.d/rsyslog ]; then
+                        $SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
+                else
+                        $SUDO systemctl restart rsyslog.service > /dev/null 2>&1
+                fi
+	elif [ "$daemon" = "syslog" ]; then	
+                if [ -f /etc/init.d/syslog ]; then
+                        $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
+                else
+                        $SUDO systemctl restart syslog.service > /dev/null 2>&1
+                fi
+	fi
+}
 
 case "$1" in
   install)
