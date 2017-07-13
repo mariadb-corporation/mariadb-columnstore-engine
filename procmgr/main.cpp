@@ -590,6 +590,10 @@ static void startMgrProcessThread()
 	      }
 	}
 	
+	//distribute system and process config files
+	processManager.distributeConfigFile("system");
+	processManager.distributeConfigFile("system", "ProcessConfig.xml");
+	
 	//send out moduleName to remote nodes, this will be used to startup new installed nodes
 	{
 	      int status = API_SUCCESS;
