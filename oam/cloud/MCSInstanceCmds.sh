@@ -108,13 +108,13 @@ getRole() {
 	iam=`curl -s http://169.254.169.254/latest/meta-data/ | grep iam`
 
 	if [ -z "$iam" ]; then
-        	exit 1;
+        	return "";
 	fi
 
 	Role=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 
 	if [ -z "$Role" ]; then
-		exit 1;
+		return "";
 	fi
 
         echo $Role
@@ -149,15 +149,15 @@ getPrivateIP() {
 	state=`aws ec2 describe-instances --instance-ids $instanceName --region $Region --output text --query 'Reservations[*].Instances[*].State.Name'`
 	if [ "$state" != "running" ]; then
 		# not running
-		if [ "$state" != "stopped" ]; then
+		if [ "$state" == "stopped" ]; then
 			echo "stopped"
 			exit 1
 		else
-			if [ "$state" != "terminated" ]; then
+			if [ "$state" == "terminated" ]; then
 				echo "terminated"
 				exit 1
 			else
-				if [ "$state" != "shutting-down" ]; then
+				if [ "$state" == "shutting-down" ]; then
 					echo "terminated"
 					exit 1
 				else

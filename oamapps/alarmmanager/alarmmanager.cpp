@@ -111,7 +111,7 @@ void rewriteActiveLog (const AlarmList& alarmList)
 	unlink (ACTIVE_ALARM_FILE.c_str());
 	
 	// create new file
-	int fd = open(ACTIVE_ALARM_FILE.c_str(), O_RDWR|O_CREAT, 0664);
+	int fd = open(ACTIVE_ALARM_FILE.c_str(), O_RDWR|O_CREAT, 0644);
 	
 	// Aquire an exclusive lock
    	if (flock(fd,LOCK_EX) == -1) {
@@ -154,7 +154,7 @@ void logAlarm (const Alarm& calAlarm, const string& fileName)
 		ml.logDebugMessage(msg);                        
 	}
 
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0664);
+	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0644);
 	ofstream AlarmFile (fileName.c_str(), ios::app);
 
 	// Aquire an exclusive lock

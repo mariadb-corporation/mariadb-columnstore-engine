@@ -5007,13 +5007,13 @@ int processCommand(string* arguments)
 			cout << endl;
 			if ( rootUser)
 			{
-				system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-				if (oam.checkLogStatus("/tmp/columnstore.txt", "Name"))
-					system("cat /tmp/columnstore.txt");
-				else {
-					system("dpkg -s mariadb-columnstore > /tmp/columnstore.txt 2>&1");
-					if (oam.checkLogStatus("/tmp/columnstore.txt", "Status: install"))
-						system("cat /tmp/columnstore.txt");
+	            int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+    	        if (WEXITSTATUS(rtnCode) == 0) 
+                    system("cat /tmp/columnstore.txt");
+            	else {
+                	rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+                	if (WEXITSTATUS(rtnCode) == 0) 
+                        system("cat /tmp/columnstore.txt");
 					else {
 						SystemSoftware systemsoftware;
 						oam.getSystemSoftware(systemsoftware);
