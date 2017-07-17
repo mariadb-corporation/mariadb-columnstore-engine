@@ -1,6 +1,7 @@
 
 include_directories( ${ENGINE_COMMON_INCLUDES}
-                     ../../dbcon/mysql )
+                     ../../dbcon/mysql
+                     rapidjson/include)
                      
 ########### next target ###############
 

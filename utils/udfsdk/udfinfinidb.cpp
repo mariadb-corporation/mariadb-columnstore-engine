@@ -38,6 +38,14 @@ using namespace rowgroup;
 #include "funcexp.h"
 using namespace funcexp;
 
+#include "messagelog.h"
+#include "rapidjson/document.h"
+#include "rapidjson/pointer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+
+using namespace rapidjson;
+
 namespace udfsdk
 {
 /**
@@ -68,6 +76,7 @@ FuncMap UDFSDK::UDFMap() const
 	// the function names passed to the interface is always in lower case.
 	fm["idb_add"] = new IDB_add();
 	fm["idb_isnull"] = new IDB_isnull();
+    fm["json_ptr"] = new json_ptr();
 	
 	return fm;
 }
@@ -398,6 +407,108 @@ int64_t IDB_isnull::getDatetimeIntVal(Row& row,
 	return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
 }
 
+
+    /***************************************************************************
+ * MCS_json_path implementation
+ *
+ * OperationType() definition
+ */
+    CalpontSystemCatalog::ColType json_ptr::operationType (FunctionParm& fp,
+                                                          CalpontSystemCatalog::ColType& resultType)
+    {
+        // result type same as first json argument type
+        assert (fp.size() == 2);
+        return fp[0]->data()->resultType();
+    }
+
+
+    void json_ptr::log_debug(string arg1, string arg2) {
+        logging::LoggingID lid(28); // 28 = primproc
+        logging::MessageLog ml(lid);
+
+        logging::Message::Args args;
+        logging::Message message(2);
+        args.add(arg1);
+        args.add(arg2);
+        message.format( args );
+        ml.logDebugMessage( message );
+    }
+
+    string json_ptr::getStrVal(Row& row,
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& op_ct) {
+        string json = parm[0]->data()->getStrVal(row, isNull);
+        string path = parm[1]->data()->getStrVal(row, isNull);
+
+        Document d;
+        d.Parse(json.c_str());
+        if (Value *v = Pointer(path.c_str()).Get(d)) {
+            StringBuffer sb;
+            Writer<StringBuffer> writer(sb);
+            v->Accept(writer);
+            return string(sb.GetString());
+        }
+        else {
+            return string();
+        }
+    }
+
+    double json_ptr::getDoubleVal(Row& row,
+                                 FunctionParm& parm,
+                                 bool& isNull,
+                                 CalpontSystemCatalog::ColType& op_ct)
+    {
+		throw logic_error("Invalid API called json_ptr::getDoubleVal");
+    }
+
+    float json_ptr::getFloatVal(Row& row,
+                               FunctionParm& parm,
+                               bool& isNull,
+                               CalpontSystemCatalog::ColType& op_ct)
+    {
+        throw logic_error("Invalid API called json_ptr::getFloatVal");
+    }
+
+    int64_t json_ptr::getIntVal(Row& row,
+                               FunctionParm& parm,
+                               bool& isNull,
+                               CalpontSystemCatalog::ColType& op_ct)
+    {
+        throw logic_error("Invalid API called json_ptr::getIntVal");
+    }
+
+    IDB_Decimal json_ptr::getDecimalVal(Row& row,
+                                       FunctionParm& parm,
+                                       bool& isNull,
+                                       CalpontSystemCatalog::ColType& op_ct)
+    {
+        throw logic_error("Invalid API called json_ptr::getDecimalVal");
+    }
+
+    int32_t json_ptr::getDateIntVal(Row& row,
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType& op_ct)
+    {
+        throw logic_error("Invalid API called json_ptr::getDateIntVal");
+    }
+
+    int64_t json_ptr::getDatetimeIntVal(Row& row,
+                                       FunctionParm& parm,
+                                       bool& isNull,
+                                       CalpontSystemCatalog::ColType& op_ct)
+    {
+        throw logic_error("Invalid API called json_ptr::getDatetimeIntVal");
+    }
+
+    bool json_ptr::getBoolVal(Row& row,
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType& op_ct)
+    {
+		throw logic_error("Invalid API called json_ptr::getBoolVal");
+    }
 }
 // vim:ts=4 sw=4:
 

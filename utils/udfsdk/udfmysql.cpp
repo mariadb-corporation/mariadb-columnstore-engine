@@ -6,6 +6,13 @@ using namespace std;
 
 #include "idb_mysql.h"
 
+#include "rapidjson/document.h"
+#include "rapidjson/pointer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+
+using namespace rapidjson;
+
 namespace {
 inline double cvtArgToDouble(int t, const char* v)
 {
@@ -173,6 +180,52 @@ __declspec(dllexport)
 long long idb_isnull(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
 {
 	return 0;
+}
+
+
+
+/**
+ * json_ptr connector stub
+ */
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool json_ptr_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+    if (args->arg_count != 2)
+    {
+        strcpy(message,"json_ptr() requires two arguments: expression, path");
+        return 1;
+    }
+
+    return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void json_ptr_deinit(UDF_INIT* initid)
+{
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+string json_ptr(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
+{
+    string json = cvtArgToString(args->arg_type[0], args->args[0]);
+    string path = cvtArgToString(args->arg_type[1], args->args[1]);
+    Document d;
+    d.Parse(json.c_str());
+    if (Value *v = Pointer(path.c_str()).Get(d)) {
+        rapidjson::StringBuffer sb;
+        Writer<rapidjson::StringBuffer> writer(sb);
+        v->Accept(writer);
+        return string(sb.GetString());
+    }
+    else {
+        return string();
+    }
 }
 
 }
