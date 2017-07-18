@@ -353,7 +353,6 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 		std::vector<CalpontSystemCatalog::ColType> &colTypes = ti.tpl_scan_ctx->ctp;
 		int64_t intColVal = 0;
 		uint64_t uintColVal = 0;
-		string stringColVal;
 		char tmp[256];
 
 		RowGroup *rowGroup = ti.tpl_scan_ctx->rowGroup;
@@ -468,7 +467,6 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 				case CalpontSystemCatalog::CHAR:
 				case CalpontSystemCatalog::VARCHAR:
 				{
-					// TODO: use getStringPointer instead of getStringField to stop the string copies
 					Field_varstring* f2 = (Field_varstring*)*f;
 					switch (colType.colWidth)
 					{
@@ -492,8 +490,7 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 							f2->store(tmp, strlen(tmp), f2->charset());
 							break;
 						default:
-							stringColVal = row.getStringField(s);
-							f2->store(stringColVal.c_str(), strlen(stringColVal.c_str()), f2->charset());
+                            f2->store((const char*)row.getStringPointer(s), row.getStringLength(s), f2->charset());
 					}
 					if ((*f)->null_ptr)
 						*(*f)->null_ptr &= ~(*f)->null_bit;
