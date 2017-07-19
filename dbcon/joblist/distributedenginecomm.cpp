@@ -336,7 +336,7 @@ void DistributedEngineComm::Listen(boost::shared_ptr<MessageQueueClient> client,
 Error:
 	// @bug 488 - error condition! push 0 length bs to messagequeuemap and
 	// eventually let jobstep error out.
-	mutex::scoped_lock lk(fMlock);
+/*	mutex::scoped_lock lk(fMlock);
 	//cout << "WARNING: DEC READ 0 LENGTH BS FROM " << client->otherEnd()<< endl;
 
 	MessageQueueMap::iterator map_tok;
@@ -370,7 +370,7 @@ Error:
 		fPmConnections.swap(tempConns);
 		pmCount = (pmCount == 0 ? 0 : pmCount - 1);
 		//cout << "PMCOUNT=" << pmCount << endl;
-
+*/
 		// send alarm & log it
 		ALARMManager alarmMgr;
 		string alarmItem = client->addr2String();
@@ -380,7 +380,7 @@ Error:
 		ostringstream os;
 		os << "DEC: lost connection to " << client->addr2String();
 		writeToLog(__FILE__, __LINE__, os.str(), LOG_TYPE_CRITICAL);
-	}
+//	}
 	return;
 }
 
@@ -861,7 +861,7 @@ int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uin
 	{
 		// @bug 488. error out under such condition instead of re-trying other connection,
 		// by pushing 0 size bytestream to messagequeue and throw excpetion
-		SBS sbs;
+/*		SBS sbs;
 		lk.lock();
 		//cout << "WARNING: DEC WRITE BROKEN PIPE. PMS index = " << index << endl;
 		MessageQueueMap::iterator map_tok;
@@ -894,7 +894,7 @@ int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uin
 			fPmConnections.swap(tempConns);
 			pmCount = (pmCount == 0 ? 0 : pmCount - 1);
 		}
-
+*/
 		// send alarm
 		ALARMManager alarmMgr;
 		string alarmItem("UNKNOWN");

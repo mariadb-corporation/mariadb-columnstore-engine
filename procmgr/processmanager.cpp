@@ -2792,6 +2792,16 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 				log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted on " + moduleName + "/" + processName);
 
+				//set query system states not ready
+				BRM::DBRM dbrm;
+				dbrm.setSystemQueryReady(false);
+
+				processManager.setQuerySystemState(false);
+
+				processManager.setSystemState(oam::BUSY_INIT);
+
+				processManager.reinitProcessType("cpimport");
+
 				//request reinit after Process is active
 				for ( int i = 0; i < 600 ; i++ ) {
 					try {
@@ -2806,7 +2816,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								processManager.distributeConfigFile("system");
 			
 								processManager.reinitProcessType("WriteEngineServer");
-								processManager.restartProcessType("ExeMgr");
+								processManager.reinitProcessType("ExeMgr");
 								processManager.reinitProcessType("DDLProc");
 								processManager.reinitProcessType("DMLProc");
 							}
@@ -2917,6 +2927,13 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						break;
 					}
 				}
+
+				//enable query stats
+				dbrm.setSystemQueryReady(true);
+
+				processManager.setQuerySystemState(true);
+
+				processManager.setSystemState(oam::ACTIVE);
 			}
 			break;
 
