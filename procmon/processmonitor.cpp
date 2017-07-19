@@ -3480,6 +3480,17 @@ int ProcessMonitor::buildSystemTables()
 	oam.getSystemConfig("DBRoot1", DBdir);
 
 	string fileName = DBdir + "/000.dir";
+	
+	//check if postConfigure or dbbuilder is running, return if so
+	string cmd = "ps aux | grep postConfigure | grep -v grep";
+	int rtnCode = system(cmd.c_str());
+	if (WEXITSTATUS(rtnCode) == 0)
+	    return API_ALREADY_IN_PROGRESS;
+
+	cmd = "ps aux | grep dbbuilder | grep -v grep";
+	rtnCode = system(cmd.c_str());
+	if (WEXITSTATUS(rtnCode) == 0)
+	    return API_ALREADY_IN_PROGRESS;
 
 	if (!IDBPolicy::exists(fileName.c_str())) {
 		string logdir("/var/log/mariadb/columnstore");
@@ -3490,7 +3501,7 @@ int ProcessMonitor::buildSystemTables()
 		log.writeLog(__LINE__, "buildSystemTables: dbbuilder 7 Successfully Launched" , LOG_TYPE_DEBUG);
 		return API_SUCCESS;
 	}
-	log.writeLog(__LINE__, "buildSystemTables: System Tables Already Exist", LOG_TYPE_ERROR );
+	log.writeLog(__LINE__, "buildSystemTables: System Tables Already Exist", LOG_TYPE_DEBUG );
 	return API_FILE_ALREADY_EXIST;
 }
 

@@ -6855,7 +6855,14 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	}
 
 	//run command to build system table if they don't already exist
-	processManager.buildSystemTables("pm1");
+	sleep(5);
+	int ret = processManager.buildSystemTables("pm1");
+	if (ret == oam::API_SUCCESS )
+	  log.writeLog(__LINE__, "System Catalog Successfully Built by ProcMgr", LOG_TYPE_DEBUG);
+	else
+	  log.writeLog(__LINE__, "System Catalog Successfully not built by ProcMgr, ret code = " + oam.itoa(ret), LOG_TYPE_DEBUG);
+
+	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
 
 	// exit thread
 	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
