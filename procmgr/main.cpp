@@ -58,6 +58,7 @@ bool HDFS = false;
 string localHostName;
 string PMwithUM = "n";
 string MySQLRep = "n";
+string DBRootStorageType = "internal";
 
 // pushing the ACTIVE_ALARMS_FILE to all nodes every 10 seconds.
 const int ACTIVE_ALARMS_PUSHING_INTERVAL = 10;
@@ -160,7 +161,6 @@ int main(int argc, char **argv)
 	}
 
 	//hdfs / hadoop config 
-	string DBRootStorageType;
 	try {
 		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
 	}
@@ -1281,8 +1281,8 @@ void pingDeviceThread()
 
 								int status;
 	
-								// if pm, move dbroots back to pm
-								if ( ( moduleName.find("pm") == 0 && !amazon ) ||
+								// if shared pm, move dbroots back to pm
+								if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
 									( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
 									( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
 
@@ -1560,8 +1560,9 @@ void pingDeviceThread()
 									aManager.sendAlarmReport(moduleName.c_str(), MODULE_DOWN_AUTO, SET);
 
 									// if pm, move dbroots back to pm
-									if ( ( moduleName.find("pm") == 0 && !amazon ) ||
-										( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ) {
+									if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
+									    ( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
+									    ( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
 										//move dbroots to other modules
 										try {
 											log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
@@ -1667,25 +1668,24 @@ void pingDeviceThread()
 								log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
 
 								// if pm, move dbroots to other pms
-								if ( !amazon ||
-									( amazon && AmazonPMFailover == "y") ) {
-									if( moduleName.find("pm") == 0 ) {
-										try {
-											log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
-											oam.autoMovePmDbroot(moduleName);
-											log.writeLog(__LINE__, "autoMovePmDbroot success", LOG_TYPE_DEBUG);
-											//distribute config file
-											processManager.distributeConfigFile("system");	
-										}
-										catch (exception& ex)
-										{
-											string error = ex.what();
-											log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: " + error, LOG_TYPE_DEBUG);
-										}
-										catch(...)
-										{
-											log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
-										}
+								if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
+									( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
+									( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
+									try {
+										log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
+										oam.autoMovePmDbroot(moduleName);
+										log.writeLog(__LINE__, "autoMovePmDbroot success", LOG_TYPE_DEBUG);
+										//distribute config file
+										processManager.distributeConfigFile("system");	
+									}
+									catch (exception& ex)
+									{
+										string error = ex.what();
+										log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: " + error, LOG_TYPE_DEBUG);
+									}
+									catch(...)
+									{
+										log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
 									}
 								}
 	
@@ -1864,7 +1864,9 @@ void pingDeviceThread()
 											processManager.removeModule(devicenetworklist, false);
 
 											// if pm, move dbroots to other pms
-											if( moduleName.find("pm") == 0 ) {
+											if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
+												( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
+												( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
 												try {
 													log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
 													oam.autoMovePmDbroot(moduleName);

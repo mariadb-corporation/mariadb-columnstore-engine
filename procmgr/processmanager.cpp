@@ -55,6 +55,7 @@ extern bool HDFS;
 extern string localHostName;
 extern string PMwithUM;
 extern string AmazonPMFailover;
+extern string DBRootStorageType;
 
 typedef   map<string, int>	moduleList;
 extern moduleList moduleInfoList;
@@ -8442,14 +8443,6 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
 	log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
 
-	string DBRootStorageType = "internal";
-	{
-		try{
-			oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
-	}
-
 	if ( DBRootStorageType == "internal" && GlusterConfig == "n") {
 		log.writeLog(__LINE__, "ERROR: DBRootStorageType = internal", LOG_TYPE_ERROR);
 		pthread_mutex_unlock(&THREAD_LOCK);
@@ -8733,15 +8726,6 @@ int ProcessManager::OAMParentModuleChange()
 	catch(...)
 	{
 		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-
-	// dbroot storage type, do different failover if internal
-	string DBRootStorageType = "internal";
-	{
-		try{
-			oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
 	}
 
 	string cmdLine = "ping ";
