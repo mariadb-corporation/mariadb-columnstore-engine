@@ -1734,7 +1734,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			int status = system(cmd.c_str());
 			if (WEXITSTATUS(status) != 0 )
 			{
-			    cmd = "echo " + entry + " >> /etc/fstab";
+				if ( rootUser) {
+					cmd = "echo " + entry + " >> /etc/fstab";
+				}
+				else {
+				    cmd = "sudo echo " + entry + " >> /etc/fstab";
+				}
 			    system(cmd.c_str());
 
 			    log.writeLog(__LINE__, "Add line entry to /etc/fstab : " + entry);
@@ -1745,7 +1750,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			status = system(cmd.c_str());
 			if (WEXITSTATUS(status) != 0 )
 			{
-			    cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+				if ( rootUser) {
+				    cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+				}
+				else {
+				    cmd = "sudo echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+				}
 			    system(cmd.c_str());
 
 			    log.writeLog(__LINE__, "Add line entry to ../local/etc/pm1/fstab : " + entry);
@@ -1755,7 +1765,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string::size_type pos = entry.find(" ",0);
 			string::size_type pos1 = entry.find(" ",pos+1);
 			string directory = entry.substr(pos+1,pos1-pos);
-			cmd = "mkdir " + directory;
+			if ( rootUser) {
+				cmd = "mkdir " + directory;
+			}
+			else {
+				cmd = "sudo mkdir " + directory;
+			}
 			system(cmd.c_str());
 			log.writeLog(__LINE__, "create directory: " + directory);
 
@@ -6076,28 +6091,32 @@ void ProcessMonitor::flushInodeCache()
 int ProcessMonitor::glusterAssign(std::string dbrootID)
 {
 	Oam oam;
-
-	log.writeLog(__LINE__, "glusterAssign called : " + dbrootID, LOG_TYPE_DEBUG);
+	Config* sysConfig = Config::makeConfig();
 
 	std::string errmsg = "";
 
-	string glustercmd = startup::StartUp::installDir() + "/bin/glusterctl";
+	log.writeLog(__LINE__, "glusterAssign called : " + dbrootID, LOG_TYPE_DEBUG);
+
 	string pmid = oam.itoa(config.moduleID());
+	string dataDupIPaddr = "ModuleIPAddr"+pmid+"-1-3";
+	string moduleIPAddr = sysConfig->getConfig("DataRedundancyConfig",dataDupIPaddr);
 
-	glustercmd = glustercmd + " assign " + dbrootID + " " + pmid + " > /tmp/gluster_assign.log 2>&1";
-	int ret;
-	ret = system(glustercmd.c_str());
-	if ( WEXITSTATUS(ret) == 0 )
-		return oam::API_SUCCESS;
+	if (moduleIPAddr.empty() || moduleIPAddr == oam::UnassignedIpAddr)
+	{
+		moduleIPAddr = sysConfig->getConfig("SystemModuleConfig",dataDupIPaddr);
+	}
+	string command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
+			dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID +"";
 
-	ret = oam.checkGlusterLog("/tmp/gluster_assign.log", errmsg);
-	if ( ret == 0 )
-		// OK return
-		return oam::API_SUCCESS;
-	else
-		log.writeLog(__LINE__, "glusterAssign failed, check /tmp/gluster_assign.log", LOG_TYPE_ERROR);
+	int ret = system(command.c_str());
+	if ( WEXITSTATUS(ret) != 0 )
+	{
+		log.writeLog(__LINE__, "glusterAssign failed.", LOG_TYPE_ERROR);
+		return oam::API_FAILURE;
+	}
 
-	return oam::API_FAILURE;
+	return oam::API_SUCCESS;
+
 }
 
 /******************************************************************************************
@@ -6111,27 +6130,20 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 {
 	Oam oam;
 
-	log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
-
 	std::string errmsg = "";
 
-	string glustercmd = startup::StartUp::installDir() + "/bin/glusterctl";
-	string pmid = oam.itoa(config.moduleID());
+	log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
 
-	glustercmd = glustercmd + " unassign " + dbrootID + " " + pmid + " > /tmp/gluster_unassign.log 2>&1";
-	int ret;
-	ret = system(glustercmd.c_str());
-	if ( WEXITSTATUS(ret) == 0 )
-		return oam::API_SUCCESS;
+	string command = "umount -f " + startup::StartUp::installDir() + "/dbroot" + dbrootID + "";
 
-	ret = oam.checkGlusterLog("/tmp/gluster_unassign.log", errmsg);
-	if ( ret == 0 )
-		// OK return
-		return oam::API_SUCCESS;
-	else
-		log.writeLog(__LINE__, "glusterAssign failed, check /tmp/gluster_assign.log", LOG_TYPE_ERROR);
+	int ret = system(command.c_str());
+	if ( WEXITSTATUS(ret) != 0 )
+	{
+		log.writeLog(__LINE__, "glusterUnassign failed.", LOG_TYPE_ERROR);
+		return oam::API_FAILURE;
+	}
 
-	return oam::API_FAILURE;
+	return oam::API_SUCCESS;
 }
 
 

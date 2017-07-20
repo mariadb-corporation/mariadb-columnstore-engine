@@ -269,9 +269,6 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR/%{name}-%{version}.%{release}
 /usr/local/mariadb/columnstore/bin/file2oid.pl
 /usr/local/mariadb/columnstore/bin/print_journal
 /usr/local/mariadb/columnstore/bin/healthcheck
-/usr/local/mariadb/columnstore/bin/glusterctl
-/usr/local/mariadb/columnstore/bin/glusteradd
-/usr/local/mariadb/columnstore/bin/glusterconf
 /usr/local/mariadb/columnstore/bin/redistributeDB
 /usr/local/mariadb/columnstore/bin/databaseSizeReport
 /usr/local/mariadb/columnstore/bin/gdb

@@ -32,9 +32,9 @@ if { $UNM != "" } {
 }
 
 set BASH "/bin/bash "
-if { $DEBUG == "1" } {
-	set BASH "/bin/bash -x "
-}
+#if { $DEBUG == "1" } {
+#	set BASH "/bin/bash -x "
+#}
 
 set HOME "$env(HOME)"
 
@@ -99,13 +99,14 @@ set timeout 60
 # check return
 expect {
         "Exit status 0" { send_user "DONE" }
-	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	# "No such file" { send_user "ERROR: post-install Not Found\n" ; exit 1 }
 	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	timeout { }
 }
 send_user "\n"
 
@@ -131,6 +132,7 @@ if { $INSTALLTYPE == "initial" || $INSTALLTYPE == "uninstall" } {
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
                 "Exit status 0" { send_user "DONE" }
+                timeout { }
 	}
 	send_user "\n"
 }
@@ -155,9 +157,9 @@ expect {
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-        "Exit status 0" { send_user "DONE" }
+        timeout { }
 }
-
+set timeout 30
 send "scp -v $HOME/mariadb-columnstore*$VERSION*$PKGTYPE $USERNAME@$SERVER:.\n"
 if { $PASSWORD != "ssh"} {
         set timeout 30
@@ -171,6 +173,7 @@ expect {
         "Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"Exit status 0" { send_user "DONE" }
         "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
+        timeout { }
 }
 send_user "\n"
 
@@ -199,6 +202,7 @@ if { $INSTALLTYPE == "initial"} {
 		"needs"    { send_user "ERROR: disk space issue\n" ; exit 1 }
 		"conflicts"	   { send_user "ERROR: File Conflict issue\n" ; exit 1 }
 	        "Exit status 0" { send_user "DONE" }
+	        timeout { }
 	}
 
 }
@@ -225,6 +229,7 @@ expect {
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	"Starting MariaDB" { send_user "DONE" }
+	timeout { }
 }
 send_user "\n"
 
@@ -250,6 +255,7 @@ if { $AMAZONINSTALL == "1" } {
 		"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+		timeout { }
 	}
 }
 

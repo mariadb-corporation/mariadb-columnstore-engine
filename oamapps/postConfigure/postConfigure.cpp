@@ -118,6 +118,8 @@ bool attachVolume(string instanceName, string volumeName, string deviceName, str
 
 void remoteInstallThread(void *);
 
+bool glusterSetup(string password);
+
 typedef struct ModuleIP_struct
 {
 	std::string     IPaddress;
@@ -3185,8 +3187,6 @@ int main(int argc, char *argv[])
 	}
 
 	//configure data redundancy
-	string glusterconfig = installDir + "/bin/glusterconf";
-
 	if (gluster )
 	{
 		cout << endl;
@@ -3196,7 +3196,7 @@ int main(int argc, char *argv[])
 
 		while(true)
 		{
-			pcommand = callReadline("Would you like to configure MariaDB ColumnStore GlusterFS Data Redundancy? [y,n] (" + start + ") > ");
+			pcommand = callReadline("Would you like to configure MariaDB ColumnStore Data Redundancy? [y,n] (" + start + ") > ");
 			if (pcommand)
 			{
 				if (strlen(pcommand) > 0) start = pcommand;
@@ -3213,12 +3213,12 @@ int main(int argc, char *argv[])
 	
 		if ( start == "y" ) {
 			cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
-			int ret = system(glusterconfig.c_str());
-			if ( WEXITSTATUS(ret) != 0 )
+			if (!glusterSetup(password))
 			{
-				cerr << endl << "There was an error in the Data Redundancy setup, exiting..." << endl;
+				cout << "ERROR: Problem setting up ColumnStore Data Redundancy" << endl;
 				exit(1);
 			}
+
 		}
 	}
 
@@ -3438,9 +3438,34 @@ int main(int argc, char *argv[])
 
 	cout << endl << "MariaDB ColumnStore Database Platform Starting, please wait .";
 	cout.flush();
-	
+
 	if ( waitForActive() ) {
 		cout << " DONE" << endl;
+
+		// IF gluster is enabled we need to modify fstab on remote systems.
+		if (gluster )
+		{
+			int numberDBRootsPerPM = DBRootCount/pmNumber;
+			for (int pm=0; pm < pmNumber; pm++)
+			{
+				string pmIPaddr = "ModuleIPAddr"+oam.itoa(pm+1)+"-1-3";
+				string moduleIPAddr = sysConfig->getConfig("DataRedundancyConfig",pmIPaddr);
+				if ( moduleIPAddr.empty() )
+				{
+					moduleIPAddr = sysConfig->getConfig("SystemModuleConfig",pmIPaddr);
+				}
+				for (int i=0; i<numberDBRootsPerPM; i++)
+				{
+					string ModuleDBRootID = "ModuleDBRootID"+ oam.itoa(pm+1) + "-" + oam.itoa(i+1) +"-3";
+					string dbr = sysConfig->getConfig("SystemModuleConfig",ModuleDBRootID);
+					string command = "" + moduleIPAddr +
+							":/dbroot" + dbr + " " + installDir + "/data" + dbr +
+							" glusterfs defaults,direct-io-mode=enable 00";
+					string toPM = "pm" + oam.itoa(pm+1);
+					oam.distributeFstabUpdates(command,toPM);
+				}
+			}
+		}
 
 		if (hdfs)
 			cmd = "bash -c '. " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/dbbuilder 7 > /tmp/dbbuilder.log'";
@@ -4421,28 +4446,23 @@ bool storageSetup(bool amazonInstall)
 	}
 
 	//check if gluster is installed
-	if (rootUser)
-		system("which gluster > /tmp/gluster.log 2>&1");
-	else
-		system("sudo which gluster > /tmp/gluster.log 2>&1");
-
-	ifstream in("/tmp/gluster.log");
-
-	in.seekg(0, std::ios::end);
-	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/gluster.log", "no gluster")) 
-	// no gluster
-		size=0;
-	else
+	int rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
+	if (rtnCode == 0)
+	{
 		glusterInstalled = "y";
+	}
+	else
+	{
+		glusterInstalled = "n";
+	}
 
 	//check if hadoop is installed
 	system("which hadoop > /tmp/hadoop.log 2>&1");
 
-	ifstream in1("/tmp/hadoop.log");
+	ifstream in("/tmp/hadoop.log");
 
-	in1.seekg(0, std::ios::end);
-	size = in1.tellg();
+	in.seekg(0, std::ios::end);
+	int size = in.tellg();
 	if ( size == 0 || oam.checkLogStatus("/tmp/hadoop.log", "no hadoop")) 
 	// no hadoop
 		size=0;
@@ -5388,6 +5408,493 @@ std::string launchInstance(ModuleIP moduleip)
 	return instanceName;
 }
 
+bool glusterSetup(string password) {
+
+	Oam oam;
+	int dataRedundancyCopies = 0;
+	int dataRedundancyNetwork = 0;
+	int dataRedundancyStorage = 0;
+	int numberDBRootsPerPM = DBRootCount/pmNumber;
+	int numberBricksPM = 0;
+	std::vector<int> dbrootPms[DBRootCount];
+	DataRedundancyConfig DataRedundancyConfigs[pmNumber];
+	string command = "";
+	string remoteCommand = installDir + "/bin/remote_command.sh ";
+	// how many copies?
+	cout << endl;
+	cout << "Setup the Number of Copies: This is the total number of copies of the data" << endl;
+	cout << "in the system and a non-redundant system has 1 copy, so choose 2 or more," << endl;
+	cout << "but not more than the number of PMs which is " + oam.itoa(pmNumber) + "." << endl;
+
+	while(dataRedundancyCopies < 2 || dataRedundancyCopies > pmNumber)
+	{
+		dataRedundancyCopies = 2;
+		prompt = "Enter Number of Copies [2-" + oam.itoa(pmNumber) + "] ("+ oam.itoa(dataRedundancyCopies) +") >  ";
+		pcommand = callReadline(prompt.c_str());
+		if (pcommand) {
+			if (strlen(pcommand) > 0) dataRedundancyCopies = atoi(pcommand);
+			callFree(pcommand);
+		}
+
+		if ( dataRedundancyCopies < 2 || dataRedundancyCopies > pmNumber ) {
+			cout << endl << "ERROR: Invalid Copy Count '" + oam.itoa(dataRedundancyCopies) + "', please re-enter" << endl << endl;
+			if ( noPrompting )
+				exit(1);
+			continue;
+		}
+
+		//update count
+		try {
+			sysConfig->setConfig(InstallSection, "DataRedundancyCopies", oam.itoa(dataRedundancyCopies));
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting DataRedundancyCopies in the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+	}
+
+	numberBricksPM = numberDBRootsPerPM * dataRedundancyCopies;
+
+	cout << endl;
+	cout << "You can choose to run redundancy over the existing network that ColumnStore " << endl;
+	cout << "is currently using or you can configure a dedicated redundancy network. " << endl;
+	cout << "If you choose a dedicated redundancy network, you will need to provide " << endl;
+	cout << "hostname and IP address information." << endl;
+	while( dataRedundancyNetwork != 1 && dataRedundancyNetwork != 2 )
+	{
+		dataRedundancyNetwork = 1;
+		prompt =  "Select the data redundancy network [1=existing, 2=dedicated] (" + oam.itoa(dataRedundancyNetwork) + ") > ";
+		pcommand = callReadline(prompt.c_str());
+		if (pcommand)
+		{
+			if (strlen(pcommand) > 0) dataRedundancyNetwork = atoi(pcommand);;
+			callFree(pcommand);
+		}
+
+		if ( dataRedundancyNetwork != 1 && dataRedundancyNetwork != 2 ) {
+			cout << "Invalid Entry, please re-enter" << endl << endl;
+			dataRedundancyNetwork = 0;
+			if ( noPrompting )
+				exit(1);
+			continue;
+		}
+		//update network type
+		try {
+			sysConfig->setConfig(InstallSection, "DataRedundancyNetworkType", oam.itoa(dataRedundancyNetwork));
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting DataRedundancyNetworkType in the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+	}
+
+	if (dataRedundancyNetwork == 2)
+	{
+		//loop through pms and get hostname and IP address for each
+		for (int pm=0; pm < pmNumber; pm++)
+		{
+			DataRedundancyConfigs[pm].pmID = pm + 1;
+			string dataDupIPaddr = "ModuleIPAddr"+oam.itoa(DataRedundancyConfigs[pm].pmID)+"-1-3";
+			string dataDupHostName = "ModuleHostName"+oam.itoa(DataRedundancyConfigs[pm].pmID)+"-1-3";
+			string moduleIPAddr = sysConfig->getConfig("DataRedundancyConfig",dataDupIPaddr);
+			string moduleHostName = sysConfig->getConfig("DataRedundancyConfig",dataDupHostName);
+			if ( moduleIPAddr.empty() )
+			{
+				moduleIPAddr = oam::UnassignedIpAddr;
+			}
+			if ( moduleHostName.empty() )
+			{
+				moduleHostName = oam::UnassignedName;
+			}
+
+			prompt = "Enter PM #" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " Host Name (" + moduleHostName + ") > ";
+			pcommand = callReadline(prompt.c_str());
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0)
+				{
+					moduleHostName = pcommand;
+					moduleIPAddr = oam::UnassignedIpAddr;
+				}
+				callFree(pcommand);
+			}
+
+			if ( moduleIPAddr == oam::UnassignedIpAddr )
+			{
+				//get IP Address
+				string IPAddress = oam.getIPAddress( moduleHostName);
+				if ( !IPAddress.empty() )
+					moduleIPAddr = IPAddress;
+				else
+					moduleIPAddr = oam::UnassignedIpAddr;
+			}
+
+			if ( moduleIPAddr == "127.0.0.1")
+				moduleIPAddr = "unassigned";
+
+			//prompt for IP address
+			while (true)
+			{
+				prompt = "Enter PM #" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " IP Address of " + moduleHostName + " (" + moduleIPAddr + ") > ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0) moduleIPAddr = pcommand;
+					callFree(pcommand);
+				}
+
+				if (moduleIPAddr == "127.0.0.1" || moduleIPAddr == "0.0.0.0" || moduleIPAddr == "128.0.0.1") {
+					cout << endl << moduleIPAddr + " is an Invalid IP Address for a multi-server system, please re-enter" << endl << endl;
+					moduleIPAddr = "unassigned";
+					if ( noPrompting )
+						exit(1);
+					continue;
+				}
+
+				if (oam.isValidIP(moduleIPAddr)) {
+
+					// run ping test to validate
+					string cmdLine = "ping ";
+					string cmdOption = " -c 1 -w 5 >> /dev/null";
+					string cmd = cmdLine + moduleIPAddr + cmdOption;
+					int rtnCode = system(cmd.c_str());
+					if ( WEXITSTATUS(rtnCode) != 0 ) {
+						//NIC failed to respond to ping
+						string temp = "2";
+						while (true)
+						{
+							cout << endl;
+							prompt = "IP Address of '" + moduleIPAddr + "' failed ping test, please validate. Do you want to continue or re-enter [1=continue, 2=re-enter] (2) > ";
+							if ( noPrompting )
+							  exit(1);
+							pcommand = callReadline(prompt.c_str());
+							if (pcommand)
+							{
+								if (strlen(pcommand) > 0) temp = pcommand;
+								callFree(pcommand);
+							}
+
+							if ( temp == "1" || temp == "2")
+								break;
+							else
+							{
+								temp = "2";
+								cout << endl << "Invalid entry, please re-enter" << endl;
+								if ( noPrompting )
+									exit(1);
+							}
+						}
+						cout << endl;
+						if ( temp == "1")
+							break;
+					}
+					else	// good ping
+						break;
+				}
+				else
+				{
+					cout << endl << "Invalid IP Address format, xxx.xxx.xxx.xxx, please re-enter" << endl << endl;
+					if ( noPrompting )
+						exit(1);
+				}
+			}
+			//set Host Name and IP
+			try {
+				sysConfig->setConfig("DataRedundancyConfig", dataDupHostName, moduleHostName);
+				sysConfig->setConfig("DataRedundancyConfig", dataDupIPaddr, moduleIPAddr);
+				DataRedundancyConfigs[pm].pmID = pm + 1;
+				DataRedundancyConfigs[pm].pmIpAddr = moduleIPAddr;
+				DataRedundancyConfigs[pm].pmHostname = moduleHostName;
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting Host Name in the MariaDB ColumnStore Data Redundancy Configuration" << endl;
+				exit(1);
+			}
+		}
+	}
+	else
+	{
+		for (int pm=0; pm < pmNumber; pm++)
+		{
+			string pmIPaddr = "ModuleIPAddr"+oam.itoa(pm+1)+"-1-3";
+			string pmHostName = "ModuleHostName"+oam.itoa(pm+1)+"-1-3";
+			DataRedundancyConfigs[pm].pmID = pm + 1;
+			DataRedundancyConfigs[pm].pmIpAddr = sysConfig->getConfig("SystemModuleConfig",pmIPaddr);
+			DataRedundancyConfigs[pm].pmHostname = sysConfig->getConfig("SystemModuleConfig",pmHostName);
+		}
+	}
+	cout << endl;
+	cout << "OK. You have " + oam.itoa(pmNumber) + " PMs, " + oam.itoa(DBRootCount) + " DBRoots, and you have chosen to keep " + oam.itoa(dataRedundancyCopies) << endl;
+	cout << "copies of the data. You can choose to place the copies in " << endl;
+	cout << "/gluster or you can specify individual, mountable device names. " << endl;
+	/// [directory,storage] (directory) >
+	while( dataRedundancyStorage != 1 && dataRedundancyStorage != 2 )
+	{
+		dataRedundancyStorage = 1;
+		prompt =  "Select the data redundancy network [1=directory, 2=storage] (" + oam.itoa(dataRedundancyStorage) + ") > ";
+		pcommand = callReadline(prompt.c_str());
+		if (pcommand)
+		{
+			if (strlen(pcommand) > 0) dataRedundancyStorage = atoi(pcommand);;
+			callFree(pcommand);
+		}
+
+		if ( dataRedundancyStorage != 1 && dataRedundancyStorage != 2 ) {
+			cout << "Invalid Entry, please re-enter" << endl << endl;
+			dataRedundancyStorage = 0;
+			if ( noPrompting )
+				exit(1);
+			continue;
+		}
+		//update network type
+		try {
+			sysConfig->setConfig(InstallSection, "DataRedundancyStorageType", oam.itoa(dataRedundancyStorage));
+		}
+		catch(...)
+		{
+			cout << "ERROR: Problem setting DataRedundancyStorageType in the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+	}
+
+	if (dataRedundancyStorage == 2)
+	{
+		int numberStorageLocations = DBRootCount*dataRedundancyCopies;
+		cout << endl;
+		cout << "You will need " + oam.itoa(numberStorageLocations) + "total storage locations," << endl;
+		cout << "and " + oam.itoa(numberBricksPM) + " storage locations per PM. You will now " << endl;
+		cout << "be asked to enter the device names for the storage locations." << endl;
+
+		//loop through pms and get storage locations for each
+		for (int pm=0; pm < pmNumber; pm++)
+		{
+			for (int brick=0; brick < numberBricksPM; brick++)
+			{
+				prompt = "Enter a storage locations for PM#" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " brick#" + oam.itoa(brick) + " : ";
+				pcommand = callReadline(prompt.c_str());
+				if (pcommand)
+				{
+					if (strlen(pcommand) > 0)
+					{
+						DataRedundancyStorageSetup dataredundancyStorageItem;
+						dataredundancyStorageItem.brickID = brick;
+						dataredundancyStorageItem.storageLocation = pcommand;
+						//get filesystem type
+						prompt = "Enter a filesystem type for storage location " + dataredundancyStorageItem.storageLocation + " (ext2,ext3,xfs,etc): ";
+						pcommand = callReadline(prompt.c_str());
+						if (pcommand)
+						{
+							if (strlen(pcommand) > 0)
+							{
+								dataredundancyStorageItem.storageFilesytemType = pcommand;
+							}
+							callFree(pcommand);
+						}
+						DataRedundancyConfigs[pm].storageLocations.push_back(dataredundancyStorageItem);
+					}
+					callFree(pcommand);
+				}
+			}
+		}
+	}
+
+	// User config complete setup the gluster bricks
+	// This will distribute DBRootCopies evenly across PMs
+	for (int pm=0; pm < pmNumber; pm++)
+	{
+		int dbrootCopy = DataRedundancyConfigs[pm].pmID;
+		int nextPM = DataRedundancyConfigs[pm].pmID;
+		if (nextPM >= pmNumber)
+		{
+			nextPM=0;
+		}
+		for ( int i=0; i<numberDBRootsPerPM; i++)
+		{
+			DataRedundancyConfigs[pm].dbrootCopies.push_back(dbrootCopy);
+			for ( int copies = 0; copies < (dataRedundancyCopies-1); copies++)
+			{
+				DataRedundancyConfigs[nextPM].dbrootCopies.push_back(dbrootCopy);
+				nextPM++;
+				if (nextPM >= pmNumber)
+				{
+					nextPM=0;
+				}
+				if (nextPM == pm)
+				{
+					nextPM++;
+				}
+				if (nextPM >= pmNumber)
+				{
+					nextPM=0;
+				}
+			}
+			dbrootCopy += pmNumber;
+		}
+	}
+	
+	// Store to config and distribute so that GLUSTER_WHOHAS will work
+	for (int db=0; db < DBRootCount; db++)
+	{
+		int dbrootID = db + 1;
+		string dbrootIDPMs = "";
+		string moduleDBRootIDPMs = "DBRoot" + oam.itoa(dbrootID) + "PMs";
+		for (int pm=0; pm < pmNumber; pm++)
+		{
+			if(find(DataRedundancyConfigs[pm].dbrootCopies.begin(),DataRedundancyConfigs[pm].dbrootCopies.end(),dbrootID) != DataRedundancyConfigs[pm].dbrootCopies.end())
+			{
+				//dbrootPms for each dbroot there is a list of PMs for building the gluster volume commands below
+				dbrootPms[db].push_back(DataRedundancyConfigs[pm].pmID);
+				dbrootIDPMs += oam.itoa(DataRedundancyConfigs[pm].pmID);
+				dbrootIDPMs += " ";
+			}
+		}
+		// Store to config and distribute so that GLUSTER_WHOHAS will work
+		sysConfig->setConfig("DataRedundancyConfig", moduleDBRootIDPMs, dbrootIDPMs);
+	}
+
+	int status;
+	for (int pm=0; pm < pmNumber; pm++)
+	{
+		for ( int brick=1; brick<=numberBricksPM; brick++)
+		{
+			// create the gluster brick directories now
+			command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+			status = system(command.c_str());
+			if (WEXITSTATUS(status) != 0 )
+			{
+				cout << "ERROR: command failed: " << command << endl;
+				exit(1);
+			}
+			if (dataRedundancyStorage == 2)
+			{
+				//walk data storage locations and modify fstab to reflect the storage locations entered by user
+				vector<DataRedundancyStorageSetup>::iterator storageSetupIter=DataRedundancyConfigs[pm].storageLocations.begin();
+				for (; storageSetupIter < DataRedundancyConfigs[pm].storageLocations.end(); storageSetupIter++ )
+				{
+					if (rootUser)
+					{
+						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+								" 'echo " + (*storageSetupIter).storageLocation + " " +
+								installDir + "/gluster/brick" + oam.itoa(brick) + " " +
+								(*storageSetupIter).storageFilesytemType + " defaults 1 2 >> /etc/fstab'";
+					}
+					else
+					{
+						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+								" 'sudo bash -c `sudo echo " + (*storageSetupIter).storageLocation + " " +
+								installDir + "/gluster/brick" + oam.itoa(brick) + " " +
+								(*storageSetupIter).storageFilesytemType + " defaults 1 2 >> /etc/fstab`'";
+					}
+					status = system(command.c_str());
+					if (WEXITSTATUS(status) != 0 )
+					{
+						cout << "ERROR: command failed: " << command << endl;
+						exit(1);
+					}
+					if (rootUser)
+					{
+						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+								" 'mount " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+					}
+					else
+					{
+						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+								" 'sudo bash -c `sudo mount " + installDir + "/gluster/brick" + oam.itoa(brick) + "`'";
+					}
+					status = system(command.c_str());
+					if (WEXITSTATUS(status) != 0 )
+					{
+						cout << "ERROR: command failed: " << command << endl;
+						exit(1);
+					}
+					if (!rootUser)
+					{
+						int user;
+						user = getuid();
+						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+								"'sudo bash -c `sudo chown -R " + oam.itoa(user) + ":" + oam.itoa(user) + " " + installDir + "/gluster/brick" + oam.itoa(brick) + "`'";
+						status = system(command.c_str());
+						if (WEXITSTATUS(status) != 0 )
+						{
+							cout << "ERROR(" << status <<"): command failed: " << command << endl;
+						}
+					}
+
+				}
+			}
+		}
+		if (rootUser)
+		{
+			command = "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr;
+		}
+		else
+		{
+			command = "sudo gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr;
+		}
+		status = system(command.c_str());
+		if (WEXITSTATUS(status) != 0 )
+		{
+			cout << "ERROR: command failed: " << command << endl;
+			exit(1);
+		}
+	}
+	sleep(5);
+	command = "gluster peer status ";
+	status = system(command.c_str());
+	if (WEXITSTATUS(status) != 0 )
+	{
+		cout << "ERROR: command failed: " << command << endl;
+		exit(1);
+	}
+	//Need to wait since peer probe success does not always mean it is ready for volume create command
+	//TODO: figureout a cleaner way to do this.
+	sleep(10);
+	// Build the gluster volumes and start them for each dbroot
+	for (int db=0; db < DBRootCount; db++)
+	{
+		int dbrootID = db + 1;
+		if (rootUser)
+		{
+			command = "gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
+		}
+		else
+		{
+			command = "sudo gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
+		}
+		vector<int>::iterator dbrootPmIter = dbrootPms[db].begin();
+		for (; dbrootPmIter < dbrootPms[db].end(); dbrootPmIter++ )
+		{
+			int pm = (*dbrootPmIter) - 1;
+			command += DataRedundancyConfigs[pm].pmIpAddr + ":" + installDir +"/gluster/brick" + oam.itoa(dbrootID) + " ";
+		}
+		command += "force";
+		status = system(command.c_str());
+		if (WEXITSTATUS(status) != 0 )
+		{
+			cout << "ERROR: command failed: " << command << endl;
+			exit(1);
+		}
+		if (rootUser)
+		{
+			command = "gluster volume start dbroot" + oam.itoa(dbrootID);
+		}
+		else
+		{
+			command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID);
+		}
+		status = system(command.c_str());
+		if (WEXITSTATUS(status) != 0 )
+		{
+			cout << "ERROR: command failed: " << command << endl;
+			exit(1);
+		}
+	}
+
+	return true;
+}
 
 
 // vim:ts=4 sw=4:

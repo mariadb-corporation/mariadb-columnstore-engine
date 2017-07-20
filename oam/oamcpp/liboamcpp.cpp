@@ -6899,11 +6899,12 @@ namespace oam
 			if ( GlusterConfig == "y")
 			{
 				try {
-					string errmsg;
-					int ret = glusterctl(oam::GLUSTER_DELETE, itoa(dbrootID), errmsg, errmsg);
+					string errmsg1;
+					string errmsg2;
+					int ret = glusterctl(oam::GLUSTER_DELETE, itoa(dbrootID), errmsg1, errmsg2);
 					if ( ret != 0 )
 					{
-						cerr << "FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID) + ", error: " + errmsg << endl;
+						cerr << "FAILURE: Error deleting gluster dbroot# " + itoa(dbrootID) + ", error: " + errmsg1 << endl;
 						exceptionControl("removeDbroot", API_FAILURE);
 					}
 				}
@@ -8098,13 +8099,12 @@ namespace oam
 		return;
 	}
 
-
 	/******************************************************************************************
 	* @brief	glusterctl
 	*
 	* purpose:	gluster control and glusteradd
 	*
-	* commands:	status - Used to check status of kuster and disk good/bad 
+	* commands:	status - Used to check status of gluster and disk good/bad
 	*					 returns
 	*						NOTINSTALLED
 	*						OK
@@ -8156,40 +8156,42 @@ namespace oam
 #ifndef _MSC_VER
 		int user;
 		user = getuid();
-		string glustercmd = InstallDir + "/bin/glusterctl";
+		string glustercmd = "gluster ";
 
-		if (access(glustercmd.c_str(), X_OK) != 0 )
-			exceptionControl("glusterctl", API_DISABLED);
+		if (user!=0)
+		{
+			glustercmd = "sudo " + glustercmd;
+		}
 
 		errmsg = "";
 
 		switch ( command ) {
 			case (oam::GLUSTER_STATUS):
 			{
-				glustercmd = glustercmd + " status > /tmp/gluster_status.log 2>&1";
+				string command = glustercmd + "volume status";
 
-				int ret;
-				ret = system(glustercmd.c_str());
-				if ( WEXITSTATUS(ret) == 0 )
-					return 0;
-
-            			ret = checkGlusterLog("/tmp/gluster_status.log", errmsg);
-				return ret;
+				char buffer[128];
+				string result = "";
+				FILE* pipe = popen(command.c_str(), "r");
+				if (!pipe) exceptionControl("GLUSTER_STATUS", API_FAILURE,"popen() failed");
+				try {
+					while (!feof(pipe)) {
+						if (fgets(buffer, 128, pipe) != NULL)
+							result += buffer;
+					}
+				} catch (...) {
+					exceptionControl("GLUSTER_STATUS", API_FAILURE);
+					throw;
+				}
+				pclose(pipe);
+				argument2 = result;
+				return 0;
 			}
 
 			case (oam::GLUSTER_SETDDC):
 			{
-				string copies = argument1;
-
-				writeLog("glusterctl: GLUSTER_SETDDC: " + copies, LOG_TYPE_DEBUG );
-				glustercmd = glustercmd + " setddc " + copies + " > /tmp/gluster_setddc.log 2>&1";
-				int ret;
-				ret = system(glustercmd.c_str());
-				if ( WEXITSTATUS(ret) == 0 )
-					return 0;
-
-            			ret = checkGlusterLog("/tmp/gluster_setddc.log", errmsg);
-				return ret;
+				// The way this was implemented it doesn't seem possible to actually change the value..
+				return 0;
 			}
 
 			case (oam::GLUSTER_ASSIGN):
@@ -8202,18 +8204,7 @@ namespace oam
 			
 				if (returnStatus != API_SUCCESS)
 				exceptionControl("GLUSTER_ASSIGN", returnStatus);
-/*
-				writeLog("glusterctl call: GLUSTER_ASSIGN: dbroot = " + dbrootID + " pm = " + pmID, LOG_TYPE_DEBUG );
-				glustercmd = glustercmd + " assign " + dbrootID + " " + pmID + " > /tmp/gluster_assign.log 2>&1";
-				int ret;
-				ret = system(glustercmd.c_str());
-				writeLog("glusterctl return: GLUSTER_ASSIGN: dbroot = " + dbrootID + " pm = " + pmID, LOG_TYPE_DEBUG );
-				if ( WEXITSTATUS(ret) == 0 )
-					return 0;
 
-            			ret = checkGlusterLog("/tmp/gluster_assign.log", errmsg);
-				return ret;
-*/
 				break;
 			}
 
@@ -8228,84 +8219,188 @@ namespace oam
 				if (returnStatus != API_SUCCESS)
 					exceptionControl("GLUSTER_UNASSIGN", returnStatus);
 
-/*				writeLog("glusterctl: GLUSTER_UNASSIGN: dbroot = " + dbrootID + " pm = " + pmID, LOG_TYPE_DEBUG );
-				glustercmd = glustercmd + " unassign " + dbrootID + " " + pmID + " > /tmp/gluster_unassign.log 2>&1";
-				int ret;
-				ret = system(glustercmd.c_str());
-				if ( WEXITSTATUS(ret) == 0 )
-					return 0;
-
-            			ret = checkGlusterLog("/tmp/gluster_unassign.log", errmsg);
-				return ret;
-*/
 				break;
 			}
 
 			case (oam::GLUSTER_WHOHAS):
 			{
+
+				// Script returned a string of space separated PMIDs everywhere this is called it expects that return form.
+				// When configuring or adding Modules we need to update DataRedundancyConfig section of configuration file.
+				Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
 				string dbrootID = argument1;
-				string msg;
-
-				for ( int retry = 0 ; retry < 5 ; retry++ )
+				string moduleDBRootIDPMs = "DBRoot" + dbrootID + "PMs";
+				string msg = sysConfig->getConfig("DataRedundancyConfig",moduleDBRootIDPMs);
+				if (msg.empty())
 				{
-					writeLog("glusterctl: GLUSTER_WHOHAS for dbroot : " + dbrootID, LOG_TYPE_DEBUG );
-					glustercmd = glustercmd + " whohas " + dbrootID + " > /tmp/gluster_howhas.log 2>&1";
-					system(glustercmd.c_str());
-	
-					int ret;
-					ret = checkGlusterLog("/tmp/gluster_howhas.log", msg);
-	
-					if ( ret == 0 )
-					{ // OK return, get pm list
-						if ( msg.empty() )
-						{
-							writeLog("glusterctl: GLUSTER_WHOHAS: empty pm list", LOG_TYPE_ERROR );
-							exceptionControl("glusterctl", API_FAILURE);
-						}
-						else
-						{
-							writeLog("glusterctl: GLUSTER_WHOHAS: pm list = " + msg, LOG_TYPE_DEBUG );
-							argument2 = msg;
-							return 0;
-						}
-					}
-
-					// retry failure
-					writeLog("glusterctl: GLUSTER_WHOHAS: failure, retrying (restarting gluster) " + msg, LOG_TYPE_ERROR );
-
-					string cmd = "service glusterd restart > /dev/null 2>&1";
-					if (user != 0)
-						cmd = "sudo " + cmd;
-
-					system(cmd.c_str());
-
-					cmd = "systemctrl restart glusterd > /dev/null 2>&1";
-					if (user != 0)
-						cmd = "sudo " + cmd;
-
-					system(cmd.c_str());
-					sleep(1);
+					exceptionControl("glusterctl", API_FAILURE);
 				}
-
+				argument2 = msg;
+				return 0;
 				break;
 			}
 
 			case (oam::GLUSTER_ADD):
 			{
-				string pmID = argument1;
-				string dbrootID = argument2;
+				int pmID = atoi(argument1.c_str());
+				int dbrootID = atoi(argument2.c_str());
+				string command = "";
+				writeLog("glusterctl: GLUSTER_ADD: dbroot = " + argument2 + " pm = " + argument1, LOG_TYPE_DEBUG );
 
-				string glustercmd = InstallDir + "/bin/glusteradd";
-				writeLog("glusterctl: GLUSTER_ADD: dbroot = " + dbrootID + " pm = " + pmID, LOG_TYPE_DEBUG );
-				glustercmd = glustercmd + " " + pmID  + " " + dbrootID + " > /tmp/gluster_add.log 2>&1";
-				int ret;
-				//writeLog("glusterctl: cmd = " + glustercmd, LOG_TYPE_DEBUG );
-				ret = system(glustercmd.c_str());
-				if ( WEXITSTATUS(ret) == 0 )
-					return 0;
+				Config* sysConfig = Config::makeConfig();
+	            ModuleTypeConfig moduletypeconfig;
+                getSystemConfig("pm", moduletypeconfig);
+				int dataRedundancyCopies;
+				int dbrootCount;
+                getSystemConfig("DataRedundancyCopies",dataRedundancyCopies);
+                getSystemConfig("DBRootCount",dbrootCount);
 
-            			ret = checkGlusterLog("/tmp/gluster_add.log", errmsg);
-				return ret;
+				int numberPMs = moduletypeconfig.ModuleCount;
+				int numberNewPMs = numberPMs - pmID + 1;
+				int numberNewDBRoots = (dbrootCount - dbrootID) + 1;
+            	int numberDBRootsPerPM = numberNewDBRoots/numberNewPMs;
+
+            	std::vector<int> dbrootPms[dbrootCount];
+            	DataRedundancyConfig DataRedundancyConfigs[numberPMs];
+        		int startDBRootID = dbrootID;
+
+            	for (int pm=(pmID-1); pm < numberPMs; pm++,startDBRootID++)
+            	{
+            		DataRedundancyConfigs[pm].pmID = (pm+1);
+            		string moduleHostName = "ModuleHostName" + itoa(pm+1)  + "-1-3";
+            		string moduleIpAddr = "ModuleIPAddr" + itoa(pm+1)  + "-1-3";
+
+            		DataRedundancyConfigs[pm].pmHostname = sysConfig->getConfig("DataRedundancyConfig",moduleHostName);
+            		DataRedundancyConfigs[pm].pmIpAddr = sysConfig->getConfig("DataRedundancyConfig",moduleIpAddr);
+            		if (DataRedundancyConfigs[pm].pmHostname.empty())
+            		{
+            			DataRedundancyConfigs[pm].pmHostname = sysConfig->getConfig("SystemModuleConfig",moduleHostName);
+            		}
+            		if (DataRedundancyConfigs[pm].pmIpAddr.empty())
+            		{
+            			DataRedundancyConfigs[pm].pmIpAddr = sysConfig->getConfig("SystemModuleConfig",moduleIpAddr);
+            		}
+
+            		int nextPM = (pm+1);
+            		int dbrootCopy = startDBRootID;
+            		if (nextPM >= numberPMs)
+            		{
+            			nextPM=(pmID-1);
+            		}
+            		for ( int i=0; i<numberDBRootsPerPM; i++)
+            		{
+            			DataRedundancyConfigs[pm].dbrootCopies.push_back(dbrootCopy);
+            			for ( int copies = 0; copies < (dataRedundancyCopies-1); copies++)
+            			{
+            				DataRedundancyConfigs[nextPM].dbrootCopies.push_back(dbrootCopy);
+            				nextPM++;
+            				if (nextPM >= numberPMs)
+            				{
+            					nextPM=(pmID-1);
+            				}
+            				if (nextPM == pm)
+            				{
+            					nextPM++;
+            				}
+            				if (nextPM >= numberPMs)
+            				{
+            					nextPM=(pmID-1);
+            				}
+            			}
+            			dbrootCopy += numberNewPMs;
+            		}
+            	}
+
+            	for (int db=(dbrootID-1); db < dbrootCount; db++)
+            	{
+            		int newDBrootID = db + 1;
+            		string dbrootIDPMs = "";
+            		string moduleDBRootIDPMs = "DBRoot" + itoa(newDBrootID) + "PMs";
+            		for (int pm=(pmID-1); pm < numberPMs; pm++)
+            		{
+            			if(find(DataRedundancyConfigs[pm].dbrootCopies.begin(),DataRedundancyConfigs[pm].dbrootCopies.end(),newDBrootID) != DataRedundancyConfigs[pm].dbrootCopies.end())
+            			{
+            				dbrootPms[db].push_back(DataRedundancyConfigs[pm].pmID);
+            				dbrootIDPMs += itoa(DataRedundancyConfigs[pm].pmID);
+            				dbrootIDPMs += " ";
+            			}
+            		}
+            		// Store to config and distribute so that GLUSTER_WHOHAS will work
+            		sysConfig->setConfig("DataRedundancyConfig", moduleDBRootIDPMs, dbrootIDPMs);
+            	}
+
+            	for (int pm=(pmID-1); pm < numberPMs; pm++)
+            	{
+	            	command = glustercmd + "peer probe " + DataRedundancyConfigs[pm].pmIpAddr;
+					int status = system(command.c_str());
+					if (WEXITSTATUS(status) != 0 )
+					{
+						writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
+						exceptionControl("GLUSTER_ADD", API_FAILURE);
+					}
+            	}
+            	sleep(5);
+            	command = glustercmd + "peer status ";
+            	int status = system(command.c_str());
+            	if (WEXITSTATUS(status) != 0 )
+            	{
+            		cout << "ERROR: command failed: " << command << endl;
+            		exit(1);
+            	}
+            	//Need to wait since peer probe success does not always mean it is ready for volume create command
+            	sleep(10);
+            	for (int db=(dbrootID-1); db < dbrootCount; db++)
+            	{
+            		int newDbrootID = db + 1;
+
+            		command = glustercmd + "volume create dbroot" + itoa(newDbrootID) + " transport tcp replica " + itoa(dataRedundancyCopies) + " ";
+
+            		vector<int>::iterator dbrootPmIter = dbrootPms[db].begin();
+            		for (; dbrootPmIter < dbrootPms[db].end(); dbrootPmIter++ )
+            		{
+            			int pm = (*dbrootPmIter) - 1;
+            			command += DataRedundancyConfigs[pm].pmIpAddr + ":" + InstallDir +"/gluster/brick" + itoa(newDbrootID) + " ";
+            		}
+            		command += "force";
+					int status = system(command.c_str());
+					if (WEXITSTATUS(status) != 0 )
+					{
+						writeLog("ERROR: command failed: " + command,LOG_TYPE_DEBUG);
+						exceptionControl("GLUSTER_ADD", API_FAILURE);
+					}
+					command = glustercmd + "volume start dbroot" + itoa(newDbrootID);
+					status = system(command.c_str());
+					if (WEXITSTATUS(status) != 0 )
+					{
+						writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
+						exceptionControl("GLUSTER_ADD", API_FAILURE);
+					}
+            	}
+
+        		try
+        		{
+        			sysConfig->write();
+        		}
+        		catch(...)
+        		{
+        			exceptionControl("sysConfig->write", API_FAILURE);
+        		}
+
+        		distributeConfigFile("system");
+
+            	for (int pm=(pmID-1); pm < numberPMs; pm++)
+            	{
+            		for (int i=0; i<numberDBRootsPerPM; i++)
+            		{
+            			string ModuleDBRootID = "ModuleDBRootID"+ itoa(pm+1) + "-" + itoa(i+1) +"-3";
+            			string dbr = sysConfig->getConfig("SystemModuleConfig",ModuleDBRootID);
+            			string command = "" + DataRedundancyConfigs[pm].pmIpAddr +
+            					":/dbroot" + dbr + " " + InstallDir + "/data" + dbr +
+            					" glusterfs defaults,direct-io-mode=enable 00";
+            			string toPM = "pm" + itoa(pm+1);
+            			distributeFstabUpdates(command,toPM);
+            		}
+            	}
 
 				break;
 			}
@@ -8313,18 +8408,27 @@ namespace oam
 			case (oam::GLUSTER_DELETE):
 			{
 				string dbrootID = argument1;
-
+				string command = "";
+				int status;
 				writeLog("glusterctl: GLUSTER_DELETE: dbroot = " + dbrootID, LOG_TYPE_DEBUG );
-				glustercmd = glustercmd + " delete " + dbrootID  +  " > /tmp/gluster_delete.log 2>&1";
-				int ret;
-				//writeLog("glusterctl: cmd = " + glustercmd, LOG_TYPE_DEBUG );
-				ret = system(glustercmd.c_str());
-				if ( WEXITSTATUS(ret) == 0 )
-					return 0;
 
-            			ret = checkGlusterLog("/tmp/gluster_delete.log", errmsg);
-				return ret;
+				command = glustercmd + "volume stop dbroot" + dbrootID;
 
+				status = system(command.c_str());
+				if (WEXITSTATUS(status) != 0 )
+				{
+					writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
+					exceptionControl("GLUSTER_DELETE", API_FAILURE);
+				}
+
+				command = glustercmd + "volume delete dbroot" + dbrootID;
+
+				status = system(command.c_str());
+				if (WEXITSTATUS(status) != 0 )
+				{
+					writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
+					exceptionControl("GLUSTER_DELETE", API_FAILURE);
+				}
 				break;
 			}
 
@@ -8648,7 +8752,6 @@ namespace oam
 
 		return entry;
 	}
-
 
     /***************************************************************************
      * PRIVATE FUNCTIONS
