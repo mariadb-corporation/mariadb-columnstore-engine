@@ -90,7 +90,7 @@ start() {
 			exit 1
 		fi
 	fi
-	#checkInstallSetup
+	checkInstallSetup
 
 	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then

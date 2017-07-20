@@ -594,7 +594,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 						log.writeLog(__LINE__, "START: process already active " + processName);
 
 					//Inform Process Manager that Process restart
-					processRestarted(processName);
+					//processRestarted(processName);
 
 					ackMsg << (ByteStream::byte) ACK;
 					ackMsg << (ByteStream::byte) START;
@@ -693,7 +693,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					}
 
 					//Inform Process Manager that Process restart
-					processRestarted(processName);
+					//processRestarted(processName);
 
 					ackMsg << (ByteStream::byte) ACK;
 					ackMsg << (ByteStream::byte) RESTART;

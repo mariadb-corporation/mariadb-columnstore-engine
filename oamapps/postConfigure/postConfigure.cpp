@@ -4886,7 +4886,7 @@ bool copyFstab(string moduleName)
 	if ( rootUser)
    		cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
 	else
-		cmd = "/sudo bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+		cmd = "sudo /bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
 
 	system(cmd.c_str());
 
