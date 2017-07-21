@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
                      
 ########### next target ###############
 
-set(udfsdk_LIB_SRCS udfinfinidb.cpp)
+set(udfsdk_LIB_SRCS udfsdk.cpp)
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
