@@ -6,7 +6,7 @@ and follow the pre-requisite and build instructions.
 
 Go into the utils/udfsdk directory.
 
-At this point you can use the idb_add() function template in udfinfinidb.cpp and udfmysql.cpp
+At this point you can use the MCS_add() function template in udfsdk.cpp and udfmysql.cpp
 files to create your own function or just try that function as is.
 - Make the library
     $ make
@@ -17,9 +17,9 @@ files to create your own function or just try that function as is.
     $ mcsadmin restartsystem y
 - Using the mcsmysql client add the user defined function, e.g,
     $ mcsmysql
-    > create function idb_add returns integer soname 'libudf_mysql.so';
-    > create function json_ptr returns string soname 'libudf_mysql.so';
+    > create function mcs_add returns integer soname 'libudf_mysql.so';
+    > create function mcs_isnull returns string soname 'libudf_mysql.so';
 
-You should now be able to use the idb_add() function in the select and/or where clauses 
+You should now be able to use the mcs_add(arg1, arg2) and mcs_isnull(arg) functions in the select and/or where clauses
 of SQL statements.
 
