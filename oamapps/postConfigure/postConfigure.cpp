@@ -2052,11 +2052,6 @@ int main(int argc, char *argv[])
 					if( !makeRClocal(moduleType , newModuleName, IserverTypeInstall) )
 						cout << "makeRClocal error" << endl;
 	
-					//if cloud, copy fstab in module tmp dir
-					if ( amazonInstall && moduleType == "pm")
-						if( !copyFstab(newModuleName) )
-							cout << "copyFstab error" << endl;
-
 					//setup DBRM Processes
 					if ( newModuleName == parentOAMModuleName )
 						sysConfig->setConfig("DBRM_Controller", "IPAddr", newModuleIPAddr);
@@ -2591,6 +2586,12 @@ int main(int argc, char *argv[])
 		cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
 		exit(1);
 	}
+
+	//if cloud, copy fstab in module tmp dir
+	if ( amazonInstall)
+		if( !copyFstab("pm1") )
+			cout << "copyFstab error" << endl;
+
 
 	//check 'files per parition' with number of dbroots
 	checkFilesPerPartion(DBRootCount, sysConfig);
@@ -4883,10 +4884,7 @@ void setSystemName()
 bool copyFstab(string moduleName)
 {
 	string cmd;	
-	if ( rootUser)
-   		cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
-	else
-		cmd = "sudo /bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+   	cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
 
 	system(cmd.c_str());
 

@@ -451,7 +451,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 										sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 										sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 								
-										//update Calpont Config table
+										//update Columnstore Config table
 										try {
 											sysConfig->write();
 										}
@@ -1281,7 +1281,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 						sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 				
-						//update Calpont Config table
+						//update Columnstore Config table
 						try {
 							sysConfig->write();
 						}
@@ -1356,7 +1356,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 					sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 			
-					//update Calpont Config table
+					//update Columnstore Config table
 					try {
 						sysConfig->write();
 					}
@@ -4545,7 +4545,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		pthread_mutex_unlock(&THREAD_LOCK);
 		return API_FILE_OPEN_ERROR;
 	}
-	log.writeLog(__LINE__, "addModule - Calpont Package found:" + calpontPackage, LOG_TYPE_DEBUG);
+	log.writeLog(__LINE__, "addModule - Columnstore Package found:" + calpontPackage, LOG_TYPE_DEBUG);
 
 	//
 	// Verify Host IP and Password
@@ -4565,6 +4565,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 		if (rpw != oam::UnassignedName)
 			password = rpw;
+	}
+	
+	if ( amazon ) {
+	    //remove know_host which shows up if you addmodule/removemodule/addmodule
+	    string file = homedir + "/.ssh/known_hosts";
+	    unlink (file.c_str());
 	}
 
 	listPT = devicenetworklist.begin();
@@ -4687,13 +4693,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
 					system(cmd.c_str());
 					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
-						//check for RSA KEY ISSUE and fix
-						if (oam.checkLogStatus("/tmp/login_test.log", "Offending")) {
-							log.writeLog(__LINE__, "addModule - login failed, Offending key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
-							string file = "/tmp/login_test.log";
-							oam.fixRSAkey(file);
-						}
-
 						log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
 						sleep(10);
 						continue;
@@ -4896,7 +4895,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		}
 	}
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -5263,7 +5262,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string remoteHostName = (*pt1).HostName;
 
 		//send start service commands
-		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
+		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Columnstore restart' 0";
 		system(cmd.c_str());
 		log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
 
@@ -5595,7 +5594,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 
 	log.writeLog(__LINE__, "removeModule - Updated DBRoot paramaters", LOG_TYPE_DEBUG);
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -5838,7 +5837,7 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 
 	log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -5930,7 +5929,7 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 
 	log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -7581,7 +7580,7 @@ int ProcessManager::updatePMSconfig( bool check )
 				nicID = 1;
 		}
 	
-		//update Calpont Config table
+		//update Columnstore Config table
 		try {
 			sysConfig1->write();
 			pthread_mutex_unlock(&THREAD_LOCK);
@@ -8022,7 +8021,7 @@ int ProcessManager::setPMProcIPs( std::string moduleName, std::string processNam
 /******************************************************************************************
 * @brief	distributeConfigFile
 *
-* purpose:	Distribute Calpont Config File to system modules
+* purpose:	Distribute Columnstore Config File to system modules
 *
 ******************************************************************************************/
 int ProcessManager::distributeConfigFile(std::string name, std::string file)
@@ -8530,7 +8529,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 		sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 		sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 
-		//update Calpont Config table
+		//update Columnstore Config table
 		try {
 			sysConfig4->write();
 		}
@@ -9100,7 +9099,7 @@ int ProcessManager::OAMParentModuleChange()
 		sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 		sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 
-		//update Calpont Config table
+		//update Columnstore Config table
 		try {
 			sysConfig4->write();
 		}
