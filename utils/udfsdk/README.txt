@@ -1,26 +1,23 @@
-How to use the InfiniDB UDF SDK
+How to use the ColumnStore UDF SDK
 
-Make sure you have a working GCC C++ compiler system, version 4.1.2 or later. You 
-also must have the libxml2-devel package installed.
-Obtain the InfiniDB source distribution for your version of InfiniDB 
-from github.com.
-Ideally, the machine you are compiling on and deploying on are the same machine. If this 
-is not possible, they must have the same InfiniDB software installation.
-
-Unpack the source tar file
+Obtain the MariaDB columnstore source code from https://github.com/mariadb-corporation/mariadb-columnstore-server
+and follow the pre-requisite and build instructions.
 
 Go into the utils/udfsdk directory.
 
-At this point you can use the idb_add() function template in udfinfinidb.cpp and udfmysql.cpp
+At this point you can use the MCS_add() function template in udfsdk.cpp and udfmysql.cpp
 files to create your own function or just try that function as is.
-Make the library
-Stop InfiniDB
-Copy the libudf_mysql.so.1.0.0 and libudfsdk.so.1.0.0 file to /usr/local/mariadb/columnstore/lib on
-every InfiniDB node
-Start InfiniDB
-In the directory /usr/local/mariadb/columnstore/mysql/lib64/mysql/plugin create a symbolic link called 
-libudf_msql.so to the file /usr/local/mariadb/columnstore/lib/libudf_msql.so.1.0.0
-In the mysql client add the function (e.g. "create function idb_add returns integer soname 
-'libudf_msql.so';")
-You should now be able to use the idb_add() function in the select and/or where clauses 
+- Make the library
+    $ make
+- Copy the libudf_mysql.so.1.0.0 and libudfsdk.so.1.0.0 file to /usr/local/mariadb/columnstore/lib on
+  every columnstore node.
+    $ sudo cp libudf_mysql.so.1.0.0 libudfsdk.so.1.0.0 /usr/local/mariadb/columnstore/lib/
+- Restart ColumnStore
+    $ mcsadmin restartsystem y
+- Using the mcsmysql client add the user defined function, e.g,
+    $ mcsmysql
+    > create function mcs_add returns integer soname 'libudf_mysql.so';
+    > create function mcs_isnull returns string soname 'libudf_mysql.so';
+
+You should now be able to use the mcs_add(arg1, arg2) and mcs_isnull(arg) functions in the select and/or where clauses
 of SQL statements.
