@@ -5173,8 +5173,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > " + logFile; 
 					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
-					    system(cmd.c_str());
-
 					    bool passed = false;
 					    for ( int retry = 0 ; retry < 20 ; retry++ )
 					    {
