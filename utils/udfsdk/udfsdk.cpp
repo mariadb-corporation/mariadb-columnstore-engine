@@ -77,7 +77,6 @@ FuncMap UDFSDK::UDFMap() const
 	fm["mcs_add"] = new MCS_add();
 	fm["mcs_isnull"] = new MCS_isnull();
     fm["json_ptr"] = new json_ptr();
-
 	return fm;
 }
 
