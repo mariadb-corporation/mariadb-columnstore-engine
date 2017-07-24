@@ -1,0 +1,3 @@
+[submodule "utils/udfsdk/rapidjson"]
+	path = utils/udfsdk/rapidjson
+	url = https://github.com/miloyip/rapidjson

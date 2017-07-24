@@ -47,6 +47,7 @@
 #include "funcexp.h"
 #include "functor.h"
 
+
 #if defined(_MSC_VER) && defined(UDFSDK_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
@@ -323,6 +324,105 @@ public:
 								execplan::CalpontSystemCatalog::ColType& op_ct);									
 };
 
+
+
+    /**
+ * Example: MCS_json_path(arg1)
+ */
+    class json_ptr : public funcexp::Func
+    {
+    public:
+        /*
+         * Constructor. Pass the function name to the base constructor.
+         */
+        json_ptr() : Func("json_ptr") {}
+
+        /*
+         * Destructor.
+         */
+        virtual ~json_ptr() {}
+
+        /**
+         * Decide on the function's operation type
+         */
+        execplan::CalpontSystemCatalog::ColType operationType(funcexp::FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+        /**
+         * Returns an integer result of this function.
+         */
+        virtual int64_t getIntVal(rowgroup::Row& row,
+                                  funcexp::FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct);
+
+        /**
+         * Returns a double result of this function.
+         */
+        virtual double getDoubleVal(rowgroup::Row& row,
+                                    funcexp::FunctionParm& fp,
+                                    bool& isNull,
+                                    execplan::CalpontSystemCatalog::ColType& op_ct);
+
+        /**
+         * Returns a float result of this function.
+         */
+        virtual float getFloatVal(rowgroup::Row& row,
+                                  funcexp::FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct);
+
+        /**
+         * Returns a string result of this function.
+         */
+        virtual std::string getStrVal(rowgroup::Row& row,
+                                      funcexp::FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct);
+
+        /**
+         * Returns a bool result of this function.
+         */
+        virtual bool getBoolVal(rowgroup::Row& row,
+                                funcexp::FunctionParm& fp,
+                                bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& op_ct);
+
+        /**
+         * Returns a decimal result of this function.
+         *
+         * IDB_Decimal is defined in ~/execplan/treenode.h
+         */
+        virtual execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row,
+                                                    funcexp::FunctionParm& fp,
+                                                    bool& isNull,
+                                                    execplan::CalpontSystemCatalog::ColType& op_ct);
+
+        /**
+         * Returns an InfiniDB integer representation of a date result of the function.
+         *
+         * Check the date/time functions in ~/utils/funcexp for implementation
+         * example of this API.
+         */
+        virtual int32_t getDateIntVal(rowgroup::Row& row,
+                                      funcexp::FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct);
+
+        /**
+         * Returns an InfiniDB integer representation of a datetime result of the function.
+         *
+         * Check the date/time functions in ~/utils/funcexp for implementation
+         * example of this API.
+         */
+        virtual int64_t getDatetimeIntVal(rowgroup::Row& row,
+                                          funcexp::FunctionParm& fp,
+                                          bool& isNull,
+                                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
+	private:
+		void log_debug(std::string arg1, std::string arg2);
+
+    };
 }
 
 #undef EXPORT
