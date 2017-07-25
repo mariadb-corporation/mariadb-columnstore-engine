@@ -4492,7 +4492,7 @@ bool storageSetup(bool amazonInstall)
 
 	if ( glusterInstalled == "y" && hadoopInstalled == "n" )
 	{
-		cout << "There are 3 options when configuring the storage: internal, external, or gluster" << endl << endl;
+		cout << "There are 3 options when configuring the storage: internal, external, or DataRedundancy" << endl << endl;
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=GlusterFS] (" + storageType + ") > ";
 	}
 
@@ -4504,7 +4504,7 @@ bool storageSetup(bool amazonInstall)
 
 	if ( glusterInstalled == "y" && hadoopInstalled == "y" )
 	{
-		cout << "There are 5 options when configuring the storage: internal, external, GlusterFS, or hdfs" << endl << endl;
+		cout << "There are 5 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=GlusterFS, 4=hdfs] (" + storageType + ") > ";
 	}
 
@@ -4515,8 +4515,8 @@ bool storageSetup(bool amazonInstall)
 
 	if ( glusterInstalled == "y" )
 	{
-		cout << "  'GlusterFS' -   This is specified when GlusterFS Data Redundancy is installed" << endl;
-		cout << "                  and you want the DBRoot directories to be controlled by glusterfs." << endl;
+		cout << "  'DataRedundancy' - This is specified when gluster is installed and you want" << endl;
+		cout << "                  the DBRoot directories to be controlled by ColumnStore Data Redundancy." << endl;
 		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 	}
 
