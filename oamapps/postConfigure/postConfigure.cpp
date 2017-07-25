@@ -4493,7 +4493,7 @@ bool storageSetup(bool amazonInstall)
 	if ( glusterInstalled == "y" && hadoopInstalled == "n" )
 	{
 		cout << "There are 3 options when configuring the storage: internal, external, or DataRedundancy" << endl << endl;
-		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=GlusterFS] (" + storageType + ") > ";
+		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy] (" + storageType + ") > ";
 	}
 
 	if ( glusterInstalled == "n" && hadoopInstalled == "y" )
@@ -4505,7 +4505,7 @@ bool storageSetup(bool amazonInstall)
 	if ( glusterInstalled == "y" && hadoopInstalled == "y" )
 	{
 		cout << "There are 5 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
-		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=GlusterFS, 4=hdfs] (" + storageType + ") > ";
+		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy, 4=hdfs] (" + storageType + ") > ";
 	}
 
 	cout << "  'internal' -    This is specified when a local disk is used for the DBRoot storage." << endl;
