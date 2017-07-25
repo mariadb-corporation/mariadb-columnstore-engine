@@ -7872,12 +7872,24 @@ namespace oam
 
 	std::string Oam::getEC2VolumeStatus(std::string volumeName)
 	{
-		// run script to get Volume Status
-		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > /tmp/getVolumeStatus_" + volumeName;
-		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
-			return "failed";
-
+		bool pass = true;
+		for ( int retry = 0 ; retry < 5 ; retry++ )
+		{
+		      // run script to get Volume Status
+		      string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > /tmp/getVolumeStatus_" + volumeName;
+		      int ret = system(cmd.c_str());
+		      if (WEXITSTATUS(ret) == 0 )
+			      break;
+		      else
+		      {
+			  sleep(1);
+			  pass = false;
+		      }
+		}
+		
+		if (!pass)
+		  return "failed";
+		
 		// get status
 		string status;
 		string file = "/tmp/getVolumeStatus_" + volumeName;
