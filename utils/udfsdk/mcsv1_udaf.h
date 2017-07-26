@@ -376,8 +376,8 @@ private:
 	int64_t  fRowCnt;         // The number of rows involved in this aggregate.
 	WF_FRAME fStartFrame;     // Is set to default to start, then modified by the actual frame in the call
 	WF_FRAME fEndFrame;       // Is set to default to start, then modified by the actual frame in the call
-	int32_t  fStartConstant;  // for start frame WF_PRECEEDIMG or WF_FOLLOWING
-	int32_t  fEndConstant;    // for end frame WF_PRECEEDIMG or WF_FOLLOWING
+	int32_t  fStartConstant;  // for start frame WFPRECEEDOMG or WF_FOLLOWING
+	int32_t  fEndConstant;    // for end frame WFPRECEEDOMG or WF_FOLLOWING
 	std::string functionName;
 	mcsv1sdk::mcsv1_UDAF* func;
 

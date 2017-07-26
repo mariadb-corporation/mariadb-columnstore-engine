@@ -2211,10 +2211,10 @@ boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 void BPPV::abort()
 {
 	sendThread->abort();
-    BOOST_FOREACH( boost::shared_ptr<BatchPrimitiveProcessor> bpp, v )
-    {
-        bpp->unlock();
-    }
+	BOOST_FOREACH( boost::shared_ptr<BatchPrimitiveProcessor> bpp, v )
+	{
+		bpp->unlock();
+	}
 }
 
 bool BPPV::aborted()
