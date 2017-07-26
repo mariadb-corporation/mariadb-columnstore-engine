@@ -72,6 +72,7 @@ bool startsystemthreadRunning = false;
 string gdownActiveOAMModule;
 vector<string> downModuleList;
 bool startFailOver = false;
+extern string DBRootStorageType;
 
 string masterLogFile = oam::UnassignedName;
 string masterLogPos = oam::UnassignedName;
@@ -2791,6 +2792,16 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 				log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted on " + moduleName + "/" + processName);
 
+				//set query system states not ready
+				BRM::DBRM dbrm;
+				dbrm.setSystemQueryReady(false);
+
+				processManager.setQuerySystemState(false);
+
+				processManager.setSystemState(oam::BUSY_INIT);
+
+				processManager.reinitProcessType("cpimport");
+
 				//request reinit after Process is active
 				for ( int i = 0; i < 600 ; i++ ) {
 					try {
@@ -2916,6 +2927,13 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						break;
 					}
 				}
+
+				//enable query stats
+				dbrm.setSystemQueryReady(true);
+
+				processManager.setQuerySystemState(true);
+
+				processManager.setSystemState(oam::ACTIVE);
 			}
 			break;
 
@@ -8525,14 +8543,6 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
 	log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
 
-	string DBRootStorageType = "internal";
-	{
-		try{
-			oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
-	}
-
 	if ( DBRootStorageType == "internal" && GlusterConfig == "n") {
 		log.writeLog(__LINE__, "ERROR: DBRootStorageType = internal", LOG_TYPE_ERROR);
 		pthread_mutex_unlock(&THREAD_LOCK);
@@ -8816,15 +8826,6 @@ int ProcessManager::OAMParentModuleChange()
 	catch(...)
 	{
 		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-
-	// dbroot storage type, do different failover if internal
-	string DBRootStorageType = "internal";
-	{
-		try{
-			oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
 	}
 
 	string cmdLine = "ping ";
