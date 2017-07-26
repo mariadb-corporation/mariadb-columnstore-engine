@@ -2945,14 +2945,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 				msg >> moduleName;
 
-				oam.dbrmctl("halt");
-				log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
-
 				int ret = processManager.getDBRMData(fIos, moduleName);
-
-				oam.dbrmctl("resume");
-				log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
 
 				if ( ret == oam::API_SUCCESS )
 					log.writeLog(__LINE__, "Get DBRM Data Files Completed");
