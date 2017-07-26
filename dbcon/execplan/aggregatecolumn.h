@@ -70,7 +70,8 @@ public:
 		BIT_AND,
 		BIT_OR,
 		BIT_XOR,
-		GROUP_CONCAT
+		GROUP_CONCAT,
+		UDAF
 	};
 
 	/**

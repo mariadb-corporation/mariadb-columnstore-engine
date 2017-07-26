@@ -21,7 +21,8 @@ set(windowfunction_LIB_SRCS
     wf_ranking.cpp
     wf_row_number.cpp
     wf_stats.cpp
-    wf_sum_avg.cpp)
+    wf_sum_avg.cpp
+    wf_udaf.cpp)
 
 add_library(windowfunction SHARED ${windowfunction_LIB_SRCS})
 

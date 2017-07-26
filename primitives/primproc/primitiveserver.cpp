@@ -92,6 +92,8 @@ using namespace threadpool;
 
 #include "atomicops.h"
 
+#include <boost/foreach.hpp>
+
 #ifndef O_BINARY
 #  define O_BINARY 0
 #endif
@@ -2176,6 +2178,10 @@ boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 void BPPV::abort()
 {
 	sendThread->abort();
+	BOOST_FOREACH( boost::shared_ptr<BatchPrimitiveProcessor> bpp, v )
+	{
+		bpp->unlock();
+	}
 }
 
 bool BPPV::aborted()

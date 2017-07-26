@@ -163,11 +163,35 @@ void WindowFunction::operator()()
 			}
 			else
 			{
+				pair<int64_t, int64_t> w;
+				pair<int64_t, int64_t> prevFrame;
+				int64_t b, e;
+				bool firstTime = true;
 				for (int64_t i = begin; i <= end && !fStep->cancelled(); i++)
 				{
-					pair<int64_t, int64_t> w = fFrame->getWindow(begin, end, i);
-					fFunctionType->resetData();
-					fFunctionType->operator()(w.first, w.second, i);
+					w = fFrame->getWindow(begin, end, i);
+					b = w.first;
+					e = w.second;
+					if (firstTime)
+					{
+						prevFrame = w;
+					}
+					// UDAnF functions may have a dropValue function implemented.
+					// If they do, we can optimize by calling dropValue() for those
+					// values leaving the window and nextValue for those entering, rather
+					// than a resetData() and then iterating over the entire window.
+					// Built-in functions may have this functionality added in the future.
+					if (fFunctionType->dropValues(prevFrame.first, w.first))
+					{
+						b = firstTime ? w.first : prevFrame.second+1;
+					}
+					else
+					{
+						fFunctionType->resetData();
+					}
+					fFunctionType->operator()(b, e, i);
+					prevFrame = w;
+					firstTime = false;
 				}
 			}
 		}
