@@ -380,7 +380,7 @@ Error:
 		ostringstream os;
 		os << "DEC: lost connection to " << client->addr2String();
 		writeToLog(__FILE__, __LINE__, os.str(), LOG_TYPE_CRITICAL);
-	}
+//	}
 	return;
 }
 
