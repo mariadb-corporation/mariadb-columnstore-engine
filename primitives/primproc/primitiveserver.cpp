@@ -1145,6 +1145,30 @@ struct BPPHandler
 {
 	BPPHandler(PrimitiveServer* ps) : fPrimitiveServerPtr(ps) { }
 
+    // Keep a list of keys so that if connection fails we don't leave BPP
+    // threads lying around
+    std::vector<uint32_t> bppKeys;
+    std::vector<uint32_t>::iterator bppKeysIt;
+
+    ~BPPHandler()
+    {
+        for (bppKeysIt = bppKeys.begin() ; bppKeysIt != bppKeys.end(); ++bppKeysIt)
+        {
+            uint32_t key = *bppKeysIt;
+            BPPMap::iterator it;
+
+            mutex::scoped_lock scoped(bppLock);
+            it = bppMap.find(key);
+            if (it != bppMap.end()) {
+                it->second->abort();
+                bppMap.erase(it);
+            }
+            scoped.unlock();
+            fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
+            OOBPool->removeJobs(key);
+        }
+    }
+
 	struct BPPHandlerFunctor : public PriorityThreadPool::Functor {
 		BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : bs(b)
 		{
@@ -1200,6 +1224,10 @@ struct BPPHandler
 
 		bs.advance(sizeof(ISMPacketHeader));
 		bs >> key;
+        bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), key);
+        if (bppKeysIt != bppKeys.end()) {
+            bppKeys.erase(bppKeysIt);
+        }
 		mutex::scoped_lock scoped(bppLock);
 		it = bppMap.find(key);
 		if (it != bppMap.end()) {
@@ -1273,6 +1301,7 @@ struct BPPHandler
 			}
 		}
 		key = bpp->getUniqueID();
+        bppKeys.push_back(key);
 		mutex::scoped_lock scoped(bppLock);
 		bool newInsert;
 		newInsert = bppMap.insert(pair<uint32_t, SBPPV>(key, bppv)).second;
@@ -1402,6 +1431,11 @@ struct BPPHandler
 
 		mutex::scoped_lock lk(djLock);
 		mutex::scoped_lock scoped(bppLock);
+
+        bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
+        if (bppKeysIt != bppKeys.end()) {
+            bppKeys.erase(bppKeysIt);
+        }
 
 		it = bppMap.find(uniqueID);
 		if (it != bppMap.end()) {
