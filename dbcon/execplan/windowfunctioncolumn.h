@@ -31,6 +31,8 @@
 
 #include "returnedcolumn.h"
 #include "functor.h"
+#include "mcsv1_udaf.h"
+#include "wf_frame.h"
 
 namespace messageqcpp {
 class ByteStream;
@@ -40,61 +42,6 @@ class ByteStream;
  * Namespace
  */
 namespace execplan { 
-
-// This enum is made consistant with mysql Item_window_func
-enum WF_FRAME
-{
-	WF_PRECEDING = 0,
-	WF_FOLLOWING,
-	WF_UNBOUNDED_PRECEDING,
-	WF_UNBOUNDED_FOLLOWING,
-	WF_CURRENT_ROW,
-	WF_UNKNOWN
-};
-
-struct WF_Boundary
-{
-	WF_Boundary() {}
-	WF_Boundary(WF_FRAME frame):fFrame(frame) {}
-	~WF_Boundary() {}
-	const std::string toString() const;
-	void serialize(messageqcpp::ByteStream&) const;
-	void unserialize(messageqcpp::ByteStream&);
-	SRCP fVal;  /// has to evaluate to unsigned value
-	SRCP fBound; /// order by col +, -, date_add or date_sub for RANGE window
-	enum WF_FRAME fFrame;
-};
-
-struct WF_Frame
-{
-	WF_Frame(): fIsRange(true)
-	{
-		fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-		fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
-	}
-	~WF_Frame() {}
-	const std::string toString() const;
-	void serialize(messageqcpp::ByteStream&) const;
-	void unserialize(messageqcpp::ByteStream&);
-	WF_Boundary fStart;
-	WF_Boundary fEnd;
-	bool fIsRange; /// RANGE or ROWS
-};
-
-/**
- * @brief A class to represent the order by clause of window function
- */
-struct WF_OrderBy
-{
-	WF_OrderBy() {}
-	WF_OrderBy(std::vector<SRCP> orders): fOrders(orders) {}
-	~WF_OrderBy() {};
-	const std::string toString() const;
-	void serialize(messageqcpp::ByteStream&) const;
-	void unserialize(messageqcpp::ByteStream&);
-	std::vector<SRCP> fOrders;
-	WF_Frame fFrame;
-};
 
 /**
  * @brief A class to represent a functional column
@@ -182,6 +129,9 @@ public:
 	virtual bool hasWindowFunc();
 	void adjustResultType();
 
+	// UDAnF support
+	mcsv1sdk::mcsv1Context& getUDAFContext() {return udafContext;}
+
 private:
 	/**
 	 * Fields
@@ -197,6 +147,8 @@ private:
 	virtual bool operator!=(const TreeNode* t) const { return false; }
 	bool operator!=(const WindowFunctionColumn& t) const;
 	
+	// UDAnF support
+	mcsv1sdk::mcsv1Context udafContext;
 	/***********************************************************
 	 *                 F&E framework                           *
 	 ***********************************************************/

@@ -257,6 +257,7 @@ void WindowFunctionColumn::serialize(messageqcpp::ByteStream& b) const
 	for (uint32_t i = 0; i < fPartitions.size(); i++)
 		fPartitions[i]->serialize(b);
 	fOrderBy.serialize(b);
+	udafContext.serialize(b);
 }
 
 void WindowFunctionColumn::unserialize(messageqcpp::ByteStream& b)
@@ -283,6 +284,7 @@ void WindowFunctionColumn::unserialize(messageqcpp::ByteStream& b)
 		fPartitions.push_back(srcp);
 	}
 	fOrderBy.unserialize(b);
+	udafContext.unserialize(b);
 }
 
 void WindowFunctionColumn::addToPartition(vector<SRCP>& groupByList)

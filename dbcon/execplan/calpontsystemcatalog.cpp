@@ -1051,7 +1051,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
     colMap.insert(CMVT_(scale, srcp));
     srcp.reset(col[8]);
     colMap.insert(CMVT_(precision, srcp));
-    // TODO: NULL value handling & convert to boost::any
+    // TODO: NULL value handling & convert to static_any::any
     // delete this manually at fcn exit
     srcp.reset(col[9]);
     colMap.insert(CMVT_(defaultvalue, srcp));
@@ -5045,7 +5045,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema)
 	colMap.insert(CMVT_(scale, srcp));
 	srcp.reset(col[8]);
 	colMap.insert(CMVT_(precision, srcp));
-	// TODO: NULL value handling & convert to boost::any
+	// TODO: NULL value handling & convert to static_any::any
 	// delete this manually at fcn exit
 	srcp.reset(col[9]);
 	colMap.insert(CMVT_(defaultvalue, srcp));

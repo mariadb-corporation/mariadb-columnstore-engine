@@ -1,5 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_UDFSDK_INCLUDE} )
 
 
 ########### next target ###############
@@ -41,7 +41,8 @@ set(execplan_LIB_SRCS
     treenode.cpp
     treenodeimpl.cpp
     vendorexecutionplan.cpp
-    windowfunctioncolumn.cpp)
+    windowfunctioncolumn.cpp
+    udafcolumn.cpp)
 
 add_library(execplan SHARED ${execplan_LIB_SRCS})
 

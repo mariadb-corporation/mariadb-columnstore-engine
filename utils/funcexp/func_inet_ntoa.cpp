@@ -54,7 +54,7 @@ namespace funcexp
 
 //------------------------------------------------------------------------------
 // Return input argument type.
-// See IDB_add in udfsdk.h for explanation of this function.
+// See mcs_add in udfsdk.h for explanation of this function.
 //------------------------------------------------------------------------------
 execplan::CalpontSystemCatalog::ColType Func_inet_ntoa::operationType(
 	FunctionParm& fp,

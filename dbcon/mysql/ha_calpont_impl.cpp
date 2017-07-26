@@ -582,6 +582,8 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 					(*f)->field_length = 40;
 					//float float_val = *(float*)(&value);
 					//f2->store(float_val);
+					if (f2->decimals() < (uint32_t)row.getScale(s))
+						f2->dec = (uint32_t)row.getScale(s);
 					f2->store(dl);
 					if ((*f)->null_ptr)
 						*(*f)->null_ptr &= ~(*f)->null_bit;
@@ -603,6 +605,8 @@ int fetchNextRow(uchar *buf, cal_table_info& ti, cal_connection_info* ci)
 					(*f)->field_length = 310;
 					//double double_val = *(double*)(&value);
 					//f2->store(double_val);
+					if (f2->decimals() < (uint32_t)row.getScale(s))
+						f2->dec = (uint32_t)row.getScale(s);
 					f2->store(dl);
 					if ((*f)->null_ptr)
 						*(*f)->null_ptr &= ~(*f)->null_bit;

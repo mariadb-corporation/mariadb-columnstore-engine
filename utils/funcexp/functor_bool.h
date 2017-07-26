@@ -182,7 +182,7 @@ public:
 	Func_isnull():fIsNotNull(false) {}
 	Func_isnull(bool isnotnull) : fIsNotNull(isnotnull) {}
 	/*
-	 * Destructor. IDB_add does not need to do anything here to clean up.
+	 * Destructor. isnull does not need to do anything here to clean up.
 	 */
 	virtual ~Func_isnull() {}
 

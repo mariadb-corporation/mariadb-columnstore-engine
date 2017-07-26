@@ -38,6 +38,7 @@
 #include <stdexcept>
 //#define NDEBUG
 #include <cassert>
+#include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/thread/mutex.hpp>
 #include <cmath>
@@ -56,6 +57,7 @@
 #include "bytestream.h"
 #include "calpontsystemcatalog.h"
 #include "exceptclasses.h"
+#include "mcsv1_udaf.h"
 
 #include "branchpred.h"
 
@@ -106,25 +108,74 @@ public:
 	void clear();
 
 	void serialize(messageqcpp::ByteStream &) const;
-	uint32_t deserialize(messageqcpp::ByteStream &);
+	void deserialize(messageqcpp::ByteStream &);
 
 	//@bug6065, make StringStore::storeString() thread safe
 	void useStoreStringMutex(bool b) { fUseStoreStringMutex = b;    }
 	bool useStoreStringMutex() const { return fUseStoreStringMutex; }
 
 private:
+	std::string empty_str;
+
 	StringStore(const StringStore &);
 	StringStore & operator=(const StringStore &);
 	static const uint32_t CHUNK_SIZE = 64*1024;    // allocators like powers of 2
 
 	// This is an overlay b/c the underlying data needs to be any size,
-	// and alloc'd in one chunk.  data can't be a sepatate dynamic chunk.
+	// and alloc'd in one chunk.  data can't be a separate dynamic chunk.
 	
 	std::vector<boost::shared_ptr<std::string> > mem;
 	bool empty;
 	bool fUseStoreStringMutex; //@bug6065, make StringStore::storeString() thread safe
 	boost::mutex fMutex;
+};
 
+// Where we store user data for UDA(n)F
+class UserDataStore
+{
+	// length represents the fixed portion length of userData.
+	// There may be variable length data in containers or other 
+	// user created structures.
+	struct StoreData
+	{
+		int32_t length;
+		std::string functionName;
+		boost::shared_ptr<mcsv1sdk::UserData> userData;
+		StoreData() : length(0) { }
+		StoreData(const StoreData& rhs)
+		{
+			length = rhs.length;
+			functionName = rhs.functionName;
+			userData = rhs.userData;
+		}
+	};
+
+public:
+	UserDataStore();
+	virtual ~UserDataStore();
+
+	void serialize(messageqcpp::ByteStream &) const;
+	void deserialize(messageqcpp::ByteStream &);
+
+	//Set to make UserDataStore thread safe
+	void useUserDataMutex(bool b) { fUseUserDataMutex = b;    }
+	bool useUserDataMutex() const { return fUseUserDataMutex; }
+
+	// Returns the offset
+	uint32_t storeUserData(mcsv1sdk::mcsv1Context& context, 
+						   boost::shared_ptr<mcsv1sdk::UserData> data, 
+						   uint32_t length);
+
+	boost::shared_ptr<mcsv1sdk::UserData>  getUserData(uint32_t offset) const;
+
+private:
+	UserDataStore(const UserDataStore &);
+	UserDataStore & operator=(const UserDataStore &);
+
+	std::vector<StoreData> vStoreData;
+
+	bool fUseUserDataMutex;
+	boost::mutex fMutex;
 };
 
 #ifdef _MSC_VER
@@ -152,7 +203,7 @@ public:
 	// the 'hasLengthField' is there b/c PM aggregation (and possibly others) currently sends
 	// inline data with a length field.  Once that's converted to string table format, that
 	// option can go away.
-	uint32_t deserialize(messageqcpp::ByteStream &, bool hasLengthField=false);  // returns the # of bytes read
+	void deserialize(messageqcpp::ByteStream &, bool hasLengthField=false);  // returns the # of bytes read
 
 	inline uint64_t getStringTableMemUsage();
 	void clear();
@@ -169,9 +220,14 @@ public:
 	void useStoreStringMutex(bool b) { if (strings) strings->useStoreStringMutex(b); }
 	bool useStoreStringMutex() const { return (strings ? (strings->useStoreStringMutex()) : false); }
 
+	UserDataStore* getUserDataStore();
+	// make UserDataStore::storeData() thread safe
+	void useUserDataMutex(bool b) { if (userDataStore) userDataStore->useUserDataMutex(b); }
+	bool useUserDataMutex() const { return (userDataStore ? (userDataStore->useUserDataMutex()) : false); }
+
 	boost::shared_array<uint8_t> rowData;
 	boost::shared_ptr<StringStore> strings;
-
+	boost::shared_ptr<UserDataStore> userDataStore;
 private:
 	//boost::shared_array<uint8_t> rowData;
 	//boost::shared_ptr<StringStore> strings;
@@ -187,14 +243,17 @@ class Row
 {
 	public:
 		struct Pointer {
-			inline Pointer() : data(NULL), strings(NULL) { }
+			inline Pointer() : data(NULL), strings(NULL), userDataStore(NULL) { }
 
 			// Pointer(uint8_t*) implicitly makes old code compatible with the string table impl;
 			// make it explicit to identify things that still might need to be changed
-			inline Pointer(uint8_t *d) : data(d), strings(NULL) { }
-			inline Pointer(uint8_t *d, StringStore *s) : data(d), strings(s) { }
+			inline Pointer(uint8_t *d) : data(d), strings(NULL), userDataStore(NULL) { }
+			inline Pointer(uint8_t *d, StringStore *s) : data(d), strings(s), userDataStore(NULL) { }
+			inline Pointer(uint8_t *d, StringStore *s, UserDataStore *u) : 
+				data(d), strings(s), userDataStore(u) { }
 			uint8_t *data;
 			StringStore *strings;
+			UserDataStore *userDataStore;
 		};
 
 		Row();
@@ -290,6 +349,11 @@ class Row
 		inline const uint8_t* getVarBinaryField(uint32_t& len, uint32_t colIndex) const;
 		inline void setVarBinaryField(const uint8_t* val, uint32_t len, uint32_t colIndex);
 
+		inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
+		inline void setUserData(mcsv1sdk::mcsv1Context& context, 
+								boost::shared_ptr<mcsv1sdk::UserData> userData, 
+								uint32_t len, uint32_t colIndex);
+
 		uint64_t getNullValue(uint32_t colIndex) const;
 		bool isNullValue(uint32_t colIndex) const;
 
@@ -332,6 +396,7 @@ class Row
 		inline bool equals(const Row &, uint32_t lastCol) const;
 		inline bool equals(const Row &) const;
 
+		inline void setUserDataStore(UserDataStore* u) {userDataStore = u;}
 	private:
 		uint32_t columnCount;
 		uint64_t baseRid;
@@ -353,10 +418,12 @@ class Row
 		boost::shared_array<bool> forceInline;
 		inline bool inStringTable(uint32_t col) const;
 
+		UserDataStore* userDataStore; // For UDAF
+
 		friend class RowGroup;
 };
 
-inline Row::Pointer Row::getPointer() const { return Pointer(data, strings); }
+inline Row::Pointer Row::getPointer() const { return Pointer(data, strings, userDataStore); }
 inline uint8_t * Row::getData() const { return data; }
 
 inline void Row::setPointer(const Pointer &p)
@@ -368,6 +435,7 @@ inline void Row::setPointer(const Pointer &p)
 		useStringTable = hasStrings;
 		offsets = (useStringTable ? stOffsets : oldOffsets);
 	}
+	userDataStore = p.userDataStore;
 }
 
 inline void Row::setData(const Pointer &p) { setPointer(p); }
@@ -613,6 +681,15 @@ inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) c
 	}
 }
 
+inline boost::shared_ptr<mcsv1sdk::UserData> Row::getUserData(uint32_t colIndex) const
+{
+	if (!userDataStore)
+	{
+		return boost::shared_ptr<mcsv1sdk::UserData>();
+	}
+	return userDataStore->getUserData(*((uint32_t *) &data[offsets[colIndex]]));
+}
+
 inline double Row::getDoubleField(uint32_t colIndex) const
 {
 	return *((double *) &data[offsets[colIndex]]);
@@ -781,6 +858,19 @@ inline void Row::setVarBinaryField(const uint8_t *val, uint32_t len, uint32_t co
 		*((uint16_t*) &data[offsets[colIndex]]) = len;
 		memcpy(&data[offsets[colIndex] + 2], val, len);
 	}
+}
+
+inline void Row::setUserData(mcsv1sdk::mcsv1Context& context, 
+							 boost::shared_ptr<mcsv1sdk::UserData> userData, 
+							 uint32_t len, uint32_t colIndex)
+{
+	if (!userDataStore)
+	{
+		return;
+	}
+	uint32_t offset = userDataStore->storeUserData(context, userData, len);
+	*((uint32_t *) &data[offsets[colIndex]]) = offset;
+	*((uint32_t *) &data[offsets[colIndex] + 4]) = len;
 }
 
 inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
@@ -1149,6 +1239,7 @@ inline void RowGroup::getRow(uint32_t rowNum, Row *r) const
 	r->baseRid = getBaseRid();
 	r->data = &(data[headerSize + (rowNum * offsets[columnCount])]);
 	r->strings = strings;
+	r->userDataStore = rgData->userDataStore.get();
 }
 
 inline void RowGroup::setData(uint8_t *d)
@@ -1523,13 +1614,14 @@ inline RGData & RGData::operator=(const RGData &r)
 {
 	rowData = r.rowData;
 	strings = r.strings;
+	userDataStore = r.userDataStore;
 	return *this;
 }
 
 inline void RGData::getRow(uint32_t num, Row *row)
 {
 	uint32_t size = row->getSize();
-	row->setData(Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get()));
+	row->setData(Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
 }
 
 }

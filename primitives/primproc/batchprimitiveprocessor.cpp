@@ -371,8 +371,20 @@ void BatchPrimitiveProcessor::initBPP(ByteStream &bs)
 		{
 			bs >> fAggregateRG;
 			fAggregator.reset(new RowAggregation);
-// 			cout << "Made an aggregator\n";
 			bs >> *(fAggregator.get());
+			// If there's UDAF involved, set up for PM processing
+			for (uint64_t i = 0; i < fAggregator->getAggFunctions().size(); i++)
+			{
+				RowUDAFFunctionCol* rowUDAF = dynamic_cast<RowUDAFFunctionCol*>(fAggregator->getAggFunctions()[i].get());
+				if (rowUDAF)
+				{
+					// On the PM, the aux column is not sent, but rather is output col + 1.
+					rowUDAF->fAuxColumnIndex = rowUDAF->fOutputColumnIndex + 1;
+					// Set the PM flag in case the UDAF cares.
+					rowUDAF->fUDAFContext.setContextFlags(rowUDAF->fUDAFContext.getContextFlags() 
+														  | mcsv1sdk::CONTEXT_IS_PM);
+				}
+			}
 		}
 	}
 
@@ -1294,7 +1306,7 @@ void BatchPrimitiveProcessor::execute()
 						}                                                           // @bug4507, 8k
 						else {                                                      // @bug4507, 8k
 							fAggregator->loadResult(*serialized);                   // @bug4507, 8k
-							fAggregator->reset();                                   // @bug4507, 8k
+							fAggregator->aggReset();                                // @bug4507, 8k
 						}                                                           // @bug4507, 8k
 					}
 					else {
@@ -1361,7 +1373,7 @@ void BatchPrimitiveProcessor::execute()
 				}                                                         // @bug4507, 8k
 				else  {                                                   // @bug4507, 8k
 					fAggregator->loadResult(*serialized);                 // @bug4507, 8k
-					fAggregator->reset();                                 // @bug4507, 8k
+					fAggregator->aggReset();                              // @bug4507, 8k
 				}                                                         // @bug4507, 8k
 			}
 
@@ -1706,7 +1718,7 @@ int BatchPrimitiveProcessor::operator()()
 	}
 
 	if (fAggregator && currentBlockOffset == 0)                     // @bug4507, 8k
-		fAggregator->reset();                                       // @bug4507, 8k
+		fAggregator->aggReset();                                    // @bug4507, 8k
 
 	for (; currentBlockOffset < count; currentBlockOffset++) {
 		if (!(sessionID & 0x80000000)) {   // can't do this with syscat queries
@@ -1765,8 +1777,11 @@ int BatchPrimitiveProcessor::operator()()
 
 	vssCache.clear();
 #ifndef __FreeBSD__
-    if (sendThread->aborted())
-        objLock.try_lock();
+	// If we've been aborted the lock *may* have been released already
+	// By doing try_lock, we ensure the unlock will work whether it was
+	// locked or not.
+	if (sendThread->aborted())
+		objLock.try_lock();
 	objLock.unlock();
 #endif
 	freeLargeBuffers();

@@ -98,8 +98,9 @@ const int WF__REGR_AVGY       = 32;
 const int WF__REGR_SXX        = 33;
 const int WF__REGR_SXY        = 34;
 const int WF__REGR_SYY        = 35;
+const int WF__UDAF            = 36;
 
-
+typedef execplan::CalpontSystemCatalog::ColDataType CDT;
 
 /** @brief class WindowFunction
  *
@@ -129,6 +130,10 @@ public:
 	// @brief virtual parseParms()
 	virtual void parseParms(const std::vector<execplan::SRCP>&) {}
 
+	// @brief virtual dropValues() For UDAnF functions
+	// return false if there's no dropValue() implemented in the function.
+	virtual bool dropValues(int64_t, int64_t) {return false;}
+
 	// @brief virtual display method
 	virtual const std::string toString() const;
 
@@ -148,14 +153,14 @@ public:
 	void peer(const boost::shared_ptr<ordering::EqualCompData>& p)  { fPeer = p; }
 	void setCallback(joblist::WindowFunctionStep* step)             { fStep = step; }
 
-	static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct);
+	static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct, WindowFunctionColumn* wc);
 
 protected:
 
 	static std::map<std::string, int> windowFunctionId;
 
 	// utility methods
-	template<typename T> void getValue(uint64_t, T&);
+	template<typename T> void getValue(uint64_t, T&, CDT* cdt = NULL);
 	template<typename T> void setValue(int, int64_t, int64_t, int64_t, T* = NULL);
 	template<typename T> void setValue(uint64_t, T&);
 	template<typename T> void implicit2T(uint64_t, T&, int);

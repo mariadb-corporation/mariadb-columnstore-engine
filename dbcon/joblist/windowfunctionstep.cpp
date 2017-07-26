@@ -146,6 +146,7 @@ WindowFunctionStep::WindowFunctionStep(const JobInfo& jobInfo) :
 	fEndOfResult(false),
 	fIsSelect(true),
 	fUseSSMutex(false),
+	fUseUFMutex(false),
 	fInputDL(NULL),
 	fOutputDL(NULL),
 	fInputIterator(-1),
@@ -531,6 +532,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 
 	// @bug6065, window functions that will update string table
 	int64_t wfsUpdateStringTable = 0;
+	int64_t wfsUserFunctionCount = 0;
 	for (RetColsVector::iterator i=jobInfo.windowCols.begin(); i<jobInfo.windowCols.end(); i++)
 	{
 		// window function type
@@ -541,11 +543,18 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 			CalpontSystemCatalog::ColType rt = wc->resultType();
 			if ((types[ridx] == CalpontSystemCatalog::CHAR || 
 			     types[ridx] == CalpontSystemCatalog::VARCHAR ||
-                 types[ridx] == CalpontSystemCatalog::TEXT) &&
+                 types[ridx] == CalpontSystemCatalog::TEXT ||
+				 types[ridx] == CalpontSystemCatalog::VARBINARY ||
+				 types[ridx] == CalpontSystemCatalog::BLOB) &&
 			    rg.getColumnWidth(ridx) >= jobInfo.stringTableThreshold)
 			{
-				wfsUpdateStringTable++;
+				++wfsUpdateStringTable;
 			} 
+		}
+//		if (boost::iequals(wc->functionName(),"UDAF_FUNC")
+		if (wc->functionName() == "UDAF_FUNC")
+		{
+			++wfsUserFunctionCount;
 		}
 
 		vector<int64_t> fields;
@@ -609,7 +618,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 
 		// create the functor based on function name
 		boost::shared_ptr<WindowFunctionType> func =
-			WindowFunctionType::makeWindowFunction(fn, ct);
+			WindowFunctionType::makeWindowFunction(fn, ct, wc);
 
 		// parse parms after peer and fields are set
 		// functions may need to set order column index
@@ -751,7 +760,8 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 
 	if (wfsUpdateStringTable > 1)
 		fUseSSMutex = true;
-
+	if (wfsUserFunctionCount > 1)
+		fUseUFMutex = true;
 	fRowGroupOut = fRowGroupDelivered;
 }
 
@@ -799,6 +809,8 @@ void WindowFunctionStep::execute()
 
 				//@bug6065, make StringStore::storeString() thread safe, default to false.
 				rgData.useStoreStringMutex(fUseSSMutex);
+				// For the User Data of UDAnF 
+				rgData.useUserDataMutex(fUseUFMutex);
 
 				// window function does not change row count
 				fRowsReturned += rowCnt;

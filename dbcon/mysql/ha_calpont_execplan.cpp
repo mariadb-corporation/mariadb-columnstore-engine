@@ -80,6 +80,7 @@ using namespace cal_impl_if;
 #include "groupconcatcolumn.h"
 #include "outerjoinonfilter.h"
 #include "intervalcolumn.h"
+#include "udafcolumn.h"
 using namespace execplan;
 
 #include "funcexp.h"
@@ -446,6 +447,9 @@ void debug_walk(const Item *item, void *arg)
 			break;
 		case Item_sum::MAX_FUNC:
 			cout << "MAX_FUNC: " << item_name << endl;
+			break;
+		case Item_sum::UDF_SUM_FUNC:
+			cout << "UDAF_FUNC: " << item_name << endl;
 			break;
 		default:
 			cout << "SUM_FUNC_ITEM type=" << isp->sum_func() << endl;
@@ -2135,6 +2139,9 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
 				return ER_CHECK_NOT_IMPLEMENTED;
 			return rc;
 		}
+		case Item_sum::UDF_SUM_FUNC:
+			ac->aggOp(AggregateColumn::UDAF);
+			return rc;
 		default:
 			return ER_CHECK_NOT_IMPLEMENTED;
 	}
@@ -3527,7 +3534,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 		gwi.aggOnSelect = true;
 
 	// N.B. argument_count() is the # of formal parms to the agg fcn. InifniDB only supports 1 argument
-	if (isp->argument_count() != 1 && isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC)
+	// TODO: Support more than one parm
+	if (isp->argument_count() != 1 && isp->sum_func() != Item_sum::GROUP_CONCAT_FUNC
+		&& isp->sum_func() != Item_sum::UDF_SUM_FUNC)
 	{
 		gwi.fatalParseError = true;
 		gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_MUL_ARG_AGG);
@@ -3536,9 +3545,18 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
 	AggregateColumn* ac = NULL;
 	if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+	{
 		ac = new GroupConcatColumn(gwi.sessionid);
+	}
 	else
+	if (isp->sum_func() == Item_sum::UDF_SUM_FUNC)
+	{
+		ac = new UDAFColumn(gwi.sessionid);
+	}
+	else
+	{
 		ac = new AggregateColumn(gwi.sessionid);
+	}
 
 	if (isp->name)
 		ac->alias(isp->name);
@@ -3893,6 +3911,53 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 	else if (ac->constCol())
 	{
 		gwi.count_asterisk_list.push_back(ac);
+	}
+
+	// For UDAF, populate the context and call the UDAF init() function.
+	if (isp->sum_func() == Item_sum::UDF_SUM_FUNC)
+	{
+		UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(ac);
+		if (udafc)
+		{
+			mcsv1Context& context = udafc->getContext();
+			context.setName(isp->func_name());
+
+			// Set up the return type defaults for the call to init()
+			context.setResultType(udafc->resultType().colDataType);
+			context.setColWidth(udafc->resultType().colWidth);
+			context.setScale(udafc->resultType().scale);
+			context.setPrecision(udafc->resultType().precision);
+
+			COL_TYPES colTypes;
+			execplan::CalpontSelectExecutionPlan::ColumnMap::iterator cmIter;
+
+			// Build the column type vector. For now, there is only one
+			colTypes.push_back(make_pair(udafc->functionParms()->alias(), udafc->functionParms()->resultType().colDataType));
+
+			// Call the user supplied init()
+			if (context.getFunction()->init(&context, colTypes) == mcsv1_UDAF::ERROR)
+			{
+				gwi.fatalParseError = true;
+				gwi.parseErrorText = udafc->getContext().getErrorMessage();
+				return NULL;
+			}
+			if (udafc->getContext().getRunFlag(UDAF_OVER_REQUIRED))
+			{
+				gwi.fatalParseError = true;
+				gwi.parseErrorText =
+				   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WINDOW_FUNC_ONLY,
+								context.getName());
+				return NULL;
+			}
+
+			// Set the return type as set in init()
+			CalpontSystemCatalog::ColType ct;
+			ct.colDataType = context.getResultType();
+			ct.colWidth = context.getColWidth();
+			ct.scale = context.getScale();
+			ct.precision = context.getPrecision();
+			udafc->resultType(ct);
+		}
 	}
 	return ac;
 }

@@ -38,7 +38,6 @@
 using namespace std;
 
 #include <boost/shared_array.hpp>
-#include <boost/shared_ptr.hpp>
 using namespace boost;
 
 #include "bytestream.h"
@@ -113,7 +112,6 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
 void StringStore::serialize(ByteStream &bs) const
 {
 	uint32_t i;
-	std::string empty_str;
     
 	bs << (uint32_t) mem.size();
 	bs << (uint8_t) empty;
@@ -126,30 +124,25 @@ void StringStore::serialize(ByteStream &bs) const
     }
 }
 
-uint32_t StringStore::deserialize(ByteStream &bs)
+void StringStore::deserialize(ByteStream &bs)
 {
 	uint32_t i;
 	uint32_t count;
-	uint32_t size;
 	std::string buf;
 	uint8_t tmp8;
-	uint32_t ret = 0;
 
 	//mem.clear();
 	bs >> count;
 	mem.reserve(count);
 	bs >> tmp8;
 	empty = (bool) tmp8;
-	ret += 5;
 	for (i = 0; i < count; i++) {
 		//cout << "deserializing " << size << " bytes\n";
         bs >> buf;
         shared_ptr<std::string> newString(new std::string(buf.c_str()));
 		mem.push_back(newString);
-		//bs.advance(size);
-		ret += (size + 4);
 	}
-	return ret;
+	return;
 }
 
 void StringStore::clear()
@@ -157,6 +150,106 @@ void StringStore::clear()
 	vector<shared_ptr<std::string> > emptyv;
 	mem.swap(emptyv);
 	empty = true;
+}
+
+UserDataStore::UserDataStore() : fUseUserDataMutex(false)
+{
+}
+
+UserDataStore::~UserDataStore()
+{
+}
+
+uint32_t UserDataStore::storeUserData(mcsv1sdk::mcsv1Context& context, 
+									  boost::shared_ptr<mcsv1sdk::UserData> data, 
+									  uint32_t len)
+{
+	uint32_t ret = 0;
+	if (len == 0 || data == NULL)
+	{
+		return numeric_limits<uint32_t>::max();
+	}
+
+	boost::mutex::scoped_lock lk(fMutex, defer_lock);
+	if (fUseUserDataMutex)
+		lk.lock();
+	StoreData storeData;
+	storeData.length = len;
+	storeData.functionName = context.getName();
+	storeData.userData = data;
+	vStoreData.push_back(storeData);
+
+	ret = vStoreData.size();
+
+	return ret;
+}
+
+boost::shared_ptr<mcsv1sdk::UserData> UserDataStore::getUserData(uint32_t off) const
+{
+	if (off == std::numeric_limits<uint32_t>::max())
+		return  boost::shared_ptr<mcsv1sdk::UserData>();
+
+	if ((vStoreData.size() < off) || off == 0)
+		return  boost::shared_ptr<mcsv1sdk::UserData>();
+
+	return vStoreData[off-1].userData;
+}
+
+
+void UserDataStore::serialize(ByteStream &bs) const
+{
+	size_t i;
+    
+	bs << (uint32_t) vStoreData.size();
+	for (i = 0; i < vStoreData.size(); ++i) 
+	{
+		const StoreData& storeData = vStoreData[i];
+		bs << storeData.length;
+		bs << storeData.functionName;
+		storeData.userData->serialize(bs);
+	}
+}
+
+void UserDataStore::deserialize(ByteStream &bs)
+{
+	size_t i;
+	uint32_t cnt;
+	bs >> cnt;
+
+//	vStoreData.clear();
+	vStoreData.resize(cnt);
+
+	for (i = 0; i < cnt; i++) 
+	{
+		bs >> vStoreData[i].length;
+		bs >> vStoreData[i].functionName;
+
+		// We don't have easy access to the context here, so we do our own lookup
+		if (vStoreData[i].functionName.length() == 0)
+		{
+			throw std::logic_error("UserDataStore::deserialize: has empty name");
+		}
+		mcsv1sdk::UDAF_MAP::iterator funcIter = mcsv1sdk::UDAFMap::getMap().find(vStoreData[i].functionName);
+		if (funcIter == mcsv1sdk::UDAFMap::getMap().end())
+		{
+			 std::ostringstream errmsg;
+			 errmsg << "UserDataStore::deserialize: " << vStoreData[i].functionName << " is undefined";
+			 throw std::logic_error(errmsg.str());
+		}
+
+		mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
+		mcsv1sdk::UserData* userData = NULL;
+		rc = funcIter->second->createUserData(userData, vStoreData[i].length);
+		if (rc != mcsv1sdk::mcsv1_UDAF::SUCCESS)
+		{
+			std::ostringstream errmsg;
+			errmsg << "UserDataStore::deserialize: " << vStoreData[i].functionName << " createUserData failed(" << rc << ")";
+			throw std::logic_error(errmsg.str());
+		}
+		userData->unserialize(bs);
+		vStoreData[i].userData = boost::shared_ptr<mcsv1sdk::UserData>(userData);
+	}
+	return;
 }
 
 //uint32_t rgDataCount = 0;
@@ -222,7 +315,7 @@ void RGData::reinit(const RowGroup &rg)
 	reinit(rg, 8192);
 }
 
-RGData::RGData(const RGData &r) : rowData(r.rowData), strings(r.strings)
+RGData::RGData(const RGData &r) : rowData(r.rowData), strings(r.strings), userDataStore(r.userDataStore)
 {
 	//cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
 }
@@ -244,49 +337,47 @@ void RGData::serialize(ByteStream &bs, uint32_t amount) const
 	}
 	else
 		bs << (uint8_t) 0;
+	if (userDataStore)
+	{
+		bs << (uint8_t) 1;
+		userDataStore->serialize(bs);
+	}
+	else
+		bs << (uint8_t) 0;
 }
 
-uint32_t RGData::deserialize(ByteStream &bs, bool hasLenField)
+void RGData::deserialize(ByteStream &bs, bool hasLenField)
 {
 	uint32_t amount, sig;
 	uint8_t *buf;
 	uint8_t tmp8;
-	uint32_t ret = 0;
 
 	bs.peek(sig);
 	if (sig == RGDATA_SIG) {
 		bs >> sig;
 		bs >> amount;
-		ret += 8;
 		rowData.reset(new uint8_t[amount]);
 		buf = bs.buf();
 		memcpy(rowData.get(), buf, amount);
 		bs.advance(amount);
 		bs >> tmp8;
-		ret += amount + 1;
 		if (tmp8) {
 			strings.reset(new StringStore());
-			ret += strings->deserialize(bs);
+			strings->deserialize(bs);
 		}
 		else
 			strings.reset();
-	}
-	// crude backward compat.  Remove after conversions are finished.
-	else {
-		if (hasLenField) {
-			bs >> amount;
-			ret += 4;
+		// UDAF user data
+		bs >> tmp8;
+		if (tmp8) {
+			userDataStore.reset(new UserDataStore());
+			userDataStore->deserialize(bs);
 		}
 		else
-			amount = bs.length();
-		rowData.reset(new uint8_t[amount]);
-		strings.reset();
-		buf = bs.buf();
-		memcpy(rowData.get(), buf, amount);
-		bs.advance(amount);
-		ret += amount;
+			userDataStore.reset();
 	}
-	return ret;
+
+	return;
 }
 
 void RGData::clear()
@@ -295,14 +386,25 @@ void RGData::clear()
 	strings.reset();
 }
 
-Row::Row() : data(NULL), strings(NULL) { }
+// UserDataStore is only used for UDAF.
+// Just in time construction because most of the time we don't need one.
+UserDataStore* RGData::getUserDataStore()
+{
+	if (!userDataStore)
+	{
+		userDataStore.reset(new UserDataStore);
+	}
+	return userDataStore.get();
+}
+
+Row::Row() : data(NULL), strings(NULL), userDataStore(NULL) { }
 
 Row::Row(const Row &r) : columnCount(r.columnCount), baseRid(r.baseRid),
 	oldOffsets(r.oldOffsets), stOffsets(r.stOffsets),
 	offsets(r.offsets), colWidths(r.colWidths), types(r.types), data(r.data),
 	scale(r.scale), precision(r.precision), strings(r.strings),
 	useStringTable(r.useStringTable), hasLongStringField(r.hasLongStringField),
-	sTableThreshold(r.sTableThreshold), forceInline(r.forceInline)
+	sTableThreshold(r.sTableThreshold), forceInline(r.forceInline), userDataStore(NULL)
 { }
 
 Row::~Row() { }
@@ -623,9 +725,10 @@ bool Row::isNullValue(uint32_t colIndex) const
 			break;
 		default: {
 			ostringstream os;
-			os << "Row::isNullValue(): got bad column type (" << types[colIndex] <<
-				").  Width=" << getColumnWidth(colIndex) << endl;
-			os << toString() << endl;
+			os << "Row::isNullValue(): got bad column type (";
+			os << types[colIndex];
+			os << ").  Width=";
+			os << getColumnWidth(colIndex) << endl;
 			throw logic_error(os.str());
 		}
 	}
@@ -884,7 +987,9 @@ RowGroup & RowGroup::operator=(const RowGroup &r)
 	return *this;
 }
 
-RowGroup::~RowGroup() { }
+RowGroup::~RowGroup() 
+{ 
+}
 
 void RowGroup::resetRowGroup(uint64_t rid)
 {

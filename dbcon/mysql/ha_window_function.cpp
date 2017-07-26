@@ -45,6 +45,9 @@ using namespace logging;
 #include "funcexp.h"
 using namespace funcexp;
 
+#include "mcsv1_udaf.h"
+using namespace mcsv1sdk;
+
 namespace cal_impl_if {
 
 ReturnedColumn* nullOnError(gp_walk_info& gwi)
@@ -232,7 +235,7 @@ string ConvertFuncName(Item_sum* item)
             return "BIT_XOR";
         break;
     case Item_sum::UDF_SUM_FUNC:
-        return "UDF_SUM_FUNC";  // Not supported
+        return "UDAF_FUNC";
         break;
     case Item_sum::GROUP_CONCAT_FUNC:
         return "GROUP_CONCAT";  // Not supported
@@ -286,14 +289,14 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 
 	gwi.hasWindowFunc = true;
 	Item_window_func* wf = (Item_window_func*)item;
-	string funcName = ConvertFuncName(wf->window_func());
+	Item_sum* item_sum = wf->window_func();
+	string funcName = ConvertFuncName(item_sum);
 	WindowFunctionColumn* ac = new WindowFunctionColumn(funcName);
-	ac->distinct(wf->window_func()->has_with_distinct());
+	ac->distinct(item_sum->has_with_distinct());
 	Window_spec *win_spec = wf->window_spec;
 	SRCP srcp;
     // arguments
     vector<SRCP> funcParms;
-    Item_sum* item_sum = (Item_sum*)wf->arguments()[0];
     for (uint32_t i = 0; i < item_sum->argument_count(); i++)
     {
         srcp.reset(buildReturnedColumn((item_sum->arguments()[i]), gwi, nonSupport));
@@ -303,17 +306,76 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         if (gwi.clauseType == WHERE && !gwi.rcWorkStack.empty())
             gwi.rcWorkStack.pop();
     }
+
+	// Setup UDAnF functions
+	if (item_sum->sum_func() == Item_sum::UDF_SUM_FUNC)
+	{
+		Item_udf_sum* udfsum = (Item_udf_sum*)item_sum;
+
+		mcsv1sdk::mcsv1Context& context = ac->getUDAFContext();
+		context.setName(udfsum->func_name());
+
+		// Set up the return type defaults for the call to init()
+		execplan::CalpontSystemCatalog::ColType& rt = ac->resultType();
+		context.setResultType(rt.colDataType);
+		context.setColWidth(rt.colWidth);
+		context.setScale(rt.scale);
+		context.setPrecision(rt.precision);
+
+		// Turn on the Analytic flag so the function is aware it is being called
+		// as a Window Function.
+		context.setContextFlag(CONTEXT_IS_ANALYTIC);
+
+		COL_TYPES colTypes;
+		execplan::CalpontSelectExecutionPlan::ColumnMap::iterator cmIter;
+
+		// Build the column type vector.
+		for (size_t i=0; i < funcParms.size(); ++i)
+		{
+			colTypes.push_back(make_pair(funcParms[i]->alias(), funcParms[i]->resultType().colDataType));
+		}
+
+		// Call the user supplied init()
+		if (context.getFunction()->init(&context, colTypes) == mcsv1_UDAF::ERROR)
+		{
+			gwi.fatalParseError = true;
+			gwi.parseErrorText = context.getErrorMessage();
+			return NULL;
+		}
+
+		if (!context.getRunFlag(UDAF_OVER_REQUIRED) && !context.getRunFlag(UDAF_OVER_ALLOWED))
+		{
+			gwi.parseErrorText =
+			   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_UDANF_NOT_ALLOWED,
+							context.getName());
+			return nullOnError(gwi);
+		}
+		// Set the return type as set in init()
+		CalpontSystemCatalog::ColType ct;
+		ct.colDataType = context.getResultType();
+		ct.colWidth = context.getColWidth();
+		ct.scale = context.getScale();
+		ct.precision = context.getPrecision();
+		ac->resultType(ct);
+	}
+
     // Some functions, such as LEAD/LAG don't have all parameters implemented in the 
     // front end. Add dummies here to make the backend use defaults.
     // Some of these will be temporary until they are implemented in the front end.
     // Others need to stay because the back end expects them, but the front end
     // no longer sends them.
     // This case is kept in enum order in hopes the compiler can optimize
-    switch (wf->window_func()->sum_func())
+    switch (item_sum->sum_func())
     {
-    case Item_sum::COUNT_FUNC:
-    case Item_sum::COUNT_DISTINCT_FUNC:
+	case Item_sum::UDF_SUM_FUNC:
+		{
+		uint64_t bIgnoreNulls = (ac->getUDAFContext().getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS));
+		char sIgnoreNulls[18];
+		sprintf(sIgnoreNulls, "%lu", bIgnoreNulls);
+		srcp.reset(new ConstantColumn(sIgnoreNulls, (uint64_t)bIgnoreNulls, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+		funcParms.push_back(srcp);
         break;
+		}
     case Item_sum::FIRST_VALUE_FUNC:
         srcp.reset(new ConstantColumn("1", (uint64_t)1, ConstantColumn::NUM)); // OFFSET (always one)
         funcParms.push_back(srcp);
@@ -365,251 +427,326 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 		ac->partitions(partitions);
 
 		// Order by
+		WF_OrderBy orderBy;
+		// order columns
 		if (win_spec->order_list)
 		{
-			WF_OrderBy orderBy;
-			// order columns
-			if (win_spec->order_list)
+			// It is an error to have an order by clause if a UDAnF says it shouldn't
+			if (item_sum->sum_func() == Item_sum::UDF_SUM_FUNC)
 			{
-				vector<SRCP> orders;
-				ORDER* orderCol = reinterpret_cast<ORDER*>(win_spec->order_list->first);
-				for (; orderCol; orderCol= orderCol->next)
+				mcsv1sdk::mcsv1Context& context = ac->getUDAFContext();
+				if (!context.getRunFlag(UDAF_ORDER_ALLOWED))
 				{
-					Item* orderItem = *(orderCol->item);
-					srcp.reset(buildReturnedColumn(orderItem, gwi, nonSupport));
-					if (!srcp)
-						return nullOnError(gwi);
-                    srcp->asc(orderCol->direction == ORDER::ORDER_ASC ? true : false);
-//					srcp->nullsFirst(orderCol->nulls); // nulls 2-default, 1-nulls first, 0-nulls last
-					srcp->nullsFirst(orderCol->direction == ORDER::ORDER_ASC ? 1 : 0); // WINDOWS TODO: implement NULLS FIRST/LAST in 10.2 front end
-                    orders.push_back(srcp);
+					gwi.parseErrorText =
+					   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_UDANF_ORDER_NOT_ALLOWED,
+									context.getName());
+					return nullOnError(gwi);
 				}
-				orderBy.fOrders = orders;
 			}
 
-			// window frame
-			WF_Frame frm;
-			if (win_spec->window_frame)
+			vector<SRCP> orders;
+			ORDER* orderCol = reinterpret_cast<ORDER*>(win_spec->order_list->first);
+			for (; orderCol; orderCol= orderCol->next)
 			{
-				frm.fIsRange = win_spec->window_frame->units == Window_frame::UNITS_RANGE;
-				// start
-				if (win_spec->window_frame->top_bound)
+				Item* orderItem = *(orderCol->item);
+				srcp.reset(buildReturnedColumn(orderItem, gwi, nonSupport));
+				if (!srcp)
+					return nullOnError(gwi);
+				srcp->asc(orderCol->direction == ORDER::ORDER_ASC ? true : false);
+//					srcp->nullsFirst(orderCol->nulls); // nulls 2-default, 1-nulls first, 0-nulls last
+				srcp->nullsFirst(orderCol->direction == ORDER::ORDER_ASC ? 1 : 0); // WINDOWS TODO: implement NULLS FIRST/LAST in 10.2 front end
+				orders.push_back(srcp);
+			}
+			orderBy.fOrders = orders;
+		}
+		else
+		{
+			if (item_sum->sum_func() == Item_sum::UDF_SUM_FUNC)
+			{
+				mcsv1sdk::mcsv1Context& context = ac->getUDAFContext();
+				if (context.getRunFlag(UDAF_ORDER_REQUIRED))
 				{
-					frm.fStart.fFrame = frame(win_spec->window_frame->top_bound->precedence_type, 
-                                              win_spec->window_frame->top_bound->offset);  // offset NULL means UNBOUNDED
+					gwi.parseErrorText =
+					   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_UDANF_NOT_ALLOWED,
+									context.getName());
+					return nullOnError(gwi);
+				}
+			}
+		}
 
-					if (win_spec->window_frame->top_bound->offset)
+		// window frame
+		WF_Frame frm;
+		if (win_spec->window_frame)
+		{
+			// It is an error to have a frame clause if a UDAnF says it shouldn't
+			if (item_sum->sum_func() == Item_sum::UDF_SUM_FUNC)
+			{
+				mcsv1sdk::mcsv1Context& context = ac->getUDAFContext();
+				if (!context.getRunFlag(UDAF_WINDOWFRAME_ALLOWED))
+				{
+					gwi.parseErrorText =
+					   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_UDANF_FRAME_NOT_ALLOWED,
+									context.getName());
+					return nullOnError(gwi);
+				}
+			}
+
+			frm.fIsRange = win_spec->window_frame->units == Window_frame::UNITS_RANGE;
+			// start
+			if (win_spec->window_frame->top_bound)
+			{
+				frm.fStart.fFrame = frame(win_spec->window_frame->top_bound->precedence_type, 
+										  win_spec->window_frame->top_bound->offset);  // offset NULL means UNBOUNDED
+
+				if (win_spec->window_frame->top_bound->offset)
+				{
+					frm.fStart.fVal.reset(buildReturnedColumn(win_spec->window_frame->top_bound->offset, gwi, nonSupport));
+					if (!frm.fStart.fVal)
+						return nullOnError(gwi);
+
+					// 1. check expr is numeric type (rows) or interval (range)
+					bool boundTypeErr = false;
+					switch (frm.fStart.fVal->resultType().colDataType)
 					{
-						frm.fStart.fVal.reset(buildReturnedColumn(win_spec->window_frame->top_bound->offset, gwi, nonSupport));
-						if (!frm.fStart.fVal)
-							return nullOnError(gwi);
-
-						// 1. check expr is numeric type (rows) or interval (range)
-						bool boundTypeErr = false;
-						switch (frm.fStart.fVal->resultType().colDataType)
-						{
-							case CalpontSystemCatalog::CHAR:
-							case CalpontSystemCatalog::VARCHAR:
-							case CalpontSystemCatalog::VARBINARY:
-							case CalpontSystemCatalog::BLOB:
-							case CalpontSystemCatalog::TEXT:
-							case CalpontSystemCatalog::CLOB:
+						case CalpontSystemCatalog::CHAR:
+						case CalpontSystemCatalog::VARCHAR:
+						case CalpontSystemCatalog::VARBINARY:
+						case CalpontSystemCatalog::BLOB:
+						case CalpontSystemCatalog::TEXT:
+						case CalpontSystemCatalog::CLOB:
+							boundTypeErr = true;
+							break;
+						case CalpontSystemCatalog::DATE:
+						case CalpontSystemCatalog::DATETIME:
+							if (!frm.fIsRange)
 								boundTypeErr = true;
-								break;
-							case CalpontSystemCatalog::DATE:
-							case CalpontSystemCatalog::DATETIME:
-								if (!frm.fIsRange)
-									boundTypeErr = true;
-								else if (dynamic_cast<IntervalColumn*>(frm.fStart.fVal.get()) == NULL)
-									boundTypeErr = true;
-								break;
-							default: //okay
-								break;
-						}
-						if (boundTypeErr)
-						{
-							gwi.fatalParseError = true;
-							gwi.parseErrorText =
-							   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_BOUND_TYPE,
-							                colDataTypeToString(frm.fStart.fVal->resultType().colDataType));
-							return nullOnError(gwi);
-						}
-					}
-				}
-
-				// end
-				if (win_spec->window_frame->bottom_bound)
-				{
-					frm.fEnd.fFrame = frame(win_spec->window_frame->bottom_bound->precedence_type,
-                                            win_spec->window_frame->bottom_bound->offset);
-					if (win_spec->window_frame->bottom_bound->offset)
-					{
-						frm.fEnd.fVal.reset(buildReturnedColumn(win_spec->window_frame->bottom_bound->offset, gwi, nonSupport));
-						if (!frm.fEnd.fVal)
-							return nullOnError(gwi);
-
-						// check expr is numeric type (rows) or interval (range)
-						bool boundTypeErr = false;
-						switch (frm.fEnd.fVal->resultType().colDataType)
-						{
-							case CalpontSystemCatalog::CHAR:
-							case CalpontSystemCatalog::VARCHAR:
-							case CalpontSystemCatalog::VARBINARY:
-							case CalpontSystemCatalog::BLOB:
-							case CalpontSystemCatalog::TEXT:
-							case CalpontSystemCatalog::CLOB:
+							else if (dynamic_cast<IntervalColumn*>(frm.fStart.fVal.get()) == NULL)
 								boundTypeErr = true;
-								break;
-							case CalpontSystemCatalog::DATE:
-							case CalpontSystemCatalog::DATETIME:
-								if (!frm.fIsRange)
-									boundTypeErr = true;
-								else if (dynamic_cast<IntervalColumn*>(frm.fEnd.fVal.get()) == NULL)
-									boundTypeErr = true;
-								break;
-							default: //okay
-								break;
-						}
-						if (boundTypeErr)
-						{
-							gwi.fatalParseError = true;
-							gwi.parseErrorText =
-							   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_BOUND_TYPE,
-							                colDataTypeToString(frm.fStart.fVal->resultType().colDataType));
-							return nullOnError(gwi);
-						}
+							break;
+						default: //okay
+							break;
 					}
-				}
-				else // no end specified. default end to current row
-				{
-					frm.fEnd.fFrame = WF_CURRENT_ROW;
-				}
-
-				if (frm.fStart.fVal || frm.fEnd.fVal)
-				{
-					// check order by key only 1 (should be error-ed out in parser. double check here)
-					if (frm.fIsRange && orderBy.fOrders.size() > 1)
+					if (boundTypeErr)
 					{
 						gwi.fatalParseError = true;
 						gwi.parseErrorText =
-						   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_ORDER_KEY);
+						   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_BOUND_TYPE,
+										colDataTypeToString(frm.fStart.fVal->resultType().colDataType));
 						return nullOnError(gwi);
 					}
+				}
+			}
 
-					// check order by key type is numeric or date/datetime
-					bool orderTypeErr = false;
-					if (frm.fIsRange && orderBy.fOrders.size() == 1)
+			// end
+			if (win_spec->window_frame->bottom_bound)
+			{
+				frm.fEnd.fFrame = frame(win_spec->window_frame->bottom_bound->precedence_type,
+										win_spec->window_frame->bottom_bound->offset);
+				if (win_spec->window_frame->bottom_bound->offset)
+				{
+					frm.fEnd.fVal.reset(buildReturnedColumn(win_spec->window_frame->bottom_bound->offset, gwi, nonSupport));
+					if (!frm.fEnd.fVal)
+						return nullOnError(gwi);
+
+					// check expr is numeric type (rows) or interval (range)
+					bool boundTypeErr = false;
+					switch (frm.fEnd.fVal->resultType().colDataType)
 					{
-						switch (orderBy.fOrders[0]->resultType().colDataType)
-						{
-							case CalpontSystemCatalog::CHAR:
-							case CalpontSystemCatalog::VARCHAR:
-							case CalpontSystemCatalog::VARBINARY:
-							case CalpontSystemCatalog::BLOB:
-                            case CalpontSystemCatalog::TEXT:
-							case CalpontSystemCatalog::CLOB:
-								orderTypeErr = true;
-								break;
-							default: //okay
-								// interval bound has to have date/datetime order key
-								if ((dynamic_cast<IntervalColumn*>(frm.fStart.fVal.get()) != NULL ||
-									  dynamic_cast<IntervalColumn*>(frm.fEnd.fVal.get()) != NULL))
-								{
-									if (orderBy.fOrders[0]->resultType().colDataType != CalpontSystemCatalog::DATE &&
-									   orderBy.fOrders[0]->resultType().colDataType != CalpontSystemCatalog::DATETIME)
-										orderTypeErr = true;
-								}
-								else
-								{
-									if (orderBy.fOrders[0]->resultType().colDataType == CalpontSystemCatalog::DATETIME)
-										orderTypeErr = true;
-								}
-								break;
-						}
-						if (orderTypeErr)
-						{
-							gwi.fatalParseError = true;
-							gwi.parseErrorText =
-								   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_ORDER_TYPE,
-								             colDataTypeToString(orderBy.fOrders[0]->resultType().colDataType));
-							return nullOnError(gwi);
-						}
+						case CalpontSystemCatalog::CHAR:
+						case CalpontSystemCatalog::VARCHAR:
+						case CalpontSystemCatalog::VARBINARY:
+						case CalpontSystemCatalog::BLOB:
+						case CalpontSystemCatalog::TEXT:
+						case CalpontSystemCatalog::CLOB:
+							boundTypeErr = true;
+							break;
+						case CalpontSystemCatalog::DATE:
+						case CalpontSystemCatalog::DATETIME:
+							if (!frm.fIsRange)
+								boundTypeErr = true;
+							else if (dynamic_cast<IntervalColumn*>(frm.fEnd.fVal.get()) == NULL)
+								boundTypeErr = true;
+							break;
+						default: //okay
+							break;
+					}
+					if (boundTypeErr)
+					{
+						gwi.fatalParseError = true;
+						gwi.parseErrorText =
+						   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_BOUND_TYPE,
+										colDataTypeToString(frm.fStart.fVal->resultType().colDataType));
+						return nullOnError(gwi);
 					}
 				}
+			}
+			else // no end specified. default end to current row
+			{
+				frm.fEnd.fFrame = WF_CURRENT_ROW;
+			}
 
-				// construct +,- or interval function for boundary
-				if (frm.fIsRange && frm.fStart.fVal)
+			if (frm.fStart.fVal || frm.fEnd.fVal)
+			{
+				// check order by key only 1 (should be error-ed out in parser. double check here)
+				if (frm.fIsRange && orderBy.fOrders.size() > 1)
 				{
-					frm.fStart.fBound.reset(buildBoundExp(frm.fStart, orderBy.fOrders[0], gwi));
+					gwi.fatalParseError = true;
+					gwi.parseErrorText =
+					   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_ORDER_KEY);
+					return nullOnError(gwi);
+				}
+
+				// check order by key type is numeric or date/datetime
+				bool orderTypeErr = false;
+				if (frm.fIsRange && orderBy.fOrders.size() == 1)
+				{
+					switch (orderBy.fOrders[0]->resultType().colDataType)
+					{
+						case CalpontSystemCatalog::CHAR:
+						case CalpontSystemCatalog::VARCHAR:
+						case CalpontSystemCatalog::VARBINARY:
+						case CalpontSystemCatalog::BLOB:
+						case CalpontSystemCatalog::TEXT:
+						case CalpontSystemCatalog::CLOB:
+							orderTypeErr = true;
+							break;
+						default: //okay
+							// interval bound has to have date/datetime order key
+							if ((dynamic_cast<IntervalColumn*>(frm.fStart.fVal.get()) != NULL ||
+								  dynamic_cast<IntervalColumn*>(frm.fEnd.fVal.get()) != NULL))
+							{
+								if (orderBy.fOrders[0]->resultType().colDataType != CalpontSystemCatalog::DATE &&
+								   orderBy.fOrders[0]->resultType().colDataType != CalpontSystemCatalog::DATETIME)
+									orderTypeErr = true;
+							}
+							else
+							{
+								if (orderBy.fOrders[0]->resultType().colDataType == CalpontSystemCatalog::DATETIME)
+									orderTypeErr = true;
+							}
+							break;
+					}
+					if (orderTypeErr)
+					{
+						gwi.fatalParseError = true;
+						gwi.parseErrorText =
+							   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_INVALID_ORDER_TYPE,
+										 colDataTypeToString(orderBy.fOrders[0]->resultType().colDataType));
+						return nullOnError(gwi);
+					}
+				}
+			}
+
+			// construct +,- or interval function for boundary
+			if (frm.fIsRange && frm.fStart.fVal)
+			{
+				frm.fStart.fBound.reset(buildBoundExp(frm.fStart, orderBy.fOrders[0], gwi));
+				if (!frm.fStart.fBound)
+					return nullOnError(gwi);
+			}
+			if (frm.fIsRange && frm.fEnd.fVal)
+			{
+				frm.fEnd.fBound.reset(buildBoundExp(frm.fEnd, orderBy.fOrders[0], gwi));
+				if (!frm.fEnd.fVal)
+					return nullOnError(gwi);
+			}
+		}
+		else
+		{
+			// Certain function types have different default boundaries
+			// This case is kept in enum order in hopes the compiler can optimize
+			switch (item_sum->sum_func())
+			{
+			case Item_sum::COUNT_FUNC:
+			case Item_sum::COUNT_DISTINCT_FUNC:
+			case Item_sum::SUM_FUNC:
+			case Item_sum::SUM_DISTINCT_FUNC:
+			case Item_sum::AVG_FUNC:
+			case Item_sum::AVG_DISTINCT_FUNC:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+				frm.fEnd.fFrame = WF_CURRENT_ROW;
+				break;
+			case Item_sum::MIN_FUNC:
+			case Item_sum::MAX_FUNC:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+//					frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
+				frm.fEnd.fFrame = WF_CURRENT_ROW;
+				break;
+			case Item_sum::STD_FUNC:
+			case Item_sum::VARIANCE_FUNC:
+			case Item_sum::SUM_BIT_FUNC:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+				frm.fEnd.fFrame = WF_CURRENT_ROW;
+				break;
+			case Item_sum::UDF_SUM_FUNC:
+			{
+				mcsv1sdk::mcsv1Context& context = ac->getUDAFContext();
+				if (context.getRunFlag(UDAF_WINDOWFRAME_REQUIRED))
+				{
+					gwi.parseErrorText =
+					   logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WF_UDANF_FRAME_REQUIRED,
+									context.getName());
+					return nullOnError(gwi);
+				}
+				int32_t bound;
+				context.getStartFrame(frm.fStart.fFrame, bound);
+				if (frm.fStart.fFrame == execplan::WF_PRECEDING)
+				{
+					if (bound == 0)
+						bound = 1;
+					srcp.reset(new ConstantColumn((int64_t)bound));
+					frm.fStart.fVal = srcp;
+					frm.fStart.fBound.reset(buildBoundExp(frm.fStart, srcp, gwi));
 					if (!frm.fStart.fBound)
 						return nullOnError(gwi);
 				}
-				if (frm.fIsRange && frm.fEnd.fVal)
+
+				context.getEndFrame(frm.fEnd.fFrame, bound);
+				if (frm.fEnd.fFrame == execplan::WF_FOLLOWING)
 				{
-					frm.fEnd.fBound.reset(buildBoundExp(frm.fEnd, orderBy.fOrders[0], gwi));
-					if (!frm.fEnd.fVal)
+					if (bound == 0)
+						bound = 1;
+					srcp.reset(new ConstantColumn((int64_t)bound));
+					frm.fEnd.fVal = srcp;
+					frm.fEnd.fBound.reset(buildBoundExp(frm.fEnd, srcp, gwi));
+					if (!frm.fEnd.fBound)
 						return nullOnError(gwi);
 				}
+				break;
 			}
-			else
-			{
-				// Certain function types have different default boundaries
-                // This case is kept in enum order in hopes the compiler can optimize
-                switch (wf->window_func()->sum_func())
-                {
-                case Item_sum::COUNT_FUNC:
-                case Item_sum::COUNT_DISTINCT_FUNC:
-                case Item_sum::SUM_FUNC:
-                case Item_sum::SUM_DISTINCT_FUNC:
-                case Item_sum::AVG_FUNC:
-                case Item_sum::AVG_DISTINCT_FUNC:
-					frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-					frm.fEnd.fFrame = WF_CURRENT_ROW;
-					break;
-                case Item_sum::MIN_FUNC:
-                case Item_sum::MAX_FUNC:
-					frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-//					frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
-					frm.fEnd.fFrame = WF_CURRENT_ROW;
-					break;
-                case Item_sum::STD_FUNC:
-                case Item_sum::VARIANCE_FUNC:
-                case Item_sum::SUM_BIT_FUNC:
-                case Item_sum::UDF_SUM_FUNC:
-                case Item_sum::GROUP_CONCAT_FUNC:
-                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-                    frm.fEnd.fFrame = WF_CURRENT_ROW;
-                    break;
-                case Item_sum::ROW_NUMBER_FUNC:
-                case Item_sum::RANK_FUNC:
-                case Item_sum::DENSE_RANK_FUNC:
-                case Item_sum::PERCENT_RANK_FUNC:
-                case Item_sum::CUME_DIST_FUNC:
-                case Item_sum::NTILE_FUNC:
-                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-                    frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
-                    break;
-                case Item_sum::FIRST_VALUE_FUNC:
-                case Item_sum::LAST_VALUE_FUNC:
-                case Item_sum::NTH_VALUE_FUNC:
-                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-                    frm.fEnd.fFrame = WF_CURRENT_ROW;
-                    break;
-                case Item_sum::LEAD_FUNC:
-                case Item_sum::LAG_FUNC:
-                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-                    frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
-                    break;
-                default:
-                    frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
-                    frm.fEnd.fFrame = WF_CURRENT_ROW;
-                    break;
-                };
-			}
-
-			orderBy.fFrame = frm;
-			ac->orderBy(orderBy);
+			case Item_sum::GROUP_CONCAT_FUNC:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+				frm.fEnd.fFrame = WF_CURRENT_ROW;
+				break;
+			case Item_sum::ROW_NUMBER_FUNC:
+			case Item_sum::RANK_FUNC:
+			case Item_sum::DENSE_RANK_FUNC:
+			case Item_sum::PERCENT_RANK_FUNC:
+			case Item_sum::CUME_DIST_FUNC:
+			case Item_sum::NTILE_FUNC:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+				frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
+				break;
+			case Item_sum::FIRST_VALUE_FUNC:
+			case Item_sum::LAST_VALUE_FUNC:
+			case Item_sum::NTH_VALUE_FUNC:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+				frm.fEnd.fFrame = WF_CURRENT_ROW;
+				break;
+			case Item_sum::LEAD_FUNC:
+			case Item_sum::LAG_FUNC:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+				frm.fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
+				break;
+			default:
+				frm.fStart.fFrame = WF_UNBOUNDED_PRECEDING;
+				frm.fEnd.fFrame = WF_CURRENT_ROW;
+				break;
+			};
 		}
+
+		orderBy.fFrame = frm;
+		ac->orderBy(orderBy);
 	}
 
 	if (gwi.fatalParseError || nonSupport)
@@ -620,7 +757,8 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 		return NULL;
 	}
 
-	ac->resultType(colType_MysqlToIDB(wf->arguments()[0]));
+	ac->resultType(colType_MysqlToIDB(item_sum));
+
 	// bug5736. Make the result type double for some window functions when
 	// infinidb_double_for_decimal_math is set.
 	ac->adjustResultType();

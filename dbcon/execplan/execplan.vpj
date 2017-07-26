@@ -213,6 +213,7 @@
             <F N="filter.cpp"/>
             <F N="functioncolumn.cpp"/>
             <F N="groupconcatcolumn.cpp"/>
+            <F N="intervalcolumn.cpp"/>
             <F N="logicoperator.cpp"/>
             <F N="mysqlexecutionplan.cpp"/>
             <F N="objectidmanager.cpp"/>
@@ -221,6 +222,7 @@
             <F N="oracleexecutionplan.cpp"/>
             <F N="outerjoinonfilter.cpp"/>
             <F N="predicateoperator.cpp"/>
+            <F N="pseudocolumn.cpp"/>
             <F N="range.cpp"/>
             <F N="returnedcolumn.cpp"/>
             <F N="rowcolumn.cpp"/>
@@ -232,6 +234,7 @@
             <F N="simplescalarfilter.cpp"/>
             <F N="treenode.cpp"/>
             <F N="treenodeimpl.cpp"/>
+            <F N="udafcolumn.cpp"/>
             <F N="vendorexecutionplan.cpp"/>
             <F N="windowfunctioncolumn.cpp"/>
         </Folder>
@@ -258,6 +261,7 @@
             <F N="filter.h"/>
             <F N="functioncolumn.h"/>
             <F N="groupconcatcolumn.h"/>
+            <F N="intervalcolumn.h"/>
             <F N="logicoperator.h"/>
             <F N="mysqlexecutionplan.h"/>
             <F N="njlcolumnresult.h"/>
@@ -268,6 +272,7 @@
             <F N="outerjoinonfilter.h"/>
             <F N="parsetree.h"/>
             <F N="predicateoperator.h"/>
+            <F N="pseudocolumn.h"/>
             <F N="range.h"/>
             <F N="returnedcolumn.h"/>
             <F N="rowcolumn.h"/>
@@ -282,7 +287,9 @@
             <F N="simplescalarfilter.h"/>
             <F N="treenode.h"/>
             <F N="treenodeimpl.h"/>
+            <F N="udafcolumn.h"/>
             <F N="vendorexecutionplan.h"/>
+            <F N="wf_frame.h"/>
             <F N="windowfunctioncolumn.h"/>
         </Folder>
         <Folder
