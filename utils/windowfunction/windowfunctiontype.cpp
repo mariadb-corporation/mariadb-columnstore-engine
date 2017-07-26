@@ -58,6 +58,7 @@ using namespace joblist;
 #include "wf_row_number.h"
 #include "wf_stats.h"
 #include "wf_sum_avg.h"
+#include "wf_udaf.h"
 
 namespace windowfunction
 {
@@ -137,13 +138,16 @@ map<string, int> WindowFunctionType::windowFunctionId = assign::map_list_of
 	(string("REGR_SXX"),        WF__REGR_SXX)
 	(string("REGR_SXY"),        WF__REGR_SXY)
 	(string("REGR_SYY"),        WF__REGR_SYY)
+	(string("UDAF_FUNC"),       WF__UDAF)
 ;
 
 boost::shared_ptr<WindowFunctionType>
-	WindowFunctionType::makeWindowFunction(const string& name, int ct)
+	WindowFunctionType::makeWindowFunction(const string& name, int ct, WindowFunctionColumn* wc)
 {
 	boost::shared_ptr<WindowFunctionType> af;
 	int functionId = windowFunctionId[algorithm::to_upper_copy(name)];
+	// The template parameters here are dummies to execute the static makeFunction
+	// which sets the real type based on ct.
 	switch (functionId)
 	{
 		case WF__COUNT_ASTERISK:
@@ -192,6 +196,9 @@ boost::shared_ptr<WindowFunctionType>
 		case WF__PERCENTILE_DISC:
 			af = WF_percentile<int64_t>::makeFunction(functionId, name, ct);
 			break;
+		case WF__UDAF:
+			af = WF_udaf<int64_t>::makeFunction(functionId, name, ct, wc->getUDAFContext());
+			break;
 		case WF__REGR_SLOPE:
 		case WF__REGR_INTERCEPT:
 		case WF__REGR_COUNT:
@@ -211,7 +218,6 @@ boost::shared_ptr<WindowFunctionType>
 	return af;
 }
 
-
 const string WindowFunctionType::toString() const
 {
 	ostringstream oss;
@@ -223,76 +229,80 @@ const string WindowFunctionType::toString() const
 	return oss.str();
 }
 
-
-template<typename T> void WindowFunctionType::getValue(uint64_t i, T& t)
+template<typename T> void WindowFunctionType::getValue(uint64_t i, T& t, CDT* cdt)
 {
 }
 
-
-template<> void WindowFunctionType::getValue<int64_t>(uint64_t i, int64_t& t)
+template<> void WindowFunctionType::getValue<int64_t>(uint64_t i, int64_t& t, CDT* cdt)
 {
 	t = fRow.getIntField(i);
+	if (cdt)
+	{
+		*cdt = execplan::CalpontSystemCatalog::BIGINT;
+	}
 }
 
-
-template<> void WindowFunctionType::getValue<uint64_t>(uint64_t i, uint64_t& t)
+template<> void WindowFunctionType::getValue<uint64_t>(uint64_t i, uint64_t& t, CDT* cdt)
 {
 	t = fRow.getUintField(i);
+	if (cdt)
+	{
+		*cdt = execplan::CalpontSystemCatalog::UBIGINT;
+	}
 }
 
-
-template<> void WindowFunctionType::getValue<double>(uint64_t i, double& t)
+template<> void WindowFunctionType::getValue<double>(uint64_t i, double& t, CDT* cdt)
 {
 	t = fRow.getDoubleField(i);
+	if (cdt)
+	{
+		*cdt = execplan::CalpontSystemCatalog::DOUBLE;
+	}
 }
 
-
-template<> void WindowFunctionType::getValue<float>(uint64_t i, float& t)
+template<> void WindowFunctionType::getValue<float>(uint64_t i, float& t, CDT* cdt)
 {
 	t = fRow.getFloatField(i);
+	if (cdt)
+	{
+		*cdt = execplan::CalpontSystemCatalog::FLOAT;
+	}
 }
 
-
-template<> void WindowFunctionType::getValue<string>(uint64_t i, string& t)
+template<> void WindowFunctionType::getValue<string>(uint64_t i, string& t, CDT* cdt)
 {
 	t = fRow.getStringField(i);
+	// By not setting cdt, we let it default to the column's type 
 }
-
 
 template<typename T> void WindowFunctionType::setValue(uint64_t i, T& t)
 {
 }
-
 
 template<> void WindowFunctionType::setValue<int64_t>(uint64_t i, int64_t& t)
 {
 	fRow.setIntField(t, i);
 }
 
-
 template<> void WindowFunctionType::setValue<uint64_t>(uint64_t i, uint64_t& t)
 {
 	fRow.setUintField(t, i);
 }
-
 
 template<> void WindowFunctionType::setValue<double>(uint64_t i, double& t)
 {
 	fRow.setDoubleField(t, i);
 }
 
-
 template<> void WindowFunctionType::setValue<float>(uint64_t i, float& t)
 {
 	fRow.setFloatField(t, i);
 }
 
-
 template<> void WindowFunctionType::setValue<string>(uint64_t i, string& t)
 {
 	fRow.setStringField(t, i);
 }
-
 
 template<typename T>
 void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
@@ -313,7 +323,6 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
 		setValue(i, *v);
 	}
 }
-
 
 template<typename T>
 void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
@@ -384,19 +393,16 @@ void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 	}
 }
 
-
 template<>
 void WindowFunctionType::implicit2T<string>(uint64_t i, string& t, int)
 {
 	t = fRow.getStringField(i);
 }
 
-
 template<typename T>
 void WindowFunctionType::getConstValue(ConstantColumn* cc, T& t, bool& b)
 {
 }
-
 
 template<>
 void WindowFunctionType::getConstValue<int64_t>(ConstantColumn* cc, int64_t& t, bool& b)
@@ -404,13 +410,11 @@ void WindowFunctionType::getConstValue<int64_t>(ConstantColumn* cc, int64_t& t, 
 	t = cc->getIntVal(fRow, b);
 }
 
-
 template<>
 void WindowFunctionType::getConstValue<uint64_t>(ConstantColumn* cc, uint64_t& t, bool& b)
 {
 	t = cc->getUintVal(fRow, b);
 }
-
 
 template<>
 void WindowFunctionType::getConstValue<double>(ConstantColumn* cc, double& t, bool& b)
@@ -418,20 +422,17 @@ void WindowFunctionType::getConstValue<double>(ConstantColumn* cc, double& t, bo
 	t = cc->getDoubleVal(fRow, b);
 }
 
-
 template<>
 void WindowFunctionType::getConstValue<float>(ConstantColumn* cc, float& t, bool& b)
 {
 	t = cc->getFloatVal(fRow, b);
 }
 
-
 template<>
 void WindowFunctionType::getConstValue<string>(ConstantColumn* cc, string& t, bool& b)
 {
 	t = cc->getStrVal(fRow, b);
 }
-
 
 template void WindowFunctionType::implicit2T<int64_t>(uint64_t, int64_t&, int);
 template void WindowFunctionType::implicit2T<uint64_t>(uint64_t, uint64_t&, int);
@@ -443,7 +444,6 @@ template void WindowFunctionType::setValue<uint64_t>(int, int64_t, int64_t, int6
 template void WindowFunctionType::setValue<float>(int, int64_t, int64_t, int64_t, float*);
 template void WindowFunctionType::setValue<double>(int, int64_t, int64_t, int64_t, double*);
 template void WindowFunctionType::setValue<string>(int, int64_t, int64_t, int64_t, string*);
-
 
 
 void* WindowFunctionType::getNullValueByType(int ct, int pos)
@@ -565,7 +565,6 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 
 	return v;
 }
-
 
 }   //namespace
 // vim:ts=4 sw=4:

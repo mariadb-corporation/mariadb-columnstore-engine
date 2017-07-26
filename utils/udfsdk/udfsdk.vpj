@@ -202,12 +202,20 @@
         <Folder
             Name="Source Files"
             Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+            <F N="allnull.cpp"/>
+            <F N="mcsv1_udaf.cpp"/>
+            <F N="median.cpp"/>
+            <F N="ssq.cpp"/>
             <F N="udfinfinidb.cpp"/>
             <F N="udfmysql.cpp"/>
         </Folder>
         <Folder
             Name="Header Files"
             Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+            <F N="allnull.h"/>
+            <F N="mcsv1_udaf.h"/>
+            <F N="median.h"/>
+            <F N="ssq.h"/>
             <F N="udfsdk.h"/>
         </Folder>
         <Folder
@@ -222,6 +230,7 @@
             <F
                 N="Makefile"
                 Type="Makefile"/>
+            <F N="mcsv1_UDAF_base"/>
         </Folder>
     </Files>
 </Project>

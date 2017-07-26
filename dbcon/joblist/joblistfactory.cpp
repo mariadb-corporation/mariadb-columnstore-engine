@@ -58,6 +58,7 @@ using namespace boost;
 #include "simplecolumn.h"
 #include "rowcolumn.h"
 #include "treenodeimpl.h"
+#include "udafcolumn.h"
 using namespace execplan;
 
 #include "configcpp.h"
@@ -697,6 +698,22 @@ void updateAggregateColType(AggregateColumn* ac, const SRCP& srcp, int op, JobIn
 		ct.scale = 0;
 		ct.precision = 0;
 	}
+	else if (op == AggregateColumn::UDAF)
+	{
+		UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(ac);
+		if (udafc)
+		{
+			mcsv1Context& udafContext = udafc->getContext();
+			ct.colDataType = udafContext.getResultType();
+			ct.colWidth = udafContext.getColWidth();
+			ct.scale = udafContext.getScale();
+			ct.precision = udafContext.getPrecision();
+		}
+		else
+		{
+			ct = ac->resultType();
+		}
+	}
 	else
 	{
 		ct = ac->resultType();
@@ -883,7 +900,16 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 				if (ac->constCol().get() != NULL)
 				{
 					// replace the aggregate on constant with a count(*)
-					SRCP clone(new AggregateColumn(*ac, ac->sessionID()));
+					SRCP clone;
+					UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(ac);
+					if (udafc)
+					{
+						clone.reset(new UDAFColumn(*udafc, ac->sessionID()));
+					}
+					else
+					{
+						clone.reset(new AggregateColumn(*ac, ac->sessionID()));
+					}
 					jobInfo.constAggregate.insert(make_pair(i, clone));
 					ac->aggOp(AggregateColumn::COUNT_ASTERISK);
 					ac->distinct(false);

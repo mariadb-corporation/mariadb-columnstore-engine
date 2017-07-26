@@ -448,8 +448,6 @@ void WESplitterApp::invokeCpimport()
 
 	std::vector<char*> Cmds;
 
-
-	char* ptr = 0;
     std::istringstream ss(aCmdLineStr);
     std::string arg;
 	std::vector<std::string> v2(20, "");
