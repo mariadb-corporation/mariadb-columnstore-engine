@@ -193,7 +193,7 @@ const string SimpleFilter::data() const
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
-		lhs = "'" + boost::replace_all_copy(fRhs->data(), "'", "\\'") + "'";
+		lhs = "'" + boost::replace_all_copy(fLhs->data(), "'", "\\'") + "'";
 	else
 		lhs = fLhs->data();
 	return lhs + " " + fOp->data() + " " + rhs;
