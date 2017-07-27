@@ -121,7 +121,7 @@ class BatchPrimitiveProcessor
 
 		// these two functions are used by BPPV to create BPP instances
 		// on demand.  TRY not to use unlock() for anything else.
-		void unlock() { objLock.unlock(); }
+		void unlock() { objLock.try_lock(); objLock.unlock(); }
 		bool hasJoin() { return doJoin; }
 	private:
 		BatchPrimitiveProcessor();

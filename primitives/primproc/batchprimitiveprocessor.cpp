@@ -1765,6 +1765,8 @@ int BatchPrimitiveProcessor::operator()()
 
 	vssCache.clear();
 #ifndef __FreeBSD__
+    if (sendThread->aborted())
+        objLock.try_lock();
 	objLock.unlock();
 #endif
 	freeLargeBuffers();
