@@ -32,6 +32,7 @@
 #include <cassert>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/foreach.hpp>
 #ifdef _MSC_VER
 #include <unordered_map>
 typedef int pthread_t;
@@ -1152,21 +1153,21 @@ struct BPPHandler
 
     ~BPPHandler()
     {
+        mutex::scoped_lock scoped(bppLock);
         for (bppKeysIt = bppKeys.begin() ; bppKeysIt != bppKeys.end(); ++bppKeysIt)
         {
             uint32_t key = *bppKeysIt;
             BPPMap::iterator it;
 
-            mutex::scoped_lock scoped(bppLock);
             it = bppMap.find(key);
             if (it != bppMap.end()) {
                 it->second->abort();
                 bppMap.erase(it);
             }
-            scoped.unlock();
             fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
             OOBPool->removeJobs(key);
         }
+        scoped.unlock();
     }
 
 	struct BPPHandlerFunctor : public PriorityThreadPool::Functor {
@@ -1224,11 +1225,11 @@ struct BPPHandler
 
 		bs.advance(sizeof(ISMPacketHeader));
 		bs >> key;
+        mutex::scoped_lock scoped(bppLock);
         bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), key);
         if (bppKeysIt != bppKeys.end()) {
             bppKeys.erase(bppKeysIt);
         }
-		mutex::scoped_lock scoped(bppLock);
 		it = bppMap.find(key);
 		if (it != bppMap.end()) {
 			it->second->abort();
@@ -1300,9 +1301,9 @@ struct BPPHandler
 				bppv->add(dup);
 			}
 		}
-		key = bpp->getUniqueID();
+        mutex::scoped_lock scoped(bppLock);
+        key = bpp->getUniqueID();
         bppKeys.push_back(key);
-		mutex::scoped_lock scoped(bppLock);
 		bool newInsert;
 		newInsert = bppMap.insert(pair<uint32_t, SBPPV>(key, bppv)).second;
 		//cout << "creating BPP # " << key << endl;
@@ -2209,6 +2210,10 @@ boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 void BPPV::abort()
 {
 	sendThread->abort();
+    BOOST_FOREACH( boost::shared_ptr<BatchPrimitiveProcessor> bpp, v )
+    {
+        bpp->unlock();
+    }
 }
 
 bool BPPV::aborted()
