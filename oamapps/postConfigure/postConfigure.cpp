@@ -4595,7 +4595,7 @@ bool storageSetup(bool amazonInstall)
 		catch(...)
 		{}
 
-		if ( PMVolumeType.empty() || PMVolumeType == "")
+		if ( PMVolumeType.empty() || PMVolumeType == "" || PMVolumeType == oam::UnassignedName)
 			PMVolumeType = "gp2";
 
 		while(true)
@@ -4943,7 +4943,7 @@ bool copyFstab(string moduleName)
 	if ( rootUser)
    		cmd = "/bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
 	else
-		cmd = "/sudo bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
+		cmd = "sudo /bin/cp -f /etc/fstab " + installDir + "/local/etc/" + moduleName + "/. > /dev/null 2>&1";
 
 	system(cmd.c_str());
 
