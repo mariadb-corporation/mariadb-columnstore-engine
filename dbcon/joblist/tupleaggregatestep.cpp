@@ -2404,22 +2404,33 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 				vector<SP_ROWAGG_FUNC_t>::iterator it = functionVec2.begin();
 				while (it != functionVec2.end())
 				{
+					SP_ROWAGG_FUNC_t funct;
 					SP_ROWAGG_FUNC_t f = *it++;
-					if ((f->fOutputColumnIndex == k) &&
-						(f->fAggFunction == ROWAGG_COUNT_ASTERISK ||
-						 f->fAggFunction == ROWAGG_COUNT_COL_NAME ||
-						 f->fAggFunction == ROWAGG_SUM ||
-						 f->fAggFunction == ROWAGG_AVG ||
-						 f->fAggFunction == ROWAGG_MIN ||
-						 f->fAggFunction == ROWAGG_MAX ||
-						 f->fAggFunction == ROWAGG_STATS   ||
-						 f->fAggFunction == ROWAGG_BIT_AND ||
-						 f->fAggFunction == ROWAGG_BIT_OR  ||
-						 f->fAggFunction == ROWAGG_BIT_XOR ||
-						 f->fAggFunction == ROWAGG_CONSTANT ||
-						 f->fAggFunction == ROWAGG_GROUP_CONCAT))
+					if (f->fAggFunction == ROWAGG_UDAF)
 					{
-						SP_ROWAGG_FUNC_t funct(new RowAggFunctionCol(
+						RowUDAFFunctionCol* udafFuncCol = dynamic_cast<RowUDAFFunctionCol*>(f.get());
+						funct.reset(new RowUDAFFunctionCol(
+							udafFuncCol->fUDAFContext,
+							udafFuncCol->fInputColumnIndex,
+							udafFuncCol->fOutputColumnIndex,
+							udafFuncCol->fAuxColumnIndex));
+						functionSub2.push_back(funct);
+					}
+					else if ((f->fOutputColumnIndex == k) &&
+							(f->fAggFunction == ROWAGG_COUNT_ASTERISK ||
+							 f->fAggFunction == ROWAGG_COUNT_COL_NAME ||
+							 f->fAggFunction == ROWAGG_SUM ||
+							 f->fAggFunction == ROWAGG_AVG ||
+							 f->fAggFunction == ROWAGG_MIN ||
+							 f->fAggFunction == ROWAGG_MAX ||
+							 f->fAggFunction == ROWAGG_STATS   ||
+							 f->fAggFunction == ROWAGG_BIT_AND ||
+							 f->fAggFunction == ROWAGG_BIT_OR  ||
+							 f->fAggFunction == ROWAGG_BIT_XOR ||
+							 f->fAggFunction == ROWAGG_CONSTANT ||
+							 f->fAggFunction == ROWAGG_GROUP_CONCAT))
+					{
+						funct.reset(new RowAggFunctionCol(
 							f->fAggFunction,
 							f->fStatsFunction,
 							f->fInputColumnIndex,
