@@ -15,6 +15,7 @@
 .libs/
 config.log
 *~
+*kdev*
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
