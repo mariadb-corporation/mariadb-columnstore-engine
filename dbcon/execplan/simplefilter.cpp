@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
+#include <boost/algorithm/string/replace.hpp>
 
 #include "returnedcolumn.h"
 #include "constantcolumn.h"
@@ -179,7 +180,7 @@ const string SimpleFilter::data() const
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
-		rhs = "'" + fRhs->data() + "'";
+		rhs = "'" + boost::replace_all_copy(fRhs->data(), "'", "\\'") + "'";
 	else
 		rhs = fRhs->data();
 	if (dynamic_cast<ConstantColumn*>(fLhs) &&
@@ -188,7 +189,7 @@ const string SimpleFilter::data() const
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
-		lhs = "'" + fLhs->data() + "'";
+		lhs = "'" + boost::replace_all_copy(fRhs->data(), "'", "\\'") + "'";
 	else
 		lhs = fLhs->data();
 	return lhs + " " + fOp->data() + " " + rhs;
