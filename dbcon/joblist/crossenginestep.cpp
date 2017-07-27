@@ -96,6 +96,10 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
 			fErrStr = "fatal error in mysql_real_connect()";
             ret = mysql_errno(fCon);
 		}
+        else
+        {
+            mysql_set_character_set(fCon, "utf8");
+        }
 	}
 	else
 	{
