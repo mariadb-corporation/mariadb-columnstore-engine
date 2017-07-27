@@ -234,7 +234,7 @@ fi
 
 # install Columnstore Log Rotate File
 $SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-$SUDO chmod 666 /etc/logrotate.d/columnstore
+$SUDO chmod 644 /etc/logrotate.d/columnstore
 
 #check if MariaDB Columnstore system logging was setup
 cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
