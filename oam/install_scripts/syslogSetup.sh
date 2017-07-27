@@ -175,14 +175,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		fi
 	fi
 
-	$SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
-	$SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
-        $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
-
-	$SUDO systemctl restart rsyslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
-
+	restartSyslog
 fi
 
 }
@@ -211,16 +204,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		$SUDO rm -f "$syslog_conf"
 	fi
 
-        $SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
-        $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
-        $SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
-
-        $SUDO systemctl restart rsyslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog.service > /dev/null 2>&1
-        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
-
-
-	$installdir/bin/setConfig -d Installation SystemLogConfigFile "unassigned"
+	restartSyslog
 
 fi
 
@@ -253,6 +237,28 @@ else
 fi
 }
 
+restartSyslog() {
+
+	if [ "$daemon" = "syslog-ng" ]; then
+		if [ -f /etc/init.d/syslog-ng ]; then
+			$SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
+		else
+		        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
+		fi
+	elif [ "$daemon" = "rsyslog" ]; then
+                if [ -f /etc/init.d/rsyslog ]; then
+                        $SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
+                else
+                        $SUDO systemctl restart rsyslog.service > /dev/null 2>&1
+                fi
+	elif [ "$daemon" = "syslog" ]; then	
+                if [ -f /etc/init.d/syslog ]; then
+                        $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
+                else
+                        $SUDO systemctl restart syslog.service > /dev/null 2>&1
+                fi
+	fi
+}
 
 case "$1" in
   install)
