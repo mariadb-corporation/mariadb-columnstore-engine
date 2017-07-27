@@ -103,7 +103,13 @@ int DrizzleMySQL::init(const char* h, unsigned int p, const char* u, const char*
 		{
 			ret = drizzle_con_connect(fDrzcp);
 			if (ret != 0)
+            {
 				fErrStr = "fatal error in drizzle_con_connect()";
+            }
+            else
+            {
+                drizzle_query_str(fDrzcp, NULL, "SET NAMES UTF8;", NULL);
+            }
 		}
 		else
 		{
