@@ -58,7 +58,17 @@ SET(CPACK_DEBIAN_LIBS_PACKAGE_PROVIDES "mariadb-columnstore-libs")
 SET(CPACK_DEBIAN_PLATFORM_PACKAGE_PROVIDES "mariadb-columnstore-platform")
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_PROVIDES "mariadb-columnstore-storage-engine")
 
-SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, libboost-all-dev, mariadb-columnstore-libs, libsnappy1v5")
+set(DEBIAN_VERSION_NUMBER OFF)
+if (EXISTS "/etc/debian_version")
+    file (READ "/etc/debian_version" DEBIAN_VERSION)
+    string(REGEX MATCH "([0-9]+).[0-9]+" DEBIAN "${DEBIAN_VERSION}")
+    set(DEBIAN_VERSION_NUMBER "${CMAKE_MATCH_1}")
+endif ()
+if (${DEBIAN_VERSION_NUMBER} EQUAL 8)
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, libboost-all-dev, mariadb-columnstore-libs, libsnappy1")
+else ()
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, libboost-all-dev, mariadb-columnstore-libs, libsnappy1v5")
+endif ()
 
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DEPENDS "mariadb-columnstore-libs")
 
