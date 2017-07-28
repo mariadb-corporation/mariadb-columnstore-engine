@@ -369,10 +369,6 @@ int main(int argc, char *argv[])
 		exit(1);        
 	}
 
-	//store syslog config file in Calpont Config file
-	cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
-	system(cmd.c_str());
-
 	//get PPackage Type
 	try{
 		packageType = sysConfig->getConfig(InstallSection, "EEPackageType");

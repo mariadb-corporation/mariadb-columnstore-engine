@@ -310,7 +310,7 @@ fi
 kill_by_pid() {
   # let's see if we can kill the 2 mysql procs by hand
   # get the our mysql from ps
-  eval $(ps -ef | grep "$COLUMNSTORE_INSTALL_DIR/mysql//sbin/mysqld" | grep -v grep | head -1 | awk '{printf "pid=%d\n", $2}')
+  eval $(ps -ef | grep "$COLUMNSTORE_INSTALL_DIR/mysql//bin/mysqld " | grep -v grep | head -1 | awk '{printf "pid=%d\n", $2}')
 
   if [ -n "$pid" ]; then
 	ppid=$(ps -o ppid= -p $pid)

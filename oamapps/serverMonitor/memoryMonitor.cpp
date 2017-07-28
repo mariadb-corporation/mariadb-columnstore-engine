@@ -32,9 +32,10 @@ using namespace logging;
 using namespace servermonitor;
 //using namespace procheartbeat;
 
-unsigned long totalMem;
 ProcessMemoryList pml;
 int swapFlag = 0;
+
+uint64_t totalMem;
 
 pthread_mutex_t MEMORY_LOCK;
 
@@ -62,7 +63,7 @@ void memoryMonitor()
 
 	//set monitoring period to 60 seconds
 	int monitorPeriod = MONITOR_PERIOD;
-    utils::CGroupConfigurator cg;
+	utils::CGroupConfigurator cg;
 
 	while(true)
 	{
@@ -87,12 +88,11 @@ void memoryMonitor()
 		//get memory stats
 		totalMem = cg.getTotalMemory();
 		uint64_t freeMem = cg.getFreeMemory();
-        uint64_t usedMem = totalMem - freeMem;
+		uint64_t usedMem = totalMem - freeMem;
 
 		//get swap stats
-        uint64_t totalSwap = cg.getTotalSwapSpace();
-        uint64_t usedSwap = cg.getSwapInUse();
-
+		uint64_t totalSwap = cg.getTotalSwapSpace();
+		uint64_t usedSwap = cg.getSwapInUse();
 
 		if ( totalSwap == 0 ) {
 			swapUsagePercent = 0;
@@ -136,13 +136,34 @@ void memoryMonitor()
 		else
 			memoryUsagePercent =  (usedMem / (totalMem / 100)) + 1;
 
+		/*LoggingID lid(SERVER_MONITOR_LOG_ID);
+		MessageLog ml(lid);
+		Message msg;
+		Message::Args args;
+		args.add("memoryUsagePercent ");
+		args.add((uint64_t) memoryUsagePercent);
+		args.add("usedMem ");
+		args.add((uint64_t) usedMem);
+		args.add("totalMem ");
+		args.add((uint64_t) totalMem);
+		msg.format(args);
+		ml.logInfoMessage(msg);
+*/
+		//first time called, log
+		//adjust if over 100%
+		if ( swapUsagePercent < 0 )
+			swapUsagePercent = 0;
+		if ( swapUsagePercent > 100 )
+			swapUsagePercent = 100;
+
+		if ( memoryUsagePercent < 0 )
+			memoryUsagePercent = 0;
+		if ( memoryUsagePercent > 100 )
+			memoryUsagePercent = 100;
+
 		// check for Memory alarms
 		if (memoryUsagePercent >= memoryCritical && memoryCritical > 0 ) {
 			if ( monitorPeriod == MONITOR_PERIOD ) {
-				//first time called, log
-				//adjust if over 100%
-				if ( memoryUsagePercent > 100 )
-					memoryUsagePercent = 100;
 
 				LoggingID lid(SERVER_MONITOR_LOG_ID);
 				MessageLog ml(lid);

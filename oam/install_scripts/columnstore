@@ -56,10 +56,9 @@ if [ "x$has_um" = x ]; then
 	has_um=0
 fi
 
-user=root
+user=`whoami 2>/dev/null`
 SUDO=" "
-if [ "$USER" != "root" ]; then
-	user=$USER
+if [ $user != "root" ]; then
         SUDO="sudo "
 fi
 
@@ -81,7 +80,7 @@ start() {
 		exit 0
 	fi
 
-        ($SUDO mkdir -p /var/lock/subsys && $SUDO chmod 777 /var/lock/subsys && $SUDO touch /var/lock/subsys/columnstore) >/dev/null 2>&1
+	($SUDO mkdir -p /var/lock/subsys && $SUDO chmod 777 /var/lock/subsys && $SUDO touch /var/lock/subsys/columnstore) >/dev/null 2>&1
 
 	if [ -x $InstallDir/bin/columnstore.pre-start ]; then
 		$InstallDir/bin/columnstore.pre-start

@@ -10,17 +10,15 @@
 # Argument 5 - Remote user name (optional)
 # Argument 6 - Force a tty to be allocated (optional)
 set stty_init {cols 512 -opost};
-set timeout 30
+set timeout 10
 set SERVER [lindex $argv 0]
 set PASSWORD [lindex $argv 1]
 set COMMAND [lindex $argv 2]
 set DEBUG [lindex $argv 3]
 
-if {[info exists env(USER)]} {
-    set USERNAME $env(USER)
-} else {
-    set USERNAME "root"
-}
+exec whoami >/tmp/whoami.tmp
+set USERNAME [exec cat /tmp/whoami.tmp]
+exec rm -f /tmp/whoami.tmp
 
 set UNM [lindex $argv 4]
 if { $UNM != "" && $UNM != "-" } {
@@ -33,7 +31,7 @@ if { $TTYOPT != "" } {
 }
 log_user $DEBUG
 spawn -noecho /bin/bash
-expect -re {[$#] }
+#expect -re {[$#] }
 
 if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
@@ -42,8 +40,9 @@ if { $PASSWORD == "ssh" } {
 # 
 # send command
 #
-send "ssh $TTY $USERNAME@$SERVER $COMMAND\n"
+send "ssh -v $TTY $USERNAME@$SERVER '$COMMAND'\n"
 expect {
+	"cannot access" { exit 1}
 	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
 	"service not known"    { send_user "           FAILED: Invalid Host\n" ; exit 1}
 	"ssh: connect to host" { send_user "           FAILED: Invalid Host\n" ; exit 1 }
@@ -57,14 +56,35 @@ expect {
 						}
 	"word: " { send "$PASSWORD\n" }
 	"passphrase" { send "$PASSWORD\n" }
-	-re {[$#] } { exit 0 }
+	"command not found" { exit 3 }
+#	-re {[$#] } { exit 0 }
+	"Exit status 0" { exit 0 }
+        "Exit status 1" { exit 1 }
+        "Exit status 3" { exit 1 }
+        "Exit status 4" { exit 1 }
+	timeout { exit 2 }
+        "Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit 1 }
 }
 expect {
-	-re {[$#] } { exit 0 }
-	"Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
+	"command not found" { exit 3 }
+#	-re {[$#] } { exit 0 }
+        "Exit status 0" { exit 0 }
+        "Exit status 1" { exit 1 }
+        "Exit status 3" { exit 1 }
+        "Exit status 4" { exit 1 }
+	timeout { exit 2 }
+        "cannot access" { exit 1}
+        "Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit 1 }
+
 	"(y or n)"  { send "y\n" 
-					  expect -re {[$#] } { exit 0 }
-					}
+				"command not found" { exit 3 }
+#				expect -re {[$#] } { exit 0 }
+				"Exit status 0" { exit 0 }
+        			"Exit status 1" { exit 1 }
+			        "Exit status 3" { exit 1 }
+        			"Exit status 4" { exit 1 }
+				timeout { exit 2 }	
+	}
 }
 exit 0
 

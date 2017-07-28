@@ -6,7 +6,7 @@
 # Argument 1 - Remote Server Host Name or IP address
 # Argument 2 - Remote Server root password
 # Argument 3 - Command
-set timeout 30
+set timeout 10
 set USERNAME $env(USER)"@"
 set SERVER [lindex $argv 0]
 set PASSWORD [lindex $argv 1]
@@ -22,9 +22,12 @@ if { $PASSWORD == "ssh" } {
 # 
 # send command
 #
-expect -re {[$#] }
-send "scp $USERNAME$SERVER:$FILE .\n"
+#expect -re {[$#] }
+send "scp -v $USERNAME$SERVER:$FILE .\n"
 expect {
+	"Exit status 0" { exit 0 }
+        "Exit status 1" { exit 1 }
+        "100%"                                          { send_user "DONE\n" ; exit 0 }
 	"authenticity" { send "yes\n" 
 						expect {
 							"word: " { send "$PASSWORD\n" }
@@ -38,16 +41,18 @@ expect {
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"word: " { send "$PASSWORD\n" }
 	"passphrase" { send "$PASSWORD\n" }
+        "scp:"   { send_user "FAILED\n" ; exit 1 }
+        "Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit 1 }
 }
 expect {
-	"100%" 						{ send_user "DONE\n" }
+	"Exit status 0" { exit 0 }
+        "Exit status 1" { exit 1 }
+	"100%" 						{ send_user "DONE\n" ; exit 0 }
 	"scp:"  					{ send_user "FAILED\n" ; exit 1 }
-	"Permission denied"         { send_user "FAILED: Invalid password\n" ; exit 1 }
+	"Permission denied, please try again"         { send_user "FAILED: Invalid password\n" ; exit 1 }
 	"No such file or directory" { send_user "FAILED: No such file or directory\n" ; exit 1 }
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 }
-#sleep to make sure it's finished
-sleep 5
 exit 0
 

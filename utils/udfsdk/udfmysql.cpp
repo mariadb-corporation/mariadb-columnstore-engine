@@ -82,8 +82,8 @@ inline string cvtArgToString(int t, const char* v)
 }
 
 /****************************************************************************
- * UDF function interface for MySQL connector to recognize is defined in
- * this section. MySQL's UDF function creation guideline needs to be followed.
+ * UDF function interface for MariaDB connector to recognize is defined in
+ * this section. MariaDB's UDF function creation guideline needs to be followed.
  *
  * Three interface need to be defined on the connector for each UDF function.
  *
@@ -91,12 +91,12 @@ inline string cvtArgToString(int t, const char* v)
  *           the input.
  * XXX_deinit: To clean up the memory.
  * XXX: The function implementation.
- * Detailed instruction can be found at MySQL source directory:
+ * Detailed instruction can be found at MariaDB source directory:
  * ~/sql/udf_example.cc.
  *
  * Please note that the implementation of the function defined on the connector
  * will only be called when all the input arguments are constant. e.g., 
- * idb_add(2,3). That way, the function does not run in a distributed fashion 
+ * mcs_add(2,3). That way, the function does not run in a distributed fashion
  * and could be slow. If there is a need for the UDF function to run with
  * pure constant input, then one needs to put a implementation in the XXX
  * body, which is very similar to the ones in getXXXval API. If there's no
@@ -106,16 +106,16 @@ inline string cvtArgToString(int t, const char* v)
 extern "C"
 {
 /**
- * IDB_ADD connector stub
+ * MCS_ADD connector stub
  */
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-my_bool idb_add_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+my_bool mcs_add_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
 {
 	if (args->arg_count != 2)
 	{
-		strcpy(message,"idb_add() requires two argument");
+		strcpy(message,"mcs_add() requires two argument");
 		return 1;
 	}
 
@@ -125,14 +125,14 @@ my_bool idb_add_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-void idb_add_deinit(UDF_INIT* initid)
+void mcs_add_deinit(UDF_INIT* initid)
 {
 }
 
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-double idb_add(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
+double mcs_add(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
 {
 	double op1, op2;
 
@@ -143,17 +143,17 @@ double idb_add(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
 }
 
 /**
- * IDB_ISNULL connector stub
+ * MCS_ISNULL connector stub
  */
  
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-my_bool idb_isnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+my_bool mcs_isnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
 {
 	if (args->arg_count != 1)
 	{
-		strcpy(message,"idb_isnull() requires one argument");
+		strcpy(message,"mcs_isnull() requires one argument");
 		return 1;
 	}
 
@@ -163,14 +163,14 @@ my_bool idb_isnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-void idb_isnull_deinit(UDF_INIT* initid)
+void mcs_isnull_deinit(UDF_INIT* initid)
 {
 }	
 
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-long long idb_isnull(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
+long long mcs_isnull(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
 {
 	return 0;
 }

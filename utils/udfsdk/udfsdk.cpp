@@ -53,9 +53,9 @@ UDFSDK::~UDFSDK()
 
 /**
  * All UDF functions should be registered in the function map. They will be
- * picked up by the InfiniDB F&E framework when the servers are started. 
- * That will make sure the UDF functions runs distributedly in InfiniDB
- * engines just like the internal InfiniDB functions.
+ * picked up by the MariaDB ColumnStore F&E framework when the servers are started. 
+ * That will make sure the UDF functions runs distributedly in ColumnStore
+ * engines just like the internal ColumnStore functions.
  */
 FuncMap UDFSDK::UDFMap() const
 {
@@ -64,23 +64,23 @@ FuncMap UDFSDK::UDFMap() const
 	// first: function name
 	// second: Function pointer
 	// please use lower case for the function name. Because the names might be 
-	// case-insensitive in MySQL depending on the setting. In such case, 
+	// case-insensitive in MariaDB depending on the setting. In such case,
 	// the function names passed to the interface is always in lower case.
-	fm["idb_add"] = new IDB_add();
-	fm["idb_isnull"] = new IDB_isnull();
+	fm["mcs_add"] = new MCS_add();
+	fm["mcs_isnull"] = new MCS_isnull();
 	
 	return fm;
 }
 
 /***************************************************************************
- * IDB_ADD implementation 
+ * MCS_ADD implementation 
  *
  * OperationType() definition
  */
-CalpontSystemCatalog::ColType IDB_add::operationType (FunctionParm& fp, 
+CalpontSystemCatalog::ColType MCS_add::operationType (FunctionParm& fp, 
                        CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type of idb_add is determined by the argument types
+	// operation type of MCS_add is determined by the argument types
 	assert (fp.size() == 2);
 	CalpontSystemCatalog::ColType rt;
 	if (fp[0]->data()->resultType() == fp[1]->data()->resultType())
@@ -135,7 +135,7 @@ CalpontSystemCatalog::ColType IDB_add::operationType (FunctionParm& fp,
  *
  * This API is called when an double value is needed to return from the UDF function
  */
-double IDB_add::getDoubleVal(Row& row,
+double MCS_add::getDoubleVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -190,7 +190,7 @@ double IDB_add::getDoubleVal(Row& row,
 	return 0;
 }
 
-float IDB_add::getFloatVal(Row& row,
+float MCS_add::getFloatVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -203,11 +203,11 @@ float IDB_add::getFloatVal(Row& row,
  *
  * This API is called when an integer value is needed to return from the UDF function
  *
- * Because the result type idb_add is double(real), all the other API can simply call 
+ * Because the result type MCS_add is double(real), all the other API can simply call 
  * getDoubleVal and apply the conversion. This method may not fit for all the UDF
  * implementation.
  */
-int64_t IDB_add::getIntVal(Row& row,
+int64_t MCS_add::getIntVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -215,7 +215,7 @@ int64_t IDB_add::getIntVal(Row& row,
 	return (int64_t)getDoubleVal(row, parm, isNull, op_ct);
 }
 
-string IDB_add::getStrVal(Row& row,
+string MCS_add::getStrVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -227,7 +227,7 @@ string IDB_add::getStrVal(Row& row,
 	return oss.str();
 }
 
-IDB_Decimal IDB_add::getDecimalVal(Row& row,
+IDB_Decimal MCS_add::getDecimalVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -239,26 +239,26 @@ IDB_Decimal IDB_add::getDecimalVal(Row& row,
 }
 
 /**
- * This API should never be called for IDB_add, because the latter
+ * This API should never be called for MCS_add, because the latter
  * is not for date/datetime values addition. In such case, one can
  * either not implement this API and an IDB-5001 error will be thrown,
  * or throw a customized exception here.
  */
-int32_t IDB_add::getDateIntVal(Row& row,
+int32_t MCS_add::getDateIntVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
 {
-	throw logic_error("Invalid API called for IDB_ADD");
+	throw logic_error("Invalid API called for MCS_ADD");
 }
 
 /**
- * This API should never be called for IDB_add, because the latter
+ * This API should never be called for MCS_add, because the latter
  * is not for date/datetime values addition. In such case, one can
  * either not implement this API and an IDB-5001 error will be thrown,
  * or throw a customized exception here.
  */
-int64_t IDB_add::getDatetimeIntVal(Row& row,
+int64_t MCS_add::getDatetimeIntVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -266,7 +266,7 @@ int64_t IDB_add::getDatetimeIntVal(Row& row,
 	return (int64_t)getDoubleVal(row, parm, isNull, op_ct);
 }
 
-bool IDB_add::getBoolVal(Row& row,
+bool MCS_add::getBoolVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -275,14 +275,14 @@ bool IDB_add::getBoolVal(Row& row,
 }
 
 /***************************************************************************
- * IDB_ISNULL implementation 
+ * MCS_ISNULL implementation 
  *
  * OperationType() definition
  */
-CalpontSystemCatalog::ColType IDB_isnull::operationType (FunctionParm& fp, 
+CalpontSystemCatalog::ColType MCS_isnull::operationType (FunctionParm& fp, 
                        CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type of idb_isnull should be the same as the argument type
+	// operation type of MCS_isnull should be the same as the argument type
 	assert (fp.size() == 1);
 	return fp[0]->data()->resultType();
 }
@@ -290,9 +290,9 @@ CalpontSystemCatalog::ColType IDB_isnull::operationType (FunctionParm& fp,
 /**
  * getBoolVal API definition
  *
- * This would be the most commonly called API for idb_isnull function
+ * This would be the most commonly called API for MCS_isnull function
  */
-bool IDB_isnull::getBoolVal(Row& row,
+bool MCS_isnull::getBoolVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -304,7 +304,7 @@ bool IDB_isnull::getBoolVal(Row& row,
 		// in parameter isNull will be set if the parameter is evaluated NULL. 
 		// Please note that before this function returns, isNull should be set to 
 		// false, otherwise the result of the function would be considered NULL,
-		// which is not possible for idb_isnull().
+		// which is not possible for MCS_isnull().
 		case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
 			parm[0]->data()->getDecimalVal(row, isNull);
@@ -327,7 +327,7 @@ bool IDB_isnull::getBoolVal(Row& row,
  *
  * This API is called when a double value is needed to return from the UDF function
  */
-double IDB_isnull::getDoubleVal(Row& row,
+double MCS_isnull::getDoubleVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -335,7 +335,7 @@ double IDB_isnull::getDoubleVal(Row& row,
 	return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
 }
 
-float IDB_isnull::getFloatVal(Row& row,
+float MCS_isnull::getFloatVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -348,11 +348,11 @@ float IDB_isnull::getFloatVal(Row& row,
  *
  * This API is called when an integer value is needed to return from the UDF function
  *
- * Because the result type idb_add is double(real), all the other API can simply call 
+ * Because the result type MCS_add is double(real), all the other API can simply call 
  * getDoubleVal and apply the conversion. This method may not fit for all the UDF
  * implementations.
  */
-int64_t IDB_isnull::getIntVal(Row& row,
+int64_t MCS_isnull::getIntVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -360,7 +360,7 @@ int64_t IDB_isnull::getIntVal(Row& row,
 	return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
 }
 
-string IDB_isnull::getStrVal(Row& row,
+string MCS_isnull::getStrVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -371,7 +371,7 @@ string IDB_isnull::getStrVal(Row& row,
 
 }
 
-IDB_Decimal IDB_isnull::getDecimalVal(Row& row,
+IDB_Decimal MCS_isnull::getDecimalVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -382,7 +382,7 @@ IDB_Decimal IDB_isnull::getDecimalVal(Row& row,
 	return dec;
 }
 
-int32_t IDB_isnull::getDateIntVal(Row& row,
+int32_t MCS_isnull::getDateIntVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)
@@ -390,7 +390,7 @@ int32_t IDB_isnull::getDateIntVal(Row& row,
 	return (getBoolVal(row, parm, isNull, op_ct) ? 1 : 0);
 }
 
-int64_t IDB_isnull::getDatetimeIntVal(Row& row,
+int64_t MCS_isnull::getDatetimeIntVal(Row& row,
 							FunctionParm& parm,
 							bool& isNull,
 							CalpontSystemCatalog::ColType& op_ct)

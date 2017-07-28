@@ -32,6 +32,7 @@
 #include <cassert>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/foreach.hpp>
 #ifdef _MSC_VER
 #include <unordered_map>
 typedef int pthread_t;
@@ -1145,6 +1146,30 @@ struct BPPHandler
 {
 	BPPHandler(PrimitiveServer* ps) : fPrimitiveServerPtr(ps) { }
 
+    // Keep a list of keys so that if connection fails we don't leave BPP
+    // threads lying around
+    std::vector<uint32_t> bppKeys;
+    std::vector<uint32_t>::iterator bppKeysIt;
+
+    ~BPPHandler()
+    {
+        mutex::scoped_lock scoped(bppLock);
+        for (bppKeysIt = bppKeys.begin() ; bppKeysIt != bppKeys.end(); ++bppKeysIt)
+        {
+            uint32_t key = *bppKeysIt;
+            BPPMap::iterator it;
+
+            it = bppMap.find(key);
+            if (it != bppMap.end()) {
+                it->second->abort();
+                bppMap.erase(it);
+            }
+            fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(key);
+            OOBPool->removeJobs(key);
+        }
+        scoped.unlock();
+    }
+
 	struct BPPHandlerFunctor : public PriorityThreadPool::Functor {
 		BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : bs(b)
 		{
@@ -1200,7 +1225,11 @@ struct BPPHandler
 
 		bs.advance(sizeof(ISMPacketHeader));
 		bs >> key;
-		mutex::scoped_lock scoped(bppLock);
+        mutex::scoped_lock scoped(bppLock);
+        bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), key);
+        if (bppKeysIt != bppKeys.end()) {
+            bppKeys.erase(bppKeysIt);
+        }
 		it = bppMap.find(key);
 		if (it != bppMap.end()) {
 			it->second->abort();
@@ -1272,8 +1301,9 @@ struct BPPHandler
 				bppv->add(dup);
 			}
 		}
-		key = bpp->getUniqueID();
-		mutex::scoped_lock scoped(bppLock);
+        mutex::scoped_lock scoped(bppLock);
+        key = bpp->getUniqueID();
+        bppKeys.push_back(key);
 		bool newInsert;
 		newInsert = bppMap.insert(pair<uint32_t, SBPPV>(key, bppv)).second;
 		//cout << "creating BPP # " << key << endl;
@@ -1402,6 +1432,11 @@ struct BPPHandler
 
 		mutex::scoped_lock lk(djLock);
 		mutex::scoped_lock scoped(bppLock);
+
+        bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
+        if (bppKeysIt != bppKeys.end()) {
+            bppKeys.erase(bppKeysIt);
+        }
 
 		it = bppMap.find(uniqueID);
 		if (it != bppMap.end()) {
@@ -2175,6 +2210,10 @@ boost::shared_ptr<BatchPrimitiveProcessor> BPPV::next()
 void BPPV::abort()
 {
 	sendThread->abort();
+    BOOST_FOREACH( boost::shared_ptr<BatchPrimitiveProcessor> bpp, v )
+    {
+        bpp->unlock();
+    }
 }
 
 bool BPPV::aborted()

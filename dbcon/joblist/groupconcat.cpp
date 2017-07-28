@@ -712,13 +712,13 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
 			fDataQueue.push(fData);
 
 			uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
+           	fMemSize += newSize;
 			if (!fRm->getMemory(newSize, fSessionMemLimit))
 			{
 				cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode)
 					 << " @" << __FILE__ << ":" << __LINE__;
 				throw IDBExcept(fErrorCode);
 			}
-			fMemSize += newSize;
 
 			fData.reinit(fRowGroup, fRowsPerRG);
 			fRowGroup.setData(&fData);
@@ -911,6 +911,7 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 		fConcatColumns.push_back((*(i++)).second);
 
 	uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
+   	fMemSize += newSize;
 	if (!fRm->getMemory(newSize, fSessionMemLimit))
 	{
 		cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode)
@@ -918,7 +919,6 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 		throw IDBExcept(fErrorCode);
 	}
 
-	fMemSize += newSize;
 	//fData.reset(new uint8_t[fRowGroup.getDataSize(fRowsPerRG)]);
 	fData.reinit(fRowGroup, fRowsPerRG);
 	fRowGroup.setData(&fData);
@@ -947,13 +947,13 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
 		{
 			uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
+           	fMemSize += newSize;
 			if (!fRm->getMemory(newSize, fSessionMemLimit))
 			{
 				cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode)
 					 << " @" << __FILE__ << ":" << __LINE__;
 				throw IDBExcept(fErrorCode);
 			}
-			fMemSize += newSize;
 
 			fDataQueue.push(fData);
 			fData.reinit(fRowGroup, fRowsPerRG);

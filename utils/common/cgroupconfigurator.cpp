@@ -309,23 +309,24 @@ uint64_t CGroupConfigurator::getFreeMemoryFromProc()
 	uint64_t memFree  = 0;
 	uint64_t buffers  = 0;
 	uint64_t cached   = 0;
-    uint64_t memTotal = 0;
+	uint64_t memTotal = 0;
+	uint64_t memAvailable = 0;
 
 #if defined(_MSC_VER)
 	MEMORYSTATUSEX memStat;
 	memStat.dwLength = sizeof(memStat);
 	if (GlobalMemoryStatusEx(&memStat))
 	{
-		memFree  = memStat.ullAvailPhys;
+		memAvailable  = memStat.ullAvailPhys;
 #ifndef _WIN64
         uint64_t tmp = getTotalMemoryFromProc();
 		if (memFree > tmp)
-			memFree = tmp;
+			memAvailable = tmp;
 #endif
 	}
 #elif defined(__FreeBSD__)
 	// FreeBSD is not supported, no optimization.
-	memFree = 0;
+	memAvailable = 0;
 #else
 	ifstream in("/proc/meminfo");
 	string x;
@@ -338,18 +339,27 @@ uint64_t CGroupConfigurator::getFreeMemoryFromProc()
 	in >> memFree;
 	in >> x;         // kB
 
-	in >> x;         // Buffers:
-	in >> buffers;
-	in >> x;         // kB
+	//check if available or buffers is passed
+	in >> x;
+	if ( x == "MemAvailable:")
+	{
+	    in >> memAvailable; // MemAvailable
+	}
+	else
+	{	// centos 6 and older OSs
+	    in >> buffers;
+	    in >> x;         // kB
 
-	in >> x;         // Cached:
-	in >> cached;
+	    in >> x;         // Cached:
+	    in >> cached;
+	    
+	    memAvailable = memFree + buffers + cached;
+	}
 #endif
 
 	// amount available for application
-	memFree = memFree + buffers + cached;
-	memFree *= 1024;
-    return memFree;
+	memAvailable *= 1024;
+    return memAvailable;
 }
 
 uint64_t CGroupConfigurator::getTotalSwapSpace()

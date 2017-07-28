@@ -23,7 +23,7 @@
 ***********************************************************************/
 
 /** 
- * InfiniDB interface for writing a user defined function (UDF).
+ * MariaDB ColumnStore interface for writing a user defined function (UDF).
  *
  * The basic steps are:
  *
@@ -32,13 +32,13 @@
  * 3. add the connector stub for this UDF function in udfsdk.cpp
  * 4. build the dynamic library libudfsdk
  * 5. put the library in /usr/local/mariadb/columnstore/lib of all modules
- * 6. restart all the InfiniDB servers and MySQL server
- * 7. notify mysqld about the new functions with the commands like:
+ * 6. restart MariaDB ColumnStore
+ * 7. Register the new functions with the commands like:
  *
- *    CREATE FUNCTION idb_add returns REAL soname 'libudfsdk.so';
- *    CREATE FUNCTION idb_isnull returns BOOL soname 'libudfsdk.so';
+ *    CREATE FUNCTION mcs_add returns REAL soname 'libudfsdk.so';
+ *    CREATE FUNCTION mcs_isnull returns BOOL soname 'libudfsdk.so';
  *
- * The UDF functions run distributedly in the InfiniDB engine. The evaluation
+ * The UDF functions run distributedly in the ColumnStore engine. The evaluation
  * is row by row. Aggregate UDF is currently not supported. Two examples are
  * given in this file to demonstrate the steps that it takes to create a UDF
  * function. More examples can be found in utils/funcexp/func_*.cpp.
@@ -78,9 +78,9 @@ private:
 };
 
 /**
- * Example: IDB_add (args1, args2)
+ * Example: MCS_add (args1, args2)
  *
- * IDB_add takes two arguments of any data type. It returns a double result.
+ * MCS_add takes two arguments of any data type. It returns a double result.
  *
  * The function interface is defined here. All UDF functions are derived from
  * class funcexp::Func. A set of getXXXval interface APIs are declared in the
@@ -90,30 +90,30 @@ private:
  * the function is expected to return.
  *
  * For example, given the following two queries, different APIs will be called
- * to evaluate the function idb_add.
+ * to evaluate the function MCS_add.
  *
- * select idb_add(int1, int2) from t1; 
- * getDoubleVal() is called, because the result type of idb_add is DOUBLE(real).
+ * select MCS_add(int1, int2) from t1; 
+ * getDoubleVal() is called, because the result type of MCS_add is DOUBLE(real).
  *
- * select substr(string1, int1, idb_add(int1+int2));
- * getIntVal() will be called, because idb_add() is passed as the third argument 
+ * select substr(string1, int1, MCS_add(int1+int2));
+ * getIntVal() will be called, because MCS_add() is passed as the third argument 
  * to substr function, and an integer result is expected.
  *
  * If one API is not implemented but called for a function, IDB-5001 error will
  * be returned.
  */
-class IDB_add : public funcexp::Func
+class MCS_add : public funcexp::Func
 {
 public:
 	/*
 	 * Constructor. Pass the function name to the base constructor. 
 	 */
-	IDB_add() : Func("idb_add") {}
+	MCS_add() : Func("mcs_add") {}
 	
 	/*
-	 * Destructor. IDB_add does not need to do anything here to clean up.
+	 * Destructor. MCS_add does not need to do anything here to clean up.
 	 */
-	virtual ~IDB_add() {}
+	virtual ~MCS_add() {}
 	
 	/**
 	 * Decide on the function's operation type
@@ -152,7 +152,7 @@ public:
 	 *       the same reference is passed to all the function argument
 	 *       evaluations. One always need to know if any argument is NULL
 	 *       to decide the result of the function. It's explained in detail
-	 *       in idb_isnull() function example.
+	 *       in MCS_isnull() function example.
 	 * @parm op_ct the operation type that is determined in operationType().
 	 * 
 	 */
@@ -205,7 +205,7 @@ public:
 								execplan::CalpontSystemCatalog::ColType& op_ct);
 	
 	/**
-	 * Returns an InfiniDB integer representation of a date result of the function.
+	 * Returns an integer representation of a date result of the function.
 	 *
 	 * Check the date/time functions in ~/utils/funcexp for implementation
 	 * example of this API.
@@ -216,7 +216,7 @@ public:
 								execplan::CalpontSystemCatalog::ColType& op_ct);
 	
 	/**
-	 * Returns an InfiniDB integer representation of a datetime result of the function.
+	 * Returns an integer representation of a datetime result of the function.
 	 *
 	 * Check the date/time functions in ~/utils/funcexp for implementation
 	 * example of this API.
@@ -228,22 +228,22 @@ public:
 };
 
 /**
- * Example: IDB_isnull(arg1)
+ * Example: MCS_isnull(arg1)
  *
  * The purpose of this example is to demostrate the NULL handling in the UDF interface
  */
-class IDB_isnull : public funcexp::Func
+class MCS_isnull : public funcexp::Func
 {
 public:
 	/*
 	 * Constructor. Pass the function name to the base constructor. 
 	 */
-	IDB_isnull() : Func("idb_isnull") {}
+	MCS_isnull() : Func("mcs_isnull") {}
 	
 	/*
-	 * Destructor. IDB_add does not need to do anything here to clean up.
+	 * Destructor. MCS_add does not need to do anything here to clean up.
 	 */
-	virtual ~IDB_isnull() {}
+	virtual ~MCS_isnull() {}
 	
 	/**
 	 * Decide on the function's operation type
@@ -301,7 +301,7 @@ public:
 								execplan::CalpontSystemCatalog::ColType& op_ct);
 
 	/**
-	 * Returns an InfiniDB integer representation of a date result of the function.
+	 * Returns an integer representation of a date result of the function.
 	 *
 	 * Check the date/time functions in ~/utils/funcexp for implementation
 	 * example of this API.
@@ -312,7 +312,7 @@ public:
 								execplan::CalpontSystemCatalog::ColType& op_ct);
 	
 	/**
-	 * Returns an InfiniDB integer representation of a datetime result of the function.
+	 * Returns an integer representation of a datetime result of the function.
 	 *
 	 * Check the date/time functions in ~/utils/funcexp for implementation
 	 * example of this API.

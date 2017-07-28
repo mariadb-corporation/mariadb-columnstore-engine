@@ -65,6 +65,7 @@ string parentOAMModule;
 string localModule;
 bool rootUser = true;
 string HOME = "/root";
+string SingleServerInstall;
 
 bool repeatStop;
 
@@ -259,7 +260,12 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 
- 	//check if root-user
+	try {
+		oam.getSystemConfig("SingleServerInstall", SingleServerInstall);
+	}
+	catch(...) {}
+
+	//check if root-user
 	int user;
 	user = getuid();
 	if (user != 0)
@@ -5038,6 +5044,12 @@ int processCommand(string* arguments)
         case 48: // addModule - parameters: Module type/Module Name, Number of Modules, Server Hostnames,
 					// Server root password optional
         {
+            if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** addModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
+
 			parentOAMModule = getParentOAMModule();
             if ( localModule != parentOAMModule ) {
                 // exit out since not on Parent OAM Module
@@ -5600,6 +5612,12 @@ int processCommand(string* arguments)
 
         case 49: // removeModule - parameters: Module name/type, number-of-modules
         {
+            if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** removeModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
+
             if (arguments[1] == "")
             {
                 // need atleast 1 arguments
@@ -5774,7 +5792,7 @@ int processCommand(string* arguments)
 					{}
 					
 					if ( !dbrootConfigList.empty() ) {
-						cout << "**** removeModule Failed : " << (*pt).DeviceName << " has dbroots still assigned. Please run movePmDbrootConfig or unassignPmDbrootConfig.";
+						cout << "**** removeModule Failed : " << (*pt).DeviceName << " has dbroots still assigned. Please run movePmDbrootConfig or unassignDbrootPmConfig.";
 						quit = true;
 						cout << endl;
 						break;
@@ -6665,6 +6683,11 @@ int processCommand(string* arguments)
 
         case 65: // alterSystem-disableModule
         {
+	    if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** alterSystem-disableModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
 			parentOAMModule = getParentOAMModule();
             if ( localModule != parentOAMModule ) {
                 //exit out since not on Parent OAM Module
@@ -6747,7 +6770,7 @@ int processCommand(string* arguments)
 				{}
 
 				if ( !dbrootConfigList.empty() ) {
-					cout << endl << "**** alterSystem-disableModule Failed : " << (*pt).DeviceName << " has dbroots still assigned and will not be disabled. Please run movePmDbrootConfig or unassignPmDbrootConfig.";
+					cout << endl << "**** alterSystem-disableModule Failed : " << (*pt).DeviceName << " has dbroots still assigned and will not be disabled. Please run movePmDbrootConfig or unassignDbrootPmConfig.";
 					quit = true;
 					cout << endl;
 					break;
@@ -6815,6 +6838,11 @@ int processCommand(string* arguments)
 
         case 66: // alterSystem-enableModule
         {
+	    if ( SingleServerInstall == "y" ) {
+                // exit out since not on single-server install
+                cout << endl << "**** alterSystem-enableModule Failed : not supported on a Single-Server type installs  " << endl;
+                break;
+            }
         	parentOAMModule = getParentOAMModule();
             if ( localModule != parentOAMModule ) {
                 //exit out since not on Parent OAM Module
@@ -8342,7 +8370,11 @@ void printModuleDisk(ModuleDisk moduledisk)
 				moduledisk.diskusage[i].DeviceName.find(etcdir, 0) == string::npos ) {
 			cout.setf(ios::left);
 			cout.width(31);
-			cout << moduledisk.diskusage[i].DeviceName;
+			if (moduledisk.diskusage[i].DeviceName.length() > 29) { 
+				cout << "..." + moduledisk.diskusage[i].DeviceName.substr(moduledisk.diskusage[i].DeviceName.length()-26);
+			} else {
+				cout << moduledisk.diskusage[i].DeviceName;
+			}
 			cout.width(14);
 			cout << moduledisk.diskusage[i].TotalBlocks;
 			cout.width(17);

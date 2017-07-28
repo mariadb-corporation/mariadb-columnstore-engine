@@ -126,7 +126,7 @@ test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
 
 if [ $user != "root" ]; then
-	$SUDO chmod -R 777 /var/log/mariadb >/dev/null 2>&1
+	$SUDO chmod -R 755 /var/log/mariadb >/dev/null 2>&1
 	$SUDO chown -R $user:$user /var/log/mariadb >/dev/null 2>&1
 fi
 
@@ -155,6 +155,7 @@ rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 
 #create columnstore temp file directory
 $SUDO chmod 777 /tmp
+$SUDO rm -f /tmp/* > /dev/null 2>&1
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
@@ -164,10 +165,6 @@ chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
 mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
-
-# install Columnstore Log Rotate File
-$SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-$SUDO chmod 644 /etc/logrotate.d/columnstore
 
 # remove mysql archive log
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
@@ -208,12 +205,24 @@ if [ $user = "root" ]; then
 		fi
 	fi
 fi
+
+#setup MariaDB Columnstore system logging
+sed -i -e s/groupname/$user/g $installdir/bin/columnstoreSyslog7
+sed -i -e s/username/$user/g $installdir/bin/columnstoreSyslog7
+
 #setup MariaDB Columnstore system logging
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	rm -f /etc/default/columnstore
 else
-	$SUDO rm -fr /tmp/* > /dev/null 2>&1
+        sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
+        sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
+
+        $SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
+
+        sed -i -e s@prefix=/home/quest@prefix=$prefix@g $installdir/bin/*
+
+        $SUDO rm -f /tmp/* > /dev/null 2>&1
 	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
 	$SUDO chmod -R 777 /dev/shm
@@ -221,12 +230,11 @@ else
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
 	$SUDO chmod 666 /etc/fstab	
-
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
-	$SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
-
-	sed -i -e s@prefix=/usr/local@prefix=$prefix@g $installdir/bin/*
 fi
+
+# install Columnstore Log Rotate File
+$SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+$SUDO chmod 644 /etc/logrotate.d/columnstore
 
 #check if MariaDB Columnstore system logging was setup
 cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1

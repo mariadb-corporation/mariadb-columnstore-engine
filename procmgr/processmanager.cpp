@@ -55,6 +55,7 @@ extern bool HDFS;
 extern string localHostName;
 extern string PMwithUM;
 extern string AmazonPMFailover;
+extern string DBRootStorageType;
 
 typedef   map<string, int>	moduleList;
 extern moduleList moduleInfoList;
@@ -450,7 +451,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 										sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 										sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 								
-										//update Calpont Config table
+										//update Columnstore Config table
 										try {
 											sysConfig->write();
 										}
@@ -1280,7 +1281,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 						sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 				
-						//update Calpont Config table
+						//update Columnstore Config table
 						try {
 							sysConfig->write();
 						}
@@ -1355,7 +1356,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 					sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 			
-					//update Calpont Config table
+					//update Columnstore Config table
 					try {
 						sysConfig->write();
 					}
@@ -2791,6 +2792,16 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 				log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted on " + moduleName + "/" + processName);
 
+				//set query system states not ready
+				BRM::DBRM dbrm;
+				dbrm.setSystemQueryReady(false);
+
+				processManager.setQuerySystemState(false);
+
+				processManager.setSystemState(oam::BUSY_INIT);
+
+				processManager.reinitProcessType("cpimport");
+
 				//request reinit after Process is active
 				for ( int i = 0; i < 600 ; i++ ) {
 					try {
@@ -2805,7 +2816,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								processManager.distributeConfigFile("system");
 			
 								processManager.reinitProcessType("WriteEngineServer");
-								processManager.restartProcessType("ExeMgr");
+								processManager.reinitProcessType("ExeMgr");
 								processManager.reinitProcessType("DDLProc");
 								processManager.reinitProcessType("DMLProc");
 							}
@@ -2916,6 +2927,13 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						break;
 					}
 				}
+
+				//enable query stats
+				dbrm.setSystemQueryReady(true);
+
+				processManager.setQuerySystemState(true);
+
+				processManager.setSystemState(oam::ACTIVE);
 			}
 			break;
 
@@ -2927,14 +2945,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 				msg >> moduleName;
 
-				oam.dbrmctl("halt");
-				log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
-
 				int ret = processManager.getDBRMData(fIos, moduleName);
-
-				oam.dbrmctl("resume");
-				log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
 
 				if ( ret == oam::API_SUCCESS )
 					log.writeLog(__LINE__, "Get DBRM Data Files Completed");
@@ -3783,7 +3794,6 @@ void ProcessManager::setSystemState(uint16_t state)
 	{
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
 	}
-	pthread_mutex_unlock(&STATUS_LOCK);
 
 	// Process Alarms
 	string system = "System";
@@ -3798,7 +3808,11 @@ void ProcessManager::setSystemState(uint16_t state)
 		else
 			if ( state == oam::AUTO_OFFLINE )
 				aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, SET);
+		//this alarm doesnt get clear by reporter, so clear on stopage
+		aManager.sendAlarmReport(system.c_str(), CONN_FAILURE, CLEAR);
 	}
+	
+	pthread_mutex_unlock(&STATUS_LOCK);
 }
 
 /******************************************************************************************
@@ -4531,7 +4545,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		pthread_mutex_unlock(&THREAD_LOCK);
 		return API_FILE_OPEN_ERROR;
 	}
-	log.writeLog(__LINE__, "addModule - Calpont Package found:" + calpontPackage, LOG_TYPE_DEBUG);
+	log.writeLog(__LINE__, "addModule - Columnstore Package found:" + calpontPackage, LOG_TYPE_DEBUG);
 
 	//
 	// Verify Host IP and Password
@@ -4551,6 +4565,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 		if (rpw != oam::UnassignedName)
 			password = rpw;
+	}
+	
+	if ( amazon ) {
+	    //remove know_host which shows up if you addmodule/removemodule/addmodule
+	    string file = homedir + "/.ssh/known_hosts";
+	    unlink (file.c_str());
 	}
 
 	listPT = devicenetworklist.begin();
@@ -4673,13 +4693,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
 					system(cmd.c_str());
 					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
-						//check for RSA KEY ISSUE and fix
-						if (oam.checkLogStatus("/tmp/login_test.log", "Offending")) {
-							log.writeLog(__LINE__, "addModule - login failed, Offending key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
-							string file = "/tmp/login_test.log";
-							oam.fixRSAkey(file);
-						}
-
 						log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
 						sleep(10);
 						continue;
@@ -4882,7 +4895,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		}
 	}
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -5249,7 +5262,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string remoteHostName = (*pt1).HostName;
 
 		//send start service commands
-		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Calpont restart' 0";
+		string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/columnstore restart;" + installDir + "/mysql/mysqld-Columnstore restart' 0";
 		system(cmd.c_str());
 		log.writeLog(__LINE__, "addModule - restart columnstore service " +  remoteModuleName, LOG_TYPE_DEBUG);
 
@@ -5581,7 +5594,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 
 	log.writeLog(__LINE__, "removeModule - Updated DBRoot paramaters", LOG_TYPE_DEBUG);
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -5824,7 +5837,7 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 
 	log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -5916,7 +5929,7 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 
 	log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
 
-	//update Calpont Config table
+	//update Columnstore Config table
 	try {
 		sysConfig->write();
 	}
@@ -6851,6 +6864,16 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	        processManager.setSystemState(rtn);
 	}
 
+	//run command to build system table if they don't already exist
+	sleep(5);
+	int ret = processManager.buildSystemTables("pm1");
+	if (ret == oam::API_SUCCESS )
+	  log.writeLog(__LINE__, "System Catalog Successfully Built by ProcMgr", LOG_TYPE_DEBUG);
+	else
+	  log.writeLog(__LINE__, "System Catalog Successfully not built by ProcMgr, ret code = " + oam.itoa(ret), LOG_TYPE_DEBUG);
+
+	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
+
 	// exit thread
 	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
 	startsystemthreadStatus = status;
@@ -7557,7 +7580,7 @@ int ProcessManager::updatePMSconfig( bool check )
 				nicID = 1;
 		}
 	
-		//update Calpont Config table
+		//update Columnstore Config table
 		try {
 			sysConfig1->write();
 			pthread_mutex_unlock(&THREAD_LOCK);
@@ -7998,7 +8021,7 @@ int ProcessManager::setPMProcIPs( std::string moduleName, std::string processNam
 /******************************************************************************************
 * @brief	distributeConfigFile
 *
-* purpose:	Distribute Calpont Config File to system modules
+* purpose:	Distribute Columnstore Config File to system modules
 *
 ******************************************************************************************/
 int ProcessManager::distributeConfigFile(std::string name, std::string file)
@@ -8429,14 +8452,6 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
 	log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
 
-	string DBRootStorageType = "internal";
-	{
-		try{
-			oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
-	}
-
 	if ( DBRootStorageType == "internal" && GlusterConfig == "n") {
 		log.writeLog(__LINE__, "ERROR: DBRootStorageType = internal", LOG_TYPE_ERROR);
 		pthread_mutex_unlock(&THREAD_LOCK);
@@ -8514,7 +8529,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 		sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 		sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 
-		//update Calpont Config table
+		//update Columnstore Config table
 		try {
 			sysConfig4->write();
 		}
@@ -8720,15 +8735,6 @@ int ProcessManager::OAMParentModuleChange()
 	catch(...)
 	{
 		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-
-	// dbroot storage type, do different failover if internal
-	string DBRootStorageType = "internal";
-	{
-		try{
-			oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
 	}
 
 	string cmdLine = "ping ";
@@ -9093,7 +9099,7 @@ int ProcessManager::OAMParentModuleChange()
 		sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
 		sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 
-		//update Calpont Config table
+		//update Columnstore Config table
 		try {
 			sysConfig4->write();
 		}
