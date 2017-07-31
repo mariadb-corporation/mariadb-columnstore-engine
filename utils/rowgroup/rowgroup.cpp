@@ -144,7 +144,7 @@ uint32_t StringStore::deserialize(ByteStream &bs)
 	for (i = 0; i < count; i++) {
 		//cout << "deserializing " << size << " bytes\n";
         bs >> buf;
-        shared_ptr<std::string> newString(new std::string(buf));
+        shared_ptr<std::string> newString(new std::string(buf.c_str()));
 		mem.push_back(newString);
 		//bs.advance(size);
 		ret += (size + 4);
