@@ -569,6 +569,19 @@ void ExpressionStep::functionJoinCheck(SimpleFilter* sf, JobInfo& jobInfo)
 		return;
 	}
 
+	if ((!compatibleColumnTypes(sf->lhs()->resultType(), sf->rhs()->resultType(), true)) &&
+		(fFunctionJoinInfo->fTableKey.size() == 2))
+	{
+		uint32_t t1 = fFunctionJoinInfo->fTableKey[0];
+		uint32_t t2 = fFunctionJoinInfo->fTableKey[1];
+		jobInfo.incompatibleJoinMap[t1] = t2;
+		jobInfo.incompatibleJoinMap[t2] = t1;
+
+		// not convertible
+		fFunctionJoinInfo.reset();
+		return;
+	}
+
     SJSTEP sjstep;
 	ReturnedColumn* sfLhs = sf->lhs();
 	ReturnedColumn* sfRhs = sf->rhs();
