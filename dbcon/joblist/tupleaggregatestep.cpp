@@ -4003,7 +4003,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 				keysAggDist.push_back(keysAggUm[j]); // Dummy?
 				scaleAggDist.push_back(0);
 				precisionAggDist.push_back(0);
-				typeAggDist.push_back(CalpontSystemCatalog::VARBINARY);
+				typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
 				widthAggDist.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2);
 				continue;
 			}
