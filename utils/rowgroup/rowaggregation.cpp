@@ -792,6 +792,14 @@ void RowAggregation::initialize()
 	{
 		fRowGroupOut->setRowCount(1);
 		attachGroupConcatAg();
+		// For UDAF, reset the data
+		for (uint64_t i = 0; i < fFunctionCols.size(); i++)
+		{
+			if (fFunctionCols[i]->fAggFunction == ROWAGG_UDAF)
+			{
+				resetUDAF(i);
+			}
+		}
 	}
 
 

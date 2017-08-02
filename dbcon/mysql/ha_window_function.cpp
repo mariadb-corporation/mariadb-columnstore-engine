@@ -680,6 +680,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 				break;
 			case Item_sum::UDF_SUM_FUNC:
 			{
+				// UDAnF functions each have their own default set in context.
 				mcsv1sdk::mcsv1Context& context = ac->getUDAFContext();
 				if (context.getRunFlag(UDAF_WINDOWFRAME_REQUIRED))
 				{
