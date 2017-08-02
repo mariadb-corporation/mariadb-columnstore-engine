@@ -4212,7 +4212,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 									f->fInputColumnIndex,
 									f->fOutputColumnIndex,
 									f->fAuxColumnIndex));
-						functionSub2.push_back(funct);
+							functionSub2.push_back(funct);
+						}
 					}
 				}
 			}

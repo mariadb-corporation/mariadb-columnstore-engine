@@ -165,6 +165,11 @@ mcsv1_UDAF::ReturnCode median::evaluate(mcsv1Context* context, static_any::any& 
 {
 	uint64_t cnt1=0, cnt2=0;
 	MEDIAN_DATA& data = static_cast<MedianData*>(context->getUserData())->mData;
+	if (data.size() == 0)
+	{
+		valOut = (DATATYPE)0;
+		return mcsv1_UDAF::SUCCESS;
+	}
 	MEDIAN_DATA::iterator iter(data.begin());
 	MEDIAN_DATA::iterator revfrom(data.end());
 	MEDIAN_DATA::reverse_iterator riter(revfrom);
