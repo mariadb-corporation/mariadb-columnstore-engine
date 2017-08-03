@@ -26,7 +26,6 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
-#include <boost/algorithm/string/replace.hpp>
 
 #include "returnedcolumn.h"
 #include "constantcolumn.h"
@@ -171,6 +170,21 @@ void SimpleFilter::rhs(ReturnedColumn* rhs)
 		convertConstant();
 }
 
+std::string SimpleFilter::escapeString(const std::string& input)
+{
+    std::ostringstream ss;
+    for (std::string::const_iterator iter = input.begin(); iter != input.end(); iter++)
+    {
+        switch (*iter)
+        {
+            case '\\': ss << "\\\\"; break;
+            case '\'': ss << "\\'"; break;
+            default: ss << *iter; break;
+        }
+    }
+    return ss.str();
+}
+
 const string SimpleFilter::data() const
 {
 	string rhs, lhs;
@@ -180,7 +194,7 @@ const string SimpleFilter::data() const
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
 		   fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
-		rhs = "'" + boost::replace_all_copy(fRhs->data(), "'", "\\'") + "'";
+		rhs = "'" + SimpleFilter::escapeString(fRhs->data()) + "'";
 	else
 		rhs = fRhs->data();
 	if (dynamic_cast<ConstantColumn*>(fLhs) &&
@@ -189,7 +203,7 @@ const string SimpleFilter::data() const
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
 		   fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
-		lhs = "'" + boost::replace_all_copy(fLhs->data(), "'", "\\'") + "'";
+		lhs = "'" + SimpleFilter::escapeString(fLhs->data()) + "'";
 	else
 		lhs = fLhs->data();
 	return lhs + " " + fOp->data() + " " + rhs;
