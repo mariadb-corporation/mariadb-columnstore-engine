@@ -180,6 +180,8 @@ public:
 
 	virtual void replaceRealCol(std::vector<SRCP>&);
 
+    static std::string escapeString(const std::string& input);
+
 private:
 	SOP fOp;				/// operator
 	ReturnedColumn *fLhs;	/// left operand
