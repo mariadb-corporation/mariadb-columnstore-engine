@@ -168,7 +168,7 @@ void mcs_isnull_deinit(UDF_INIT* initid)
 }	
 
 #ifdef _MSC_VER
-__declspec(dllexport)f
+__declspec(dllexport)
 #endif
 long long mcs_isnull(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *error)
 {

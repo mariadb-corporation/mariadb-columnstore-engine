@@ -1,4 +1,6 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* 
+   Copyright (c) 2017, MariaDB
+   Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -13,22 +15,15 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
-
-//  $Id: rowgroup.h 4020 2013-07-26 21:41:28Z pleblanc $
+   MA 02110-1301, USA.
+*/
 
 //
 // C++ Interface: rowgroup
 //
 // Description:
 //
-//
 // Author: Patrick LeBlanc <pleblanc@calpont.com>, (C) 2008
-//
-// Copyright: See COPYING file that comes with this distribution
-//
-//
-/** @file */
 
 #ifndef ROWGROUP_H_
 #define ROWGROUP_H_

@@ -1,4 +1,6 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* 
+   Copyright (c) 2017, MariaDB
+   Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -13,14 +15,9 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
+   MA 02110-1301, USA.
+*/
 
-/******************************************************************************************
-* $Id: bytestream.h 3861 2013-06-04 20:59:23Z dhall $
-*
-*
-******************************************************************************************/
-/** @file */
 #ifndef MESSAGEQCPP_BYTESTREAM_H
 #define MESSAGEQCPP_BYTESTREAM_H
 
@@ -145,12 +142,12 @@ public:
 	 */
 	EXPORT ByteStream& operator<<(const uint64_t o);
 	/**
-	 *  push an float onto the end of the stream. The byte order is
+	 *  push a float onto the end of the stream. The byte order is
 	 *  whatever the native byte order is.
 	 */
 	EXPORT ByteStream& operator<<(const float f);
 	/**
-	 *  push an double onto the end of the stream. The byte order is
+	 *  push a double onto the end of the stream. The byte order is
 	 *  whatever the native byte order is.
 	 */
 	EXPORT ByteStream& operator<<(const double d);
