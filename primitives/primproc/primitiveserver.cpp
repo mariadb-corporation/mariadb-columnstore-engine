@@ -1223,8 +1223,17 @@ struct BPPHandler
 		uint32_t key;
 		BPPMap::iterator it;
 
-		bs.advance(sizeof(ISMPacketHeader));
-		bs >> key;
+        try
+        {
+		    bs.advance(sizeof(ISMPacketHeader));
+    		bs >> key;
+        }
+        catch(...)
+        {
+            // MCOL-857 We don't have the full packet yet
+            bs.rewind();
+            return -1;
+        }
         mutex::scoped_lock scoped(bppLock);
         bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), key);
         if (bppKeysIt != bppKeys.end()) {
@@ -1425,10 +1434,20 @@ struct BPPHandler
 		uint32_t uniqueID, sessionID, stepID;
 		BPPMap::iterator it;
 
-		bs.advance(sizeof(ISMPacketHeader));
-		bs >> sessionID;
-		bs >> stepID;
-		bs >> uniqueID;
+        try
+        {
+
+    		bs.advance(sizeof(ISMPacketHeader));
+	    	bs >> sessionID;
+		    bs >> stepID;
+    		bs >> uniqueID;
+        }
+        catch(...)
+        {
+            // MCOL-857 We don't appear to have the full packet yet!
+            bs.rewind();
+            return -1;
+        }
 
 		mutex::scoped_lock lk(djLock);
 		mutex::scoped_lock scoped(bppLock);
