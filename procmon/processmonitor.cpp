@@ -6106,13 +6106,23 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 		moduleIPAddr = sysConfig->getConfig("SystemModuleConfig",dataDupIPaddr);
 	}
 	string command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
-			dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID +"";
+			dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
 
 	int ret = system(command.c_str());
+
 	if ( WEXITSTATUS(ret) != 0 )
 	{
-		log.writeLog(__LINE__, "glusterAssign failed.", LOG_TYPE_ERROR);
-		return oam::API_FAILURE;
+		ifstream in("/tmp/glusterAssign.txt");
+		in.seekg(0, std::ios::end);
+		int size = in.tellg();
+		if ( size != 0 )
+		{
+			if (!oam.checkLogStatus("/tmp/glusterAssign.txt", "already")) {
+				log.writeLog(__LINE__, "glusterAssign failed.", LOG_TYPE_ERROR);
+				system("mv -f /tmp/glusterAssign.txt /tmp/glusterAssign_failed.txt");
+				return oam::API_FAILURE;
+			}
+		}
 	}
 
 	return oam::API_SUCCESS;
@@ -6134,11 +6144,22 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
 	log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
 
-	string command = "umount -f " + startup::StartUp::installDir() + "/dbroot" + dbrootID + "";
+	string command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
 
 	int ret = system(command.c_str());
 	if ( WEXITSTATUS(ret) != 0 )
 	{
+		ifstream in("/tmp/glusterUnassign.txt");
+		in.seekg(0, std::ios::end);
+		int size = in.tellg();
+		if ( size != 0 )
+		{
+			if (!oam.checkLogStatus("/tmp/glusterAssign.txt", "not mounted")) {
+				log.writeLog(__LINE__, "glusterUnassign failed.", LOG_TYPE_ERROR);
+				system("mv -f /tmp/glusterUnassign.txt /tmp/glusterUnassign_failed.txt");
+				return oam::API_FAILURE;
+			}
+		}
 		log.writeLog(__LINE__, "glusterUnassign failed.", LOG_TYPE_ERROR);
 		return oam::API_FAILURE;
 	}

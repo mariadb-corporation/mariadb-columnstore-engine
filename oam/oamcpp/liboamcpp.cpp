@@ -8203,7 +8203,7 @@ namespace oam
 				int returnStatus = sendMsgToProcMgr(GLUSTERASSIGN, pm, FORCEFUL, ACK_YES, dbrootID);
 			
 				if (returnStatus != API_SUCCESS)
-				exceptionControl("GLUSTER_ASSIGN", returnStatus);
+					exceptionControl("GLUSTER_ASSIGN", returnStatus);
 
 				break;
 			}
