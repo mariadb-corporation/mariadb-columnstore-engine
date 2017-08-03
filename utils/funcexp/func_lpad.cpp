@@ -63,7 +63,7 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
     const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
     // The result length in number of characters
-    int len = 0;
+    size_t len = 0;
 	switch (fp[1]->data()->resultType().colDataType)
 	{
 		case execplan::CalpontSystemCatalog::BIGINT:
@@ -129,16 +129,16 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
     // determine the size of buffer to allocate, we can be sure the wide
     // char string won't be longer than
     strwclen = tstr.length(); // a guess to start with. This will be >= to the real count.
-    int alen = len;
+    size_t alen = len;
 	if(strwclen > len)
 		alen = strwclen;
-	int bufsize = (alen+1) * sizeof(wchar_t);
+	size_t bufsize = (alen+1) * sizeof(wchar_t);
 
     // Convert to wide characters. Do all further work in wide characters
     wchar_t* wcbuf = (wchar_t*)alloca(bufsize);
     strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen+1);
 
-    unsigned int strSize = strwclen;    // The number of significant characters
+    size_t strSize = strwclen;    // The number of significant characters
     const wchar_t* pWChar = wcbuf;
     for (i = 0; *pWChar != '\0' && i < strwclen; ++pWChar, ++i)
     {
@@ -165,13 +165,13 @@ std::string Func_lpad::getStrVal(rowgroup::Row& row,
 
     // Convert the pad string to wide
     padwclen = pad.length();  // A guess to start.
-    int padbufsize = (padwclen+1) * sizeof(wchar_t);
+    size_t padbufsize = (padwclen+1) * sizeof(wchar_t);
     wchar_t* wcpad = (wchar_t*)alloca(padbufsize);
 	// padwclen+1 is for giving count for the terminating null
     size_t padlen = utf8::idb_mbstowcs(wcpad, pad.c_str(), padwclen+1);
      
     // How many chars do we need?
-    unsigned int padspace = len - strSize;
+    size_t padspace = len - strSize;
 
     // Shift the contents of wcbuf to the right.
     wchar_t* startofstr = wcbuf + padspace;

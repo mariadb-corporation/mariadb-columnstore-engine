@@ -114,6 +114,10 @@ public:
 		CALPONTSELECTEXECUTIONPLAN,
 		CONSTANTFILTER,
 		OUTERJOINONFILTER,
+
+		/** UDAF SDK */
+		MCSV1_CONTEXT,
+		UDAFCOLUMN,
 	};
 
 	typedef uint8_t id_t;    //expand as necessary

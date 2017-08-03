@@ -1,4 +1,6 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* 
+   Copyright (c) 2017, MariaDB
+   Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -13,10 +15,8 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
-
-//  $Id: rowaggregation.h 4017 2013-07-26 16:20:29Z pleblanc $
-
+   MA 02110-1301, USA.
+*/
 
 #ifndef ROWAGGREGATION_H
 #define ROWAGGREGATION_H
@@ -49,6 +49,7 @@
 #include "hasher.h"
 #include "stlpoolallocator.h"
 #include "returnedcolumn.h"
+#include "mcsv1_udaf.h"
 
 // To do: move code that depends on joblist to a proper subsystem.
 namespace joblist
@@ -64,6 +65,7 @@ struct RowPosition
 {
 	uint64_t group:48;
 	uint64_t row:16;
+
 	static const uint64_t MSB = 0x800000000000ULL;   //48th bit is set
 	inline RowPosition(uint64_t g, uint64_t r) : group(g), row(r) { }
 	inline RowPosition() { }
@@ -104,6 +106,9 @@ enum RowAggFunctionType
 
 	// Constant
 	ROWAGG_CONSTANT,
+
+	// User Defined Aggregate Function
+	ROWAGG_UDAF,
 
 	// internal function type to avoid duplicate the work
 	// handling ROWAGG_COUNT_NO_OP, ROWAGG_DUP_FUNCT and ROWAGG_DUP_AVG is a little different
@@ -169,7 +174,10 @@ struct RowAggFunctionCol
 		int32_t inputColIndex, int32_t outputColIndex, int32_t auxColIndex = -1) :
 			fAggFunction(aggFunction), fStatsFunction(stats), fInputColumnIndex(inputColIndex),
 			fOutputColumnIndex(outputColIndex), fAuxColumnIndex(auxColIndex) {}
-	~RowAggFunctionCol() {}
+	virtual ~RowAggFunctionCol() {}
+
+	virtual void serialize(messageqcpp::ByteStream& bs) const;
+	virtual void deserialize(messageqcpp::ByteStream& bs);
 
 	RowAggFunctionType  fAggFunction;      // aggregate function
 	// statistics function stores ROWAGG_STATS in fAggFunction and real function in fStatsFunction
@@ -178,24 +186,86 @@ struct RowAggFunctionCol
 	uint32_t            fInputColumnIndex;
 	uint32_t            fOutputColumnIndex;
 
-	// fAuxColumnIndex is used in 3 cases:
+	// fAuxColumnIndex is used in 4 cases:
 	// 1. for AVG - point to the count column, the fInputColumnIndex is for sum
 	// 2. for statistics function - point to sum(x), +1 is sum(x**2)
-	// 3. for duplicate - point to the real aggretate column to be copied from
+	// 3. for UDAF - contain the context user data as binary
+	// 4. for duplicate - point to the real aggretate column to be copied from
 	// Set only on UM, the fAuxColumnIndex is defaulted to fOutputColumnIndex+1 on PM.
 	uint32_t            fAuxColumnIndex;
 };
 
-inline messageqcpp::ByteStream& operator<<(messageqcpp::ByteStream& b, RowAggFunctionCol& o)
-{ return (b << (uint8_t)o.fAggFunction << o.fInputColumnIndex << o.fOutputColumnIndex); }
-inline messageqcpp::ByteStream& operator>>(messageqcpp::ByteStream& b, RowAggFunctionCol& o)
-{ return (b >> (uint8_t&)o.fAggFunction >> o.fInputColumnIndex >> o.fOutputColumnIndex); }
 
+struct RowUDAFFunctionCol : public RowAggFunctionCol
+{
+	RowUDAFFunctionCol(mcsv1sdk::mcsv1Context& context, int32_t inputColIndex, 
+					   int32_t outputColIndex, int32_t auxColIndex = -1) :
+			RowAggFunctionCol(ROWAGG_UDAF, ROWAGG_FUNCT_UNDEFINE,
+							  inputColIndex, outputColIndex, auxColIndex),
+		    fUDAFContext(context), bInterrupted(false) 
+	{
+		fUDAFContext.setInterrupted(&bInterrupted);
+	}
 
+	RowUDAFFunctionCol(int32_t inputColIndex, 
+					   int32_t outputColIndex, int32_t auxColIndex = -1) :
+			RowAggFunctionCol(ROWAGG_UDAF, ROWAGG_FUNCT_UNDEFINE,
+							  inputColIndex, outputColIndex, auxColIndex),
+			bInterrupted(false) 
+	{}
+	RowUDAFFunctionCol(const RowUDAFFunctionCol& rhs) : RowAggFunctionCol(ROWAGG_UDAF, ROWAGG_FUNCT_UNDEFINE,
+							  rhs.fInputColumnIndex, rhs.fOutputColumnIndex, rhs.fAuxColumnIndex), fUDAFContext(rhs.fUDAFContext)
+	{}
+
+	virtual ~RowUDAFFunctionCol() {}
+
+	virtual void serialize(messageqcpp::ByteStream& bs) const;
+	virtual void deserialize(messageqcpp::ByteStream& bs);
+
+	mcsv1sdk::mcsv1Context fUDAFContext;  // The UDAF context
+	bool bInterrupted;                    // Shared by all the threads
+};
+
+inline void RowAggFunctionCol::serialize(messageqcpp::ByteStream& bs) const
+{ 
+	bs << (uint8_t)fAggFunction;
+	bs << fInputColumnIndex;
+	bs << fOutputColumnIndex; 
+}
+
+inline void RowAggFunctionCol::deserialize(messageqcpp::ByteStream& bs)
+{ 
+	bs >> (uint8_t&)fAggFunction;
+	bs >> fInputColumnIndex;
+	bs >> fOutputColumnIndex; 
+}
+
+inline void RowUDAFFunctionCol::serialize(messageqcpp::ByteStream& bs) const
+{ 
+	RowAggFunctionCol::serialize(bs);
+	fUDAFContext.serialize(bs);
+}
+
+inline void RowUDAFFunctionCol::deserialize(messageqcpp::ByteStream& bs)
+{ 
+	// This deserialize is called when the function gets to PrimProc.
+	// reset is called because we're starting a new sub-evaluate cycle.
+	RowAggFunctionCol::deserialize(bs);
+	fUDAFContext.unserialize(bs);
+	fUDAFContext.setInterrupted(&bInterrupted);
+	mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
+	rc = fUDAFContext.getFunction()->reset(&fUDAFContext);
+	if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
+	{
+		bInterrupted = true;
+		throw logging::QueryDataExcept(fUDAFContext.getErrorMessage(), logging::aggregateFuncErr);
+	}
+}
 
 struct ConstantAggData
 {
 	std::string        fConstValue;
+	std::string        fUDAFName;     // If a UDAF is called with constant.
 	RowAggFunctionType fOp;
 	bool               fIsNull;
 
@@ -204,6 +274,10 @@ struct ConstantAggData
 
 	ConstantAggData(const std::string& v, RowAggFunctionType f, bool n) :
 		fConstValue(v), fOp(f), fIsNull(n)
+	{}
+
+	ConstantAggData(const std::string& v, const std::string u, RowAggFunctionType f, bool n) :
+		fConstValue(v), fUDAFName(u), fOp(f), fIsNull(n)
 	{}
 };
 
@@ -377,7 +451,7 @@ class RowAggregation : public messageqcpp::Serializeable
 
 		/** @brief reset RowAggregation outputRowGroup and hashMap
 		 */
-		virtual void reset();
+		virtual void aggReset();
 
 		/** @brief Define content of data to be aggregated and its aggregated output.
 		 *
@@ -470,11 +544,14 @@ class RowAggregation : public messageqcpp::Serializeable
 		virtual void doAvg(const Row&, int64_t, int64_t, int64_t);
 		virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
 		virtual void doBitOp(const Row&, int64_t, int64_t, int);
+		virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF);
 		virtual bool countSpecial(const RowGroup* pRG)
 		{ fRow.setIntField<8>(fRow.getIntField<8>(0) + pRG->getRowCount(), 0); return true; }
 
 		virtual bool newRowGroup();
 		virtual void clearAggMap() { if (fAggMapPtr) fAggMapPtr->clear(); }
+
+		void resetUDAF(uint64_t funcColID);
 
 		inline bool isNull(const RowGroup* pRowGroup, const Row& row, int64_t col);
 		inline void makeAggFieldsNull(Row& row);
@@ -536,7 +613,6 @@ class RowAggregation : public messageqcpp::Serializeable
 		friend class AggHasher;
 		friend class AggComparator;
 };
-
 
 //------------------------------------------------------------------------------
 /** @brief derived Class that aggregates multi-rowgroups on UM
@@ -602,7 +678,7 @@ class RowAggregationUM : public RowAggregation
 
 		void aggregateRow(Row &);
 		//void initialize();
-		virtual void reset();
+		virtual void aggReset();
 
 		void setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut);
 
@@ -628,6 +704,12 @@ class RowAggregationUM : public RowAggregation
 		// calculate the statistics function all rows received. UM only function.
 		void calculateStatisticsFunctions();
 
+		// Sets the value from valOut into column colOut, performing any conversions.
+		void SetUDAFValue(static_any::any& valOut, int64_t colOut);
+
+		// calculate the UDAF function all rows received. UM only function.
+		void calculateUDAFColumns();
+
 		// fix duplicates. UM only function.
 		void fixDuplicates(RowAggFunctionType funct);
 
@@ -646,6 +728,7 @@ class RowAggregationUM : public RowAggregation
 		bool fHasAvg;
 		bool fKeyOnHeap;
 		bool fHasStatsFunc;
+		bool fHasUDAF;
 
 		boost::shared_ptr<RowAggregation> fDistinctAggregator;
 
@@ -715,6 +798,7 @@ class RowAggregationUMP2 : public RowAggregationUM
 		void doStatistics(const Row&, int64_t, int64_t, int64_t);
 		void doGroupConcat(const Row&, int64_t, int64_t);
 		void doBitOp(const Row&, int64_t, int64_t, int);
+		void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF);
 		bool countSpecial(const RowGroup* pRG) { return false; }
 };
 

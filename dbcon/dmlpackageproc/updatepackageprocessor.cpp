@@ -512,16 +512,15 @@ uint64_t UpdatePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
 					//timer.stop("Meta");
 					continue;
 				}
-				uint32_t amount = rgData.deserialize(msg, true);
+				rgData.deserialize(msg, true);
 				rowGroup->setData(&rgData);
 				//rowGroup->setData(const_cast<uint8_t*>(msg.buf())); 
 				err = (rowGroup->getStatus() != 0);
 				if (err)
 				{
-					msgBk.advance(amount);
 					//msgBk.advance(rowGroup->getDataSize());
 					string errorMsg;
-					msgBk >> errorMsg;
+					msg >> errorMsg;
 					logging::Message::Args args;
 					logging::Message message(2);
 					args.add("Update Failed: ");

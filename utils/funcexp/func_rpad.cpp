@@ -63,7 +63,7 @@ std::string Func_rpad::getStrVal(rowgroup::Row& row,
     const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
     // The result length in number of characters
-    int len = 0;
+    size_t len = 0;
 	switch (fp[1]->data()->resultType().colDataType)
 	{
 		case execplan::CalpontSystemCatalog::BIGINT:

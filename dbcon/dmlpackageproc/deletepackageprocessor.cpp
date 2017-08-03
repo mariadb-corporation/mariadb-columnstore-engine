@@ -458,16 +458,15 @@ namespace dmlpackageprocessor
 				}
 
 				// XXXST: take out the 'true' when all jobsteps have been made st-compatible
-				uint32_t amount = rgData.deserialize(msg, true);
+				rgData.deserialize(msg, true);
 				rowGroup->setData(&rgData);
 				//rowGroup->setData(const_cast<uint8_t*>(msg.buf())); 
 				err = (rowGroup->getStatus() != 0);
 				if (err)
 				{
-					msgBk.advance(amount);
 					//msgBk.advance(rowGroup->getDataSize());
 					string errorMsg;
-					msgBk >> errorMsg;
+					msg >> errorMsg;
 					logging::Message::Args args;
 					logging::Message message(2);
 					args.add("Delete Failed: ");

@@ -32,6 +32,7 @@
 #include "treenode.h"
 #include "returnedcolumn.h"
 #include "aggregatecolumn.h"
+#include "udafcolumn.h"
 #include "arithmeticcolumn.h"
 #include "constantcolumn.h"
 #include "functioncolumn.h"
@@ -120,6 +121,9 @@ TreeNode* ObjectReader::createTreeNode(messageqcpp::ByteStream& b) {
 			break;
 		case GROUPCONCATCOLUMN:
 			ret = new GroupConcatColumn();
+			break;
+		case UDAFCOLUMN:
+			ret = new UDAFColumn();
 			break;
 		case ARITHMETICCOLUMN:
 			ret = new ArithmeticColumn();
@@ -293,6 +297,8 @@ void ObjectReader::checkType(messageqcpp::ByteStream& b, const CLASSID id)
 				throw UnserializeException("Not a CalpontSelectExecutionPlan");
 			case NULL_CLASS:
 				throw UnserializeException("Not NULL");   // ??
+			case MCSV1_CONTEXT:
+				throw UnserializeException("Not a MCSV1_CONTEXT");
 			default:
 				throw UnserializeException("Bad id");
 		}

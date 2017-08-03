@@ -175,6 +175,232 @@ long long mcs_isnull(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *erro
 	return 0;
 }
 
+/**
+ * ALLNULL connector stub
+ */
+struct allnull_data
+{
+  ulonglong	totalQuantity;
+  ulonglong	totalNulls;
+};
+ 
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool allnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+	struct allnull_data* data;
+//	if (args->arg_count != 1)
+//	{
+//		strcpy(message,"allnull() requires one argument");
+//		return 1;
+//	}
+
+	if (!(data = (struct allnull_data*) malloc(sizeof(struct allnull_data))))
+	{
+		strmov(message,"Couldn't allocate memory");
+		return 1;
+	}
+	data->totalQuantity	= 0;
+	data->totalNulls	= 0;
+
+	initid->ptr = (char*)data;
+
+	return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void allnull_deinit(UDF_INIT* initid)
+{
+	free(initid->ptr);
+}	
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+long long allnull(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+				  char* is_null, char* error __attribute__((unused)))
+{
+	struct allnull_data* data = (struct allnull_data*)initid->ptr;
+	return data->totalQuantity > 0 && data->totalNulls == data->totalQuantity;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void
+allnull_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+              char* message __attribute__((unused)))
+{
+	struct allnull_data* data = (struct allnull_data*)initid->ptr;
+	data->totalQuantity = 0;
+	data->totalNulls    = 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void
+allnull_add(UDF_INIT* initid, UDF_ARGS* args,
+            char* is_null,
+            char* message __attribute__((unused)))
+{
+	struct allnull_data* data = (struct allnull_data*)initid->ptr;
+	const char *word=args->args[0];
+	data->totalQuantity++;
+	if (!word)
+	{
+		data->totalNulls++;
+	}
+}
+
+/**
+ * SSQ connector stub
+ */
+struct ssq_data
+{
+  double	sumsq;
+};
+ 
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool ssq_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+	struct ssq_data* data;
+	if (args->arg_count != 1)
+	{
+		strcpy(message,"ssq() requires one argument");
+		return 1;
+	}
+
+	if (!(data = (struct ssq_data*) malloc(sizeof(struct ssq_data))))
+	{
+		strmov(message,"Couldn't allocate memory");
+		return 1;
+	}
+	data->sumsq	= 0;
+
+	initid->ptr = (char*)data;
+	return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void ssq_deinit(UDF_INIT* initid)
+{
+	free(initid->ptr);
+}	
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void
+ssq_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+              char* message __attribute__((unused)))
+{
+	struct ssq_data* data = (struct ssq_data*)initid->ptr;
+	data->sumsq = 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void
+ssq_add(UDF_INIT* initid, UDF_ARGS* args,
+            char* is_null,
+            char* message __attribute__((unused)))
+{
+	struct ssq_data* data = (struct ssq_data*)initid->ptr;
+	double val = cvtArgToDouble(args->arg_type[0], args->args[0]);
+	data->sumsq = val*val;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+long long ssq(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+				  char* is_null, char* error __attribute__((unused)))
+{
+	struct ssq_data* data = (struct ssq_data*)initid->ptr;
+	return data->sumsq;
+}
+
+//=======================================================================
+
+/**
+ * MEDIAN connector stub
+ */
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool median_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+	if (args->arg_count != 1)
+	{
+		strcpy(message,"median() requires one argument");
+		return 1;
+	}
+
+/*
+	if (!(data = (struct ssq_data*) malloc(sizeof(struct ssq_data))))
+	{
+		strmov(message,"Couldn't allocate memory");
+		return 1;
+	}
+	data->sumsq	= 0;
+
+	initid->ptr = (char*)data;
+*/
+	return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void median_deinit(UDF_INIT* initid)
+{
+//	free(initid->ptr);
+}	
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void
+median_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+              char* message __attribute__((unused)))
+{
+//	struct ssq_data* data = (struct ssq_data*)initid->ptr;
+//	data->sumsq = 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void
+median_add(UDF_INIT* initid, UDF_ARGS* args,
+            char* is_null,
+            char* message __attribute__((unused)))
+{
+//	struct ssq_data* data = (struct ssq_data*)initid->ptr;
+//	double val = cvtArgToDouble(args->arg_type[0], args->args[0]);
+//	data->sumsq = val*val;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+long long median(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+				  char* is_null, char* error __attribute__((unused)))
+{
+//	struct ssq_data* data = (struct ssq_data*)initid->ptr;
+//	return data->sumsq;
+	return 0;
+}
+
 }
 // vim:ts=4 sw=4:
 

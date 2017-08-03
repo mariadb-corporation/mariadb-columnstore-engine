@@ -1,4 +1,6 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* 
+   Copyright (c) 2017, MariaDB
+   Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -13,13 +15,9 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
+   MA 02110-1301, USA.
+*/
 
-/***********************************************************************
-*   $Id: bytestream.cpp 3862 2013-06-05 13:29:12Z rdempsey $
-*
-*
-***********************************************************************/
 #include <cstring>
 #include <stdexcept>
 #include <string>
@@ -587,6 +585,54 @@ void ByteStream::peek(uuid& u) const
 
 	memcpy(&u.data[0], fCurOutPtr, uuids::uuid::static_size());
 }
+
+ByteStream& ByteStream::operator<<(const float f)
+{
+	int sz = sizeof(float);
+	if (fBuf == 0 || (fCurInPtr - fBuf + sz > fMaxLen + ISSOverhead))
+		growBuf(fMaxLen + BlockSize);
+	*((float *) fCurInPtr) = f;
+	fCurInPtr += sz;
+
+	return *this;
+}
+ByteStream& ByteStream::operator<<(const double d)
+{
+	int sz = sizeof(double);
+	if (fBuf == 0 || (fCurInPtr - fBuf + sz > fMaxLen + ISSOverhead))
+		growBuf(fMaxLen + BlockSize);
+	*((double *) fCurInPtr) = d;
+	fCurInPtr += sz;
+
+	return *this;
+}
+ByteStream& ByteStream::operator>>(float& f)
+{
+	peek(f);
+	fCurOutPtr += sizeof(float);
+	return *this;
+}
+ByteStream& ByteStream::operator>>(double& d)
+{
+	peek(d);
+	fCurOutPtr += sizeof(double);
+	return *this;
+}
+void ByteStream::peek(float& f) const
+{
+	if (length() < sizeof(float))
+		throw underflow_error("ByteStream>int64_t: not enough data in stream to fill datatype");
+
+	f = *((float *) fCurOutPtr);
+}
+void ByteStream::peek(double& d) const
+{
+	if (length() < sizeof(double))
+		throw underflow_error("ByteStream>int64_t: not enough data in stream to fill datatype");
+
+	d = *((double *) fCurOutPtr);
+}
+
 
 }//namespace messageqcpp
 

@@ -1,4 +1,6 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* 
+   Copyright (c) 2017, MariaDB
+   Copyright (C) 2014 InfiniDB, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -13,10 +15,8 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
-
-//  $Id: windowfunction.cpp 3932 2013-06-25 16:08:10Z xlou $
-
+   MA 02110-1301, USA.
+*/
 
 //#define NDEBUG
 #include <cassert>
@@ -163,11 +163,35 @@ void WindowFunction::operator()()
 			}
 			else
 			{
+				pair<int64_t, int64_t> w;
+				pair<int64_t, int64_t> prevFrame;
+				int64_t b, e;
+				bool firstTime = true;
 				for (int64_t i = begin; i <= end && !fStep->cancelled(); i++)
 				{
-					pair<int64_t, int64_t> w = fFrame->getWindow(begin, end, i);
-					fFunctionType->resetData();
-					fFunctionType->operator()(w.first, w.second, i);
+					w = fFrame->getWindow(begin, end, i);
+					b = w.first;
+					e = w.second;
+					if (firstTime)
+					{
+						prevFrame = w;
+					}
+					// UDAnF functions may have a dropValue function implemented.
+					// If they do, we can optimize by calling dropValue() for those
+					// values leaving the window and nextValue for those entering, rather
+					// than a resetData() and then iterating over the entire window.
+					// Built-in functions may have this functionality added in the future.
+					if (fFunctionType->dropValues(prevFrame.first, w.first))
+					{
+						b = firstTime ? w.first : prevFrame.second+1;
+					}
+					else
+					{
+						fFunctionType->resetData();
+					}
+					fFunctionType->operator()(b, e, i);
+					prevFrame = w;
+					firstTime = false;
 				}
 			}
 		}

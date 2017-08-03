@@ -156,7 +156,8 @@ public:
             TEXT,           /*!< TEXT type */
 			NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
 			LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
-			STRINT			/* @bug3532, string as int for fast comparison */
+			STRINT,			/* @bug3532, string as int for fast comparison */
+			UNDEFINED       /*!< Undefined - used in UDAF API */
    	};
 
 	/** the set of column constraint types
@@ -914,6 +915,32 @@ inline bool isCharType(const execplan::CalpontSystemCatalog::ColDataType type)
 /** convenience function to determine if column type is an
  *  unsigned type
  */
+inline bool isNumeric(const execplan::CalpontSystemCatalog::ColDataType type)
+{
+	switch (type)
+	{
+		case execplan::CalpontSystemCatalog::TINYINT:
+		case execplan::CalpontSystemCatalog::SMALLINT:
+		case execplan::CalpontSystemCatalog::MEDINT:
+		case execplan::CalpontSystemCatalog::INT:
+		case execplan::CalpontSystemCatalog::BIGINT:
+		case execplan::CalpontSystemCatalog::FLOAT:
+		case execplan::CalpontSystemCatalog::DOUBLE:
+		case execplan::CalpontSystemCatalog::DECIMAL:
+		case execplan::CalpontSystemCatalog::UTINYINT:
+		case execplan::CalpontSystemCatalog::USMALLINT:
+		case execplan::CalpontSystemCatalog::UMEDINT:
+		case execplan::CalpontSystemCatalog::UINT:
+		case execplan::CalpontSystemCatalog::UBIGINT:
+		case execplan::CalpontSystemCatalog::UFLOAT:
+		case execplan::CalpontSystemCatalog::UDOUBLE:
+		case execplan::CalpontSystemCatalog::UDECIMAL:
+			return true;
+		default:
+			return false;
+	}
+}
+
 inline bool isUnsigned(const execplan::CalpontSystemCatalog::ColDataType type)
 {
 	switch (type)

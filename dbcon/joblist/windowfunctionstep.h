@@ -160,7 +160,7 @@ private:
 	bool                             fEndOfResult;
 	bool                             fIsSelect;
 	bool                             fUseSSMutex; //@bug6065, mutex for setStringField
-
+	bool                             fUseUFMutex; // To ensure thread safety of User Data (UDAnF)
 	// for input/output datalist
 	RowGroupDL*                      fInputDL;
 	RowGroupDL*                      fOutputDL;
