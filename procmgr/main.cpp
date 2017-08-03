@@ -59,6 +59,7 @@ string localHostName;
 string PMwithUM = "n";
 string MySQLRep = "n";
 string DBRootStorageType = "internal";
+int requestCount;
 
 // pushing the ACTIVE_ALARMS_FILE to all nodes every 10 seconds.
 const int ACTIVE_ALARMS_PUSHING_INTERVAL = 10;
@@ -421,10 +422,21 @@ static void messageThread(Configuration config)
 	{
 	}
 
+	// Number of Max requests
+//	int ProcessManagerRequest = 10;
+	
+//	try {
+//		oam.getSystemConfig("ProcessManagerRequest", ProcessManagerRequest);
+//	}
+//	catch (...) {
+//	      ProcessManagerRequest = 10;
+//	}
+	
 	//
 	//waiting for request 	
 	//
 	IOSocket fIos;
+	requestCount = 0;
 
 	for (;;)
 	{
@@ -446,23 +458,33 @@ static void messageThread(Configuration config)
 				catch(...)
 				{}
 
+				requestCount++;
+				//log.writeLog(__LINE__, "requestCount = " + oam.itoa(requestCount), LOG_TYPE_ERROR);
+
+				// loop until count decreases
+				//while(true)
+				//{
+				//      if ( requestCount < ProcessManagerRequest ) 
+				//	    break;
+				//      log.writeLog(__LINE__, "in loop", LOG_TYPE_ERROR);
+				//}
 			}
 		}
-        catch (exception& ex)
-        {
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr:" + error, LOG_TYPE_ERROR);
+		catch (exception& ex)
+		{
+				string error = ex.what();
+				log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr:" + error, LOG_TYPE_ERROR);
 
-			// takes 2 - 4 minites to free sockets, sleep and retry
-			sleep(60);
-        }
-        catch(...)
-        {
-			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr: Caught unknown exception!", LOG_TYPE_ERROR);
+				// takes 2 - 4 minites to free sockets, sleep and retry
+				sleep(60);
+		}
+		catch(...)
+		{
+				log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr: Caught unknown exception!", LOG_TYPE_ERROR);
 
-			// takes 2 - 4 minites to free sockets, sleep and retry
-			sleep(60);
-        }
+				// takes 2 - 4 minites to free sockets, sleep and retry
+				sleep(60);
+		}
 	}
 	return;
 }

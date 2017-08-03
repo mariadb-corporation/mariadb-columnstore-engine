@@ -235,6 +235,12 @@ public:
 	* @brief db health check 
 	*/
 	int healthCheck(bool action = true);
+	
+	/**
+	* @brief Check Active Alarm 
+	*/
+	bool checkActiveAlarm(const int alarmid, const std::string moduleName, const std::string deviceName);
+
 
 }; // end of class
 
