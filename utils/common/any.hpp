@@ -106,7 +106,6 @@ namespace anyimpl
 	SMALL_POLICY(float);
 	SMALL_POLICY(double);
 	SMALL_POLICY(bool);
-	SMALL_POLICY(std::string);
 
 	#undef SMALL_POLICY
 

@@ -2367,21 +2367,21 @@ void RowAggregationUM::calculateAvgColumns()
 // Sets the value from valOut into column colOut, performing any conversions.
 void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 {
-	static const static_any::any& charTypeId = (char)1;
-	static const static_any::any& scharTypeId = (signed char)1;
-	static const static_any::any& shortTypeId = (short)1;
-	static const static_any::any& intTypeId = (int)1;
-	static const static_any::any& longTypeId = (long)1;
-	static const static_any::any& llTypeId = (long long)1;
-	static const static_any::any& ucharTypeId = (unsigned char)1;
-	static const static_any::any& ushortTypeId = (unsigned short)1;
-	static const static_any::any& uintTypeId = (unsigned int)1;
-	static const static_any::any& ulongTypeId = (unsigned long)1;
-	static const static_any::any& ullTypeId = (unsigned long long)1;
-	static const static_any::any& floatTypeId = (float)1;
-	static const static_any::any& doubleTypeId = (double)1;
+	static const static_any::any& charTypeId((char)1);
+	static const static_any::any& scharTypeId((signed char)1);
+	static const static_any::any& shortTypeId((short)1);
+	static const static_any::any& intTypeId((int)1);
+	static const static_any::any& longTypeId((long)1);
+	static const static_any::any& llTypeId((long long)1);
+	static const static_any::any& ucharTypeId((unsigned char)1);
+	static const static_any::any& ushortTypeId((unsigned short)1);
+	static const static_any::any& uintTypeId((unsigned int)1);
+	static const static_any::any& ulongTypeId((unsigned long)1);
+	static const static_any::any& ullTypeId((unsigned long long)1);
+	static const static_any::any& floatTypeId((float)1);
+	static const static_any::any& doubleTypeId((double)1);
 	static const std::string typeStr("");
-	static const static_any::any& strTypeId = typeStr;
+	static const static_any::any& strTypeId(typeStr);
 
 	execplan::CalpontSystemCatalog::ColDataType colDataType = fRowGroupOut->getColTypes()[colOut];
 	if (valOut.empty())

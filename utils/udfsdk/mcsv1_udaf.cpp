@@ -240,19 +240,19 @@ void UserData::unserialize(messageqcpp::ByteStream& bs)
 }
 
 const std::string typeStr("");
-const static_any::any& mcsv1_UDAF::charTypeId = (char)1;
-const static_any::any& mcsv1_UDAF::scharTypeId = (signed char)1;
-const static_any::any& mcsv1_UDAF::shortTypeId = (short)1;
-const static_any::any& mcsv1_UDAF::intTypeId = (int)1;
-const static_any::any& mcsv1_UDAF::longTypeId = (long)1;
-const static_any::any& mcsv1_UDAF::llTypeId = (long long)1;
-const static_any::any& mcsv1_UDAF::ucharTypeId = (unsigned char)1;
-const static_any::any& mcsv1_UDAF::ushortTypeId = (unsigned short)1;
-const static_any::any& mcsv1_UDAF::uintTypeId = (unsigned int)1;
-const static_any::any& mcsv1_UDAF::ulongTypeId = (unsigned long)1;
-const static_any::any& mcsv1_UDAF::ullTypeId = (unsigned long long)1;
-const static_any::any& mcsv1_UDAF::floatTypeId = (float)1;
-const static_any::any& mcsv1_UDAF::doubleTypeId = (double)1;
-const static_any::any& mcsv1_UDAF::strTypeId = typeStr;
+const static_any::any& mcsv1_UDAF::charTypeId((char)1);
+const static_any::any& mcsv1_UDAF::scharTypeId((signed char)1);
+const static_any::any& mcsv1_UDAF::shortTypeId((short)1);
+const static_any::any& mcsv1_UDAF::intTypeId((int)1);
+const static_any::any& mcsv1_UDAF::longTypeId((long)1);
+const static_any::any& mcsv1_UDAF::llTypeId((long long)1);
+const static_any::any& mcsv1_UDAF::ucharTypeId((unsigned char)1);
+const static_any::any& mcsv1_UDAF::ushortTypeId((unsigned short)1);
+const static_any::any& mcsv1_UDAF::uintTypeId((unsigned int)1);
+const static_any::any& mcsv1_UDAF::ulongTypeId((unsigned long)1);
+const static_any::any& mcsv1_UDAF::ullTypeId((unsigned long long)1);
+const static_any::any& mcsv1_UDAF::floatTypeId((float)1);
+const static_any::any& mcsv1_UDAF::doubleTypeId((double)1);
+const static_any::any& mcsv1_UDAF::strTypeId(typeStr);
 
 
