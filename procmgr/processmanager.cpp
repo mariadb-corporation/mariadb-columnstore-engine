@@ -5088,7 +5088,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    string logFile = "/tmp/" + remoteModuleName + "_user_installer.log";
 				    log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
-				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps none  1 > " + logFile;
+				    string cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps 1 > " + logFile;
 
 				    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -5183,8 +5183,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 					    string cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > " + logFile; 
 					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
-
-					    system(cmd.c_str());
 
 					    bool passed = false;
 					    for ( int retry = 0 ; retry < 20 ; retry++ )

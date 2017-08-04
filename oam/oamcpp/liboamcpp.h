@@ -1295,6 +1295,23 @@ namespace oam
     };	
     typedef std::vector<ActiveSqlStatement> ActiveSqlStatements;
 
+    struct DataRedundancyStorageSetup
+    {
+    	int brickID;
+        std::string storageLocation;
+        std::string	storageFilesytemType;
+    };
+    typedef std::vector<DataRedundancyStorageSetup> DataRedundancyStorage;
+
+    struct DataRedundancyConfig_s
+    {
+    	int pmID;
+    	std::string pmHostname;
+    	std::string pmIpAddr;
+    	std::vector<int> dbrootCopies;
+    	DataRedundancyStorage storageLocations;
+    };
+    typedef struct DataRedundancyConfig_s DataRedundancyConfig;
 
     // username / password for smbclient use
 	const std::string USERNAME = "oamuser";

@@ -1877,20 +1877,20 @@ int processCommand(string* arguments)
 				}
  
 				string GlusterConfig;
-				string GlusterCopies;
-				string GlusterStorageType;
+				string DataRedundancyCopies;
+				string DataRedundancyStorageType;
 				try {
 					oam.getSystemConfig("GlusterConfig", GlusterConfig);
-					oam.getSystemConfig("GlusterCopies", GlusterCopies);
-					oam.getSystemConfig("GlusterStorageType", GlusterStorageType);
+					oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
+					oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
 				}
 				catch(...) {}
 
 				if ( GlusterConfig == "y" )
 				{
 					cout << endl << "Data Redundant Configuration" << endl << endl;
-					cout << "Copies Per DBroot = " << GlusterCopies << endl;
-					cout << "Storage Type = " << GlusterStorageType << endl;
+					cout << "Copies Per DBroot = " << DataRedundancyCopies << endl;
+					cout << "Storage Type = " << DataRedundancyStorageType << endl;
 
 					oamModuleInfo_t st;
 					string moduleType;
@@ -3573,6 +3573,32 @@ int processCommand(string* arguments)
 			{
 				cout << endl << "**** getSystemStatus Failed =  " << e.what() << endl;
 			}
+
+			string GlusterConfig;
+			string DataRedundancyCopies;
+			string DataRedundancyStorageType;
+			try {
+				oam.getSystemConfig("GlusterConfig", GlusterConfig);
+				oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
+				oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
+			}
+			catch(...) {}
+
+			if ( GlusterConfig == "y" )
+			{
+				string arg1 = "";
+				string arg2 = "";
+				string errmsg = "";
+				int ret = oam.glusterctl(oam::GLUSTER_STATUS, arg1, arg2, errmsg);
+				if ( ret == 0 )
+				{
+					cout << arg2 << endl;
+				}
+				else
+				{
+					cerr << "FAILURE: Status check error: " + errmsg << endl;
+				}
+			}
         }
         break;
 
@@ -5044,6 +5070,8 @@ int processCommand(string* arguments)
         case 48: // addModule - parameters: Module type/Module Name, Number of Modules, Server Hostnames,
 					// Server root password optional
         {
+			Config* sysConfig = Config::makeConfig();
+
             if ( SingleServerInstall == "y" ) {
                 // exit out since not on single-server install
                 cout << endl << "**** addModule Failed : not support on a Single-Server type installs  " << endl;
@@ -5076,18 +5104,19 @@ int processCommand(string* arguments)
 			}
 
 			string GlusterConfig = "n";
-			int GlusterCopies;
+			int DataRedundancyCopies;
 			string cloud = oam::UnassignedName;
-			string GlusterStorageType;
+			int DataRedundancyNetworkType;
+			int DataRedundancyStorageType;
 			string AmazonVPCNextPrivateIP;
 			string DistributedInstall = "y";
 			try {
 				oam.getSystemConfig("Cloud", cloud);
 				oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
 				oam.getSystemConfig("GlusterConfig", GlusterConfig);
-				oam.getSystemConfig("GlusterCopies", GlusterCopies);
-				oam.getSystemConfig("GlusterStorageType", GlusterStorageType);
-				oam.getSystemConfig("DistributedInstall", DistributedInstall);
+				oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
+				oam.getSystemConfig("DataRedundancyNetworkType", DataRedundancyNetworkType);
+				oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
 			}
 			catch(...) {}
 
@@ -5184,8 +5213,8 @@ int processCommand(string* arguments)
 					break;
 				}
 
-				if ( fmod((float) moduleCount , (float) GlusterCopies) != 0 ) {
-					cout << endl << "**** addModule Failed : Failed to Add Module, invalid number-of-modules: must be multiple of Data Redundancy Copies, which is " << GlusterCopies << endl;
+				if ( fmod((float) moduleCount , (float) DataRedundancyCopies) != 0 ) {
+					cout << endl << "**** addModule Failed : Failed to Add Module, invalid number-of-modules: must be multiple of Data Redundancy Copies, which is " << DataRedundancyCopies << endl;
 					break;
 				}
 			}
@@ -5298,6 +5327,8 @@ int processCommand(string* arguments)
 			umStorageNames::const_iterator listPT2 = umstoragenames.begin();
 			for ( int i = 0 ; i < moduleCount ; i++ )
 			{
+				string dataDupIPaddr = "ModuleIPAddr"+oam.itoa(moduleID)+"-1-3";
+				string dataDupHostName = "ModuleHostName"+oam.itoa(moduleID)+"-1-3";
 				//validate or determine module name
 				moduleNameList::const_iterator listPT = modulenamelist.begin();
 				for( ; listPT != modulenamelist.end() ; listPT++)
@@ -5403,6 +5434,27 @@ int processCommand(string* arguments)
 				devicenetworklist.push_back(devicenetworkconfig);
 				devicenetworkconfig.hostConfigList.clear();
 				moduleName.clear();
+
+				if ( GlusterConfig == "y" && DataRedundancyNetworkType == 2 && moduleType == "pm")
+				{
+					string DataRedundancyIPAddress = sysConfig->getConfig("DataRedundancyConfig",dataDupIPaddr);
+					string DataRedundancyHostname = sysConfig->getConfig("DataRedundancyConfig",dataDupHostName);
+					if (DataRedundancyIPAddress.empty() || DataRedundancyHostname.empty())
+					{
+						string prompt = "DataRedundancy is configured for dedicated network, enter a hostname";
+						DataRedundancyHostname = dataPrompt(prompt);
+						DataRedundancyIPAddress = oam.getIPAddress(DataRedundancyHostname);
+						if ( DataRedundancyIPAddress.empty() ) {
+							// prompt for IP Address
+							string prompt = "IP Address of " + DataRedundancyHostname + " not found, enter IP Address";
+							DataRedundancyIPAddress = dataPrompt(prompt);
+							if (!oam.isValidIP(DataRedundancyIPAddress))
+								return 1;
+						}
+						sysConfig->setConfig("DataRedundancyConfig", dataDupHostName, DataRedundancyHostname);
+						sysConfig->setConfig("DataRedundancyConfig", dataDupIPaddr, DataRedundancyIPAddress);
+					}
+				}
 			}
 
 			DBRootConfigList dbrootlist;
@@ -5417,11 +5469,6 @@ int processCommand(string* arguments)
 				cout << "will be created with the Modules during this command." << endl;
 				cout << "The Data Redundancy Packages should already be installed on the" << endl;
 				cout << "Servers being installed." << endl;
-				cout << "Also the Servers should have either a password-less ssh configured" << endl;
-				cout << "for the local server or setup for a login via password." << endl;
-				cout << "If its setup for login via password, then you will be required to" << endl;
-				cout << "enter the password when prompted. You will be prompted 2 * the" << endl;
-				cout << "number of modules being added." << endl;
 
 				// confirm request
 				if (confirmPrompt(" "))
@@ -5438,14 +5485,14 @@ int processCommand(string* arguments)
 				
 				dbrootNumber = dbrootPerPM * moduleCount;
 
-				if ( GlusterStorageType == "storage" )
+				if ( DataRedundancyStorageType == 2 )
 				{
 					cout << endl << "Data Redundancy Storage Type is configured for 'storage'" << endl;
 
-					cout << "You will need " << oam.itoa(dbrootNumber*GlusterCopies);
-					cout << " total storage locations and " << oam.itoa(dbrootPerPM*GlusterCopies) << " storage locations per PM. You will now " << endl;
+					cout << "You will need " << oam.itoa(dbrootNumber*DataRedundancyCopies);
+					cout << " total storage locations and " << oam.itoa(dbrootPerPM*DataRedundancyCopies) << " storage locations per PM. You will now " << endl;
 					cout << "be asked to enter the device names for the storage locations. You will enter " << endl;
-					cout << "them for each PM, on one line, separated by spaces (" << oam.itoa(dbrootPerPM*GlusterCopies) << " names on each line)." << endl;
+					cout << "them for each PM, on one line, separated by spaces (" << oam.itoa(dbrootPerPM*DataRedundancyCopies) << " names on each line)." << endl;
 
 					DeviceNetworkList::iterator pt = devicenetworklist.begin();
 					string firstPM = (*pt).DeviceName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE);
@@ -5483,28 +5530,33 @@ int processCommand(string* arguments)
 
 				if ( GlusterConfig == "y" && moduleType == "pm" ) {
 
-					if ( GlusterStorageType == "storage" ) {
+					 {
 						//send messages to update fstab to new modules, if needed
 						DeviceNetworkList::iterator pt2 = devicenetworklist.begin();
 						storageDeviceList::iterator pt3 = storagedevicelist.begin();
 						for( ; pt2 != devicenetworklist.end() ; pt2++, pt3++)
 						{
+							HostConfigList::iterator hostConfigIter = (*pt2).hostConfigList.begin();
 							string moduleName = (*pt2).DeviceName;
-							string devices = *pt3;
-							int brinkID = 1;
-							boost::char_separator<char> sep(" ");
-							boost::tokenizer< boost::char_separator<char> > tokens(devices, sep);
-							for ( boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
-									it != tokens.end();
-									++it)
+							int brickID = 1;
+							if ( DataRedundancyStorageType == 2 )
 							{
-								string deviceName = *it;
-								string entry = deviceName + " " + startup::StartUp::installDir() + "/gluster/brick" + oam.itoa(brinkID)  + " " + deviceType + " defaults 1 2";
-	
-								//send update pm
-								oam.distributeFstabUpdates(entry, moduleName);
-								brinkID++;
+								string devices = *pt3;
+								boost::char_separator<char> sep(" ");
+								boost::tokenizer< boost::char_separator<char> > tokens(devices, sep);
+								for ( boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
+										it != tokens.end();
+										++it)
+								{
+									string deviceName = *it;
+									string entry = deviceName + " " + startup::StartUp::installDir() + "/gluster/brick" + oam.itoa(brickID)  + " " + deviceType + " defaults 1 2";
+									//send update pm
+									oam.distributeFstabUpdates(entry, moduleName);
+								}
 							}
+							string command = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*hostConfigIter).IPAddr + " " + password + " 'mkdir -p " + startup::StartUp::installDir() + "/gluster/brick" + oam.itoa(brickID) + "'";
+							int status = system(command.c_str());
+							brickID++;
 						}
 					}
 
