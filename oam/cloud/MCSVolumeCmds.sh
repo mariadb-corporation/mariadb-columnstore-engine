@@ -215,7 +215,7 @@ detachvolume() {
 			sleep 1
 		done
 		test -f /usr/local/mariadb/columnstore/post/functions && . /usr/local/mariadb/columnstore/post/functions
-		$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "detachvolume failed: $STATUS"
+		$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 6 "MCSVolume: detachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
 	fi
@@ -226,7 +226,7 @@ detachvolume() {
 	fi
 
 	test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
-	$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "detachvolume failed status: $STATUS"
+	$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 6 "MCSVolume: detachvolume failed status: $STATUS"
 	echo $STATUS
 	exit 1
 }
@@ -250,7 +250,7 @@ attachvolume() {
 			sleep 1
 		done
 		test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
-		$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "attachvolume failed: $STATUS"
+		$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 6 "MCSVolume: attachvolume failed: $STATUS"
 		echo "failed"
 		exit 1
 	fi
@@ -261,7 +261,7 @@ attachvolume() {
 	fi
 
 	test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
-	$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 100 "attachvolume failed: $STATUS"
+	$COLUMNSTORE_INSTALL_DIR/bin/cplogger -w 6 "MCSVolume: attachvolume failed: $STATUS"
 	echo $STATUS
 	exit 1
 }

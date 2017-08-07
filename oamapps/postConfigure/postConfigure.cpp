@@ -4996,27 +4996,23 @@ bool attachVolume(string instanceName, string volumeName, string deviceName, str
 {
 	Oam oam;
 
-	//just return of debug set, called from amazonInstaller
-	if( thread_remote_installer )
-		return true;
-
-	cout << "Checking if Volume " << volumeName << " is attached , please wait..." << endl;	
+//	cout << "Checking if Volume " << volumeName << " is attached , please wait..." << endl;	
 
 	string status = oam.getEC2VolumeStatus(volumeName);
 	if ( status == "attached" ) {
-		cout << "Volume " << volumeName << " is attached " << endl;
-		cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
+		cout << "  Volume " << volumeName << " is attached " << endl;
+//		cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
 		return true;
 	}
 
 	if ( status != "available" ) {
-		cout << "ERROR: Volume " << volumeName << " status is " << status << endl;
-		cout << "Please resolve and re-run postConfigure" << endl;
+		cout << "  ERROR: Volume " << volumeName << " status is " << status << endl;
+		cout << "  Please resolve and re-run postConfigure" << endl;
 		return false;
 	}
 	else
 	{
-		cout << endl;
+/*		cout << endl;
 		string temp = "y";
 		while(true)
 		{
@@ -5037,26 +5033,26 @@ bool attachVolume(string instanceName, string volumeName, string deviceName, str
 		}
 	
 		if ( temp == "y" ) {
-			cout << "Attaching, please wait..." << endl;
+*/			cout << "  Attaching, please wait..." << endl;
 			if(oam.attachEC2Volume(volumeName, deviceName, instanceName)) {
-				cout << "Volume " << volumeName << " is now attached " << endl;
-				cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
+				cout << "  Volume " << volumeName << " is now attached " << endl;
+//				cout << "Make sure it's device " << deviceName << " is mounted to DBRoot directory " << dbrootPath << endl;
 				return true;
 			}
 			else
 			{
-				cout << "ERROR: Volume " << volumeName << " failed to attach" << endl;
-				cout << "Please resolve and re-run postConfigure" << endl;
+				cout << "  ERROR: Volume " << volumeName << " failed to attach" << endl;
+				cout << "  Please resolve and re-run postConfigure" << endl;
 				return false;
 			}
-		}
+/*		}
 		else
 		{
 			cout << "Volume " << volumeName << " will need to be attached before completing the install" << endl;
 			cout << "Please resolve and re-run postConfigure" << endl;
 			return false;
 		}
-	}
+*/	}
 }
 
 bool singleServerDBrootSetup()
