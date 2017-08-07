@@ -225,7 +225,7 @@ void CrossEngineStep::setFcnExpGroup3(const vector<execplan::SRCP>& fe)
 
 void CrossEngineStep::setFE23Output(const rowgroup::RowGroup& rg)
 {
-	fRowGroupFe3 = fRowGroupDelivered = rg;
+	fRowGroupFe3 = fRowGroupDelivered = fRowGroupAdded = rg;
 }
 
 
