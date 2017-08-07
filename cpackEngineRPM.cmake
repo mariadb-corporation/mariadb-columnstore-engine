@@ -242,7 +242,7 @@ SET(CPACK_RPM_libs_USER_FILELIST
 "/usr/local/mariadb/columnstore/lib/libfuncexp.so.1.0.0"
 "/usr/local/mariadb/columnstore/lib/libfuncexp.so.1"
 "/usr/local/mariadb/columnstore/lib/libfuncexp.so"
-"/usr/local/mariadb/columnstore/lib/libudfsdk.so.1.0.0"
+"/usr/local/mariadb/columnstore/lib/libudfsdk.so.1.1.0"
 "/usr/local/mariadb/columnstore/lib/libudfsdk.so.1"
 "/usr/local/mariadb/columnstore/lib/libudfsdk.so"
 "/usr/local/mariadb/columnstore/lib/libjoblist.so.1.0.0"
