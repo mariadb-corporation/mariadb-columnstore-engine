@@ -136,7 +136,10 @@ void StringStore::deserialize(ByteStream &bs)
 	for (i = 0; i < count; i++) {
 		//cout << "deserializing " << size << " bytes\n";
         bs >> buf;
-        shared_ptr<std::string> newString(new std::string(buf.c_str()));
+        // We do this to avoid pre-C++11 zero copy hell but need to
+        // preserve all data including NULs so using c_str() is out.
+        shared_ptr<std::string> newString(new std::string());
+        newString->append(buf);
 		mem.push_back(newString);
 	}
 	return;
