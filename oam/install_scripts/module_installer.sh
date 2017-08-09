@@ -97,8 +97,13 @@ if [ $module = "um" ]; then
 				echo "Setup UM Volume Mount"
 				device=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMVolumeDeviceName$mid`
 				mkdir -p $COLUMNSTORE_INSTALL_DIR/mysql/db > /dev/null 2>&1
-				mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o defaults
-				chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
+ 				if [ $user = "root" ]; then
+ 					mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto
+ 					chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
+ 				else
+ 					sudo mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto,user
+ 					sudo chown $user:$user -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
+ 				fi
 			fi
 		fi
 	fi

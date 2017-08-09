@@ -6334,7 +6334,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
 	if ( skipSession )
 		skip = "-s";
 
-	string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > + logdir + /reset_locks.log1 2>&1";
+	string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
 	int rtnCode = system(cmd.c_str());
 	log.writeLog(__LINE__, "Ran reset_locks", LOG_TYPE_DEBUG);
 

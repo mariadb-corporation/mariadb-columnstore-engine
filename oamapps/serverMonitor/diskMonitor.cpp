@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "serverMonitor.h"
-#include "installdir.h"
 
 using namespace std;
 using namespace oam;
@@ -224,7 +223,7 @@ void diskMonitor()
 				string fileName;
 				// check local
 				if ( deviceName == "/") {
-					fileName = startup::StartUp::installDir() + "/releasenum";
+					fileName = deviceName + "usr/local/mariadb/columnstore/releasenum";
 				}
 				else
 				{
@@ -646,26 +645,26 @@ void ServerMonitor::checkDiskAlarm(string alarmItem, ALARMS alarmID)
 
 	switch (alarmID) {
 		case ALARM_NONE: 	// clear all alarms set if any found
-			if ( oam.checkActiveAlarm(DISK_USAGE_HIGH, serverName, alarmItem) )
+			if ( serverMonitor.checkActiveAlarm(DISK_USAGE_HIGH, serverName, alarmItem) )
 				//  alarm set, clear it
 				clearAlarm(alarmItem, DISK_USAGE_HIGH);
-			if ( oam.checkActiveAlarm(DISK_USAGE_MED, serverName, alarmItem) )
+			if ( serverMonitor.checkActiveAlarm(DISK_USAGE_MED, serverName, alarmItem) )
 				//  alarm set, clear it
 				clearAlarm(alarmItem, DISK_USAGE_MED);
-			if ( oam.checkActiveAlarm(DISK_USAGE_LOW, serverName, alarmItem) )
+			if ( serverMonitor.checkActiveAlarm(DISK_USAGE_LOW, serverName, alarmItem) )
 				//  alarm set, clear it
 				clearAlarm(alarmItem, DISK_USAGE_LOW);
 			break;
 		case DISK_USAGE_LOW: 	// clear high and medium alarms set if any found
-			if ( oam.checkActiveAlarm(DISK_USAGE_HIGH, serverName, alarmItem) )
+			if ( serverMonitor.checkActiveAlarm(DISK_USAGE_HIGH, serverName, alarmItem) )
 				//  alarm set, clear it
 				clearAlarm(alarmItem, DISK_USAGE_HIGH);
-			if ( oam.checkActiveAlarm(DISK_USAGE_MED, serverName, alarmItem) )
+			if ( serverMonitor.checkActiveAlarm(DISK_USAGE_MED, serverName, alarmItem) )
 				//  alarm set, clear it
 				clearAlarm(alarmItem, DISK_USAGE_MED);
 			break;
 		case DISK_USAGE_MED: 	// clear high alarms set if any found
-			if ( oam.checkActiveAlarm(DISK_USAGE_HIGH, serverName, alarmItem) )
+			if ( serverMonitor.checkActiveAlarm(DISK_USAGE_HIGH, serverName, alarmItem) )
 				//  alarm set, clear it
 				clearAlarm(alarmItem, DISK_USAGE_HIGH);
 			break;
