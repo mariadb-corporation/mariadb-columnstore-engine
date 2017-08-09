@@ -291,3 +291,27 @@ int main (int argc, char** argv)
 	return 0;
 }
 
+// common functions
+
+//
+//	Check Active alarms
+//
+//	Use a mutex to limit the number of calls
+//
+
+pthread_mutex_t THREAD_LOCK;
+
+
+bool ServerMonitor::checkActiveAlarm(const int alarmid, const std::string moduleName, const std::string deviceName)
+{
+	Oam oam;
+
+	pthread_mutex_lock(&THREAD_LOCK);
+
+	bool status = oam.checkActiveAlarm(alarmid, moduleName, deviceName);
+	
+	pthread_mutex_unlock(&THREAD_LOCK);
+	
+	return status;
+}
+

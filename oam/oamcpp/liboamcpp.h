@@ -38,6 +38,7 @@
 #include <netdb.h>
 #endif
 #include <fcntl.h>
+#include <sys/file.h>
 
 #include "bytestream.h"
 #include "configcpp.h"
