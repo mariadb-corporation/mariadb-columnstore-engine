@@ -2536,25 +2536,48 @@ namespace oam
 
         Oam::getAlarmConfig(alarmid, name, returnValue);
 
-		// only allow user to change these levels
-		if ( name != "Threshold" && 
-				name != "Occurrences" &&
-				name != "LastIssueTime" )
+	// only allow user to change these levels
+	if ( name != "Threshold" && 
+			name != "Occurrences" &&
+			name != "LastIssueTime" )
             exceptionControl("setAlarmConfig", API_READONLY_PARAMETER);
+
+	string fileName = AlarmConfigFile;
+	
+	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0644);
+
+	// Aquire an exclusive lock
+   	if (flock(fd,LOCK_EX) == -1) {
+		throw runtime_error ("Lock file error: " + fileName);
+   	}
 
         //  write parameter to disk
 
         Config* alaConfig = Config::makeConfig(AlarmConfigFile.c_str());
         alaConfig->setConfig(Section, name, value);
-		try
+
+	try
+	{
+		alaConfig->write();
+	}
+	catch(...)
+	{
+		// Release lock
+		if (flock(fd,LOCK_UN)==-1)
 		{
-			alaConfig->write();
-		}
-		catch(...)
-		{
-			exceptionControl("setAlarmConfig", API_FAILURE);
+			throw runtime_error ("Release lock file error: " + fileName);		
 		}
 
+		exceptionControl("setAlarmConfig", API_FAILURE);
+	}
+		
+	// Release lock
+	if (flock(fd,LOCK_UN)==-1)
+	{
+		throw runtime_error ("Release lock file error: " + fileName);		
+	}
+	
+	close(fd);
     }
 
     /********************************************************************
@@ -6970,7 +6993,7 @@ namespace oam
 
 	//current amazon max dbroot id support = 190;
 	string PMdeviceName = "/dev/sd";
-	string deviceLetter[] = {"g","h","i","j","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","end"};
+	string deviceLetter[] = {"g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","end"};
 
     /***************************************************************************
      *
