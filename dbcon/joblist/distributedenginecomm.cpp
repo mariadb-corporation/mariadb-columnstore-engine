@@ -765,12 +765,17 @@ void DistributedEngineComm::write(messageqcpp::ByteStream &msg, uint32_t connect
 
 	mutex::scoped_lock lk(fMlock, defer_lock_t());
 	MessageQueueMap::iterator it;
+    // This keeps mqe's stats from being freed until end of function
+    boost::shared_ptr<MQE> mqe;
 	Stats *senderStats = NULL;
 
 	lk.lock();
 	it = fSessionMessages.find(senderID);
 	if (it != fSessionMessages.end())
-		senderStats = &(it->second->stats);
+    {
+        mqe = it->second;
+		senderStats = &(mqe->stats);
+    }
 	lk.unlock();
 
 	newClients[connection]->write(msg, NULL, senderStats);
@@ -829,6 +834,8 @@ int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uin
 {
 	mutex::scoped_lock lk(fMlock, defer_lock_t());
 	MessageQueueMap::iterator it;
+    // Keep mqe's stats from being freed early
+    boost::shared_ptr<MQE> mqe;
 	Stats *senderStats = NULL;
 	uint32_t interleaver = 0;
 
@@ -839,7 +846,8 @@ int DistributedEngineComm::writeToClient(size_t index, const ByteStream& bs, uin
 		lk.lock();
 		it = fSessionMessages.find(sender);
 		if (it != fSessionMessages.end()) {
-			senderStats = &(it->second->stats);
+            mqe = it->second;
+			senderStats = &(mqe->stats);
 			if (doInterleaving)
 				interleaver = it->second->interleaver[index % it->second->pmCount]++;
 		}
