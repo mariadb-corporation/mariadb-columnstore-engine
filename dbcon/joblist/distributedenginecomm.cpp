@@ -772,8 +772,10 @@ void DistributedEngineComm::write(messageqcpp::ByteStream &msg, uint32_t connect
 	lk.lock();
 	it = fSessionMessages.find(senderID);
 	if (it != fSessionMessages.end())
+    {
         mqe = it->second;
 		senderStats = &(mqe->stats);
+    }
 	lk.unlock();
 
 	newClients[connection]->write(msg, NULL, senderStats);
