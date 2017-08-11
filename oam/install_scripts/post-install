@@ -226,6 +226,7 @@ else
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
 	$SUDO chmod 666 /etc/fstab
+	$SUDO chmod 777 /etc/rc.local
 fi
 
 # install Columnstore Log Rotate File
