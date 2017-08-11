@@ -121,7 +121,7 @@ class BatchPrimitiveProcessor
 
 		// these two functions are used by BPPV to create BPP instances
 		// on demand.  TRY not to use unlock() for anything else.
-		void unlock() { objLock.try_lock(); objLock.unlock(); }
+		void unlock() { pthread_mutex_unlock(&objLock); }
 		bool hasJoin() { return doJoin; }
 	private:
 		BatchPrimitiveProcessor();
@@ -200,7 +200,12 @@ class BatchPrimitiveProcessor
 		messageqcpp::SBS serialized;
 		SP_UM_MUTEX  writelock;
 
-		boost::mutex objLock;
+        // MCOL-744 using pthread mutex instead of Boost mutex because
+        // in it is possible that this lock could be unlocked when it is
+        // already unlocked. In Ubuntu 16.04's Boost this triggers a
+        // crash. Whilst it is very hard to hit this it is still bad.
+        // Longer term TODO: fix/remove objLock and/or refactor BPP
+		pthread_mutex_t objLock;
 		bool LBIDTrace;
 		bool fBusy;
 
