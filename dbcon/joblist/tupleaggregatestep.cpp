@@ -1338,7 +1338,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
 
 		if (functionVec[i]->fAggFunction == ROWAGG_UDAF)
 		{
-			// UDAF user data
+			// Column for index of UDAF UserData struct
 			RowUDAFFunctionCol* udafFuncCol = dynamic_cast<RowUDAFFunctionCol*>(functionVec[i].get());
 			if (!udafFuncCol)
 			{
@@ -1350,8 +1350,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
 			scaleAgg.push_back(0);
 			precisionAgg.push_back(0);
 			precisionAgg.push_back(0);
-			typeAgg.push_back(CalpontSystemCatalog::VARBINARY);
-			widthAgg.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2);
+			typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
+			widthAgg.push_back(bigUintWidth);
 			continue;
 		}
 
@@ -1775,8 +1775,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					keysAgg.push_back(aggKey);
 					scaleAgg.push_back(0);
 					precisionAgg.push_back(0);
-					typeAgg.push_back(CalpontSystemCatalog::VARBINARY);
-					widthAgg.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2); // Binary column needs +2 for length bytes
+					typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
+					widthAgg.push_back(sizeof(uint64_t));
 					funct->fAuxColumnIndex = colAgg++;
 					break;
 				}
@@ -2207,7 +2207,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
 			if (functionVec2[i]->fAggFunction == ROWAGG_UDAF)
 			{
-				// Dummy Column for UDAF user data
+				// Column for index of UDAF UserData struct
 				RowUDAFFunctionCol* udafFuncCol = dynamic_cast<RowUDAFFunctionCol*>(functionVec2[i].get());
 				if (!udafFuncCol)
 				{
@@ -2218,8 +2218,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 				keysAggDist.push_back(keysAggDist[j]); // Dummy?
 				scaleAggDist.push_back(0);
 				precisionAggDist.push_back(0);
-				typeAggDist.push_back(CalpontSystemCatalog::VARBINARY);
-				widthAggDist.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2);
+				typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
+				widthAggDist.push_back(sizeof(uint64_t));
 				continue;
 			}
 
@@ -2844,13 +2844,13 @@ void TupleAggregateStep::prep2PhasesAggregate(
  					typeAggPm.push_back(udafFuncCol->fUDAFContext.getResultType());
 					widthAggPm.push_back(udafFuncCol->fUDAFContext.getColWidth());
 					colAggPm++;
-					// Dummy Column for UDAF UserData struct
+					// Column for index of UDAF UserData struct
 					oidsAggPm.push_back(oidsProj[colProj]);
 					keysAggPm.push_back(aggKey);
 					scaleAggPm.push_back(0);
 					precisionAggPm.push_back(0);
-					typeAggPm.push_back(CalpontSystemCatalog::VARBINARY);
-					widthAggPm.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2); // Binary column needs +2 for length bytes
+					typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+					widthAggPm.push_back(bigUintWidth);
 					funct->fAuxColumnIndex = colAggPm++;
 					break;
 				}
@@ -3111,7 +3111,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 
 			if (functionVecUm[i]->fAggFunction == ROWAGG_UDAF)
 			{
-				// Dummy column for UDAF user data
+				// Column for index of UDAF UserData struct
 				RowUDAFFunctionCol* udafFuncCol = dynamic_cast<RowUDAFFunctionCol*>(functionVecUm[i].get());
 				if (!udafFuncCol)
 				{
@@ -3122,8 +3122,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
 				keysAggUm.push_back(keysAggUm[j]); // Dummy?
 				scaleAggUm.push_back(0);
 				precisionAggUm.push_back(0);
-				typeAggUm.push_back(CalpontSystemCatalog::VARBINARY);
-				widthAggUm.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2);
+				typeAggUm.push_back(CalpontSystemCatalog::UBIGINT);
+				widthAggUm.push_back(bigUintWidth);
 				continue;
 			}
 
@@ -3560,13 +3560,13 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					typeAggPm.push_back(udafFuncCol->fUDAFContext.getResultType());
 					widthAggPm.push_back(udafFuncCol->fUDAFContext.getColWidth());
 					colAggPm++;
-					// Dummy column for UDAF UserData struct
+					// Column for index of UDAF UserData struct
 					oidsAggPm.push_back(oidsProj[colProj]);
 					keysAggPm.push_back(aggKey);
 					scaleAggPm.push_back(0);
 					precisionAggPm.push_back(0);
-					typeAggPm.push_back(CalpontSystemCatalog::VARBINARY);
-					widthAggPm.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2); // Binary column needs +2 for length bytes
+					typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+					widthAggPm.push_back(sizeof(uint64_t));
 					funct->fAuxColumnIndex = colAggPm++;
 					break;
 				}
@@ -3992,7 +3992,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
 			if (functionVecUm[i]->fAggFunction == ROWAGG_UDAF)
 			{
-				// Dummy column for UDAF user data
+				// Column for index of UDAF UserData struct
 				RowUDAFFunctionCol* udafFuncCol = dynamic_cast<RowUDAFFunctionCol*>(functionVecUm[i].get());
 				if (!udafFuncCol)
 				{
@@ -4003,8 +4003,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 				keysAggDist.push_back(keysAggUm[j]); // Dummy?
 				scaleAggDist.push_back(0);
 				precisionAggDist.push_back(0);
-				typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
-				widthAggDist.push_back(udafFuncCol->fUDAFContext.getUserDataSize()+2);
+				typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
+				widthAggDist.push_back(sizeof(uint64_t));
 				continue;
 			}
 			if (functionVecUm[i]->fAggFunction != ROWAGG_STATS)

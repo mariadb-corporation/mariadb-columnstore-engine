@@ -2863,7 +2863,7 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 			int64_t rowCnt = 0;
 			// For a NULL constant, call nextValue with NULL and then evaluate.
 			bool bInterrupted = false;
-			mcsv1sdk::mcsv1Context context;
+			mcsv1sdk::mcsv1Context context(((RowUDAFFunctionCol*)fFunctionCols[i].get())->fUDAFContext);
 			context.setRowCnt(rowCnt);
 			context.setInterrupted(bInterrupted);
 			context.createUserData();
@@ -3193,10 +3193,9 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 		{
 			int64_t rowCnt = 0;
 			bool bInterrupted = false;
-			mcsv1sdk::mcsv1Context context;
+			mcsv1sdk::mcsv1Context context(((RowUDAFFunctionCol*)fFunctionCols[i].get())->fUDAFContext);
 			context.setRowCnt(rowCnt);
 			context.setInterrupted(bInterrupted);
-			// Try the complex data initiation. If not implemented, use the simple,
 			context.createUserData();
 			mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
 			std::vector<mcsv1sdk::ColumnDatum> valsIn;
