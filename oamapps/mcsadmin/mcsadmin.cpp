@@ -1890,7 +1890,7 @@ int processCommand(string* arguments)
 				{
 					cout << endl << "Data Redundant Configuration" << endl << endl;
 					cout << "Copies Per DBroot = " << DataRedundancyCopies << endl;
-					cout << "Storage Type = " << DataRedundancyStorageType << endl;
+					//cout << "Storage Type = " << DataRedundancyStorageType << endl;
 
 					oamModuleInfo_t st;
 					string moduleType;
