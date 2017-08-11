@@ -7,8 +7,7 @@ install(PROGRAMS post-install
                 transactionLogArchiver.sh  
                 module_installer.sh 
                 startupTests.sh  
-                user_installer.sh 
-                performance_installer.sh  
+                package_installer.sh   
                 remote_scp_get.sh 
                 columnstoreAlias 
                 run.sh 

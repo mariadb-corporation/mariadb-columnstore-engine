@@ -2938,7 +2938,7 @@ int main(int argc, char *argv[])
 						    temppwprompt = "none";
 
 					    //run remote installer script
-					    cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+					    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
 					    if ( thread_remote_installer ) {
 						    thr_data[thread_id].command = cmd;
@@ -2956,7 +2956,7 @@ int main(int argc, char *argv[])
 					    {
 						    int rtnCode = system(cmd.c_str());
 						    if (WEXITSTATUS(rtnCode) != 0) {
-							    cout << endl << "Error returned from user_installer.sh" << endl;
+							    cout << endl << "Error returned from package_installer.sh" << endl;
 							    exit(1);
 						    }
 
@@ -3065,7 +3065,7 @@ int main(int argc, char *argv[])
 					    {
 						    int rtnCode = system(cmd.c_str());
 						    if (WEXITSTATUS(rtnCode) != 0) {
-							    cout << endl << "Error returned from user_installer.sh" << endl;
+							    cout << endl << "Error returned from package_installer.sh" << endl;
 							    exit(1);
 						    }
 					    }
@@ -3083,7 +3083,7 @@ int main(int argc, char *argv[])
 
 					    if ( EEPackageType != "binary" ) {
 						    //run remote installer script
-						    cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+						    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
 						    if ( thread_remote_installer ) {
 							    thr_data[thread_id].command = cmd;
@@ -3102,7 +3102,7 @@ int main(int argc, char *argv[])
 						    {
 							    int rtnCode = system(cmd.c_str());
 							    if (WEXITSTATUS(rtnCode) != 0) {
-								    cout << endl << "Error returned from performance_installer.sh" << endl;
+								    cout << endl << "Error returned from package_installer.sh" << endl;
 								    exit(1);
 							    }
 						    }
@@ -3134,7 +3134,7 @@ int main(int argc, char *argv[])
 						    {
 							    int rtnCode = system(cmd.c_str());
 							    if (WEXITSTATUS(rtnCode) != 0) {
-								    cout << endl << "Error returned from user_installer.sh" << endl;
+								    cout << endl << "Error returned from package_installer.sh" << endl;
 								    exit(1);
 							    }
 						    }

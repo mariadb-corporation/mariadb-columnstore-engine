@@ -563,32 +563,29 @@ static void startMgrProcessThread()
                 log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
 	}
 
-	//if non-distrubuted install, send out a start service just to make sure Columnstore is runing on remote nodes
+	//Send out a start service just to make sure Columnstore is runing on remote nodes
 	//note this only works for systems with ssh-keys
-	if ( DistributedInstall == "n" )
+	for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
 	{
-	      for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-	      {
-		      int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-		      if( moduleCount == 0)
+		int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+		if( moduleCount == 0)
+			continue;
+
+		DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+		for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+		{
+		      //skip OAM Parent module
+		      if ( (*pt).DeviceName == config.moduleName() )
 			      continue;
 
-		      DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-		      for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+		      HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
+		      for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
 		      {
-			    //skip OAM Parent module
-			    if ( (*pt).DeviceName == config.moduleName() )
-				    continue;
-
-			    HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-			    for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
-			    {
-				    //run remote command script
-				    string cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " ssh '" + startup::StartUp::installDir() + "/bin/columnstore restart' 0";
-				    system(cmd.c_str());
-			    }
+			      //run remote command script
+			      string cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*pt1).IPAddr + " ssh '" + startup::StartUp::installDir() + "/bin/columnstore restart' 0";
+			      system(cmd.c_str());
 		      }
-	      }
+		}
 	}
 	
 	//distribute system and process config files
@@ -599,7 +596,7 @@ static void startMgrProcessThread()
 	{
 	      int status = API_SUCCESS;
 	      int k = 0;
-	      for( ; k < 30 ; k++ )
+	      for( ; k < 60 ; k++ )
 	      {
 		      if ( startsystemthreadStop ) {
 			      processManager.setSystemState(oam::MAN_OFFLINE);
@@ -643,7 +640,7 @@ static void startMgrProcessThread()
 		      sleep(1);
 	      }
 
-	      if ( k == 30 || status == API_FAILURE) {
+	      if ( k == 60 || status == API_FAILURE) {
 		      // system didn't successfull restart
 		      processManager.setSystemState(oam::FAILED);
 		      // exit thread

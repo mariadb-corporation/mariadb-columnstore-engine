@@ -1,36 +1,32 @@
 #!/usr/bin/expect
 #
-# $Id$
+# $Id: package_installer.sh 1128 2009-01-05 16:36:59Z rdempsey $
 #
 # Install RPM and custom OS files on system
 # Argument 1 - Remote Module Name
 # Argument 2 - Remote Server Host Name or IP address
-# Argument 3 - User Password of remote server
+# Argument 3 - Root Password of remote server
 # Argument 4 - Package name being installed
-# Argument 6 - Install Type, "initial", "upgrade", "uninstall"
-# Argument 7 - Server type?
-# Argument 8 - Debug flag 1 for on, 0 for off
-# Argument 9 - install dir (optional)
-# Argument 10 - user name (optional)
+# Argument 5 - Install Type, "initial" or "upgrade"
+# Argument 6 - Debug flag 1 for on, 0 for off
+set timeout 30
 set USERNAME root
 set MODULE [lindex $argv 0]
 set SERVER [lindex $argv 1]
 set PASSWORD [lindex $argv 2]
-set CALPONTPKG [lindex $argv 3]
+set VERSION [lindex $argv 3]
 set INSTALLTYPE [lindex $argv 4]
 set AMAZONINSTALL [lindex $argv 5]
-set PKGTYPE "binary"
-set DEBUG [lindex $argv 6]
+set PKGTYPE [lindex $argv 6]
+set NODEPS [lindex $argv 7]
+set DEBUG [lindex $argv 8]
 set INSTALLDIR "/usr/local/mariadb/columnstore"
-set IDIR [lindex $argv 7]
+set IDIR [lindex $argv 9]
 if { $IDIR != "" } {
 	set INSTALLDIR $IDIR
 }
-set env(COLUMNSTORE_INSTALL_DIR) $INSTALLDIR
-set PREFIX [file dirname $INSTALLDIR]
-set PREFIX [file dirname $PREFIX]
-set USERNAME $env(USER)
-set UNM [lindex $argv 8]
+set USERNAME "root"
+set UNM [lindex $argv 10]
 if { $UNM != "" } {
 	set USERNAME $UNM
 }
@@ -40,9 +36,31 @@ if { $DEBUG == "1" } {
 	set BASH "/bin/bash -x "
 }
 
+set HOME "$env(HOME)"
+
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
+if { $PKGTYPE == "rpm" } {
+	set PKGERASE "rpm -e --nodeps \$(rpm -qa | grep '^mariadb-columnstore')"
+	set PKGERASE1 "rpm -e --nodeps "
+
+	set PKGINSTALL "rpm -ivh $NODEPS --force mariadb-columnstore*$VERSION*rpm"
+	set PKGUPGRADE "rpm -Uvh --noscripts mariadb-columnstore*$VERSION*rpm"
+} else {
+	if { $PKGTYPE == "deb" } {
+		set PKGERASE "dpkg -P \$(dpkg --get-selections | grep '^mariadb-columnstore')"
+		set PKGERASE1 "dpkg -P "
+		set PKGINSTALL "dpkg -i --force-confnew mariadb-columnstore*$VERSION*deb"
+		set PKGUPGRADE "dpkg -i --force-confnew mariadb-columnstore*$VERSION*deb"
+	} else {
+		if { $PKGTYPE != "bin" } {
+			send_user "Invalid Package Type of $PKGTYPE"
+			exit 1
+		}
+	}
+}
+
 
 #check and see if remote server has ssh keys setup, set PASSWORD if so
 send_user " "
@@ -82,146 +100,139 @@ expect {
 	"Exit status 0" { set PASSWORD "ssh" }	
         "Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
 }
-send_user "\n"
 
+send_user "\n"
 
 send_user "Stop ColumnStore service                       "
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
-}
+if { $PASSWORD != "ssh" } {
+                set timeout 30
+                expect {
+                        "word: " { send "$PASSWORD\n" }
+                        "passphrase" { send "$PASSWORD\n" }
+                }
+        }
 set timeout 60
 # check return
 expect {
         "Exit status 0" { send_user "DONE" }
-	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	# "No such file" { send_user "ERROR: post-install Not Found\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	timeout { }
 }
 send_user "\n"
 
+# 
+# erase package
 #
-# remove MariaDB Columnstore files
-#
-send_user "Uninstall MariaDB Columnstore Package                       "
-send " \n"
-send date\n
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/pre-uninstall --installdir=$INSTALLDIR >/dev/null 2>&1'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+send_user "Erase MariaDB Columnstore Packages on Module                 "
+send "ssh -v $USERNAME@$SERVER '$PKGERASE '\n"
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
-set timeout 20
+set timeout 120
 expect {
-	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
-	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1}
+	"error: --purge needs at least one package" { send_user "DONE" }
+	"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
 	"Exit status 0" { send_user "DONE" }
+	timeout { }
 }
 send_user "\n"
 
 if { $INSTALLTYPE == "uninstall" } { exit 0 }
 
-# needed for some reason, if not here the 'columnstore start' will run before the package is installed
-sleep 60
-
 # 
-# send the MariaDB Columnstore package
+# send the package
 #
-send_user "Copy New MariaDB Columnstore Package to Module              "
-send " \n"
-send date\n
-send "scp -v $CALPONTPKG $USERNAME@$SERVER:$CALPONTPKG\n"
 set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+send_user "Copy New MariaDB Columnstore Package to Module              "
+send "ssh -v $USERNAME@$SERVER 'rm -f /root/mariadb-columnstore-*.$PKGTYPE'\n"
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
-set timeout 120
 expect {
-	"Exit status 0" { send_user "DONE" }
-	"100%" 		{ send_user "DONE" }
-	"scp :"  	{ send_user "ERROR\n" ; 
-				send_user "\n*** Installation ERROR\n" ; 
-				exit 1 }
-	"Permission denied, please try again"         { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"No such file or directory" { send_user "ERROR: Invalid package\n" ; exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+        "Exit status 0" { send_user "DONE" }
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	timeout { send_user "ERROR: Timeout\n" ; exit 1 }
+        timeout { }
+}
+set timeout 30
+send "scp -v $HOME/mariadb-columnstore*$VERSION*$PKGTYPE $USERNAME@$SERVER:.\n"
+if { $PASSWORD != "ssh"} {
+        set timeout 30
+        expect {
+                "word: " { send "$PASSWORD\n" }
+                "passphrase" { send "$PASSWORD\n" }
+        }
+}
+set timeout 180
+expect {
+        "Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"Exit status 0" { send_user "DONE" }
+        "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
+        timeout { }
 }
 send_user "\n"
+
 #
 # install package
 #
-send_user "Install MariaDB Columnstore Package on Module               "
-send " \n"
-send date\n
-send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+send_user "Install MariaDB Columnstore Packages on Module               "
+
+send "ssh -v $USERNAME@$SERVER '$PKGINSTALL '\n"
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
-set timeout 120
+set timeout 180
 expect {
+	"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
+								send_user "\n*** Installation ERROR\n" ; 
+									exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"needs"    { send_user "ERROR: disk space issue\n" ; exit 1 }
+	"conflicts"	   { send_user "ERROR: File Conflict issue\n" ; exit 1 }
 	"Exit status 0" { send_user "DONE" }
-	"No such file" 		  { send_user "ERROR: Binary Install Failed, binary/releasenum not found\n" ; exit 1 }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	timeout { send_user "ERROR: Timeout\n" ; exit 1 }
+	timeout { }
 }
-
 
 send_user "\n"
-send_user "Run post-install script                         "
-send " \n"
-send date\n
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/post-install --installdir=$INSTALLDIR'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
-}
-set timeout 60
-# check return
-expect {
-	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	"columnstore start" { send_user "DONE" }
-}
-send_user "\n"
-
-# needed for some reason, if not here the 'columnstore start' will run before the package is installed
-sleep 30
 
 send_user "Start ColumnStore service                       "
 send " \n"
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
-}
+if { $PASSWORD != "ssh" } {
+                set timeout 30
+                expect {
+                        "word: " { send "$PASSWORD\n" }
+                        "passphrase" { send "$PASSWORD\n" }
+                }
+        }
+
 set timeout 60
 # check return
 expect {
@@ -234,6 +245,7 @@ expect {
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	"Starting MariaDB" { send_user "DONE" }
+	timeout { }
 }
 send_user "\n"
 
@@ -245,12 +257,14 @@ if { $AMAZONINSTALL == "1" } {
 	send " \n"
 	send date\n
 	send "scp -v -r $INSTALLDIR/local/etc  $USERNAME@$SERVER:$INSTALLDIR/local\n"
-	set timeout 30
-	expect {
-		"word: " { send "$PASSWORD\n" }
-		"passphrase" { send "$PASSWORD\n" }
-		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	}
+	if { $PASSWORD != "ssh" } {
+                set timeout 30
+                expect {
+                        "word: " { send "$PASSWORD\n" }
+                        "passphrase" { send "$PASSWORD\n" }
+                }
+        }
+
 	set timeout 60
 	expect {
                 "Exit status 0" { send_user "DONE" }
@@ -259,6 +273,7 @@ if { $AMAZONINSTALL == "1" } {
 		"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+		timeout { }
 	}
 }
 

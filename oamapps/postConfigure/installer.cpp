@@ -555,10 +555,10 @@ int main(int argc, char *argv[])
 						temppwprompt = "none";
 						
 					cout << endl << "----- Performing Uninstall on Module '" + remoteModuleName + "' -----" << endl << endl;
-					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
+					cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
-						cout << endl << "ERROR: returned from user_installer.sh" << endl;
+						cout << endl << "ERROR: returned from package_installer.sh" << endl;
 						exit(1);
 					}
 				}
@@ -581,10 +581,10 @@ int main(int argc, char *argv[])
 					if ( packageType != "binary" ) {
 						//run remote installer script
 						cout << endl << "----- Performing Uninstall on Module '" + remoteModuleName + "' -----" << endl << endl;
-						cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
+						cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
 						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
-							cout << endl << "ERROR returned from performance_installer.sh" << endl;
+							cout << endl << "ERROR returned from package_installer.sh" << endl;
 							exit(1);
 						}
 					}
@@ -649,10 +649,10 @@ int main(int argc, char *argv[])
 						temppwprompt = "none";
 						
 					cout << endl << "----- Performing Install on Module '" + remoteModuleName + "' -----" << endl << endl;
-					cmd = installDir + "/bin/user_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
+					cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + temppwprompt + " " + installer_debug;
 					int rtnCode = system(cmd.c_str());
 					if (WEXITSTATUS(rtnCode) != 0) {
-						cout << endl << "ERROR returned from user_installer.sh" << endl;
+						cout << endl << "ERROR returned from package_installer.sh" << endl;
 						exit(1);
 					}
 				}
@@ -675,10 +675,10 @@ int main(int argc, char *argv[])
 					//run remote installer script
 					if ( packageType != "binary" ) {
 						cout << endl << "----- Performing Install on Module '" + remoteModuleName + "' -----" << endl << endl;
-						cmd = installDir + "/bin/performance_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
+						cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpont_rpm1 + " " + calpont_rpm2 + " " + calpont_rpm3 + " " + mysql_rpm + " " + mysqld_rpm + " " + installType + " " + packageType + " " + nodeps + " " + installer_debug;
 						int rtnCode = system(cmd.c_str());
 						if (WEXITSTATUS(rtnCode) != 0) {
-							cout << endl << "ERROR returned from performance_installer.sh" << endl;
+							cout << endl << "ERROR returned from package_installer.sh" << endl;
 							exit(1);
 						}
 					}
