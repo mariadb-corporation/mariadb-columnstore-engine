@@ -46,7 +46,7 @@ extern bool runStandby;
 extern bool processInitComplete;
 extern int fmoduleNumber;
 extern string cloud;
-extern string GlusterConfig;
+extern string DataRedundancyConfig;
 extern bool rootUser;
 extern string USER;
 extern bool HDFS;
@@ -1615,7 +1615,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			flushInodeCache();
 
 			int return_status = API_SUCCESS;
-			if (GlusterConfig == "n")
+			if (DataRedundancyConfig == "n")
 			{
 				int retry = 1; 
 				for ( ; retry < 5 ; retry++)
@@ -1689,7 +1689,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			log.writeLog(__LINE__,  "MSG RECEIVED: Mount DBRoot: " + dbrootID);;
 
 			int return_status = API_SUCCESS;
-			if (GlusterConfig == "n")
+			if (DataRedundancyConfig == "n")
 			{
 				string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/mount.txt 2>&1";
 				system(cmd.c_str());
@@ -2461,7 +2461,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 				}
 	
 				// now delete the dbrm data from local disk
-				if ( !gOAMParentModuleFlag && !HDFS && GlusterConfig == "n") {
+				if ( !gOAMParentModuleFlag && !HDFS && DataRedundancyConfig == "n") {
 					string cmd = "rm -f " + DBRMDir + "/*";
 					system(cmd.c_str());
 					log.writeLog(__LINE__, "removed DBRM file with command: " + cmd, LOG_TYPE_DEBUG);
@@ -5719,12 +5719,12 @@ void ProcessMonitor::unmountExtraDBroots()
 		oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
 
 		if ( DBRootStorageType == "hdfs" ||
-			( DBRootStorageType == "internal" && GlusterConfig == "n") )
+			( DBRootStorageType == "internal" && DataRedundancyConfig == "n") )
 			return;
 	}
 	catch(...) {}
 
-//	if (GlusterConfig == "y")
+//	if (DataRedundancyConfig == "y")
 //		return;
 
 	try
@@ -5755,7 +5755,7 @@ void ProcessMonitor::unmountExtraDBroots()
 
 				if (config.moduleID() != moduleID)
 				{
-					if ( GlusterConfig == "n" )
+					if ( DataRedundancyConfig == "n" )
 					{
 						string cmd = "umount " + startup::StartUp::installDir() + "/data" + oam.itoa(id) + " > /dev/null 2>&1";
 						system(cmd.c_str());
@@ -5863,7 +5863,7 @@ int ProcessMonitor::checkDataMount()
 	catch(...) {}
 
 	//asign DBRoot is gluster
-	if (GlusterConfig == "y")
+	if (DataRedundancyConfig == "y")
 	{
 		vector<string>::iterator p = dbrootList.begin();
 		while ( p != dbrootList.end() )
@@ -5886,7 +5886,7 @@ int ProcessMonitor::checkDataMount()
 	}
 
 	if ( DBRootStorageType == "hdfs" ||
-		(DBRootStorageType == "internal" && GlusterConfig == "n") ) {
+		(DBRootStorageType == "internal" && DataRedundancyConfig == "n") ) {
 		//create OAM-Test-Flag
 		vector<string>::iterator p = dbrootList.begin();
 		while ( p != dbrootList.end() )
@@ -5921,7 +5921,7 @@ int ProcessMonitor::checkDataMount()
 		string dbroot = installDir + "/data" + *p;
 		string fileName = dbroot + "/OAMdbrootCheck";
 
-		if ( GlusterConfig == "n" ) {
+		if ( DataRedundancyConfig == "n" ) {
 			//remove any local check flag for starters
 			string cmd = "umount " + dbroot + " > /tmp/umount.txt 2>&1";
 			system(cmd.c_str());

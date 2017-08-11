@@ -47,7 +47,7 @@ static void mysqlMonitorThread(MonitorConfig config);
 string systemOAM;
 string dm_server;
 string cloud;
-string GlusterConfig = "n";
+string DataRedundancyConfig = "n";
 bool HDFS = false;
 
 void updateShareMemory(processStatusList* aPtr);
@@ -207,14 +207,14 @@ int main(int argc, char **argv)
 
 	//get gluster config
 	try {
-		oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+		oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 	}
 	catch(...)
 	{
-		GlusterConfig = "n";
+		DataRedundancyConfig = "n";
 	}
 
-	if ( GlusterConfig == "y" ) {
+	if ( DataRedundancyConfig == "y" ) {
 		system("mount -a > /dev/null 2>&1");
 	}
 
@@ -524,7 +524,7 @@ int main(int argc, char **argv)
 
 		//check if gluster, if so then find PMs that have copies of DBROOT #1
 		string pmList = "";
-		if (GlusterConfig == "y") {
+		if (DataRedundancyConfig == "y") {
 	
 			try {
 				string errmsg;
@@ -2021,7 +2021,7 @@ static void statusControlThread()
  
 	std::vector<string>dbrootList;
 	if ( DBRootStorageType == "external" || 
-			GlusterConfig == "y") {
+			DataRedundancyConfig == "y") {
 		//get system dbroots
 		DBRootConfigList dbrootConfigList;
 		try

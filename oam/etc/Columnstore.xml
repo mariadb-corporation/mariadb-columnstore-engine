@@ -458,9 +458,9 @@
 		<AmazonElasticIPCount>0</AmazonElasticIPCount>
 		<AmazonElasticIPAddr1>unassigned</AmazonElasticIPAddr1>
 		<AmazonElasticModule1>unassigned</AmazonElasticModule1>
-		<GlusterConfig>n</GlusterConfig>
-		<GlusterCopies>0</GlusterCopies>
-		<GlusterStorageType>unassigned</GlusterStorageType>
+		<DataRedundancyConfig>n</DataRedundancyConfig>
+		<DataRedundancyCopies>0</DataRedundancyCopies>
+		<DataRedundancyStorageType>unassigned</DataRedundancyStorageType>
 		<CoreFileFlag>n</CoreFileFlag>
 		<MySQLPort>3306</MySQLPort>
 		<MySQLPasswordConfig>unassigned</MySQLPasswordConfig>

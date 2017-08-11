@@ -5180,13 +5180,13 @@ namespace oam
 
 		writeLog("manualMovePmDbroot: " + dbrootIDs + " from " + residePM + " to " + toPM, LOG_TYPE_DEBUG );
 
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
-			getSystemConfig( "GlusterConfig", GlusterConfig);
+			getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...)
 		{
-			GlusterConfig = "n";
+			DataRedundancyConfig = "n";
 		}
 
 		boost::char_separator<char> sep(", ");
@@ -5196,7 +5196,7 @@ namespace oam
 				++it)
 		{
 			//if gluster, check if there are copies on the to-pm
-			if ( GlusterConfig == "y")
+			if ( DataRedundancyConfig == "y")
 			{
 				string pmList = "";
 				try {
@@ -5358,7 +5358,7 @@ namespace oam
 					}
 
 					//if Gluster, do the assign command
-					if ( GlusterConfig == "y")
+					if ( DataRedundancyConfig == "y")
 					{
 						try {
 							string errmsg;
@@ -5454,16 +5454,16 @@ namespace oam
 		}
 		catch(...) {}
 
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
-			getSystemConfig( "GlusterConfig", GlusterConfig);
+			getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...)
 		{
-			GlusterConfig = "n";
+			DataRedundancyConfig = "n";
 		}
 
-		if (DBRootStorageType == "internal" && GlusterConfig == "n")
+		if (DBRootStorageType == "internal" && DataRedundancyConfig == "n")
 			return 1;
 
 		// get current Module name
@@ -5598,7 +5598,7 @@ namespace oam
 					exceptionControl("autoMovePmDbroot", API_FAILURE);
 				}
 		
-				if ( GlusterConfig == "y")
+				if ( DataRedundancyConfig == "y")
 				{
 					try {
 						string errmsg;
@@ -5644,7 +5644,7 @@ namespace oam
 			{
 				//if Gluster, get it's list for DBroot and move to one of those
 				string toPmID;
-				if ( GlusterConfig == "y")
+				if ( DataRedundancyConfig == "y")
 				{
 					string pmList = "";
 					try {
@@ -5869,16 +5869,16 @@ namespace oam
 		}
 		catch(...) {}
 
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
-			getSystemConfig( "GlusterConfig", GlusterConfig);
+			getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...)
 		{
-			GlusterConfig = "n";
+			DataRedundancyConfig = "n";
 		}
 
-		if (DBRootStorageType == "internal" && GlusterConfig == "n")
+		if (DBRootStorageType == "internal" && DataRedundancyConfig == "n")
 			return 1;
 
 		//store in move dbroot transaction file
@@ -6457,13 +6457,13 @@ namespace oam
 		cout << endl << "Changes being applied" << endl << endl;
 
 		//added entered dbroot IDs to to-PM list and do Gluster assign if needed
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
-			getSystemConfig( "GlusterConfig", GlusterConfig);
+			getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...)
 		{
-			GlusterConfig = "n";
+			DataRedundancyConfig = "n";
 		}
 
 		DBRootConfigList::iterator pt3 = dbrootlist.begin();
@@ -6471,7 +6471,7 @@ namespace oam
 		{
 			todbrootConfigList.push_back(*pt3);
 
-/*			if ( GlusterConfig == "y")
+/*			if ( DataRedundancyConfig == "y")
 			{
 				try {
 					string errmsg;
@@ -6805,12 +6805,12 @@ namespace oam
 		int SystemDBRootCount = 0;
 		string cloud;
 		string DBRootStorageType;
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
 			getSystemConfig("DBRootCount", SystemDBRootCount);
 			getSystemConfig("Cloud", cloud);
 			getSystemConfig("DBRootStorageType", DBRootStorageType);
-			getSystemConfig("GlusterConfig", GlusterConfig);
+			getSystemConfig("DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...) {}
 
@@ -6896,7 +6896,7 @@ namespace oam
 			}
 
 			// if gluster, request volume delete
-			if ( GlusterConfig == "y")
+			if ( DataRedundancyConfig == "y")
 			{
 				try {
 					string errmsg1;
@@ -8261,7 +8261,7 @@ namespace oam
             	int numberDBRootsPerPM = numberNewDBRoots/numberNewPMs;
 
             	std::vector<int> dbrootPms[dbrootCount];
-            	DataRedundancyConfig DataRedundancyConfigs[numberPMs];
+            	DataRedundancySetup DataRedundancyConfigs[numberPMs];
         		int startDBRootID = dbrootID;
 
             	for (int pm=(pmID-1); pm < numberPMs; pm++,startDBRootID++)
@@ -9582,18 +9582,18 @@ namespace oam
 		}
 		catch(...) {}
 
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
-			getSystemConfig( "GlusterConfig", GlusterConfig);
+			getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...)
 		{
-			GlusterConfig = "n";
+			DataRedundancyConfig = "n";
 		}
 
-		if ( (DBRootStorageType == "external" && GlusterConfig == "n") 
+		if ( (DBRootStorageType == "external" && DataRedundancyConfig == "n")
 			||
-			(GlusterConfig == "y" && !mount) )
+			(DataRedundancyConfig == "y" && !mount) )
 		{
 			dbrootList::iterator pt3 = dbrootConfigList.begin();
 			for( ; pt3 != dbrootConfigList.end() ; pt3++)

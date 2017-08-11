@@ -1876,17 +1876,17 @@ int processCommand(string* arguments)
 					}
 				}
  
-				string GlusterConfig;
+				string DataRedundancyConfig;
 				string DataRedundancyCopies;
 				string DataRedundancyStorageType;
 				try {
-					oam.getSystemConfig("GlusterConfig", GlusterConfig);
+					oam.getSystemConfig("DataRedundancyConfig", DataRedundancyConfig);
 					oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
 					oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
 				}
 				catch(...) {}
 
-				if ( GlusterConfig == "y" )
+				if ( DataRedundancyConfig == "y" )
 				{
 					cout << endl << "Data Redundant Configuration" << endl << endl;
 					cout << "Copies Per DBroot = " << DataRedundancyCopies << endl;
@@ -1952,14 +1952,14 @@ int processCommand(string* arguments)
 
         case 14: // addDbroot parameters: dbroot-number
         {
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
-			oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+			oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...)
 		{}
 
-		if (GlusterConfig == "y") {
+		if (DataRedundancyConfig == "y") {
 			cout << endl << "**** addDbroot Not Supported on Data Redundancy Configured System, use addModule command to expand your capacity" << endl;
 			break;
 		}
@@ -2042,9 +2042,9 @@ int processCommand(string* arguments)
         case 15: // removeDbroot parameters: dbroot-list
         {
 
-		string GlusterConfig = "n";
+		string DataRedundancyConfig = "n";
 		try {
-			oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+			oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}
 		catch(...)
 		{}
@@ -3262,15 +3262,15 @@ int processCommand(string* arguments)
 			}
 			catch(...) {}
 	
-			string GlusterConfig = "n";
+			string DataRedundancyConfig = "n";
 			try 
 			{
-				oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+				oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 			}
 			catch(...)
 			{}
 
-			if (DBRootStorageType == "internal" && GlusterConfig == "n")
+			if (DBRootStorageType == "internal" && DataRedundancyConfig == "n")
 			{
 				cout << endl << "**** switchParentOAMModule Failed : DBRoot Storage type =  internal/non-data-replication" << endl;
 				break;
@@ -3307,7 +3307,7 @@ int processCommand(string* arguments)
 			}
 
 			//check for gluster system is do-able
-			if (GlusterConfig == "y")
+			if (DataRedundancyConfig == "y")
 			{
 				// get to-module assigned DBRoots and see if current active PM
 				// has a copy
@@ -3574,17 +3574,17 @@ int processCommand(string* arguments)
 				cout << endl << "**** getSystemStatus Failed =  " << e.what() << endl;
 			}
 
-			string GlusterConfig;
+			string DataRedundancyConfig;
 			string DataRedundancyCopies;
 			string DataRedundancyStorageType;
 			try {
-				oam.getSystemConfig("GlusterConfig", GlusterConfig);
+				oam.getSystemConfig("DataRedundancyConfig", DataRedundancyConfig);
 				oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
 				oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
 			}
 			catch(...) {}
 
-			if ( GlusterConfig == "y" )
+			if ( DataRedundancyConfig == "y" )
 			{
 				string arg1 = "";
 				string arg2 = "";
@@ -3754,13 +3754,13 @@ int processCommand(string* arguments)
 			}
 
 			//if gluster, check if toPM is has a copy
-			string GlusterConfig;
+			string DataRedundancyConfig;
 			try {
-				oam.getSystemConfig("GlusterConfig", GlusterConfig);
+				oam.getSystemConfig("DataRedundancyConfig", DataRedundancyConfig);
 			}
 			catch(...) {}
 	
-			if ( GlusterConfig == "y" )
+			if ( DataRedundancyConfig == "y" )
 			{
 				string pmList = "";
 				try {
@@ -4224,16 +4224,16 @@ int processCommand(string* arguments)
 					oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
 
 					if (DBRootStorageType == "external" ){
-						string GlusterConfig = "n";
+						string DataRedundancyConfig = "n";
 						string cloud = oam::UnassignedName;
 						try {
 							oam.getSystemConfig("Cloud", cloud);
-							oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+							oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 						}
 						catch(...)
 						{}
 
-						if ( GlusterConfig == "n" && cloud == oam::UnassignedName)
+						if ( DataRedundancyConfig == "n" && cloud == oam::UnassignedName)
 							cout << "   REMINDER: Update the /etc/fstab on " << toPM << " to include these dbroot mounts" << endl << endl;
 						break;
 
@@ -5103,7 +5103,7 @@ int processCommand(string* arguments)
 				}
 			}
 
-			string GlusterConfig = "n";
+			string DataRedundancyConfig = "n";
 			int DataRedundancyCopies;
 			string cloud = oam::UnassignedName;
 			int DataRedundancyNetworkType;
@@ -5113,7 +5113,7 @@ int processCommand(string* arguments)
 			try {
 				oam.getSystemConfig("Cloud", cloud);
 				oam.getSystemConfig("AmazonVPCNextPrivateIP", AmazonVPCNextPrivateIP);
-				oam.getSystemConfig("GlusterConfig", GlusterConfig);
+				oam.getSystemConfig("DataRedundancyConfig", DataRedundancyConfig);
 				oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
 				oam.getSystemConfig("DataRedundancyNetworkType", DataRedundancyNetworkType);
 				oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
@@ -5206,7 +5206,7 @@ int processCommand(string* arguments)
 				break;
 			}
 
-			if ( GlusterConfig == "y" && moduleType == "pm" ) {
+			if ( DataRedundancyConfig == "y" && moduleType == "pm" ) {
 				if ( localModule != parentOAMModule ) {
 					// exit out since not on active module
 					cout << endl << "**** addModule Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
@@ -5435,7 +5435,7 @@ int processCommand(string* arguments)
 				devicenetworkconfig.hostConfigList.clear();
 				moduleName.clear();
 
-				if ( GlusterConfig == "y" && DataRedundancyNetworkType == 2 && moduleType == "pm")
+				if ( DataRedundancyConfig == "y" && DataRedundancyNetworkType == 2 && moduleType == "pm")
 				{
 					string DataRedundancyIPAddress = sysConfig->getConfig("DataRedundancyConfig",dataDupIPaddr);
 					string DataRedundancyHostname = sysConfig->getConfig("DataRedundancyConfig",dataDupHostName);
@@ -5463,7 +5463,7 @@ int processCommand(string* arguments)
 			storageDeviceList storagedevicelist;
 			string deviceType;
 
-			if ( GlusterConfig == "y" && moduleType == "pm")
+			if ( DataRedundancyConfig == "y" && moduleType == "pm")
 			{
 				cout << endl << "System is configured with Data Redundancy, DBRoot Storage will" << endl;
 				cout << "will be created with the Modules during this command." << endl;
@@ -5528,7 +5528,7 @@ int processCommand(string* arguments)
 
 				cout << "Add Module(s) successfully completed" << endl;
 
-				if ( GlusterConfig == "y" && moduleType == "pm" ) {
+				if ( DataRedundancyConfig == "y" && moduleType == "pm" ) {
 
 					 {
 						//send messages to update fstab to new modules, if needed

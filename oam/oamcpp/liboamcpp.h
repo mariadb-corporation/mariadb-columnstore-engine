@@ -1303,7 +1303,7 @@ namespace oam
     };
     typedef std::vector<DataRedundancyStorageSetup> DataRedundancyStorage;
 
-    struct DataRedundancyConfig_s
+    struct DataRedundancySetup_s
     {
     	int pmID;
     	std::string pmHostname;
@@ -1311,7 +1311,7 @@ namespace oam
     	std::vector<int> dbrootCopies;
     	DataRedundancyStorage storageLocations;
     };
-    typedef struct DataRedundancyConfig_s DataRedundancyConfig;
+    typedef struct DataRedundancySetup_s DataRedundancySetup;
 
     // username / password for smbclient use
 	const std::string USERNAME = "oamuser";
