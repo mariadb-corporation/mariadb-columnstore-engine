@@ -107,18 +107,16 @@ send_user "Stop ColumnStore service                       "
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
 if { $PASSWORD != "ssh" } {
-                set timeout 30
-                expect {
-                        "word: " { send "$PASSWORD\n" }
-                        "passphrase" { send "$PASSWORD\n" }
-                }
-        }
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
+}
 set timeout 60
 # check return
 expect {
         "Exit status 0" { send_user "DONE" }
-	# "No such file" { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
@@ -215,6 +213,7 @@ expect {
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"needs"    { send_user "ERROR: disk space issue\n" ; exit 1 }
 	"conflicts"	   { send_user "ERROR: File Conflict issue\n" ; exit 1 }
+	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n" }
 	"Exit status 0" { send_user "DONE" }
 	timeout { }
 }
@@ -237,8 +236,7 @@ set timeout 60
 # check return
 expect {
         "Exit status 0" { send_user "DONE" }
-	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"No such file"   { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }

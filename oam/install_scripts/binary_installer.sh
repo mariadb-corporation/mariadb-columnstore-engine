@@ -99,7 +99,6 @@ set timeout 60
 # check return
 expect {
         "Exit status 0" { send_user "DONE" }
-	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
@@ -181,7 +180,6 @@ if { $PASSWORD != "ssh" } {
 set timeout 120
 expect {
 	"Exit status 0" { send_user "DONE" }
-	"No such file" 		  { send_user "ERROR: Binary Install Failed, binary/releasenum not found\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
@@ -189,9 +187,8 @@ expect {
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	timeout { send_user "ERROR: Timeout\n" ; exit 1 }
 }
-
-
 send_user "\n"
+
 send_user "Run post-install script                         "
 send " \n"
 send date\n
@@ -207,7 +204,7 @@ set timeout 60
 # check return
 expect {
 	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" }
+	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n" }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
@@ -232,8 +229,7 @@ set timeout 60
 # check return
 expect {
         "Exit status 0" { send_user "DONE" }
-	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "ERROR: MariaDB Columnstore System logging not setup\n" ; exit 1 }
+	"No such file"   { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
