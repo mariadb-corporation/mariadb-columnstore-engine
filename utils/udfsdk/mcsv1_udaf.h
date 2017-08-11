@@ -677,6 +677,7 @@ inline mcsv1Context& mcsv1Context::copy(const mcsv1Context& rhs)
 	rhs.getEndFrame(fEndFrame, fEndConstant);
 	functionName = rhs.getName();
 	bInterrupted = rhs.bInterrupted;  // Multiple threads will use the same reference
+	func = rhs.func;
 	return *this;
 }
 

@@ -35,6 +35,7 @@ UDAF_MAP UDAFMap::fm;
 #include "allnull.h"
 #include "ssq.h"
 #include "median.h"
+#include "avg_mode.h"
 UDAF_MAP& UDAFMap::getMap()
 {
 	if (fm.size() > 0)
@@ -49,6 +50,7 @@ UDAF_MAP& UDAFMap::getMap()
 	fm["allnull"] = new allnull();
 	fm["ssq"] = new ssq();
 	fm["median"] = new median();
+	fm["avg_mode"] = new avg_mode();
 	
 	return fm;
 }
