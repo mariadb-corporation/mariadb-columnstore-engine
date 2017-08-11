@@ -177,7 +177,7 @@ bool noPrompting = false;
 bool rootUser = true;
 string USER = "root";
 bool hdfs = false;
-bool gluster = false;
+bool DataRedundancy = false;
 bool pmwithum = false;
 bool mysqlRep = false;
 string MySQLRep = "y";
@@ -1461,7 +1461,12 @@ int main(int argc, char *argv[])
 					exit(1);
 				continue;
 			}
-
+			if ( moduleType == "pm" && DataRedundancy && moduleCount == 1) {
+				cout << endl << "ERROR: DataRedundancy requires " + moduleType + " module type to be 2 or greater, please re-enter or select a different data storage type." << endl << endl;
+				if ( noPrompting )
+					exit(1);
+				continue;
+			}
 			//update count
 			try {
 				string ModuleCountParm = "ModuleCount" + oam.itoa(i+1);
@@ -3173,13 +3178,13 @@ int main(int argc, char *argv[])
 	}
 
 	//configure data redundancy
-	if (gluster )
+	if (DataRedundancy )
 	{
 		cout << endl;
 		string start = "y";
 		if ( reuseConfig == "y" )
 			start = "n";
-
+/*
 		while(true)
 		{
 			pcommand = callReadline("Would you like to configure MariaDB ColumnStore Data Redundancy? [y,n] (" + start + ") > ");
@@ -3196,7 +3201,7 @@ int main(int argc, char *argv[])
 			if ( noPrompting )
 				exit(1);
 		}
-	
+*/
 		if ( start == "y" ) {
 			cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
 			if (!glusterSetup(password))
@@ -3429,7 +3434,7 @@ int main(int argc, char *argv[])
 		cout << " DONE" << endl;
 
 		// IF gluster is enabled we need to modify fstab on remote systems.
-		if (gluster )
+		if (DataRedundancy )
 		{
 			int numberDBRootsPerPM = DBRootCount/pmNumber;
 			for (int pm=0; pm < pmNumber; pm++)
@@ -4119,8 +4124,8 @@ bool storageSetup(bool amazonInstall)
 	if ( DBRootStorageType == "hdfs")
 		hdfs = true;
 
-	if ( DBRootStorageType == "gluster")
-		gluster = true;
+	if ( DBRootStorageType == "DataRedundancy")
+		DataRedundancy = true;
 
 	if ( reuseConfig == "y" ) {
 		cout << "===== Storage Configuration = " + DBRootStorageType + " =====" << endl << endl;
@@ -4463,7 +4468,7 @@ bool storageSetup(bool amazonInstall)
 	storageType = "1";
 	if ( DBRootStorageType == "external" )
 		storageType = "2";
-	if ( DBRootStorageType == "gluster" )
+	if ( DBRootStorageType == "DataRedundancy" )
 		storageType = "3";
 	if ( DBRootStorageType == "hdfs" )
 		storageType = "4";
@@ -4476,7 +4481,7 @@ bool storageSetup(bool amazonInstall)
 		prompt = "Select the type of Data Storage [1=internal, 2=external] (" + storageType + ") > ";
 	}
 
-	if ( glusterInstalled == "y" && hadoopInstalled == "n" )
+	if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "n" )
 	{
 		cout << "There are 3 options when configuring the storage: internal, external, or DataRedundancy" << endl << endl;
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy] (" + storageType + ") > ";
@@ -4488,7 +4493,7 @@ bool storageSetup(bool amazonInstall)
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 4=hdfs] (" + storageType + ") > ";
 	}
 
-	if ( glusterInstalled == "y" && hadoopInstalled == "y" )
+	if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "y" )
 	{
 		cout << "There are 5 options when configuring the storage: internal, external, DataRedundancy, or hdfs" << endl << endl;
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy, 4=hdfs] (" + storageType + ") > ";
@@ -4499,7 +4504,7 @@ bool storageSetup(bool amazonInstall)
 	cout << "  'external' -    This is specified when the DBRoot directories are mounted." << endl;
 	cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
 
-	if ( glusterInstalled == "y" )
+	if ( glusterInstalled == "y" && singleServerInstall != "1")
 	{
 		cout << "  'DataRedundancy' - This is specified when gluster is installed and you want" << endl;
 		cout << "                  the DBRoot directories to be controlled by ColumnStore Data Redundancy." << endl;
@@ -4531,7 +4536,7 @@ bool storageSetup(bool amazonInstall)
 				exit(1);
 		}
 	
-		if ( glusterInstalled == "y" && hadoopInstalled == "n" )
+		if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "n" )
 		{
 			if ( storageType == "1" || storageType == "2" || storageType == "3")
 				break;
@@ -4550,7 +4555,7 @@ bool storageSetup(bool amazonInstall)
 				exit(1);
 		}
 
-		if ( glusterInstalled == "y" && hadoopInstalled == "y" )
+		if ( (glusterInstalled == "y" && singleServerInstall != "1") && hadoopInstalled == "y" )
 		{
 			if ( storageType == "1" || storageType == "2" || storageType == "3" || storageType == "4")
 				break;
@@ -4560,6 +4565,34 @@ bool storageSetup(bool amazonInstall)
 		}
 	}
 
+	if (storageType != "3" && DataRedundancy)
+	{
+		cout << "WARNING: This system was configured with ColumnStore DataRedundancy" << endl;
+		cout << "         The selection to change from DataRedundancy to a different" << endl;
+		cout << "         storage type will require to cleanup. Exit and refer to" << endl;
+		cout << "         ColumnStore documentation for procedures or continue." << endl;
+
+		cout << endl;
+		string continueInstall = "y";
+		while(true)
+		{
+			pcommand = callReadline("Would you like to continue with this storage setting? [y,n] (" + continueInstall + ") > ");
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0) continueInstall = pcommand;
+				callFree(pcommand);
+			}
+			if ( continueInstall == "y" || continueInstall == "n" )
+				break;
+			else
+				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+			continueInstall = "y";
+			if ( noPrompting )
+				exit(1);
+		}
+		if ( continueInstall == "n")
+			exit(1);
+	}
 	switch ( atoi(storageType.c_str()) ) {
 		case (1):
 		{
@@ -4573,7 +4606,7 @@ bool storageSetup(bool amazonInstall)
 		}
 		case (3):
 		{
-			DBRootStorageType = "gluster";
+			DBRootStorageType = "DataRedundancy";
 			break;
 		}
 		case (4):
@@ -4762,14 +4795,14 @@ bool storageSetup(bool amazonInstall)
 	// if gluster
 	if ( storageType == "3" )
 	{
-		gluster = true;
-		sysConfig->setConfig(InstallSection, "GlusterConfig", "y");
+		DataRedundancy = true;
+		sysConfig->setConfig(InstallSection, "DataRedundancyConfig", "y");
 		sysConfig->setConfig("PrimitiveServers", "DirectIO", "n");
 	}
 	else
 	{
-		gluster = false;
-		sysConfig->setConfig(InstallSection, "GlusterConfig", "n");
+		DataRedundancy = false;
+		sysConfig->setConfig(InstallSection, "DataRedundancyConfig", "n");
 		sysConfig->setConfig("PrimitiveServers", "DirectIO", "y");
 	}
 
@@ -5400,41 +5433,55 @@ bool glusterSetup(string password) {
 	int numberDBRootsPerPM = DBRootCount/pmNumber;
 	int numberBricksPM = 0;
 	std::vector<int> dbrootPms[DBRootCount];
-	DataRedundancyConfig DataRedundancyConfigs[pmNumber];
+	DataRedundancySetup DataRedundancyConfigs[pmNumber];
 	string command = "";
 	string remoteCommand = installDir + "/bin/remote_command.sh ";
 	// how many copies?
-	cout << endl;
-	cout << "Setup the Number of Copies: This is the total number of copies of the data" << endl;
-	cout << "in the system and a non-redundant system has 1 copy, so choose 2 or more," << endl;
-	cout << "but not more than the number of PMs which is " + oam.itoa(pmNumber) + "." << endl;
-
-	while(dataRedundancyCopies < 2 || dataRedundancyCopies > pmNumber)
+	if (pmNumber > 2)
 	{
-		dataRedundancyCopies = 2;
-		prompt = "Enter Number of Copies [2-" + oam.itoa(pmNumber) + "] ("+ oam.itoa(dataRedundancyCopies) +") >  ";
-		pcommand = callReadline(prompt.c_str());
-		if (pcommand) {
-			if (strlen(pcommand) > 0) dataRedundancyCopies = atoi(pcommand);
-			callFree(pcommand);
-		}
-
-		if ( dataRedundancyCopies < 2 || dataRedundancyCopies > pmNumber ) {
-			cout << endl << "ERROR: Invalid Copy Count '" + oam.itoa(dataRedundancyCopies) + "', please re-enter" << endl << endl;
-			if ( noPrompting )
-				exit(1);
-			continue;
-		}
-
-		//update count
-		try {
-			sysConfig->setConfig(InstallSection, "DataRedundancyCopies", oam.itoa(dataRedundancyCopies));
-		}
-		catch(...)
+		cout << endl;
+		cout << "Setup the Number of Copies: This is the total number of copies of the data" << endl;
+		cout << "in the system. At least 2, but not more than the number of PMs(" + oam.itoa(pmNumber) + "), are required." << endl;
+		while(dataRedundancyCopies < 2 || dataRedundancyCopies > pmNumber)
 		{
-			cout << "ERROR: Problem setting DataRedundancyCopies in the MariaDB ColumnStore System Configuration file" << endl;
-			exit(1);
+			dataRedundancyCopies = 2;  //minimum 2 copies
+			prompt = "Enter Number of Copies [2-" + oam.itoa(pmNumber) + "] ("+ oam.itoa(dataRedundancyCopies) +") >  ";
+			pcommand = callReadline(prompt.c_str());
+			if (pcommand) {
+				if (strlen(pcommand) > 0) dataRedundancyCopies = atoi(pcommand);
+				callFree(pcommand);
+			}
+
+			if ( dataRedundancyCopies < 2 || dataRedundancyCopies > pmNumber ) {
+				cout << endl << "ERROR: Invalid Copy Count '" + oam.itoa(dataRedundancyCopies) + "', please re-enter" << endl << endl;
+				if ( noPrompting )
+					exit(1);
+				continue;
+			}
 		}
+	}
+	else if (pmNumber == 2)
+	{
+		dataRedundancyCopies = 2;  //minimum 2 copies
+		cout << endl;
+		cout << "Only 2 PMs configured. Setting number of copies at 2." << endl;
+	}
+	else
+	{
+		// This should never happen
+		cout << endl;
+		cout << "ERROR: Invalid value for pm count Data Redundancy could not be configured." << endl;
+		exit(1);
+	}
+
+	//update count
+	try {
+		sysConfig->setConfig(InstallSection, "DataRedundancyCopies", oam.itoa(dataRedundancyCopies));
+	}
+	catch(...)
+	{
+		cout << "ERROR: Problem setting DataRedundancyCopies in the MariaDB ColumnStore System Configuration file" << endl;
+		exit(1);
 	}
 
 	numberBricksPM = numberDBRootsPerPM * dataRedundancyCopies;
@@ -5609,6 +5656,7 @@ bool glusterSetup(string password) {
 			DataRedundancyConfigs[pm].pmHostname = sysConfig->getConfig("SystemModuleConfig",pmHostName);
 		}
 	}
+/*
 	cout << endl;
 	cout << "OK. You have " + oam.itoa(pmNumber) + " PMs, " + oam.itoa(DBRootCount) + " DBRoots, and you have chosen to keep " + oam.itoa(dataRedundancyCopies) << endl;
 	cout << "copies of the data. You can choose to place the copies in " << endl;
@@ -5617,7 +5665,7 @@ bool glusterSetup(string password) {
 	while( dataRedundancyStorage != 1 && dataRedundancyStorage != 2 )
 	{
 		dataRedundancyStorage = 1;
-		prompt =  "Select the data redundancy network [1=directory, 2=storage] (" + oam.itoa(dataRedundancyStorage) + ") > ";
+		prompt =  "Select the data redundancy storage device [1=directory, 2=storage] (" + oam.itoa(dataRedundancyStorage) + ") > ";
 		pcommand = callReadline(prompt.c_str());
 		if (pcommand)
 		{
@@ -5654,6 +5702,12 @@ bool glusterSetup(string password) {
 		//loop through pms and get storage locations for each
 		for (int pm=0; pm < pmNumber; pm++)
 		{
+			vector<int>::iterator dbrootID = DataRedundancyConfigs[pm].dbrootCopies.begin();
+			for (; dbrootID < DataRedundancyConfigs[pm].dbrootCopies.end(); dbrootID++ )
+			{
+				int brick = (*dbrootID);
+				cout << "PM#" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " brick#" + oam.itoa(brick) + " : " << endl;
+			}
 			for (int brick=0; brick < numberBricksPM; brick++)
 			{
 				prompt = "Enter a storage locations for PM#" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " brick#" + oam.itoa(brick) + " : ";
@@ -5683,7 +5737,7 @@ bool glusterSetup(string password) {
 			}
 		}
 	}
-
+*/
 	// User config complete setup the gluster bricks
 	// This will distribute DBRootCopies evenly across PMs
 	for (int pm=0; pm < pmNumber; pm++)
@@ -5751,6 +5805,7 @@ bool glusterSetup(string password) {
 				cout << "ERROR: command failed: " << command << endl;
 				exit(1);
 			}
+/*
 			if (dataRedundancyStorage == 2)
 			{
 				//walk data storage locations and modify fstab to reflect the storage locations entered by user
@@ -5808,15 +5863,17 @@ bool glusterSetup(string password) {
 
 				}
 			}
+*/
 		}
 		if (rootUser)
 		{
-			command = "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr;
+			command = "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr + " >> /tmp/glusterCommands.txt 2>&1";
 		}
 		else
 		{
-			command = "sudo gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr;
+			command = "sudo gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr + " >> /tmp/glusterCommands.txt 2>&1";
 		}
+		cout << "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr << endl;
 		status = system(command.c_str());
 		if (WEXITSTATUS(status) != 0 )
 		{
@@ -5825,7 +5882,7 @@ bool glusterSetup(string password) {
 		}
 	}
 	sleep(5);
-	command = "gluster peer status ";
+	command = "gluster peer status >> /tmp/glusterCommands.txt 2>&1";
 	status = system(command.c_str());
 	if (WEXITSTATUS(status) != 0 )
 	{
@@ -5836,6 +5893,11 @@ bool glusterSetup(string password) {
 	//TODO: figureout a cleaner way to do this.
 	sleep(10);
 	// Build the gluster volumes and start them for each dbroot
+	int pmnextbrick[pmNumber];
+	for (int pm=0; pm < pmNumber; pm++)
+	{
+		pmnextbrick[pm]=1;
+	}
 	for (int db=0; db < DBRootCount; db++)
 	{
 		int dbrootID = db + 1;
@@ -5851,9 +5913,11 @@ bool glusterSetup(string password) {
 		for (; dbrootPmIter < dbrootPms[db].end(); dbrootPmIter++ )
 		{
 			int pm = (*dbrootPmIter) - 1;
-			command += DataRedundancyConfigs[pm].pmIpAddr + ":" + installDir +"/gluster/brick" + oam.itoa(dbrootID) + " ";
+			command += DataRedundancyConfigs[pm].pmIpAddr + ":" + installDir +"/gluster/brick" + oam.itoa(pmnextbrick[pm]) + " ";
+			pmnextbrick[pm]++;
 		}
-		command += "force";
+		command += "force >> /tmp/glusterCommands.txt 2>&1";
+		cout << "Gluster create and start volume dbroot" << oam.itoa(dbrootID) << "...";
 		status = system(command.c_str());
 		if (WEXITSTATUS(status) != 0 )
 		{
@@ -5862,11 +5926,11 @@ bool glusterSetup(string password) {
 		}
 		if (rootUser)
 		{
-			command = "gluster volume start dbroot" + oam.itoa(dbrootID);
+			command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
 		}
 		else
 		{
-			command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID);
+			command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
 		}
 		status = system(command.c_str());
 		if (WEXITSTATUS(status) != 0 )
@@ -5874,6 +5938,7 @@ bool glusterSetup(string password) {
 			cout << "ERROR: command failed: " << command << endl;
 			exit(1);
 		}
+		cout << "DONE" << endl;
 	}
 
 	return true;

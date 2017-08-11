@@ -51,7 +51,7 @@ bool amazon = false;
 string PMInstanceType;
 string UMInstanceType;
 string AmazonPMFailover = "y";
-string GlusterConfig = "n";
+string DataRedundancyConfig = "n";
 bool rootUser = true;
 string USER = "root";
 bool HDFS = false;
@@ -153,11 +153,11 @@ int main(int argc, char **argv)
 
 	//get gluster config
 	try {
-		oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+		oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 	}
 	catch(...)
 	{
-		GlusterConfig = "n";
+		DataRedundancyConfig = "n";
 	}
 
 	//hdfs / hadoop config 

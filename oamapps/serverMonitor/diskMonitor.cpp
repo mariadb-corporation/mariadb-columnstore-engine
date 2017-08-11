@@ -92,13 +92,13 @@ void diskMonitor()
 	}
 
 	//get Gluster Config setting
-	string GlusterConfig = "n";
+	string DataRedundancyConfig = "n";
 	try {
-		oam.getSystemConfig( "GlusterConfig", GlusterConfig);
+		oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 	}
 	catch(...)
 	{
-		GlusterConfig = "n";
+		DataRedundancyConfig = "n";
 	}
 
 	int diskSpaceCheck = 0;
@@ -322,7 +322,7 @@ void diskMonitor()
 
 			//check for external file systems/devices
 			if (Externalflag ||
-				(!Externalflag && GlusterConfig == "y" && moduleType == "pm") ){
+				(!Externalflag && DataRedundancyConfig == "y" && moduleType == "pm") ){
 				try
 				{
 					DBRootConfigList dbrootConfigList;
@@ -565,7 +565,7 @@ void diskMonitor()
 		}
 
 		//do Gluster status check, if configured
-		if ( GlusterConfig == "y")
+		if ( DataRedundancyConfig == "y")
 		{
 			bool pass = true;
 			string errmsg = "unknown";
