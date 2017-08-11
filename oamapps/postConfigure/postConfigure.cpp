@@ -4480,7 +4480,7 @@ bool storageSetup(bool amazonInstall)
 
 	cout << endl << "----- Setup Performance Module DBRoot Data Storage Mount Configuration -----" << endl << endl;
 
-	if ( glusterInstalled == "n" && hadoopInstalled == "n" )
+	if (( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
 	{
 		cout << "There are 2 options when configuring the storage: internal or external" << endl << endl;
 		prompt = "Select the type of Data Storage [1=internal, 2=external] (" + storageType + ") > ";
@@ -4492,7 +4492,7 @@ bool storageSetup(bool amazonInstall)
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 3=DataRedundancy] (" + storageType + ") > ";
 	}
 
-	if ( glusterInstalled == "n" && hadoopInstalled == "y" )
+	if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "y" )
 	{
 		cout << "There are 3 options when configuring the storage: internal, external, or hdfs" << endl << endl;
 		prompt = "Select the type of Data Storage [1=internal, 2=external, 4=hdfs] (" + storageType + ") > ";
@@ -4532,7 +4532,7 @@ bool storageSetup(bool amazonInstall)
 			callFree(pcommand);
 		}
 
-		if ( glusterInstalled == "n" && hadoopInstalled == "n" )
+		if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "n" )
 		{
 			if ( storageType == "1" || storageType == "2")
 				break;
@@ -4550,7 +4550,7 @@ bool storageSetup(bool amazonInstall)
 				exit(1);
 		}
 	
-		if ( glusterInstalled == "n" && hadoopInstalled == "y" )
+		if ( ( glusterInstalled == "n" || (glusterInstalled == "y" && singleServerInstall == "1")) && hadoopInstalled == "y" )
 		{
 			if ( storageType == "1" || storageType == "2" || storageType == "4") {
 				break;
