@@ -5179,8 +5179,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    {
 			    if ( remoteModuleType == "pm" ) {
 				    if ( packageType != "binary" ) {
-					    string logFile = "/tmp/" + remoteModuleName + "_performance_installer.log";
-					    log.writeLog(__LINE__, "addModule - performance_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+					    string logFile = "/tmp/" + remoteModuleName + "_package_installer.log";
+					    log.writeLog(__LINE__, "addModule - package_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 					    string cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > " + logFile; 
 					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
