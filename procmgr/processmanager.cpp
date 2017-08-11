@@ -48,7 +48,7 @@ extern bool runStandby;
 extern string iface_name;
 extern string PMInstanceType;
 extern string UMInstanceType;
-extern string GlusterConfig;
+extern string DataRedundancyConfig;
 extern bool rootUser;
 extern string USER;
 extern bool HDFS;
@@ -8539,7 +8539,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
 	log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
 
-	if ( DBRootStorageType == "internal" && GlusterConfig == "n") {
+	if ( DBRootStorageType == "internal" && DataRedundancyConfig == "n") {
 		log.writeLog(__LINE__, "ERROR: DBRootStorageType = internal", LOG_TYPE_ERROR);
 		pthread_mutex_unlock(&THREAD_LOCK);
 		return API_INVALID_PARAMETER;
@@ -9138,7 +9138,7 @@ int ProcessManager::OAMParentModuleChange()
 
 			}
 
-			if ( DBRootStorageType == "internal" && failover && GlusterConfig == "n")
+			if ( DBRootStorageType == "internal" && failover && DataRedundancyConfig == "n")
 			{
 				log.writeLog(__LINE__, "DBRoot Storage configured for internal, don't do standby-active failover", LOG_TYPE_DEBUG);
 
@@ -9537,7 +9537,7 @@ std::string ProcessManager::getStandbyModule()
 
 	//check if gluster, if so then find PMs that have copies of DBROOT #1
 	string pmList = "";
-	if (GlusterConfig == "y") {
+	if (DataRedundancyConfig == "y") {
 
 		try {
 			string errmsg;
@@ -10024,7 +10024,7 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
 	ProcessManager processManager(config, log);
 	Oam oam;
 
-	if (GlusterConfig == "y")
+	if (DataRedundancyConfig == "y")
 		return oam::API_SUCCESS;
 
 	//get pm assigned to that dbroot

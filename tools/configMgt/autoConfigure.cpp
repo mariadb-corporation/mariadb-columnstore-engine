@@ -201,21 +201,21 @@ int main(int argc, char *argv[])
 	}
 
 	//set gluster flag if it exists
-	string GlusterConfig;
-	string GlusterCopies;
-	string GlusterStorageType;
+	string DataRedundancyConfig;
+	string DataRedundancyCopies;
+	string DataRedundancyStorageType;
 	try {
-		GlusterConfig = sysConfigOld->getConfig(InstallSection, "GlusterConfig");
-		GlusterCopies = sysConfigOld->getConfig(InstallSection, "GlusterCopies");
-		GlusterStorageType = sysConfigOld->getConfig(InstallSection, "GlusterStorageType");
+		DataRedundancyConfig = sysConfigOld->getConfig(InstallSection, "DataRedundancyConfig");
+		DataRedundancyCopies = sysConfigOld->getConfig(InstallSection, "DataRedundancyCopies");
+		DataRedundancyStorageType = sysConfigOld->getConfig(InstallSection, "DataRedundancyStorageType");
 	}
 	catch(...)
 	{}
-	if ( !GlusterConfig.empty() ) {
+	if ( !DataRedundancyConfig.empty() ) {
 		try {
-			sysConfigNew->setConfig(InstallSection, "GlusterConfig", GlusterConfig);
-			sysConfigNew->setConfig(InstallSection, "GlusterCopies", GlusterCopies);
-			sysConfigNew->setConfig(InstallSection, "GlusterStorageType", GlusterStorageType);
+			sysConfigNew->setConfig(InstallSection, "DataRedundancyConfig", DataRedundancyConfig);
+			sysConfigNew->setConfig(InstallSection, "DataRedundancyCopies", DataRedundancyCopies);
+			sysConfigNew->setConfig(InstallSection, "DataRedundancyStorageType", DataRedundancyStorageType);
 		}
 		catch(...)
 		{}
