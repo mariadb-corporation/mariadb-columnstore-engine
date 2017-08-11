@@ -88,10 +88,12 @@ send_user "\n"
 send_user "Stop ColumnStore service                       "
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
 set timeout 60
 # check return
@@ -112,10 +114,12 @@ send_user "Uninstall MariaDB Columnstore Package                       "
 send " \n"
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/pre-uninstall --installdir=$INSTALLDIR >/dev/null 2>&1'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
 set timeout 20
 expect {
@@ -137,10 +141,12 @@ send_user "Copy New MariaDB Columnstore Package to Module              "
 send " \n"
 send date\n
 send "scp -v $CALPONTPKG $USERNAME@$SERVER:$CALPONTPKG\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
 set timeout 120
 expect {
@@ -165,10 +171,12 @@ send_user "Install MariaDB Columnstore Package on Module               "
 send " \n"
 send date\n
 send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
 set timeout 120
 expect {
@@ -188,10 +196,12 @@ send_user "Run post-install script                         "
 send " \n"
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/post-install --installdir=$INSTALLDIR'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
 set timeout 60
 # check return
@@ -211,10 +221,12 @@ send_user "Start ColumnStore service                       "
 send " \n"
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
-set timeout 30
-expect {
-	"word: " { send "$PASSWORD\n" }
-	"passphrase" { send "$PASSWORD\n" }
+if { $PASSWORD != "ssh" } {
+	set timeout 30
+	expect {
+		"word: " { send "$PASSWORD\n" }
+		"passphrase" { send "$PASSWORD\n" }
+	}
 }
 set timeout 60
 # check return
@@ -239,11 +251,12 @@ if { $AMAZONINSTALL == "1" } {
 	send " \n"
 	send date\n
 	send "scp -v -r $INSTALLDIR/local/etc  $USERNAME@$SERVER:$INSTALLDIR/local\n"
-	set timeout 30
-	expect {
-		"word: " { send "$PASSWORD\n" }
-		"passphrase" { send "$PASSWORD\n" }
-		"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
+	if { $PASSWORD != "ssh" } {
+		set timeout 30
+		expect {
+			"word: " { send "$PASSWORD\n" }
+			"passphrase" { send "$PASSWORD\n" }
+		}
 	}
 	set timeout 60
 	expect {
