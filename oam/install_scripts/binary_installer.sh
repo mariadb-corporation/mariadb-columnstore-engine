@@ -130,9 +130,6 @@ send_user "\n"
 
 if { $INSTALLTYPE == "uninstall" } { exit 0 }
 
-# needed for some reason, if not here the 'columnstore start' will run before the package is installed
-sleep 60
-
 # 
 # send the MariaDB Columnstore package
 #
@@ -209,9 +206,6 @@ expect {
 	"columnstore start" { send_user "DONE" }
 }
 send_user "\n"
-
-# needed for some reason, if not here the 'columnstore start' will run before the package is installed
-sleep 30
 
 send_user "Start ColumnStore service                       "
 send " \n"
