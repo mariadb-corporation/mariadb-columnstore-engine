@@ -416,7 +416,14 @@ int main(int argc, char *argv[])
 		exit (1);
 	}
 
-    //determine package type
+	//check Config saved files
+	if ( !checkSaveConfigFile())
+	{
+		cout << "ERROR: Configuration File not setup" << endl;
+		exit(1);
+	}
+
+	//determine package type
 	string EEPackageType;
 
         if (!rootUser)
@@ -444,6 +451,11 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
+	if ( !writeConfig(sysConfig) ) {
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+		exit(1);
+	}
+
         //if binary install, then run post-install just in case the user didnt run it
     	if ( EEPackageType == "binary" )
     	{
@@ -451,13 +463,6 @@ int main(int argc, char *argv[])
         	cmd = installDir + "/bin/post-install --installdir=" + installDir + " > /dev/null 2>&1";
         	system(cmd.c_str());
     	}
-
-	//check Config saved files
-	if ( !checkSaveConfigFile())
-	{
-		cout << "ERROR: Configuration File not setup" << endl;
-		exit(1);
-	}
 
 	//check for local ip address as pm1
 	ModuleConfig moduleconfig;
