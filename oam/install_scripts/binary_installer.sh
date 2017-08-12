@@ -35,11 +35,6 @@ if { $UNM != "" } {
 	set USERNAME $UNM
 }
 
-set BASH "/bin/bash "
-if { $DEBUG == "1" } {
-	set BASH "/bin/bash -x "
-}
-
 log_user $DEBUG
 spawn -noecho /bin/bash
 #
@@ -55,38 +50,79 @@ expect {
 						expect {
                              				"Exit status 0" { send_user "DONE" }
 				           		"Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }	
+							"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
+							"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+							"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+							"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+							"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+							"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+							timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 						}			
 					}
 					"passphrase" { send "$PASSWORD\n" 
                                                 expect {
                                                         "Exit status 0" { send_user "DONE" }
                                                         "Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
+							"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
+							"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+							"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+							"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+							"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+							"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+							timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
                                                 }
 					}
 					"Exit status 0" { set PASSWORD "ssh" }
 					"Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
+					"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
+					"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+					"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+					"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+					"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+					"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+					timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 				}
 	}
 	"word: " { send "$PASSWORD\n"
 			expect {
                              	"Exit status 0" { send_user "DONE" } 
                                "Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
+				"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
+				"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+				"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+				"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+				"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+				"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+				timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
                         }
 	}
 	"passphrase" { send "$PASSWORD\n" 
                         expect {
                                "Exit status 0" { send_user "DONE" }
+				"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
+				"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+				"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+				"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+				"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+				"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+				timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 				"Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
                         }
 	}
 	"Exit status 0" { set PASSWORD "ssh" }	
         "Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
+	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
+	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
+	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
+	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 }
 send_user "\n"
 
 
 send_user "Stop ColumnStore service                       "
-send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -98,11 +134,13 @@ if { $PASSWORD != "ssh" } {
 set timeout 60
 # check return
 expect {
+	"No such file or directory" { send_user "DONE" }
         "Exit status 0" { send_user "DONE" }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	timeout { send_user "DONE" }
 }
 send_user "\n"
 
@@ -111,7 +149,6 @@ send_user "\n"
 #
 send_user "Uninstall MariaDB Columnstore Package                       "
 send " \n"
-send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/pre-uninstall --installdir=$INSTALLDIR >/dev/null 2>&1'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -120,14 +157,17 @@ if { $PASSWORD != "ssh" } {
 		"passphrase" { send "$PASSWORD\n" }
 	}
 }
-set timeout 20
+set timeout 30
 expect {
+	"No such file or directory" { send_user "DONE" }
 	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
 	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1}
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
 	"Exit status 0" { send_user "DONE" }
+	"Exit status 127" { send_user "DONE" }
+	timeout { send_user "DONE" }
 }
 send_user "\n"
 
@@ -138,7 +178,6 @@ if { $INSTALLTYPE == "uninstall" } { exit 0 }
 #
 send_user "Copy New MariaDB Columnstore Package to Module              "
 send " \n"
-send date\n
 send "scp -v $CALPONTPKG $USERNAME@$SERVER:$CALPONTPKG\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -147,7 +186,7 @@ if { $PASSWORD != "ssh" } {
 		"passphrase" { send "$PASSWORD\n" }
 	}
 }
-set timeout 120
+set timeout 180
 expect {
 	"Exit status 0" { send_user "DONE" }
 	"100%" 		{ send_user "DONE" }
@@ -168,7 +207,6 @@ send_user "\n"
 #
 send_user "Install MariaDB Columnstore Package on Module               "
 send " \n"
-send date\n
 send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -191,7 +229,6 @@ send_user "\n"
 
 send_user "Run post-install script                         "
 send " \n"
-send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/post-install --installdir=$INSTALLDIR'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -210,13 +247,13 @@ expect {
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	"columnstore start" { send_user "DONE" }
+	#"columnstore start" { send_user "DONE" }
+	"Exit status 0" { send_user "DONE" }
 }
 send_user "\n"
 
 send_user "Start ColumnStore service                       "
 send " \n"
-send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -228,7 +265,6 @@ if { $PASSWORD != "ssh" } {
 set timeout 60
 # check return
 expect {
-        "Exit status 0" { send_user "DONE" }
 	"No such file"   { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
@@ -245,7 +281,6 @@ if { $AMAZONINSTALL == "1" } {
 	#
 	send_user "Copy MariaDB Columnstore OS files to Module                 "
 	send " \n"
-	send date\n
 	send "scp -v -r $INSTALLDIR/local/etc  $USERNAME@$SERVER:$INSTALLDIR/local\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30

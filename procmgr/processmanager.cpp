@@ -5273,6 +5273,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 	    //distribute config file
 	    distributeConfigFile("system");
+	    distributeConfigFile("system", "ProcessConfig.xml");
 
 	    //Start new modules by starting up local Process-Monitor
 	    listPT = devicenetworklist.begin();
@@ -5287,7 +5288,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		    HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
 		    string remoteModuleIP = (*pt1).IPAddr;
 		    string remoteHostName = (*pt1).HostName;
-
 
 		    // add to monitor list
 		    moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
@@ -5338,14 +5338,13 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string moduleName = (*listPT).DeviceName;
 
 	  	processManager.configureModule(moduleName);
-		sleep(10);
 	    }
 
 	    //if amazon, delay to give time for ProcMon to start
-//	    if (amazon) {
-//		    log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
-//		    sleep(30);
-//	    }
+	    if (amazon) {
+		    log.writeLog(__LINE__, "addModule - sleep 10 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
+		    sleep(10);
+	    }
 	}
 	else
 	{
@@ -5355,10 +5354,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 		string moduleName = (*listPT).DeviceName;
 
 	  	processManager.configureModule(moduleName);
-		sleep(10);
 	    }
 	}
 	
+	sleep(5);
 	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
 	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
@@ -6083,8 +6082,11 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 ******************************************************************************************/
 int ProcessManager::configureModule(std::string moduleName)
 {
+	log.writeLog(__LINE__, "configureModule: Process module " + moduleName , LOG_TYPE_DEBUG);
+
 	//distribute config file
 	distributeConfigFile(moduleName);
+	distributeConfigFile(moduleName, "ProcessConfig.xml");
 
 	//
 	//Send Configure msg to Module's Process-Monitor being reconfigured
