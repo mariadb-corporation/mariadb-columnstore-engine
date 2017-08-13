@@ -6121,7 +6121,7 @@ int ProcessManager::configureModule(std::string moduleName)
 int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requestID, int timeout )
 {
 	string msgPort;
-	int returnStatus = API_MINOR_FAILURE;
+	int returnStatus = API_FAILURE;
 	Oam oam;
 
 	if ( module != config.moduleName() ) {
