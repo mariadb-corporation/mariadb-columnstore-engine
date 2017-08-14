@@ -10,7 +10,7 @@ CHECK=true
 REPORTPASS=true
 LOGFILE=""
 
-OS_LIST=("centos6" "centos7" "debian8" "suse12" "ubuntu16")
+OS_LIST=("centos6" "centos7" "debian8" "debian9" "suse12" "ubuntu16")
 
 NODE_IPADDRESS=""
 
@@ -62,17 +62,16 @@ helpPrint () {
     echo  "	OS version" 
     echo  "	Locale settings" 
     echo  "	Firewall settings"
-    echo  "	Date/time settings"
-    echo  "	MariaDB port 3306 availability"
+    echo  "     Date/time settings"
     echo  "	Dependent packages installed"
-    echo  "	For non-root user install - test permissions on /tmp and /dev/shm"
+    echo  "     For non-root user install - test permissions on /tmp and /dev/shm"
     echo ""
     echo  "Usage: $0 [options]" 
     echo "OPTIONS:"
     echo  "   -h,--help			Help" 
     echo  "   --ipaddr=[ipaddresses]	Remote Node IP-Addresses/Hostnames, if not provide, will only check local node"
     echo  "                           	examples: 192.168.1.1,192.168.1.2 or serverum1,serverpm2"
-    echo  "   --os=[os]			Optional: Set OS Version (centos6, centos7, debian8, suse12, ubuntu16)" 
+    echo  "   --os=[os]			Optional: Set OS Version (centos6, centos7, debian8, debian9, suse12, ubuntu16)" 
     echo  "   --password=[password]	Provide a user password. (Default: ssh-keys setup will be assumed)" 
     echo  "   -c,--continue		Continue on failures"
     echo  "   --logfile=[fileName] 	Output results to a log file"
@@ -192,8 +191,6 @@ if [ "$IPADDRESSES" != "" ]; then
       exit 1
   fi
 fi  
-
-USER=`whoami 2>/dev/null`
 
 checkLocalOS()
 {
@@ -717,11 +714,8 @@ checkPackages()
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
 
-  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools")
-  # packages that need to be removed, MCS doesnt work with these packaged installed
-  declare -a CENTOS_PKG_UNINSTALL=("mariadb-libs")
+  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools" "perl-DBD-MySQL")
 
-  #check local packages
   if [ "$OS" == "centos6" ] || [ "$OS" == "centos7" ]; then
     if [ ! `which yum 2>/dev/null` ] ; then
       echo "${bold}Failed${normal}, Local Node ${bold}yum${normal} package not installed"
@@ -756,27 +750,6 @@ checkPackages()
       checkContinue
     fi
 
-    #check the packages that should exist
-      pass=true
-      #check centos packages that should be removed on local node
-      for PKG in "${CENTOS_PKG_UNINSTALL[@]}"; do
-          `yum list installed "$PKG" > /tmp/pkg_check 2>&1`
-          `cat /tmp/pkg_check | grep Installed > /dev/null 2>&1`
-          if [ "$?" -eq 0 ]; then
-            echo "${bold}Failed${normal}, Local Node package ${bold}${PKG}${normal} is installed which can cause issues with MCS, please uninstall"
-            pass=false
-            REPORTPASS=false
-          fi
-      done
-    
-    if [ $pass == true ] ; then
-      echo ""
-      echo "Local Node - Passed, all packages that should not be installed are uninstalled"
-    else
-      checkContinue
-    fi
-
-    # check remote packages
     echo ""
     pass=true
     if [ "$IPADDRESSES" != "" ]; then
@@ -811,32 +784,12 @@ checkPackages()
 	  checkContinue
 	  pass=true
 	fi
-
-	#check package that shouldn't be installed
-        for PKG in "${CENTOS_PKG_UNINSTALL[@]}"; do
-            `./remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
-            rc="$?"
-            if [ $rc -eq 0 ] ; then
-                echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is installed which can cause issues with MCS, please unstall"
-                pass=false
-                REPORTPASS=false
-            fi
-        done
-
-        if $pass; then
-	  echo ""
-          echo "$ipadd Node - Passed, all packages that should not be installed are uninstalled"
-        else
-          checkContinue
-          pass=true
-        fi
-
 	echo ""
       done
     fi
   fi
 
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-mysql")
 
   if [ "$OS" == "suse12" ]; then
     if [ ! `which rpm 2>/dev/null` ] ; then
@@ -888,7 +841,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "snappy" "net-tools")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libdbd-mysql-perl")
 
   if [ "$OS" == "ubuntu16" ] ; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -953,7 +906,7 @@ checkPackages()
    fi
   fi
 
-  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools")
+  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libdbd-mysql-perl")
 
   if [ "$OS" == "debian8" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -1017,40 +970,73 @@ checkPackages()
      done
     fi
   fi
-}
-
-checkMySQLPort()
-{
-  # MySQL Port Usage check
-  #
-  echo ""
-  echo "** Run MariaDB Port Usage check - port 3306 shouldn't be in-use"
-  echo ""
   
-  pass=true
-  `netstat -na | grep -e ":3306 " | grep LISTEN > /dev/null 2>&1`
-  if [ "$?" -eq 0 ]; then
-    echo "${bold}Failed${normal}, Local Node - MariaDB port 3306 is being used. Recommend stopping the process that is using that port"
-    pass=false
-  else
-    echo "Local Node - MariaDB port 3306 is not in-use"
-  fi
+  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools")
 
-  if [ "$IPADDRESSES" != "" ]; then
-    for ipadd in "${NODE_IPADDRESS[@]}"; do
-      `./remote_command.sh $ipadd $PASSWORD "netstat -na | grep -e ":3306 " | grep LISTEN > /dev/null 2>&1" 1 > /tmp/remote_command_check 2>&1`
-      if [ "$?" -eq 0 ]; then
-	echo "${bold}Failed${normal}, $ipadd MariaDB port 3306 is being used. Recommend stopping the process that is using that port"
-	pass=false
+  if [ "$OS" == "debian9" ]; then
+    if [ ! `which dpkg 2>/dev/null` ] ; then
+      echo "${bold}Failed${normal}, Local Node ${bold}rpm${normal} package not installed"
+      pass=false
+      REPORTPASS=false
+    else    
+      pass=true
+      #check centos packages on local node
+      for PKG in "${DEBIAN9_PKG[@]}"; do
+	`dpkg -s "$PKG" > /tmp/pkg_check 2>&1`
+	`cat /tmp/pkg_check | grep 'install ok installed' > /dev/null 2>&1`
+	if [ "$?" -ne 0 ]; then
+	  echo "${bold}Failed${normal}, Local Node package ${bold}${PKG}${normal} is not installed, please install"
+	  pass=false
+	  REPORTPASS=false
+	fi
+      done
+
+      if $pass; then
+	echo "Local Node - Passed, all dependency packages are installed"
       else
-	echo "$ipadd MariaDB port 3306 is not in-use"
+	checkContinue
       fi
-    done
+    fi
+    
+    echo ""
+    pass=true
+    if [ "$IPADDRESSES" != "" ]; then
+     for ipadd in "${NODE_IPADDRESS[@]}"; do
+      for PKG in "${DEBIAN9_PKG[@]}"; do
+        `./remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+          `./remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
+            if [ "$?" -ne 0 ]; then
+              echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
+            else
+              `cat /tmp/remote_command_check | grep 'command not found' > /dev/null 2>&1`
+              if [ "$?" -eq 0 ]; then
+                echo "${bold}Failed${normal}, $ipadd Node ${bold}dpkg${normal} package not installed"
+                pass=false
+                break
+              else
+                `cat pkg_check | grep 'install ok installed' > /dev/null 2>&1`
+                if [ "$?" -ne 0 ]; then
+                    echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
+                    pass=false
+                fi
+
+                `rm -f pkg_check`
+              fi
+            fi
+      done
+
+      if $pass; then
+        echo "$ipadd Node - Passed, all dependency packages are installed"
+      else
+        checkContinue
+        pass=true
+      fi
+      echo ""
+     done
+    fi
   fi
   
-  if ! $pass; then
-    checkContinue
-  fi
+
 }
 
 echo ""  
@@ -1070,7 +1056,6 @@ if [ "$IPADDRESSES" != "" ]; then
   checkPorts
   checkTime
 fi
-checkMySQLPort
 checkPackages
 
 if [ $REPORTPASS == true ] ; then
