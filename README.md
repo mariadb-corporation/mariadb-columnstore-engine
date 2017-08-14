@@ -1,6 +1,6 @@
-#MariaDB ColumnStore Storage/Execution engine 1.0.10
-MariaDB ColumnStore 1.0.10 is the development version of MariaDB ColumnStore. 
-It is built by porting InfiniDB 4.6.7 on MariaDB 10.1.25 and adding entirely 
+#MariaDB ColumnStore Storage/Execution engine 1.0.11
+MariaDB ColumnStore 1.0.11 is the development version of MariaDB ColumnStore. 
+It is built by porting InfiniDB 4.6.7 on MariaDB 10.1.26 and adding entirely 
 new features not found anywhere else.
 
 #MariaDB ColumnStore 1.0.10 is an GA release. 
