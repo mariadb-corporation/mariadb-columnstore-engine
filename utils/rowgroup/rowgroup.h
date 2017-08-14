@@ -118,9 +118,18 @@ private:
 
 	// This is an overlay b/c the underlying data needs to be any size,
 	// and alloc'd in one chunk.  data can't be a separate dynamic chunk.
-	
-	std::vector<boost::shared_ptr<std::string> > mem;
-	bool empty;
+    struct MemChunk
+    {
+        uint32_t currentSize;
+        uint32_t capacity;
+        uint8_t data[];
+    };
+
+    std::vector<boost::shared_array<uint8_t> > mem;
+
+    // To store strings > 64KB (BLOB/TEXT)
+    std::vector<boost::shared_array<uint8_t> > longStrings;
+    bool empty;
 	bool fUseStoreStringMutex; //@bug6065, make StringStore::storeString() thread safe
 	boost::mutex fMutex;
 };
@@ -1531,13 +1540,27 @@ inline std::string StringStore::getString(uint32_t off, uint32_t len) const
 	if (off == std::numeric_limits<uint32_t>::max())
 		return joblist::CPNULLSTRMARK;
 
-	if ((mem.size() < off) || off == 0)
+    MemChunk *mc;
+    if (off & 0x80000000)
+    {
+        off = off - 0x80000000;
+        if (longStrings.size() <= off)
+            return joblist::CPNULLSTRMARK;
+        mc = (MemChunk*) longStrings[off].get();
+        return std::string((char *) mc->data, len);
+    }
+
+    uint32_t chunk = off / CHUNK_SIZE;
+    uint32_t offset = off % CHUNK_SIZE;
+    // this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
+    // what gets returned, it just can't go out of bounds.
+    if (mem.size() <= chunk)
+        return joblist::CPNULLSTRMARK;
+    mc = (MemChunk *) mem[chunk].get();
+    if ((offset + len) > mc->currentSize)
 		return joblist::CPNULLSTRMARK;
     
-    if (mem[off-1].get() == NULL)    
-        return joblist::CPNULLSTRMARK;
-
-	return *mem[off-1].get();
+    return std::string((char *) &(mc->data[offset]), len);
 }
 
 inline const uint8_t * StringStore::getPointer(uint32_t off) const
@@ -1545,15 +1568,26 @@ inline const uint8_t * StringStore::getPointer(uint32_t off) const
 	if (off == std::numeric_limits<uint32_t>::max())
 		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
 
+    uint32_t chunk = off / CHUNK_SIZE;
+    uint32_t offset = off % CHUNK_SIZE;
+    MemChunk *mc;
+    if (off & 0x80000000)
+    {
+        off = off - 0x80000000;
+        if (longStrings.size() <= off)
+            return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
+        mc = (MemChunk*) longStrings[off].get();
+        return mc->data;
+    }
 	// this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
 	// what gets returned, it just can't go out of bounds.
-	if (UNLIKELY(mem.size() < off))
-		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
-        
-    if (off == 0 || (mem[off-1].get() == NULL))
+    if (UNLIKELY(mem.size() <= chunk))
         return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
+    mc = (MemChunk *) mem[chunk].get();
+    if (offset > mc->currentSize)
+		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
 
-	return (uint8_t*)mem[off-1].get()->c_str();
+    return &(mc->data[offset]);
 }
 
 inline bool StringStore::isNullValue(uint32_t off, uint32_t len) const
@@ -1564,15 +1598,22 @@ inline bool StringStore::isNullValue(uint32_t off, uint32_t len) const
 	if (len < 8)
 		return false;
 
-	if ((mem.size() < off) || off == 0)
+    // Long strings won't be NULL
+    if (off & 0x80000000)
+        return false;
+
+    uint32_t chunk = off / CHUNK_SIZE;
+    uint32_t offset = off % CHUNK_SIZE;
+    MemChunk *mc;
+    if (mem.size() <= chunk)
 		return true;
 
-	if (mem[off-1].get() == NULL)
+    mc = (MemChunk *) mem[chunk].get();
+    if ((offset + len) > mc->currentSize)
         return true;
-
-	if (mem[off-1].get()->empty()) // Empty string is NULL
+    if (mc->data[offset] == 0)    // "" = NULL string for some reason...
         return true;
-	return (mem[off-1].get()->compare(joblist::CPNULLSTRMARK) == 0);
+    return (*((uint64_t *) &mc->data[offset]) == *((uint64_t *) joblist::CPNULLSTRMARK.c_str()));
 }
 
 inline bool StringStore::equals(const std::string &str, uint32_t off, uint32_t len) const
@@ -1580,13 +1621,30 @@ inline bool StringStore::equals(const std::string &str, uint32_t off, uint32_t l
 	if (off == std::numeric_limits<uint32_t>::max() || len == 0)
 		return str == joblist::CPNULLSTRMARK;
 
-	if ((mem.size() < off) || off == 0)
+    MemChunk *mc;
+    if (off & 0x80000000)
+    {
+        if (longStrings.size() <= (off - 0x80000000))
+            return false;
+
+        mc = (MemChunk *) longStrings[off - 0x80000000].get();
+
+        // Not sure if this check it needed, but adds safety
+        if (len > mc->currentSize)
+            return false;
+
+        return (strncmp(str.c_str(), (const char*) mc->data, len) == 0);
+    }
+    uint32_t chunk = off / CHUNK_SIZE;
+    uint32_t offset = off % CHUNK_SIZE;
+    if (mem.size() <=  chunk)
 		return false;
 
-	if (mem[off-1].get() == NULL)
+    mc = (MemChunk *) mem[chunk].get();
+    if ((offset + len) > mc->currentSize)
 		return false;
 
-	return (mem[off-1].get()->compare(str) == 0);
+    return (strncmp(str.c_str(), (const char *) &mc->data[offset], len) == 0);
 }
 
 inline bool StringStore::isEmpty() const
@@ -1598,10 +1656,16 @@ inline uint64_t StringStore::getSize() const
 {
 	uint32_t i;
 	uint64_t ret = 0;
+    MemChunk *mc;
 	
 	for (i = 0; i < mem.size(); i++) {
-		ret+= mem[i].get()->length();
+        mc = (MemChunk *) mem[i].get();
+        ret += mc->capacity;
 	}
+    for (i = 0; i < longStrings.size(); i++) {
+        mc = (MemChunk *) longStrings[i].get();
+        ret += mc->capacity;
+    }
 	return ret;
 }
 
