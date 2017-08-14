@@ -10,7 +10,7 @@ CHECK=true
 REPORTPASS=true
 LOGFILE=""
 
-OS_LIST=("centos6" "centos7" "debian8" "suse12" "ubuntu16")
+OS_LIST=("centos6" "centos7" "debian8" "debian9" "suse12" "ubuntu16")
 
 NODE_IPADDRESS=""
 
@@ -71,7 +71,7 @@ helpPrint () {
     echo  "   -h,--help			Help" 
     echo  "   --ipaddr=[ipaddresses]	Remote Node IP-Addresses/Hostnames, if not provide, will only check local node"
     echo  "                           	examples: 192.168.1.1,192.168.1.2 or serverum1,serverpm2"
-    echo  "   --os=[os]			Optional: Set OS Version (centos6, centos7, debian8, suse12, ubuntu16)" 
+    echo  "   --os=[os]			Optional: Set OS Version (centos6, centos7, debian8, debian9, suse12, ubuntu16)" 
     echo  "   --password=[password]	Provide a user password. (Default: ssh-keys setup will be assumed)" 
     echo  "   -c,--continue		Continue on failures"
     echo  "   --logfile=[fileName] 	Output results to a log file"
@@ -841,7 +841,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "snappy" "net-tools" "libdbd-mysql-perl")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libdbd-mysql-perl")
 
   if [ "$OS" == "ubuntu16" ] ; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -970,6 +970,73 @@ checkPackages()
      done
     fi
   fi
+  
+  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools")
+
+  if [ "$OS" == "debian9" ]; then
+    if [ ! `which dpkg 2>/dev/null` ] ; then
+      echo "${bold}Failed${normal}, Local Node ${bold}rpm${normal} package not installed"
+      pass=false
+      REPORTPASS=false
+    else    
+      pass=true
+      #check centos packages on local node
+      for PKG in "${DEBIAN9_PKG[@]}"; do
+	`dpkg -s "$PKG" > /tmp/pkg_check 2>&1`
+	`cat /tmp/pkg_check | grep 'install ok installed' > /dev/null 2>&1`
+	if [ "$?" -ne 0 ]; then
+	  echo "${bold}Failed${normal}, Local Node package ${bold}${PKG}${normal} is not installed, please install"
+	  pass=false
+	  REPORTPASS=false
+	fi
+      done
+
+      if $pass; then
+	echo "Local Node - Passed, all dependency packages are installed"
+      else
+	checkContinue
+      fi
+    fi
+    
+    echo ""
+    pass=true
+    if [ "$IPADDRESSES" != "" ]; then
+     for ipadd in "${NODE_IPADDRESS[@]}"; do
+      for PKG in "${DEBIAN9_PKG[@]}"; do
+        `./remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+          `./remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
+            if [ "$?" -ne 0 ]; then
+              echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
+            else
+              `cat /tmp/remote_command_check | grep 'command not found' > /dev/null 2>&1`
+              if [ "$?" -eq 0 ]; then
+                echo "${bold}Failed${normal}, $ipadd Node ${bold}dpkg${normal} package not installed"
+                pass=false
+                break
+              else
+                `cat pkg_check | grep 'install ok installed' > /dev/null 2>&1`
+                if [ "$?" -ne 0 ]; then
+                    echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
+                    pass=false
+                fi
+
+                `rm -f pkg_check`
+              fi
+            fi
+      done
+
+      if $pass; then
+        echo "$ipadd Node - Passed, all dependency packages are installed"
+      else
+        checkContinue
+        pass=true
+      fi
+      echo ""
+     done
+    fi
+  fi
+  
+
 }
 
 echo ""  
