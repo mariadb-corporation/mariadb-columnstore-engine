@@ -219,7 +219,7 @@ void QueryStats::insert()
     mysql_real_escape_string(mysql.fCon, query.get(), fQuery.c_str(), fQuery.length());
 
 	ostringstream insert;
-	insert << "insert delayed into querystats values (0, ";
+	insert << "insert into querystats values (0, ";
 	insert << fSessionID << ", ";
 	insert << "'" << fHost << "', ";
 	insert << "'" << fUser << "', ";
