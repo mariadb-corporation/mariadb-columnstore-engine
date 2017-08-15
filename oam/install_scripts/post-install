@@ -153,7 +153,6 @@ mkdir -p $installdir/data/bulk/tmpjob >/dev/null 2>&1
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 
 #create columnstore temp file directory
-$SUDO chmod 777 /tmp
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
@@ -218,7 +217,7 @@ else
 
         sed -i -e s@prefix=/home/quest@prefix=$prefix@g $installdir/bin/*
 
-	$SUDO rm -f /tmp/* > /dev/null 2>&1
+	$SUDO chmod 777 /tmp
 	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
 	$SUDO chmod -R 777 /dev/shm
@@ -231,7 +230,7 @@ fi
 
 # install Columnstore Log Rotate File
 $SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-$SUDO chmod 666 /etc/logrotate.d/columnstore
+$SUDO chmod 644 /etc/logrotate.d/columnstore
 
 #check if MariaDB Columnstore system logging was setup
 cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
