@@ -971,7 +971,7 @@ checkPackages()
     fi
   fi
   
-  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools")
+  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools" "libioa1")
 
   if [ "$OS" == "debian9" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
