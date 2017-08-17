@@ -62,7 +62,7 @@ if { $PKGTYPE == "rpm" } {
 #check and see if remote server has ssh keys setup, set PASSWORD if so
 send_user " "
 send "ssh -v $USERNAME@$SERVER 'time'\n"
-set timeout 20
+set timeout 60
 expect {
 	"authenticity" { send "yes\n" 
 				expect {
@@ -325,7 +325,7 @@ send_user "\n"
 # Start module installer to setup Custom OS files
 #
 send_user "Run Module Installer                            "
-send "ssh -v $USERNAME@$SERVER '$BASH $INSTALLDIR/bin/module_installer.sh --module=um --port=$MYSQLPORT'\n"
+send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/module_installer.sh --module=um --port=$MYSQLPORT'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {
