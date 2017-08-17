@@ -338,11 +338,6 @@ expect {
 	"Exit status 0" { send_user "DONE" }
         "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
 	"!!!Module" 	{ send_user "DONE" }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"FAILED"   { send_user "ERROR: missing OS file\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }
-	"WARNING"   { send_user "WARNING: SYSLOG setup failed\n" }
 }
 send_user "\n"
 

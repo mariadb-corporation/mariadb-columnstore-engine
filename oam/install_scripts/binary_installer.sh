@@ -216,7 +216,7 @@ if { $PASSWORD != "ssh" } {
 		"passphrase" { send "$PASSWORD\n" }
 	}
 }
-set timeout 120
+set timeout 360
 expect {
 	"Exit status 0" { send_user "DONE" }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
@@ -341,16 +341,9 @@ if { $PASSWORD != "ssh" } {
 }
 set timeout 60
 expect {
-	"!!!Module" { send_user "DONE" }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"FAILED"   								{ send_user "ERROR: missing module file\n" ; exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	"No such file"   { send_user "ERROR: File Not Found\n" ; exit 1 }
-	"WARNING"   { send_user "WARNING: SYSLOG setup failed\n" }
 	"Exit status 0" { send_user "DONE" }
+        "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
+	"!!!Module" 	{ send_user "DONE" }
 }
 send_user "\n"
 
