@@ -60,7 +60,7 @@ if { $PKGTYPE == "rpm" } {
 #check and see if remote server has ssh keys setup, set PASSWORD if so
 send_user " "
 send "ssh -v $USERNAME@$SERVER 'time'\n"
-set timeout 20
+set timeout 60
 expect {
 	"authenticity" { send "yes\n" 
 				expect {

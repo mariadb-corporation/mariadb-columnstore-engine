@@ -42,7 +42,7 @@ spawn -noecho /bin/bash
 #check and see if remote server has ssh keys setup, set PASSWORD if so
 send_user " "
 send "ssh -v $USERNAME@$SERVER 'time'\n"
-set timeout 20
+set timeout 60
 expect {
 	"authenticity" { send "yes\n" 
 				expect {
@@ -215,7 +215,7 @@ if { $PASSWORD != "ssh" } {
 		"passphrase" { send "$PASSWORD\n" }
 	}
 }
-set timeout 120
+set timeout 360
 expect {
 	"Exit status 0" { send_user "DONE" }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
