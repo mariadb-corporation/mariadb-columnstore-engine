@@ -18,7 +18,7 @@ set(WriteEngineServer_SRCS
 
 add_executable(WriteEngineServer ${WriteEngineServer_SRCS})
 
-target_link_libraries(WriteEngineServer ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute)
+target_link_libraries(WriteEngineServer ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute)
 
 install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

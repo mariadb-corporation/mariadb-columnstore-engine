@@ -114,7 +114,7 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
 int LibMySQL::run(const char* query)
 {
 	int ret = 0;
-    if (mysql_query(fCon, query) != 0)
+    if (mysql_real_query(fCon, query, strlen(query)) != 0)
 	{
 		fErrStr = "fatal error reading result from crossengine client lib";
         ret = -1;

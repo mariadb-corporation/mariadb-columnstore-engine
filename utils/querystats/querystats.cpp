@@ -210,6 +210,9 @@ void QueryStats::insert()
 	if (mysql.fCon == NULL)
 		handleMySqlError("fatal error initializing querystats lib", -1);
 
+    unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
+    mysql_options(mysql.fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
+
     if (mysql_real_connect(mysql.fCon, host.c_str(), user.c_str(), pwd.c_str(),
 		SCHEMA.c_str(), port, NULL, 0) == NULL)
 		handleMySqlError("fatal error setting up parms in querystats lib", mysql_errno(mysql.fCon));
@@ -241,7 +244,7 @@ void QueryStats::insert()
 	insert << fNumFiles << ", ";
 	insert << fFileBytes << ")"; // the last 2 fields are not populated yet
 
-	int ret = mysql_query(mysql.fCon, insert.str().c_str());
+	int ret = mysql_real_query(mysql.fCon, insert.str().c_str(), insert.str().length());
 	if (ret != 0)
 		handleMySqlError("fatal error executing query in querystats lib", ret);
 }
@@ -287,6 +290,9 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
 	if (mysql.fCon == NULL)
 		handleMySqlError("fatal error initializing querystats lib", -1);
 
+    unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
+    mysql_options(mysql.fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
+
     if (mysql_real_connect(mysql.fCon, host.c_str(), user.c_str(), pwd.c_str(),
 		SCHEMA.c_str(), port, NULL, 0) == NULL)
 		handleMySqlError("fatal error connecting to InfiniDB in querystats lib", mysql_errno(mysql.fCon));
@@ -307,7 +313,7 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
 	      << _user 
 	      << "') and upper(a.priority) = upper(b.priority)";
 
-    int ret =mysql_query(mysql.fCon, query.str().c_str());
+    int ret =mysql_real_query(mysql.fCon, query.str().c_str(), query.str().length());
     if (ret != 0)
 		handleMySqlError("fatal error executing query in querystats lib", ret);
     // Using mysql_store_result here as for mysql_use_result we would need to get every row
