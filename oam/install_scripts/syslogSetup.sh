@@ -169,10 +169,13 @@ if [ ! -z "$syslog_conf" ] ; then
 		if [ $rsyslog7 == 1 ]; then
 			$SUDO rm -f /etc/rsyslog.d/49-columnstore.conf
 			$SUDO cp  ${columnstoreSyslogFile7} ${syslog_conf}
-			$SUDO chown -R syslog:adm /var/log/mariadb/columnstore >/dev/null 2>&1
 		else
 			$SUDO cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
+	fi
+	
+	if [ $rsyslog7 == 1 ]; then
+	      $SUDO chown -R syslog:adm /var/log/mariadb/columnstore >/dev/null 2>&1
 	fi
 
 	restartSyslog
