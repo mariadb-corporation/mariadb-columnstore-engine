@@ -8,7 +8,7 @@ set(ProcMon_SRCS main.cpp processmonitor.cpp)
 
 add_executable(ProcMon ${ProcMon_SRCS})
 
-target_link_libraries(ProcMon ${ENGINE_LDFLAGS} cacheutils ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
+target_link_libraries(ProcMon ${ENGINE_LDFLAGS} cacheutils ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_EXEC_LIBS})
 
 install(TARGETS ProcMon DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

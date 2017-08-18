@@ -24,7 +24,7 @@ set(PrimProc_SRCS
 
 add_executable(PrimProc ${PrimProc_SRCS})
 
-target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor)
+target_link_libraries(PrimProc ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} threadpool cacheutils dbbc processor)
 
 install(TARGETS PrimProc DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 

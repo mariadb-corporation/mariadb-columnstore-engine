@@ -17,7 +17,7 @@ set(cpimport_SRCS
 
 add_executable(cpimport ${cpimport_SRCS})
 
-target_link_libraries(cpimport ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} batchloader threadpool)
+target_link_libraries(cpimport ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} batchloader threadpool)
 
 install(TARGETS cpimport DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
