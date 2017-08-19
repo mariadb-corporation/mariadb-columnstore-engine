@@ -227,7 +227,7 @@ void QueryStats::insert()
 	drizzle_escape_string(query.get(), fQuery.length()*2, fQuery.c_str(), fQuery.length());
 
 	ostringstream insert;
-	insert << "insert delayed into querystats values (0, ";
+	insert << "insert into querystats values (0, ";
 	insert << fSessionID << ", ";
 	insert << "'" << fHost << "', ";
 	insert << "'" << fUser << "', ";

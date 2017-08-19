@@ -56,6 +56,7 @@ extern string localHostName;
 extern string PMwithUM;
 extern string AmazonPMFailover;
 extern string DBRootStorageType;
+extern int requestCount;
 
 typedef   map<string, int>	moduleList;
 extern moduleList moduleInfoList;
@@ -2987,11 +2988,18 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 				break;
 	}
 	
-	sleep(5);
+//	sleep(5);
+
+//	requestCount--;
+//	log.writeLog(__LINE__, "requestCount = " + oam.itoa(requestCount), LOG_TYPE_ERROR);
+
 	fIos.close();
 	pthread_detach (ThreadId);
 	pthread_exit(0);
 }
+
+	pthread_mutex_t ALARM_LOCK;
+
 
 /******************************************************************************************
 * @brief	getAlarmData
@@ -3003,6 +3011,9 @@ int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::stri
 {
 	ByteStream msg;
 	Oam oam;
+
+	pthread_mutex_lock(&ALARM_LOCK);
+
 	int returnStatus = oam::API_SUCCESS;
 
 	AlarmList alarmList;
@@ -3022,6 +3033,7 @@ int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::stri
 			}
 			catch(...) {}
 		
+			pthread_mutex_unlock(&ALARM_LOCK);
 			return oam::API_FAILURE;
 		}
 	}
@@ -3041,6 +3053,7 @@ int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::stri
 			}
 			catch(...) {}
 		
+			pthread_mutex_unlock(&ALARM_LOCK);
 			return oam::API_FAILURE;
 		}
 	}
@@ -3071,6 +3084,7 @@ int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::stri
 	}
 	catch(...) {}
 
+	pthread_mutex_unlock(&ALARM_LOCK);
 	return returnStatus;
 }
 
@@ -6245,7 +6259,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
 	if ( skipSession )
 		skip = "-s";
 
-	string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > + logdir + /reset_locks.log1 2>&1";
+	string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
 	int rtnCode = system(cmd.c_str());
 	log.writeLog(__LINE__, "Ran reset_locks", LOG_TYPE_DEBUG);
 

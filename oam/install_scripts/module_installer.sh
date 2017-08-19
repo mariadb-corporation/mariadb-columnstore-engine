@@ -92,8 +92,13 @@ if [ $module = "um" ]; then
 				echo "Setup UM Volume Mount"
 				device=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMVolumeDeviceName$mid`
 				mkdir -p $COLUMNSTORE_INSTALL_DIR/mysql/db > /dev/null 2>&1
-				sudo mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto,user
-				chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
+				if [ $user = "root" ]; then
+					mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto
+					chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
+				else
+					sudo mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto,user
+					sudo chown $user:$user -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
+				fi
 			fi
 		fi
 	fi
@@ -155,13 +160,13 @@ fi
 # if um, run mysql install scripts
 if [ $module = "um" ]; then
 	echo "Run post-mysqld-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install > /tmp/post-mysqld-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysqld-install.log 2>&1
 	if [ $? -ne 0 ]; then
 	    echo "ERROR: post-mysqld-install failed: check /tmp/post-mysqld-install.log"
 	    exit 1
 	fi
 	echo "Run post-mysql-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install > /tmp/post-mysql-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysql-install.log 2>&1
         if [ $? -ne 0 ]; then
             echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
             exit 1
