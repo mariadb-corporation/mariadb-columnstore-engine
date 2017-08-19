@@ -6171,8 +6171,6 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 				return oam::API_FAILURE;
 			}
 		}
-		log.writeLog(__LINE__, "glusterUnassign failed.", LOG_TYPE_ERROR);
-		return oam::API_FAILURE;
 	}
 
 	return oam::API_SUCCESS;
