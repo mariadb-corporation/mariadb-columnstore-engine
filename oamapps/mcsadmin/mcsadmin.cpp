@@ -2049,6 +2049,11 @@ int processCommand(string* arguments)
 		catch(...)
 		{}
 
+		if (DataRedundancyConfig == "y") {
+			cout << endl << "**** removeDbroot Not Supported on Data Redundancy Configured System, use removeModule command to remove modules and dbroots" << endl;
+			break;
+		}
+
 		if ( localModule != parentOAMModule ) {
 			// exit out since not on active module
 			cout << endl << "**** removeDbroot Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
@@ -5424,6 +5429,16 @@ int processCommand(string* arguments)
 						}
 					}
 
+					if ( DataRedundancyConfig == "y")
+					{
+						string errmsg1;
+						string errmsg2;
+						int ret = oam.glusterctl(oam::GLUSTER_PEERPROBE, IPAddress, password, errmsg2);
+						if ( ret != 0 )
+						{
+							return 1;
+						}
+					}
 					hostconfig.IPAddr = IPAddress;
 					hostconfig.HostName = hostName;
 					hostconfig.NicID = j+1;
@@ -5465,14 +5480,7 @@ int processCommand(string* arguments)
 
 			if ( DataRedundancyConfig == "y" && moduleType == "pm")
 			{
-				cout << endl << "System is configured with Data Redundancy, DBRoot Storage will" << endl;
-				cout << "will be created with the Modules during this command." << endl;
-				cout << "The Data Redundancy Packages should already be installed on the" << endl;
-				cout << "Servers being installed." << endl;
-
-				// confirm request
-				if (confirmPrompt(" "))
-					break;
+				cout << endl << "Data Redundancy storage will be expanded when module(s) are added." << endl;
 
 				if ( dbrootPerPM == 0) {
 					cout << endl;
@@ -5634,11 +5642,10 @@ int processCommand(string* arguments)
 					cout << endl << "Run Data Redundancy Setup for DBRoots" << endl;
 
 					try {
-						string errmsg;	
-						int ret = oam.glusterctl(oam::GLUSTER_ADD, firstPM, firstDBroot, errmsg);
+						int ret = oam.glusterctl(oam::GLUSTER_ADD, firstPM, firstDBroot, password);
 						if ( ret != 0 )
 						{
-							cout << endl << "**** Failed Data Redundancy Add of DBRoots: " << errmsg << endl;
+							cout << endl << "**** Failed Data Redundancy Add of DBRoots, " << endl;
 							break;
 						}
 
@@ -5677,6 +5684,22 @@ int processCommand(string* arguments)
 
         case 49: // removeModule - parameters: Module name/type, number-of-modules
         {
+    		string DataRedundancyConfig = "n";
+    		int DataRedundancyCopies;
+    		try {
+    			oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
+    		}
+    		catch(...)
+    		{}
+    		if (DataRedundancyConfig == "y")
+    		{
+        		try {
+        			oam.getSystemConfig( "DataRedundancyCopies", DataRedundancyCopies);
+        		}
+        		catch(...)
+        		{}
+    		}
+
             if ( SingleServerInstall == "y" ) {
                 // exit out since not on single-server install
                 cout << endl << "**** removeModule Failed : not support on a Single-Server type installs  " << endl;
@@ -5738,6 +5761,10 @@ int processCommand(string* arguments)
 					break;
 				}
 
+				if ( DataRedundancyConfig == "y" ) {
+					cout << endl << "**** removeModule Failed : Data Redundancy requires you to specify modules to remove in groups." << endl;
+					break;
+				}
 				cout << endl;
 
 				moduleType = arguments[1];
@@ -5810,7 +5837,7 @@ int processCommand(string* arguments)
 					devicenetworklist.push_back(devicenetworkconfig);
 
 					moduleType = (*it).substr(0,MAX_MODULE_TYPE_SIZE);
-	
+
 					try{
 						oam.getSystemConfig(moduleType, moduletypeconfig);
 					}
@@ -5820,9 +5847,9 @@ int processCommand(string* arguments)
 						quit = true;
 						break;
 					}
-				
+
 					int currentModuleCount = moduletypeconfig.ModuleCount;
-	
+
 					if ( moduleType == "pm" && currentModuleCount == 1) {
 						cout << endl << "**** removeModule Failed : Failed to Remove Module, you can't remove last Performance Module" << endl;
 						quit = true;
@@ -5837,6 +5864,10 @@ int processCommand(string* arguments)
 				}
 			}
 
+			if ( DataRedundancyConfig == "y" && devicenetworklist.size() != DataRedundancyCopies) {
+				cout << endl << "**** removeModule Failed : Data Redundancy requires you to remove modules in groups equal to number of copies" << endl;
+				quit = true;
+			}
 			if (quit)
 				break;
 
@@ -5855,12 +5886,75 @@ int processCommand(string* arguments)
 					}
 					catch(...) 
 					{}
-					
-					if ( !dbrootConfigList.empty() ) {
+					if ( !dbrootConfigList.empty() && DataRedundancyConfig == "n") {
 						cout << "**** removeModule Failed : " << (*pt).DeviceName << " has dbroots still assigned. Please run movePmDbrootConfig or unassignDbrootPmConfig.";
 						quit = true;
 						cout << endl;
 						break;
+					}
+					else if (DataRedundancyConfig == "y")
+					{
+						bool PMlistError = true;
+						DBRootConfigList::iterator dbrootListPt = dbrootConfigList.begin();
+						for( ; dbrootListPt != dbrootConfigList.end() ; dbrootListPt++)
+						{
+							// check if ACTIVE PM has a copy of Dbroot
+							string pmList = "";
+							try {
+								string errmsg;
+								int ret = oam.glusterctl(oam::GLUSTER_WHOHAS, oam.itoa(*dbrootListPt), pmList, errmsg);
+								if ( ret != 0 )
+								{
+									cout << endl << "**** removeModule Failed : " << (*pt).DeviceName << " glusterctl error" << endl;
+									break;
+								}
+							}
+							catch (...)
+							{
+								cout << endl << "**** removeModule Failed : " << (*pt).DeviceName << " glusterctl error" << endl;
+								break;
+							}
+							boost::char_separator<char> sep(" ");
+							boost::tokenizer< boost::char_separator<char> > tokens(pmList, sep);
+							for ( boost::tokenizer< boost::char_separator<char> >::iterator it1 = tokens.begin();
+									it1 != tokens.end();
+									++it1)
+							{
+								PMlistError = true;
+								DeviceNetworkList::iterator deviceNetListStartPt = devicenetworklist.begin();
+								string pmWithThisdbrootCopy = (*it1);
+								// walk the list of PMs that have copies of this dbroot
+								// and be sure they are in the list of nodes to be removed
+								for( ; deviceNetListStartPt != endpt ; deviceNetListStartPt++)
+								{
+									string thisModuleID = (*deviceNetListStartPt).DeviceName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE);
+									//cout << "pmWithThisDBRoot: " << pmWithThisdbrootCopy << " thisModuleID: " << thisModuleID << endl;
+									if (pmWithThisdbrootCopy == thisModuleID)
+									{
+										PMlistError = false;
+									}
+								}
+								if (PMlistError)
+								{
+									cout << "**** removeModule Failed : Attempting to remove PMs: "<< arguments[1] << " -- DBRoot" << oam.itoa(*dbrootListPt) << " has copies on PMs " << pmList << endl;
+									quit = true;
+								}
+							}
+						}
+						if (!quit)
+						{
+							try
+							{
+								oam.removeDbroot(dbrootConfigList);
+
+								cout << endl << "   Successful Removal of DBRoots " << endl << endl;
+							}
+							catch (exception& e)
+							{
+								cout << endl << "**** removeModule : Removal of DBRoots Failed: " << e.what() << endl;
+								quit = true;
+							}
+						}
 					}
 				}
 	

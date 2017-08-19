@@ -138,7 +138,8 @@ namespace oam
         GLUSTER_WHOHAS,
         GLUSTER_UNASSIGN,
         GLUSTER_ADD,
-        GLUSTER_DELETE
+        GLUSTER_DELETE,
+		GLUSTER_PEERPROBE
 	};
 
 

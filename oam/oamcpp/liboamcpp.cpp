@@ -8267,7 +8267,9 @@ namespace oam
 			{
 				int pmID = atoi(argument1.c_str());
 				int dbrootID = atoi(argument2.c_str());
+				string password = errmsg;
 				string command = "";
+				int status;
 				writeLog("glusterctl: GLUSTER_ADD: dbroot = " + argument2 + " pm = " + argument1, LOG_TYPE_DEBUG );
 
 				Config* sysConfig = Config::makeConfig();
@@ -8354,17 +8356,24 @@ namespace oam
 
             	for (int pm=(pmID-1); pm < numberPMs; pm++)
             	{
-	            	command = glustercmd + "peer probe " + DataRedundancyConfigs[pm].pmIpAddr;
-					int status = system(command.c_str());
-					if (WEXITSTATUS(status) != 0 )
-					{
-						writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
-						exceptionControl("GLUSTER_ADD", API_FAILURE);
-					}
+    				cout << "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr << endl;
+    				status = system(command.c_str());
+    				if (WEXITSTATUS(status) != 0 )
+    				{
+    					cout << "ERROR: peer probe command failed." << endl;
+    					command = InstallDir + "/bin/remote_command.sh " + DataRedundancyConfigs[pm].pmIpAddr + " " + password + "'stat /var/run/glusterd.pid > /dev/null 2>&1'";
+    					status = system(command.c_str());
+    					if (WEXITSTATUS(status) != 0 )
+    					{
+    						cout << "ERROR: No glusterd process detected at " << DataRedundancyConfigs[pm].pmIpAddr << "." << endl;
+    						cout << "       Start and enable glusterd and run postConfigure again." << endl;
+    					}
+    					exceptionControl("GLUSTER_ADD", API_FAILURE);
+    				}
             	}
             	sleep(5);
-            	command = glustercmd + "peer status ";
-            	int status = system(command.c_str());
+            	command = glustercmd + "peer status " + " >> /tmp/glusterCommands.txt 2>&1";
+            	status = system(command.c_str());
             	if (WEXITSTATUS(status) != 0 )
             	{
             		cout << "ERROR: command failed: " << command << endl;
@@ -8372,6 +8381,11 @@ namespace oam
             	}
             	//Need to wait since peer probe success does not always mean it is ready for volume create command
             	sleep(10);
+            	int pmnextbrick[numberPMs];
+            	for (int pm=(pmID-1); pm < numberPMs; pm++)
+            	{
+            		pmnextbrick[pm]=1;
+            	}
             	for (int db=(dbrootID-1); db < dbrootCount; db++)
             	{
             		int newDbrootID = db + 1;
@@ -8382,22 +8396,25 @@ namespace oam
             		for (; dbrootPmIter < dbrootPms[db].end(); dbrootPmIter++ )
             		{
             			int pm = (*dbrootPmIter) - 1;
-            			command += DataRedundancyConfigs[pm].pmIpAddr + ":" + InstallDir +"/gluster/brick" + itoa(newDbrootID) + " ";
+            			command += DataRedundancyConfigs[pm].pmIpAddr + ":" + InstallDir +"/gluster/brick" + itoa(pmnextbrick[pm]) + " ";
+            			pmnextbrick[pm]++;
             		}
-            		command += "force";
-					int status = system(command.c_str());
+            		command += "force >> /tmp/glusterCommands.txt 2>&1";
+            		cout << "Gluster create and start volume dbroot" << itoa(newDbrootID) << "...";
+					status = system(command.c_str());
 					if (WEXITSTATUS(status) != 0 )
 					{
 						writeLog("ERROR: command failed: " + command,LOG_TYPE_DEBUG);
 						exceptionControl("GLUSTER_ADD", API_FAILURE);
 					}
-					command = glustercmd + "volume start dbroot" + itoa(newDbrootID);
+					command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
 					status = system(command.c_str());
 					if (WEXITSTATUS(status) != 0 )
 					{
 						writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
 						exceptionControl("GLUSTER_ADD", API_FAILURE);
 					}
+					cout << "DONE" << endl;
             	}
 
         		try
@@ -8435,7 +8452,7 @@ namespace oam
 				int status;
 				writeLog("glusterctl: GLUSTER_DELETE: dbroot = " + dbrootID, LOG_TYPE_DEBUG );
 
-				command = glustercmd + "volume stop dbroot" + dbrootID;
+				command = glustercmd + "--mode=script volume stop dbroot" + dbrootID + " >> /tmp/glusterCommands.txt 2>&1";
 
 				status = system(command.c_str());
 				if (WEXITSTATUS(status) != 0 )
@@ -8443,14 +8460,42 @@ namespace oam
 					writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
 					exceptionControl("GLUSTER_DELETE", API_FAILURE);
 				}
+				// give time for transaction to finish after stopping
+            	sleep(10);
 
-				command = glustercmd + "volume delete dbroot" + dbrootID;
+				command = glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> /tmp/glusterCommands.txt 2>&1";
 
 				status = system(command.c_str());
 				if (WEXITSTATUS(status) != 0 )
 				{
 					writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
 					exceptionControl("GLUSTER_DELETE", API_FAILURE);
+				}
+				break;
+			}
+
+			case (oam::GLUSTER_PEERPROBE):
+			{
+				string ipAddress = argument1;
+				string password = argument2;
+				string command = "";
+				int status;
+
+				command = glustercmd + "peer probe " + ipAddress + " >> /tmp/glusterCommands.txt 2>&1";
+
+				cout << "gluster peer probe " + ipAddress << endl;
+				status = system(command.c_str());
+				if (WEXITSTATUS(status) != 0 )
+				{
+					cout << "ERROR: peer probe command failed." << endl;
+					command = InstallDir + "/bin/remote_command.sh " + ipAddress + " " + password + "'stat /var/run/glusterd.pid > /dev/null 2>&1'";
+					status = system(command.c_str());
+					if (WEXITSTATUS(status) != 0 )
+					{
+						cout << "ERROR: No glusterd process detected at " << ipAddress << "." << endl;
+						cout << "       Start and enable glusterd and run postConfigure again." << endl;
+					}
+					return 1;
 				}
 				break;
 			}
