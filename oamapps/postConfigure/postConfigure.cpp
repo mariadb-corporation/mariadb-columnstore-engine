@@ -1467,7 +1467,7 @@ int main(int argc, char *argv[])
 				continue;
 			}
 			if ( moduleType == "pm" && DataRedundancy && moduleCount == 1) {
-				cout << endl << "ERROR: DataRedundancy requires " + moduleType + " module type to be 2 or greater, please re-enter or select a different data storage type." << endl << endl;
+				cout << endl << "ERROR: DataRedundancy requires 2 or more " + moduleType + " modules. type to be 2 or greater, please re-enter or restart to select a different data storage type." << endl << endl;
 				if ( noPrompting )
 					exit(1);
 				continue;
@@ -4572,10 +4572,10 @@ bool storageSetup(bool amazonInstall)
 
 	if (storageType != "3" && DataRedundancy)
 	{
-		cout << "WARNING: This system was configured with ColumnStore DataRedundancy" << endl;
-		cout << "         The selection to change from DataRedundancy to a different" << endl;
-		cout << "         storage type will require to cleanup. Exit and refer to" << endl;
-		cout << "         ColumnStore documentation for procedures or continue." << endl;
+		cout << "WARNING: This system was configured with ColumnStore DataRedundancy storage." << endl;
+		cout << "         Before changing from DataRedundancy to another storage type," << endl;
+		cout << "         existing data should be migrated to the targeted storage." << endl;
+		cout << "         Please refer to the ColumnStore documentation for more information." << endl;
 
 		cout << endl;
 		string continueInstall = "y";
@@ -5445,8 +5445,9 @@ bool glusterSetup(string password) {
 	if (pmNumber > 2)
 	{
 		cout << endl;
+		cout << endl << "----- Setup Data Redundancy Copy Count Configuration -----" << endl << endl;
 		cout << "Setup the Number of Copies: This is the total number of copies of the data" << endl;
-		cout << "in the system. At least 2, but not more than the number of PMs(" + oam.itoa(pmNumber) + "), are required." << endl;
+		cout << "in the system. At least 2, but not more than the number of PMs(" + oam.itoa(pmNumber) + "), are required." << endl << endl;
 		while(dataRedundancyCopies < 2 || dataRedundancyCopies > pmNumber)
 		{
 			dataRedundancyCopies = 2;  //minimum 2 copies
@@ -5491,11 +5492,16 @@ bool glusterSetup(string password) {
 
 	numberBricksPM = numberDBRootsPerPM * dataRedundancyCopies;
 
+
+	cout << endl << "----- Setup Data Redundancy Network Configuration -----" << endl << endl;
+
+
+	cout << "  'existing'  -   This is specified when using previously configured network devices. (NIC Interface #1)" << endl;
+	cout << "                  No additional network configuration is required with this option." << endl << endl;
+	cout << "  'dedicated' -   This is specified when it is desired for Data Redundancy traffic to use" << endl;
+	cout << "                  a separate network than one previously configured for ColumnStore."  << endl;
+	cout << "                  You will be prompted to provide Hostname and IP information for each PM." << endl << endl;
 	cout << endl;
-	cout << "You can choose to run redundancy over the existing network that ColumnStore " << endl;
-	cout << "is currently using or you can configure a dedicated redundancy network. " << endl;
-	cout << "If you choose a dedicated redundancy network, you will need to provide " << endl;
-	cout << "hostname and IP address information." << endl;
 	while( dataRedundancyNetwork != 1 && dataRedundancyNetwork != 2 )
 	{
 		dataRedundancyNetwork = 1;
@@ -5744,6 +5750,8 @@ bool glusterSetup(string password) {
 	}
 */
 	// User config complete setup the gluster bricks
+	cout << endl << "----- Performing Data Redundancy Configuration -----" << endl << endl;
+
 	// This will distribute DBRootCopies evenly across PMs
 	for (int pm=0; pm < pmNumber; pm++)
 	{
@@ -5803,11 +5811,18 @@ bool glusterSetup(string password) {
 		for ( int brick=1; brick<=numberBricksPM; brick++)
 		{
 			// create the gluster brick directories now
-			command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+			if (rootUser)
+			{
+				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+			}
+			else
+			{
+				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'sudo mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+			}
 			status = system(command.c_str());
 			if (WEXITSTATUS(status) != 0 )
 			{
-				cout << "ERROR: command failed: " << command << endl;
+				cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): 'sudo mkdir -p " << installDir << "/gluster/brick" << oam.itoa(brick) << "'" << endl;
 				exit(1);
 			}
 /*
@@ -5870,19 +5885,11 @@ bool glusterSetup(string password) {
 			}
 */
 		}
-		if (rootUser)
+		string errmsg1;
+		string errmsg2;
+		int ret = oam.glusterctl(oam::GLUSTER_PEERPROBE, DataRedundancyConfigs[pm].pmIpAddr, password, errmsg2);
+		if ( ret != 0 )
 		{
-			command = "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr + " >> /tmp/glusterCommands.txt 2>&1";
-		}
-		else
-		{
-			command = "sudo gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr + " >> /tmp/glusterCommands.txt 2>&1";
-		}
-		cout << "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr << endl;
-		status = system(command.c_str());
-		if (WEXITSTATUS(status) != 0 )
-		{
-			cout << "ERROR: command failed: " << command << endl;
 			exit(1);
 		}
 	}
@@ -5891,7 +5898,7 @@ bool glusterSetup(string password) {
 	status = system(command.c_str());
 	if (WEXITSTATUS(status) != 0 )
 	{
-		cout << "ERROR: command failed: " << command << endl;
+		cout << "ERROR: peer status command failed." << endl;
 		exit(1);
 	}
 	//Need to wait since peer probe success does not always mean it is ready for volume create command
@@ -5926,8 +5933,28 @@ bool glusterSetup(string password) {
 		status = system(command.c_str());
 		if (WEXITSTATUS(status) != 0 )
 		{
-			cout << "ERROR: command failed: " << command << endl;
-			exit(1);
+			if (oam.checkLogStatus("/tmp/glusterCommands.txt" , "dbroot" + oam.itoa(dbrootID) + " already exists" ))
+			{
+				string errmsg1;
+				string errmsg2;
+				int ret = oam.glusterctl(oam::GLUSTER_DELETE, oam.itoa(dbrootID), errmsg1, errmsg2);
+				if ( ret != 0 )
+				{
+					cerr << "FAILURE: Error replacing existing gluster dbroot# " + oam.itoa(dbrootID) + ", error: " + errmsg1 << endl;
+					exit(1);
+				}
+				status = system(command.c_str());
+				if (WEXITSTATUS(status) != 0 )
+				{
+					cout << "ERROR: Failed to create volume dbroot" << oam.itoa(dbrootID) << endl;
+					exit(1);
+				}
+			}
+			else
+			{
+				cout << "ERROR: Failed to create volume dbroot" << oam.itoa(dbrootID) << endl;
+				exit(1);
+			}
 		}
 		if (rootUser)
 		{
@@ -5940,11 +5967,13 @@ bool glusterSetup(string password) {
 		status = system(command.c_str());
 		if (WEXITSTATUS(status) != 0 )
 		{
-			cout << "ERROR: command failed: " << command << endl;
+			cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
 			exit(1);
 		}
 		cout << "DONE" << endl;
 	}
+
+	cout << endl << "----- Data Redundancy Configuration Complete -----" << endl << endl;
 
 	return true;
 }
