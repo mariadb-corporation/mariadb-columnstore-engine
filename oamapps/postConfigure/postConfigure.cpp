@@ -2841,13 +2841,12 @@ int main(int argc, char *argv[])
 		    
 			//check if pkgs are located in $HOME directory
 			if ( EEPackageType == "rpm")
-				columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm.tar.gz";
+				columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
 			else
 				if ( EEPackageType == "deb") 
-					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb.tar.gz";
+					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb";
 				else
 					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
-
 
 			if( !pkgCheck(columnstorePackage) )
 			exit(1);
