@@ -170,12 +170,24 @@ rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 # delete Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
 
+systemctl=`which systemctl 2>/dev/null`
+
+#check and create rc.local file if missing
+if [ ! -f /etc/rc.local ]; then
+	printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a /etc/rc.local > /dev/null 2>&1
+    	$SUDO chmod +x /etc/rc.local
+    
+    if [ -n "$systemctl" ]; then
+	systemctl restart columnstore >/dev/null 2>&1
+	systemctl enable columnstore >/dev/null 2>&1
+    fi
+fi
+
 #setup the columnstore service script
 rm -f /etc/init.d/columnstore >/dev/null 2>&1
 rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
 
 if [ $user = "root" ]; then
-	systemctl=`which systemctl 2>/dev/null`
 	if [ -n "$systemctl" ]; then
 
 		chmod 644 $installdir/bin/columnstore.service
@@ -215,7 +227,7 @@ else
 
         $SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
 
-        sed -i -e s@prefix=/home/quest@prefix=$prefix@g $installdir/bin/*
+        sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
 	$SUDO chmod 777 /tmp
 	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
