@@ -705,8 +705,6 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 
-				checkFilesPerPartion(DBRootCount, sysConfig);
-
 				//check if dbrm data resides in older directory path and inform user if it does
 				dbrmDirCheck();
 
