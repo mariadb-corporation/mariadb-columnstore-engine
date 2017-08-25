@@ -2764,6 +2764,7 @@ int main(int argc, char *argv[])
 			}
 	
 			//check if pkgs are located in $HOME directory
+			string version = systemsoftware.Version + "-" + systemsoftware.Release;
 			if ( EEPackageType == "rpm")
 				columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
 			else
