@@ -6804,13 +6804,6 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 		status = oam::API_FAILURE;
 	}
 
-	log.writeLog(__LINE__, "Setup MySQL Replication for startsystemthread", LOG_TYPE_DEBUG);
-	oam::DeviceNetworkList devicenetworklistRep;
-	processManager.setMySQLReplication(devicenetworklistRep);
-
-	//set query system state not ready
-	processManager.setQuerySystemState(true);
-
 	// Bug 4554: Wait until DMLProc is finished with rollback
 	if (status == oam::API_SUCCESS)
 	{
@@ -6875,18 +6868,24 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 			// wait some more
             		sleep(2);
         	}
-	        processManager.setSystemState(rtn);
+
+        	log.writeLog(__LINE__, "Setup MySQL Replication for startsystemthread", LOG_TYPE_DEBUG);
+		oam::DeviceNetworkList devicenetworklistRep;
+		processManager.setMySQLReplication(devicenetworklistRep);
+
+		//set query system state ready
+		processManager.setQuerySystemState(true);
+
+		//run command to build system table if they don't already exist
+		sleep(5);
+		int ret = processManager.buildSystemTables("pm1");
+		if (ret == oam::API_SUCCESS )
+		      log.writeLog(__LINE__, "System Catalog Successfully Built by ProcMgr", LOG_TYPE_DEBUG);
+		else
+		      log.writeLog(__LINE__, "System Catalog Successfully not built by ProcMgr, ret code = " + oam.itoa(ret), LOG_TYPE_DEBUG);
+
+		processManager.setSystemState(rtn);
 	}
-
-	//run command to build system table if they don't already exist
-	sleep(5);
-	int ret = processManager.buildSystemTables("pm1");
-	if (ret == oam::API_SUCCESS )
-	  log.writeLog(__LINE__, "System Catalog Successfully Built by ProcMgr", LOG_TYPE_DEBUG);
-	else
-	  log.writeLog(__LINE__, "System Catalog Successfully not built by ProcMgr, ret code = " + oam.itoa(ret), LOG_TYPE_DEBUG);
-
-	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
 
 	// exit thread
 	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
