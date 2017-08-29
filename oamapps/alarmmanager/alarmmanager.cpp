@@ -97,9 +97,6 @@ ALARMManager::~ALARMManager()
 *****************************************************************************************/
 void rewriteActiveLog (const AlarmList& alarmList)
 {
-	struct flock fl;
-	int fd;
-
 	if (ALARM_DEBUG) {                                        
 		LoggingID lid(11);                                        
 		MessageLog ml(lid);                                        
@@ -113,52 +110,30 @@ void rewriteActiveLog (const AlarmList& alarmList)
 	// delete the old file
 	unlink (ACTIVE_ALARM_FILE.c_str());
 	
-	memset(&fl, 0, sizeof(fl));
-	fl.l_type   = F_RDLCK;  // read lock
-	fl.l_whence = SEEK_SET;
-	fl.l_start  = 0;
-	fl.l_len    = 0;	//lock whole file
-
 	// create new file
-	if ((fd = open(ACTIVE_ALARM_FILE.c_str(), O_RDWR|O_CREAT, 0664)) >= 0)
-	{	// lock file
-		if (fcntl(fd, F_SETLKW, &fl) != 0)
-		{
-			ostringstream oss;
-			oss << "rewriteActiveLog: error locking file " <<
-				ACTIVE_ALARM_FILE <<
-				": " <<
-				strerror(errno) <<
-				", proceding anyway.";
-			cerr << oss.str() << endl;
-		}
-	  
-		ofstream activeAlarmFile (ACTIVE_ALARM_FILE.c_str());
-		
-		AlarmList::const_iterator i;
-		for (i = alarmList.begin(); i != alarmList.end(); ++i)
-		{
-			activeAlarmFile << i->second;
-		}
-
-		activeAlarmFile.close();
-
-		fl.l_type   = F_UNLCK;	//unlock
-		fcntl(fd, F_SETLK, &fl);
-
-		close(fd);
-	}
-	else
-	{
-		ostringstream oss;
-		oss << "rewriteActiveLog: error opening file " <<
-			ACTIVE_ALARM_FILE <<
-			": " <<
-			strerror(errno);
-		throw runtime_error(oss.str());
-	}
+	int fd = open(ACTIVE_ALARM_FILE.c_str(), O_RDWR|O_CREAT, 0644);
 	
-	return;
+	// Aquire an exclusive lock
+   	if (flock(fd,LOCK_EX) == -1) {
+		throw runtime_error ("Lock active alarm log file error");
+   	}
+
+   	ofstream activeAlarmFile (ACTIVE_ALARM_FILE.c_str());
+   	
+   	AlarmList::const_iterator i;
+   	for (i = alarmList.begin(); i != alarmList.end(); ++i)
+   	{
+   		activeAlarmFile << i->second;
+   	}
+
+   	activeAlarmFile.close();
+
+   	// Release lock
+	if (flock(fd,LOCK_UN)==-1)
+	{
+		throw runtime_error ("Release lock active alarm log file error");		
+	}
+	close(fd);
 }
 
 /*****************************************************************************************
@@ -169,9 +144,6 @@ void rewriteActiveLog (const AlarmList& alarmList)
 *****************************************************************************************/
 void logAlarm (const Alarm& calAlarm, const string& fileName)
 {
-	struct flock fl;
-	int fd;
-
         if (ALARM_DEBUG) {                                        
 		LoggingID lid(11);                                        
 		MessageLog ml(lid);                                        
@@ -182,48 +154,24 @@ void logAlarm (const Alarm& calAlarm, const string& fileName)
 		ml.logDebugMessage(msg);                        
 	}
 
-	memset(&fl, 0, sizeof(fl));
-	fl.l_type   = F_RDLCK;  // read lock
-	fl.l_whence = SEEK_SET;
-	fl.l_start  = 0;
-	fl.l_len    = 0;	//lock whole file
+	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0644);
+	ofstream AlarmFile (fileName.c_str(), ios::app);
 
-	// create new file
-	if ((fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0664)) >= 0)
-	{	// lock file
-		if (fcntl(fd, F_SETLKW, &fl) != 0)
-		{
-			ostringstream oss;
-			oss << "logAlarm: error locking file " <<
-				fileName <<
-				": " <<
-				strerror(errno) <<
-				", proceding anyway.";
-			cerr << oss.str() << endl;
-		}
-	  
-		ofstream AlarmFile (fileName.c_str(), ios::app);
+	// Aquire an exclusive lock
+   	if (flock(fd,LOCK_EX) == -1) {
+		throw runtime_error ("Lock file error: " + fileName);
+   	}
 
-		AlarmFile << calAlarm;
-		AlarmFile.close();
-		
-		fl.l_type   = F_UNLCK;	//unlock
-		fcntl(fd, F_SETLK, &fl);
-
-		close(fd);
-	}
-	else
-	{
-		ostringstream oss;
-		oss << "logAlarm: error opening file " <<
-			fileName <<
-			": " <<
-			strerror(errno);
-		throw runtime_error(oss.str());
-	}
+	AlarmFile << calAlarm;
+	AlarmFile.close();
 	
-	return;
+	// Release lock
+	if (flock(fd,LOCK_UN)==-1)
+	{
+		throw runtime_error ("Release lock file error: " + fileName);		
+	}
 
+	close(fd);
 }
 
 /*****************************************************************************************
@@ -375,6 +323,7 @@ void configAlarm (Alarm& calAlarm)
   			oam.setAlarmConfig (alarmID, "LastIssueTime", now);
   			oam.setAlarmConfig (alarmID, "Occurrences", 1);
   		}
+  
   		else
   		{
   			// increment counter and check the ctnThreshold
@@ -428,7 +377,7 @@ void configAlarm (Alarm& calAlarm)
 *
 *****************************************************************************************/
 void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int state, 
-				  std::string repModuleName, std::string repProcessName)
+									std::string repModuleName, std::string repProcessName)
 {
 
 #ifdef SKIP_ALARM
@@ -526,62 +475,58 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
 *****************************************************************************************/
 void ALARMManager::getActiveAlarm(AlarmList& alarmList) const
 {
-	struct flock fl;
-	int fd;
-
 	//add-on to fileName with mount name if on non Parent Module
 	Oam oam;
 	string fileName = ACTIVE_ALARM_FILE;
 
-	memset(&fl, 0, sizeof(fl));
-	fl.l_type   = F_RDLCK;  // read lock
-	fl.l_whence = SEEK_SET;
-	fl.l_start  = 0;
-	fl.l_len    = 0;	//lock whole file
+   	int fd = open(fileName.c_str(),O_RDONLY);
 
-	// create new file
-	if (fd = open(fileName.c_str(),O_RDONLY) >= 0)
-	{	// lock file
-		if (fcntl(fd, F_SETLKW, &fl) != 0)
-		{
-			ostringstream oss;
-			oss << "getActiveAlarm: error locking file " <<
-				fileName <<
-				": " <<
-				strerror(errno) <<
-				", proceding anyway.";
-			cerr << oss.str() << endl;
-		}
-	  
-		ifstream activeAlarm (fileName.c_str(), ios::in);
-		
-		Alarm alarm;
-		
-		while (!activeAlarm.eof())
-		{
-			activeAlarm >> alarm;
-			if (alarm.getAlarmID() != INVALID_ALARM_ID)
-				//don't sort
-	//			alarmList.insert (AlarmList::value_type(alarm.getAlarmID(), alarm));
-				alarmList.insert (AlarmList::value_type(INVALID_ALARM_ID, alarm));
-		}
-		activeAlarm.close();
-	
-		fl.l_type   = F_UNLCK;	//unlock
-		fcntl(fd, F_SETLK, &fl);
+   	if (fd == -1) {
+     	// file may being deleted temporarily by trapHandler
+	 	sleep (1);
+   		fd = open(fileName.c_str(),O_RDONLY);
+   		if (fd == -1) {
+			// no active alarms, return
+			return;
+	 	}
+	}
 
-		close(fd);
+	ifstream activeAlarm (fileName.c_str(), ios::in);
 
-		if (ALARM_DEBUG)
-		{
-			AlarmList :: iterator i;
-			for (i = alarmList.begin(); i != alarmList.end(); ++i)
-			{
-				cout << i->second << endl;
-			}
-		}
+    // acquire read lock
+	if (flock(fd,LOCK_SH) == -1) 
+	{
+     	throw runtime_error ("Lock active alarm log file error");
 	}
 	
+	Alarm alarm;
+	
+	while (!activeAlarm.eof())
+	{
+		activeAlarm >> alarm;
+		if (alarm.getAlarmID() != INVALID_ALARM_ID)
+			//don't sort
+//			alarmList.insert (AlarmList::value_type(alarm.getAlarmID(), alarm));
+			alarmList.insert (AlarmList::value_type(INVALID_ALARM_ID, alarm));
+	}
+	activeAlarm.close();
+	
+	// release lock
+	if (flock(fd,LOCK_UN) == -1) 
+	{
+     	throw runtime_error ("Release lock active alarm log file error");
+	}
+
+	close(fd);
+
+	if (ALARM_DEBUG)
+	{
+		AlarmList :: iterator i;
+		for (i = alarmList.begin(); i != alarmList.end(); ++i)
+		{
+			cout << i->second << endl;
+		}
+	}
 	return;
 }
 
@@ -595,9 +540,6 @@ void ALARMManager::getActiveAlarm(AlarmList& alarmList) const
 *****************************************************************************************/
 void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
 {
-	struct flock fl;
-	int fd;
-
 	string alarmFile = "/tmp/alarms";
 
 	//make 1 alarm log file made up of archive and current alarm.log
@@ -626,79 +568,68 @@ void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
 	cmd = "cat " + ALARM_FILE + " >> /tmp/alarms";
 	(void)system(cmd.c_str());
 
-	memset(&fl, 0, sizeof(fl));
-	fl.l_type   = F_RDLCK;  // read lock
-	fl.l_whence = SEEK_SET;
-	fl.l_start  = 0;
-	fl.l_len    = 0;	//lock whole file
-
-	// create new file
-	if (fd = open(alarmFile.c_str(),O_RDONLY) >= 0)
-	{	// lock file
-		if (fcntl(fd, F_SETLKW, &fl) != 0)
-		{
-			ostringstream oss;
-			oss << "getAlarm: error locking file " <<
-				alarmFile <<
-				": " <<
-				strerror(errno) <<
-				", proceding anyway.";
-			cerr << oss.str() << endl;
-		}
-
-		ifstream hisAlarm (alarmFile.c_str(), ios::in);
-
-		//get mm / dd / yy from incoming date
-		string mm = date.substr(0,2);
-		string dd = date.substr(3,2);
-		string yy = date.substr(6,2);
-
-		Alarm alarm;
-		
-		while (!hisAlarm.eof())
-		{
-			hisAlarm >> alarm;
-			if (alarm.getAlarmID() != INVALID_ALARM_ID) {
-				time_t cal = alarm.getTimestampSeconds();
-				struct tm tm;
-				localtime_r(&cal, &tm);
-				char tmp[3];
-				strftime (tmp, 3, "%m", &tm);
-				string alarm_mm = tmp;
-				alarm_mm = alarm_mm.substr(0,2);
-				strftime (tmp, 3, "%d", &tm);
-				string alarm_dd = tmp;
-				alarm_dd = alarm_dd.substr(0,2);
-				strftime (tmp, 3, "%y", &tm);
-				string alarm_yy = tmp;
-				alarm_yy = alarm_yy.substr(0,2);
-
-				if ( mm == alarm_mm && dd == alarm_dd && yy == alarm_yy )
-					//don't sort
-		//			alarmList.insert (AlarmList::value_type(alarm.getAlarmID(), alarm));
-					alarmList.insert (AlarmList::value_type(INVALID_ALARM_ID, alarm));
-			}
-		}
-		hisAlarm.close();
-		unlink (alarmFile.c_str());
+   	int fd = open(alarmFile.c_str(),O_RDONLY);
 	
-		fl.l_type   = F_UNLCK;	//unlock
-		fcntl(fd, F_SETLK, &fl);
+   	if (fd == -1)
+ 		// doesn't exist yet, return
+		return;
 
+	ifstream hisAlarm (alarmFile.c_str(), ios::in);
+
+	// acquire read lock
+	if (flock(fd,LOCK_SH) == -1) 
+	{
+     	throw runtime_error ("Lock alarm log file error");
+	}
+
+	//get mm / dd / yy from incoming date
+	string mm = date.substr(0,2);
+	string dd = date.substr(3,2);
+	string yy = date.substr(6,2);
+
+	Alarm alarm;
 	
-		if (ALARM_DEBUG)
-		{
-			AlarmList :: iterator i;
-			for (i = alarmList.begin(); i != alarmList.end(); ++i)
-			{
-				cout << i->second << endl;
-			}
+	while (!hisAlarm.eof())
+	{
+		hisAlarm >> alarm;
+		if (alarm.getAlarmID() != INVALID_ALARM_ID) {
+			time_t cal = alarm.getTimestampSeconds();
+			struct tm tm;
+			localtime_r(&cal, &tm);
+			char tmp[3];
+			strftime (tmp, 3, "%m", &tm);
+			string alarm_mm = tmp;
+			alarm_mm = alarm_mm.substr(0,2);
+			strftime (tmp, 3, "%d", &tm);
+			string alarm_dd = tmp;
+			alarm_dd = alarm_dd.substr(0,2);
+			strftime (tmp, 3, "%y", &tm);
+			string alarm_yy = tmp;
+			alarm_yy = alarm_yy.substr(0,2);
+
+			if ( mm == alarm_mm && dd == alarm_dd && yy == alarm_yy )
+				//don't sort
+	//			alarmList.insert (AlarmList::value_type(alarm.getAlarmID(), alarm));
+				alarmList.insert (AlarmList::value_type(INVALID_ALARM_ID, alarm));
 		}
-		
-		close(fd);
+	}
+	hisAlarm.close();
+	unlink (alarmFile.c_str());
+	
+	// release lock
+	if (flock(fd,LOCK_UN) == -1) 
+	{
+     	throw runtime_error ("Release lock active alarm log file error");
 	}
 	
-	return;
+	if (ALARM_DEBUG)
+	{
+		AlarmList :: iterator i;
+		for (i = alarmList.begin(); i != alarmList.end(); ++i)
+		{
+			cout << i->second << endl;
+		}
+	}
 }
 
 } //namespace alarmmanager
