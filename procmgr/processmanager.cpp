@@ -5093,7 +5093,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 				    bool passed = false;
-				    for ( int retry = 0 ; retry < 20 ; retry++ )
+				    for ( int retry = 0 ; retry < 5 ; retry++ )
 				    {
 					    int rtnCode = system(cmd.c_str());
 					    if (WEXITSTATUS(rtnCode) != 0) {
@@ -5120,6 +5120,27 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    if ( !passed )
 				    {
 					    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + "  failed", LOG_TYPE_ERROR);
+
+					    DeviceNetworkList devicenetworklistR;
+					    DeviceNetworkConfig devicenetworkconfigR;
+					    HostConfig hostconfig;
+
+					    devicenetworkconfigR.DeviceName = remoteModuleName;
+					    if (cloud == "amazon-vpc")
+						    hostconfig.IPAddr = remoteModuleIP;
+					    else
+						    hostconfig.IPAddr = oam::UnassignedName;
+
+					    hostconfig.HostName = oam::UnassignedName;
+					    hostconfig.NicID = 1;
+					    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+					    devicenetworklistR.push_back(devicenetworkconfigR);
+
+					    processManager.removeModule(devicenetworklistR, false);
+    
+					    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
 					    pthread_mutex_unlock(&THREAD_LOCK);
 					    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
 					    system(cmd.c_str());
@@ -5140,7 +5161,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
 				    bool passed = false;
-				    for ( int retry = 0 ; retry < 20 ; retry++ )
+				    for ( int retry = 0 ; retry < 5 ; retry++ )
 				    {
 					    int rtnCode = system(cmd.c_str());
 					    if (WEXITSTATUS(rtnCode) != 0) {
@@ -5167,6 +5188,27 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 				    if ( !passed )
 				    {
 					    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+					    DeviceNetworkList devicenetworklistR;
+					    DeviceNetworkConfig devicenetworkconfigR;
+					    HostConfig hostconfig;
+
+					    devicenetworkconfigR.DeviceName = remoteModuleName;
+					    if (cloud == "amazon-vpc")
+						    hostconfig.IPAddr = remoteModuleIP;
+					    else
+						    hostconfig.IPAddr = oam::UnassignedName;
+
+					    hostconfig.HostName = oam::UnassignedName;
+					    hostconfig.NicID = 1;
+					    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+					    devicenetworklistR.push_back(devicenetworkconfigR);
+
+					    processManager.removeModule(devicenetworklistR, false);
+     
+					    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
 					    pthread_mutex_unlock(&THREAD_LOCK);
 					    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
 					    system(cmd.c_str());
@@ -5185,7 +5227,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
 
 					    bool passed = false;
-					    for ( int retry = 0 ; retry < 20 ; retry++ )
+					    for ( int retry = 0 ; retry < 5 ; retry++ )
 					    {
 						    int rtnCode = system(cmd.c_str());
 						    if (WEXITSTATUS(rtnCode) != 0) {
@@ -5212,6 +5254,27 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    if ( !passed )
 					    {
 						    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+						    DeviceNetworkList devicenetworklistR;
+						    DeviceNetworkConfig devicenetworkconfigR;
+						    HostConfig hostconfig;
+
+						    devicenetworkconfigR.DeviceName = remoteModuleName;
+						    if (cloud == "amazon-vpc")
+							    hostconfig.IPAddr = remoteModuleIP;
+						    else
+							    hostconfig.IPAddr = oam::UnassignedName;
+
+						    hostconfig.HostName = oam::UnassignedName;
+						    hostconfig.NicID = 1;
+						    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+						    devicenetworklistR.push_back(devicenetworkconfigR);
+
+						    processManager.removeModule(devicenetworklistR, false);
+ 	    
+						    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
 						    pthread_mutex_unlock(&THREAD_LOCK);
 						    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
 						    system(cmd.c_str());
@@ -5233,7 +5296,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
 
 					    bool passed = false;
-					    for ( int retry = 0 ; retry < 20 ; retry++ )
+					    for ( int retry = 0 ; retry < 5 ; retry++ )
 					    {
 						    int rtnCode = system(cmd.c_str());
 						    if (WEXITSTATUS(rtnCode) != 0) {
@@ -5260,6 +5323,27 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 					    if ( !passed )
 					    {
 						    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+						    DeviceNetworkList devicenetworklistR;
+						    DeviceNetworkConfig devicenetworkconfigR;
+						    HostConfig hostconfig;
+
+						    devicenetworkconfigR.DeviceName = remoteModuleName;
+						    if (cloud == "amazon-vpc")
+							    hostconfig.IPAddr = remoteModuleIP;
+						    else
+							    hostconfig.IPAddr = oam::UnassignedName;
+
+						    hostconfig.HostName = oam::UnassignedName;
+						    hostconfig.NicID = 1;
+						    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+						    devicenetworklistR.push_back(devicenetworkconfigR);
+
+						    processManager.removeModule(devicenetworklistR, false);
+ 	    
+						    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
 						    pthread_mutex_unlock(&THREAD_LOCK);
 						    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
 						    system(cmd.c_str());
