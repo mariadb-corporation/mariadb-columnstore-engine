@@ -178,8 +178,8 @@ if [ ! -f /etc/rc.local ]; then
     	$SUDO chmod +x /etc/rc.local
     
     if [ -n "$systemctl" ]; then
-	systemctl restart columnstore >/dev/null 2>&1
-	systemctl enable columnstore >/dev/null 2>&1
+	systemctl restart rc-local >/dev/null 2>&1
+	systemctl enable rc-local >/dev/null 2>&1
     fi
 fi
 
