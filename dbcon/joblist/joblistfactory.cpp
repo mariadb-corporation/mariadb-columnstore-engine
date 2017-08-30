@@ -888,6 +888,25 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 				TupleInfo ti(setExpTupleInfo(ct, eid, gcc->alias(), jobInfo));
 				tupleKey = ti.key;
 				jobInfo.returnedColVec.push_back(make_pair(tupleKey, gcc->aggOp()));
+				// not a tokenOnly column. Mark all the columns involved
+				srcp = gcc->functionParms();
+				const RowColumn* rowCol = dynamic_cast<const RowColumn*>(srcp.get());
+				if (rowCol)
+				{
+					const std::vector<SRCP>& cols = rowCol->columnVec();
+					for (vector<SRCP>::const_iterator j = cols.begin(); j != cols.end(); j++)
+					{
+						sc = dynamic_cast<const SimpleColumn*>(j->get());
+						if (sc)
+						{
+							CalpontSystemCatalog::OID tblOid = tableOid(sc, jobInfo.csc);
+							alias = extractTableAlias(sc);
+							ct = sc->colType();
+							TupleInfo ti(setTupleInfo(ct, sc->oid(), jobInfo, tblOid, sc, alias));
+							jobInfo.tokenOnly[ti.key] = false;
+						}
+					}
+				}
 
 				continue;
 			}
