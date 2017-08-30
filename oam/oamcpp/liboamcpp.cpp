@@ -2523,6 +2523,9 @@ namespace oam
         string Section = "AlarmConfig";
         int returnValue;
 
+	struct flock fl;
+	int fd;
+
         // validate Alarm ID
 
         if( alarmid > MAX_ALARM_ID )
@@ -2543,41 +2546,55 @@ namespace oam
             exceptionControl("setAlarmConfig", API_READONLY_PARAMETER);
 
 	string fileName = AlarmConfigFile;
-	
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0644);
 
-	// Aquire an exclusive lock
-   	if (flock(fd,LOCK_EX) == -1) {
-		throw runtime_error ("Lock file error: " + fileName);
-   	}
+	memset(&fl, 0, sizeof(fl));
+	fl.l_type   = F_RDLCK;  // read lock
+	fl.l_whence = SEEK_SET;
+	fl.l_start  = 0;
+	fl.l_len    = 0;	//lock whole file
 
-        //  write parameter to disk
-
-        Config* alaConfig = Config::makeConfig(AlarmConfigFile.c_str());
-        alaConfig->setConfig(Section, name, value);
-
-	try
-	{
-		alaConfig->write();
-	}
-	catch(...)
-	{
-		// Release lock
-		if (flock(fd,LOCK_UN)==-1)
+	// open config file
+	if ((fd = open(fileName.c_str(), O_RDWR)) >= 0)
+	{	// lock file
+		if (fcntl(fd, F_SETLKW, &fl) != 0)
 		{
-			throw runtime_error ("Release lock file error: " + fileName);		
+			ostringstream oss;
+			oss << "Oam::setAlarmConfig: error locking file " <<
+				fileName <<
+				": " <<
+				strerror(errno) <<
+				", proceding anyway.";
+			cerr << oss.str() << endl;
 		}
+	
+		//  write parameter to disk
 
-		exceptionControl("setAlarmConfig", API_FAILURE);
-	}
+		Config* alaConfig = Config::makeConfig(AlarmConfigFile.c_str());
+		alaConfig->setConfig(Section, name, value);
+
+		try
+		{
+			alaConfig->write();
+		}
+		catch(...)
+		{}
 		
-	// Release lock
-	if (flock(fd,LOCK_UN)==-1)
+		fl.l_type   = F_UNLCK;	//unlock
+		fcntl(fd, F_SETLK, &fl);
+
+		close(fd);
+	}
+	else
 	{
-		throw runtime_error ("Release lock file error: " + fileName);		
+		ostringstream oss;
+		oss << "Oam::setAlarmConfig: error opening file " <<
+			fileName <<
+			": " <<
+			strerror(errno);
+		throw runtime_error(oss.str());
 	}
 	
-	close(fd);
+	return;
     }
 
     /********************************************************************

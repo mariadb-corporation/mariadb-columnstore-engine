@@ -2902,6 +2902,9 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 	MonitorLog log;
 	Oam oam;
 
+	struct flock fl;
+	int fd;
+
 	string fileName;
 	oam.getSystemConfig("SystemLogConfigFile", fileName);
 	if (fileName == oam::UnassignedName ) {
@@ -3137,33 +3140,49 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
 	//
 
 	if (restart) {
-
 		unlink (fileName.c_str());
 		ofstream newFile (fileName.c_str());	
 		
-		// create new file
-		int fd = open(fileName.c_str(),O_RDWR|O_CREAT, 0644);
-		
-		// Aquire an exclusive lock
-		if (flock(fd,LOCK_EX) == -1) {
-			log.writeLog(__LINE__, "ERROR: file lock failure on " + fileName, LOG_TYPE_ERROR );
-			close(fd);
-			return -1;
-		}
-	
-		copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-		newFile.close();
-		
-		// Release lock
-		if (flock(fd,LOCK_UN) == -1)
-		{
-			log.writeLog(__LINE__, "ERROR: file unlock failure on " + fileName, LOG_TYPE_ERROR );
-			close(fd);
-			return -1;
-		}
-		close(fd);
+		memset(&fl, 0, sizeof(fl));
+		fl.l_type   = F_RDLCK;  // read lock
+		fl.l_whence = SEEK_SET;
+		fl.l_start  = 0;
+		fl.l_len    = 0;	//lock whole file
 
-		oam.syslogAction("restart");
+		// create new file
+		if ((fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0644)) >= 0)
+		{	// lock file
+
+		      if (fcntl(fd, F_SETLKW, &fl) != 0)
+		      {
+			      ostringstream oss;
+			      oss << "ProcessMonitor::updateLog: error locking file " <<
+				      fileName <<
+				      ": " <<
+				      strerror(errno) <<
+				      ", proceding anyway.";
+			      cerr << oss.str() << endl;
+		      }
+	
+		      copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+		      newFile.close();
+		      
+		      fl.l_type   = F_UNLCK;	//unlock
+		      fcntl(fd, F_SETLK, &fl);
+
+		      close(fd);
+
+		      oam.syslogAction("restart");
+		}
+		else
+		{
+			ostringstream oss;
+			oss << "ProcessMonitor::updateLog: error opening file " <<
+				fileName <<
+				": " <<
+				strerror(errno);
+			throw runtime_error(oss.str());
+		}		      
 	}
 
 	//update file priviledges
