@@ -173,6 +173,9 @@ else
         fi
 fi
 
+#remove file in library directory # mcol-875
+rm -f $installdir/lib/*
+
 #tell user to run post configure script
 echo " "
 echo "Mariab Columnstore uninstall completed"

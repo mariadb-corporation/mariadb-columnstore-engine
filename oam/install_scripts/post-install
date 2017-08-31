@@ -69,10 +69,21 @@ if [ ! -f $installdir/etc/Columnstore.xml ]; then
 fi
 
 cd $installdir/lib || exit 1
+
+#remove libudfsdk.so.1.0.0 file, if it exist # mcol-875
+rm -f $installdir/lib/libudfsdk.so
+rm -f $installdir/lib/libudfsdk.so.1
+rm -f $installdir/lib/libudfsdk.so.1.0.0
+
 for lib in *.so.1.0.0; do
 	blib=`basename $lib .1.0.0`
 	ln -sf $lib $blib
 	ln -sf $lib ${blib}.1
+done
+for lib in *.so.1.1.0; do
+        blib=`basename $lib .1.1.0`
+        ln -sf $lib $blib
+        ln -sf $lib ${blib}.1
 done
 chown -h $user.$user *.so >/dev/null 2>&1
 
