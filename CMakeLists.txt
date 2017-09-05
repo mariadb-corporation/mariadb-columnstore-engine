@@ -106,16 +106,29 @@ if(NOT AWK_EXECUTABLE)
     message(FATAL_ERROR "awk not found!")
 endif()
 
+INCLUDE(check_compiler_flag.cmake)
 
-FOREACH(BUILD_TYPE RELEASE RELWITHDEBINFO MINSIZEREL)
-    SET(CMAKE_CXX_FLAGS_${BUILD_TYPE} "-g -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
-    SET(CMAKE_C_FLAGS_${BUILD_TYPE} "-g -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
-ENDFOREACH()
+MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
+MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
 
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D _DEBUG -DHAVE_CONFIG_H")
+# enable security hardening features, like most distributions do
+# in our benchmarks that costs about ~1% of performance, depending on the load
+IF(CMAKE_C_COMPILER_VERSION VERSION_LESS "4.6")
+  SET(security_default OFF)
+ELSE()
+  SET(security_default ON)
+ENDIF()
+OPTION(SECURITY_HARDENED "Use security-enhancing compiler features (stack protector, relro, etc)" ${security_default})
+IF(SECURITY_HARDENED)
+  # security-enhancing flags
+  MY_CHECK_AND_SET_COMPILER_FLAG("-pie -fPIC")
+  MY_CHECK_AND_SET_COMPILER_FLAG("-Wl,-z,relro,-z,now")
+  MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector --param=ssp-buffer-size=4")
+  MY_CHECK_AND_SET_COMPILER_FLAG("-D_FORTIFY_SOURCE=2" RELEASE RELWITHDEBINFO)
+ENDIF()
 
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")  
+
 
 FIND_PACKAGE(Boost 1.53.0 REQUIRED COMPONENTS system filesystem thread regex date_time) 
 
