@@ -1,3 +1,5 @@
+.. _source_file:
+
 Source file
 ===========
 

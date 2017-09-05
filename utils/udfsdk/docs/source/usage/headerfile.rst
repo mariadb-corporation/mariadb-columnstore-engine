@@ -1,3 +1,5 @@
+.. _header_file:
+
 Header file
 ===========
 
