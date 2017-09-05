@@ -1,3 +1,5 @@
+.. _ mcsv1_udaf:
+
 mcsv1_UDAF
 ==========
 
@@ -76,6 +78,8 @@ Destructor
 Callback Methods
 ----------------
 
+.. _init:
+
 .. c:function:: ReturnCode init(mcsv1Context* context, COL_TYPES& colTypes);
 
 :param context: The context object for this call.
@@ -98,6 +102,8 @@ Callback Methods
 
  All flags, return type, Window Frame, etc. set in the context object here will be propogated to any copies made and will be streamed to the various modules. You are guaranteed that these settings will be correct for each callback.
 
+.. _reset:
+
 .. c:function:: ReturnCode reset(mcsv1Context* context);
 
 :param context: The context object for this call.
@@ -107,6 +113,8 @@ Callback Methods
  Reset the UDA(n)F for a new group, partition or, in some cases, new Window Frame. Do not free any memory directly allocated by createUserData(). The SDK Framework owns that memory and will handle that. However, Empty any user defined containers and free memory you allocated in other callback methods. Use this opportunity to reset any variables in your user data needed for the next aggregation. 
 
  Use context->getUserData() and type cast it to your UserData type or Simple Data Model stuct. 
+
+.. _nextvalue:
 
 .. c:function:: ReturnCode nextValue(mcsv1Context* context, 				 std::vector<ColumnDatum>& valsIn);
 
@@ -128,6 +136,8 @@ Callback Methods
 
  Since this is called for every row, it is important that this method be efficient.
 
+.. _subevaluate:
+
 .. c:function:: ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn);
 
 :param context: The context object for this call
@@ -141,6 +151,8 @@ Callback Methods
  The userData struct in context will be newly initialized for the first call to subEvaluate for each GROUP BY. userDataIn will have the final values as set by nextValue() for a given PM and GROUP BY. 
 
  Each call to subEvaluate should aggregate the values from userDataIn into the context's UserData struct.
+
+.. _evaluate:
 
 .. c:function:: ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
 
@@ -157,6 +169,8 @@ Callback Methods
  For analytic use (UDAnF) the context's UserData struct will have the values as set by the latest call to nextValue() for the Window.
 
  Set your aggregated value into valOut. The type you set should be compatible with the type defined in the context's result type. The framework will do it's best to do any conversions if required.
+
+.. _dropvalue:
 
 .. c:function:: ReturnCode dropValue(mcsv1Context* context, 				 std::vector<ColumnDatum>& valsDropped);
 
@@ -181,6 +195,8 @@ Callback Methods
   dropValue:
    Subtract the value from accumulator
    decrement row count
+
+.. _createuserdata:
 
 .. c:function:: ReturnCode createUserData(UserData*& userdata, int32_t& length);
 
