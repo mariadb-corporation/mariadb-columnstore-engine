@@ -72,9 +72,9 @@ In the MEDIAN UDAF, it works like this:
 
 Notice that the data is to be stored in a std::map container.
 
-The serialize method leverages Columnstore's ByteStream class (in namespace messageqcpp). This is not optional. The serialize and unserialize methods are each passed an reference to a ByteStream. The framework expects the data to be streamed into the ByteStream by serialize and streamed back into your data struct by unserialize. See the chapter on ByteStream for more information.
+The serialize method leverages Columnstore's :ref:`ByteStream <bytestream>` class (in namespace messageqcpp). This is not optional. The serialize and unserialize methods are each passed an reference to a :ref:`ByteStream <bytestream>`. The framework expects the data to be streamed into the :ref:`ByteStream <bytestream>` by serialize and streamed back into your data struct by unserialize. See the chapter on :ref:`ByteStream <bytestream>` for more information.
 
-For MEDIAN, serialize() iterates over the set and streams the values to the ByteStream and unserialze unstreams them back into the set:
+For MEDIAN, serialize() iterates over the set and streams the values to the :ref:`ByteStream <bytestream>` and unserialze unstreams them back into the set:
 
 .. literalinclude:: ../../../median.cpp
    :lines: 290-305
@@ -82,7 +82,7 @@ For MEDIAN, serialize() iterates over the set and streams the values to the Byte
 
 .. rubric:: createUserData()
 
-The createUserData() method() has two parameters, a pointer reference to userData, and a length. Both of these are [OUT] parameters.
+The :ref:`createUserData() <createuserdata>` method() has two parameters, a pointer reference to userData, and a length. Both of these are [OUT] parameters.
 
 The userData parameter is to be set to an instance of your new data structure.
 

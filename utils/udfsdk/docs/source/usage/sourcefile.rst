@@ -20,7 +20,7 @@ You may only need a few accunulators and counters. These can be represented as a
 If you have a more complex data structure that may have varying size, you must use :ref:`complexdatamodel`. This should be defined in the header. Here's a struct for MEDIAN example from median.h:
 
 .. literalinclude:: ../../../median.h
-   :lines: 84-97
+   :lines: 80-97
    :language: cpp
 
 In each of the functions that have a context parameter, you should type cast the data member of context's UserData member::
