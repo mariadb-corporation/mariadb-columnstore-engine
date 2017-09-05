@@ -11,4 +11,5 @@ mcsv1_udaf reference
    ColumnDatum
    mcsv1_UDAF
    ByteStream
+   MariaDBUDAF
 

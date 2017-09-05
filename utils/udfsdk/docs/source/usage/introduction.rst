@@ -9,14 +9,14 @@ The API has a number of features. The general theme is, there is a class that re
 
 The steps required to create a function are:
 
-* Decide on memory allocation scheme.
-* Create a header file for your function.
-* Create a source file for your function.
-* Implement mariadb udaf api code.
-* Add the function to UDAFMap in mcsv1_udaf.cpp
-* Add the function to CMakeLists.txt in ./utils/udfsdk
-* Compile udfsdk.
-* Copy the compiled libraries to the working directories.
+* Decide on a :ref:`memory allocation <memory_allocation>` scheme.
+* Create a :ref:`header file <header_file>` for your function.
+* Create a :ref:`source file <source_file>` for your function.
+* Implement :ref:`mariadb udaf api <mariadb_udaf>` code.
+* Add the function to :ref:`UDAFMap <udaf_map>` in mcsv1_udaf.cpp
+* Add the function to :ref:`CMakeLists.txt <cmakelists>` in ./utils/udfsdk
+* :ref:`Compile udfsdk <compile>`.
+* :ref:`Copy the compiled libraries <copylibs>` to the working directories.
 
 In 1.1.0, Columnstore does not have a plugin framework, so the functions have to be compiled into the libraries that Columnstore already loads.
 
