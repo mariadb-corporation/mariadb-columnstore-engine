@@ -51,7 +51,7 @@ This consists of the createUserData() method that must be over ridden and the Us
 Let's take a look at the base user data structure defined in mcsv1_udaf.h:
 
 .. literalinclude:: ../../../mcsv1_udaf.h
-   :lines: 126-168
+   :lines: 131-173
    :language: cpp
 
 There are two constructors listed. The second one taking a size is used by :ref:`simpledatamodel`.

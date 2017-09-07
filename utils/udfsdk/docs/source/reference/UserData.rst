@@ -5,9 +5,9 @@ The UserData struct is used for allocating and streaming the intermediate data n
 
 There may be multiple instantiations of UserData for each UDA(n)F call. Make no assumptions about the contents except within the context of a method call.
 
-Since there is no need to deal with the UserData Structure unless you are using the Complex Data Mode, the remainder of this page assumes the Complex Data Structure.
+Since there is no need to deal with the UserData Structure unless you are using :ref:`complexdatamodel`, the remainder of this page assumes :ref:`complexdatamodel`.
 
-To use the Complex Data Structure, you derive a struct from UserData and override, at the least, the streaming functions.
+To use :ref:`complexdatamodel`, you derive a struct from UserData and override, at the least, the streaming functions.
 
 .. rubric:: constructor
 

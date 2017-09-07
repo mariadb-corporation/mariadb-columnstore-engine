@@ -8,7 +8,6 @@ Using mcsv1_udaf
    memoryallocation
    headerfile
    sourcefile
-   UDAFMap
    cmakelists
    compile
    copylibs

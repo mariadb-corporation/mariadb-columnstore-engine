@@ -9,7 +9,7 @@ Bytestream is compiled and lives in the messageqcpp shared library. The header c
 
 #include "bytestream.h"
 
-For UDA(n)F you should not have to instantiate a ByteStream. However, if you implement the Complex Data Model, you will need to use the instances passed to your serialize() and unserialize() methods.
+For UDA(n)F you should not have to instantiate a ByteStream. However, if you implement :ref:`complexdatamodel`, you will need to use the instances passed to your serialize() and unserialize() methods.
 
 These typedefs exist only for backwards compatibility and can be ignored:
 

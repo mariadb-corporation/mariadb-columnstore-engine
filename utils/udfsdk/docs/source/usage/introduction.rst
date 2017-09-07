@@ -13,7 +13,7 @@ The steps required to create a function are:
 * Create a :ref:`header file <header_file>` for your function.
 * Create a :ref:`source file <source_file>` for your function.
 * Implement :ref:`mariadb udaf api <mariadb_udaf>` code.
-* Add the function to :ref:`UDAFMap <udaf_map>` in mcsv1_udaf.cpp
+* Add the function to :ref:`UDAFMap <udafmap>` in mcsv1_udaf.cpp
 * Add the function to :ref:`CMakeLists.txt <cmakelists>` in ./utils/udfsdk
 * :ref:`Compile udfsdk <compile>`.
 * :ref:`Copy the compiled libraries <copylibs>` to the working directories.

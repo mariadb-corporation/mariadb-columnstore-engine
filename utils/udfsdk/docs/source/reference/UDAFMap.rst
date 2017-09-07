@@ -1,4 +1,4 @@
-.. _udaf_map:
+.. _udafmap:
 
 UDAFMap
 =======
