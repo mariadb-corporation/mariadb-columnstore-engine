@@ -137,9 +137,6 @@ expect {
 	"No such file or directory" { send_user "DONE" }
         "Exit status 0" { send_user "DONE" }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	timeout { send_user "DONE" }
 }
 send_user "\n"
@@ -160,10 +157,6 @@ if { $PASSWORD != "ssh" } {
 set timeout 30
 expect {
 	"No such file or directory" { send_user "DONE" }
-	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1}
-	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1}
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	"MariaDB Columnstore uninstall completed"	{ send_user "DONE" }
 	"Exit status 0" { send_user "DONE" }
 	"Exit status 127" { send_user "DONE" }
@@ -193,12 +186,7 @@ expect {
 	"scp :"  	{ send_user "ERROR\n" ; 
 				send_user "\n*** Installation ERROR\n" ; 
 				exit 1 }
-	"Permission denied, please try again"         { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"No such file or directory" { send_user "ERROR: Invalid package\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	timeout { send_user "ERROR: Timeout\n" ; exit 1 }
 }
 send_user "\n"
@@ -207,7 +195,7 @@ send_user "\n"
 #
 send_user "Install MariaDB Columnstore Package on Module               "
 send " \n"
-send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG'\n"
+send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxvf $CALPONTPKG'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
 	expect {
@@ -218,11 +206,7 @@ if { $PASSWORD != "ssh" } {
 set timeout 360
 expect {
 	"Exit status 0" { send_user "DONE" }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	timeout { send_user "ERROR: Timeout\n" ; exit 1 }
 }
 send_user "\n"
@@ -242,11 +226,6 @@ set timeout 60
 expect {
 	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
 	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n" }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	#"columnstore start" { send_user "DONE" }
 	"Exit status 0" { send_user "DONE" }
 }
@@ -266,11 +245,6 @@ set timeout 60
 # check return
 expect {
 	"No such file"   { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	"Starting MariaDB" { send_user "DONE" }
 }
 send_user "\n"
@@ -293,10 +267,6 @@ if { $AMAZONINSTALL == "1" } {
 	expect {
                 "Exit status 0" { send_user "DONE" }
 		-re {[$#] } 		  		  { send_user "DONE" }
-		"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-		"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-		"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-		"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	}
 }
 
