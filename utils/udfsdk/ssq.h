@@ -117,16 +117,6 @@ public:
 							COL_TYPES& colTypes);
 
 	/** 
-	 * finish() 
-	 *  
-	 * Mandatory. Completes the UDA(n)F. Called once per SQL 
-	 * statement. Do not free any memory allocated by 
-	 * context->createUserData(). The SDK Framework owns that memory
-	 * and will handle that. Often, there is nothing to do here. 
-	 */
-	virtual ReturnCode finish(mcsv1Context* context);
-
-	/** 
 	 * reset() 
 	 *  
 	 * Mandatory. Reset the UDA(n)F for a new group, partition or, 

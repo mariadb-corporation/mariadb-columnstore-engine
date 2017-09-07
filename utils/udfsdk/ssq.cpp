@@ -67,11 +67,6 @@ mcsv1_UDAF::ReturnCode ssq::init(mcsv1Context* context,
 
 }
 
-mcsv1_UDAF::ReturnCode ssq::finish(mcsv1Context* context)
-{
-	return mcsv1_UDAF::SUCCESS;
-}
-
 mcsv1_UDAF::ReturnCode ssq::reset(mcsv1Context* context)
 {
 	struct ssq_data* data = (struct ssq_data*)context->getUserData()->data;

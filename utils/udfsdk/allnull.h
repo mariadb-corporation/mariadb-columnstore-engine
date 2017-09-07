@@ -38,22 +38,9 @@
  * 6. restart the Columnstore system. 
  * 7. notify mysqld about the new functions with commands like:
  *  
- *    // An example of xor over a range for UDAF and UDAnF
- *    CREATE AGGREGATE FUNCTION mcs_bit_xor returns BOOL soname
- *    'libudfsdk.so';
+ *    CREATE AGGREGATE FUNCTION allnull returns BOOL soname
+ *    'libudf_mysql.so';
  *  
- *    // An example that only makes sense as a UDAnF
- *    CREATE AGGREGATE FUNCTION mcs_interpolate returns REAL
- *    soname 'libudfsdk.so';
- *
- * The UDAF functions may run distributed in the Columnstore 
- * engine. UDAnF do not run distributed. 
- *  
- * UDAF is User Defined Aggregate Function. 
- * UDAnF is User Defined Analytic Function. 
- * UDA(n)F is an acronym for a function that could be either. It 
- * is also used to describe the interface that is used for 
- * either. 
  */
 #ifndef HEADER_allnull
 #define HEADER_allnull
@@ -116,18 +103,7 @@ public:
 	 * colTypes or wrong number of arguments. Else return 
 	 * mcsv1_UDAF::SUCCESS. 
 	 */
-	virtual ReturnCode init(mcsv1Context* context,
-							COL_TYPES& colTypes);
-
-	/** 
-	 * finish() 
-	 *  
-	 * Mandatory. Completes the UDA(n)F. Called once per SQL 
-	 * statement. Do not free any memory allocated by 
-	 * context->setUserDataSize(). The SDK Framework owns that memory 
-	 * and will handle that. Often, there is nothing to do here. 
-	 */
-	virtual ReturnCode finish(mcsv1Context* context);
+	virtual ReturnCode init(mcsv1Context* context, COL_TYPES& colTypes);
 
 	/** 
 	 * reset() 
@@ -162,8 +138,7 @@ public:
 	 *  
 	 * valsIn (in) - a vector of the parameters from the row.
 	 */
-	virtual ReturnCode nextValue(mcsv1Context* context, 
-								 std::vector<ColumnDatum>& valsIn);
+	virtual ReturnCode nextValue(mcsv1Context* context, std::vector<ColumnDatum>& valsIn);
 
 	 /** 
 	  * subEvaluate() 

@@ -2860,11 +2860,9 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
 
 		case ROWAGG_UDAF:
 		{
-			int64_t rowCnt = 0;
 			// For a NULL constant, call nextValue with NULL and then evaluate.
 			bool bInterrupted = false;
 			mcsv1sdk::mcsv1Context context(((RowUDAFFunctionCol*)fFunctionCols[i].get())->fUDAFContext);
-			context.setRowCnt(rowCnt);
 			context.setInterrupted(bInterrupted);
 			context.createUserData();
 			mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
@@ -3191,10 +3189,8 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
 		case ROWAGG_UDAF:
 		{
-			int64_t rowCnt = 0;
 			bool bInterrupted = false;
 			mcsv1sdk::mcsv1Context context(((RowUDAFFunctionCol*)fFunctionCols[i].get())->fUDAFContext);
-			context.setRowCnt(rowCnt);
 			context.setInterrupted(bInterrupted);
 			context.createUserData();
 			mcsv1sdk::mcsv1_UDAF::ReturnCode rc;

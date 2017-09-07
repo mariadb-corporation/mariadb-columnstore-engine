@@ -57,11 +57,6 @@ mcsv1_UDAF::ReturnCode median::init(mcsv1Context* context,
 
 }
 
-mcsv1_UDAF::ReturnCode median::finish(mcsv1Context* context)
-{
-	return mcsv1_UDAF::SUCCESS;
-}
-
 mcsv1_UDAF::ReturnCode median::reset(mcsv1Context* context)
 {
 	MedianData* data = static_cast<MedianData*>(context->getUserData());
