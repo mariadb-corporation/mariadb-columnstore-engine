@@ -160,16 +160,6 @@ Use these to determine the way your UDA(n)F was called
 
 :returns: true if the parameter is a constant.
 
-.. c:function:: uint64_t getRowsInPartition() const;
-
-:returns: the actual number of rows in the Window partition. If no partitioning, returns 0.
-
-.. c:function:: cuint64_t getRowCnt() const;
-
-:returns: the number of rows in the aggregate. 
-
- This could be the total number of rows, the number of rows in the group, or the number of rows in the PM's subaggregate, depending on the context it was called.
-
 .. rubric:: Result Type
 
 .. c:function:: CalpontSystemCatalog::ColDataType getResultType() const;
