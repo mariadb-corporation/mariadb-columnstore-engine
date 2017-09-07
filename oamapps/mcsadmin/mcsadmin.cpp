@@ -4084,6 +4084,18 @@ int processCommand(string* arguments)
 
         case 34: // unassignDbrootPmConfig parameters: dbroot-list reside-pm
         {
+		string DataRedundancyConfig = "n";
+		try {
+			oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
+		}
+		catch(...)
+		{}
+
+		if (DataRedundancyConfig == "y") {
+			cout << endl << "**** unassignDbrootPmConfig : command not supported on Data Redundancy configured system. " << endl;
+			break;
+		}
+
 		if ( localModule != parentOAMModule ) {
 			// exit out since not on active module
 			cout << endl << "**** unassignDbrootPmConfig Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
@@ -4153,6 +4165,18 @@ int processCommand(string* arguments)
 
         case 35: // assignDbrootPmConfig parameters: pm dbroot-list
         {
+		string DataRedundancyConfig = "n";
+		try {
+			oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
+		}
+		catch(...)
+		{}
+
+		if (DataRedundancyConfig == "y") {
+			cout << endl << "**** assignDbrootPmConfig : command not supported on Data Redundancy configured system. " << endl;
+			break;
+		}
+
 		if ( localModule != parentOAMModule ) {
 			// exit out since not on active module
 			cout << endl << "**** assignDbrootPmConfig Failed : Can only run command on Active OAM Parent Module (" << parentOAMModule << ")." << endl;
@@ -5877,6 +5901,30 @@ int processCommand(string* arguments)
 			// check for module status and if any dbroots still assigned
 			for( ; pt != endpt ; pt++)
 			{
+				// check module status
+				try{
+					bool degraded;
+					int opState;
+					oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+
+					if (opState == oam::MAN_OFFLINE ||
+						opState == oam::MAN_DISABLED ||
+						opState == oam::FAILED)
+					{
+
+					}
+					else
+					{
+						cout << "**** removeModule Failed : " << (*pt).DeviceName << " is not MAN_OFFLINE, DISABLED, or FAILED state.";
+						quit = true;
+						cout << endl;
+						break;
+					}
+				}
+				catch (exception& ex)
+				{}
+
+				// check dbrootlist should be empty on non data redundancy setups and remove dbroots if dataredundancy removal check passes
 				if ( moduleType == "pm" ) {
 					// check for dbroots assigned
 					DBRootConfigList dbrootConfigList;
@@ -5892,9 +5940,10 @@ int processCommand(string* arguments)
 						cout << endl;
 						break;
 					}
-					else if (DataRedundancyConfig == "y")
+					else if (DataRedundancyConfig == "y" && !dbrootConfigList.empty())
 					{
 						bool PMlistError = true;
+						cout << "Removing DBRoot(s)" << endl;
 						DBRootConfigList::iterator dbrootListPt = dbrootConfigList.begin();
 						for( ; dbrootListPt != dbrootConfigList.end() ; dbrootListPt++)
 						{
@@ -5945,7 +5994,10 @@ int processCommand(string* arguments)
 						{
 							try
 							{
-								oam.removeDbroot(dbrootConfigList);
+								if (!dbrootConfigList.empty())
+								{
+									oam.removeDbroot(dbrootConfigList);
+								}
 
 								cout << endl << "   Successful Removal of DBRoots " << endl << endl;
 							}
@@ -5957,27 +6009,6 @@ int processCommand(string* arguments)
 						}
 					}
 				}
-	
-				// check module status
-				try{
-					bool degraded;
-					int opState;
-					oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-
-					if (opState == oam::MAN_OFFLINE ||
-						opState == oam::MAN_DISABLED ||
-						opState == oam::FAILED)
-						continue;
-					else
-					{
-						cout << "**** removeModule Failed : " << (*pt).DeviceName << " is not MAN_OFFLINE, DISABLED, or FAILED state.";
-						quit = true;
-						cout << endl;
-						break;
-					}
-				}
-				catch (exception& ex)
-				{}
 			}
 
 			if (quit) {
@@ -6842,6 +6873,15 @@ int processCommand(string* arguments)
 
         case 65: // alterSystem-disableModule
         {
+
+		string DataRedundancyConfig = "n";
+		int DataRedundancyCopies;
+		try {
+			oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
+		}
+		catch(...)
+		{}
+
 	    if ( SingleServerInstall == "y" ) {
                 // exit out since not on single-server install
                 cout << endl << "**** alterSystem-disableModule Failed : not support on a Single-Server type installs  " << endl;
@@ -6929,11 +6969,36 @@ int processCommand(string* arguments)
 				catch(...) 
 				{}
 
-				if ( !dbrootConfigList.empty() ) {
+				if ( !dbrootConfigList.empty() && DataRedundancyConfig == "n") {
 					cout << endl << "**** alterSystem-disableModule Failed : " << (*pt).DeviceName << " has dbroots still assigned and will not be disabled. Please run movePmDbrootConfig or unassignDbrootPmConfig.";
 					quit = true;
 					cout << endl;
 					break;
+				}
+				else if (!dbrootConfigList.empty() && DataRedundancyConfig == "y")
+				{
+					//check if dbroot requested to be removed is empty and dboot #1 is requested to be removed
+					DBRootConfigList::iterator pt = dbrootConfigList.begin();
+					for( ; pt != dbrootConfigList.end() ; pt++)
+					{
+						int dbrootID = *pt;
+
+						//check if dbroot is empty
+						bool isEmpty = false;
+						string errMsg;
+						try
+						{
+							BRM::DBRM dbrm;
+							if ( dbrm.isDBRootEmpty(dbrootID, isEmpty, errMsg) != 0)
+							{
+								cout << endl << "**** alterSystem-disableModule Failed : Data Redundancy detected DBRoots must be empty to be disabled. Remove data from DBRoot #" << oam.itoa(dbrootID) << " to continue."<< endl;
+								cout << "ERROR: isDBRootEmpty API error, dbroot #" << oam.itoa(dbrootID) << " :" << errMsg << endl;
+								quit = true;
+							}
+						}
+						catch (...)
+						{}
+					}
 				}
 			}
 

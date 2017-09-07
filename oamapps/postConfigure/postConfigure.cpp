@@ -4510,7 +4510,9 @@ bool storageSetup(bool amazonInstall)
 	{
 		cout << "  'DataRedundancy' - This is specified when gluster is installed and you want" << endl;
 		cout << "                  the DBRoot directories to be controlled by ColumnStore Data Redundancy." << endl;
-		cout << "                  High Availability Server Failover is Supported in this mode." << endl << endl;
+		cout << "                  High Availability Server Failover is Supported in this mode." << endl;
+		cout << "                  NOTE: glusterd service must be running and enabled on all PMs." << endl << endl;
+
 	}
 
 	if ( hadoopInstalled == "y" )
@@ -4797,6 +4799,14 @@ bool storageSetup(bool amazonInstall)
 	// if gluster
 	if ( storageType == "3" )
 	{
+		string command = "stat /var/run/glusterd.pid > /dev/null 2>&1";
+		int status = system(command.c_str());
+		if (WEXITSTATUS(status) != 0 )
+		{
+			cout << "ERROR: No glusterd process detected. " << endl;
+			cout << "       Start and enable glusterd on all PMs and run postConfigure again." << endl;
+			return false;
+		}
 		DataRedundancy = true;
 		sysConfig->setConfig(InstallSection, "DataRedundancyConfig", "y");
 		sysConfig->setConfig("PrimitiveServers", "DirectIO", "n");
@@ -5891,7 +5901,14 @@ bool glusterSetup(string password) {
 		}
 	}
 	sleep(5);
-	command = "gluster peer status >> /tmp/glusterCommands.txt 2>&1";
+	if (rootUser)
+	{
+		command = "gluster peer status >> /tmp/glusterCommands.txt 2>&1";
+	}
+	else
+	{
+		command = "sudo gluster peer status >> /tmp/glusterCommands.txt 2>&1";
+	}
 	status = system(command.c_str());
 	if (WEXITSTATUS(status) != 0 )
 	{

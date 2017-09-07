@@ -5871,7 +5871,7 @@ int ProcessMonitor::checkDataMount()
 		}
 	}
 
-	if ( dbrootList.size() == 0 ) {
+	if ( dbrootList.size() == 0 && DataRedundancyConfig != "y") {
 		log.writeLog(__LINE__, "No dbroots are configured in Columnstore.xml file", LOG_TYPE_WARNING);
 		return API_INVALID_PARAMETER;
 	}
@@ -6184,7 +6184,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 		int size = in.tellg();
 		if ( size != 0 )
 		{
-			if (!oam.checkLogStatus("/tmp/glusterAssign.txt", "not mounted")) {
+			if (!oam.checkLogStatus("/tmp/glusterUnassign.txt", "not mounted")) {
 				log.writeLog(__LINE__, "glusterUnassign failed.", LOG_TYPE_ERROR);
 				system("mv -f /tmp/glusterUnassign.txt /tmp/glusterUnassign_failed.txt");
 				return oam::API_FAILURE;
