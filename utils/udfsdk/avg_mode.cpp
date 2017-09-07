@@ -57,11 +57,6 @@ mcsv1_UDAF::ReturnCode avg_mode::init(mcsv1Context* context,
 
 }
 
-mcsv1_UDAF::ReturnCode avg_mode::finish(mcsv1Context* context)
-{
-	return mcsv1_UDAF::SUCCESS;
-}
-
 mcsv1_UDAF::ReturnCode avg_mode::reset(mcsv1Context* context)
 {
 	ModeData* data = static_cast<ModeData*>(context->getUserData());

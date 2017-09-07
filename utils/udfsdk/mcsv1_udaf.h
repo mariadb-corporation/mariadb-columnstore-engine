@@ -32,20 +32,24 @@
  * 2. Create the UDF function implementation in some .cpp file 
  * 3. Create the connector stub (MariaDB UDAF definition) for 
  * this UDF function.  
- * 4. build the dynamic library using all of the source. 
+ * 4. build the dynamic librarys using all of the source. 
  * 5  Put the library in $COLUMNSTORE_INSTALL/lib of 
  * all modules 
- * 6. restart the Columnstore system. 
- * 7. notify mysqld about the new functions with commands like:
+ * 6. Put the connector stub in $COLUMNSTORE_INSTALL/mysql/lib 
+ * of all UMs 
+ * 7. restart the Columnstore system. 7. notify mysqld about the 
+ * new functions with commands like: 
  *  
- *    // An example of xor over a range for UDAF and UDAnF
- *    CREATE AGGREGATE FUNCTION mcs_bit_xor returns BOOL soname
- *    'libudfsdk.so';
+ *    CREATE AGGREGATE FUNCTION all_null returns BOOL soname
+ *    'libudf_mysql.so';
  *  
  *    // An example that only makes sense as a UDAnF
  *    CREATE AGGREGATE FUNCTION mcs_interpolate returns REAL
- *    soname 'libudfsdk.so';
- *
+ *    soname 'libudf_mysql.so';
+ *  
+ * Use the name of the connector stub library in CREATE 
+ * AGGREGATE FUNCTION 
+ *  
  * The UDAF functions may run distributed in the Columnstore 
  * engine. UDAnF do not run distributed. 
  *  
@@ -55,6 +59,7 @@
  * is also used to describe the interface that is used for 
  * either. 
  */
+
 #ifndef HEADER_mcsv1_udaf
 #define HEADER_mcsv1_udaf
 
@@ -133,9 +138,9 @@ struct UserData
 	/** 
 	 * serialize()
 	 *  
-	 * User data is passed between process. In order to do so, it 
+	 * User data is passed between processes. In order to do so, it 
 	 * must be serialized. Since user data can have sub objects, 
-	 * containers and the like, it is up to the UDAF to provide the 
+	 * containers and the like, it is up to the UDAF to provide the
 	 * serialize function. The streaming functionality of 
 	 * messageqcpp::ByteStream must be used. 
 	 *  
@@ -147,7 +152,7 @@ struct UserData
 	/** 
 	 * unserialize()
 	 *  
-	 * User data is passed between process. In order to do so, it 
+	 * User data is passed between processes. In order to do so, it 
 	 * must be unserialized. Since user data can have sub objects, 
 	 * containers and the like, it is up to the UDAF to provide the 
 	 * unserialize function. The streaming functionality of 
@@ -198,7 +203,7 @@ typedef std::vector<std::pair<std::string, CalpontSystemCatalog::ColDataType> >C
 // This is the context class that is passed to all API callbacks
 // The framework potentially sets data here for each invocation of 
 // mcsv1_UDAF methods. Access methods are given for data useful to UDA(n)F.
-// Don't modify anything directly except data retrieved with getUserData().
+// Don't modify anything directly except the struct retrieved with getUserData().
 
 // UDA(n)F devlopers should not modify this class. The framework and other UDA(n)F
 // rely on it being as it was when they were compiled.
@@ -257,23 +262,23 @@ public:
 	EXPORT bool isPM();
 
 	// Parameter refinement description accessors
-	// valid in nextValue, dropValue and evaluateCumulative
+	// valid in nextValue and dropValue
 	size_t getParameterCount() const;
 
 	// Determine if an input parameter is NULL
-	// valid in nextValue, dropValue and evaluateCumulative
+	// valid in nextValue and dropValue
 	EXPORT bool isParamNull(int paramIdx);
 
-	// If a parameter is a constant, the UDA(n)F could presumably optimize its workings.
-	// During the first call to nextValue() or evaluateCumulative().
+	// If a parameter is a constant, the UDA(n)F could presumably optimize its workings
+	// during the first call to nextValue().
 	// Is there a better way to determine this?
-	// valid in nextValue, dropValue and evaluateCumulative
+	// valid in nextValue
 	EXPORT bool isParamConstant(int paramIdx);
 
 	// For getting the result type.
 	EXPORT CalpontSystemCatalog::ColDataType getResultType() const;
 
-	// For getting the decimal characteristics for the return value.
+	// For getting the decimal characteristics for the return type.
 	// These will be set to the default before init().
 	EXPORT int32_t getScale() const;
 	EXPORT int32_t getPrecision() const;
@@ -301,16 +306,6 @@ public:
 	// interupted the processing. If getInterrupted() returns true, then the executing
 	// method should clean up and exit.
 	EXPORT bool getInterrupted() const;
-
-	// Returns the actual number of rows in the partition. If no partitioning, returns 0.
-	// valid in reset()
-	EXPORT uint64_t getRowsInPartition() const;
-
-	// Returns the number of rows in the aggregate. This could be the total number of rows,
-	// the number of rows in the group, or the number of rows in the PM's subaggregate,
-	// depending on the context it was called.
-	// valid in subEvaluate() end evaluate().
-	EXPORT uint64_t getRowCnt() const;
 
 	// Allocate instance specific memory. This should be type cast to a structure overlay
 	// defined by the function. The actual allocatoin occurs in the various modules that
@@ -362,18 +357,16 @@ public:
 private:
 
 	uint64_t fRunFlags;       // Set by the user to define the type of UDA(n)F
-	uint64_t fContextFlags;  // Set by the framework to define this specific call.
+	uint64_t fContextFlags;   // Set by the framework to define this specific call.
 	int32_t fUserDataSize;
 	boost::shared_ptr<UserData> fUserData;
 	CalpontSystemCatalog::ColDataType fResultType;
-	int32_t  fColWidth;        // The length in bytes of the return type
-	int32_t  fResultscale;  // For scale, the number of digits to the right of the decimal
+	int32_t  fColWidth;       // The length in bytes of the return type
+	int32_t  fResultscale;    // For scale, the number of digits to the right of the decimal
 	int32_t  fResultPrecision; // The max number of digits allowed in the decimal value
 	std::string errorMsg;
 	std::vector<uint32_t>* dataFlags; // one entry for each parameter
-	bool*    bInterrupted;            // Gets set to true by the Framework if something happens
-	uint64_t fRowsInPartition;        // Only valid in reset()
-	int64_t  fRowCnt;         // The number of rows involved in this aggregate.
+	bool*    bInterrupted;    // Gets set to true by the Framework if something happens
 	WF_FRAME fStartFrame;     // Is set to default to start, then modified by the actual frame in the call
 	WF_FRAME fEndFrame;       // Is set to default to start, then modified by the actual frame in the call
 	int32_t  fStartConstant;  // for start frame WF_PRECEEDIMG or WF_FOLLOWING
@@ -398,7 +391,6 @@ public:
 	EXPORT void setDataFlags(std::vector<uint32_t>* flags);
 	EXPORT void setInterrupted(bool interrupted);
 	EXPORT void setInterrupted(bool* interrupted);
-	EXPORT void setRowCnt(uint64_t cnt);
 	EXPORT mcsv1sdk::mcsv1_UDAF* getFunction();
 	EXPORT mcsv1sdk::mcsv1_UDAF* getFunction() const;
 	EXPORT boost::shared_ptr<UserData> getUserDataSP();
@@ -407,11 +399,11 @@ public:
 // Since aggregate functions can operate on any data type, we use the following structure
 // to define the input row data. To be type insensiteve, data is stored in type static_any::any.
 // 
-// To access the data it must be type cast to the correct type using boost::any_cast.
+// To access the data it must be type cast to the correct type using static_any::cast.
 // example for int data:
 // 
-// if (dataType == CalpontSystemCatalog::INT)
-//     int myint = boost::any_cast<int>columnData;
+// if (valIn.compatible(intTypeId)
+//     int myint = valIn.cast<int>();
 //
 // For multi-paramter aggregations, the colsIn vector of next_value()
 // contains the ordered set of row parameters.
@@ -468,16 +460,6 @@ public:
 	 */
 	virtual ReturnCode init(mcsv1Context* context,
 							COL_TYPES& colTypes) = 0;
-
-	/** 
-	 * finish() 
-	 *  
-	 * Mandatory. Completes the UDA(n)F. Called once per SQL 
-	 * statement. Do not free any memory allocated by 
-	 * createUserData(). The SDK Framework owns that memory 
-	 * and will handle that. Often, there is nothing to do here. 
-	 */
-	virtual ReturnCode finish(mcsv1Context* context) = 0;
 
 	/** 
 	 * reset() 
@@ -647,7 +629,6 @@ inline mcsv1Context::mcsv1Context() :
     fResultPrecision(18),
 	dataFlags(NULL),
 	bInterrupted(NULL),
-    fRowsInPartition(0),
 	fStartFrame(WF_UNBOUNDED_PRECEDING),
 	fEndFrame(WF_CURRENT_ROW),
 	fStartConstant(0),
@@ -845,16 +826,6 @@ inline bool mcsv1Context::getInterrupted() const
 	return false;
 }
 
-inline uint64_t mcsv1Context::getRowsInPartition() const
-{
-	return fRowsInPartition;
-}
-
-inline uint64_t mcsv1Context::getRowCnt() const
-{
-	return fRowCnt;
-}
-
 inline void mcsv1Context::setUserDataSize(int bytes)
 {
 	fUserDataSize = bytes;
@@ -928,11 +899,6 @@ inline const std::string& mcsv1Context::getName() const
 inline void mcsv1Context::setName(std::string name)
 {
 	functionName = name;
-}
-
-inline void mcsv1Context::setRowCnt(uint64_t cnt)
-{
-	fRowCnt = cnt;
 }
 
 inline uint64_t mcsv1Context::getContextFlags() const

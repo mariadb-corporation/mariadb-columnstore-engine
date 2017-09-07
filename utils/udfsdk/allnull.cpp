@@ -15,11 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <sstream>
-#include <cstring>
 #include "allnull.h"
-#include "bytestream.h"
-#include "objectreader.h"
 
 using namespace mcsv1sdk;
 
@@ -31,7 +27,7 @@ struct allnull_data
 
 #define OUT_TYPE int64_t
 mcsv1_UDAF::ReturnCode allnull::init(mcsv1Context* context,
-									 COL_TYPES& colTypes)
+                                     COL_TYPES& colTypes)
 {
 	context->setUserDataSize(sizeof(allnull_data));
 	if (colTypes.size() < 1)
@@ -43,11 +39,6 @@ mcsv1_UDAF::ReturnCode allnull::init(mcsv1Context* context,
 	}
 	context->setResultType(CalpontSystemCatalog::TINYINT);
 
-	return mcsv1_UDAF::SUCCESS;
-}
-
-mcsv1_UDAF::ReturnCode allnull::finish(mcsv1Context* context)
-{
 	return mcsv1_UDAF::SUCCESS;
 }
 

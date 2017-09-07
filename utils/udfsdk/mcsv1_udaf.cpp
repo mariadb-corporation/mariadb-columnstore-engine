@@ -113,7 +113,6 @@ bool mcsv1Context::operator==(const mcsv1Context& c) const
 	 || fResultType      != c.fResultType
 	 || fResultscale  != c.fResultscale
 	 || fResultPrecision != c.fResultPrecision
-	 || fRowsInPartition != c.fRowsInPartition
 	 || fStartFrame      != c.fStartFrame
 	 || fEndFrame        != c.fEndFrame
 	 || fStartConstant   != c.fStartConstant
@@ -135,7 +134,7 @@ const std::string mcsv1Context::toString() const
 	output << "  UserDataSize=" << fUserDataSize << " ResultType=" << colDataTypeToString(fResultType) << std::endl;
 	output << "  Resultscale=" << fResultscale << " ResultPrecision=" << fResultPrecision << std::endl;
 	output << "  ErrorMsg=" << errorMsg << std::endl;
-	output << "  bInterrupted=" << bInterrupted << " RowsInPartition=" << fRowsInPartition << std::endl;
+	output << "  bInterrupted=" << bInterrupted << std::endl;
 	output << "  StartFrame=" << fStartFrame << " EndFrame=" << fEndFrame << std::endl;
 	output << "  StartConstant=" << fStartConstant << " EndConstant=" << fEndConstant << std::endl;
 	return output.str();
@@ -199,7 +198,6 @@ void mcsv1Context::serialize(messageqcpp::ByteStream& b) const
 	b << errorMsg;
 	// Don't send dataflags. These are set for each call
 	// bInterrupted is set internally.
-	b << fRowsInPartition;
 	b << (uint32_t)fStartFrame;
 	b << (uint32_t)fEndFrame;
 	b << fStartConstant;
@@ -218,7 +216,6 @@ void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
 	b >> fResultscale;
 	b >> fResultPrecision;
 	b >> errorMsg;
-	b >> fRowsInPartition;
 	uint32_t frame;
 	b >> frame;
 	fStartFrame = (WF_FRAME)frame;

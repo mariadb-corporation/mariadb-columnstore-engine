@@ -614,6 +614,7 @@
             <F N="../../../mariadb/sql/ha_partition.h"/>
             <F N="ha_subquery.h"/>
             <F N="ha_view.h"/>
+            <F N="idb_mysql.h"/>
         </Folder>
         <Folder
             Name="Resource Files"
