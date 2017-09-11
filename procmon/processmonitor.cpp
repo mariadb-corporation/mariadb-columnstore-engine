@@ -5871,11 +5871,6 @@ int ProcessMonitor::checkDataMount()
 		}
 	}
 
-	if ( dbrootList.size() == 0 && DataRedundancyConfig != "y") {
-		log.writeLog(__LINE__, "No dbroots are configured in Columnstore.xml file", LOG_TYPE_WARNING);
-		return API_INVALID_PARAMETER;
-	}
-
 	try{
 		oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
 	}
@@ -5902,6 +5897,11 @@ int ProcessMonitor::checkDataMount()
 				log.writeLog(__LINE__, "Exception assigning gluster dbroot# " + dbrootID, LOG_TYPE_ERROR);
 			}
 		}
+	}
+
+	if ( dbrootList.size() == 0 ) {
+		log.writeLog(__LINE__, "No dbroots are configured in Columnstore.xml file", LOG_TYPE_WARNING);
+		return API_INVALID_PARAMETER;
 	}
 
 	if ( DBRootStorageType == "hdfs" ||
@@ -6122,7 +6122,7 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 {
 	Oam oam;
 	Config* sysConfig = Config::makeConfig();
-
+	string command;
 	std::string errmsg = "";
 
 	log.writeLog(__LINE__, "glusterAssign called : " + dbrootID, LOG_TYPE_DEBUG);
@@ -6135,9 +6135,17 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 	{
 		moduleIPAddr = sysConfig->getConfig("SystemModuleConfig",dataDupIPaddr);
 	}
-	string command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
-			dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
 
+	if ( rootUser)
+	{
+		command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
+				dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
+	}
+	else
+	{
+		command = "sudo mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
+				dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
+	}
 	int ret = system(command.c_str());
 
 	if ( WEXITSTATUS(ret) != 0 )
@@ -6169,13 +6177,19 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 int ProcessMonitor::glusterUnassign(std::string dbrootID)
 {
 	Oam oam;
-
+	string command;
 	std::string errmsg = "";
 
 	log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
 
-	string command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
-
+	if ( rootUser)
+	{
+		command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
+	}
+	else
+	{
+		command = "sudo umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
+	}
 	int ret = system(command.c_str());
 	if ( WEXITSTATUS(ret) != 0 )
 	{

@@ -162,8 +162,8 @@ int main(int argc, char **argv)
 	      }
 	      
 	      //re-read local system info with updated Columnstore.xml
-	      sleep(1);
-	      MonitorConfig config;
+//	      sleep(1);
+//	      MonitorConfig config;
 
 	      //PMwithUM config 
 	      try {
@@ -357,9 +357,6 @@ int main(int argc, char **argv)
 							sleep(1);
 						}
 					}
-					//re-read local system info with new Columnstore.xml
-					sleep(1);
-					MonitorConfig config;
 				}
 
 				// not OAM parent module, delay starting until a successful get status is performed
@@ -412,9 +409,6 @@ int main(int argc, char **argv)
 					sleep(1);
 				}
 			}
-			//re-read local system info with new Columnstore.xml
-			sleep(1);
-			MonitorConfig config;
 		}
 
 		// not OAM parent module, delay starting until a successful get status is performed
@@ -481,11 +475,11 @@ int main(int argc, char **argv)
 		
 		if ( retry == 20 )
 		{
-			log.writeLog(__LINE__, "Check DB mounts failed, infinidb shutting down", LOG_TYPE_CRITICAL);
+			log.writeLog(__LINE__, "Check DB mounts failed, shutting down", LOG_TYPE_CRITICAL);
 			//Set the alarm
 			aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 			sleep (1);
-			string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
 			system(cmd.c_str());
 		}
 
@@ -634,8 +628,6 @@ int main(int argc, char **argv)
 				exit(1);
 			}
 		}
-
-		MonitorConfig config;
 
 		while(true)
 		{
