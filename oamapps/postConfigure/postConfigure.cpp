@@ -1071,7 +1071,7 @@ int main(int argc, char *argv[])
 		}
 		
 		// setup to start on reboot
-		system("sudo sed -i -e s/#runuser/runuser/g /etc/rc.local >/dev/null 2>&1");
+		system("sudo sed -i -e s/#sudo runuser/sudo runuser/g /etc/rc.local >/dev/null 2>&1");
 	}
 	
 	if ( pmwithum )
