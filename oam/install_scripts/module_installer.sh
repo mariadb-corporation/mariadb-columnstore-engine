@@ -61,7 +61,7 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if [ $user = "root" ]; then
 		sed -i -e s/#runuser/runuser/g /etc/rc.local
 	else
-                sudo sed -i -e s/#sudo runuser/sudo runuser/g /etc/rc.local
+                sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.local
 	fi
 
 	if [ $module = "pm" ]; then

@@ -72,7 +72,7 @@ expect {
 							timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
                                                 }
 					}
-					"Exit status 0" { set PASSWORD "ssh" }
+					"Exit status 0" { set PASSWORD "ssh" ; send_user "DONE"}
 					"Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
 					"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
 					"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
@@ -109,7 +109,7 @@ expect {
 				"Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
                         }
 	}
-	"Exit status 0" { set PASSWORD "ssh" }	
+	"Exit status 0" { set PASSWORD "ssh" ; send_user "DONE"}	
         "Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
 	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
 	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
@@ -145,7 +145,7 @@ send_user "\n"
 # remove MariaDB Columnstore files
 #
 send_user "Uninstall MariaDB Columnstore Package                       "
-send " \n"
+send_user " \n"
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/pre-uninstall --installdir=$INSTALLDIR >/dev/null 2>&1'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -170,7 +170,7 @@ if { $INSTALLTYPE == "uninstall" } { exit 0 }
 # send the MariaDB Columnstore package
 #
 send_user "Copy New MariaDB Columnstore Package to Module              "
-send " \n"
+send_user " \n"
 send "scp -v $CALPONTPKG $USERNAME@$SERVER:$CALPONTPKG\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -182,7 +182,6 @@ if { $PASSWORD != "ssh" } {
 set timeout 180
 expect {
 	"Exit status 0" { send_user "DONE" }
-	"100%" 		{ send_user "DONE" }
 	"scp :"  	{ send_user "ERROR\n" ; 
 				send_user "\n*** Installation ERROR\n" ; 
 				exit 1 }
@@ -194,7 +193,7 @@ send_user "\n"
 # install package
 #
 send_user "Install MariaDB Columnstore Package on Module               "
-send " \n"
+send_user " \n"
 send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxvf $CALPONTPKG'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -212,7 +211,7 @@ expect {
 send_user "\n"
 
 send_user "Run post-install script                         "
-send " \n"
+send_user " \n"
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/post-install --installdir=$INSTALLDIR'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -226,13 +225,12 @@ set timeout 60
 expect {
 	"No such file"   { send_user "ERROR: post-install Not Found\n" ; exit 1 }
 	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n" }
-	#"columnstore start" { send_user "DONE" }
 	"Exit status 0" { send_user "DONE" }
 }
 send_user "\n"
 
 send_user "Start ColumnStore service                       "
-send " \n"
+send_user " \n"
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
 if { $PASSWORD != "ssh" } {
 	set timeout 30
@@ -245,7 +243,7 @@ set timeout 60
 # check return
 expect {
 	"No such file"   { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
-	"Starting MariaDB" { send_user "DONE" }
+	"Exit status 0" { send_user "DONE" }
 }
 send_user "\n"
 
@@ -254,7 +252,7 @@ if { $AMAZONINSTALL == "1" } {
 	# copy over customer OS files
 	#
 	send_user "Copy MariaDB Columnstore OS files to Module                 "
-	send " \n"
+	send_user " \n"
 	send "scp -v -r $INSTALLDIR/local/etc  $USERNAME@$SERVER:$INSTALLDIR/local\n"
 	if { $PASSWORD != "ssh" } {
 		set timeout 30
@@ -266,7 +264,6 @@ if { $AMAZONINSTALL == "1" } {
 	set timeout 60
 	expect {
                 "Exit status 0" { send_user "DONE" }
-		-re {[$#] } 		  		  { send_user "DONE" }
 	}
 }
 
