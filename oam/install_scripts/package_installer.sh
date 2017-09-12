@@ -255,31 +255,6 @@ expect {
 send_user "\n"
 
 #
-# copy over calpont config file
-#
-send_user "Copy MariaDB Columnstore Config file to Module              "
-send_user " \n"
-send date\n
-send "scp -v $INSTALLDIR/etc/* $USERNAME@$SERVER:$INSTALLDIR/etc\n"
-if { $PASSWORD != "ssh" } {
-	set timeout 30
-	expect {
-		"word: " { send "$PASSWORD\n" }
-		"passphrase" { send "$PASSWORD\n" }
-	}
-}
-set timeout 60
-expect {
-	"Exit status 0" { send_user "DONE" }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-}
-send_user "\n"
-
-#
 # copy over custom OS tmp files
 #
 send_user "Copy Custom OS files to Module                  "
