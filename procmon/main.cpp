@@ -162,8 +162,9 @@ int main(int argc, char **argv)
 	      }
 	      
 	      //re-read local system info with updated Columnstore.xml
-//	      sleep(1);
-//	      MonitorConfig config;
+	      sleep(1);
+	      Config* sysConfig = Config::makeConfig();
+	      MonitorConfig config;
 
 	      //PMwithUM config 
 	      try {
@@ -977,23 +978,33 @@ static void messageThread(MonitorConfig config)
 	Oam oam;
 
 	string msgPort = config.moduleName() + "_ProcessMonitor";
-
-	//ProcMon will wait for request 	
+	string port = "";
+	
+	//ProcMon will wait for request
 	IOSocket fIos;
+	Config* sysConfig = Config::makeConfig();
 
 	//read and cleanup port before trying to use
 	try {
-		Config* sysConfig = Config::makeConfig();
-		string port = sysConfig->getConfig(msgPort, "Port");
-		string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
-		if ( !rootUser)
-			cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-		system(cmd.c_str());
+		port = sysConfig->getConfig(msgPort, "Port");
 	}
 	catch(...)
+	{}
+	
+	//check if enter doesnt exist, if not use pm1's
+	if (port.empty() or port == "" )
 	{
+	    msgPort = "pm1_ProcessMonitor";
+	    port = sysConfig->getConfig(msgPort, "Port");
 	}
+	
+	log.writeLog(__LINE__, "PORTS: " + msgPort + "/" + port, LOG_TYPE_DEBUG);
+
+	string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
+	if ( !rootUser)
+	    cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
+
+	system(cmd.c_str());
 
 	for (;;)
 	{
@@ -1043,14 +1054,14 @@ static void messageThread(MonitorConfig config)
         catch (exception& ex)
         {
 			string error = ex.what();
-//			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for " + msgPort + ": " + error, LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for " + msgPort + ": " + error, LOG_TYPE_ERROR);
 
 			// takes 2 - 4 minites to free sockets, sleep and retry
 			sleep(1);
         }
         catch(...)
         {
-//			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for " + msgPort + ": Caught unknown exception!", LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for " + msgPort + ": Caught unknown exception!", LOG_TYPE_ERROR);
 
 			// takes 2 - 4 minites to free sockets, sleep and retry
 			sleep(1);

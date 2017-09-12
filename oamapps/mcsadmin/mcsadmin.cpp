@@ -2428,8 +2428,8 @@ int processCommand(string* arguments)
 				}
 			}
             	}
-
-		sleep(10);
+		//this is here because a customer likes doing a shutdownsystem then startsystem in a script
+		sleep(5);
         }
         break;
 

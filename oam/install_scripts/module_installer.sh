@@ -57,9 +57,11 @@ ServerTypeInstall=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation ServerTyp
 
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+	echo "Amazon setup on Module"
 	cp $COLUMNSTORE_INSTALL_DIR/local/etc/credentials $HOME/.aws/. > /dev/null 2>&1
         sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local
-
+	sudo chmod 777 /etc/rc.d/rc.local
+	
 	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
 			echo "Setup fstab on Module"

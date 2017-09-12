@@ -1072,6 +1072,7 @@ int main(int argc, char *argv[])
 		
 		// setup to start on reboot
 		system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+		system("sudo chmod 777 /etc/rc.d/rc.local >/dev/null 2>&1");
 	}
 	
 	if ( pmwithum )
@@ -5022,7 +5023,7 @@ bool makeModuleFile(string moduleName, string parentOAMModuleName)
 	if ( moduleName == parentOAMModuleName)
 		fileName = installDir + "/local/module";
 	else
-	    return true;
+		fileName = installDir + "/local/etc/" + moduleName + "/module";
 	
 	unlink (fileName.c_str());
    	ofstream newFile (fileName.c_str());
