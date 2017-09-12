@@ -170,6 +170,8 @@ int main(int argc, char **argv)
 	if ( DBRootStorageType == "hdfs" )
 		HDFS = true;
 
+	log.writeLog(__LINE__, "DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
+
 	//PMwithUM config 
 	try {
 		oam.getSystemConfig( "PMwithUM", PMwithUM);
