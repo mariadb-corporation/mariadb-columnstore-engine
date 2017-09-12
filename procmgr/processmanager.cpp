@@ -10209,6 +10209,8 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 {
 	Oam oam;
 
+	log.writeLog(__LINE__, "setMySQLReplication called", LOG_TYPE_DEBUG);
+
 	string MySQLRep;
 	try {
 		oam.getSystemConfig("MySQLRep", MySQLRep);
@@ -10217,8 +10219,10 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		MySQLRep = "n";
 	}
 
-	if ( MySQLRep == "n" && enable )
+	if ( MySQLRep == "n" && enable ) {
+	    log.writeLog(__LINE__, "setMySQLReplication: MySQLRep not set, exiting", LOG_TYPE_DEBUG);
 		return oam::API_SUCCESS;
+	}
 
 	//also skip if single-server, multi-node seperate with 1 UM, multi-node combo with 1 PM
 
@@ -10232,24 +10236,31 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 
 	//single server check
 	if ( SingleServerInstall == "y" )
-		return oam::API_SUCCESS;
+	{
+	    log.writeLog(__LINE__, "setMySQLReplication: Single-Server, exiting", LOG_TYPE_DEBUG);
+	    return oam::API_SUCCESS;
+	}
 
 	//combined system check
 	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM && !failover ) {
 		try {
 			Config* sysConfig = Config::makeConfig();
 			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
+				log.writeLog(__LINE__, "setMySQLReplication: 1 configured module, exiting", LOG_TYPE_DEBUG);
 				return oam::API_SUCCESS;
 			}
 		}
 		catch(...)
 		{
+			log.writeLog(__LINE__, "setMySQLReplication: makeConfig exception, exiting", LOG_TYPE_DEBUG);
 			return oam::API_SUCCESS;
 		}
 	}
 
 	//seperate system check
-	if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
+	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) &&
+	    (PMwithUM == "n" ) )
+	{ 
 		ModuleTypeConfig moduletypeconfig;
 		try{
 			oam.getSystemConfig("um", moduletypeconfig);
@@ -10259,6 +10270,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 	
 		if ( moduletypeconfig.ModuleCount < 2 )
 		{
+			log.writeLog(__LINE__, "setMySQLReplication: moduleCount = 1, exiting", LOG_TYPE_DEBUG);
 			return oam::API_SUCCESS;
 		}
 	}
