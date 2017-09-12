@@ -58,7 +58,6 @@ bool HDFS = false;
 string localHostName;
 string PMwithUM = "n";
 string MySQLRep = "n";
-string DBRootStorageType = "internal";
 
 // pushing the ACTIVE_ALARMS_FILE to all nodes every 10 seconds.
 const int ACTIVE_ALARMS_PUSHING_INTERVAL = 10;
@@ -170,7 +169,7 @@ int main(int argc, char **argv)
 	if ( DBRootStorageType == "hdfs" )
 		HDFS = true;
 
-	log.writeLog(__LINE__, "DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
+	log.writeLog(__LINE__, "Main: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
 
 	//PMwithUM config 
 	try {
@@ -1015,6 +1014,15 @@ void pingDeviceThread()
 		string name = systemextdeviceconfig.extdeviceconfig[i].Name;
 		extDeviceInfoList.insert(extDeviceList::value_type(name, 0));
 	}
+
+	//storage config 
+	string DBRootStorageType;
+	try {
+		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+	}
+	catch(...) {}
+
+	log.writeLog(__LINE__, "pingDeviceThread: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
 
 	int rtnCode = 0;
 	Configuration configData;

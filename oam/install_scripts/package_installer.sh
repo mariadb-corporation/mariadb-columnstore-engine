@@ -340,6 +340,7 @@ set timeout 60
 expect {
 	"No such file"   { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
         "Exit status 0" { send_user "DONE" }
+}
 
 send_user "\n"
 

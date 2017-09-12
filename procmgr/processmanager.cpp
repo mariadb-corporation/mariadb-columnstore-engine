@@ -72,7 +72,6 @@ bool startsystemthreadRunning = false;
 string gdownActiveOAMModule;
 vector<string> downModuleList;
 bool startFailOver = false;
-extern string DBRootStorageType;
 
 string masterLogFile = oam::UnassignedName;
 string masterLogPos = oam::UnassignedName;
@@ -8625,6 +8624,15 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
 	log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
 
+	//storage config 
+	string DBRootStorageType;
+	try {
+		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+	}
+	catch(...) {}
+
+	log.writeLog(__LINE__, "switchParentOAMModule: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
+
 	if ( DBRootStorageType == "internal" && DataRedundancyConfig == "n") {
 		log.writeLog(__LINE__, "ERROR: DBRootStorageType = internal", LOG_TYPE_ERROR);
 		pthread_mutex_unlock(&THREAD_LOCK);
@@ -9224,6 +9232,15 @@ int ProcessManager::OAMParentModuleChange()
 
 			}
 
+			//storage config 
+			string DBRootStorageType;
+			try {
+				oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+			}
+			catch(...) {}
+
+			log.writeLog(__LINE__, "OAMParentModuleChange: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
+
 			if ( DBRootStorageType == "internal" && failover && DataRedundancyConfig == "n")
 			{
 				log.writeLog(__LINE__, "DBRoot Storage configured for internal, don't do standby-active failover", LOG_TYPE_DEBUG);
@@ -9239,9 +9256,6 @@ int ProcessManager::OAMParentModuleChange()
 
 	//run save.brm script
 	processManager.saveBRM(true, false);
-
-	//set query system state not ready
-	processManager.setQuerySystemState(false);
 
 	gdownActiveOAMModule = downOAMParentName;
 
