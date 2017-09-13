@@ -5824,7 +5824,7 @@ bool glusterSetup(string password) {
 			//}
 			//else
 			//{
-				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'sudo mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+			//	command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'sudo mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
 			//}
 			status = system(command.c_str());
 			if (WEXITSTATUS(status) != 0 )
