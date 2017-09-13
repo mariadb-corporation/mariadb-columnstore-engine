@@ -4645,30 +4645,8 @@ StopWatch timer;
                case WriteEngine::WR_CHAR:
                case WriteEngine::WR_BLOB:
                case WriteEngine::WR_TEXT:
-                  switch (colStructList[i].colWidth)
-                  {
-                      case 1:
-                          tmp8 = curValue;
-                          ((uint8_t*)valArray)[j] = tmp8;
-                          break;
-                      case 2:
-                          tmp16 = curValue;
-                          ((uint16_t*)valArray)[j] = tmp16;
-                          break;
-                      case 3:
-                      case 4:
-                          tmp32 = curValue;
-                          ((uint32_t*)valArray)[j] = tmp32;
-                          break;
-                      case 5:
-                      case 6:
-                      case 7:
-                      case 8:
-                          ((uint64_t*)valArray)[j] = curValue;
-                          break;
-                  }
-
-                  break;
+                    ((uint64_t*)valArray)[j] = curValue;
+                    break;
                case WriteEngine::WR_INT:
                case WriteEngine::WR_UINT:
                case WriteEngine::WR_FLOAT:
