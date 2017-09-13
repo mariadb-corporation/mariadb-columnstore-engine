@@ -2592,7 +2592,7 @@ int main(int argc, char *argv[])
 
 
 	//check 'files per parition' with number of dbroots
-	checkFilesPerPartion(DBRootCount, sysConfig);
+	//checkFilesPerPartion(DBRootCount, sysConfig);
 
 	//setup DBRM Controller
 	sysConfig->setConfig("DBRM_Controller", "NumWorkers", oam.itoa(DBRMworkernodeID));
