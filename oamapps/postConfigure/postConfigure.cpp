@@ -254,7 +254,9 @@ int main(int argc, char *argv[])
 
 	//check if root-user
 	int user;
+	int usergroup;
 	user = getuid();
+	usergroup = getgid();
 	if (user != 0)
 		rootUser = false;
 
@@ -5816,18 +5818,18 @@ bool glusterSetup(string password) {
 		for ( int brick=1; brick<=numberBricksPM; brick++)
 		{
 			// create the gluster brick directories now
-			if (rootUser)
-			{
+			//if (rootUser)
+			//{
 				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
-			}
-			else
-			{
-				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'sudo mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
-			}
+			//}
+			//else
+			//{
+			//	command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'sudo mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+			//}
 			status = system(command.c_str());
 			if (WEXITSTATUS(status) != 0 )
 			{
-				cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): 'sudo mkdir -p " << installDir << "/gluster/brick" << oam.itoa(brick) << "'" << endl;
+				cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): 'mkdir -p " << installDir << "/gluster/brick" << oam.itoa(brick) << "'" << endl;
 				exit(1);
 			}
 /*
@@ -5971,16 +5973,38 @@ bool glusterSetup(string password) {
 		if (rootUser)
 		{
 			command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+			status = system(command.c_str());
+			if (WEXITSTATUS(status) != 0 )
+			{
+				cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
+				exit(1);
+			}
 		}
 		else
 		{
+			int user = getuid();
+			int group = getgid();
+			command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
+			status = system(command.c_str());
+			if (WEXITSTATUS(status) != 0 )
+			{
+				cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
+				exit(1);
+			}
+			command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+			status = system(command.c_str());
+			if (WEXITSTATUS(status) != 0 )
+			{
+				cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
+				exit(1);
+			}
 			command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
-		}
-		status = system(command.c_str());
-		if (WEXITSTATUS(status) != 0 )
-		{
-			cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
-			exit(1);
+			status = system(command.c_str());
+			if (WEXITSTATUS(status) != 0 )
+			{
+				cout << "ERROR: Failed to start dbroot" << oam.itoa(dbrootID) << endl;
+				exit(1);
+			}
 		}
 		cout << "DONE" << endl;
 	}

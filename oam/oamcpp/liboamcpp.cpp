@@ -8194,8 +8194,10 @@ namespace oam
 	int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string& argument2, std::string& errmsg)
 	{
 #ifndef _MSC_VER
-		int user;
+		int user,group;
 		user = getuid();
+		group = getgid();
+
 		string glustercmd = "gluster ";
 
 		if (user!=0)
@@ -8423,6 +8425,23 @@ namespace oam
 					{
 						writeLog("ERROR: command failed: " + command,LOG_TYPE_DEBUG);
 						exceptionControl("GLUSTER_ADD", API_FAILURE);
+					}
+					if (user != 0)
+					{
+						command = "sudo gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-uid " + itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
+						status = system(command.c_str());
+						if (WEXITSTATUS(status) != 0 )
+						{
+							writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
+							exceptionControl("GLUSTER_ADD", API_FAILURE);
+						}
+						command = "sudo gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-gid " + itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+						status = system(command.c_str());
+						if (WEXITSTATUS(status) != 0 )
+						{
+							writeLog("ERROR: command failed: ",LOG_TYPE_DEBUG);
+							exceptionControl("GLUSTER_ADD", API_FAILURE);
+						}
 					}
 					command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
 					status = system(command.c_str());
