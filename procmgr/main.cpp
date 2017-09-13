@@ -566,7 +566,7 @@ static void startMgrProcessThread()
 
 	//Send out a start service just to make sure Columnstore is runing on remote nodes
 	//note this only works for systems with ssh-keys
-	for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+/*	for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
 	{
 		int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
 		if( moduleCount == 0)
@@ -588,7 +588,7 @@ static void startMgrProcessThread()
 		      }
 		}
 	}
-	
+*/	
 	//distribute system and process config files
 	processManager.distributeConfigFile("system");
 	processManager.distributeConfigFile("system", "ProcessConfig.xml");
