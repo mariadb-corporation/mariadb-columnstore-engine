@@ -5816,18 +5816,18 @@ bool glusterSetup(string password) {
 		for ( int brick=1; brick<=numberBricksPM; brick++)
 		{
 			// create the gluster brick directories now
-			if (rootUser)
-			{
+			//if (rootUser)
+			//{
 				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
-			}
-			else
-			{
+			//}
+			//else
+			//{
 				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'sudo mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
-			}
+			//}
 			status = system(command.c_str());
 			if (WEXITSTATUS(status) != 0 )
 			{
-				cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): 'sudo mkdir -p " << installDir << "/gluster/brick" << oam.itoa(brick) << "'" << endl;
+				cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): 'mkdir -p " << installDir << "/gluster/brick" << oam.itoa(brick) << "'" << endl;
 				exit(1);
 			}
 /*
