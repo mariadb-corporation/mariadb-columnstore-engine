@@ -5422,12 +5422,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 	  	processManager.configureModule(moduleName);
 	    }
-
-	    //if amazon, delay to give time for ProcMon to start
-	    if (amazon) {
-		    log.writeLog(__LINE__, "addModule - sleep 10 - give ProcMon time to start on new Instance", LOG_TYPE_DEBUG);
-		    sleep(10);
-	    }
 	}
 	else
 	{
@@ -5440,9 +5434,13 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	    }
 	}
 	
-	sleep(5);
-	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
-	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
+	//delay to give time for ProcMon to start after the config is sent and procmon restarts
+	log.writeLog(__LINE__, "addModule - sleep 10 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
+	sleep(10);
+
+//	sleep(5);
+//	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
+//	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
 	return API_SUCCESS;
 }

@@ -2754,7 +2754,7 @@ int main(int argc, char *argv[])
 
 	if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM && pmNumber == 1) {
 		//run the mysql / mysqld setup scripts
-		cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
+		cout << endl << "===== Running the MariaDB ColumnStore MariaDB Server setup scripts =====" << endl << endl;
 
 		checkMysqlPort(mysqlPort, sysConfig);
 
