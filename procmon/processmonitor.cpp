@@ -5675,6 +5675,9 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 		}
 	
 		string status = oam.getEC2VolumeStatus(volumeName);
+		log.writeLog(__LINE__, "amazonVolumeCheck:  getEC2VolumeStatus: " + status, LOG_TYPE_DEBUG);
+
+
 		if ( status == "attached" ) {
 			log.writeLog(__LINE__, "amazonVolumeCheck function successfully completed, volume attached: " + volumeName, LOG_TYPE_DEBUG);
 			return true;
