@@ -94,7 +94,7 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
-	"No such file or directory" { send_user "DONE" }
+#	"No such file or directory" { send_user "DONE" }
     "Exit status 0" { send_user "DONE" }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
@@ -118,13 +118,13 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
-	"error: --purge needs at least one package" { send_user "DONE" }
+#	"error: --purge needs at least one package" { send_user "DONE" }
 	"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-	"rpm: no packages given for erase" { send_user "DONE" }
+#	"rpm: no packages given for erase" { send_user "DONE" }
 	"Exit status 0" { send_user "DONE" }
 	timeout { send_user "DONE" }
 }
@@ -188,7 +188,7 @@ expect {
 	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"needs"    { send_user "ERROR: disk space issue\n" ; exit 1 }
 	"conflicts"	   { send_user "ERROR: File Conflict issue\n" ; exit 1 }
-	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n" }
+	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n"; exp_continue }
 	"Exit status 0" { send_user "DONE" }
 	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 }
