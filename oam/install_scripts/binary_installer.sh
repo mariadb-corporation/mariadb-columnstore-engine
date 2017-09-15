@@ -78,7 +78,8 @@ expect {
     exp_continue
 	}
 #	"No such file or directory" { send_user "DONE" }
-    "Exit status 0" { send_user "DONE" }
+    	"Exit status 0" { send_user "DONE" }
+	"Exit status 127" { send_user "DONE" }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	timeout { send_user "DONE" }
 }

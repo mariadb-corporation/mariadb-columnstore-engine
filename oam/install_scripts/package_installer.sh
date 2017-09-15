@@ -95,7 +95,8 @@ expect {
     exp_continue
 	}
 #	"No such file or directory" { send_user "DONE" }
-    "Exit status 0" { send_user "DONE" }
+        "Exit status 127" { send_user "DONE" }
+	    "Exit status 0" { send_user "DONE" }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
 	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
@@ -110,7 +111,7 @@ send_user "\n"
 #
 send_user "Erase MariaDB Columnstore Packages on Module                 "
 send "ssh -v $USERNAME@$SERVER '$PKGERASE '\n"
-set timeout 120
+set timeout 60
 expect {
 	"word: " { send "$PASSWORD\n"
     exp_continue
