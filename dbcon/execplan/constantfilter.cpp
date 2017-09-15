@@ -121,13 +121,21 @@ ostream& operator<<(ostream& output, const ConstantFilter& rhs)
 
 bool ConstantFilter::hasAggregate()
 {
-	fAggColumnList.clear();
-	for (uint32_t i = 0; i < fFilterList.size(); i++)
+	if (fAggColumnList.empty())
 	{
-		if (fFilterList[i]->hasAggregate())
+		for (uint32_t i = 0; i < fFilterList.size(); i++)
 		{
-			return true;
+			if (fFilterList[i]->hasAggregate())
+			{
+				fAggColumnList.insert(fAggColumnList.end(), 
+									   fFilterList[i]->aggColumnList().begin(), 
+									   fFilterList[i]->aggColumnList().end());
+			}
 		}
+	}
+	if (!fAggColumnList.empty())
+	{
+		return true;
 	}
 	return false;
 }
