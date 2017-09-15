@@ -1187,7 +1187,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colTypeDct(const OID& 
 	}
 
     // check map first cached column type
-    boost::mutex::scoped_lock lk3(fDctTokenMapLock);
+    boost::recursive_mutex::scoped_lock lk3(fDctTokenMapLock);
 	DctTokenMap::const_iterator iter = fDctTokenMap.find(dictOid);
 	if (iter != fDctTokenMap.end())
 		return colType(iter->second);
@@ -5317,7 +5317,7 @@ void CalpontSystemCatalog::flushCache()
 	buildSysTablemap();
 	lk3.unlock();
 
-	boost::mutex::scoped_lock lk4(fDctTokenMapLock);
+	boost::recursive_mutex::scoped_lock lk4(fDctTokenMapLock);
 	fDctTokenMap.clear();
 	buildSysDctmap();
 	lk4.unlock();
