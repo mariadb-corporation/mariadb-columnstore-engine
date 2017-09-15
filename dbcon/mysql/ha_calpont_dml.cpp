@@ -711,6 +711,7 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
     uint16_t colpos = 0;
     buf  = buf + ci.headerLength;  // Number of bytes used for null bits.
     //@Bug 6122 if all columns have not null constraint, there is no information in the header
+    std::string escape;
 	char nullBits = *bufHdr++;
 	if (!ci.useXbit)
 	{
@@ -831,8 +832,11 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 						if (current_thd->variables.sql_mode & MODE_PAD_CHAR_TO_FULL_LENGTH)
 						{
 							// Pad to the full length of the field
-							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, ci.columnTypes[colpos].colWidth, 
-									buf, ci.enclosed_by, ci.delimiter); 
+                            escape.assign((char*)buf, ci.columnTypes[colpos].colWidth);
+                            boost::replace_all(escape, "\\", "\\\\");
+
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), 
+									escape.c_str(), ci.enclosed_by, ci.delimiter); 
 						}
 						else
 						{
@@ -841,8 +845,10 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 							bitmap_set_bit(table->read_set, field->field_index);
 							String attribute;
 							field->val_str(&attribute);
-							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, attribute.length(), 
-									buf, ci.enclosed_by, ci.delimiter); 
+                            escape.assign((char*)buf, attribute.length());
+                            boost::replace_all(escape, "\\", "\\\\");
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), 
+									escape.c_str(), ci.enclosed_by, ci.delimiter); 
 						}
 					}
 						
@@ -895,7 +901,9 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 								dataLength = *(int16_t*) buf;
 								buf = buf + 2 ;
 							}
-							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, dataLength, buf, ci.enclosed_by, ci.delimiter); 							
+                            escape.assign((char*)buf, dataLength);
+                            boost::replace_all(escape, "\\", "\\\\");
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter); 							
 						}
 						else //utf8
 						{
@@ -911,8 +919,11 @@ int ha_calpont_impl_write_batch_row_(uchar *buf, TABLE* table, cal_impl_if::cal_
 							}
 							if ( dataLength > ci.columnTypes[colpos].colWidth)
 								dataLength = ci.columnTypes[colpos].colWidth;
-							
-							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, dataLength, buf, ci.enclosed_by, ci.delimiter); 
+
+                            escape.assign((char*)buf, dataLength);
+                            boost::replace_all(escape, "\\", "\\\\");
+
+							fprintf(ci.filePtr, "%c%.*s%c%c", ci.enclosed_by, (int)escape.length(), escape.c_str(), ci.enclosed_by, ci.delimiter); 
 						}
 					}
 					//buf += ci.columnTypes[colpos].colWidth;
