@@ -72,7 +72,7 @@ expect {
     exp_continue
 	}
 	"Exit status 0" { send_user "DONE"}	
-    "Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
+	"Exit status 1" { send_user "FAILED: Login Failure\n" ; exit 1 }
 	"Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit 1 }
 	"service not known" { send_user "FAILED: Invalid Host\n" ; exit 1 }
 	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
@@ -96,12 +96,8 @@ expect {
 	}
 #	"No such file or directory" { send_user "DONE" }
         "Exit status 127" { send_user "DONE" }
-	    "Exit status 0" { send_user "DONE" }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
+	 "Exit status 0" { send_user "DONE" }
 	"Read-only file system" { send_user "ERROR: local disk - Read-only file system\n" ; exit 1}
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
 	timeout { send_user "DONE" }
 }
 send_user "\n"
@@ -119,14 +115,9 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
-#	"error: --purge needs at least one package" { send_user "DONE" }
 	"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; exit 1 }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
-#	"rpm: no packages given for erase" { send_user "DONE" }
 	"Exit status 0" { send_user "DONE" }
+	"Exit status 2" { send_user "DONE" }
 	timeout { send_user "DONE" }
 }
 send_user "\n"
@@ -146,10 +137,7 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
-    "Exit status 0" { send_user "DONE" }
-	"Connection refused"   { send_user "ERROR: Connection refused\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
-	"No route to host"   { send_user "ERROR: No route to host\n" ; exit 1 }
+	"Exit status 0" { send_user "DONE" }
 	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 }
 set timeout 180
@@ -161,9 +149,11 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
-    "Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"scp :"  	{ send_user "ERROR\n" ; 
+				send_user "\n*** Installation ERROR\n" ; 
+				exit 1 }
 	"Exit status 0" { send_user "DONE" }
-    "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
+	"Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
 	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 }
 send_user "\n"
@@ -185,8 +175,6 @@ expect {
 	"error: Failed dependencies" { send_user "ERROR: Failed dependencies\n" ; 
 								send_user "\n*** Installation ERROR\n" ; 
 									exit 1 }
-	"Permission denied, please try again"   { send_user "ERROR: Invalid password\n" ; exit 1 }
-	"Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
 	"needs"    { send_user "ERROR: disk space issue\n" ; exit 1 }
 	"conflicts"	   { send_user "ERROR: File Conflict issue\n" ; exit 1 }
 	"MariaDB Columnstore syslog logging not working" { send_user "WARNING: MariaDB Columnstore System logging not setup\n"; exp_continue }
@@ -231,9 +219,11 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
-    "Connection closed"   { send_user "ERROR: Connection closed\n" ; exit 1 }
+	"scp :"  	{ send_user "ERROR\n" ; 
+				send_user "\n*** Installation ERROR\n" ; 
+				exit 1 }
 	"Exit status 0" { send_user "DONE" }
-    "Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
+	"Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
 	timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 }
 send_user "\n"
@@ -250,8 +240,8 @@ expect {
 	"passphrase" { send "$PASSWORD\n" 
     exp_continue
 	}
-	"No such file"   { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
     "Exit status 0" { send_user "DONE" }
+    "Exit status 127" { send_user "ERROR: $INSTALLDIR/bin/columnstore Not Found\n" ; exit 1 }
     timeout { send_user "ERROR: Timeout to host\n" ; exit 1 }
 }
 
