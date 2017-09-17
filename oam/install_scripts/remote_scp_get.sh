@@ -25,7 +25,7 @@ if { $PASSWORD == "ssh" } {
 # send command
 #
 #expect -re {[$#] }
-send "scp -v $USERNAME$SERVER:$FILE .\n"
+send "scp -v $USERNAME@$SERVER:$FILE .\n"
 expect {
 	"Exit status 0" { exit 0 }
         "Exit status 1" { exit 1 }
