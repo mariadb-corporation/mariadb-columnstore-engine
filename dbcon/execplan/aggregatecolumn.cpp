@@ -55,15 +55,29 @@ void getAggCols(execplan::ParseTree* n, void* obj)
 	SimpleFilter *sf = dynamic_cast<SimpleFilter*>(tn);
 	ConstantFilter *cf = dynamic_cast<ConstantFilter*>(tn);
 	if (sc)
+	{
 		list->push_back(sc);
+	}
 	else if (fc)
+	{
+		fc->hasAggregate();
 		list->insert(list->end(), fc->aggColumnList().begin(), fc->aggColumnList().end());
+	}
 	else if (ac)
+	{
+		ac->hasAggregate();
 		list->insert(list->end(), ac->aggColumnList().begin(), ac->aggColumnList().end());
+	}
 	else if (sf)
+	{
+		sf->hasAggregate();
 		list->insert(list->end(), sf->aggColumnList().begin(), sf->aggColumnList().end());
+	}
 	else if (cf)
+	{
+		cf->hasAggregate();
 		list->insert(list->end(), cf->aggColumnList().begin(), cf->aggColumnList().end());
+	}
 }
 
 /**
