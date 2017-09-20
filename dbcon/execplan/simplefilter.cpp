@@ -648,28 +648,40 @@ void SimpleFilter::setSimpleColumnList()
 
 bool SimpleFilter::hasAggregate()
 {
-	AggregateColumn *lac = dynamic_cast<AggregateColumn*>(fLhs);
-	AggregateColumn *rac = dynamic_cast<AggregateColumn*>(fRhs);
-	fAggColumnList.clear();
+	if (fAggColumnList.empty())
+	{
+		AggregateColumn *lac = dynamic_cast<AggregateColumn*>(fLhs);
+		AggregateColumn *rac = dynamic_cast<AggregateColumn*>(fRhs);
+		fAggColumnList.clear();
 
-	if (lac)
+		if (lac)
+		{
+			fAggColumnList.insert(fAggColumnList.end(), lac);
+		}
+		if (rac)
+		{
+			fAggColumnList.insert(fAggColumnList.end(), rac);
+		}
+
+		if (fLhs)
+		{
+			if (fLhs->hasAggregate())
+				fAggColumnList.insert(fAggColumnList.end(), 
+									   fLhs->aggColumnList().begin(), 
+									   fLhs->aggColumnList().end());
+		}
+
+		if (fRhs)
+		{
+			if (fRhs->hasAggregate())
+				fAggColumnList.insert(fAggColumnList.end(), 
+									   fRhs->aggColumnList().begin(), 
+									   fRhs->aggColumnList().end());
+		}
+	}
+	if (!fAggColumnList.empty())
 	{
 		return true;
-	}
-	else if (fLhs)
-	{
-		if (fLhs->hasAggregate())
-			return true;
-	}
-
-	if (rac)
-	{
-		return true;
-	}
-	else if (fRhs)
-	{
-		if (fRhs->hasAggregate())
-			return true;
 	}
 	return false;
 }
