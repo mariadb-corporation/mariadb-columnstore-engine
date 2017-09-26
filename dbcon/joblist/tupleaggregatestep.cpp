@@ -1597,10 +1597,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 				(avgSet.find(aggKey) != avgSet.end()))
 				continue;
 
-			// skip if this is a duplicate
-			if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
-				continue;
-
 			if (aggOp == ROWAGG_DISTINCT_SUM ||
 				aggOp == ROWAGG_DISTINCT_AVG ||
 				aggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
@@ -1624,6 +1620,10 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 			}
 			else
 			{
+				// skip if this is a duplicate
+				if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
+					continue;
+
 				funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, colAgg));
 			}
 			functionVec1.push_back(funct);
@@ -1806,7 +1806,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					precisionAgg.push_back(udafFuncCol->fUDAFContext.getPrecision());
 					typeAgg.push_back(udafFuncCol->fUDAFContext.getResultType());
 					widthAgg.push_back(udafFuncCol->fUDAFContext.getColWidth());
-					colAgg++;
+					++colAgg;
 					// UDAF Dummy holder for UserData struct
 					oidsAgg.push_back(oidsProj[colProj]);
 					keysAgg.push_back(aggKey);
@@ -2183,7 +2183,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 						funct->fAggFunction = ROWAGG_DUP_AVG;
 					else if (funct->fAggFunction == ROWAGG_STATS)
 						funct->fAggFunction = ROWAGG_DUP_STATS;
-					else
+					else if (funct->fAggFunction != ROWAGG_UDAF)
 						funct->fAggFunction = ROWAGG_DUP_FUNCT;
 					funct->fAuxColumnIndex = iter->second;
 				}
@@ -2713,10 +2713,6 @@ void TupleAggregateStep::prep2PhasesAggregate(
 				// skip sum / count(column) if avg is also selected
 				continue;
 
-			// skip if this is a duplicate
-			if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
-				continue;
-
 			uint64_t colProj = projColPosMap[aggKey];
 			SP_ROWAGG_FUNC_t funct;
 			if (aggOp == ROWAGG_UDAF)
@@ -2734,6 +2730,10 @@ void TupleAggregateStep::prep2PhasesAggregate(
 			}
 			else
 			{
+				// skip if this is a duplicate
+				if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
+					continue;
+
 				funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, colAggPm));
 			}
 			functionVecPm.push_back(funct);
@@ -2917,7 +2917,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 					precisionAggPm.push_back(udafFuncCol->fUDAFContext.getPrecision());
  					typeAggPm.push_back(udafFuncCol->fUDAFContext.getResultType());
 					widthAggPm.push_back(udafFuncCol->fUDAFContext.getColWidth());
-					colAggPm++;
+					++colAggPm;
 					// Column for index of UDAF UserData struct
 					oidsAggPm.push_back(oidsProj[colProj]);
 					keysAggPm.push_back(aggKey);
@@ -3134,7 +3134,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 						funct->fAggFunction = ROWAGG_DUP_AVG;
 					else if (funct->fAggFunction == ROWAGG_STATS)
 						funct->fAggFunction = ROWAGG_DUP_STATS;
-					else
+					else if (funct->fAggFunction != ROWAGG_UDAF)
 						funct->fAggFunction = ROWAGG_DUP_FUNCT;
 					funct->fAuxColumnIndex = iter->second;
 				}
@@ -3448,10 +3448,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 				(avgSet.find(aggKey) != avgSet.end()))
 				continue;
 
-			// skip if this is a duplicate
-			if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
-				continue;
-
 			if (aggOp == ROWAGG_DISTINCT_SUM ||
 				aggOp == ROWAGG_DISTINCT_AVG ||
 				aggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
@@ -3474,6 +3470,10 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 			}
 			else
 			{
+				// skip if this is a duplicate
+				if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
+					continue;
+
 				funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, colAggPm));
 			}
 			functionVecPm.push_back(funct);
@@ -3637,7 +3637,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                         typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
                     }
 					widthAggPm.push_back(bigIntWidth);
-					colAggPm++;
+					++colAggPm;
 				}
 				break;
 
@@ -3655,7 +3655,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					precisionAggPm.push_back(udafFuncCol->fUDAFContext.getPrecision());
 					typeAggPm.push_back(udafFuncCol->fUDAFContext.getResultType());
 					widthAggPm.push_back(udafFuncCol->fUDAFContext.getColWidth());
-					colAggPm++;
+					++colAggPm;
 					// Column for index of UDAF UserData struct
 					oidsAggPm.push_back(oidsProj[colProj]);
 					keysAggPm.push_back(aggKey);
@@ -4020,7 +4020,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 						funct->fAggFunction = ROWAGG_DUP_AVG;
 					else if (funct->fAggFunction == ROWAGG_STATS)
 						funct->fAggFunction = ROWAGG_DUP_STATS;
-					else
+					else if (funct->fAggFunction != ROWAGG_UDAF)
 						funct->fAggFunction = ROWAGG_DUP_FUNCT;
 
 					funct->fAuxColumnIndex = iter->second;
