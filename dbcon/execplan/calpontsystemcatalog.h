@@ -1216,6 +1216,8 @@ std::ostream& operator<<(std::ostream& os, const CalpontSystemCatalog::ColType& 
 
 const std::string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt);
 
+bool ctListSort(const CalpontSystemCatalog::ColType& a, const CalpontSystemCatalog::ColType& b);
+
 } //namespace execplan
 
 #endif											//EXECPLAN_CALPONTSYSTEMCATALOG_H
