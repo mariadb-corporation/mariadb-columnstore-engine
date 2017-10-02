@@ -1208,7 +1208,14 @@ void TupleAggregateStep::prep1PhaseAggregate(
 				scaleAgg.push_back(0);
 				// work around count() in select subquery
 				precisionAgg.push_back(9999);
-				typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                if (isUnsigned(typeProj[colProj]))
+                {
+                    typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
+                }
+                else
+                {
+                    typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                }
 				widthAgg.push_back(bigIntWidth);
 			}
 			break;
@@ -1248,7 +1255,14 @@ void TupleAggregateStep::prep1PhaseAggregate(
 				keysAgg.push_back(key);
 				scaleAgg.push_back(0);
 				precisionAgg.push_back(-16);  // for connector to skip null check
-				typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                if (isUnsigned(typeProj[colProj]))
+                {
+                    typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
+                }
+                else
+                {
+                    typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                }
 				widthAgg.push_back(bigIntWidth);
 			}
 			break;
@@ -1655,13 +1669,21 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					if (typeProj[colProj] != CalpontSystemCatalog::DOUBLE &&
 						typeProj[colProj] != CalpontSystemCatalog::FLOAT)
 					{
-						typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-						uint32_t scale = scaleProj[colProj];
+                        if (isUnsigned(typeProj[colProj]))
+                        {
+                            typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
+                            precisionAgg.push_back(20);
+                        }
+                        else
+                        {
+                            typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                            precisionAgg.push_back(19);
+                        }
+                        uint32_t scale = scaleProj[colProj];
 						// for int average, FE expects a decimal
 						if (aggOp == ROWAGG_AVG)
 							scale = jobInfo.scaleOfAvg[aggKey]; // scale += 4;
 						scaleAgg.push_back(scale);
-						precisionAgg.push_back(19);
 						widthAgg.push_back(bigIntWidth);
 					}
 					else
@@ -1688,7 +1710,14 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					scaleAgg.push_back(0);
 					// work around count() in select subquery
 					precisionAgg.push_back(9999);
-					typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                    if (isUnsigned(typeProj[colProj]))
+                    {
+                        typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                    }
 					widthAgg.push_back(bigIntWidth);
 					colAgg++;
 				}
@@ -1750,7 +1779,15 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					scaleAgg.push_back(0);
 					precisionAgg.push_back(-16);  // for connector to skip null check
 					typeAgg.push_back(CalpontSystemCatalog::BIGINT);
-					widthAgg.push_back(bigIntWidth);
+                    if (isUnsigned(typeProj[colProj]))
+                    {
+                        typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAgg.push_back(CalpontSystemCatalog::BIGINT);
+                    }
+                    widthAgg.push_back(bigIntWidth);
 					colAgg++;
 				}
 				break;
@@ -1882,13 +1919,21 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					if (typeAgg[colAgg] != CalpontSystemCatalog::DOUBLE &&
 						typeAgg[colAgg] != CalpontSystemCatalog::FLOAT)
 					{
-						typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                        if (isUnsigned(typeAgg[colAgg]))
+                        {
+                            typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
+                            precisionAggDist.push_back(20);
+                        }
+                        else
+                        {
+                            typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                            precisionAggDist.push_back(19);
+                        }
 						uint32_t scale = scaleProj[colAgg];
 						// for int average, FE expects a decimal
 						if (aggOp == ROWAGG_DISTINCT_AVG)
 							scale = jobInfo.scaleOfAvg[retKey]; // scale += 4;
 						scaleAggDist.push_back(scale);
-						precisionAggDist.push_back(19);
 						widthAggDist.push_back(bigIntWidth);
 					}
 					else
@@ -1908,7 +1953,14 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 					scaleAggDist.push_back(0);
 					// work around count() in select subquery
 					precisionAggDist.push_back(9999);
-					typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                    if (isUnsigned(typeAgg[colAgg]))
+                    {
+                        typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                    }
 					widthAggDist.push_back(bigIntWidth);
 				}
 				break;
@@ -1977,8 +2029,16 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 									oidsAggDist.push_back(oidsAgg[colAgg]);
 									keysAggDist.push_back(retKey);
 									scaleAggDist.push_back(0);
-									precisionAggDist.push_back(19);
-									typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                                    if (isUnsigned(typeAgg[colAgg]))
+                                    {
+                                        typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
+                                        precisionAggDist.push_back(20);
+                                    }
+                                    else
+                                    {
+                                        typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                                        precisionAggDist.push_back(19);
+                                    }
 									widthAggDist.push_back(bigIntWidth);
 								}
 							}
@@ -2763,7 +2823,14 @@ void TupleAggregateStep::prep2PhasesAggregate(
 					scaleAggPm.push_back(0);
 					// work around count() in select subquery
 					precisionAggPm.push_back(9999);
-					typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                    if (isUnsigned(typeProj[colProj]))
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                    }
 					widthAggPm.push_back(bigIntWidth);
 					colAggPm++;
 				}
@@ -2824,8 +2891,15 @@ void TupleAggregateStep::prep2PhasesAggregate(
 					keysAggPm.push_back(aggKey);
 					scaleAggPm.push_back(0);
 					precisionAggPm.push_back(-16);  // for connector to skip null check
-					typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
-					widthAggPm.push_back(bigIntWidth);
+                    if (isUnsigned(typeProj[colProj]))
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                    }
+                    widthAggPm.push_back(bigIntWidth);
 					colAggPm++;
 				}
 				break;
@@ -3445,13 +3519,21 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					if (typeProj[colProj] != CalpontSystemCatalog::DOUBLE &&
 						typeProj[colProj] != CalpontSystemCatalog::FLOAT)
 					{
-						typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                        if (isUnsigned(typeProj[colProj]))
+                        {
+                            typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+                            precisionAggPm.push_back(20);
+                        }
+                        else
+                        {
+						    typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                            precisionAggPm.push_back(19);
+                        }
 						uint32_t scale = scaleProj[colProj];
 						// for int average, FE expects a decimal
 						if (aggOp == ROWAGG_AVG)
 							scale = jobInfo.scaleOfAvg[aggKey]; // scale += 4;
 						scaleAggPm.push_back(scale);
-						precisionAggPm.push_back(19);
 						widthAggPm.push_back(bigIntWidth);
 					}
 					else
@@ -3478,7 +3560,14 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					scaleAggPm.push_back(0);
 					// work around count() in select subquery
 					precisionAggPm.push_back(9999);
-					typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                    if (isUnsigned(typeProj[colProj]))
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                    }
 					widthAggPm.push_back(bigIntWidth);
 					colAggPm++;
 				}
@@ -3539,7 +3628,14 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					keysAggPm.push_back(aggKey);
 					scaleAggPm.push_back(0);
 					precisionAggPm.push_back(-16);  // for connector to skip null check
-					typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                    if (isUnsigned(typeProj[colProj]))
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                    }
 					widthAggPm.push_back(bigIntWidth);
 					colAggPm++;
 				}
@@ -3704,13 +3800,21 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					if (typeAggUm[colUm] != CalpontSystemCatalog::DOUBLE &&
 						typeAggUm[colUm] != CalpontSystemCatalog::FLOAT)
 					{
-						typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                        if (isUnsigned(typeAggUm[colUm]))
+                        {
+                            typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
+                            precisionAggDist.push_back(20);
+                        }
+                        else
+                        {
+                            typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                            precisionAggDist.push_back(19);
+                        }
 						uint32_t scale = scaleAggUm[colUm];
 						// for int average, FE expects a decimal
 						if (aggOp == ROWAGG_DISTINCT_AVG)
 							scale = jobInfo.scaleOfAvg[retKey]; // scale += 4;
 						scaleAggDist.push_back(scale);
-						precisionAggDist.push_back(19);
 						widthAggDist.push_back(bigIntWidth);
 					}
 					else
@@ -3733,7 +3837,14 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					scaleAggDist.push_back(0);
 					// work around count() in select subquery
 					precisionAggDist.push_back(9999);
-					typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                    if (isUnsigned(typeAggUm[colUm]))
+                    {
+                        typeAggDist.push_back(CalpontSystemCatalog::UBIGINT);
+                    }
+                    else
+                    {
+                        typeAggDist.push_back(CalpontSystemCatalog::BIGINT);
+                    }
 					widthAggDist.push_back(bigIntWidth);
 				}
 				break;
