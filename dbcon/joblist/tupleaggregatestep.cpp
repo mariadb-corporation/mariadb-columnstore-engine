@@ -1627,10 +1627,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 				(avgSet.find(aggKey) != avgSet.end()))
 				continue;
 
-			// skip if this is a duplicate
-			if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
-				continue;
-
 			if (aggOp == ROWAGG_DISTINCT_SUM ||
 				aggOp == ROWAGG_DISTINCT_AVG ||
 				aggOp == ROWAGG_COUNT_DISTINCT_COL_NAME)
@@ -2751,10 +2747,6 @@ void TupleAggregateStep::prep2PhasesAggregate(
 				// skip sum / count(column) if avg is also selected
 				continue;
 
-			// skip if this is a duplicate
-			if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
-				continue;
-
 			uint64_t colProj = projColPosMap[aggKey];
 			SP_ROWAGG_FUNC_t funct;
 			if (aggOp == ROWAGG_UDAF)
@@ -3500,10 +3492,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 			// skip sum / count(column) if avg is also selected
 			if ((aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME) &&
 				(avgSet.find(aggKey) != avgSet.end()))
-				continue;
-
-			// skip if this is a duplicate
-			if (aggFuncMap.find(make_pair(aggKey, aggOp)) != aggFuncMap.end())
 				continue;
 
 			if (aggOp == ROWAGG_DISTINCT_SUM ||
