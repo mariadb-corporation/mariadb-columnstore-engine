@@ -116,10 +116,10 @@ enum RowAggFunctionType
 	// ROWAGG_DUP_FUNCT    :  copy data before AVG calculation, because SUM may share by AVG
 	// ROWAGG_DUP_AVG      :  copy data after AVG calculation
 	ROWAGG_COUNT_NO_OP,    // COUNT(column_name), but leave count() to AVG
-	ROWAGG_DUP_FUNCT,      // duplicate aggregate Function(), except AVG, in select
+	ROWAGG_DUP_FUNCT,      // duplicate aggregate Function(), except AVG and UDAF, in select
 	ROWAGG_DUP_AVG,        // duplicate AVG(column_name) in select
-	ROWAGG_DUP_STATS       // duplicate statistics functions in select
-
+	ROWAGG_DUP_STATS,      // duplicate statistics functions in select
+	ROWAGG_DUP_UDAF        // duplicate UDAF function in select
 };
 
 
