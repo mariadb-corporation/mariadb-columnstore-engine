@@ -3445,13 +3445,21 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 					if (typeProj[colProj] != CalpontSystemCatalog::DOUBLE &&
 						typeProj[colProj] != CalpontSystemCatalog::FLOAT)
 					{
-						typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                        if (isUnsigned(typeProj[colProj]))
+                        {
+                            typeAggPm.push_back(CalpontSystemCatalog::UBIGINT);
+                            precisionAggPm.push_back(20);
+                        }
+                        else
+                        {
+						    typeAggPm.push_back(CalpontSystemCatalog::BIGINT);
+                            precisionAggPm.push_back(19);
+                        }
 						uint32_t scale = scaleProj[colProj];
 						// for int average, FE expects a decimal
 						if (aggOp == ROWAGG_AVG)
 							scale = jobInfo.scaleOfAvg[aggKey]; // scale += 4;
 						scaleAggPm.push_back(scale);
-						precisionAggPm.push_back(19);
 						widthAggPm.push_back(bigIntWidth);
 					}
 					else
