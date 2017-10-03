@@ -1553,6 +1553,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
 			case ROWAGG_DUP_FUNCT:
 			case ROWAGG_DUP_AVG:
 			case ROWAGG_DUP_STATS:
+			case ROWAGG_DUP_UDAF:
 			case ROWAGG_CONSTANT:
 			case ROWAGG_GROUP_CONCAT:
 				break;
@@ -2110,6 +2111,8 @@ void RowAggregationUM::finalize()
 	if (fHasUDAF)
 	{
 		calculateUDAFColumns();
+		// copy the duplicate UDAF, if any
+		fixDuplicates(ROWAGG_DUP_UDAF);
 	}
 
 	if (fGroupConcat.size() > 0)
@@ -2208,6 +2211,7 @@ void RowAggregationUM::updateEntry(const Row& rowIn)
 			case ROWAGG_DUP_FUNCT:
 			case ROWAGG_DUP_AVG:
 			case ROWAGG_DUP_STATS:
+			case ROWAGG_DUP_UDAF:
 			case ROWAGG_CONSTANT:
 				break;
 
@@ -3511,6 +3515,7 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn)
 			case ROWAGG_DUP_FUNCT:
 			case ROWAGG_DUP_AVG:
 			case ROWAGG_DUP_STATS:
+			case ROWAGG_DUP_UDAF:
 			case ROWAGG_CONSTANT:
 				break;
 
@@ -3728,12 +3733,18 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
 	// Call the UDAF subEvaluate method
 	mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-	rc = rgContext.getFunction()->subEvaluate(&rgContext, rowIn.getUserData(colIn+1).get());
+	boost::shared_ptr<mcsv1sdk::UserData> userData = rowIn.getUserData(colIn+1);
+	if (!userData)
+	{
+		rowUDAF->bInterrupted = true;
+		throw logic_error("UDAF subevaluate : No userData");
+	}
+	rc = rgContext.getFunction()->subEvaluate(&rgContext, userData.get());
 	rgContext.setUserData(NULL);
 	if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
 	{
 		rowUDAF->bInterrupted = true;
-		throw logging::QueryDataExcept(rgContext.getErrorMessage(), logging::aggregateFuncErr);
+		throw logging::IDBExcept(rgContext.getErrorMessage(), logging::aggregateFuncErr);
 	}
 }
 
@@ -3917,6 +3928,7 @@ void RowAggregationDistinct::updateEntry(const Row& rowIn)
 			case ROWAGG_DUP_FUNCT:
 			case ROWAGG_DUP_AVG:
 			case ROWAGG_DUP_STATS:
+			case ROWAGG_DUP_UDAF:
 			case ROWAGG_CONSTANT:
 				break;
 
