@@ -55,7 +55,7 @@ UDAFColumn::UDAFColumn(const uint32_t sessionID):
 }
 
 UDAFColumn::UDAFColumn(const UDAFColumn& rhs, const uint32_t sessionID):
-		AggregateColumn(dynamic_cast<const AggregateColumn&>(rhs))
+		AggregateColumn(dynamic_cast<const AggregateColumn&>(rhs), sessionID), context(rhs.context)
 {
 }
 
