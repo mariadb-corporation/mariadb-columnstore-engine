@@ -62,7 +62,7 @@ mcsv1_UDAF::ReturnCode ssq::init(mcsv1Context* context,
 	context->setColWidth(8);
 	context->setScale(context->getScale()*2);
 	context->setPrecision(19);
-//	context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+	context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
 	return mcsv1_UDAF::SUCCESS;
 
 }
