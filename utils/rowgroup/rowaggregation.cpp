@@ -1850,71 +1850,74 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
 
 	mcsv1sdk::ColumnDatum datum;
 
-	switch (colDataType)
+	if (!rgContext.isParamNull(0))
 	{
-		case execplan::CalpontSystemCatalog::TINYINT:
-		case execplan::CalpontSystemCatalog::SMALLINT:
-		case execplan::CalpontSystemCatalog::MEDINT:
-		case execplan::CalpontSystemCatalog::INT:
-		case execplan::CalpontSystemCatalog::BIGINT:
-		case execplan::CalpontSystemCatalog::DECIMAL:
-		case execplan::CalpontSystemCatalog::UDECIMAL:
+		switch (colDataType)
 		{
-			datum.dataType = execplan::CalpontSystemCatalog::BIGINT;
-			datum.columnData = rowIn.getIntField(colIn);
-			datum.scale = fRowGroupIn.getScale()[colIn];
-			datum.precision = fRowGroupIn.getPrecision()[colIn];
-			break;
-		}
-		case execplan::CalpontSystemCatalog::UTINYINT:
-		case execplan::CalpontSystemCatalog::USMALLINT:
-		case execplan::CalpontSystemCatalog::UMEDINT:
-		case execplan::CalpontSystemCatalog::UINT:
-		case execplan::CalpontSystemCatalog::UBIGINT:
-		{
-			datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
-			datum.columnData = rowIn.getUintField(colIn);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DOUBLE:
-		case execplan::CalpontSystemCatalog::UDOUBLE:
-		{
-			datum.dataType = execplan::CalpontSystemCatalog::DOUBLE;
-			datum.columnData = rowIn.getDoubleField(colIn);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::FLOAT:
-		case execplan::CalpontSystemCatalog::UFLOAT:
-		{
-			datum.dataType = execplan::CalpontSystemCatalog::FLOAT;
-			datum.columnData = rowIn.getFloatField(colIn);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DATE:
-		case execplan::CalpontSystemCatalog::DATETIME:
-		{
-			datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
-			datum.columnData = rowIn.getUintField(colIn);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::CHAR:
-		case execplan::CalpontSystemCatalog::VARCHAR:
-		case execplan::CalpontSystemCatalog::TEXT:
-		case execplan::CalpontSystemCatalog::VARBINARY:
-		case execplan::CalpontSystemCatalog::CLOB:
-		case execplan::CalpontSystemCatalog::BLOB:
-		{
-			datum.dataType = colDataType;
-			datum.columnData = rowIn.getStringField(colIn);
-			break;
-		}
-		default:
-		{
-			std::ostringstream errmsg;
-			errmsg << "RowAggregation " << rgContext.getName() << 
-				": No logic for data type: " << colDataType;
-			throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
-			break;
+			case execplan::CalpontSystemCatalog::TINYINT:
+			case execplan::CalpontSystemCatalog::SMALLINT:
+			case execplan::CalpontSystemCatalog::MEDINT:
+			case execplan::CalpontSystemCatalog::INT:
+			case execplan::CalpontSystemCatalog::BIGINT:
+			case execplan::CalpontSystemCatalog::DECIMAL:
+			case execplan::CalpontSystemCatalog::UDECIMAL:
+			{
+				datum.dataType = execplan::CalpontSystemCatalog::BIGINT;
+				datum.columnData = rowIn.getIntField(colIn);
+				datum.scale = fRowGroupIn.getScale()[colIn];
+				datum.precision = fRowGroupIn.getPrecision()[colIn];
+				break;
+			}
+			case execplan::CalpontSystemCatalog::UTINYINT:
+			case execplan::CalpontSystemCatalog::USMALLINT:
+			case execplan::CalpontSystemCatalog::UMEDINT:
+			case execplan::CalpontSystemCatalog::UINT:
+			case execplan::CalpontSystemCatalog::UBIGINT:
+			{
+				datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
+				datum.columnData = rowIn.getUintField(colIn);
+				break;
+			}
+			case execplan::CalpontSystemCatalog::DOUBLE:
+			case execplan::CalpontSystemCatalog::UDOUBLE:
+			{
+				datum.dataType = execplan::CalpontSystemCatalog::DOUBLE;
+				datum.columnData = rowIn.getDoubleField(colIn);
+				break;
+			}
+			case execplan::CalpontSystemCatalog::FLOAT:
+			case execplan::CalpontSystemCatalog::UFLOAT:
+			{
+				datum.dataType = execplan::CalpontSystemCatalog::FLOAT;
+				datum.columnData = rowIn.getFloatField(colIn);
+				break;
+			}
+			case execplan::CalpontSystemCatalog::DATE:
+			case execplan::CalpontSystemCatalog::DATETIME:
+			{
+				datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
+				datum.columnData = rowIn.getUintField(colIn);
+				break;
+			}
+			case execplan::CalpontSystemCatalog::CHAR:
+			case execplan::CalpontSystemCatalog::VARCHAR:
+			case execplan::CalpontSystemCatalog::TEXT:
+			case execplan::CalpontSystemCatalog::VARBINARY:
+			case execplan::CalpontSystemCatalog::CLOB:
+			case execplan::CalpontSystemCatalog::BLOB:
+			{
+				datum.dataType = colDataType;
+				datum.columnData = rowIn.getStringField(colIn);
+				break;
+			}
+			default:
+			{
+				std::ostringstream errmsg;
+				errmsg << "RowAggregation " << rgContext.getName() << 
+					": No logic for data type: " << colDataType;
+				throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
+				break;
+			}
 		}
 	}
 	valsIn.push_back(datum);
@@ -3720,11 +3723,22 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 	static_any::any valOut;
 	mcsv1sdk::mcsv1Context rgContext(rowUDAF->fUDAFContext);
 
-	// Turn on NULL flags
+	// Get the user data
+	boost::shared_ptr<mcsv1sdk::UserData> userData = rowIn.getUserData(colIn+1);
+
+	// Unlike other aggregates, the data isn't in colIn, so testing it for NULL
+	// there won't help. In case of NULL, userData will be NULL.
 	std::vector<uint32_t> flags;
 	uint32_t flag = 0;
-	if (isNull(&fRowGroupIn, rowIn, colIn) == true)
+	if (!userData)
+	{
+		if (rgContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
+		{
+			return;
+		}
+		// Turn on NULL flags
 		flag |= mcsv1sdk::PARAM_IS_NULL;
+	}
 	flags.push_back(flag);
 	rgContext.setDataFlags(&flags);
 
@@ -3733,12 +3747,6 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
 	// Call the UDAF subEvaluate method
 	mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-	boost::shared_ptr<mcsv1sdk::UserData> userData = rowIn.getUserData(colIn+1);
-	if (!userData)
-	{
-		rowUDAF->bInterrupted = true;
-		throw logic_error("UDAF subevaluate : No userData");
-	}
 	rc = rgContext.getFunction()->subEvaluate(&rgContext, userData.get());
 	rgContext.setUserData(NULL);
 	if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
