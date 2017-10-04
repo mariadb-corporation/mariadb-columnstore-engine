@@ -62,7 +62,7 @@ mcsv1_UDAF::ReturnCode ssq::init(mcsv1Context* context,
 	context->setColWidth(8);
 	context->setScale(context->getScale()*2);
 	context->setPrecision(19);
-	context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+//	context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
 	return mcsv1_UDAF::SUCCESS;
 
 }
@@ -85,9 +85,9 @@ mcsv1_UDAF::ReturnCode ssq::nextValue(mcsv1Context* context,
 	struct ssq_data* data = (struct ssq_data*)context->getUserData()->data;
 	DATATYPE val = 0.0;
 
-	if (valIn.empty())
+	if (context->isParamNull(0) || valIn.empty())
 	{
-		return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
+		return mcsv1_UDAF::SUCCESS;
 	}
 
 	if (valIn.compatible(charTypeId))
@@ -155,6 +155,12 @@ mcsv1_UDAF::ReturnCode ssq::nextValue(mcsv1Context* context,
 
 mcsv1_UDAF::ReturnCode ssq::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
 {
+	// If we turn off UDAF_IGNORE_NULLS in init(), then NULLS may be sent here in cases of Joins. 
+	// When a NULL value is sent here, userDataIn will be NULL, so check for NULLS.
+	if (context->isParamNull(0))
+	{
+		return mcsv1_UDAF::SUCCESS;
+	}
 	struct ssq_data* outData = (struct ssq_data*)context->getUserData()->data;
 	struct ssq_data* inData = (struct ssq_data*)userDataIn->data;
 	outData->sumsq += inData->sumsq;
