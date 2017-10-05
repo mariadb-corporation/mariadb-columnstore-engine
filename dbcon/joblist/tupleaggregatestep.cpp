@@ -2576,22 +2576,22 @@ void TupleAggregateStep::prep2PhasesAggregate(
 {
 	// check if there are any aggregate columns
 	// a vector that has the aggregate function to be done by PM
-//	vector<pair<uint32_t, int> > aggColVec;
+	vector<pair<uint32_t, int> > aggColVec;
 	set<uint32_t> avgSet;
 	vector<std::pair<uint32_t, int> >& returnedColVec = jobInfo.returnedColVec;
-//	for (uint64_t i = 0; i < returnedColVec.size(); i++)
-//	{
+	for (uint64_t i = 0; i < returnedColVec.size(); i++)
+	{
 		// skip if not an aggregation column
-//		if (returnedColVec[i].second == 0)
-//			continue;
+		if (returnedColVec[i].second == 0)
+			continue;
 
-//		aggColVec.push_back(returnedColVec[i]);
+		aggColVec.push_back(returnedColVec[i]);
 
 		// remember if a column has an average function,
 		// with avg function, no need for separate sum or count_column_name
-//		if (returnedColVec[i].second == AggregateColumn::AVG)
-//			avgSet.insert(returnedColVec[i].first);
-//	}
+		if (returnedColVec[i].second == AggregateColumn::AVG)
+			avgSet.insert(returnedColVec[i].first);
+	}
 
 	// populate the aggregate rowgroup on PM and UM
 	// PM: projectedRG   -> aggregateRGPM
@@ -2713,16 +2713,12 @@ void TupleAggregateStep::prep2PhasesAggregate(
 		}
 
 		// vectors for aggregate functions
-		for (uint64_t i = 0; i < returnedColVec.size(); i++)
+		for (uint64_t i = 0; i < aggColVec.size(); i++)
 		{
-			// skip if not an aggregation column
-			if (returnedColVec[i].second == 0)
-				continue;
-
 			pUDAFFunc = NULL;
-			uint32_t aggKey = returnedColVec[i].first;
-			RowAggFunctionType aggOp = functionIdMap(returnedColVec[i].second);
-			RowAggFunctionType stats = statsFuncIdMap(returnedColVec[i].second);
+			uint32_t aggKey = aggColVec[i].first;
+			RowAggFunctionType aggOp = functionIdMap(aggColVec[i].second);
+			RowAggFunctionType stats = statsFuncIdMap(aggColVec[i].second);
 
 			// skip on PM if this is a constant
 			if (aggOp == ROWAGG_CONSTANT)
@@ -2742,8 +2738,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 			}
 
 			if ((aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME) &&
-				(returnedColVec[i].second == AggregateColumn::AVG))
-//				(avgSet.find(aggKey) != avgSet.end()))
+				(avgSet.find(aggKey) != avgSet.end()))
 				// skip sum / count(column) if avg is also selected
 				continue;
 
