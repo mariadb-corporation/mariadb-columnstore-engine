@@ -4809,6 +4809,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
+	// Until we handle recursive cte:
+	if (gwi.thd->lex->derived_tables == DERIVED_WITH)
+	{
+		gwi.fatalParseError = true;
+		gwi.parseErrorText = "Recursive CTE";
+		setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+		return ER_CHECK_NOT_IMPLEMENTED;
+	}
+
 	gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
 	gwi.subSelectType = csep->subType();
 
