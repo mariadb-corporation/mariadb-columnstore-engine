@@ -393,6 +393,14 @@ int RedistributeControlThread::makeRedistributePlan()
 			// It's possible that a source that is "removed" on the command line is not empty.
 			// This can happen if a partition exists on all dbroots.
 
+			// WCOL-786: use nextDbroot to start the loop looking for a suitible target 
+			// where we left off with the previous partition. This gives each target 
+			// an opportunity to get some of the data. In the case of dbroot removal,
+			// there is often the same number of partitions on each remaining dbroot.
+			// This logic tends to roundrobin which dbroot gets the next batch.
+			set<int>::iterator nextDbroot = targetDbroots.begin();
+			set<int>::iterator targetDbroot;
+			int targetCnt = (int)targetDbroots.size();
 			// Loop through the sources, looking for dbroots that are not targets that also still contain partitions
 			for (set<int>::iterator sourceDbroot = sourceDbroots.begin(); 
 									sourceDbroot != sourceDbroots.end(); 
@@ -416,15 +424,22 @@ int RedistributeControlThread::makeRedistributePlan()
 					// the partition.
 					uint64_t partCount = std::numeric_limits<uint64_t>::max();
 					int tdbroot = 0;
-					for (set<int>::iterator targetDbroot = targetDbroots.begin(); 
-											targetDbroot != targetDbroots.end(); 
-											++targetDbroot)
+					targetDbroot = nextDbroot;
+					// MCOL-786. Start at targetDbroot and loop around back to the same spot.
+					for (int tbd=0; tbd < targetCnt; ++tbd)
 					{
+						if (targetDbroot == targetDbroots.end())
+						{
+							targetDbroot == targetDbroots.begin();
+						}
 						if (dbPartVec[*targetDbroot].size() < partCount)
 						{
 							tdbroot = *targetDbroot;
 							partCount = dbPartVec[*targetDbroot].size();
+							nextDbroot = targetDbroot;
+							++nextDbroot;
 						}
+						++targetDbroot;
 					}
 					if (tdbroot == 0)
 					{
