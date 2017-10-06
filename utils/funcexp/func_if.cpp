@@ -35,9 +35,10 @@ using namespace rowgroup;
 namespace
 {
 
-bool boolVal(SPTP& parm, Row& row, bool& isNull)
+bool boolVal(SPTP& parm, Row& row)
 {
 	bool ret = true;
+	bool isNull = false;  // Keep it local. We don't want to mess with the global one here.
 	try
 	{
 		ret = parm->getBoolVal(row, isNull);
@@ -119,13 +120,12 @@ int64_t Func_if::getIntVal(Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row, isNull) && !isNull)
+	if (boolVal(parm[0], row))
 	{
 		return parm[1]->data()->getIntVal(row, isNull);
 	}
 	else
 	{
-		isNull = false;
 		return parm[2]->data()->getIntVal(row, isNull);
 	}
 }
@@ -137,14 +137,12 @@ string Func_if::getStrVal(Row& row,
 							CalpontSystemCatalog::ColType&)
 {
 
-	if (boolVal(parm[0], row, isNull))
+	if (boolVal(parm[0], row))
 	{
-		isNull = false;
 		return parm[1]->data()->getStrVal(row, isNull);
 	}
 	else
 	{
-		isNull = false;
 		return parm[2]->data()->getStrVal(row, isNull);
 	}
 }
@@ -155,14 +153,12 @@ IDB_Decimal Func_if::getDecimalVal(Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row, isNull))
+	if (boolVal(parm[0], row))
 	{
-		isNull = false;
 		return parm[1]->data()->getDecimalVal(row, isNull);
 	}
 	else
 	{
-		isNull = false;
 		return parm[2]->data()->getDecimalVal(row, isNull);
 	}
 }
@@ -173,14 +169,12 @@ double Func_if::getDoubleVal(Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row, isNull))
+	if (boolVal(parm[0], row))
 	{
-		isNull = false;
 		return parm[1]->data()->getDoubleVal(row, isNull);
 	}
 	else
 	{
-		isNull = false;
 		return parm[2]->data()->getDoubleVal(row, isNull);
 	}
 }
@@ -191,14 +185,12 @@ int32_t Func_if::getDateIntVal(Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row, isNull))
+	if (boolVal(parm[0], row))
 	{
-		isNull = false;
 		return parm[1]->data()->getDateIntVal(row, isNull);
 	}
 	else
 	{
-		isNull = false;
 		return parm[2]->data()->getDateIntVal(row, isNull);
 	}
 }
@@ -209,14 +201,12 @@ int64_t Func_if::getDatetimeIntVal(Row& row,
 							bool& isNull,
 							CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row, isNull))
+	if (boolVal(parm[0], row))
 	{
-		isNull = false;
 		return parm[1]->data()->getDatetimeIntVal(row, isNull);
 	}
 	else
 	{
-		isNull = false;
 		return parm[2]->data()->getDatetimeIntVal(row, isNull);
 	}
 }
