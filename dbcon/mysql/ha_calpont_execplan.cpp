@@ -4809,15 +4809,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		return ER_CHECK_NOT_IMPLEMENTED;
 	}
 
-	// Until we handle recursive cte:
-	if (gwi.thd->lex->derived_tables == DERIVED_WITH)
-	{
-		gwi.fatalParseError = true;
-		gwi.parseErrorText = "Recursive CTE";
-		setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-		return ER_CHECK_NOT_IMPLEMENTED;
-	}
-
 	gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
 	gwi.subSelectType = csep->subType();
 
@@ -4891,6 +4882,16 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			// mysql put vtable here for from sub. we ignore it
 			if (string(table_ptr->table_name).find("$vtable") != string::npos)
 				continue;
+
+			// Until we handle recursive cte:
+			// Checking here ensures we catch all with clauses in the query.
+			if (table_ptr->is_recursive_with_table())
+			{
+				gwi.fatalParseError = true;
+				gwi.parseErrorText = "Recursive CTE";
+				setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+				return ER_CHECK_NOT_IMPLEMENTED;
+			}
 
 			string viewName = getViewName(table_ptr);
 
