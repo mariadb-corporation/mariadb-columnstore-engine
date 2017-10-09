@@ -4810,7 +4810,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 	}
 
 	// Until we handle recursive cte:
-	if (gwi.thd->lex->derived_tables == DERIVED_WITH)
+	With_clause* with_clause = select_lex.get_with_clause();
+	if (with_clause && with_clause->with_recursive)
 	{
 		gwi.fatalParseError = true;
 		gwi.parseErrorText = "Recursive CTE";
