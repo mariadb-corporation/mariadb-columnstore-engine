@@ -1392,6 +1392,7 @@ void pingDeviceThread()
 								oam.sendDeviceNotification(config.moduleName(), MODULE_UP);
 
 								int status;
+								DBRootConfigList dbrootConfigList;
 		
 								// if shared pm, move dbroots back to pm
 								if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
@@ -1414,7 +1415,6 @@ void pingDeviceThread()
 	
 											//check if any dbroots got assigned back to this module
 											// they could not be moved if there were busy on other pms
-											DBRootConfigList dbrootConfigList;
 											try
 											{
 												int moduleID = atoi(moduleName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
@@ -1454,7 +1454,7 @@ void pingDeviceThread()
 											{}
 	
 											log.writeLog(__LINE__, "autoUnMovePmDbroot success", LOG_TYPE_DEBUG);
-	
+
 											//distribute config file
 											processManager.distributeConfigFile("system");
 
@@ -1589,6 +1589,15 @@ void pingDeviceThread()
 											if ( newStandbyModule == "NONE")
 												if ( moduleName.substr(0,MAX_MODULE_TYPE_SIZE) == "pm" )
 													processManager.setStandbyModule(moduleName);
+										}
+										DBRootConfigList::iterator pt = dbrootConfigList.begin();
+										if (( DBRootStorageType == "DataRedundancy") && (*pt == 1))
+										{
+											log.writeLog(__LINE__, "stopModule, " + config.moduleName(), LOG_TYPE_DEBUG);
+											processManager.stopModule(config.moduleName(), oam::FORCEFUL, false);
+											processManager.switchParentOAMModule(moduleName);
+											processManager.stopProcess(config.moduleName(), "ProcessManager", oam::FORCEFUL, true);
+											break;
 										}
 									}
 									else {

@@ -2778,131 +2778,407 @@ int main(int argc, char *argv[])
 	    //skip interface with remote servers and perform install
 	    if ( !nonDistribute )
 	    {
-		//
-		// perform remote install of other servers in the system
-		//
-		cout << endl << "===== System Installation =====" << endl << endl;
+			//
+			// perform remote install of other servers in the system
+			//
+			cout << endl << "===== System Installation =====" << endl << endl;
+
+			cout << "System Configuration is complete, System Installation is the next step." << endl;
 	
-		cout << "System Configuration is complete, System Installation is the next step." << endl;
-
-		while(true)
-		{
-			pcommand = callReadline("Would you like to continue with the System Installation? [y,n] (y) > ");
-			if (pcommand)
+			while(true)
 			{
-				if (strlen(pcommand) > 0) install = pcommand;
-				callFree(pcommand);
-			}
-			if ( install == "y" || install == "n" )
-				break;
-			else
-				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-			install = "y";
-			if ( noPrompting )
-				exit(1);
-		}
-	
-		if ( install == "y" ) {
-			SystemSoftware systemsoftware;
-		
-			try
-			{
-				oam.getSystemSoftware(systemsoftware);
-			}
-			catch (exception& e)
-			{
-				cout << " ERROR: reading getSystemSoftware API" << endl;
-				exit (1);
-			}
-
-			cout << endl;
-
-			string version = systemsoftware.Version + "-" + systemsoftware.Release;
-
-			string installType = "initial";
-
-			if ( EEPackageType == "rpm" )
-			{
-				cout << "Performing a MariaDB ColumnStore System install using RPM packages" << endl; 
-				cout << "located in the " + HOME + " directory." << endl << endl;
-			}
-			else
-			{
-				if ( EEPackageType == "binary" )
+				pcommand = callReadline("Would you like to continue with the System Installation? [y,n] (y) > ");
+				if (pcommand)
 				{
-					cout << "Performing a MariaDB ColumnStore System install using a Binary package" << endl; 
+					if (strlen(pcommand) > 0) install = pcommand;
+					callFree(pcommand);
+				}
+				if ( install == "y" || install == "n" )
+					break;
+				else
+					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+				install = "y";
+				if ( noPrompting )
+					exit(1);
+			}
+
+			if ( install == "y" )
+			{
+				SystemSoftware systemsoftware;
+
+				try
+				{
+					oam.getSystemSoftware(systemsoftware);
+				}
+				catch (exception& e)
+				{
+					cout << " ERROR: reading getSystemSoftware API" << endl;
+					exit (1);
+				}
+
+				cout << endl;
+
+				string version = systemsoftware.Version + "-" + systemsoftware.Release;
+
+				string installType = "initial";
+	
+				if ( EEPackageType == "rpm" )
+				{
+					cout << "Performing a MariaDB ColumnStore System install using RPM packages" << endl;
 					cout << "located in the " + HOME + " directory." << endl << endl;
 				}
 				else
 				{
-					cout << "Performing a MariaDB ColumnStore System install using using DEB packages" << endl;
-					cout << "located in the " + HOME + " directory." << endl;
+					if ( EEPackageType == "binary" )
+					{
+						cout << "Performing a MariaDB ColumnStore System install using a Binary package" << endl;
+						cout << "located in the " + HOME + " directory." << endl << endl;
+					}
+					else
+					{
+						cout << "Performing a MariaDB ColumnStore System install using using DEB packages" << endl;
+						cout << "located in the " + HOME + " directory." << endl;
+					}
 				}
-			}
-		    
-			//check if pkgs are located in $HOME directory
-			if ( EEPackageType == "rpm")
-				columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
-			else
-				if ( EEPackageType == "deb") 
-					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb";
+
+				//check if pkgs are located in $HOME directory
+				if ( EEPackageType == "rpm")
+					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
 				else
-					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
+					if ( EEPackageType == "deb")
+						columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb";
+					else
+						columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 
-			if( !pkgCheck(columnstorePackage) )
-			exit(1);
-			
-			if ( password.empty() )
-			{
-				cout << endl;
-				cout << "Next step is to enter the password to access the other Servers." << endl;
-				cout << "This is either your password or you can default to using a ssh key" << endl;
-				cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
-			}
+				if( !pkgCheck(columnstorePackage) )
+				exit(1);
 
-			while(true)
-			{	
-				char  *pass1, *pass2;
+				if ( password.empty() )
+				{
+					cout << endl;
+					cout << "Next step is to enter the password to access the other Servers." << endl;
+					cout << "This is either your password or you can default to using a ssh key" << endl;
+					cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+				}
 
-				if ( noPrompting ) {
-					cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
-					if ( password.empty() )
+				while(true)
+				{
+					char  *pass1, *pass2;
+
+					if ( noPrompting ) {
+						cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
+						if ( password.empty() )
+							password = "ssh";
+						break;
+					}
+
+					//check for command line option password
+					if ( !password.empty() )
+						break;
+
+					pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
+					if ( strcmp(pass1, "") == 0 ) {
 						password = "ssh";
-					break;
+						break;
+					}
+
+					if ( pass1 == "exit")
+						exit(0);
+
+					string p1 = pass1;
+					pass2=getpass("Confirm password > ");
+					string p2 = pass2;
+					if ( p1 == p2 ) {
+						password = p2;
+						break;
+					}
+					else
+						cout << "Password mismatch, please re-enter" << endl;
 				}
 
-				//check for command line option password
-				if ( !password.empty() )
-					break;
+				//add single quote for special characters
+				if ( password != "ssh" )
+				{
+					password = "'" + password + "'";
+				}
+	
+				checkSystemMySQLPort(mysqlPort, sysConfig, USER, password, childmodulelist, IserverTypeInstall, pmwithum);
 
-				pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
-				if ( strcmp(pass1, "") == 0 ) {
-					password = "ssh";
-					break;
+				if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+					( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
+				{
+					cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
+
+					// call the mysql setup scripts
+					mysqlSetup();
+					sleep(5);
 				}
 
-				if ( pass1 == "exit")
-					exit(0);
+				string AmazonInstall = "0";
+				if ( amazonInstall )
+					  AmazonInstall = "1";
 
-				string p1 = pass1;
-				pass2=getpass("Confirm password > ");
-				string p2 = pass2;
-				if ( p1 == p2 ) {
-					password = p2;
-					break;
+				ChildModuleList::iterator list1 = childmodulelist.begin();
+				for (; list1 != childmodulelist.end() ; list1++)
+				{
+					string remoteModuleName = (*list1).moduleName;
+					string remoteModuleIP = (*list1).moduleIP;
+					string remoteHostName = (*list1).hostName;
+					string remoteModuleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
+
+					string debug_logfile;
+					string logfile;
+					if ( remote_installer_debug == "1" ) {
+						logfile = "/tmp/";
+						logfile += remoteModuleName + "_" + EEPackageType + "_install.log";
+						debug_logfile = " > " + logfile;
+					}
+
+					if ( remoteModuleType == "um" ||
+						(remoteModuleType == "pm" && IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ||
+						(remoteModuleType == "pm" && pmwithum) )
+					{
+						cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
+
+						if ( remote_installer_debug == "1" )
+							cout << "Install log file is located here: " + logfile << endl << endl;
+
+						if ( EEPackageType != "binary" ) {
+							string temppwprompt = pwprompt;
+							if ( pwprompt == " " )
+								temppwprompt = "none";
+
+							//run remote installer script
+							cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+
+							if ( thread_remote_installer ) {
+								thr_data[thread_id].command = cmd;
+
+								int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
+
+								if ( status != 0 )
+								{
+									cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
+									exit (1);
+								}
+								thread_id++;
+							}
+							else
+							{
+								int rtnCode = system(cmd.c_str());
+								if (WEXITSTATUS(rtnCode) != 0) {
+									cout << endl << "Error returned from package_installer.sh" << endl;
+									exit(1);
+								}
+
+								//check for mysql password on remote UM
+								if ( pwprompt == " " ) {
+									//start mysqld
+									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
+									int rtnCode = system(cmd.c_str());
+									if (WEXITSTATUS(rtnCode) != 0) {
+										cout << endl << "Error returned from mysql-Columnstore start" << endl;
+										exit(1);
+									}
+
+									//try to login
+									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+									rtnCode = system(cmd.c_str());
+									if (WEXITSTATUS(rtnCode) != 0) {
+										cout << endl << "Error returned from remote_command.sh" << endl;
+										exit(1);
+									}
+
+									if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR .my.cnf") ) {
+										// password needed check and get password from remote UM
+										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
+										rtnCode = system(cmd.c_str());
+										if (WEXITSTATUS(rtnCode) != 0) {
+											cout << endl << "MariaDB ColumnStore login failure, MySQL Root password is set." << endl;
+											cout <<  "Need MariaDB ColumnStore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+											exit(1);
+										}
+
+										//get password from local tmp file
+										mysqlpw = getmysqlpw("/tmp/mysqlpw.log");
+
+										if ( mysqlpw != oam::UnassignedName )
+										{
+											mysqlpw = "'" + mysqlpw + "'";
+											pwprompt = "--password=" + mysqlpw;
+										}
+
+										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+										rtnCode = system(cmd.c_str());
+										if (WEXITSTATUS(rtnCode) != 0) {
+											cout << endl << "MariaDB ColumnStore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
+											exit(1);
+										}
+									}
+									else
+									{
+										if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
+											cout << endl << "ERROR: MariaDB ColumnStore runtime error, exit..." << endl << endl;
+											system("cat /tmp/idbmysql.log");
+											exit (1);
+										}
+										else
+										{
+											cout << endl << "Additional MariaDB ColumnStore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
+
+											cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
+											int rtnCode = system(cmd.c_str());
+											if (WEXITSTATUS(rtnCode) != 0) {
+												cout << endl << "Error returned from mysql-Columnstore stop" << endl;
+												exit(1);
+											}
+											unlink("/tmp/idbmysql.log");
+											break;
+										}
+									}
+
+									//re-run post-mysql-install with password
+									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "' < /tmp/post-mysql-install.log";
+									rtnCode = system(cmd.c_str());
+									if (WEXITSTATUS(rtnCode) != 0) {
+										cout << endl << "Error returned from post-mysql-install, check /tmp/post-mysql-install.log" << endl;
+										exit(1);
+									}
+									else
+										cout << endl << "post-mysql-install Successfully Completed" << endl;
+								}
+							}
+						}
+						else
+						{	// do a binary package install
+							string binservertype = serverTypeInstall;
+							if ( pmwithum )
+								binservertype = "pmwithum";
+
+							cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
+								remoteModuleIP + " " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " + remote_installer_debug +
+								" " + installDir + " " + debug_logfile;
+
+							if ( thread_remote_installer ) {
+								thr_data[thread_id].command = cmd;
+
+								int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
+
+								if ( status != 0 )
+								{
+									cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
+									exit (1);
+								}
+
+								thread_id++;
+							}
+							else
+							{
+								int rtnCode = system(cmd.c_str());
+								if (WEXITSTATUS(rtnCode) != 0) {
+									cout << endl << "Error returned from package_installer.sh" << endl;
+									exit(1);
+								}
+							}
+						}
+					}
+					else
+					{
+						if ( (remoteModuleType == "pm" && IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) ||
+							(remoteModuleType == "pm" && !pmwithum ) )
+						{
+							cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
+
+							if ( remote_installer_debug == "1" )
+								cout << "Install log file is located here: " + logfile << endl << endl;
+
+							if ( EEPackageType != "binary" ) {
+								//run remote installer script
+								cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+
+								if ( thread_remote_installer ) {
+									thr_data[thread_id].command = cmd;
+
+									int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
+
+									if ( status != 0 )
+									{
+										cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
+										exit (1);
+									}
+
+									thread_id++;
+								}
+								else
+								{
+									int rtnCode = system(cmd.c_str());
+									if (WEXITSTATUS(rtnCode) != 0) {
+										cout << endl << "Error returned from package_installer.sh" << endl;
+										exit(1);
+									}
+								}
+							}
+							else
+							{	// do a binary package install
+								string binservertype = serverTypeInstall;
+								if ( pmwithum )
+									binservertype = "pmwithum";
+								cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
+									" " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " +
+									remote_installer_debug + " " + installDir + " " +
+									debug_logfile;
+
+								if ( thread_remote_installer ) {
+									thr_data[thread_id].command = cmd;
+
+									int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
+
+									if ( status != 0 )
+									{
+										cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
+										exit (1);
+									}
+
+									thread_id++;
+								}
+								else
+								{
+									int rtnCode = system(cmd.c_str());
+									if (WEXITSTATUS(rtnCode) != 0) {
+										cout << endl << "Error returned from package_installer.sh" << endl;
+										exit(1);
+									}
+								}
+							}
+						}
+					}
 				}
-				else
-					cout << "Password mismatch, please re-enter" << endl;
+
+				if ( thread_remote_installer ) {
+
+					//wait until remove install Thread Count is at zero or hit timeout
+					cout << endl << "MariaDB ColumnStore Package being installed, please wait ...";
+					cout.flush();
+
+					/* block until all threads complete */
+					for (thread_id = 0; thread_id < (int) childmodulelist.size(); ++thread_id) {
+						pthread_join(thr[thread_id], NULL);
+					}
+			
+					cout << "  DONE" << endl;
+				}
 			}
-
-			//add single quote for special characters
-			if ( password != "ssh" )
+			else
 			{
-				password = "'" + password + "'";
+				if (DataRedundancy && install != "y")
+				{
+					cout << endl << "Must choose to install with DataRedundancy configured." << endl;
+					exit(1);
+				}
 			}
-
-			checkSystemMySQLPort(mysqlPort, sysConfig, USER, password, childmodulelist, IserverTypeInstall, pmwithum);
-
+	    }
+	    else
+	    {
 			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 			{
@@ -2912,311 +3188,24 @@ int main(int argc, char *argv[])
 				mysqlSetup();
 				sleep(5);
 			}
-			
-			string AmazonInstall = "0";
-			if ( amazonInstall )
-			      AmazonInstall = "1";
-
-			ChildModuleList::iterator list1 = childmodulelist.begin();
-			for (; list1 != childmodulelist.end() ; list1++)
-			{
-				string remoteModuleName = (*list1).moduleName;
-				string remoteModuleIP = (*list1).moduleIP;
-				string remoteHostName = (*list1).hostName;
-				string remoteModuleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
-	
-				string debug_logfile;
-				string logfile;
-				if ( remote_installer_debug == "1" ) {
-					logfile = "/tmp/";
-					logfile += remoteModuleName + "_" + EEPackageType + "_install.log";
-					debug_logfile = " > " + logfile;
-				}
-
-				if ( remoteModuleType == "um" ||
-					(remoteModuleType == "pm" && IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ||
-					(remoteModuleType == "pm" && pmwithum) )
-				{
-				    cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
-
-				    if ( remote_installer_debug == "1" )
-					    cout << "Install log file is located here: " + logfile << endl << endl;
-
-				    if ( EEPackageType != "binary" ) {
-					    string temppwprompt = pwprompt;
-					    if ( pwprompt == " " )
-						    temppwprompt = "none";
-
-					    //run remote installer script
-					    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
-
-					    if ( thread_remote_installer ) {
-						    thr_data[thread_id].command = cmd;
-
-						    int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-				    
-						    if ( status != 0 )
-						    {
-							    cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
-							    exit (1);
-						    }
-						    thread_id++;
-					    }
-					    else
-					    {
-						    int rtnCode = system(cmd.c_str());
-						    if (WEXITSTATUS(rtnCode) != 0) {
-							    cout << endl << "Error returned from package_installer.sh" << endl;
-							    exit(1);
-						    }
-
-						    //check for mysql password on remote UM
-						    if ( pwprompt == " " ) {
-							    //start mysqld
-							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
-							    int rtnCode = system(cmd.c_str());
-							    if (WEXITSTATUS(rtnCode) != 0) {
-								    cout << endl << "Error returned from mysql-Columnstore start" << endl;
-								    exit(1);
-							    }
-
-							    //try to login
-							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
-							    rtnCode = system(cmd.c_str());
-							    if (WEXITSTATUS(rtnCode) != 0) {
-								    cout << endl << "Error returned from remote_command.sh" << endl;
-								    exit(1);
-							    }
-    
-							    if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR .my.cnf") ) {
-								    // password needed check and get password from remote UM
-								    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
-								    rtnCode = system(cmd.c_str());
-								    if (WEXITSTATUS(rtnCode) != 0) {
-									    cout << endl << "MariaDB ColumnStore login failure, MySQL Root password is set." << endl;
-									    cout <<  "Need MariaDB ColumnStore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
-									    exit(1);
-								    }
-
-								    //get password from local tmp file
-								    mysqlpw = getmysqlpw("/tmp/mysqlpw.log");
-
-								    if ( mysqlpw != oam::UnassignedName )
-								    {
-									    mysqlpw = "'" + mysqlpw + "'";
-									    pwprompt = "--password=" + mysqlpw;
-								    }
-
-								    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
-								    rtnCode = system(cmd.c_str());
-								    if (WEXITSTATUS(rtnCode) != 0) {
-									    cout << endl << "MariaDB ColumnStore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
-									    exit(1);
-								    }
-							    }
-							    else
-							    {
-								    if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
-									    cout << endl << "ERROR: MariaDB ColumnStore runtime error, exit..." << endl << endl;
-									    system("cat /tmp/idbmysql.log");
-									    exit (1);
-								    }
-								    else
-								    {
-									    cout << endl << "Additional MariaDB ColumnStore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
-
-									    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
-									    int rtnCode = system(cmd.c_str());
-									    if (WEXITSTATUS(rtnCode) != 0) {
-										    cout << endl << "Error returned from mysql-Columnstore stop" << endl;
-										    exit(1);
-									    }
-									    unlink("/tmp/idbmysql.log");
-									    break;
-								    }
-							    }
-    
-							    //re-run post-mysql-install with password
-							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "' < /tmp/post-mysql-install.log";
-							    rtnCode = system(cmd.c_str());
-							    if (WEXITSTATUS(rtnCode) != 0) {
-								    cout << endl << "Error returned from post-mysql-install, check /tmp/post-mysql-install.log" << endl;
-								    exit(1);
-							    }
-							    else
-								    cout << endl << "post-mysql-install Successfully Completed" << endl;
-						    }
-					    }
-				    }
-				    else
-				    {	// do a binary package install
-					    string binservertype = serverTypeInstall;
-					    if ( pmwithum )
-						    binservertype = "pmwithum";
-
-					    cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
-						    remoteModuleIP + " " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " + remote_installer_debug +
-						    " " + installDir + " " + debug_logfile;
-					    
-					    if ( thread_remote_installer ) {
-						    thr_data[thread_id].command = cmd;
-
-						    int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-				    
-						    if ( status != 0 )
-						    {
-							    cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
-							    exit (1);
-						    }
-				    
-						    thread_id++;
-					    }
-					    else
-					    {
-						    int rtnCode = system(cmd.c_str());
-						    if (WEXITSTATUS(rtnCode) != 0) {
-							    cout << endl << "Error returned from package_installer.sh" << endl;
-							    exit(1);
-						    }
-					    }
-				    }
-				}
-				else
-				{
-					if ( (remoteModuleType == "pm" && IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) ||
-						(remoteModuleType == "pm" && !pmwithum ) )
-					{
-					    cout << endl << "----- Performing Install on '" + remoteModuleName + " / " + remoteHostName + "' -----" << endl << endl;
-
-					    if ( remote_installer_debug == "1" )
-						    cout << "Install log file is located here: " + logfile << endl << endl;
-
-					    if ( EEPackageType != "binary" ) {
-						    //run remote installer script
-						    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
-
-						    if ( thread_remote_installer ) {
-							    thr_data[thread_id].command = cmd;
-
-							    int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-					    
-							    if ( status != 0 )
-							    {
-								    cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
-								    exit (1);
-							    }
-					    
-							    thread_id++;
-						    }
-						    else
-						    {
-							    int rtnCode = system(cmd.c_str());
-							    if (WEXITSTATUS(rtnCode) != 0) {
-								    cout << endl << "Error returned from package_installer.sh" << endl;
-								    exit(1);
-							    }
-						    }
-					    }
-					    else	
-					    {	// do a binary package install
-						    string binservertype = serverTypeInstall;
-						    if ( pmwithum )
-							    binservertype = "pmwithum";
-						    cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP +
-							    " " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " +
-							    remote_installer_debug + " " + installDir + " " +
-							    debug_logfile;
-
-						    if ( thread_remote_installer ) {
-							    thr_data[thread_id].command = cmd;
-
-							    int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-					    
-							    if ( status != 0 )
-							    {
-								    cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
-								    exit (1);
-							    }
-					    
-							    thread_id++;
-						    }
-						    else
-						    {
-							    int rtnCode = system(cmd.c_str());
-							    if (WEXITSTATUS(rtnCode) != 0) {
-								    cout << endl << "Error returned from package_installer.sh" << endl;
-								    exit(1);
-							    }
-						    }
-					    }
-					}
-				}
-			}
-
-			if ( thread_remote_installer ) {
-		
-				//wait until remove install Thread Count is at zero or hit timeout
-				cout << endl << "MariaDB ColumnStore Package being installed, please wait ...";
-				cout.flush();
-			
-				/* block until all threads complete */
-				for (thread_id = 0; thread_id < (int) childmodulelist.size(); ++thread_id) {
-					pthread_join(thr[thread_id], NULL);
-				}
-		
-				cout << "  DONE" << endl;
-			}
-		    }
 	    }
-	    else
-	    {
-		if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-			( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
+
+		//configure data redundancy
+		if (DataRedundancy)
 		{
-			cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
+			cout << endl;
+			if ( reuseConfig != "y" ) {
+				cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
+				if (!glusterSetup(password))
+				{
+					cout << "ERROR: Problem setting up ColumnStore Data Redundancy" << endl;
+					exit(1);
+				}
 
-			// call the mysql setup scripts
-			mysqlSetup();
-			sleep(5);
+			}
 		}
-	    }
 	}
 
-	//configure data redundancy
-	if (DataRedundancy )
-	{
-		cout << endl;
-		string start = "y";
-		if ( reuseConfig == "y" )
-			start = "n";
-/*
-		while(true)
-		{
-			pcommand = callReadline("Would you like to configure MariaDB ColumnStore Data Redundancy? [y,n] (" + start + ") > ");
-			if (pcommand)
-			{
-				if (strlen(pcommand) > 0) start = pcommand;
-				callFree(pcommand);
-			}
-			if ( start == "y" || start == "n" )
-				break;
-			else
-				cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-			start = "y";
-			if ( noPrompting )
-				exit(1);
-		}
-*/
-		if ( start == "y" ) {
-			cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
-			if (!glusterSetup(password))
-			{
-				cout << "ERROR: Problem setting up ColumnStore Data Redundancy" << endl;
-				exit(1);
-			}
-
-		}
-	}
 
 	if ( !writeConfig(sysConfig) ) {
 		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
@@ -4442,7 +4431,12 @@ bool storageSetup(bool amazonInstall)
 	}
 
 	//check if gluster is installed
-	int rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
+	int rtnCode = 1;
+	if (rootUser)
+		rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
+	else
+		rtnCode = system("sudo gluster --version > /tmp/gluster.log 2>&1");
+
 	if (rtnCode == 0)
 	{
 		glusterInstalled = "y";
@@ -5817,19 +5811,11 @@ bool glusterSetup(string password) {
 	{
 		for ( int brick=1; brick<=numberBricksPM; brick++)
 		{
-			// create the gluster brick directories now
-			//if (rootUser)
-			//{
-				command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
-			//}
-			//else
-			//{
-			//	command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'sudo mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
-			//}
+			command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'mkdir -p " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
 			status = system(command.c_str());
 			if (WEXITSTATUS(status) != 0 )
 			{
-				cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): 'mkdir -p " << installDir << "/gluster/brick" << oam.itoa(brick) << "'" << endl;
+				cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): '" << command << "'" << endl;
 				exit(1);
 			}
 /*

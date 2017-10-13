@@ -4933,7 +4933,7 @@ namespace oam
 		{
 			//give  time for ProcMon/ProcMgr to get fully active on new pm
 			sleep(10);
-	
+
 			// build and send msg to restart system
 			returnStatus = sendMsgToProcMgr(RESTARTSYSTEM, "", FORCEFUL, ACK_YES);
 	
@@ -5651,6 +5651,46 @@ namespace oam
 					catch (...)
 					{
 						writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
+					}
+					// check if a copy is available when residePM returns
+					string pmList = "";
+					try {
+						string errmsg;
+						int ret = glusterctl(oam::GLUSTER_WHOHAS, itoa(subDBRootID), pmList, errmsg);
+						if ( ret != 0 )
+						{
+							writeLog("ERROR: glusterctl failure getting pm list for dbroot " + itoa(subDBRootID) + " , error: " + errmsg, LOG_TYPE_ERROR );
+							exceptionControl("autoMovePmDbroot", API_INVALID_PARAMETER);
+						}
+					}
+					catch (exception& )
+					{
+						writeLog("ERROR: glusterctl failure getting pm list for dbroot " + itoa(subDBRootID), LOG_TYPE_ERROR );
+						exceptionControl("autoMovePmDbroot", API_INVALID_PARAMETER);
+					}
+					catch (...)
+					{
+						writeLog("ERROR: glusterctl failure getting pm list for dbroot " + itoa(subDBRootID), LOG_TYPE_ERROR );
+						exceptionControl("autoMovePmDbroot", API_INVALID_PARAMETER);
+					}
+
+					bool found = false;
+					boost::char_separator<char> sep(" ");
+					boost::tokenizer< boost::char_separator<char> > tokens(pmList, sep);
+					for ( boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
+							it != tokens.end();
+							++it)
+					{
+						if ( atoi((*it).c_str()) == residePMID )
+						{
+							// found it and can assign the subDBRoot back to residedPM no switch back is needed
+							found = true;
+						}
+					}
+					// We will go back to this PM
+					if (!found)
+					{
+						subDBRootID = dbrootID;
 					}
 				}
 
@@ -6632,7 +6672,7 @@ namespace oam
 		{
 			getPmDbrootConfig(atoi(residePMID.c_str()), residedbrootConfigList);
 
-			cout << "DBRoot IDs assigned to '" + residePM + "' = ";
+			cout << endl << "DBRoot IDs assigned to '" + residePM + "' = ";
 
 			DBRootConfigList::iterator pt = residedbrootConfigList.begin();
 			for( ; pt != residedbrootConfigList.end() ;)
@@ -6650,7 +6690,7 @@ namespace oam
 			exceptionControl("unassignPmDbrootConfig", API_FAILURE);
 		}
 
-		cout << endl << "Changes being applied" << endl << endl;
+		cout << "Changes being applied..." << endl;
 
 		//remove entered dbroot IDs from reside PM list
 		DBRootConfigList::iterator pt1 = dbrootlist.begin();
@@ -6700,6 +6740,7 @@ namespace oam
 						detachEC2Volume(volumeName);
 
 					residedbrootConfigList.erase(pt2);
+					cout << "DBRoot IDs unassigned from '" + residePM + "' = " + itoa(*pt1) << endl;
 
 					break;
 				}
@@ -6732,7 +6773,7 @@ namespace oam
 				if (pt != residedbrootConfigList.end())
 					cout << ", ";
 			}
-			cout << endl;
+			cout << endl << endl;
 		}
 		catch (exception& e)
 		{
