@@ -8727,22 +8727,8 @@ namespace oam
 	* purpose:	check and get mysql user password
 	*
 	******************************************************************************************/
-	std::string Oam::getMySQLPassword(bool bypassConfig)
+	std::string Oam::getMySQLPassword()
 	{
-		if ( !bypassConfig )
-		{
-			string MySQLPasswordConfig;
-			try {
-				getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-			}
-			catch(...) {
-				MySQLPasswordConfig = "n";
-			}
-		
-			if ( MySQLPasswordConfig == "n" )
-				return oam::UnassignedName;
-		}
-
 		string USER = "root";
 		char* p= getenv("USER");
 		if (p && *p)
@@ -8779,13 +8765,6 @@ namespace oam
 					string::size_type pos1 = buf.find("=",pos);
 					if (pos1 != string::npos) {
 						//password found
-						if ( bypassConfig )
-						{
-							try {
-								setSystemConfig("MySQLPasswordConfig", "y");
-							}
-							catch(...) {}
-						}
 
 						string password = buf.substr(pos1+2, 80);
 
@@ -8797,6 +8776,7 @@ namespace oam
 		file.close();
 
 		exceptionControl("getMySQLPassword", API_FAILURE);
+		
 		return oam::UnassignedName;
 	}
 

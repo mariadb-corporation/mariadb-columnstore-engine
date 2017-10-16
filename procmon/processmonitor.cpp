@@ -5076,7 +5076,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 				if ( passwordError ) 
 				{
 					try {
-						mysqlpw = oam.getMySQLPassword(true);
+						mysqlpw = oam.getMySQLPassword();
 					}
 					catch (...)
 					{}
@@ -5226,7 +5226,7 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 		if ( passwordError ) 
 		{
 			try {
-				mysqlpw = oam.getMySQLPassword(true);
+				mysqlpw = oam.getMySQLPassword();
 			}
 			catch (...)
 			{}

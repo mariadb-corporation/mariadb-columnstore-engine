@@ -2468,7 +2468,7 @@ namespace oam
 
 		/** @brief check and get mysql user password
 		*/
-		EXPORT std::string getMySQLPassword(bool bypassConfig = false);
+		EXPORT std::string getMySQLPassword();
 
 		/** @brief update fstab with dbroot mounts
 		*/

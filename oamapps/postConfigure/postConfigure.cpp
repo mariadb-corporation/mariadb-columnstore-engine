@@ -191,7 +191,7 @@ string installDir;
 string HOME = "/root";
 
 extern string pwprompt;
-string mysqlpw = " ";
+string mysqlpw = oam::UnassignedName;
 
 extern const char* pcommand;
 extern string prompt;
@@ -591,11 +591,6 @@ int main(int argc, char *argv[])
 		catch(...)
 		{}
 	}
-
-	try {
-		oam.setSystemConfig("MySQLPasswordConfig", oam::UnassignedName);
-	}
-	catch(...) {}
 
 	//check for non-Distributed Install
 	if ( nonDistribute )
@@ -2999,8 +2994,14 @@ int main(int argc, char *argv[])
 								    }
 
 								    //get password from local tmp file
-								    mysqlpw = getmysqlpw("/tmp/mysqlpw.log");
-
+								    try {
+									mysqlpw = oam.getMySQLPassword();
+								    }
+								    catch(...)
+								    {
+									mysqlpw = oam::UnassignedName;
+								    }
+								    
 								    if ( mysqlpw != oam::UnassignedName )
 								    {
 									    mysqlpw = "'" + mysqlpw + "'";
