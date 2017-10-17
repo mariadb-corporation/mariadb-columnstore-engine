@@ -8741,10 +8741,15 @@ namespace oam
 
 		string fileName = HOME + "/.my.cnf";
 		
+		writeLog("getMySQLPassword: checking: " + fileName, LOG_TYPE_DEBUG);
+
 		ifstream file (fileName.c_str());
 
 		if (!file)
+		{
+			writeLog("getMySQLPassword: doesn't exist: " + fileName, LOG_TYPE_DEBUG);
 			exceptionControl("getMySQLPassword", API_FILE_OPEN_ERROR);
+		}
 	
 		char line[400];
 		string buf;
@@ -8768,6 +8773,7 @@ namespace oam
 
 						string password = buf.substr(pos1+2, 80);
 
+						writeLog("getMySQLPassword: password found", LOG_TYPE_DEBUG);
 						return password;
 					}
 				}
@@ -8775,6 +8781,7 @@ namespace oam
 		}
 		file.close();
 
+		writeLog("getMySQLPassword: no password found", LOG_TYPE_DEBUG);
 		exceptionControl("getMySQLPassword", API_FAILURE);
 		
 		return oam::UnassignedName;

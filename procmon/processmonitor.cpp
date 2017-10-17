@@ -5036,6 +5036,11 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 
 			bool passwordError = false;
 
+			string moduleType = systemModuleTypeConfig.moduletypeconfig[i].ModuleType;
+	
+			if ( (PMwithUM == "n") && (moduleType == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+				continue;
+
 			HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 			while(true)	// need in case there is a password retry
 			{

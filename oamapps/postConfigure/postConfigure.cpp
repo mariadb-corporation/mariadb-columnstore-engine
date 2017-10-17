@@ -2966,7 +2966,7 @@ int main(int argc, char *argv[])
 						    }
 
 						    //check for mysql password on remote UM
-						    if ( pwprompt == " " ) {
+/*						    if ( pwprompt == " " ) {
 							    //start mysqld
 							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
 							    int rtnCode = system(cmd.c_str());
@@ -3047,7 +3047,7 @@ int main(int argc, char *argv[])
 							    else
 								    cout << endl << "post-mysql-install Successfully Completed" << endl;
 						    }
-					    }
+*/					    }
 				    }
 				    else
 				    {	// do a binary package install
@@ -3499,14 +3499,15 @@ int main(int argc, char *argv[])
 		}
 
 		//set mysql replication, if wasn't setup before on system
-/*		if ( ( mysqlRep && pmwithum ) || 
-			( mysqlRep && (umNumber > 1) ) ||
-			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
+//		if ( ( mysqlRep && pmwithum ) || 
+//			( mysqlRep && (umNumber > 1) ) ||
+//			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
+		if ( mysqlRep )
 		{
 			cout << endl << "Run MariaDB ColumnStore Replication Setup.. ";
 			cout.flush();
 
-			//send message to procmon's to run upgrade script
+			//send message to procmon's to run mysql replication script
 			int status = sendReplicationRequest(IserverTypeInstall, password, mysqlPort, pmwithum);
 
 			if ( status != 0 ) {
@@ -3516,7 +3517,7 @@ int main(int argc, char *argv[])
 			else
 				cout << " DONE" << endl;
 		}
-*/
+
 		cout << endl << "MariaDB ColumnStore Install Successfully Completed, System is Active" << endl << endl;
 
 		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
