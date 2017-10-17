@@ -458,7 +458,6 @@
 		<JavaHome>unassigned</JavaHome>
 		<JavaPath>unassigned</JavaPath>
 		<MySQLPort>3306</MySQLPort>
-		<MySQLPasswordConfig>unassigned</MySQLPasswordConfig>
 	</Installation>
 	<ExtentMap>
 		<!--

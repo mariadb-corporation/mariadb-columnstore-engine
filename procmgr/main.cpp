@@ -502,6 +502,8 @@ static void startMgrProcessThread()
 	ModuleTypeConfig PMSmoduletypeconfig;
 	ALARMManager aManager;
 
+	int waitTime = 60; 
+	
 	log.writeLog(__LINE__, "startMgrProcessThread launched", LOG_TYPE_DEBUG);
 
 	//get calpont software version and release
@@ -597,7 +599,7 @@ static void startMgrProcessThread()
 	{
 	      int status = API_SUCCESS;
 	      int k = 0;
-	      for( ; k < 200 ; k++ )
+	      for( ; k < waitTime ; k++ )
 	      {
 		      if ( startsystemthreadStop ) {
 			      processManager.setSystemState(oam::MAN_OFFLINE);
@@ -641,7 +643,7 @@ static void startMgrProcessThread()
 		      sleep(1);
 	      }
 
-	      if ( k == 200 || status == API_FAILURE) {
+	      if ( k == waitTime || status == API_FAILURE) {
 		      // system didn't successfull restart
 		      processManager.setSystemState(oam::FAILED);
 		      // exit thread
@@ -653,7 +655,7 @@ static void startMgrProcessThread()
 	
 	//wait until all modules are up after a system reboot
 	int i = 0;
-	for( ; i < 200 ; i++ )
+	for( ; i < waitTime ; i++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -719,7 +721,7 @@ static void startMgrProcessThread()
 			break;
 	}
 
-	if ( i == 200 ) {
+	if ( i == waitTime ) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 
@@ -738,7 +740,7 @@ static void startMgrProcessThread()
 	//now wait until all procmons are ACTIVE and validate rpms on each module
 	int status = API_SUCCESS;
 	int k = 0;
-	for( ; k < 200 ; k++ )
+	for( ; k < waitTime ; k++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -859,7 +861,7 @@ static void startMgrProcessThread()
 		}
 	}
 
-	if ( k == 200 || status == API_FAILURE) {
+	if ( k == waitTime || status == API_FAILURE) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 		// exit thread

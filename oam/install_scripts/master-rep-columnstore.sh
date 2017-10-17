@@ -47,7 +47,7 @@ password="Calpont1"
 #
 echo "Create Replication User $repUser for node $hostipaddr" >>/tmp/master-rep-status-$hostipaddr.log
 cat >/tmp/idb_master-rep.sql <<EOD
-CREATE USER '$repUser'@'$hostipaddr' IDENTIFIED BY '$password';
+CREATE USER IF NOT EXISTS '$repUser'@'$hostipaddr' IDENTIFIED BY '$password';
 GRANT REPLICATION SLAVE ON *.* TO '$repUser'@'$hostipaddr';
 EOD
 
@@ -55,7 +55,7 @@ cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
 	--defaults-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
-	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
+	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
 checkForError
 
@@ -73,7 +73,7 @@ cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
 	--defaults-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
-	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
+	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
 checkForError
 
@@ -89,7 +89,7 @@ cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
 	--defaults-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
-	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
+	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
 checkForError
 
