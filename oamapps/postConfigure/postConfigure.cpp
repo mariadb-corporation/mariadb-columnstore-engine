@@ -458,14 +458,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-        //if binary install, then run post-install just in case the user didnt run it
-    	if ( EEPackageType == "binary" )
-    	{
-        	//run post install
-        	cmd = installDir + "/bin/post-install --installdir=" + installDir + " > /dev/null 2>&1";
-        	system(cmd.c_str());
-    	}
-
 	//check for local ip address as pm1
 	ModuleConfig moduleconfig;
 
