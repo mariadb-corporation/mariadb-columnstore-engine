@@ -8727,22 +8727,8 @@ namespace oam
 	* purpose:	check and get mysql user password
 	*
 	******************************************************************************************/
-	std::string Oam::getMySQLPassword(bool bypassConfig)
+	std::string Oam::getMySQLPassword()
 	{
-		if ( !bypassConfig )
-		{
-			string MySQLPasswordConfig;
-			try {
-				getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-			}
-			catch(...) {
-				MySQLPasswordConfig = "n";
-			}
-		
-			if ( MySQLPasswordConfig == "n" )
-				return oam::UnassignedName;
-		}
-
 		string USER = "root";
 		char* p= getenv("USER");
 		if (p && *p)
@@ -8755,10 +8741,15 @@ namespace oam
 
 		string fileName = HOME + "/.my.cnf";
 		
+		writeLog("getMySQLPassword: checking: " + fileName, LOG_TYPE_DEBUG);
+
 		ifstream file (fileName.c_str());
 
 		if (!file)
+		{
+			writeLog("getMySQLPassword: doesn't exist: " + fileName, LOG_TYPE_DEBUG);
 			exceptionControl("getMySQLPassword", API_FILE_OPEN_ERROR);
+		}
 	
 		char line[400];
 		string buf;
@@ -8779,16 +8770,10 @@ namespace oam
 					string::size_type pos1 = buf.find("=",pos);
 					if (pos1 != string::npos) {
 						//password found
-						if ( bypassConfig )
-						{
-							try {
-								setSystemConfig("MySQLPasswordConfig", "y");
-							}
-							catch(...) {}
-						}
 
 						string password = buf.substr(pos1+2, 80);
 
+						writeLog("getMySQLPassword: password found", LOG_TYPE_DEBUG);
 						return password;
 					}
 				}
@@ -8796,7 +8781,9 @@ namespace oam
 		}
 		file.close();
 
+		writeLog("getMySQLPassword: no password found", LOG_TYPE_DEBUG);
 		exceptionControl("getMySQLPassword", API_FAILURE);
+		
 		return oam::UnassignedName;
 	}
 
