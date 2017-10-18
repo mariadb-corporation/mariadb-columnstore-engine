@@ -8757,8 +8757,8 @@ namespace oam
 		while (file.getline(line, 400))
 		{
 			buf = line;
-	
-			string::size_type pos = buf.find(USER,0);
+			//find the mariadb user, root
+			string::size_type pos = buf.find("root",0);
 			if (pos != string::npos)
 			{
 				file.getline(line, 400);
