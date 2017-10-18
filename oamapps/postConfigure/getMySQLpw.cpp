@@ -57,30 +57,59 @@ int main(int argc, char *argv[])
 {
 	Oam oam;
 
-	//get mysql user password
-	string mysqlpw = oam::UnassignedName;
-	try {
-		mysqlpw = oam.getMySQLPassword();
-	}
-	catch (...)
+	string USER = "root";
+	char* p= getenv("USER");
+	if (p && *p)
+		USER = p;
+
+	string HOME = "/root";
+	p= getenv("HOME");
+	if (p && *p)
+		HOME = p;
+
+	string fileName = HOME + "/.my.cnf";
+	
+	ifstream file (fileName.c_str());
+
+	if (!file)
 	{
-		cout << oam::UnassignedName << endl;
-		exit (1);
+	    cout << oam::UnassignedName << endl;
+	    exit (1);
 	}
 
-	if ( mysqlpw == oam::UnassignedName ) {
-		cout << oam::UnassignedName << endl;
-		exit (1);
+	char line[400];
+	string buf;
+
+	while (file.getline(line, 400))
+	{
+		buf = line;
+
+		string::size_type pos = buf.find(USER,0);
+		if (pos != string::npos)
+		{
+			file.getline(line, 400);
+			buf = line;
+
+			pos = buf.find("password",0);
+			if (pos != string::npos)
+			{
+				string::size_type pos1 = buf.find("=",pos);
+				if (pos1 != string::npos) {
+					//password found
+
+					string password = buf.substr(pos1+2, 80);
+
+					cout << password << endl;
+					exit (0);
+				}
+			}
+		}
 	}
+	file.close();
+	
+	cout << oam::UnassignedName << endl;
 
-	cout << mysqlpw << endl;
-
-	try {
-		oam.setSystemConfig("MySQLPasswordConfig", "y");
-	}
-	catch(...) {}
-
-	exit (0);
+	exit (1);
 
 }
 // vim:ts=4 sw=4:
