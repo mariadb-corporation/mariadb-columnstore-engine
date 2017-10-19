@@ -33,6 +33,7 @@
 #include <limits.h>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #ifdef __linux__
 #include <sys/sysinfo.h>
 #include <netdb.h>
