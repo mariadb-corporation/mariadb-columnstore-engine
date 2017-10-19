@@ -3402,7 +3402,6 @@ int processCommand(string* arguments)
 				}
 			}
 
-
 			if (bNeedsConfirm) 
 			{
 				// confirm request
@@ -3411,24 +3410,8 @@ int processCommand(string* arguments)
 			}
 
 		string MySQLRep;
-		string MySQLPasswordConfig;
 		try {
 			oam.getSystemConfig("MySQLRep", MySQLRep);
-			oam.getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
-	
-		if ( MySQLRep == "y" && MySQLPasswordConfig == oam::UnassignedName ) {
-			cout << endl;
-			string prompt = "MariaDB ColumnStore Replication is enabled, is there a 'MariaDB ColumnStore' Password configured in " + HOME + "/.my.cnf  (y,n): ";
-			MySQLPasswordConfig = dataPrompt(prompt);
-		}
-
-		if ( MySQLPasswordConfig != "y" )
-			MySQLPasswordConfig = "n";
-
-		try {
-			oam.setSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
 		}
 		catch(...) {}
 
@@ -4960,26 +4943,6 @@ int processCommand(string* arguments)
 		if ( password == "")
 			password = oam::UnassignedName;
 
-		string MySQLPasswordConfig;
-		try {
-			oam.getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
-	
-		if ( MySQLPasswordConfig == oam::UnassignedName ) {
-			cout << endl;
-			string prompt = "Is there a 'MariaDB ColumnStore' Password configured on the MariaDB ColumnStore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
-			MySQLPasswordConfig = dataPrompt(prompt);
-		}
-
-		if ( MySQLPasswordConfig != "y" )
-			MySQLPasswordConfig = "n";
-
-		try {
-			oam.setSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
-
 		//set flag
 		try {
 			oam.setSystemConfig("MySQLRep", "y");
@@ -5451,8 +5414,6 @@ int processCommand(string* arguments)
 
 			}
 
-			string mysqlpassword = oam::UnassignedName;
-
 			try{
 				cout << endl << "Adding Modules ";
 				DeviceNetworkList::iterator pt = devicenetworklist.begin();
@@ -5464,7 +5425,7 @@ int processCommand(string* arguments)
 
 				cout << "please wait..." << endl;
 
-				oam.addModule(devicenetworklist, password, mysqlpassword);
+				oam.addModule(devicenetworklist, password);
 
 				cout << "Add Module(s) successfully completed" << endl;
 
@@ -5939,26 +5900,6 @@ int processCommand(string* arguments)
 			if (confirmPrompt(warning))
 				break;
 		}
-
-		string MySQLPasswordConfig;
-		try {
-			oam.getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
-	
-		if ( MySQLPasswordConfig == oam::UnassignedName ) {
-			cout << endl;
-			string prompt = "Is there a 'MariaDB ColumnStore' Password configured on the MariaDB ColumnStore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
-			MySQLPasswordConfig = dataPrompt(prompt);
-		}
-
-		if ( MySQLPasswordConfig != "y" )
-			MySQLPasswordConfig = "n";
-
-		try {
-			oam.setSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
 
 		//set flag
 		try {

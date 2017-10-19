@@ -1260,10 +1260,10 @@ namespace oam
      *
      ********************************************************************/
 
-    void Oam::addModule(DeviceNetworkList devicenetworklist, const std::string password, const std::string mysqlpw)
+    void Oam::addModule(DeviceNetworkList devicenetworklist, const std::string password)
 	{
         // build and send msg
-        int returnStatus = sendMsgToProcMgr2(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, password, mysqlpw);
+        int returnStatus = sendMsgToProcMgr2(ADDMODULE, devicenetworklist, FORCEFUL, ACK_YES, password);
 
         if (returnStatus != API_SUCCESS)
             exceptionControl("addModule", returnStatus);
@@ -8550,22 +8550,10 @@ namespace oam
 	* purpose:	check and get mysql user password
 	*
 	******************************************************************************************/
-	std::string Oam::getMySQLPassword(bool bypassConfig)
+	std::string Oam::getMySQLPassword()
 	{
-		if ( !bypassConfig )
-		{
-			string MySQLPasswordConfig;
-			try {
-				getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-			}
-			catch(...) {
-				MySQLPasswordConfig = "n";
-			}
+		string mysqlUser = "root";
 		
-			if ( MySQLPasswordConfig == "n" )
-				return oam::UnassignedName;
-		}
-
 		string USER = "root";
 		char* p= getenv("USER");
 		if (p && *p)
@@ -8578,10 +8566,15 @@ namespace oam
 
 		string fileName = HOME + "/.my.cnf";
 		
+		writeLog("getMySQLPassword: checking: " + fileName, LOG_TYPE_DEBUG);
+
 		ifstream file (fileName.c_str());
 
 		if (!file)
+		{
+			writeLog("getMySQLPassword: doesn't exist: " + fileName, LOG_TYPE_DEBUG);
 			exceptionControl("getMySQLPassword", API_FILE_OPEN_ERROR);
+		}
 	
 		char line[400];
 		string buf;
@@ -8589,8 +8582,8 @@ namespace oam
 		while (file.getline(line, 400))
 		{
 			buf = line;
-	
-			string::size_type pos = buf.find(USER,0);
+			string::size_type pos = buf.find(mysqlUser,0);
+
 			if (pos != string::npos)
 			{
 				file.getline(line, 400);
@@ -8602,24 +8595,23 @@ namespace oam
 					string::size_type pos1 = buf.find("=",pos);
 					if (pos1 != string::npos) {
 						//password found
-						if ( bypassConfig )
-						{
-							try {
-								setSystemConfig("MySQLPasswordConfig", "y");
-							}
-							catch(...) {}
-						}
 
-						string password = buf.substr(pos1+2, 80);
+						string password = buf.substr(pos1+1, 80);
+						password.erase(remove_if(password.begin(), password.end(), ::isspace), password.end());
 
+						writeLog("getMySQLPassword: password found", LOG_TYPE_DEBUG);
 						return password;
 					}
 				}
+				
+				break;
 			}
 		}
 		file.close();
 
+		writeLog("getMySQLPassword: no password found", LOG_TYPE_DEBUG);
 		exceptionControl("getMySQLPassword", API_FAILURE);
+		
 		return oam::UnassignedName;
 	}
 

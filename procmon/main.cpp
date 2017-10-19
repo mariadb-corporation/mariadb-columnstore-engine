@@ -203,8 +203,13 @@ int main(int argc, char **argv)
 	pthread_t MessageThread;
 	int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*)) &messageThread, &config);
 	if ( ret != 0 )
+	{
 		log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
-
+		sleep (1);
+		string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+		system(cmd.c_str());
+	}
+		
 	//create and mount data directories
 	aMonitor.createDataDirs(cloud);
 
@@ -2145,7 +2150,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	catch (exception& ex)
 	{
 		string error = ex.what();
-		log.writeLog(__LINE__, "***read error, close create thread: " + error, LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***read error, close create thread: " + error, LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
@@ -2154,7 +2159,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	}
 	catch(...)
 	{
-		log.writeLog(__LINE__, "***read error, close create thread", LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***read error, close create thread", LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
@@ -2163,7 +2168,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	}
 
 	if (msg->length() <= 0) {
-		log.writeLog(__LINE__, "***0 bytes, close create thread", LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***0 bytes, close create thread", LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
