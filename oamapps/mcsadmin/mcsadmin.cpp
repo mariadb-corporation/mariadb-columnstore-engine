@@ -4974,6 +4974,12 @@ int processCommand(string* arguments)
 
         case 46: // enableReplication
         {
+		if ( SingleServerInstall == "y" ) {
+		    // exit out since not on single-server install
+		    cout << endl << "**** enableReplication Failed : not supported on a Single-Server type installs  " << endl;
+		    break;
+		}
+
 		string MySQLRep;
 		try {
 			oam.getSystemConfig("MySQLRep", MySQLRep);
@@ -6081,6 +6087,12 @@ int processCommand(string* arguments)
 
         case 51: // disableReplication
         {
+		if ( SingleServerInstall == "y" ) {
+		    // exit out since not on single-server install
+		    cout << endl << "**** disableReplication Failed : not supported on a Single-Server type installs  " << endl;
+		    break;
+		}
+
 		string MySQLRep;
 		try {
 			oam.getSystemConfig("MySQLRep", MySQLRep);
