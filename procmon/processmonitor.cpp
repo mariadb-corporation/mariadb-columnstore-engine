@@ -4745,10 +4745,10 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				buf = "server-id = 1";
 			}
 
-			pos = buf.find("# binlog_format=ROW",0);
-			if ( pos != string::npos ) {
-				buf = "binlog_format=ROW";
-			}
+//			pos = buf.find("# binlog_format=ROW",0);
+//			if ( pos != string::npos ) {
+//				buf = "binlog_format=ROW";
+//			}
 
 			pos = buf.find("infinidb_local_query=1",0);
 			if ( pos != string::npos && pos == 0) {
@@ -4871,10 +4871,10 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				}
 			}
 
-			pos = buf.find("binlog_format=ROW",0);
-			if ( pos != string::npos && pos == 0 ) {
-				buf = "# binlog_format=ROW";
-			}
+//			pos = buf.find("binlog_format=ROW",0);
+//			if ( pos != string::npos && pos == 0 ) {
+//				buf = "# binlog_format=ROW";
+//			}
 
 			//output to temp file
 			lines.push_back(buf);
@@ -4893,7 +4893,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 		close(fd);
 	}
 
-	if ( type == "disable" )
+/*	if ( type == "disable" )
 	{
 		// set master replication entries
 		vector <string> lines;
@@ -4937,11 +4937,6 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				}
 			}
 
-			pos = buf.find("slave-skip-errors=all",0);
-			if ( pos != string::npos ) {
-				buf = "# slave-skip-errors=all";
-			}
-
 			//output to temp file
 			lines.push_back(buf);
 		}
@@ -4958,7 +4953,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 		
 		close(fd);
 	}
-
+*/
 	// set owner and permission 
 	string cmd = "chmod 664 " + mycnfFile + " >/dev/null 2>&1";
 	if ( !rootUser)
@@ -5036,6 +5031,11 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 
 			bool passwordError = false;
 
+			string moduleType = systemModuleTypeConfig.moduletypeconfig[i].ModuleType;
+	
+			if ( (PMwithUM == "n") && (moduleType == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+				continue;
+
 			HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 			while(true)	// need in case there is a password retry
 			{
@@ -5076,7 +5076,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 				if ( passwordError ) 
 				{
 					try {
-						mysqlpw = oam.getMySQLPassword(true);
+						mysqlpw = oam.getMySQLPassword();
 					}
 					catch (...)
 					{}
@@ -5226,7 +5226,7 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 		if ( passwordError ) 
 		{
 			try {
-				mysqlpw = oam.getMySQLPassword(true);
+				mysqlpw = oam.getMySQLPassword();
 			}
 			catch (...)
 			{}

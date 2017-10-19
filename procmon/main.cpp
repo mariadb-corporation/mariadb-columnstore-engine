@@ -136,7 +136,9 @@ int main(int argc, char **argv)
 	int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*)) &messageThread, &config);
 	if ( ret != 0 ) {
 		log.writeLog(__LINE__, "pthread_create failed, exiting..., return code = " + oam.itoa(ret), LOG_TYPE_CRITICAL);
-		exit (1);
+		string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+		system(cmd.c_str());
+		exit(1);
 	}
 
 	//check if this is a fresh install, meaning the Columnstore.xml file is not setup
@@ -181,8 +183,15 @@ int main(int argc, char **argv)
 	      log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
 	      log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 
-	      system(cmd.c_str());
+	      int ret = system(cmd.c_str());
 
+	      if ( ret != 0 ) {
+		      log.writeLog(__LINE__, "module_installer.sh error, exiting..., return code = " + oam.itoa(ret), LOG_TYPE_CRITICAL);
+			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
+			system(cmd.c_str());
+			exit(1);
+	      }
+	      
 	      //exit to allow ProcMon to restart in a setup state
 	      log.writeLog(__LINE__, "restarting for a initial setup", LOG_TYPE_DEBUG);
 
@@ -2214,7 +2223,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	catch (exception& ex)
 	{
 		string error = ex.what();
-		log.writeLog(__LINE__, "***read error, close create thread: " + error, LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***read error, close create thread: " + error, LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
@@ -2223,7 +2232,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	}
 	catch(...)
 	{
-		log.writeLog(__LINE__, "***read error, close create thread", LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***read error, close create thread", LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
@@ -2232,7 +2241,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	}
 
 	if (msg->length() <= 0) {
-		log.writeLog(__LINE__, "***0 bytes, close create thread", LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***0 bytes, close create thread", LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
