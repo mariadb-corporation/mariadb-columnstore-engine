@@ -2223,7 +2223,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	catch (exception& ex)
 	{
 		string error = ex.what();
-		log.writeLog(__LINE__, "***read error, close create thread: " + error, LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***read error, close create thread: " + error, LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
@@ -2232,7 +2232,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	}
 	catch(...)
 	{
-		log.writeLog(__LINE__, "***read error, close create thread", LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***read error, close create thread", LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;
@@ -2241,7 +2241,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 	}
 
 	if (msg->length() <= 0) {
-		log.writeLog(__LINE__, "***0 bytes, close create thread", LOG_TYPE_DEBUG);
+//		log.writeLog(__LINE__, "***0 bytes, close create thread", LOG_TYPE_DEBUG);
 		fIos->close();
 		delete fIos;
 		delete msg;

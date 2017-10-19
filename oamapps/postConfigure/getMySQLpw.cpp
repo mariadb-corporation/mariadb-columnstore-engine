@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	{
 		buf = line;
 
-		string::size_type pos = buf.find(USER,0);
+		string::size_type pos = buf.find("root",0);
 		if (pos != string::npos)
 		{
 			file.getline(line, 400);

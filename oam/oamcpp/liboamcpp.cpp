@@ -8729,6 +8729,8 @@ namespace oam
 	******************************************************************************************/
 	std::string Oam::getMySQLPassword()
 	{
+		string mysqlUser = "root";
+		
 		string USER = "root";
 		char* p= getenv("USER");
 		if (p && *p)
@@ -8757,8 +8759,8 @@ namespace oam
 		while (file.getline(line, 400))
 		{
 			buf = line;
-	
-			string::size_type pos = buf.find(USER,0);
+			string::size_type pos = buf.find(mysqlUser,0);
+
 			if (pos != string::npos)
 			{
 				file.getline(line, 400);
@@ -8771,12 +8773,15 @@ namespace oam
 					if (pos1 != string::npos) {
 						//password found
 
-						string password = buf.substr(pos1+2, 80);
+						string password = buf.substr(pos1+1, 80);
+						password.erase(remove_if(password.begin(), password.end(), ::isspace), password.end());
 
 						writeLog("getMySQLPassword: password found", LOG_TYPE_DEBUG);
 						return password;
 					}
 				}
+				
+				break;
 			}
 		}
 		file.close();
