@@ -142,26 +142,19 @@ if [ -n "$plugin" ]; then
 	echo ". $COLUMNSTORE_INSTALL_DIR/bin/$setenv" >> ${bashFile}
 fi
 
-# if um, run mysql install scripts
-if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $ServerTypeInstall = "2" ]; then
-	echo "Run post-mysqld-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysqld-install.log 2>&1
-	if [ $? -ne 0 ]; then
-	    echo "ERROR: post-mysqld-install failed: check /tmp/post-mysqld-install.log"
-	    exit 1
+# if mysqlrep is on and module has a my.cnf file, upgrade it
+
+MySQLRep=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation MySQLRep`
+if [ $MySQLRep = "y" ]; then
+	if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
+		echo "Run Upgrade on my.cnf on Module"
+		$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade > /tmp/mycnfUpgrade.log 2>&1
 	fi
-	echo "Run post-mysql-install"
-	
-	password=`$COLUMNSTORE_INSTALL_DIR/bin/getMySQLpw`
-	if [ $password = "unassigned" ]; then
-	    password=""
-	fi
-	
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR --password=$password > /tmp/post-mysql-install.log 2>&1
-        if [ $? -ne 0 ]; then
-            echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
-            exit 1
-	fi
+fi
+
+if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
+	echo "Run Mysql Port update on my.cnf on Module"
+	$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > /tmp/mycnfUpgrade_port.log 2>&1
 fi
 
 # if um, run mysql install scripts

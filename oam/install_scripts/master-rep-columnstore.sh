@@ -47,7 +47,7 @@ password="Calpont1"
 #
 echo "Create Replication User $repUser for node $hostipaddr" >>/tmp/master-rep-status-$hostipaddr.log
 cat >/tmp/idb_master-rep.sql <<EOD
-CREATE USER IF NOT EXIST '$repUser'@'$hostipaddr' IDENTIFIED BY '$password';
+CREATE USER IF NOT EXISTS '$repUser'@'$hostipaddr' IDENTIFIED BY '$password';
 GRANT REPLICATION SLAVE ON *.* TO '$repUser'@'$hostipaddr';
 EOD
 

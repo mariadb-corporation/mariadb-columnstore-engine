@@ -46,6 +46,7 @@ extern bool writeConfig(Config* sysConfig);
 extern void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string USER, std::string password, ChildModuleList childmodulelist, int IserverTypeInstall, bool pmwithum);
 extern const char* callReadline(string prompt);
 extern void callFree(const char* );
+extern std::string getmysqlpw(std::string logFile);
 
 }
 

@@ -2569,7 +2569,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					// target = root password
 					oam::DeviceNetworkList devicenetworklist;
-					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target, false);
+					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, false, target, false);
 	
 					log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
 

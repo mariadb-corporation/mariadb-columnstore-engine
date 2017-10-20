@@ -187,7 +187,7 @@ string installDir;
 string HOME = "/root";
 
 extern string pwprompt;
-string mysqlpw = oam::UnassignedName;
+string mysqlpw = " ";
 
 extern const char* pcommand;
 extern string prompt;
@@ -2882,6 +2882,83 @@ int main(int argc, char *argv[])
 							if (WEXITSTATUS(rtnCode) != 0) {
 								cout << endl << "Error returned from user_installer.sh" << endl;
 								exit(1);
+							}
+
+							//check for mysql password on remote UM
+							if ( pwprompt == " " ) {
+								//start mysqld
+								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
+								int rtnCode = system(cmd.c_str());
+								if (WEXITSTATUS(rtnCode) != 0) {
+									cout << endl << "Error returned from mysql-Columnstore start" << endl;
+									exit(1);
+								}
+
+								//try to login
+								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+								rtnCode = system(cmd.c_str());
+								if (WEXITSTATUS(rtnCode) != 0) {
+									cout << endl << "Error returned from remote_command.sh" << endl;
+									exit(1);
+								}
+	
+								if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR .my.cnf") ) {
+									// password needed check and get password from remote UM
+									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
+									rtnCode = system(cmd.c_str());
+									if (WEXITSTATUS(rtnCode) != 0) {
+										cout << endl << "MariaDB ColumnStore login failure, MySQL Root password is set." << endl;
+										cout <<  "Need MariaDB ColumnStore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+										exit(1);
+									}
+
+									//get password from local tmp file
+									mysqlpw = getmysqlpw("/tmp/mysqlpw.log");
+
+									if ( mysqlpw != oam::UnassignedName )
+									{
+										mysqlpw = "'" + mysqlpw + "'";
+										pwprompt = "--password=" + mysqlpw;
+									}
+
+									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+									rtnCode = system(cmd.c_str());
+									if (WEXITSTATUS(rtnCode) != 0) {
+										cout << endl << "MariaDB ColumnStore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
+										exit(1);
+									}
+								}
+								else
+								{
+									if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
+										cout << endl << "ERROR: MariaDB ColumnStore runtime error, exit..." << endl << endl;
+										system("cat /tmp/idbmysql.log");
+										exit (1);
+									}
+									else
+									{
+										cout << endl << "Additional MariaDB ColumnStore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
+
+										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
+										int rtnCode = system(cmd.c_str());
+										if (WEXITSTATUS(rtnCode) != 0) {
+											cout << endl << "Error returned from mysql-Columnstore stop" << endl;
+											exit(1);
+										}
+										unlink("/tmp/idbmysql.log");
+										break;
+									}
+								}
+	
+								//re-run post-mysql-install with password
+								cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "' < /tmp/post-mysql-install.log";
+								rtnCode = system(cmd.c_str());
+								if (WEXITSTATUS(rtnCode) != 0) {
+									cout << endl << "Error returned from post-mysql-install, check /tmp/post-mysql-install.log" << endl;
+									exit(1);
+								}
+								else
+									cout << endl << "post-mysql-install Successfully Completed" << endl;
 							}
 						}
 					}

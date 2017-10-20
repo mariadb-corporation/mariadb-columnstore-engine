@@ -874,6 +874,29 @@ bool writeConfig( Config* sysConfig )
 	return false;
 }
 
+std::string getmysqlpw(std::string logFile)
+{
+	ifstream oldFile (logFile.c_str());
+	if (oldFile) {
+		char line[200];
+		string buf;
+		while (oldFile.getline(line, 200))
+		{
+			buf = line;
+			string::size_type pos = buf.find("mysqlpw=",0);
+			if (pos != string::npos)
+			{
+				string mysqlpw = buf.substr(pos+8, 80);
+//				unlink(logFile);
+				return mysqlpw;
+			}
+		}
+	}
+
+	return oam::UnassignedName;
+}
+
+
 
 }
 
