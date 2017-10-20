@@ -14,9 +14,12 @@ set DEBUG [lindex $argv 3]
 log_user $DEBUG
 spawn -noecho /bin/bash
 
-exec whoami >/tmp/whoami.tmp
-set USERNAME [exec cat /tmp/whoami.tmp]
-exec rm -f /tmp/whoami.tmp
+if {[info exists env(USER)]} {
+    set USERNAME $env(USER)
+} else {
+    set USERNAME "root"
+}
+
 
 if { $PASSWORD == "ssh" } {
 	set PASSWORD ""
@@ -43,13 +46,36 @@ expect {
 	-re "passphrase" { send "$PASSWORD\n" }
 	-re "failed" { send_user "           FAILED: Failure, check tmp log\n" ; exit 1 }
 	-re "Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
-	-re "total size" { exit 0 }
+	-re "total size" {} abort
 }
 expect {
 	-re "failed" { send_user "           FAILED: Failure, check tmp log\n" ; exit 1 }
 	-re "Permission denied" { send_user "           FAILED: Invalid password\n" ; exit 1 }
-	-re "total size" { exit 0 }
+	-re "total size" {} abort
 	
 }
+
+set HOME "$env(HOME)"
+
+set COMMAND "rsync -vopgr -e ssh $HOME/.my.cnf $USERNAME@$SERVER:$HOME/"
+
+#
+# run command
+#
+set timeout 20
+send "$COMMAND\n"
+expect {
+        -re "word: " { send "$PASSWORD\n" }
+        -re "passphrase" { send "$PASSWORD\n" }
+	-re "total size" {} abort
+	-re "failed" { exit 0 }
+        timeout { exit 0 }
+}
+expect {
+	-re "total size" {} abort
+        -re "failed" { exit 0 }
+        timeout { exit 0 }
+}
+
 
 exit 0
