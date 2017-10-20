@@ -1468,7 +1468,7 @@ namespace oam
              * @param DeviceNetworkConfig the Modules added
              * @param password Host Root Password
             */
-            EXPORT void addModule(DeviceNetworkList devicenetworklist, const std::string password, const std::string mysqlpw);
+            EXPORT void addModule(DeviceNetworkList devicenetworklist, const std::string password);
 
             /** @brief remove Module
              *
@@ -2449,7 +2449,7 @@ namespace oam
 
 		/** @brief check and get mysql user password
 		*/
-		EXPORT std::string getMySQLPassword(bool bypassConfig = false);
+		EXPORT std::string getMySQLPassword();
 
 		/** @brief update fstab with dbroot mounts
 		*/

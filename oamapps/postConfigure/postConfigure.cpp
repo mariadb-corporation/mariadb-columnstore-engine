@@ -439,14 +439,6 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
-        //if binary install, then run post-install just in case the user didnt run it
-	if ( EEPackageType == "binary" )
-	{
-		//run post install
-		cmd = installDir + "/bin/post-install --installdir=" + installDir + " > /dev/null 2>&1";
-		system(cmd.c_str());
-	}
-
 	//check Config saved files
 	if ( !checkSaveConfigFile())
 	{
@@ -553,11 +545,6 @@ int main(int argc, char *argv[])
 		catch(...)
 		{}
 	}
-
-	try {
-		oam.setSystemConfig("MySQLPasswordConfig", oam::UnassignedName);
-	}
-	catch(...) {}
 
 	cout << endl;
 
@@ -3354,22 +3341,7 @@ int main(int argc, char *argv[])
 			cout << endl << "System Catalog Successfully Created" << endl;
 		else
 		{
-			if ( oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
-
-//				cout << endl << "Run MySQL Upgrade.. ";
-				cout.flush();
-
-				//send message to procmon's to run upgrade script
-//				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
-	
-//				if ( status != 0 ) {
-//					cout << endl << "MariaDB ColumnStore Install Failed" << endl << endl;
-//					exit(1);
-//				}
-//				else
-//					cout << " DONE" << endl;
-			}
-			else
+			if ( ! oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") )
 			{
 				cout << endl << "System Catalog Create Failure" << endl;
 				cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
@@ -3378,9 +3350,7 @@ int main(int argc, char *argv[])
 		}
 
 		//set mysql replication, if wasn't setup before on system
-		if ( ( mysqlRep && pmwithum ) || 
-			( mysqlRep && (umNumber > 1) ) ||
-			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
+		if ( mysqlRep  ) 
 		{
 			cout << endl << "Run MariaDB ColumnStore Replication Setup.. ";
 			cout.flush();

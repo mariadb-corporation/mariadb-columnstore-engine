@@ -521,6 +521,8 @@ static void startMgrProcessThread()
 	SystemModuleTypeConfig systemmoduletypeconfig;
 	ModuleTypeConfig PMSmoduletypeconfig;
 	ALARMManager aManager;
+	
+	int waitTime = 90;
 
 	log.writeLog(__LINE__, "startMgrProcessThread launched", LOG_TYPE_DEBUG);
 
@@ -576,7 +578,7 @@ static void startMgrProcessThread()
 
 	//wait until all modules are up after a system reboot
 	int i = 0;
-	for( ; i < 100 ; i++ )
+	for( ; i < waitTime ; i++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -642,7 +644,7 @@ static void startMgrProcessThread()
 			break;
 	}
 
-	if ( i == 100 ) {
+	if ( i == waitTime ) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 
@@ -661,7 +663,7 @@ static void startMgrProcessThread()
 	//now wait until all procmons are up and validate rpms on each module
 	int status = API_SUCCESS;
 	int k = 0;
-	for( ; k < 1200 ; k++ )
+	for( ; k < waitTime ; k++ )
 	{
 		if ( startsystemthreadStop ) {
 			processManager.setSystemState(oam::MAN_OFFLINE);
@@ -778,7 +780,7 @@ static void startMgrProcessThread()
 		}
 	}
 
-	if ( k == 1200 || status == API_FAILURE) {
+	if ( k == waitTime || status == API_FAILURE) {
 		// system didn't successfull restart
 		processManager.setSystemState(oam::FAILED);
 		// exit thread

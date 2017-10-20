@@ -1145,7 +1145,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					//wait until all child modules are offline or A FAILURE HAS OCCURRED
 					bool failure = false;
 					bool stopped = true;
-					for ( int retry = 0 ; retry < 120 ; retry++ )
+					for ( int retry = 0 ; retry < 30 ; retry++ )
 					{
 						sleep(1);
 						stopped = true;
@@ -2569,7 +2569,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					// target = root password
 					oam::DeviceNetworkList devicenetworklist;
-					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target, false);
+					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, false, target, false);
 	
 					log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
 
@@ -3856,6 +3856,8 @@ void ProcessManager::setModuleState(string moduleName, uint16_t state)
 	}
 
 	pthread_mutex_unlock(&STATUS_LOCK);
+	
+	return;
 }
 
 /******************************************************************************************
@@ -3884,6 +3886,9 @@ void ProcessManager::setExtdeviceState(string extDeviceName, uint16_t state)
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setExtDeviceStatus: Caught unknown exception!", LOG_TYPE_ERROR);
 	}
 	pthread_mutex_unlock(&STATUS_LOCK);
+	
+	return;
+
 }
 
 /******************************************************************************************
@@ -3912,6 +3917,8 @@ void ProcessManager::setNICState(string hostName, uint16_t state)
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setNICStatus: Caught unknown exception!", LOG_TYPE_ERROR);
 	}
 	pthread_mutex_unlock(&STATUS_LOCK);
+	
+	return;
 }
 
 
@@ -4045,6 +4052,8 @@ void ProcessManager::setProcessStates(std::string moduleName, uint16_t state, st
 			}
 		}
 	}
+	
+	return;
 }
 
 /******************************************************************************************
@@ -6868,10 +6877,6 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 			// wait some more
             		sleep(2);
         	}
-
-        	log.writeLog(__LINE__, "Setup MySQL Replication for startsystemthread", LOG_TYPE_DEBUG);
-		oam::DeviceNetworkList devicenetworklistRep;
-		processManager.setMySQLReplication(devicenetworklistRep);
 
 		//set query system state ready
 		processManager.setQuerySystemState(true);
@@ -10046,49 +10051,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 	if ( MySQLRep == "n" && enable )
 		return oam::API_SUCCESS;
 
-	//also skip if single-server, multi-node seperate with 1 UM, multi-node combo with 1 PM
-
-	string SingleServerInstall = "n";
-	try {
-		oam.getSystemConfig("SingleServerInstall", SingleServerInstall);
-	}
-	catch(...) {
-		SingleServerInstall = "n";
-	}
-
-	//single server check
-	if ( SingleServerInstall == "y" )
-		return oam::API_SUCCESS;
-
-	//combined system check
-	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM && !failover ) {
-		try {
-			Config* sysConfig = Config::makeConfig();
-			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
-				return oam::API_SUCCESS;
-			}
-		}
-		catch(...)
-		{
-			return oam::API_SUCCESS;
-		}
-	}
-
-	//seperate system check
-	if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
-		ModuleTypeConfig moduletypeconfig;
-		try{
-			oam.getSystemConfig("um", moduletypeconfig);
-		}
-		catch(...)
-		{}
-	
-		if ( moduletypeconfig.ModuleCount < 2 )
-		{
-			return oam::API_SUCCESS;
-		}
-	}
-
 	log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
 
 	// mysql port number
@@ -10139,7 +10101,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		
 			if ( returnStatus != API_SUCCESS) {
 				log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
-				pthread_mutex_unlock(&THREAD_LOCK);
 				return API_FAILURE;
 			}
 		}
@@ -10166,7 +10127,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 			
 				if ( returnStatus != API_SUCCESS) {
 					log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
-					pthread_mutex_unlock(&THREAD_LOCK);
 					return API_FAILURE;
 				}
 			}
@@ -10189,6 +10149,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 
 	if ( returnStatus != API_SUCCESS) {
 		log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
+		return API_FAILURE;
 	}
 
 	//
@@ -10256,6 +10217,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 			
 				if ( returnStatus != API_SUCCESS) {
 					log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error setting MySQL Replication Slave", LOG_TYPE_ERROR);
+					return API_FAILURE;
 				}
 			}
 		}
@@ -10304,6 +10266,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		
 			if ( returnStatus != API_SUCCESS) {
 				log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error setting MySQL Replication Slave", LOG_TYPE_ERROR);
+				return API_FAILURE;
 			}
 		}
 	}

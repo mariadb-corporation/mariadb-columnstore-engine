@@ -463,7 +463,6 @@
 		<GlusterStorageType>unassigned</GlusterStorageType>
 		<CoreFileFlag>n</CoreFileFlag>
 		<MySQLPort>3306</MySQLPort>
-		<MySQLPasswordConfig>unassigned</MySQLPasswordConfig>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 	</Installation>
 	<ExtentMap>
