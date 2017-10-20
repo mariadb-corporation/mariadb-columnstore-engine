@@ -2655,7 +2655,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 			}
 		}
 
-		if (!lhs->data() || !rhs->data() || nonSupport)
+		if (nonSupport || !lhs->data() || !rhs->data())
 		{
 			gwi.fatalParseError = true;
 			if (gwi.parseErrorText.empty())
@@ -2688,7 +2688,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 				gwi.rcWorkStack.pop();
 			}
 		}
-		if (!rhs->data() || nonSupport)
+		if (nonSupport || !rhs->data())
 		{
 			gwi.fatalParseError = true;
 			if (gwi.parseErrorText.empty())
