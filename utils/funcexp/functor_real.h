@@ -303,6 +303,31 @@ public:
 						execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
+/** @brief Func_cast_double class
+  */
+class Func_cast_double : public Func_Real
+{
+public:
+	Func_cast_double() : Func_Real("cast_double") {}
+	virtual ~Func_cast_double() {}
+
+	execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+	int64_t getIntVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
+
+	double getDoubleVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
+
+	std::string getStrVal(rowgroup::Row& row,
+						FunctionParm& fp,
+						bool& isNull,
+						execplan::CalpontSystemCatalog::ColType& op_ct);
+};
 
 /** @brief Func_mod class
   */

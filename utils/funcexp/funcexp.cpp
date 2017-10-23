@@ -86,6 +86,7 @@ FuncExp::FuncExp()
 	fFuncMap["cast_as_date"] = new Func_cast_date();	//dlh
 	fFuncMap["cast_as_datetime"] = new Func_cast_datetime();	//dlh
 	fFuncMap["decimal_typecast"] = new Func_cast_decimal();	//dlh
+    fFuncMap["double_typecast"] = new Func_cast_double();
 	fFuncMap["ceil"] = new Func_ceil();	//dlh
 	fFuncMap["ceiling"] = new Func_ceil();	//dlh
 	fFuncMap["char"] = new Func_char();	//dlh

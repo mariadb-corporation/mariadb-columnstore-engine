@@ -80,6 +80,11 @@ CalpontSystemCatalog::ColType Func_cast_decimal::operationType( FunctionParm& fp
 	return resultType;
 }
 
+CalpontSystemCatalog::ColType Func_cast_double::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
+{
+	return resultType;
+}
+
 //
 //	Func_cast_signed
 //
@@ -1085,6 +1090,116 @@ double Func_cast_decimal::getDoubleVal(Row& row,
 				operationColType);
 
 	return (double) decimal.value/helpers::powerOf10_c[decimal.scale];
+}
+
+
+//
+//	Func_cast_double
+//
+
+int64_t Func_cast_double::getIntVal(Row& row,
+									FunctionParm& parm,
+									bool& isNull,
+									CalpontSystemCatalog::ColType& operationColType)
+{
+
+	double dblval = Func_cast_double::getDoubleVal(row,
+				parm,
+				isNull,
+				operationColType);
+
+	return (int64_t) dblval;
+}
+
+
+string Func_cast_double::getStrVal(Row& row,
+									FunctionParm& parm,
+									bool& isNull,
+									CalpontSystemCatalog::ColType& operationColType)
+{
+	double dblval = Func_cast_double::getDoubleVal(row,
+				parm,
+				isNull,
+				operationColType);
+
+    std::string value = helpers::doubleToString(dblval);
+
+	return value;
+
+}
+
+
+double Func_cast_double::getDoubleVal(Row& row,
+									FunctionParm& parm,
+									bool& isNull,
+									CalpontSystemCatalog::ColType& operationColType)
+{
+    double dblval;
+
+    // TODO: Here onwards
+	switch (parm[0]->data()->resultType().colDataType)
+	{
+		case execplan::CalpontSystemCatalog::BIGINT:
+		case execplan::CalpontSystemCatalog::INT:
+		case execplan::CalpontSystemCatalog::MEDINT:
+		case execplan::CalpontSystemCatalog::TINYINT:
+		case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::DATE:
+        case execplan::CalpontSystemCatalog::DATETIME:
+		{
+			int64_t intval = parm[0]->data()->getIntVal(row, isNull);
+            dblval = (double) intval;
+		}
+		break;
+
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        {
+            uint64_t uintval = parm[0]->data()->getUintVal(row, isNull);
+            dblval = (double) uintval;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::UDOUBLE:
+		case execplan::CalpontSystemCatalog::FLOAT:
+		case execplan::CalpontSystemCatalog::UFLOAT:
+		{
+			dblval = parm[0]->data()->getDoubleVal(row, isNull);
+		}
+		break;
+
+		case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+		{
+			IDB_Decimal decimal = parm[0]->data()->getDecimalVal(row, isNull);
+
+            dblval = (double)(decimal.value / pow((double)10, decimal.scale));
+		}
+		break;
+
+		case execplan::CalpontSystemCatalog::VARCHAR:
+		case execplan::CalpontSystemCatalog::CHAR:
+		case execplan::CalpontSystemCatalog::TEXT:
+        {
+            const string& strValue = parm[0]->data()->getStrVal(row, isNull);
+
+            dblval = strtod(strValue.c_str(), NULL);
+        }
+		break;
+
+		default:
+		{
+			std::ostringstream oss;
+			oss << "cast: datatype of " << execplan::colDataTypeToString(operationColType.colDataType);
+			throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+		}
+	}
+
+	return dblval;
 }
 
 
