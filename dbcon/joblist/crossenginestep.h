@@ -201,7 +201,7 @@ protected:
 	std::string fSelectClause;
 
 	// Function & Expression columns
-	boost::shared_ptr<execplan::ParseTree> fFeFilters;
+    std::vector<boost::shared_ptr<execplan::ParseTree> > fFeFilters;
 	std::vector<boost::shared_ptr<execplan::ReturnedColumn> > fFeSelects;
 	std::vector<boost::shared_ptr<execplan::ReturnedColumn> > fFeFcnJoin;
 	std::map<uint32_t, uint32_t> fColumnMap;   // projected key position (k->p)
