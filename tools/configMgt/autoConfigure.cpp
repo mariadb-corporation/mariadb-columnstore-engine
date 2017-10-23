@@ -1861,6 +1861,40 @@ int main(int argc, char *argv[])
 	catch(...)
 	{}
 
+	// add entries from tuning guide
+	
+	string ColScanReadAheadBlocks;
+	string PrefetchThreshold;
+	string MaxOutstandingRequests;
+	string PmMaxMemorySmallSide;
+	string AllowDiskBasedJoin;
+	string TempFileCompression;
+	string TempFilePath;
+	
+	try {
+		ColScanReadAheadBlocks = sysConfigOld->getConfig("PrimitiveServers", "ColScanReadAheadBlocks");
+		PrefetchThreshold = sysConfigOld->getConfig("PrimitiveServers", "PrefetchThreshold");
+		MaxOutstandingRequests = sysConfigOld->getConfig("JobList", "MaxOutstandingRequests");
+		PmMaxMemorySmallSide = sysConfigOld->getConfig("HashJoin", "PmMaxMemorySmallSide");
+		AllowDiskBasedJoin = sysConfigOld->getConfig("HashJoin", "ColScanReadAheadBlocks");
+		TempFileCompression = sysConfigOld->getConfig("HashJoin", "TempFileCompression");
+		TempFilePath = sysConfigOld->getConfig("HashJoin", "TempFilePath");
+	}
+	catch(...)
+	{}
+	
+	try {
+		sysConfigNew->setConfig("PrimitiveServers", "ColScanReadAheadBlocks", ColScanReadAheadBlocks);
+		sysConfigNew->setConfig("PrimitiveServers", "PrefetchThreshold", PrefetchThreshold);
+		sysConfigNew->setConfig("JobList", "MaxOutstandingRequests", MaxOutstandingRequests);
+		sysConfigNew->setConfig("HashJoin", "PmMaxMemorySmallSide", PmMaxMemorySmallSide);
+		sysConfigNew->setConfig("HashJoin", "AllowDiskBasedJoin", AllowDiskBasedJoin);
+		sysConfigNew->setConfig("HashJoin", "TempFileCompression", TempFileCompression);
+		sysConfigNew->setConfig("HashJoin", "TempFilePath", TempFilePath);
+	}
+	catch(...)
+	{}
+
 	//Write out Updated System Configuration File
 	sysConfigNew->write();
 }
