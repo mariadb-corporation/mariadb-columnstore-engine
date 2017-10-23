@@ -4659,7 +4659,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 
 	string dbDir = startup::StartUp::installDir() + "/mysql/db";
 
-	if ( type == "master" )
+/*	if ( type == "master" )
 	{
 		// set master replication entries
 		vector <string> lines;
@@ -4699,10 +4699,10 @@ int ProcessMonitor::changeMyCnf(std::string type)
 		
 		close(fd);
 	}
-
-	if ( type == "slave" )
-	{
-		//get slave id based on ExeMgrx setup
+*/
+//	if ( type == "slave" )
+//	{
+		//get server-id based on ExeMgrx setup
 		string slaveID = "0";
 		string slaveModuleName = config.moduleName();
 		for ( int id = 1 ; ; id++ )
@@ -4755,7 +4755,6 @@ int ProcessMonitor::changeMyCnf(std::string type)
 			return oam::API_FAILURE;
 		}
 
-
 		// set slave replication entries
 		vector <string> lines;
 		char line[200];
@@ -4804,7 +4803,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 		newFile.close();
 		
 		close(fd);
-	}
+//	}
 
 /*	if ( type == "disable" )
 	{
