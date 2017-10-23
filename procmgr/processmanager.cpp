@@ -8321,7 +8321,7 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
 				else
 				{
 					//log the error event 
-					log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile failed!!", LOG_TYPE_DEBUG);
+					log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
 				}
 			}
 		}
@@ -8338,7 +8338,7 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
 		else
 		{
 			//log the error event 
-			log.writeLog(__LINE__, name + " distributeConfigFile failed!!", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, name + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
 		}
 	}
 
