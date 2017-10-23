@@ -189,7 +189,7 @@ void CrossEngineStep::addFcnJoinExp(const vector<execplan::SRCP>& fe)
 
 void CrossEngineStep::addFcnExpGroup1(const boost::shared_ptr<ParseTree>& fe)
 {
-	fFeFilters = fe;
+	fFeFilters.push_back(fe);
 }
 
 
@@ -217,7 +217,7 @@ void CrossEngineStep::makeMappings()
 	for (uint64_t i = 0; i < fColumnCount; ++i)
 		fFe1Column[i] = -1;
 
-	if (fFeFilters != NULL || fFeFcnJoin.size() > 0)
+	if (fFeFilters.size() > 0 || fFeFcnJoin.size() > 0)
 	{
 		const std::vector<uint32_t>& colInFe1 = fRowGroupFe1.getKeys();
 		for (uint64_t i = 0; i < colInFe1.size(); i++)
@@ -499,7 +499,7 @@ void CrossEngineStep::execute()
 
 		// Any functions to evaluate
 		makeMappings();
-		bool doFE1 = ((fFeFcnJoin.size() > 0) || (fFeFilters != NULL));
+		bool doFE1 = ((fFeFcnJoin.size() > 0) || (fFeFilters.size() > 0));
 		bool doFE3 =  (fFeSelects.size() > 0);
 		if (!doFE1 && !doFE3)
 		{
@@ -529,8 +529,20 @@ void CrossEngineStep::execute()
 						setField(fFe1Column[i], rowIn[i], mysql->getFieldLength(i), mysql->getField(i), rowFe1);
 				}
 
-				if (fFeFilters && fFeInstance->evaluate(rowFe1, fFeFilters.get()) == false)
-					continue;
+				if (fFeFilters.size() > 0)
+                {
+                    bool feBreak = false;
+                    for (std::vector<boost::shared_ptr<execplan::ParseTree> >::iterator it = fFeFilters.begin(); it != fFeFilters.end(); it++)
+                    {
+                        if (fFeInstance->evaluate(rowFe1, (*it).get()) == false)
+                        {
+                            feBreak = true;
+                            break;
+                        }
+                    }
+                    if (feBreak)
+    					continue;
+                }
 
 				// evaluate the FE join column
 				fFeInstance->evaluate(rowFe1, fFeFcnJoin);
@@ -592,8 +604,20 @@ void CrossEngineStep::execute()
 						setField(fFe1Column[i], rowIn[i], mysql->getFieldLength(i), mysql->getField(i), rowFe1);
 				}
 
-				if (fFeFilters && fFeInstance->evaluate(rowFe1, fFeFilters.get()) == false)
-					continue;
+				if (fFeFilters.size() > 0)
+                {
+                    bool feBreak = false;
+                    for (std::vector<boost::shared_ptr<execplan::ParseTree> >::iterator it = fFeFilters.begin(); it != fFeFilters.end(); it++)
+                    {
+                        if (fFeInstance->evaluate(rowFe1, (*it).get()) == false)
+                        {
+                            feBreak = true;
+                            break;
+                        }
+                    }
+                    if (feBreak)
+    					continue;
+                }
 
 				// evaluate the FE join column
 				fFeInstance->evaluate(rowFe1, fFeFcnJoin);
