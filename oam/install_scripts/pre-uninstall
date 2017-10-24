@@ -33,12 +33,6 @@ for arg in "$@"; do
 	fi
 done
 
-if [ $user = "root" ]; then
-	. /root/.bashrc
-else
-	. $HOME/.bashrc
-fi
-
 #stop services
 $installdir/bin/columnstore stop > /dev/null 2>&1
 $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
@@ -162,16 +156,8 @@ else
 	$SUDO rm -f /etc/defaults/columnstore
 fi
 
-#cleanup .bashrc	
-if [ $user = "root" ]; then
-        if test -f /root/.bashrc.columnstoreSave ; then
-                mv -f /root/.bashrc.columnstoreSave /root/.bashrc > /dev/null 2>&1
-        fi
-else
-        if test -f $HOME/.bashrc.columnstoreSave ; then
-                mv -f /home/$user/.bashrc.columnstoreSave /home/$user/.bashrc > /dev/null 2>&1
-        fi
-fi
+#cleanup profile file
+rm -f /etc/profile.d/columnstore*
 
 #tell user to run post configure script
 echo " "
