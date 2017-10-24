@@ -1176,7 +1176,6 @@ double Func_cast_double::getDoubleVal(Row& row,
 
 		case execplan::CalpontSystemCatalog::VARCHAR:
 		case execplan::CalpontSystemCatalog::CHAR:
-		case execplan::CalpontSystemCatalog::TEXT:
         {
             const string& strValue = parm[0]->data()->getStrVal(row, isNull);
 
