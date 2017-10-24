@@ -96,27 +96,32 @@ fi
 $SUDO ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
 #setup profile files
-profileFileAlias=/etc/profile.d/columnstoreAlias
-profileFileEnv=/etc/profile.d/columnstoreEnv
-
-if [ $user != "root" ]; then
-	touch profileFileEnv
-	egrep -qs 'MariaDB Columnstore Non-Root' ${profileFileEnv}
-	rc1=$?
-	if [ $rc1 -ne 0 ]; then
-        	echo " " >> ${profileFileEnv}
-		echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFileEnv}
-        	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFileEnv}
-        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${profileFileEnv}
-        	. ${profileFileEnv}
-	fi
-fi
+profileFileAlias=/etc/profile.d/columnstoreAlias.sh
+profileFileEnv=/etc/profile.d/columnstoreEnv.sh
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
         sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
 fi
 
-/bin/cp -f $installdir/bin/columnstoreAlias $profileFileAlias
+if [ $user != "root" ]; then
+	sudo touch $profileFileEnv
+	sudo chmod 666 $profileFileEnv
+	egrep -qs 'MariaDB Columnstore Non-Root' ${profileFileEnv}
+	rc1=$?
+	if [ $rc1 -ne 0 ]; then
+        	sudo echo " " >> ${profileFileEnv}
+		sudo echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFileEnv}
+        	sudo echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFileEnv}
+        	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${profileFileEnv}
+        	. ${profileFileEnv}
+	fi
+	
+	sudo /bin/cp -f $installdir/bin/columnstoreAlias $profileFileAlias
+	sudo chmod 666 $profileFileAlias
+else
+	/bin/cp -f $installdir/bin/columnstoreAlias $profileFileAlias
+	chmod 644 $profileFileAlias
+fi
 
 cd /
 

@@ -157,7 +157,11 @@ else
 fi
 
 #cleanup profile file
-rm -f /etc/profile.d/columnstore*
+if [ $user = "root" ]; then
+	rm -f /etc/profile.d/columnstore*
+else
+	$SUDO rm -f /etc/profile.d/columnstore*
+fi
 
 #tell user to run post configure script
 echo " "
