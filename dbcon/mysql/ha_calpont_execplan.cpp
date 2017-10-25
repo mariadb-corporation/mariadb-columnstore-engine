@@ -3552,6 +3552,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 				else
 				{
 					rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
+					if (!rc || gwi.fatalParseError)
+					{
+						return NULL;
+					}
 				}
 			rc->asc((*order_item)->asc);
 			orderCols.push_back(SRCP(rc));
