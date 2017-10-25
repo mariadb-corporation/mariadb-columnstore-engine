@@ -184,9 +184,9 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 systemctl=`which systemctl 2>/dev/null`
 
 #check and create rc.local file if missing
-if [ ! -f /etc/rc.local ]; then
+if [ ! -f /etc/rc.d/rc.local ]; then
 	printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a /etc/rc.local > /dev/null 2>&1
-    	$SUDO chmod +x /etc/rc.local
+    	$SUDO chmod +x /etc/rc.d/rc.local
     
     if [ -n "$systemctl" ]; then
 	systemctl restart rc-local >/dev/null 2>&1
@@ -248,7 +248,7 @@ else
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
 	$SUDO chmod 666 /etc/fstab
-	$SUDO chmod 777 /etc/rc.local
+	$SUDO chmod 777 /etc/rc.d/rc.local
 fi
 
 # install Columnstore Log Rotate File

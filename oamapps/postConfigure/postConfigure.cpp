@@ -23,7 +23,7 @@
 * List of files being updated by post-install configure:
 *		mariadb/columnstore/etc/Columnstore.xml
 *		mariadb/columnstore/etc/ProcessConfig.xml
-*		/etc/rc.local
+*		/etc/rc.d/rc.local
 *		
 ******************************************************************************************/
 /**
@@ -605,6 +605,13 @@ int main(int argc, char *argv[])
 		nonDistribute = true;
 	}
 	
+	// setup to start on reboot, for non-root amazon installs
+	if ( !rootUser )
+	{
+	    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+	    system("sudo chmod 777 /etc/rc.d/rc.local >/dev/null 2>&1");
+	}
+	
 	cout << endl;
 
 	cout << "===== Setup System Server Type Configuration =====" << endl << endl;
@@ -1058,10 +1065,6 @@ int main(int argc, char *argv[])
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
 		}
-		
-		// setup to start on reboot
-		system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-		system("sudo chmod 777 /etc/rc.d/rc.local >/dev/null 2>&1");
 	}
 	
 	if ( pmwithum )
@@ -4010,9 +4013,9 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 	close(fd);
 	
 	if (rootUser)
-	    system("cat /tmp/rc.local >> /etc/rc.local > /dev/null");
+	    system("cat /tmp/rc.local >> /etc/rc.d/rc.local > /dev/null");
 	else
-	    system("sudo cat /tmp/rc.local >> /etc/rc.local > /dev/null");
+	    system("sudo cat /tmp/rc.local >> /etc/rc.d/rc.local > /dev/null");
 
 	unlink(fileName.c_str());
 	  
