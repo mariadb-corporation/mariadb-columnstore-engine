@@ -3606,6 +3606,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             else
             {
                 rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
+				if (!rc || gwi.fatalParseError)
+				{
+					return NULL;
+				}
             }
             // 10.2 TODO: direction is now a tri-state flag
 			rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);
