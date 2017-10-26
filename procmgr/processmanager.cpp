@@ -8308,7 +8308,7 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
 				}
 				catch(...)
 				{}
-	
+
 				if (opState == oam::AUTO_DISABLED)
 					continue;
 
@@ -8322,7 +8322,7 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
 				else
 				{
 					//log the error event 
-					log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile failed!!", LOG_TYPE_ERROR);
+					log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
 				}
 			}
 		}
@@ -8339,7 +8339,7 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
 		else
 		{
 			//log the error event 
-			log.writeLog(__LINE__, name + " distributeConfigFile failed!!", LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, name + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
 		}
 	}
 
@@ -8654,21 +8654,29 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 
 		//move a newparent dbroot to old parent for balancing
 		DBRootConfigList residedbrootConfigList;
+		bool doDBRootMove = true;
+
 		try
 		{
 			oam.getPmDbrootConfig(moduleID, residedbrootConfigList);
-
 			if ( residedbrootConfigList.size() > 0 )
 			{
 				DBRootConfigList::iterator pt = residedbrootConfigList.begin();
-				try {
-					oam.manualMovePmDbroot(newActiveModuleName, oam.itoa(*pt), config.OAMParentName());
-				}
-				catch (...)
+				if (*pt != 1)
 				{
-					log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
-					pthread_mutex_unlock(&THREAD_LOCK);
-					return API_FAILURE;
+					try {
+						oam.manualMovePmDbroot(newActiveModuleName, oam.itoa(*pt), config.OAMParentName());
+					}
+					catch (...)
+					{
+						log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
+						pthread_mutex_unlock(&THREAD_LOCK);
+						return API_FAILURE;
+					}
+				}
+				else
+				{
+					doDBRootMove = false;
 				}
 			}
 		}
@@ -8680,16 +8688,18 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 		}
 
 		//move dbroot #1 to new parent
-		try {
-			oam.manualMovePmDbroot(config.OAMParentName(), "1", newActiveModuleName);
-		}
-		catch (...)
+		if (doDBRootMove)
 		{
-			log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_FAILURE;
+			try {
+				oam.manualMovePmDbroot(config.OAMParentName(), "1", newActiveModuleName);
+			}
+			catch (...)
+			{
+				log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
+				pthread_mutex_unlock(&THREAD_LOCK);
+				return API_FAILURE;
+			}
 		}
-
 		Config* sysConfig4 = Config::makeConfig();
 	
 		// get new Active address

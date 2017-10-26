@@ -5812,7 +5812,7 @@ int processCommand(string* arguments)
 
 				if ( arguments[2] != "y") {
 					cout << endl << "!!!!! DESTRUCTIVE COMMAND !!!!!" << endl;
-					string warning = "This command does a stop and remove a module from the MariaDB ColumnStore System";
+					string warning = "This command removes module(s) from the MariaDB ColumnStore System";
 					// confirm request
 					if (confirmPrompt(warning))
 						break;
