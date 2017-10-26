@@ -4776,7 +4776,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 	{
 */		//get slave id based on ExeMgrx setup
 		string slaveID = "0";
-		string slaveModuleName = config.moduleName();
+		string localModuleName = config.moduleName();
 		for ( int id = 1 ; ; id++ )
 		{
 			string Section = "ExeMgr" + oam.itoa(id);
@@ -4787,34 +4787,9 @@ int ProcessMonitor::changeMyCnf(std::string type)
 				Config* sysConfig = Config::makeConfig();
 				moduleName = sysConfig->getConfig(Section, "Module");
 
-				if ( moduleName == slaveModuleName )
+				if ( moduleName == localModuleName )
 				{
 					slaveID = oam.itoa(id);
-
-					// if slave ID from above is 1, then it means this is a former Original master and use the ID of the current Master
-					if ( slaveID == "1" ) {
-						string PrimaryUMModuleName;
-						oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
-
-						for ( int mid = 1 ; ; mid++ )
-						{
-							string Section = "ExeMgr" + oam.itoa(mid);
-				
-							string moduleName;
-				
-							try {
-								Config* sysConfig = Config::makeConfig();
-								moduleName = sysConfig->getConfig(Section, "Module");
-				
-								if ( moduleName == PrimaryUMModuleName )
-								{
-									slaveID = oam.itoa(mid);
-									break;
-								}
-							}
-							catch (...) {}
-						}
-					}
 					break;
 				}
 			}
