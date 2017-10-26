@@ -36,11 +36,11 @@ using namespace execplan;
 
 namespace
 {
-    const char*  DICT_TYPE("D");
-    const char*  ENCODING("UTF-8");
-    const char*  JOBNAME("Job_");
-    const char*  LOGNAME("Jobxml_");
-    const std::string LOGDIR("/log/");
+const char*  DICT_TYPE("D");
+const char*  ENCODING("UTF-8");
+const char*  JOBNAME("Job_");
+const char*  LOGNAME("Jobxml_");
+const std::string LOGDIR("/log/");
 }
 
 namespace WriteEngine
@@ -61,10 +61,11 @@ XMLGenProc::XMLGenProc(XMLGenData* mgr, bool bUseXmlLogFile, bool bSysCatRpt) :
     fUseXmlLogFile(bUseXmlLogFile)
 {
     std::string logFile(Config::getBulkRoot() + std::string(LOGDIR) + LOGNAME +
-                   fInputMgr->getParm(XMLGenData::JOBID) + ".log" );
+                        fInputMgr->getParm(XMLGenData::JOBID) + ".log" );
     std::string errFile(Config::getBulkRoot() + std::string(LOGDIR) + LOGNAME +
-                   fInputMgr->getParm(XMLGenData::JOBID) + ".err" );
+                        fInputMgr->getParm(XMLGenData::JOBID) + ".err" );
     fErrorString.append(errFile + "\n");
+
     if (fUseXmlLogFile)
     {
         fLog.setLogFileName( logFile.c_str(), errFile.c_str() );
@@ -90,52 +91,57 @@ XMLGenProc::~XMLGenProc()
 void XMLGenProc::startXMLFile( )
 {
     fWriter = xmlNewTextWriterDoc(&fDoc, 0);
-    if (fWriter == NULL) {
+
+    if (fWriter == NULL)
+    {
         throw std::runtime_error("Error creating the xml fWriter: "
-            "bad return from xmlNewTextWriter");
+                                 "bad return from xmlNewTextWriter");
     }
 
     /* Start the fDocument with the xml default for the version,
      * encoding UTF-8 and the default for the standalone
      * declaration. */
     int rc = xmlTextWriterStartDocument(fWriter, NULL, ENCODING, NULL);
-    if (rc < 0) {
+
+    if (rc < 0)
+    {
         throw std::runtime_error("Error at xmlTextWriterStartfDocument: "
-            "bad return from xmlTextWriterStartDocument");
+                                 "bad return from xmlTextWriterStartDocument");
     }
 
     if (!fSysCatRpt) // skip non-syscat tags if we are writing a syscat dump
     {
         xmlTextWriterStartElement(fWriter, BAD_CAST xmlTagTable[TAG_BULK_JOB]);
         xmlTextWriterWriteFormatElement(fWriter, BAD_CAST xmlTagTable[TAG_ID],
-            "%d", atoi(fInputMgr->getParm(XMLGenData::JOBID).c_str()));
+                                        "%d", atoi(fInputMgr->getParm(XMLGenData::JOBID).c_str()));
         xmlTextWriterWriteElement(fWriter, BAD_CAST xmlTagTable[TAG_NAME],
-            BAD_CAST fInputMgr->getParm(XMLGenData::NAME).c_str() );
+                                  BAD_CAST fInputMgr->getParm(XMLGenData::NAME).c_str() );
         xmlTextWriterWriteElement(fWriter, BAD_CAST xmlTagTable[TAG_DESC],
-            BAD_CAST fInputMgr->getParm(XMLGenData::DESCRIPTION).c_str() );
+                                  BAD_CAST fInputMgr->getParm(XMLGenData::DESCRIPTION).c_str() );
 
         std::string now(boost::posix_time::to_iso_string(
-            boost::posix_time::second_clock::local_time()));
+                            boost::posix_time::second_clock::local_time()));
         xmlTextWriterWriteElement(fWriter,
-            BAD_CAST xmlTagTable[TAG_CREATE_DATE],
-            BAD_CAST now.substr(0, 8).c_str() );
+                                  BAD_CAST xmlTagTable[TAG_CREATE_DATE],
+                                  BAD_CAST now.substr(0, 8).c_str() );
         xmlTextWriterWriteElement(fWriter,
-            BAD_CAST xmlTagTable[TAG_CREATE_TIME],
-            BAD_CAST now.substr(9, 4).c_str() );
+                                  BAD_CAST xmlTagTable[TAG_CREATE_TIME],
+                                  BAD_CAST now.substr(9, 4).c_str() );
         xmlTextWriterWriteElement(fWriter, BAD_CAST xmlTagTable[TAG_USER],
-            BAD_CAST fInputMgr->getParm(XMLGenData::USER).c_str() );
+                                  BAD_CAST fInputMgr->getParm(XMLGenData::USER).c_str() );
         xmlTextWriterWriteElement(fWriter, BAD_CAST xmlTagTable[TAG_DELIMITER],
-            BAD_CAST fInputMgr->getParm(XMLGenData::DELIMITER).c_str() );
+                                  BAD_CAST fInputMgr->getParm(XMLGenData::DELIMITER).c_str() );
 
         // Only include enclosedBy and escape chars if enclosedBy was specified
         std::string enclosedByChar = fInputMgr->getParm(
-            XMLGenData::ENCLOSED_BY_CHAR);
+                                         XMLGenData::ENCLOSED_BY_CHAR);
+
         if (enclosedByChar.length() > 0)
         {
             xmlTextWriterWriteElement(fWriter,
-                BAD_CAST xmlTagTable[TAG_ENCLOSED_BY_CHAR],
-                BAD_CAST fInputMgr->getParm(
-                    XMLGenData::ENCLOSED_BY_CHAR).c_str() );
+                                      BAD_CAST xmlTagTable[TAG_ENCLOSED_BY_CHAR],
+                                      BAD_CAST fInputMgr->getParm(
+                                          XMLGenData::ENCLOSED_BY_CHAR).c_str() );
         }
 
         // Include escape character regardless of whether the "enclosed by"
@@ -143,28 +149,28 @@ void XMLGenProc::startXMLFile( )
         // to override the default NULL escape sequence '\N', to be something
         // else like '#N'.
         xmlTextWriterWriteElement(fWriter,
-            BAD_CAST xmlTagTable[TAG_ESCAPE_CHAR],
-            BAD_CAST fInputMgr->getParm(XMLGenData::ESCAPE_CHAR).c_str() );
+                                  BAD_CAST xmlTagTable[TAG_ESCAPE_CHAR],
+                                  BAD_CAST fInputMgr->getParm(XMLGenData::ESCAPE_CHAR).c_str() );
 
         // Added new tags for configurable parameters
         xmlTextWriterStartElement(fWriter,
-            BAD_CAST xmlTagTable[TAG_READ_BUFFERS]);
+                                  BAD_CAST xmlTagTable[TAG_READ_BUFFERS]);
         xmlTextWriterWriteFormatAttribute(fWriter,
-            BAD_CAST xmlTagTable[TAG_NO_OF_READ_BUFFERS], "%d",
-            atoi(fInputMgr->getParm(XMLGenData::NO_OF_READ_BUFFER).c_str()));
+                                          BAD_CAST xmlTagTable[TAG_NO_OF_READ_BUFFERS], "%d",
+                                          atoi(fInputMgr->getParm(XMLGenData::NO_OF_READ_BUFFER).c_str()));
         xmlTextWriterWriteFormatAttribute(fWriter,
-            BAD_CAST xmlTagTable[TAG_READ_BUFFER_SIZE],  "%d",
-            atoi(fInputMgr->getParm(XMLGenData::READ_BUFFER_CAPACITY).c_str()));
+                                          BAD_CAST xmlTagTable[TAG_READ_BUFFER_SIZE],  "%d",
+                                          atoi(fInputMgr->getParm(XMLGenData::READ_BUFFER_CAPACITY).c_str()));
         xmlTextWriterEndElement(fWriter);
         xmlTextWriterWriteFormatElement(fWriter,
-            BAD_CAST xmlTagTable[TAG_WRITE_BUFFER_SIZE], "%d",
-            atoi( fInputMgr->getParm(XMLGenData::WRITE_BUFFER_SIZE).c_str()));
+                                        BAD_CAST xmlTagTable[TAG_WRITE_BUFFER_SIZE], "%d",
+                                        atoi( fInputMgr->getParm(XMLGenData::WRITE_BUFFER_SIZE).c_str()));
         // End of additions
     }
 
     xmlTextWriterStartElement(fWriter, BAD_CAST xmlTagTable[TAG_SCHEMA]);
     xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_NAME],
-        BAD_CAST fInputMgr->getSchema().c_str() );
+                                BAD_CAST fInputMgr->getSchema().c_str() );
 }
 
 //------------------------------------------------------------------------------
@@ -178,7 +184,7 @@ void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table)
     xmlTextWriterStartElement(fWriter, BAD_CAST xmlTagTable[TAG_TABLE]);
     std::string tmp(table.schema + "." + table.table);
     xmlTextWriterWriteAttribute(fWriter,
-        BAD_CAST xmlTagTable[TAG_TBL_NAME], BAD_CAST tmp.c_str() );
+                                BAD_CAST xmlTagTable[TAG_TBL_NAME], BAD_CAST tmp.c_str() );
 
     if (fSysCatRpt) // Write full schema information for syscat rpt
     {
@@ -186,11 +192,11 @@ void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table)
         {
             boost::shared_ptr<CalpontSystemCatalog> cat =
                 CalpontSystemCatalog::makeCalpontSystemCatalog(
-                BULK_SYSCAT_SESSION_ID);
+                    BULK_SYSCAT_SESSION_ID);
             cat->identity(CalpontSystemCatalog::EC);
             xmlTextWriterWriteFormatAttribute(fWriter,
-                BAD_CAST xmlTagTable[TAG_TBL_OID], "%d",
-                cat->tableRID(table).objnum);
+                                              BAD_CAST xmlTagTable[TAG_TBL_OID], "%d",
+                                              cat->tableRID(table).objnum);
         }
         catch (std::exception& ex)
         {
@@ -211,20 +217,22 @@ void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table)
     if (!fSysCatRpt) // skip non-syscat tags if we are writing a syscat dump
     {
         const XMLGenData::LoadNames& loadNames = fInputMgr->getLoadNames();
+
         if ( loadNames.size() > kount )
         {
             tmp = loadNames[kount];
         }
-        else 
+        else
         {
             tmp = (table.table + "." + fInputMgr->getParm(
-                XMLGenData::EXT).c_str());
+                       XMLGenData::EXT).c_str());
         }
+
         xmlTextWriterWriteAttribute(fWriter,
-            BAD_CAST xmlTagTable[TAG_LOAD_NAME], BAD_CAST tmp.c_str() );
+                                    BAD_CAST xmlTagTable[TAG_LOAD_NAME], BAD_CAST tmp.c_str() );
         xmlTextWriterWriteFormatAttribute(fWriter,
-            BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], "%d",
-            atoi( fInputMgr->getParm(XMLGenData::MAXERROR).c_str()) );
+                                          BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], "%d",
+                                          atoi( fInputMgr->getParm(XMLGenData::MAXERROR).c_str()) );
     }
 
     kount++;
@@ -234,25 +242,27 @@ void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table)
 // sortColumnsByPosition
 // Sort list of columns by column position.
 //------------------------------------------------------------------------------
-void XMLGenProc::sortColumnsByPosition(SysCatColumnList &columns)
+void XMLGenProc::sortColumnsByPosition(SysCatColumnList& columns)
 {
-    std::map<int,SysCatColumn> tempCols;
+    std::map<int, SysCatColumn> tempCols;
 
     SysCatColumnList::const_iterator cend = columns.end();
+
     for (SysCatColumnList::const_iterator col = columns.begin();
-        col != cend; ++col)
+            col != cend; ++col)
     {
         tempCols[col->colType.colPosition] = *col ;
     }
 
     columns.clear();
 
-    std::map<int,SysCatColumn>::iterator pos;
-    for (pos = tempCols.begin(); pos != tempCols.end(); ++pos) 
+    std::map<int, SysCatColumn>::iterator pos;
+
+    for (pos = tempCols.begin(); pos != tempCols.end(); ++pos)
     {
         columns.push_back(pos->second);
     }
-    
+
     tempCols.clear();
 }
 
@@ -263,8 +273,9 @@ void XMLGenProc::sortColumnsByPosition(SysCatColumnList &columns)
 bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
 {
     SysCatColumnList columns;
-    getColumnsForTable(table.schema,table.table, columns);
+    getColumnsForTable(table.schema, table.table, columns);
     sortColumnsByPosition(columns);
+
     if (columns.empty())
     {
         if (fUseXmlLogFile)
@@ -272,91 +283,97 @@ bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
             fLog.logMsg("No columns for " + table.table +
                         ", or table does not exist", MSGLVL_ERROR );
         }
+
         return false;
     }
 
     SysCatColumnList::const_iterator cend = columns.end();
+
     for (SysCatColumnList::const_iterator col = columns.begin();
-        col != cend; ++col)
+            col != cend; ++col)
     {
         xmlTextWriterStartElement(fWriter, BAD_CAST xmlTagTable[TAG_COLUMN]);
         xmlTextWriterWriteAttribute(fWriter,
-            BAD_CAST xmlTagTable[TAG_COL_NAME],
-            BAD_CAST col->tableColName.column.c_str());
+                                    BAD_CAST xmlTagTable[TAG_COL_NAME],
+                                    BAD_CAST col->tableColName.column.c_str());
 
         if (fSysCatRpt) // Write full schema information for syscat rpt
         {
             xmlTextWriterWriteFormatAttribute(fWriter,
-                BAD_CAST xmlTagTable[TAG_COL_OID], "%d", col->oid);
+                                              BAD_CAST xmlTagTable[TAG_COL_OID], "%d", col->oid);
             xmlTextWriterWriteAttribute(fWriter,
-                BAD_CAST xmlTagTable[TAG_DATA_TYPE],
-                BAD_CAST ColDataTypeStr[
-                    col->colType.colDataType]);
+                                        BAD_CAST xmlTagTable[TAG_DATA_TYPE],
+                                        BAD_CAST ColDataTypeStr[
+                                 col->colType.colDataType]);
+
             if (col->colType.compressionType !=
-                CalpontSystemCatalog::NO_COMPRESSION)
+                    CalpontSystemCatalog::NO_COMPRESSION)
                 xmlTextWriterWriteFormatAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_COMPRESS_TYPE], "%d",
-                    col->colType.compressionType);
+                                                  BAD_CAST xmlTagTable[TAG_COMPRESS_TYPE], "%d",
+                                                  col->colType.compressionType);
 
             // Old logic went by scale > 0; New logic checks for "decimal" type
             if ( (0 < col->colType.scale ) ||
-                (col->colType.colDataType == CalpontSystemCatalog::DECIMAL) ||
-                (col->colType.colDataType == CalpontSystemCatalog::UDECIMAL) )
+                    (col->colType.colDataType == CalpontSystemCatalog::DECIMAL) ||
+                    (col->colType.colDataType == CalpontSystemCatalog::UDECIMAL) )
             {
                 xmlTextWriterWriteFormatAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_PRECISION], "%d",
-                    col->colType.precision);
+                                                  BAD_CAST xmlTagTable[TAG_PRECISION], "%d",
+                                                  col->colType.precision);
                 xmlTextWriterWriteFormatAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_SCALE], "%d", col->colType.scale);
+                                                  BAD_CAST xmlTagTable[TAG_SCALE], "%d", col->colType.scale);
             }
+
             xmlTextWriterWriteFormatAttribute(fWriter,
-                BAD_CAST xmlTagTable[TAG_WIDTH], "%d", col->colType.colWidth);
- 
+                                              BAD_CAST xmlTagTable[TAG_WIDTH], "%d", col->colType.colWidth);
+
             if (col->colType.autoincrement)
             {
                 int autoInc = 1;
                 xmlTextWriterWriteFormatAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_AUTOINCREMENT_FLAG], "%d",autoInc);
+                                                  BAD_CAST xmlTagTable[TAG_AUTOINCREMENT_FLAG], "%d", autoInc);
             }
 
             //need dictionary and decimal stuff
             if (col->colType.ddn.dictOID > 0)
             {
                 xmlTextWriterWriteAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_COL_TYPE], BAD_CAST DICT_TYPE );
+                                            BAD_CAST xmlTagTable[TAG_COL_TYPE], BAD_CAST DICT_TYPE );
                 xmlTextWriterWriteFormatAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_DVAL_OID], "%d",
-                    col->colType.ddn.dictOID );
+                                                  BAD_CAST xmlTagTable[TAG_DVAL_OID], "%d",
+                                                  col->colType.ddn.dictOID );
             }
 
             // Include NotNull and Default value
             const std::string col_defaultValue(col->colType.defaultValue);
 
             if (col->colType.constraintType ==
-                execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
+                    execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
             {
                 int notNull = 1;
                 xmlTextWriterWriteFormatAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_NOT_NULL], "%d", notNull);
+                                                  BAD_CAST xmlTagTable[TAG_NOT_NULL], "%d", notNull);
+
                 if (!col_defaultValue.empty())
                 {
                     xmlTextWriterWriteAttribute(fWriter,
-                        BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
-                        BAD_CAST col_defaultValue.c_str());
+                                                BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
+                                                BAD_CAST col_defaultValue.c_str());
                 }
             }
             else if (col->colType.constraintType ==
-                execplan::CalpontSystemCatalog::DEFAULT_CONSTRAINT)
+                     execplan::CalpontSystemCatalog::DEFAULT_CONSTRAINT)
             {
                 xmlTextWriterWriteAttribute(fWriter,
-                    BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
-                    BAD_CAST col_defaultValue.c_str());
+                                            BAD_CAST xmlTagTable[TAG_DEFAULT_VALUE],
+                                            BAD_CAST col_defaultValue.c_str());
             }
         } // end of "if fSysCatRpt"
 
         xmlTextWriterEndElement(fWriter);
     }
-    xmlTextWriterEndElement(fWriter); //table 
+
+    xmlTextWriterEndElement(fWriter); //table
     return true;
 }
 
@@ -383,7 +400,7 @@ void XMLGenProc::getColumnsForTable(
     {
         boost::shared_ptr<CalpontSystemCatalog> systemCatalogPtr =
             CalpontSystemCatalog::makeCalpontSystemCatalog(
-            BULK_SYSCAT_SESSION_ID);
+                BULK_SYSCAT_SESSION_ID);
         systemCatalogPtr->identity(CalpontSystemCatalog::EC);
 
         const CalpontSystemCatalog::RIDList ridList =
@@ -391,6 +408,7 @@ void XMLGenProc::getColumnsForTable(
 
         CalpontSystemCatalog::RIDList::const_iterator rid_iterator =
             ridList.begin();
+
         while (rid_iterator != ridList.end())
         {
             CalpontSystemCatalog::ROPair roPair = *rid_iterator;
@@ -428,7 +446,7 @@ std::string XMLGenProc::genJobXMLFileName( ) const
 {
     std::string xmlFileName;
     boost::filesystem::path p(std::string(
-        fInputMgr->getParm(XMLGenData::PATH)));
+                                  fInputMgr->getParm(XMLGenData::PATH)));
 
     //Append the jobname, jobid & file extension
     std::string fileName( JOBNAME );
@@ -443,6 +461,7 @@ std::string XMLGenProc::genJobXMLFileName( ) const
     // path if so given
     xmlFileName = p.string();
 #else
+
     if (!p.has_root_path())
     {
         char cwdPath[4096];
@@ -455,9 +474,10 @@ std::string XMLGenProc::genJobXMLFileName( ) const
     {
         xmlFileName = p.string();
     }
+
 #endif
 
-	return xmlFileName;
+    return xmlFileName;
 }
 
 //------------------------------------------------------------------------------
@@ -474,11 +494,11 @@ void XMLGenProc::writeXMLFile( const std::string& xmlFileName )
 //------------------------------------------------------------------------------
 // logErrorMessage
 //------------------------------------------------------------------------------
-void XMLGenProc::logErrorMessage(const std::string& msg) 
-{ 
+void XMLGenProc::logErrorMessage(const std::string& msg)
+{
     if (fUseXmlLogFile)
     {
-        fLog.logMsg( msg , MSGLVL_ERROR );
+        fLog.logMsg( msg, MSGLVL_ERROR );
     }
 }
 

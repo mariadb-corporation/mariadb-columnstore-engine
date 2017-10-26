@@ -44,7 +44,7 @@ namespace WriteEngine
 {
 
 /** Class Config */
-class Config 
+class Config
 {
 public:
     /**
@@ -82,7 +82,7 @@ public:
     EXPORT static void getRootIdList( std::vector<uint16_t>& dbRootIds );
 
 #ifdef SHARED_NOTHING_DEMO_2
-    EXPORT static void getSharedNothingRoot(char *);  // pass in an char[FILE_NAME_SIZE]
+    EXPORT static void getSharedNothingRoot(char*);   // pass in an char[FILE_NAME_SIZE]
 #endif
 
     /**
@@ -99,7 +99,7 @@ public:
      * @brief Wait Period
      */
     EXPORT static int getWaitPeriod();
-   
+
     /**
      * @brief FilesPerColumnPartition
      */
@@ -150,7 +150,7 @@ public:
      * @brief Version Buffer root
      */
     EXPORT static std::string getVBRoot();
-   
+
     /**
      * @brief Cache the config parameters locally
      * Initialize Config cache.  Cache will be updated as needed.
@@ -165,7 +165,7 @@ public:
 
 private:
     typedef std::vector<std::string>  strvec_t;
-    typedef std::map<int,std::string> intstrmap_t;
+    typedef std::map<int, std::string> intstrmap_t;
     typedef std::vector<uint16_t>    uint16vec_t;
 
     static void         checkReload();
@@ -191,7 +191,7 @@ private:
     static bool         m_ParentOAMModuleFlag;   // are we running on parent PM
     static std::string  m_LocalModuleType;       // local node type (ex: "pm")
     static int          m_LocalModuleID;         // local node id   (ex: 1   )
-    static std::string  m_VersionBufferDir;      // Version buffer directory 
+    static std::string  m_VersionBufferDir;      // Version buffer directory
 };
 
 } //end of namespace

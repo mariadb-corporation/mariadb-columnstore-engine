@@ -24,7 +24,7 @@
 #include "statistics.h"
 #include "socklib.h"
 
-extern FILE *udpc_log;
+extern FILE* udpc_log;
 
 struct fifo;
 
@@ -33,9 +33,9 @@ struct fifo;
 #define localReader udpc_localReader
 #define doSend udpc_doSend
 
-int openFile(struct disk_config *config);
-int openPipe(struct disk_config *config, int in, int *pid);
-int localReader(struct fifo *fifo, int in);
+int openFile(struct disk_config* config);
+int openPipe(struct disk_config* config, int in, int* pid);
+int localReader(struct fifo* fifo, int in);
 
 #define BCAST_DATA(s, msg) \
 	doSend(s, &msg, sizeof(msg), &net_config->dataMcastAddr)

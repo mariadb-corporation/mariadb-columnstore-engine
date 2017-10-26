@@ -32,52 +32,60 @@
 #include <map>
 #include <boost/shared_array.hpp>
 
-namespace utils {
+namespace utils
+{
 
 class PoolAllocator
 {
 public:
-	static const unsigned DEFAULT_WINDOW_SIZE = 4096 * 40;  // should be an integral # of pages
+    static const unsigned DEFAULT_WINDOW_SIZE = 4096 * 40;  // should be an integral # of pages
 
-	explicit PoolAllocator(unsigned windowSize = DEFAULT_WINDOW_SIZE, bool isTmpSpace = false) :
-		allocSize(windowSize),
-		tmpSpace(isTmpSpace),
-		capacityRemaining(0),
-		memUsage(0),
-		nextAlloc(0) { }
-	PoolAllocator(const PoolAllocator &p) :
-		allocSize(p.allocSize),
-		tmpSpace(p.tmpSpace),
-		capacityRemaining(0),
-		memUsage(0),
-		nextAlloc(0) { }
-	virtual ~PoolAllocator() {}
+    explicit PoolAllocator(unsigned windowSize = DEFAULT_WINDOW_SIZE, bool isTmpSpace = false) :
+        allocSize(windowSize),
+        tmpSpace(isTmpSpace),
+        capacityRemaining(0),
+        memUsage(0),
+        nextAlloc(0) { }
+    PoolAllocator(const PoolAllocator& p) :
+        allocSize(p.allocSize),
+        tmpSpace(p.tmpSpace),
+        capacityRemaining(0),
+        memUsage(0),
+        nextAlloc(0) { }
+    virtual ~PoolAllocator() {}
 
-	PoolAllocator & operator=(const PoolAllocator &);
+    PoolAllocator& operator=(const PoolAllocator&);
 
-	void *allocate(uint64_t size);
-	void deallocate(void *p);
-	void deallocateAll();
+    void* allocate(uint64_t size);
+    void deallocate(void* p);
+    void deallocateAll();
 
-	inline uint64_t getMemUsage() const { return memUsage; }
-	unsigned getWindowSize() const { return allocSize; }
+    inline uint64_t getMemUsage() const
+    {
+        return memUsage;
+    }
+    unsigned getWindowSize() const
+    {
+        return allocSize;
+    }
 
 private:
-	void newBlock();
+    void newBlock();
 
-	unsigned allocSize;
-	std::vector<boost::shared_array<uint8_t> > mem;
-	bool tmpSpace;
-	unsigned capacityRemaining;
-	uint64_t memUsage;
-	uint8_t *nextAlloc;
-	
-	struct OOBMemInfo {
-		boost::shared_array<uint8_t> mem;
-		uint64_t size;
-	};
-	typedef std::map<void *, OOBMemInfo> OutOfBandMap;
-	OutOfBandMap oob;  // for mem chunks bigger than the window size; these can be dealloc'd
+    unsigned allocSize;
+    std::vector<boost::shared_array<uint8_t> > mem;
+    bool tmpSpace;
+    unsigned capacityRemaining;
+    uint64_t memUsage;
+    uint8_t* nextAlloc;
+
+    struct OOBMemInfo
+    {
+        boost::shared_array<uint8_t> mem;
+        uint64_t size;
+    };
+    typedef std::map<void*, OOBMemInfo> OutOfBandMap;
+    OutOfBandMap oob;  // for mem chunks bigger than the window size; these can be dealloc'd
 };
 
 }

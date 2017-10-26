@@ -17,11 +17,11 @@
 
 /***********************************************************************
 *
-*   Work dervied from Devguy.com's Open Source C++ thread pool implementation 
+*   Work dervied from Devguy.com's Open Source C++ thread pool implementation
 *	released under public domain:
-*	http://web.archive.org/liveweb/http://dgpctk.cvs.sourceforge.net/viewvc/dgpctk/dgc%2B%2B/include/dg/thread/threadpool.h?revision=1.22&content-type=text%2Fplain 
+*	http://web.archive.org/liveweb/http://dgpctk.cvs.sourceforge.net/viewvc/dgpctk/dgc%2B%2B/include/dg/thread/threadpool.h?revision=1.22&content-type=text%2Fplain
 *
-*	http://web.archive.org/web/20100104101109/http://devguy.com/bb/viewtopic.php?t=460 
+*	http://web.archive.org/web/20100104101109/http://devguy.com/bb/viewtopic.php?t=460
 *
 ***********************************************************************/
 
@@ -62,7 +62,7 @@ public:
 
     /*********************************************
      *  ctor/dtor
-     * 
+     *
      *********************************************/
 
     /** @brief ctor
@@ -74,10 +74,10 @@ public:
       * @param maxThreads the maximum number of threads in this pool. This is the maximum number
       *        of simultaneuous operations that can go on.
       * @param queueSize  the maximum number of work tasks in the queue. This is the maximum
-	  *        number of jobs that can queue up in the work list before invoke() blocks.
-	  *        If 0, then threads never block and total threads may
-	  *        exceed maxThreads. Nothing waits. Thread count will
-	  *        idle down to maxThreads when less work is required.
+      *        number of jobs that can queue up in the work list before invoke() blocks.
+      *        If 0, then threads never block and total threads may
+      *        exceed maxThreads. Nothing waits. Thread count will
+      *        idle down to maxThreads when less work is required.
       */
     EXPORT explicit ThreadPool( size_t maxThreads, size_t queueSize );
 
@@ -88,7 +88,7 @@ public:
 
     /*********************************************
      *  accessors/mutators
-     * 
+     *
      *********************************************/
     /** @brief set the work queue size
       *
@@ -98,7 +98,10 @@ public:
 
     /** @brief fet the work queue size
       */
-    inline size_t getQueueSize() const { return fQueueSize; }
+    inline size_t getQueueSize() const
+    {
+        return fQueueSize;
+    }
 
     /** @brief set the maximum number of threads to be used to process
       * the work queue
@@ -109,17 +112,23 @@ public:
 
     /** @brief get the maximum number of threads
       */
-    inline size_t getMaxThreads() const { return fMaxThreads; }
+    inline size_t getMaxThreads() const
+    {
+        return fMaxThreads;
+    }
 
     /** @brief queue size accessor
       *
       */
-    inline uint32_t getWaiting() const { return waitingFunctorsSize; }
+    inline uint32_t getWaiting() const
+    {
+        return waitingFunctorsSize;
+    }
 
 
     /*********************************************
      *  operations
-     * 
+     *
      *********************************************/
 
     /** @brief invoke a functor in a separate thread managed by the pool
@@ -129,7 +138,7 @@ public:
       * queueSize tasks already waiting, invoke() will block until a slot in the
       * queue comes free.
       */
-    EXPORT uint64_t invoke(const Functor_T &threadfunc);
+    EXPORT uint64_t invoke(const Functor_T& threadfunc);
 
     /** @brief stop the threads
       */
@@ -151,16 +160,31 @@ public:
       */
     EXPORT void dump();
 
-	EXPORT std::string& name() {return fName;}
+    EXPORT std::string& name()
+    {
+        return fName;
+    }
 
-	EXPORT void setName(std::string name) {fName = name;}
-	EXPORT void setName(const char* name) {fName = name;}
+    EXPORT void setName(std::string name)
+    {
+        fName = name;
+    }
+    EXPORT void setName(const char* name)
+    {
+        fName = name;
+    }
 
-	EXPORT bool debug() {return fDebug;}
+    EXPORT bool debug()
+    {
+        return fDebug;
+    }
 
-	EXPORT void setDebug(bool d) {fDebug = d;}
+    EXPORT void setDebug(bool d)
+    {
+        fDebug = d;
+    }
 
-	friend class ThreadPoolMonitor;
+    friend class ThreadPoolMonitor;
 protected:
 
 private:
@@ -177,7 +201,7 @@ private:
 
     /** @brief add a functor to the list
       */
-    uint64_t addFunctor(const Functor_T &func);
+    uint64_t addFunctor(const Functor_T& func);
 
     /** @brief thread entry point
       */
@@ -192,7 +216,7 @@ private:
     struct beginThreadFunc
     {
         beginThreadFunc(ThreadPool& impl)
-                : fImpl(impl)
+            : fImpl(impl)
         {}
 
         void operator() ()
@@ -200,7 +224,7 @@ private:
             fImpl.beginThread();
         }
 
-        ThreadPool &fImpl;
+        ThreadPool& fImpl;
     };
 
     struct NoOp
@@ -226,11 +250,11 @@ private:
     bool 	fStop;
     long 	fGeneralErrors;
     long	fFunctorErrors;
-	uint32_t 	waitingFunctorsSize;
-	uint64_t fNextHandle;
+    uint32_t 	waitingFunctorsSize;
+    uint64_t fNextHandle;
 
-	std::string fName;  // Optional to add a name to the pool for debugging.
-	bool fDebug;
+    std::string fName;  // Optional to add a name to the pool for debugging.
+    bool fDebug;
 };
 
 // This class, if instantiated, will continuously log details about the indicated threadpool
@@ -238,25 +262,25 @@ private:
 class ThreadPoolMonitor
 {
 public:
-	ThreadPoolMonitor(ThreadPool* pool) : fPool(pool), fLog(NULL)
-	{
-	}
+    ThreadPoolMonitor(ThreadPool* pool) : fPool(pool), fLog(NULL)
+    {
+    }
 
-	~ThreadPoolMonitor()
-	{
-		if (fLog)
-		{
-			delete fLog;
-		}
-	}
+    ~ThreadPoolMonitor()
+    {
+        if (fLog)
+        {
+            delete fLog;
+        }
+    }
 
-	void operator()();
+    void operator()();
 private:
-	//defaults okay
-	//ThreadPoolMonitor(const ThreadPoolMonitor& rhs);
-	//ThreadPoolMonitor& operator=(const ThreadPoolMonitor& rhs);
-	ThreadPool* fPool;
-	std::ofstream* fLog;
+    //defaults okay
+    //ThreadPoolMonitor(const ThreadPoolMonitor& rhs);
+    //ThreadPoolMonitor& operator=(const ThreadPoolMonitor& rhs);
+    ThreadPool* fPool;
+    std::ofstream* fLog;
 };
 
 } // namespace threadpool

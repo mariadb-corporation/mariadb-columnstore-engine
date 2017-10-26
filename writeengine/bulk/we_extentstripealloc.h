@@ -42,7 +42,7 @@
 
 namespace WriteEngine
 {
-    class Log;
+class Log;
 
 //------------------------------------------------------------------------------
 /** @brief Represents an extent allocation entry that is part of a "stripe".
@@ -53,15 +53,15 @@ class AllocExtEntry
 public:
     // Default constructor
     AllocExtEntry() :   fOid(0),
-                        fColWidth(0),
-                        fDbRoot(0),
-                        fPartNum(0),
-                        fSegNum(0),
-                        fStartLbid(0),
-                        fAllocSize(0),
-                        fHwm(0),
-                        fStatus(NO_ERROR),
-                        fStripeKey(0) { }
+        fColWidth(0),
+        fDbRoot(0),
+        fPartNum(0),
+        fSegNum(0),
+        fStartLbid(0),
+        fAllocSize(0),
+        fHwm(0),
+        fStatus(NO_ERROR),
+        fStripeKey(0) { }
 
     // Used to create entry for an existing extent we are going to add data to.
     AllocExtEntry   (   OID& oid, int colWidth,
@@ -69,17 +69,17 @@ public:
                         BRM::LBID_t startLbid, int allocSize,
                         HWM hwm, int status, const std::string& statusMsg,
                         unsigned int stripeKey ) :
-                        fOid(oid),
-                        fColWidth(colWidth),
-                        fDbRoot(dbRoot),
-                        fPartNum(partNum),
-                        fSegNum(segNum),
-                        fStartLbid(startLbid),
-                        fAllocSize(allocSize),
-                        fHwm(hwm),
-                        fStatus(status),
-                        fStatusMsg(statusMsg),
-                        fStripeKey(stripeKey) { }
+        fOid(oid),
+        fColWidth(colWidth),
+        fDbRoot(dbRoot),
+        fPartNum(partNum),
+        fSegNum(segNum),
+        fStartLbid(startLbid),
+        fAllocSize(allocSize),
+        fHwm(hwm),
+        fStatus(status),
+        fStatusMsg(statusMsg),
+        fStripeKey(stripeKey) { }
 
     OID         fOid;       // column OID
     int         fColWidth;  // colum width (in bytes)
@@ -99,10 +99,12 @@ public:
  *  the corresponding column OID as the key.
  */
 //------------------------------------------------------------------------------
-struct AllocExtHasher : public std::unary_function<OID,std::size_t>
+struct AllocExtHasher : public std::unary_function<OID, std::size_t>
 {
     std::size_t operator()(OID val) const
-    { return static_cast<std::size_t>(val); }
+    {
+        return static_cast<std::size_t>(val);
+    }
 };
 
 //------------------------------------------------------------------------------
@@ -149,13 +151,13 @@ public:
      *  @return NO_ERROR returned upon success
      */
     int  allocateExtent( OID        oid,
-                    uint16_t        dbRoot,
-                    uint32_t&       partNum,
-                    uint16_t&       segNum,
-                    BRM::LBID_t&    startLbid,
-                    int&            allocSize,
-                    HWM&            hwm,
-                    std::string&    errMsg );
+                         uint16_t        dbRoot,
+                         uint32_t&       partNum,
+                         uint16_t&       segNum,
+                         BRM::LBID_t&    startLbid,
+                         int&            allocSize,
+                         HWM&            hwm,
+                         std::string&    errMsg );
 
     /** @brief Debug print function.
      */
@@ -170,7 +172,7 @@ private:
     std::vector<int>    fColWidths;     // Widths associated with fColOIDs
 
     // unordered map where we collect the allocated extents
-    std::tr1::unordered_multimap<OID,AllocExtEntry,AllocExtHasher> fMap;
+    std::tr1::unordered_multimap<OID, AllocExtEntry, AllocExtHasher> fMap;
 
     // disable copy constructor and assignment operator
     ExtentStripeAlloc(const ExtentStripeAlloc&);

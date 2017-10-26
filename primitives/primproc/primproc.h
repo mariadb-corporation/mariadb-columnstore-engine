@@ -94,25 +94,25 @@ namespace primitiveprocessor
           std::cout << message1 << message2 << message3 << std::endl; \
         }
 
-       enum DebugLevel                   /** @brief Debug level type enumeration */
-       {
-           NONE                    = 0,  /** @brief No debug info */
-           STATS                   = 1,  /** @brief stats info */
-           SUMMARY                 = 2,  /** @brief Summary level debug info */
-           DETAIL                  = 3,  /** @brief A little detail debug info */
-           VERBOSE                 = 4,  /** @brief Detailed debug info */
-       };
+enum DebugLevel                   /** @brief Debug level type enumeration */
+{
+    NONE                    = 0,  /** @brief No debug info */
+    STATS                   = 1,  /** @brief stats info */
+    SUMMARY                 = 2,  /** @brief Summary level debug info */
+    DETAIL                  = 3,  /** @brief A little detail debug info */
+    VERBOSE                 = 4,  /** @brief Detailed debug info */
+};
 
-       bool isDebug( const DebugLevel level );
+bool isDebug( const DebugLevel level );
 
-       const int MAX_BUFFER_SIZE = 32768 * 2;
+const int MAX_BUFFER_SIZE = 32768 * 2;
 
-       // message log globals
-       //const logging::LoggingID lid1(28);
-       //extern logging::Message msg16;
-       //extern logging::MessageLog ml1;
-       //extern boost::mutex logLock;
-       extern Logger* mlp;
+// message log globals
+//const logging::LoggingID lid1(28);
+//extern logging::Message msg16;
+//extern logging::MessageLog ml1;
+//extern boost::mutex logLock;
+extern Logger* mlp;
 }
 
 #endif //PRIMPROC_H

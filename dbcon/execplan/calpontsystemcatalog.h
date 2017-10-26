@@ -54,37 +54,37 @@
 
 namespace
 {
-	const int64_t MIN_TINYINT	__attribute__ ((unused)) = std::numeric_limits<int8_t>::min()+2;	  //-126;
-	const int64_t MAX_TINYINT	__attribute__ ((unused)) = std::numeric_limits<int8_t>::max();		//127;
-	const int64_t MIN_SMALLINT   __attribute__ ((unused)) = std::numeric_limits<int16_t>::min()+2;	 //-32766;
-	const int64_t MAX_SMALLINT   __attribute__ ((unused)) = std::numeric_limits<int16_t>::max();	   //32767;
-	const int64_t MIN_INT		__attribute__ ((unused)) = std::numeric_limits<int32_t>::min()+2;	 //-2147483646;
-	const int64_t MAX_INT		__attribute__ ((unused)) = std::numeric_limits<int32_t>::max();	   //2147483647;
-	const int64_t MIN_BIGINT	 __attribute__ ((unused)) = std::numeric_limits<int64_t>::min()+2;	 //-9223372036854775806LL;
-	const int64_t MAX_BIGINT	 __attribute__ ((unused)) = std::numeric_limits<int64_t>::max();	   //9223372036854775807
+const int64_t MIN_TINYINT	__attribute__ ((unused)) = std::numeric_limits<int8_t>::min() + 2;	 //-126;
+const int64_t MAX_TINYINT	__attribute__ ((unused)) = std::numeric_limits<int8_t>::max();		//127;
+const int64_t MIN_SMALLINT   __attribute__ ((unused)) = std::numeric_limits<int16_t>::min() + 2;	 //-32766;
+const int64_t MAX_SMALLINT   __attribute__ ((unused)) = std::numeric_limits<int16_t>::max();	   //32767;
+const int64_t MIN_INT		__attribute__ ((unused)) = std::numeric_limits<int32_t>::min() + 2;	 //-2147483646;
+const int64_t MAX_INT		__attribute__ ((unused)) = std::numeric_limits<int32_t>::max();	   //2147483647;
+const int64_t MIN_BIGINT	 __attribute__ ((unused)) = std::numeric_limits<int64_t>::min() + 2;	 //-9223372036854775806LL;
+const int64_t MAX_BIGINT	 __attribute__ ((unused)) = std::numeric_limits<int64_t>::max();	   //9223372036854775807
 
-	const uint64_t MIN_UINT	  __attribute__ ((unused)) = 0;
-	const uint64_t MIN_UTINYINT  __attribute__ ((unused)) = 0;
-	const uint64_t MIN_USMALLINT __attribute__ ((unused)) = 0;
-	const uint64_t MIN_UBIGINT   __attribute__ ((unused)) = 0;
-	const uint64_t MAX_UINT	  __attribute__ ((unused)) = std::numeric_limits<uint32_t>::max()-2;	//4294967293
-	const uint64_t MAX_UTINYINT  __attribute__ ((unused)) = std::numeric_limits<uint8_t>::max()-2;	 //253;
-	const uint64_t MAX_USMALLINT __attribute__ ((unused)) = std::numeric_limits<uint16_t>::max()-2;	//65533;
-	const uint64_t MAX_UBIGINT   __attribute__ ((unused)) = std::numeric_limits<uint64_t>::max()-2;	//18446744073709551613
+const uint64_t MIN_UINT	  __attribute__ ((unused)) = 0;
+const uint64_t MIN_UTINYINT  __attribute__ ((unused)) = 0;
+const uint64_t MIN_USMALLINT __attribute__ ((unused)) = 0;
+const uint64_t MIN_UBIGINT   __attribute__ ((unused)) = 0;
+const uint64_t MAX_UINT	  __attribute__ ((unused)) = std::numeric_limits<uint32_t>::max() - 2;	//4294967293
+const uint64_t MAX_UTINYINT  __attribute__ ((unused)) = std::numeric_limits<uint8_t>::max() - 2;	 //253;
+const uint64_t MAX_USMALLINT __attribute__ ((unused)) = std::numeric_limits<uint16_t>::max() - 2;	//65533;
+const uint64_t MAX_UBIGINT   __attribute__ ((unused)) = std::numeric_limits<uint64_t>::max() - 2;	//18446744073709551613
 
-	const float MAX_FLOAT		__attribute__ ((unused)) = std::numeric_limits<float>::max();		 //3.402823466385289e+38
-	const float MIN_FLOAT		__attribute__ ((unused)) = -std::numeric_limits<float>::max();
-	const double MAX_DOUBLE	  __attribute__ ((unused)) = std::numeric_limits<double>::max();		//1.7976931348623157e+308
-	const double MIN_DOUBLE	  __attribute__ ((unused)) = -std::numeric_limits<double>::max();
+const float MAX_FLOAT		__attribute__ ((unused)) = std::numeric_limits<float>::max();		 //3.402823466385289e+38
+const float MIN_FLOAT		__attribute__ ((unused)) = -std::numeric_limits<float>::max();
+const double MAX_DOUBLE	  __attribute__ ((unused)) = std::numeric_limits<double>::max();		//1.7976931348623157e+308
+const double MIN_DOUBLE	  __attribute__ ((unused)) = -std::numeric_limits<double>::max();
 
 
-	const uint64_t AUTOINCR_SATURATED __attribute__ ((unused)) = std::numeric_limits<uint64_t>::max();
+const uint64_t AUTOINCR_SATURATED __attribute__ ((unused)) = std::numeric_limits<uint64_t>::max();
 }
 
 class ExecPlanTest;
 namespace messageqcpp
 {
-	class MessageQueueClient;
+class MessageQueueClient;
 }
 
 // This is now set in the Columnstore.xml file
@@ -98,8 +98,8 @@ class ClientRotator;
 class SessionManager;
 
 /** MySQL $VTABLE ID */
-const int32_t CNX_VTABLE_ID=100;
-const int32_t IDB_VTABLE_ID=CNX_VTABLE_ID;
+const int32_t CNX_VTABLE_ID = 100;
+const int32_t IDB_VTABLE_ID = CNX_VTABLE_ID;
 
 /** The CalpontSystemCatalog class
  *
@@ -109,786 +109,841 @@ class CalpontSystemCatalog
 {
 public:
 
-	/** static calpontsystemcatalog instance map. one instance per session
-	 *  TODO: should be one per transaction
-	 */
-	typedef std::map <uint32_t, boost::shared_ptr<CalpontSystemCatalog> > CatalogMap;
+    /** static calpontsystemcatalog instance map. one instance per session
+     *  TODO: should be one per transaction
+     */
+    typedef std::map <uint32_t, boost::shared_ptr<CalpontSystemCatalog> > CatalogMap;
 
-	/** Server Identity
-	 *
-	 */
-	enum Identity { EC = 0, FE };
+    /** Server Identity
+     *
+     */
+    enum Identity { EC = 0, FE };
 
-	/** the set of Calpont column widths
-	 *
-	 */
-	enum ColWidth { ONE_BIT, ONE_BYTE, TWO_BYTE, THREE_BYTE, FOUR_BYTE, FIVE_BYTE, SIX_BYTE, SEVEN_BYTE, EIGHT_BYTE };
+    /** the set of Calpont column widths
+     *
+     */
+    enum ColWidth { ONE_BIT, ONE_BYTE, TWO_BYTE, THREE_BYTE, FOUR_BYTE, FIVE_BYTE, SIX_BYTE, SEVEN_BYTE, EIGHT_BYTE };
 
-	/** the set of Calpont column data types
-	 *
-	 */
-	enum ColDataType
-	{
-			BIT,			/*!< BIT type */
-			TINYINT,		/*!< TINYINT type */
-			CHAR,			/*!< CHAR type */
-			SMALLINT,		/*!< SMALLINT type */
-			DECIMAL,		/*!< DECIMAL type */
-			MEDINT,			/*!< MEDINT type */
-			INT,			/*!< INT type */
-			FLOAT,			/*!< FLOAT type */
-			DATE,			/*!< DATE type */
-			BIGINT,			/*!< BIGINT type */
-			DOUBLE,			/*!< DOUBLE type */
-			DATETIME,		/*!< DATETIME type */
-			VARCHAR,		/*!< VARCHAR type */
-			VARBINARY,		/*!< VARBINARY type */
-			CLOB,			/*!< CLOB type */
-			BLOB,			/*!< BLOB type */
-			UTINYINT,		/*!< Unsigned TINYINT type */
-			USMALLINT,		/*!< Unsigned SMALLINT type */
-			UDECIMAL,		/*!< Unsigned DECIMAL type */
-			UMEDINT,		/*!< Unsigned MEDINT type */
-			UINT,			/*!< Unsigned INT type */
-			UFLOAT,			/*!< Unsigned FLOAT type */
-			UBIGINT,		/*!< Unsigned BIGINT type */
-			UDOUBLE,		/*!< Unsigned DOUBLE type */
-            TEXT,           /*!< TEXT type */
-			NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
-			LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
-			STRINT,			/* @bug3532, string as int for fast comparison */
-			UNDEFINED       /*!< Undefined - used in UDAF API */
-   	};
+    /** the set of Calpont column data types
+     *
+     */
+    enum ColDataType
+    {
+        BIT,			/*!< BIT type */
+        TINYINT,		/*!< TINYINT type */
+        CHAR,			/*!< CHAR type */
+        SMALLINT,		/*!< SMALLINT type */
+        DECIMAL,		/*!< DECIMAL type */
+        MEDINT,			/*!< MEDINT type */
+        INT,			/*!< INT type */
+        FLOAT,			/*!< FLOAT type */
+        DATE,			/*!< DATE type */
+        BIGINT,			/*!< BIGINT type */
+        DOUBLE,			/*!< DOUBLE type */
+        DATETIME,		/*!< DATETIME type */
+        VARCHAR,		/*!< VARCHAR type */
+        VARBINARY,		/*!< VARBINARY type */
+        CLOB,			/*!< CLOB type */
+        BLOB,			/*!< BLOB type */
+        UTINYINT,		/*!< Unsigned TINYINT type */
+        USMALLINT,		/*!< Unsigned SMALLINT type */
+        UDECIMAL,		/*!< Unsigned DECIMAL type */
+        UMEDINT,		/*!< Unsigned MEDINT type */
+        UINT,			/*!< Unsigned INT type */
+        UFLOAT,			/*!< Unsigned FLOAT type */
+        UBIGINT,		/*!< Unsigned BIGINT type */
+        UDOUBLE,		/*!< Unsigned DOUBLE type */
+        TEXT,           /*!< TEXT type */
+        NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
+        LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
+        STRINT,			/* @bug3532, string as int for fast comparison */
+        UNDEFINED       /*!< Undefined - used in UDAF API */
+    };
 
-	/** the set of column constraint types
-	 *
-	 */
-	enum ConstraintType
-	{
-		NO_CONSTRAINT,
-		UNIQUE_CONSTRAINT,
-		CHECK_CONSTRAINT,
-		NOTNULL_CONSTRAINT,
-		PRIMARYKEY_CONSTRAINT,
-		REFERENCE_CONSTRAINT,
-		DEFAULT_CONSTRAINT
-	};
+    /** the set of column constraint types
+     *
+     */
+    enum ConstraintType
+    {
+        NO_CONSTRAINT,
+        UNIQUE_CONSTRAINT,
+        CHECK_CONSTRAINT,
+        NOTNULL_CONSTRAINT,
+        PRIMARYKEY_CONSTRAINT,
+        REFERENCE_CONSTRAINT,
+        DEFAULT_CONSTRAINT
+    };
 
-	enum CompressionType
-	{
-		NO_COMPRESSION,
-		COMPRESSION1,
-		COMPRESSION2
-	};
+    enum CompressionType
+    {
+        NO_COMPRESSION,
+        COMPRESSION1,
+        COMPRESSION2
+    };
 
-	enum AutoincrColumn
-	{
-		NO_AUTOINCRCOL,
-		AUTOINCRCOL
-	};
+    enum AutoincrColumn
+    {
+        NO_AUTOINCRCOL,
+        AUTOINCRCOL
+    };
 
-	/** the type of an object number
-	 *
-	 * @todo TODO: OIDs aren't really signed. This should be fixed.
-	 */
-	typedef int32_t OID;
+    /** the type of an object number
+     *
+     * @todo TODO: OIDs aren't really signed. This should be fixed.
+     */
+    typedef int32_t OID;
 
-	/** @brief a structure to hold a dictionary's
-	   *  object ids
-	   */
-	struct DictOID
-	{
-		DictOID() : dictOID(0), listOID(0), treeOID(0), compressionType(0) { }
-		OID dictOID;
-		OID listOID;
-		OID treeOID;
-		int compressionType;
-		bool operator==(const DictOID& t) const
-		{
-			if (dictOID != t.dictOID)
-				return false;
-			if (listOID != t.listOID)
-				return false;
-			if (treeOID != t.treeOID)
-				return false;
-			if (compressionType != t.compressionType)
-				return false;
-			return true;
-		}
-		bool operator!=(const DictOID& t) const
-		{
-			return !(*this == t);
-		}
-	};
+    /** @brief a structure to hold a dictionary's
+       *  object ids
+       */
+    struct DictOID
+    {
+        DictOID() : dictOID(0), listOID(0), treeOID(0), compressionType(0) { }
+        OID dictOID;
+        OID listOID;
+        OID treeOID;
+        int compressionType;
+        bool operator==(const DictOID& t) const
+        {
+            if (dictOID != t.dictOID)
+                return false;
 
-	/** the type of a list of ColumnResult as returned from getSysData
-	  */
-	typedef std::vector <ColumnResult*> NJLSysDataVector;
-	struct NJLSysDataList
-	{
-		// If we used an unorderedmap<OID, ColumnResult*>, we might improve performance.
-		// Maybe.
-		NJLSysDataVector sysDataVec;
-		NJLSysDataList(){};
-		~NJLSysDataList();
-		NJLSysDataVector::const_iterator begin() const {return sysDataVec.begin();}
-		NJLSysDataVector::const_iterator end() const {return sysDataVec.end();}
-		void push_back(ColumnResult* cr) {sysDataVec.push_back(cr);}
-		NJLSysDataVector::size_type size() const {return sysDataVec.size();}
-		NJLSysDataVector::size_type findColumn(const OID& columnOID) const
-		{
-			for(NJLSysDataVector::size_type i = 0; i < sysDataVec.size(); i++)
-				if(sysDataVec[i]->ColumnOID() == columnOID)
-					return i;
-			return -1;
-		}
-	};
+            if (listOID != t.listOID)
+                return false;
 
-	/** the type of a list of dictionary OIDs
-	  */
-	typedef std::vector<DictOID> DictOIDList;
+            if (treeOID != t.treeOID)
+                return false;
 
-	/** the structure returned by colType
-	 *
-	 * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
-	 */
-	struct ColType
-	{
-		ColType() : colWidth(0), constraintType(NO_CONSTRAINT), colDataType(MEDINT), defaultValue(""), colPosition(-1), scale(0), precision(-1), compressionType(NO_COMPRESSION), columnOID(0),
-		autoincrement(0), nextvalue(0){ }
-		int32_t colWidth;
-		ConstraintType constraintType;
-		ColDataType colDataType;
-		DictOID ddn;
-		std::string defaultValue;
-		int32_t colPosition;	// temporally put here. may need to have ColInfo struct later
-		int32_t scale;  //number after decimal points
-		int32_t precision;
-		int32_t compressionType;
-		OID columnOID;
-		bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
-		uint64_t nextvalue; //next autoincrement value
+            if (compressionType != t.compressionType)
+                return false;
 
-		ColType(const ColType& rhs)
-		{
-			colWidth = rhs.colWidth;
-			constraintType = rhs.constraintType;
-			colDataType = rhs.colDataType;
-			ddn = rhs.ddn;
-			defaultValue = rhs.defaultValue;
-			colPosition = rhs.colPosition;
-			scale = rhs.scale;
-			precision = rhs.precision;
-			compressionType = rhs.compressionType;
-			columnOID = rhs.columnOID;
-			autoincrement = rhs.autoincrement;
-			nextvalue = rhs.nextvalue;
+            return true;
+        }
+        bool operator!=(const DictOID& t) const
+        {
+            return !(*this == t);
+        }
+    };
 
-		}
-		// for F&E use. only serialize necessary info for now
-		void serialize (messageqcpp::ByteStream& b) const
-		{
-			b << (uint32_t)colDataType;
-			b << (uint32_t)colWidth;
-			b << (uint32_t)scale;
-			b << (uint32_t)precision;
-			b << (uint32_t)compressionType;
-		}
+    /** the type of a list of ColumnResult as returned from getSysData
+      */
+    typedef std::vector <ColumnResult*> NJLSysDataVector;
+    struct NJLSysDataList
+    {
+        // If we used an unorderedmap<OID, ColumnResult*>, we might improve performance.
+        // Maybe.
+        NJLSysDataVector sysDataVec;
+        NJLSysDataList() {};
+        ~NJLSysDataList();
+        NJLSysDataVector::const_iterator begin() const
+        {
+            return sysDataVec.begin();
+        }
+        NJLSysDataVector::const_iterator end() const
+        {
+            return sysDataVec.end();
+        }
+        void push_back(ColumnResult* cr)
+        {
+            sysDataVec.push_back(cr);
+        }
+        NJLSysDataVector::size_type size() const
+        {
+            return sysDataVec.size();
+        }
+        NJLSysDataVector::size_type findColumn(const OID& columnOID) const
+        {
+            for (NJLSysDataVector::size_type i = 0; i < sysDataVec.size(); i++)
+                if (sysDataVec[i]->ColumnOID() == columnOID)
+                    return i;
 
-		void unserialize (messageqcpp::ByteStream& b)
-		{
-			uint32_t val;
-			b >> (uint32_t&)val;
-			colDataType = (ColDataType)val;
-			b >> (uint32_t&)colWidth;
-			b >> (uint32_t&)scale;
-			b >> (uint32_t&)precision;
-			b >> (uint32_t&)compressionType;
-		}
+            return -1;
+        }
+    };
 
-		const std::string toString() const;
+    /** the type of a list of dictionary OIDs
+      */
+    typedef std::vector<DictOID> DictOIDList;
 
-		//Put these here so udf doesn't need to link libexecplan
-		bool operator==(const ColType& t) const
-		{
-			//order these with the most likely first
-			if (columnOID != t.columnOID)
-				return false;
-			if (colPosition != t.colPosition)
-				return false;
-			if (ddn != t.ddn)
-				return false;
-			if (colWidth != t.colWidth)
-				return false;
-			if (scale != t.scale)
-				return false;
-			if (precision != t.precision)
-				return false;
-			if (constraintType != t.constraintType)
-				return false;
-			return true;
-		}
+    /** the structure returned by colType
+     *
+     * defaultValue is only meaningful when constraintType == DEFAULT_CONSTRAINT
+     */
+    struct ColType
+    {
+        ColType() : colWidth(0), constraintType(NO_CONSTRAINT), colDataType(MEDINT), defaultValue(""), colPosition(-1), scale(0), precision(-1), compressionType(NO_COMPRESSION), columnOID(0),
+            autoincrement(0), nextvalue(0) { }
+        int32_t colWidth;
+        ConstraintType constraintType;
+        ColDataType colDataType;
+        DictOID ddn;
+        std::string defaultValue;
+        int32_t colPosition;	// temporally put here. may need to have ColInfo struct later
+        int32_t scale;  //number after decimal points
+        int32_t precision;
+        int32_t compressionType;
+        OID columnOID;
+        bool	 autoincrement; //set to true if  SYSCOLUMN autoincrement is �y�
+        uint64_t nextvalue; //next autoincrement value
 
-		bool operator!=(const ColType& t) const
-		{
-			return !(*this == t);
-		}
+        ColType(const ColType& rhs)
+        {
+            colWidth = rhs.colWidth;
+            constraintType = rhs.constraintType;
+            colDataType = rhs.colDataType;
+            ddn = rhs.ddn;
+            defaultValue = rhs.defaultValue;
+            colPosition = rhs.colPosition;
+            scale = rhs.scale;
+            precision = rhs.precision;
+            compressionType = rhs.compressionType;
+            columnOID = rhs.columnOID;
+            autoincrement = rhs.autoincrement;
+            nextvalue = rhs.nextvalue;
 
-	};
+        }
+        // for F&E use. only serialize necessary info for now
+        void serialize (messageqcpp::ByteStream& b) const
+        {
+            b << (uint32_t)colDataType;
+            b << (uint32_t)colWidth;
+            b << (uint32_t)scale;
+            b << (uint32_t)precision;
+            b << (uint32_t)compressionType;
+        }
 
-	/** the structure of a table infomation
-	 *
-	 *  this structure holds table related info. More in the future
-	 */
-	struct TableInfo
-	{
-		TableInfo() : numOfCols(0), tablewithautoincr(NO_AUTOINCRCOL) { }
-		int numOfCols;
-		int tablewithautoincr;
-	};
+        void unserialize (messageqcpp::ByteStream& b)
+        {
+            uint32_t val;
+            b >> (uint32_t&)val;
+            colDataType = (ColDataType)val;
+            b >> (uint32_t&)colWidth;
+            b >> (uint32_t&)scale;
+            b >> (uint32_t&)precision;
+            b >> (uint32_t&)compressionType;
+        }
 
-	/** the type of a Row ID
-	 *
-	 * @todo TODO: RIDs aren't really signed. This should be fixed.
-	 */
-	//@bug 1866 match RID to writeengine, uint64_t
-	typedef WriteEngine::RID RID;
+        const std::string toString() const;
 
-	/**
-	 *
-	 */
+        //Put these here so udf doesn't need to link libexecplan
+        bool operator==(const ColType& t) const
+        {
+            //order these with the most likely first
+            if (columnOID != t.columnOID)
+                return false;
 
-	/** the type of a <Row ID, object number> pair
-	 *
-	 * @todo TODO: the rid field in this structure does not make sense. the structure is equalivent
-	 * to OID and therefore will be deprecated soon.
-	 */
-	//@bug 1866 changed rid default to 0; RID matches writeengine rid, uint64_t
-	struct ROPair
-	{
-		ROPair() : rid(std::numeric_limits<RID>::max()), objnum(0) { }
-		RID rid;
-		OID objnum;
-	};
+            if (colPosition != t.colPosition)
+                return false;
 
-	/** the type of a list of Object ID's
-	 *
-	 * @todo TODO: the rid field in this structure does not make sense. the structure is equalivent
-	 * to OID and therefore will be deprecated soon.
-	 */
-	typedef std::vector<ROPair> RIDList;
+            if (ddn != t.ddn)
+                return false;
 
-	/** the type of a <indexTreeOID, indexListOID> pair
-	 *
-	 */
-	struct IndexOID
-	{
-		OID objnum;
-		OID listOID;
-		bool multiColFlag;
-	};
+            if (colWidth != t.colWidth)
+                return false;
 
-	/** the type of a list of Index OIDs
-	  */
-	typedef std::vector<IndexOID> IndexOIDList;
+            if (scale != t.scale)
+                return false;
 
-	/** the structure for libcalmysql to use. Alias is taken account to the identity of tables.
-	 *
-	 */
-	struct TableAliasName
-	{
-		TableAliasName ():fIsInfiniDB (true) {}
-		TableAliasName (std::string sch, std::string tb, std::string al) :
-					schema (sch), table (tb), alias (al), fIsInfiniDB(true) {}
-		TableAliasName (std::string sch, std::string tb, std::string al, std::string v) :
-                                        schema (sch), table (tb), alias (al), view(v), fIsInfiniDB(true) {}
-		std::string schema;
-		std::string table;
-		std::string alias;
-		std::string view;
-		bool fIsInfiniDB;
-		void clear();
-		bool operator<(const TableAliasName& rhs) const;
-		bool operator>=(const TableAliasName& rhs) const { return !(*this < rhs); }
-		bool operator==(const TableAliasName& rhs) const
-			{ return (schema == rhs.schema &&
-						table == rhs.table &&
-						alias == rhs.alias &&
-						view == rhs.view &&
-						fIsInfiniDB == rhs.fIsInfiniDB); }
-		bool operator!=(const TableAliasName& rhs) const { return !(*this == rhs); }
-		void serialize(messageqcpp::ByteStream&) const;
-		void unserialize(messageqcpp::ByteStream&);
-		friend std::ostream& operator<<(std::ostream& os, const TableAliasName& rhs);
-	};
+            if (precision != t.precision)
+                return false;
 
-	/** the structure passed into various RID methods
-	 *
-	 */
-	struct TableName
-	{
-		TableName() {}
-		TableName(std::string sch, std::string tb) :
-					schema(sch), table(tb) {}
-		TableName(const TableAliasName& tan): schema(tan.schema), table(tan.table) {}
-		std::string schema;
-		std::string table;
+            if (constraintType != t.constraintType)
+                return false;
+
+            return true;
+        }
+
+        bool operator!=(const ColType& t) const
+        {
+            return !(*this == t);
+        }
+
+    };
+
+    /** the structure of a table infomation
+     *
+     *  this structure holds table related info. More in the future
+     */
+    struct TableInfo
+    {
+        TableInfo() : numOfCols(0), tablewithautoincr(NO_AUTOINCRCOL) { }
+        int numOfCols;
+        int tablewithautoincr;
+    };
+
+    /** the type of a Row ID
+     *
+     * @todo TODO: RIDs aren't really signed. This should be fixed.
+     */
+    //@bug 1866 match RID to writeengine, uint64_t
+    typedef WriteEngine::RID RID;
+
+    /**
+     *
+     */
+
+    /** the type of a <Row ID, object number> pair
+     *
+     * @todo TODO: the rid field in this structure does not make sense. the structure is equalivent
+     * to OID and therefore will be deprecated soon.
+     */
+    //@bug 1866 changed rid default to 0; RID matches writeengine rid, uint64_t
+    struct ROPair
+    {
+        ROPair() : rid(std::numeric_limits<RID>::max()), objnum(0) { }
+        RID rid;
+        OID objnum;
+    };
+
+    /** the type of a list of Object ID's
+     *
+     * @todo TODO: the rid field in this structure does not make sense. the structure is equalivent
+     * to OID and therefore will be deprecated soon.
+     */
+    typedef std::vector<ROPair> RIDList;
+
+    /** the type of a <indexTreeOID, indexListOID> pair
+     *
+     */
+    struct IndexOID
+    {
+        OID objnum;
+        OID listOID;
+        bool multiColFlag;
+    };
+
+    /** the type of a list of Index OIDs
+      */
+    typedef std::vector<IndexOID> IndexOIDList;
+
+    /** the structure for libcalmysql to use. Alias is taken account to the identity of tables.
+     *
+     */
+    struct TableAliasName
+    {
+        TableAliasName (): fIsInfiniDB (true) {}
+        TableAliasName (std::string sch, std::string tb, std::string al) :
+            schema (sch), table (tb), alias (al), fIsInfiniDB(true) {}
+        TableAliasName (std::string sch, std::string tb, std::string al, std::string v) :
+            schema (sch), table (tb), alias (al), view(v), fIsInfiniDB(true) {}
+        std::string schema;
+        std::string table;
+        std::string alias;
+        std::string view;
+        bool fIsInfiniDB;
+        void clear();
+        bool operator<(const TableAliasName& rhs) const;
+        bool operator>=(const TableAliasName& rhs) const
+        {
+            return !(*this < rhs);
+        }
+        bool operator==(const TableAliasName& rhs) const
+        {
+            return (schema == rhs.schema &&
+                    table == rhs.table &&
+                    alias == rhs.alias &&
+                    view == rhs.view &&
+                    fIsInfiniDB == rhs.fIsInfiniDB);
+        }
+        bool operator!=(const TableAliasName& rhs) const
+        {
+            return !(*this == rhs);
+        }
+        void serialize(messageqcpp::ByteStream&) const;
+        void unserialize(messageqcpp::ByteStream&);
+        friend std::ostream& operator<<(std::ostream& os, const TableAliasName& rhs);
+    };
+
+    /** the structure passed into various RID methods
+     *
+     */
+    struct TableName
+    {
+        TableName() {}
+        TableName(std::string sch, std::string tb) :
+            schema(sch), table(tb) {}
+        TableName(const TableAliasName& tan): schema(tan.schema), table(tan.table) {}
+        std::string schema;
+        std::string table;
         int64_t create_date;
-		bool operator<(const TableName& rhs) const;
-		bool operator>=(const TableName& rhs) const { return !(*this < rhs); }
-		bool operator==(const TableName& rhs) const
-			{ return (schema == rhs.schema && table == rhs.table); }
-		bool operator!=(const TableName& rhs) const { return !(*this == rhs); }
-		const std::string toString() const;
-		friend std::ostream& operator<<(std::ostream& os, const TableName& rhs)
-			{ os << rhs.toString(); return os; }
-	};
+        bool operator<(const TableName& rhs) const;
+        bool operator>=(const TableName& rhs) const
+        {
+            return !(*this < rhs);
+        }
+        bool operator==(const TableName& rhs) const
+        {
+            return (schema == rhs.schema && table == rhs.table);
+        }
+        bool operator!=(const TableName& rhs) const
+        {
+            return !(*this == rhs);
+        }
+        const std::string toString() const;
+        friend std::ostream& operator<<(std::ostream& os, const TableName& rhs)
+        {
+            os << rhs.toString();
+            return os;
+        }
+    };
 
-	/** the structure passed into get RID for Index values
-	 *
-	 */
-	struct IndexName
-	{
-		std::string schema;
-		std::string table;
-		std::string index;
-		bool  	multiColFlag;
-		bool operator<(const IndexName& rhs) const;
-	};
+    /** the structure passed into get RID for Index values
+     *
+     */
+    struct IndexName
+    {
+        std::string schema;
+        std::string table;
+        std::string index;
+        bool  	multiColFlag;
+        bool operator<(const IndexName& rhs) const;
+    };
 
-	/** the structure of a constraint infomation */
-	struct ConstraintInfo
-	{
-		ConstraintInfo():constraintType(NO_CONSTRAINT){}
-		int constraintType;
-		IndexName constraintName;
-		std::string constraintText;
-		std::string referenceSchema;	// for foreign key constraint
-		std::string referenceTable;	 // for foreign key constraint
-		std::string referencePKName;	// for foreign key constraint
-		std::string constraintStatus;
-	};
+    /** the structure of a constraint infomation */
+    struct ConstraintInfo
+    {
+        ConstraintInfo(): constraintType(NO_CONSTRAINT) {}
+        int constraintType;
+        IndexName constraintName;
+        std::string constraintText;
+        std::string referenceSchema;	// for foreign key constraint
+        std::string referenceTable;	 // for foreign key constraint
+        std::string referencePKName;	// for foreign key constraint
+        std::string constraintStatus;
+    };
 
-	/** the structure passed into lookupOID
-	 *
-	 */
-	struct TableColName
-	{
-		std::string schema;
-		std::string table;
-		std::string column;
-		bool operator<(const TableColName& rhs) const;
-		const std::string toString() const;
-		friend std::ostream& operator<<(std::ostream& os, const TableColName& rhs);
-	};
+    /** the structure passed into lookupOID
+     *
+     */
+    struct TableColName
+    {
+        std::string schema;
+        std::string table;
+        std::string column;
+        bool operator<(const TableColName& rhs) const;
+        const std::string toString() const;
+        friend std::ostream& operator<<(std::ostream& os, const TableColName& rhs);
+    };
 
-	typedef std::vector<IndexName> IndexNameList;
-	typedef std::vector<TableColName> TableColNameList;
+    typedef std::vector<IndexName> IndexNameList;
+    typedef std::vector<TableColName> TableColNameList;
 
-	/** the type of a System Change Number
-	 *
-	 */
-	typedef int SCN;
+    /** the type of a System Change Number
+     *
+     */
+    typedef int SCN;
 
-	/** the type of an index number
-	 *
-	 */
-	typedef int INDNUM;
+    /** the type of an index number
+     *
+     */
+    typedef int INDNUM;
 
-	/** the type returned by makeCalpontSystemCatalog()
-	 *
-	 */
-	typedef boost::shared_ptr<CalpontSystemCatalog> SPCSC;
+    /** the type returned by makeCalpontSystemCatalog()
+     *
+     */
+    typedef boost::shared_ptr<CalpontSystemCatalog> SPCSC;
 
-	/** looks up a table's OID in the System Catalog
-	 *
-	 * For a unique table_name return the internal OID
-	 */
-	const OID lookupTableOID(const TableName& tableName);
+    /** looks up a table's OID in the System Catalog
+     *
+     * For a unique table_name return the internal OID
+     */
+    const OID lookupTableOID(const TableName& tableName);
 
-	/** looks up a column's OID in the System Catalog
-	 *
-	 * For a unique table_name.column_name return the internal OID
-	 */
-	const OID lookupOID(const TableColName& tableColName);
+    /** looks up a column's OID in the System Catalog
+     *
+     * For a unique table_name.column_name return the internal OID
+     */
+    const OID lookupOID(const TableColName& tableColName);
 
-	/** returns the column type attribute(s) for a column
-	 *
-	 * return the various column attributes for a given OID
-	 */
-	const ColType colType(const OID& oid);
+    /** returns the column type attribute(s) for a column
+     *
+     * return the various column attributes for a given OID
+     */
+    const ColType colType(const OID& oid);
 
-	/** returns the column type attribute(s) for a column gived a dictionary OID
-	 *
-	 * return the same thing as colType does for the corresponding token OID
-	 */
-	const ColType colTypeDct(const OID& dictOid);
+    /** returns the column type attribute(s) for a column gived a dictionary OID
+     *
+     * return the same thing as colType does for the corresponding token OID
+     */
+    const ColType colTypeDct(const OID& dictOid);
 
-	/** returns the table column name for a column
-	 *
-	 * return the table column name for a given OID:
-	 */
-	const TableColName colName(const OID& oid);
-	 /** returns the table column name for a dictionary column
-	 *
-	 * return the table column name for a given OID:
-	 */
-	const TableColName dictColName(const OID& oid);
+    /** returns the table column name for a column
+     *
+     * return the table column name for a given OID:
+     */
+    const TableColName colName(const OID& oid);
+    /** returns the table column name for a dictionary column
+    *
+    * return the table column name for a given OID:
+    */
+    const TableColName dictColName(const OID& oid);
 
-	/** returns the next value of autoincrement for the table
-	 *
-	 * return the next value of autoincrement for a given table:
-	 * AUTOINCR_SATURATED: limit exceeded
-	 * 0: Autoincrement does not exist for this table
-	 * Throws runtime_error if no such table found
-	 */
-	const uint64_t nextAutoIncrValue ( TableName tableName);
+    /** returns the next value of autoincrement for the table
+     *
+     * return the next value of autoincrement for a given table:
+     * AUTOINCR_SATURATED: limit exceeded
+     * 0: Autoincrement does not exist for this table
+     * Throws runtime_error if no such table found
+     */
+    const uint64_t nextAutoIncrValue ( TableName tableName);
 
-	/** returns the rid of next autoincrement value for the table oid
-	 *
-	 * return the rid of next value of autoincrement for a given table:
-	 */
-	const ROPair nextAutoIncrRid ( const OID& oid);
+    /** returns the rid of next autoincrement value for the table oid
+     *
+     * return the rid of next value of autoincrement for a given table:
+     */
+    const ROPair nextAutoIncrRid ( const OID& oid);
 
-	/** returns the oid of autoincrement column for the table
-	 *
-	 * return the oid of autoincrement column for a given table:
-	 */
-	int32_t autoColumOid(TableName tableName);
+    /** returns the oid of autoincrement column for the table
+     *
+     * return the oid of autoincrement column for a given table:
+     */
+    int32_t autoColumOid(TableName tableName);
 
-	/** returns the columns bitmap file object number
-	 *
-	 * return the bitmap file object number for a given OID:
-	 */
-	const OID colBitmap(const OID& oid) const;
+    /** returns the columns bitmap file object number
+     *
+     * return the bitmap file object number for a given OID:
+     */
+    const OID colBitmap(const OID& oid) const;
 
-	/** return the current SCN
-	 *
-	 * returns the current System Change Number (for versioning support)
-	 */
-	const SCN scn(void) const;
+    /** return the current SCN
+     *
+     * returns the current System Change Number (for versioning support)
+     */
+    const SCN scn(void) const;
 
-	/** return the RID's of the indexes for a table
-	 *
-	 * returns a list of the RID's of the indexes for a table
-	 */
-	const RIDList indexRIDs(const TableName& tableName);
+    /** return the RID's of the indexes for a table
+     *
+     * returns a list of the RID's of the indexes for a table
+     */
+    const RIDList indexRIDs(const TableName& tableName);
 
-   /** return the total number of columns for a table
-	 *
-	 * returns the total number of columns for a table
-	 */
-	const int colNumbers(const TableName& tableName);
+    /** return the total number of columns for a table
+     *
+     * returns the total number of columns for a table
+     */
+    const int colNumbers(const TableName& tableName);
 
-	/** return the RID's of the colindexes for a table
-	 *
-	 * returns a list of the RID's of the colindexes for a table
-	 */
-	const RIDList indexColRIDs(const TableName& tableName);
+    /** return the RID's of the colindexes for a table
+     *
+     * returns a list of the RID's of the colindexes for a table
+     */
+    const RIDList indexColRIDs(const TableName& tableName);
 
-	/** return the RID's of the index columns (SYSINDEXCOL) for a index
-	 *
-	 * returns a list of the RID's of the colindexes for a index
-	 */
-	const RIDList indexColRIDs(const IndexName& indexName);
+    /** return the RID's of the index columns (SYSINDEXCOL) for a index
+     *
+     * returns a list of the RID's of the colindexes for a index
+     */
+    const RIDList indexColRIDs(const IndexName& indexName);
 
-	/** return the RID's of the constraints for a table
-	 *
-	 * returns a list of the RID's of the constraints for a table
-	 */
-	const RIDList constraintRIDs(const TableName& tableName);
+    /** return the RID's of the constraints for a table
+     *
+     * returns a list of the RID's of the constraints for a table
+     */
+    const RIDList constraintRIDs(const TableName& tableName);
 
-	/** return the RID of the constraint for a ConstrainName
-	 *
-	 * returns a RID of the constraint for a ConstrainName fron table SYSCONSTRAINT
-	 */
-	const RID constraintRID(const std::string constraintName);
+    /** return the RID of the constraint for a ConstrainName
+     *
+     * returns a RID of the constraint for a ConstrainName fron table SYSCONSTRAINT
+     */
+    const RID constraintRID(const std::string constraintName);
 
-	/** return the list of IndexName for a given TableColName
-	 *
-	 * return the list of IndexName for a given TableColName from table SYSCONSTRAINTCOL
-	 */
-	const IndexNameList colValueSysconstraint (const TableColName& colName, bool useCache=false);
+    /** return the list of IndexName for a given TableColName
+     *
+     * return the list of IndexName for a given TableColName from table SYSCONSTRAINTCOL
+     */
+    const IndexNameList colValueSysconstraint (const TableColName& colName, bool useCache = false);
 
-	/** return the RID's of the colconstraints for a table
-	 *
-	 * returns a list of the RID's of the colconstraints for a table
-	 */
-	const RIDList constraintColRIDs(const TableName& tableName);
+    /** return the RID's of the colconstraints for a table
+     *
+     * returns a list of the RID's of the colconstraints for a table
+     */
+    const RIDList constraintColRIDs(const TableName& tableName);
 
-	 /** return the RID of the colconstraint for a column
-	 *
-	 * returns the RID of the colconstraints for a column
-	 */
-	const RID constraintColRID(const TableColName& tableColName);
+    /** return the RID of the colconstraint for a column
+    *
+    * returns the RID of the colconstraints for a column
+    */
+    const RID constraintColRID(const TableColName& tableColName);
 
-	/** return the value for the given RID and column name from table SYSCONSTRAINTCOL
-	 *
-	 * returns the column value for the given RID a column name fron table SYSCONSTRAINTCOL
-	 */
-	const std::string colValueSysconstraintCol (const TableColName& colName);
+    /** return the value for the given RID and column name from table SYSCONSTRAINTCOL
+     *
+     * returns the column value for the given RID a column name fron table SYSCONSTRAINTCOL
+     */
+    const std::string colValueSysconstraintCol (const TableColName& colName);
 
-	/** return the RID of the constraint for a ConstrainName
-	 *
-	 * returns a RID of the constraint for a ConstrainName fron table SYSCONSTRAINTCOL
-	 */
-	const RIDList constraintColRID(const std::string constraintName);
+    /** return the RID of the constraint for a ConstrainName
+     *
+     * returns a RID of the constraint for a ConstrainName fron table SYSCONSTRAINTCOL
+     */
+    const RIDList constraintColRID(const std::string constraintName);
 
-	/** return the ROPair of the column
-	 *
-	 * @note the RID field in ROPair does not make sense. the purpose of this function is to
-	 * return OID. Therefore it's duplicate to lookupOID function. This function is to be
-	 * deprecated.
-	 */
-	const ROPair columnRID(const TableColName& tableColName);
+    /** return the ROPair of the column
+     *
+     * @note the RID field in ROPair does not make sense. the purpose of this function is to
+     * return OID. Therefore it's duplicate to lookupOID function. This function is to be
+     * deprecated.
+     */
+    const ROPair columnRID(const TableColName& tableColName);
 
-	/** return the RID's of the columns for a table
-	 *
-	 * returns a list of the RID's of the columns for a table
-	 */
-	const RIDList columnRIDs(const TableName& tableName, bool useCache=false);
+    /** return the RID's of the columns for a table
+     *
+     * returns a list of the RID's of the columns for a table
+     */
+    const RIDList columnRIDs(const TableName& tableName, bool useCache = false);
 
-	/** return the RID of the table
-	 *
-	 * returns the RID of the table
-	 */
-	const ROPair tableRID(const TableName& tableName);
+    /** return the RID of the table
+     *
+     * returns the RID of the table
+     */
+    const ROPair tableRID(const TableName& tableName);
 
-	/** return the RID of the index for a table
-	 *
-	 * returns the RID of the indexes for a table
-	 */
-	const ROPair indexRID(const IndexName& indexName);
-	 /** return the INDEX NAME list for a table
-	 *
-	 * returns the index name list for a table
-	 */
-	const IndexNameList indexNames(const TableName& tableName);
-	 /** return the column names for a index
-	 *
-	 * returns the column name list for a index
-	 */
-	const TableColNameList indexColNames ( const IndexName& indexName);
+    /** return the RID of the index for a table
+     *
+     * returns the RID of the indexes for a table
+     */
+    const ROPair indexRID(const IndexName& indexName);
+    /** return the INDEX NAME list for a table
+    *
+    * returns the index name list for a table
+    */
+    const IndexNameList indexNames(const TableName& tableName);
+    /** return the column names for a index
+    *
+    * returns the column name list for a index
+    */
+    const TableColNameList indexColNames ( const IndexName& indexName);
 
-	 /** return the column names for a index
-	 *
-	 * returns the column name list for a index
-	 */
-	const TableColNameList constraintColNames ( const std::string constraintName);
+    /** return the column names for a index
+    *
+    * returns the column name list for a index
+    */
+    const TableColNameList constraintColNames ( const std::string constraintName);
 
-	/** return the value for the given RID and column name from table SYSINDEX
-	 *
-	 * returns the column value for the given RID a column name fron table SYSINDEX
-	 */
-	const std::string colValueSysindex (const TableColName& colName);
+    /** return the value for the given RID and column name from table SYSINDEX
+     *
+     * returns the column value for the given RID a column name fron table SYSINDEX
+     */
+    const std::string colValueSysindex (const TableColName& colName);
 
-	/** return the RID of the colindexe for a table
-	 *
-	 * returns the RID's of the colindexe for a table
-	 */
-	const RIDList indexColRID(const IndexName& indexName);
+    /** return the RID of the colindexe for a table
+     *
+     * returns the RID's of the colindexe for a table
+     */
+    const RIDList indexColRID(const IndexName& indexName);
 
-	/** return the RID of the colindexe for a table
-	 *
-	 * returns the RID's of the colindexe for a table
-	 */
-	const ROPair indexColRID(const TableColName& tableColName);
+    /** return the RID of the colindexe for a table
+     *
+     * returns the RID's of the colindexe for a table
+     */
+    const ROPair indexColRID(const TableColName& tableColName);
 
-	/** return the value for the given RID and column name from table SYSINDEX
-	 *
-	 * returns the column value for the given RID a column name fron table SYSINDEX
-	 */
-	const IndexNameList colValueSysindexCol (const TableColName& colName);
+    /** return the value for the given RID and column name from table SYSINDEX
+     *
+     * returns the column value for the given RID a column name fron table SYSINDEX
+     */
+    const IndexNameList colValueSysindexCol (const TableColName& colName);
 
-	/** looks up a Table Name for a Index in the System Catalog
-	 *
-	 * For a unique Index return the Table Name Structure
-	 */
-	const TableName lookupTableForIndex(const std::string indexName, const std::string schema);
+    /** looks up a Table Name for a Index in the System Catalog
+     *
+     * For a unique Index return the Table Name Structure
+     */
+    const TableName lookupTableForIndex(const std::string indexName, const std::string schema);
 
-	/** looks up a index oid for a Index in the System Catalog
-	 *
-	 * For an index name return index OID
-	 */
-	const IndexOID lookupIndexNbr(const IndexName& indexName);
+    /** looks up a index oid for a Index in the System Catalog
+     *
+     * For an index name return index OID
+     */
+    const IndexOID lookupIndexNbr(const IndexName& indexName);
 
-	/** look up an Index Number for the given table column name
-	 *
-	 * If an index exists for the table and column return its number
-	 * @note if one column belongs to multiple index, this function will get confused.
-	 * for now, assume one column belongs to just one index. In the future getPlan
-	 * should give index name therefore this function will be deprecated.
-	 */
-	const IndexOID lookupIndexNbr(const TableColName& tableColName);
+    /** look up an Index Number for the given table column name
+     *
+     * If an index exists for the table and column return its number
+     * @note if one column belongs to multiple index, this function will get confused.
+     * for now, assume one column belongs to just one index. In the future getPlan
+     * should give index name therefore this function will be deprecated.
+     */
+    const IndexOID lookupIndexNbr(const TableColName& tableColName);
 
-	/** return the list of Index OIDs for the given table
-	  *
-	  * returns the list of Index OIDs for a table
-	  */
-	const IndexOIDList indexOIDs(const TableName& tableName);
+    /** return the list of Index OIDs for the given table
+      *
+      * returns the list of Index OIDs for a table
+      */
+    const IndexOIDList indexOIDs(const TableName& tableName);
 
-	/** return the list of Dictionary OIDs for the given table
-	  *
-	  * returns the list of Dictionary OIDs for a table
-	  */
-	const DictOIDList dictOIDs(const TableName& tableName);
+    /** return the list of Dictionary OIDs for the given table
+      *
+      * returns the list of Dictionary OIDs for a table
+      */
+    const DictOIDList dictOIDs(const TableName& tableName);
 
-	/** Update column OID. This is for testing DDL and DML only
-	  * and will go away once READ works
-	*/
-	void storeColOID (void) ;
+    /** Update column OID. This is for testing DDL and DML only
+      * and will go away once READ works
+    */
+    void storeColOID (void) ;
 
-	/** Update dictionary OIDs. This is for testing DDL and DML only
-	  * and will go away once READ works
-	*/
-	void storeDictOID (void) ;
+    /** Update dictionary OIDs. This is for testing DDL and DML only
+      * and will go away once READ works
+    */
+    void storeDictOID (void) ;
 
-	/** Update index OIDs. This is for testing DDL and DML only
-	  * and will go away once READ works
-	*/
-	void storeIndexOID (void) ;
+    /** Update index OIDs. This is for testing DDL and DML only
+      * and will go away once READ works
+    */
+    void storeIndexOID (void) ;
 
-	/** Reload dictionary OIDs, index OIDs, column OID. This is for testing DDL and DML only
-	  * and will go away once READ works
-	*/
-	void updateColInfo (void) ;
+    /** Reload dictionary OIDs, index OIDs, column OID. This is for testing DDL and DML only
+      * and will go away once READ works
+    */
+    void updateColInfo (void) ;
 
-	/** returns a pointer to the System Catalog singleton per session
-	 *  TODO: may need to change to one instance per transaction
-	 *  @parm sessionID to map the key of catalog map
-	 */
-	static SPCSC makeCalpontSystemCatalog(uint32_t sessionID = 0);
+    /** returns a pointer to the System Catalog singleton per session
+     *  TODO: may need to change to one instance per transaction
+     *  @parm sessionID to map the key of catalog map
+     */
+    static SPCSC makeCalpontSystemCatalog(uint32_t sessionID = 0);
 
-	/** remove and delete the instance map to the sessionid
-	 *  @param sessionID
-	 */
-	static void removeCalpontSystemCatalog(uint32_t sessionID = 0);
-	/** sessionid access and mutator methods
-	 *
-	 */
-	const uint32_t sessionID() const { return fSessionID; }
-	void sessionID (uint32_t sessionID) { fSessionID = sessionID; }
-	/** identity access and mutator methods
-	 *
-	 */
-	const int identity() const { return fIdentity; }
-	void identity (int identity) { fIdentity = identity; }
+    /** remove and delete the instance map to the sessionid
+     *  @param sessionID
+     */
+    static void removeCalpontSystemCatalog(uint32_t sessionID = 0);
+    /** sessionid access and mutator methods
+     *
+     */
+    const uint32_t sessionID() const
+    {
+        return fSessionID;
+    }
+    void sessionID (uint32_t sessionID)
+    {
+        fSessionID = sessionID;
+    }
+    /** identity access and mutator methods
+     *
+     */
+    const int identity() const
+    {
+        return fIdentity;
+    }
+    void identity (int identity)
+    {
+        fIdentity = identity;
+    }
 
-	/** return the column position
-	 *
-	 *  return the column position for a given OID
-	 */
-	const int colPosition (const OID& oid);
-	/** return primary key name for the given table */
-	const std::string primaryKeyName (const TableName& tableName );
-	/** return the table info
-	 *
-	 *  return the table info for a given TableName
-	 */
-	const TableInfo tableInfo (const TableName& tb);
-	/** return the table name for a give table oid */
-	const TableName tableName (const OID& oid);
-	/** return the list of tables for a given schema */
-	const std::vector< std::pair<OID, TableName> > getTables (const std::string schema = "");
-	/** return the number of tables in the whole database */
-	const int getTableCount ();
-	/** return the constraint info for a given constraint */
-	const ConstraintInfo constraintInfo (const IndexName& constraintName);
-	/** return the constraintName list for a given referencePKName */
-	const IndexNameList referenceConstraints (const IndexName& referencePKName);
+    /** return the column position
+     *
+     *  return the column position for a given OID
+     */
+    const int colPosition (const OID& oid);
+    /** return primary key name for the given table */
+    const std::string primaryKeyName (const TableName& tableName );
+    /** return the table info
+     *
+     *  return the table info for a given TableName
+     */
+    const TableInfo tableInfo (const TableName& tb);
+    /** return the table name for a give table oid */
+    const TableName tableName (const OID& oid);
+    /** return the list of tables for a given schema */
+    const std::vector< std::pair<OID, TableName> > getTables (const std::string schema = "");
+    /** return the number of tables in the whole database */
+    const int getTableCount ();
+    /** return the constraint info for a given constraint */
+    const ConstraintInfo constraintInfo (const IndexName& constraintName);
+    /** return the constraintName list for a given referencePKName */
+    const IndexNameList referenceConstraints (const IndexName& referencePKName);
 
-	// @bug 682
-	void getSchemaInfo(const std::string& schema);
+    // @bug 682
+    void getSchemaInfo(const std::string& schema);
 
-	typedef std::map<uint32_t, long long> OIDNextvalMap;
-	void updateColinfoCache(OIDNextvalMap & oidNextvalMap);
+    typedef std::map<uint32_t, long long> OIDNextvalMap;
+    void updateColinfoCache(OIDNextvalMap& oidNextvalMap);
 
-	void flushCache();
+    void flushCache();
 
-	/** Convert a MySQL thread id to an InfiniDB session id */
-	static uint32_t idb_tid2sid(const uint32_t tid);
+    /** Convert a MySQL thread id to an InfiniDB session id */
+    static uint32_t idb_tid2sid(const uint32_t tid);
 
-	friend class ::ExecPlanTest;
+    friend class ::ExecPlanTest;
 
-	/** Destructor */
-	~CalpontSystemCatalog();
+    /** Destructor */
+    ~CalpontSystemCatalog();
 
 private:
-	/** Constuctors */
-	explicit CalpontSystemCatalog();
-	explicit CalpontSystemCatalog(const CalpontSystemCatalog& rhs);
+    /** Constuctors */
+    explicit CalpontSystemCatalog();
+    explicit CalpontSystemCatalog(const CalpontSystemCatalog& rhs);
 
 
-	CalpontSystemCatalog& operator=(const CalpontSystemCatalog& rhs);
+    CalpontSystemCatalog& operator=(const CalpontSystemCatalog& rhs);
 
-	/** get system data */
-	void getSysData (execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
-	/** get system data for Front End */
-	void getSysData_FE(const execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
-	/** get system data for Engine Controller */
-	void getSysData_EC(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
+    /** get system data */
+    void getSysData (execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
+    /** get system data for Front End */
+    void getSysData_FE(const execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
+    /** get system data for Engine Controller */
+    void getSysData_EC(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
 
-	void buildSysColinfomap();
-	void buildSysOIDmap();
-	void buildSysTablemap();
-	void buildSysDctmap();
+    void buildSysColinfomap();
+    void buildSysOIDmap();
+    void buildSysTablemap();
+    void buildSysDctmap();
 
-	void checkSysCatVer();
+    void checkSysCatVer();
 
-	static boost::mutex map_mutex;
-	static CatalogMap fCatalogMap;
+    static boost::mutex map_mutex;
+    static CatalogMap fCatalogMap;
 
-	typedef std::map<TableColName, OID> OIDmap;
-	OIDmap fOIDmap;
-	boost::mutex fOIDmapLock; //Also locks fColRIDmap
+    typedef std::map<TableColName, OID> OIDmap;
+    OIDmap fOIDmap;
+    boost::mutex fOIDmapLock; //Also locks fColRIDmap
 
-	typedef std::map<TableName, RID> Tablemap;
-	Tablemap fTablemap;
+    typedef std::map<TableName, RID> Tablemap;
+    Tablemap fTablemap;
 
-	typedef std::map<OID, ColType> Colinfomap;
-	Colinfomap fColinfomap;
-	boost::mutex fColinfomapLock;
+    typedef std::map<OID, ColType> Colinfomap;
+    Colinfomap fColinfomap;
+    boost::mutex fColinfomapLock;
 
-	/** this structure is used by ddl only. it cache the rid for rows in syscolumn
-		that match the tableColName */
-	typedef std::map<TableColName, RID> ColRIDmap;
-	ColRIDmap fColRIDmap;
+    /** this structure is used by ddl only. it cache the rid for rows in syscolumn
+    	that match the tableColName */
+    typedef std::map<TableColName, RID> ColRIDmap;
+    ColRIDmap fColRIDmap;
 
-	/** this structure is used by ddl only. it cache the rid for rows in systable
-		that match the tableName */
-	typedef std::map<TableName, RID> TableRIDmap;
-	TableRIDmap fTableRIDmap;
+    /** this structure is used by ddl only. it cache the rid for rows in systable
+    	that match the tableName */
+    typedef std::map<TableName, RID> TableRIDmap;
+    TableRIDmap fTableRIDmap;
 
 
-	// this structure may combine with Tablemap, where RID is added to TalbeInfo struct
-	typedef std::map<TableName, TableInfo> TableInfoMap;
-	TableInfoMap fTableInfoMap;
-	boost::mutex fTableInfoMapLock;
+    // this structure may combine with Tablemap, where RID is added to TalbeInfo struct
+    typedef std::map<TableName, TableInfo> TableInfoMap;
+    TableInfoMap fTableInfoMap;
+    boost::mutex fTableInfoMapLock;
 
-	typedef std::map<TableColName, IndexNameList> ColIndexListmap;
-	ColIndexListmap fColIndexListmap;
-	boost::mutex fColIndexListmapLock;
+    typedef std::map<TableColName, IndexNameList> ColIndexListmap;
+    ColIndexListmap fColIndexListmap;
+    boost::mutex fColIndexListmapLock;
 
-	typedef std::map<OID, OID> DctTokenMap;
-	DctTokenMap fDctTokenMap;
-	// MCOL-859: this can lock when already locked in the same thread
-	boost::recursive_mutex fDctTokenMapLock;
+    typedef std::map<OID, OID> DctTokenMap;
+    DctTokenMap fDctTokenMap;
+    // MCOL-859: this can lock when already locked in the same thread
+    boost::recursive_mutex fDctTokenMapLock;
 
-		typedef std::map<OID, TableName> TableNameMap;
-		TableNameMap fTableNameMap;
-		boost::mutex fTableNameMapLock;
+    typedef std::map<OID, TableName> TableNameMap;
+    TableNameMap fTableNameMap;
+    boost::mutex fTableNameMapLock;
 
-	ClientRotator* fExeMgr;
-	uint32_t fSessionID;
-	uint32_t fTxn;
-	int fIdentity;
-	std::set<std::string> fSchemaCache;
-	boost::mutex fSchemaCacheLock;
-		//Cache flush
-	boost::mutex  fSyscatSCNLock;
-	SCN fSyscatSCN;
+    ClientRotator* fExeMgr;
+    uint32_t fSessionID;
+    uint32_t fTxn;
+    int fIdentity;
+    std::set<std::string> fSchemaCache;
+    boost::mutex fSchemaCacheLock;
+    //Cache flush
+    boost::mutex  fSyscatSCNLock;
+    SCN fSyscatSCN;
 
-	static uint32_t fModuleID;
+    static uint32_t fModuleID;
 };
 
 /** convenience function to make a TableColName from 3 strings
@@ -899,7 +954,7 @@ const CalpontSystemCatalog::TableColName make_tcn(const std::string& s, const st
  */
 const CalpontSystemCatalog::TableName make_table(const std::string& s, const std::string& t);
 const CalpontSystemCatalog::TableAliasName make_aliastable(const std::string& s, const std::string& t, const std::string& a,
-						 const bool fIsInfiniDB = true);
+        const bool fIsInfiniDB = true);
 const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, const std::string& t, const std::string& a, const std::string& v, const bool fIsInfiniDB = true);
 
 /** convenience function to determine if column type is a char
@@ -907,8 +962,8 @@ const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, 
  */
 inline bool isCharType(const execplan::CalpontSystemCatalog::ColDataType type)
 {
-	return (execplan::CalpontSystemCatalog::VARCHAR == type ||
-			execplan::CalpontSystemCatalog::CHAR == type ||
+    return (execplan::CalpontSystemCatalog::VARCHAR == type ||
+            execplan::CalpontSystemCatalog::CHAR == type ||
             execplan::CalpontSystemCatalog::BLOB == type ||
             execplan::CalpontSystemCatalog::TEXT == type);
 }
@@ -918,193 +973,234 @@ inline bool isCharType(const execplan::CalpontSystemCatalog::ColDataType type)
  */
 inline bool isNumeric(const execplan::CalpontSystemCatalog::ColDataType type)
 {
-	switch (type)
-	{
-		case execplan::CalpontSystemCatalog::TINYINT:
-		case execplan::CalpontSystemCatalog::SMALLINT:
-		case execplan::CalpontSystemCatalog::MEDINT:
-		case execplan::CalpontSystemCatalog::INT:
-		case execplan::CalpontSystemCatalog::BIGINT:
-		case execplan::CalpontSystemCatalog::FLOAT:
-		case execplan::CalpontSystemCatalog::DOUBLE:
-		case execplan::CalpontSystemCatalog::DECIMAL:
-		case execplan::CalpontSystemCatalog::UTINYINT:
-		case execplan::CalpontSystemCatalog::USMALLINT:
-		case execplan::CalpontSystemCatalog::UMEDINT:
-		case execplan::CalpontSystemCatalog::UINT:
-		case execplan::CalpontSystemCatalog::UBIGINT:
-		case execplan::CalpontSystemCatalog::UFLOAT:
-		case execplan::CalpontSystemCatalog::UDOUBLE:
-		case execplan::CalpontSystemCatalog::UDECIMAL:
-			return true;
-		default:
-			return false;
-	}
+    switch (type)
+    {
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::UFLOAT:
+        case execplan::CalpontSystemCatalog::UDOUBLE:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 inline bool isUnsigned(const execplan::CalpontSystemCatalog::ColDataType type)
 {
-	switch (type)
-	{
-		case execplan::CalpontSystemCatalog::UTINYINT:
-		case execplan::CalpontSystemCatalog::USMALLINT:
-		case execplan::CalpontSystemCatalog::UMEDINT:
-		case execplan::CalpontSystemCatalog::UINT:
-		case execplan::CalpontSystemCatalog::UBIGINT:
-			return true;
-		default:
-			return false;
-	}
+    switch (type)
+    {
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UBIGINT:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 inline bool isSignedInteger(const execplan::CalpontSystemCatalog::ColDataType type)
 {
-	switch (type)
-	{
-		case execplan::CalpontSystemCatalog::TINYINT:
-		case execplan::CalpontSystemCatalog::SMALLINT:
-		case execplan::CalpontSystemCatalog::MEDINT:
-		case execplan::CalpontSystemCatalog::INT:
-		case execplan::CalpontSystemCatalog::BIGINT:
-			return true;
-		default:
-			return false;
-	}
+    switch (type)
+    {
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::BIGINT:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& ct)
 {
-	bool ret = false;
+    bool ret = false;
 
-	switch (ct.colDataType)
-	{
-		case execplan::CalpontSystemCatalog::TINYINT:
-		{
-			if ((int8_t) joblist::TINYINTNULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::CHAR:
-		{
-			int colWidth = ct.colWidth;
-			if (colWidth <= 8)
-			{
-				if ((colWidth == 1) && ((int8_t) joblist::CHAR1NULL == val)) ret = true ;
-				else if ((colWidth == 2) && ((int16_t) joblist::CHAR2NULL == val)) ret = true;
-				else if ((colWidth < 5) && ((int32_t) joblist::CHAR4NULL == val)) ret = true;
-				else if ((int64_t) joblist::CHAR8NULL == val) ret = true;
-			}
-			else
-			{
-				throw std::logic_error("Not a int column.");
-			}
-			break;
-		}
-		case execplan::CalpontSystemCatalog::SMALLINT:
-		{
-			if ((int16_t) joblist::SMALLINTNULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DECIMAL:
-		case execplan::CalpontSystemCatalog::UDECIMAL:
-		{
-			switch (ct.colWidth)
-			{
-				case 1:
-				{
-					if ((int8_t)joblist::TINYINTNULL == val) ret = true;
-					break;
-				}
-				case 2:
-				{
-					if ((int16_t)joblist::SMALLINTNULL == val) ret = true;
-					break;
-				}
-				case 4:
-				{
-					if ((int32_t)joblist::INTNULL == val) ret = true;
-					break;
-				}
-				default:
-				{
-					if ((int64_t)joblist::BIGINTNULL == val) ret = true;
-					break;
-				}
-			}
-		}
-		case execplan::CalpontSystemCatalog::DOUBLE:
-		case execplan::CalpontSystemCatalog::UDOUBLE:
-		{
-			if ((int64_t)joblist::DOUBLENULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::MEDINT:
-		case execplan::CalpontSystemCatalog::INT:
-		{
-			if ((int32_t)joblist::INTNULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::FLOAT:
-		case execplan::CalpontSystemCatalog::UFLOAT:
-		{
-			if ((int32_t)joblist::FLOATNULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DATE:
-		{
-			if ((int32_t) joblist::DATENULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::BIGINT:
-		{
-			if ((int64_t)joblist::BIGINTNULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DATETIME:
-		{
-			if ((int64_t)joblist::DATETIMENULL == val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::VARCHAR:
-		{
-			int colWidth = ct.colWidth;
-			if (colWidth <= 8)
-			{
-				if ((colWidth < 3) && ((int16_t) joblist::CHAR2NULL == val)) ret = true;
-				else if ((colWidth < 5) && ((int32_t) joblist::CHAR4NULL == val)) ret = true;
-				else if ((int64_t)joblist::CHAR8NULL == val) ret = true;
-			}
-			else
-			{
-				throw std::logic_error("Not a int column.");
-			}
-			break;
-		}
-		case execplan::CalpontSystemCatalog::UTINYINT:
-		{
-			if (joblist::UTINYINTNULL == (uint8_t)val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::USMALLINT:
-		{
-			if (joblist::USMALLINTNULL == (uint16_t)val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::UMEDINT:
-		case execplan::CalpontSystemCatalog::UINT:
-		{
-			if (joblist::UINTNULL == (uint32_t)val) ret = true;
-			break;
-		}
-		case execplan::CalpontSystemCatalog::UBIGINT:
-		{
-			if (joblist::UBIGINTNULL == (uint64_t)val) ret = true;
-			break;
-		}
-		default:
-			break;
-	}
+    switch (ct.colDataType)
+    {
+        case execplan::CalpontSystemCatalog::TINYINT:
+        {
+            if ((int8_t) joblist::TINYINTNULL == val) ret = true;
 
-	return ret;
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::CHAR:
+        {
+            int colWidth = ct.colWidth;
+
+            if (colWidth <= 8)
+            {
+                if ((colWidth == 1) && ((int8_t) joblist::CHAR1NULL == val)) ret = true ;
+                else if ((colWidth == 2) && ((int16_t) joblist::CHAR2NULL == val)) ret = true;
+                else if ((colWidth < 5) && ((int32_t) joblist::CHAR4NULL == val)) ret = true;
+                else if ((int64_t) joblist::CHAR8NULL == val) ret = true;
+            }
+            else
+            {
+                throw std::logic_error("Not a int column.");
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        {
+            if ((int16_t) joblist::SMALLINTNULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            switch (ct.colWidth)
+            {
+                case 1:
+                {
+                    if ((int8_t)joblist::TINYINTNULL == val) ret = true;
+
+                    break;
+                }
+
+                case 2:
+                {
+                    if ((int16_t)joblist::SMALLINTNULL == val) ret = true;
+
+                    break;
+                }
+
+                case 4:
+                {
+                    if ((int32_t)joblist::INTNULL == val) ret = true;
+
+                    break;
+                }
+
+                default:
+                {
+                    if ((int64_t)joblist::BIGINTNULL == val) ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::UDOUBLE:
+        {
+            if ((int64_t)joblist::DOUBLENULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::INT:
+        {
+            if ((int32_t)joblist::INTNULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::UFLOAT:
+        {
+            if ((int32_t)joblist::FLOATNULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DATE:
+        {
+            if ((int32_t) joblist::DATENULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::BIGINT:
+        {
+            if ((int64_t)joblist::BIGINTNULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            if ((int64_t)joblist::DATETIMENULL == val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        {
+            int colWidth = ct.colWidth;
+
+            if (colWidth <= 8)
+            {
+                if ((colWidth < 3) && ((int16_t) joblist::CHAR2NULL == val)) ret = true;
+                else if ((colWidth < 5) && ((int32_t) joblist::CHAR4NULL == val)) ret = true;
+                else if ((int64_t)joblist::CHAR8NULL == val) ret = true;
+            }
+            else
+            {
+                throw std::logic_error("Not a int column.");
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        {
+            if (joblist::UTINYINTNULL == (uint8_t)val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        {
+            if (joblist::USMALLINTNULL == (uint16_t)val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        {
+            if (joblist::UINTNULL == (uint32_t)val) ret = true;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        {
+            if (joblist::UBIGINTNULL == (uint64_t)val) ret = true;
+
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return ret;
 }
 
 /** constants for system table names
@@ -1153,17 +1249,17 @@ const std::string MAXVALUE_COL = "maxvalue";
 const std::string COMPRESSIONTYPE_COL = "compressiontype";
 const std::string NEXTVALUE_COL = "nextvalue";
 
-   /*****************************************************
-   * System tables OID definition
-   ******************************************************/
+/*****************************************************
+* System tables OID definition
+******************************************************/
 const int   SYSTABLE_BASE			= 1000;		  /** @brief SYSTABLE table base */
 const int   SYSTABLE_DICT_BASE	   = 2000;		  /** @brief SYSTABLE table dictionary files base */
 const int   SYSCOLUMN_BASE		   = 1020;		  /** @brief SYSCOLUMN table base */
 const int   SYSCOLUMN_DICT_BASE	  = 2060;		  /** @brief SYSCOLUMN table dictionary files base */
 
-   /*****************************************************
-   * SYSTABLE columns OID definition
-   ******************************************************/
+/*****************************************************
+* SYSTABLE columns OID definition
+******************************************************/
 const int   OID_SYSTABLE_TABLENAME	  	= SYSTABLE_BASE + 1;		  /** @brief TABLENAME column */
 const int   OID_SYSTABLE_SCHEMA		  		= SYSTABLE_BASE + 2;		  /** @brief SCHEMA column */
 const int   OID_SYSTABLE_OBJECTID	  		= SYSTABLE_BASE + 3;		  /** @brief OBJECTID column */
@@ -1177,9 +1273,9 @@ const int	OID_SYSTABLE_NUMOFBLOCKS		= SYSTABLE_BASE + 10;		 /** @brief num. of b
 const int	OID_SYSTABLE_AUTOINCREMENT		= SYSTABLE_BASE + 11;		 /** @brief AUTOINCREMENT column */
 const int	SYSTABLE_MAX					= SYSTABLE_BASE + 12; // be sure this is one more than the highest #
 
-   /*****************************************************
-   * SYSCOLUMN columns OID definition
-   ******************************************************/
+/*****************************************************
+* SYSCOLUMN columns OID definition
+******************************************************/
 const int   OID_SYSCOLUMN_SCHEMA	  		= SYSCOLUMN_BASE + 1;		  /** @brief SCHEMA column */
 const int   OID_SYSCOLUMN_TABLENAME		  	= SYSCOLUMN_BASE + 2;		  /** @brief TABLENAME column */
 const int   OID_SYSCOLUMN_COLNAME	  		= SYSCOLUMN_BASE + 3;		  /** @brief COLNAME column */
@@ -1204,9 +1300,9 @@ const int	OID_SYSCOLUMN_COMPRESSIONTYPE	= SYSCOLUMN_BASE + 21;		   /** @brief co
 const int	OID_SYSCOLUMN_NEXTVALUE 		= SYSCOLUMN_BASE + 22;		   /** @brief next value */
 const int	SYSCOLUMN_MAX					= SYSCOLUMN_BASE + 23; // be sure this is one more than the highest #
 
-   /*****************************************************
-   * SYSTABLE columns dictionary OID definition
-   ******************************************************/
+/*****************************************************
+* SYSTABLE columns dictionary OID definition
+******************************************************/
 const int   DICTOID_SYSTABLE_TABLENAME	  = SYSTABLE_DICT_BASE + 1;	 /** @brief TABLENAME column DICTOID*/
 const int   LISTOID_SYSTABLE_TABLENAME	  = SYSTABLE_DICT_BASE + 2;	 /** @brief TABLENAME column LISTOID*/
 const int   TREEOID_SYSTABLE_TABLENAME	  = SYSTABLE_DICT_BASE + 3;	 /** @brief TABLENAME column TREEOID*/
@@ -1215,9 +1311,9 @@ const int   LISTOID_SYSTABLE_SCHEMA	  	= SYSTABLE_DICT_BASE + 5;	 /** @brief SCH
 const int   TREEOID_SYSTABLE_SCHEMA	  	= SYSTABLE_DICT_BASE + 6;	 /** @brief SCHEMA column TREEOID*/
 const int	SYSTABLE_DICT_MAX				= SYSTABLE_DICT_BASE + 7; // be sure this is one more than the highest #
 
-   /*****************************************************
-   * SYSCOLUMN columns dictionary OID definition
-   ******************************************************/
+/*****************************************************
+* SYSCOLUMN columns dictionary OID definition
+******************************************************/
 const int   DICTOID_SYSCOLUMN_SCHEMA	  	= SYSCOLUMN_DICT_BASE + 1;	 /** @brief SCHEMA column DICTOID*/
 const int   LISTOID_SYSCOLUMN_SCHEMA	  	= SYSCOLUMN_DICT_BASE + 2;	 /** @brief SCHEMA column LISTOID*/
 const int   TREEOID_SYSCOLUMN_SCHEMA	  	= SYSCOLUMN_DICT_BASE + 3;	 /** @brief SCHEMA column TREEOID*/

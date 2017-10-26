@@ -23,37 +23,45 @@
 #include <boost/shared_ptr.hpp>
 #include <thrift/transport/TServerSocket.h>
 
-namespace apache { namespace thrift { namespace transport {
+namespace apache
+{
+namespace thrift
+{
+namespace transport
+{
 
 class TSSLSocketFactory;
 
 /**
  * Server socket that accepts SSL connections.
  */
-class TSSLServerSocket: public TServerSocket {
- public:
-  /**
-   * Constructor.
-   *
-   * @param port    Listening port
-   * @param factory SSL socket factory implementation
-   */
-  TSSLServerSocket(int port, boost::shared_ptr<TSSLSocketFactory> factory);
-  /**
-   * Constructor.
-   *
-   * @param port        Listening port
-   * @param sendTimeout Socket send timeout
-   * @param recvTimeout Socket receive timeout
-   * @param factory     SSL socket factory implementation
-   */
-  TSSLServerSocket(int port, int sendTimeout, int recvTimeout,
-                   boost::shared_ptr<TSSLSocketFactory> factory);
- protected:
-  boost::shared_ptr<TSocket> createSocket(int socket);
-  boost::shared_ptr<TSSLSocketFactory> factory_;
+class TSSLServerSocket: public TServerSocket
+{
+public:
+    /**
+     * Constructor.
+     *
+     * @param port    Listening port
+     * @param factory SSL socket factory implementation
+     */
+    TSSLServerSocket(int port, boost::shared_ptr<TSSLSocketFactory> factory);
+    /**
+     * Constructor.
+     *
+     * @param port        Listening port
+     * @param sendTimeout Socket send timeout
+     * @param recvTimeout Socket receive timeout
+     * @param factory     SSL socket factory implementation
+     */
+    TSSLServerSocket(int port, int sendTimeout, int recvTimeout,
+                     boost::shared_ptr<TSSLSocketFactory> factory);
+protected:
+    boost::shared_ptr<TSocket> createSocket(int socket);
+    boost::shared_ptr<TSSLSocketFactory> factory_;
 };
 
-}}}
+}
+}
+}
 
 #endif

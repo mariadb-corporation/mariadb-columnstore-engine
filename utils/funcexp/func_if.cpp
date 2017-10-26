@@ -37,45 +37,50 @@ namespace
 
 bool boolVal(SPTP& parm, Row& row)
 {
-	bool ret = true;
-	bool isNull = false;  // Keep it local. We don't want to mess with the global one here.
-	try
-	{
-		ret = parm->getBoolVal(row, isNull);
-	}
-	catch (logging::NotImplementedExcept&)
-	{
-		switch (parm->data()->resultType().colDataType)
-		{
-			case CalpontSystemCatalog::CHAR:
-			case CalpontSystemCatalog::TEXT:
-			case CalpontSystemCatalog::VARCHAR:
-				ret = (atoi((char*)(parm->data()->getStrVal().c_str())) != 0);
+    bool ret = true;
+    bool isNull = false;  // Keep it local. We don't want to mess with the global one here.
+
+    try
+    {
+        ret = parm->getBoolVal(row, isNull);
+    }
+    catch (logging::NotImplementedExcept&)
+    {
+        switch (parm->data()->resultType().colDataType)
+        {
+            case CalpontSystemCatalog::CHAR:
+            case CalpontSystemCatalog::TEXT:
+            case CalpontSystemCatalog::VARCHAR:
+                ret = (atoi((char*)(parm->data()->getStrVal().c_str())) != 0);
+
             case CalpontSystemCatalog::FLOAT:
-			case CalpontSystemCatalog::UFLOAT:
-				ret = (parm->data()->getFloatVal(row, isNull) != 0);
-			case CalpontSystemCatalog::DOUBLE:
+            case CalpontSystemCatalog::UFLOAT:
+                ret = (parm->data()->getFloatVal(row, isNull) != 0);
+
+            case CalpontSystemCatalog::DOUBLE:
             case CalpontSystemCatalog::UDOUBLE:
-				ret = (parm->data()->getDoubleVal(row, isNull) != 0);
+                ret = (parm->data()->getDoubleVal(row, isNull) != 0);
+
             case CalpontSystemCatalog::DECIMAL:
             case CalpontSystemCatalog::UDECIMAL:
-				ret = (parm->data()->getDecimalVal(row, isNull).value != 0);
-			case CalpontSystemCatalog::BIGINT:
-			case CalpontSystemCatalog::SMALLINT:
-			case CalpontSystemCatalog::MEDINT:
-			case CalpontSystemCatalog::INT:
+                ret = (parm->data()->getDecimalVal(row, isNull).value != 0);
+
+            case CalpontSystemCatalog::BIGINT:
+            case CalpontSystemCatalog::SMALLINT:
+            case CalpontSystemCatalog::MEDINT:
+            case CalpontSystemCatalog::INT:
             case CalpontSystemCatalog::UBIGINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:
             case CalpontSystemCatalog::UINT:
-			case CalpontSystemCatalog::DATE:
-			case CalpontSystemCatalog::DATETIME:
-			default:
-				ret = (parm->data()->getIntVal(row, isNull) != 0);
-		}
-	}
+            case CalpontSystemCatalog::DATE:
+            case CalpontSystemCatalog::DATETIME:
+            default:
+                ret = (parm->data()->getIntVal(row, isNull) != 0);
+        }
+    }
 
-	return ret;
+    return ret;
 }
 
 }
@@ -91,127 +96,127 @@ namespace funcexp
 //
 CalpontSystemCatalog::ColType Func_if::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	// The result type given by the connector may not be right if there's derived table (MySQL bug?)
-	// We want to double check on our own.
-	// If any parm is of string type, the result type should be string.
-	if (fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
-		  fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
-		  fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
-		  fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
-		  fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
-		  fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR)
-	{
-		CalpontSystemCatalog::ColType ct;
-		ct.colDataType = CalpontSystemCatalog::VARCHAR;
-		ct.colWidth = 255;
-		resultType = ct;
-		return ct;
-	}
+    // operation type is not used by this functor
+    // The result type given by the connector may not be right if there's derived table (MySQL bug?)
+    // We want to double check on our own.
+    // If any parm is of string type, the result type should be string.
+    if (fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
+            fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
+            fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
+            fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
+            fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
+            fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR)
+    {
+        CalpontSystemCatalog::ColType ct;
+        ct.colDataType = CalpontSystemCatalog::VARCHAR;
+        ct.colWidth = 255;
+        resultType = ct;
+        return ct;
+    }
 
-	CalpontSystemCatalog::ColType ct = fp[1]->data()->resultType();
-	PredicateOperator op;
-	op.setOpType(ct, fp[2]->data()->resultType());
-	ct = op.operationType();
-	resultType = ct;
-	return ct;
+    CalpontSystemCatalog::ColType ct = fp[1]->data()->resultType();
+    PredicateOperator op;
+    op.setOpType(ct, fp[2]->data()->resultType());
+    ct = op.operationType();
+    resultType = ct;
+    return ct;
 }
 
 
 int64_t Func_if::getIntVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                           FunctionParm& parm,
+                           bool& isNull,
+                           CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row))
-	{
-		return parm[1]->data()->getIntVal(row, isNull);
-	}
-	else
-	{
-		return parm[2]->data()->getIntVal(row, isNull);
-	}
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getIntVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getIntVal(row, isNull);
+    }
 }
 
 
 string Func_if::getStrVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                          FunctionParm& parm,
+                          bool& isNull,
+                          CalpontSystemCatalog::ColType&)
 {
 
-	if (boolVal(parm[0], row))
-	{
-		return parm[1]->data()->getStrVal(row, isNull);
-	}
-	else
-	{
-		return parm[2]->data()->getStrVal(row, isNull);
-	}
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getStrVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getStrVal(row, isNull);
+    }
 }
 
 
 IDB_Decimal Func_if::getDecimalVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row))
-	{
-		return parm[1]->data()->getDecimalVal(row, isNull);
-	}
-	else
-	{
-		return parm[2]->data()->getDecimalVal(row, isNull);
-	}
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getDecimalVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getDecimalVal(row, isNull);
+    }
 }
 
 
 double Func_if::getDoubleVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row))
-	{
-		return parm[1]->data()->getDoubleVal(row, isNull);
-	}
-	else
-	{
-		return parm[2]->data()->getDoubleVal(row, isNull);
-	}
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getDoubleVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getDoubleVal(row, isNull);
+    }
 }
 
 
 int32_t Func_if::getDateIntVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                               FunctionParm& parm,
+                               bool& isNull,
+                               CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row))
-	{
-		return parm[1]->data()->getDateIntVal(row, isNull);
-	}
-	else
-	{
-		return parm[2]->data()->getDateIntVal(row, isNull);
-	}
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getDateIntVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getDateIntVal(row, isNull);
+    }
 }
 
 
 int64_t Func_if::getDatetimeIntVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType&)
 {
-	if (boolVal(parm[0], row))
-	{
-		return parm[1]->data()->getDatetimeIntVal(row, isNull);
-	}
-	else
-	{
-		return parm[2]->data()->getDatetimeIntVal(row, isNull);
-	}
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getDatetimeIntVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getDatetimeIntVal(row, isNull);
+    }
 }
 
 

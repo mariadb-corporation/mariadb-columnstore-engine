@@ -38,11 +38,11 @@ using namespace joblist;
 
 class to_lower
 {
-    public:
-        char operator() (char c) const            // notice the return type
-        {
-            return tolower(c);
-        }
+public:
+    char operator() (char c) const            // notice the return type
+    {
+        return tolower(c);
+    }
 };
 
 
@@ -51,48 +51,51 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_repeat::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	//return fp[0]->data()->resultType();
-	return resultType;
+    // operation type is not used by this functor
+    //return fp[0]->data()->resultType();
+    return resultType;
 }
 
 std::string Func_repeat::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& op_ct)
+                                   FunctionParm& fp,
+                                   bool& isNull,
+                                   execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	string str = stringValue(fp[0], row, isNull);
+    string str = stringValue(fp[0], row, isNull);
 
-	if (str.empty() || str == "")
-		return "";
+    if (str.empty() || str == "")
+        return "";
 
-	int count = fp[1]->data()->getIntVal(row, isNull);
-	if (isNull)
-		return "";
+    int count = fp[1]->data()->getIntVal(row, isNull);
 
-	if ( count < 1  )
-		return "";
+    if (isNull)
+        return "";
 
-	//calculate size of buffer to allocate
+    if ( count < 1  )
+        return "";
 
-	int size = str.length() * count;
+    //calculate size of buffer to allocate
 
-	//allocate memory
-	char *result = NULL;
-	result = (char*) alloca(size * sizeof(char) + 1);
- 	if (result == NULL) {
-		return "";
- 	}
+    int size = str.length() * count;
 
-	memset( (char*) result, 0, size);
+    //allocate memory
+    char* result = NULL;
+    result = (char*) alloca(size * sizeof(char) + 1);
 
-	for ( int i = 0 ; i < count ; i ++ )
-	{
- 		if(strcat(result, str.c_str()) == NULL)
-		return "";
-	}
+    if (result == NULL)
+    {
+        return "";
+    }
 
-	return result;
+    memset( (char*) result, 0, size);
+
+    for ( int i = 0 ; i < count ; i ++ )
+    {
+        if (strcat(result, str.c_str()) == NULL)
+            return "";
+    }
+
+    return result;
 }
 
 

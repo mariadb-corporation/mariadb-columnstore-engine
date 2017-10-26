@@ -37,35 +37,47 @@ template<typename T>
 class WF_udaf : public WindowFunctionType
 {
 public:
-	WF_udaf(int id, const std::string& name, mcsv1sdk::mcsv1Context& context) :
-		WindowFunctionType(id, name), fUDAFContext(context), fDistinct(false), bHasDropValue(true) {}
-	WF_udaf(WF_udaf& rhs);
-	// pure virtual in base
-	void operator()(int64_t b, int64_t e, int64_t c);
-	WindowFunctionType* clone() const;
-	void resetData();
-	void parseParms(const std::vector<execplan::SRCP>&);
-	virtual bool dropValues(int64_t, int64_t);
+    WF_udaf(int id, const std::string& name, mcsv1sdk::mcsv1Context& context) :
+        WindowFunctionType(id, name), fUDAFContext(context), fDistinct(false), bHasDropValue(true) {}
+    WF_udaf(WF_udaf& rhs);
+    // pure virtual in base
+    void operator()(int64_t b, int64_t e, int64_t c);
+    WindowFunctionType* clone() const;
+    void resetData();
+    void parseParms(const std::vector<execplan::SRCP>&);
+    virtual bool dropValues(int64_t, int64_t);
 
-	mcsv1sdk::mcsv1Context& getContext() {return fUDAFContext;}
-	bool getInterrupted() {return bInterrupted;}
-	bool getInterruptedPtr() {return &bInterrupted;}
-	bool getDistinct() {return fDistinct;}
+    mcsv1sdk::mcsv1Context& getContext()
+    {
+        return fUDAFContext;
+    }
+    bool getInterrupted()
+    {
+        return bInterrupted;
+    }
+    bool getInterruptedPtr()
+    {
+        return &bInterrupted;
+    }
+    bool getDistinct()
+    {
+        return fDistinct;
+    }
 
 protected:
-	void SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, int64_t e, int64_t c);
+    void SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, int64_t e, int64_t c);
 
-	mcsv1sdk::mcsv1Context fUDAFContext;  // The UDAF context
-	bool bInterrupted;                    // Shared by all the threads
-	bool fDistinct;
-	bool bRespectNulls;                   // respect null | ignore null
-	bool bHasDropValue;                   // Set to false when we discover the UDAnF doesn't implement dropValue. 	
-	std::set<T> fSet;                     // To hold distinct values
-	static_any::any fValOut;              // The return value
+    mcsv1sdk::mcsv1Context fUDAFContext;  // The UDAF context
+    bool bInterrupted;                    // Shared by all the threads
+    bool fDistinct;
+    bool bRespectNulls;                   // respect null | ignore null
+    bool bHasDropValue;                   // Set to false when we discover the UDAnF doesn't implement dropValue.
+    std::set<T> fSet;                     // To hold distinct values
+    static_any::any fValOut;              // The return value
 
 public:
-	static boost::shared_ptr<WindowFunctionType> makeFunction(int id, const string& name, 
-															  int ct, mcsv1sdk::mcsv1Context& context);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int id, const string& name,
+            int ct, mcsv1sdk::mcsv1Context& context);
 };
 
 

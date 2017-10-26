@@ -28,12 +28,14 @@
 #include "calpontexecutionplan.h"
 #include "vendorexecutionplan.h"
 
-namespace execplan { 
+namespace execplan
+{
 
-class CalpontExecutionPlanFactory {
+class CalpontExecutionPlanFactory
+{
 
 public:
-	//static CalpontExecutionPlan* makeCalpontExecutionPlan(const VendorExecutionPlan* vplan);
+    //static CalpontExecutionPlan* makeCalpontExecutionPlan(const VendorExecutionPlan* vplan);
 
 };
 

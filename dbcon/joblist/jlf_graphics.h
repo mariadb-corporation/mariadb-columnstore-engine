@@ -33,7 +33,7 @@ namespace jlf_graphics
 * Format a stream of dot commands
 */
 std::ostream& writeDotCmds(std::ostream& dotFile, const joblist::JobStepVector& querySteps,
-	const joblist::JobStepVector& projectSteps);
+                           const joblist::JobStepVector& projectSteps);
 
 }
 

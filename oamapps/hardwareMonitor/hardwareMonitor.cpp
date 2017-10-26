@@ -52,133 +52,143 @@ using namespace logging;
 ************************************************************************************************************/
 int main (int argc, char** argv)
 {
-	string data[10];
-	string SensorName;
-	float SensorValue;
+    string data[10];
+    string SensorName;
+    float SensorValue;
     string Units;
-	string SensorStatus;
-	float lowFatal;
-	float lowCritical;
-	float lowWarning;
-	float highWarning;
-	float highCritical;
-	float highFatal;
-	char *p;
+    string SensorStatus;
+    float lowFatal;
+    float lowCritical;
+    float lowWarning;
+    float highWarning;
+    float highCritical;
+    float highFatal;
+    char* p;
 
     // check for IPMI_SUPPORT FLAG passed in
-    if(argc > 1)
-		IPMI_SUPPORT = atoi(argv[1]);
+    if (argc > 1)
+        IPMI_SUPPORT = atoi(argv[1]);
 
-	// loop forever reading the hardware status
-	while(true)
-	{
-		if( IPMI_SUPPORT == 0) {
-			int returnCode = system("ipmitool sensor list > /tmp/harwareMonitor.txt");
-			if (returnCode) {
-				// System error, Log this event 
-				LoggingID lid;
-				MessageLog ml(lid);
-				Message msg;
-				Message::Args args;
-				args.add("Error running ipmitool sensor list!!!");
-				msg.format(args);
-				ml.logWarningMessage(msg);
-				sleep(300);
-				continue;
-			}
-		}
-	
-		// parse output file
-	
-		ifstream File ("/tmp/harwareMonitor.txt");
-		if (!File){
-			// System error, Log this event 
-			LoggingID lid;
-			MessageLog ml(lid);
-			Message msg;
-			Message::Args args;
-			args.add("Error opening /tmp/harwareMonitor.txt!!!");
-			msg.format(args);
-			ml.logWarningMessage(msg);
-			sleep(300);
-			continue;
-		}
-		
-		char line[200];
-		while (File.getline(line, 200))
-		{
-			// parse the line
-			int f = 0;
-			p = strtok(line,"|");
-			while (p) 
-			{
-				data[f]=p;
-				data[f] = StripWhitespace(data[f]);
-				p = strtok (NULL, "|");
-				f++;
-			}
-	
-			if( f == 0 )
-				// nothing on this line, skip
-				continue;
-	
-			SensorName = data[0];
-			SensorValue = atof(data[1].c_str());
-			Units = data[2];
-			SensorStatus = data[3];
-			lowFatal = atof(data[4].c_str());
-			lowCritical = atof(data[5].c_str());
-			lowWarning = atof(data[6].c_str());
-			highWarning = atof(data[7].c_str());
-			highCritical = atof(data[8].c_str());
-			highFatal = atof(data[9].c_str());
+    // loop forever reading the hardware status
+    while (true)
+    {
+        if ( IPMI_SUPPORT == 0)
+        {
+            int returnCode = system("ipmitool sensor list > /tmp/harwareMonitor.txt");
 
-			// check status and issue apporiate alarm if needed
-			if ( (SensorStatus != "ok") && (SensorStatus != "nr") && (SensorStatus != "na") ) {
-				// Status error, check for warning or critical levels
+            if (returnCode)
+            {
+                // System error, Log this event
+                LoggingID lid;
+                MessageLog ml(lid);
+                Message msg;
+                Message::Args args;
+                args.add("Error running ipmitool sensor list!!!");
+                msg.format(args);
+                ml.logWarningMessage(msg);
+                sleep(300);
+                continue;
+            }
+        }
 
-				if ( SensorValue >= highFatal ) {
-					// issue critical alarm and send message to shutdown Server
-					sendAlarm(SensorName, HARDWARE_HIGH, SET, SensorValue);
-					sendMsgShutdownServer();
-				}
-				else if ( (SensorValue < highFatal) && (SensorValue >= highCritical) )
-					// issue major alarm
-					sendAlarm(SensorName, HARDWARE_MED, SET, SensorValue);
+        // parse output file
 
-				else if ( (SensorValue < highCritical ) && (SensorValue >= highWarning) )
-					// issue minor alarm
-					sendAlarm(SensorName, HARDWARE_LOW, SET, SensorValue);
+        ifstream File ("/tmp/harwareMonitor.txt");
 
-				else if ( (SensorValue <= lowWarning) && (SensorValue > lowCritical) )
-					// issue minor alarm
-					sendAlarm(SensorName, HARDWARE_LOW, SET, SensorValue);
+        if (!File)
+        {
+            // System error, Log this event
+            LoggingID lid;
+            MessageLog ml(lid);
+            Message msg;
+            Message::Args args;
+            args.add("Error opening /tmp/harwareMonitor.txt!!!");
+            msg.format(args);
+            ml.logWarningMessage(msg);
+            sleep(300);
+            continue;
+        }
 
-				else if ( (SensorValue <= lowCritical) && (SensorValue > lowFatal) )
-					// issue major alarm
-					sendAlarm(SensorName, HARDWARE_MED, SET, SensorValue);
+        char line[200];
 
-				else if ( SensorValue <= lowFatal ) {
-					// issue critical alarm and send message to shutdown Server
-					sendAlarm(SensorName, HARDWARE_HIGH, SET, SensorValue);
-					sendMsgShutdownServer();
-				}
-				else
-					// check if there are any active alarms that needs to be cleared
-					checkAlarm(SensorName);
-			}
-			else
-				// check if there are any active alarms that needs to be cleared
-				checkAlarm(SensorName);
+        while (File.getline(line, 200))
+        {
+            // parse the line
+            int f = 0;
+            p = strtok(line, "|");
 
-		} //end of parsing file while
-		
-		File.close();
-		// sleep for 1 minute
-		sleep(60);
-	} //end of forever while loop
+            while (p)
+            {
+                data[f] = p;
+                data[f] = StripWhitespace(data[f]);
+                p = strtok (NULL, "|");
+                f++;
+            }
+
+            if ( f == 0 )
+                // nothing on this line, skip
+                continue;
+
+            SensorName = data[0];
+            SensorValue = atof(data[1].c_str());
+            Units = data[2];
+            SensorStatus = data[3];
+            lowFatal = atof(data[4].c_str());
+            lowCritical = atof(data[5].c_str());
+            lowWarning = atof(data[6].c_str());
+            highWarning = atof(data[7].c_str());
+            highCritical = atof(data[8].c_str());
+            highFatal = atof(data[9].c_str());
+
+            // check status and issue apporiate alarm if needed
+            if ( (SensorStatus != "ok") && (SensorStatus != "nr") && (SensorStatus != "na") )
+            {
+                // Status error, check for warning or critical levels
+
+                if ( SensorValue >= highFatal )
+                {
+                    // issue critical alarm and send message to shutdown Server
+                    sendAlarm(SensorName, HARDWARE_HIGH, SET, SensorValue);
+                    sendMsgShutdownServer();
+                }
+                else if ( (SensorValue < highFatal) && (SensorValue >= highCritical) )
+                    // issue major alarm
+                    sendAlarm(SensorName, HARDWARE_MED, SET, SensorValue);
+
+                else if ( (SensorValue < highCritical ) && (SensorValue >= highWarning) )
+                    // issue minor alarm
+                    sendAlarm(SensorName, HARDWARE_LOW, SET, SensorValue);
+
+                else if ( (SensorValue <= lowWarning) && (SensorValue > lowCritical) )
+                    // issue minor alarm
+                    sendAlarm(SensorName, HARDWARE_LOW, SET, SensorValue);
+
+                else if ( (SensorValue <= lowCritical) && (SensorValue > lowFatal) )
+                    // issue major alarm
+                    sendAlarm(SensorName, HARDWARE_MED, SET, SensorValue);
+
+                else if ( SensorValue <= lowFatal )
+                {
+                    // issue critical alarm and send message to shutdown Server
+                    sendAlarm(SensorName, HARDWARE_HIGH, SET, SensorValue);
+                    sendMsgShutdownServer();
+                }
+                else
+                    // check if there are any active alarms that needs to be cleared
+                    checkAlarm(SensorName);
+            }
+            else
+                // check if there are any active alarms that needs to be cleared
+                checkAlarm(SensorName);
+
+        } //end of parsing file while
+
+        File.close();
+        // sleep for 1 minute
+        sleep(60);
+    } //end of forever while loop
 }
-	
+
 /******************************************************************************************
 * @brief	sendAlarm
 *
@@ -187,48 +197,52 @@ int main (int argc, char** argv)
 ******************************************************************************************/
 void sendAlarm(string alarmItem, ALARMS alarmID, int action, float sensorValue)
 {
-	Oam oam;
+    Oam oam;
 
-	//Log this event 
-	LoggingID lid;
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add(alarmItem);
-	args.add(", sensor value out-of-range: ");
-	args.add(sensorValue);
+    //Log this event
+    LoggingID lid;
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add(alarmItem);
+    args.add(", sensor value out-of-range: ");
+    args.add(sensorValue);
 
-	// get current server name
-	string serverName;
-	oamServerInfo_t st;
-	try {
-		st = oam.getServerInfo();
-		serverName = boost::get<0>(st);
-	}
-	catch (...) {
-		serverName = "Unknown Server";
-	}
+    // get current server name
+    string serverName;
+    oamServerInfo_t st;
 
-	// check if there is an active alarm above the reporting theshold 
-	// that needs to be cleared
-	checkAlarm(alarmItem, alarmID);
+    try
+    {
+        st = oam.getServerInfo();
+        serverName = boost::get<0>(st);
+    }
+    catch (...)
+    {
+        serverName = "Unknown Server";
+    }
 
-	// check if Alarm is already active, don't resend
-	if ( !( oam.checkActiveAlarm(alarmID, serverName, alarmItem)) ) {
+    // check if there is an active alarm above the reporting theshold
+    // that needs to be cleared
+    checkAlarm(alarmItem, alarmID);
 
-		ALARMManager alarmMgr;
-		// send alarm
-		alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
+    // check if Alarm is already active, don't resend
+    if ( !( oam.checkActiveAlarm(alarmID, serverName, alarmItem)) )
+    {
 
-		args.add(", Alarm set: ");
-		args.add(alarmID);
-	}
+        ALARMManager alarmMgr;
+        // send alarm
+        alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, action);
 
-	// output log
-	msg.format(args);
-	ml.logWarningMessage(msg);
+        args.add(", Alarm set: ");
+        args.add(alarmID);
+    }
 
-	return;
+    // output log
+    msg.format(args);
+    ml.logWarningMessage(msg);
+
+    return;
 }
 
 /******************************************************************************************
@@ -239,48 +253,62 @@ void sendAlarm(string alarmItem, ALARMS alarmID, int action, float sensorValue)
 ******************************************************************************************/
 void checkAlarm(string alarmItem, ALARMS alarmID)
 {
-	Oam oam;
+    Oam oam;
 
-	// get current server name
-	string serverName;
-	oamServerInfo_t st;
-	try {
-		st = oam.getServerInfo();
-		serverName = boost::get<0>(st);
-	}
-	catch (...) {
-		serverName = "Unknown Server";
-	}
+    // get current server name
+    string serverName;
+    oamServerInfo_t st;
 
-	switch (alarmID) {
-		case ALARM_NONE: 	// clear all alarms set if any found
-			if ( oam.checkActiveAlarm(HARDWARE_HIGH, serverName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_HIGH);
-			if ( oam.checkActiveAlarm(HARDWARE_MED, serverName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_MED);
-			if ( oam.checkActiveAlarm(HARDWARE_LOW, serverName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_LOW);
-			break;
-		case HARDWARE_LOW: 	// clear high and medium alarms set if any found
-			if ( oam.checkActiveAlarm(HARDWARE_HIGH, serverName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_HIGH);
-			if ( oam.checkActiveAlarm(HARDWARE_MED, serverName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_MED);
-			break;
-		case HARDWARE_MED: 	// clear high alarms set if any found
-			if ( oam.checkActiveAlarm(HARDWARE_HIGH, serverName, alarmItem) )
-				//  alarm set, clear it
-				clearAlarm(alarmItem, HARDWARE_HIGH);
-			break;
-		default:			// none to clear
-			break;
-		} // end of switch
-	return;
+    try
+    {
+        st = oam.getServerInfo();
+        serverName = boost::get<0>(st);
+    }
+    catch (...)
+    {
+        serverName = "Unknown Server";
+    }
+
+    switch (alarmID)
+    {
+        case ALARM_NONE: 	// clear all alarms set if any found
+            if ( oam.checkActiveAlarm(HARDWARE_HIGH, serverName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_HIGH);
+
+            if ( oam.checkActiveAlarm(HARDWARE_MED, serverName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_MED);
+
+            if ( oam.checkActiveAlarm(HARDWARE_LOW, serverName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_LOW);
+
+            break;
+
+        case HARDWARE_LOW: 	// clear high and medium alarms set if any found
+            if ( oam.checkActiveAlarm(HARDWARE_HIGH, serverName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_HIGH);
+
+            if ( oam.checkActiveAlarm(HARDWARE_MED, serverName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_MED);
+
+            break;
+
+        case HARDWARE_MED: 	// clear high alarms set if any found
+            if ( oam.checkActiveAlarm(HARDWARE_HIGH, serverName, alarmItem) )
+                //  alarm set, clear it
+                clearAlarm(alarmItem, HARDWARE_HIGH);
+
+            break;
+
+        default:			// none to clear
+            break;
+    } // end of switch
+
+    return;
 }
 
 /******************************************************************************************
@@ -291,20 +319,20 @@ void checkAlarm(string alarmItem, ALARMS alarmID)
 ******************************************************************************************/
 void clearAlarm(string alarmItem, ALARMS alarmID)
 {
-	ALARMManager alarmMgr;
-	alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, CLEAR);
+    ALARMManager alarmMgr;
+    alarmMgr.sendAlarmReport(alarmItem.c_str(), alarmID, CLEAR);
 
-	//Log this event 
-	LoggingID lid;
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add(alarmItem);
-	args.add(" alarm #");
-	args.add(alarmID);
-	args.add("cleared");
-	msg.format(args);
-	ml.logWarningMessage(msg);
+    //Log this event
+    LoggingID lid;
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add(alarmItem);
+    args.add(" alarm #");
+    args.add(alarmID);
+    args.add("cleared");
+    msg.format(args);
+    ml.logWarningMessage(msg);
 }
 /******************************************************************************************
 * @brief	sendMsgShutdownServer
@@ -314,39 +342,42 @@ void clearAlarm(string alarmItem, ALARMS alarmID)
 ******************************************************************************************/
 void sendMsgShutdownServer()
 {
-	Oam oam;
+    Oam oam;
 
-	//Log this event 
-	LoggingID lid;
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add("Fatal Hardware Alarm detected, Server being shutdown");
-	msg.format(args);
-	ml.logCriticalMessage(msg);
+    //Log this event
+    LoggingID lid;
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add("Fatal Hardware Alarm detected, Server being shutdown");
+    msg.format(args);
+    ml.logCriticalMessage(msg);
 
-	string serverName;
-	oamServerInfo_t st;
-	try {
-		st = oam.getServerInfo();
-		serverName = boost::get<0>(st);
-	}
-	catch (...) {
-		// o well, let's take out own action
-		if( IPMI_SUPPORT == 0)
-			system("init 0");
-	}
+    string serverName;
+    oamServerInfo_t st;
 
-	try
-	{
-		oam.shutdownServer(serverName, FORCEFUL, ACK_NO);
-	}
-	catch (exception& e)
-	{
-		// o well, let's take out own action
-		if( IPMI_SUPPORT == 0)
-			system("init 0");
-	}
+    try
+    {
+        st = oam.getServerInfo();
+        serverName = boost::get<0>(st);
+    }
+    catch (...)
+    {
+        // o well, let's take out own action
+        if ( IPMI_SUPPORT == 0)
+            system("init 0");
+    }
+
+    try
+    {
+        oam.shutdownServer(serverName, FORCEFUL, ACK_NO);
+    }
+    catch (exception& e)
+    {
+        // o well, let's take out own action
+        if ( IPMI_SUPPORT == 0)
+            system("init 0");
+    }
 }
 
 /******************************************************************************************
@@ -357,20 +388,25 @@ void sendMsgShutdownServer()
 ******************************************************************************************/
 string StripWhitespace(string value)
 {
-	for(;;)
-	{
-		string::size_type pos = value.find (' ',0);
-		if (pos == string::npos)
-			// no more found
-			break;
-		// strip leading
-		if (pos == 0) {
-			value = value.substr (pos+1,10000);
-		}
-		else 
-		{ // strip trailing
-			value = value.substr (0, pos);
-		}
-	}
-	return value;
+    for (;;)
+    {
+        string::size_type pos = value.find (' ', 0);
+
+        if (pos == string::npos)
+            // no more found
+            break;
+
+        // strip leading
+        if (pos == 0)
+        {
+            value = value.substr (pos + 1, 10000);
+        }
+        else
+        {
+            // strip trailing
+            value = value.substr (0, pos);
+        }
+    }
+
+    return value;
 }

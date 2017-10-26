@@ -42,8 +42,8 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
@@ -51,17 +51,18 @@ CalpontSystemCatalog::ColType Func_concat::operationType(FunctionParm& fp, Calpo
 // concat() returns NULL if any argument is NULL.
 //
 string Func_concat::getStrVal(Row& row,
-								FunctionParm& parm,
-								bool& isNull,
-								CalpontSystemCatalog::ColType&)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
 {
-	string ret = stringValue(parm[0], row, isNull);
+    string ret = stringValue(parm[0], row, isNull);
 
-	for ( unsigned int id = 1 ; id < parm.size() ; id++) {
-		ret.append( stringValue(parm[id], row, isNull) );
-	}
+    for ( unsigned int id = 1 ; id < parm.size() ; id++)
+    {
+        ret.append( stringValue(parm[id], row, isNull) );
+    }
 
-	return ret;
+    return ret;
 }
 
 } // namespace funcexp

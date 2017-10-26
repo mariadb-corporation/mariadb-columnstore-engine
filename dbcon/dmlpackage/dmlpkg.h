@@ -123,7 +123,7 @@ public:
 
     /** @brief dump to stdout.
      */
-    virtual std::ostream& put(std::ostream &os) const = 0;
+    virtual std::ostream& put(std::ostream& os) const = 0;
 
     /** @brief get the query string associated with the
      * SqlStatement
@@ -225,7 +225,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get a string representation of the query spec
      */
@@ -233,7 +233,10 @@ public:
 
     /** @brief get the statement type - DML_INSERT
      */
-    inline virtual int getStatementType() const { return DML_INSERT; }
+    inline virtual int getStatementType() const
+    {
+        return DML_INSERT;
+    }
 
     ValuesOrQuery* fValuesOrQueryPtr;
     ColumnNameList fColumnList;
@@ -267,7 +270,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the
      *  SET assignment_commalist opt_where_clause
@@ -277,7 +280,10 @@ public:
 
     /** @brief get the statement type - DML_UPDATE
      */
-    inline virtual int getStatementType() const { return DML_UPDATE; }
+    inline virtual int getStatementType() const
+    {
+        return DML_UPDATE;
+    }
 
     ColumnAssignmentList* fColAssignmentListPtr;
     WhereClause* fWhereClausePtr;
@@ -309,7 +315,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the WHERE clause
      */
@@ -317,7 +323,10 @@ public:
 
     /** @brief get the statement type - DML_DELETE
      */
-    inline virtual int getStatementType() const { return DML_DELETE; }
+    inline virtual int getStatementType() const
+    {
+        return DML_DELETE;
+    }
 
     WhereClause* fWhereClausePtr;
 };
@@ -344,11 +353,14 @@ public:
 
     /** @brief get the statement type - DML_COMMAND
      */
-    inline virtual int getStatementType() const { return DML_COMMAND; }
+    inline virtual int getStatementType() const
+    {
+        return DML_COMMAND;
+    }
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the COMMIT or ROLLBACK string
      */
@@ -382,7 +394,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     std::string fName;
     std::string fSchema;
@@ -399,7 +411,7 @@ class ColumnAssignment
 public:
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of
      * the column assignment
@@ -409,8 +421,8 @@ public:
     std::string fColumn;
     std::string fOperator;
     std::string fScalarExpression;
-	bool fFromCol;
-	uint32_t fFuncScale;
+    bool fFromCol;
+    uint32_t fFuncScale;
 };
 
 /** @brief Stores a value list or a query specification
@@ -444,7 +456,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string reperesentation of
      * the ValuesList or the QuerySpec
@@ -480,7 +492,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string represntation of the SELECT statement
      */
@@ -513,7 +525,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the FROM clause
      */
@@ -540,7 +552,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the WHERE clause
      */
@@ -569,7 +581,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the GROUP BY clause
      */
@@ -597,7 +609,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the HAVING clause
      */
@@ -618,7 +630,7 @@ class Escape
 public:
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     std::string fEscapeChar;
 };
@@ -653,7 +665,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @param get the string representation of the predicate
      */
@@ -682,7 +694,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the COMPARISON
      * predicate
@@ -717,7 +729,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the BETWEEN
      *  predicate
@@ -752,7 +764,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the LIKE
      * predicate
@@ -786,7 +798,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the NULL test
      * predicate
@@ -820,7 +832,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the IN
      * predicate
@@ -853,7 +865,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the
      * ALL or ANY predicate
@@ -886,7 +898,7 @@ public:
 
     /** @brief dump to stdout
      */
-    virtual std::ostream& put(std::ostream &os) const;
+    virtual std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the EXISTS
      * predicate
@@ -919,7 +931,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the striong representation of the
      * search condition
@@ -965,7 +977,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the
      * table expression
@@ -1013,7 +1025,7 @@ public:
 
     /** @brief dump to stdout
      */
-    std::ostream& put(std::ostream &os) const;
+    std::ostream& put(std::ostream& os) const;
 
     /** @brief get the string representation of the
      * query specification

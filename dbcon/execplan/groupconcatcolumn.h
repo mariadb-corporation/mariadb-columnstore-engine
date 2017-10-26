@@ -29,98 +29,116 @@
 #include "calpontselectexecutionplan.h"
 #include "aggregatecolumn.h"
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 class ByteStream;
 }
 
 /**
  * Namespace
  */
-namespace execplan {
+namespace execplan
+{
 /**
  * @brief A class to represent a aggregate return column
  *
  * This class is a specialization of class ReturnedColumn that
  * handles an aggregate function call (e.g., SUM, COUNT, MIN, MAX).
  */
-class GroupConcatColumn : public AggregateColumn {
+class GroupConcatColumn : public AggregateColumn
+{
 
 public:
 
-	/**
-	 * Constructors
-	 */
-	GroupConcatColumn();
+    /**
+     * Constructors
+     */
+    GroupConcatColumn();
 
-	GroupConcatColumn(const uint32_t sessionID);
+    GroupConcatColumn(const uint32_t sessionID);
 
-	GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t sessionID=0);
+    GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t sessionID = 0);
 
-	/**
-	 * Destructors
-	 */
-	virtual ~GroupConcatColumn();
+    /**
+     * Destructors
+     */
+    virtual ~GroupConcatColumn();
 
-	/**
-	 * Overloaded stream operator
-	 */
-	virtual const std::string toString() const;
+    /**
+     * Overloaded stream operator
+     */
+    virtual const std::string toString() const;
 
-	/** return a copy of this pointer
-	 *
-	 * deep copy of this pointer and return the copy
-	 */
-	virtual GroupConcatColumn* clone() const { return new GroupConcatColumn(*this); }
+    /** return a copy of this pointer
+     *
+     * deep copy of this pointer and return the copy
+     */
+    virtual GroupConcatColumn* clone() const
+    {
+        return new GroupConcatColumn(*this);
+    }
 
-	/**
-	 * Accessors and Mutators
-	 */
-	void orderCols(const std::vector<SRCP>& orderCols) { fOrderCols = orderCols; }
-	std::vector<SRCP>& orderCols() { return fOrderCols; }
-	void separator(const std::string& separator) { fSeparator = separator; }
-	std::string& separator() { return fSeparator; }
+    /**
+     * Accessors and Mutators
+     */
+    void orderCols(const std::vector<SRCP>& orderCols)
+    {
+        fOrderCols = orderCols;
+    }
+    std::vector<SRCP>& orderCols()
+    {
+        return fOrderCols;
+    }
+    void separator(const std::string& separator)
+    {
+        fSeparator = separator;
+    }
+    std::string& separator()
+    {
+        return fSeparator;
+    }
 
-	/**
-	 * Serialize interface
-	 */
-	virtual void serialize(messageqcpp::ByteStream&) const;
-	virtual void unserialize(messageqcpp::ByteStream&);
+    /**
+     * Serialize interface
+     */
+    virtual void serialize(messageqcpp::ByteStream&) const;
+    virtual void unserialize(messageqcpp::ByteStream&);
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this;
-	 *         false otherwise
-	 */
-	virtual bool operator==(const TreeNode* t) const;
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this;
+     *         false otherwise
+     */
+    virtual bool operator==(const TreeNode* t) const;
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this;
-	 *         false otherwise
-	 */
-	virtual bool operator==(const GroupConcatColumn& t) const;
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this;
+     *         false otherwise
+     */
+    virtual bool operator==(const GroupConcatColumn& t) const;
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this;
-	 *         true otherwise
-	 */
-	virtual bool operator!=(const TreeNode* t) const;
-
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this;
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this;
      *         true otherwise
-	 */
-	virtual bool operator!=(const GroupConcatColumn& t) const;
+     */
+    virtual bool operator!=(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this;
+     *         true otherwise
+     */
+    virtual bool operator!=(const GroupConcatColumn& t) const;
 
 private:
-	std::vector<SRCP> fOrderCols;
-	std::string fSeparator;
+    std::vector<SRCP> fOrderCols;
+    std::string fSeparator;
 };
 
 /**

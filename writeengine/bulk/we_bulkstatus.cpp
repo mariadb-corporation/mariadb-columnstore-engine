@@ -29,6 +29,6 @@
 
 namespace WriteEngine
 {
-    /*static*/
-	volatile int BulkStatus::fJobStatus = EXIT_SUCCESS;
+/*static*/
+volatile int BulkStatus::fJobStatus = EXIT_SUCCESS;
 }

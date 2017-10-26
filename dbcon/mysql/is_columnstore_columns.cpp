@@ -30,7 +30,7 @@
 
 
 // Required declaration as it isn't in a MairaDB include
-bool schema_table_store_record(THD *thd, TABLE *table);
+bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_columns_fields[] =
 {
@@ -54,10 +54,10 @@ ST_FIELD_INFO is_columnstore_columns_fields[] =
 
 };
 
-static int is_columnstore_columns_fill(THD *thd, TABLE_LIST *tables, COND *cond)
+static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
-    CHARSET_INFO *cs = system_charset_info;
-    TABLE *table = tables->table;
+    CHARSET_INFO* cs = system_charset_info;
+    TABLE* table = tables->table;
 
     boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
@@ -68,84 +68,97 @@ static int is_columnstore_columns_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     systemCatalogPtr->identity(execplan::CalpontSystemCatalog::FE);
 
     for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >::const_iterator it = catalog_tables.begin();
-         it != catalog_tables.end(); ++it)
+            it != catalog_tables.end(); ++it)
     {
         execplan::CalpontSystemCatalog::RIDList column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true);
+
         for (size_t col_num = 0; col_num < column_rid_list.size(); col_num++)
         {
             execplan::CalpontSystemCatalog::TableColName tcn = systemCatalogPtr->colName(column_rid_list[col_num].objnum);
             execplan::CalpontSystemCatalog::ColType ct = systemCatalogPtr->colType(column_rid_list[col_num].objnum);
 
-			table->field[0]->store(tcn.schema.c_str(), tcn.schema.length(), cs);
-			table->field[1]->store(tcn.table.c_str(), tcn.table.length(), cs);
-			table->field[2]->store(tcn.column.c_str(), tcn.column.length(), cs);
-			table->field[3]->store(column_rid_list[col_num].objnum);
-			if (ct.ddn.dictOID == std::numeric_limits<int32_t>::min())
-			{
-			    table->field[4]->set_null();
-			}
-			else
-			{
-			    table->field[4]->set_notnull();
-			    table->field[4]->store(ct.ddn.dictOID);
-			}
-			if (ct.ddn.listOID == std::numeric_limits<int32_t>::min())
-			{
-			    table->field[5]->set_null();
-			}
-			else
-			{
-			    table->field[5]->set_notnull();
-			    table->field[5]->store(ct.ddn.listOID);
-			}
-			if (ct.ddn.treeOID == std::numeric_limits<int32_t>::min())
-			{
-			    table->field[6]->set_null();
-			}
-			else
-			{
-			    table->field[6]->set_notnull();
-			    table->field[6]->store(ct.ddn.treeOID);
-			}
-			std::string data_type = execplan::colDataTypeToString(ct.colDataType);
-			table->field[7]->store(data_type.c_str(), data_type.length(), cs);
-			table->field[8]->store(ct.colWidth);
-			table->field[9]->store(ct.colPosition);
-			if (ct.defaultValue.empty())
-			{
-			    table->field[10]->set_null();
-			}
-			else
-			{
-			    table->field[10]->set_notnull();
-    			table->field[10]->store(ct.defaultValue.c_str(), ct.defaultValue.length(), cs);
-    		}
-    		table->field[11]->store(ct.autoincrement);
-			table->field[12]->store(ct.precision);
-			table->field[13]->store(ct.scale);
-			if (ct.constraintType != execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
-			{
-			    table->field[14]->store(true);
-			}
-			else
-			{
-			    table->field[14]->store(false);
-			}
+            table->field[0]->store(tcn.schema.c_str(), tcn.schema.length(), cs);
+            table->field[1]->store(tcn.table.c_str(), tcn.table.length(), cs);
+            table->field[2]->store(tcn.column.c_str(), tcn.column.length(), cs);
+            table->field[3]->store(column_rid_list[col_num].objnum);
 
-			std::string compression_type;
-			switch (ct.compressionType)
-			{
-				case 0:
-				    compression_type = "None";
-				    break;
-				case 2:
-				    compression_type = "Snappy";
-				    break;
-				default:
-				    compression_type = "Unknown";
-				    break;
-			}
-			table->field[15]->store(compression_type.c_str(), compression_type.length(), cs);
+            if (ct.ddn.dictOID == std::numeric_limits<int32_t>::min())
+            {
+                table->field[4]->set_null();
+            }
+            else
+            {
+                table->field[4]->set_notnull();
+                table->field[4]->store(ct.ddn.dictOID);
+            }
+
+            if (ct.ddn.listOID == std::numeric_limits<int32_t>::min())
+            {
+                table->field[5]->set_null();
+            }
+            else
+            {
+                table->field[5]->set_notnull();
+                table->field[5]->store(ct.ddn.listOID);
+            }
+
+            if (ct.ddn.treeOID == std::numeric_limits<int32_t>::min())
+            {
+                table->field[6]->set_null();
+            }
+            else
+            {
+                table->field[6]->set_notnull();
+                table->field[6]->store(ct.ddn.treeOID);
+            }
+
+            std::string data_type = execplan::colDataTypeToString(ct.colDataType);
+            table->field[7]->store(data_type.c_str(), data_type.length(), cs);
+            table->field[8]->store(ct.colWidth);
+            table->field[9]->store(ct.colPosition);
+
+            if (ct.defaultValue.empty())
+            {
+                table->field[10]->set_null();
+            }
+            else
+            {
+                table->field[10]->set_notnull();
+                table->field[10]->store(ct.defaultValue.c_str(), ct.defaultValue.length(), cs);
+            }
+
+            table->field[11]->store(ct.autoincrement);
+            table->field[12]->store(ct.precision);
+            table->field[13]->store(ct.scale);
+
+            if (ct.constraintType != execplan::CalpontSystemCatalog::NOTNULL_CONSTRAINT)
+            {
+                table->field[14]->store(true);
+            }
+            else
+            {
+                table->field[14]->store(false);
+            }
+
+            std::string compression_type;
+
+            switch (ct.compressionType)
+            {
+                case 0:
+                    compression_type = "None";
+                    break;
+
+                case 2:
+                    compression_type = "Snappy";
+                    break;
+
+                default:
+                    compression_type = "Unknown";
+                    break;
+            }
+
+            table->field[15]->store(compression_type.c_str(), compression_type.length(), cs);
+
             if (schema_table_store_record(thd, table))
                 return 1;
         }
@@ -156,9 +169,9 @@ static int is_columnstore_columns_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     return 0;
 }
 
-static int is_columnstore_columns_plugin_init(void *p)
+static int is_columnstore_columns_plugin_init(void* p)
 {
-    ST_SCHEMA_TABLE *schema = (ST_SCHEMA_TABLE*) p;
+    ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_columns_fields;
     schema->fill_table = is_columnstore_columns_fill;
     return 0;

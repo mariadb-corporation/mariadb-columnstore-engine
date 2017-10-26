@@ -27,22 +27,25 @@
 
 using namespace std;
 
-namespace ddlpackage {
+namespace ddlpackage
+{
 
-RestorePartitionStatement::RestorePartitionStatement(QualifiedName *qualifiedName) :
-	fTableName(qualifiedName)
+RestorePartitionStatement::RestorePartitionStatement(QualifiedName* qualifiedName) :
+    fTableName(qualifiedName)
 {
 }
 
 ostream& RestorePartitionStatement::put(ostream& os) const
 {
-	os << "Mark partition out of service: " << *fTableName;
-	os << " partitions: ";
-	set<BRM::LogicalPartition>::const_iterator it;
-	for (it=fPartitions.begin(); it!=fPartitions.end(); ++it)
-                os << (*it) << "  ";
-	os << endl;
-	return os;
+    os << "Mark partition out of service: " << *fTableName;
+    os << " partitions: ";
+    set<BRM::LogicalPartition>::const_iterator it;
+
+    for (it = fPartitions.begin(); it != fPartitions.end(); ++it)
+        os << (*it) << "  ";
+
+    os << endl;
+    return os;
 }
 
 }

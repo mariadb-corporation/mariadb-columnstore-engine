@@ -79,7 +79,8 @@ string masterLogPos = oam::UnassignedName;
 
 HeartBeatProcList hbproclist;
 
-namespace processmanager{
+namespace processmanager
+{
 
 
 /******************************************************************************************
@@ -90,32 +91,35 @@ namespace processmanager{
 ******************************************************************************************/
 Configuration::Configuration()
 {
-	Oam oam;
-	oamModuleInfo_t t;
-	try {
-		t = oam.getModuleInfo();
-		flocalModuleName = boost::get<0>(t);
-		flocalModuleType = boost::get<1>(t);
-		flocalModuleID = boost::get<2>(t);
-		fOAMParentModuleName = boost::get<3>(t);
-		fOAMParentModuleFlag = boost::get<4>(t);
-		fserverInstallType = boost::get<5>(t);
-		fOAMStandbyModuleName = boost::get<6>(t);
-		fOAMStandbyModuleFlag = boost::get<7>(t);
+    Oam oam;
+    oamModuleInfo_t t;
 
-		gOAMParentModuleFlag = boost::get<4>(t);
-	}
-	catch (exception& e) {
-		cout << endl << "ProcMgr Construct Error = " << e.what() << endl;
-		exit(-1);
-	}
+    try
+    {
+        t = oam.getModuleInfo();
+        flocalModuleName = boost::get<0>(t);
+        flocalModuleType = boost::get<1>(t);
+        flocalModuleID = boost::get<2>(t);
+        fOAMParentModuleName = boost::get<3>(t);
+        fOAMParentModuleFlag = boost::get<4>(t);
+        fserverInstallType = boost::get<5>(t);
+        fOAMStandbyModuleName = boost::get<6>(t);
+        fOAMStandbyModuleFlag = boost::get<7>(t);
+
+        gOAMParentModuleFlag = boost::get<4>(t);
+    }
+    catch (exception& e)
+    {
+        cout << endl << "ProcMgr Construct Error = " << e.what() << endl;
+        exit(-1);
+    }
 
 }
 
 /******************************************************************************************
 * @brief	Configuration Destructor#
 *
-* purpose:	Configuration 
+* purpose:	Configuration
 *
 ******************************************************************************************/
 Configuration::~Configuration()
@@ -130,7 +134,7 @@ Configuration::~Configuration()
 ******************************************************************************************/
 string Configuration::getstateInfo(string moduleName)
 {
-	return stateInfoList[moduleName];
+    return stateInfoList[moduleName];
 }
 
 
@@ -162,52 +166,70 @@ ProcessLog::~ProcessLog()
 ******************************************************************************************/
 void ProcessLog::writeLog(const int lineNumber, const string logContent, const LOG_TYPE logType)
 {
-	LoggingID lid(17);
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	if (logType == LOG_TYPE_ERROR)
-	{
-		args.add("line:");
-		args.add(lineNumber);
-	}
-	args.add(logContent);
+    LoggingID lid(17);
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
 
-	msg.format(args);
+    if (logType == LOG_TYPE_ERROR)
+    {
+        args.add("line:");
+        args.add(lineNumber);
+    }
 
-	switch(logType) {
-		case LOG_TYPE_DEBUG:
-			try {
-				ml.logDebugMessage(msg);
-			}
-			catch(...) {}
-			break;
-		case LOG_TYPE_INFO:
-			try {
-				ml.logInfoMessage(msg);
-			}
-			catch(...) {}
-			break;
-		case LOG_TYPE_WARNING:
-			try {
-				ml.logWarningMessage(msg);
-			}
-			catch(...) {}
-			break;
-		case LOG_TYPE_ERROR:
-			try {
-				ml.logErrorMessage(msg);
-			}
-			catch(...) {}
-			break;
-		case LOG_TYPE_CRITICAL:
-			try {
-				ml.logCriticalMessage(msg);
-			}
-			catch(...) {}
-			break;
-	}
-	return;
+    args.add(logContent);
+
+    msg.format(args);
+
+    switch (logType)
+    {
+        case LOG_TYPE_DEBUG:
+            try
+            {
+                ml.logDebugMessage(msg);
+            }
+            catch (...) {}
+
+            break;
+
+        case LOG_TYPE_INFO:
+            try
+            {
+                ml.logInfoMessage(msg);
+            }
+            catch (...) {}
+
+            break;
+
+        case LOG_TYPE_WARNING:
+            try
+            {
+                ml.logWarningMessage(msg);
+            }
+            catch (...) {}
+
+            break;
+
+        case LOG_TYPE_ERROR:
+            try
+            {
+                ml.logErrorMessage(msg);
+            }
+            catch (...) {}
+
+            break;
+
+        case LOG_TYPE_CRITICAL:
+            try
+            {
+                ml.logCriticalMessage(msg);
+            }
+            catch (...) {}
+
+            break;
+    }
+
+    return;
 }
 
 /******************************************************************************************
@@ -218,33 +240,39 @@ void ProcessLog::writeLog(const int lineNumber, const string logContent, const L
 ******************************************************************************************/
 void ProcessLog::writeLog(const int lineNumber, const int logContent, const LOG_TYPE logType)
 {
-	LoggingID lid(17);
-	MessageLog ml(lid);
-	Message msg;
-	Message::Args args;
-	args.add(logContent);
-	msg.format(args);
+    LoggingID lid(17);
+    MessageLog ml(lid);
+    Message msg;
+    Message::Args args;
+    args.add(logContent);
+    msg.format(args);
 
-	switch(logType) {
-		case LOG_TYPE_DEBUG:
-			ml.logDebugMessage(msg);
-			break;
-		case LOG_TYPE_INFO:
-			ml.logInfoMessage(msg);
-			break;
-		case LOG_TYPE_WARNING:
-			ml.logWarningMessage(msg);
-			break;
-		case LOG_TYPE_ERROR:
-			args.add("line:");
-			args.add(lineNumber);
-			ml.logErrorMessage(msg);
-			break;
-		case LOG_TYPE_CRITICAL:
-			ml.logCriticalMessage(msg);
-			break;
-	}
-	return;
+    switch (logType)
+    {
+        case LOG_TYPE_DEBUG:
+            ml.logDebugMessage(msg);
+            break;
+
+        case LOG_TYPE_INFO:
+            ml.logInfoMessage(msg);
+            break;
+
+        case LOG_TYPE_WARNING:
+            ml.logWarningMessage(msg);
+            break;
+
+        case LOG_TYPE_ERROR:
+            args.add("line:");
+            args.add(lineNumber);
+            ml.logErrorMessage(msg);
+            break;
+
+        case LOG_TYPE_CRITICAL:
+            ml.logCriticalMessage(msg);
+            break;
+    }
+
+    return;
 }
 
 /******************************************************************************************
@@ -253,9 +281,9 @@ void ProcessLog::writeLog(const int lineNumber, const int logContent, const LOG_
 * purpose:	Write the message to the log
 *
 ******************************************************************************************/
- void ProcessLog::setSysLogData()
+void ProcessLog::setSysLogData()
 {
-	return;
+    return;
 }
 
 /******************************************************************************************
@@ -266,8 +294,8 @@ void ProcessLog::writeLog(const int lineNumber, const int logContent, const LOG_
 ******************************************************************************************/
 string ProcessLog::getSysLogData()
 {
-	string i;
-	return i;
+    string i;
+    return i;
 }
 
 /******************************************************************************************
@@ -286,7 +314,7 @@ void ProcessLog::writeSystemLog()
 * purpose:	ProcessManager Constructor
 *
 ******************************************************************************************/
-ProcessManager::ProcessManager(Configuration &aconfig, ProcessLog &alog):config(aconfig), log(alog)
+ProcessManager::ProcessManager(Configuration& aconfig, ProcessLog& alog): config(aconfig), log(alog)
 {
 }
 
@@ -309,2687 +337,2980 @@ ProcessManager::~ProcessManager()
 //void	ProcessManager::processMSG( messageqcpp::IOSocket fIos, messageqcpp::ByteStream msg)
 void processMSG(messageqcpp::IOSocket* cfIos)
 {
-	messageqcpp::IOSocket fIos = *cfIos;
+    messageqcpp::IOSocket fIos = *cfIos;
 
-	pthread_t ThreadId;
-	ThreadId = pthread_self();
+    pthread_t ThreadId;
+    ThreadId = pthread_self();
 
-	ByteStream msg;
+    ByteStream msg;
 
-	try{
-		msg = fIos.read();
-	}
-	catch(...)
-	{
-		pthread_detach (ThreadId);
-		pthread_exit(0);
-	}
+    try
+    {
+        msg = fIos.read();
+    }
+    catch (...)
+    {
+        pthread_detach (ThreadId);
+        pthread_exit(0);
+    }
 
-	if (msg.length() <= 0) {
-		fIos.close();
-		pthread_detach (ThreadId);
-		pthread_exit(0);
-	}
+    if (msg.length() <= 0)
+    {
+        fIos.close();
+        pthread_detach (ThreadId);
+        pthread_exit(0);
+    }
 
-	ByteStream::byte msgType;
-	msg >> msgType;
+    ByteStream::byte msgType;
+    msg >> msgType;
 
-	Oam oam;
-	ProcessLog log;
+    Oam oam;
+    ProcessLog log;
 //	log.writeLog(__LINE__, "** processMSG msg type: " + oam.itoa(msgType), LOG_TYPE_DEBUG);
 
-	Configuration config;
-	ProcessManager processManager(config, log);
-
-	ByteStream::byte actionType;
-	string target;
-	ByteStream::byte graceful;
-	ByteStream::byte ackIndicator = 0;
-	ByteStream::byte manualFlag;
-	ByteStream ackMsg;
-	ByteStream::byte status = 0;
-
-	ALARMManager aManager;
-	SystemModuleTypeConfig systemmoduletypeconfig;
-	SystemProcessConfig systemprocessconfig;
-
-	try{
-		oam.getSystemConfig(systemmoduletypeconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-
-	switch (msgType) {
-		case REQUEST:
-			msg >> actionType;
-			msg >> target;
-			msg >> graceful;
-			msg >> ackIndicator;
-        		msg >> manualFlag;
-
-			switch (actionType) {
-				case STOPMODULE:
-				{
-					uint16_t count, hostConfigCount;
-					string value;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					oam::DeviceNetworkList devicenetworklist;
-
-					//get module count to remove
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-							devicenetworklist.push_back(devicenetworkconfig);
-							msg >> hostConfigCount;
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						DeviceNetworkList::iterator listPT = devicenetworklist.begin();
-
-						for( ; listPT != devicenetworklist.end() ; listPT++)
-						{
-							string moduleName = (*listPT).DeviceName;
-
-							log.writeLog(__LINE__,  "MSG RECEIVED: Stop Module request on " + moduleName );
-
-							string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
-							status = API_SUCCESS;
-		
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus(moduleName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED) {
-								status = API_DISABLED;
-								log.writeLog(__LINE__, "Stop Module requested Ignored on a Disabled " + moduleName);
-							}
-							else {
-								status = processManager.stopModule(moduleName, graceful, manualFlag);
-								log.writeLog(__LINE__, "Stop Module Completed on " + moduleName, LOG_TYPE_INFO);
-
-								Configuration config;
-								if ( moduleName == config.OAMStandbyName() ) {
-									string newStandbyModule = processManager.getStandbyModule();
-									if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
-										processManager.setStandbyModule(newStandbyModule);
-									else
-									{
-										Config* sysConfig = Config::makeConfig();
-	
-										// clear Standby OAM Module
-										sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-										sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
-								
-										//update Calpont Config table
-										try {
-											sysConfig->write();
-										}
-										catch(...)
-										{
-											log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-										}
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "STOPMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					log.writeLog(__LINE__, "STOPMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "STOPMODULE: ACK back to sender");
-					}
-
-					break;
-				}
-				case SHUTDOWNMODULE:
-				{
-					uint16_t count, hostConfigCount;
-					string value;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					oam::DeviceNetworkList devicenetworklist;
-
-					//get module count to remove
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-							devicenetworklist.push_back(devicenetworkconfig);
-							msg >> hostConfigCount;
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						DeviceNetworkList::iterator listPT = devicenetworklist.begin();
-
-						for( ; listPT != devicenetworklist.end() ; listPT++)
-						{
-							string moduleName = (*listPT).DeviceName;
-
-							log.writeLog(__LINE__,  "MSG RECEIVED: Shutdown Module request on " + moduleName );
-
-							status = API_SUCCESS;
-		
-							log.writeLog(__LINE__, "Shutdown Module Requested on " + moduleName, LOG_TYPE_INFO);
-							processManager.shutdownModule(moduleName, graceful, manualFlag, 0);
-
-							//check for SIMPLEX Processes on mate might need to be started
-							processManager.checkSimplexModule(moduleName);
-
-							Configuration config;
-							if ( moduleName == config.OAMStandbyName() ) {
-								string newStandbyModule = processManager.getStandbyModule();
-								if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
-									processManager.setStandbyModule(newStandbyModule);
-							}
-						}
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "SHUTDOWNMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "SHUTDOWNMODULE: ACK back to sender, return status = " + oam.itoa(status));
-					}
-
-					break;
-				}
-				case STARTMODULE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Start Module request" );
-
-					startsystemthreadStop = false;
-
-					uint16_t count, hostConfigCount;
-					string value;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					startdevicenetworklist.clear();
-
-					//get module count to remove
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-							startdevicenetworklist.push_back(devicenetworkconfig);
-							msg >> hostConfigCount;
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						pthread_t startsystemthread;
-						status = pthread_create (&startsystemthread, NULL, (void*(*)(void*)) &startSystemThread, &startdevicenetworklist);
-
-						if ( status != 0 ) {
-							log.writeLog(__LINE__, "STARTMODULE: pthread_create failed, return status = " + oam.itoa(status));
-							status = API_FAILURE;
-						}
-
-						if (status == 0 && ackIndicator)
-						{
-							pthread_join(startsystemthread, NULL);
-							status = startsystemthreadStatus;
-						}
-
-						if( status == API_SUCCESS) {
-							//distribute config file
-							processManager.distributeConfigFile("system");	
-		
-							//call dbrm control
-							oam.dbrmctl("halt");
-							log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
-
-							oam.dbrmctl("reload");
-							log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-						
-							oam.dbrmctl("resume");
-							log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
-//							processManager.restartProcessType("ExeMgr");
-
-							//setup MySQL Replication for started modules
-//							log.writeLog(__LINE__, "Setup MySQL Replication for module being started", LOG_TYPE_DEBUG);
-//							processManager.setMySQLReplication(startdevicenetworklist);
-						}
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "STARTMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					log.writeLog(__LINE__, "STARTMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));					
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "STARTMODULE: ACK back to sender");
-					}
-
-					break;
-				}
-				case RESTARTMODULE:
-				{
-					uint16_t count, hostConfigCount;
-					string value;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					startdevicenetworklist.clear();
-
-					startsystemthreadStop = false;
-
-					//get module count to remove
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-							startdevicenetworklist.push_back(devicenetworkconfig);
-							msg >> hostConfigCount;
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						DeviceNetworkList::iterator listPT = startdevicenetworklist.begin();
-
-						for( ; listPT != startdevicenetworklist.end() ; listPT++)
-						{
-							string moduleName = (*listPT).DeviceName;
-
-							log.writeLog(__LINE__,  "MSG RECEIVED: Restart Module request on " + moduleName );
-							status = API_SUCCESS;
-		
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus(moduleName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							if (opState != oam::MAN_DISABLED) {
-		
-								status = processManager.stopModule(moduleName, graceful, manualFlag);
-	
-								log.writeLog(__LINE__, "Stop Module Completed on " + moduleName, LOG_TYPE_INFO);
-
-								Configuration config;
-								if ( moduleName == config.OAMStandbyName() ) {
-									string newStandbyModule = processManager.getStandbyModule();
-									if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
-										processManager.setStandbyModule(newStandbyModule);
-								}
-							}
-							else {
-								status = API_DISABLED;
-								log.writeLog(__LINE__, "Stop Module requested Ignored on a Disabled " + moduleName);
-							}	
-						}
-
-						pthread_t startsystemthread;
-						status = pthread_create (&startsystemthread, NULL, (void*(*)(void*)) &startSystemThread, &startdevicenetworklist);
-	
-						if ( status != 0 ) {
-							log.writeLog(__LINE__, "RESTARTMODULE: pthread_create failed, return status = " + oam.itoa(status));
-							status = API_FAILURE;
-						}
-
-						if (status == 0 && ackIndicator)
-						{
-							pthread_join(startsystemthread, NULL);
-							status = startsystemthreadStatus;
-						}
-
-						if( status == API_SUCCESS) {
-							//distribute config file
-							processManager.distributeConfigFile("system");	
-
-							processManager.restartProcessType("ExeMgr");
-						}
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "RESTARTMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					log.writeLog(__LINE__, "RESTARTMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "RESTARTMODULE: ACK back to sender");
-					}
-
-					break;
-				}
-
-				case DISABLEMODULE:
-				{
-					uint16_t count, hostConfigCount;
-					string value;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					oam::DeviceNetworkList devicenetworklist;
-
-					//get module count to remove
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-							devicenetworklist.push_back(devicenetworkconfig);
-							msg >> hostConfigCount;
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						DeviceNetworkList::iterator listPT = devicenetworklist.begin();
-
-						for( ; listPT != devicenetworklist.end() ; listPT++)
-						{
-							string moduleName = (*listPT).DeviceName;
-
-							log.writeLog(__LINE__,  "MSG RECEIVED: Disable Module request on " + moduleName );
-		
-							// check module status, Disable module
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus(moduleName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							//don't allow disble of current Parent OAM Module
-							if ( moduleName == config.moduleName() )
-							{
-								log.writeLog(__LINE__,  "ERROR: can't disable Parent OAM module", LOG_TYPE_ERROR);
-								status = API_INVALID_PARAMETER;
-								break;
-							}
-
-							if (opState == oam::MAN_OFFLINE || opState == oam::MAN_DISABLED
-									|| opState == oam::AUTO_DISABLED ) {
-
-								oam.dbrmctl("halt");
-								log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
-
-								status = processManager.disableModule(moduleName, true);
-								log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
-
-								//call dbrm control
-								oam.dbrmctl("reload");
-								log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-							
-								// resume the dbrm
-								oam.dbrmctl("resume");
-								log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
-								//check for SIMPLEX Processes on mate might need to be started
-								processManager.checkSimplexModule(moduleName);
-							}
-							else
-							{
-								log.writeLog(__LINE__,  "ERROR: module not stopped", LOG_TYPE_ERROR);
-								status = API_FAILURE;
-								break;
-							}
-						}
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "DISABLEMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					log.writeLog(__LINE__, "DISABLEMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "DISABLEMODULE: ACK back to sender");
-					}
-
-					break;
-				}
-
-				case ENABLEMODULE:
-				{
-					uint16_t count, hostConfigCount;
-					string value;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					oam::DeviceNetworkList devicenetworklist;
-
-					//get module count to remove
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-							devicenetworklist.push_back(devicenetworkconfig);
-							msg >> hostConfigCount;
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						DeviceNetworkList::iterator listPT = devicenetworklist.begin();
-
-						//stopModules being removed with the REMOVE option, which will stop process
-						for( ; listPT != devicenetworklist.end() ; listPT++)
-						{
-							string moduleName = (*listPT).DeviceName;
-
-							log.writeLog(__LINE__,  "MSG RECEIVED: Enable Module request on " + moduleName );
-		
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus(moduleName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							if (opState == oam::MAN_DISABLED) {
-								status = processManager.enableModule(moduleName, oam::MAN_OFFLINE);
-								log.writeLog(__LINE__, "Enable Module Completed on " + moduleName, LOG_TYPE_INFO);
-							}
-							else
-							{
-								log.writeLog(__LINE__,  "ERROR: module name not Disabled", LOG_TYPE_ERROR);
-								status = API_INVALID_STATE;
-								break;
-							}
-						}
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "ENABLEMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					log.writeLog(__LINE__, "ENABLEMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "ENABLEMODULE: ACK back to sender");
-					}
-
-					break;
-				}
-
-				case STOPSYSTEM:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Stop System request..." );
-
-					// GRACEFUL_WAIT means that we are shutting down, but waiting for
-					// all transactions to finish or rollback as commanded. This is only set if
-					// there are, in fact, transactions active (or cpimport).
-					if (graceful == GRACEFUL_WAIT)
-					{
-						ByteStream stillWorkingMsg;
-						stillWorkingMsg << (ByteStream::byte) oam::ACK;
-						stillWorkingMsg << actionType;
-						stillWorkingMsg << target;
-						stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
-
-						// This wait can take a while. We wait for table locks to release and open transactions to commit.
-						if (oam.waitForSystem(STOPSYSTEM, fIos, stillWorkingMsg))
-						{
-							graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
-							// Send an ack back to say we're done waiting and are now shutting down.
-							ackMsg << (ByteStream::byte) oam::ACK;
-							ackMsg << actionType;
-							ackMsg << target;
-							ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
-							try {
-								fIos.write(ackMsg);
-							}
-							catch(...) {}
-							log.writeLog(__LINE__, "STOPSYSTEM: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
-						}
-						else
-						{
-							// We've been cancelled.
-							if (ackIndicator)
-							{
-								ackMsg << (ByteStream::byte) oam::ACK;
-								ackMsg << actionType;
-								ackMsg << target;
-								ackMsg << (ByteStream::byte) API_CANCELLED;
-								try {
-									fIos.write(ackMsg);
-								}
-								catch(...) {}
-
-								log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender (canceled)");
-								break;
-							}
-						}
-					}
-
-					//set the flag to have any startsystemthreads to exit out before stop is done
-					startsystemthreadStop = true;
-					if ( startsystemthreadRunning )
-						sleep(5);
-
-					//stop by process type first, if system is ACTIVE
-					SystemStatus systemstatus;
-					try {
-						oam.getSystemStatus(systemstatus);
-					}
-					catch(...)
-					{}
-
-					//set system status
-					processManager.setSystemState(oam::MAN_INIT);
-
-					if (HDFS)
-					{
-						oam::DeviceNetworkList devicenetworklist;
-						pthread_t stopsystemthread;
-						status = pthread_create (&stopsystemthread, NULL, (void*(*)(void*)) &stopSystemThread, &devicenetworklist);
-	
-						if ( status != 0 ) {
-							log.writeLog(__LINE__, "STOPSYSTEMS: pthread_create failed, return status = " + oam.itoa(status));
-							status = API_FAILURE;
-						}
-	
-						if (status == 0 && ackIndicator)
-						{	
-							ackMsg << (ByteStream::byte) oam::ACK;
-							ackMsg << actionType;
-							ackMsg << target;
-							ackMsg << (ByteStream::byte) status;
-
-							try {
-								fIos.write(ackMsg);
-							}
-							catch(...) {}
-	
-							log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender");
-						}
-						break;
-					}
-
-					//call to update module status and send notification message
-					for( unsigned int i = 0 ;i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-					{
-						int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-						if( moduleCount == 0)
-							continue;
-			
-						DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-						for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-						{
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-								continue;
-
-							processManager.stopModule((*pt).DeviceName, STATUS_UPDATE, manualFlag, 0);
-						}
-					}
-
-					//set query system state not ready
-					processManager.setQuerySystemState(false);
-
-					if (systemstatus.SystemOpState == ACTIVE && graceful == oam::GRACEFUL)
-						processManager.stopProcessTypes(manualFlag);
-
-					//stop all of processes..
-					for( unsigned int i = 0 ;i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-					{
-						int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-						if( moduleCount == 0)
-							continue;
-			
-						DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-						for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-						{
-							//skip OAM Parent module, do at the end
-							if ( (*pt).DeviceName == config.moduleName() )
-								continue;
-
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-								continue;
-
-							log.writeLog(__LINE__,  "STOPSYSTEM: Request Stop Module on " + (*pt).DeviceName );
-
-//							int retStatus = processManager.stopModule((*pt).DeviceName, graceful, manualFlag, 0);
-							processManager.stopModule((*pt).DeviceName, graceful, manualFlag, 0);
-
-//							log.writeLog(__LINE__, "STOPSYSTEM: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-//							if (retStatus != API_SUCCESS)
-//								status = retStatus;
-						}
-					}
-
-					//wait until all child modules are offline or A FAILURE HAS OCCURRED
-					bool failure = false;
-					bool stopped = true;
-					for ( int retry = 0 ; retry < 30 ; retry++ )
-					{
-						sleep(1);
-						stopped = true;
-						for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-						{
-							int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-							if ( moduleCount == 0)
-								continue;
-		
-							DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-							for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
-							{
-								string moduleName = (*pt).DeviceName;
-		
-								//skip OAM Parent module, do at the end
-								if ( moduleName == config.moduleName() )
-									continue;
-
-								int opState = oam::ACTIVE;
-								try
-								{
-									bool degraded;
-									oam.getModuleStatus(moduleName, opState, degraded);
-									if (opState == oam::FAILED) {
-										failure = true;
-										log.writeLog(__LINE__, "STOPSYSTEM: Failed, failure on module " + moduleName, LOG_TYPE_ERROR);
-										break;
-									}
-	
-									if (opState == oam::MAN_OFFLINE || 
-										opState == oam::MAN_DISABLED || 
-										opState == oam::AUTO_DISABLED )
-										continue;
-									stopped = false;
-								} 
-								catch (exception& ex)
-								{
-//									string error = ex.what();
-//									log.writeLog(__LINE__, "EXCEPTION ERROR on : " + error, LOG_TYPE_ERROR);
-								} 
-								catch (...)
-								{
-//									log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-								}
-							}
-							if ( failure )
-								break;
-						}
-
-						if ( failure)
-							break;
-						if ( stopped )
-							break;
-					}
-
-					if ( failure )
-					{
-						processManager.setSystemState(oam::FAILED);
-					}
-					else
-					{
-						if ( !stopped)
-						{
-							//timeout waiting for system to stop, error out
-							log.writeLog(__LINE__, "STOPSYSTEM: Failed, timeout waiting for module to stop", LOG_TYPE_ERROR);
-							processManager.setSystemState(oam::FAILED);
-						}
-						else
-						{
-							//now stop local module
-							processManager.stopModule(config.moduleName(), graceful, manualFlag );
-	
-							//run save.brm script
-							processManager.saveBRM(false);
-	
-							log.writeLog(__LINE__, "Stop System Completed Success", LOG_TYPE_INFO);
-	
-							processManager.setSystemState(oam::MAN_OFFLINE);
-
-							//clearout auto move dbroots files
-							string cmd = "rm -f " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
-							system(cmd.c_str());
-							cmd = "touch " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
-							system(cmd.c_str());
-						}
-					}
-
-					if (ackIndicator)
-					{
-					ackMsg.reset();
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) API_SUCCESS;
-						fIos.write(ackMsg);
-
-						log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender");
-					}
-
-					startsystemthreadStop = false;
-
-					break;
-				}
-				case SHUTDOWNSYSTEM:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Shutdown System request..." );
-
-					// GRACEFUL_WAIT means that we are shutting down, but waiting for
-					// all transactions to finish or rollback as commanded. This is only set if
-					// there are, in fact, transactions active (or cpimport).
-
-					int retStatus = oam::API_SUCCESS;
-
-					if (HDFS)
-					{
-						if (ackIndicator)
-						{
-							ackMsg.reset();
-							ackMsg << (ByteStream::byte) oam::ACK;
-							ackMsg << actionType;
-							ackMsg << target;
-							ackMsg << (ByteStream::byte) status;
-							try {
-								fIos.write(ackMsg);
-							}
-							catch(...) {}
-	
-							log.writeLog(__LINE__, "SHUTDOWNSYSTEM: ACK back to sender, return status = " + oam.itoa(API_SUCCESS));
-						}
-	
-						Config* sysConfig = Config::makeConfig();
-	
-						// clear Standby OAM Module
-						sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-						sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
-				
-						//update Calpont Config table
-						try {
-							sysConfig->write();
-						}
-						catch(...)
-						{
-							log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-						}
-	
-						string cmd = "pdsh -a -x " + localHostName + " '" + startup::StartUp::installDir() + "/columnstore stop' > /dev/null 2>&1";
-						system(cmd.c_str());
-
-						break;
-					}
-					else
-					{
-						for( unsigned int i = 0 ;i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-						{
-							int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-							if( moduleCount == 0)
-								continue;
-				
-							DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-							for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-							{
-								//do local module last
-								if ( (*pt).DeviceName == config.moduleName() )
-								{
-									continue;
-								}
-	
-								int opState = oam::ACTIVE;
-								bool degraded;
-								try {
-									oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-								}
-								catch (exception& ex)
-								{
-//									string error = ex.what();
-//									log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-								}
-								catch(...)
-								{
-//									log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-								}
-			
-								if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-									continue;
-	
-								retStatus = processManager.shutdownModule((*pt).DeviceName, graceful, manualFlag, 0);
-							}
-						}
-					}
-
-					if (ackIndicator)
-					{
-						ackMsg.reset();
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "SHUTDOWNSYSTEM: ACK back to sender, return status = " + oam.itoa(API_SUCCESS));
-					}
-
-					Config* sysConfig = Config::makeConfig();
-
-					// clear Standby OAM Module
-					sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-					sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
-			
-					//update Calpont Config table
-					try {
-						sysConfig->write();
-					}
-					catch(...)
-					{
-						log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-					}
-
-					//clearout auto move dbroots files
-					string cmd = "rm -f " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
-					system(cmd.c_str());
-					cmd = "touch " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
-					system(cmd.c_str());
-
-					// now do local module
-					processManager.shutdownModule(config.moduleName(), graceful, manualFlag);
-
-					break;
-				}
-				case STARTSYSTEM:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Start System request...ackIndicator=" + oam.itoa(ackIndicator));
-
-					startsystemthreadStop = false;
-
-					// get system status and don't process if already in-progress
-					try {
-						SystemStatus systemstatus;
-						oam.getSystemStatus(systemstatus);
-				
-						if (systemstatus.SystemOpState == MAN_INIT) {
-							log.writeLog(__LINE__, "STARTSYSTEM: Start already in-progess");
-
-							if (ackIndicator)
-							{
-								ackMsg << (ByteStream::byte) oam::ACK;
-								ackMsg << actionType;
-								ackMsg << target;
-								ackMsg << (ByteStream::byte) API_ALREADY_IN_PROGRESS;
-								try {
-									fIos.write(ackMsg);
-								}
-								catch(...) {}
-		
-								log.writeLog(__LINE__, "STARTSYSTEM: ACK back to sender");
-							}
-		
-							break;
-						}
-					}
-					catch (exception& ex)
-					{
-//						string error = ex.what();
-//						log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemStatus: " + error, LOG_TYPE_ERROR);
-					}
-					catch(...)
-					{
-//						log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-					}
-
-					oam::DeviceNetworkList devicenetworklist;
-					pthread_t startsystemthread;
-					status = pthread_create (&startsystemthread, NULL, (void*(*)(void*)) &startSystemThread, &devicenetworklist);
-
-					if ( status != 0 ) {
-						log.writeLog(__LINE__, "STARTSYSTEMS: pthread_create failed, return status = " + oam.itoa(status));
-						status = API_FAILURE;
-					}
-
-					if (status == 0 && ackIndicator)
-					{
-						pthread_join(startsystemthread, NULL);
-						status = stopsystemthreadStatus;
-
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "STARTSYSTEM: ACK back to sender");
-					}
-
-					log.writeLog(__LINE__, "STARTSYSTEM: Start System Request Completed with status = " + oam.itoa(status));
-
-					break;
-				}
-				case RESTARTSYSTEM:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Restart System request..." );
-
-					startsystemthreadStop = false;
-
-					// GRACEFUL_WAIT means that we are shutting down, but waiting for
-					// all transactions to finish or rollback as commanded. This is only set if
-					// there are, in fact, transactions active (or cpimport).
-					if (graceful == GRACEFUL_WAIT)
-					{
-						ByteStream stillWorkingMsg;
-						stillWorkingMsg << (ByteStream::byte) oam::ACK;
-						stillWorkingMsg << actionType;
-						stillWorkingMsg << target;
-						stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
-
-						// This wait can take a while. We wait for table locks to release and open transactions to commit.
-						if (oam.waitForSystem(RESTARTSYSTEM, fIos, stillWorkingMsg))
-						{
-							graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
-							// Send an ack back to say we're done waiting and are now shutting down.
-							ackMsg << (ByteStream::byte) oam::ACK;
-							ackMsg << actionType;
-							ackMsg << target;
-							ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
-							try {
-								fIos.write(ackMsg);
-							}
-							catch(...) {}
-							log.writeLog(__LINE__, "RESTARTSYSTEM: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
-						}
-						else
-						{
-							// We've been cancelled.
-							if (ackIndicator)
-							{
-								ackMsg << (ByteStream::byte) oam::ACK;
-								ackMsg << actionType;
-								ackMsg << target;
-								ackMsg << (ByteStream::byte) API_CANCELLED;
-								try {
-									fIos.write(ackMsg);
-								}
-								catch(...) {}
-
-								log.writeLog(__LINE__, "RESTARTSYSTEM: ACK back to sender (canceled)");
-								break;
-							}
-						}
-					}
-
-					//set the flag to have any startsystemthreads to exit out before stop is done
-					startsystemthreadStop = true;
-					if ( startsystemthreadRunning )
-						sleep(5);
-
-					//get system status
-					SystemStatus systemstatus;
-					try {
-						oam.getSystemStatus(systemstatus);
-					}
-					catch(...)
-					{}
-
-					//set system status
-					processManager.setSystemState(oam::MAN_OFFLINE);
-
-					//call to update module status and send notification message
-					//stop all of processes..
-					for( unsigned int i = 0 ;i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-					{
-						int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-						if( moduleCount == 0)
-							continue;
-			
-						DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-						for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-						{
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-								continue;
-
-							processManager.stopModule((*pt).DeviceName, STATUS_UPDATE, manualFlag);
-						}
-					}
-
-					//stop by process type first, if system is ACTIVE
-					if (systemstatus.SystemOpState == ACTIVE)
-						processManager.stopProcessTypes(manualFlag);
-
-					status = API_SUCCESS;
-
-					// stop modules
-					for( unsigned int i = 0 ;i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-					{
-						int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-						if( moduleCount == 0)
-							continue;
-			
-						DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-						for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-						{
-							//skip OAM Parent module, do at the end
-							if ( (*pt).DeviceName == config.moduleName() )
-								continue;
-
-							int opState = oam::ACTIVE;
-							bool degraded;
-							try {
-								oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-							}
-							catch (exception& ex)
-							{
-//								string error = ex.what();
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-							}
-							catch(...)
-							{
-//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-							}
-		
-							if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-								continue;
-
-							log.writeLog(__LINE__,  "RESTARTSYSTEM: Request Stop Module on " + (*pt).DeviceName );
-
-							int retStatus = processManager.stopModule((*pt).DeviceName, graceful, manualFlag);
-
-							log.writeLog(__LINE__, "RESTARTSYSTEM: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-							if (retStatus != API_SUCCESS)
-								status = retStatus;
-						}
-					}
-					//now stop local module
-					processManager.stopModule(config.moduleName(), graceful, manualFlag );
-
-					//run save.brm script
-					processManager.saveBRM(false);
-
-					log.writeLog(__LINE__, "RESTARTSYSTEM: ACK received from Process-Monitor for stopModule requests, return status = " + oam.itoa(status));
-
-					startsystemthreadStop = false;
-
-					if (status == API_SUCCESS ) {
-						//distribute config file
-						processManager.distributeConfigFile("system");	
-
-						oam::DeviceNetworkList devicenetworklist;
-						pthread_t startsystemthread;
-						pthread_create (&startsystemthread, NULL, (void*(*)(void*)) &startSystemThread, &devicenetworklist);
-
-						if ( status != 0 ) {
-							log.writeLog(__LINE__, "STARTMODULE: pthread_create failed, return status = " + oam.itoa(status));
-							status = API_FAILURE;
-						}
-
-						if (status == 0 && ackIndicator)
-						{
-                            // BUG 4554 We don't need the join because calpont console is now looking for "Active"
-                            // We need to return the ack right away to let console know we got the message.
-//							pthread_join(startsystemthread, NULL);
-//							status = startsystemthreadStatus;
-						}
-
-						// setup MySQL Replication after switchover command
-/*						if (graceful == FORCEFUL)
-						{
-							log.writeLog(__LINE__, "Setup MySQL Replication for restartSystem FORCE, used by switch-parent command", LOG_TYPE_DEBUG);
-							oam::DeviceNetworkList devicenetworklist;
-							processManager.setMySQLReplication(devicenetworklist);
-						}
-*/
-						log.writeLog(__LINE__, "RESTARTSYSTEM: Start System Request Completed", LOG_TYPE_INFO);
-					}
-	
-					if (ackIndicator)
-					{
-						ackMsg.reset();
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "RESTARTSYSTEM: ACK back to sender");
-					}
-
-					log.writeLog(__LINE__, "Restart System Completed, status = " + oam.itoa(status), LOG_TYPE_INFO);
-
-					break;
-				}
-				case STOPPROCESS:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Stop Process request on " + target );
-					string moduleName;
-
-					msg >> moduleName;
-					status = API_SUCCESS;
-
-					status = processManager.stopProcess(moduleName, target, graceful, manualFlag);
-
-					log.writeLog(__LINE__, "STOPPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-					log.writeLog(__LINE__, "Stop Process Completed on " + moduleName + " / " + target, LOG_TYPE_INFO );
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "STOPPROCESS: ACK back to sender");
-					}
-					break;	
-				}
-				case STARTPROCESS:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Start Process request on " + target);
-					string moduleName;
-
-					msg >> moduleName;
-
-					status = processManager.startProcess(moduleName, target, graceful);
-
-					log.writeLog(__LINE__, "STARTPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-					log.writeLog(__LINE__, "Start Process Completed on " + moduleName + " / " + target, LOG_TYPE_INFO );
-
-					// if a PrimProc was restarted, restart ACTIVE ExeMgr(s) and DDL/DMLProc
-#if 0	// A RESTARTPROCESS message is about to arrive, so this is redundant.
-					if( target.find("PrimProc") == 0) {
-
-						//distribute config file
-						processManager.distributeConfigFile("system");	
-
-						processManager.reinitProcessType("WriteEngineServer");
-						processManager.restartProcessType("ExeMgr");
-						processManager.reinitProcessType("DDLProc");
-						processManager.reinitProcessType("DMLProc");
-					}
-
-					// if a WriteEngineServer was restarted, restart DDL/DMLProc
-					if( target.find("WriteEngineServer") == 0) {
-
-						processManager.reinitProcessType("DDLProc");
-						processManager.reinitProcessType("DMLProc");
-					}
-#endif
-					// if DDL or DMLProc, change IP Address
-					if( target.find("DDLProc") == 0 || 
-						target.find("DMLProc") == 0 ) {
-
-						processManager.setPMProcIPs(moduleName, target);
-					}
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "STARTPROCESS: ACK back to sender");
-					}
-					break;	
-				}
-				case RESTARTPROCESS:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Restart Process request on " + target );
-					string moduleName;
-
-					msg >> moduleName;
-
-					status = processManager.restartProcess(moduleName, target, graceful, manualFlag);
-
-					// if a PrimProc was restarted, restart ACTIVE ExeMgr(s)
-					if( target.find("PrimProc") == 0) {
-
-						//distribute config file
-						processManager.distributeConfigFile("system");	
-
-						processManager.reinitProcessType("WriteEngineServer");
-						processManager.restartProcessType("ExeMgr");
-						processManager.reinitProcessType("DDLProc");
-						processManager.reinitProcessType("DMLProc");
-					}
-
-					// if a WriteEngineServer was restarted, restart DDL/DMLProc
-					if( target.find("WriteEngineServer") == 0) {
-
-						processManager.reinitProcessType("DDLProc");
-						processManager.reinitProcessType("DMLProc");
-					}
-
-					log.writeLog(__LINE__, "RESTARTPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-					log.writeLog(__LINE__, "Restart Process Completed on " + moduleName + " / " + target, LOG_TYPE_INFO );
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "RESTARTPROCESS: ACK back to sender");
-					}
-					break;	
-				}
-				case UPDATELOG:
-				{
-					string action;
-					string level;
-
-					msg >> action;
-					msg >> level;
-
-					log.writeLog(__LINE__,  "MSG RECEIVED: " + action + " logging on " + target + " for level " + level );
-
-					status = API_SUCCESS;
- 
-					if ( target == "system" ) {
-						// send logging message to all modules
-						for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-						{
-							int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-							if( moduleCount == 0)
-								continue;
-				
-							DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-							for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-							{
-								int retStatus = processManager.updateLog(action, (*pt).DeviceName, level);
-								if ( retStatus != API_SUCCESS)
-									status = retStatus;
-							}
-						}
-					}
-					else
-					{ // for a specific module
-						// validate module name
-						bool found = false;
-						for( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-						{
-							int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-							if( moduleCount == 0)
-								continue;
-				
-							DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-							for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-							{
-								if ((*pt).DeviceName == target) {
-									status = processManager.updateLog(action, target, level);
-									found = true;
-									break;
-								}
-							}
-						}
-						if ( found == false ) {
-							log.writeLog(__LINE__,  "ERROR: Invalid module name: " +  target, LOG_TYPE_ERROR);
-							status = API_INVALID_PARAMETER;
-						}
-					}
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					log.writeLog(__LINE__, "UPDATELOG: ACK back to sender, return status = " + oam.itoa(status));
-
-					break;
-				}
-				case GETCONFIGLOG:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Get Log Configuation" );
-
-					status = API_SUCCESS;
- 
-					// validate module name and make request
-					bool found = false;
-					for( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-					{
-						int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-						if( moduleCount == 0)
-							continue;
-			
-						DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-						for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-						{
-							if ((*pt).DeviceName == target) {
-								status = processManager.getConfigLog(target);
-								found = true;
-								break;
-							}
-						}
-					}
-					if ( found == false ) {
-						log.writeLog(__LINE__,  "ERROR: Invalid module name: " +  target, LOG_TYPE_ERROR);
-						status = API_INVALID_PARAMETER;
-					}
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					log.writeLog(__LINE__, "GETCONFIGLOG: ACK back to sender, return status = " + oam.itoa(status));
-
-					break;
-				}
-				case REINITPROCESS:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Re-Init Process request..." );
-					string moduleName;
-
-					msg >> moduleName;
-
-					//distribute config file
-					processManager.distributeConfigFile(moduleName);	
-
-					status = processManager.reinitProcess(moduleName, target);
-
-					log.writeLog(__LINE__, "REINITPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "REINITPROCESS: ACK back to sender");
-					}
-					break;
-				}
-				case UPDATECONFIG:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Update Process Configuation" );
-
-					status = API_SUCCESS;
- 
-					//distribute update of process config file
-					processManager.distributeConfigFile("system", "ProcessConfig.xml");
-
-					for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-					{
-						int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-						if( moduleCount == 0)
-							continue;
-			
-						DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-						for (;pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-						{
-							int retStatus = processManager.updateConfig((*pt).DeviceName);
-							if (retStatus != API_SUCCESS)
-								status = retStatus;
-						}
-					}
-
-					log.writeLog(__LINE__, "UPDATECONFIG: ACK back to sender, return status = " + oam.itoa(status));
-					break;
-				}
-				case BUILDSYSTEMTABLES:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Send Build System Table request to " + target);
-
-					status = processManager.buildSystemTables(target);
-
-					log.writeLog(__LINE__, "BUILDSYSTEMTABLES: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "BUILDSYSTEMTABLES: ACK back to sender");
-					}
-					break;
-				}
-				case ADDMODULE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Add Module request");
-
-					string value;
-					uint16_t count,ivalue,nicCount;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					oam::DeviceNetworkList devicenetworklist;
-					oam::HostConfig hostconfig;
-
-					//get module count to add
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-
-							msg >> nicCount;
-							for (int j = 0 ; j < nicCount ; j ++ )
-							{
-								msg >> value;	
-								hostconfig.IPAddr = value;
-								msg >> value;
-								hostconfig.HostName = value;
-								msg >> ivalue;
-								hostconfig.NicID = ivalue; 
-								devicenetworkconfig.hostConfigList.push_back(hostconfig);
-							}
-							devicenetworklist.push_back(devicenetworkconfig);
-							devicenetworkconfig.hostConfigList.clear();
-						}
-	
-						string password;
-						msg >> password;
-	
-						status = processManager.addModule(devicenetworklist, password);
-	
-						log.writeLog(__LINE__, "ADDMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "ADDMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "ADDMODULE: ACK back to sender");
-					}
-
-					break;
-				}
-				case REMOVEMODULE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Remove Module request");
-
-					uint16_t count, hostConfigCount;
-					string value;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					oam::DeviceNetworkList devicenetworklist;
-
-					//get module count to remove
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-							devicenetworklist.push_back(devicenetworkconfig);
-							msg >> hostConfigCount;
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						status = processManager.removeModule(devicenetworklist);
-	
-						log.writeLog(__LINE__, "REMOVEMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-						log.writeLog(__LINE__, "Remove Module Completed", LOG_TYPE_INFO);
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "REMOVEMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "REMOVEMODULE: ACK back to sender");
-					}
-
-					break;
-				}
-				case RECONFIGUREMODULE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Reconfigure Module request");
-
-					string value;
-					uint16_t count,ivalue,nicCount;
-					oam::DeviceNetworkConfig devicenetworkconfig;
-					oam::DeviceNetworkList devicenetworklist;
-					oam::HostConfig hostconfig;
-
-					//get module count
-					msg >> count;
-
-					if ( count > 0 ) {
-
-						for (int i = 0; i < count; i++)
-						{
-							msg >> value;	
-							devicenetworkconfig.DeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.UserTempDeviceName = value;
-							msg >> value;	
-							devicenetworkconfig.DisableState = value;
-	
-							msg >> nicCount;
-							for (int j = 0 ; j < nicCount ; j ++ )
-							{
-								msg >> value;	
-								hostconfig.IPAddr = value;
-								msg >> value;
-								hostconfig.HostName = value;
-								msg >> ivalue;
-								hostconfig.NicID = ivalue; 
-								devicenetworkconfig.hostConfigList.push_back(hostconfig);
-							}
-							devicenetworklist.push_back(devicenetworkconfig);
-							devicenetworkconfig.hostConfigList.clear();
-						}
-	
-						string password;
-	
-						msg >> password;
-	
-						status = processManager.reconfigureModule(devicenetworklist);
-	
-						log.writeLog(__LINE__, "RECONFIGUREMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
-					}
-					else
-					{
-						status = oam::API_INVALID_PARAMETER;
-						log.writeLog(__LINE__, "RECONFIGUREMODULE: Module Count invalid = " + oam.itoa(count));
-					}
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-
-						log.writeLog(__LINE__, "RECONFIGUREMODULE: ACK back to sender");
-					}
-					break;
-				}
-				case STOPPROCESSTYPE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Stop Process Type request: " + target);
-
-					if ( target == "DBRM" ) {
-						processManager.stopProcessType("DBRMControllerNode");
-						processManager.stopProcessType("DBRMWorkerNode");
-					}
-					else
-						processManager.stopProcessType(target);
-
-					log.writeLog(__LINE__, "Stop Process Type Completed", LOG_TYPE_INFO );
-					break;	
-				}
-				case STARTPROCESSTYPE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Start Process Type request: " + target);
-
-					if ( target == "DBRM" ) {
-						processManager.startProcessType("DBRMControllerNode");
-						processManager.startProcessType("DBRMWorkerNode");
-					}
-					else
-						processManager.startProcessType(target);
-
-					// if a PrimProc was restarted, restart ACTIVE ExeMgr(s) and DDL/DMLProc
-					if( target == "PrimProc" ) {
-
-						//distribute config file
-						processManager.distributeConfigFile("system");	
-
-						processManager.reinitProcessType("WriteEngineServer");
-						processManager.restartProcessType("ExeMgr");
-						processManager.reinitProcessType("DDLProc");
-						processManager.reinitProcessType("DMLProc");
-					}
-
-					// if a WriteEngineServer was restarted, restart DDL/DMLProc
-					if( target.find("WriteEngineServer") == 0) {
-
-						processManager.reinitProcessType("DDLProc");
-						processManager.reinitProcessType("DMLProc");
-					}
-
-					log.writeLog(__LINE__, "Start Process Type Completed", LOG_TYPE_INFO );
-					break;	
-				}
-				case RESTARTPROCESSTYPE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Restart Process Type request: " + target);
-
-					if ( target == "DBRM" ) {
-						processManager.restartProcessType("DBRMControllerNode");
-						processManager.restartProcessType("DBRMWorkerNode");
-					}
-					else {
-						processManager.restartProcessType(target);
-
-						// if a PrimProc was restarted, restart ACTIVE ExeMgr(s) and DDL/DMLProc
-						if( target == "PrimProc" ) {
-
-							//distribute config file
-							processManager.distributeConfigFile("system");	
-
-							processManager.reinitProcessType("WriteEngineServer");
-							processManager.restartProcessType("ExeMgr");
-							processManager.reinitProcessType("DDLProc");
-							processManager.reinitProcessType("DMLProc");
-						}
-					}
-
-					// if a WriteEngineServer was restarted, restart DDL/DMLProc
-					if( target.find("WriteEngineServer") == 0) {
-
-						processManager.reinitProcessType("DDLProc");
-						processManager.reinitProcessType("DMLProc");
-					}
-
-					log.writeLog(__LINE__, "Restart Process Type Completed", LOG_TYPE_INFO );
-					break;	
-				}
-				case REINITPROCESSTYPE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Reinit Process Type request: " + target);
-
-					status = processManager.reinitProcessType(target);
-
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) status;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-					}
-
-					log.writeLog(__LINE__, "Reinit Process Type Completed, return status = " + oam.itoa(status));
-					break;	
-				}
-
-				case DISTRIBUTECONFIG:
-				{
-					string file;
-
-					msg >> file;
-	
-					log.writeLog(__LINE__,  "MSG RECEIVED: Distribute Config File " + target + "/" + file);
-
-					processManager.distributeConfigFile(target, file);
-	
-					if (ackIndicator)
-					{
-						ackMsg << (ByteStream::byte) oam::ACK;
-						ackMsg << actionType;
-						ackMsg << target;
-						ackMsg << (ByteStream::byte) oam::API_SUCCESS;
-						try {
-							fIos.write(ackMsg);
-						}
-						catch(...) {}
-					}
-
-					log.writeLog(__LINE__, "Distribute Config File Completed " + target + "/" + file);
-					break;	
-				}
-	
-				case SWITCHOAMPARENT:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Switch OAM Parent to : " + target);
-						// GRACEFUL_WAIT means that we are shutting down, but waiting for
-					// all transactions to finish or rollback as commanded. This is only set if
-					// there are, in fact, transactions active (or cpimport).
-
-					if (graceful == GRACEFUL_WAIT)
-					{
-						ByteStream stillWorkingMsg;
-						stillWorkingMsg << (ByteStream::byte) oam::ACK;
-						stillWorkingMsg << actionType;
-						stillWorkingMsg << target;
-						stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
-
-						// This wait can take a while. We wait for table locks to release and open transactions to commit.
-						if (oam.waitForSystem(RESTARTSYSTEM, fIos, stillWorkingMsg))
-						{
-							graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
-							// Send an ack back to say we're done waiting and are now shutting down.
-							ackMsg << (ByteStream::byte) oam::ACK;
-							ackMsg << actionType;
-							ackMsg << target;
-							ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
-							try {
-								fIos.write(ackMsg);
-							}
-							catch(...) {}
-							log.writeLog(__LINE__, "SWITCHOAMPARENT: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
-						}
-						else
-						{
-							// We've been cancelled.
-							if (ackIndicator)
-							{
-								ackMsg << (ByteStream::byte) oam::ACK;
-								ackMsg << actionType;
-								ackMsg << target;
-								ackMsg << (ByteStream::byte) API_CANCELLED;
-								try {
-									fIos.write(ackMsg);
-								}
-								catch(...) {}
-
-								log.writeLog(__LINE__, "SWITCHOAMPARENT: ACK back to sender (canceled)");
-								break;
-							}
-						}
-					}
-
-					status = processManager.switchParentOAMModule(target);
-	
-					log.writeLog(__LINE__, "Switch OAM Parent Completed", LOG_TYPE_INFO );
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					// stop myself
-					processManager.stopProcess(config.moduleName(), "ProcessManager", oam::FORCEFUL, true);
-
-					break;	
-				}
-
-				case UNMOUNT:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Unmount dbroot : " + target);
-	
-					status = processManager.unmountDBRoot(target);
-	
-					log.writeLog(__LINE__, "UnMount Completed status: " + oam.itoa(status) );
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					break;	
-				}
-
-				case MOUNT:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: mount dbroot : " + target);
-	
-					status = processManager.mountDBRoot(target);
-	
-					log.writeLog(__LINE__, "Mount Completed status: " + oam.itoa(status) );
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					break;	
-				}
-
-				case SUSPENDWRITES:
-				{
-					ByteStream::byte ackResponse = API_FAILURE;
-					log.writeLog(__LINE__,  "MSG RECEIVED: suspend database writes");
-
-					// GRACEFUL_WAIT means that we are Suspending writes, but waiting for all
-					// transactions to finish or rollback as commanded. This is only set if there
-					// are, in fact, transactions active (or cpimport).
-					if (graceful == GRACEFUL_WAIT)
-					{
-						ByteStream stillWorkingMsg;
-						stillWorkingMsg << (ByteStream::byte) oam::ACK;
-						stillWorkingMsg << actionType;
-						stillWorkingMsg << target;
-						stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
-
-						// This wait can take a while. We wait for table locks to release and open transactions to commit.
-						if (oam.waitForSystem(SUSPENDWRITES, fIos, stillWorkingMsg))
-						{
-							graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
-							// Send an ack back to say we're done waiting and are now shutting down.
-							ackMsg << (ByteStream::byte) oam::ACK;
-							ackMsg << actionType;
-							ackMsg << target;
-							ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
-							try {
-								fIos.write(ackMsg);
-							}
-							catch(...) {}
-							log.writeLog(__LINE__, "SUSPENDWRITES: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
-						}
-						else
-						{
-							// We've been cancelled.
-							if (ackIndicator)
-							{
-								ackMsg << (ByteStream::byte) oam::ACK;
-								ackMsg << actionType;
-								ackMsg << target;
-								ackMsg << (ByteStream::byte) API_CANCELLED;
-								try {
-									fIos.write(ackMsg);
-								}
-								catch(...) {}
-
-								log.writeLog(__LINE__, "SUSPENDWRITES: ACK back to sender (canceled)");
-								break;
-							}
-						}
-					}
-
-					BRM::DBRM dbrm;
-					dbrm.setSystemSuspended(true);
-					// Wait for everything to settle down
-					sleep(5);
-					// Save the BRM. This command presages a system backup. Best to have a current BRM on disk
-					string logdir("/var/log/mariadb/columnstore");
-					if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
-					string cmd = startup::StartUp::installDir() + "/bin/save_brm  > " + logdir + "/save_brm.log1 2>&1";
-					int rtnCode = system(cmd.c_str());
-					if (WEXITSTATUS(rtnCode) == 0)
-					{
-						ackResponse = API_SUCCESS;
-					}
-					else
-					{
-						ackResponse = API_FAILURE_DB_ERROR;
-						dbrm.setSystemSuspended(false);
-					}
-
-					ackMsg.reset();
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << ackResponse;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					log.writeLog(__LINE__, "SUSPENDWRITES: ACK back to sender" + oam.itoa(ackResponse));
-					break;
-				}
-
-				case FSTABUPDATE:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Distribute Fstab update" );
-
-					//get fstab entry
-					string entry;
-					msg >> entry;
-
-					status = API_SUCCESS;
- 
-					if ( target == "system" )
-					{
-						//send out to all pms except local module
-						for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-						{
-							if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType != "pm" )
-								continue;
-	
-							int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-							if( moduleCount == 0)
-								continue;
-			
-							DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-							for (;pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-							{
-								if ( (*pt).DeviceName == config.moduleName() )
-									continue;
-
-								int retStatus = processManager.updateFstab((*pt).DeviceName, entry);
-								if (retStatus != API_SUCCESS)
-									status = retStatus;
-							}
-						}
-					}
-					else
-					{
-						int retStatus = processManager.updateFstab(target, entry);
-						if (retStatus != API_SUCCESS)
-							status = retStatus;
-					}
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					log.writeLog(__LINE__, "FSTABUPDATE: ACK back to sender, return status = " + oam.itoa(status));
-
-					break;
-				}
-
-				case ENABLEMYSQLREP:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Enable MySQL Replication");
-
-					// target = root password
-					oam::DeviceNetworkList devicenetworklist;
-					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target);
-	
-					log.writeLog(__LINE__, "Enable MySQL Replication status: " + oam.itoa(status) );
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					break;	
-				}
-
-				case DISABLEMYSQLREP:
-				{
-					log.writeLog(__LINE__,  "MSG RECEIVED: Disable MySQL Replication");
-
-					// target = root password
-					oam::DeviceNetworkList devicenetworklist;
-					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target, false);
-	
-					log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					break;	
-				}
-
-				case GLUSTERASSIGN:
-				{
-					string dbroot;
-					msg >> dbroot;
-
-					log.writeLog(__LINE__,  "MSG RECEIVED: Gluster Assign DBRoot: " + dbroot);
-
-					status = processManager.glusterAssign(target, dbroot);
-
-					log.writeLog(__LINE__, "Gluster Assign DBRoot status: " + oam.itoa(status) );
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					break;	
-				}
-
-				case GLUSTERUNASSIGN:
-				{
-					string dbroot;
-					msg >> dbroot;
-
-					log.writeLog(__LINE__,  "MSG RECEIVED: Gluster Unassign DBRoot: " + dbroot);
-
-					status = processManager.glusterUnassign(target, dbroot);
-
-					log.writeLog(__LINE__, "Gluster Unassign DBRoot status: " + oam.itoa(status) );
-
-					ackMsg << (ByteStream::byte) oam::ACK;
-					ackMsg << actionType;
-					ackMsg << target;
-					ackMsg << (ByteStream::byte) status;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
-
-					break;	
-				}
-/*
-             	case PROCESSALARM:
+    Configuration config;
+    ProcessManager processManager(config, log);
+
+    ByteStream::byte actionType;
+    string target;
+    ByteStream::byte graceful;
+    ByteStream::byte ackIndicator = 0;
+    ByteStream::byte manualFlag;
+    ByteStream ackMsg;
+    ByteStream::byte status = 0;
+
+    ALARMManager aManager;
+    SystemModuleTypeConfig systemmoduletypeconfig;
+    SystemProcessConfig systemprocessconfig;
+
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+    }
+
+    switch (msgType)
+    {
+        case REQUEST:
+            msg >> actionType;
+            msg >> target;
+            msg >> graceful;
+            msg >> ackIndicator;
+            msg >> manualFlag;
+
+            switch (actionType)
+            {
+                case STOPMODULE:
                 {
-                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
+                    uint16_t count, hostConfigCount;
+                    string value;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    oam::DeviceNetworkList devicenetworklist;
 
-    				ByteStream::byte alarmID;
-    				std::string componentID;
-    				ByteStream::byte state;
-    				std::string ModuleName;
-    				std::string processName;
-    				ByteStream::byte pid;
-    				ByteStream::byte tid;
+                    //get module count to remove
+                    msg >> count;
 
-					msg >> alarmID;
-					msg >> componentID;
-					msg >> state;
-					msg >> ModuleName;
-					msg >> processName;
-					msg >> pid;
-					msg >> tid;
+                    if ( count > 0 )
+                    {
 
-    				Alarm calAlarm;
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+                            devicenetworklist.push_back(devicenetworkconfig);
+                            msg >> hostConfigCount;
+                        }
 
-    				calAlarm.setAlarmID (alarmID);
-    				calAlarm.setComponentID (componentID);
-    				calAlarm.setState (state);
-    				calAlarm.setSname (ModuleName);
-    				calAlarm.setPname (processName);
-    				calAlarm.setPid (pid);
-    				calAlarm.setTid (tid);
+                        string password;
 
-					ALARMManager aManager;
-        			aManager.processAlarmReport(calAlarm);
+                        msg >> password;
+
+                        DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+
+                        for ( ; listPT != devicenetworklist.end() ; listPT++)
+                        {
+                            string moduleName = (*listPT).DeviceName;
+
+                            log.writeLog(__LINE__,  "MSG RECEIVED: Stop Module request on " + moduleName );
+
+                            string moduletype = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
+                            status = API_SUCCESS;
+
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus(moduleName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                            {
+                                status = API_DISABLED;
+                                log.writeLog(__LINE__, "Stop Module requested Ignored on a Disabled " + moduleName);
+                            }
+                            else
+                            {
+                                status = processManager.stopModule(moduleName, graceful, manualFlag);
+                                log.writeLog(__LINE__, "Stop Module Completed on " + moduleName, LOG_TYPE_INFO);
+
+                                Configuration config;
+
+                                if ( moduleName == config.OAMStandbyName() )
+                                {
+                                    string newStandbyModule = processManager.getStandbyModule();
+
+                                    if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
+                                        processManager.setStandbyModule(newStandbyModule);
+                                    else
+                                    {
+                                        Config* sysConfig = Config::makeConfig();
+
+                                        // clear Standby OAM Module
+                                        sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+                                        sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
+
+                                        //update Calpont Config table
+                                        try
+                                        {
+                                            sysConfig->write();
+                                        }
+                                        catch (...)
+                                        {
+                                            log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "STOPMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    log.writeLog(__LINE__, "STOPMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "STOPMODULE: ACK back to sender");
+                    }
 
                     break;
                 }
 
-*/
-				default:
-					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
-					break;
-			}
-			break;
+                case SHUTDOWNMODULE:
+                {
+                    uint16_t count, hostConfigCount;
+                    string value;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    oam::DeviceNetworkList devicenetworklist;
 
-			case HEARTBEAT_REGISTER:
-			{
-				string moduleName;
-				string processName;
-				ByteStream::byte id;
+                    //get module count to remove
+                    msg >> count;
 
-				msg >> moduleName;
-				msg >> processName;
-				msg >> id;
-				
-				HeartBeatProc hbproc;
-				hbproc.ModuleName = moduleName;
-				hbproc.ProcessName = processName;
-				hbproc.ID = id;
-				hbproc.receiveFlag = true;
+                    if ( count > 0 )
+                    {
 
-				HeartBeatProcList::iterator list = hbproclist.begin();
-				for( ; list != hbproclist.end() ; list++) 
-				{
-					if ( (*list).ModuleName == moduleName 
-							&& (*list).ProcessName == processName 
-							&& (*list).ID == id) {
-						// already in the list
-						break;
-					}
-				}
-				if ( list == hbproclist.end() ) {
-				// add to list
-					hbproclist.push_front(hbproc);
-					log.writeLog(__LINE__, "Adding Process to Heartbeat Monitor list: " + moduleName + " / " + processName + " / " + oam.itoa(id));
-				}
-			}
-			break;
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+                            devicenetworklist.push_back(devicenetworkconfig);
+                            msg >> hostConfigCount;
+                        }
 
-			case HEARTBEAT_DEREGISTER:
-			{
-				string moduleName;
-				string processName;
-				ByteStream::byte id;
+                        string password;
 
-				msg >> moduleName;
-				msg >> processName;
-				msg >> id;
-	
-				HeartBeatProcList::iterator list = hbproclist.begin();
-				for( ; list != hbproclist.end() ; list++) 
-				{
-					if ( (*list).ModuleName == moduleName 
-							&& (*list).ProcessName == processName 
-							&& (*list).ID == id) {
-						hbproclist.erase(list);
-						log.writeLog(__LINE__, "Removing Process from Heartbeat Monitor list: " + moduleName + " / " + processName+ " / " + oam.itoa(id));
-						break;
-					}
-				}
-			}
-			break;
+                        msg >> password;
 
-			case HEARTBEAT_SEND:
-			{
-				string moduleName;
-				string processName;
-				string timeStamp;
-				ByteStream::byte id;
-		        ByteStream::byte ackFlag;
+                        DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-				msg >> moduleName;
-				msg >> processName;
-				msg >> timeStamp;
-				msg >> id;
-		        msg >> ackFlag;
+                        for ( ; listPT != devicenetworklist.end() ; listPT++)
+                        {
+                            string moduleName = (*listPT).DeviceName;
 
-				if ( ackFlag == oam::ACK_YES ) {
-					// send back an ack msg
-					ackMsg << (ByteStream::byte) HEARTBEAT_SEND;
-					try {
-						fIos.write(ackMsg);
-					}
-					catch(...) {}
+                            log.writeLog(__LINE__,  "MSG RECEIVED: Shutdown Module request on " + moduleName );
+
+                            status = API_SUCCESS;
+
+                            log.writeLog(__LINE__, "Shutdown Module Requested on " + moduleName, LOG_TYPE_INFO);
+                            processManager.shutdownModule(moduleName, graceful, manualFlag, 0);
+
+                            //check for SIMPLEX Processes on mate might need to be started
+                            processManager.checkSimplexModule(moduleName);
+
+                            Configuration config;
+
+                            if ( moduleName == config.OAMStandbyName() )
+                            {
+                                string newStandbyModule = processManager.getStandbyModule();
+
+                                if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
+                                    processManager.setStandbyModule(newStandbyModule);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "SHUTDOWNMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "SHUTDOWNMODULE: ACK back to sender, return status = " + oam.itoa(status));
+                    }
+
+                    break;
+                }
+
+                case STARTMODULE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Start Module request" );
+
+                    startsystemthreadStop = false;
+
+                    uint16_t count, hostConfigCount;
+                    string value;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    startdevicenetworklist.clear();
+
+                    //get module count to remove
+                    msg >> count;
+
+                    if ( count > 0 )
+                    {
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+                            startdevicenetworklist.push_back(devicenetworkconfig);
+                            msg >> hostConfigCount;
+                        }
+
+                        string password;
+
+                        msg >> password;
+
+                        pthread_t startsystemthread;
+                        status = pthread_create (&startsystemthread, NULL, (void* (*)(void*)) &startSystemThread, &startdevicenetworklist);
+
+                        if ( status != 0 )
+                        {
+                            log.writeLog(__LINE__, "STARTMODULE: pthread_create failed, return status = " + oam.itoa(status));
+                            status = API_FAILURE;
+                        }
+
+                        if (status == 0 && ackIndicator)
+                        {
+                            pthread_join(startsystemthread, NULL);
+                            status = startsystemthreadStatus;
+                        }
+
+                        if ( status == API_SUCCESS)
+                        {
+                            //distribute config file
+                            processManager.distributeConfigFile("system");
+
+                            //call dbrm control
+                            oam.dbrmctl("halt");
+                            log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
+
+                            oam.dbrmctl("reload");
+                            log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
+
+                            oam.dbrmctl("resume");
+                            log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+
+//							processManager.restartProcessType("ExeMgr");
+
+                            //setup MySQL Replication for started modules
+//							log.writeLog(__LINE__, "Setup MySQL Replication for module being started", LOG_TYPE_DEBUG);
+//							processManager.setMySQLReplication(startdevicenetworklist);
+                        }
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "STARTMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    log.writeLog(__LINE__, "STARTMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "STARTMODULE: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case RESTARTMODULE:
+                {
+                    uint16_t count, hostConfigCount;
+                    string value;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    startdevicenetworklist.clear();
+
+                    startsystemthreadStop = false;
+
+                    //get module count to remove
+                    msg >> count;
+
+                    if ( count > 0 )
+                    {
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+                            startdevicenetworklist.push_back(devicenetworkconfig);
+                            msg >> hostConfigCount;
+                        }
+
+                        string password;
+
+                        msg >> password;
+
+                        DeviceNetworkList::iterator listPT = startdevicenetworklist.begin();
+
+                        for ( ; listPT != startdevicenetworklist.end() ; listPT++)
+                        {
+                            string moduleName = (*listPT).DeviceName;
+
+                            log.writeLog(__LINE__,  "MSG RECEIVED: Restart Module request on " + moduleName );
+                            status = API_SUCCESS;
+
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus(moduleName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            if (opState != oam::MAN_DISABLED)
+                            {
+
+                                status = processManager.stopModule(moduleName, graceful, manualFlag);
+
+                                log.writeLog(__LINE__, "Stop Module Completed on " + moduleName, LOG_TYPE_INFO);
+
+                                Configuration config;
+
+                                if ( moduleName == config.OAMStandbyName() )
+                                {
+                                    string newStandbyModule = processManager.getStandbyModule();
+
+                                    if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
+                                        processManager.setStandbyModule(newStandbyModule);
+                                }
+                            }
+                            else
+                            {
+                                status = API_DISABLED;
+                                log.writeLog(__LINE__, "Stop Module requested Ignored on a Disabled " + moduleName);
+                            }
+                        }
+
+                        pthread_t startsystemthread;
+                        status = pthread_create (&startsystemthread, NULL, (void* (*)(void*)) &startSystemThread, &startdevicenetworklist);
+
+                        if ( status != 0 )
+                        {
+                            log.writeLog(__LINE__, "RESTARTMODULE: pthread_create failed, return status = " + oam.itoa(status));
+                            status = API_FAILURE;
+                        }
+
+                        if (status == 0 && ackIndicator)
+                        {
+                            pthread_join(startsystemthread, NULL);
+                            status = startsystemthreadStatus;
+                        }
+
+                        if ( status == API_SUCCESS)
+                        {
+                            //distribute config file
+                            processManager.distributeConfigFile("system");
+
+                            processManager.restartProcessType("ExeMgr");
+                        }
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "RESTARTMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    log.writeLog(__LINE__, "RESTARTMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "RESTARTMODULE: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case DISABLEMODULE:
+                {
+                    uint16_t count, hostConfigCount;
+                    string value;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    oam::DeviceNetworkList devicenetworklist;
+
+                    //get module count to remove
+                    msg >> count;
+
+                    if ( count > 0 )
+                    {
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+                            devicenetworklist.push_back(devicenetworkconfig);
+                            msg >> hostConfigCount;
+                        }
+
+                        string password;
+
+                        msg >> password;
+
+                        DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+
+                        for ( ; listPT != devicenetworklist.end() ; listPT++)
+                        {
+                            string moduleName = (*listPT).DeviceName;
+
+                            log.writeLog(__LINE__,  "MSG RECEIVED: Disable Module request on " + moduleName );
+
+                            // check module status, Disable module
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus(moduleName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            //don't allow disble of current Parent OAM Module
+                            if ( moduleName == config.moduleName() )
+                            {
+                                log.writeLog(__LINE__,  "ERROR: can't disable Parent OAM module", LOG_TYPE_ERROR);
+                                status = API_INVALID_PARAMETER;
+                                break;
+                            }
+
+                            if (opState == oam::MAN_OFFLINE || opState == oam::MAN_DISABLED
+                                    || opState == oam::AUTO_DISABLED )
+                            {
+
+                                oam.dbrmctl("halt");
+                                log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
+
+                                status = processManager.disableModule(moduleName, true);
+                                log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
+
+                                //call dbrm control
+                                oam.dbrmctl("reload");
+                                log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
+
+                                // resume the dbrm
+                                oam.dbrmctl("resume");
+                                log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+
+                                //check for SIMPLEX Processes on mate might need to be started
+                                processManager.checkSimplexModule(moduleName);
+                            }
+                            else
+                            {
+                                log.writeLog(__LINE__,  "ERROR: module not stopped", LOG_TYPE_ERROR);
+                                status = API_FAILURE;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "DISABLEMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    log.writeLog(__LINE__, "DISABLEMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "DISABLEMODULE: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case ENABLEMODULE:
+                {
+                    uint16_t count, hostConfigCount;
+                    string value;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    oam::DeviceNetworkList devicenetworklist;
+
+                    //get module count to remove
+                    msg >> count;
+
+                    if ( count > 0 )
+                    {
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+                            devicenetworklist.push_back(devicenetworkconfig);
+                            msg >> hostConfigCount;
+                        }
+
+                        string password;
+
+                        msg >> password;
+
+                        DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+
+                        //stopModules being removed with the REMOVE option, which will stop process
+                        for ( ; listPT != devicenetworklist.end() ; listPT++)
+                        {
+                            string moduleName = (*listPT).DeviceName;
+
+                            log.writeLog(__LINE__,  "MSG RECEIVED: Enable Module request on " + moduleName );
+
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus(moduleName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            if (opState == oam::MAN_DISABLED)
+                            {
+                                status = processManager.enableModule(moduleName, oam::MAN_OFFLINE);
+                                log.writeLog(__LINE__, "Enable Module Completed on " + moduleName, LOG_TYPE_INFO);
+                            }
+                            else
+                            {
+                                log.writeLog(__LINE__,  "ERROR: module name not Disabled", LOG_TYPE_ERROR);
+                                status = API_INVALID_STATE;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "ENABLEMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    log.writeLog(__LINE__, "ENABLEMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "ENABLEMODULE: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case STOPSYSTEM:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Stop System request..." );
+
+                    // GRACEFUL_WAIT means that we are shutting down, but waiting for
+                    // all transactions to finish or rollback as commanded. This is only set if
+                    // there are, in fact, transactions active (or cpimport).
+                    if (graceful == GRACEFUL_WAIT)
+                    {
+                        ByteStream stillWorkingMsg;
+                        stillWorkingMsg << (ByteStream::byte) oam::ACK;
+                        stillWorkingMsg << actionType;
+                        stillWorkingMsg << target;
+                        stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
+
+                        // This wait can take a while. We wait for table locks to release and open transactions to commit.
+                        if (oam.waitForSystem(STOPSYSTEM, fIos, stillWorkingMsg))
+                        {
+                            graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
+                            // Send an ack back to say we're done waiting and are now shutting down.
+                            ackMsg << (ByteStream::byte) oam::ACK;
+                            ackMsg << actionType;
+                            ackMsg << target;
+                            ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
+
+                            try
+                            {
+                                fIos.write(ackMsg);
+                            }
+                            catch (...) {}
+
+                            log.writeLog(__LINE__, "STOPSYSTEM: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
+                        }
+                        else
+                        {
+                            // We've been cancelled.
+                            if (ackIndicator)
+                            {
+                                ackMsg << (ByteStream::byte) oam::ACK;
+                                ackMsg << actionType;
+                                ackMsg << target;
+                                ackMsg << (ByteStream::byte) API_CANCELLED;
+
+                                try
+                                {
+                                    fIos.write(ackMsg);
+                                }
+                                catch (...) {}
+
+                                log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender (canceled)");
+                                break;
+                            }
+                        }
+                    }
+
+                    //set the flag to have any startsystemthreads to exit out before stop is done
+                    startsystemthreadStop = true;
+
+                    if ( startsystemthreadRunning )
+                        sleep(5);
+
+                    //stop by process type first, if system is ACTIVE
+                    SystemStatus systemstatus;
+
+                    try
+                    {
+                        oam.getSystemStatus(systemstatus);
+                    }
+                    catch (...)
+                    {}
+
+                    //set system status
+                    processManager.setSystemState(oam::MAN_INIT);
+
+                    if (HDFS)
+                    {
+                        oam::DeviceNetworkList devicenetworklist;
+                        pthread_t stopsystemthread;
+                        status = pthread_create (&stopsystemthread, NULL, (void* (*)(void*)) &stopSystemThread, &devicenetworklist);
+
+                        if ( status != 0 )
+                        {
+                            log.writeLog(__LINE__, "STOPSYSTEMS: pthread_create failed, return status = " + oam.itoa(status));
+                            status = API_FAILURE;
+                        }
+
+                        if (status == 0 && ackIndicator)
+                        {
+                            ackMsg << (ByteStream::byte) oam::ACK;
+                            ackMsg << actionType;
+                            ackMsg << target;
+                            ackMsg << (ByteStream::byte) status;
+
+                            try
+                            {
+                                fIos.write(ackMsg);
+                            }
+                            catch (...) {}
+
+                            log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender");
+                        }
+
+                        break;
+                    }
+
+                    //call to update module status and send notification message
+                    for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                    {
+                        int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                        if ( moduleCount == 0)
+                            continue;
+
+                        DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                        for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                        {
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                                continue;
+
+                            processManager.stopModule((*pt).DeviceName, STATUS_UPDATE, manualFlag, 0);
+                        }
+                    }
+
+                    //set query system state not ready
+                    processManager.setQuerySystemState(false);
+
+                    if (systemstatus.SystemOpState == ACTIVE && graceful == oam::GRACEFUL)
+                        processManager.stopProcessTypes(manualFlag);
+
+                    //stop all of processes..
+                    for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                    {
+                        int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                        if ( moduleCount == 0)
+                            continue;
+
+                        DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                        for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                        {
+                            //skip OAM Parent module, do at the end
+                            if ( (*pt).DeviceName == config.moduleName() )
+                                continue;
+
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                                continue;
+
+                            log.writeLog(__LINE__,  "STOPSYSTEM: Request Stop Module on " + (*pt).DeviceName );
+
+//							int retStatus = processManager.stopModule((*pt).DeviceName, graceful, manualFlag, 0);
+                            processManager.stopModule((*pt).DeviceName, graceful, manualFlag, 0);
+
+//							log.writeLog(__LINE__, "STOPSYSTEM: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+//							if (retStatus != API_SUCCESS)
+//								status = retStatus;
+                        }
+                    }
+
+                    //wait until all child modules are offline or A FAILURE HAS OCCURRED
+                    bool failure = false;
+                    bool stopped = true;
+
+                    for ( int retry = 0 ; retry < 30 ; retry++ )
+                    {
+                        sleep(1);
+                        stopped = true;
+
+                        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                        {
+                            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                            if ( moduleCount == 0)
+                                continue;
+
+                            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
+                            {
+                                string moduleName = (*pt).DeviceName;
+
+                                //skip OAM Parent module, do at the end
+                                if ( moduleName == config.moduleName() )
+                                    continue;
+
+                                int opState = oam::ACTIVE;
+
+                                try
+                                {
+                                    bool degraded;
+                                    oam.getModuleStatus(moduleName, opState, degraded);
+
+                                    if (opState == oam::FAILED)
+                                    {
+                                        failure = true;
+                                        log.writeLog(__LINE__, "STOPSYSTEM: Failed, failure on module " + moduleName, LOG_TYPE_ERROR);
+                                        break;
+                                    }
+
+                                    if (opState == oam::MAN_OFFLINE ||
+                                            opState == oam::MAN_DISABLED ||
+                                            opState == oam::AUTO_DISABLED )
+                                        continue;
+
+                                    stopped = false;
+                                }
+                                catch (exception& ex)
+                                {
+//									string error = ex.what();
+//									log.writeLog(__LINE__, "EXCEPTION ERROR on : " + error, LOG_TYPE_ERROR);
+                                }
+                                catch (...)
+                                {
+//									log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                                }
+                            }
+
+                            if ( failure )
+                                break;
+                        }
+
+                        if ( failure)
+                            break;
+
+                        if ( stopped )
+                            break;
+                    }
+
+                    if ( failure )
+                    {
+                        processManager.setSystemState(oam::FAILED);
+                    }
+                    else
+                    {
+                        if ( !stopped)
+                        {
+                            //timeout waiting for system to stop, error out
+                            log.writeLog(__LINE__, "STOPSYSTEM: Failed, timeout waiting for module to stop", LOG_TYPE_ERROR);
+                            processManager.setSystemState(oam::FAILED);
+                        }
+                        else
+                        {
+                            //now stop local module
+                            processManager.stopModule(config.moduleName(), graceful, manualFlag );
+
+                            //run save.brm script
+                            processManager.saveBRM(false);
+
+                            log.writeLog(__LINE__, "Stop System Completed Success", LOG_TYPE_INFO);
+
+                            processManager.setSystemState(oam::MAN_OFFLINE);
+
+                            //clearout auto move dbroots files
+                            string cmd = "rm -f " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                            system(cmd.c_str());
+                            cmd = "touch " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                            system(cmd.c_str());
+                        }
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg.reset();
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) API_SUCCESS;
+                        fIos.write(ackMsg);
+
+                        log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender");
+                    }
+
+                    startsystemthreadStop = false;
+
+                    break;
+                }
+
+                case SHUTDOWNSYSTEM:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Shutdown System request..." );
+
+                    // GRACEFUL_WAIT means that we are shutting down, but waiting for
+                    // all transactions to finish or rollback as commanded. This is only set if
+                    // there are, in fact, transactions active (or cpimport).
+
+                    int retStatus = oam::API_SUCCESS;
+
+                    if (HDFS)
+                    {
+                        if (ackIndicator)
+                        {
+                            ackMsg.reset();
+                            ackMsg << (ByteStream::byte) oam::ACK;
+                            ackMsg << actionType;
+                            ackMsg << target;
+                            ackMsg << (ByteStream::byte) status;
+
+                            try
+                            {
+                                fIos.write(ackMsg);
+                            }
+                            catch (...) {}
+
+                            log.writeLog(__LINE__, "SHUTDOWNSYSTEM: ACK back to sender, return status = " + oam.itoa(API_SUCCESS));
+                        }
+
+                        Config* sysConfig = Config::makeConfig();
+
+                        // clear Standby OAM Module
+                        sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+                        sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
+
+                        //update Calpont Config table
+                        try
+                        {
+                            sysConfig->write();
+                        }
+                        catch (...)
+                        {
+                            log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
+                        }
+
+                        string cmd = "pdsh -a -x " + localHostName + " '" + startup::StartUp::installDir() + "/columnstore stop' > /dev/null 2>&1";
+                        system(cmd.c_str());
+
+                        break;
+                    }
+                    else
+                    {
+                        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                        {
+                            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                            if ( moduleCount == 0)
+                                continue;
+
+                            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                            {
+                                //do local module last
+                                if ( (*pt).DeviceName == config.moduleName() )
+                                {
+                                    continue;
+                                }
+
+                                int opState = oam::ACTIVE;
+                                bool degraded;
+
+                                try
+                                {
+                                    oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                                }
+                                catch (exception& ex)
+                                {
+//									string error = ex.what();
+//									log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
+                                }
+                                catch (...)
+                                {
+//									log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                                }
+
+                                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                                    continue;
+
+                                retStatus = processManager.shutdownModule((*pt).DeviceName, graceful, manualFlag, 0);
+                            }
+                        }
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg.reset();
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "SHUTDOWNSYSTEM: ACK back to sender, return status = " + oam.itoa(API_SUCCESS));
+                    }
+
+                    Config* sysConfig = Config::makeConfig();
+
+                    // clear Standby OAM Module
+                    sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+                    sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
+
+                    //update Calpont Config table
+                    try
+                    {
+                        sysConfig->write();
+                    }
+                    catch (...)
+                    {
+                        log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
+                    }
+
+                    //clearout auto move dbroots files
+                    string cmd = "rm -f " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                    system(cmd.c_str());
+                    cmd = "touch " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
+                    system(cmd.c_str());
+
+                    // now do local module
+                    processManager.shutdownModule(config.moduleName(), graceful, manualFlag);
+
+                    break;
+                }
+
+                case STARTSYSTEM:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Start System request...ackIndicator=" + oam.itoa(ackIndicator));
+
+                    startsystemthreadStop = false;
+
+                    // get system status and don't process if already in-progress
+                    try
+                    {
+                        SystemStatus systemstatus;
+                        oam.getSystemStatus(systemstatus);
+
+                        if (systemstatus.SystemOpState == MAN_INIT)
+                        {
+                            log.writeLog(__LINE__, "STARTSYSTEM: Start already in-progess");
+
+                            if (ackIndicator)
+                            {
+                                ackMsg << (ByteStream::byte) oam::ACK;
+                                ackMsg << actionType;
+                                ackMsg << target;
+                                ackMsg << (ByteStream::byte) API_ALREADY_IN_PROGRESS;
+
+                                try
+                                {
+                                    fIos.write(ackMsg);
+                                }
+                                catch (...) {}
+
+                                log.writeLog(__LINE__, "STARTSYSTEM: ACK back to sender");
+                            }
+
+                            break;
+                        }
+                    }
+                    catch (exception& ex)
+                    {
+//						string error = ex.what();
+//						log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemStatus: " + error, LOG_TYPE_ERROR);
+                    }
+                    catch (...)
+                    {
+//						log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemStatus: Caught unknown exception!", LOG_TYPE_ERROR);
+                    }
+
+                    oam::DeviceNetworkList devicenetworklist;
+                    pthread_t startsystemthread;
+                    status = pthread_create (&startsystemthread, NULL, (void* (*)(void*)) &startSystemThread, &devicenetworklist);
+
+                    if ( status != 0 )
+                    {
+                        log.writeLog(__LINE__, "STARTSYSTEMS: pthread_create failed, return status = " + oam.itoa(status));
+                        status = API_FAILURE;
+                    }
+
+                    if (status == 0 && ackIndicator)
+                    {
+                        pthread_join(startsystemthread, NULL);
+                        status = stopsystemthreadStatus;
+
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "STARTSYSTEM: ACK back to sender");
+                    }
+
+                    log.writeLog(__LINE__, "STARTSYSTEM: Start System Request Completed with status = " + oam.itoa(status));
+
+                    break;
+                }
+
+                case RESTARTSYSTEM:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Restart System request..." );
+
+                    startsystemthreadStop = false;
+
+                    // GRACEFUL_WAIT means that we are shutting down, but waiting for
+                    // all transactions to finish or rollback as commanded. This is only set if
+                    // there are, in fact, transactions active (or cpimport).
+                    if (graceful == GRACEFUL_WAIT)
+                    {
+                        ByteStream stillWorkingMsg;
+                        stillWorkingMsg << (ByteStream::byte) oam::ACK;
+                        stillWorkingMsg << actionType;
+                        stillWorkingMsg << target;
+                        stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
+
+                        // This wait can take a while. We wait for table locks to release and open transactions to commit.
+                        if (oam.waitForSystem(RESTARTSYSTEM, fIos, stillWorkingMsg))
+                        {
+                            graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
+                            // Send an ack back to say we're done waiting and are now shutting down.
+                            ackMsg << (ByteStream::byte) oam::ACK;
+                            ackMsg << actionType;
+                            ackMsg << target;
+                            ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
+
+                            try
+                            {
+                                fIos.write(ackMsg);
+                            }
+                            catch (...) {}
+
+                            log.writeLog(__LINE__, "RESTARTSYSTEM: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
+                        }
+                        else
+                        {
+                            // We've been cancelled.
+                            if (ackIndicator)
+                            {
+                                ackMsg << (ByteStream::byte) oam::ACK;
+                                ackMsg << actionType;
+                                ackMsg << target;
+                                ackMsg << (ByteStream::byte) API_CANCELLED;
+
+                                try
+                                {
+                                    fIos.write(ackMsg);
+                                }
+                                catch (...) {}
+
+                                log.writeLog(__LINE__, "RESTARTSYSTEM: ACK back to sender (canceled)");
+                                break;
+                            }
+                        }
+                    }
+
+                    //set the flag to have any startsystemthreads to exit out before stop is done
+                    startsystemthreadStop = true;
+
+                    if ( startsystemthreadRunning )
+                        sleep(5);
+
+                    //get system status
+                    SystemStatus systemstatus;
+
+                    try
+                    {
+                        oam.getSystemStatus(systemstatus);
+                    }
+                    catch (...)
+                    {}
+
+                    //set system status
+                    processManager.setSystemState(oam::MAN_OFFLINE);
+
+                    //call to update module status and send notification message
+                    //stop all of processes..
+                    for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                    {
+                        int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                        if ( moduleCount == 0)
+                            continue;
+
+                        DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                        for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                        {
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                                continue;
+
+                            processManager.stopModule((*pt).DeviceName, STATUS_UPDATE, manualFlag);
+                        }
+                    }
+
+                    //stop by process type first, if system is ACTIVE
+                    if (systemstatus.SystemOpState == ACTIVE)
+                        processManager.stopProcessTypes(manualFlag);
+
+                    status = API_SUCCESS;
+
+                    // stop modules
+                    for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                    {
+                        int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                        if ( moduleCount == 0)
+                            continue;
+
+                        DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                        for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                        {
+                            //skip OAM Parent module, do at the end
+                            if ( (*pt).DeviceName == config.moduleName() )
+                                continue;
+
+                            int opState = oam::ACTIVE;
+                            bool degraded;
+
+                            try
+                            {
+                                oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                            }
+                            catch (exception& ex)
+                            {
+//								string error = ex.what();
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
+                            }
+                            catch (...)
+                            {
+//								log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                            }
+
+                            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                                continue;
+
+                            log.writeLog(__LINE__,  "RESTARTSYSTEM: Request Stop Module on " + (*pt).DeviceName );
+
+                            int retStatus = processManager.stopModule((*pt).DeviceName, graceful, manualFlag);
+
+                            log.writeLog(__LINE__, "RESTARTSYSTEM: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                            if (retStatus != API_SUCCESS)
+                                status = retStatus;
+                        }
+                    }
+
+                    //now stop local module
+                    processManager.stopModule(config.moduleName(), graceful, manualFlag );
+
+                    //run save.brm script
+                    processManager.saveBRM(false);
+
+                    log.writeLog(__LINE__, "RESTARTSYSTEM: ACK received from Process-Monitor for stopModule requests, return status = " + oam.itoa(status));
+
+                    startsystemthreadStop = false;
+
+                    if (status == API_SUCCESS )
+                    {
+                        //distribute config file
+                        processManager.distributeConfigFile("system");
+
+                        oam::DeviceNetworkList devicenetworklist;
+                        pthread_t startsystemthread;
+                        pthread_create (&startsystemthread, NULL, (void* (*)(void*)) &startSystemThread, &devicenetworklist);
+
+                        if ( status != 0 )
+                        {
+                            log.writeLog(__LINE__, "STARTMODULE: pthread_create failed, return status = " + oam.itoa(status));
+                            status = API_FAILURE;
+                        }
+
+                        if (status == 0 && ackIndicator)
+                        {
+                            // BUG 4554 We don't need the join because calpont console is now looking for "Active"
+                            // We need to return the ack right away to let console know we got the message.
+//							pthread_join(startsystemthread, NULL);
+//							status = startsystemthreadStatus;
+                        }
+
+                        // setup MySQL Replication after switchover command
+                        /*						if (graceful == FORCEFUL)
+                        						{
+                        							log.writeLog(__LINE__, "Setup MySQL Replication for restartSystem FORCE, used by switch-parent command", LOG_TYPE_DEBUG);
+                        							oam::DeviceNetworkList devicenetworklist;
+                        							processManager.setMySQLReplication(devicenetworklist);
+                        						}
+                        */
+                        log.writeLog(__LINE__, "RESTARTSYSTEM: Start System Request Completed", LOG_TYPE_INFO);
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg.reset();
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "RESTARTSYSTEM: ACK back to sender");
+                    }
+
+                    log.writeLog(__LINE__, "Restart System Completed, status = " + oam.itoa(status), LOG_TYPE_INFO);
+
+                    break;
+                }
+
+                case STOPPROCESS:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Stop Process request on " + target );
+                    string moduleName;
+
+                    msg >> moduleName;
+                    status = API_SUCCESS;
+
+                    status = processManager.stopProcess(moduleName, target, graceful, manualFlag);
+
+                    log.writeLog(__LINE__, "STOPPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+                    log.writeLog(__LINE__, "Stop Process Completed on " + moduleName + " / " + target, LOG_TYPE_INFO );
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "STOPPROCESS: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case STARTPROCESS:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Start Process request on " + target);
+                    string moduleName;
+
+                    msg >> moduleName;
+
+                    status = processManager.startProcess(moduleName, target, graceful);
+
+                    log.writeLog(__LINE__, "STARTPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+                    log.writeLog(__LINE__, "Start Process Completed on " + moduleName + " / " + target, LOG_TYPE_INFO );
+
+                    // if a PrimProc was restarted, restart ACTIVE ExeMgr(s) and DDL/DMLProc
+#if 0	// A RESTARTPROCESS message is about to arrive, so this is redundant.
+
+                    if ( target.find("PrimProc") == 0)
+                    {
+
+                        //distribute config file
+                        processManager.distributeConfigFile("system");
+
+                        processManager.reinitProcessType("WriteEngineServer");
+                        processManager.restartProcessType("ExeMgr");
+                        processManager.reinitProcessType("DDLProc");
+                        processManager.reinitProcessType("DMLProc");
+                    }
+
+                    // if a WriteEngineServer was restarted, restart DDL/DMLProc
+                    if ( target.find("WriteEngineServer") == 0)
+                    {
+
+                        processManager.reinitProcessType("DDLProc");
+                        processManager.reinitProcessType("DMLProc");
+                    }
+
+#endif
+
+                    // if DDL or DMLProc, change IP Address
+                    if ( target.find("DDLProc") == 0 ||
+                            target.find("DMLProc") == 0 )
+                    {
+
+                        processManager.setPMProcIPs(moduleName, target);
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "STARTPROCESS: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case RESTARTPROCESS:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Restart Process request on " + target );
+                    string moduleName;
+
+                    msg >> moduleName;
+
+                    status = processManager.restartProcess(moduleName, target, graceful, manualFlag);
+
+                    // if a PrimProc was restarted, restart ACTIVE ExeMgr(s)
+                    if ( target.find("PrimProc") == 0)
+                    {
+
+                        //distribute config file
+                        processManager.distributeConfigFile("system");
+
+                        processManager.reinitProcessType("WriteEngineServer");
+                        processManager.restartProcessType("ExeMgr");
+                        processManager.reinitProcessType("DDLProc");
+                        processManager.reinitProcessType("DMLProc");
+                    }
+
+                    // if a WriteEngineServer was restarted, restart DDL/DMLProc
+                    if ( target.find("WriteEngineServer") == 0)
+                    {
+
+                        processManager.reinitProcessType("DDLProc");
+                        processManager.reinitProcessType("DMLProc");
+                    }
+
+                    log.writeLog(__LINE__, "RESTARTPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+                    log.writeLog(__LINE__, "Restart Process Completed on " + moduleName + " / " + target, LOG_TYPE_INFO );
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "RESTARTPROCESS: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case UPDATELOG:
+                {
+                    string action;
+                    string level;
+
+                    msg >> action;
+                    msg >> level;
+
+                    log.writeLog(__LINE__,  "MSG RECEIVED: " + action + " logging on " + target + " for level " + level );
+
+                    status = API_SUCCESS;
+
+                    if ( target == "system" )
+                    {
+                        // send logging message to all modules
+                        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                        {
+                            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                            if ( moduleCount == 0)
+                                continue;
+
+                            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                            {
+                                int retStatus = processManager.updateLog(action, (*pt).DeviceName, level);
+
+                                if ( retStatus != API_SUCCESS)
+                                    status = retStatus;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // for a specific module
+                        // validate module name
+                        bool found = false;
+
+                        for ( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                        {
+                            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                            if ( moduleCount == 0)
+                                continue;
+
+                            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                            {
+                                if ((*pt).DeviceName == target)
+                                {
+                                    status = processManager.updateLog(action, target, level);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ( found == false )
+                        {
+                            log.writeLog(__LINE__,  "ERROR: Invalid module name: " +  target, LOG_TYPE_ERROR);
+                            status = API_INVALID_PARAMETER;
+                        }
+                    }
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    log.writeLog(__LINE__, "UPDATELOG: ACK back to sender, return status = " + oam.itoa(status));
+
+                    break;
+                }
+
+                case GETCONFIGLOG:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Get Log Configuation" );
+
+                    status = API_SUCCESS;
+
+                    // validate module name and make request
+                    bool found = false;
+
+                    for ( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                    {
+                        int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                        if ( moduleCount == 0)
+                            continue;
+
+                        DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                        for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                        {
+                            if ((*pt).DeviceName == target)
+                            {
+                                status = processManager.getConfigLog(target);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ( found == false )
+                    {
+                        log.writeLog(__LINE__,  "ERROR: Invalid module name: " +  target, LOG_TYPE_ERROR);
+                        status = API_INVALID_PARAMETER;
+                    }
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    log.writeLog(__LINE__, "GETCONFIGLOG: ACK back to sender, return status = " + oam.itoa(status));
+
+                    break;
+                }
+
+                case REINITPROCESS:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Re-Init Process request..." );
+                    string moduleName;
+
+                    msg >> moduleName;
+
+                    //distribute config file
+                    processManager.distributeConfigFile(moduleName);
+
+                    status = processManager.reinitProcess(moduleName, target);
+
+                    log.writeLog(__LINE__, "REINITPROCESS: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "REINITPROCESS: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case UPDATECONFIG:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Update Process Configuation" );
+
+                    status = API_SUCCESS;
+
+                    //distribute update of process config file
+                    processManager.distributeConfigFile("system", "ProcessConfig.xml");
+
+                    for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                    {
+                        int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                        if ( moduleCount == 0)
+                            continue;
+
+                        DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                        for (; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                        {
+                            int retStatus = processManager.updateConfig((*pt).DeviceName);
+
+                            if (retStatus != API_SUCCESS)
+                                status = retStatus;
+                        }
+                    }
+
+                    log.writeLog(__LINE__, "UPDATECONFIG: ACK back to sender, return status = " + oam.itoa(status));
+                    break;
+                }
+
+                case BUILDSYSTEMTABLES:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Send Build System Table request to " + target);
+
+                    status = processManager.buildSystemTables(target);
+
+                    log.writeLog(__LINE__, "BUILDSYSTEMTABLES: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "BUILDSYSTEMTABLES: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case ADDMODULE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Add Module request");
+
+                    string value;
+                    uint16_t count, ivalue, nicCount;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    oam::DeviceNetworkList devicenetworklist;
+                    oam::HostConfig hostconfig;
+
+                    //get module count to add
+                    msg >> count;
+
+                    if ( count > 0 )
+                    {
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+
+                            msg >> nicCount;
+
+                            for (int j = 0 ; j < nicCount ; j ++ )
+                            {
+                                msg >> value;
+                                hostconfig.IPAddr = value;
+                                msg >> value;
+                                hostconfig.HostName = value;
+                                msg >> ivalue;
+                                hostconfig.NicID = ivalue;
+                                devicenetworkconfig.hostConfigList.push_back(hostconfig);
+                            }
+
+                            devicenetworklist.push_back(devicenetworkconfig);
+                            devicenetworkconfig.hostConfigList.clear();
+                        }
+
+                        string password;
+                        msg >> password;
+
+                        status = processManager.addModule(devicenetworklist, password);
+
+                        log.writeLog(__LINE__, "ADDMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "ADDMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "ADDMODULE: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case REMOVEMODULE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Remove Module request");
+
+                    uint16_t count, hostConfigCount;
+                    string value;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    oam::DeviceNetworkList devicenetworklist;
+
+                    //get module count to remove
+                    msg >> count;
+
+                    if ( count > 0 )
+                    {
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+                            devicenetworklist.push_back(devicenetworkconfig);
+                            msg >> hostConfigCount;
+                        }
+
+                        string password;
+
+                        msg >> password;
+
+                        status = processManager.removeModule(devicenetworklist);
+
+                        log.writeLog(__LINE__, "REMOVEMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+                        log.writeLog(__LINE__, "Remove Module Completed", LOG_TYPE_INFO);
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "REMOVEMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "REMOVEMODULE: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case RECONFIGUREMODULE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Reconfigure Module request");
+
+                    string value;
+                    uint16_t count, ivalue, nicCount;
+                    oam::DeviceNetworkConfig devicenetworkconfig;
+                    oam::DeviceNetworkList devicenetworklist;
+                    oam::HostConfig hostconfig;
+
+                    //get module count
+                    msg >> count;
+
+                    if ( count > 0 )
+                    {
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg >> value;
+                            devicenetworkconfig.DeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.UserTempDeviceName = value;
+                            msg >> value;
+                            devicenetworkconfig.DisableState = value;
+
+                            msg >> nicCount;
+
+                            for (int j = 0 ; j < nicCount ; j ++ )
+                            {
+                                msg >> value;
+                                hostconfig.IPAddr = value;
+                                msg >> value;
+                                hostconfig.HostName = value;
+                                msg >> ivalue;
+                                hostconfig.NicID = ivalue;
+                                devicenetworkconfig.hostConfigList.push_back(hostconfig);
+                            }
+
+                            devicenetworklist.push_back(devicenetworkconfig);
+                            devicenetworkconfig.hostConfigList.clear();
+                        }
+
+                        string password;
+
+                        msg >> password;
+
+                        status = processManager.reconfigureModule(devicenetworklist);
+
+                        log.writeLog(__LINE__, "RECONFIGUREMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
+                    }
+                    else
+                    {
+                        status = oam::API_INVALID_PARAMETER;
+                        log.writeLog(__LINE__, "RECONFIGUREMODULE: Module Count invalid = " + oam.itoa(count));
+                    }
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+
+                        log.writeLog(__LINE__, "RECONFIGUREMODULE: ACK back to sender");
+                    }
+
+                    break;
+                }
+
+                case STOPPROCESSTYPE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Stop Process Type request: " + target);
+
+                    if ( target == "DBRM" )
+                    {
+                        processManager.stopProcessType("DBRMControllerNode");
+                        processManager.stopProcessType("DBRMWorkerNode");
+                    }
+                    else
+                        processManager.stopProcessType(target);
+
+                    log.writeLog(__LINE__, "Stop Process Type Completed", LOG_TYPE_INFO );
+                    break;
+                }
+
+                case STARTPROCESSTYPE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Start Process Type request: " + target);
+
+                    if ( target == "DBRM" )
+                    {
+                        processManager.startProcessType("DBRMControllerNode");
+                        processManager.startProcessType("DBRMWorkerNode");
+                    }
+                    else
+                        processManager.startProcessType(target);
+
+                    // if a PrimProc was restarted, restart ACTIVE ExeMgr(s) and DDL/DMLProc
+                    if ( target == "PrimProc" )
+                    {
+
+                        //distribute config file
+                        processManager.distributeConfigFile("system");
+
+                        processManager.reinitProcessType("WriteEngineServer");
+                        processManager.restartProcessType("ExeMgr");
+                        processManager.reinitProcessType("DDLProc");
+                        processManager.reinitProcessType("DMLProc");
+                    }
+
+                    // if a WriteEngineServer was restarted, restart DDL/DMLProc
+                    if ( target.find("WriteEngineServer") == 0)
+                    {
+
+                        processManager.reinitProcessType("DDLProc");
+                        processManager.reinitProcessType("DMLProc");
+                    }
+
+                    log.writeLog(__LINE__, "Start Process Type Completed", LOG_TYPE_INFO );
+                    break;
+                }
+
+                case RESTARTPROCESSTYPE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Restart Process Type request: " + target);
+
+                    if ( target == "DBRM" )
+                    {
+                        processManager.restartProcessType("DBRMControllerNode");
+                        processManager.restartProcessType("DBRMWorkerNode");
+                    }
+                    else
+                    {
+                        processManager.restartProcessType(target);
+
+                        // if a PrimProc was restarted, restart ACTIVE ExeMgr(s) and DDL/DMLProc
+                        if ( target == "PrimProc" )
+                        {
+
+                            //distribute config file
+                            processManager.distributeConfigFile("system");
+
+                            processManager.reinitProcessType("WriteEngineServer");
+                            processManager.restartProcessType("ExeMgr");
+                            processManager.reinitProcessType("DDLProc");
+                            processManager.reinitProcessType("DMLProc");
+                        }
+                    }
+
+                    // if a WriteEngineServer was restarted, restart DDL/DMLProc
+                    if ( target.find("WriteEngineServer") == 0)
+                    {
+
+                        processManager.reinitProcessType("DDLProc");
+                        processManager.reinitProcessType("DMLProc");
+                    }
+
+                    log.writeLog(__LINE__, "Restart Process Type Completed", LOG_TYPE_INFO );
+                    break;
+                }
+
+                case REINITPROCESSTYPE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Reinit Process Type request: " + target);
+
+                    status = processManager.reinitProcessType(target);
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) status;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+                    }
+
+                    log.writeLog(__LINE__, "Reinit Process Type Completed, return status = " + oam.itoa(status));
+                    break;
+                }
+
+                case DISTRIBUTECONFIG:
+                {
+                    string file;
+
+                    msg >> file;
+
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Distribute Config File " + target + "/" + file);
+
+                    processManager.distributeConfigFile(target, file);
+
+                    if (ackIndicator)
+                    {
+                        ackMsg << (ByteStream::byte) oam::ACK;
+                        ackMsg << actionType;
+                        ackMsg << target;
+                        ackMsg << (ByteStream::byte) oam::API_SUCCESS;
+
+                        try
+                        {
+                            fIos.write(ackMsg);
+                        }
+                        catch (...) {}
+                    }
+
+                    log.writeLog(__LINE__, "Distribute Config File Completed " + target + "/" + file);
+                    break;
+                }
+
+                case SWITCHOAMPARENT:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Switch OAM Parent to : " + target);
+
+                    // GRACEFUL_WAIT means that we are shutting down, but waiting for
+                    // all transactions to finish or rollback as commanded. This is only set if
+                    // there are, in fact, transactions active (or cpimport).
+
+                    if (graceful == GRACEFUL_WAIT)
+                    {
+                        ByteStream stillWorkingMsg;
+                        stillWorkingMsg << (ByteStream::byte) oam::ACK;
+                        stillWorkingMsg << actionType;
+                        stillWorkingMsg << target;
+                        stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
+
+                        // This wait can take a while. We wait for table locks to release and open transactions to commit.
+                        if (oam.waitForSystem(RESTARTSYSTEM, fIos, stillWorkingMsg))
+                        {
+                            graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
+                            // Send an ack back to say we're done waiting and are now shutting down.
+                            ackMsg << (ByteStream::byte) oam::ACK;
+                            ackMsg << actionType;
+                            ackMsg << target;
+                            ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
+
+                            try
+                            {
+                                fIos.write(ackMsg);
+                            }
+                            catch (...) {}
+
+                            log.writeLog(__LINE__, "SWITCHOAMPARENT: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
+                        }
+                        else
+                        {
+                            // We've been cancelled.
+                            if (ackIndicator)
+                            {
+                                ackMsg << (ByteStream::byte) oam::ACK;
+                                ackMsg << actionType;
+                                ackMsg << target;
+                                ackMsg << (ByteStream::byte) API_CANCELLED;
+
+                                try
+                                {
+                                    fIos.write(ackMsg);
+                                }
+                                catch (...) {}
+
+                                log.writeLog(__LINE__, "SWITCHOAMPARENT: ACK back to sender (canceled)");
+                                break;
+                            }
+                        }
+                    }
+
+                    status = processManager.switchParentOAMModule(target);
+
+                    log.writeLog(__LINE__, "Switch OAM Parent Completed", LOG_TYPE_INFO );
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    // stop myself
+                    processManager.stopProcess(config.moduleName(), "ProcessManager", oam::FORCEFUL, true);
+
+                    break;
+                }
+
+                case UNMOUNT:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Unmount dbroot : " + target);
+
+                    status = processManager.unmountDBRoot(target);
+
+                    log.writeLog(__LINE__, "UnMount Completed status: " + oam.itoa(status) );
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    break;
+                }
+
+                case MOUNT:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: mount dbroot : " + target);
+
+                    status = processManager.mountDBRoot(target);
+
+                    log.writeLog(__LINE__, "Mount Completed status: " + oam.itoa(status) );
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    break;
+                }
+
+                case SUSPENDWRITES:
+                {
+                    ByteStream::byte ackResponse = API_FAILURE;
+                    log.writeLog(__LINE__,  "MSG RECEIVED: suspend database writes");
+
+                    // GRACEFUL_WAIT means that we are Suspending writes, but waiting for all
+                    // transactions to finish or rollback as commanded. This is only set if there
+                    // are, in fact, transactions active (or cpimport).
+                    if (graceful == GRACEFUL_WAIT)
+                    {
+                        ByteStream stillWorkingMsg;
+                        stillWorkingMsg << (ByteStream::byte) oam::ACK;
+                        stillWorkingMsg << actionType;
+                        stillWorkingMsg << target;
+                        stillWorkingMsg << (ByteStream::byte) API_STILL_WORKING;
+
+                        // This wait can take a while. We wait for table locks to release and open transactions to commit.
+                        if (oam.waitForSystem(SUSPENDWRITES, fIos, stillWorkingMsg))
+                        {
+                            graceful = GRACEFUL;	// ProcMonitor doesn't know GRACEFUL_WAIT.
+                            // Send an ack back to say we're done waiting and are now shutting down.
+                            ackMsg << (ByteStream::byte) oam::ACK;
+                            ackMsg << actionType;
+                            ackMsg << target;
+                            ackMsg << (ByteStream::byte) API_TRANSACTIONS_COMPLETE;
+
+                            try
+                            {
+                                fIos.write(ackMsg);
+                            }
+                            catch (...) {}
+
+                            log.writeLog(__LINE__, "SUSPENDWRITES: ACK transactions complete back to sender, return status = " + oam.itoa(API_TRANSACTIONS_COMPLETE));
+                        }
+                        else
+                        {
+                            // We've been cancelled.
+                            if (ackIndicator)
+                            {
+                                ackMsg << (ByteStream::byte) oam::ACK;
+                                ackMsg << actionType;
+                                ackMsg << target;
+                                ackMsg << (ByteStream::byte) API_CANCELLED;
+
+                                try
+                                {
+                                    fIos.write(ackMsg);
+                                }
+                                catch (...) {}
+
+                                log.writeLog(__LINE__, "SUSPENDWRITES: ACK back to sender (canceled)");
+                                break;
+                            }
+                        }
+                    }
+
+                    BRM::DBRM dbrm;
+                    dbrm.setSystemSuspended(true);
+                    // Wait for everything to settle down
+                    sleep(5);
+                    // Save the BRM. This command presages a system backup. Best to have a current BRM on disk
+                    string logdir("/var/log/mariadb/columnstore");
+
+                    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+
+                    string cmd = startup::StartUp::installDir() + "/bin/save_brm  > " + logdir + "/save_brm.log1 2>&1";
+                    int rtnCode = system(cmd.c_str());
+
+                    if (WEXITSTATUS(rtnCode) == 0)
+                    {
+                        ackResponse = API_SUCCESS;
+                    }
+                    else
+                    {
+                        ackResponse = API_FAILURE_DB_ERROR;
+                        dbrm.setSystemSuspended(false);
+                    }
+
+                    ackMsg.reset();
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << ackResponse;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    log.writeLog(__LINE__, "SUSPENDWRITES: ACK back to sender" + oam.itoa(ackResponse));
+                    break;
+                }
+
+                case FSTABUPDATE:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Distribute Fstab update" );
+
+                    //get fstab entry
+                    string entry;
+                    msg >> entry;
+
+                    status = API_SUCCESS;
+
+                    if ( target == "system" )
+                    {
+                        //send out to all pms except local module
+                        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+                        {
+                            if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType != "pm" )
+                                continue;
+
+                            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+                            if ( moduleCount == 0)
+                                continue;
+
+                            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                            for (; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                            {
+                                if ( (*pt).DeviceName == config.moduleName() )
+                                    continue;
+
+                                int retStatus = processManager.updateFstab((*pt).DeviceName, entry);
+
+                                if (retStatus != API_SUCCESS)
+                                    status = retStatus;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        int retStatus = processManager.updateFstab(target, entry);
+
+                        if (retStatus != API_SUCCESS)
+                            status = retStatus;
+                    }
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    log.writeLog(__LINE__, "FSTABUPDATE: ACK back to sender, return status = " + oam.itoa(status));
+
+                    break;
+                }
+
+                case ENABLEMYSQLREP:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Enable MySQL Replication");
+
+                    // target = root password
+                    oam::DeviceNetworkList devicenetworklist;
+                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target);
+
+                    log.writeLog(__LINE__, "Enable MySQL Replication status: " + oam.itoa(status) );
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    break;
+                }
+
+                case DISABLEMYSQLREP:
+                {
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Disable MySQL Replication");
+
+                    // target = root password
+                    oam::DeviceNetworkList devicenetworklist;
+                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target, false);
+
+                    log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    break;
+                }
+
+                case GLUSTERASSIGN:
+                {
+                    string dbroot;
+                    msg >> dbroot;
+
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Gluster Assign DBRoot: " + dbroot);
+
+                    status = processManager.glusterAssign(target, dbroot);
+
+                    log.writeLog(__LINE__, "Gluster Assign DBRoot status: " + oam.itoa(status) );
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    break;
+                }
+
+                case GLUSTERUNASSIGN:
+                {
+                    string dbroot;
+                    msg >> dbroot;
+
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Gluster Unassign DBRoot: " + dbroot);
+
+                    status = processManager.glusterUnassign(target, dbroot);
+
+                    log.writeLog(__LINE__, "Gluster Unassign DBRoot status: " + oam.itoa(status) );
+
+                    ackMsg << (ByteStream::byte) oam::ACK;
+                    ackMsg << actionType;
+                    ackMsg << target;
+                    ackMsg << (ByteStream::byte) status;
+
+                    try
+                    {
+                        fIos.write(ackMsg);
+                    }
+                    catch (...) {}
+
+                    break;
+                }
+
+                /*
+                             	case PROCESSALARM:
+                                {
+                                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
+
+                    				ByteStream::byte alarmID;
+                    				std::string componentID;
+                    				ByteStream::byte state;
+                    				std::string ModuleName;
+                    				std::string processName;
+                    				ByteStream::byte pid;
+                    				ByteStream::byte tid;
+
+                					msg >> alarmID;
+                					msg >> componentID;
+                					msg >> state;
+                					msg >> ModuleName;
+                					msg >> processName;
+                					msg >> pid;
+                					msg >> tid;
+
+                    				Alarm calAlarm;
+
+                    				calAlarm.setAlarmID (alarmID);
+                    				calAlarm.setComponentID (componentID);
+                    				calAlarm.setState (state);
+                    				calAlarm.setSname (ModuleName);
+                    				calAlarm.setPname (processName);
+                    				calAlarm.setPid (pid);
+                    				calAlarm.setTid (tid);
+
+                					ALARMManager aManager;
+                        			aManager.processAlarmReport(calAlarm);
+
+                                    break;
+                                }
+
+                */
+                default:
+                    log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
+                    break;
+            }
+
+            break;
+
+        case HEARTBEAT_REGISTER:
+        {
+            string moduleName;
+            string processName;
+            ByteStream::byte id;
+
+            msg >> moduleName;
+            msg >> processName;
+            msg >> id;
+
+            HeartBeatProc hbproc;
+            hbproc.ModuleName = moduleName;
+            hbproc.ProcessName = processName;
+            hbproc.ID = id;
+            hbproc.receiveFlag = true;
+
+            HeartBeatProcList::iterator list = hbproclist.begin();
+
+            for ( ; list != hbproclist.end() ; list++)
+            {
+                if ( (*list).ModuleName == moduleName
+                        && (*list).ProcessName == processName
+                        && (*list).ID == id)
+                {
+                    // already in the list
+                    break;
+                }
+            }
+
+            if ( list == hbproclist.end() )
+            {
+                // add to list
+                hbproclist.push_front(hbproc);
+                log.writeLog(__LINE__, "Adding Process to Heartbeat Monitor list: " + moduleName + " / " + processName + " / " + oam.itoa(id));
+            }
+        }
+        break;
+
+        case HEARTBEAT_DEREGISTER:
+        {
+            string moduleName;
+            string processName;
+            ByteStream::byte id;
+
+            msg >> moduleName;
+            msg >> processName;
+            msg >> id;
+
+            HeartBeatProcList::iterator list = hbproclist.begin();
+
+            for ( ; list != hbproclist.end() ; list++)
+            {
+                if ( (*list).ModuleName == moduleName
+                        && (*list).ProcessName == processName
+                        && (*list).ID == id)
+                {
+                    hbproclist.erase(list);
+                    log.writeLog(__LINE__, "Removing Process from Heartbeat Monitor list: " + moduleName + " / " + processName + " / " + oam.itoa(id));
+                    break;
+                }
+            }
+        }
+        break;
+
+        case HEARTBEAT_SEND:
+        {
+            string moduleName;
+            string processName;
+            string timeStamp;
+            ByteStream::byte id;
+            ByteStream::byte ackFlag;
+
+            msg >> moduleName;
+            msg >> processName;
+            msg >> timeStamp;
+            msg >> id;
+            msg >> ackFlag;
+
+            if ( ackFlag == oam::ACK_YES )
+            {
+                // send back an ack msg
+                ackMsg << (ByteStream::byte) HEARTBEAT_SEND;
+
+                try
+                {
+                    fIos.write(ackMsg);
+                }
+                catch (...) {}
 
 //log.writeLog(__LINE__, "Heartbeat Ack message sent", LOG_TYPE_DEBUG);
-				}
+            }
 
-				HeartBeatProcList::iterator list = hbproclist.begin();
-				for( ; list != hbproclist.end() ; list++) 
-				{
-					if ( (*list).ModuleName == moduleName 
-							&& (*list).ProcessName == processName 
-							&& (*list).ID == id) {
-						(*list).receiveFlag = true;
+            HeartBeatProcList::iterator list = hbproclist.begin();
+
+            for ( ; list != hbproclist.end() ; list++)
+            {
+                if ( (*list).ModuleName == moduleName
+                        && (*list).ProcessName == processName
+                        && (*list).ID == id)
+                {
+                    (*list).receiveFlag = true;
 //log.writeLog(__LINE__, "Heartbeat Received: " + moduleName + " / " + processName + " / " + oam.itoa(id) + ", timestamp: " + timeStamp, LOG_TYPE_DEBUG);
-						break;
-					}
-				}
-				if ( list == hbproclist.end() ) {
-				// not found, add to list
-					HeartBeatProc hbproc;
-					hbproc.ModuleName = moduleName;
-					hbproc.ProcessName = processName;
-					hbproc.ID = id;
-					hbproc.receiveFlag = true;
-					hbproclist.push_front(hbproc);
-					log.writeLog(__LINE__, "Adding Process to Heartbeat Monitor list: " + moduleName + " / " + processName + " / " + oam.itoa(id));
-				}
-			}
-			break;
+                    break;
+                }
+            }
 
-			case PROCESSRESTART:
-			{
-				string moduleName;
-				string processName;
-				ByteStream::byte manual;
+            if ( list == hbproclist.end() )
+            {
+                // not found, add to list
+                HeartBeatProc hbproc;
+                hbproc.ModuleName = moduleName;
+                hbproc.ProcessName = processName;
+                hbproc.ID = id;
+                hbproc.receiveFlag = true;
+                hbproclist.push_front(hbproc);
+                log.writeLog(__LINE__, "Adding Process to Heartbeat Monitor list: " + moduleName + " / " + processName + " / " + oam.itoa(id));
+            }
+        }
+        break;
 
-				msg >> moduleName;
-				msg >> processName;
-				msg >> manual;
+        case PROCESSRESTART:
+        {
+            string moduleName;
+            string processName;
+            ByteStream::byte manual;
 
-				log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted on " + moduleName + "/" + processName);
+            msg >> moduleName;
+            msg >> processName;
+            msg >> manual;
 
-				//set query system states not ready
-				BRM::DBRM dbrm;
-				dbrm.setSystemQueryReady(false);
+            log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted on " + moduleName + "/" + processName);
 
-				processManager.setQuerySystemState(false);
+            //set query system states not ready
+            BRM::DBRM dbrm;
+            dbrm.setSystemQueryReady(false);
 
-				processManager.setSystemState(oam::BUSY_INIT);
+            processManager.setQuerySystemState(false);
 
-				processManager.reinitProcessType("cpimport");
+            processManager.setSystemState(oam::BUSY_INIT);
 
-				//request reinit after Process is active
-				for ( int i = 0; i < 600 ; i++ ) {
-					try {
-						ProcessStatus procstat;
-						oam.getProcessStatus(processName, moduleName, procstat);
+            processManager.reinitProcessType("cpimport");
 
-						if (procstat.ProcessOpState == oam::ACTIVE) {
-							// if a PrimProc was restarted, reinit ACTIVE ExeMgr(s) and DDL/DMLProc
-							if( processName == "PrimProc") {
-			
-								//distribute config file
-								processManager.distributeConfigFile("system");
-			
-								processManager.reinitProcessType("WriteEngineServer");
-								processManager.restartProcessType("ExeMgr");
-								processManager.reinitProcessType("DDLProc");
-								processManager.reinitProcessType("DMLProc");
-							}
+            //request reinit after Process is active
+            for ( int i = 0; i < 600 ; i++ )
+            {
+                try
+                {
+                    ProcessStatus procstat;
+                    oam.getProcessStatus(processName, moduleName, procstat);
 
-							// if a WriteEngineServer was restarted, restart DDL/DMLProc
-							if( processName == "WriteEngineServer") {
-		
-								processManager.reinitProcessType("DDLProc");
-								processManager.reinitProcessType("DMLProc");
-							}
+                    if (procstat.ProcessOpState == oam::ACTIVE)
+                    {
+                        // if a PrimProc was restarted, reinit ACTIVE ExeMgr(s) and DDL/DMLProc
+                        if ( processName == "PrimProc")
+                        {
 
-							// if a ControllerNode was restarted, restart DMLProc
-							if( processName == "DBRMControllerNode") {
-							//	sleep(5);
-							//	processManager.reinitProcessType("DBRMWorkerNode");
-								// Wait for DBRMControllerNode to go active
-								ProcessStatus procstat;
-								uint16_t state = AUTO_OFFLINE;
-								while (state == oam::MAN_OFFLINE
-									|| state == oam::AUTO_OFFLINE
-									|| state == oam::MAN_INIT
-									|| state == oam::AUTO_INIT)
-								{
-									oam.getProcessStatus("DBRMControllerNode", config.OAMParentName(), procstat);
-									state = procstat.ProcessOpState;
-									if ( procstat.ProcessOpState == oam::ACTIVE)
-										break;
-									sleep(1);
-								}
-								processManager.restartProcessType("DDLProc");
-								processManager.restartProcessType("DMLProc");
-								sleep(1);
+                            //distribute config file
+                            processManager.distributeConfigFile("system");
 
-								string DMLmodule = config.OAMParentName();
-								if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
-						        	string PrimaryUMModuleName;
-        							try {
-            							oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
-        							}
-        							catch(...) {}
-									if ( !PrimaryUMModuleName.empty() )
-										DMLmodule = PrimaryUMModuleName;
-								}
+                            processManager.reinitProcessType("WriteEngineServer");
+                            processManager.restartProcessType("ExeMgr");
+                            processManager.reinitProcessType("DDLProc");
+                            processManager.reinitProcessType("DMLProc");
+                        }
 
-								// Wait for DMLProc to be ACTIVE
-								BRM::DBRM dbrm;
-								state = AUTO_OFFLINE;
-								while (state == oam::MAN_OFFLINE
-									|| state == oam::AUTO_OFFLINE
-									|| state == oam::MAN_INIT
-									|| state == oam::AUTO_INIT
-									|| state == oam::ROLLBACK_INIT)
-								{
-									oam.getProcessStatus("DMLProc", DMLmodule, procstat);
-									state = procstat.ProcessOpState;
-									if ( procstat.ProcessOpState == oam::ACTIVE)
-										break;
-									sleep(1);
-								}
-								dbrm.setSystemQueryReady(true);
-							}
+                        // if a WriteEngineServer was restarted, restart DDL/DMLProc
+                        if ( processName == "WriteEngineServer")
+                        {
 
-							// if a DDLProc was restarted, reinit DMLProc
-							if( processName == "DDLProc") {
-								processManager.reinitProcessType("DMLProc");
-							}
+                            processManager.reinitProcessType("DDLProc");
+                            processManager.reinitProcessType("DMLProc");
+                        }
 
-							//only run on auto process restart
-							if (manual == 0 )
-							{
-								//get dbhealth flag
-								string DBHealthMonitorFlag = "n";
-								string DBFunctionalMonitorFlag;
-								try {
-									oam.getSystemConfig( "DBHealthMonitorFlag", DBHealthMonitorFlag);
-								}
-								catch(...) {
-									DBHealthMonitorFlag = "n";
-								}
-	
-								//check the db health
-								if (DBHealthMonitorFlag == "y" ) {
-									log.writeLog(__LINE__, "Call the check DB Health API", LOG_TYPE_DEBUG);
-									try {
-										oam.checkDBFunctional();
-										log.writeLog(__LINE__, "check DB Health passed", LOG_TYPE_DEBUG);
-									}
-									catch(...)
-									{
-										log.writeLog(__LINE__, "check DB Health FAILED", LOG_TYPE_ERROR);
-									}
-								}
-							}
+                        // if a ControllerNode was restarted, restart DMLProc
+                        if ( processName == "DBRMControllerNode")
+                        {
+                            //	sleep(5);
+                            //	processManager.reinitProcessType("DBRMWorkerNode");
+                            // Wait for DBRMControllerNode to go active
+                            ProcessStatus procstat;
+                            uint16_t state = AUTO_OFFLINE;
 
-							break;
-						}
-						sleep(1);
-					}
-					catch (exception& ex)
-					{
+                            while (state == oam::MAN_OFFLINE
+                                    || state == oam::AUTO_OFFLINE
+                                    || state == oam::MAN_INIT
+                                    || state == oam::AUTO_INIT)
+                            {
+                                oam.getProcessStatus("DBRMControllerNode", config.OAMParentName(), procstat);
+                                state = procstat.ProcessOpState;
+
+                                if ( procstat.ProcessOpState == oam::ACTIVE)
+                                    break;
+
+                                sleep(1);
+                            }
+
+                            processManager.restartProcessType("DDLProc");
+                            processManager.restartProcessType("DMLProc");
+                            sleep(1);
+
+                            string DMLmodule = config.OAMParentName();
+
+                            if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM )
+                            {
+                                string PrimaryUMModuleName;
+
+                                try
+                                {
+                                    oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+                                }
+                                catch (...) {}
+
+                                if ( !PrimaryUMModuleName.empty() )
+                                    DMLmodule = PrimaryUMModuleName;
+                            }
+
+                            // Wait for DMLProc to be ACTIVE
+                            BRM::DBRM dbrm;
+                            state = AUTO_OFFLINE;
+
+                            while (state == oam::MAN_OFFLINE
+                                    || state == oam::AUTO_OFFLINE
+                                    || state == oam::MAN_INIT
+                                    || state == oam::AUTO_INIT
+                                    || state == oam::ROLLBACK_INIT)
+                            {
+                                oam.getProcessStatus("DMLProc", DMLmodule, procstat);
+                                state = procstat.ProcessOpState;
+
+                                if ( procstat.ProcessOpState == oam::ACTIVE)
+                                    break;
+
+                                sleep(1);
+                            }
+
+                            dbrm.setSystemQueryReady(true);
+                        }
+
+                        // if a DDLProc was restarted, reinit DMLProc
+                        if ( processName == "DDLProc")
+                        {
+                            processManager.reinitProcessType("DMLProc");
+                        }
+
+                        //only run on auto process restart
+                        if (manual == 0 )
+                        {
+                            //get dbhealth flag
+                            string DBHealthMonitorFlag = "n";
+                            string DBFunctionalMonitorFlag;
+
+                            try
+                            {
+                                oam.getSystemConfig( "DBHealthMonitorFlag", DBHealthMonitorFlag);
+                            }
+                            catch (...)
+                            {
+                                DBHealthMonitorFlag = "n";
+                            }
+
+                            //check the db health
+                            if (DBHealthMonitorFlag == "y" )
+                            {
+                                log.writeLog(__LINE__, "Call the check DB Health API", LOG_TYPE_DEBUG);
+
+                                try
+                                {
+                                    oam.checkDBFunctional();
+                                    log.writeLog(__LINE__, "check DB Health passed", LOG_TYPE_DEBUG);
+                                }
+                                catch (...)
+                                {
+                                    log.writeLog(__LINE__, "check DB Health FAILED", LOG_TYPE_ERROR);
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+
+                    sleep(1);
+                }
+                catch (exception& ex)
+                {
 //						string error = ex.what();
 //						log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-						break;
-					}
-					catch(...)
-					{
+                    break;
+                }
+                catch (...)
+                {
 //						log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-						break;
-					}
-				}
+                    break;
+                }
+            }
 
-				//enable query stats
-				dbrm.setSystemQueryReady(true);
+            //enable query stats
+            dbrm.setSystemQueryReady(true);
 
-				processManager.setQuerySystemState(true);
+            processManager.setQuerySystemState(true);
 
-				processManager.setSystemState(oam::ACTIVE);
-			}
-			break;
+            processManager.setSystemState(oam::ACTIVE);
+        }
+        break;
 
-			case GETDBRMDATA:
-			{
-				log.writeLog(__LINE__,  "MSG RECEIVED: Get DBRM Data Files");
+        case GETDBRMDATA:
+        {
+            log.writeLog(__LINE__,  "MSG RECEIVED: Get DBRM Data Files");
 
-				string moduleName;
+            string moduleName;
 
-				msg >> moduleName;
+            msg >> moduleName;
 
-				int ret = processManager.getDBRMData(fIos, moduleName);
+            int ret = processManager.getDBRMData(fIos, moduleName);
 
-				if ( ret == oam::API_SUCCESS )
-					log.writeLog(__LINE__, "Get DBRM Data Files Completed");
-				else
-					log.writeLog(__LINE__, "Get DBRM Data Files Failed");
-			}
-			break;
+            if ( ret == oam::API_SUCCESS )
+                log.writeLog(__LINE__, "Get DBRM Data Files Completed");
+            else
+                log.writeLog(__LINE__, "Get DBRM Data Files Failed");
+        }
+        break;
 
-			case GETALARMDATA:
-			{
-				log.writeLog(__LINE__,  "MSG RECEIVED: Get Alarm Data Files");
+        case GETALARMDATA:
+        {
+            log.writeLog(__LINE__,  "MSG RECEIVED: Get Alarm Data Files");
 
-				string date;
+            string date;
 
-				msg >> date;
+            msg >> date;
 
-				processManager.getAlarmData(fIos, GETALARMDATA, date);
+            processManager.getAlarmData(fIos, GETALARMDATA, date);
 
-				log.writeLog(__LINE__, "Get Alarm Data Files Completed");
-			}
-			break;
+            log.writeLog(__LINE__, "Get Alarm Data Files Completed");
+        }
+        break;
 
-			case GETACTIVEALARMDATA:
-			{
+        case GETACTIVEALARMDATA:
+        {
 //				log.writeLog(__LINE__,  "MSG RECEIVED: Get Active Alarm Data Files");
 
-				//pull off, but don't need
-				string date;
+            //pull off, but don't need
+            string date;
 
-				msg >> date;
+            msg >> date;
 
-				processManager.getAlarmData(fIos, GETACTIVEALARMDATA, "");
+            processManager.getAlarmData(fIos, GETACTIVEALARMDATA, "");
 
 //				log.writeLog(__LINE__, "Get Active Alarm Data Files Completed");
-			}
-			break;
+        }
+        break;
 
-			default:
-				break;
-	}
-	
-	sleep(5);
-	fIos.close();
-	pthread_detach (ThreadId);
-	pthread_exit(0);
+        default:
+            break;
+    }
+
+    sleep(5);
+    fIos.close();
+    pthread_detach (ThreadId);
+    pthread_exit(0);
 }
 
 /******************************************************************************************
@@ -3000,77 +3321,86 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 ******************************************************************************************/
 int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::string date)
 {
-	ByteStream msg;
-	Oam oam;
-	int returnStatus = oam::API_SUCCESS;
+    ByteStream msg;
+    Oam oam;
+    int returnStatus = oam::API_SUCCESS;
 
-	AlarmList alarmList;
+    AlarmList alarmList;
 
-	if ( type == GETALARMDATA ) {
-		try {
-			ALARMManager sm;
-			sm.getAlarm(date, alarmList);
-		}
-		catch(...)
-		{
-			msg << (ByteStream::byte) oam::ACK;
-			msg << (ByteStream::byte) type;
-			msg << (ByteStream::byte) oam::API_FAILURE;
-			try {
-				fIos.write(msg);
-			}
-			catch(...) {}
-		
-			return oam::API_FAILURE;
-		}
-	}
-	else
-	{
-		try {
-	        ALARMManager sm;
-			sm.getActiveAlarm(alarmList);
-		}
-		catch(...)
-		{
-			msg << (ByteStream::byte) oam::ACK;
-			msg << (ByteStream::byte) type;
-			msg << (ByteStream::byte) oam::API_FAILURE;
-			try {
-				fIos.write(msg);
-			}
-			catch(...) {}
-		
-			return oam::API_FAILURE;
-		}
-	}
+    if ( type == GETALARMDATA )
+    {
+        try
+        {
+            ALARMManager sm;
+            sm.getAlarm(date, alarmList);
+        }
+        catch (...)
+        {
+            msg << (ByteStream::byte) oam::ACK;
+            msg << (ByteStream::byte) type;
+            msg << (ByteStream::byte) oam::API_FAILURE;
 
-	msg << (ByteStream::byte) oam::ACK;
-	msg << (ByteStream::byte) type;
-	msg << (ByteStream::byte) oam::API_SUCCESS;
+            try
+            {
+                fIos.write(msg);
+            }
+            catch (...) {}
 
-	//number of alarms
-	msg << (ByteStream::byte) alarmList.size();
+            return oam::API_FAILURE;
+        }
+    }
+    else
+    {
+        try
+        {
+            ALARMManager sm;
+            sm.getActiveAlarm(alarmList);
+        }
+        catch (...)
+        {
+            msg << (ByteStream::byte) oam::ACK;
+            msg << (ByteStream::byte) type;
+            msg << (ByteStream::byte) oam::API_FAILURE;
+
+            try
+            {
+                fIos.write(msg);
+            }
+            catch (...) {}
+
+            return oam::API_FAILURE;
+        }
+    }
+
+    msg << (ByteStream::byte) oam::ACK;
+    msg << (ByteStream::byte) type;
+    msg << (ByteStream::byte) oam::API_SUCCESS;
+
+    //number of alarms
+    msg << (ByteStream::byte) alarmList.size();
 //log.writeLog(__LINE__, oam.itoa(alarmList.size()), LOG_TYPE_ERROR );
 
-	AlarmList :: iterator i;
-	for (i = alarmList.begin(); i != alarmList.end(); ++i)
-	{
-		msg << (ByteStream::doublebyte) i->second.getAlarmID();
+    AlarmList :: iterator i;
+
+    for (i = alarmList.begin(); i != alarmList.end(); ++i)
+    {
+        msg << (ByteStream::doublebyte) i->second.getAlarmID();
 //log.writeLog(__LINE__, oam.itoa(i->second.getAlarmID()), LOG_TYPE_ERROR );
-		msg << i->second.getDesc();
-		msg << (ByteStream::doublebyte) i->second.getSeverity();
-		msg << i->second.getTimestamp();
-		msg << i->second.getSname();
-		msg << i->second.getPname();
-		msg << i->second.getComponentID();
-	}
+        msg << i->second.getDesc();
+        msg << (ByteStream::doublebyte) i->second.getSeverity();
+        msg << i->second.getTimestamp();
+        msg << i->second.getSname();
+        msg << i->second.getPname();
+        msg << i->second.getComponentID();
+    }
 
-	try {
-		fIos.write(msg);
-	}
-	catch(...) {}
+    try
+    {
+        fIos.write(msg);
+    }
+    catch (...) {}
 
-	return returnStatus;
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3079,20 +3409,22 @@ int ProcessManager::getAlarmData(messageqcpp::IOSocket fIos, int type, std::stri
 * purpose:	Build a request message
 *
 ******************************************************************************************/
-ByteStream  ProcessManager::buildRequestMessage(ByteStream::byte requestID, 
-				ByteStream::byte actionIndicator, string processName, bool manualFlag)
+ByteStream  ProcessManager::buildRequestMessage(ByteStream::byte requestID,
+        ByteStream::byte actionIndicator, string processName, bool manualFlag)
 {
-	ByteStream msg;
-	ByteStream::byte messageType = REQUEST;
+    ByteStream msg;
+    ByteStream::byte messageType = REQUEST;
 
-	msg << messageType;
-	msg << requestID;
-	msg << actionIndicator;
-	if (processName != "" )
-		msg << processName;
-	msg << (ByteStream::byte) manualFlag;
+    msg << messageType;
+    msg << requestID;
+    msg << actionIndicator;
 
-	return msg;
+    if (processName != "" )
+        msg << processName;
+
+    msg << (ByteStream::byte) manualFlag;
+
+    return msg;
 }
 
 /******************************************************************************************
@@ -3103,45 +3435,44 @@ ByteStream  ProcessManager::buildRequestMessage(ByteStream::byte requestID,
 ******************************************************************************************/
 int ProcessManager::startModule(string target, messageqcpp::ByteStream::byte actionIndicator, uint16_t startType, bool systemStart)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = STARTALL;
-	string processName = "";
-	Oam oam;
+    ByteStream msg;
+    ByteStream::byte requestID = STARTALL;
+    string processName = "";
+    Oam oam;
 
-	if ( startType ==  oam::MAN_OFFLINE )
-		setModuleState(target, oam::MAN_INIT);
-	else
-		setModuleState(target, oam::AUTO_INIT);
+    if ( startType ==  oam::MAN_OFFLINE )
+        setModuleState(target, oam::MAN_INIT);
+    else
+        setModuleState(target, oam::AUTO_INIT);
 
-	msg = buildRequestMessage(requestID, actionIndicator, processName);
+    msg = buildRequestMessage(requestID, actionIndicator, processName);
 
-	int returnStatus = sendMsgProcMon( target, msg, requestID );
+    int returnStatus = sendMsgProcMon( target, msg, requestID );
 
-	if ( returnStatus == API_SUCCESS)
-	{
-		setModuleState(target, oam::ACTIVE);
-	
-		//clear alarm, log the event 
-		log.writeLog(__LINE__, target + " module is started by request.", LOG_TYPE_DEBUG);
-	
-		//clear an alarm 
-		ALARMManager aManager;
-		aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, CLEAR);
-		aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, CLEAR);
-	}
-	else
-	{
-		if ( returnStatus == oam::API_FAILURE || returnStatus == API_FAILURE_DB_ERROR)
-			setModuleState(target, oam::FAILED);
-		else
-			if ( !systemStart )
-				setModuleState(target, oam::FAILED);
-	
-		//log the event 
-		log.writeLog(__LINE__, target + " module failed to start!!", LOG_TYPE_DEBUG);
-	}
+    if ( returnStatus == API_SUCCESS)
+    {
+        setModuleState(target, oam::ACTIVE);
 
-	return returnStatus;
+        //clear alarm, log the event
+        log.writeLog(__LINE__, target + " module is started by request.", LOG_TYPE_DEBUG);
+
+        //clear an alarm
+        ALARMManager aManager;
+        aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, CLEAR);
+        aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, CLEAR);
+    }
+    else
+    {
+        if ( returnStatus == oam::API_FAILURE || returnStatus == API_FAILURE_DB_ERROR)
+            setModuleState(target, oam::FAILED);
+        else if ( !systemStart )
+            setModuleState(target, oam::FAILED);
+
+        //log the event
+        log.writeLog(__LINE__, target + " module failed to start!!", LOG_TYPE_DEBUG);
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3152,89 +3483,93 @@ int ProcessManager::startModule(string target, messageqcpp::ByteStream::byte act
 ******************************************************************************************/
 int ProcessManager::stopModule(string target, ByteStream::byte actionIndicator, bool manualFlag, int timeout)
 {
-	Configuration config;
-	ProcessManager processManager(config, log);
-	ByteStream msg;
-	ByteStream::byte requestID = STOPALL;
-	string processName = "";
+    Configuration config;
+    ProcessManager processManager(config, log);
+    ByteStream msg;
+    ByteStream::byte requestID = STOPALL;
+    string processName = "";
 
-	msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
+    msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
 
-	string msgPort = target;
-	msgPort = msgPort + "_ProcessMonitor";
+    string msgPort = target;
+    msgPort = msgPort + "_ProcessMonitor";
 
-	int returnStatus = API_FAILURE;
+    int returnStatus = API_FAILURE;
 
-	if ( actionIndicator == INSTALL && target == config.OAMParentName() ) {
-		// Process Manager will be taken down, do your updates now
-		log.writeLog(__LINE__, target + " module is stopped by request.", LOG_TYPE_DEBUG);
-	
-		if ( manualFlag ) {
-			setModuleState(target, oam::MAN_OFFLINE);
-		
-			//Issue an alarm 
-			ALARMManager aManager;				
-			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
-		}
-		else
-		{
-			setModuleState(target, oam::AUTO_OFFLINE);
-		
-			//Issue an alarm 
-			ALARMManager aManager;				
-			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
-		}
-	}
-	else
-	{
-		log.writeLog(__LINE__, target + " module is stopped by request.", LOG_TYPE_DEBUG);
-	
-		if ( manualFlag ) {
-			setModuleState(target, oam::MAN_INIT);
-		}
-		else
-		{
-			setModuleState(target, oam::AUTO_INIT);
-		}
-	}
+    if ( actionIndicator == INSTALL && target == config.OAMParentName() )
+    {
+        // Process Manager will be taken down, do your updates now
+        log.writeLog(__LINE__, target + " module is stopped by request.", LOG_TYPE_DEBUG);
 
-	returnStatus = sendMsgProcMon( target, msg, requestID, timeout );
+        if ( manualFlag )
+        {
+            setModuleState(target, oam::MAN_OFFLINE);
 
-	if ( actionIndicator != STATUS_UPDATE )
-	{
-		if ( returnStatus == API_SUCCESS)
-		{
-			//Issue an alarm, log the event 
-			log.writeLog(__LINE__, target + " module is successfully stopped.", LOG_TYPE_DEBUG);
-	
-			if ( manualFlag ) {
+            //Issue an alarm
+            ALARMManager aManager;
+            aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
+        }
+        else
+        {
+            setModuleState(target, oam::AUTO_OFFLINE);
+
+            //Issue an alarm
+            ALARMManager aManager;
+            aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
+        }
+    }
+    else
+    {
+        log.writeLog(__LINE__, target + " module is stopped by request.", LOG_TYPE_DEBUG);
+
+        if ( manualFlag )
+        {
+            setModuleState(target, oam::MAN_INIT);
+        }
+        else
+        {
+            setModuleState(target, oam::AUTO_INIT);
+        }
+    }
+
+    returnStatus = sendMsgProcMon( target, msg, requestID, timeout );
+
+    if ( actionIndicator != STATUS_UPDATE )
+    {
+        if ( returnStatus == API_SUCCESS)
+        {
+            //Issue an alarm, log the event
+            log.writeLog(__LINE__, target + " module is successfully stopped.", LOG_TYPE_DEBUG);
+
+            if ( manualFlag )
+            {
 //				setModuleState(target, oam::MAN_OFFLINE);
-			
-				//Issue an alarm 
-				ALARMManager aManager;				
-				aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
-			}
-			else
-			{
+
+                //Issue an alarm
+                ALARMManager aManager;
+                aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
+            }
+            else
+            {
 //				setModuleState(target, oam::AUTO_OFFLINE);
-			
-				//Issue an alarm 
-				ALARMManager aManager;
-				aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
-			}
-		}
-		else
-		{
+
+                //Issue an alarm
+                ALARMManager aManager;
+                aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
+            }
+        }
+        else
+        {
 //			if ( manualFlag ) {
 //				setModuleState(target, oam::FAILED);
 //			}
-	
-			//log the event 
-			log.writeLog(__LINE__, target + " module failed to stop!!", LOG_TYPE_WARNING);
-		}
-	}
 
-	return returnStatus;
+            //log the event
+            log.writeLog(__LINE__, target + " module failed to stop!!", LOG_TYPE_WARNING);
+        }
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3245,50 +3580,51 @@ int ProcessManager::stopModule(string target, ByteStream::byte actionIndicator, 
 ******************************************************************************************/
 int ProcessManager::shutdownModule(string target, ByteStream::byte actionIndicator, bool manualFlag, int timeout)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = SHUTDOWNMODULE;
-	string processName = "";
+    ByteStream msg;
+    ByteStream::byte requestID = SHUTDOWNMODULE;
+    string processName = "";
 
-	msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
+    msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
 
-	int returnStatus = sendMsgProcMon( target, msg, requestID, timeout );
+    int returnStatus = sendMsgProcMon( target, msg, requestID, timeout );
 
-	if ( returnStatus == API_SUCCESS)
-	{
-		//Issue an alarm, log the event 
-		log.writeLog(__LINE__, target + " module is shutdown by request.", LOG_TYPE_DEBUG);
+    if ( returnStatus == API_SUCCESS)
+    {
+        //Issue an alarm, log the event
+        log.writeLog(__LINE__, target + " module is shutdown by request.", LOG_TYPE_DEBUG);
 
-		if ( manualFlag ) {
-			setModuleState(target, oam::MAN_OFFLINE);
-		
-			//mark all processes running on module man-offline
-			setProcessStates(target, oam::MAN_OFFLINE);
+        if ( manualFlag )
+        {
+            setModuleState(target, oam::MAN_OFFLINE);
 
-			//Issue an alarm 
-			ALARMManager aManager;				
-			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
-		}
-		else
-		{
-			setModuleState(target, oam::AUTO_OFFLINE);
+            //mark all processes running on module man-offline
+            setProcessStates(target, oam::MAN_OFFLINE);
 
-			//mark all processes running on module auto-offline
-			setProcessStates(target, oam::AUTO_OFFLINE);
+            //Issue an alarm
+            ALARMManager aManager;
+            aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_MANUAL, SET);
+        }
+        else
+        {
+            setModuleState(target, oam::AUTO_OFFLINE);
 
-			//Issue an alarm 
-			ALARMManager aManager;				
-			aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
-		}
-	}
-	else
-	{
-		setModuleState(target, oam::FAILED);
-	
-		//log the event 
-		log.writeLog(__LINE__, target + " module failed to shutdown!!", LOG_TYPE_WARNING);
-	}
+            //mark all processes running on module auto-offline
+            setProcessStates(target, oam::AUTO_OFFLINE);
 
-	return returnStatus;
+            //Issue an alarm
+            ALARMManager aManager;
+            aManager.sendAlarmReport(target.c_str(), MODULE_DOWN_AUTO, SET);
+        }
+    }
+    else
+    {
+        setModuleState(target, oam::FAILED);
+
+        //log the event
+        log.writeLog(__LINE__, target + " module failed to shutdown!!", LOG_TYPE_WARNING);
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3299,120 +3635,126 @@ int ProcessManager::shutdownModule(string target, ByteStream::byte actionIndicat
 ******************************************************************************************/
 int ProcessManager::disableModule(string target, bool manualFlag)
 {
-	Oam oam;
-	ModuleConfig moduleconfig;
+    Oam oam;
+    ModuleConfig moduleconfig;
 
-	log.writeLog(__LINE__, "disableModule request for " + target, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "disableModule request for " + target, LOG_TYPE_DEBUG);
 
-	string moduleType = target.substr(0,MAX_MODULE_TYPE_SIZE);
+    string moduleType = target.substr(0, MAX_MODULE_TYPE_SIZE);
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	int newState;
-	string SnewState;
-	if ( manualFlag ) {
-		newState = oam::MAN_DISABLED;
-		SnewState = oam::MANDISABLEDSTATE;
-	}
-	else
-	{
-		newState = oam::AUTO_DISABLED;
-		SnewState = oam::AUTODISABLEDSTATE;
-	}
+    int newState;
+    string SnewState;
 
-	// skip of module already in current DISABLED state or in MAN_DISABLED state
-	try{
-		int opState = oam::ACTIVE;
-		bool degraded;
-		oam.getModuleStatus(target, opState, degraded);
+    if ( manualFlag )
+    {
+        newState = oam::MAN_DISABLED;
+        SnewState = oam::MANDISABLEDSTATE;
+    }
+    else
+    {
+        newState = oam::AUTO_DISABLED;
+        SnewState = oam::AUTODISABLEDSTATE;
+    }
 
-		if (opState == newState || opState == oam::MAN_DISABLED) {
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_SUCCESS;
-		}
+    // skip of module already in current DISABLED state or in MAN_DISABLED state
+    try
+    {
+        int opState = oam::ACTIVE;
+        bool degraded;
+        oam.getModuleStatus(target, opState, degraded);
 
-		// if current state is AUTO_DISABLED and new state is MAN_DISABLED
-		// update state to MAN_DISABLED
+        if (opState == newState || opState == oam::MAN_DISABLED)
+        {
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_SUCCESS;
+        }
 
-		if (opState == oam::AUTO_DISABLED && newState == oam::MAN_DISABLED) {
-		
-			try
-			{
-				oam.getSystemConfig(target, moduleconfig);
-		
-				moduleconfig.DisableState = oam::MANDISABLEDSTATE;
-		
-				try
-				{
-					oam.setSystemConfig(target, moduleconfig);
-				}
-				catch (exception& ex)
-				{
-					string error = ex.what();
-					log.writeLog(__LINE__, "EXCEPTION ERROR on setSystemConfig: " + error, LOG_TYPE_ERROR);
-				}
-				catch(...)
-				{
-					log.writeLog(__LINE__, "EXCEPTION ERROR on setSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-				}
-			}
-			catch (exception& ex)
-			{
-				string error = ex.what();
-				log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
-				log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-			}
+        // if current state is AUTO_DISABLED and new state is MAN_DISABLED
+        // update state to MAN_DISABLED
 
-			pthread_mutex_unlock(&THREAD_LOCK);
-		
-			setModuleState(target, oam::MAN_DISABLED);
+        if (opState == oam::AUTO_DISABLED && newState == oam::MAN_DISABLED)
+        {
 
-			return API_SUCCESS;
-		}
-	}
-	catch (exception& ex)
-	{
+            try
+            {
+                oam.getSystemConfig(target, moduleconfig);
+
+                moduleconfig.DisableState = oam::MANDISABLEDSTATE;
+
+                try
+                {
+                    oam.setSystemConfig(target, moduleconfig);
+                }
+                catch (exception& ex)
+                {
+                    string error = ex.what();
+                    log.writeLog(__LINE__, "EXCEPTION ERROR on setSystemConfig: " + error, LOG_TYPE_ERROR);
+                }
+                catch (...)
+                {
+                    log.writeLog(__LINE__, "EXCEPTION ERROR on setSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+                }
+            }
+            catch (exception& ex)
+            {
+                string error = ex.what();
+                log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+            }
+            catch (...)
+            {
+                log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+            }
+
+            pthread_mutex_unlock(&THREAD_LOCK);
+
+            setModuleState(target, oam::MAN_DISABLED);
+
+            return API_SUCCESS;
+        }
+    }
+    catch (exception& ex)
+    {
 //		string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + target + ": " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + target + ": Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    }
 
-	pthread_mutex_unlock(&THREAD_LOCK);
-	
-	setModuleState(target, newState);
+    pthread_mutex_unlock(&THREAD_LOCK);
 
-	//set Columnstore.xml enbale state
-	setEnableState( target, SnewState);
+    setModuleState(target, newState);
 
-	log.writeLog(__LINE__, "disableModule - setEnableState", LOG_TYPE_DEBUG);
+    //set Columnstore.xml enbale state
+    setEnableState( target, SnewState);
 
-	//sleep a bit to give time for the state change to apply
-	sleep(1);
+    log.writeLog(__LINE__, "disableModule - setEnableState", LOG_TYPE_DEBUG);
 
-	//update PMS area if PM was disabled
-	if ( moduleType == "pm" ) {
-		if ( updatePMSconfig() != API_SUCCESS )
-			return API_FAILURE;
+    //sleep a bit to give time for the state change to apply
+    sleep(1);
 
-		log.writeLog(__LINE__, "disableModule - Updated PM server Count", LOG_TYPE_DEBUG);
-	}
+    //update PMS area if PM was disabled
+    if ( moduleType == "pm" )
+    {
+        if ( updatePMSconfig() != API_SUCCESS )
+            return API_FAILURE;
 
-	//Update DBRM section of Columnstore.xml
-	if ( updateWorkerNodeconfig() != API_SUCCESS )
-		return API_FAILURE;
+        log.writeLog(__LINE__, "disableModule - Updated PM server Count", LOG_TYPE_DEBUG);
+    }
 
-	//distribute config file
-	distributeConfigFile("system");
+    //Update DBRM section of Columnstore.xml
+    if ( updateWorkerNodeconfig() != API_SUCCESS )
+        return API_FAILURE;
 
-	log.writeLog(__LINE__, "disableModule successfully complete for " + target, LOG_TYPE_DEBUG);
+    //distribute config file
+    distributeConfigFile("system");
 
-	return API_SUCCESS;
+    log.writeLog(__LINE__, "disableModule successfully complete for " + target, LOG_TYPE_DEBUG);
+
+    return API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -3423,46 +3765,49 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 ******************************************************************************************/
 void ProcessManager::recycleProcess(string module)
 {
-	Oam oam;
-	ModuleConfig moduleconfig;
+    Oam oam;
+    ModuleConfig moduleconfig;
 
-	log.writeLog(__LINE__, "recycleProcess request after module was disabled: " + module, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "recycleProcess request after module was disabled: " + module, LOG_TYPE_DEBUG);
 
-	string moduleType = module.substr(0,MAX_MODULE_TYPE_SIZE);
+    string moduleType = module.substr(0, MAX_MODULE_TYPE_SIZE);
 
-	// if a UM module, send a restart on DMLProc/DDLProc to get started on another UM, if needed
-	string PrimaryUMModuleName;
-	try {
-		oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
-	}
-	catch(...) {}
+    // if a UM module, send a restart on DMLProc/DDLProc to get started on another UM, if needed
+    string PrimaryUMModuleName;
 
-	//restart ExeMgrs/mysql if module is a pm
-	if ( moduleType == "pm" ) {
-		restartProcessType("ExeMgr");
-		restartProcessType("mysql");
-	}
-	else
-		restartProcessType("ExeMgr");
+    try
+    {
+        oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+    }
+    catch (...) {}
 
-	if ( PrimaryUMModuleName == module )
-	{
-		restartProcessType("DDLProc", module);
+    //restart ExeMgrs/mysql if module is a pm
+    if ( moduleType == "pm" )
+    {
+        restartProcessType("ExeMgr");
+        restartProcessType("mysql");
+    }
+    else
+        restartProcessType("ExeMgr");
+
+    if ( PrimaryUMModuleName == module )
+    {
+        restartProcessType("DDLProc", module);
 //		restartProcessType("DDLProc", module, false);
-		sleep(1);
-		restartProcessType("DMLProc", module);
+        sleep(1);
+        restartProcessType("DMLProc", module);
 //		restartProcessType("DMLProc", module, false);
-	}
+    }
 
-	if( moduleType == "pm" && PrimaryUMModuleName != module)
-	{
-		reinitProcessType("DDLProc");
-		sleep(1);
-		restartProcessType("DMLProc", module);
+    if ( moduleType == "pm" && PrimaryUMModuleName != module)
+    {
+        reinitProcessType("DDLProc");
+        sleep(1);
+        restartProcessType("DMLProc", module);
 //		restartProcessType("DMLProc", module, false);
-	}
+    }
 
-	return;
+    return;
 }
 
 /******************************************************************************************
@@ -3473,45 +3818,46 @@ void ProcessManager::recycleProcess(string module)
 ******************************************************************************************/
 int ProcessManager::enableModule(string target, int state)
 {
-	Oam oam;
-	ModuleConfig moduleconfig;
+    Oam oam;
+    ModuleConfig moduleconfig;
 
-	log.writeLog(__LINE__, "enableModule request for " + target, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "enableModule request for " + target, LOG_TYPE_DEBUG);
 
-	string moduleType = target.substr(0,MAX_MODULE_TYPE_SIZE);
+    string moduleType = target.substr(0, MAX_MODULE_TYPE_SIZE);
 
-	if (setEnableState( target, oam::ENABLEDSTATE) != API_SUCCESS )
-		return API_FAILURE;
+    if (setEnableState( target, oam::ENABLEDSTATE) != API_SUCCESS )
+        return API_FAILURE;
 
-	setModuleState(target, state);
+    setModuleState(target, state);
 
-	//sleep a bit to give time for the state change to apply
-	sleep(5);
+    //sleep a bit to give time for the state change to apply
+    sleep(5);
 
-	//update PMS area if PM was disabled
-	if ( moduleType == "pm" ) {
-		if ( updatePMSconfig() != API_SUCCESS )
-			return API_FAILURE;
+    //update PMS area if PM was disabled
+    if ( moduleType == "pm" )
+    {
+        if ( updatePMSconfig() != API_SUCCESS )
+            return API_FAILURE;
 
-		log.writeLog(__LINE__, "enableModule - Updated PM server Count", LOG_TYPE_DEBUG);
-	}
+        log.writeLog(__LINE__, "enableModule - Updated PM server Count", LOG_TYPE_DEBUG);
+    }
 
-	//Update DBRM section of Columnstore.xml
-	if ( updateWorkerNodeconfig() != API_SUCCESS )
-		return API_FAILURE;
+    //Update DBRM section of Columnstore.xml
+    if ( updateWorkerNodeconfig() != API_SUCCESS )
+        return API_FAILURE;
 
-	//distribute config file
-	distributeConfigFile("system");
+    //distribute config file
+    distributeConfigFile("system");
 
-	//check if new module should be hot-standby
-	string newStandbyModule = getStandbyModule();
+    //check if new module should be hot-standby
+    string newStandbyModule = getStandbyModule();
 
-	if ( newStandbyModule == target)
-		setStandbyModule(newStandbyModule);
+    if ( newStandbyModule == target)
+        setStandbyModule(newStandbyModule);
 
-	log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
-	return API_SUCCESS;
+    return API_SUCCESS;
 }
 
 
@@ -3523,91 +3869,97 @@ int ProcessManager::enableModule(string target, int state)
 ******************************************************************************************/
 void ProcessManager::startMgrProcesses(std::string moduleName)
 {
-	Oam oam;
-	SystemProcessConfig systemprocessconfig;
-	vector<ProcessConfig>::iterator itor;
+    Oam oam;
+    SystemProcessConfig systemprocessconfig;
+    vector<ProcessConfig>::iterator itor;
 
-	ByteStream msg;
-	string modulePortName = moduleName + "_ProcessMonitor";
+    ByteStream msg;
+    string modulePortName = moduleName + "_ProcessMonitor";
 
-	try{
-		oam.getProcessConfig(systemprocessconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessConfig: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    try
+    {
+        oam.getProcessConfig(systemprocessconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessConfig: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+    }
 
-	string moduleType = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
+    string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
 
-	while(true) 
-	{
-		bool status = true;
-		for (itor=systemprocessconfig.processconfig.begin();
-			itor != systemprocessconfig.processconfig.end(); ++itor)
-		{
-			status = true;
-	
-			if ((*itor).BootLaunch == MGR_LAUNCH)
-			{
-				if ((*itor).ModuleType == moduleType
-				|| (*itor).ModuleType == "ChildExtOAMModule"
-				|| ( (*itor).ModuleType == "ChildOAMModule")
-				|| ((*itor).ModuleType == "ParentOAMModule" && moduleName == config.OAMParentName()) )
-				{
-					int state = oam::ACTIVE;
-					try{
-						ProcessStatus procstat;
-						oam.getProcessStatus((*itor).ProcessName, moduleName, procstat);
-						state = procstat.ProcessOpState;
-					}
-					catch (exception& ex)
-					{
+    while (true)
+    {
+        bool status = true;
+
+        for (itor = systemprocessconfig.processconfig.begin();
+                itor != systemprocessconfig.processconfig.end(); ++itor)
+        {
+            status = true;
+
+            if ((*itor).BootLaunch == MGR_LAUNCH)
+            {
+                if ((*itor).ModuleType == moduleType
+                        || (*itor).ModuleType == "ChildExtOAMModule"
+                        || ( (*itor).ModuleType == "ChildOAMModule")
+                        || ((*itor).ModuleType == "ParentOAMModule" && moduleName == config.OAMParentName()) )
+                {
+                    int state = oam::ACTIVE;
+
+                    try
+                    {
+                        ProcessStatus procstat;
+                        oam.getProcessStatus((*itor).ProcessName, moduleName, procstat);
+                        state = procstat.ProcessOpState;
+                    }
+                    catch (exception& ex)
+                    {
 //						string error = ex.what();
 //						log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-						continue;
-					}
-					catch(...)
-					{
+                        continue;
+                    }
+                    catch (...)
+                    {
 //						log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-						continue;
-					}
-		
-					if ( state == oam::INITIAL ) {
-		
-						msg = buildRequestMessage(START, FORCEFUL, (*itor).ProcessName);
-		
-						log.writeLog(__LINE__, "Request Start of Process/Module: " + (*itor).ProcessName + " / " + moduleName, LOG_TYPE_DEBUG);
-		
-						try{
-							MessageQueueClient mqRequest(modulePortName);
-							mqRequest.write(msg);
-							mqRequest.shutdown();
-//							sleep(2);
-							status = false;
-						}
-						catch (exception& ex)
-						{
-							string error = ex.what();
-//							log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: " + error, LOG_TYPE_ERROR);
-						}
-						catch(...)
-						{
-//							log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
-						}
-					}
-				}
-			}
-		} //end of for loop
+                        continue;
+                    }
 
-		if (status)
-			return;
-	} //end of while
+                    if ( state == oam::INITIAL )
+                    {
+
+                        msg = buildRequestMessage(START, FORCEFUL, (*itor).ProcessName);
+
+                        log.writeLog(__LINE__, "Request Start of Process/Module: " + (*itor).ProcessName + " / " + moduleName, LOG_TYPE_DEBUG);
+
+                        try
+                        {
+                            MessageQueueClient mqRequest(modulePortName);
+                            mqRequest.write(msg);
+                            mqRequest.shutdown();
+//							sleep(2);
+                            status = false;
+                        }
+                        catch (exception& ex)
+                        {
+                            string error = ex.what();
+//							log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: " + error, LOG_TYPE_ERROR);
+                        }
+                        catch (...)
+                        {
+//							log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
+                        }
+                    }
+                }
+            }
+        } //end of for loop
+
+        if (status)
+            return;
+    } //end of while
 }
 
 /******************************************************************************************
@@ -3616,24 +3968,24 @@ void ProcessManager::startMgrProcesses(std::string moduleName)
 * purpose:	Stop a Process on the specified module
 *
 ******************************************************************************************/
-int ProcessManager::stopProcess(string moduleName, string processName, 
-	messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout)
+int ProcessManager::stopProcess(string moduleName, string processName,
+                                messageqcpp::ByteStream::byte actionIndicator, bool manualFlag, int timeout)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = STOP;
-	
-	msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
+    ByteStream msg;
+    ByteStream::byte requestID = STOP;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, timeout );
+    msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
 
-	if ( returnStatus == API_SUCCESS)
-		//log the event 
-		log.writeLog(__LINE__, processName + " process is stopped by request.", LOG_TYPE_DEBUG);
-	else
-		//log the event 
-		log.writeLog(__LINE__, processName + " process failed to stop!!", LOG_TYPE_WARNING);
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, timeout );
 
-	return returnStatus;
+    if ( returnStatus == API_SUCCESS)
+        //log the event
+        log.writeLog(__LINE__, processName + " process is stopped by request.", LOG_TYPE_DEBUG);
+    else
+        //log the event
+        log.writeLog(__LINE__, processName + " process failed to stop!!", LOG_TYPE_WARNING);
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3642,39 +3994,41 @@ int ProcessManager::stopProcess(string moduleName, string processName,
 * purpose:	Start a Process on the specified module
 *
 ******************************************************************************************/
-int ProcessManager::startProcess(string moduleName, string processName, 
-	messageqcpp::ByteStream::byte actionIndicator)
+int ProcessManager::startProcess(string moduleName, string processName,
+                                 messageqcpp::ByteStream::byte actionIndicator)
 {
-	Oam oam;
+    Oam oam;
 
-	//skip if module is DISABLED
-	int opState;
-	bool degraded;
-	try{
-		oam.getModuleStatus(moduleName, opState, degraded);
-	}
-	catch(...)
-	{}
+    //skip if module is DISABLED
+    int opState;
+    bool degraded;
 
-	//check if disabled
-	if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-		return API_SUCCESS;
+    try
+    {
+        oam.getModuleStatus(moduleName, opState, degraded);
+    }
+    catch (...)
+    {}
 
-	ByteStream msg;
-	ByteStream::byte requestID = START;
-	
-	msg = buildRequestMessage(requestID, actionIndicator, processName);
+    //check if disabled
+    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+        return API_SUCCESS;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID );
+    ByteStream msg;
+    ByteStream::byte requestID = START;
 
-	if ( returnStatus == API_SUCCESS)
-		//log the event 
-		log.writeLog(__LINE__, moduleName + "/" + processName + " process is started by request.", LOG_TYPE_DEBUG);
-	else
-		//log the event 
-		log.writeLog(__LINE__, moduleName + "/" + processName + " process failed to start!!", LOG_TYPE_WARNING);
+    msg = buildRequestMessage(requestID, actionIndicator, processName);
 
-	return returnStatus;
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID );
+
+    if ( returnStatus == API_SUCCESS)
+        //log the event
+        log.writeLog(__LINE__, moduleName + "/" + processName + " process is started by request.", LOG_TYPE_DEBUG);
+    else
+        //log the event
+        log.writeLog(__LINE__, moduleName + "/" + processName + " process failed to start!!", LOG_TYPE_WARNING);
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3683,45 +4037,50 @@ int ProcessManager::startProcess(string moduleName, string processName,
 * purpose:	Restart a Process on the specified module
 *
 ******************************************************************************************/
-int ProcessManager::restartProcess(string moduleName, string processName, 
-	messageqcpp::ByteStream::byte actionIndicator, bool manualFlag)
+int ProcessManager::restartProcess(string moduleName, string processName,
+                                   messageqcpp::ByteStream::byte actionIndicator, bool manualFlag)
 {
-	Oam oam;
+    Oam oam;
 
-	//skip if module is DISABLED
-	int opState;
-	bool degraded;
-	try{
-		oam.getModuleStatus(moduleName, opState, degraded);
-	}
-	catch(...)
-	{}
+    //skip if module is DISABLED
+    int opState;
+    bool degraded;
 
-	//check if disabled
-	if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-		return API_SUCCESS;
+    try
+    {
+        oam.getModuleStatus(moduleName, opState, degraded);
+    }
+    catch (...)
+    {}
 
-	ByteStream msg;
-	ByteStream::byte requestID = RESTART;
-	
-	msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
+    //check if disabled
+    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+        return API_SUCCESS;
 
-	int returnStatus;
-	// need retry due to the depend process checks
-	for ( int retry = 0 ; retry < 5 ; retry++)
-	{
-		returnStatus = sendMsgProcMon( moduleName, msg, requestID );
-	
-		if ( returnStatus == API_SUCCESS)
-		{
-			log.writeLog(__LINE__, processName + " process is restarted by request.", LOG_TYPE_DEBUG);
-			return returnStatus;
-		}
-		else
-			log.writeLog(__LINE__, processName + " process failed to restart, will retry!!", LOG_TYPE_WARNING);
-		sleep(2);
-	}
-	return returnStatus;
+    ByteStream msg;
+    ByteStream::byte requestID = RESTART;
+
+    msg = buildRequestMessage(requestID, actionIndicator, processName, manualFlag);
+
+    int returnStatus;
+
+    // need retry due to the depend process checks
+    for ( int retry = 0 ; retry < 5 ; retry++)
+    {
+        returnStatus = sendMsgProcMon( moduleName, msg, requestID );
+
+        if ( returnStatus == API_SUCCESS)
+        {
+            log.writeLog(__LINE__, processName + " process is restarted by request.", LOG_TYPE_DEBUG);
+            return returnStatus;
+        }
+        else
+            log.writeLog(__LINE__, processName + " process failed to restart, will retry!!", LOG_TYPE_WARNING);
+
+        sleep(2);
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3732,37 +4091,39 @@ int ProcessManager::restartProcess(string moduleName, string processName,
 ******************************************************************************************/
 int ProcessManager::reinitProcess(string moduleName, string processName)
 {
-	Oam oam;
+    Oam oam;
 
-	//skip if module is DISABLED
-	int opState;
-	bool degraded;
-	try{
-		oam.getModuleStatus(moduleName, opState, degraded);
-	}
-	catch(...)
-	{}
+    //skip if module is DISABLED
+    int opState;
+    bool degraded;
 
-	//check if disabled
-	if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-		return API_SUCCESS;
+    try
+    {
+        oam.getModuleStatus(moduleName, opState, degraded);
+    }
+    catch (...)
+    {}
 
-	ByteStream msg;
-	ByteStream::byte requestID = PROCREINITPROCESS;
-	ByteStream::byte actionIndicator = FORCEFUL;
+    //check if disabled
+    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+        return API_SUCCESS;
 
-	msg = buildRequestMessage(requestID, actionIndicator, processName);
+    ByteStream msg;
+    ByteStream::byte requestID = PROCREINITPROCESS;
+    ByteStream::byte actionIndicator = FORCEFUL;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 0 );
+    msg = buildRequestMessage(requestID, actionIndicator, processName);
 
-	if ( returnStatus == API_SUCCESS)
-		//log the event 
-		log.writeLog(__LINE__, processName + " process is reinited by request.", LOG_TYPE_DEBUG);
-	else
-		//log the event 
-		log.writeLog(__LINE__, processName + " process failed to reinit!!", LOG_TYPE_WARNING);
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 0 );
 
-	return returnStatus;
+    if ( returnStatus == API_SUCCESS)
+        //log the event
+        log.writeLog(__LINE__, processName + " process is reinited by request.", LOG_TYPE_DEBUG);
+    else
+        //log the event
+        log.writeLog(__LINE__, processName + " process failed to reinit!!", LOG_TYPE_WARNING);
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -3773,45 +4134,50 @@ int ProcessManager::reinitProcess(string moduleName, string processName)
 ******************************************************************************************/
 void ProcessManager::setSystemState(uint16_t state)
 {
-	ProcessLog log;
-	Oam oam;
-	ALARMManager aManager;
-	Configuration config;
+    ProcessLog log;
+    Oam oam;
+    ALARMManager aManager;
+    Configuration config;
 
-	log.writeLog(__LINE__, "Set System State = " + oamState[state], LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "Set System State = " + oamState[state], LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&STATUS_LOCK);
-	try{
-		oam.setSystemStatus(state);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+    pthread_mutex_lock(&STATUS_LOCK);
+
+    try
+    {
+        oam.setSystemStatus(state);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    }
 
-	// Process Alarms
-	string system = "System";
-	if( state == oam::ACTIVE ) {
-		//clear alarms if set
-		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
-		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
-	}
-	else {
-		if( state == oam::MAN_OFFLINE )
-			aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, SET);
-		else
-			if ( state == oam::AUTO_OFFLINE )
-				aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, SET);
-		aManager.sendAlarmReport(system.c_str(), CONN_FAILURE, CLEAR);
-	}
-	
-	pthread_mutex_unlock(&STATUS_LOCK);
-	return;
+    // Process Alarms
+    string system = "System";
+
+    if ( state == oam::ACTIVE )
+    {
+        //clear alarms if set
+        aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
+        aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
+    }
+    else
+    {
+        if ( state == oam::MAN_OFFLINE )
+            aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, SET);
+        else if ( state == oam::AUTO_OFFLINE )
+            aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, SET);
+
+        aManager.sendAlarmReport(system.c_str(), CONN_FAILURE, CLEAR);
+    }
+
+    pthread_mutex_unlock(&STATUS_LOCK);
+    return;
 }
 
 /******************************************************************************************
@@ -3822,26 +4188,28 @@ void ProcessManager::setSystemState(uint16_t state)
 ******************************************************************************************/
 void ProcessManager::setModuleState(string moduleName, uint16_t state)
 {
-	ProcessLog log;
-	Oam oam;
-	log.writeLog(__LINE__, "Set Module " + moduleName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
+    ProcessLog log;
+    Oam oam;
+    log.writeLog(__LINE__, "Set Module " + moduleName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&STATUS_LOCK);
-	try{
-		oam.setModuleStatus(moduleName, state);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+    pthread_mutex_lock(&STATUS_LOCK);
+
+    try
+    {
+        oam.setModuleStatus(moduleName, state);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setModuleStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    }
 
-	pthread_mutex_unlock(&STATUS_LOCK);
-	return;
+    pthread_mutex_unlock(&STATUS_LOCK);
+    return;
 }
 
 /******************************************************************************************
@@ -3852,25 +4220,28 @@ void ProcessManager::setModuleState(string moduleName, uint16_t state)
 ******************************************************************************************/
 void ProcessManager::setExtdeviceState(string extDeviceName, uint16_t state)
 {
-	ProcessLog log;
-	Oam oam;
-	log.writeLog(__LINE__, "Set Ext Device " + extDeviceName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
+    ProcessLog log;
+    Oam oam;
+    log.writeLog(__LINE__, "Set Ext Device " + extDeviceName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&STATUS_LOCK);
-	try{
-		oam.setExtDeviceStatus(extDeviceName, state);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+    pthread_mutex_lock(&STATUS_LOCK);
+
+    try
+    {
+        oam.setExtDeviceStatus(extDeviceName, state);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setExtDeviceStatus: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setExtDeviceStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-	pthread_mutex_unlock(&STATUS_LOCK);
-	return;
+    }
+
+    pthread_mutex_unlock(&STATUS_LOCK);
+    return;
 }
 
 /******************************************************************************************
@@ -3881,25 +4252,28 @@ void ProcessManager::setExtdeviceState(string extDeviceName, uint16_t state)
 ******************************************************************************************/
 void ProcessManager::setNICState(string hostName, uint16_t state)
 {
-	ProcessLog log;
-	Oam oam;
-	log.writeLog(__LINE__, "Set NIC " + hostName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
+    ProcessLog log;
+    Oam oam;
+    log.writeLog(__LINE__, "Set NIC " + hostName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&STATUS_LOCK);
-	try{
-		oam.setNICStatus(hostName, state);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+    pthread_mutex_lock(&STATUS_LOCK);
+
+    try
+    {
+        oam.setNICStatus(hostName, state);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setNICStatus: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setNICStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-	pthread_mutex_unlock(&STATUS_LOCK);
-	return;
+    }
+
+    pthread_mutex_unlock(&STATUS_LOCK);
+    return;
 }
 
 
@@ -3911,26 +4285,27 @@ void ProcessManager::setNICState(string hostName, uint16_t state)
 ******************************************************************************************/
 int ProcessManager::setProcessState(string moduleName, string processName, uint16_t state, pid_t PID)
 {
-	ProcessLog log;
-	Oam oam;
-	log.writeLog(__LINE__, "StatusUpdate of Process " + processName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
+    ProcessLog log;
+    Oam oam;
+    log.writeLog(__LINE__, "StatusUpdate of Process " + processName + " State = " + oam.itoa(state), LOG_TYPE_DEBUG);
 
-	try {
-    	oam.setProcessStatus(processName, moduleName, state, PID);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+    try
+    {
+        oam.setProcessStatus(processName, moduleName, state, PID);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setProcessStatus: " + error, LOG_TYPE_ERROR);
-		return oam::API_FAILURE;
-	}
-	catch(...)
-	{
+        return oam::API_FAILURE;
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on setProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		return oam::API_FAILURE;
-	}
+        return oam::API_FAILURE;
+    }
 
-	return oam::API_SUCCESS;
+    return oam::API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -3941,98 +4316,109 @@ int ProcessManager::setProcessState(string moduleName, string processName, uint1
 ******************************************************************************************/
 void ProcessManager::setProcessStates(std::string moduleName, uint16_t state, std::string processNameSkip )
 {
-	ProcessLog log;
-	Oam oam;
-	log.writeLog(__LINE__, "Set All NON-MAN_OFFLINE Process for module " + moduleName + " = " + oam.itoa(state), LOG_TYPE_DEBUG);
+    ProcessLog log;
+    Oam oam;
+    log.writeLog(__LINE__, "Set All NON-MAN_OFFLINE Process for module " + moduleName + " = " + oam.itoa(state), LOG_TYPE_DEBUG);
 
-	SystemProcessConfig systemprocessconfig;
-	vector<ProcessConfig>::iterator itor;
+    SystemProcessConfig systemprocessconfig;
+    vector<ProcessConfig>::iterator itor;
 
-	//PMwithUM config
-	string PMwithUM = "n";
-	try {
-		oam.getSystemConfig( "PMwithUM", PMwithUM);
-	}
-	catch(...) {
-		PMwithUM = "n";
-	}
+    //PMwithUM config
+    string PMwithUM = "n";
 
-	string moduleType = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
+    try
+    {
+        oam.getSystemConfig( "PMwithUM", PMwithUM);
+    }
+    catch (...)
+    {
+        PMwithUM = "n";
+    }
 
-	try{
-		oam.getProcessConfig(systemprocessconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+    string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
+
+    try
+    {
+        oam.getProcessConfig(systemprocessconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessConfig: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    }
 
-	string moduleTypeSet = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
-	
-	for (itor=systemprocessconfig.processconfig.begin();
-		itor != systemprocessconfig.processconfig.end(); ++itor)
-	{
-		if ( (*itor).ModuleType == moduleType
-			|| (*itor).ModuleType == "ChildExtOAMModule"
-			|| ( (*itor).ModuleType == "ChildOAMModule" )
-			|| ((*itor).ModuleType == "ParentOAMModule") )
-		{
-			if ( (*itor).ProcessName == processNameSkip )
-				continue;
+    string moduleTypeSet = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
 
-			ProcessStatus processstatus;
-			try {
-				oam.getProcessStatus((*itor).ProcessName, moduleName, processstatus);
-			}
-			catch (exception& ex)
-			{
+    for (itor = systemprocessconfig.processconfig.begin();
+            itor != systemprocessconfig.processconfig.end(); ++itor)
+    {
+        if ( (*itor).ModuleType == moduleType
+                || (*itor).ModuleType == "ChildExtOAMModule"
+                || ( (*itor).ModuleType == "ChildOAMModule" )
+                || ((*itor).ModuleType == "ParentOAMModule") )
+        {
+            if ( (*itor).ProcessName == processNameSkip )
+                continue;
+
+            ProcessStatus processstatus;
+
+            try
+            {
+                oam.getProcessStatus((*itor).ProcessName, moduleName, processstatus);
+            }
+            catch (exception& ex)
+            {
 //				string error = ex.what();
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
+            }
+            catch (...)
+            {
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-			}
+            }
 
-			if (processstatus.ProcessOpState != oam::MAN_OFFLINE) {
-				setProcessState(moduleName, (*itor).ProcessName, state, 0);
+            if (processstatus.ProcessOpState != oam::MAN_OFFLINE)
+            {
+                setProcessState(moduleName, (*itor).ProcessName, state, 0);
 
-				if ( (*itor).ProcessName == "ExeMgr" || state == oam::AUTO_OFFLINE ) 
-					setProcessState(moduleName, "mysqld", state, 0);
-			}
-		}
-		else
-		{	//for for umwithpm apps, which is ExeMgr now
-			if ( moduleTypeSet == "pm" && PMwithUM == "y" )
-			{
-				ProcessStatus processstatus;
-				try {
-					oam.getProcessStatus("ExeMgr", moduleName, processstatus);
-				}
-				catch (exception& ex)
-				{
+                if ( (*itor).ProcessName == "ExeMgr" || state == oam::AUTO_OFFLINE )
+                    setProcessState(moduleName, "mysqld", state, 0);
+            }
+        }
+        else
+        {
+            //for for umwithpm apps, which is ExeMgr now
+            if ( moduleTypeSet == "pm" && PMwithUM == "y" )
+            {
+                ProcessStatus processstatus;
+
+                try
+                {
+                    oam.getProcessStatus("ExeMgr", moduleName, processstatus);
+                }
+                catch (exception& ex)
+                {
 //					string error = ex.what();
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-				}
-				catch(...)
-				{
+                }
+                catch (...)
+                {
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-				}
-	
-				if (processstatus.ProcessOpState != oam::MAN_OFFLINE) {
-					setProcessState(moduleName, "ExeMgr", state, 0);
-	
-					if ( state == oam::AUTO_OFFLINE ) 
-						setProcessState(moduleName, "mysqld", state, 0);
-				}
-			}
-		}
-	}
+                }
+
+                if (processstatus.ProcessOpState != oam::MAN_OFFLINE)
+                {
+                    setProcessState(moduleName, "ExeMgr", state, 0);
+
+                    if ( state == oam::AUTO_OFFLINE )
+                        setProcessState(moduleName, "mysqld", state, 0);
+                }
+            }
+        }
+    }
 }
 
 /******************************************************************************************
@@ -4043,26 +4429,27 @@ void ProcessManager::setProcessStates(std::string moduleName, uint16_t state, st
 ******************************************************************************************/
 int ProcessManager::updateLog(std::string action, std::string moduleName, std::string level)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = PROCUPDATELOG;
+    ByteStream msg;
+    ByteStream::byte requestID = PROCUPDATELOG;
 
-	msg << requestID;
-	msg << action;
-	msg << level;
+    msg << requestID;
+    msg << action;
+    msg << level;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
 
-	if ( returnStatus == API_SUCCESS)
-	{
-		//log the success event 
-		log.writeLog(__LINE__, moduleName + " updateLog by request.", LOG_TYPE_DEBUG);
-	}
-	else
-	{
-		//log the error event 
-		log.writeLog(__LINE__, moduleName + " updateLog failed!!", LOG_TYPE_WARNING);
-	}
-	return returnStatus;
+    if ( returnStatus == API_SUCCESS)
+    {
+        //log the success event
+        log.writeLog(__LINE__, moduleName + " updateLog by request.", LOG_TYPE_DEBUG);
+    }
+    else
+    {
+        //log the error event
+        log.writeLog(__LINE__, moduleName + " updateLog failed!!", LOG_TYPE_WARNING);
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -4073,14 +4460,14 @@ int ProcessManager::updateLog(std::string action, std::string moduleName, std::s
 ******************************************************************************************/
 int ProcessManager::getConfigLog(std::string moduleName)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = PROCGETCONFIGLOG;
+    ByteStream msg;
+    ByteStream::byte requestID = PROCGETCONFIGLOG;
 
-	msg << requestID;
+    msg << requestID;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
 
-	return returnStatus;
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -4091,14 +4478,14 @@ int ProcessManager::getConfigLog(std::string moduleName)
 ******************************************************************************************/
 int ProcessManager::updateConfig(std::string moduleName)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = PROCUPDATECONFIG;
+    ByteStream msg;
+    ByteStream::byte requestID = PROCUPDATECONFIG;
 
-	msg << requestID;
+    msg << requestID;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
 
-	return returnStatus;
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -4109,14 +4496,14 @@ int ProcessManager::updateConfig(std::string moduleName)
 ******************************************************************************************/
 int ProcessManager::buildSystemTables(string target)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = PROCBUILDSYSTEMTABLES;
+    ByteStream msg;
+    ByteStream::byte requestID = PROCBUILDSYSTEMTABLES;
 
-	msg << requestID;
+    msg << requestID;
 
-	int returnStatus = sendMsgProcMon( target, msg, requestID );
+    int returnStatus = sendMsgProcMon( target, msg, requestID );
 
-	return returnStatus;
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -4127,15 +4514,15 @@ int ProcessManager::buildSystemTables(string target)
 ******************************************************************************************/
 int ProcessManager::updateFstab(std::string moduleName, std::string entry)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = PROCFSTABUPDATE;
+    ByteStream msg;
+    ByteStream::byte requestID = PROCFSTABUPDATE;
 
-	msg << requestID;
-	msg << entry;
+    msg << requestID;
+    msg << entry;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
 
-	return returnStatus;
+    return returnStatus;
 }
 
 
@@ -4147,43 +4534,45 @@ int ProcessManager::updateFstab(std::string moduleName, std::string entry)
 ******************************************************************************************/
 int ProcessManager::stopProcessType( std::string processName, bool manualFlag )
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	SystemProcessStatus systemprocessstatus;
-	ProcessStatus processstatus;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    SystemProcessStatus systemprocessstatus;
+    ProcessStatus processstatus;
 
-	log.writeLog(__LINE__, "stopProcessType: Stop all " + processName, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "stopProcessType: Stop all " + processName, LOG_TYPE_DEBUG);
 
-	try {
-		oam.getProcessStatus(systemprocessstatus);
-	
-		for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-		{
-			if ( systemprocessstatus.processstatus[i].ProcessName == processName) {
-				// found one, request restart of it
-				processManager.stopProcess(systemprocessstatus.processstatus[i].Module, 
-																processName, 
-																GRACEFUL, 
-																manualFlag, 0);
+    try
+    {
+        oam.getProcessStatus(systemprocessstatus);
+
+        for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+        {
+            if ( systemprocessstatus.processstatus[i].ProcessName == processName)
+            {
+                // found one, request restart of it
+                processManager.stopProcess(systemprocessstatus.processstatus[i].Module,
+                                           processName,
+                                           GRACEFUL,
+                                           manualFlag, 0);
 //				log.writeLog(__LINE__, "stopProcessType: Start ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-			}
-		}
-	}
-	catch (exception& ex)
-	{
+            }
+        }
+    }
+    catch (exception& ex)
+    {
 //		string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
-	catch(...)
-	{
+        return API_FAILURE;
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+        return API_FAILURE;
+    }
 
-	return API_SUCCESS;
+    return API_SUCCESS;
 
 }
 
@@ -4195,42 +4584,44 @@ int ProcessManager::stopProcessType( std::string processName, bool manualFlag )
 ******************************************************************************************/
 int ProcessManager::startProcessType( std::string processName )
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	SystemProcessStatus systemprocessstatus;
-	ProcessStatus processstatus;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    SystemProcessStatus systemprocessstatus;
+    ProcessStatus processstatus;
 
-	log.writeLog(__LINE__, "StartProcessType: Start all " + processName, LOG_TYPE_DEBUG);
-	try
-	{
-		oam.getProcessStatus(systemprocessstatus);
+    log.writeLog(__LINE__, "StartProcessType: Start all " + processName, LOG_TYPE_DEBUG);
 
-		for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-		{
-			if ( systemprocessstatus.processstatus[i].ProcessName == processName) {
-				// found one, request restart of it
-				int retStatus = processManager.startProcess(systemprocessstatus.processstatus[i].Module, 
-																processName, 
-																FORCEFUL);
-				log.writeLog(__LINE__, "StartProcessType: Start ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-			}
-		}
-	}
-	catch (exception& ex)
-	{
+    try
+    {
+        oam.getProcessStatus(systemprocessstatus);
+
+        for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+        {
+            if ( systemprocessstatus.processstatus[i].ProcessName == processName)
+            {
+                // found one, request restart of it
+                int retStatus = processManager.startProcess(systemprocessstatus.processstatus[i].Module,
+                                processName,
+                                FORCEFUL);
+                log.writeLog(__LINE__, "StartProcessType: Start ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+            }
+        }
+    }
+    catch (exception& ex)
+    {
 //		string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
-	catch(...)
-	{
+        return API_FAILURE;
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+        return API_FAILURE;
+    }
 
-	return API_SUCCESS;
+    return API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -4241,112 +4632,124 @@ int ProcessManager::startProcessType( std::string processName )
 ******************************************************************************************/
 int ProcessManager::restartProcessType( std::string processName, std::string skipModule, bool manualFlag )
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	SystemProcessStatus systemprocessstatus;
-	ProcessStatus processstatus;
-	int retStatus = API_SUCCESS;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    SystemProcessStatus systemprocessstatus;
+    ProcessStatus processstatus;
+    int retStatus = API_SUCCESS;
 
-	log.writeLog(__LINE__, "restartProcessType: Restart all " + processName, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "restartProcessType: Restart all " + processName, LOG_TYPE_DEBUG);
 
-	//PMwithUM config
-	string PMwithUM = "n";
-	try {
-		oam.getSystemConfig( "PMwithUM", PMwithUM);
-	}
-	catch(...) {
-		PMwithUM = "n";
-	}
+    //PMwithUM config
+    string PMwithUM = "n";
 
-	// If mysql is the processName, then send to modules were ExeMgr is running
-	try
-	{
-		oam.getProcessStatus(systemprocessstatus);
+    try
+    {
+        oam.getSystemConfig( "PMwithUM", PMwithUM);
+    }
+    catch (...)
+    {
+        PMwithUM = "n";
+    }
 
-		for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-		{
-			//check for skipModule 
-			if ( systemprocessstatus.processstatus[i].Module == skipModule )
-				continue;
+    // If mysql is the processName, then send to modules were ExeMgr is running
+    try
+    {
+        oam.getProcessStatus(systemprocessstatus);
 
-			if ( processName == "mysql" ) {
-				if ( systemprocessstatus.processstatus[i].ProcessName == "ExeMgr") {
-					ProcessStatus procstat;
-					oam.getProcessStatus("mysqld", systemprocessstatus.processstatus[i].Module, procstat);
-					int state = procstat.ProcessOpState;
-					if ( state == ACTIVE ) {
-						retStatus = processManager.restartProcess(systemprocessstatus.processstatus[i].Module, 
-																		processName, 
-																		FORCEFUL, 
-																		true);
-						log.writeLog(__LINE__, "restartProcessType: Start ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-					}
-				}
-			}
-			else
-			{
-				if ( systemprocessstatus.processstatus[i].ProcessName == processName ) {
-					//skip if in a BUSY_INIT state
-					if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::BUSY_INIT ||
-						systemprocessstatus.processstatus[i].ProcessOpState == oam::AUTO_INIT ||
-						systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_INIT ||
-						( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
-						continue;
+        for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+        {
+            //check for skipModule
+            if ( systemprocessstatus.processstatus[i].Module == skipModule )
+                continue;
 
-					if( processName.find("DDLProc") == 0 || 
-						processName.find("DMLProc") == 0 ) {
-						string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0,MAX_MODULE_TYPE_SIZE);
-						if ( procModuleType == "pm" && PMwithUM == "y" )
-							continue;
+            if ( processName == "mysql" )
+            {
+                if ( systemprocessstatus.processstatus[i].ProcessName == "ExeMgr")
+                {
+                    ProcessStatus procstat;
+                    oam.getProcessStatus("mysqld", systemprocessstatus.processstatus[i].Module, procstat);
+                    int state = procstat.ProcessOpState;
 
-						try {
-							oam.setSystemConfig("PrimaryUMModuleName", systemprocessstatus.processstatus[i].Module);
+                    if ( state == ACTIVE )
+                    {
+                        retStatus = processManager.restartProcess(systemprocessstatus.processstatus[i].Module,
+                                    processName,
+                                    FORCEFUL,
+                                    true);
+                        log.writeLog(__LINE__, "restartProcessType: Start ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+                    }
+                }
+            }
+            else
+            {
+                if ( systemprocessstatus.processstatus[i].ProcessName == processName )
+                {
+                    //skip if in a BUSY_INIT state
+                    if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::BUSY_INIT ||
+                            systemprocessstatus.processstatus[i].ProcessOpState == oam::AUTO_INIT ||
+                            systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_INIT ||
+                            ( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
+                        continue;
 
-							processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module);
+                    if ( processName.find("DDLProc") == 0 ||
+                            processName.find("DMLProc") == 0 )
+                    {
+                        string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0, MAX_MODULE_TYPE_SIZE);
 
-							//distribute config file
-							processManager.distributeConfigFile("system");
-							sleep(1);
-						}
-						catch(...) {}
-					}
+                        if ( procModuleType == "pm" && PMwithUM == "y" )
+                            continue;
 
-					// found one, request restart of it
-					retStatus = processManager.restartProcess(systemprocessstatus.processstatus[i].Module, 
-											processName, 
-											FORCEFUL, 
-											true);
-					log.writeLog(__LINE__, "restartProcessType: Start ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+                        try
+                        {
+                            oam.setSystemConfig("PrimaryUMModuleName", systemprocessstatus.processstatus[i].Module);
 
-					// if DDL or DMLProc, change IP Address
-					if ( retStatus == oam::API_SUCCESS )
-					{
-						if( processName.find("DDLProc") == 0 || 
-							processName.find("DMLProc") == 0 ) {
-	
-							processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module, processName);
-							return retStatus;
-						}
-					}
-				}
-			}
-		}
-	}
-	catch (exception& ex)
-	{
+                            processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module);
+
+                            //distribute config file
+                            processManager.distributeConfigFile("system");
+                            sleep(1);
+                        }
+                        catch (...) {}
+                    }
+
+                    // found one, request restart of it
+                    retStatus = processManager.restartProcess(systemprocessstatus.processstatus[i].Module,
+                                processName,
+                                FORCEFUL,
+                                true);
+                    log.writeLog(__LINE__, "restartProcessType: Start ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+
+                    // if DDL or DMLProc, change IP Address
+                    if ( retStatus == oam::API_SUCCESS )
+                    {
+                        if ( processName.find("DDLProc") == 0 ||
+                                processName.find("DMLProc") == 0 )
+                        {
+
+                            processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module, processName);
+                            return retStatus;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (exception& ex)
+    {
 //		string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
-	catch(...)
-	{
+        return API_FAILURE;
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+        return API_FAILURE;
+    }
 
-	return retStatus;
+    return retStatus;
 }
 
 /******************************************************************************************
@@ -4357,58 +4760,62 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 ******************************************************************************************/
 int ProcessManager::reinitProcessType( std::string processName )
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	SystemProcessStatus systemprocessstatus;
-	ProcessStatus processstatus;
-	int retStatus = API_SUCCESS;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    SystemProcessStatus systemprocessstatus;
+    ProcessStatus processstatus;
+    int retStatus = API_SUCCESS;
 
-	log.writeLog(__LINE__, "reinitProcessType: ReInit all " + processName, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "reinitProcessType: ReInit all " + processName, LOG_TYPE_DEBUG);
 
-	try
-	{
-		oam.getProcessStatus(systemprocessstatus);
-		// re-init cpimport on all nodes
-		if ( processName == "cpimport" ) {
-			for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-			{
-				if ( systemprocessstatus.processstatus[i].ProcessName == "ServerMonitor" ) {
-					// found one, request reinit of it
-					retStatus = processManager.reinitProcess(systemprocessstatus.processstatus[i].Module, 
-																	"cpimport");
-					log.writeLog(__LINE__, "reinitProcessType: ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-				}
-			}
-		}
-		else
-		{
-			for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-			{
-				if ( systemprocessstatus.processstatus[i].ProcessName == processName &&
-					systemprocessstatus.processstatus[i].ProcessOpState == oam::ACTIVE ) {
-					// found one, request reinit of it
-					retStatus = processManager.reinitProcess(systemprocessstatus.processstatus[i].Module, 
-																	processName);
-					log.writeLog(__LINE__, "reinitProcessType: ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-				}
-			}
-		}
-	}
-	catch (exception& ex)
-	{
+    try
+    {
+        oam.getProcessStatus(systemprocessstatus);
+
+        // re-init cpimport on all nodes
+        if ( processName == "cpimport" )
+        {
+            for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+            {
+                if ( systemprocessstatus.processstatus[i].ProcessName == "ServerMonitor" )
+                {
+                    // found one, request reinit of it
+                    retStatus = processManager.reinitProcess(systemprocessstatus.processstatus[i].Module,
+                                "cpimport");
+                    log.writeLog(__LINE__, "reinitProcessType: ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+                }
+            }
+        }
+        else
+        {
+            for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+            {
+                if ( systemprocessstatus.processstatus[i].ProcessName == processName &&
+                        systemprocessstatus.processstatus[i].ProcessOpState == oam::ACTIVE )
+                {
+                    // found one, request reinit of it
+                    retStatus = processManager.reinitProcess(systemprocessstatus.processstatus[i].Module,
+                                processName);
+                    log.writeLog(__LINE__, "reinitProcessType: ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+                }
+            }
+        }
+    }
+    catch (exception& ex)
+    {
 //		string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
-	catch(...)
-	{
+        return API_FAILURE;
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+        return API_FAILURE;
+    }
 
-	return retStatus;
+    return retStatus;
 }
 
 /******************************************************************************************
@@ -4419,1035 +4826,1160 @@ int ProcessManager::reinitProcessType( std::string processName )
 ******************************************************************************************/
 int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool manualFlag)
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
 
-	SystemModuleTypeConfig systemmoduletypeconfig;
-	ModuleTypeConfig moduletypeconfig;
-	ModuleTypeConfig setmoduletypeconfig;
-	DeviceNetworkConfig devicenetworkconfig;
-	Oam oam;
-	string Section;
-	string installDir = startup::StartUp::installDir();
+    SystemModuleTypeConfig systemmoduletypeconfig;
+    ModuleTypeConfig moduletypeconfig;
+    ModuleTypeConfig setmoduletypeconfig;
+    DeviceNetworkConfig devicenetworkconfig;
+    Oam oam;
+    string Section;
+    string installDir = startup::StartUp::installDir();
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	//get Distributed Install
-	string DistributedInstall = "y";
+    //get Distributed Install
+    string DistributedInstall = "y";
 
-	try
+    try
+    {
+        oam.getSystemConfig("DistributedInstall", DistributedInstall);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+    }
+
+    int AddModuleCount = devicenetworklist.size();
+    DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+    string moduleType = (*listPT).DeviceName.substr(0, MAX_MODULE_TYPE_SIZE);
+
+    //
+    //Check hostname and IP Address for availibility
+    //
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
+
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
         {
-		oam.getSystemConfig("DistributedInstall", DistributedInstall);
+            if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType.empty() )
+                // end of list
+                break;
+
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+            string moduletype = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
+
+            if ( moduleCount > 0 )
+            {
+                DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+                for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
+                {
+                    HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
+
+                    for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
+                    {
+                        string hostname = (*pt1).HostName;
+
+                        if ( hostname == oam::UnassignedName )
+                            continue;
+
+                        string ipAddr = (*pt1).IPAddr;
+
+                        listPT = devicenetworklist.begin();
+
+                        for ( ; listPT != devicenetworklist.end() ; listPT++)
+                        {
+                            HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+                            string newHostName = (*pt1).HostName;
+                            string newIPAddr = (*pt1).IPAddr;
+
+                            if ( newIPAddr == ipAddr || newHostName == hostname )
+                            {
+                                log.writeLog(__LINE__, "addModule - ERROR: hostName or IP address already in-use: " + newIPAddr + "/" + newHostName, LOG_TYPE_ERROR);
+                                pthread_mutex_unlock(&THREAD_LOCK);
+                                return API_INVALID_PARAMETER;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        catch (...) 
-	{
-                log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
-	}
+    }
+    catch (exception& e)
+    {
+        log.writeLog(__LINE__, "addModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	int AddModuleCount = devicenetworklist.size();
-	DeviceNetworkList::iterator listPT = devicenetworklist.begin();
-	string moduleType = (*listPT).DeviceName.substr(0,MAX_MODULE_TYPE_SIZE);
+    string calpontPackage;
 
-	//
-	//Check hostname and IP Address for availibility
-	//
-	try
-	{
-		oam.getSystemConfig(systemmoduletypeconfig);
+    string systemID;
+    string packageType = "rpm";
 
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			if( systemmoduletypeconfig.moduletypeconfig[i].ModuleType.empty() )
-				// end of list
-				break;
+    try
+    {
+        oam.getSystemConfig("EEPackageType", packageType);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "addModule - ERROR: get EEPackageType", LOG_TYPE_ERROR);
+    }
 
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			string moduletype = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
+    //
+    // check for RPM package
+    //
 
-			if ( moduleCount > 0 )
-			{
-				DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-				for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
-				{
-					HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-					for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
-					{
-						string hostname = (*pt1).HostName;
-						if ( hostname == oam::UnassignedName )
-							continue;
+    SystemSoftware systemsoftware;
 
-						string ipAddr = (*pt1).IPAddr;
-	
-						listPT = devicenetworklist.begin();
-						for( ; listPT != devicenetworklist.end() ; listPT++)
-						{
-							HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-							string newHostName = (*pt1).HostName;
-							string newIPAddr = (*pt1).IPAddr;
-	
-							if ( newIPAddr == ipAddr || newHostName == hostname ) {
-								log.writeLog(__LINE__, "addModule - ERROR: hostName or IP address already in-use: " + newIPAddr + "/" + newHostName, LOG_TYPE_ERROR);
-								pthread_mutex_unlock(&THREAD_LOCK);
-								return API_INVALID_PARAMETER;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	catch (exception& e)
-	{
-		log.writeLog(__LINE__, "addModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    try
+    {
+        oam.getSystemSoftware(systemsoftware);
+    }
+    catch (exception& e)
+    {
+        log.writeLog(__LINE__, "addModule - ERROR: getSystemSoftware", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	string calpontPackage;
+    string homedir = "/root";
 
-	string systemID;
-	string packageType = "rpm";
+    if (!rootUser)
+    {
+        char* p = getenv("HOME");
 
-	try
+        if (p && *p)
+            homedir = p;
+    }
+
+    //clear out the known_host file, sometimes causes a failure on amazon during addModule
+    if ( amazon )
+    {
+        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        system(cmd.c_str());
+    }
+
+    if ( packageType == "rpm")
+        calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
+    else if ( packageType == "deb")
+        calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
+    else
+        calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
+
+    if ( DistributedInstall == "y" )
+    {
+        //check if pkgs are located in /root directory
+        string cmd = "ls " + calpontPackage + " > /dev/null 2>&1";
+        int rtnCode = system(cmd.c_str());
+
+        if (WEXITSTATUS(rtnCode) != 0)
         {
-		oam.getSystemConfig("EEPackageType", packageType);
+            log.writeLog(__LINE__, "addModule - ERROR: Package not found: " + calpontPackage, LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_FILE_OPEN_ERROR;
         }
-        catch (...) 
-	{
-                log.writeLog(__LINE__, "addModule - ERROR: get EEPackageType", LOG_TYPE_ERROR);
-	}
-
-	//
-	// check for RPM package
-	//
-
-	SystemSoftware systemsoftware;
-
-	try
-	{
-		oam.getSystemSoftware(systemsoftware);
-	}
-	catch (exception& e)
-	{
-		log.writeLog(__LINE__, "addModule - ERROR: getSystemSoftware", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
-
-	string homedir = "/root";
-	if (!rootUser) {
-		char* p= getenv("HOME");
-		if (p && *p)
-			homedir = p;
-	}
-
-	//clear out the known_host file, sometimes causes a failure on amazon during addModule
-	if ( amazon )
-	{
-	    string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
-	    system(cmd.c_str());
-	}
-	  
-	if ( packageType == "rpm")
-		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
-	else
-		if ( packageType == "deb") 
-        		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
-		else
-			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
-
-	if ( DistributedInstall == "y" )
-	{
-	  //check if pkgs are located in /root directory
-	    string cmd = "ls " + calpontPackage + " > /dev/null 2>&1";
-	    int rtnCode = system(cmd.c_str());
-	    if (WEXITSTATUS(rtnCode) != 0) {
-		    log.writeLog(__LINE__, "addModule - ERROR: Package not found: " + calpontPackage, LOG_TYPE_ERROR);
-		    pthread_mutex_unlock(&THREAD_LOCK);
-		    return API_FILE_OPEN_ERROR;
-	    }
-	    log.writeLog(__LINE__, "addModule - ColumnStore Package found:" + calpontPackage, LOG_TYPE_DEBUG);
-	
-	      //
-	      // Verify Host IP and Password
-	      //
-
-	      if ( password == "ssh" && amazon )
-	      {	// check if there is a root password stored
-		      string rpw = oam::UnassignedName;
-		      try
-		      {
-			      oam.getSystemConfig("rpw", rpw);
-		      }
-		      catch(...)
-		      {
-			      rpw = "mariadb1";
-		      }
-
-		      if (rpw != oam::UnassignedName)
-			      password = rpw;
-	      }
-
-	      listPT = devicenetworklist.begin();
-	      for( ; listPT != devicenetworklist.end() ; listPT++)
-	      {
-		      HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		      string newHostName = (*pt1).HostName;
-		      if ( newHostName == oam::UnassignedName )
-			      continue;
-
-		      string newIPAddr = (*pt1).IPAddr;
-		      string cmd = installDir + "/bin/remote_command.sh " + newIPAddr + " " + password + " ls";
-		      log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
-		      int rtnCode = system(cmd.c_str());
-		      if (WEXITSTATUS(rtnCode) != 0) {
-			      log.writeLog(__LINE__, "addModule - ERROR: Remote login test failed, Invalid IP / Password " + newIPAddr, LOG_TYPE_ERROR);
-			      pthread_mutex_unlock(&THREAD_LOCK);
-			      return API_FAILURE;
-		      }
-		      log.writeLog(__LINE__, "addModule - Remote login test successful: " + newIPAddr, LOG_TYPE_DEBUG);
-	      }
-	}
-	
-	//
-	//Get System Configuration file
-	//
-
-	try{
-		oam.getSystemConfig(moduleType, moduletypeconfig);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "addModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
-
-	setmoduletypeconfig = moduletypeconfig;
-
-	// update Module Type Count
-	int oldModuleCount = moduletypeconfig.ModuleCount;
-	int newModuleCount = oldModuleCount + AddModuleCount;
-	setmoduletypeconfig.ModuleCount = newModuleCount;
-
-	//add new IP Addresses and Hostnames
-	listPT = devicenetworklist.begin();
-	HostConfig hostconfig;
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		string moduleName = (*listPT).DeviceName;
-		devicenetworkconfig.DeviceName = (*listPT).DeviceName;
-		devicenetworkconfig.DisableState = oam::MANDISABLEDSTATE;
-
-		HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		for( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
-		{
-			string hostName = (*pt1).HostName;
-			string IPAddr = (*pt1).IPAddr;
-			//if cloud and unassigned, launch a new Instance
-			if ( ( cloud == "amazon-ec2" && hostName == oam::UnassignedName ) ||
-				 ( cloud == "amazon-vpc" && hostName == oam::UnassignedName ) )
-			{
-				string UMinstanceType;
-				string UMSecurityGroup;
-				if ( moduleType == "um")
-				{
-					try{
-						oam.getSystemConfig("UMInstanceType", UMinstanceType);
-						oam.getSystemConfig("UMSecurityGroup", UMSecurityGroup);
-					}
-					catch(...) {}
-				}	
-
-				log.writeLog(__LINE__, "addModule - Launching a new Instance for: " + moduleName, LOG_TYPE_DEBUG);
-
-				if ( moduleType == "um" )
-					hostName = oam.launchEC2Instance(moduleName, IPAddr, UMinstanceType, UMSecurityGroup);
-				else
-					hostName = oam.launchEC2Instance(moduleName, IPAddr);
-
-				if ( hostName == "failed" ) {
-					log.writeLog(__LINE__, "addModule - Launch New Instance Failure", LOG_TYPE_ERROR);
-					pthread_mutex_unlock(&THREAD_LOCK);
-					return API_FAILURE;
-				}
-
-				// add instance tag
-				string systemName;
-				string AmazonAutoTagging;
-				{
-					try{
-						oam.getSystemConfig("SystemName", systemName);
-						oam.getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
-					}
-					catch(...) {}
-				}
-
-				if ( AmazonAutoTagging == "y" )
-				{
-					string tagValue = systemName + "-" + moduleName;
-					oam.createEC2tag( hostName, "Name", tagValue );
-				}
-
-				//wait until login is success until continuing or fail if can't login
-				log.writeLog(__LINE__, "addModule - Successfully Launch of new Instance, retry login test: " + moduleName, LOG_TYPE_DEBUG);
-				int retry = 0;
-				for (  ; retry < 18 ; retry++)
-				{
-					IPAddr = oam.getEC2InstanceIpAddress(hostName);
-					if (IPAddr == "terminated") {
-						log.writeLog(__LINE__, "addModule - Failed to log in to Instance, it was terminated: " + hostName, LOG_TYPE_ERROR);
-						pthread_mutex_unlock(&THREAD_LOCK);
-						return API_FAILURE;
-					}
-
-					if (IPAddr == "stopped") {
-						sleep(10);
-						continue;
-					}
-
-					string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
-					system(cmd.c_str());
-					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
-						//check for RSA KEY ISSUE and fix
-						if (oam.checkLogStatus("/tmp/login_test.log", "Offending")) {
-							log.writeLog(__LINE__, "addModule - login failed, Offending key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
-							string file = "/tmp/login_test.log";
-							oam.fixRSAkey(file);
-						}
-
-						log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
-						sleep(10);
-						continue;
-					}
-
-					// logged in
-					break;
-				}
-
-				if ( retry >= 18 )
-				{
-					log.writeLog(__LINE__, "addModule - Failed to log in to Instance: " + hostName, LOG_TYPE_ERROR);
-					pthread_mutex_unlock(&THREAD_LOCK);
-					return API_FAILURE;
-				}
-
-				log.writeLog(__LINE__, "addModule - Successful loggin: " + hostName, LOG_TYPE_DEBUG);
-
-				log.writeLog(__LINE__, "addModule - Launched new Instance: " + hostName + "/" + IPAddr, LOG_TYPE_DEBUG);
-
-				(*pt1).HostName = hostName;
-				(*pt1).IPAddr = IPAddr;
-
-				//check if any volumes need to be attached
-				if ( moduleType == "um" )
-				{
-					string UMStorageType = "internal";
-					{
-						try{
-							oam.getSystemConfig("UMStorageType", UMStorageType);
-						}
-						catch(...) {}
-					}
-
-					if ( UMStorageType == "external" )
-					{	//check if volume already assigned or need to create a new one
-						int moduleID = atoi((*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
-
-						string volumeNameID = "UMVolumeName" + oam.itoa(moduleID);
-						string volumeName = oam::UnassignedName;
-						string deviceNameID = "UMVolumeDeviceName" + oam.itoa(moduleID);
-						string deviceName = oam::UnassignedName;
-						try {
-							oam.getSystemConfig( volumeNameID, volumeName);
-							oam.getSystemConfig( deviceNameID, deviceName);
-						}
-						catch(...)
-						{}
-					
-						if ( volumeName.empty() || volumeName == oam::UnassignedName ) {
-							// need to create a new one
-							string device;
-							try{
-
-    								oam.addUMdisk(moduleID, volumeName, device);
-							}
-							catch(...) {
-								log.writeLog(__LINE__, "addModule: volume create failed for um: " + moduleName, LOG_TYPE_CRITICAL);
-								pthread_mutex_unlock(&THREAD_LOCK);
-							}
-			
-							//attach to UM
-							log.writeLog(__LINE__, "addModule - attach new Volume to " + moduleName, LOG_TYPE_DEBUG);
-							if (!oam.attachEC2Volume(volumeName, device, hostName)) {
-								log.writeLog(__LINE__, "addModule: volume failed to attach to um: " + moduleName, LOG_TYPE_CRITICAL);
-								pthread_mutex_unlock(&THREAD_LOCK);
-							}
-
-							try {
-								Config* sysConfig = Config::makeConfig();
-
-								sysConfig->setConfig("Installation", volumeNameID, volumeName);
-								sysConfig->setConfig("Installation", deviceNameID, device);
-
-								sysConfig->write();
-							}
-							catch(...)
-							{}
-
-							log.writeLog(__LINE__, "addModule - create/attach new volume: " + volumeName + "/" + device, LOG_TYPE_DEBUG);
-
-						}
-						else
-						{ // one exist, detach and reattach it
-
-							oam.detachEC2Volume( volumeName );
-					
-							if (!oam.attachEC2Volume(volumeName, deviceName, hostName)) {
-								log.writeLog(__LINE__, "addModule: volume failed to attached: " + volumeName, LOG_TYPE_CRITICAL);
-								pthread_mutex_unlock(&THREAD_LOCK);
-								return API_FAILURE;
-							}
-
-							log.writeLog(__LINE__, "addModule - attach existing volume: " + volumeName + "/" + deviceName, LOG_TYPE_DEBUG);
-						}
-					}
-				}
-			}
-
-			hostconfig.HostName = hostName;
-			hostconfig.IPAddr = IPAddr;
-			hostconfig.NicID = (*pt1).NicID;
-			devicenetworkconfig.hostConfigList.push_back(hostconfig);
-		}
-		setmoduletypeconfig.ModuleNetworkList.push_back(devicenetworkconfig);
-	}
-
-	Config* sysConfig = Config::makeConfig();
-
-	//Add additional Process Ports
-	// all nodes: ProcessMonitor, ServerMonitor
-	// dm: NONE
-	// um: ExeMgr
-	// pm: NONE
-
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		Section = (*listPT).DeviceName + "_ProcessMonitor";
-
-		HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
-		sysConfig->setConfig(Section, "Port", "8800");
-
-		Section = (*listPT).DeviceName + "_ServerMonitor";
-		sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
-		sysConfig->setConfig(Section, "Port", "8622");
-	}
-
-	if ( moduleType == "um" ||
-		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-		( moduleType == "pm" && PMwithUM == "y") ) {
-
-		listPT = devicenetworklist.begin();
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			int moduleID = atoi((*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
-			int exemgrID = moduleID;
-			if ( PMwithUM == "y" )
-			{ // then go check for next available ID
-				exemgrID = 0;
-				for ( int id = 2 ; ; id++ )
-				{
-					string Section = "ExeMgr" + oam.itoa(id);
-					string moduleName;
-					try {
-						Config* sysConfig = Config::makeConfig();
-						moduleName = sysConfig->getConfig(Section, "Module");
-					}
-					catch (...) {}
-
-					if ( moduleName.empty() )
-					{
-						exemgrID = id;
-						break;
-					}
-				}
-			}
-
-			Section = "ExeMgr" + oam.itoa(exemgrID);
-			HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-			sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
-			sysConfig->setConfig(Section, "Port", "8601");
-			sysConfig->setConfig(Section, "Module", (*listPT).DeviceName);
-		}
-	}
-
-	if ( moduleType == "pm" ) {
-		listPT = devicenetworklist.begin();
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			Section = (*listPT).DeviceName + "_WriteEngineServer";
-	
-			HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-			sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
-			sysConfig->setConfig(Section, "Port", "8630");
-		}
-	}
-	log.writeLog(__LINE__, "addModule - Updated Process Ports", LOG_TYPE_DEBUG);
-
-	string parentOAMModuleHostName;
-	string parentOAMModuleIPAddr;
-
-	//setup dbroot entries
-	if (moduleType == "pm" && manualFlag)
-	{
-		const string MODULE_DBROOTID = "ModuleDBRootID";
-		const string MODULE_DBROOT_COUNT = "ModuleDBRootCount";
-
-		listPT = devicenetworklist.begin();
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			string moduleID = (*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE);
-
-			string ModuleDBRootCount = MODULE_DBROOT_COUNT + moduleID + "-3";
-			sysConfig->setConfig("SystemModuleConfig", ModuleDBRootCount, "0");
-
-			string ModuleDBrootID = MODULE_DBROOTID + moduleID + "-1-3";
-			sysConfig->setConfig("SystemModuleConfig", ModuleDBrootID, oam::UnassignedName);
-		}
-	}
-
-	//update Calpont Config table
-	try {
-		sysConfig->write();
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "addModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
-
-	//write Columnstore.xml Module section
-	try {
-		oam.setSystemConfig(moduleType, setmoduletypeconfig);
-		log.writeLog(__LINE__, "addModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "addModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
-
-	pthread_mutex_unlock(&THREAD_LOCK);
-
-	//check if any added modules are Active OAM
-	bool activeOAM = false;
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		if ( (*listPT).DeviceName == config.OAMParentName() ) {
-			activeOAM = true;
-			break;
-		}
-	}
-
-	//
-	//send message to Process Monitor to add module/processes to shared memory
-	//
-	if ( !activeOAM )
-	{
-		try
-		{
-			ByteStream obs;
-	
-			obs << (ByteStream::byte) ADD_MODULE;
-			obs << (ByteStream::byte) AddModuleCount;
-	
-			listPT = devicenetworklist.begin();
-			for( ; listPT != devicenetworklist.end() ; listPT++)
-			{
-				obs << (*listPT).DeviceName;
-			}
-	
-			//pass NIC Hostnames
-			vector<string> nicHostNames;
-	
-			listPT = devicenetworklist.begin();
-			HostConfig hostconfig;
-			for( ; listPT != devicenetworklist.end() ; listPT++)
-			{
-				HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-				for( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
-				{
-					nicHostNames.push_back((*pt1).HostName);
-				}
-			}
-	
-			obs << (ByteStream::byte) nicHostNames.size();
-	
-			vector<string>::iterator pt2 = nicHostNames.begin();
-			for( ; pt2 != nicHostNames.end() ; pt2++)
-			{
-				obs << *pt2;
-			}
-	
-			sendStatusUpdate(obs, ADD_MODULE);
-			log.writeLog(__LINE__, "addModule - Updated Shared Memory", LOG_TYPE_DEBUG);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "addModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
-			return API_FAILURE;
-		}
-	}
-
-	//distribute config file
-	distributeConfigFile("system");
-
-	if ( DistributedInstall == "y" ) {
-
-	    //PMwithUM config
-	    string PMwithUM = "n";
-	    try {
-		    oam.getSystemConfig( "PMwithUM", PMwithUM);
-	    }
-	    catch(...) {
-		    PMwithUM = "n";
-	    }
-
-	    string version = systemsoftware.Version + "-" + systemsoftware.Release;
-
-	    string AmazonInstall = "0";
-	    if ( amazon )
-		  AmazonInstall = "1";
-
-	    //setup and push custom OS files
-	    listPT = devicenetworklist.begin();
-	    for( ; listPT != devicenetworklist.end() ; listPT++)
-	    {
-		    string remoteModuleName = (*listPT).DeviceName;
-		    string remoteModuleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
-		    HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		    string remoteModuleIP = (*pt1).IPAddr;
-		    string remoteHostName = (*pt1).HostName;
-
-		    //create and copy custom OS
-		    //run remote installer script
-		    string dir = installDir + "/local/etc/" + remoteModuleName;
-
-		    string cmd = "mkdir " + dir + " > /dev/null 2>&1";
-		    system(cmd.c_str());
-
-		    if ( remoteModuleType == "um" ) {
-			    cmd = "cp " + installDir + "/local/etc/um1/* " + dir + "/.";
-			    system(cmd.c_str());
-		    }
-		    else
-		    {
-			    if ( remoteModuleType == "pm") {
-				    cmd = "cp " + installDir + "/local/etc/pm1/* " + dir + "/.";
-				    system(cmd.c_str());
-			    }
-		    }
-		    log.writeLog(__LINE__, "addModule - created directory and custom OS files for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-		    //create module file 
-		    if( !createModuleFile(remoteModuleName) ) {
-			    log.writeLog(__LINE__, "addModule - ERROR: createModuleFile failed", LOG_TYPE_ERROR);
-			    pthread_mutex_unlock(&THREAD_LOCK);
-			    return API_FAILURE;
-		    }
-		    log.writeLog(__LINE__, "addModule - create module file for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-		    if ( remoteModuleType == "pm" ) {
-			    //setup Standby OAM Parent, if needed
-			    if ( config.OAMStandbyName() == oam::UnassignedName )
-				    setStandbyModule(remoteModuleName, false);
-		    }
-
-		    //set root password
-		    if (amazon) {
-			    cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
-			    log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
-			    int rtnCode = system(cmd.c_str());
-			    if (WEXITSTATUS(rtnCode) == 0)
-				    log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
-			    else
-				    log.writeLog(__LINE__, "addModule - ERROR: update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
-		    }
-
-		    //default
-		    string binaryInstallDir = installDir;
-
-		    //run installer on remote module
-		    if ( remoteModuleType == "um" ||
-			    ( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-			    ( remoteModuleType == "pm" && PMwithUM == "y" ) ) {
-			    //run remote installer script
-			    if ( packageType != "binary" ) {
-				    string logFile = "/tmp/" + remoteModuleName + "_user_installer.log";
-				    log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-				    string cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps 1 > " + logFile;
-
-				    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
-
-				    bool passed = false;
-				    for ( int retry = 0 ; retry < 5 ; retry++ )
-				    {
-					    int rtnCode = system(cmd.c_str());
-					    if (WEXITSTATUS(rtnCode) != 0) {
-						    // if log file size is zero, retry
-						    ifstream in(logFile.c_str());
-						    in.seekg(0, std::ios::end);
-						    int size = in.tellg();
-						    if ( size == 0 )
-						    {
-							    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
-							    sleep(5);
-							    continue;
-						    }
-						    else
-							    break;
-					    }
-					    else
-					    {
-						    passed = true;
-						    break;
-					    }
-				    }
-
-				    if ( !passed )
-				    {
-					    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + "  failed", LOG_TYPE_ERROR);
-
-					    DeviceNetworkList devicenetworklistR;
-					    DeviceNetworkConfig devicenetworkconfigR;
-					    HostConfig hostconfig;
-
-					    devicenetworkconfigR.DeviceName = remoteModuleName;
-					    if (cloud == "amazon-vpc")
-						    hostconfig.IPAddr = remoteModuleIP;
-					    else
-						    hostconfig.IPAddr = oam::UnassignedName;
-
-					    hostconfig.HostName = oam::UnassignedName;
-					    hostconfig.NicID = 1;
-					    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
-
-					    devicenetworklistR.push_back(devicenetworkconfigR);
-
-					    processManager.removeModule(devicenetworklistR, false);
-    
-					    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
-
-					    pthread_mutex_unlock(&THREAD_LOCK);
-					    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
-					    system(cmd.c_str());
-					    processManager.setModuleState(remoteModuleName, oam::FAILED);
-					    return API_FAILURE;
-				    }
-			    }
-			    else
-			    {	// do a binary package install
-				    string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
-				    log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-				    string binservertype = oam.itoa(config.ServerInstallType());
-				    if ( PMwithUM == "y" )
-					    binservertype = "pmwithum";
-				    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " +  AmazonInstall + " 1 " + binaryInstallDir + " > " + logFile; 
-
-				    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
-
-				    bool passed = false;
-				    for ( int retry = 0 ; retry < 5 ; retry++ )
-				    {
-					    int rtnCode = system(cmd.c_str());
-					    if (WEXITSTATUS(rtnCode) != 0) {
-						    // if log file size is zero, retry
-						    ifstream in(logFile.c_str());
-						    in.seekg(0, std::ios::end);
-						    int size = in.tellg();
-						    if ( size == 0 )
-						    {
-							    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
-							    sleep(5);
-							    continue;
-						    }
-						    else
-							    break;
-					    }
-					    else
-					    {
-						    passed = true;
-						    break;
-					    }
-				    }
-
-				    if ( !passed )
-				    {
-					    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
-
-					    DeviceNetworkList devicenetworklistR;
-					    DeviceNetworkConfig devicenetworkconfigR;
-					    HostConfig hostconfig;
-
-					    devicenetworkconfigR.DeviceName = remoteModuleName;
-					    if (cloud == "amazon-vpc")
-						    hostconfig.IPAddr = remoteModuleIP;
-					    else
-						    hostconfig.IPAddr = oam::UnassignedName;
-
-					    hostconfig.HostName = oam::UnassignedName;
-					    hostconfig.NicID = 1;
-					    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
-
-					    devicenetworklistR.push_back(devicenetworkconfigR);
-
-					    processManager.removeModule(devicenetworklistR, false);
-     
-					    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
-
-					    pthread_mutex_unlock(&THREAD_LOCK);
-					    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
-					    system(cmd.c_str());
-					    processManager.setModuleState(remoteModuleName, oam::FAILED);
-					    return API_FAILURE;
-				    }
-			    }
-		    }
-		    else
-		    {
-			    if ( remoteModuleType == "pm" ) {
-				    if ( packageType != "binary" ) {
-					    string logFile = "/tmp/" + remoteModuleName + "_package_installer.log";
-					    log.writeLog(__LINE__, "addModule - package_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-					    string cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > " + logFile; 
-					    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
-
-					    bool passed = false;
-					    for ( int retry = 0 ; retry < 5 ; retry++ )
-					    {
-						    int rtnCode = system(cmd.c_str());
-						    if (WEXITSTATUS(rtnCode) != 0) {
-							    // if log file size is zero, retry
-							    ifstream in(logFile.c_str());
-							    in.seekg(0, std::ios::end);
-							    int size = in.tellg();
-							    if ( size == 0 )
-							    {
-								    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
-								    sleep(5);
-								    continue;
-							    }
-							    else
-								    break;
-						    }
-						    else
-						    {
-							    passed = true;
-							    break;
-						    }
-					    }
-	    
-					    if ( !passed )
-					    {
-						    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
-
-						    DeviceNetworkList devicenetworklistR;
-						    DeviceNetworkConfig devicenetworkconfigR;
-						    HostConfig hostconfig;
-
-						    devicenetworkconfigR.DeviceName = remoteModuleName;
-						    if (cloud == "amazon-vpc")
-							    hostconfig.IPAddr = remoteModuleIP;
-						    else
-							    hostconfig.IPAddr = oam::UnassignedName;
-
-						    hostconfig.HostName = oam::UnassignedName;
-						    hostconfig.NicID = 1;
-						    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
-
-						    devicenetworklistR.push_back(devicenetworkconfigR);
-
-						    processManager.removeModule(devicenetworklistR, false);
- 	    
-						    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
-
-						    pthread_mutex_unlock(&THREAD_LOCK);
-						    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
-						    system(cmd.c_str());
-						    processManager.setModuleState(remoteModuleName, oam::FAILED);
-						    return API_FAILURE;
-					    }
-				    }
-				    else
-				    {	// do a binary package install
-					    string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
-					    log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
-
-					    string binservertype = oam.itoa(config.ServerInstallType());
-					    if ( PMwithUM == "y" )
-						    binservertype = "pmwithum";
-
-					    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " + AmazonInstall + " 1 " + binaryInstallDir + " > " + logFile; 
-
-					    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
-
-					    bool passed = false;
-					    for ( int retry = 0 ; retry < 5 ; retry++ )
-					    {
-						    int rtnCode = system(cmd.c_str());
-						    if (WEXITSTATUS(rtnCode) != 0) {
-							    // if log file size is zero, retry
-							    ifstream in(logFile.c_str());
-							    in.seekg(0, std::ios::end);
-							    int size = in.tellg();
-							    if ( size == 0 )
-							    {
-								    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
-								    sleep(5);
-								    continue;
-							    }
-							    else
-								    break;
-						    }
-						    else
-						    {
-							    passed = true;
-							    break;
-						    }
-					    }
-	    
-					    if ( !passed )
-					    {
-						    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
-
-						    DeviceNetworkList devicenetworklistR;
-						    DeviceNetworkConfig devicenetworkconfigR;
-						    HostConfig hostconfig;
-
-						    devicenetworkconfigR.DeviceName = remoteModuleName;
-						    if (cloud == "amazon-vpc")
-							    hostconfig.IPAddr = remoteModuleIP;
-						    else
-							    hostconfig.IPAddr = oam::UnassignedName;
-
-						    hostconfig.HostName = oam::UnassignedName;
-						    hostconfig.NicID = 1;
-						    devicenetworkconfigR.hostConfigList.push_back(hostconfig);
-
-						    devicenetworklistR.push_back(devicenetworkconfigR);
-
-						    processManager.removeModule(devicenetworklistR, false);
- 	    
-						    log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
-
-						    pthread_mutex_unlock(&THREAD_LOCK);
-						    cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
-						    system(cmd.c_str());
-						    processManager.setModuleState(remoteModuleName, oam::FAILED);
-						    return API_FAILURE;
-					    }
-				    }
-			    }
-		    }
-	    }
-
-	    //distribute config file
-	    distributeConfigFile("system");
-	    distributeConfigFile("system", "ProcessConfig.xml");
-
-	    //Start new modules by starting up local Process-Monitor
-	    listPT = devicenetworklist.begin();
-	    for( ; listPT != devicenetworklist.end() ; listPT++)
-	    {
-		    string remoteModuleName = (*listPT).DeviceName;
-
-		    if (manualFlag)
-			    //set new module to disable state if manual add
-			    disableModule(remoteModuleName, true);
-
-		    HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		    string remoteModuleIP = (*pt1).IPAddr;
-		    string remoteHostName = (*pt1).HostName;
-
-		    // add to monitor list
-		    moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
-		    if (amazon) {
-			    //check and assign Elastic IP Address
-			    int AmazonElasticIPCount = 0;
-			    try{
-				    oam.getSystemConfig("AmazonElasticIPCount", AmazonElasticIPCount);
-			    }
-			    catch(...) {
-				    AmazonElasticIPCount = 0;
-			    }
-	    
-			    for ( int id = 1 ; id < AmazonElasticIPCount+1 ; id++ )
-			    {
-				    string AmazonElasticModule = "AmazonElasticModule" + oam.itoa(id);
-				    string ELmoduleName;
-				    try{
-					    oam.getSystemConfig(AmazonElasticModule, ELmoduleName);
-				    }
-				    catch(...) {}
-	    
-				    if ( ELmoduleName == remoteModuleName )
-				    {	//match found assign Elastic IP Address
-					    string AmazonElasticIPAddr = "AmazonElasticIPAddr" + oam.itoa(id);
-					    string ELIPaddress;
-					    try{
-						    oam.getSystemConfig(AmazonElasticIPAddr, ELIPaddress);
-					    }
-					    catch(...) {}
-	    
-					    try{
-						    oam.assignElasticIP(remoteHostName, ELIPaddress);
-						    log.writeLog(__LINE__, "addModule - Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_DEBUG);
-					    }
-					    catch(...) {
-						    log.writeLog(__LINE__, "addModule - Failed to Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_ERROR);
-					    }
-					    break;
-				    }
-			    }
-		    }
-	    }
-
-	    listPT = devicenetworklist.begin();
-	    for( ; listPT != devicenetworklist.end() ; listPT++)
-	    {
-		string moduleName = (*listPT).DeviceName;
-
-	  	processManager.configureModule(moduleName);
-	    }
-	}
-	else
-	{
-	    listPT = devicenetworklist.begin();
-	    for( ; listPT != devicenetworklist.end() ; listPT++)
-	    {
-		string moduleName = (*listPT).DeviceName;
-
-	  	processManager.configureModule(moduleName);
-	    }
-	}
-	
-	//delay to give time for ProcMon to start after the config is sent and procmon restarts
-	log.writeLog(__LINE__, "addModule - sleep 10 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
-	sleep(10);
+
+        log.writeLog(__LINE__, "addModule - ColumnStore Package found:" + calpontPackage, LOG_TYPE_DEBUG);
+
+        //
+        // Verify Host IP and Password
+        //
+
+        if ( password == "ssh" && amazon )
+        {
+            // check if there is a root password stored
+            string rpw = oam::UnassignedName;
+
+            try
+            {
+                oam.getSystemConfig("rpw", rpw);
+            }
+            catch (...)
+            {
+                rpw = "mariadb1";
+            }
+
+            if (rpw != oam::UnassignedName)
+                password = rpw;
+        }
+
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+            string newHostName = (*pt1).HostName;
+
+            if ( newHostName == oam::UnassignedName )
+                continue;
+
+            string newIPAddr = (*pt1).IPAddr;
+            string cmd = installDir + "/bin/remote_command.sh " + newIPAddr + " " + password + " ls";
+            log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
+            int rtnCode = system(cmd.c_str());
+
+            if (WEXITSTATUS(rtnCode) != 0)
+            {
+                log.writeLog(__LINE__, "addModule - ERROR: Remote login test failed, Invalid IP / Password " + newIPAddr, LOG_TYPE_ERROR);
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return API_FAILURE;
+            }
+
+            log.writeLog(__LINE__, "addModule - Remote login test successful: " + newIPAddr, LOG_TYPE_DEBUG);
+        }
+    }
+
+    //
+    //Get System Configuration file
+    //
+
+    try
+    {
+        oam.getSystemConfig(moduleType, moduletypeconfig);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "addModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
+
+    setmoduletypeconfig = moduletypeconfig;
+
+    // update Module Type Count
+    int oldModuleCount = moduletypeconfig.ModuleCount;
+    int newModuleCount = oldModuleCount + AddModuleCount;
+    setmoduletypeconfig.ModuleCount = newModuleCount;
+
+    //add new IP Addresses and Hostnames
+    listPT = devicenetworklist.begin();
+    HostConfig hostconfig;
+
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        string moduleName = (*listPT).DeviceName;
+        devicenetworkconfig.DeviceName = (*listPT).DeviceName;
+        devicenetworkconfig.DisableState = oam::MANDISABLEDSTATE;
+
+        HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+
+        for ( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
+        {
+            string hostName = (*pt1).HostName;
+            string IPAddr = (*pt1).IPAddr;
+
+            //if cloud and unassigned, launch a new Instance
+            if ( ( cloud == "amazon-ec2" && hostName == oam::UnassignedName ) ||
+                    ( cloud == "amazon-vpc" && hostName == oam::UnassignedName ) )
+            {
+                string UMinstanceType;
+                string UMSecurityGroup;
+
+                if ( moduleType == "um")
+                {
+                    try
+                    {
+                        oam.getSystemConfig("UMInstanceType", UMinstanceType);
+                        oam.getSystemConfig("UMSecurityGroup", UMSecurityGroup);
+                    }
+                    catch (...) {}
+                }
+
+                log.writeLog(__LINE__, "addModule - Launching a new Instance for: " + moduleName, LOG_TYPE_DEBUG);
+
+                if ( moduleType == "um" )
+                    hostName = oam.launchEC2Instance(moduleName, IPAddr, UMinstanceType, UMSecurityGroup);
+                else
+                    hostName = oam.launchEC2Instance(moduleName, IPAddr);
+
+                if ( hostName == "failed" )
+                {
+                    log.writeLog(__LINE__, "addModule - Launch New Instance Failure", LOG_TYPE_ERROR);
+                    pthread_mutex_unlock(&THREAD_LOCK);
+                    return API_FAILURE;
+                }
+
+                // add instance tag
+                string systemName;
+                string AmazonAutoTagging;
+                {
+                    try
+                    {
+                        oam.getSystemConfig("SystemName", systemName);
+                        oam.getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
+                    }
+                    catch (...) {}
+                }
+
+                if ( AmazonAutoTagging == "y" )
+                {
+                    string tagValue = systemName + "-" + moduleName;
+                    oam.createEC2tag( hostName, "Name", tagValue );
+                }
+
+                //wait until login is success until continuing or fail if can't login
+                log.writeLog(__LINE__, "addModule - Successfully Launch of new Instance, retry login test: " + moduleName, LOG_TYPE_DEBUG);
+                int retry = 0;
+
+                for (  ; retry < 18 ; retry++)
+                {
+                    IPAddr = oam.getEC2InstanceIpAddress(hostName);
+
+                    if (IPAddr == "terminated")
+                    {
+                        log.writeLog(__LINE__, "addModule - Failed to log in to Instance, it was terminated: " + hostName, LOG_TYPE_ERROR);
+                        pthread_mutex_unlock(&THREAD_LOCK);
+                        return API_FAILURE;
+                    }
+
+                    if (IPAddr == "stopped")
+                    {
+                        sleep(10);
+                        continue;
+                    }
+
+                    string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
+                    system(cmd.c_str());
+
+                    if (!oam.checkLogStatus("/tmp/login_test.log", "README"))
+                    {
+                        //check for RSA KEY ISSUE and fix
+                        if (oam.checkLogStatus("/tmp/login_test.log", "Offending"))
+                        {
+                            log.writeLog(__LINE__, "addModule - login failed, Offending key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
+                            string file = "/tmp/login_test.log";
+                            oam.fixRSAkey(file);
+                        }
+
+                        log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
+                        sleep(10);
+                        continue;
+                    }
+
+                    // logged in
+                    break;
+                }
+
+                if ( retry >= 18 )
+                {
+                    log.writeLog(__LINE__, "addModule - Failed to log in to Instance: " + hostName, LOG_TYPE_ERROR);
+                    pthread_mutex_unlock(&THREAD_LOCK);
+                    return API_FAILURE;
+                }
+
+                log.writeLog(__LINE__, "addModule - Successful loggin: " + hostName, LOG_TYPE_DEBUG);
+
+                log.writeLog(__LINE__, "addModule - Launched new Instance: " + hostName + "/" + IPAddr, LOG_TYPE_DEBUG);
+
+                (*pt1).HostName = hostName;
+                (*pt1).IPAddr = IPAddr;
+
+                //check if any volumes need to be attached
+                if ( moduleType == "um" )
+                {
+                    string UMStorageType = "internal";
+                    {
+                        try
+                        {
+                            oam.getSystemConfig("UMStorageType", UMStorageType);
+                        }
+                        catch (...) {}
+                    }
+
+                    if ( UMStorageType == "external" )
+                    {
+                        //check if volume already assigned or need to create a new one
+                        int moduleID = atoi((*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
+
+                        string volumeNameID = "UMVolumeName" + oam.itoa(moduleID);
+                        string volumeName = oam::UnassignedName;
+                        string deviceNameID = "UMVolumeDeviceName" + oam.itoa(moduleID);
+                        string deviceName = oam::UnassignedName;
+
+                        try
+                        {
+                            oam.getSystemConfig( volumeNameID, volumeName);
+                            oam.getSystemConfig( deviceNameID, deviceName);
+                        }
+                        catch (...)
+                        {}
+
+                        if ( volumeName.empty() || volumeName == oam::UnassignedName )
+                        {
+                            // need to create a new one
+                            string device;
+
+                            try
+                            {
+
+                                oam.addUMdisk(moduleID, volumeName, device);
+                            }
+                            catch (...)
+                            {
+                                log.writeLog(__LINE__, "addModule: volume create failed for um: " + moduleName, LOG_TYPE_CRITICAL);
+                                pthread_mutex_unlock(&THREAD_LOCK);
+                            }
+
+                            //attach to UM
+                            log.writeLog(__LINE__, "addModule - attach new Volume to " + moduleName, LOG_TYPE_DEBUG);
+
+                            if (!oam.attachEC2Volume(volumeName, device, hostName))
+                            {
+                                log.writeLog(__LINE__, "addModule: volume failed to attach to um: " + moduleName, LOG_TYPE_CRITICAL);
+                                pthread_mutex_unlock(&THREAD_LOCK);
+                            }
+
+                            try
+                            {
+                                Config* sysConfig = Config::makeConfig();
+
+                                sysConfig->setConfig("Installation", volumeNameID, volumeName);
+                                sysConfig->setConfig("Installation", deviceNameID, device);
+
+                                sysConfig->write();
+                            }
+                            catch (...)
+                            {}
+
+                            log.writeLog(__LINE__, "addModule - create/attach new volume: " + volumeName + "/" + device, LOG_TYPE_DEBUG);
+
+                        }
+                        else
+                        {
+                            // one exist, detach and reattach it
+
+                            oam.detachEC2Volume( volumeName );
+
+                            if (!oam.attachEC2Volume(volumeName, deviceName, hostName))
+                            {
+                                log.writeLog(__LINE__, "addModule: volume failed to attached: " + volumeName, LOG_TYPE_CRITICAL);
+                                pthread_mutex_unlock(&THREAD_LOCK);
+                                return API_FAILURE;
+                            }
+
+                            log.writeLog(__LINE__, "addModule - attach existing volume: " + volumeName + "/" + deviceName, LOG_TYPE_DEBUG);
+                        }
+                    }
+                }
+            }
+
+            hostconfig.HostName = hostName;
+            hostconfig.IPAddr = IPAddr;
+            hostconfig.NicID = (*pt1).NicID;
+            devicenetworkconfig.hostConfigList.push_back(hostconfig);
+        }
+
+        setmoduletypeconfig.ModuleNetworkList.push_back(devicenetworkconfig);
+    }
+
+    Config* sysConfig = Config::makeConfig();
+
+    //Add additional Process Ports
+    // all nodes: ProcessMonitor, ServerMonitor
+    // dm: NONE
+    // um: ExeMgr
+    // pm: NONE
+
+    listPT = devicenetworklist.begin();
+
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        Section = (*listPT).DeviceName + "_ProcessMonitor";
+
+        HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+        sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
+        sysConfig->setConfig(Section, "Port", "8800");
+
+        Section = (*listPT).DeviceName + "_ServerMonitor";
+        sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
+        sysConfig->setConfig(Section, "Port", "8622");
+    }
+
+    if ( moduleType == "um" ||
+            ( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+            ( moduleType == "pm" && PMwithUM == "y") )
+    {
+
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            int moduleID = atoi((*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
+            int exemgrID = moduleID;
+
+            if ( PMwithUM == "y" )
+            {
+                // then go check for next available ID
+                exemgrID = 0;
+
+                for ( int id = 2 ; ; id++ )
+                {
+                    string Section = "ExeMgr" + oam.itoa(id);
+                    string moduleName;
+
+                    try
+                    {
+                        Config* sysConfig = Config::makeConfig();
+                        moduleName = sysConfig->getConfig(Section, "Module");
+                    }
+                    catch (...) {}
+
+                    if ( moduleName.empty() )
+                    {
+                        exemgrID = id;
+                        break;
+                    }
+                }
+            }
+
+            Section = "ExeMgr" + oam.itoa(exemgrID);
+            HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+            sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
+            sysConfig->setConfig(Section, "Port", "8601");
+            sysConfig->setConfig(Section, "Module", (*listPT).DeviceName);
+        }
+    }
+
+    if ( moduleType == "pm" )
+    {
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            Section = (*listPT).DeviceName + "_WriteEngineServer";
+
+            HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+            sysConfig->setConfig(Section, "IPAddr", (*pt1).IPAddr);
+            sysConfig->setConfig(Section, "Port", "8630");
+        }
+    }
+
+    log.writeLog(__LINE__, "addModule - Updated Process Ports", LOG_TYPE_DEBUG);
+
+    string parentOAMModuleHostName;
+    string parentOAMModuleIPAddr;
+
+    //setup dbroot entries
+    if (moduleType == "pm" && manualFlag)
+    {
+        const string MODULE_DBROOTID = "ModuleDBRootID";
+        const string MODULE_DBROOT_COUNT = "ModuleDBRootCount";
+
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string moduleID = (*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE);
+
+            string ModuleDBRootCount = MODULE_DBROOT_COUNT + moduleID + "-3";
+            sysConfig->setConfig("SystemModuleConfig", ModuleDBRootCount, "0");
+
+            string ModuleDBrootID = MODULE_DBROOTID + moduleID + "-1-3";
+            sysConfig->setConfig("SystemModuleConfig", ModuleDBrootID, oam::UnassignedName);
+        }
+    }
+
+    //update Calpont Config table
+    try
+    {
+        sysConfig->write();
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "addModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
+
+    //write Columnstore.xml Module section
+    try
+    {
+        oam.setSystemConfig(moduleType, setmoduletypeconfig);
+        log.writeLog(__LINE__, "addModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "addModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+
+    //check if any added modules are Active OAM
+    bool activeOAM = false;
+    listPT = devicenetworklist.begin();
+
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        if ( (*listPT).DeviceName == config.OAMParentName() )
+        {
+            activeOAM = true;
+            break;
+        }
+    }
+
+    //
+    //send message to Process Monitor to add module/processes to shared memory
+    //
+    if ( !activeOAM )
+    {
+        try
+        {
+            ByteStream obs;
+
+            obs << (ByteStream::byte) ADD_MODULE;
+            obs << (ByteStream::byte) AddModuleCount;
+
+            listPT = devicenetworklist.begin();
+
+            for ( ; listPT != devicenetworklist.end() ; listPT++)
+            {
+                obs << (*listPT).DeviceName;
+            }
+
+            //pass NIC Hostnames
+            vector<string> nicHostNames;
+
+            listPT = devicenetworklist.begin();
+            HostConfig hostconfig;
+
+            for ( ; listPT != devicenetworklist.end() ; listPT++)
+            {
+                HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+
+                for ( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
+                {
+                    nicHostNames.push_back((*pt1).HostName);
+                }
+            }
+
+            obs << (ByteStream::byte) nicHostNames.size();
+
+            vector<string>::iterator pt2 = nicHostNames.begin();
+
+            for ( ; pt2 != nicHostNames.end() ; pt2++)
+            {
+                obs << *pt2;
+            }
+
+            sendStatusUpdate(obs, ADD_MODULE);
+            log.writeLog(__LINE__, "addModule - Updated Shared Memory", LOG_TYPE_DEBUG);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "addModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
+            return API_FAILURE;
+        }
+    }
+
+    //distribute config file
+    distributeConfigFile("system");
+
+    if ( DistributedInstall == "y" )
+    {
+
+        //PMwithUM config
+        string PMwithUM = "n";
+
+        try
+        {
+            oam.getSystemConfig( "PMwithUM", PMwithUM);
+        }
+        catch (...)
+        {
+            PMwithUM = "n";
+        }
+
+        string version = systemsoftware.Version + "-" + systemsoftware.Release;
+
+        string AmazonInstall = "0";
+
+        if ( amazon )
+            AmazonInstall = "1";
+
+        //setup and push custom OS files
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string remoteModuleName = (*listPT).DeviceName;
+            string remoteModuleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+            HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+            string remoteModuleIP = (*pt1).IPAddr;
+            string remoteHostName = (*pt1).HostName;
+
+            //create and copy custom OS
+            //run remote installer script
+            string dir = installDir + "/local/etc/" + remoteModuleName;
+
+            string cmd = "mkdir " + dir + " > /dev/null 2>&1";
+            system(cmd.c_str());
+
+            if ( remoteModuleType == "um" )
+            {
+                cmd = "cp " + installDir + "/local/etc/um1/* " + dir + "/.";
+                system(cmd.c_str());
+            }
+            else
+            {
+                if ( remoteModuleType == "pm")
+                {
+                    cmd = "cp " + installDir + "/local/etc/pm1/* " + dir + "/.";
+                    system(cmd.c_str());
+                }
+            }
+
+            log.writeLog(__LINE__, "addModule - created directory and custom OS files for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+            //create module file
+            if ( !createModuleFile(remoteModuleName) )
+            {
+                log.writeLog(__LINE__, "addModule - ERROR: createModuleFile failed", LOG_TYPE_ERROR);
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return API_FAILURE;
+            }
+
+            log.writeLog(__LINE__, "addModule - create module file for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+            if ( remoteModuleType == "pm" )
+            {
+                //setup Standby OAM Parent, if needed
+                if ( config.OAMStandbyName() == oam::UnassignedName )
+                    setStandbyModule(remoteModuleName, false);
+            }
+
+            //set root password
+            if (amazon)
+            {
+                cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
+                log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
+                int rtnCode = system(cmd.c_str());
+
+                if (WEXITSTATUS(rtnCode) == 0)
+                    log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
+                else
+                    log.writeLog(__LINE__, "addModule - ERROR: update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
+            }
+
+            //default
+            string binaryInstallDir = installDir;
+
+            //run installer on remote module
+            if ( remoteModuleType == "um" ||
+                    ( remoteModuleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+                    ( remoteModuleType == "pm" && PMwithUM == "y" ) )
+            {
+                //run remote installer script
+                if ( packageType != "binary" )
+                {
+                    string logFile = "/tmp/" + remoteModuleName + "_user_installer.log";
+                    log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+                    string cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps 1 > " + logFile;
+
+                    log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
+
+                    bool passed = false;
+
+                    for ( int retry = 0 ; retry < 5 ; retry++ )
+                    {
+                        int rtnCode = system(cmd.c_str());
+
+                        if (WEXITSTATUS(rtnCode) != 0)
+                        {
+                            // if log file size is zero, retry
+                            ifstream in(logFile.c_str());
+                            in.seekg(0, std::ios::end);
+                            int size = in.tellg();
+
+                            if ( size == 0 )
+                            {
+                                log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+                                sleep(5);
+                                continue;
+                            }
+                            else
+                                break;
+                        }
+                        else
+                        {
+                            passed = true;
+                            break;
+                        }
+                    }
+
+                    if ( !passed )
+                    {
+                        log.writeLog(__LINE__, "addModule - ERROR: " + logFile + "  failed", LOG_TYPE_ERROR);
+
+                        DeviceNetworkList devicenetworklistR;
+                        DeviceNetworkConfig devicenetworkconfigR;
+                        HostConfig hostconfig;
+
+                        devicenetworkconfigR.DeviceName = remoteModuleName;
+
+                        if (cloud == "amazon-vpc")
+                            hostconfig.IPAddr = remoteModuleIP;
+                        else
+                            hostconfig.IPAddr = oam::UnassignedName;
+
+                        hostconfig.HostName = oam::UnassignedName;
+                        hostconfig.NicID = 1;
+                        devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+                        devicenetworklistR.push_back(devicenetworkconfigR);
+
+                        processManager.removeModule(devicenetworklistR, false);
+
+                        log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
+                        pthread_mutex_unlock(&THREAD_LOCK);
+                        cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+                        system(cmd.c_str());
+                        processManager.setModuleState(remoteModuleName, oam::FAILED);
+                        return API_FAILURE;
+                    }
+                }
+                else
+                {
+                    // do a binary package install
+                    string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
+                    log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+                    string binservertype = oam.itoa(config.ServerInstallType());
+
+                    if ( PMwithUM == "y" )
+                        binservertype = "pmwithum";
+
+                    string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " +  AmazonInstall + " 1 " + binaryInstallDir + " > " + logFile;
+
+                    log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
+
+                    bool passed = false;
+
+                    for ( int retry = 0 ; retry < 5 ; retry++ )
+                    {
+                        int rtnCode = system(cmd.c_str());
+
+                        if (WEXITSTATUS(rtnCode) != 0)
+                        {
+                            // if log file size is zero, retry
+                            ifstream in(logFile.c_str());
+                            in.seekg(0, std::ios::end);
+                            int size = in.tellg();
+
+                            if ( size == 0 )
+                            {
+                                log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+                                sleep(5);
+                                continue;
+                            }
+                            else
+                                break;
+                        }
+                        else
+                        {
+                            passed = true;
+                            break;
+                        }
+                    }
+
+                    if ( !passed )
+                    {
+                        log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+                        DeviceNetworkList devicenetworklistR;
+                        DeviceNetworkConfig devicenetworkconfigR;
+                        HostConfig hostconfig;
+
+                        devicenetworkconfigR.DeviceName = remoteModuleName;
+
+                        if (cloud == "amazon-vpc")
+                            hostconfig.IPAddr = remoteModuleIP;
+                        else
+                            hostconfig.IPAddr = oam::UnassignedName;
+
+                        hostconfig.HostName = oam::UnassignedName;
+                        hostconfig.NicID = 1;
+                        devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+                        devicenetworklistR.push_back(devicenetworkconfigR);
+
+                        processManager.removeModule(devicenetworklistR, false);
+
+                        log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
+                        pthread_mutex_unlock(&THREAD_LOCK);
+                        cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+                        system(cmd.c_str());
+                        processManager.setModuleState(remoteModuleName, oam::FAILED);
+                        return API_FAILURE;
+                    }
+                }
+            }
+            else
+            {
+                if ( remoteModuleType == "pm" )
+                {
+                    if ( packageType != "binary" )
+                    {
+                        string logFile = "/tmp/" + remoteModuleName + "_package_installer.log";
+                        log.writeLog(__LINE__, "addModule - package_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+                        string cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > " + logFile;
+                        log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
+
+                        bool passed = false;
+
+                        for ( int retry = 0 ; retry < 5 ; retry++ )
+                        {
+                            int rtnCode = system(cmd.c_str());
+
+                            if (WEXITSTATUS(rtnCode) != 0)
+                            {
+                                // if log file size is zero, retry
+                                ifstream in(logFile.c_str());
+                                in.seekg(0, std::ios::end);
+                                int size = in.tellg();
+
+                                if ( size == 0 )
+                                {
+                                    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+                                    sleep(5);
+                                    continue;
+                                }
+                                else
+                                    break;
+                            }
+                            else
+                            {
+                                passed = true;
+                                break;
+                            }
+                        }
+
+                        if ( !passed )
+                        {
+                            log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+                            DeviceNetworkList devicenetworklistR;
+                            DeviceNetworkConfig devicenetworkconfigR;
+                            HostConfig hostconfig;
+
+                            devicenetworkconfigR.DeviceName = remoteModuleName;
+
+                            if (cloud == "amazon-vpc")
+                                hostconfig.IPAddr = remoteModuleIP;
+                            else
+                                hostconfig.IPAddr = oam::UnassignedName;
+
+                            hostconfig.HostName = oam::UnassignedName;
+                            hostconfig.NicID = 1;
+                            devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+                            devicenetworklistR.push_back(devicenetworkconfigR);
+
+                            processManager.removeModule(devicenetworklistR, false);
+
+                            log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
+                            pthread_mutex_unlock(&THREAD_LOCK);
+                            cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+                            system(cmd.c_str());
+                            processManager.setModuleState(remoteModuleName, oam::FAILED);
+                            return API_FAILURE;
+                        }
+                    }
+                    else
+                    {
+                        // do a binary package install
+                        string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
+                        log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
+
+                        string binservertype = oam.itoa(config.ServerInstallType());
+
+                        if ( PMwithUM == "y" )
+                            binservertype = "pmwithum";
+
+                        string cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + calpontPackage + " initial " + AmazonInstall + " 1 " + binaryInstallDir + " > " + logFile;
+
+                        log.writeLog(__LINE__, "addModule - " + cmd, LOG_TYPE_DEBUG);
+
+                        bool passed = false;
+
+                        for ( int retry = 0 ; retry < 5 ; retry++ )
+                        {
+                            int rtnCode = system(cmd.c_str());
+
+                            if (WEXITSTATUS(rtnCode) != 0)
+                            {
+                                // if log file size is zero, retry
+                                ifstream in(logFile.c_str());
+                                in.seekg(0, std::ios::end);
+                                int size = in.tellg();
+
+                                if ( size == 0 )
+                                {
+                                    log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+                                    sleep(5);
+                                    continue;
+                                }
+                                else
+                                    break;
+                            }
+                            else
+                            {
+                                passed = true;
+                                break;
+                            }
+                        }
+
+                        if ( !passed )
+                        {
+                            log.writeLog(__LINE__, "addModule - ERROR: " + logFile + " failed, retry", LOG_TYPE_DEBUG);
+
+                            DeviceNetworkList devicenetworklistR;
+                            DeviceNetworkConfig devicenetworkconfigR;
+                            HostConfig hostconfig;
+
+                            devicenetworkconfigR.DeviceName = remoteModuleName;
+
+                            if (cloud == "amazon-vpc")
+                                hostconfig.IPAddr = remoteModuleIP;
+                            else
+                                hostconfig.IPAddr = oam::UnassignedName;
+
+                            hostconfig.HostName = oam::UnassignedName;
+                            hostconfig.NicID = 1;
+                            devicenetworkconfigR.hostConfigList.push_back(hostconfig);
+
+                            devicenetworklistR.push_back(devicenetworkconfigR);
+
+                            processManager.removeModule(devicenetworklistR, false);
+
+                            log.writeLog(__LINE__, "addModule - Remove Module Completed", LOG_TYPE_DEBUG);
+
+                            pthread_mutex_unlock(&THREAD_LOCK);
+                            cmd = "/bin/cp -f " + logFile + " " + logFile + "failed";
+                            system(cmd.c_str());
+                            processManager.setModuleState(remoteModuleName, oam::FAILED);
+                            return API_FAILURE;
+                        }
+                    }
+                }
+            }
+        }
+
+        //distribute config file
+        distributeConfigFile("system");
+        distributeConfigFile("system", "ProcessConfig.xml");
+
+        //Start new modules by starting up local Process-Monitor
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string remoteModuleName = (*listPT).DeviceName;
+
+            if (manualFlag)
+                //set new module to disable state if manual add
+                disableModule(remoteModuleName, true);
+
+            HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+            string remoteModuleIP = (*pt1).IPAddr;
+            string remoteHostName = (*pt1).HostName;
+
+            // add to monitor list
+            moduleInfoList.insert(moduleList::value_type(remoteModuleName, 0));
+
+            if (amazon)
+            {
+                //check and assign Elastic IP Address
+                int AmazonElasticIPCount = 0;
+
+                try
+                {
+                    oam.getSystemConfig("AmazonElasticIPCount", AmazonElasticIPCount);
+                }
+                catch (...)
+                {
+                    AmazonElasticIPCount = 0;
+                }
+
+                for ( int id = 1 ; id < AmazonElasticIPCount + 1 ; id++ )
+                {
+                    string AmazonElasticModule = "AmazonElasticModule" + oam.itoa(id);
+                    string ELmoduleName;
+
+                    try
+                    {
+                        oam.getSystemConfig(AmazonElasticModule, ELmoduleName);
+                    }
+                    catch (...) {}
+
+                    if ( ELmoduleName == remoteModuleName )
+                    {
+                        //match found assign Elastic IP Address
+                        string AmazonElasticIPAddr = "AmazonElasticIPAddr" + oam.itoa(id);
+                        string ELIPaddress;
+
+                        try
+                        {
+                            oam.getSystemConfig(AmazonElasticIPAddr, ELIPaddress);
+                        }
+                        catch (...) {}
+
+                        try
+                        {
+                            oam.assignElasticIP(remoteHostName, ELIPaddress);
+                            log.writeLog(__LINE__, "addModule - Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_DEBUG);
+                        }
+                        catch (...)
+                        {
+                            log.writeLog(__LINE__, "addModule - Failed to Set Elastic IP Address: " + remoteModuleName + "/" + ELIPaddress, LOG_TYPE_ERROR);
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string moduleName = (*listPT).DeviceName;
+
+            processManager.configureModule(moduleName);
+        }
+    }
+    else
+    {
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string moduleName = (*listPT).DeviceName;
+
+            processManager.configureModule(moduleName);
+        }
+    }
+
+    //delay to give time for ProcMon to start after the config is sent and procmon restarts
+    log.writeLog(__LINE__, "addModule - sleep 10 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
+    sleep(10);
 
 //	sleep(5);
 //	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
 //	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
-	return API_SUCCESS;
+    return API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -5458,380 +5990,418 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 ******************************************************************************************/
 int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool manualFlag)
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
 
-	ModuleTypeConfig moduletypeconfig;
-	ModuleTypeConfig setmoduletypeconfig;
-	Oam oam;
-	string Section;
+    ModuleTypeConfig moduletypeconfig;
+    ModuleTypeConfig setmoduletypeconfig;
+    Oam oam;
+    string Section;
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	//get module count being removed
-	int RemoveModuleCount = devicenetworklist.size();
-	DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+    //get module count being removed
+    int RemoveModuleCount = devicenetworklist.size();
+    DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-	//
-	//Get System Configuration 
-	//
-	listPT = devicenetworklist.begin();
-	string moduleType = (*listPT).DeviceName.substr(0,MAX_MODULE_TYPE_SIZE);
+    //
+    //Get System Configuration
+    //
+    listPT = devicenetworklist.begin();
+    string moduleType = (*listPT).DeviceName.substr(0, MAX_MODULE_TYPE_SIZE);
 
-	try{
-		oam.getSystemConfig(moduleType, moduletypeconfig);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "removeModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
-	setmoduletypeconfig = moduletypeconfig;
+    try
+    {
+        oam.getSystemConfig(moduleType, moduletypeconfig);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "removeModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	// get current Module Type Count and validate request
-	int oldModuleCount = moduletypeconfig.ModuleCount;
+    setmoduletypeconfig = moduletypeconfig;
 
-	if ( oldModuleCount < RemoveModuleCount ) {
-		log.writeLog(__LINE__, "removeModule - ERROR: remove count is larger than ModuleType count", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_INVALID_PARAMETER;
-	}
+    // get current Module Type Count and validate request
+    int oldModuleCount = moduletypeconfig.ModuleCount;
 
-	//validate the module list to be removed
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		int returnStatus = oam.validateModule((*listPT).DeviceName);
-		if (returnStatus != API_SUCCESS) {
-			log.writeLog(__LINE__, "removeModule - ERROR: invalid module: " + (*listPT).DeviceName, LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_INVALID_PARAMETER;
-		}
-	}
+    if ( oldModuleCount < RemoveModuleCount )
+    {
+        log.writeLog(__LINE__, "removeModule - ERROR: remove count is larger than ModuleType count", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_INVALID_PARAMETER;
+    }
 
-	if(manualFlag)
-	{
-		//stopModules being removed with the REMOVE option, which will stop process
-		listPT = devicenetworklist.begin();
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			string moduleName = (*listPT).DeviceName;
-			log.writeLog(__LINE__, "removeModule - stopping module: " + moduleName, LOG_TYPE_DEBUG);
+    //validate the module list to be removed
+    listPT = devicenetworklist.begin();
 
-			//don't allow remove of Active PM Module
-			if ( moduleName == config.OAMParentName() ) {
-				log.writeLog(__LINE__, "removeModule - ERROR: can't remove current module (Active Parent OAM) ", LOG_TYPE_ERROR);
-				pthread_mutex_unlock(&THREAD_LOCK);
-				return API_INVALID_PARAMETER;
-			}
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        int returnStatus = oam.validateModule((*listPT).DeviceName);
 
-			int status;
-			status = stopModule(moduleName, REMOVE, true);
-	
-			if (status == API_SUCCESS) {
-				log.writeLog(__LINE__, "removeModule - stopModule Successfully " + moduleName, LOG_TYPE_DEBUG);
-				//check for SIMPLEX Processes on mate might need to be started
-				pthread_mutex_unlock(&THREAD_LOCK);
-				checkSimplexModule(moduleName);
-				pthread_mutex_lock(&THREAD_LOCK);
-			}
-			else
-				log.writeLog(__LINE__, "removeModule - stopModule " + moduleName, LOG_TYPE_ERROR);
-		}
-	}
+        if (returnStatus != API_SUCCESS)
+        {
+            log.writeLog(__LINE__, "removeModule - ERROR: invalid module: " + (*listPT).DeviceName, LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_INVALID_PARAMETER;
+        }
+    }
 
-	int newModuleCount = oldModuleCount - RemoveModuleCount;
-	setmoduletypeconfig.ModuleCount = newModuleCount;
+    if (manualFlag)
+    {
+        //stopModules being removed with the REMOVE option, which will stop process
+        listPT = devicenetworklist.begin();
 
-	string systemName;
-	string AmazonAutoTagging;
-	{
-		try{
-			oam.getSystemConfig("SystemName", systemName);
-			oam.getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
-		}
-		catch(...) {}
-	}
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string moduleName = (*listPT).DeviceName;
+            log.writeLog(__LINE__, "removeModule - stopping module: " + moduleName, LOG_TYPE_DEBUG);
 
-	//Clear out Module IP and Hostnames
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		string moduleName = (*listPT).DeviceName;
-		log.writeLog(__LINE__, "removeModule - removing module: " + moduleName, LOG_TYPE_DEBUG);
+            //don't allow remove of Active PM Module
+            if ( moduleName == config.OAMParentName() )
+            {
+                log.writeLog(__LINE__, "removeModule - ERROR: can't remove current module (Active Parent OAM) ", LOG_TYPE_ERROR);
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return API_INVALID_PARAMETER;
+            }
 
-		//don't allow remove of Active PM Module
-		if ( moduleName == config.OAMParentName() ) {
-			log.writeLog(__LINE__, "removeModule - ERROR: can't remove current module (Active Parent OAM) ", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_INVALID_PARAMETER;
-		}
+            int status;
+            status = stopModule(moduleName, REMOVE, true);
 
-		DeviceNetworkList::iterator pt = setmoduletypeconfig.ModuleNetworkList.begin();
-		for ( ; pt != setmoduletypeconfig.ModuleNetworkList.end() ; pt++)
-		{
-			if ( moduleName == (*pt).DeviceName ) {
-				HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-				for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++ )
-				{
-					//if cloud, delete instance
-					if (amazon)
-					{
-						log.writeLog(__LINE__, "removeModule - terminate instance: " + (*pt1).HostName, LOG_TYPE_DEBUG);
-						oam.terminateEC2Instance( (*pt1).HostName );
+            if (status == API_SUCCESS)
+            {
+                log.writeLog(__LINE__, "removeModule - stopModule Successfully " + moduleName, LOG_TYPE_DEBUG);
+                //check for SIMPLEX Processes on mate might need to be started
+                pthread_mutex_unlock(&THREAD_LOCK);
+                checkSimplexModule(moduleName);
+                pthread_mutex_lock(&THREAD_LOCK);
+            }
+            else
+                log.writeLog(__LINE__, "removeModule - stopModule " + moduleName, LOG_TYPE_ERROR);
+        }
+    }
 
-						// update instance tag
-						if ( AmazonAutoTagging == "y" )
-						{
-							string tagValue = systemName + "-" + moduleName + "-terminated";
-							oam.createEC2tag( (*pt1).HostName, "Name", tagValue );
-						}
+    int newModuleCount = oldModuleCount - RemoveModuleCount;
+    setmoduletypeconfig.ModuleCount = newModuleCount;
 
-						//check if any volumes need to be deleted
-						if ( moduleType == "um" )
-						{
-							string UMStorageType = "internal";
-							{
-								try{
-									oam.getSystemConfig("UMStorageType", UMStorageType);
-								}
-								catch(...) {}
-							}
-		
-							if ( UMStorageType == "external" )
-							{	//check if volume already assigned or need to create a new one
-								int moduleID = atoi(moduleName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
-		
-								string volumeNameID = "UMVolumeName" + oam.itoa(moduleID);
-								string volumeName = oam::UnassignedName;
-								string deviceNameID = "UMVolumeDeviceName" + oam.itoa(moduleID);
-								string deviceName = oam::UnassignedName;
-								try {
-									oam.getSystemConfig( volumeNameID, volumeName);
-									oam.getSystemConfig( deviceNameID, deviceName);
-								}
-								catch(...)
-								{}
-							
-								if ( !volumeName.empty() || volumeName != oam::UnassignedName ) {
-									log.writeLog(__LINE__, "removeModule - detach / remove volume: " + volumeName + "/" + deviceName, LOG_TYPE_DEBUG);
-									oam.detachEC2Volume( volumeName );
+    string systemName;
+    string AmazonAutoTagging;
+    {
+        try
+        {
+            oam.getSystemConfig("SystemName", systemName);
+            oam.getSystemConfig("AmazonAutoTagging", AmazonAutoTagging);
+        }
+        catch (...) {}
+    }
 
-									oam.deleteEC2Volume( volumeName );
-							
-									try {
-										Config* sysConfig = Config::makeConfig();
-		
-										sysConfig->setConfig("Installation", volumeNameID, oam::UnassignedName);
-										sysConfig->setConfig("Installation", deviceNameID, oam::UnassignedName);
-		
-										sysConfig->write();
-									}
-									catch(...)
-									{}
-								}
-							}
-						}
-					}
+    //Clear out Module IP and Hostnames
+    listPT = devicenetworklist.begin();
 
-					clearNICAlarms((*pt1).HostName);
-					(*pt1).IPAddr = oam::UnassignedIpAddr;
-					(*pt1).HostName = oam::UnassignedName;
-				}
-				break;
-			}
-		}
-	}
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        string moduleName = (*listPT).DeviceName;
+        log.writeLog(__LINE__, "removeModule - removing module: " + moduleName, LOG_TYPE_DEBUG);
 
-	//Remove Process Ports
-	// all nodes: ProcessMonitor, ServerMonitor
-	// dm: NONE
-	// um: ExeMgr
-	// pm: NONE
+        //don't allow remove of Active PM Module
+        if ( moduleName == config.OAMParentName() )
+        {
+            log.writeLog(__LINE__, "removeModule - ERROR: can't remove current module (Active Parent OAM) ", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_INVALID_PARAMETER;
+        }
 
-	Config* sysConfig = Config::makeConfig();
+        DeviceNetworkList::iterator pt = setmoduletypeconfig.ModuleNetworkList.begin();
 
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		Section = (*listPT).DeviceName + "_ProcessMonitor";
-		sysConfig->setConfig(Section, "IPAddr", oam::UnassignedName);
+        for ( ; pt != setmoduletypeconfig.ModuleNetworkList.end() ; pt++)
+        {
+            if ( moduleName == (*pt).DeviceName )
+            {
+                HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 
-		Section = (*listPT).DeviceName + "_ServerMonitor";
-		sysConfig->setConfig(Section, "IPAddr", oam::UnassignedName);
-	}
+                for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++ )
+                {
+                    //if cloud, delete instance
+                    if (amazon)
+                    {
+                        log.writeLog(__LINE__, "removeModule - terminate instance: " + (*pt1).HostName, LOG_TYPE_DEBUG);
+                        oam.terminateEC2Instance( (*pt1).HostName );
 
-	if ( moduleType == "um" ||
-		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-		( moduleType == "um" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM ) ||
-		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_PM_UM ) || 
-		( moduleType == "pm" && PMwithUM == "y" ) ) {
+                        // update instance tag
+                        if ( AmazonAutoTagging == "y" )
+                        {
+                            string tagValue = systemName + "-" + moduleName + "-terminated";
+                            oam.createEC2tag( (*pt1).HostName, "Name", tagValue );
+                        }
 
-		listPT = devicenetworklist.begin();
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			// go find ExeMgr ID by moduleName
-			for ( int id = 1 ; ; id++ )
-			{
-				string Section = "ExeMgr" + oam.itoa(id);
-				string moduleName;
-				try {
-					Config* sysConfig = Config::makeConfig();
-					moduleName = sysConfig->getConfig(Section, "Module");
+                        //check if any volumes need to be deleted
+                        if ( moduleType == "um" )
+                        {
+                            string UMStorageType = "internal";
+                            {
+                                try
+                                {
+                                    oam.getSystemConfig("UMStorageType", UMStorageType);
+                                }
+                                catch (...) {}
+                            }
 
-					if ( moduleName == (*listPT).DeviceName )
-					{ // match
-						sysConfig->setConfig(Section, "IPAddr", oam::UnassignedName);
-						sysConfig->setConfig(Section, "Module", oam::UnassignedName);
+                            if ( UMStorageType == "external" )
+                            {
+                                //check if volume already assigned or need to create a new one
+                                int moduleID = atoi(moduleName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
 
-						break;
-					}
-				}
-				catch (...) {}
+                                string volumeNameID = "UMVolumeName" + oam.itoa(moduleID);
+                                string volumeName = oam::UnassignedName;
+                                string deviceNameID = "UMVolumeDeviceName" + oam.itoa(moduleID);
+                                string deviceName = oam::UnassignedName;
 
-				if ( moduleName.empty() )
-					break;
-			}
-		}
-	}
+                                try
+                                {
+                                    oam.getSystemConfig( volumeNameID, volumeName);
+                                    oam.getSystemConfig( deviceNameID, deviceName);
+                                }
+                                catch (...)
+                                {}
 
-	log.writeLog(__LINE__, "removeModule - Updated Process Ports", LOG_TYPE_DEBUG);
+                                if ( !volumeName.empty() || volumeName != oam::UnassignedName )
+                                {
+                                    log.writeLog(__LINE__, "removeModule - detach / remove volume: " + volumeName + "/" + deviceName, LOG_TYPE_DEBUG);
+                                    oam.detachEC2Volume( volumeName );
 
-	//unassign dbroot entries
-	if (moduleType == "pm")
-	{
+                                    oam.deleteEC2Volume( volumeName );
+
+                                    try
+                                    {
+                                        Config* sysConfig = Config::makeConfig();
+
+                                        sysConfig->setConfig("Installation", volumeNameID, oam::UnassignedName);
+                                        sysConfig->setConfig("Installation", deviceNameID, oam::UnassignedName);
+
+                                        sysConfig->write();
+                                    }
+                                    catch (...)
+                                    {}
+                                }
+                            }
+                        }
+                    }
+
+                    clearNICAlarms((*pt1).HostName);
+                    (*pt1).IPAddr = oam::UnassignedIpAddr;
+                    (*pt1).HostName = oam::UnassignedName;
+                }
+
+                break;
+            }
+        }
+    }
+
+    //Remove Process Ports
+    // all nodes: ProcessMonitor, ServerMonitor
+    // dm: NONE
+    // um: ExeMgr
+    // pm: NONE
+
+    Config* sysConfig = Config::makeConfig();
+
+    listPT = devicenetworklist.begin();
+
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        Section = (*listPT).DeviceName + "_ProcessMonitor";
+        sysConfig->setConfig(Section, "IPAddr", oam::UnassignedName);
+
+        Section = (*listPT).DeviceName + "_ServerMonitor";
+        sysConfig->setConfig(Section, "IPAddr", oam::UnassignedName);
+    }
+
+    if ( moduleType == "um" ||
+            ( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+            ( moduleType == "um" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM ) ||
+            ( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_PM_UM ) ||
+            ( moduleType == "pm" && PMwithUM == "y" ) )
+    {
+
+        listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            // go find ExeMgr ID by moduleName
+            for ( int id = 1 ; ; id++ )
+            {
+                string Section = "ExeMgr" + oam.itoa(id);
+                string moduleName;
+
+                try
+                {
+                    Config* sysConfig = Config::makeConfig();
+                    moduleName = sysConfig->getConfig(Section, "Module");
+
+                    if ( moduleName == (*listPT).DeviceName )
+                    {
+                        // match
+                        sysConfig->setConfig(Section, "IPAddr", oam::UnassignedName);
+                        sysConfig->setConfig(Section, "Module", oam::UnassignedName);
+
+                        break;
+                    }
+                }
+                catch (...) {}
+
+                if ( moduleName.empty() )
+                    break;
+            }
+        }
+    }
+
+    log.writeLog(__LINE__, "removeModule - Updated Process Ports", LOG_TYPE_DEBUG);
+
+    //unassign dbroot entries
+    if (moduleType == "pm")
+    {
         const string MODULE_DBROOTID = "ModuleDBRootID";
         const string MODULE_DBROOT_COUNT = "ModuleDBRootCount";
 
-		listPT = devicenetworklist.begin();
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			string moduleID = (*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE);
+        listPT = devicenetworklist.begin();
 
-			string ModuleDBRootCount = MODULE_DBROOT_COUNT + moduleID + "-3";
-			sysConfig->setConfig("SystemModuleConfig", ModuleDBRootCount, oam::UnassignedName);
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string moduleID = (*listPT).DeviceName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE);
 
-			string ModuleDBrootID = MODULE_DBROOTID + moduleID + "-1-3";
-			sysConfig->setConfig("SystemModuleConfig", ModuleDBrootID, oam::UnassignedName);
-		}
-	}
+            string ModuleDBRootCount = MODULE_DBROOT_COUNT + moduleID + "-3";
+            sysConfig->setConfig("SystemModuleConfig", ModuleDBRootCount, oam::UnassignedName);
 
-	log.writeLog(__LINE__, "removeModule - Updated DBRoot paramaters", LOG_TYPE_DEBUG);
+            string ModuleDBrootID = MODULE_DBROOTID + moduleID + "-1-3";
+            sysConfig->setConfig("SystemModuleConfig", ModuleDBrootID, oam::UnassignedName);
+        }
+    }
 
-	//update Calpont Config table
-	try {
-		sysConfig->write();
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "removeModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    log.writeLog(__LINE__, "removeModule - Updated DBRoot paramaters", LOG_TYPE_DEBUG);
 
-	//write Columnstore.xml Module section
-	try {
-		oam.setSystemConfig(moduleType, setmoduletypeconfig);
-		log.writeLog(__LINE__, "removeModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "removeModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    //update Calpont Config table
+    try
+    {
+        sysConfig->write();
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "removeModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	//clear out the known_host file, sometimes causes a failure on amazon during addModule
-	if ( amazon )
-	{
-	    string homedir = "/root";
-	    if (!rootUser) {
-		    char* p= getenv("HOME");
-		    if (p && *p)
-			    homedir = p;
-	    }
+    //write Columnstore.xml Module section
+    try
+    {
+        oam.setSystemConfig(moduleType, setmoduletypeconfig);
+        log.writeLog(__LINE__, "removeModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "removeModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	    string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
-	    system(cmd.c_str());
-	}
-	  
-	pthread_mutex_unlock(&THREAD_LOCK);
+    //clear out the known_host file, sometimes causes a failure on amazon during addModule
+    if ( amazon )
+    {
+        string homedir = "/root";
 
-	//check if any removed modules was Standby OAM or Active OAM
-	bool activeOAM = false;
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		if ( (*listPT).DeviceName == config.OAMStandbyName() )
-			clearStandbyModule();
-		else
-			if ( (*listPT).DeviceName == config.OAMParentName() )
-				activeOAM = true;
-	}
+        if (!rootUser)
+        {
+            char* p = getenv("HOME");
 
-	//
-	//send message to Process Monitor to remove module/processes to shared memory
-	//
-	if ( !activeOAM )
-	{
-		try
-		{
-			ByteStream obs;
-	
-			obs << (ByteStream::byte) REMOVE_MODULE;
-			obs << (ByteStream::byte) RemoveModuleCount;
-	
-			listPT = devicenetworklist.begin();
-			for( ; listPT != devicenetworklist.end() ; listPT++)
-			{
-				obs << (*listPT).DeviceName;
-			}
-	
-			sendStatusUpdate(obs, REMOVE_MODULE);
-			log.writeLog(__LINE__, "removeModule - Updated Shared Memory", LOG_TYPE_DEBUG);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "removeModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
-			return API_FAILURE;
-		}
-	}
+            if (p && *p)
+                homedir = p;
+        }
 
-	if ( moduleType == "pm" ) {
-		if ( updatePMSconfig() != API_SUCCESS )
-			return API_FAILURE;
-	}
+        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        system(cmd.c_str());
+    }
 
-	//Update DBRM section of Columnstore.xml
-	if ( updateWorkerNodeconfig() != API_SUCCESS )
-		return API_FAILURE;
+    pthread_mutex_unlock(&THREAD_LOCK);
 
-	// remove all associated alarms for this modules being removed
-	listPT = devicenetworklist.begin();
-	for( ; listPT != devicenetworklist.end() ; listPT++)
-	{
-		clearModuleAlarms( (*listPT).DeviceName );
-		log.writeLog(__LINE__, "removeModule - successfully removed module: " + (*listPT).DeviceName, LOG_TYPE_DEBUG);
-	}
+    //check if any removed modules was Standby OAM or Active OAM
+    bool activeOAM = false;
+    listPT = devicenetworklist.begin();
 
-	//distribute config file
-	distributeConfigFile("system");	
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        if ( (*listPT).DeviceName == config.OAMStandbyName() )
+            clearStandbyModule();
+        else if ( (*listPT).DeviceName == config.OAMParentName() )
+            activeOAM = true;
+    }
 
-	string password;
-	// check if there is a root password stored
-	string rpw = oam::UnassignedName;
-	try
-	{
-		oam.getSystemConfig("rpw", password);
-	}
-	catch(...)
-	{
-		rpw = "root";
-	}
+    //
+    //send message to Process Monitor to remove module/processes to shared memory
+    //
+    if ( !activeOAM )
+    {
+        try
+        {
+            ByteStream obs;
 
-	return API_SUCCESS;
+            obs << (ByteStream::byte) REMOVE_MODULE;
+            obs << (ByteStream::byte) RemoveModuleCount;
+
+            listPT = devicenetworklist.begin();
+
+            for ( ; listPT != devicenetworklist.end() ; listPT++)
+            {
+                obs << (*listPT).DeviceName;
+            }
+
+            sendStatusUpdate(obs, REMOVE_MODULE);
+            log.writeLog(__LINE__, "removeModule - Updated Shared Memory", LOG_TYPE_DEBUG);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "removeModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
+            return API_FAILURE;
+        }
+    }
+
+    if ( moduleType == "pm" )
+    {
+        if ( updatePMSconfig() != API_SUCCESS )
+            return API_FAILURE;
+    }
+
+    //Update DBRM section of Columnstore.xml
+    if ( updateWorkerNodeconfig() != API_SUCCESS )
+        return API_FAILURE;
+
+    // remove all associated alarms for this modules being removed
+    listPT = devicenetworklist.begin();
+
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        clearModuleAlarms( (*listPT).DeviceName );
+        log.writeLog(__LINE__, "removeModule - successfully removed module: " + (*listPT).DeviceName, LOG_TYPE_DEBUG);
+    }
+
+    //distribute config file
+    distributeConfigFile("system");
+
+    string password;
+    // check if there is a root password stored
+    string rpw = oam::UnassignedName;
+
+    try
+    {
+        oam.getSystemConfig("rpw", password);
+    }
+    catch (...)
+    {
+        rpw = "root";
+    }
+
+    return API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -5842,322 +6412,343 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
 ******************************************************************************************/
 int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 {
-	ModuleTypeConfig reconfiguremoduletypeconfig;
-	ModuleTypeConfig setreconfiguremoduletypeconfig;
-	ModuleTypeConfig moduletypeconfig;
-	DeviceNetworkConfig devicenetworkconfig;
-	Oam oam;
-	string Section;
+    ModuleTypeConfig reconfiguremoduletypeconfig;
+    ModuleTypeConfig setreconfiguremoduletypeconfig;
+    ModuleTypeConfig moduletypeconfig;
+    DeviceNetworkConfig devicenetworkconfig;
+    Oam oam;
+    string Section;
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+    DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-	//get module name being reconfigured
-	string moduleName = (*listPT).DeviceName;
-	string moduleType = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
+    //get module name being reconfigured
+    string moduleName = (*listPT).DeviceName;
+    string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
 
-	//get module type being configured as
-	listPT++;
-	string reconfigureModuleName = (*listPT).DeviceName;
-	string reconfigureModuleType = reconfigureModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
-	string reconfigureHostName2;
-	string reconfigureIpAddr2;
-	int reconfigureNicId2 = 0;
+    //get module type being configured as
+    listPT++;
+    string reconfigureModuleName = (*listPT).DeviceName;
+    string reconfigureModuleType = reconfigureModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+    string reconfigureHostName2;
+    string reconfigureIpAddr2;
+    int reconfigureNicId2 = 0;
 
-	if ( !(*listPT).hostConfigList.empty()) {
-		HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-		reconfigureHostName2 = (*pt1).HostName;
-		reconfigureIpAddr2 = (*pt1).IPAddr;
-		reconfigureNicId2 = (*pt1).NicID;
-	}
+    if ( !(*listPT).hostConfigList.empty())
+    {
+        HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+        reconfigureHostName2 = (*pt1).HostName;
+        reconfigureIpAddr2 = (*pt1).IPAddr;
+        reconfigureNicId2 = (*pt1).NicID;
+    }
 
-	int status = stopModule(moduleName, GRACEFUL, true);
-	if (status == API_SUCCESS) {
-		log.writeLog(__LINE__, "reconfigureModule - stopModule Successfully " + moduleName, LOG_TYPE_DEBUG);
-		//check for SIMPLEX Processes on mate might need to be started
-		pthread_mutex_unlock(&THREAD_LOCK);
-		checkSimplexModule(moduleName);
-		pthread_mutex_lock(&THREAD_LOCK);
-	}
-	else
-		log.writeLog(__LINE__, "reconfigureModule - stopModule " + moduleName, LOG_TYPE_ERROR);
+    int status = stopModule(moduleName, GRACEFUL, true);
 
-	//
-	//Get Module Configuration 
-	//
+    if (status == API_SUCCESS)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - stopModule Successfully " + moduleName, LOG_TYPE_DEBUG);
+        //check for SIMPLEX Processes on mate might need to be started
+        pthread_mutex_unlock(&THREAD_LOCK);
+        checkSimplexModule(moduleName);
+        pthread_mutex_lock(&THREAD_LOCK);
+    }
+    else
+        log.writeLog(__LINE__, "reconfigureModule - stopModule " + moduleName, LOG_TYPE_ERROR);
 
-	try{
-		oam.getSystemConfig(moduleType, moduletypeconfig);
-		oam.getSystemConfig(reconfigureModuleType, reconfiguremoduletypeconfig);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    //
+    //Get Module Configuration
+    //
 
-	setreconfiguremoduletypeconfig = reconfiguremoduletypeconfig;
+    try
+    {
+        oam.getSystemConfig(moduleType, moduletypeconfig);
+        oam.getSystemConfig(reconfigureModuleType, reconfiguremoduletypeconfig);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	// update Module Type Counts
-	setreconfiguremoduletypeconfig.ModuleCount++;
+    setreconfiguremoduletypeconfig = reconfiguremoduletypeconfig;
 
-	Config* sysConfig = Config::makeConfig();
+    // update Module Type Counts
+    setreconfiguremoduletypeconfig.ModuleCount++;
 
-	//Move Module IP and Hostnames
-	string IPaddress = oam::UnassignedIpAddr;
-	HostConfig hostconfig;
-	DeviceNetworkList::iterator pt = moduletypeconfig.ModuleNetworkList.begin();
-	for ( ; pt != moduletypeconfig.ModuleNetworkList.end() ; pt++)
-	{
-		if ( moduleName == (*pt).DeviceName ) {
-			devicenetworkconfig.DeviceName = reconfigureModuleName;
-			HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-			for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
-			{
-				if ( pt1 == (*pt).hostConfigList.begin() )
-					//save first IP for Process Port usage
-					IPaddress = (*pt1).IPAddr;
-				hostconfig.IPAddr = (*pt1).IPAddr;
-				hostconfig.HostName = (*pt1).HostName;
-				hostconfig.NicID = (*pt1).NicID;
-				devicenetworkconfig.hostConfigList.push_back(hostconfig);
-			}
+    Config* sysConfig = Config::makeConfig();
 
-			//configure any secondary NIC info passed from console
-			if ( ! reconfigureHostName2.empty() ) {
-				hostconfig.IPAddr = reconfigureIpAddr2;
-				hostconfig.HostName = reconfigureHostName2;
-				hostconfig.NicID = reconfigureNicId2;
-				devicenetworkconfig.hostConfigList.push_back(hostconfig);
-			}
+    //Move Module IP and Hostnames
+    string IPaddress = oam::UnassignedIpAddr;
+    HostConfig hostconfig;
+    DeviceNetworkList::iterator pt = moduletypeconfig.ModuleNetworkList.begin();
 
-			setreconfiguremoduletypeconfig.ModuleNetworkList.push_back(devicenetworkconfig);
-			break;
-		}
-	}
+    for ( ; pt != moduletypeconfig.ModuleNetworkList.end() ; pt++)
+    {
+        if ( moduleName == (*pt).DeviceName )
+        {
+            devicenetworkconfig.DeviceName = reconfigureModuleName;
+            HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 
-	if ( IPaddress == oam::UnassignedIpAddr ) {
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: module IP is unassigned", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+            for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
+            {
+                if ( pt1 == (*pt).hostConfigList.begin() )
+                    //save first IP for Process Port usage
+                    IPaddress = (*pt1).IPAddr;
 
-	//Update Process Ports
-	// all nodes: ProcessMonitor, ServerMonitor
-	// dm: NONE
-	// um: ExeMgr
-	// pm: NONE
+                hostconfig.IPAddr = (*pt1).IPAddr;
+                hostconfig.HostName = (*pt1).HostName;
+                hostconfig.NicID = (*pt1).NicID;
+                devicenetworkconfig.hostConfigList.push_back(hostconfig);
+            }
 
-	Section = reconfigureModuleName + "_ProcessMonitor";
-	sysConfig->setConfig(Section, "IPAddr", IPaddress);
-	sysConfig->setConfig(Section, "Port", "8800");
+            //configure any secondary NIC info passed from console
+            if ( ! reconfigureHostName2.empty() )
+            {
+                hostconfig.IPAddr = reconfigureIpAddr2;
+                hostconfig.HostName = reconfigureHostName2;
+                hostconfig.NicID = reconfigureNicId2;
+                devicenetworkconfig.hostConfigList.push_back(hostconfig);
+            }
 
-	Section = reconfigureModuleName + "_ServerMonitor";
-	sysConfig->setConfig(Section, "IPAddr", IPaddress);
-	sysConfig->setConfig(Section, "Port", "8622");
+            setreconfiguremoduletypeconfig.ModuleNetworkList.push_back(devicenetworkconfig);
+            break;
+        }
+    }
 
-	if ( moduleType == "um" ||
-		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-		( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_PM_UM ) ) {
+    if ( IPaddress == oam::UnassignedIpAddr )
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: module IP is unassigned", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-		int moduleID = atoi(moduleName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
-		Section = "ExeMgr" + oam.itoa(moduleID);
-		sysConfig->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
-	}
-	else
-	{
-		//PM TO UM
-		int moduleID = atoi(reconfigureModuleName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
-		Section = "ExeMgr" + oam.itoa(moduleID);
-		sysConfig->setConfig(Section, "IPAddr", IPaddress);
-		sysConfig->setConfig(Section, "Port", "8601");
-	}
+    //Update Process Ports
+    // all nodes: ProcessMonitor, ServerMonitor
+    // dm: NONE
+    // um: ExeMgr
+    // pm: NONE
 
-	log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
+    Section = reconfigureModuleName + "_ProcessMonitor";
+    sysConfig->setConfig(Section, "IPAddr", IPaddress);
+    sysConfig->setConfig(Section, "Port", "8800");
 
-	//update Calpont Config table
-	try {
-		sysConfig->write();
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    Section = reconfigureModuleName + "_ServerMonitor";
+    sysConfig->setConfig(Section, "IPAddr", IPaddress);
+    sysConfig->setConfig(Section, "Port", "8622");
 
-	//write Columnstore.xml Module section
-	try {
-		oam.setSystemConfig(reconfigureModuleType, setreconfiguremoduletypeconfig);
-		log.writeLog(__LINE__, "reconfigureModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    if ( moduleType == "um" ||
+            ( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+            ( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_PM_UM ) )
+    {
 
-	//distribute config file
-	distributeConfigFile(moduleName);	
+        int moduleID = atoi(moduleName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
+        Section = "ExeMgr" + oam.itoa(moduleID);
+        sysConfig->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
+    }
+    else
+    {
+        //PM TO UM
+        int moduleID = atoi(reconfigureModuleName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
+        Section = "ExeMgr" + oam.itoa(moduleID);
+        sysConfig->setConfig(Section, "IPAddr", IPaddress);
+        sysConfig->setConfig(Section, "Port", "8601");
+    }
 
-	//
-	//Send Reconfigure msg to Module's Process-Monitor being reconfigured
-	//
-	ByteStream msg;
-	ByteStream::byte requestID = RECONFIGURE;
+    log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
 
-	msg << requestID;
-	msg << reconfigureModuleName;
+    //update Calpont Config table
+    try
+    {
+        sysConfig->write();
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID );
+    //write Columnstore.xml Module section
+    try
+    {
+        oam.setSystemConfig(reconfigureModuleType, setreconfiguremoduletypeconfig);
+        log.writeLog(__LINE__, "reconfigureModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	if ( returnStatus == API_SUCCESS)
-		//log the event 
-		log.writeLog(__LINE__, "reconfigureModule - procmon reconfigure successful", LOG_TYPE_DEBUG);
-	else
-	{
-		log.writeLog(__LINE__, "reconfigureModule - procmon reconfigure failed", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    //distribute config file
+    distributeConfigFile(moduleName);
 
-	ModuleTypeConfig setmoduletypeconfig;
+    //
+    //Send Reconfigure msg to Module's Process-Monitor being reconfigured
+    //
+    ByteStream msg;
+    ByteStream::byte requestID = RECONFIGURE;
 
-	try{
-		oam.getSystemConfig(moduleType, setmoduletypeconfig);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    msg << requestID;
+    msg << reconfigureModuleName;
 
-	// update Module Type Counts
-	setmoduletypeconfig.ModuleCount--;
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID );
 
-	//Clear Module IP and Hostnames
-	pt = setmoduletypeconfig.ModuleNetworkList.begin();
-	for ( ; pt != setmoduletypeconfig.ModuleNetworkList.end() ; pt++)
-	{
-		if ( moduleName == (*pt).DeviceName ) {
-			HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-			for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
-			{
-				(*pt1).IPAddr = oam::UnassignedIpAddr;
-				(*pt1).HostName = oam::UnassignedName;
-			}
+    if ( returnStatus == API_SUCCESS)
+        //log the event
+        log.writeLog(__LINE__, "reconfigureModule - procmon reconfigure successful", LOG_TYPE_DEBUG);
+    else
+    {
+        log.writeLog(__LINE__, "reconfigureModule - procmon reconfigure failed", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-			break;
-		}
-	}
+    ModuleTypeConfig setmoduletypeconfig;
 
-	//Update Process Ports
-	// all nodes: ProcessMonitor, ServerMonitor
-	// dm: NONE
-	// um: ExeMgr
-	// pm: NONE
+    try
+    {
+        oam.getSystemConfig(moduleType, setmoduletypeconfig);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: getSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	Section = moduleName + "_ProcessMonitor";
-	sysConfig->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
+    // update Module Type Counts
+    setmoduletypeconfig.ModuleCount--;
 
-	Section = moduleName + "_ServerMonitor";
-	sysConfig->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
+    //Clear Module IP and Hostnames
+    pt = setmoduletypeconfig.ModuleNetworkList.begin();
 
-	log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
+    for ( ; pt != setmoduletypeconfig.ModuleNetworkList.end() ; pt++)
+    {
+        if ( moduleName == (*pt).DeviceName )
+        {
+            HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 
-	//update Calpont Config table
-	try {
-		sysConfig->write();
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+            for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
+            {
+                (*pt1).IPAddr = oam::UnassignedIpAddr;
+                (*pt1).HostName = oam::UnassignedName;
+            }
 
-	//write Columnstore.xml Module section
-	try {
-		oam.setSystemConfig(moduleType, setmoduletypeconfig);
-		log.writeLog(__LINE__, "reconfigureModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+            break;
+        }
+    }
 
-	pthread_mutex_unlock(&THREAD_LOCK);
+    //Update Process Ports
+    // all nodes: ProcessMonitor, ServerMonitor
+    // dm: NONE
+    // um: ExeMgr
+    // pm: NONE
 
-	//
-	//send message to Process Monitor to remove/add module/processes to shared memory
-	//
-	try
-	{
-		ByteStream obs;
+    Section = moduleName + "_ProcessMonitor";
+    sysConfig->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
 
-		obs << (ByteStream::byte) REMOVE_MODULE;
+    Section = moduleName + "_ServerMonitor";
+    sysConfig->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
 
-		obs << (ByteStream::byte) 1;
-		obs << moduleName;
+    log.writeLog(__LINE__, "reconfigureModule - Updated Process Ports", LOG_TYPE_DEBUG);
 
-		sendStatusUpdate(obs, REMOVE_MODULE);
-		log.writeLog(__LINE__, "reconfigureModule - module removed from Shared Memory", LOG_TYPE_DEBUG);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
+    //update Calpont Config table
+    try
+    {
+        sysConfig->write();
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	try
-	{
-		ByteStream obs;
+    //write Columnstore.xml Module section
+    try
+    {
+        oam.setSystemConfig(moduleType, setmoduletypeconfig);
+        log.writeLog(__LINE__, "reconfigureModule - Updated Module Section of Config file", LOG_TYPE_DEBUG);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: setSystemConfig", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-		obs << (ByteStream::byte) ADD_MODULE;
+    pthread_mutex_unlock(&THREAD_LOCK);
 
-		obs << (ByteStream::byte) 1;
-		obs << reconfigureModuleName;
+    //
+    //send message to Process Monitor to remove/add module/processes to shared memory
+    //
+    try
+    {
+        ByteStream obs;
 
-		//pass NIC Hostnames
-		if ( ! reconfigureHostName2.empty() ) {
-			obs << (ByteStream::byte) 1;
-			obs << hostconfig.HostName;
-		}
-		else
-			obs << (ByteStream::byte) 0;
+        obs << (ByteStream::byte) REMOVE_MODULE;
 
-		sendStatusUpdate(obs, ADD_MODULE);
-		log.writeLog(__LINE__, "reconfigureModule - module added from Shared Memory", LOG_TYPE_DEBUG);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "reconfigureModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+        obs << (ByteStream::byte) 1;
+        obs << moduleName;
 
-	if ( moduleType == "pm" ) {
-		if ( updatePMSconfig() != API_SUCCESS )
-			return API_FAILURE;
-	}
+        sendStatusUpdate(obs, REMOVE_MODULE);
+        log.writeLog(__LINE__, "reconfigureModule - module removed from Shared Memory", LOG_TYPE_DEBUG);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_FAILURE;
+    }
 
-	//Update DBRM section of Columnstore.xml
-	if ( updateWorkerNodeconfig() != API_SUCCESS )
-		return API_FAILURE;
+    try
+    {
+        ByteStream obs;
 
-	// remove all associated alarms for this modules being removed
-	clearModuleAlarms( moduleName );
+        obs << (ByteStream::byte) ADD_MODULE;
 
-	//distribute config file
-	distributeConfigFile("system");	
+        obs << (ByteStream::byte) 1;
+        obs << reconfigureModuleName;
 
-	return API_SUCCESS;
+        //pass NIC Hostnames
+        if ( ! reconfigureHostName2.empty() )
+        {
+            obs << (ByteStream::byte) 1;
+            obs << hostconfig.HostName;
+        }
+        else
+            obs << (ByteStream::byte) 0;
+
+        sendStatusUpdate(obs, ADD_MODULE);
+        log.writeLog(__LINE__, "reconfigureModule - module added from Shared Memory", LOG_TYPE_DEBUG);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "reconfigureModule - ERROR: sendStatusUpdate error", LOG_TYPE_ERROR);
+        return API_FAILURE;
+    }
+
+    if ( moduleType == "pm" )
+    {
+        if ( updatePMSconfig() != API_SUCCESS )
+            return API_FAILURE;
+    }
+
+    //Update DBRM section of Columnstore.xml
+    if ( updateWorkerNodeconfig() != API_SUCCESS )
+        return API_FAILURE;
+
+    // remove all associated alarms for this modules being removed
+    clearModuleAlarms( moduleName );
+
+    //distribute config file
+    distributeConfigFile("system");
+
+    return API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -6168,33 +6759,33 @@ int ProcessManager::reconfigureModule(oam::DeviceNetworkList devicenetworklist)
 ******************************************************************************************/
 int ProcessManager::configureModule(std::string moduleName)
 {
-	log.writeLog(__LINE__, "configureModule: Process module " + moduleName , LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "configureModule: Process module " + moduleName, LOG_TYPE_DEBUG);
 
-	//distribute config file
-	distributeConfigFile(moduleName);
-	distributeConfigFile(moduleName, "ProcessConfig.xml");
+    //distribute config file
+    distributeConfigFile(moduleName);
+    distributeConfigFile(moduleName, "ProcessConfig.xml");
 
-	//
-	//Send Configure msg to Module's Process-Monitor being reconfigured
-	//
-	ByteStream msg;
-	ByteStream::byte requestID = CONFIGURE;
+    //
+    //Send Configure msg to Module's Process-Monitor being reconfigured
+    //
+    ByteStream msg;
+    ByteStream::byte requestID = CONFIGURE;
 
-	msg << requestID;
-	msg << moduleName;
+    msg << requestID;
+    msg << moduleName;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID );
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID );
 
-	if ( returnStatus == API_SUCCESS)
-		//log the event 
-		log.writeLog(__LINE__, "configureModule - procmon configure successful", LOG_TYPE_DEBUG);
-	else
-	{
-		log.writeLog(__LINE__, "configureModule - procmon configure failed", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+    if ( returnStatus == API_SUCCESS)
+        //log the event
+        log.writeLog(__LINE__, "configureModule - procmon configure successful", LOG_TYPE_DEBUG);
+    else
+    {
+        log.writeLog(__LINE__, "configureModule - procmon configure failed", LOG_TYPE_ERROR);
+        return API_FAILURE;
+    }
 
-	return API_SUCCESS;
+    return API_SUCCESS;
 }
 
 
@@ -6206,117 +6797,131 @@ int ProcessManager::configureModule(std::string moduleName)
 ******************************************************************************************/
 int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requestID, int timeout )
 {
-	string msgPort;
-	int returnStatus = API_FAILURE;
-	Oam oam;
+    string msgPort;
+    int returnStatus = API_FAILURE;
+    Oam oam;
 
-	if ( module != config.moduleName() ) {
-		msgPort = module + "_ProcessMonitor";
+    if ( module != config.moduleName() )
+    {
+        msgPort = module + "_ProcessMonitor";
 
-		// do a ping test to determine a quick failure
-		Config* sysConfig = Config::makeConfig();
-	
-		string IPAddr = sysConfig->getConfig(msgPort, "IPAddr");
-	
-		if ( IPAddr == oam::UnassignedIpAddr ) {
-			log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
-			return oam::API_SUCCESS;
-		}
-	
-		string cmdLine = "ping ";
-		string cmdOption = " -c 1 -w 5 >> /dev/null";
-		string cmd = cmdLine + IPAddr + cmdOption;
-		if ( system(cmd.c_str()) != 0) {
-			//ping failure
-			log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
-			return oam::API_SUCCESS;
-		}
-	}
-	else
-		// use the localhost IP Address
-		msgPort = "localhost_ProcessMonitor";
+        // do a ping test to determine a quick failure
+        Config* sysConfig = Config::makeConfig();
 
-	log.writeLog(__LINE__, "sendMsgProcMon: Process module " + module , LOG_TYPE_DEBUG);
-	try
-	{
-		MessageQueueClient mqRequest(msgPort);
-		mqRequest.write(msg);
+        string IPAddr = sysConfig->getConfig(msgPort, "IPAddr");
 
-		if ( timeout > 0 ) {
-			// wait for response
-			ByteStream::byte returnACK;
-			ByteStream::byte returnRequestID;
-			ByteStream::byte requestStatus;
-			ByteStream receivedMSG;
-		
-			struct timespec ts = { timeout, 0 };
+        if ( IPAddr == oam::UnassignedIpAddr )
+        {
+            log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
+            return oam::API_SUCCESS;
+        }
 
-			// get current time in seconds
-			time_t startTimeSec;
-			time (&startTimeSec);
+        string cmdLine = "ping ";
+        string cmdOption = " -c 1 -w 5 >> /dev/null";
+        string cmd = cmdLine + IPAddr + cmdOption;
 
-			while(true)
-			{
-				try {
-					receivedMSG = mqRequest.read(&ts);
-				}
-				catch (SocketClosed &ex) {
-					string error = ex.what();
+        if ( system(cmd.c_str()) != 0)
+        {
+            //ping failure
+            log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
+            return oam::API_SUCCESS;
+        }
+    }
+    else
+        // use the localhost IP Address
+        msgPort = "localhost_ProcessMonitor";
+
+    log.writeLog(__LINE__, "sendMsgProcMon: Process module " + module, LOG_TYPE_DEBUG);
+
+    try
+    {
+        MessageQueueClient mqRequest(msgPort);
+        mqRequest.write(msg);
+
+        if ( timeout > 0 )
+        {
+            // wait for response
+            ByteStream::byte returnACK;
+            ByteStream::byte returnRequestID;
+            ByteStream::byte requestStatus;
+            ByteStream receivedMSG;
+
+            struct timespec ts = { timeout, 0 };
+
+            // get current time in seconds
+            time_t startTimeSec;
+            time (&startTimeSec);
+
+            while (true)
+            {
+                try
+                {
+                    receivedMSG = mqRequest.read(&ts);
+                }
+                catch (SocketClosed& ex)
+                {
+                    string error = ex.what();
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read, module " + module + " : " + error, LOG_TYPE_ERROR);
-					return returnStatus;
-				}
-				catch (...) {
+                    return returnStatus;
+                }
+                catch (...)
+                {
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read: Caught unknown exception! module " + module, LOG_TYPE_ERROR);
-					return returnStatus;
-				}
-	
-				if (receivedMSG.length() > 0) {
-					receivedMSG >> returnACK;
-					receivedMSG >> returnRequestID;
-					receivedMSG >> requestStatus;
-		
-					if ( requestID == oam::MASTERREP )
-					{
-						receivedMSG >> masterLogFile;
-						receivedMSG >> masterLogPos;
-					}
-		
-					if ( returnACK == oam::ACK &&  returnRequestID == requestID) {
-						// ACK for this request
-						returnStatus = requestStatus;
-						break;	
-					}	
-					else
-						log.writeLog(__LINE__, "sendMsgProcMon: invalid message " + module, LOG_TYPE_ERROR);
-				}
-				else
-				{	//api timeout occurred, check if retry should be done
-					// get current time in seconds
-					time_t endTimeSec;
-					time (&endTimeSec);
-					if ( timeout <= (endTimeSec - startTimeSec) ) {
-						log.writeLog(__LINE__, "sendMsgProcMon: ProcMon Msg timeout on module " + module, LOG_TYPE_ERROR);
-						break;
-					}
-				}
-			}
-		}
-		else
-			returnStatus = oam::API_SUCCESS;
+                    return returnStatus;
+                }
 
-		mqRequest.shutdown();
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+                if (receivedMSG.length() > 0)
+                {
+                    receivedMSG >> returnACK;
+                    receivedMSG >> returnRequestID;
+                    receivedMSG >> requestStatus;
+
+                    if ( requestID == oam::MASTERREP )
+                    {
+                        receivedMSG >> masterLogFile;
+                        receivedMSG >> masterLogPos;
+                    }
+
+                    if ( returnACK == oam::ACK &&  returnRequestID == requestID)
+                    {
+                        // ACK for this request
+                        returnStatus = requestStatus;
+                        break;
+                    }
+                    else
+                        log.writeLog(__LINE__, "sendMsgProcMon: invalid message " + module, LOG_TYPE_ERROR);
+                }
+                else
+                {
+                    //api timeout occurred, check if retry should be done
+                    // get current time in seconds
+                    time_t endTimeSec;
+                    time (&endTimeSec);
+
+                    if ( timeout <= (endTimeSec - startTimeSec) )
+                    {
+                        log.writeLog(__LINE__, "sendMsgProcMon: ProcMon Msg timeout on module " + module, LOG_TYPE_ERROR);
+                        break;
+                    }
+                }
+            }
+        }
+        else
+            returnStatus = oam::API_SUCCESS;
+
+        mqRequest.shutdown();
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    }
 
-	return returnStatus;
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -6327,81 +6932,90 @@ int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requ
 ******************************************************************************************/
 std::string ProcessManager::sendMsgProcMon1( std::string module, ByteStream msg, int requestID )
 {
-	string msgPort;
-	string returnStatus = "FAILED";
+    string msgPort;
+    string returnStatus = "FAILED";
 
-	if ( module != config.moduleName() ) {
-		msgPort = module + "_ProcessMonitor";
+    if ( module != config.moduleName() )
+    {
+        msgPort = module + "_ProcessMonitor";
 
-		// do a ping test to determine a quick failure
-		Config* sysConfig = Config::makeConfig();
-	
-		string IPAddr = sysConfig->getConfig(msgPort, "IPAddr");
-	
-		string cmdLine = "ping ";
-		string cmdOption = " -c 1 -w 5 >> /dev/null";
-		string cmd = cmdLine + IPAddr + cmdOption;
-		if ( system(cmd.c_str()) != 0 ) {
-			//ping failure
-			log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
-			return returnStatus;
-		}
-	}
-	else
-		// use the localhost IP Address
-		msgPort = "localhost_ProcessMonitor";
+        // do a ping test to determine a quick failure
+        Config* sysConfig = Config::makeConfig();
 
-	try
-	{
-		MessageQueueClient mqRequest(msgPort);
-		mqRequest.write(msg);
-	
-		// wait 30 seconds for response
-		ByteStream::byte returnACK;
-		ByteStream::byte returnRequestID;
-		string requestStatus;
-		ByteStream receivedMSG;
-	
-		struct timespec ts = { 30, 0 };
-		try {
-			receivedMSG = mqRequest.read(&ts);
-		}
-		catch (SocketClosed &ex) {
-			string error = ex.what();
+        string IPAddr = sysConfig->getConfig(msgPort, "IPAddr");
+
+        string cmdLine = "ping ";
+        string cmdOption = " -c 1 -w 5 >> /dev/null";
+        string cmd = cmdLine + IPAddr + cmdOption;
+
+        if ( system(cmd.c_str()) != 0 )
+        {
+            //ping failure
+            log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
+            return returnStatus;
+        }
+    }
+    else
+        // use the localhost IP Address
+        msgPort = "localhost_ProcessMonitor";
+
+    try
+    {
+        MessageQueueClient mqRequest(msgPort);
+        mqRequest.write(msg);
+
+        // wait 30 seconds for response
+        ByteStream::byte returnACK;
+        ByteStream::byte returnRequestID;
+        string requestStatus;
+        ByteStream receivedMSG;
+
+        struct timespec ts = { 30, 0 };
+
+        try
+        {
+            receivedMSG = mqRequest.read(&ts);
+        }
+        catch (SocketClosed& ex)
+        {
+            string error = ex.what();
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read: " + error, LOG_TYPE_ERROR);
-			return returnStatus;
-		}
-		catch (...) {
+            return returnStatus;
+        }
+        catch (...)
+        {
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on mqRequest.read: Caught unknown exception!", LOG_TYPE_ERROR);
-			return returnStatus;
-		}
+            return returnStatus;
+        }
 
-		if (receivedMSG.length() > 0) {
-			receivedMSG >> returnACK;
-			receivedMSG >> returnRequestID;
-			receivedMSG >> requestStatus;
-	
-			if ( returnACK == oam::ACK &&  returnRequestID == requestID) {
-				// ACK for this request
-				returnStatus = requestStatus;
-			}
-		}
-		else
-			log.writeLog(__LINE__, "sendMsgProcMon1: ProcMon Msg timeout on module " + module, LOG_TYPE_ERROR);
+        if (receivedMSG.length() > 0)
+        {
+            receivedMSG >> returnACK;
+            receivedMSG >> returnRequestID;
+            receivedMSG >> requestStatus;
 
-		mqRequest.shutdown();
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
+            if ( returnACK == oam::ACK &&  returnRequestID == requestID)
+            {
+                // ACK for this request
+                returnStatus = requestStatus;
+            }
+        }
+        else
+            log.writeLog(__LINE__, "sendMsgProcMon1: ProcMon Msg timeout on module " + module, LOG_TYPE_ERROR);
+
+        mqRequest.shutdown();
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueClient: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    }
 
-	return returnStatus;
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -6412,40 +7026,46 @@ std::string ProcessManager::sendMsgProcMon1( std::string module, ByteStream msg,
 ******************************************************************************************/
 void ProcessManager::saveBRM(bool skipSession, bool clearshm)
 {
-	Oam oam;
-	string logdir("/var/log/mariadb/columnstore");
-	if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+    Oam oam;
+    string logdir("/var/log/mariadb/columnstore");
 
-	log.writeLog(__LINE__, "Running reset_locks", LOG_TYPE_DEBUG);
+    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
 
-	string skip = " ";
-	if ( skipSession )
-		skip = "-s";
+    log.writeLog(__LINE__, "Running reset_locks", LOG_TYPE_DEBUG);
 
-	string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
-	int rtnCode = system(cmd.c_str());
-	log.writeLog(__LINE__, "Ran reset_locks", LOG_TYPE_DEBUG);
+    string skip = " ";
 
-	log.writeLog(__LINE__, "Running DBRM save_brm", LOG_TYPE_DEBUG);
+    if ( skipSession )
+        skip = "-s";
 
-	cmd = startup::StartUp::installDir() + "/bin/save_brm > " + logdir + "/save_brm.log1 2>&1";
-	rtnCode = system(cmd.c_str());
-	if (WEXITSTATUS(rtnCode) != 1) {
-		log.writeLog(__LINE__, "Successfully ran DBRM save_brm", LOG_TYPE_DEBUG);
-	}
-	else
-		log.writeLog(__LINE__, "Error running DBRM save_brm", LOG_TYPE_ERROR);
+    string cmd = startup::StartUp::installDir() + "/bin/reset_locks " + skip + " > " + logdir + "/reset_locks.log1 2>&1";
+    int rtnCode = system(cmd.c_str());
+    log.writeLog(__LINE__, "Ran reset_locks", LOG_TYPE_DEBUG);
 
-	if ( clearshm )
-	{
-		cmd = startup::StartUp::installDir() + "/bin/clearShm -c > /dev/null 2>&1";
-		rtnCode = system(cmd.c_str());
-		if (WEXITSTATUS(rtnCode) != 1) {
-			log.writeLog(__LINE__, "Successfully ran DBRM clearShm", LOG_TYPE_DEBUG);
-		}
-		else
-			log.writeLog(__LINE__, "Error running DBRM clearShm", LOG_TYPE_ERROR);
-	}
+    log.writeLog(__LINE__, "Running DBRM save_brm", LOG_TYPE_DEBUG);
+
+    cmd = startup::StartUp::installDir() + "/bin/save_brm > " + logdir + "/save_brm.log1 2>&1";
+    rtnCode = system(cmd.c_str());
+
+    if (WEXITSTATUS(rtnCode) != 1)
+    {
+        log.writeLog(__LINE__, "Successfully ran DBRM save_brm", LOG_TYPE_DEBUG);
+    }
+    else
+        log.writeLog(__LINE__, "Error running DBRM save_brm", LOG_TYPE_ERROR);
+
+    if ( clearshm )
+    {
+        cmd = startup::StartUp::installDir() + "/bin/clearShm -c > /dev/null 2>&1";
+        rtnCode = system(cmd.c_str());
+
+        if (WEXITSTATUS(rtnCode) != 1)
+        {
+            log.writeLog(__LINE__, "Successfully ran DBRM clearShm", LOG_TYPE_DEBUG);
+        }
+        else
+            log.writeLog(__LINE__, "Error running DBRM clearShm", LOG_TYPE_ERROR);
+    }
 
 }
 
@@ -6458,20 +7078,21 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
 ******************************************************************************************/
 void ProcessManager::setQuerySystemState(bool set)
 {
-	Oam oam;
-	BRM::DBRM dbrm;
+    Oam oam;
+    BRM::DBRM dbrm;
 
-	log.writeLog(__LINE__, "setQuerySystemState = " + oam.itoa(set), LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "setQuerySystemState = " + oam.itoa(set), LOG_TYPE_DEBUG);
 
-	try {
-		dbrm.setSystemQueryReady(set);
-		log.writeLog(__LINE__, "setQuerySystemState successful", LOG_TYPE_DEBUG);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_DEBUG);
-		log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_ERROR);
-	}
+    try
+    {
+        dbrm.setSystemQueryReady(set);
+        log.writeLog(__LINE__, "setQuerySystemState successful", LOG_TYPE_DEBUG);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_DEBUG);
+        log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_ERROR);
+    }
 }
 
 
@@ -6483,19 +7104,19 @@ void ProcessManager::setQuerySystemState(bool set)
 ******************************************************************************************/
 bool ProcessManager::createModuleFile(string remoteModuleName)
 {
-	// Read Local Install flag
+    // Read Local Install flag
 
-	string fileName = startup::StartUp::installDir() + "/local/etc/" + remoteModuleName + "/module";
+    string fileName = startup::StartUp::installDir() + "/local/etc/" + remoteModuleName + "/module";
 
-	unlink (fileName.c_str());
-   	ofstream newFile (fileName.c_str());
+    unlink (fileName.c_str());
+    ofstream newFile (fileName.c_str());
 
-	string cmd = "echo " + remoteModuleName + " > " + fileName;
-	system(cmd.c_str());
+    string cmd = "echo " + remoteModuleName + " > " + fileName;
+    system(cmd.c_str());
 
-	newFile.close();
+    newFile.close();
 
-	return true;
+    return true;
 }
 
 
@@ -6507,550 +7128,606 @@ bool ProcessManager::createModuleFile(string remoteModuleName)
 *****************************************************************************************/
 void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 {
-	oam::DeviceNetworkList devicenetworklist = Devicenetworklist;
+    oam::DeviceNetworkList devicenetworklist = Devicenetworklist;
 
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	SystemModuleTypeConfig systemmoduletypeconfig;
-	ALARMManager aManager;
-	int status = API_SUCCESS;
-	bool exitThread = false;
-	int exitThreadStatus = oam::API_SUCCESS;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    SystemModuleTypeConfig systemmoduletypeconfig;
+    ALARMManager aManager;
+    int status = API_SUCCESS;
+    bool exitThread = false;
+    int exitThreadStatus = oam::API_SUCCESS;
 
-	pthread_t ThreadId;
-	ThreadId = pthread_self();
+    pthread_t ThreadId;
+    ThreadId = pthread_self();
 
-	log.writeLog(__LINE__, "startSystemThread launched", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "startSystemThread launched", LOG_TYPE_DEBUG);
 
-	// get system status and exit thread if in AUTO_INIT OR MAN_INIT
-	SystemStatus systemstatus;
-	try {
-		oam.getSystemStatus(systemstatus);
+    // get system status and exit thread if in AUTO_INIT OR MAN_INIT
+    SystemStatus systemstatus;
 
-		if (systemstatus.SystemOpState == AUTO_INIT ||
-			 systemstatus.SystemOpState == MAN_INIT) {
-			log.writeLog(__LINE__, "Start already in-progess, exit startSystemThread", LOG_TYPE_DEBUG);
-			startsystemthreadStatus = oam::API_ALREADY_IN_PROGRESS;
-			exitThread = true;
-			exitThreadStatus = oam::API_ALREADY_IN_PROGRESS;
-		}
-	}
-	catch (exception& ex)
-	{
+    try
+    {
+        oam.getSystemStatus(systemstatus);
+
+        if (systemstatus.SystemOpState == AUTO_INIT ||
+                systemstatus.SystemOpState == MAN_INIT)
+        {
+            log.writeLog(__LINE__, "Start already in-progess, exit startSystemThread", LOG_TYPE_DEBUG);
+            startsystemthreadStatus = oam::API_ALREADY_IN_PROGRESS;
+            exitThread = true;
+            exitThreadStatus = oam::API_ALREADY_IN_PROGRESS;
+        }
+    }
+    catch (exception& ex)
+    {
 //		string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemStatus: " + error, LOG_TYPE_ERROR);
-		startsystemthreadStatus = oam::API_FAILURE;
-		processManager.setSystemState(oam::MAN_OFFLINE);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
-	catch(...)
-	{
+        startsystemthreadStatus = oam::API_FAILURE;
+        processManager.setSystemState(oam::MAN_OFFLINE);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		startsystemthreadStatus = oam::API_FAILURE;
-		processManager.setSystemState(oam::MAN_OFFLINE);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
+        startsystemthreadStatus = oam::API_FAILURE;
+        processManager.setSystemState(oam::MAN_OFFLINE);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
 
-	if ( exitThread ) {
-		pthread_detach (ThreadId);
-		pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
-	}
+    if ( exitThread )
+    {
+        pthread_detach (ThreadId);
+        pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
+    }
 
-	if (systemstatus.SystemOpState == AUTO_OFFLINE)
-		processManager.setSystemState(oam::AUTO_INIT);
-	else
-		processManager.setSystemState(oam::MAN_INIT);
+    if (systemstatus.SystemOpState == AUTO_OFFLINE)
+        processManager.setSystemState(oam::AUTO_INIT);
+    else
+        processManager.setSystemState(oam::MAN_INIT);
 
-	//validate the dbroots assignments
-	//make sure no 1 ID is assigned to 2 PMs
-	//and a dbroot not assigned to a DISABLED PM
-	try
-	{
-		systemStorageInfo_t t;
-		t = oam.getStorageConfig();
+    //validate the dbroots assignments
+    //make sure no 1 ID is assigned to 2 PMs
+    //and a dbroot not assigned to a DISABLED PM
+    try
+    {
+        systemStorageInfo_t t;
+        t = oam.getStorageConfig();
 
-		DeviceDBRootList moduledbrootlist1 = boost::get<2>(t);
-		DeviceDBRootList moduledbrootlist2 = boost::get<2>(t);
+        DeviceDBRootList moduledbrootlist1 = boost::get<2>(t);
+        DeviceDBRootList moduledbrootlist2 = boost::get<2>(t);
 
-		DeviceDBRootList::iterator pt1 = moduledbrootlist1.begin();
-		for( ; pt1 != moduledbrootlist1.end() ; pt1++)
-		{
-			string moduleID1 = oam.itoa((*pt1).DeviceID);
-			string moduleName = "pm" + moduleID1;
+        DeviceDBRootList::iterator pt1 = moduledbrootlist1.begin();
 
-			// check DISABLED modules
-			int opState = oam::ACTIVE;
-			bool degraded;
-			try{
-				oam.getModuleStatus(moduleName, opState, degraded);
-			}
-			catch (exception& ex)
-			{
+        for ( ; pt1 != moduledbrootlist1.end() ; pt1++)
+        {
+            string moduleID1 = oam.itoa((*pt1).DeviceID);
+            string moduleName = "pm" + moduleID1;
+
+            // check DISABLED modules
+            int opState = oam::ACTIVE;
+            bool degraded;
+
+            try
+            {
+                oam.getModuleStatus(moduleName, opState, degraded);
+            }
+            catch (exception& ex)
+            {
 //				string error = ex.what();
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-				continue;
-				
-			}
-			catch(...)
-			{
+                continue;
+
+            }
+            catch (...)
+            {
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-				continue;
-			}
+                continue;
+            }
 
-			//check if disabled
-			if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED) {
-				if ( (*pt1).dbrootConfigList.size() != 0 ) {
-					//issue log and Set the alarm 
-					log.writeLog(__LINE__, "startSystemThread failed: Disabled Module '" + moduleName + "' has  DBRoots assigned to it", LOG_TYPE_CRITICAL);
-					aManager.sendAlarmReport(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-					startsystemthreadStatus = oam::API_FAILURE;
-					processManager.setSystemState(oam::FAILED);
-					pthread_detach (ThreadId);
-					pthread_exit((void*) oam::API_FAILURE);
-				}
+            //check if disabled
+            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+            {
+                if ( (*pt1).dbrootConfigList.size() != 0 )
+                {
+                    //issue log and Set the alarm
+                    log.writeLog(__LINE__, "startSystemThread failed: Disabled Module '" + moduleName + "' has  DBRoots assigned to it", LOG_TYPE_CRITICAL);
+                    aManager.sendAlarmReport(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+                    startsystemthreadStatus = oam::API_FAILURE;
+                    processManager.setSystemState(oam::FAILED);
+                    pthread_detach (ThreadId);
+                    pthread_exit((void*) oam::API_FAILURE);
+                }
 
-				continue;
-			}
+                continue;
+            }
 
-			// if module has no dbroots assigned, fail startSystem
-			if ( (*pt1).dbrootConfigList.size() == 0 ) {
-				//issue log and Set the alarm 
-				log.writeLog(__LINE__, "startSystemThread failed: Module '" + moduleName + "' has no DBRoots assigned to it", LOG_TYPE_CRITICAL);
-				aManager.sendAlarmReport(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-				startsystemthreadStatus = oam::API_FAILURE;
-				processManager.setSystemState(oam::FAILED);
-				pthread_detach (ThreadId);
-				pthread_exit((void*) oam::API_FAILURE);
-			}
+            // if module has no dbroots assigned, fail startSystem
+            if ( (*pt1).dbrootConfigList.size() == 0 )
+            {
+                //issue log and Set the alarm
+                log.writeLog(__LINE__, "startSystemThread failed: Module '" + moduleName + "' has no DBRoots assigned to it", LOG_TYPE_CRITICAL);
+                aManager.sendAlarmReport(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+                startsystemthreadStatus = oam::API_FAILURE;
+                processManager.setSystemState(oam::FAILED);
+                pthread_detach (ThreadId);
+                pthread_exit((void*) oam::API_FAILURE);
+            }
 
-			DBRootConfigList::iterator pt1a = (*pt1).dbrootConfigList.begin();
-			for( ; pt1a != (*pt1).dbrootConfigList.end() ; pt1a++)
-			{
-				DeviceDBRootList::iterator pt2 = moduledbrootlist2.begin();
-				for( ; pt2 != moduledbrootlist2.end() ; pt2++)
-				{
-					string moduleID2 = oam.itoa((*pt2).DeviceID);
-					if ( moduleID1 == moduleID2 )
-						continue;
+            DBRootConfigList::iterator pt1a = (*pt1).dbrootConfigList.begin();
 
-					DBRootConfigList::iterator pt2a = (*pt2).dbrootConfigList.begin();
-					for( ; pt2a != (*pt2).dbrootConfigList.end() ; pt2a++)
-					{
-						if ( *pt1a == *pt2a) {
-							log.writeLog(__LINE__, "ERROR: DBRoot ID " + oam.itoa(*pt1a) + " configured on 2 pms: 'pm" + moduleID1 + "' and 'pm" + moduleID2 + "'", LOG_TYPE_CRITICAL);
-							//Set the alarm 
-							aManager.sendAlarmReport(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-					
-							startsystemthreadStatus = oam::API_FAILURE;
-							processManager.setSystemState(oam::FAILED);
-							pthread_detach (ThreadId);
-							pthread_exit((void*) oam::API_FAILURE);
-						}
-					}
-				}
-			}
-		}
-	}
-	catch (exception& e)
-	{} 
+            for ( ; pt1a != (*pt1).dbrootConfigList.end() ; pt1a++)
+            {
+                DeviceDBRootList::iterator pt2 = moduledbrootlist2.begin();
 
-	try{
-		oam.getSystemConfig(systemmoduletypeconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		startsystemthreadStatus = oam::API_FAILURE;
-		processManager.setSystemState(oam::FAILED);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		startsystemthreadStatus = oam::API_FAILURE;
-		processManager.setSystemState(oam::FAILED);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
+                for ( ; pt2 != moduledbrootlist2.end() ; pt2++)
+                {
+                    string moduleID2 = oam.itoa((*pt2).DeviceID);
 
-	if ( exitThread ) {
-		pthread_detach (ThreadId);
-		pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
-	}
+                    if ( moduleID1 == moduleID2 )
+                        continue;
 
-	if (systemstatus.SystemOpState == AUTO_OFFLINE)
-		processManager.setSystemState(oam::AUTO_INIT);
-	else
-		processManager.setSystemState(oam::MAN_INIT);
+                    DBRootConfigList::iterator pt2a = (*pt2).dbrootConfigList.begin();
 
-	startsystemthreadRunning = true;
+                    for ( ; pt2a != (*pt2).dbrootConfigList.end() ; pt2a++)
+                    {
+                        if ( *pt1a == *pt2a)
+                        {
+                            log.writeLog(__LINE__, "ERROR: DBRoot ID " + oam.itoa(*pt1a) + " configured on 2 pms: 'pm" + moduleID1 + "' and 'pm" + moduleID2 + "'", LOG_TYPE_CRITICAL);
+                            //Set the alarm
+                            aManager.sendAlarmReport(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 
-	string newStandbyModule = processManager.getStandbyModule();
+                            startsystemthreadStatus = oam::API_FAILURE;
+                            processManager.setSystemState(oam::FAILED);
+                            pthread_detach (ThreadId);
+                            pthread_exit((void*) oam::API_FAILURE);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (exception& e)
+    {}
 
-	if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
-		processManager.setStandbyModule(newStandbyModule);
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        startsystemthreadStatus = oam::API_FAILURE;
+        processManager.setSystemState(oam::FAILED);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        startsystemthreadStatus = oam::API_FAILURE;
+        processManager.setSystemState(oam::FAILED);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
 
-	//update workernode section
-	processManager.updateWorkerNodeconfig();
+    if ( exitThread )
+    {
+        pthread_detach (ThreadId);
+        pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
+    }
 
-	//configure PMS ports
-	if ( processManager.updatePMSconfig() != API_SUCCESS ) {
-		startsystemthreadStatus = oam::API_FAILURE;
-		processManager.setSystemState(oam::FAILED);
-		pthread_detach (ThreadId);
-		pthread_exit((void*) oam::API_FAILURE);
-	}
+    if (systemstatus.SystemOpState == AUTO_OFFLINE)
+        processManager.setSystemState(oam::AUTO_INIT);
+    else
+        processManager.setSystemState(oam::MAN_INIT);
 
-	if ( devicenetworklist.size() != 0 ) {
-		//distribute config file
-		processManager.distributeConfigFile("system");
+    startsystemthreadRunning = true;
 
-		// start modules from devicenetworklist
-		DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+    string newStandbyModule = processManager.getStandbyModule();
 
-		//launch start module threads, starting with local module
-		pthread_t startmodulethread;
-		string moduleName = config.moduleName();
-		int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &moduleName);
-		
-		if ( status != 0 )
-			log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+    if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
+        processManager.setStandbyModule(newStandbyModule);
 
-		sleep(5);	
+    //update workernode section
+    processManager.updateWorkerNodeconfig();
 
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			string moduleName = (*listPT).DeviceName;
+    //configure PMS ports
+    if ( processManager.updatePMSconfig() != API_SUCCESS )
+    {
+        startsystemthreadStatus = oam::API_FAILURE;
+        processManager.setSystemState(oam::FAILED);
+        pthread_detach (ThreadId);
+        pthread_exit((void*) oam::API_FAILURE);
+    }
 
-			// skip local module name
-			if ( moduleName == config.moduleName() )
-				continue;
+    if ( devicenetworklist.size() != 0 )
+    {
+        //distribute config file
+        processManager.distributeConfigFile("system");
 
-			// bypass DISABLED modules
-			try{
-				int opState = oam::ACTIVE;
-				bool degraded;
-				oam.getModuleStatus(moduleName, opState, degraded);
+        // start modules from devicenetworklist
+        DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-					//skip
-					continue;
-			}
-			catch (exception& ex)
-			{
+        //launch start module threads, starting with local module
+        pthread_t startmodulethread;
+        string moduleName = config.moduleName();
+        int status = pthread_create (&startmodulethread, NULL, (void* (*)(void*)) &startModuleThread, &moduleName);
+
+        if ( status != 0 )
+            log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+
+        sleep(5);
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string moduleName = (*listPT).DeviceName;
+
+            // skip local module name
+            if ( moduleName == config.moduleName() )
+                continue;
+
+            // bypass DISABLED modules
+            try
+            {
+                int opState = oam::ACTIVE;
+                bool degraded;
+                oam.getModuleStatus(moduleName, opState, degraded);
+
+                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                    //skip
+                    continue;
+            }
+            catch (exception& ex)
+            {
 //				string error = ex.what();
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
+            }
+            catch (...)
+            {
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-			}
+            }
 
-			pthread_t startmodulethread;
-			int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &moduleName);
-			
-			if ( status != 0 )
-				log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+            pthread_t startmodulethread;
+            int status = pthread_create (&startmodulethread, NULL, (void* (*)(void*)) &startModuleThread, &moduleName);
 
-			sleep(5);
-		}
-	}
-	else {
-		// start all modules, like on a systemStart command
-		//launch start module threads, starting with local module
+            if ( status != 0 )
+                log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
-		if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
-		{
-			try {
-				oam.setSystemConfig("PrimaryUMModuleName", config.OAMParentName());
-			}
-			catch(...) {}
+            sleep(5);
+        }
+    }
+    else
+    {
+        // start all modules, like on a systemStart command
+        //launch start module threads, starting with local module
 
-			processManager.setPMProcIPs(config.OAMParentName());
-		}
+        if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
+        {
+            try
+            {
+                oam.setSystemConfig("PrimaryUMModuleName", config.OAMParentName());
+            }
+            catch (...) {}
 
-		//distribute config file
-		processManager.distributeConfigFile("system");
+            processManager.setPMProcIPs(config.OAMParentName());
+        }
 
-		pthread_t startmodulethread;
-		string moduleName = config.moduleName();
-		int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &moduleName);
+        //distribute config file
+        processManager.distributeConfigFile("system");
 
-		if ( status != 0 )
-			log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+        pthread_t startmodulethread;
+        string moduleName = config.moduleName();
+        int status = pthread_create (&startmodulethread, NULL, (void* (*)(void*)) &startModuleThread, &moduleName);
 
-		sleep(5);
+        if ( status != 0 )
+            log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			if( moduleCount == 0)
-				continue;
-	
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-			{
-				string moduleName = (*pt).DeviceName;
-	
-				// skip local module name
-				if ( moduleName == config.moduleName() )
-					continue;
+        sleep(5);
 
-				// bypass DISABLED modules
-				try{
-					int opState = oam::ACTIVE;
-					bool degraded;
-					oam.getModuleStatus(moduleName, opState, degraded);
-	
-					if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-						//skip
-						continue;
-	
-				}
-				catch (exception& ex)
-				{
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+            if ( moduleCount == 0)
+                continue;
+
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+            {
+                string moduleName = (*pt).DeviceName;
+
+                // skip local module name
+                if ( moduleName == config.moduleName() )
+                    continue;
+
+                // bypass DISABLED modules
+                try
+                {
+                    int opState = oam::ACTIVE;
+                    bool degraded;
+                    oam.getModuleStatus(moduleName, opState, degraded);
+
+                    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                        //skip
+                        continue;
+
+                }
+                catch (exception& ex)
+                {
 //					string error = ex.what();
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-				}
-				catch(...)
-				{
+                }
+                catch (...)
+                {
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-				}
+                }
 
-				//setup primary User Module, DML/DDL only start on this module
-				if ( moduleName.find("um") == 0 && config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM)
-				{
-					string PrimaryUMModuleName;
-					try {
-						oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
-					}
-					catch(...) {}
+                //setup primary User Module, DML/DDL only start on this module
+                if ( moduleName.find("um") == 0 && config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM)
+                {
+                    string PrimaryUMModuleName;
 
-					if ( PrimaryUMModuleName == oam::UnassignedName )
-					{
-						try {
-							oam.setSystemConfig("PrimaryUMModuleName", moduleName);
-						}
-						catch(...) {}
+                    try
+                    {
+                        oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+                    }
+                    catch (...) {}
 
-						processManager.setPMProcIPs(moduleName);
+                    if ( PrimaryUMModuleName == oam::UnassignedName )
+                    {
+                        try
+                        {
+                            oam.setSystemConfig("PrimaryUMModuleName", moduleName);
+                        }
+                        catch (...) {}
 
-						//distribute config file
-						processManager.distributeConfigFile("system");
-					}
-				}
+                        processManager.setPMProcIPs(moduleName);
 
-				pthread_t startmodulethread;
-				string name = moduleName;
-				int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &name);
+                        //distribute config file
+                        processManager.distributeConfigFile("system");
+                    }
+                }
 
-				if ( status != 0 )
-					log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+                pthread_t startmodulethread;
+                string name = moduleName;
+                int status = pthread_create (&startmodulethread, NULL, (void* (*)(void*)) &startModuleThread, &name);
 
-				if ( !HDFS )
-					sleep(5);
-				else
-					//usleep(100000);
-					sleep(1);
-			}
-		}
-	}
+                if ( status != 0 )
+                    log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
-	// check status and process accordingly
-	int k = 0;
-	for( ; k < 1200 ; k++ )
-	{
-		if ( startsystemthreadStop ) {
-			log.writeLog(__LINE__, "startSystemThread exit early, startsystemthreadStop set", LOG_TYPE_DEBUG);
-			if ( startmodulethreadStatus != API_SUCCESS ) {
-				startsystemthreadStatus = startmodulethreadStatus;
-				processManager.setSystemState(oam::FAILED);
-			}
-			else
-			{
-				startsystemthreadStatus = API_FAILURE;
-				processManager.setSystemState(oam::MAN_OFFLINE);
-			}
-			startsystemthreadRunning = false;
-			pthread_detach (ThreadId);
-			pthread_exit((void*) oam::API_FAILURE);
-		}
+                if ( !HDFS )
+                    sleep(5);
+                else
+                    //usleep(100000);
+                    sleep(1);
+            }
+        }
+    }
 
-		string moduleName;
-		status = API_SUCCESS;
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			if( moduleCount == 0)
-				continue;
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-			{
-				moduleName = (*pt).DeviceName;
-	
-				// get module status
-				try{
-					int opState = oam::ACTIVE;
-					bool degraded;
-					oam.getModuleStatus(moduleName, opState, degraded);
-	
-					if ( opState == oam::FAILED ) {
-						if ( startmodulethreadStatus != API_SUCCESS )
-							status = startmodulethreadStatus;
-						else
-							status = API_FAILURE;
-						break;
-					}
-	
-					if (opState == oam::ACTIVE ||
-						opState == oam::MAN_DISABLED ||
-						opState == oam::AUTO_DISABLED ||
-						(opState == oam::MAN_OFFLINE && k > 0) )
-						//skip
-						continue;
+    // check status and process accordingly
+    int k = 0;
 
-					status = API_ALREADY_IN_PROGRESS;
-				}
-				catch (exception& ex)
-				{
+    for ( ; k < 1200 ; k++ )
+    {
+        if ( startsystemthreadStop )
+        {
+            log.writeLog(__LINE__, "startSystemThread exit early, startsystemthreadStop set", LOG_TYPE_DEBUG);
+
+            if ( startmodulethreadStatus != API_SUCCESS )
+            {
+                startsystemthreadStatus = startmodulethreadStatus;
+                processManager.setSystemState(oam::FAILED);
+            }
+            else
+            {
+                startsystemthreadStatus = API_FAILURE;
+                processManager.setSystemState(oam::MAN_OFFLINE);
+            }
+
+            startsystemthreadRunning = false;
+            pthread_detach (ThreadId);
+            pthread_exit((void*) oam::API_FAILURE);
+        }
+
+        string moduleName;
+        status = API_SUCCESS;
+
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+            if ( moduleCount == 0)
+                continue;
+
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+            {
+                moduleName = (*pt).DeviceName;
+
+                // get module status
+                try
+                {
+                    int opState = oam::ACTIVE;
+                    bool degraded;
+                    oam.getModuleStatus(moduleName, opState, degraded);
+
+                    if ( opState == oam::FAILED )
+                    {
+                        if ( startmodulethreadStatus != API_SUCCESS )
+                            status = startmodulethreadStatus;
+                        else
+                            status = API_FAILURE;
+
+                        break;
+                    }
+
+                    if (opState == oam::ACTIVE ||
+                            opState == oam::MAN_DISABLED ||
+                            opState == oam::AUTO_DISABLED ||
+                            (opState == oam::MAN_OFFLINE && k > 0) )
+                        //skip
+                        continue;
+
+                    status = API_ALREADY_IN_PROGRESS;
+                }
+                catch (exception& ex)
+                {
 //					string error = ex.what();
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-					continue;
-				}
-				catch(...)
-				{
+                    continue;
+                }
+                catch (...)
+                {
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-					continue;
-				}
-			}
-			if( status == API_FAILURE )
-				break;
-		}
+                    continue;
+                }
+            }
 
-		//get out of loop if all modules started successfully
-		if( status == API_SUCCESS ) {
-			//send message to start new Standby Process-Manager, if needed
-			string newStandbyModule = processManager.getStandbyModule();
-		
-			if ( !newStandbyModule.empty() && newStandbyModule != "NONE") {
-				// get standby IP address and update entries
-				processManager.setStandbyModule(newStandbyModule);
+            if ( status == API_FAILURE )
+                break;
+        }
 
-				//distribute config file
-				processManager.distributeConfigFile("system");
-			}
-			break;
-		}
-		else
-		{
-			//get out of loop if start module failed
-			if( status == API_FAILURE ) {
-				//set system status
-				log.writeLog(__LINE__, "startSystemThread: Module failed, Set System State to FAILED: " + moduleName , LOG_TYPE_CRITICAL);
-				processManager.setSystemState(oam::FAILED);
-				break;
-			}
-		}
-		sleep(5);
-	}
-	
-	if ( k == 1200 ) {
-		// system didn't Successfully restart
-		log.writeLog(__LINE__, "startSystemThread: Modules failed to start after 1200 tries, Set System State to FAILED" , LOG_TYPE_CRITICAL);
-		processManager.setSystemState(oam::FAILED);
-		status = oam::API_FAILURE;
-	}
+        //get out of loop if all modules started successfully
+        if ( status == API_SUCCESS )
+        {
+            //send message to start new Standby Process-Manager, if needed
+            string newStandbyModule = processManager.getStandbyModule();
 
-	//set query system state not ready
-	processManager.setQuerySystemState(true);
+            if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
+            {
+                // get standby IP address and update entries
+                processManager.setStandbyModule(newStandbyModule);
 
-	// Bug 4554: Wait until DMLProc is finished with rollback
-	if (status == oam::API_SUCCESS)
-	{
-		BRM::DBRM dbrm;
-		uint16_t rtn = 0;
-		bool bfirst = true;
-		SystemProcessStatus systemprocessstatus;
+                //distribute config file
+                processManager.distributeConfigFile("system");
+            }
 
-		string PrimaryUMModuleName;
-		try {
-			oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
-		}
-		catch(...) {}
+            break;
+        }
+        else
+        {
+            //get out of loop if start module failed
+            if ( status == API_FAILURE )
+            {
+                //set system status
+                log.writeLog(__LINE__, "startSystemThread: Module failed, Set System State to FAILED: " + moduleName, LOG_TYPE_CRITICAL);
+                processManager.setSystemState(oam::FAILED);
+                break;
+            }
+        }
 
-		if ( PrimaryUMModuleName.empty() )
-		{
-			log.writeLog(__LINE__, "startSystemThread: Failed, PrimaryUMModuleName is unassigned", LOG_TYPE_CRITICAL);
-			rtn = oam::FAILED;
-			log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
-			processManager.setSystemState(oam::FAILED);
-			startsystemthreadStatus = status;
-			startsystemthreadRunning = false;
-			pthread_detach (ThreadId);
-			pthread_exit(0);
-		}
+        sleep(5);
+    }
 
-		// waiting until dml are ACTIVE, then mark system ACTIVE
-		while (rtn == 0)
-		{
-			ProcessStatus DMLprocessstatus;
-			try {
-				oam.getProcessStatus("DMLProc", PrimaryUMModuleName, DMLprocessstatus);
-			}
-			catch (exception& ex)
-			{
+    if ( k == 1200 )
+    {
+        // system didn't Successfully restart
+        log.writeLog(__LINE__, "startSystemThread: Modules failed to start after 1200 tries, Set System State to FAILED", LOG_TYPE_CRITICAL);
+        processManager.setSystemState(oam::FAILED);
+        status = oam::API_FAILURE;
+    }
+
+    //set query system state not ready
+    processManager.setQuerySystemState(true);
+
+    // Bug 4554: Wait until DMLProc is finished with rollback
+    if (status == oam::API_SUCCESS)
+    {
+        BRM::DBRM dbrm;
+        uint16_t rtn = 0;
+        bool bfirst = true;
+        SystemProcessStatus systemprocessstatus;
+
+        string PrimaryUMModuleName;
+
+        try
+        {
+            oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+        }
+        catch (...) {}
+
+        if ( PrimaryUMModuleName.empty() )
+        {
+            log.writeLog(__LINE__, "startSystemThread: Failed, PrimaryUMModuleName is unassigned", LOG_TYPE_CRITICAL);
+            rtn = oam::FAILED;
+            log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
+            processManager.setSystemState(oam::FAILED);
+            startsystemthreadStatus = status;
+            startsystemthreadRunning = false;
+            pthread_detach (ThreadId);
+            pthread_exit(0);
+        }
+
+        // waiting until dml are ACTIVE, then mark system ACTIVE
+        while (rtn == 0)
+        {
+            ProcessStatus DMLprocessstatus;
+
+            try
+            {
+                oam.getProcessStatus("DMLProc", PrimaryUMModuleName, DMLprocessstatus);
+            }
+            catch (exception& ex)
+            {
 //				string error = ex.what();
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
+            }
+            catch (...)
+            {
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-			}
+            }
 
-			if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT) {
-				if (bfirst)
-				{
-					log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback" , LOG_TYPE_INFO);
-					bfirst = false;
-				}
-			}
+            if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT)
+            {
+                if (bfirst)
+                {
+                    log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback", LOG_TYPE_INFO);
+                    bfirst = false;
+                }
+            }
 
-			if (DMLprocessstatus.ProcessOpState == oam::ACTIVE) {
- 		               rtn = oam::ACTIVE;
-				break;
-			}
+            if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+            {
+                rtn = oam::ACTIVE;
+                break;
+            }
 
-			if (DMLprocessstatus.ProcessOpState == oam::FAILED) {
-		                rtn = oam::FAILED;
-				break;
-			}
+            if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+            {
+                rtn = oam::FAILED;
+                break;
+            }
 
-			// wait some more
-            		sleep(2);
-        	}
-	        processManager.setSystemState(rtn);
-	}
+            // wait some more
+            sleep(2);
+        }
+
+        processManager.setSystemState(rtn);
+    }
 
     //run command to build system table if they don't already exist
     sleep(5);
     int ret = processManager.buildSystemTables("pm1");
+
     if (ret == oam::API_SUCCESS )
-		log.writeLog(__LINE__, "System Catalog Successfully Built", LOG_TYPE_DEBUG);
-	else
-		log.writeLog(__LINE__, "System Catalog not built, already existed", LOG_TYPE_DEBUG);
-    
-	// exit thread
-	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
-	startsystemthreadStatus = status;
-	startsystemthreadRunning = false;
-	pthread_detach (ThreadId);
-	pthread_exit(0);
+        log.writeLog(__LINE__, "System Catalog Successfully Built", LOG_TYPE_DEBUG);
+    else
+        log.writeLog(__LINE__, "System Catalog not built, already existed", LOG_TYPE_DEBUG);
+
+    // exit thread
+    log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
+    startsystemthreadStatus = status;
+    startsystemthreadRunning = false;
+    pthread_detach (ThreadId);
+    pthread_exit(0);
 }
 
 /*****************************************************************************************
@@ -7062,93 +7739,100 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 void startModuleThread(string module)
 {
 
-	//store in a local variable
-	string moduleName = module;
+    //store in a local variable
+    string moduleName = module;
 
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	bool exitThread = false;
-	int exitThreadStatus = oam::API_SUCCESS;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    bool exitThread = false;
+    int exitThreadStatus = oam::API_SUCCESS;
 
-	pthread_t ThreadId;
-	ThreadId = pthread_self();
+    pthread_t ThreadId;
+    ThreadId = pthread_self();
 
-	if ( moduleName.empty() ){
-		log.writeLog(__LINE__, "startModuleThread received on invalid module name", LOG_TYPE_ERROR);
-		pthread_detach (ThreadId);
-		pthread_exit(0);
-	}
+    if ( moduleName.empty() )
+    {
+        log.writeLog(__LINE__, "startModuleThread received on invalid module name", LOG_TYPE_ERROR);
+        pthread_detach (ThreadId);
+        pthread_exit(0);
+    }
 
-	log.writeLog(__LINE__, "Start Module " + moduleName, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "Start Module " + moduleName, LOG_TYPE_DEBUG);
 
-	bool start = false;
-	while(true)
-	{
-		if ( exitThread ) {
-			pthread_detach (ThreadId);
-			pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
-		}
+    bool start = false;
 
-		// get module status
-		uint16_t startType = oam::MAN_OFFLINE;
-		try{
-			int opState = oam::ACTIVE;
-			bool degraded;
-			oam.getModuleStatus(moduleName, opState, degraded);
+    while (true)
+    {
+        if ( exitThread )
+        {
+            pthread_detach (ThreadId);
+            pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
+        }
 
-			if ( opState == oam::AUTO_OFFLINE || opState == oam::AUTO_INIT)
-				startType = oam::AUTO_OFFLINE;
+        // get module status
+        uint16_t startType = oam::MAN_OFFLINE;
 
-			if (opState == oam::ACTIVE ||
-				opState == oam::MAN_DISABLED ||
-				opState == oam::AUTO_DISABLED ||
-				( opState == oam::MAN_OFFLINE && start) )
-				//quit
-				break;
+        try
+        {
+            int opState = oam::ACTIVE;
+            bool degraded;
+            oam.getModuleStatus(moduleName, opState, degraded);
 
-			start = true;
-		}
-		catch (exception& ex)
-		{
+            if ( opState == oam::AUTO_OFFLINE || opState == oam::AUTO_INIT)
+                startType = oam::AUTO_OFFLINE;
+
+            if (opState == oam::ACTIVE ||
+                    opState == oam::MAN_DISABLED ||
+                    opState == oam::AUTO_DISABLED ||
+                    ( opState == oam::MAN_OFFLINE && start) )
+                //quit
+                break;
+
+            start = true;
+        }
+        catch (exception& ex)
+        {
 //			string error = ex.what();
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
+        }
+        catch (...)
+        {
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-		}
+        }
 
-		if ( startsystemthreadStop) {
-			// set status and exit this thread
-			processManager.setModuleState(moduleName, oam::MAN_OFFLINE);
-			log.writeLog(__LINE__, "startModuleThread early exit on " + moduleName, LOG_TYPE_DEBUG);
-			pthread_detach (ThreadId);
-			pthread_exit(0);
-		}
+        if ( startsystemthreadStop)
+        {
+            // set status and exit this thread
+            processManager.setModuleState(moduleName, oam::MAN_OFFLINE);
+            log.writeLog(__LINE__, "startModuleThread early exit on " + moduleName, LOG_TYPE_DEBUG);
+            pthread_detach (ThreadId);
+            pthread_exit(0);
+        }
 
-		int retStatus = processManager.startModule(moduleName, oam::FORCEFUL, startType, true);
-	
-		log.writeLog(__LINE__, "ACK received from '" + moduleName + "' Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-	
-		if (retStatus == API_SUCCESS)
-			break;
-		else
-		{
-			if (retStatus != API_MINOR_FAILURE) {
-				//major failure, set stopsystem flag and exit this thread
-				startmodulethreadStatus = retStatus;
-				startsystemthreadStop = true;
-				break;
-			}
-		}
-	}
+        int retStatus = processManager.startModule(moduleName, oam::FORCEFUL, startType, true);
 
-	// exit thread
-	log.writeLog(__LINE__, "startModuleThread Exit on " + moduleName, LOG_TYPE_DEBUG);
-	pthread_detach (ThreadId);
-	pthread_exit(0);
+        log.writeLog(__LINE__, "ACK received from '" + moduleName + "' Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+
+        if (retStatus == API_SUCCESS)
+            break;
+        else
+        {
+            if (retStatus != API_MINOR_FAILURE)
+            {
+                //major failure, set stopsystem flag and exit this thread
+                startmodulethreadStatus = retStatus;
+                startsystemthreadStop = true;
+                break;
+            }
+        }
+    }
+
+    // exit thread
+    log.writeLog(__LINE__, "startModuleThread Exit on " + moduleName, LOG_TYPE_DEBUG);
+    pthread_detach (ThreadId);
+    pthread_exit(0);
 }
 
 
@@ -7160,221 +7844,239 @@ void startModuleThread(string module)
 *****************************************************************************************/
 void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
 {
-	oam::DeviceNetworkList devicenetworklist = Devicenetworklist;
+    oam::DeviceNetworkList devicenetworklist = Devicenetworklist;
 
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	SystemModuleTypeConfig systemmoduletypeconfig;
-	ALARMManager aManager;
-	int status = API_SUCCESS;
-	bool exitThread = false;
-	int exitThreadStatus = oam::API_SUCCESS;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    SystemModuleTypeConfig systemmoduletypeconfig;
+    ALARMManager aManager;
+    int status = API_SUCCESS;
+    bool exitThread = false;
+    int exitThreadStatus = oam::API_SUCCESS;
 
-	pthread_t ThreadId;
-	ThreadId = pthread_self();
+    pthread_t ThreadId;
+    ThreadId = pthread_self();
 
-	log.writeLog(__LINE__, "stopSystemThread launched", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "stopSystemThread launched", LOG_TYPE_DEBUG);
 
-	try{
-		oam.getSystemConfig(systemmoduletypeconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		stopsystemthreadStatus = oam::API_FAILURE;
-		processManager.setSystemState(oam::FAILED);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		stopsystemthreadStatus = oam::API_FAILURE;
-		processManager.setSystemState(oam::FAILED);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        stopsystemthreadStatus = oam::API_FAILURE;
+        processManager.setSystemState(oam::FAILED);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        stopsystemthreadStatus = oam::API_FAILURE;
+        processManager.setSystemState(oam::FAILED);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
 
-	if ( devicenetworklist.size() != 0 ) {
-		// stop modules from devicenetworklist
-		DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+    if ( devicenetworklist.size() != 0 )
+    {
+        // stop modules from devicenetworklist
+        DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-		//launch start module threads, starting with local module
-		pthread_t stopmodulethread;
-		string moduleName = config.moduleName();
-		int status = pthread_create (&stopmodulethread, NULL, (void*(*)(void*)) &stopModuleThread, &moduleName);
-		
-		if ( status != 0 )
-			log.writeLog(__LINE__, "stopModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+        //launch start module threads, starting with local module
+        pthread_t stopmodulethread;
+        string moduleName = config.moduleName();
+        int status = pthread_create (&stopmodulethread, NULL, (void* (*)(void*)) &stopModuleThread, &moduleName);
 
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			string moduleName = (*listPT).DeviceName;
+        if ( status != 0 )
+            log.writeLog(__LINE__, "stopModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
-			// bypass DISABLED modules
-			try{
-				int opState;
-				bool degraded = oam::ACTIVE;
-				oam.getModuleStatus(moduleName, opState, degraded);
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string moduleName = (*listPT).DeviceName;
 
-				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-					//skip
-					continue;
-			}
-			catch (exception& ex)
-			{
+            // bypass DISABLED modules
+            try
+            {
+                int opState;
+                bool degraded = oam::ACTIVE;
+                oam.getModuleStatus(moduleName, opState, degraded);
+
+                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                    //skip
+                    continue;
+            }
+            catch (exception& ex)
+            {
 //				string error = ex.what();
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
+            }
+            catch (...)
+            {
 //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-			}
+            }
 
-			pthread_t stopmodulethread;
-			int status = pthread_create (&stopmodulethread, NULL, (void*(*)(void*)) &stopModuleThread, &moduleName);
-			
-			if ( status != 0 )
-				log.writeLog(__LINE__, "stopModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+            pthread_t stopmodulethread;
+            int status = pthread_create (&stopmodulethread, NULL, (void* (*)(void*)) &stopModuleThread, &moduleName);
 
-			sleep(5);
-		}
-	}
-	else {
-		// stop all modules, like on a systemStart command
-		//launch stop module threads, stoping with local module
+            if ( status != 0 )
+                log.writeLog(__LINE__, "stopModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			if( moduleCount == 0)
-				continue;
-	
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-			{
-				string moduleName = (*pt).DeviceName;
-	
-				// bypass DISABLED modules
-				try{
-					int opState = oam::ACTIVE;
-					bool degraded;
-					oam.getModuleStatus(moduleName, opState, degraded);
-	
-					if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-						//skip
-						continue;
-	
-				}
-				catch (exception& ex)
-				{
+            sleep(5);
+        }
+    }
+    else
+    {
+        // stop all modules, like on a systemStart command
+        //launch stop module threads, stoping with local module
+
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+            if ( moduleCount == 0)
+                continue;
+
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+            {
+                string moduleName = (*pt).DeviceName;
+
+                // bypass DISABLED modules
+                try
+                {
+                    int opState = oam::ACTIVE;
+                    bool degraded;
+                    oam.getModuleStatus(moduleName, opState, degraded);
+
+                    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                        //skip
+                        continue;
+
+                }
+                catch (exception& ex)
+                {
 //					string error = ex.what();
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-				}
-				catch(...)
-				{
+                }
+                catch (...)
+                {
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-				}
+                }
 
-				pthread_t stopmodulethread;
-				string name = moduleName;
-				int status = pthread_create (&stopmodulethread, NULL, (void*(*)(void*)) &stopModuleThread, &name);
+                pthread_t stopmodulethread;
+                string name = moduleName;
+                int status = pthread_create (&stopmodulethread, NULL, (void* (*)(void*)) &stopModuleThread, &name);
 
-				if ( status != 0 )
-					log.writeLog(__LINE__, "stopModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+                if ( status != 0 )
+                    log.writeLog(__LINE__, "stopModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
-				usleep(50000);
-			}
-		}
-	}
+                usleep(50000);
+            }
+        }
+    }
 
-	// check status and process accordingly
-	int k = 0;
-	for( ; k < 1200 ; k++ )
-	{
-		string moduleName;
-		status = API_SUCCESS;
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			if( moduleCount == 0)
-				continue;
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-			{
-				moduleName = (*pt).DeviceName;
-	
-				// get module status
-				try{
-					int opState = oam::ACTIVE;
-					bool degraded;
-					oam.getModuleStatus(moduleName, opState, degraded);
-	
-					if ( opState == oam::FAILED ) {
-						status = API_FAILURE;
-						break;
-					}
-	
-					if (opState == oam::MAN_DISABLED || 
-						opState == oam::AUTO_DISABLED ||
-						opState == oam::MAN_OFFLINE)
-						//skip
-						continue;
-				}
-				catch (exception& ex)
-				{
+    // check status and process accordingly
+    int k = 0;
+
+    for ( ; k < 1200 ; k++ )
+    {
+        string moduleName;
+        status = API_SUCCESS;
+
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+            if ( moduleCount == 0)
+                continue;
+
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+            {
+                moduleName = (*pt).DeviceName;
+
+                // get module status
+                try
+                {
+                    int opState = oam::ACTIVE;
+                    bool degraded;
+                    oam.getModuleStatus(moduleName, opState, degraded);
+
+                    if ( opState == oam::FAILED )
+                    {
+                        status = API_FAILURE;
+                        break;
+                    }
+
+                    if (opState == oam::MAN_DISABLED ||
+                            opState == oam::AUTO_DISABLED ||
+                            opState == oam::MAN_OFFLINE)
+                        //skip
+                        continue;
+                }
+                catch (exception& ex)
+                {
 //					string error = ex.what();
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-					continue;
-				}
-				catch(...)
-				{
+                    continue;
+                }
+                catch (...)
+                {
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-					continue;
-				}
-			}
+                    continue;
+                }
+            }
 
-			if( status == API_FAILURE )
-				break;
-		}
+            if ( status == API_FAILURE )
+                break;
+        }
 
-		//get out of loop if all modules stopped successfully
-		if( status == API_SUCCESS ) {
-			break;
-		}
-		else
-		{
-			//get out of loop if stop module failed
-			if( status == API_FAILURE ) {
-				//set system status
-				log.writeLog(__LINE__, "stopSystemThread: Module failed, Set System State to FAILED: " + moduleName , LOG_TYPE_CRITICAL);
-				processManager.setSystemState(oam::FAILED);
-				break;
-			}
-		}
-		sleep(5);
-	}
-	
-	if ( k == 1200 ) {
-		// system didn't Successfully restart
-		log.writeLog(__LINE__, "stopSystemThread: Modules failed to stop after 1200 tries, Set System State to FAILED" , LOG_TYPE_CRITICAL);
-		processManager.setSystemState(oam::FAILED);
-		status = oam::API_FAILURE;
-	}
-	else
-	{
-		processManager.setSystemState(oam::MAN_OFFLINE);
-		status = oam::API_SUCCESS;
-	}
+        //get out of loop if all modules stopped successfully
+        if ( status == API_SUCCESS )
+        {
+            break;
+        }
+        else
+        {
+            //get out of loop if stop module failed
+            if ( status == API_FAILURE )
+            {
+                //set system status
+                log.writeLog(__LINE__, "stopSystemThread: Module failed, Set System State to FAILED: " + moduleName, LOG_TYPE_CRITICAL);
+                processManager.setSystemState(oam::FAILED);
+                break;
+            }
+        }
 
-	// exit thread
-	stopsystemthreadStatus = status;
-	log.writeLog(__LINE__, "stopSystemThread Exit", LOG_TYPE_DEBUG);
-	pthread_detach (ThreadId);
-	pthread_exit(0);
+        sleep(5);
+    }
+
+    if ( k == 1200 )
+    {
+        // system didn't Successfully restart
+        log.writeLog(__LINE__, "stopSystemThread: Modules failed to stop after 1200 tries, Set System State to FAILED", LOG_TYPE_CRITICAL);
+        processManager.setSystemState(oam::FAILED);
+        status = oam::API_FAILURE;
+    }
+    else
+    {
+        processManager.setSystemState(oam::MAN_OFFLINE);
+        status = oam::API_SUCCESS;
+    }
+
+    // exit thread
+    stopsystemthreadStatus = status;
+    log.writeLog(__LINE__, "stopSystemThread Exit", LOG_TYPE_DEBUG);
+    pthread_detach (ThreadId);
+    pthread_exit(0);
 }
 
 /*****************************************************************************************
@@ -7385,66 +8087,69 @@ void stopSystemThread(oam::DeviceNetworkList Devicenetworklist)
 *****************************************************************************************/
 void stopModuleThread(string module)
 {
-	//store in a local variable
-	string moduleName = module;
+    //store in a local variable
+    string moduleName = module;
 
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
 
-	pthread_t ThreadId;
-	ThreadId = pthread_self();
+    pthread_t ThreadId;
+    ThreadId = pthread_self();
 
-	if ( moduleName.empty() ){
-		log.writeLog(__LINE__, "stopModuleThread received on invalid module name", LOG_TYPE_ERROR);
-		pthread_detach (ThreadId);
-		pthread_exit(0);
-	}
+    if ( moduleName.empty() )
+    {
+        log.writeLog(__LINE__, "stopModuleThread received on invalid module name", LOG_TYPE_ERROR);
+        pthread_detach (ThreadId);
+        pthread_exit(0);
+    }
 
-	log.writeLog(__LINE__, "Stop Module " + moduleName, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "Stop Module " + moduleName, LOG_TYPE_DEBUG);
 
-	while(true)
-	{
-		// get module status
-		try{
-			int opState = oam::ACTIVE;
-			bool degraded;
-			oam.getModuleStatus(moduleName, opState, degraded);
+    while (true)
+    {
+        // get module status
+        try
+        {
+            int opState = oam::ACTIVE;
+            bool degraded;
+            oam.getModuleStatus(moduleName, opState, degraded);
 
-			if (opState == oam::MAN_OFFLINE)
-				//quit
-				break;
-		}
-		catch (exception& ex)
-		{
+            if (opState == oam::MAN_OFFLINE)
+                //quit
+                break;
+        }
+        catch (exception& ex)
+        {
 //			string error = ex.what();
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
+        }
+        catch (...)
+        {
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-		}
+        }
 
-		int retStatus = processManager.stopModule(moduleName, oam::GRACEFUL, true);
-	
-		log.writeLog(__LINE__, "ACK received from '" + moduleName + "' Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-	
-		if (retStatus == API_SUCCESS)
-			break;
-		else
-		{
-			if (retStatus != API_MINOR_FAILURE) {
-				//major failure, set stopsystem flag and exit this thread
-				break;
-			}
-		}
-	}
+        int retStatus = processManager.stopModule(moduleName, oam::GRACEFUL, true);
 
-	// exit thread
-	log.writeLog(__LINE__, "stopModuleThread Exit on " + moduleName, LOG_TYPE_DEBUG);
-	pthread_detach (ThreadId);
-	pthread_exit(0);
+        log.writeLog(__LINE__, "ACK received from '" + moduleName + "' Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+
+        if (retStatus == API_SUCCESS)
+            break;
+        else
+        {
+            if (retStatus != API_MINOR_FAILURE)
+            {
+                //major failure, set stopsystem flag and exit this thread
+                break;
+            }
+        }
+    }
+
+    // exit thread
+    log.writeLog(__LINE__, "stopModuleThread Exit on " + moduleName, LOG_TYPE_DEBUG);
+    pthread_detach (ThreadId);
+    pthread_exit(0);
 }
 
 
@@ -7456,144 +8161,161 @@ void stopModuleThread(string module)
 *****************************************************************************************/
 void ProcessManager::checkSimplexModule(std::string moduleName)
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	SystemModuleTypeConfig systemmoduletypeconfig;
-	SystemProcessConfig systemprocessconfig;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    SystemModuleTypeConfig systemmoduletypeconfig;
+    SystemProcessConfig systemprocessconfig;
 
-	log.writeLog(__LINE__, "checkSimplexModule called for " + moduleName, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "checkSimplexModule called for " + moduleName, LOG_TYPE_DEBUG);
 
-	try{
-		oam.getSystemConfig(systemmoduletypeconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		return;
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		return;
-	}
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        return;
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        return;
+    }
 
-	string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
+    string moduletype = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
 
-	for( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-	{
-		if ( moduletype == systemmoduletypeconfig.moduletypeconfig[i].ModuleType ) {
+    for ( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+    {
+        if ( moduletype == systemmoduletypeconfig.moduletypeconfig[i].ModuleType )
+        {
 
-			if( systemmoduletypeconfig.moduletypeconfig[i].ModuleCount == 0)
-				return;
+            if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleCount == 0)
+                return;
 
-			//check for SIMPLEX Processes on mate might need to be started
-			if( systemmoduletypeconfig.moduletypeconfig[i].RunType == SIMPLEX ) {
+            //check for SIMPLEX Processes on mate might need to be started
+            if ( systemmoduletypeconfig.moduletypeconfig[i].RunType == SIMPLEX )
+            {
 
-				DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-				for( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-				{
-					if ((*pt).DeviceName != moduleName) {
-					//mate module, check for module ACTIVE and SIMPLEX processes
-						int opState = oam::ACTIVE;
-						try{
-							bool degraded;
-							oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
 
-							if (opState == oam::ACTIVE ||
-								opState == oam::DEGRADED ) {
-								//start COLD_STANDBY processes
-								try {
-									oam.getProcessConfig(systemprocessconfig);
+                for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+                {
+                    if ((*pt).DeviceName != moduleName)
+                    {
+                        //mate module, check for module ACTIVE and SIMPLEX processes
+                        int opState = oam::ACTIVE;
 
-									for( unsigned int j = 0 ; j < systemprocessconfig.processconfig.size(); j++)
-									{
-										if ( systemprocessconfig.processconfig[j].ModuleType == moduletype &&
-											systemprocessconfig.processconfig[j].RunType == oam::SIMPLEX ) {
-											int state = oam::ACTIVE;
-											try{
-												ProcessStatus procstat;
-												oam.getProcessStatus(systemprocessconfig.processconfig[j].ProcessName,
-																		(*pt).DeviceName, procstat);
-												state = procstat.ProcessOpState;
-											}
-											catch (exception& ex)
-											{
+                        try
+                        {
+                            bool degraded;
+                            oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+
+                            if (opState == oam::ACTIVE ||
+                                    opState == oam::DEGRADED )
+                            {
+                                //start COLD_STANDBY processes
+                                try
+                                {
+                                    oam.getProcessConfig(systemprocessconfig);
+
+                                    for ( unsigned int j = 0 ; j < systemprocessconfig.processconfig.size(); j++)
+                                    {
+                                        if ( systemprocessconfig.processconfig[j].ModuleType == moduletype &&
+                                                systemprocessconfig.processconfig[j].RunType == oam::SIMPLEX )
+                                        {
+                                            int state = oam::ACTIVE;
+
+                                            try
+                                            {
+                                                ProcessStatus procstat;
+                                                oam.getProcessStatus(systemprocessconfig.processconfig[j].ProcessName,
+                                                                     (*pt).DeviceName, procstat);
+                                                state = procstat.ProcessOpState;
+                                            }
+                                            catch (exception& ex)
+                                            {
 //												string error = ex.what();
 //												log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-												continue;
-											}
-											catch(...)
-											{
+                                                continue;
+                                            }
+                                            catch (...)
+                                            {
 //												log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-												continue;
-											}
+                                                continue;
+                                            }
 
-											if ( state == oam::COLD_STANDBY ) {
-												//set Primary UM Module
-												if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc" ) {
-													oam.setSystemConfig("PrimaryUMModuleName", (*pt).DeviceName);
+                                            if ( state == oam::COLD_STANDBY )
+                                            {
+                                                //set Primary UM Module
+                                                if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc" )
+                                                {
+                                                    oam.setSystemConfig("PrimaryUMModuleName", (*pt).DeviceName);
 
-													//distribute config file
-													distributeConfigFile("system");
-													sleep(2);
+                                                    //distribute config file
+                                                    distributeConfigFile("system");
+                                                    sleep(2);
 
-													//add MySQL Replication setup, if needed
-													log.writeLog(__LINE__, "Setup MySQL Replication for COLD_STANDBY DMLProc going ACTIVE", LOG_TYPE_DEBUG);
-													oam::DeviceNetworkList devicenetworklist;
-													processManager.setMySQLReplication(devicenetworklist, (*pt).DeviceName);
-												}
+                                                    //add MySQL Replication setup, if needed
+                                                    log.writeLog(__LINE__, "Setup MySQL Replication for COLD_STANDBY DMLProc going ACTIVE", LOG_TYPE_DEBUG);
+                                                    oam::DeviceNetworkList devicenetworklist;
+                                                    processManager.setMySQLReplication(devicenetworklist, (*pt).DeviceName);
+                                                }
 
-												int status = processManager.startProcess((*pt).DeviceName,
-																	systemprocessconfig.processconfig[j].ProcessName, 
-																	FORCEFUL);
-												if ( status == API_SUCCESS ) {
-													log.writeLog(__LINE__, "checkSimplexModule: mate process started: " + (*pt).DeviceName + "/" + systemprocessconfig.processconfig[j].ProcessName, LOG_TYPE_DEBUG);
+                                                int status = processManager.startProcess((*pt).DeviceName,
+                                                             systemprocessconfig.processconfig[j].ProcessName,
+                                                             FORCEFUL);
 
-													//check to see if DDL/DML IPs need to be updated
-													if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc" )
-														setPMProcIPs((*pt).DeviceName);
-												}
-												else
-													log.writeLog(__LINE__, "checkSimplexModule: mate process failed to start: " + (*pt).DeviceName + "/" + systemprocessconfig.processconfig[j].ProcessName, LOG_TYPE_DEBUG);
-											}
-											else
-											{ // if found ACTIVE, skip to next process
-												if ( state == oam::ACTIVE )
-													return;
-											}
-										}
-									}
-								}
-								catch (exception& ex)
-								{
-									string error = ex.what();
-									log.writeLog(__LINE__, "checkSimplexModule: EXCEPTION ERROR on getProcessConfig: " + error, LOG_TYPE_ERROR);
-								}
-								catch(...)
-								{
-									log.writeLog(__LINE__, "checkSimplexModule: EXCEPTION ERROR on getProcessConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-								}
-							}
-						}
-						catch (exception& ex)
-						{
+                                                if ( status == API_SUCCESS )
+                                                {
+                                                    log.writeLog(__LINE__, "checkSimplexModule: mate process started: " + (*pt).DeviceName + "/" + systemprocessconfig.processconfig[j].ProcessName, LOG_TYPE_DEBUG);
+
+                                                    //check to see if DDL/DML IPs need to be updated
+                                                    if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc" )
+                                                        setPMProcIPs((*pt).DeviceName);
+                                                }
+                                                else
+                                                    log.writeLog(__LINE__, "checkSimplexModule: mate process failed to start: " + (*pt).DeviceName + "/" + systemprocessconfig.processconfig[j].ProcessName, LOG_TYPE_DEBUG);
+                                            }
+                                            else
+                                            {
+                                                // if found ACTIVE, skip to next process
+                                                if ( state == oam::ACTIVE )
+                                                    return;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (exception& ex)
+                                {
+                                    string error = ex.what();
+                                    log.writeLog(__LINE__, "checkSimplexModule: EXCEPTION ERROR on getProcessConfig: " + error, LOG_TYPE_ERROR);
+                                }
+                                catch (...)
+                                {
+                                    log.writeLog(__LINE__, "checkSimplexModule: EXCEPTION ERROR on getProcessConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+                                }
+                            }
+                        }
+                        catch (exception& ex)
+                        {
 //							string error = ex.what();
 //							log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": " + error, LOG_TYPE_ERROR);
-						}
-						catch(...)
-						{
+                        }
+                        catch (...)
+                        {
 //							log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-						}
-					}
-				}
-			}
-		}
-	}
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	return;	
+    return;
 }
 
 /******************************************************************************************
@@ -7604,173 +8326,187 @@ void ProcessManager::checkSimplexModule(std::string moduleName)
 ******************************************************************************************/
 int ProcessManager::updatePMSconfig( bool check )
 {
-	Oam oam;
-	int minPmPorts = 32;
-	vector<string> IpAddrs;
-	vector<int> nicIDs;
+    Oam oam;
+    int minPmPorts = 32;
+    vector<string> IpAddrs;
+    vector<int> nicIDs;
 
-	log.writeLog(__LINE__, "updatePMSconfig Started", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "updatePMSconfig Started", LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	ModuleTypeConfig moduletypeconfig;
-	oam.getSystemConfig("pm", moduletypeconfig);
+    ModuleTypeConfig moduletypeconfig;
+    oam.getSystemConfig("pm", moduletypeconfig);
 
-	Config* sysConfig = Config::makeConfig();
-	string pmsIPAddr = sysConfig->getConfig("PMS1", "IPAddr");
+    Config* sysConfig = Config::makeConfig();
+    string pmsIPAddr = sysConfig->getConfig("PMS1", "IPAddr");
 
-	//exit out if PMS already setup
-	if( pmsIPAddr != oam::UnassignedIpAddr && 
-		check)
-	{
-		log.writeLog(__LINE__, "updatePMSconfig: no update needed, exiting function", LOG_TYPE_DEBUG);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_SUCCESS;
-	}
+    //exit out if PMS already setup
+    if ( pmsIPAddr != oam::UnassignedIpAddr &&
+            check)
+    {
+        log.writeLog(__LINE__, "updatePMSconfig: no update needed, exiting function", LOG_TYPE_DEBUG);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_SUCCESS;
+    }
 
-	//exit out if PM module count is 1 or less
-	if( moduletypeconfig.ModuleCount <= 1 && 
-		check)
-	{
-		log.writeLog(__LINE__, "updatePMSconfig: no update needed, exiting function", LOG_TYPE_DEBUG);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_SUCCESS;
-	}
+    //exit out if PM module count is 1 or less
+    if ( moduletypeconfig.ModuleCount <= 1 &&
+            check)
+    {
+        log.writeLog(__LINE__, "updatePMSconfig: no update needed, exiting function", LOG_TYPE_DEBUG);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_SUCCESS;
+    }
 
-	int maxPMNicID = atoi(sysConfig->getConfig("PrimitiveServers", "ConnectionsPerPrimProc").c_str()) / 2;
-	int pmCount = 0;
+    int maxPMNicID = atoi(sysConfig->getConfig("PrimitiveServers", "ConnectionsPerPrimProc").c_str()) / 2;
+    int pmCount = 0;
 
-	//get Perfomance module IP addresses
-	DeviceNetworkList::iterator pt = moduletypeconfig.ModuleNetworkList.begin();
-	for ( ; pt != moduletypeconfig.ModuleNetworkList.end() ; pt++)
-	{
-		int opState = oam::ACTIVE;
-		bool degraded;
-		try {
-			oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+    //get Perfomance module IP addresses
+    DeviceNetworkList::iterator pt = moduletypeconfig.ModuleNetworkList.begin();
 
-			if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-				continue;
-		}
-		catch (exception& ex)
-		{
+    for ( ; pt != moduletypeconfig.ModuleNetworkList.end() ; pt++)
+    {
+        int opState = oam::ACTIVE;
+        bool degraded;
+
+        try
+        {
+            oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+
+            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                continue;
+        }
+        catch (exception& ex)
+        {
 //			string error = ex.what();
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
+        }
+        catch (...)
+        {
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-		}
+        }
 
-		pmCount++;
+        pmCount++;
 
-		HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-		for( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
-		{
-			if ( (*pt1).IPAddr == oam::UnassignedIpAddr )
-				continue;
-			else
-			{
-				//check NIC status and don't assigned if down
-				try{
-					int state = oam::UP;
-					oam.getNICStatus((*pt1).HostName, state);
-					if ( state == oam::UP || state == oam::INITIAL) {
-						IpAddrs.push_back((*pt1).IPAddr);
-						nicIDs.push_back((*pt1).NicID);
-					}
-				}
-				catch (...)
-				{
-					IpAddrs.push_back((*pt1).IPAddr);
-					nicIDs.push_back((*pt1).NicID);
-				}
-			}
-		}
-	}
+        HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 
-	if( IpAddrs.empty()) {
-		log.writeLog(__LINE__, "updatePMSconfig: No up NICS found, exiting function", LOG_TYPE_DEBUG);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_SUCCESS;
-	}
- 
-	if( pmCount == 0) {
-		log.writeLog(__LINE__, "updatePMSconfig: No PM modules Enabled, exiting function", LOG_TYPE_DEBUG);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_SUCCESS;
-	}
+        for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++)
+        {
+            if ( (*pt1).IPAddr == oam::UnassignedIpAddr )
+                continue;
+            else
+            {
+                //check NIC status and don't assigned if down
+                try
+                {
+                    int state = oam::UP;
+                    oam.getNICStatus((*pt1).HostName, state);
 
-	if( pmCount == 1 && 
-		pmsIPAddr != oam::UnassignedIpAddr && 
-		check )
-	{
-		log.writeLog(__LINE__, "updatePMSconfig: no update needed, exiting function", LOG_TYPE_DEBUG);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_SUCCESS;
-	}
+                    if ( state == oam::UP || state == oam::INITIAL)
+                    {
+                        IpAddrs.push_back((*pt1).IPAddr);
+                        nicIDs.push_back((*pt1).NicID);
+                    }
+                }
+                catch (...)
+                {
+                    IpAddrs.push_back((*pt1).IPAddr);
+                    nicIDs.push_back((*pt1).NicID);
+                }
+            }
+        }
+    }
 
-	Configuration config;
+    if ( IpAddrs.empty())
+    {
+        log.writeLog(__LINE__, "updatePMSconfig: No up NICS found, exiting function", LOG_TYPE_DEBUG);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_SUCCESS;
+    }
 
-	//retry 5 times loop just in case
-	for(int i=0 ; i < 5; i++)
-	{
-		Config* sysConfig1 = Config::makeConfig();
+    if ( pmCount == 0)
+    {
+        log.writeLog(__LINE__, "updatePMSconfig: No PM modules Enabled, exiting function", LOG_TYPE_DEBUG);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_SUCCESS;
+    }
 
-		//update PM count if needed
-		sysConfig1->setConfig("PrimitiveServers", "Count", oam.itoa(pmCount));
-	
-		int pmPorts = pmCount * (maxPMNicID*2);
-		if ( pmPorts < minPmPorts )
-			pmPorts = minPmPorts;
+    if ( pmCount == 1 &&
+            pmsIPAddr != oam::UnassignedIpAddr &&
+            check )
+    {
+        log.writeLog(__LINE__, "updatePMSconfig: no update needed, exiting function", LOG_TYPE_DEBUG);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_SUCCESS;
+    }
 
-		const string PM = "PMS";
-		int nicID = 1;
+    Configuration config;
 
-		for ( int pmsID = 1;  pmsID < pmPorts+1 ; )
-		{
-			vector<string>::iterator pt = IpAddrs.begin();
-			vector<int>::iterator pt1 = nicIDs.begin();
+    //retry 5 times loop just in case
+    for (int i = 0 ; i < 5; i++)
+    {
+        Config* sysConfig1 = Config::makeConfig();
 
-			for( ; pt != IpAddrs.end() ; pt++,pt1++)
-			{
-				if ( *pt1 == nicID ) {
-					string pmsName = PM + oam.itoa(pmsID);
-					sysConfig1->setConfig(pmsName, "IPAddr", *pt);
-					pmsID++;
-				}
-				if ( pmsID > pmPorts )
-					break;
-			}
+        //update PM count if needed
+        sysConfig1->setConfig("PrimitiveServers", "Count", oam.itoa(pmCount));
 
-			if ( pmsID > pmPorts )
-				break;
+        int pmPorts = pmCount * (maxPMNicID * 2);
 
-			nicID++;
-			if ( nicID > maxPMNicID )
-				nicID = 1;
-		}
-	
-		//update Calpont Config table
-		try {
-			sysConfig1->write();
-			pthread_mutex_unlock(&THREAD_LOCK);
-			
-			log.writeLog(__LINE__, "updatePMSconfig completed", LOG_TYPE_DEBUG);
+        if ( pmPorts < minPmPorts )
+            pmPorts = minPmPorts;
 
-			return API_SUCCESS;
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "updatePMSconfig - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-		}
-	}
+        const string PM = "PMS";
+        int nicID = 1;
 
-	pthread_mutex_unlock(&THREAD_LOCK);
-	
-	log.writeLog(__LINE__, "updatePMSconfig failed", LOG_TYPE_DEBUG);
+        for ( int pmsID = 1;  pmsID < pmPorts + 1 ; )
+        {
+            vector<string>::iterator pt = IpAddrs.begin();
+            vector<int>::iterator pt1 = nicIDs.begin();
 
-	return API_FAILURE;
+            for ( ; pt != IpAddrs.end() ; pt++, pt1++)
+            {
+                if ( *pt1 == nicID )
+                {
+                    string pmsName = PM + oam.itoa(pmsID);
+                    sysConfig1->setConfig(pmsName, "IPAddr", *pt);
+                    pmsID++;
+                }
+
+                if ( pmsID > pmPorts )
+                    break;
+            }
+
+            if ( pmsID > pmPorts )
+                break;
+
+            nicID++;
+
+            if ( nicID > maxPMNicID )
+                nicID = 1;
+        }
+
+        //update Calpont Config table
+        try
+        {
+            sysConfig1->write();
+            pthread_mutex_unlock(&THREAD_LOCK);
+
+            log.writeLog(__LINE__, "updatePMSconfig completed", LOG_TYPE_DEBUG);
+
+            return API_SUCCESS;
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "updatePMSconfig - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+        }
+    }
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+
+    log.writeLog(__LINE__, "updatePMSconfig failed", LOG_TYPE_DEBUG);
+
+    return API_FAILURE;
 }
 
 /******************************************************************************************
@@ -7781,133 +8517,139 @@ int ProcessManager::updatePMSconfig( bool check )
 ******************************************************************************************/
 int ProcessManager::updateWorkerNodeconfig()
 {
-	Oam oam;
-	vector <string> module;
-	vector <string> ipadr;
+    Oam oam;
+    vector <string> module;
+    vector <string> ipadr;
 
-	log.writeLog(__LINE__, "updateWorkerNodeconfig Started", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "updateWorkerNodeconfig Started", LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	//setup current module as work-node #1 by entering it in first
-	module.push_back(config.moduleName());
+    //setup current module as work-node #1 by entering it in first
+    module.push_back(config.moduleName());
 
-	// get my IP address and update entries
-	ModuleConfig moduleconfig;
-	oam.getSystemConfig(config.moduleName(), moduleconfig);
-	HostConfigList::iterator pt0 = moduleconfig.hostConfigList.begin();
-	idbassert(pt0 != moduleconfig.hostConfigList.end());
-	ipadr.push_back(pt0->IPAddr);
+    // get my IP address and update entries
+    ModuleConfig moduleconfig;
+    oam.getSystemConfig(config.moduleName(), moduleconfig);
+    HostConfigList::iterator pt0 = moduleconfig.hostConfigList.begin();
+    idbassert(pt0 != moduleconfig.hostConfigList.end());
+    ipadr.push_back(pt0->IPAddr);
 
-	SystemModuleTypeConfig systemmoduletypeconfig;
+    SystemModuleTypeConfig systemmoduletypeconfig;
 
-	try
-	{
-		oam.getSystemConfig(systemmoduletypeconfig);
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
 
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			if( systemmoduletypeconfig.moduletypeconfig[i].ModuleType.empty() )
-				// end of list
-				break;
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            if ( systemmoduletypeconfig.moduletypeconfig[i].ModuleType.empty() )
+                // end of list
+                break;
 
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
 
-			if ( moduleCount > 0 )
-			{
-				DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-				for( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
-				{
-					//skip current module
-					if ( (*pt).DeviceName == config.moduleName() )
-						continue;
+            if ( moduleCount > 0 )
+            {
+                DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
 
-					int opState = oam::ACTIVE;
-					bool degraded;
-					try {
-						oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
+                {
+                    //skip current module
+                    if ( (*pt).DeviceName == config.moduleName() )
+                        continue;
 
-						if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-							continue;
-					}
-					catch (exception& ex)
-					{
+                    int opState = oam::ACTIVE;
+                    bool degraded;
+
+                    try
+                    {
+                        oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+
+                        if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                            continue;
+                    }
+                    catch (exception& ex)
+                    {
 //						string error = ex.what();
 //						log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-					}
-					catch(...)
-					{
+                    }
+                    catch (...)
+                    {
 //						log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-					}
-			
-					module.push_back((*pt).DeviceName);
+                    }
 
-					HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-					ipadr.push_back((*pt1).IPAddr);
-				}
-			}
-		}
-	}
-	catch (...)
-	{
-		log.writeLog(__LINE__, "updateWorkerNodeconfig: getSystemNetworkConfig Failed", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_SUCCESS;
-	}
+                    module.push_back((*pt).DeviceName);
 
-	Configuration config;
+                    HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
+                    ipadr.push_back((*pt1).IPAddr);
+                }
+            }
+        }
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "updateWorkerNodeconfig: getSystemNetworkConfig Failed", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_SUCCESS;
+    }
 
-	for ( int i = 1 ; i < 5 ; i++ )
-	{
-		Config* sysConfig3 = Config::makeConfig();;
-	
-		//update Columnstore.xml
-		sysConfig3->setConfig("DBRM_Controller", "NumWorkers", oam.itoa(module.size()));
-	
-		std::vector<std::string>::iterator pt = module.begin();
-		std::vector<std::string>::iterator pt1 = ipadr.begin();
-		int id = 1;
-		for( ; pt != module.end() ; pt++,pt1++,id++)
-		{
-			string Section = "DBRM_Worker" + oam.itoa(id);
-			sysConfig3->setConfig(Section, "IPAddr", *pt1);
-			sysConfig3->setConfig(Section, "Module", *pt);
-			string moduleName = *pt;
-			sysConfig3->setConfig(Section, "Port", "8700");
-		}
-	
-		//clear out any leftovers
-		for ( ; id < MAX_MODULE ; id++ )
-		{
-			string Section = "DBRM_Worker" + oam.itoa(id);
-			
-			if ( sysConfig3->getConfig(Section, "IPAddr") != oam::UnassignedIpAddr &&
-					!sysConfig3->getConfig(Section, "IPAddr").empty())
-				sysConfig3->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
-			if ( sysConfig3->getConfig(Section, "Module") != oam::UnassignedIpAddr &&
-					!sysConfig3->getConfig(Section, "Module").empty())
-				sysConfig3->setConfig(Section, "Module", oam::UnassignedName);
-		}
-	
-		try {
-			sysConfig3->write();
-			pthread_mutex_unlock(&THREAD_LOCK);
+    Configuration config;
 
-			log.writeLog(__LINE__, "updateWorkerNodeconfig completed", LOG_TYPE_DEBUG);
+    for ( int i = 1 ; i < 5 ; i++ )
+    {
+        Config* sysConfig3 = Config::makeConfig();;
 
-			return API_SUCCESS;
+        //update Columnstore.xml
+        sysConfig3->setConfig("DBRM_Controller", "NumWorkers", oam.itoa(module.size()));
 
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "updateWorkerNodeconfig - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-		}
-	}
+        std::vector<std::string>::iterator pt = module.begin();
+        std::vector<std::string>::iterator pt1 = ipadr.begin();
+        int id = 1;
 
-	pthread_mutex_unlock(&THREAD_LOCK);
-	log.writeLog(__LINE__, "updateWorkerNodeconfig failed", LOG_TYPE_DEBUG);
+        for ( ; pt != module.end() ; pt++, pt1++, id++)
+        {
+            string Section = "DBRM_Worker" + oam.itoa(id);
+            sysConfig3->setConfig(Section, "IPAddr", *pt1);
+            sysConfig3->setConfig(Section, "Module", *pt);
+            string moduleName = *pt;
+            sysConfig3->setConfig(Section, "Port", "8700");
+        }
 
-	return API_FAILURE;
+        //clear out any leftovers
+        for ( ; id < MAX_MODULE ; id++ )
+        {
+            string Section = "DBRM_Worker" + oam.itoa(id);
+
+            if ( sysConfig3->getConfig(Section, "IPAddr") != oam::UnassignedIpAddr &&
+                    !sysConfig3->getConfig(Section, "IPAddr").empty())
+                sysConfig3->setConfig(Section, "IPAddr", oam::UnassignedIpAddr);
+
+            if ( sysConfig3->getConfig(Section, "Module") != oam::UnassignedIpAddr &&
+                    !sysConfig3->getConfig(Section, "Module").empty())
+                sysConfig3->setConfig(Section, "Module", oam::UnassignedName);
+        }
+
+        try
+        {
+            sysConfig3->write();
+            pthread_mutex_unlock(&THREAD_LOCK);
+
+            log.writeLog(__LINE__, "updateWorkerNodeconfig completed", LOG_TYPE_DEBUG);
+
+            return API_SUCCESS;
+
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "updateWorkerNodeconfig - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+        }
+    }
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+    log.writeLog(__LINE__, "updateWorkerNodeconfig failed", LOG_TYPE_DEBUG);
+
+    return API_FAILURE;
 }
 
 /******************************************************************************************
@@ -7918,25 +8660,26 @@ int ProcessManager::updateWorkerNodeconfig()
 ******************************************************************************************/
 void ProcessManager::clearModuleAlarms(std::string moduleName)
 {
-	ALARMManager aManager;
-	AlarmList alarmList;
-	aManager.getActiveAlarm (alarmList);
+    ALARMManager aManager;
+    AlarmList alarmList;
+    aManager.getActiveAlarm (alarmList);
 
-	AlarmList::iterator i;
-	for (i = alarmList.begin(); i != alarmList.end(); ++i)
-	{
-		// check if the same fault component on same module
-		if (moduleName.compare((i->second).getComponentID()) == 0 ||
-			moduleName.compare((i->second).getSname()) == 0)
-		{
-			// match, go clear it
-			aManager.sendAlarmReport((i->second).getComponentID().c_str(),
-									(i->second).getAlarmID(),
-									CLEAR,
-									(i->second).getSname().c_str(),
-									"ProcessManager");
-		}
-	}
+    AlarmList::iterator i;
+
+    for (i = alarmList.begin(); i != alarmList.end(); ++i)
+    {
+        // check if the same fault component on same module
+        if (moduleName.compare((i->second).getComponentID()) == 0 ||
+                moduleName.compare((i->second).getSname()) == 0)
+        {
+            // match, go clear it
+            aManager.sendAlarmReport((i->second).getComponentID().c_str(),
+                                     (i->second).getAlarmID(),
+                                     CLEAR,
+                                     (i->second).getSname().c_str(),
+                                     "ProcessManager");
+        }
+    }
 }
 
 /******************************************************************************************
@@ -7947,24 +8690,25 @@ void ProcessManager::clearModuleAlarms(std::string moduleName)
 ******************************************************************************************/
 void ProcessManager::clearNICAlarms(std::string hostName)
 {
-	ALARMManager aManager;
-	AlarmList alarmList;
-	aManager.getActiveAlarm (alarmList);
+    ALARMManager aManager;
+    AlarmList alarmList;
+    aManager.getActiveAlarm (alarmList);
 
-	AlarmList::iterator i;
-	for (i = alarmList.begin(); i != alarmList.end(); ++i)
-	{
-		// check if the same fault component on same module
-		if (hostName.compare((i->second).getComponentID()) == 0)
-		{
-			// match, go clear it
-			aManager.sendAlarmReport((i->second).getComponentID().c_str(),
-									(i->second).getAlarmID(),
-									CLEAR,
-									(i->second).getSname().c_str(),
-									"ProcessManager");
-		}
-	}
+    AlarmList::iterator i;
+
+    for (i = alarmList.begin(); i != alarmList.end(); ++i)
+    {
+        // check if the same fault component on same module
+        if (hostName.compare((i->second).getComponentID()) == 0)
+        {
+            // match, go clear it
+            aManager.sendAlarmReport((i->second).getComponentID().c_str(),
+                                     (i->second).getAlarmID(),
+                                     CLEAR,
+                                     (i->second).getSname().c_str(),
+                                     "ProcessManager");
+        }
+    }
 }
 
 /******************************************************************************************
@@ -7975,71 +8719,76 @@ void ProcessManager::clearNICAlarms(std::string hostName)
 ******************************************************************************************/
 bool ProcessManager::updateExtentMap()
 {
-	string fileName = startup::StartUp::installDir() + "/etc/Columnstore.xml";
+    string fileName = startup::StartUp::installDir() + "/etc/Columnstore.xml";
 
-	ifstream oldFile (fileName.c_str());
-	if (!oldFile) return false;
-	
-	vector <string> lines;
-	char line[200];
-	string buf;
-	string newLine;
+    ifstream oldFile (fileName.c_str());
 
-	string start = "</Installation>";
-	string firstComment = "<!--";
-	string end = "</ExtentMap>";
-	string lastComment = "-->";
+    if (!oldFile) return false;
 
-	while (oldFile.getline(line, 200))
-	{
-		buf = line;
+    vector <string> lines;
+    char line[200];
+    string buf;
+    string newLine;
 
-		string::size_type pos = buf.find(start,0);
-		if (pos != string::npos)
-		{
-			//output to temp file and skip next line
-			lines.push_back(buf);
-			oldFile.getline(line, 200);
-			buf = line;
-			pos = buf.find(firstComment,0);
-			if (pos == string::npos)
-			{
-				return true;
-			}
-		}
-		else
-		{
-			pos = buf.find(end,0);
-			if (pos != string::npos)
-			{
-				//output to temp file and skip next line
-				lines.push_back(buf);
-				oldFile.getline(line, 200);
-				buf = line;
-				pos = buf.find(lastComment,0);
-				if (pos == string::npos)
-				{
-					return true;
-				}
-			}
-			else
-				//output to temp file
-				lines.push_back(buf);
-		}
-	}
+    string start = "</Installation>";
+    string firstComment = "<!--";
+    string end = "</ExtentMap>";
+    string lastComment = "-->";
 
-	oldFile.close();
-	unlink (fileName.c_str());
-   	ofstream newFile (fileName.c_str());	
-	
-	//create new file
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0664);
-	
-	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-	newFile.close();
-	
-	close(fd);
-	return true;
+    while (oldFile.getline(line, 200))
+    {
+        buf = line;
+
+        string::size_type pos = buf.find(start, 0);
+
+        if (pos != string::npos)
+        {
+            //output to temp file and skip next line
+            lines.push_back(buf);
+            oldFile.getline(line, 200);
+            buf = line;
+            pos = buf.find(firstComment, 0);
+
+            if (pos == string::npos)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            pos = buf.find(end, 0);
+
+            if (pos != string::npos)
+            {
+                //output to temp file and skip next line
+                lines.push_back(buf);
+                oldFile.getline(line, 200);
+                buf = line;
+                pos = buf.find(lastComment, 0);
+
+                if (pos == string::npos)
+                {
+                    return true;
+                }
+            }
+            else
+                //output to temp file
+                lines.push_back(buf);
+        }
+    }
+
+    oldFile.close();
+    unlink (fileName.c_str());
+    ofstream newFile (fileName.c_str());
+
+    //create new file
+    int fd = open(fileName.c_str(), O_RDWR | O_CREAT, 0664);
+
+    copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+    newFile.close();
+
+    close(fd);
+    return true;
 }
 
 /******************************************************************************************
@@ -8050,26 +8799,26 @@ bool ProcessManager::updateExtentMap()
 ******************************************************************************************/
 bool ProcessManager::makeXMInittab(std::string moduleName, std::string systemID, std::string parentOAMModuleHostName)
 {
-	string fileName = startup::StartUp::installDir() + "/local/etc/" + moduleName + "/inittab.calpont";
+    string fileName = startup::StartUp::installDir() + "/local/etc/" + moduleName + "/inittab.calpont";
 
-	vector <string> lines;
+    vector <string> lines;
 
-	string init1 = "1" + systemID + ":2345:respawn:" + startup::StartUp::installDir() + "/bin/ProcMon " + parentOAMModuleHostName;
-	
-	lines.push_back(init1);
+    string init1 = "1" + systemID + ":2345:respawn:" + startup::StartUp::installDir() + "/bin/ProcMon " + parentOAMModuleHostName;
 
-	unlink (fileName.c_str());
-   	ofstream newFile (fileName.c_str());	
-	
-	//create new file
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0664);
-	
-	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-	newFile.close();
-	
-	close(fd);
+    lines.push_back(init1);
 
-	return true;
+    unlink (fileName.c_str());
+    ofstream newFile (fileName.c_str());
+
+    //create new file
+    int fd = open(fileName.c_str(), O_RDWR | O_CREAT, 0664);
+
+    copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+    newFile.close();
+
+    close(fd);
+
+    return true;
 }
 
 
@@ -8082,110 +8831,116 @@ bool ProcessManager::makeXMInittab(std::string moduleName, std::string systemID,
 ******************************************************************************************/
 int ProcessManager::setPMProcIPs( std::string moduleName, std::string processName )
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	ModuleConfig moduleconfig;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    ModuleConfig moduleconfig;
 
-	log.writeLog(__LINE__, "setPMProcIPs called for " + moduleName, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "setPMProcIPs called for " + moduleName, LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	if ( processName == oam::UnassignedName || processName == "DDLProc")
-	{
-		for ( int i = 1 ; i < 5 ; i ++)
-		{
-			//get Module IP address
-			try
-			{
-				oam.getSystemConfig(moduleName, moduleconfig);
-				HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-				string ipAdd = (*pt1).IPAddr;
-		
-				Config* sysConfig2 = Config::makeConfig();
-			
-				//check if IP address if different than current value, don't update if it is
-				if ( sysConfig2->getConfig("DDLProc", "IPAddr") == ipAdd ) {
-					log.writeLog(__LINE__, "setPMProcIPs for DDLProc: no update needed", LOG_TYPE_DEBUG);	
-					break;
-				}	
-		
-				sysConfig2->setConfig("DDLProc", "IPAddr", ipAdd);
-				try {
-					sysConfig2->write();
-	
-					pthread_mutex_unlock(&THREAD_LOCK);
-	
-					log.writeLog(__LINE__, "setPMProcIPs: DDLProc to " + ipAdd, LOG_TYPE_DEBUG);
-				}
-				catch(...)
-				{
-					log.writeLog(__LINE__, "setPMProcIPs - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-				}
-			}
-			catch (exception& ex)
-			{
-				string error = ex.what();
-				log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
-				log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-			}
-		}
-	}
+    if ( processName == oam::UnassignedName || processName == "DDLProc")
+    {
+        for ( int i = 1 ; i < 5 ; i ++)
+        {
+            //get Module IP address
+            try
+            {
+                oam.getSystemConfig(moduleName, moduleconfig);
+                HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+                string ipAdd = (*pt1).IPAddr;
 
-	if ( processName == oam::UnassignedName || processName == "DMLProc")
-	{
-		for ( int i = 1 ; i < 5 ; i ++)
-		{
-			//get Module IP address
-			try
-			{
-				oam.getSystemConfig(moduleName, moduleconfig);
-				HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-				string ipAdd = (*pt1).IPAddr;
-		
-				Config* sysConfig2 = Config::makeConfig();
-			
-				//check if IP address if different than current value, don't update if it is
-				if ( sysConfig2->getConfig("DMLProc", "IPAddr") == ipAdd ) {
-					log.writeLog(__LINE__, "setPMProcIPs for DMLProc: no update needed, exiting function", LOG_TYPE_DEBUG);	
-					pthread_mutex_unlock(&THREAD_LOCK);
-					return API_SUCCESS;
-				}	
-		
-				sysConfig2->setConfig("DMLProc", "IPAddr", ipAdd);
-				try {
-					sysConfig2->write();
-	
-					pthread_mutex_unlock(&THREAD_LOCK);
-	
-					log.writeLog(__LINE__, "setPMProcIPs: DMLProc to " + ipAdd, LOG_TYPE_DEBUG);
-				}
-				catch(...)
-				{
-					log.writeLog(__LINE__, "setPMProcIPs - ERROR: sysConfig->write", LOG_TYPE_ERROR);
-				}
-			}
-			catch (exception& ex)
-			{
-				string error = ex.what();
-				log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
-				log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-			}
-		}
-	}
+                Config* sysConfig2 = Config::makeConfig();
 
-	pthread_mutex_unlock(&THREAD_LOCK);
+                //check if IP address if different than current value, don't update if it is
+                if ( sysConfig2->getConfig("DDLProc", "IPAddr") == ipAdd )
+                {
+                    log.writeLog(__LINE__, "setPMProcIPs for DDLProc: no update needed", LOG_TYPE_DEBUG);
+                    break;
+                }
 
-	log.writeLog(__LINE__, "setPMProcIPs failed", LOG_TYPE_DEBUG);
+                sysConfig2->setConfig("DDLProc", "IPAddr", ipAdd);
 
-	return API_SUCCESS;
+                try
+                {
+                    sysConfig2->write();
+
+                    pthread_mutex_unlock(&THREAD_LOCK);
+
+                    log.writeLog(__LINE__, "setPMProcIPs: DDLProc to " + ipAdd, LOG_TYPE_DEBUG);
+                }
+                catch (...)
+                {
+                    log.writeLog(__LINE__, "setPMProcIPs - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+                }
+            }
+            catch (exception& ex)
+            {
+                string error = ex.what();
+                log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+            }
+            catch (...)
+            {
+                log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+            }
+        }
+    }
+
+    if ( processName == oam::UnassignedName || processName == "DMLProc")
+    {
+        for ( int i = 1 ; i < 5 ; i ++)
+        {
+            //get Module IP address
+            try
+            {
+                oam.getSystemConfig(moduleName, moduleconfig);
+                HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+                string ipAdd = (*pt1).IPAddr;
+
+                Config* sysConfig2 = Config::makeConfig();
+
+                //check if IP address if different than current value, don't update if it is
+                if ( sysConfig2->getConfig("DMLProc", "IPAddr") == ipAdd )
+                {
+                    log.writeLog(__LINE__, "setPMProcIPs for DMLProc: no update needed, exiting function", LOG_TYPE_DEBUG);
+                    pthread_mutex_unlock(&THREAD_LOCK);
+                    return API_SUCCESS;
+                }
+
+                sysConfig2->setConfig("DMLProc", "IPAddr", ipAdd);
+
+                try
+                {
+                    sysConfig2->write();
+
+                    pthread_mutex_unlock(&THREAD_LOCK);
+
+                    log.writeLog(__LINE__, "setPMProcIPs: DMLProc to " + ipAdd, LOG_TYPE_DEBUG);
+                }
+                catch (...)
+                {
+                    log.writeLog(__LINE__, "setPMProcIPs - ERROR: sysConfig->write", LOG_TYPE_ERROR);
+                }
+            }
+            catch (exception& ex)
+            {
+                string error = ex.what();
+                log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+            }
+            catch (...)
+            {
+                log.writeLog(__LINE__, "setPMProcIPs: EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+            }
+        }
+    }
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+
+    log.writeLog(__LINE__, "setPMProcIPs failed", LOG_TYPE_DEBUG);
+
+    return API_SUCCESS;
 
 }
 
@@ -8197,153 +8952,167 @@ int ProcessManager::setPMProcIPs( std::string moduleName, std::string processNam
 ******************************************************************************************/
 int ProcessManager::distributeConfigFile(std::string name, std::string file)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = UPDATECONFIGFILE;
-	Oam oam;
-	int returnStatus = oam::API_SUCCESS;
+    ByteStream msg;
+    ByteStream::byte requestID = UPDATECONFIGFILE;
+    Oam oam;
+    int returnStatus = oam::API_SUCCESS;
 
-	log.writeLog(__LINE__, "distributeConfigFile called for " + name + " file = " + file, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "distributeConfigFile called for " + name + " file = " + file, LOG_TYPE_DEBUG);
 
-	string dirName = startup::StartUp::installDir() + "/etc/";
-	string fileName = dirName + file;
+    string dirName = startup::StartUp::installDir() + "/etc/";
+    string fileName = dirName + file;
 
-	ifstream in (fileName.c_str());
-	if (!in) {
-		log.writeLog(__LINE__, "distributeConfigFile failed, file doesn't exist: " + fileName, LOG_TYPE_ERROR);
-		return oam::API_FAILURE;
-	}
+    ifstream in (fileName.c_str());
 
-	//skip any file of size 0
-	in.seekg(0, std::ios::end);
-	int size = in.tellg();
-	if ( size == 0 ) {
-		log.writeLog(__LINE__, "distributeConfigFile failed, file doesn't exist: " + fileName, LOG_TYPE_ERROR);
-		return oam::API_FAILURE;
-	}
+    if (!in)
+    {
+        log.writeLog(__LINE__, "distributeConfigFile failed, file doesn't exist: " + fileName, LOG_TYPE_ERROR);
+        return oam::API_FAILURE;
+    }
 
-	// distribute using hdfs call, make sure host names are in /etc/pdsh/machines
-	ifstream in1 ("/etc/pdsh/machines");
-	if (in1) {
-		if ( HDFS )
-		{
-			if ( name == "system" )
-			{
-				string cmd = "pdcp -a -x " + localHostName + " " + fileName + " " + dirName;
-				int rtnCode = system(cmd.c_str());
-				if (WEXITSTATUS(rtnCode) == 0)
-				{
-					log.writeLog(__LINE__, "distributeConfigFile using pdcp successful on " + fileName, LOG_TYPE_DEBUG);
-					return returnStatus;
-				}
-				else
-				{
-					log.writeLog(__LINE__, "distributeConfigFile using pdcp failed on " + fileName, LOG_TYPE_ERROR);
-				}
-			}
-			else
-			{
-				// get module hostname
-				ModuleConfig moduleconfig;
-				oam.getSystemConfig(name, moduleconfig);
-				HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-				string hostName = (*pt1).HostName;
+    //skip any file of size 0
+    in.seekg(0, std::ios::end);
+    int size = in.tellg();
 
-				string cmd = "pdcp -w " + hostName + " " + fileName + " " + dirName;
-				int rtnCode = system(cmd.c_str());
-				if (WEXITSTATUS(rtnCode) == 0)
-				{
-					log.writeLog(__LINE__, "distributeConfigFile using pdcp successful on " + fileName, LOG_TYPE_DEBUG);
-					return returnStatus;
-				}
-				else
-				{
-					log.writeLog(__LINE__, "distributeConfigFile using pdcp failed on " + fileName, LOG_TYPE_ERROR);
-				}
-			}
-		}
-	}
+    if ( size == 0 )
+    {
+        log.writeLog(__LINE__, "distributeConfigFile failed, file doesn't exist: " + fileName, LOG_TYPE_ERROR);
+        return oam::API_FAILURE;
+    }
 
-	//send via tcp messaging
-	msg << requestID;
-	msg << fileName;
+    // distribute using hdfs call, make sure host names are in /etc/pdsh/machines
+    ifstream in1 ("/etc/pdsh/machines");
 
-	in.seekg(0, std::ios::beg);
-	in >> msg;
+    if (in1)
+    {
+        if ( HDFS )
+        {
+            if ( name == "system" )
+            {
+                string cmd = "pdcp -a -x " + localHostName + " " + fileName + " " + dirName;
+                int rtnCode = system(cmd.c_str());
 
-	SystemModuleTypeConfig systemmoduletypeconfig;
+                if (WEXITSTATUS(rtnCode) == 0)
+                {
+                    log.writeLog(__LINE__, "distributeConfigFile using pdcp successful on " + fileName, LOG_TYPE_DEBUG);
+                    return returnStatus;
+                }
+                else
+                {
+                    log.writeLog(__LINE__, "distributeConfigFile using pdcp failed on " + fileName, LOG_TYPE_ERROR);
+                }
+            }
+            else
+            {
+                // get module hostname
+                ModuleConfig moduleconfig;
+                oam.getSystemConfig(name, moduleconfig);
+                HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+                string hostName = (*pt1).HostName;
 
-	try{
-		oam.getSystemConfig(systemmoduletypeconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+                string cmd = "pdcp -w " + hostName + " " + fileName + " " + dirName;
+                int rtnCode = system(cmd.c_str());
 
-	if ( name == "system" ) {
-		// send config file to all modules
-		for( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			if( moduleCount == 0)
-				continue;
-	
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-			{
-				//skip local module
-				if ( (*pt).DeviceName == config.moduleName() )
-					continue;
+                if (WEXITSTATUS(rtnCode) == 0)
+                {
+                    log.writeLog(__LINE__, "distributeConfigFile using pdcp successful on " + fileName, LOG_TYPE_DEBUG);
+                    return returnStatus;
+                }
+                else
+                {
+                    log.writeLog(__LINE__, "distributeConfigFile using pdcp failed on " + fileName, LOG_TYPE_ERROR);
+                }
+            }
+        }
+    }
 
-				//skip if AOS
-				int opState = oam::ACTIVE;
-				bool degraded;
-				try {
-					oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-				}
-				catch(...)
-				{}
+    //send via tcp messaging
+    msg << requestID;
+    msg << fileName;
 
-				if (opState == oam::AUTO_DISABLED)
-					continue;
+    in.seekg(0, std::ios::beg);
+    in >> msg;
 
-				returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 0 );
-			
-				if ( returnStatus == API_SUCCESS)
-				{
-					//log the success event 
-					log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile success.", LOG_TYPE_DEBUG);
-				}
-				else
-				{
-					//log the error event 
-					log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
-				}
-			}
-		}
-	}
-	else
-	{
-		returnStatus = sendMsgProcMon( name, msg, requestID, 0 );
-	
-		if ( returnStatus == API_SUCCESS)
-		{
-			//log the success event 
-			log.writeLog(__LINE__, name + " distributeConfigFile success.", LOG_TYPE_DEBUG);
-		}
-		else
-		{
-			//log the error event 
-			log.writeLog(__LINE__, name + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
-		}
-	}
+    SystemModuleTypeConfig systemmoduletypeconfig;
 
-	return returnStatus;
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+    }
+
+    if ( name == "system" )
+    {
+        // send config file to all modules
+        for ( unsigned int i = 0 ; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+            if ( moduleCount == 0)
+                continue;
+
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+            {
+                //skip local module
+                if ( (*pt).DeviceName == config.moduleName() )
+                    continue;
+
+                //skip if AOS
+                int opState = oam::ACTIVE;
+                bool degraded;
+
+                try
+                {
+                    oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                }
+                catch (...)
+                {}
+
+                if (opState == oam::AUTO_DISABLED)
+                    continue;
+
+                returnStatus = sendMsgProcMon( (*pt).DeviceName, msg, requestID, 0 );
+
+                if ( returnStatus == API_SUCCESS)
+                {
+                    //log the success event
+                    log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile success.", LOG_TYPE_DEBUG);
+                }
+                else
+                {
+                    //log the error event
+                    log.writeLog(__LINE__, (*pt).DeviceName + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
+                }
+            }
+        }
+    }
+    else
+    {
+        returnStatus = sendMsgProcMon( name, msg, requestID, 0 );
+
+        if ( returnStatus == API_SUCCESS)
+        {
+            //log the success event
+            log.writeLog(__LINE__, name + " distributeConfigFile success.", LOG_TYPE_DEBUG);
+        }
+        else
+        {
+            //log the error event
+            log.writeLog(__LINE__, name + " distributeConfigFile failed!!", LOG_TYPE_WARNING);
+        }
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -8354,255 +9123,284 @@ int ProcessManager::distributeConfigFile(std::string name, std::string file)
 ******************************************************************************************/
 int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleName)
 {
-	ByteStream msg;
-	Oam oam;
-	int returnStatus = oam::API_SUCCESS;
+    ByteStream msg;
+    Oam oam;
+    int returnStatus = oam::API_SUCCESS;
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	messageqcpp::IOSocket cfIos = fIos;
+    messageqcpp::IOSocket cfIos = fIos;
 
-	string DBRMroot;
-	oam.getSystemConfig("DBRMRoot", DBRMroot);
+    string DBRMroot;
+    oam.getSystemConfig("DBRMRoot", DBRMroot);
 
-	string currentFileName = DBRMroot + "_current";
-	string journalFileName = DBRMroot + "_journal";
+    string currentFileName = DBRMroot + "_current";
+    string journalFileName = DBRMroot + "_journal";
 
-	string oidFile;
-	oam.getSystemConfig("OIDBitmapFile", oidFile);
+    string oidFile;
+    oam.getSystemConfig("OIDBitmapFile", oidFile);
 
-	string currentDbrmFile;
-	ifstream oldFile (currentFileName.c_str());
-	if (oldFile) {
-		// current file found, check for OIDBitmapFile
-		ifstream mapFile (oidFile.c_str());
-		if (!mapFile) {
-			// no OIDBitmapFile, with current file, dbrm files are hosed
-			log.writeLog(__LINE__, "getDBRMData: DBRM data files error, current file exist without OIDBitmapFile", LOG_TYPE_CRITICAL);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return oam::API_FAILURE_DB_ERROR;
-		}
+    string currentDbrmFile;
+    ifstream oldFile (currentFileName.c_str());
 
-		char line[200];
-		oldFile.getline(line, 200);
-		currentDbrmFile = line;
-	}
-	else
-	{
-		log.writeLog(__LINE__, "getDBRMData: no DBRM current file found, must be initial install", LOG_TYPE_DEBUG);
+    if (oldFile)
+    {
+        // current file found, check for OIDBitmapFile
+        ifstream mapFile (oidFile.c_str());
 
-		msg << "initial";
-		try {
-			cfIos.write(msg);
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-			returnStatus = oam::API_FAILURE;
-		}
+        if (!mapFile)
+        {
+            // no OIDBitmapFile, with current file, dbrm files are hosed
+            log.writeLog(__LINE__, "getDBRMData: DBRM data files error, current file exist without OIDBitmapFile", LOG_TYPE_CRITICAL);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return oam::API_FAILURE_DB_ERROR;
+        }
 
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return returnStatus;
-	}
+        char line[200];
+        oldFile.getline(line, 200);
+        currentDbrmFile = line;
+    }
+    else
+    {
+        log.writeLog(__LINE__, "getDBRMData: no DBRM current file found, must be initial install", LOG_TYPE_DEBUG);
 
-	string fileName = startup::StartUp::installDir() + "/local/dbrmfiles";
-	unlink(fileName.c_str());
+        msg << "initial";
 
-	string cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
-	system(cmd.c_str());
+        try
+        {
+            cfIos.write(msg);
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            returnStatus = oam::API_FAILURE;
+        }
 
-	ifstream file (fileName.c_str());
-	if (!file) {
-		log.writeLog(__LINE__, "getDBRMData: no DBRM files found, must be initial install", LOG_TYPE_DEBUG);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return returnStatus;
+    }
 
-		msg << "initial";
-		try {
-			cfIos.write(msg);
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-			returnStatus = oam::API_FAILURE;
-		}
+    string fileName = startup::StartUp::installDir() + "/local/dbrmfiles";
+    unlink(fileName.c_str());
 
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return returnStatus;
-	}
-	
-	vector <string> dbrmFiles;
+    string cmd = "ls " + currentDbrmFile + "_* >> " + startup::StartUp::installDir() + "/local/dbrmfiles";
+    system(cmd.c_str());
 
-	char line[200];
-	string buf;
-	while (file.getline(line, 200))
-	{
-		buf = line;
-		dbrmFiles.push_back(buf);
-	}
+    ifstream file (fileName.c_str());
 
-	file.close();
+    if (!file)
+    {
+        log.writeLog(__LINE__, "getDBRMData: no DBRM files found, must be initial install", LOG_TYPE_DEBUG);
 
-	if ( dbrmFiles.size() < 1 ) {
-		log.writeLog(__LINE__, "getDBRMData: dbrmFiles size = 0, must be initial install", LOG_TYPE_DEBUG);
+        msg << "initial";
 
-		msg << "initial";
-		try {
-			cfIos.write(msg);
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-			returnStatus = oam::API_FAILURE;
-		}
+        try
+        {
+            cfIos.write(msg);
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            returnStatus = oam::API_FAILURE;
+        }
 
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return returnStatus;
-	}
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return returnStatus;
+    }
 
-	// put oid file and current file in list
-	dbrmFiles.push_back(currentFileName);
+    vector <string> dbrmFiles;
 
-	ifstream file1 (journalFileName.c_str());
-	if (file1)
-		dbrmFiles.push_back(journalFileName);
+    char line[200];
+    string buf;
 
-	ifstream file2 (oidFile.c_str());
-	if (file2)
-		dbrmFiles.push_back(oidFile);
+    while (file.getline(line, 200))
+    {
+        buf = line;
+        dbrmFiles.push_back(buf);
+    }
 
-	//type
-	msg << "files";
-	try {
-		cfIos.write(msg);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return oam::API_FAILURE;
-	}
+    file.close();
 
-	//remove any file of size 0
-	std::vector<std::string>::iterator pt1 = dbrmFiles.begin();
-	for( ; pt1 != dbrmFiles.end() ; pt1++)
-	{
-		string fileName = *pt1;
-		ifstream in(fileName.c_str());
+    if ( dbrmFiles.size() < 1 )
+    {
+        log.writeLog(__LINE__, "getDBRMData: dbrmFiles size = 0, must be initial install", LOG_TYPE_DEBUG);
 
-		in.seekg(0, std::ios::end);
-		int size = in.tellg();
-		if ( size == 0 )
-			dbrmFiles.erase(pt1);
-	}
+        msg << "initial";
 
-	ByteStream fcmsg;
+        try
+        {
+            cfIos.write(msg);
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            returnStatus = oam::API_FAILURE;
+        }
 
-	// number of files
-	fcmsg << (ByteStream::byte) dbrmFiles.size();
-	try {
-		cfIos.write(fcmsg);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return oam::API_FAILURE;
-	}
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return returnStatus;
+    }
 
-	pt1 = dbrmFiles.begin();
-	for( ; pt1 != dbrmFiles.end() ; pt1++)
-	{
-		ByteStream fnmsg,fdmsg;
+    // put oid file and current file in list
+    dbrmFiles.push_back(currentFileName);
 
-		string fileName = *pt1;
-		ifstream in(fileName.c_str());
+    ifstream file1 (journalFileName.c_str());
 
-		//skip any file of size 0
-		in.seekg(0, std::ios::end);
-		int size = in.tellg();
-		if ( size == 0 )
-			continue;
+    if (file1)
+        dbrmFiles.push_back(journalFileName);
 
-		in.seekg(0, std::ios::beg);
+    ifstream file2 (oidFile.c_str());
 
-		log.writeLog(__LINE__, fileName, LOG_TYPE_DEBUG);
-		fnmsg << fileName;
-		try {
-			cfIos.write(fnmsg);
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return oam::API_FAILURE;
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return oam::API_FAILURE;
-		}
+    if (file2)
+        dbrmFiles.push_back(oidFile);
 
-		in >> fdmsg;
-		try {
-			cfIos.write(fdmsg);
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return oam::API_FAILURE;
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return oam::API_FAILURE;
-		}
-	}
+    //type
+    msg << "files";
 
-	try {
-		cfIos.write(msg);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
-		returnStatus = oam::API_FAILURE;
-	}
+    try
+    {
+        cfIos.write(msg);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return oam::API_FAILURE;
+    }
 
-	pthread_mutex_unlock(&THREAD_LOCK);
-	return returnStatus;
+    //remove any file of size 0
+    std::vector<std::string>::iterator pt1 = dbrmFiles.begin();
+
+    for ( ; pt1 != dbrmFiles.end() ; pt1++)
+    {
+        string fileName = *pt1;
+        ifstream in(fileName.c_str());
+
+        in.seekg(0, std::ios::end);
+        int size = in.tellg();
+
+        if ( size == 0 )
+            dbrmFiles.erase(pt1);
+    }
+
+    ByteStream fcmsg;
+
+    // number of files
+    fcmsg << (ByteStream::byte) dbrmFiles.size();
+
+    try
+    {
+        cfIos.write(fcmsg);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return oam::API_FAILURE;
+    }
+
+    pt1 = dbrmFiles.begin();
+
+    for ( ; pt1 != dbrmFiles.end() ; pt1++)
+    {
+        ByteStream fnmsg, fdmsg;
+
+        string fileName = *pt1;
+        ifstream in(fileName.c_str());
+
+        //skip any file of size 0
+        in.seekg(0, std::ios::end);
+        int size = in.tellg();
+
+        if ( size == 0 )
+            continue;
+
+        in.seekg(0, std::ios::beg);
+
+        log.writeLog(__LINE__, fileName, LOG_TYPE_DEBUG);
+        fnmsg << fileName;
+
+        try
+        {
+            cfIos.write(fnmsg);
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return oam::API_FAILURE;
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return oam::API_FAILURE;
+        }
+
+        in >> fdmsg;
+
+        try
+        {
+            cfIos.write(fdmsg);
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return oam::API_FAILURE;
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return oam::API_FAILURE;
+        }
+    }
+
+    try
+    {
+        cfIos.write(msg);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on cfIos.write: Unknow exception", LOG_TYPE_ERROR);
+        returnStatus = oam::API_FAILURE;
+    }
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+    return returnStatus;
 }
 
 
@@ -8614,216 +9412,232 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
 ******************************************************************************************/
 int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	int returnStatus = oam::API_SUCCESS;
-	ALARMManager aManager;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    int returnStatus = oam::API_SUCCESS;
+    ALARMManager aManager;
 
-	log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "switchParentOAMModule Function Started", LOG_TYPE_DEBUG);
 
-	//storage config 
-	string DBRootStorageType;
-	try {
-		oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
-	}
-	catch(...) {}
+    //storage config
+    string DBRootStorageType;
 
-	log.writeLog(__LINE__, "switchParentOAMModule: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
+    try
+    {
+        oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+    }
+    catch (...) {}
 
-	if ( DBRootStorageType == "internal" && DataRedundancyConfig == "n") {
-		log.writeLog(__LINE__, "ERROR: DBRootStorageType = internal", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_INVALID_PARAMETER;
-	}
+    log.writeLog(__LINE__, "switchParentOAMModule: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
 
-	// set alarm
-	aManager.sendAlarmReport(newActiveModuleName.c_str(), MODULE_SWITCH_ACTIVE, SET);
+    if ( DBRootStorageType == "internal" && DataRedundancyConfig == "n")
+    {
+        log.writeLog(__LINE__, "ERROR: DBRootStorageType = internal", LOG_TYPE_ERROR);
+        pthread_mutex_unlock(&THREAD_LOCK);
+        return API_INVALID_PARAMETER;
+    }
 
-	//clear run standby flag;
-	runStandby = false;
+    // set alarm
+    aManager.sendAlarmReport(newActiveModuleName.c_str(), MODULE_SWITCH_ACTIVE, SET);
 
-	int moduleID = atoi(newActiveModuleName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
+    //clear run standby flag;
+    runStandby = false;
 
-	// update Columnstore.xml entries
-	string newActiveIPaddr;
-	try
-	{
-		pthread_mutex_lock(&THREAD_LOCK);
+    int moduleID = atoi(newActiveModuleName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
 
-		//move a newparent dbroot to old parent for balancing
-		DBRootConfigList residedbrootConfigList;
-		bool doDBRootMove = true;
+    // update Columnstore.xml entries
+    string newActiveIPaddr;
 
-		try
-		{
-			oam.getPmDbrootConfig(moduleID, residedbrootConfigList);
-			if ( residedbrootConfigList.size() > 0 )
-			{
-				DBRootConfigList::iterator pt = residedbrootConfigList.begin();
-				if (*pt != 1)
-				{
-					try {
-						oam.manualMovePmDbroot(newActiveModuleName, oam.itoa(*pt), config.OAMParentName());
-					}
-					catch (...)
-					{
-						log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
-						pthread_mutex_unlock(&THREAD_LOCK);
-						return API_FAILURE;
-					}
-				}
-				else
-				{
-					doDBRootMove = false;
-				}
-			}
-		}
-		catch (...)
-		{
-			log.writeLog(__LINE__, "ERROR: getPmDbrootConfig Failed", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_FAILURE;
-		}
+    try
+    {
+        pthread_mutex_lock(&THREAD_LOCK);
 
-		//move dbroot #1 to new parent
-		if (doDBRootMove)
-		{
-			try {
-				oam.manualMovePmDbroot(config.OAMParentName(), "1", newActiveModuleName);
-			}
-			catch (...)
-			{
-				log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
-				pthread_mutex_unlock(&THREAD_LOCK);
-				return API_FAILURE;
-			}
-		}
-		Config* sysConfig4 = Config::makeConfig();
-	
-		// get new Active address
-		ModuleConfig moduleconfig;
-		oam.getSystemConfig(newActiveModuleName, moduleconfig);
-		HostConfigList::iterator pt2 = moduleconfig.hostConfigList.begin();
-		newActiveIPaddr = (*pt2).IPAddr;
+        //move a newparent dbroot to old parent for balancing
+        DBRootConfigList residedbrootConfigList;
+        bool doDBRootMove = true;
 
-		sysConfig4->setConfig("ProcMgr", "IPAddr", newActiveIPaddr);
-		sysConfig4->setConfig("ProcStatusControl", "IPAddr", newActiveIPaddr);
-		sysConfig4->setConfig("DBRM_Controller", "IPAddr", newActiveIPaddr);
+        try
+        {
+            oam.getPmDbrootConfig(moduleID, residedbrootConfigList);
 
-		// update Parent OAM Module name to current module name
-		sysConfig4->setConfig("SystemConfig", "ParentOAMModuleName", newActiveModuleName);
+            if ( residedbrootConfigList.size() > 0 )
+            {
+                DBRootConfigList::iterator pt = residedbrootConfigList.begin();
 
-		// clear Standby OAM Module
-		sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-		sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
+                if (*pt != 1)
+                {
+                    try
+                    {
+                        oam.manualMovePmDbroot(newActiveModuleName, oam.itoa(*pt), config.OAMParentName());
+                    }
+                    catch (...)
+                    {
+                        log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
+                        pthread_mutex_unlock(&THREAD_LOCK);
+                        return API_FAILURE;
+                    }
+                }
+                else
+                {
+                    doDBRootMove = false;
+                }
+            }
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "ERROR: getPmDbrootConfig Failed", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_FAILURE;
+        }
 
-		//update Calpont Config table
-		try {
-			sysConfig4->write();
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_FAILURE;
-		}
+        //move dbroot #1 to new parent
+        if (doDBRootMove)
+        {
+            try
+            {
+                oam.manualMovePmDbroot(config.OAMParentName(), "1", newActiveModuleName);
+            }
+            catch (...)
+            {
+                log.writeLog(__LINE__, "ERROR: manualMovePmDbroot Failed", LOG_TYPE_ERROR);
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return API_FAILURE;
+            }
+        }
 
-		pthread_mutex_unlock(&THREAD_LOCK);
+        Config* sysConfig4 = Config::makeConfig();
 
-		if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
-		{
-			//set DDL/DMLproc IPs to new module
-			setPMProcIPs(newActiveModuleName);
+        // get new Active address
+        ModuleConfig moduleconfig;
+        oam.getSystemConfig(newActiveModuleName, moduleconfig);
+        HostConfigList::iterator pt2 = moduleconfig.hostConfigList.begin();
+        newActiveIPaddr = (*pt2).IPAddr;
 
-			//set Primary UM to new module
-			try {
-				oam.setSystemConfig("PrimaryUMModuleName", newActiveModuleName);
-			}
-			catch(...) {}
-		}
+        sysConfig4->setConfig("ProcMgr", "IPAddr", newActiveIPaddr);
+        sysConfig4->setConfig("ProcStatusControl", "IPAddr", newActiveIPaddr);
+        sysConfig4->setConfig("DBRM_Controller", "IPAddr", newActiveIPaddr);
 
-		log.writeLog(__LINE__, "Columnstore.xml entries update to local IP address of " + newActiveIPaddr, LOG_TYPE_DEBUG);
+        // update Parent OAM Module name to current module name
+        sysConfig4->setConfig("SystemConfig", "ParentOAMModuleName", newActiveModuleName);
 
-		//distribute config file
-		processManager.distributeConfigFile("system");
-		sleep(1);
+        // clear Standby OAM Module
+        sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+        sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 
-		//change master MySQL Replication setup
-		log.writeLog(__LINE__, "Setup MySQL Replication for new Parent Module during switch-over", LOG_TYPE_DEBUG);
-		oam::DeviceNetworkList devicenetworklist;
-		processManager.setMySQLReplication(devicenetworklist, newActiveModuleName, false, false,  oam::UnassignedName);
+        //update Calpont Config table
+        try
+        {
+            sysConfig4->write();
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_FAILURE;
+        }
 
-	}
-	catch (exception& ex)
-	{
-		pthread_mutex_unlock(&THREAD_LOCK);
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
-	catch(...)
-	{
-		pthread_mutex_unlock(&THREAD_LOCK);
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+        pthread_mutex_unlock(&THREAD_LOCK);
 
-	//send message to local Process Monitor for OAM Cold Activation 
-	ByteStream msg1;
-	ByteStream::byte requestID = OAMPARENTCOLD;
+        if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
+        {
+            //set DDL/DMLproc IPs to new module
+            setPMProcIPs(newActiveModuleName);
 
-	msg1 << requestID;
-	while(true)
-	{
-		int returnStatus = sendMsgProcMon( config.moduleName(), msg1, requestID );
-	
-		log.writeLog(__LINE__, "sent OAM Parent Cold message to local Process-Monitor, status: " + oam.itoa(returnStatus) , LOG_TYPE_DEBUG);
-		if ( returnStatus == oam::API_SUCCESS)
-			break;
-	}
+            //set Primary UM to new module
+            try
+            {
+                oam.setSystemConfig("PrimaryUMModuleName", newActiveModuleName);
+            }
+            catch (...) {}
+        }
 
-	//send message to new Active Process Monitor for OAM Parent Activation
-	ByteStream msg;
-	requestID = OAMPARENTACTIVE;
+        log.writeLog(__LINE__, "Columnstore.xml entries update to local IP address of " + newActiveIPaddr, LOG_TYPE_DEBUG);
 
-	msg << requestID;
+        //distribute config file
+        processManager.distributeConfigFile("system");
+        sleep(1);
 
-	while(true)
-	{
-		int returnStatus = sendMsgProcMon( newActiveModuleName, msg, requestID );
-	
-		log.writeLog(__LINE__, "sent OAM Parent Activate message to New Active Process-Monitor, status: " + oam.itoa(returnStatus) , LOG_TYPE_DEBUG);
-		if ( returnStatus == oam::API_SUCCESS)
-			break;
-	}
+        //change master MySQL Replication setup
+        log.writeLog(__LINE__, "Setup MySQL Replication for new Parent Module during switch-over", LOG_TYPE_DEBUG);
+        oam::DeviceNetworkList devicenetworklist;
+        processManager.setMySQLReplication(devicenetworklist, newActiveModuleName, false, false,  oam::UnassignedName);
 
-	// start processmanager on new active node
-	startProcess(newActiveModuleName, "ProcessManager", oam::FORCEFUL);
+    }
+    catch (exception& ex)
+    {
+        pthread_mutex_unlock(&THREAD_LOCK);
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        return API_FAILURE;
+    }
+    catch (...)
+    {
+        pthread_mutex_unlock(&THREAD_LOCK);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        return API_FAILURE;
+    }
 
-	// clear alarm
-	aManager.sendAlarmReport(newActiveModuleName.c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
+    //send message to local Process Monitor for OAM Cold Activation
+    ByteStream msg1;
+    ByteStream::byte requestID = OAMPARENTCOLD;
 
-	//DOING THIS JUST TO UPDATE THE TIMESTAMP OF THE CALPONT.XML FILE AS A WORK-AROUND FIX 
-	//BECAUSE PROCMON ISN'T READING UPDATES FROM DISK ON HDFS SYSTEMS
+    msg1 << requestID;
 
-	if (HDFS)
-	{
-		sleep(60);
-		Config* sysConfig = Config::makeConfig();
-		try {
-			sysConfig->write();
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_FAILURE;
-		}
-	}
+    while (true)
+    {
+        int returnStatus = sendMsgProcMon( config.moduleName(), msg1, requestID );
 
-	return returnStatus;
+        log.writeLog(__LINE__, "sent OAM Parent Cold message to local Process-Monitor, status: " + oam.itoa(returnStatus), LOG_TYPE_DEBUG);
+
+        if ( returnStatus == oam::API_SUCCESS)
+            break;
+    }
+
+    //send message to new Active Process Monitor for OAM Parent Activation
+    ByteStream msg;
+    requestID = OAMPARENTACTIVE;
+
+    msg << requestID;
+
+    while (true)
+    {
+        int returnStatus = sendMsgProcMon( newActiveModuleName, msg, requestID );
+
+        log.writeLog(__LINE__, "sent OAM Parent Activate message to New Active Process-Monitor, status: " + oam.itoa(returnStatus), LOG_TYPE_DEBUG);
+
+        if ( returnStatus == oam::API_SUCCESS)
+            break;
+    }
+
+    // start processmanager on new active node
+    startProcess(newActiveModuleName, "ProcessManager", oam::FORCEFUL);
+
+    // clear alarm
+    aManager.sendAlarmReport(newActiveModuleName.c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
+
+    //DOING THIS JUST TO UPDATE THE TIMESTAMP OF THE CALPONT.XML FILE AS A WORK-AROUND FIX
+    //BECAUSE PROCMON ISN'T READING UPDATES FROM DISK ON HDFS SYSTEMS
+
+    if (HDFS)
+    {
+        sleep(60);
+        Config* sysConfig = Config::makeConfig();
+
+        try
+        {
+            sysConfig->write();
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_FAILURE;
+        }
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -8837,725 +9651,800 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 ******************************************************************************************/
 int ProcessManager::OAMParentModuleChange()
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-
-	//
-	//monitor OAM Parent module for outage
-	//
-
-	log.writeLog(__LINE__, "OAMParentModuleChange Function Started", LOG_TYPE_DEBUG);
-
-	// Get Module Info
-	SystemModuleTypeConfig systemModuleTypeConfig;
-
-	try{
-		oam.getSystemConfig(systemModuleTypeConfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-
-	string downOAMParentIPAddress;
-	string downOAMParentHostname;
-	string downOAMParentName = config.OAMParentName();
-
-	//Build module list
-	vector<string>	moduleNameList;
-	vector<string>	moduleIPAddrList;
-
-	for ( unsigned int i = 0 ; i < systemModuleTypeConfig.moduletypeconfig.size(); i++)
-	{
-		int moduleCount = systemModuleTypeConfig.moduletypeconfig[i].ModuleCount;
-		if ( moduleCount == 0 )
-			// skip of no modules configured
-			continue;
-
-		DeviceNetworkList::iterator pt = systemModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();
-		for( ; pt != systemModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
-		{
-			HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-
-			//get parent module IP address
-			if ( (*pt).DeviceName == downOAMParentName ) {
-				downOAMParentIPAddress = (*pt1).IPAddr;
-				downOAMParentHostname = (*pt1).HostName;
-				continue;
-			}
-
-			//store the other modules
-			if ( (*pt).DeviceName != config.moduleName() ) {
-				moduleNameList.push_back((*pt).DeviceName);
-				moduleIPAddrList.push_back((*pt1).IPAddr);
-			}
-		}
-	}
-
-	string HA_IPAddr;
-	if ( moduleIPAddrList.empty() )
-	{
-		//get HA IP Address
-		Config* sysConfig = Config::makeConfig();
-		HA_IPAddr = sysConfig->getConfig("ProcMgr_HA", "IPAddr");
-	
-		log.writeLog(__LINE__, "Get HA_IPAddr = " + HA_IPAddr, LOG_TYPE_DEBUG);
-		if ( !HA_IPAddr.empty() ) {
-			moduleNameList.push_back("HA_device");
-			moduleIPAddrList.push_back(HA_IPAddr);
-		}
-	}
-
-	int ModuleHeartbeatCount;
-
-	try {
-		oam.getSystemConfig("ModuleHeartbeatCount", ModuleHeartbeatCount);
-	}
-	catch (exception& ex) {
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
-
-	string cmdLine = "ping ";
-	string cmdOption = " -c 1 -w 5 >> /dev/null";
-	string cmd;
-
-	int pingFailure = 0;
-	bool failover = false;
-	bool recoveryTest = false;
-	int disableCount = 0;
-	int noAckCount = 0;
-	bool amazonParentRestart = false;
-
-	while(!failover)
-	{
-		// check if a signal was received to start failover
-		if (startFailOver) {
-			//send notification going from standby to active
-			oam.sendDeviceNotification(config.moduleName(), START_STANDBY_TO_MASTER);
-			break;
-		}
-
-		// perform ping test of Active Parent Module
-		string cmd = cmdLine + downOAMParentIPAddress + cmdOption;
-		int rtnCode = system(cmd.c_str());
-
-		switch (WEXITSTATUS(rtnCode)) {
-			case 0:
-			{
-				//Ack ping
-				pingFailure = 0;
-				if ( noAckCount != 0 )
-					oam.sendDeviceNotification(config.moduleName(), MODULE_UP);
-				noAckCount = 0;
-
-				//if Amazon Parent PM is restarting, monitor when back active and take needed actions
-				if (amazonParentRestart)
-				{
-					log.writeLog(__LINE__, "Amazon Parent pinging, waiting until it's active", LOG_TYPE_DEBUG);
-					sleep(60);
-
-					while(true)
-					{
-						SystemStatus systemstatus;
-						try {
-							oam.getSystemStatus(systemstatus);
-						}
-						catch(...)
-						{}
-
-						if (systemstatus.SystemOpState == ACTIVE) {
-							log.writeLog(__LINE__, "System Active, restart needed processes", LOG_TYPE_DEBUG);
-
-							processManager.restartProcessType("mysql");
-							processManager.restartProcessType("ExeMgr");
-							processManager.restartProcessType("WriteEngineServer");
-							processManager.reinitProcessType("DBRMWorkerNode");
-							sleep(1);
-							processManager.restartProcessType("DDLProc");
-							sleep(1);
-							processManager.restartProcessType("DMLProc");
-
-							amazonParentRestart = false;
-							break;
-						}
-
-						sleep(5);
-					}
-				}
-
-				sleep(1);
-				break;
-			}
-
-			default:
-			{
-				//failed to respond to ping
-				pingFailure++;
-				log.writeLog(__LINE__, "OAMParentModule ping failure (" + downOAMParentName + ")", LOG_TYPE_WARNING);
-
-				if ( pingFailure >= ModuleHeartbeatCount ) {
-
-					bool ack = false;
-					bool noack = false;
-
-					//check NIC #1 status
-					int sockfd;
-					struct ifreq ifr;
-				
-					sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-					if(sockfd == -1){
-						log.writeLog(__LINE__, "Could not get socket to check NIC #1", LOG_TYPE_ERROR);
-						close(sockfd);
-						break;
-					}
-				
-					/* get interface name */
-					strncpy(ifr.ifr_name, iface_name.c_str(), IFNAMSIZ);
-				
-					/* Read interface flags */
-					if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) < 0) {
-						// not supported
-						close(sockfd);
-						break;
-					}
-				
-					if (ifr.ifr_flags & IFF_UP) {
-						log.writeLog(__LINE__, "Local Interface is UP", LOG_TYPE_INFO);
-						// any additional devices/modules to test
-						if ( !moduleNameList.empty()) {
-							// Active Parent not talking, check other modules or HA IP address
-							for ( int count = 0 ; count <= ModuleHeartbeatCount ; count++ )
-							{
-								vector<string>::iterator pt1 = moduleNameList.begin();
-								vector<string>::iterator pt2 = moduleIPAddrList.begin();
-			
-								for( ; pt1 != moduleNameList.end() ; pt1++, pt2++)
-								{
-									string cmd = cmdLine + *pt2 + cmdOption;
-									int rtnCode = system(cmd.c_str());
-							
-									switch (WEXITSTATUS(rtnCode)) {
-										case 0:
-										{ //Ack ping
-											log.writeLog(__LINE__, *pt1 + " ping successful", LOG_TYPE_DEBUG);
-											ack = true;
-											break;
-										}
-				
-										default:
-										{ // ping failure	
-											log.writeLog(__LINE__, *pt1 + " ping failure", LOG_TYPE_WARNING);
-			
-											noack = true;
-											//save module name
-											if ( *pt1 != "HA_device" )
-												downModuleList.push_back(*pt1);
-											break;
-										}
-									}
-									// exit loop if ping was successfuly
-									if ( ack )
-										break;
-		
-									sleep (2);
-								}
-								// exit loop if ping was successfuly
-								if ( ack )
-									break;
-							}
-						}
-						else
-						{
-							// NIC #1 up, procede with failover
-							failover = true;
-						}
-					}
-					else
-					{
-						log.writeLog(__LINE__, "NIC #1 is DOWN", LOG_TYPE_WARNING);
-						// NIC #1 down, dont switch
-						noack = true;
-						if ( noAckCount == 0 )
-							oam.sendDeviceNotification(config.moduleName(), MODULE_DOWN);
-						noAckCount++;
-					}
-
-					close(sockfd);
-
-					//check if all modules are not responding to ping
-					if ( !ack && noack ) {
-						// yes, go into hold state by setting local module to cold-state
-						ByteStream msg;
-						ByteStream::byte requestID = OAMPARENTCOLD;
-					
-						msg << requestID;
-					
-						int returnStatus = processManager.sendMsgProcMon( config.moduleName(), msg, requestID );	
-						log.writeLog(__LINE__, "sent OAM Parent Cold message to local Process-Monitor, status: " + oam.itoa(returnStatus) , LOG_TYPE_DEBUG);
-					}
-					else
-					{
-						if ( ack && !noack ) {
-							// all other modules ACK, only parent failed, procede with failover
-							failover = true;
-							break;
-						}
-						else
-						{
-							if ( ack && noack && !recoveryTest) {
-							// some other modules ACK, some didn't
-							// try 1 more time and mark sure didn't catch in the middle of a LAN recovery
-								recoveryTest = true;
-							}
-							else
-							{
-								if ( ack && noack && recoveryTest) {
-								// some other modules ACK, some didn't, partial outage, do failover
-								failover = true;
-								break;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if ( !failover ) {
-			sleep(5);
-			downModuleList.clear();
-		}
-		else
-		{
-			// PARENT PM OUTAGE DETECTED
-			// check if disable flag is set, if so call the notification API
-			string activePmFailoverDisabled;
-			try {
-				oam.getSystemConfig("ActivePmFailoverDisabled", activePmFailoverDisabled);
-
-				if ( activePmFailoverDisabled == "y" ) {
-
-					log.writeLog(__LINE__, "ActivePmFailoverDisabled is set, send notication", LOG_TYPE_DEBUG);
-
-					oam.sendDeviceNotification(downOAMParentName, PM_MASTER_FAILED_DISABLED);
-					failover = false;
-					sleep(5);
-					disableCount++;
-					if ( disableCount > 4 ) {
-						//no manually failover has been called, go ahead and do auto-failover
-						//send notification going from standby to active
-
-						log.writeLog(__LINE__, "ActivePmFailoverDisabled is set, but no manual action has been taken. Do Auto-Failover", LOG_TYPE_DEBUG);
-
-						oam.sendDeviceNotification(config.moduleName(), START_STANDBY_TO_MASTER);
-					}
-				}
-				else
-				{
-					//send notification going from standby to active
-					oam.sendDeviceNotification(config.moduleName(), START_STANDBY_TO_MASTER);
-				}
-			}
-			catch (exception& ex)
-			{}
-
-			//do amazon failover
-			if (amazon && AmazonPMFailover == "n")
-			{
-				log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
-				log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, wating for instance to restart  ***", LOG_TYPE_DEBUG);
-	
-				string currentIPAddr = oam.getEC2InstanceIpAddress(downOAMParentHostname);
-				if (currentIPAddr == "stopped")
-				{ // start instance
-					int retryCount = 6;		// 1 minutes
-					if ( PMInstanceType == "m2.4xlarge" )
-						retryCount = 15;		// 2.5 minutes
-
-					log.writeLog(__LINE__, "Instance in stopped state, try starting it: " + downOAMParentHostname, LOG_TYPE_DEBUG);
-					int retry = 0;
-					for (  ; retry < retryCount ; retry++ )
-					{
-						if ( oam.startEC2Instance(downOAMParentHostname) )
-						{
-							log.writeLog(__LINE__, "Instance started, sleep for 30 seconds to allow it to fully come up: " + downOAMParentHostname, LOG_TYPE_DEBUG);
-	
-							//delay then get new IP Address
-							sleep(30);
-							string currentIPAddr = oam.getEC2InstanceIpAddress(downOAMParentHostname);
-							if (currentIPAddr == "stopped" || currentIPAddr == "terminated") {
-								log.writeLog(__LINE__, "Instance failed to start (no ip-address), retry: " + downOAMParentHostname, LOG_TYPE_DEBUG);
-							}
-							else
-							{
-								// update the Columnstore.xml with the new IP Address
-								string cmd = "sed -i s/" + downOAMParentIPAddress + "/" + currentIPAddr + "/g " +  startup::StartUp::installDir() + "/etc/Columnstore.xml";
-								system(cmd.c_str());
-
-								// get parent hotsname and IP address in case it changed
-								downOAMParentIPAddress = currentIPAddr;
-
-								amazonParentRestart = true;
-
-								break;
-							}
-						}
-						else
-						{
-							log.writeLog(__LINE__, "Instance failed to start, retry: " + downOAMParentHostname, LOG_TYPE_DEBUG);
-
-							sleep(5);
-						}
-					}
-	
-					if ( retry >= retryCount )
-					{
-						log.writeLog(__LINE__, "Instance failed to start, restart a new instance: " + downOAMParentHostname, LOG_TYPE_DEBUG);
-						currentIPAddr = "terminated";
-					}
-				}
-	
-				if ( currentIPAddr != "terminated")
-				{
-					log.writeLog(__LINE__, "Instance rebooting, monitor", LOG_TYPE_DEBUG);
-
-					//clear and go monitor again
-					failover = false;
-
-					amazonParentRestart = true;
-				}
-				else
-					log.writeLog(__LINE__, "Instance terminated, do standby-active failover", LOG_TYPE_DEBUG);
-
-			}
-
-			//storage config 
-			string DBRootStorageType;
-			try {
-				oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
-			}
-			catch(...) {}
-
-			log.writeLog(__LINE__, "OAMParentModuleChange: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
-
-			if ( DBRootStorageType == "internal" && failover && DataRedundancyConfig == "n")
-			{
-				log.writeLog(__LINE__, "DBRoot Storage configured for internal, don't do standby-active failover", LOG_TYPE_DEBUG);
-
-				//clear and go monitor again
-				failover = false;
-			}
-		}
-	}
-
-	log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
-	log.writeLog(__LINE__, "*** OAMParentModule outage, OAM Parent Module change-over started ***", LOG_TYPE_DEBUG);
-
-	//run save.brm script
-	processManager.saveBRM(true, false);
-
-	gdownActiveOAMModule = downOAMParentName;
-
-	// update Columnstore.xml entries
-	string localIPaddr;
-	string newStandbyModule = downOAMParentName;
-	string standbyIPaddr = downOAMParentIPAddress;
-	try
-	{
-		pthread_mutex_lock(&THREAD_LOCK);
-
-		Config* sysConfig4 = Config::makeConfig();
-	
-		// get my IP address
-		ModuleConfig moduleconfig;
-		oam.getSystemConfig(config.moduleName(), moduleconfig);
-		HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-		localIPaddr = (*pt1).IPAddr;
-
-		sysConfig4->setConfig("ProcMgr", "IPAddr", localIPaddr);
-		sysConfig4->setConfig("ProcStatusControl", "IPAddr", localIPaddr);
-		sysConfig4->setConfig("DBRM_Controller", "IPAddr", localIPaddr);
-
-		// update Parent OAM Module name to current module name
-		sysConfig4->setConfig("SystemConfig", "ParentOAMModuleName", config.moduleName());
-
-		// clear Standby OAM Module
-		sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-		sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
-
-		//update Calpont Config table
-		try {
-			sysConfig4->write();
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-			pthread_mutex_unlock(&THREAD_LOCK);
-			return API_FAILURE;
-		}
-
-		pthread_mutex_unlock(&THREAD_LOCK);
-
-		//clear run standby flag;
-		runStandby = false;
-
-		//sleep, give time for message thread to startup
-		sleep(5);
-
-		try {
-			oam.autoMovePmDbroot(downOAMParentName);
-		}
-		catch (...)
-		{
-			log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
-		}
-
-		//distribute config file
-		distributeConfigFile("system");	
-
-		//re-read config info again
-		Configuration config;
-		oam.setHotStandbyPM(standbyIPaddr);
-
-		log.writeLog(__LINE__, "Columnstore.xml Standby OAM updated : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
-		log.writeLog(__LINE__, "Columnstore.xml entries update to local IP address of " + localIPaddr, LOG_TYPE_DEBUG);
-	}
-	catch (exception& ex)
-	{
-		pthread_mutex_unlock(&THREAD_LOCK);
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
-	catch(...)
-	{
-		pthread_mutex_unlock(&THREAD_LOCK);
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
-
-	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) {
-		//set DDL/DMLproc IPs to local module
-		setPMProcIPs(config.moduleName());
-
-		try {
-			oam.setSystemConfig("PrimaryUMModuleName", config.moduleName());
-		}
-		catch(...) {}
-	}
-
-	//send message to local Process Monitor for OAM Parent Activation
-	ByteStream msg;
-	ByteStream::byte requestID = OAMPARENTACTIVE;
-
-	msg << requestID;
-
-	while(true)
-	{
-		int returnStatus = sendMsgProcMon( config.moduleName(), msg, requestID );
-	
-		log.writeLog(__LINE__, "sent OAM Parent Activate message to local Process-Monitor, status: " + oam.itoa(returnStatus) , LOG_TYPE_DEBUG);
-		if ( returnStatus == oam::API_SUCCESS)
-			break;
-	}
-
-	//set Process Manager state, will make sure process-monitor status control is working
-	while (true)
-	{
-		try{
-			ProcessStatus procstat;
-			oam.getProcessStatus("ProcessManager", config.moduleName(), procstat);
-
-			int ret = setProcessState(config.moduleName(), "ProcessManager", oam::ACTIVE, 0);
-			if ( ret == oam::API_SUCCESS ) {
-				oam.getProcessStatus("ProcessManager", config.moduleName(), procstat);
-				if ( procstat.ProcessOpState == oam::ACTIVE )
-					break;
-			}
-		}
-		catch (...)
-		{}
-		sleep(1);
-	}
-
-	//set status to BUSY_INIT while failover is in progress
-	processManager.setSystemState(oam::BUSY_INIT);
-
-	// graceful start snmptrap-daemon
-	string EnableSNMP = "y";
-	try {
-		oam.getSystemConfig("EnableSNMP", EnableSNMP);
-	}
-	catch(...)
-	{}
-
-	if ( EnableSNMP == "y" )
-		startProcess(config.moduleName(), "SNMPTrapDaemon", oam::GRACEFUL);
-
-	// set alarm
-	ALARMManager aManager;
-	aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, SET);
-
-	//set down Active module to disable state
-	disableModule(downOAMParentName, false);
-
-	//do it here to get current processes active faster to process queries faster
-	processManager.setProcessStates(downOAMParentName, oam::AUTO_OFFLINE);
-
-	//set other down modules to disable state
-	vector<string>::iterator pt1 = downModuleList.begin();
-
-	for( ; pt1 != downModuleList.end() ; pt1++)
-	{
-		disableModule(*pt1, false);
-		processManager.setProcessStates(*pt1, oam::AUTO_OFFLINE);
-	}
-
-	//distribute config file
-	distributeConfigFile("system");	
-
-	//restart local module
-	processManager.stopModule(config.moduleName(), oam::FORCEFUL, true);
-
-	string localModule = config.moduleName();
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+
+    //
+    //monitor OAM Parent module for outage
+    //
+
+    log.writeLog(__LINE__, "OAMParentModuleChange Function Started", LOG_TYPE_DEBUG);
+
+    // Get Module Info
+    SystemModuleTypeConfig systemModuleTypeConfig;
+
+    try
+    {
+        oam.getSystemConfig(systemModuleTypeConfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+    }
+
+    string downOAMParentIPAddress;
+    string downOAMParentHostname;
+    string downOAMParentName = config.OAMParentName();
+
+    //Build module list
+    vector<string>	moduleNameList;
+    vector<string>	moduleIPAddrList;
+
+    for ( unsigned int i = 0 ; i < systemModuleTypeConfig.moduletypeconfig.size(); i++)
+    {
+        int moduleCount = systemModuleTypeConfig.moduletypeconfig[i].ModuleCount;
+
+        if ( moduleCount == 0 )
+            // skip of no modules configured
+            continue;
+
+        DeviceNetworkList::iterator pt = systemModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+        for ( ; pt != systemModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
+        {
+            HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
+
+            //get parent module IP address
+            if ( (*pt).DeviceName == downOAMParentName )
+            {
+                downOAMParentIPAddress = (*pt1).IPAddr;
+                downOAMParentHostname = (*pt1).HostName;
+                continue;
+            }
+
+            //store the other modules
+            if ( (*pt).DeviceName != config.moduleName() )
+            {
+                moduleNameList.push_back((*pt).DeviceName);
+                moduleIPAddrList.push_back((*pt1).IPAddr);
+            }
+        }
+    }
+
+    string HA_IPAddr;
+
+    if ( moduleIPAddrList.empty() )
+    {
+        //get HA IP Address
+        Config* sysConfig = Config::makeConfig();
+        HA_IPAddr = sysConfig->getConfig("ProcMgr_HA", "IPAddr");
+
+        log.writeLog(__LINE__, "Get HA_IPAddr = " + HA_IPAddr, LOG_TYPE_DEBUG);
+
+        if ( !HA_IPAddr.empty() )
+        {
+            moduleNameList.push_back("HA_device");
+            moduleIPAddrList.push_back(HA_IPAddr);
+        }
+    }
+
+    int ModuleHeartbeatCount;
+
+    try
+    {
+        oam.getSystemConfig("ModuleHeartbeatCount", ModuleHeartbeatCount);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+    }
+
+    string cmdLine = "ping ";
+    string cmdOption = " -c 1 -w 5 >> /dev/null";
+    string cmd;
+
+    int pingFailure = 0;
+    bool failover = false;
+    bool recoveryTest = false;
+    int disableCount = 0;
+    int noAckCount = 0;
+    bool amazonParentRestart = false;
+
+    while (!failover)
+    {
+        // check if a signal was received to start failover
+        if (startFailOver)
+        {
+            //send notification going from standby to active
+            oam.sendDeviceNotification(config.moduleName(), START_STANDBY_TO_MASTER);
+            break;
+        }
+
+        // perform ping test of Active Parent Module
+        string cmd = cmdLine + downOAMParentIPAddress + cmdOption;
+        int rtnCode = system(cmd.c_str());
+
+        switch (WEXITSTATUS(rtnCode))
+        {
+            case 0:
+            {
+                //Ack ping
+                pingFailure = 0;
+
+                if ( noAckCount != 0 )
+                    oam.sendDeviceNotification(config.moduleName(), MODULE_UP);
+
+                noAckCount = 0;
+
+                //if Amazon Parent PM is restarting, monitor when back active and take needed actions
+                if (amazonParentRestart)
+                {
+                    log.writeLog(__LINE__, "Amazon Parent pinging, waiting until it's active", LOG_TYPE_DEBUG);
+                    sleep(60);
+
+                    while (true)
+                    {
+                        SystemStatus systemstatus;
+
+                        try
+                        {
+                            oam.getSystemStatus(systemstatus);
+                        }
+                        catch (...)
+                        {}
+
+                        if (systemstatus.SystemOpState == ACTIVE)
+                        {
+                            log.writeLog(__LINE__, "System Active, restart needed processes", LOG_TYPE_DEBUG);
+
+                            processManager.restartProcessType("mysql");
+                            processManager.restartProcessType("ExeMgr");
+                            processManager.restartProcessType("WriteEngineServer");
+                            processManager.reinitProcessType("DBRMWorkerNode");
+                            sleep(1);
+                            processManager.restartProcessType("DDLProc");
+                            sleep(1);
+                            processManager.restartProcessType("DMLProc");
+
+                            amazonParentRestart = false;
+                            break;
+                        }
+
+                        sleep(5);
+                    }
+                }
+
+                sleep(1);
+                break;
+            }
+
+            default:
+            {
+                //failed to respond to ping
+                pingFailure++;
+                log.writeLog(__LINE__, "OAMParentModule ping failure (" + downOAMParentName + ")", LOG_TYPE_WARNING);
+
+                if ( pingFailure >= ModuleHeartbeatCount )
+                {
+
+                    bool ack = false;
+                    bool noack = false;
+
+                    //check NIC #1 status
+                    int sockfd;
+                    struct ifreq ifr;
+
+                    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+                    if (sockfd == -1)
+                    {
+                        log.writeLog(__LINE__, "Could not get socket to check NIC #1", LOG_TYPE_ERROR);
+                        close(sockfd);
+                        break;
+                    }
+
+                    /* get interface name */
+                    strncpy(ifr.ifr_name, iface_name.c_str(), IFNAMSIZ);
+
+                    /* Read interface flags */
+                    if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) < 0)
+                    {
+                        // not supported
+                        close(sockfd);
+                        break;
+                    }
+
+                    if (ifr.ifr_flags & IFF_UP)
+                    {
+                        log.writeLog(__LINE__, "Local Interface is UP", LOG_TYPE_INFO);
+
+                        // any additional devices/modules to test
+                        if ( !moduleNameList.empty())
+                        {
+                            // Active Parent not talking, check other modules or HA IP address
+                            for ( int count = 0 ; count <= ModuleHeartbeatCount ; count++ )
+                            {
+                                vector<string>::iterator pt1 = moduleNameList.begin();
+                                vector<string>::iterator pt2 = moduleIPAddrList.begin();
+
+                                for ( ; pt1 != moduleNameList.end() ; pt1++, pt2++)
+                                {
+                                    string cmd = cmdLine + *pt2 + cmdOption;
+                                    int rtnCode = system(cmd.c_str());
+
+                                    switch (WEXITSTATUS(rtnCode))
+                                    {
+                                        case 0:
+                                        {
+                                            //Ack ping
+                                            log.writeLog(__LINE__, *pt1 + " ping successful", LOG_TYPE_DEBUG);
+                                            ack = true;
+                                            break;
+                                        }
+
+                                        default:
+                                        {
+                                            // ping failure
+                                            log.writeLog(__LINE__, *pt1 + " ping failure", LOG_TYPE_WARNING);
+
+                                            noack = true;
+
+                                            //save module name
+                                            if ( *pt1 != "HA_device" )
+                                                downModuleList.push_back(*pt1);
+
+                                            break;
+                                        }
+                                    }
+
+                                    // exit loop if ping was successfuly
+                                    if ( ack )
+                                        break;
+
+                                    sleep (2);
+                                }
+
+                                // exit loop if ping was successfuly
+                                if ( ack )
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            // NIC #1 up, procede with failover
+                            failover = true;
+                        }
+                    }
+                    else
+                    {
+                        log.writeLog(__LINE__, "NIC #1 is DOWN", LOG_TYPE_WARNING);
+                        // NIC #1 down, dont switch
+                        noack = true;
+
+                        if ( noAckCount == 0 )
+                            oam.sendDeviceNotification(config.moduleName(), MODULE_DOWN);
+
+                        noAckCount++;
+                    }
+
+                    close(sockfd);
+
+                    //check if all modules are not responding to ping
+                    if ( !ack && noack )
+                    {
+                        // yes, go into hold state by setting local module to cold-state
+                        ByteStream msg;
+                        ByteStream::byte requestID = OAMPARENTCOLD;
+
+                        msg << requestID;
+
+                        int returnStatus = processManager.sendMsgProcMon( config.moduleName(), msg, requestID );
+                        log.writeLog(__LINE__, "sent OAM Parent Cold message to local Process-Monitor, status: " + oam.itoa(returnStatus), LOG_TYPE_DEBUG);
+                    }
+                    else
+                    {
+                        if ( ack && !noack )
+                        {
+                            // all other modules ACK, only parent failed, procede with failover
+                            failover = true;
+                            break;
+                        }
+                        else
+                        {
+                            if ( ack && noack && !recoveryTest)
+                            {
+                                // some other modules ACK, some didn't
+                                // try 1 more time and mark sure didn't catch in the middle of a LAN recovery
+                                recoveryTest = true;
+                            }
+                            else
+                            {
+                                if ( ack && noack && recoveryTest)
+                                {
+                                    // some other modules ACK, some didn't, partial outage, do failover
+                                    failover = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ( !failover )
+        {
+            sleep(5);
+            downModuleList.clear();
+        }
+        else
+        {
+            // PARENT PM OUTAGE DETECTED
+            // check if disable flag is set, if so call the notification API
+            string activePmFailoverDisabled;
+
+            try
+            {
+                oam.getSystemConfig("ActivePmFailoverDisabled", activePmFailoverDisabled);
+
+                if ( activePmFailoverDisabled == "y" )
+                {
+
+                    log.writeLog(__LINE__, "ActivePmFailoverDisabled is set, send notication", LOG_TYPE_DEBUG);
+
+                    oam.sendDeviceNotification(downOAMParentName, PM_MASTER_FAILED_DISABLED);
+                    failover = false;
+                    sleep(5);
+                    disableCount++;
+
+                    if ( disableCount > 4 )
+                    {
+                        //no manually failover has been called, go ahead and do auto-failover
+                        //send notification going from standby to active
+
+                        log.writeLog(__LINE__, "ActivePmFailoverDisabled is set, but no manual action has been taken. Do Auto-Failover", LOG_TYPE_DEBUG);
+
+                        oam.sendDeviceNotification(config.moduleName(), START_STANDBY_TO_MASTER);
+                    }
+                }
+                else
+                {
+                    //send notification going from standby to active
+                    oam.sendDeviceNotification(config.moduleName(), START_STANDBY_TO_MASTER);
+                }
+            }
+            catch (exception& ex)
+            {}
+
+            //do amazon failover
+            if (amazon && AmazonPMFailover == "n")
+            {
+                log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
+                log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, wating for instance to restart  ***", LOG_TYPE_DEBUG);
+
+                string currentIPAddr = oam.getEC2InstanceIpAddress(downOAMParentHostname);
+
+                if (currentIPAddr == "stopped")
+                {
+                    // start instance
+                    int retryCount = 6;		// 1 minutes
+
+                    if ( PMInstanceType == "m2.4xlarge" )
+                        retryCount = 15;		// 2.5 minutes
+
+                    log.writeLog(__LINE__, "Instance in stopped state, try starting it: " + downOAMParentHostname, LOG_TYPE_DEBUG);
+                    int retry = 0;
+
+                    for (  ; retry < retryCount ; retry++ )
+                    {
+                        if ( oam.startEC2Instance(downOAMParentHostname) )
+                        {
+                            log.writeLog(__LINE__, "Instance started, sleep for 30 seconds to allow it to fully come up: " + downOAMParentHostname, LOG_TYPE_DEBUG);
+
+                            //delay then get new IP Address
+                            sleep(30);
+                            string currentIPAddr = oam.getEC2InstanceIpAddress(downOAMParentHostname);
+
+                            if (currentIPAddr == "stopped" || currentIPAddr == "terminated")
+                            {
+                                log.writeLog(__LINE__, "Instance failed to start (no ip-address), retry: " + downOAMParentHostname, LOG_TYPE_DEBUG);
+                            }
+                            else
+                            {
+                                // update the Columnstore.xml with the new IP Address
+                                string cmd = "sed -i s/" + downOAMParentIPAddress + "/" + currentIPAddr + "/g " +  startup::StartUp::installDir() + "/etc/Columnstore.xml";
+                                system(cmd.c_str());
+
+                                // get parent hotsname and IP address in case it changed
+                                downOAMParentIPAddress = currentIPAddr;
+
+                                amazonParentRestart = true;
+
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            log.writeLog(__LINE__, "Instance failed to start, retry: " + downOAMParentHostname, LOG_TYPE_DEBUG);
+
+                            sleep(5);
+                        }
+                    }
+
+                    if ( retry >= retryCount )
+                    {
+                        log.writeLog(__LINE__, "Instance failed to start, restart a new instance: " + downOAMParentHostname, LOG_TYPE_DEBUG);
+                        currentIPAddr = "terminated";
+                    }
+                }
+
+                if ( currentIPAddr != "terminated")
+                {
+                    log.writeLog(__LINE__, "Instance rebooting, monitor", LOG_TYPE_DEBUG);
+
+                    //clear and go monitor again
+                    failover = false;
+
+                    amazonParentRestart = true;
+                }
+                else
+                    log.writeLog(__LINE__, "Instance terminated, do standby-active failover", LOG_TYPE_DEBUG);
+
+            }
+
+            //storage config
+            string DBRootStorageType;
+
+            try
+            {
+                oam.getSystemConfig( "DBRootStorageType", DBRootStorageType);
+            }
+            catch (...) {}
+
+            log.writeLog(__LINE__, "OAMParentModuleChange: DBRootStorageType = " + DBRootStorageType, LOG_TYPE_DEBUG);
+
+            if ( DBRootStorageType == "internal" && failover && DataRedundancyConfig == "n")
+            {
+                log.writeLog(__LINE__, "DBRoot Storage configured for internal, don't do standby-active failover", LOG_TYPE_DEBUG);
+
+                //clear and go monitor again
+                failover = false;
+            }
+        }
+    }
+
+    log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "*** OAMParentModule outage, OAM Parent Module change-over started ***", LOG_TYPE_DEBUG);
+
+    //run save.brm script
+    processManager.saveBRM(true, false);
+
+    gdownActiveOAMModule = downOAMParentName;
+
+    // update Columnstore.xml entries
+    string localIPaddr;
+    string newStandbyModule = downOAMParentName;
+    string standbyIPaddr = downOAMParentIPAddress;
+
+    try
+    {
+        pthread_mutex_lock(&THREAD_LOCK);
+
+        Config* sysConfig4 = Config::makeConfig();
+
+        // get my IP address
+        ModuleConfig moduleconfig;
+        oam.getSystemConfig(config.moduleName(), moduleconfig);
+        HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+        localIPaddr = (*pt1).IPAddr;
+
+        sysConfig4->setConfig("ProcMgr", "IPAddr", localIPaddr);
+        sysConfig4->setConfig("ProcStatusControl", "IPAddr", localIPaddr);
+        sysConfig4->setConfig("DBRM_Controller", "IPAddr", localIPaddr);
+
+        // update Parent OAM Module name to current module name
+        sysConfig4->setConfig("SystemConfig", "ParentOAMModuleName", config.moduleName());
+
+        // clear Standby OAM Module
+        sysConfig4->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+        sysConfig4->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
+
+        //update Calpont Config table
+        try
+        {
+            sysConfig4->write();
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
+            pthread_mutex_unlock(&THREAD_LOCK);
+            return API_FAILURE;
+        }
+
+        pthread_mutex_unlock(&THREAD_LOCK);
+
+        //clear run standby flag;
+        runStandby = false;
+
+        //sleep, give time for message thread to startup
+        sleep(5);
+
+        try
+        {
+            oam.autoMovePmDbroot(downOAMParentName);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
+        }
+
+        //distribute config file
+        distributeConfigFile("system");
+
+        //re-read config info again
+        Configuration config;
+        oam.setHotStandbyPM(standbyIPaddr);
+
+        log.writeLog(__LINE__, "Columnstore.xml Standby OAM updated : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
+        log.writeLog(__LINE__, "Columnstore.xml entries update to local IP address of " + localIPaddr, LOG_TYPE_DEBUG);
+    }
+    catch (exception& ex)
+    {
+        pthread_mutex_unlock(&THREAD_LOCK);
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        return API_FAILURE;
+    }
+    catch (...)
+    {
+        pthread_mutex_unlock(&THREAD_LOCK);
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        return API_FAILURE;
+    }
+
+    if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
+    {
+        //set DDL/DMLproc IPs to local module
+        setPMProcIPs(config.moduleName());
+
+        try
+        {
+            oam.setSystemConfig("PrimaryUMModuleName", config.moduleName());
+        }
+        catch (...) {}
+    }
+
+    //send message to local Process Monitor for OAM Parent Activation
+    ByteStream msg;
+    ByteStream::byte requestID = OAMPARENTACTIVE;
+
+    msg << requestID;
+
+    while (true)
+    {
+        int returnStatus = sendMsgProcMon( config.moduleName(), msg, requestID );
+
+        log.writeLog(__LINE__, "sent OAM Parent Activate message to local Process-Monitor, status: " + oam.itoa(returnStatus), LOG_TYPE_DEBUG);
+
+        if ( returnStatus == oam::API_SUCCESS)
+            break;
+    }
+
+    //set Process Manager state, will make sure process-monitor status control is working
+    while (true)
+    {
+        try
+        {
+            ProcessStatus procstat;
+            oam.getProcessStatus("ProcessManager", config.moduleName(), procstat);
+
+            int ret = setProcessState(config.moduleName(), "ProcessManager", oam::ACTIVE, 0);
+
+            if ( ret == oam::API_SUCCESS )
+            {
+                oam.getProcessStatus("ProcessManager", config.moduleName(), procstat);
+
+                if ( procstat.ProcessOpState == oam::ACTIVE )
+                    break;
+            }
+        }
+        catch (...)
+        {}
+
+        sleep(1);
+    }
+
+    //set status to BUSY_INIT while failover is in progress
+    processManager.setSystemState(oam::BUSY_INIT);
+
+    // graceful start snmptrap-daemon
+    string EnableSNMP = "y";
+
+    try
+    {
+        oam.getSystemConfig("EnableSNMP", EnableSNMP);
+    }
+    catch (...)
+    {}
+
+    if ( EnableSNMP == "y" )
+        startProcess(config.moduleName(), "SNMPTrapDaemon", oam::GRACEFUL);
+
+    // set alarm
+    ALARMManager aManager;
+    aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, SET);
+
+    //set down Active module to disable state
+    disableModule(downOAMParentName, false);
+
+    //do it here to get current processes active faster to process queries faster
+    processManager.setProcessStates(downOAMParentName, oam::AUTO_OFFLINE);
+
+    //set other down modules to disable state
+    vector<string>::iterator pt1 = downModuleList.begin();
+
+    for ( ; pt1 != downModuleList.end() ; pt1++)
+    {
+        disableModule(*pt1, false);
+        processManager.setProcessStates(*pt1, oam::AUTO_OFFLINE);
+    }
+
+    //distribute config file
+    distributeConfigFile("system");
+
+    //restart local module
+    processManager.stopModule(config.moduleName(), oam::FORCEFUL, true);
+
+    string localModule = config.moduleName();
 //	processManager.setModuleState(localModule, oam::AUTO_INIT);
-	pthread_t startmodulethread;
-	int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &localModule);
+    pthread_t startmodulethread;
+    int status = pthread_create (&startmodulethread, NULL, (void* (*)(void*)) &startModuleThread, &localModule);
 
-	if ( status != 0 )
-		log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+    if ( status != 0 )
+        log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
 
-	if (status == 0)
-	{
-		pthread_join(startmodulethread, NULL);
-		status = startsystemthreadStatus;
-	}
+    if (status == 0)
+    {
+        pthread_join(startmodulethread, NULL);
+        status = startsystemthreadStatus;
+    }
 
-	//restart/reinit processes to force their release of the controller node port
-	if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
-		( moduleNameList.size() <= 1 && config.moduleType() == "pm") )
-	{
-		status = 0;
-	}
-	else 
-	{
-		processManager.restartProcessType("mysql", localModule);
-		processManager.restartProcessType("ExeMgr", localModule);
-		processManager.restartProcessType("WriteEngineServer", localModule);
-	
-		processManager.reinitProcessType("DBRMWorkerNode");
+    //restart/reinit processes to force their release of the controller node port
+    if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
+            ( moduleNameList.size() <= 1 && config.moduleType() == "pm") )
+    {
+        status = 0;
+    }
+    else
+    {
+        processManager.restartProcessType("mysql", localModule);
+        processManager.restartProcessType("ExeMgr", localModule);
+        processManager.restartProcessType("WriteEngineServer", localModule);
 
-		//send message to start new Standby Process-Manager, if needed
-		newStandbyModule = getStandbyModule();
-	
-		if ( !newStandbyModule.empty() && newStandbyModule != downOAMParentName 
-				&& newStandbyModule != "NONE") {
-			// get standby IP address and update entries
-			setStandbyModule(newStandbyModule);
-		}
-	
-		//send message to each child process to start any COLD_STANDBY processes
-		SystemModuleTypeConfig systemmoduletypeconfig;
-	
-		try{
-			oam.getSystemConfig(systemmoduletypeconfig);
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		}
-	
-		for( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			if( moduleCount == 0)
-				continue;
-	
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-			{
-				int opState = oam::ACTIVE;
-				bool degraded;
-				try {
-					oam.getModuleStatus((*pt).DeviceName, opState, degraded);
-				}
-				catch (exception& ex)
-				{
-					string error = ex.what();
-	//				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-				}
-				catch(...)
-				{
-	//				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-				}
-	
-				if (opState != oam::MAN_DISABLED) {
-					if (opState != oam::AUTO_DISABLED) {
-						if ((*pt).DeviceName != downOAMParentName ) {
-							if ((*pt).DeviceName != config.moduleName() ) {
-							//	processManager.setModuleState((*pt).DeviceName, oam::AUTO_INIT);
-								pthread_t startmodulethread;
-								string moduleName = (*pt).DeviceName;
-								int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &moduleName);
-		
-								if ( status != 0 )
-									log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
-		
-								sleep(1);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+        processManager.reinitProcessType("DBRMWorkerNode");
 
-	//restart DDLProc/DMLProc to perform any rollbacks, if needed
-	//dont rollback in amazon, wait until down pm recovers
-	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM  ) 
-		&& !amazon ) {
-		processManager.restartProcessType("DDLProc", config.moduleName());
-		sleep(1);
-		processManager.restartProcessType("DMLProc", config.moduleName());
-	}
+        //send message to start new Standby Process-Manager, if needed
+        newStandbyModule = getStandbyModule();
 
-	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM  )
-	{
-		//change master MySQL Replication setup
-		log.writeLog(__LINE__, "Setup this node as MySQL Replication Master", LOG_TYPE_DEBUG);
-		oam::DeviceNetworkList devicenetworklist;
-		processManager.setMySQLReplication(devicenetworklist, config.moduleName(), true);
-	}
+        if ( !newStandbyModule.empty() && newStandbyModule != downOAMParentName
+                && newStandbyModule != "NONE")
+        {
+            // get standby IP address and update entries
+            setStandbyModule(newStandbyModule);
+        }
 
-	//set query system state not ready
-	processManager.setQuerySystemState(true);
+        //send message to each child process to start any COLD_STANDBY processes
+        SystemModuleTypeConfig systemmoduletypeconfig;
 
-	// clear alarm
-	aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
+        try
+        {
+            oam.getSystemConfig(systemmoduletypeconfig);
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        }
 
-	//set status to ACTIVE while failover is in progress
-	processManager.setSystemState(oam::ACTIVE);
+        for ( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
 
-	log.writeLog(__LINE__, "*** Exiting OAMParentModuleChange function ***", LOG_TYPE_DEBUG);
+            if ( moduleCount == 0)
+                continue;
 
-	return API_SUCCESS;
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+            {
+                int opState = oam::ACTIVE;
+                bool degraded;
+
+                try
+                {
+                    oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+                }
+                catch (exception& ex)
+                {
+                    string error = ex.what();
+                    //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
+                }
+                catch (...)
+                {
+                    //				log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                }
+
+                if (opState != oam::MAN_DISABLED)
+                {
+                    if (opState != oam::AUTO_DISABLED)
+                    {
+                        if ((*pt).DeviceName != downOAMParentName )
+                        {
+                            if ((*pt).DeviceName != config.moduleName() )
+                            {
+                                //	processManager.setModuleState((*pt).DeviceName, oam::AUTO_INIT);
+                                pthread_t startmodulethread;
+                                string moduleName = (*pt).DeviceName;
+                                int status = pthread_create (&startmodulethread, NULL, (void* (*)(void*)) &startModuleThread, &moduleName);
+
+                                if ( status != 0 )
+                                    log.writeLog(__LINE__, "startModuleThread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+
+                                sleep(1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //restart DDLProc/DMLProc to perform any rollbacks, if needed
+    //dont rollback in amazon, wait until down pm recovers
+    if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM  )
+            && !amazon )
+    {
+        processManager.restartProcessType("DDLProc", config.moduleName());
+        sleep(1);
+        processManager.restartProcessType("DMLProc", config.moduleName());
+    }
+
+    if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM  )
+    {
+        //change master MySQL Replication setup
+        log.writeLog(__LINE__, "Setup this node as MySQL Replication Master", LOG_TYPE_DEBUG);
+        oam::DeviceNetworkList devicenetworklist;
+        processManager.setMySQLReplication(devicenetworklist, config.moduleName(), true);
+    }
+
+    //set query system state not ready
+    processManager.setQuerySystemState(true);
+
+    // clear alarm
+    aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, CLEAR);
+
+    //set status to ACTIVE while failover is in progress
+    processManager.setSystemState(oam::ACTIVE);
+
+    log.writeLog(__LINE__, "*** Exiting OAMParentModuleChange function ***", LOG_TYPE_DEBUG);
+
+    return API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -9567,63 +10456,65 @@ int ProcessManager::OAMParentModuleChange()
 ******************************************************************************************/
 void ProcessManager::sendStatusUpdate(ByteStream obs, ByteStream::byte returnRequestType)
 {
-	try
-	{
-		MessageQueueClient processor("ProcStatusControl");
-		ByteStream ibs;
+    try
+    {
+        MessageQueueClient processor("ProcStatusControl");
+        ByteStream ibs;
 
-		processor.write(obs);
+        processor.write(obs);
 
-		// wait 10 seconds for ACK from Process Monitor
-		struct timespec ts = { 10, 0 };
+        // wait 10 seconds for ACK from Process Monitor
+        struct timespec ts = { 10, 0 };
 
-		ibs = processor.read(&ts);
+        ibs = processor.read(&ts);
 
-		if (ibs.length() > 0)
-		{
-			ByteStream::byte status;
-			ibs >> status;
-			if ( status == oam::API_SUCCESS ) {
-				processor.shutdown();
-			}
-			else
-			{
-				// shutdown connection
-				processor.shutdown();
-				throw std::runtime_error("error");
-			}
-		}
-		else
-		{
-			// timeout occurred, shutdown connection
-			processor.shutdown();
-			throw std::runtime_error("timeout");
-		}
-	}
-	catch(...)
-	{
-		throw std::runtime_error("timeout");
-	}
+        if (ibs.length() > 0)
+        {
+            ByteStream::byte status;
+            ibs >> status;
 
-	Configuration config;
-	Config* sysConfig5 = Config::makeConfig();
+            if ( status == oam::API_SUCCESS )
+            {
+                processor.shutdown();
+            }
+            else
+            {
+                // shutdown connection
+                processor.shutdown();
+                throw std::runtime_error("error");
+            }
+        }
+        else
+        {
+            // timeout occurred, shutdown connection
+            processor.shutdown();
+            throw std::runtime_error("timeout");
+        }
+    }
+    catch (...)
+    {
+        throw std::runtime_error("timeout");
+    }
 
-	if ( sysConfig5->getConfig("ProcStatusControlStandby", "IPAddr") == oam::UnassignedIpAddr )
-		return;
+    Configuration config;
+    Config* sysConfig5 = Config::makeConfig();
 
-	try
-	{
-		MessageQueueClient processor("ProcStatusControlStandby");
-		ByteStream ibs;
+    if ( sysConfig5->getConfig("ProcStatusControlStandby", "IPAddr") == oam::UnassignedIpAddr )
+        return;
 
-		processor.write(obs);
+    try
+    {
+        MessageQueueClient processor("ProcStatusControlStandby");
+        ByteStream ibs;
 
-		processor.shutdown();
-	}
-	catch(...)
-	{}
+        processor.write(obs);
 
-	return;
+        processor.shutdown();
+    }
+    catch (...)
+    {}
+
+    return;
 
 }
 
@@ -9636,115 +10527,125 @@ void ProcessManager::sendStatusUpdate(ByteStream obs, ByteStream::byte returnReq
 ******************************************************************************************/
 std::string ProcessManager::getStandbyModule()
 {
-	Oam oam;
-	SystemProcessStatus systemprocessstatus;
-	ProcessStatus processstatus;
-	string backupStandbyModule = "NONE";
-	string newStandbyModule = "NONE";
+    Oam oam;
+    SystemProcessStatus systemprocessstatus;
+    ProcessStatus processstatus;
+    string backupStandbyModule = "NONE";
+    string newStandbyModule = "NONE";
 
-	log.writeLog(__LINE__, "getStandbyModule called", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "getStandbyModule called", LOG_TYPE_DEBUG);
 
-	//check if gluster, if so then find PMs that have copies of DBROOT #1
-	string pmList = "";
-	if (DataRedundancyConfig == "y") {
+    //check if gluster, if so then find PMs that have copies of DBROOT #1
+    string pmList = "";
 
-		try {
-			string errmsg;
-			oam.glusterctl(oam::GLUSTER_WHOHAS, "1", pmList, errmsg);
+    if (DataRedundancyConfig == "y")
+    {
 
-			log.writeLog(__LINE__, "GLUSTER_WHOHAS called:" + pmList, LOG_TYPE_DEBUG);
+        try
+        {
+            string errmsg;
+            oam.glusterctl(oam::GLUSTER_WHOHAS, "1", pmList, errmsg);
 
-			boost::char_separator<char> sep(" ");
-			boost::tokenizer< boost::char_separator<char> > tokens(pmList, sep);
-			for ( boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
-					it != tokens.end();
-					++it)
-			{
-				string pm = "pm" + *it;
+            log.writeLog(__LINE__, "GLUSTER_WHOHAS called:" + pmList, LOG_TYPE_DEBUG);
 
-				// skip if current module
-				if ( pm == config.moduleName() )
-					continue;
+            boost::char_separator<char> sep(" ");
+            boost::tokenizer< boost::char_separator<char> > tokens(pmList, sep);
 
-				int opState;
-				bool degraded;
-				try {
-					oam.getModuleStatus(pm, opState, degraded);
-				}
-				catch(...)
-				{}
+            for ( boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
+                    it != tokens.end();
+                    ++it)
+            {
+                string pm = "pm" + *it;
 
-				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED) {
-					continue;
-				}
-				else
-					return pm;
-			}
+                // skip if current module
+                if ( pm == config.moduleName() )
+                    continue;
 
-		}
-		catch (...)
-		{}
+                int opState;
+                bool degraded;
 
-		return "NONE";
-	}
+                try
+                {
+                    oam.getModuleStatus(pm, opState, degraded);
+                }
+                catch (...)
+                {}
 
-	//not gluster, check by status
-	try
-	{
-		oam.getProcessStatus(systemprocessstatus);
+                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                {
+                    continue;
+                }
+                else
+                    return pm;
+            }
 
-		for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-		{
-			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
-				systemprocessstatus.processstatus[i].ProcessOpState == oam::STANDBY )
-				//already have a hot-standby
-				return "";
+        }
+        catch (...)
+        {}
 
-			if ( backupStandbyModule != "NONE" )
-				continue;
+        return "NONE";
+    }
 
-			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
-				systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
-				// Found a ProcessManager in a COLD_STANDBY state
-				newStandbyModule = systemprocessstatus.processstatus[i].Module;
+    //not gluster, check by status
+    try
+    {
+        oam.getProcessStatus(systemprocessstatus);
 
-			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
-				systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_OFFLINE &&
-				backupStandbyModule == "NONE" &&
-				newStandbyModule == "NONE" )
-			{
-				// Found a ProcessManager in a MAN_OFFLINE state, use if no COLD_STANDBY is found
-				// and module is not disabled
-				int opState = oam::ACTIVE;
-				bool degraded;
-				try {
-					oam.getModuleStatus(systemprocessstatus.processstatus[i].Module, opState, degraded);
-				}
-				catch(...)
-				{}
+        for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+        {
+            if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
+                    systemprocessstatus.processstatus[i].ProcessOpState == oam::STANDBY )
+                //already have a hot-standby
+                return "";
 
-				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED) {
-					continue;
-				}
-				else
-					backupStandbyModule = systemprocessstatus.processstatus[i].Module;
-			}
-		}
-	}
-	catch (exception& ex)
-	{
+            if ( backupStandbyModule != "NONE" )
+                continue;
+
+            if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
+                    systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
+                // Found a ProcessManager in a COLD_STANDBY state
+                newStandbyModule = systemprocessstatus.processstatus[i].Module;
+
+            if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
+                    systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_OFFLINE &&
+                    backupStandbyModule == "NONE" &&
+                    newStandbyModule == "NONE" )
+            {
+                // Found a ProcessManager in a MAN_OFFLINE state, use if no COLD_STANDBY is found
+                // and module is not disabled
+                int opState = oam::ACTIVE;
+                bool degraded;
+
+                try
+                {
+                    oam.getModuleStatus(systemprocessstatus.processstatus[i].Module, opState, degraded);
+                }
+                catch (...)
+                {}
+
+                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                {
+                    continue;
+                }
+                else
+                    backupStandbyModule = systemprocessstatus.processstatus[i].Module;
+            }
+        }
+    }
+    catch (exception& ex)
+    {
 //		string error = ex.what();
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-	}
-	catch(...)
-	{
+    }
+    catch (...)
+    {
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-	}
+    }
 
-	if ( newStandbyModule != "NONE" )
-		return newStandbyModule;
+    if ( newStandbyModule != "NONE" )
+        return newStandbyModule;
 
-	return backupStandbyModule;
+    return backupStandbyModule;
 }
 
 /******************************************************************************************
@@ -9756,63 +10657,65 @@ std::string ProcessManager::getStandbyModule()
 ******************************************************************************************/
 bool ProcessManager::setStandbyModule(std::string newStandbyModule, bool send)
 {
-	Oam oam;
+    Oam oam;
 
-	log.writeLog(__LINE__, "setStandbyModule called", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "setStandbyModule called", LOG_TYPE_DEBUG);
 
-	if ( newStandbyModule.empty() )
-		return true;
+    if ( newStandbyModule.empty() )
+        return true;
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	for(int i=0 ; i < 5; i++)
-	{
-		// get standby IP address and update entries
-		ModuleConfig moduleconfig;
-		oam.getSystemConfig(newStandbyModule, moduleconfig);
-		HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-		string standbyIPaddr = (*pt1).IPAddr;
-	
-		Configuration config;
-		Config* sysConfig6 = Config::makeConfig();
-		sysConfig6->setConfig("SystemConfig", "StandbyOAMModuleName", newStandbyModule);
-		sysConfig6->setConfig("ProcStatusControlStandby", "IPAddr", standbyIPaddr);
-	
-		try{
-			sysConfig6->write();
-			pthread_mutex_unlock(&THREAD_LOCK);
-	
-			oam.setHotStandbyPM(standbyIPaddr);
+    for (int i = 0 ; i < 5; i++)
+    {
+        // get standby IP address and update entries
+        ModuleConfig moduleconfig;
+        oam.getSystemConfig(newStandbyModule, moduleconfig);
+        HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+        string standbyIPaddr = (*pt1).IPAddr;
 
-			//distribute config file
-			distributeConfigFile("system");	
+        Configuration config;
+        Config* sysConfig6 = Config::makeConfig();
+        sysConfig6->setConfig("SystemConfig", "StandbyOAMModuleName", newStandbyModule);
+        sysConfig6->setConfig("ProcStatusControlStandby", "IPAddr", standbyIPaddr);
 
-			log.writeLog(__LINE__, "Columnstore.xml Standby OAM updated to : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
+        try
+        {
+            sysConfig6->write();
+            pthread_mutex_unlock(&THREAD_LOCK);
 
-			if (send) {
-				log.writeLog(__LINE__, "Send Message for new Hot-Standby ProcessManager to module = " + newStandbyModule, LOG_TYPE_DEBUG);
-				int retStatus = startProcess(newStandbyModule, "ProcessManager", oam::GRACEFUL_STANDBY);
-			
-				log.writeLog(__LINE__, "Hot-Standby ProcessManager ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
-			}
+            oam.setHotStandbyPM(standbyIPaddr);
 
-			return true;
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "setStandbyModule: EXCEPTION ERROR on sysConfig->write(): " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "setStandbyModule :EXCEPTION ERROR on sysConfig->write(): Caught unknown exception!", LOG_TYPE_ERROR);
-		}
-	}
+            //distribute config file
+            distributeConfigFile("system");
 
-	log.writeLog(__LINE__, "setStandbyModule: failed to set enable state", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "Columnstore.xml Standby OAM updated to : " + newStandbyModule + ":" + standbyIPaddr, LOG_TYPE_DEBUG);
 
-	pthread_mutex_unlock(&THREAD_LOCK);
-	return false;
+            if (send)
+            {
+                log.writeLog(__LINE__, "Send Message for new Hot-Standby ProcessManager to module = " + newStandbyModule, LOG_TYPE_DEBUG);
+                int retStatus = startProcess(newStandbyModule, "ProcessManager", oam::GRACEFUL_STANDBY);
+
+                log.writeLog(__LINE__, "Hot-Standby ProcessManager ACK received from Process-Monitor, return status = " + oam.itoa(retStatus), LOG_TYPE_DEBUG);
+            }
+
+            return true;
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "setStandbyModule: EXCEPTION ERROR on sysConfig->write(): " + error, LOG_TYPE_ERROR);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "setStandbyModule :EXCEPTION ERROR on sysConfig->write(): Caught unknown exception!", LOG_TYPE_ERROR);
+        }
+    }
+
+    log.writeLog(__LINE__, "setStandbyModule: failed to set enable state", LOG_TYPE_ERROR);
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+    return false;
 
 }
 
@@ -9825,48 +10728,50 @@ bool ProcessManager::setStandbyModule(std::string newStandbyModule, bool send)
 ******************************************************************************************/
 bool ProcessManager::clearStandbyModule()
 {
-	Oam oam;
+    Oam oam;
 
-	log.writeLog(__LINE__, "clearStandbyModule called", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "clearStandbyModule called", LOG_TYPE_DEBUG);
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	Configuration config;
+    Configuration config;
 
-	for(int i=0 ; i < 5; i++)
-	{
-		Config* sysConfig7 = Config::makeConfig();
-		sysConfig7->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-		sysConfig7->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
-		try{
-			sysConfig7->write();
-			pthread_mutex_unlock(&THREAD_LOCK);
-	
-			oam.setHotStandbyPM(" ");
-			log.writeLog(__LINE__, "Clear Columnstore.xml Standby OAM", LOG_TYPE_DEBUG);
+    for (int i = 0 ; i < 5; i++)
+    {
+        Config* sysConfig7 = Config::makeConfig();
+        sysConfig7->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+        sysConfig7->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
 
-			//distribute config file
-			distributeConfigFile("system");	
+        try
+        {
+            sysConfig7->write();
+            pthread_mutex_unlock(&THREAD_LOCK);
 
-			return true;
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "clearStandbyModule: EXCEPTION ERROR on sysConfig->write(): " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "clearStandbyModule :EXCEPTION ERROR on sysConfig->write(): Caught unknown exception!", LOG_TYPE_ERROR);
-		}
-	
-		sleep(1);
-	}
+            oam.setHotStandbyPM(" ");
+            log.writeLog(__LINE__, "Clear Columnstore.xml Standby OAM", LOG_TYPE_DEBUG);
 
-	log.writeLog(__LINE__, "clearStandbyModule: failed to set enable state", LOG_TYPE_ERROR);
+            //distribute config file
+            distributeConfigFile("system");
 
-	pthread_mutex_unlock(&THREAD_LOCK);
-	return false;
+            return true;
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "clearStandbyModule: EXCEPTION ERROR on sysConfig->write(): " + error, LOG_TYPE_ERROR);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "clearStandbyModule :EXCEPTION ERROR on sysConfig->write(): Caught unknown exception!", LOG_TYPE_ERROR);
+        }
+
+        sleep(1);
+    }
+
+    log.writeLog(__LINE__, "clearStandbyModule: failed to set enable state", LOG_TYPE_ERROR);
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+    return false;
 
 }
 
@@ -9879,53 +10784,53 @@ bool ProcessManager::clearStandbyModule()
 ******************************************************************************************/
 int ProcessManager::setEnableState(std::string target, std::string state)
 {
-	Oam oam;
-	ModuleConfig moduleconfig;
+    Oam oam;
+    ModuleConfig moduleconfig;
 
-	pthread_mutex_lock(&THREAD_LOCK);
+    pthread_mutex_lock(&THREAD_LOCK);
 
-	for(int i=0 ; i < 5; i++)
-	{
-		try
-		{
-			oam.getSystemConfig(target, moduleconfig);
-	
-			moduleconfig.DisableState = state;
-	
-			try
-			{
-				oam.setSystemConfig(target, moduleconfig);
-				pthread_mutex_unlock(&THREAD_LOCK);
-				return API_SUCCESS;
-			}
-			catch (exception& ex)
-			{
-				string error = ex.what();
-				log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on setSystemConfig: " + error, LOG_TYPE_ERROR);
-			}
-			catch(...)
-			{
-				log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on setSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-			}
-	
-		}
-		catch (exception& ex)
-		{
-			string error = ex.what();
-			log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		}
+    for (int i = 0 ; i < 5; i++)
+    {
+        try
+        {
+            oam.getSystemConfig(target, moduleconfig);
 
-		sleep(1);
-	}
+            moduleconfig.DisableState = state;
 
-	log.writeLog(__LINE__, "setEnableState: failed to set enable state", LOG_TYPE_ERROR);
+            try
+            {
+                oam.setSystemConfig(target, moduleconfig);
+                pthread_mutex_unlock(&THREAD_LOCK);
+                return API_SUCCESS;
+            }
+            catch (exception& ex)
+            {
+                string error = ex.what();
+                log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on setSystemConfig: " + error, LOG_TYPE_ERROR);
+            }
+            catch (...)
+            {
+                log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on setSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+            }
 
-	pthread_mutex_unlock(&THREAD_LOCK);
-	return API_SUCCESS;
+        }
+        catch (exception& ex)
+        {
+            string error = ex.what();
+            log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        }
+        catch (...)
+        {
+            log.writeLog(__LINE__, "setEnableState: EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        }
+
+        sleep(1);
+    }
+
+    log.writeLog(__LINE__, "setEnableState: failed to set enable state", LOG_TYPE_ERROR);
+
+    pthread_mutex_unlock(&THREAD_LOCK);
+    return API_SUCCESS;
 
 }
 
@@ -9939,111 +10844,122 @@ int ProcessManager::setEnableState(std::string target, std::string state)
 ******************************************************************************************/
 void sendUpgradeRequest()
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
-	bool exitThread = false;
-	int exitThreadStatus = oam::API_SUCCESS;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
+    bool exitThread = false;
+    int exitThreadStatus = oam::API_SUCCESS;
 
-	pthread_t ThreadId;
-	ThreadId = pthread_self();
+    pthread_t ThreadId;
+    ThreadId = pthread_self();
 
-	// wait until DMLProc is ACTIVE
-	while(true)
-	{
-		try{
-			ProcessStatus procstat;
-			oam.getProcessStatus("WriteEngineServer", config.moduleName(), procstat);
-			if ( procstat.ProcessOpState == oam::ACTIVE)
-				break;
-		}
-		catch (exception& ex)
-		{
+    // wait until DMLProc is ACTIVE
+    while (true)
+    {
+        try
+        {
+            ProcessStatus procstat;
+            oam.getProcessStatus("WriteEngineServer", config.moduleName(), procstat);
+
+            if ( procstat.ProcessOpState == oam::ACTIVE)
+                break;
+        }
+        catch (exception& ex)
+        {
 //			string error = ex.what();
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
+        }
+        catch (...)
+        {
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		}
-	}
+        }
+    }
 
-	SystemModuleTypeConfig systemmoduletypeconfig;
+    SystemModuleTypeConfig systemmoduletypeconfig;
 
-	try{
-		oam.getSystemConfig(systemmoduletypeconfig);
-	}
-	catch (exception& ex)
-	{
-		string error = ex.what();
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
-	catch(...)
-	{
-		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
-		exitThread = true;
-		exitThreadStatus = oam::API_FAILURE;
-	}
+    try
+    {
+        oam.getSystemConfig(systemmoduletypeconfig);
+    }
+    catch (exception& ex)
+    {
+        string error = ex.what();
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: " + error, LOG_TYPE_ERROR);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
+    catch (...)
+    {
+        log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
+        exitThread = true;
+        exitThreadStatus = oam::API_FAILURE;
+    }
 
-	if ( exitThread ) {
-		pthread_detach (ThreadId);
-		pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
-	}
+    if ( exitThread )
+    {
+        pthread_detach (ThreadId);
+        pthread_exit(reinterpret_cast<void*>(static_cast<ptrdiff_t>(exitThreadStatus)));
+    }
 
-	ByteStream msg;
-	ByteStream::byte requestID = RUNUPGRADE;
+    ByteStream msg;
+    ByteStream::byte requestID = RUNUPGRADE;
 
-	msg << requestID;
-	msg << " ";		// pass a blank dummy password
+    msg << requestID;
+    msg << " ";		// pass a blank dummy password
 
-	int returnStatus = oam::API_SUCCESS;
+    int returnStatus = oam::API_SUCCESS;
 
-	for( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-	{
-		int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-		if( moduleCount == 0)
-			continue;
+    for ( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+    {
+        int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
 
-		string moduleType = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
-		if ( moduleType == "um" ||
-			( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ) {
+        if ( moduleCount == 0)
+            continue;
 
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
-			{
-				int opState = oam::ACTIVE;
-				bool degraded;
-				try {
-					oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+        string moduleType = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
 
-					if (opState == oam::ACTIVE ||
-						opState == oam::DEGRADED) {
-						returnStatus = processManager.sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
-		
-						upgradethreadStatus = returnStatus;
-		
-						if ( returnStatus != API_SUCCESS)
-							break;
-					}
-				}
-				catch (exception& ex)
-				{
+        if ( moduleType == "um" ||
+                ( moduleType == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) )
+        {
+
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++)
+            {
+                int opState = oam::ACTIVE;
+                bool degraded;
+
+                try
+                {
+                    oam.getModuleStatus((*pt).DeviceName, opState, degraded);
+
+                    if (opState == oam::ACTIVE ||
+                            opState == oam::DEGRADED)
+                    {
+                        returnStatus = processManager.sendMsgProcMon( (*pt).DeviceName, msg, requestID, 30 );
+
+                        upgradethreadStatus = returnStatus;
+
+                        if ( returnStatus != API_SUCCESS)
+                            break;
+                    }
+                }
+                catch (exception& ex)
+                {
 //					string error = ex.what();
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": " + error, LOG_TYPE_ERROR);
-				}
-				catch(...)
-				{
+                }
+                catch (...)
+                {
 //					log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + (*pt).DeviceName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-				}
-			}
-		}
-	}
+                }
+            }
+        }
+    }
 
-	pthread_detach (ThreadId);
-	pthread_exit(0);
+    pthread_detach (ThreadId);
+    pthread_exit(0);
 }
 
 /******************************************************************************************
@@ -10055,39 +10971,41 @@ void sendUpgradeRequest()
 ******************************************************************************************/
 void ProcessManager::stopProcessTypes(bool manualFlag)
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
 
-	// skip if single server install, meaning only 1 worker node
-	try {
-		Config* sysConfig = Config::makeConfig();
-		if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" )
-			return;
-	}
-	catch(...)
-	{
-		return;
-	}
+    // skip if single server install, meaning only 1 worker node
+    try
+    {
+        Config* sysConfig = Config::makeConfig();
 
-	log.writeLog(__LINE__, "stopProcessTypes Called");
+        if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" )
+            return;
+    }
+    catch (...)
+    {
+        return;
+    }
 
-	//front-end first
-	processManager.stopProcessType("mysql", manualFlag);
-	processManager.stopProcessType("DMLProc", manualFlag);
-	processManager.stopProcessType("DDLProc", manualFlag);
-	processManager.stopProcessType("ExeMgr", manualFlag);
+    log.writeLog(__LINE__, "stopProcessTypes Called");
 
-	//back-end
-	processManager.stopProcessType("WriteEngineServer", manualFlag);
-	processManager.stopProcessType("PrimProc", manualFlag);
+    //front-end first
+    processManager.stopProcessType("mysql", manualFlag);
+    processManager.stopProcessType("DMLProc", manualFlag);
+    processManager.stopProcessType("DDLProc", manualFlag);
+    processManager.stopProcessType("ExeMgr", manualFlag);
 
-	//dbrm
-	processManager.stopProcessType("DBRMControllerNode", manualFlag);
-	processManager.stopProcessType("DBRMWorkerNode", manualFlag);
+    //back-end
+    processManager.stopProcessType("WriteEngineServer", manualFlag);
+    processManager.stopProcessType("PrimProc", manualFlag);
 
-	log.writeLog(__LINE__, "stopProcessTypes Completed");
+    //dbrm
+    processManager.stopProcessType("DBRMControllerNode", manualFlag);
+    processManager.stopProcessType("DBRMWorkerNode", manualFlag);
+
+    log.writeLog(__LINE__, "stopProcessTypes Completed");
 }
 
 /******************************************************************************************
@@ -10099,23 +11017,23 @@ void ProcessManager::stopProcessTypes(bool manualFlag)
 ******************************************************************************************/
 int ProcessManager::unmountDBRoot(std::string dbrootID)
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
 
-	//get pm assigned to that dbroot
-	int pmID;
-	oam.getDbrootPmConfig(atoi(dbrootID.c_str()), pmID);
-	string moduleName = "pm" + oam.itoa(pmID);
+    //get pm assigned to that dbroot
+    int pmID;
+    oam.getDbrootPmConfig(atoi(dbrootID.c_str()), pmID);
+    string moduleName = "pm" + oam.itoa(pmID);
 
-	log.writeLog(__LINE__, "send unmountDBRoot to pm: " + dbrootID + "/" + moduleName, LOG_TYPE_DEBUG );
+    log.writeLog(__LINE__, "send unmountDBRoot to pm: " + dbrootID + "/" + moduleName, LOG_TYPE_DEBUG );
 
-	ByteStream msg;
-	msg << (ByteStream::byte) PROCUNMOUNT;
-	msg << dbrootID;
+    ByteStream msg;
+    msg << (ByteStream::byte) PROCUNMOUNT;
+    msg << dbrootID;
 
-	return sendMsgProcMon( moduleName, msg, PROCUNMOUNT );
+    return sendMsgProcMon( moduleName, msg, PROCUNMOUNT );
 
 }
 
@@ -10128,53 +11046,57 @@ int ProcessManager::unmountDBRoot(std::string dbrootID)
 ******************************************************************************************/
 int ProcessManager::mountDBRoot(std::string dbrootID)
 {
-	ProcessLog log;
-	Configuration config;
-	ProcessManager processManager(config, log);
-	Oam oam;
+    ProcessLog log;
+    Configuration config;
+    ProcessManager processManager(config, log);
+    Oam oam;
 
-	if (DataRedundancyConfig == "y")
-		return oam::API_SUCCESS;
+    if (DataRedundancyConfig == "y")
+        return oam::API_SUCCESS;
 
-	//get pm assigned to that dbroot
-	int pmID;
-	oam.getDbrootPmConfig(atoi(dbrootID.c_str()), pmID);
-	string moduleName = "pm" + oam.itoa(pmID);
+    //get pm assigned to that dbroot
+    int pmID;
+    oam.getDbrootPmConfig(atoi(dbrootID.c_str()), pmID);
+    string moduleName = "pm" + oam.itoa(pmID);
 
-	log.writeLog(__LINE__, "send mountDBRoot to pm: " + dbrootID + "/" + moduleName, LOG_TYPE_DEBUG );
+    log.writeLog(__LINE__, "send mountDBRoot to pm: " + dbrootID + "/" + moduleName, LOG_TYPE_DEBUG );
 
-	//send msg to ProcMon if not local module
-	if ( config.moduleName() == moduleName ) {
-		string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/mount.txt";
-		system(cmd.c_str());
+    //send msg to ProcMon if not local module
+    if ( config.moduleName() == moduleName )
+    {
+        string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/mount.txt";
+        system(cmd.c_str());
 
-		if ( !rootUser) {
-			cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
-			system(cmd.c_str());
-		}
+        if ( !rootUser)
+        {
+            cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+            system(cmd.c_str());
+        }
 
-		ifstream in("/tmp/mount.txt");
+        ifstream in("/tmp/mount.txt");
 
-		in.seekg(0, std::ios::end);
-		int size = in.tellg();
-		if ( size != 0 )
-		{
-			if (!oam.checkLogStatus("/tmp/mount.txt", "already")) {
-				log.writeLog(__LINE__, "mount failed, dbroot: " + dbrootID);
-				return API_FAILURE;
-			}
-		}
-	}
-	else
-	{
-		ByteStream msg;
-		msg << (ByteStream::byte) PROCMOUNT;
-		msg << dbrootID;
+        in.seekg(0, std::ios::end);
+        int size = in.tellg();
 
-		return sendMsgProcMon( moduleName, msg, PROCMOUNT );
-	}
+        if ( size != 0 )
+        {
+            if (!oam.checkLogStatus("/tmp/mount.txt", "already"))
+            {
+                log.writeLog(__LINE__, "mount failed, dbroot: " + dbrootID);
+                return API_FAILURE;
+            }
+        }
+    }
+    else
+    {
+        ByteStream msg;
+        msg << (ByteStream::byte) PROCMOUNT;
+        msg << dbrootID;
 
-	return oam::API_SUCCESS;
+        return sendMsgProcMon( moduleName, msg, PROCMOUNT );
+    }
+
+    return oam::API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -10186,24 +11108,30 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
 ******************************************************************************************/
 void ProcessManager::flushInodeCache()
 {
-	int fd;
-	ByteStream reply;
+    int fd;
+    ByteStream reply;
 
 #ifdef __linux__
-	fd = open("/proc/sys/vm/drop_caches", O_WRONLY);
-	if (fd >= 0) {
-		if (write(fd, "3\n", 2) == 2)
-		{
-			log.writeLog(__LINE__, "flushInodeCache successful", LOG_TYPE_DEBUG);
-		}
-		else {
-			log.writeLog(__LINE__, "flushInodeCache failed", LOG_TYPE_DEBUG);
-		}
-		close(fd);
-	}
-	else {
-		log.writeLog(__LINE__, "flushInodeCache failed to open file", LOG_TYPE_DEBUG);
-	}
+    fd = open("/proc/sys/vm/drop_caches", O_WRONLY);
+
+    if (fd >= 0)
+    {
+        if (write(fd, "3\n", 2) == 2)
+        {
+            log.writeLog(__LINE__, "flushInodeCache successful", LOG_TYPE_DEBUG);
+        }
+        else
+        {
+            log.writeLog(__LINE__, "flushInodeCache failed", LOG_TYPE_DEBUG);
+        }
+
+        close(fd);
+    }
+    else
+    {
+        log.writeLog(__LINE__, "flushInodeCache failed to open file", LOG_TYPE_DEBUG);
+    }
+
 #endif
 }
 
@@ -10216,295 +11144,326 @@ void ProcessManager::flushInodeCache()
 ******************************************************************************************/
 int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule, bool failover, bool distributeDB, std::string password, bool enable)
 {
-	Oam oam;
+    Oam oam;
 
-	log.writeLog(__LINE__, "setMySQLReplication called", LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "setMySQLReplication called", LOG_TYPE_DEBUG);
 
-	string MySQLRep;
-	try {
-		oam.getSystemConfig("MySQLRep", MySQLRep);
-	}
-	catch(...) {
-		MySQLRep = "n";
-	}
+    string MySQLRep;
 
-	if ( MySQLRep == "n" && enable ) {
-	    log.writeLog(__LINE__, "setMySQLReplication: MySQLRep not set, exiting", LOG_TYPE_DEBUG);
-		return oam::API_SUCCESS;
-	}
+    try
+    {
+        oam.getSystemConfig("MySQLRep", MySQLRep);
+    }
+    catch (...)
+    {
+        MySQLRep = "n";
+    }
 
-	//also skip if single-server, multi-node seperate with 1 UM, multi-node combo with 1 PM
+    if ( MySQLRep == "n" && enable )
+    {
+        log.writeLog(__LINE__, "setMySQLReplication: MySQLRep not set, exiting", LOG_TYPE_DEBUG);
+        return oam::API_SUCCESS;
+    }
 
-/*	string SingleServerInstall = "n";
-	try {
-		oam.getSystemConfig("SingleServerInstall", SingleServerInstall);
-	}
-	catch(...) {
-		SingleServerInstall = "n";
-	}
+    //also skip if single-server, multi-node seperate with 1 UM, multi-node combo with 1 PM
 
-	//single server check
-	if ( SingleServerInstall == "y" )
-	{
-	    log.writeLog(__LINE__, "setMySQLReplication: Single-Server, exiting", LOG_TYPE_DEBUG);
-	    return oam::API_SUCCESS;
-	}
+    /*	string SingleServerInstall = "n";
+    	try {
+    		oam.getSystemConfig("SingleServerInstall", SingleServerInstall);
+    	}
+    	catch(...) {
+    		SingleServerInstall = "n";
+    	}
 
-	//combined system check
-	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM && !failover ) {
-		try {
-			Config* sysConfig = Config::makeConfig();
-			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
-				log.writeLog(__LINE__, "setMySQLReplication: 1 configured module, exiting", LOG_TYPE_DEBUG);
-				return oam::API_SUCCESS;
-			}
-		}
-		catch(...)
-		{
-			log.writeLog(__LINE__, "setMySQLReplication: makeConfig exception, exiting", LOG_TYPE_DEBUG);
-			return oam::API_SUCCESS;
-		}
-	}
+    	//single server check
+    	if ( SingleServerInstall == "y" )
+    	{
+    	    log.writeLog(__LINE__, "setMySQLReplication: Single-Server, exiting", LOG_TYPE_DEBUG);
+    	    return oam::API_SUCCESS;
+    	}
 
-	//seperate system check
-	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) &&
-	    (PMwithUM == "n" ) )
-	{ 
-		ModuleTypeConfig moduletypeconfig;
-		try{
-			oam.getSystemConfig("um", moduletypeconfig);
-		}
-		catch(...)
-		{}
-	
-		if ( moduletypeconfig.ModuleCount < 2 )
-		{
-			log.writeLog(__LINE__, "setMySQLReplication: moduleCount = 1, exiting", LOG_TYPE_DEBUG);
-			return oam::API_SUCCESS;
-		}
-	}
-*/
-	log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
+    	//combined system check
+    	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM && !failover ) {
+    		try {
+    			Config* sysConfig = Config::makeConfig();
+    			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
+    				log.writeLog(__LINE__, "setMySQLReplication: 1 configured module, exiting", LOG_TYPE_DEBUG);
+    				return oam::API_SUCCESS;
+    			}
+    		}
+    		catch(...)
+    		{
+    			log.writeLog(__LINE__, "setMySQLReplication: makeConfig exception, exiting", LOG_TYPE_DEBUG);
+    			return oam::API_SUCCESS;
+    		}
+    	}
 
-	// mysql port number
-	string MySQLPort;
-	try {
-		oam.getSystemConfig("MySQLPort", MySQLPort);
-	}
-	catch(...) {
-		MySQLPort = "3306";
-	}
+    	//seperate system check
+    	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) &&
+    	    (PMwithUM == "n" ) )
+    	{
+    		ModuleTypeConfig moduletypeconfig;
+    		try{
+    			oam.getSystemConfig("um", moduletypeconfig);
+    		}
+    		catch(...)
+    		{}
 
-	if ( MySQLPort.empty() )
-		MySQLPort = "3306";
+    		if ( moduletypeconfig.ModuleCount < 2 )
+    		{
+    			log.writeLog(__LINE__, "setMySQLReplication: moduleCount = 1, exiting", LOG_TYPE_DEBUG);
+    			return oam::API_SUCCESS;
+    		}
+    	}
+    */
+    log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
 
-	//get master info
-	if ( masterModule == oam::UnassignedName)
-	{
-		try {
-			oam.getSystemConfig("PrimaryUMModuleName", masterModule);
-		}
-		catch(...) {
-			masterModule = oam::UnassignedName;
-		}
-	
-		if ( masterModule == oam::UnassignedName )
-		{
-			// use default setting
-			masterModule = "um1";
-			if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
-				masterModule = "pm1";
-		}
-	}
+    // mysql port number
+    string MySQLPort;
 
-	//send distubute DB
-	if ( distributeDB )
-	{
-		if ( devicenetworklist.size() == 0 )
-		{ //dist to all slaves
-			ByteStream msg;
-			ByteStream::byte requestID = oam::MASTERDIST;
-			msg << requestID;
-			msg << password;
-			msg << "all";
-		
-			log.writeLog(__LINE__, "Distribute Master DB, master module=" + masterModule, LOG_TYPE_DEBUG);
-		
-			int returnStatus = sendMsgProcMon( masterModule, msg, requestID, 60 );
-		
-			if ( returnStatus != API_SUCCESS) {
-				log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
-				return API_FAILURE;
-			}
-		}
-		else
-		{
-			DeviceNetworkList::iterator listPT = devicenetworklist.begin();
-			for( ; listPT != devicenetworklist.end() ; listPT++)
-			{
-				string remoteModuleName = (*listPT).DeviceName;
-		
-				//skip master
-				if ( remoteModuleName == masterModule )
-					continue;
+    try
+    {
+        oam.getSystemConfig("MySQLPort", MySQLPort);
+    }
+    catch (...)
+    {
+        MySQLPort = "3306";
+    }
 
-				ByteStream msg;
-				ByteStream::byte requestID = oam::MASTERDIST;
-				msg << requestID;
-				msg << password;
-				msg << remoteModuleName;
-			
-				log.writeLog(__LINE__, "Distribute Master DB, master module=" + masterModule, LOG_TYPE_DEBUG);
-			
-				int returnStatus = sendMsgProcMon( masterModule, msg, requestID, 60 );
-			
-				if ( returnStatus != API_SUCCESS) {
-					log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
-					return API_FAILURE;
-				}
-			}
-		}
-	}
+    if ( MySQLPort.empty() )
+        MySQLPort = "3306";
 
-	//send setup master
-	ByteStream msg;
-	ByteStream::byte requestID = oam::MASTERREP;
-	if ( !enable ) {
-		requestID = oam::DISABLEREP;
-		log.writeLog(__LINE__, "Disable MySQL Replication, master module=" + masterModule, LOG_TYPE_DEBUG);
-	}
-	else
-		log.writeLog(__LINE__, "Setup MySQL Replication, master module=" + masterModule, LOG_TYPE_DEBUG);
+    //get master info
+    if ( masterModule == oam::UnassignedName)
+    {
+        try
+        {
+            oam.getSystemConfig("PrimaryUMModuleName", masterModule);
+        }
+        catch (...)
+        {
+            masterModule = oam::UnassignedName;
+        }
 
-	msg << requestID;
+        if ( masterModule == oam::UnassignedName )
+        {
+            // use default setting
+            masterModule = "um1";
 
-	int returnStatus = sendMsgProcMon( masterModule, msg, requestID, 60 );
+            if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM )
+                masterModule = "pm1";
+        }
+    }
 
-	if ( returnStatus != API_SUCCESS) {
-		log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
-		return API_FAILURE;
-	}
+    //send distubute DB
+    if ( distributeDB )
+    {
+        if ( devicenetworklist.size() == 0 )
+        {
+            //dist to all slaves
+            ByteStream msg;
+            ByteStream::byte requestID = oam::MASTERDIST;
+            msg << requestID;
+            msg << password;
+            msg << "all";
 
-	//
-	// send msg to setup slave
-	//
+            log.writeLog(__LINE__, "Distribute Master DB, master module=" + masterModule, LOG_TYPE_DEBUG);
 
-	// check if a list was provide, if not, do all modules
-	if ( devicenetworklist.size() == 0 )
-	{
-		log.writeLog(__LINE__, "Setup MySQL Replication on all modules", LOG_TYPE_DEBUG);
-		SystemModuleTypeConfig systemmoduletypeconfig;
-	
-		try{
-			oam.getSystemConfig(systemmoduletypeconfig);
-		}
-		catch (exception& ex)
-		{}
+            int returnStatus = sendMsgProcMon( masterModule, msg, requestID, 60 );
 
-		for( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
-		{
-			int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
-			if( moduleCount == 0)
-				continue;
-	
-			string moduleType = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
-	
-			DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
-			for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++ )
-			{
-				string remoteModuleName = (*pt).DeviceName;
+            if ( returnStatus != API_SUCCESS)
+            {
+                log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
+                return API_FAILURE;
+            }
+        }
+        else
+        {
+            DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-				//skip master
-				if ( remoteModuleName == masterModule )
-					continue;
+            for ( ; listPT != devicenetworklist.end() ; listPT++)
+            {
+                string remoteModuleName = (*listPT).DeviceName;
 
-				// don't do PMs unless PMwithUM flag is set
-				if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
-					string moduleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
-					if ( moduleType == "pm" && PMwithUM == "n" )
-						continue;
-				}
-		
-				ByteStream msg1;
-				ByteStream::byte requestID = oam::SLAVEREP;
-				if ( !enable ) {
-					requestID = oam::DISABLEREP;
-					log.writeLog(__LINE__, "Disable MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
-				}
-				else
-					log.writeLog(__LINE__, "Setup MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
+                //skip master
+                if ( remoteModuleName == masterModule )
+                    continue;
 
-				msg1 << requestID;
+                ByteStream msg;
+                ByteStream::byte requestID = oam::MASTERDIST;
+                msg << requestID;
+                msg << password;
+                msg << remoteModuleName;
 
-				if ( enable ) {
-					if ( masterLogFile == oam::UnassignedName || 
-						masterLogPos == oam::UnassignedName )
-						return API_FAILURE;
-				
-					msg1 << masterLogFile;
-					msg1 << masterLogPos;
-					msg1 << MySQLPort;
-				}
+                log.writeLog(__LINE__, "Distribute Master DB, master module=" + masterModule, LOG_TYPE_DEBUG);
 
-				returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );
-			
-				if ( returnStatus != API_SUCCESS) {
-					log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error setting MySQL Replication Slave", LOG_TYPE_ERROR);
-					return API_FAILURE;
-				 }
-			}
-		}
-	}
-	else
-	{
-		DeviceNetworkList::iterator listPT = devicenetworklist.begin();
-		for( ; listPT != devicenetworklist.end() ; listPT++)
-		{
-			string remoteModuleName = (*listPT).DeviceName;
-			log.writeLog(__LINE__, "Setup SlavMySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
-	
-			//skip master
-			if ( remoteModuleName == masterModule )
-				continue;
+                int returnStatus = sendMsgProcMon( masterModule, msg, requestID, 60 );
 
-			ByteStream msg1;
-			ByteStream::byte requestID = oam::SLAVEREP;
-			if ( !enable ) {
-				requestID = oam::DISABLEREP;
-				log.writeLog(__LINE__, "Disable MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
-			}
-			else
-				log.writeLog(__LINE__, "Setup MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
+                if ( returnStatus != API_SUCCESS)
+                {
+                    log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
+                    return API_FAILURE;
+                }
+            }
+        }
+    }
 
-			msg1 << requestID;
-		
-			if ( masterLogFile == oam::UnassignedName || 
-				masterLogPos == oam::UnassignedName )
-			{
-				log.writeLog(__LINE__, "setMySQLReplication: ERROR: Unassigned masterLogFile or masterLogPos", LOG_TYPE_ERROR);
-				return API_FAILURE;
-			}
+    //send setup master
+    ByteStream msg;
+    ByteStream::byte requestID = oam::MASTERREP;
 
-			if ( enable ) {
-				if ( masterLogFile == oam::UnassignedName || 
-					masterLogPos == oam::UnassignedName )
-					return API_FAILURE;
-			
-				msg1 << masterLogFile;
-				msg1 << masterLogPos;
-				msg1 << MySQLPort;
-			}
-		
-			returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );
-		
-			if ( returnStatus != API_SUCCESS) {
-				log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error setting MySQL Replication Slave", LOG_TYPE_ERROR);
-				return API_FAILURE;
-			}
-		}
-	}
+    if ( !enable )
+    {
+        requestID = oam::DISABLEREP;
+        log.writeLog(__LINE__, "Disable MySQL Replication, master module=" + masterModule, LOG_TYPE_DEBUG);
+    }
+    else
+        log.writeLog(__LINE__, "Setup MySQL Replication, master module=" + masterModule, LOG_TYPE_DEBUG);
 
-	return oam::API_SUCCESS;
+    msg << requestID;
+
+    int returnStatus = sendMsgProcMon( masterModule, msg, requestID, 60 );
+
+    if ( returnStatus != API_SUCCESS)
+    {
+        log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error getting MySQL Replication Master Information", LOG_TYPE_ERROR);
+        return API_FAILURE;
+    }
+
+    //
+    // send msg to setup slave
+    //
+
+    // check if a list was provide, if not, do all modules
+    if ( devicenetworklist.size() == 0 )
+    {
+        log.writeLog(__LINE__, "Setup MySQL Replication on all modules", LOG_TYPE_DEBUG);
+        SystemModuleTypeConfig systemmoduletypeconfig;
+
+        try
+        {
+            oam.getSystemConfig(systemmoduletypeconfig);
+        }
+        catch (exception& ex)
+        {}
+
+        for ( unsigned int i = 0; i < systemmoduletypeconfig.moduletypeconfig.size(); i++)
+        {
+            int moduleCount = systemmoduletypeconfig.moduletypeconfig[i].ModuleCount;
+
+            if ( moduleCount == 0)
+                continue;
+
+            string moduleType = systemmoduletypeconfig.moduletypeconfig[i].ModuleType;
+
+            DeviceNetworkList::iterator pt = systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.begin();
+
+            for ( ; pt != systemmoduletypeconfig.moduletypeconfig[i].ModuleNetworkList.end(); pt++ )
+            {
+                string remoteModuleName = (*pt).DeviceName;
+
+                //skip master
+                if ( remoteModuleName == masterModule )
+                    continue;
+
+                // don't do PMs unless PMwithUM flag is set
+                if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM )
+                {
+                    string moduleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+
+                    if ( moduleType == "pm" && PMwithUM == "n" )
+                        continue;
+                }
+
+                ByteStream msg1;
+                ByteStream::byte requestID = oam::SLAVEREP;
+
+                if ( !enable )
+                {
+                    requestID = oam::DISABLEREP;
+                    log.writeLog(__LINE__, "Disable MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
+                }
+                else
+                    log.writeLog(__LINE__, "Setup MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
+
+                msg1 << requestID;
+
+                if ( enable )
+                {
+                    if ( masterLogFile == oam::UnassignedName ||
+                            masterLogPos == oam::UnassignedName )
+                        return API_FAILURE;
+
+                    msg1 << masterLogFile;
+                    msg1 << masterLogPos;
+                    msg1 << MySQLPort;
+                }
+
+                returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );
+
+                if ( returnStatus != API_SUCCESS)
+                {
+                    log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error setting MySQL Replication Slave", LOG_TYPE_ERROR);
+                    return API_FAILURE;
+                }
+            }
+        }
+    }
+    else
+    {
+        DeviceNetworkList::iterator listPT = devicenetworklist.begin();
+
+        for ( ; listPT != devicenetworklist.end() ; listPT++)
+        {
+            string remoteModuleName = (*listPT).DeviceName;
+            log.writeLog(__LINE__, "Setup SlavMySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
+
+            //skip master
+            if ( remoteModuleName == masterModule )
+                continue;
+
+            ByteStream msg1;
+            ByteStream::byte requestID = oam::SLAVEREP;
+
+            if ( !enable )
+            {
+                requestID = oam::DISABLEREP;
+                log.writeLog(__LINE__, "Disable MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
+            }
+            else
+                log.writeLog(__LINE__, "Setup MySQL Replication, slave module=" + remoteModuleName, LOG_TYPE_DEBUG);
+
+            msg1 << requestID;
+
+            if ( masterLogFile == oam::UnassignedName ||
+                    masterLogPos == oam::UnassignedName )
+            {
+                log.writeLog(__LINE__, "setMySQLReplication: ERROR: Unassigned masterLogFile or masterLogPos", LOG_TYPE_ERROR);
+                return API_FAILURE;
+            }
+
+            if ( enable )
+            {
+                if ( masterLogFile == oam::UnassignedName ||
+                        masterLogPos == oam::UnassignedName )
+                    return API_FAILURE;
+
+                msg1 << masterLogFile;
+                msg1 << masterLogPos;
+                msg1 << MySQLPort;
+            }
+
+            returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );
+
+            if ( returnStatus != API_SUCCESS)
+            {
+                log.writeLog(__LINE__, "setMySQLReplication: ERROR: Error setting MySQL Replication Slave", LOG_TYPE_ERROR);
+                return API_FAILURE;
+            }
+        }
+    }
+
+    return oam::API_SUCCESS;
 }
 
 /******************************************************************************************
@@ -10515,25 +11474,26 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 ******************************************************************************************/
 int ProcessManager::glusterAssign(std::string moduleName, std::string dbroot)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = PROCGLUSTERASSIGN;
+    ByteStream msg;
+    ByteStream::byte requestID = PROCGLUSTERASSIGN;
 
-	msg << requestID;
-	msg << dbroot;
+    msg << requestID;
+    msg << dbroot;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
 
-	if ( returnStatus == API_SUCCESS)
-	{
-		//log the success event 
-		log.writeLog(__LINE__, "glusterAssign Success: " + moduleName + "/" + dbroot, LOG_TYPE_DEBUG);
-	}
-	else
-	{
-		//log the error event 
-		log.writeLog(__LINE__, "glusterAssign FAILED: " + moduleName + "/" + dbroot, LOG_TYPE_ERROR);
-	}
-	return returnStatus;
+    if ( returnStatus == API_SUCCESS)
+    {
+        //log the success event
+        log.writeLog(__LINE__, "glusterAssign Success: " + moduleName + "/" + dbroot, LOG_TYPE_DEBUG);
+    }
+    else
+    {
+        //log the error event
+        log.writeLog(__LINE__, "glusterAssign FAILED: " + moduleName + "/" + dbroot, LOG_TYPE_ERROR);
+    }
+
+    return returnStatus;
 }
 
 /******************************************************************************************
@@ -10544,25 +11504,26 @@ int ProcessManager::glusterAssign(std::string moduleName, std::string dbroot)
 ******************************************************************************************/
 int ProcessManager::glusterUnassign(std::string moduleName, std::string dbroot)
 {
-	ByteStream msg;
-	ByteStream::byte requestID = PROCGLUSTERUNASSIGN;
+    ByteStream msg;
+    ByteStream::byte requestID = PROCGLUSTERUNASSIGN;
 
-	msg << requestID;
-	msg << dbroot;
+    msg << requestID;
+    msg << dbroot;
 
-	int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
+    int returnStatus = sendMsgProcMon( moduleName, msg, requestID, 30 );
 
-	if ( returnStatus == API_SUCCESS)
-	{
-		//log the success event 
-		log.writeLog(__LINE__, "glusterUnassign Success: " + moduleName + "/" + dbroot, LOG_TYPE_DEBUG);
-	}
-	else
-	{
-		//log the error event 
-		log.writeLog(__LINE__, "glusterUnassign FAILED: " + moduleName + "/" + dbroot, LOG_TYPE_ERROR);
-	}
-	return returnStatus;
+    if ( returnStatus == API_SUCCESS)
+    {
+        //log the success event
+        log.writeLog(__LINE__, "glusterUnassign Success: " + moduleName + "/" + dbroot, LOG_TYPE_DEBUG);
+    }
+    else
+    {
+        //log the error event
+        log.writeLog(__LINE__, "glusterUnassign FAILED: " + moduleName + "/" + dbroot, LOG_TYPE_ERROR);
+    }
+
+    return returnStatus;
 }
 
 

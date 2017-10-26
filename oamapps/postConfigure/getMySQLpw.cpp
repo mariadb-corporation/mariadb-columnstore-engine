@@ -19,7 +19,7 @@
 * $Id: getMySQLpw.cpp 64 2006-10-12 22:21:51Z dhill $
 *
 *
-*		
+*
 ******************************************************************************************/
 /**
  * @file
@@ -53,63 +53,70 @@
 using namespace std;
 using namespace oam;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-	Oam oam;
+    Oam oam;
 
-	string USER = "root";
-	char* p= getenv("USER");
-	if (p && *p)
-		USER = p;
+    string USER = "root";
+    char* p = getenv("USER");
 
-	string HOME = "/root";
-	p= getenv("HOME");
-	if (p && *p)
-		HOME = p;
+    if (p && *p)
+        USER = p;
 
-	string fileName = HOME + "/.my.cnf";
-	
-	ifstream file (fileName.c_str());
+    string HOME = "/root";
+    p = getenv("HOME");
 
-	if (!file)
-	{
-	    cout << oam::UnassignedName << endl;
-	    exit (1);
-	}
+    if (p && *p)
+        HOME = p;
 
-	char line[400];
-	string buf;
+    string fileName = HOME + "/.my.cnf";
 
-	while (file.getline(line, 400))
-	{
-		buf = line;
+    ifstream file (fileName.c_str());
 
-		string::size_type pos = buf.find("root",0);
-		if (pos != string::npos)
-		{
-			file.getline(line, 400);
-			buf = line;
+    if (!file)
+    {
+        cout << oam::UnassignedName << endl;
+        exit (1);
+    }
 
-			pos = buf.find("password",0);
-			if (pos != string::npos)
-			{
-				string::size_type pos1 = buf.find("=",pos);
-				if (pos1 != string::npos) {
-					//password found
+    char line[400];
+    string buf;
 
-					string password = buf.substr(pos1+2, 80);
+    while (file.getline(line, 400))
+    {
+        buf = line;
 
-					cout << password << endl;
-					exit (0);
-				}
-			}
-		}
-	}
-	file.close();
-	
-	cout << oam::UnassignedName << endl;
+        string::size_type pos = buf.find("root", 0);
 
-	exit (1);
+        if (pos != string::npos)
+        {
+            file.getline(line, 400);
+            buf = line;
+
+            pos = buf.find("password", 0);
+
+            if (pos != string::npos)
+            {
+                string::size_type pos1 = buf.find("=", pos);
+
+                if (pos1 != string::npos)
+                {
+                    //password found
+
+                    string password = buf.substr(pos1 + 2, 80);
+
+                    cout << password << endl;
+                    exit (0);
+                }
+            }
+        }
+    }
+
+    file.close();
+
+    cout << oam::UnassignedName << endl;
+
+    exit (1);
 
 }
 // vim:ts=4 sw=4:

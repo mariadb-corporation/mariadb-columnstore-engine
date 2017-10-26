@@ -37,19 +37,21 @@ using namespace boost;
 
 namespace
 {
-	oam::OamCache *oamCache = 0;
-	mutex cacheLock;
+oam::OamCache* oamCache = 0;
+mutex cacheLock;
 }
 
 namespace oam
 {
 
-OamCache * OamCache::makeOamCache()
+OamCache* OamCache::makeOamCache()
 {
-	mutex::scoped_lock lk(cacheLock);
-	if (oamCache == 0)
-		oamCache = new OamCache();
-	return oamCache;
+    mutex::scoped_lock lk(cacheLock);
+
+    if (oamCache == 0)
+        oamCache = new OamCache();
+
+    return oamCache;
 }
 
 OamCache::OamCache() : mtime(0), mLocalPMId(0)
@@ -60,262 +62,285 @@ OamCache::~OamCache()
 
 void OamCache::checkReload()
 {
-	Oam oam;
-	config::Config *config = config::Config::makeConfig();
-	int temp;
+    Oam oam;
+    config::Config* config = config::Config::makeConfig();
+    int temp;
 
-	if (config->getCurrentMTime() == mtime)
-		return;
+    if (config->getCurrentMTime() == mtime)
+        return;
 
-	dbroots.clear();
-	oam.getSystemDbrootConfig(dbroots);
+    dbroots.clear();
+    oam.getSystemDbrootConfig(dbroots);
 
-	string txt = config->getConfig("SystemConfig", "DBRootCount");
-	mtime = config->getLastMTime();   // get 'last' after the first access; quicker than 'current'
-	idbassert(txt != "");
-	numDBRoots = config->fromText(txt);
+    string txt = config->getConfig("SystemConfig", "DBRootCount");
+    mtime = config->getLastMTime();   // get 'last' after the first access; quicker than 'current'
+    idbassert(txt != "");
+    numDBRoots = config->fromText(txt);
 
-	dbRootPMMap.reset(new map<int, int>());
+    dbRootPMMap.reset(new map<int, int>());
 
-	//cout << "reloading oamcache\n";	
-	for (uint32_t i = 0; i < dbroots.size(); i++) {
-		oam.getDbrootPmConfig(dbroots[i], temp);
-		//cout << "  dbroot " << dbroots[i] << " -> PM " << temp << endl;
-		(*dbRootPMMap)[dbroots[i]] = temp;
-	}
+    //cout << "reloading oamcache\n";
+    for (uint32_t i = 0; i < dbroots.size(); i++)
+    {
+        oam.getDbrootPmConfig(dbroots[i], temp);
+        //cout << "  dbroot " << dbroots[i] << " -> PM " << temp << endl;
+        (*dbRootPMMap)[dbroots[i]] = temp;
+    }
 
-	ModuleTypeConfig moduletypeconfig; 
-	std::set<int> uniquePids;
-	oam.getSystemConfig("pm", moduletypeconfig);
-	int moduleID = 0;
-	for (unsigned i = 0; i < moduletypeconfig.ModuleCount; i++) {
-		moduleID = atoi((moduletypeconfig.ModuleNetworkList[i]).DeviceName.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
-		uniquePids.insert(moduleID); 
-	}
-	std::set<int>::const_iterator it = uniquePids.begin();
-	moduleIds.clear();
-	uint32_t i = 0;
-	map<int, int> pmToConnectionMap;
+    ModuleTypeConfig moduletypeconfig;
+    std::set<int> uniquePids;
+    oam.getSystemConfig("pm", moduletypeconfig);
+    int moduleID = 0;
+
+    for (unsigned i = 0; i < moduletypeconfig.ModuleCount; i++)
+    {
+        moduleID = atoi((moduletypeconfig.ModuleNetworkList[i]).DeviceName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
+        uniquePids.insert(moduleID);
+    }
+
+    std::set<int>::const_iterator it = uniquePids.begin();
+    moduleIds.clear();
+    uint32_t i = 0;
+    map<int, int> pmToConnectionMap;
 #ifdef _MSC_VER
-	moduleIds.push_back(*it);
-	pmToConnectionMap[*it] = i++;
+    moduleIds.push_back(*it);
+    pmToConnectionMap[*it] = i++;
 #else
+
     // Restore for Windows when we support multiple PMs
-	while (it != uniquePids.end())
-	{
+    while (it != uniquePids.end())
+    {
 #if  !defined(SKIP_OAM_INIT)
-		{
-			try {
-				int state = oam::MAN_INIT; 
-				bool degraded;
-				char num[80];
-				int retry = 0;
-				// MCOL-259 retry for 5 seconds if the PM is in some INIT mode.
-				while ((   state == oam::BUSY_INIT 
-						|| state == oam::MAN_INIT 
-					    || state == oam::PID_UPDATE)
-				       && retry < 5)
-				{
-					snprintf(num, 80, "%d", *it);
-					try {
-						oam.getModuleStatus(string("pm") + num, state, degraded);
-					}
-					catch (std::exception& e)
-					{
-						ostringstream os;
-						os << "OamCache::checkReload exception while getModuleStatus pm" << num << " " << e.what();
-						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-						break;
-					}
-					catch (...) {
-						ostringstream os;
-						os << "OamCache::checkReload exception while getModuleStatus pm" << num;
-						oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-						break;
-					}
+        {
+            try
+            {
+                int state = oam::MAN_INIT;
+                bool degraded;
+                char num[80];
+                int retry = 0;
 
-					if (state == oam::ACTIVE || state == oam::DEGRADED) {
-						pmToConnectionMap[*it] = i++;
-						moduleIds.push_back(*it);
-						break;
-					}
-					sleep(1);
-				//cout << "pm " << *it << " -> connection " << (i-1) << endl;
-				}
-				if (state != oam::ACTIVE)
-				{
-					ostringstream os;
-					os << "OamCache::checkReload shows state for pm" << num << " as " << oamState[state];
-					oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-				}
-			}
-			catch (std::exception& e)
-			{
-				ostringstream os;
-				os << "OamCache::checkReload final exception while getModuleStatus " << e.what();
-				oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-				break;
-			}
-			catch (...) {
-				ostringstream os;
-				os << "OamCache::checkReload final exception while getModuleStatus";
-				oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
-				break;
-			}
-		}
+                // MCOL-259 retry for 5 seconds if the PM is in some INIT mode.
+                while ((   state == oam::BUSY_INIT
+                           || state == oam::MAN_INIT
+                           || state == oam::PID_UPDATE)
+                        && retry < 5)
+                {
+                    snprintf(num, 80, "%d", *it);
+
+                    try
+                    {
+                        oam.getModuleStatus(string("pm") + num, state, degraded);
+                    }
+                    catch (std::exception& e)
+                    {
+                        ostringstream os;
+                        os << "OamCache::checkReload exception while getModuleStatus pm" << num << " " << e.what();
+                        oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+                        break;
+                    }
+                    catch (...)
+                    {
+                        ostringstream os;
+                        os << "OamCache::checkReload exception while getModuleStatus pm" << num;
+                        oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+                        break;
+                    }
+
+                    if (state == oam::ACTIVE || state == oam::DEGRADED)
+                    {
+                        pmToConnectionMap[*it] = i++;
+                        moduleIds.push_back(*it);
+                        break;
+                    }
+
+                    sleep(1);
+                    //cout << "pm " << *it << " -> connection " << (i-1) << endl;
+                }
+
+                if (state != oam::ACTIVE)
+                {
+                    ostringstream os;
+                    os << "OamCache::checkReload shows state for pm" << num << " as " << oamState[state];
+                    oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+                }
+            }
+            catch (std::exception& e)
+            {
+                ostringstream os;
+                os << "OamCache::checkReload final exception while getModuleStatus " << e.what();
+                oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+                break;
+            }
+            catch (...)
+            {
+                ostringstream os;
+                os << "OamCache::checkReload final exception while getModuleStatus";
+                oam.writeLog(os.str(), logging::LOG_TYPE_ERROR);
+                break;
+            }
+        }
 #else
-		moduleIds.push_back(*it);
+        moduleIds.push_back(*it);
 #endif
-		it++;
-		
-	}
-#endif
-	dbRootConnectionMap.reset(new map<int, int>());
-	for (i = 0; i < dbroots.size(); i++)
-	{
-		map<int, int>::iterator pmIter = pmToConnectionMap.find((*dbRootPMMap)[dbroots[i]]);
-		if (pmIter != pmToConnectionMap.end())
-		{
-			(*dbRootConnectionMap)[dbroots[i]] = (*pmIter).second;
-		}
-	}
+        it++;
 
-	pmDbrootsMap.reset(new OamCache::PMDbrootsMap_t::element_type());
-	systemStorageInfo_t t;
-	t = oam.getStorageConfig();
-	DeviceDBRootList moduledbrootlist = boost::get<2>(t);
-	DeviceDBRootList::iterator pt = moduledbrootlist.begin();
-	for( ; pt != moduledbrootlist.end() ; pt++)
-	{
-		moduleID = (*pt).DeviceID;
-		DBRootConfigList::iterator pt1 = (*pt).dbrootConfigList.begin();
-		for( ; pt1 != (*pt).dbrootConfigList.end(); pt1++)
-		{
-			(*pmDbrootsMap)[moduleID].push_back(*pt1);
-		}
-	}
-	
-	oamModuleInfo_t tm;
-	tm = oam.getModuleInfo();
-	OAMParentModuleName = boost::get<3>(tm);
-	systemName = config->getConfig("SystemConfig", "SystemName");
+    }
+
+#endif
+    dbRootConnectionMap.reset(new map<int, int>());
+
+    for (i = 0; i < dbroots.size(); i++)
+    {
+        map<int, int>::iterator pmIter = pmToConnectionMap.find((*dbRootPMMap)[dbroots[i]]);
+
+        if (pmIter != pmToConnectionMap.end())
+        {
+            (*dbRootConnectionMap)[dbroots[i]] = (*pmIter).second;
+        }
+    }
+
+    pmDbrootsMap.reset(new OamCache::PMDbrootsMap_t::element_type());
+    systemStorageInfo_t t;
+    t = oam.getStorageConfig();
+    DeviceDBRootList moduledbrootlist = boost::get<2>(t);
+    DeviceDBRootList::iterator pt = moduledbrootlist.begin();
+
+    for ( ; pt != moduledbrootlist.end() ; pt++)
+    {
+        moduleID = (*pt).DeviceID;
+        DBRootConfigList::iterator pt1 = (*pt).dbrootConfigList.begin();
+
+        for ( ; pt1 != (*pt).dbrootConfigList.end(); pt1++)
+        {
+            (*pmDbrootsMap)[moduleID].push_back(*pt1);
+        }
+    }
+
+    oamModuleInfo_t tm;
+    tm = oam.getModuleInfo();
+    OAMParentModuleName = boost::get<3>(tm);
+    systemName = config->getConfig("SystemConfig", "SystemName");
 }
 
 OamCache::dbRootPMMap_t OamCache::getDBRootToPMMap()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return dbRootPMMap;
+    checkReload();
+    return dbRootPMMap;
 }
 
 OamCache::dbRootPMMap_t OamCache::getDBRootToConnectionMap()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return dbRootConnectionMap;
+    checkReload();
+    return dbRootConnectionMap;
 }
 
 OamCache::PMDbrootsMap_t OamCache::getPMToDbrootsMap()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return pmDbrootsMap;
+    checkReload();
+    return pmDbrootsMap;
 }
 
 uint32_t OamCache::getDBRootCount()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return numDBRoots;
+    checkReload();
+    return numDBRoots;
 }
 
 DBRootConfigList& OamCache::getDBRootNums()
-{ 
-	mutex::scoped_lock lk(cacheLock);
+{
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return dbroots; 
+    checkReload();
+    return dbroots;
 }
 
 std::vector<int>& OamCache::getModuleIds()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return moduleIds; 
+    checkReload();
+    return moduleIds;
 }
 
 std::string OamCache::getOAMParentModuleName()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return OAMParentModuleName; 
+    checkReload();
+    return OAMParentModuleName;
 }
 
 int OamCache::getLocalPMId()
 {
-	mutex::scoped_lock lk(cacheLock);
-	// This comes from the file $INSTALL/local/module, not from the xml.
-	// Thus, it's not refreshed during checkReload().
-	if (mLocalPMId > 0)
-	{
-		return mLocalPMId;
-	}
+    mutex::scoped_lock lk(cacheLock);
 
-	string localModule;
-	string moduleType;
-	string fileName = startup::StartUp::installDir() + "/local/module";
-	ifstream moduleFile (fileName.c_str());
-	char line[400];
-	while (moduleFile.getline(line, 400))
-	{
-		localModule = line;
-		break;
-	}
-	moduleFile.close();
+    // This comes from the file $INSTALL/local/module, not from the xml.
+    // Thus, it's not refreshed during checkReload().
+    if (mLocalPMId > 0)
+    {
+        return mLocalPMId;
+    }
 
-	if (localModule.empty() ) 
-	{
-		mLocalPMId = 0;
-		return mLocalPMId;
-	}
+    string localModule;
+    string moduleType;
+    string fileName = startup::StartUp::installDir() + "/local/module";
+    ifstream moduleFile (fileName.c_str());
+    char line[400];
 
-	moduleType = localModule.substr(0,MAX_MODULE_TYPE_SIZE);
-	mLocalPMId = atoi(localModule.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
-	if (moduleType != "pm")
-	{
-		mLocalPMId = 0;
-	}
+    while (moduleFile.getline(line, 400))
+    {
+        localModule = line;
+        break;
+    }
 
-	return mLocalPMId;
+    moduleFile.close();
+
+    if (localModule.empty() )
+    {
+        mLocalPMId = 0;
+        return mLocalPMId;
+    }
+
+    moduleType = localModule.substr(0, MAX_MODULE_TYPE_SIZE);
+    mLocalPMId = atoi(localModule.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE).c_str());
+
+    if (moduleType != "pm")
+    {
+        mLocalPMId = 0;
+    }
+
+    return mLocalPMId;
 }
 
 string OamCache::getSystemName()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	checkReload();
-	return systemName; 
+    checkReload();
+    return systemName;
 }
 
 string OamCache::getModuleName()
 {
-	mutex::scoped_lock lk(cacheLock);
+    mutex::scoped_lock lk(cacheLock);
 
-	if (!moduleName.empty())
-		return moduleName;
+    if (!moduleName.empty())
+        return moduleName;
 
-	string fileName = startup::StartUp::installDir() + "/local/module";
-	ifstream moduleFile(fileName.c_str());
-	getline(moduleFile, moduleName);
-	moduleFile.close();
+    string fileName = startup::StartUp::installDir() + "/local/module";
+    ifstream moduleFile(fileName.c_str());
+    getline(moduleFile, moduleName);
+    moduleFile.close();
 
-	return moduleName; 
+    return moduleName;
 }
 
 } /* namespace oam */

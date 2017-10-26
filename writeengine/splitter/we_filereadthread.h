@@ -39,17 +39,18 @@ class WEFileReadThread;
 class WEReadThreadRunner
 {
 public:
-	WEReadThreadRunner(WEFileReadThread& Owner):fRef(Owner)
-	{		// ctor
-	}
-	~WEReadThreadRunner()
-	{
-	}
+    WEReadThreadRunner(WEFileReadThread& Owner): fRef(Owner)
+    {
+        // ctor
+    }
+    ~WEReadThreadRunner()
+    {
+    }
 
-	void operator()();				// Thread function
+    void operator()();				// Thread function
 
 private:
-	WEFileReadThread& fRef;
+    WEFileReadThread& fRef;
 
 };
 
@@ -62,49 +63,79 @@ private:
 class WEFileReadThread
 {
 public:
-	WEFileReadThread(WESDHandler& aSdh);
-	virtual ~WEFileReadThread();
+    WEFileReadThread(WESDHandler& aSdh);
+    virtual ~WEFileReadThread();
 
-	void reset();
-	void setup(std::string FileName);
-	void shutdown();
+    void reset();
+    void setup(std::string FileName);
+    void shutdown();
     void feedData();
     unsigned int readDataFile(messageqcpp::SBS& Sbs);
     unsigned int readBinaryDataFile(messageqcpp::SBS& Sbs, unsigned int recLen);
     void openInFile();
 
-    int getNextRow(std::istream& ifs, char*pBuf, int MaxLen);
+    int getNextRow(std::istream& ifs, char* pBuf, int MaxLen);
 
-    boost::thread* getFpThread() const  { return fpThread;  }
-    bool isContinue() const  { 	return fContinue;  }
-    void setContinue(bool fContinue) {	this->fContinue = fContinue; }
-    std::string getInFileName() const {	return fInFileName; }
-    unsigned int getTgtPmId() const { return fTgtPmId; }
-    unsigned int getBatchQty() const { return fBatchQty; }
-    void setFpThread(boost::thread* fpThread) {	this->fpThread = fpThread; }
+    boost::thread* getFpThread() const
+    {
+        return fpThread;
+    }
+    bool isContinue() const
+    {
+        return fContinue;
+    }
+    void setContinue(bool fContinue)
+    {
+        this->fContinue = fContinue;
+    }
+    std::string getInFileName() const
+    {
+        return fInFileName;
+    }
+    unsigned int getTgtPmId() const
+    {
+        return fTgtPmId;
+    }
+    unsigned int getBatchQty() const
+    {
+        return fBatchQty;
+    }
+    void setFpThread(boost::thread* fpThread)
+    {
+        this->fpThread = fpThread;
+    }
     void setInFileName(std::string fInFileName)
     {
-    	if((0==fInFileName.compare("STDIN"))||(0==fInFileName.compare("stdin")))
-    		this->fInFileName = "/dev/stdin";
-    	else
-    		this->fInFileName = fInFileName;
+        if ((0 == fInFileName.compare("STDIN")) || (0 == fInFileName.compare("stdin")))
+            this->fInFileName = "/dev/stdin";
+        else
+            this->fInFileName = fInFileName;
     }
     //@BUG 4326
-    const std::istream& getInFile() const { return fInFile; }
-    void setBatchQty(unsigned int BatchQty) { fBatchQty = BatchQty;  }
+    const std::istream& getInFile() const
+    {
+        return fInFile;
+    }
+    void setBatchQty(unsigned int BatchQty)
+    {
+        fBatchQty = BatchQty;
+    }
 
     bool chkForListOfFiles(std::string& FileName);
     std::string getNextInputDataFile();
     void add2InputDataFileList(std::string& FileName);
 
 private:
-    enum { MAXBUFFSIZE=1024*1024 };
+    enum { MAXBUFFSIZE = 1024 * 1024 };
 
     // don't allow anyone else to set
-    void setTgtPmId(unsigned int fTgtPmId) { this->fTgtPmId = fTgtPmId; }
+    void setTgtPmId(unsigned int fTgtPmId)
+    {
+        this->fTgtPmId = fTgtPmId;
+    }
 
-    WESDHandler & fSdh;
-    boost::thread *fpThread;
+    WESDHandler& fSdh;
+    boost::thread* fpThread;
     boost::mutex fFileMutex;
     bool fContinue;
     std::string fInFileName;

@@ -29,7 +29,8 @@ using namespace std;
 #include "simplefilter.h"
 #include "constantfilter.h"
 
-namespace execplan {
+namespace execplan
+{
 /**
  * Constructors/Destructors
  */
@@ -53,48 +54,51 @@ Filter::~Filter()
  */
 void Filter::serialize(messageqcpp::ByteStream& b) const
 {
-	b << (ObjectReader::id_t) ObjectReader::FILTER;
-	b << fData;
-	b << (uint64_t)fCardinality;
+    b << (ObjectReader::id_t) ObjectReader::FILTER;
+    b << fData;
+    b << (uint64_t)fCardinality;
 }
 
 void Filter::unserialize(messageqcpp::ByteStream& b)
 {
-	ObjectReader::checkType(b, ObjectReader::FILTER);
-	b >> fData;
-	b >> (uint64_t&)fCardinality;
+    ObjectReader::checkType(b, ObjectReader::FILTER);
+    b >> fData;
+    b >> (uint64_t&)fCardinality;
 }
-	
+
 const string Filter::toString() const
 {
-	return string(">Filter<");
+    return string(">Filter<");
 }
 
 bool Filter::operator==(const Filter& t) const
 {
-	if (fData == t.fData)
-		return true;
-	return false;
+    if (fData == t.fData)
+        return true;
+
+    return false;
 }
 
 bool Filter::operator==(const TreeNode* t) const
 {
-	const Filter *o;
+    const Filter* o;
 
-	o = dynamic_cast<const Filter*>(t);
-	if (o == NULL)
-		return false;
-	return *this == *o;
+    o = dynamic_cast<const Filter*>(t);
+
+    if (o == NULL)
+        return false;
+
+    return *this == *o;
 }
 
 bool Filter::operator!=(const Filter& t) const
 {
-	return (!(*this == t));
+    return (!(*this == t));
 }
 
 bool Filter::operator!=(const TreeNode* t) const
 {
-	return (!(*this == t));
+    return (!(*this == t));
 }
 
 /**
@@ -102,8 +106,8 @@ bool Filter::operator!=(const TreeNode* t) const
  */
 ostream& operator<<(ostream& output, const Filter& rhs)
 {
-	output << rhs.toString();
-	return output;
-} 
+    output << rhs.toString();
+    return output;
+}
 
 } // namespace execplan

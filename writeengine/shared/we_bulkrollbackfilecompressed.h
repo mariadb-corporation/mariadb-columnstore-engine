@@ -37,7 +37,7 @@
 
 namespace WriteEngine
 {
-    class BulkRollbackMgr;
+class BulkRollbackMgr;
 
 //------------------------------------------------------------------------------
 /** @brief Class used by BulkRollbackMgr to restore compressed db files.
@@ -65,9 +65,9 @@ public:
      * @param segNum Segment number for the segment file in question
      */
     virtual bool doWeReInitExtent( OID columnOID,
-                        uint32_t   dbRoot,
-                        uint32_t   partNum,
-                        uint32_t   segNum) const;
+                                   uint32_t   dbRoot,
+                                   uint32_t   partNum,
+                                   uint32_t   segNum) const;
 
     /** @brief Reinitialize the specified column segment file starting at
      * startOffsetBlk, and truncate trailing extents.
@@ -83,14 +83,14 @@ public:
      * @param restoreHwmChk Restore HWM chunk
      */
     virtual void reInitTruncColumnExtent(OID columnOID,
-                                uint32_t   dbRoot,
-                                uint32_t   partNum,
-                                uint32_t   segNum,
-                                long long   startOffsetBlk,
-                                int         nBlocks,
-                                execplan::CalpontSystemCatalog::ColDataType colType,
-                                uint32_t   colWidth,
-                                bool        restoreHwmChk );
+                                         uint32_t   dbRoot,
+                                         uint32_t   partNum,
+                                         uint32_t   segNum,
+                                         long long   startOffsetBlk,
+                                         int         nBlocks,
+                                         execplan::CalpontSystemCatalog::ColDataType colType,
+                                         uint32_t   colWidth,
+                                         bool        restoreHwmChk );
 
     /** @brief Reinitialize the specified dictionary store segment file starting
      * at startOffsetBlk, and truncate trailing extents.
@@ -103,11 +103,11 @@ public:
      * @param nBlocks Number of blocks to be reinitialized
      */
     virtual void reInitTruncDctnryExtent(OID columnOID,
-                                uint32_t   dbRoot,
-                                uint32_t   partNum,
-                                uint32_t   segNum,
-                                long long   startOffsetBlk,
-                                int         nBlocks );
+                                         uint32_t   dbRoot,
+                                         uint32_t   partNum,
+                                         uint32_t   segNum,
+                                         long long   startOffsetBlk,
+                                         int         nBlocks );
 
     /** @brief Truncate the specified segment file to a specified num of bytes
      * @param columnOID OID of the relevant segment file
@@ -117,10 +117,10 @@ public:
      * @param fileSizeBlocks Number of blocks to retain in the file
      */
     virtual void truncateSegmentFile( OID    columnOID,
-                                uint32_t   dbRoot,
-                                uint32_t   partNum,
-                                uint32_t   segNum,
-                                long long   filesSizeBlocks );
+                                      uint32_t   dbRoot,
+                                      uint32_t   partNum,
+                                      uint32_t   segNum,
+                                      long long   filesSizeBlocks );
 
 private:
     // Disable unnecessary copy constructor and assignment operator

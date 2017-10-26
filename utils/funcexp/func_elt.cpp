@@ -39,63 +39,68 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_elt::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 string Func_elt::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                           FunctionParm& parm,
+                           bool& isNull,
+                           CalpontSystemCatalog::ColType&)
 {
-	uint64_t number = 0;
+    uint64_t number = 0;
 
-	//get number
-	switch (parm[0]->data()->resultType().colDataType)
-	{
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::INT:
-		case CalpontSystemCatalog::DOUBLE:
-		case CalpontSystemCatalog::FLOAT:
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::TEXT:
-		case CalpontSystemCatalog::VARCHAR:
-		{
-			double value = parm[0]->data()->getDoubleVal(row, isNull);
-			number = (int64_t) value;
-			break;
-		}
-		case CalpontSystemCatalog::DECIMAL:
-		{
-			IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-			number = d.value / helpers::power(d.scale);
-			int lefto = (d.value - number * helpers::power(d.scale)) / helpers::power(d.scale-1);
-			if ( number >= 0 && lefto > 4 )
-				number++;
-			if ( number < 0 && lefto < -4 )
-				number--;
-			break;
-		}
-		default:
-			isNull = true;
-			return "";
-	}
+    //get number
+    switch (parm[0]->data()->resultType().colDataType)
+    {
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::DOUBLE:
+        case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
+        case CalpontSystemCatalog::VARCHAR:
+        {
+            double value = parm[0]->data()->getDoubleVal(row, isNull);
+            number = (int64_t) value;
+            break;
+        }
 
-	if (number < 1)
-	{
-		isNull = true;
-		return "";
-	}
+        case CalpontSystemCatalog::DECIMAL:
+        {
+            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+            number = d.value / helpers::power(d.scale);
+            int lefto = (d.value - number * helpers::power(d.scale)) / helpers::power(d.scale - 1);
 
-	if (number > parm.size()-1 )
-	{
-		isNull = true;
-		return "";
-	}
+            if ( number >= 0 && lefto > 4 )
+                number++;
 
-	return stringValue(parm[number], row, isNull);
+            if ( number < 0 && lefto < -4 )
+                number--;
+
+            break;
+        }
+
+        default:
+            isNull = true;
+            return "";
+    }
+
+    if (number < 1)
+    {
+        isNull = true;
+        return "";
+    }
+
+    if (number > parm.size() - 1 )
+    {
+        isNull = true;
+        return "";
+    }
+
+    return stringValue(parm[number], row, isNull);
 
 }
 

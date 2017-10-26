@@ -43,67 +43,70 @@ const string MessageFifo("/tmp/idbdsfifo");
 int main(int argc, char** argv)
 {
 again:
-	int fd = open(MessageFifo.c_str(), O_WRONLY|O_NONBLOCK);
-	if (fd < 0)
-	{
-		if (errno == ENXIO)
-		{
-			cerr << "waiting for DS to startup..." << endl;
-			sleep(1);
-			goto again;
-		}
-		throw runtime_error("while opening fifo for write");
-	}
-	uint32_t u32;
-	uint64_t u64;
-	string s;
-	ssize_t wrc;
+    int fd = open(MessageFifo.c_str(), O_WRONLY | O_NONBLOCK);
 
-	s = "/tmp/cdatafifo";
-	mknod(s.c_str(), S_IFIFO|0666, 0);
-	u32 = s.length();
-	wrc = write(fd, &u32, 4);
-	assert(wrc == 4);
-	wrc = write(fd, s.c_str(), u32);
-	assert(wrc == u32);
+    if (fd < 0)
+    {
+        if (errno == ENXIO)
+        {
+            cerr << "waiting for DS to startup..." << endl;
+            sleep(1);
+            goto again;
+        }
 
-	u64 = 707070;
-	write(fd, &u64, 8);
+        throw runtime_error("while opening fifo for write");
+    }
 
-	close(fd);
+    uint32_t u32;
+    uint64_t u64;
+    string s;
+    ssize_t wrc;
 
-	fd = open(s.c_str(), O_WRONLY);
-	assert(fd >= 0);
+    s = "/tmp/cdatafifo";
+    mknod(s.c_str(), S_IFIFO | 0666, 0);
+    u32 = s.length();
+    wrc = write(fd, &u32, 4);
+    assert(wrc == 4);
+    wrc = write(fd, s.c_str(), u32);
+    assert(wrc == u32);
 
-	char* b = new char[u64];
-	assert(b);
+    u64 = 707070;
+    write(fd, &u64, 8);
 
-	wrc = write (fd, b, u64);
-	assert(wrc == u64);
+    close(fd);
 
-	delete [] b;
+    fd = open(s.c_str(), O_WRONLY);
+    assert(fd >= 0);
 
-	close(fd);
-	fd = open(s.c_str(), O_RDONLY);
-	assert(fd >= 0);
+    char* b = new char[u64];
+    assert(b);
 
-	wrc = read(fd, &u64, 8);
-	assert(wrc == 8);
+    wrc = write (fd, b, u64);
+    assert(wrc == u64);
 
-	b = new char[u64];
-	assert(b);
+    delete [] b;
 
-	cout << "going to read " << u64 << " bytes of uncompressed data" << endl << flush;
-	wrc = read(fd, b, u64);
-	assert(wrc == u64);
-	cout << "read " << u64 << " bytes of uncompressed data" << endl;
+    close(fd);
+    fd = open(s.c_str(), O_RDONLY);
+    assert(fd >= 0);
 
-	delete [] b;
+    wrc = read(fd, &u64, 8);
+    assert(wrc == 8);
 
-	close(fd);
+    b = new char[u64];
+    assert(b);
 
-	unlink(s.c_str());
+    cout << "going to read " << u64 << " bytes of uncompressed data" << endl << flush;
+    wrc = read(fd, b, u64);
+    assert(wrc == u64);
+    cout << "read " << u64 << " bytes of uncompressed data" << endl;
 
-	return 0;
+    delete [] b;
+
+    close(fd);
+
+    unlink(s.c_str());
+
+    return 0;
 }
 

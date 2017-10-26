@@ -41,64 +41,70 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_div::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 int64_t Func_div::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                            FunctionParm& parm,
+                            bool& isNull,
+                            CalpontSystemCatalog::ColType& op_ct)
 {
-	double val1 = parm[0]->data()->getDoubleVal(row, isNull);
-	double val2 = parm[1]->data()->getDoubleVal(row, isNull);
-	int64_t int_val2 = (int64_t)(val2 > 0 ? val2 + 0.5 : val2 - 0.5);
-	if (int_val2 == 0)
-	{
-		isNull = true;
+    double val1 = parm[0]->data()->getDoubleVal(row, isNull);
+    double val2 = parm[1]->data()->getDoubleVal(row, isNull);
+    int64_t int_val2 = (int64_t)(val2 > 0 ? val2 + 0.5 : val2 - 0.5);
+
+    if (int_val2 == 0)
+    {
+        isNull = true;
         return 0;
-	}
-	int64_t int_val1 = (int64_t)(val1 > 0 ? val1 + 0.5 : val1 - 0.5);
-	// MCOL-176 If abs(int_val2) is small enough (like -1), then, this may cause overflow.
-	// This kludge stops the crash.
-	if (int_val1 == INT64_MIN)
-	{
-		--int_val1;
-	}
-	return int_val1 / int_val2;
+    }
+
+    int64_t int_val1 = (int64_t)(val1 > 0 ? val1 + 0.5 : val1 - 0.5);
+
+    // MCOL-176 If abs(int_val2) is small enough (like -1), then, this may cause overflow.
+    // This kludge stops the crash.
+    if (int_val1 == INT64_MIN)
+    {
+        --int_val1;
+    }
+
+    return int_val1 / int_val2;
 }
 
 
 uint64_t Func_div::getUintVal(rowgroup::Row& row,
-						      FunctionParm& parm,
-						      bool& isNull,
-						      CalpontSystemCatalog::ColType& op_ct)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType& op_ct)
 {
-	uint64_t val1 = parm[0]->data()->getUintVal(row, isNull);
-	uint64_t val2 = parm[1]->data()->getUintVal(row, isNull);
-	if (val2 == 0)
-	{
-		isNull = true;
+    uint64_t val1 = parm[0]->data()->getUintVal(row, isNull);
+    uint64_t val2 = parm[1]->data()->getUintVal(row, isNull);
+
+    if (val2 == 0)
+    {
+        isNull = true;
         return 0;
-	}
-	return val1 / val2;
+    }
+
+    return val1 / val2;
 }
 
 
 double Func_div::getDoubleVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType& ct)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& ct)
 {
-	return getIntVal(row, parm, isNull, ct);
+    return getIntVal(row, parm, isNull, ct);
 }
 
 
 string Func_div::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+                           FunctionParm& parm,
+                           bool& isNull,
+                           CalpontSystemCatalog::ColType& ct)
 {
-	return intToString(getIntVal(row, parm, isNull, ct));
+    return intToString(getIntVal(row, parm, isNull, ct));
 }
 
 

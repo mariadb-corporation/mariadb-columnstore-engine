@@ -34,7 +34,8 @@
 
 #include "idbcompress.h"
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 class Log;
 struct ColumnInfo;
 
@@ -45,9 +46,10 @@ struct ColumnInfo;
  * (currently a file stream). The file stream should be initialized by
  * the client of this class
  */
-class ColumnBufferCompressed : public ColumnBuffer {
+class ColumnBufferCompressed : public ColumnBuffer
+{
 
-  public:
+public:
 
     /** @brief default Constructor
      */
@@ -75,7 +77,7 @@ class ColumnBufferCompressed : public ColumnBuffer {
      * @param startHwm Starting HWM for cFile
      * @param hdrs     Headers with ptr information.
      */
-    virtual int setDbFile(IDBDataFile * const cFile, HWM startHwm, const char* hdrs);
+    virtual int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs);
 
     /** @brief Write data to FILE
      *
@@ -84,7 +86,7 @@ class ColumnBufferCompressed : public ColumnBuffer {
      */
     virtual int writeToFile(int startOffset, int writeSize);
 
-  private:
+private:
 
     // Disable copy constructor and assignment operator by declaring and
     // not defining.
@@ -94,22 +96,22 @@ class ColumnBufferCompressed : public ColumnBuffer {
     // Compress and flush the to-be-compressed buffer; updates header if needed
     int compressAndFlush(bool bFinishFile);
     int initToBeCompressedBuffer( long long& startFileOffset);
-                                // Initialize the to-be-compressed buffer
+    // Initialize the to-be-compressed buffer
     int saveCompressionHeaders(); // Saves compression headers to the db file
 
     unsigned char*       fToBeCompressedBuffer; // data waiting to be compressed
     size_t               fToBeCompressedCapacity;//size of comp buffer;
-                                                // should always be 4MB, unless
-                                                // working with abbrev extent.
+    // should always be 4MB, unless
+    // working with abbrev extent.
     size_t               fNumBytes;             // num Bytes in comp buffer
     compress::IDBCompressInterface*
-                         fCompressor;           // data compression object
+    fCompressor;           // data compression object
     compress::CompChunkPtrList
-                         fChunkPtrs;            // col file header information
+    fChunkPtrs;            // col file header information
     bool                 fPreLoadHWMChunk;      // preload 1st HWM chunk only
     unsigned int         fUserPaddingBytes;     // compressed chunk padding
     bool                 fFlushedStartHwmChunk; // have we rewritten the hdr
-                                                //   for the starting HWM chunk
+    //   for the starting HWM chunk
 };
 
 }

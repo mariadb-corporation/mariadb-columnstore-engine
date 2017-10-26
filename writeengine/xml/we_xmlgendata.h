@@ -46,7 +46,7 @@ namespace WriteEngine
  */
 class XMLGenData
 {
-  public:
+public:
     typedef std::vector<execplan::CalpontSystemCatalog::TableName> TableList;
     typedef std::map<std::string, std::string> ParmList;
     typedef std::vector<std::string> LoadNames;
@@ -92,17 +92,26 @@ class XMLGenData
     EXPORT virtual void print(std::ostream& os) const;
 
     EXPORT std::string getParm(const std::string& key) const;
-    const TableList&   getTables()    const { return fTables;    }
-    const std::string& getSchema()    const { return fSchema;    }
-    const LoadNames&   getLoadNames() const { return fLoadNames; }
+    const TableList&   getTables()    const
+    {
+        return fTables;
+    }
+    const std::string& getSchema()    const
+    {
+        return fSchema;
+    }
+    const LoadNames&   getLoadNames() const
+    {
+        return fLoadNames;
+    }
 
-  protected:
+protected:
     TableList   fTables;
     ParmList    fParms;
     std::string fSchema;
     LoadNames   fLoadNames;
 
-  private:
+private:
     XMLGenData(const XMLGenData&);             // disable default copy ctor
     XMLGenData& operator=(const XMLGenData&);  // disable default assignment
 };

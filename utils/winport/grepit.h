@@ -23,7 +23,7 @@
 
 namespace winport
 {
-	extern bool grepit(std::istream&, const std::string&);
+extern bool grepit(std::istream&, const std::string&);
 }
 
 #endif

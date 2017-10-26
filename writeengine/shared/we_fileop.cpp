@@ -60,11 +60,11 @@ using namespace idbdatafile;
 namespace WriteEngine
 {
 
-   /*static*/ boost::mutex               FileOp::m_createDbRootMutexes;
-   /*static*/ boost::mutex               FileOp::m_mkdirMutex;
-   /*static*/ std::map<int,boost::mutex*> FileOp::m_DbRootAddExtentMutexes;
-   const int MAX_NBLOCKS = 8192; // max number of blocks written to an extent
-                                 // in 1 call to fwrite(), during initialization
+/*static*/ boost::mutex               FileOp::m_createDbRootMutexes;
+/*static*/ boost::mutex               FileOp::m_mkdirMutex;
+/*static*/ std::map<int, boost::mutex*> FileOp::m_DbRootAddExtentMutexes;
+const int MAX_NBLOCKS = 8192; // max number of blocks written to an extent
+// in 1 call to fwrite(), during initialization
 
 //StopWatch timer;
 
@@ -74,11 +74,11 @@ namespace WriteEngine
 FileOp::FileOp(bool doAlloc) : m_compressionType(0),
     m_transId((TxnID)INVALID_NUM), m_buffer(0)
 {
-   if (doAlloc)
-   {
-      m_buffer = new char[DEFAULT_BUFSIZ];
-      memset(m_buffer, '\0', DEFAULT_BUFSIZ);
-   }
+    if (doAlloc)
+    {
+        m_buffer = new char[DEFAULT_BUFSIZ];
+        memset(m_buffer, '\0', DEFAULT_BUFSIZ);
+    }
 }
 
 /**
@@ -86,11 +86,12 @@ FileOp::FileOp(bool doAlloc) : m_compressionType(0),
  */
 FileOp::~FileOp()
 {
-   if (m_buffer)
-   {
-       delete [] m_buffer;
-   }
-   m_buffer = 0;
+    if (m_buffer)
+    {
+        delete [] m_buffer;
+    }
+
+    m_buffer = 0;
 }
 
 /***********************************************************
@@ -103,7 +104,7 @@ FileOp::~FileOp()
  ***********************************************************/
 void FileOp::closeFile( IDBDataFile* pFile ) const
 {
-	delete pFile;
+    delete pFile;
 }
 
 /***********************************************************
@@ -121,9 +122,11 @@ int FileOp::createDir( const char* dirName, mode_t mode ) const
 {
     boost::mutex::scoped_lock lk(m_mkdirMutex);
     int rc = IDBPolicy::mkdir( dirName );
+
     if ( rc != 0 )
     {
         int errRc = errno;
+
         if (errRc == EEXIST)
             return NO_ERROR; // ignore "File exists" error
 
@@ -133,9 +136,10 @@ int FileOp::createDir( const char* dirName, mode_t mode ) const
             std::string errnoMsg;
             Convertor::mapErrnoToString(errRc, errnoMsg);
             oss << "Error creating directory " << dirName << "; err-" <<
-               errRc << "; " << errnoMsg;
+                errRc << "; " << errnoMsg;
             getLogger()->logMsg( oss.str(), ERR_DIR_CREATE, MSGLVL_ERROR );
         }
+
         return ERR_DIR_CREATE;
     }
 
@@ -159,38 +163,40 @@ int FileOp::createDir( const char* dirName, mode_t mode ) const
  *    ERR_FILE_CREATE if can not create the file
  ***********************************************************/
 int FileOp::createFile( const char* fileName, int numOfBlock,
-                              uint64_t emptyVal, int width,
-                              uint16_t dbRoot )
+                        uint64_t emptyVal, int width,
+                        uint16_t dbRoot )
 {
-	IDBDataFile* pFile =
-    	IDBDataFile::open(
-    					IDBPolicy::getType( fileName, IDBPolicy::WRITEENG ),
-    					fileName,
-    					"w+b",
-    					IDBDataFile::USE_VBUF,
-                        width);
+    IDBDataFile* pFile =
+        IDBDataFile::open(
+            IDBPolicy::getType( fileName, IDBPolicy::WRITEENG ),
+            fileName,
+            "w+b",
+            IDBDataFile::USE_VBUF,
+            width);
     int rc = 0;
-    if( pFile != NULL ) {
+
+    if ( pFile != NULL )
+    {
 
         // Initialize the contents of the extent.
         if (m_compressionType)
         {
             rc = initAbbrevCompColumnExtent( pFile,
-                               dbRoot,
-                               numOfBlock,
-                               emptyVal,
-                               width );
+                                             dbRoot,
+                                             numOfBlock,
+                                             emptyVal,
+                                             width );
         }
         else
         {
             rc = initColumnExtent( pFile,
-                               dbRoot,
-                               numOfBlock,
-                               emptyVal,
-                               width,
-                               true,    // new file
-                               false,   // don't expand; add new extent
-                               true );  // add abbreviated extent
+                                   dbRoot,
+                                   numOfBlock,
+                                   emptyVal,
+                                   width,
+                                   true,    // new file
+                                   false,   // don't expand; add new extent
+                                   true );  // add abbreviated extent
         }
 
         closeFile( pFile );
@@ -220,12 +226,12 @@ int FileOp::createFile( const char* fileName, int numOfBlock,
  *    ERR_FILE_CREATE if can not create the file
  ***********************************************************/
 int FileOp::createFile(FID fid,
-    int&     allocSize,
-    uint16_t dbRoot,
-    uint32_t partition,
-    execplan::CalpontSystemCatalog::ColDataType colDataType,
-    uint64_t  emptyVal,
-    int      width)
+                       int&     allocSize,
+                       uint16_t dbRoot,
+                       uint32_t partition,
+                       execplan::CalpontSystemCatalog::ColDataType colDataType,
+                       uint64_t  emptyVal,
+                       int      width)
 {
     //std::cout << "Creating file oid: " << fid <<
     //    "; compress: " << m_compressionType << std::endl;
@@ -234,11 +240,12 @@ int FileOp::createFile(FID fid,
 
     uint16_t segment = 0; // should always be 0 when starting a new column
     RETURN_ON_ERROR( ( rc = oid2FileName( fid, fileName, true,
-        dbRoot, partition, segment ) ) );
+                                          dbRoot, partition, segment ) ) );
 
     //@Bug 3196
-    if( exists( fileName ) )
+    if ( exists( fileName ) )
         return ERR_FILE_EXIST;
+
     // allocatColExtent() treats dbRoot and partition as in/out
     // arguments, so we need to pass in a non-const variable.
     uint16_t dbRootx    = dbRoot;
@@ -251,8 +258,8 @@ int FileOp::createFile(FID fid,
     BRM::LBID_t startLbid;
     uint32_t startBlock;
     RETURN_ON_ERROR( BRMWrapper::getInstance()->allocateColExtentExactFile(
-        (const OID)fid, (uint32_t)width, dbRootx, partitionx, segment, colDataType,
-        startLbid, allocSize, startBlock) );
+                         (const OID)fid, (uint32_t)width, dbRootx, partitionx, segment, colDataType,
+                         startLbid, allocSize, startBlock) );
 
     // We allocate a full extent from BRM, but only write an abbreviated 256K
     // rows to disk for 1st extent, to conserve disk usage for small tables.
@@ -261,8 +268,9 @@ int FileOp::createFile(FID fid,
     // whose first partition is not 0.  In this case, we know we are not
     // dealing with a small table, so we init a full extent for 1st extent.
     int totalSize = 0;
+
     if (partition == 0)
-        totalSize = (INITIAL_EXTENT_ROWS_TO_DISK/BYTE_PER_BLOCK) * width;
+        totalSize = (INITIAL_EXTENT_ROWS_TO_DISK / BYTE_PER_BLOCK) * width;
     else
         totalSize = allocSize; // full extent if starting partition > 0
 
@@ -272,6 +280,7 @@ int FileOp::createFile(FID fid,
     {
         return ERR_FILE_DISK_SPACE;
     }
+
 //timer.stop( "allocateColExtent" );
 
     return createFile( fileName, totalSize, emptyVal, width, dbRoot );
@@ -289,7 +298,7 @@ int FileOp::createFile(FID fid,
  ***********************************************************/
 int FileOp::deleteFile( const char* fileName ) const
 {
-    if( !exists( fileName ) )
+    if ( !exists( fileName ) )
         return ERR_FILE_NOT_EXIST;
 
     return ( IDBPolicy::remove( fileName ) == -1 ) ? ERR_FILE_DELETE : NO_ERROR;
@@ -312,9 +321,9 @@ int FileOp::deleteFile( FID fid ) const
     char dbDir       [MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
 
     RETURN_ON_ERROR((Convertor::oid2FileName(
-        fid, tempFileName, dbDir, 0, 0)));
+                         fid, tempFileName, dbDir, 0, 0)));
     sprintf(oidDirName, "%s/%s/%s/%s",
-        dbDir[0], dbDir[1], dbDir[2], dbDir[3]);
+            dbDir[0], dbDir[1], dbDir[2], dbDir[3]);
     //std::cout << "Deleting files for OID " << fid <<
     //             "; dirpath: " << oidDirName << std::endl;
     //need check return code.
@@ -322,16 +331,17 @@ int FileOp::deleteFile( FID fid ) const
 
     std::vector<std::string> dbRootPathList;
     Config::getDBRootPathList( dbRootPathList );
+
     for (unsigned i = 0; i < dbRootPathList.size(); i++)
     {
         char rootOidDirName[FILE_NAME_SIZE];
         sprintf(rootOidDirName, "%s/%s", dbRootPathList[i].c_str(), oidDirName);
 
-        if( IDBPolicy::remove( rootOidDirName ) != 0 )
+        if ( IDBPolicy::remove( rootOidDirName ) != 0 )
         {
-        	ostringstream oss;
-        	oss << "Unable to remove " << rootOidDirName;
-        	throw std::runtime_error( oss.str() );
+            ostringstream oss;
+            oss << "Unable to remove " << rootOidDirName;
+            throw std::runtime_error( oss.str() );
         }
     }
 
@@ -355,26 +365,27 @@ int FileOp::deleteFiles( const std::vector<int32_t>& fids ) const
     char dbDir       [MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
     std::vector<std::string> dbRootPathList;
     Config::getDBRootPathList( dbRootPathList );
-    for ( unsigned n=0; n<fids.size(); n++ )
+
+    for ( unsigned n = 0; n < fids.size(); n++ )
     {
         RETURN_ON_ERROR((Convertor::oid2FileName(
-            fids[n], tempFileName, dbDir, 0, 0)));
+                             fids[n], tempFileName, dbDir, 0, 0)));
         sprintf(oidDirName, "%s/%s/%s/%s",
-            dbDir[0], dbDir[1], dbDir[2], dbDir[3]);
-      //std::cout << "Deleting files for OID " << fid <<
-      //             "; dirpath: " << oidDirName << std::endl;
+                dbDir[0], dbDir[1], dbDir[2], dbDir[3]);
+        //std::cout << "Deleting files for OID " << fid <<
+        //             "; dirpath: " << oidDirName << std::endl;
 
         for (unsigned i = 0; i < dbRootPathList.size(); i++)
         {
             char rootOidDirName[FILE_NAME_SIZE];
             sprintf(rootOidDirName, "%s/%s", dbRootPathList[i].c_str(),
-                oidDirName);
+                    oidDirName);
 
-            if( IDBPolicy::remove( rootOidDirName ) != 0 )
+            if ( IDBPolicy::remove( rootOidDirName ) != 0 )
             {
-            	ostringstream oss;
-            	oss << "Unable to remove " << rootOidDirName;
-            	throw std::runtime_error( oss.str() );
+                ostringstream oss;
+                oss << "Unable to remove " << rootOidDirName;
+                throw std::runtime_error( oss.str() );
             }
         }
     }
@@ -393,8 +404,8 @@ int FileOp::deleteFiles( const std::vector<int32_t>& fids ) const
  *    NO_ERROR if success
  *    ERR_DM_CONVERT_OID if error occurs converting OID to file name
  ***********************************************************/
-int FileOp::deletePartitions( const std::vector<OID>& fids, 
-    const std::vector<BRM::PartitionInfo>& partitions ) const
+int FileOp::deletePartitions( const std::vector<OID>& fids,
+                              const std::vector<BRM::PartitionInfo>& partitions ) const
 {
     char tempFileName[FILE_NAME_SIZE];
     char oidDirName  [FILE_NAME_SIZE];
@@ -405,39 +416,40 @@ int FileOp::deletePartitions( const std::vector<OID>& fids,
     for (uint32_t i = 0; i < partitions.size(); i++)
     {
         RETURN_ON_ERROR((Convertor::oid2FileName(
-            partitions[i].oid, tempFileName, dbDir,
-            partitions[i].lp.pp, partitions[i].lp.seg)));
+                             partitions[i].oid, tempFileName, dbDir,
+                             partitions[i].lp.pp, partitions[i].lp.seg)));
         sprintf(oidDirName, "%s/%s/%s/%s/%s",
-            dbDir[0], dbDir[1], dbDir[2], dbDir[3], dbDir[4]);
+                dbDir[0], dbDir[1], dbDir[2], dbDir[3], dbDir[4]);
         // config expects dbroot starting from 0
         std::string rt( Config::getDBRootByNum(partitions[i].lp.dbroot) );
         sprintf(rootOidDirName, "%s/%s",
-            rt.c_str(), tempFileName);
+                rt.c_str(), tempFileName);
         sprintf(partitionDirName, "%s/%s",
-            rt.c_str(), oidDirName);
+                rt.c_str(), oidDirName);
 
-        if( IDBPolicy::remove( rootOidDirName ) != 0 )
+        if ( IDBPolicy::remove( rootOidDirName ) != 0 )
         {
-        	ostringstream oss;
-        	oss << "Unable to remove " << rootOidDirName;
-        	throw std::runtime_error( oss.str() );
+            ostringstream oss;
+            oss << "Unable to remove " << rootOidDirName;
+            throw std::runtime_error( oss.str() );
         }
 
         list<string> dircontents;
-        if( IDBPolicy::listDirectory( partitionDirName, dircontents ) == 0 )
-		{
-			// the directory exists, now check if empty
-        	if( dircontents.size() == 0 )
-        	{
-        		// empty directory
-                if( IDBPolicy::remove( partitionDirName ) != 0 )
+
+        if ( IDBPolicy::listDirectory( partitionDirName, dircontents ) == 0 )
+        {
+            // the directory exists, now check if empty
+            if ( dircontents.size() == 0 )
+            {
+                // empty directory
+                if ( IDBPolicy::remove( partitionDirName ) != 0 )
                 {
-                	ostringstream oss;
-                	oss << "Unable to remove " << rootOidDirName;
-                	throw std::runtime_error( oss.str() );
+                    ostringstream oss;
+                    oss << "Unable to remove " << rootOidDirName;
+                    throw std::runtime_error( oss.str() );
                 }
-        	}
-		}
+            }
+        }
     }
 
     return NO_ERROR;
@@ -455,12 +467,12 @@ int FileOp::deletePartitions( const std::vector<OID>& fids,
  *    NO_ERROR if success
  ***********************************************************/
 int FileOp::deleteFile( FID fid, uint16_t dbRoot,
-    uint32_t partition, uint16_t segment ) const
+                        uint32_t partition, uint16_t segment ) const
 {
     char fileName[FILE_NAME_SIZE];
 
     RETURN_ON_ERROR( getFileName( fid, fileName,
-        dbRoot, partition, segment) );
+                                  dbRoot, partition, segment) );
 
     return ( deleteFile( fileName ) );
 }
@@ -490,12 +502,12 @@ bool FileOp::exists( const char* fileName ) const
  *    true if exists, false otherwise
  ***********************************************************/
 bool FileOp::exists( FID fid, uint16_t dbRoot,
-    uint32_t partition, uint16_t segment ) const
+                     uint32_t partition, uint16_t segment ) const
 {
     char fileName[FILE_NAME_SIZE];
 
     if (getFileName(fid, fileName, dbRoot, partition,
-        segment) != NO_ERROR)
+                    segment) != NO_ERROR)
         return false;
 
     return exists( fileName );
@@ -514,9 +526,9 @@ bool FileOp::existsOIDDir( FID fid ) const
     char fileName[FILE_NAME_SIZE];
 
     if (oid2DirName( fid, fileName ) != NO_ERROR)
-	{
+    {
         return false;
-	}
+    }
 
     return exists( fileName );
 }
@@ -562,7 +574,7 @@ int FileOp::extendFile(
     std::string& segFile,
     IDBDataFile*& pFile,
     bool&        newFile,
-    char*        hdrs) 
+    char*        hdrs)
 {
     int rc = NO_ERROR;
     pFile = 0;
@@ -575,7 +587,7 @@ int FileOp::extendFile(
     if (hwm > 0) // db segment file should exist
     {
         RETURN_ON_ERROR( oid2FileName(oid, fileName, false,
-            dbRoot, partition, segment) );
+                                      dbRoot, partition, segment) );
         segFile = fileName;
 
         if (!exists(fileName))
@@ -588,13 +600,14 @@ int FileOp::extendFile(
             args.add("");
             args.add("");
             SimpleSysLog::instance()->logMsg(args,
-                logging::LOG_TYPE_ERROR,
-                logging::M0001);
+                                             logging::LOG_TYPE_ERROR,
+                                             logging::M0001);
             return ERR_FILE_NOT_EXIST;
         }
 
         pFile = openFile( oid, dbRoot, partition, segment,
-            segFile, "r+b" );//old file
+                          segFile, "r+b" );//old file
+
         if (pFile == 0)
         {
             ostringstream oss;
@@ -605,8 +618,8 @@ int FileOp::extendFile(
             args.add("");
             args.add("");
             SimpleSysLog::instance()->logMsg(args,
-                logging::LOG_TYPE_ERROR,
-                logging::M0001);
+                                             logging::LOG_TYPE_ERROR,
+                                             logging::M0001);
             return ERR_FILE_OPEN;
         }
 
@@ -614,13 +627,13 @@ int FileOp::extendFile(
         {
             std::ostringstream oss;
             oss << "Opening existing column file"  <<
-                   ": OID-"    << oid       <<
-                   "; DBRoot-" << dbRoot    <<
-                   "; part-"   << partition <<
-                   "; seg-"    << segment   <<
-                   "; LBID-"   << startLbid <<
-                   "; hwm-"    << hwm       <<
-                   "; file-"   << segFile;
+                ": OID-"    << oid       <<
+                "; DBRoot-" << dbRoot    <<
+                "; part-"   << partition <<
+                "; seg-"    << segment   <<
+                "; LBID-"   << startLbid <<
+                "; hwm-"    << hwm       <<
+                "; file-"   << segFile;
             getLogger()->logMsg( oss.str(), MSGLVL_INFO2 );
         }
 
@@ -634,7 +647,7 @@ int FileOp::extendFile(
             unsigned int ptrCount   = compressor.getPtrCount(hdrsIn);
             unsigned int chunkIndex = 0;
             unsigned int blockOffsetWithinChunk = 0;
-            compressor.locateBlock((hwm-1), chunkIndex, blockOffsetWithinChunk);
+            compressor.locateBlock((hwm - 1), chunkIndex, blockOffsetWithinChunk);
 
             //std::ostringstream oss1;
             //oss1 << "Extending compressed column file"<<
@@ -656,8 +669,8 @@ int FileOp::extendFile(
                 args.add("compressed");
                 args.add(oss.str());
                 SimpleSysLog::instance()->logMsg(args,
-                    logging::LOG_TYPE_ERROR,
-                    logging::M0103);
+                                                 logging::LOG_TYPE_ERROR,
+                                                 logging::M0103);
                 return ERR_FILE_NEW_EXTENT_FBO;
             }
 
@@ -691,8 +704,8 @@ int FileOp::extendFile(
                 args.add("uncompressed");
                 args.add(oss.str());
                 SimpleSysLog::instance()->logMsg(args,
-                    logging::LOG_TYPE_ERROR,
-                    logging::M0103);
+                                                 logging::LOG_TYPE_ERROR,
+                                                 logging::M0103);
                 return ERR_FILE_NEW_EXTENT_FBO;
             }
         }
@@ -700,26 +713,28 @@ int FileOp::extendFile(
     else // db segment file should not exist
     {
         RETURN_ON_ERROR( oid2FileName(oid, fileName, true,
-            dbRoot, partition, segment) );
+                                      dbRoot, partition, segment) );
         segFile = fileName;
 
         // if obsolete file exists, "w+b" will truncate and write over
         pFile = openFile( fileName, "w+b" );//new file
+
         if (pFile == 0)
             return ERR_FILE_CREATE;
 
         newFile = true;
+
         if ( isDebug(DEBUG_1) && getLogger() )
         {
             std::ostringstream oss;
-            oss << "Opening new column file"<<
-                   ": OID-"    << oid       <<
-                   "; DBRoot-" << dbRoot    <<
-                   "; part-"   << partition <<
-                   "; seg-"    << segment   <<
-                   "; LBID-"   << startLbid <<
-                   "; hwm-"    << hwm       <<
-                   "; file-"   << segFile;
+            oss << "Opening new column file" <<
+                ": OID-"    << oid       <<
+                "; DBRoot-" << dbRoot    <<
+                "; part-"   << partition <<
+                "; seg-"    << segment   <<
+                "; LBID-"   << startLbid <<
+                "; hwm-"    << hwm       <<
+                "; file-"   << segFile;
             getLogger()->logMsg( oss.str(), MSGLVL_INFO2 );
         }
 
@@ -729,7 +744,9 @@ int FileOp::extendFile(
             compressor.initHdr(hdrs, m_compressionType);
         }
     }
+
 #ifdef _MSC_VER
+
     //Need to call the win version with a dir, not a file
     if (!isDiskSpaceAvail(Config::getDBRootByNum(dbRoot), allocSize))
 #else
@@ -744,6 +761,7 @@ int FileOp::extendFile(
     // with compressed files, this is murky; do I find and seek to the chunk
     // containing the HWM block?  So I left as-is for now, seeking to EOF.
     rc = setFileOffset(pFile, 0, SEEK_END);
+
     if (rc != NO_ERROR)
         return rc;
 
@@ -791,7 +809,7 @@ int FileOp::addExtentExactFile(
     std::string& segFile,
     BRM::LBID_t& startLbid,
     bool&        newFile,
-    char*        hdrs) 
+    char*        hdrs)
 {
     int rc = NO_ERROR;
     IDBDataFile* pFile = 0;
@@ -801,14 +819,15 @@ int FileOp::addExtentExactFile(
 
     // Allocate the new extent in the ExtentMap
     RETURN_ON_ERROR( BRMWrapper::getInstance()->allocateColExtentExactFile(
-        oid, width, dbRoot, partition, segment, colDataType, startLbid, allocSize, hwm));
+                         oid, width, dbRoot, partition, segment, colDataType, startLbid, allocSize, hwm));
 
     // Determine the existence of the "next" segment file, and either open
     // or create the segment file accordingly.
     if (exists(oid, dbRoot, partition, segment))
     {
         pFile = openFile( oid, dbRoot, partition, segment,
-            segFile, "r+b" );//old file
+                          segFile, "r+b" );//old file
+
         if (pFile == 0)
         {
             ostringstream oss;
@@ -819,8 +838,8 @@ int FileOp::addExtentExactFile(
             args.add("");
             args.add("");
             SimpleSysLog::instance()->logMsg(args,
-                logging::LOG_TYPE_ERROR,
-                logging::M0001);
+                                             logging::LOG_TYPE_ERROR,
+                                             logging::M0001);
             return ERR_FILE_OPEN;
         }
 
@@ -828,19 +847,20 @@ int FileOp::addExtentExactFile(
         {
             std::ostringstream oss;
             oss << "Opening existing column file"  <<
-                   ": OID-"    << oid       <<
-                   "; DBRoot-" << dbRoot    <<
-                   "; part-"   << partition <<
-                   "; seg-"    << segment   <<
-                   "; LBID-"   << startLbid <<
-                   "; hwm-"    << hwm       <<
-                   "; file-"   << segFile;
+                ": OID-"    << oid       <<
+                "; DBRoot-" << dbRoot    <<
+                "; part-"   << partition <<
+                "; seg-"    << segment   <<
+                "; LBID-"   << startLbid <<
+                "; hwm-"    << hwm       <<
+                "; file-"   << segFile;
             getLogger()->logMsg( oss.str(), MSGLVL_INFO2 );
         }
 
         if ((m_compressionType) && (hdrs))
         {
             rc = readHeaders(pFile, hdrs);
+
             if (rc != NO_ERROR)
                 return rc;
         }
@@ -849,25 +869,27 @@ int FileOp::addExtentExactFile(
     {
         char fileName[FILE_NAME_SIZE];
         RETURN_ON_ERROR( oid2FileName(oid, fileName, true,
-            dbRoot, partition, segment) );
+                                      dbRoot, partition, segment) );
         segFile = fileName;
 
         pFile = openFile( fileName, "w+b" );//new file
+
         if (pFile == 0)
             return ERR_FILE_CREATE;
 
         newFile = true;
+
         if ( isDebug(DEBUG_1) && getLogger() )
         {
             std::ostringstream oss;
-            oss << "Opening new column file"<<
-                   ": OID-"    << oid       <<
-                   "; DBRoot-" << dbRoot    <<
-                   "; part-"   << partition <<
-                   "; seg-"    << segment   <<
-                   "; LBID-"   << startLbid <<
-                   "; hwm-"    << hwm       <<
-                   "; file-"   << segFile;
+            oss << "Opening new column file" <<
+                ": OID-"    << oid       <<
+                "; DBRoot-" << dbRoot    <<
+                "; part-"   << partition <<
+                "; seg-"    << segment   <<
+                "; LBID-"   << startLbid <<
+                "; hwm-"    << hwm       <<
+                "; file-"   << segFile;
             getLogger()->logMsg( oss.str(), MSGLVL_INFO2 );
         }
 
@@ -877,7 +899,9 @@ int FileOp::addExtentExactFile(
             compressor.initHdr(hdrs, m_compressionType);
         }
     }
+
 #ifdef _MSC_VER
+
     //Need to call the win version with a dir, not a file
     if (!isDiskSpaceAvail(Config::getDBRootByNum(dbRoot), allocSize))
 #else
@@ -892,6 +916,7 @@ int FileOp::addExtentExactFile(
     // with compressed files, this is murky; do I find and seek to the chunk
     // containing the HWM block?  So I left as-is for now, seeking to EOF.
     rc = setFileOffset(pFile, 0, SEEK_END);
+
     if (rc != NO_ERROR)
         return rc;
 
@@ -946,11 +971,13 @@ int FileOp::initColumnExtent(
 {
     if ((bNewFile) && (m_compressionType))
     {
-        char hdrs[IDBCompressInterface::HDR_BUF_LEN*2];
+        char hdrs[IDBCompressInterface::HDR_BUF_LEN * 2];
         IDBCompressInterface compressor;
         compressor.initHdr(hdrs, m_compressionType);
+
         if (bAbbrevExtent)
             compressor.setBlockCount(hdrs, nBlocks);
+
         RETURN_ON_ERROR(writeHeaders(pFile, hdrs));
     }
 
@@ -983,6 +1010,7 @@ int FileOp::initColumnExtent(
         int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
         int loopCount = 1;
         int remWriteSize = 0;
+
         if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
         {
             writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
@@ -993,17 +1021,21 @@ int FileOp::initColumnExtent(
         // Allocate a buffer, initialize it, and use it to create the extent
         idbassert(dbRoot > 0);
 #ifdef PROFILE
+
         if (bExpandExtent)
             Stats::startParseEvent(WE_STATS_WAIT_TO_EXPAND_COL_EXTENT);
         else
             Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
+
 #endif
         boost::mutex::scoped_lock lk(*m_DbRootAddExtentMutexes[dbRoot]);
 #ifdef PROFILE
+
         if (bExpandExtent)
             Stats::stopParseEvent(WE_STATS_WAIT_TO_EXPAND_COL_EXTENT);
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
+
         Stats::startParseEvent(WE_STATS_INIT_COL_EXTENT);
 #endif
 
@@ -1017,10 +1049,12 @@ int FileOp::initColumnExtent(
 
 #ifdef PROFILE
             Stats::stopParseEvent(WE_STATS_INIT_COL_EXTENT);
+
             if (bExpandExtent)
                 Stats::startParseEvent(WE_STATS_EXPAND_COL_EXTENT);
             else
                 Stats::startParseEvent(WE_STATS_CREATE_COL_EXTENT);
+
 #endif
 
             //std::ostringstream oss;
@@ -1030,14 +1064,15 @@ int FileOp::initColumnExtent(
             //std::cout << oss.str() << std::endl;
             if (remWriteSize > 0)
             {
-                if( pFile->write( writeBuf, remWriteSize ) != remWriteSize )
+                if ( pFile->write( writeBuf, remWriteSize ) != remWriteSize )
                 {
                     return ERR_FILE_WRITE;
                 }
             }
-            for (int j=0; j<loopCount; j++)
+
+            for (int j = 0; j < loopCount; j++)
             {
-        	    if( pFile->write( writeBuf, writeSize ) != writeSize )
+                if ( pFile->write( writeBuf, writeSize ) != writeSize )
                 {
                     return ERR_FILE_WRITE;
                 }
@@ -1056,10 +1091,12 @@ int FileOp::initColumnExtent(
         pFile->flush();
 
 #ifdef PROFILE
+
         if (bExpandExtent)
             Stats::stopParseEvent(WE_STATS_EXPAND_COL_EXTENT);
         else
             Stats::stopParseEvent(WE_STATS_CREATE_COL_EXTENT);
+
 #endif
     }
 
@@ -1085,17 +1122,18 @@ int FileOp::initAbbrevCompColumnExtent(
     uint16_t dbRoot,
     int      nBlocks,
     uint64_t emptyVal,
-    int      width) 
+    int      width)
 {
     // Reserve disk space for full abbreviated extent
     int rc = initColumnExtent( pFile,
-        dbRoot,
-        nBlocks,
-        emptyVal,
-        width,
-        true,   // new file
-        false,  // don't expand; add new extent
-        true ); // add abbreviated extent
+                               dbRoot,
+                               nBlocks,
+                               emptyVal,
+                               width,
+                               true,   // new file
+                               false,  // don't expand; add new extent
+                               true ); // add abbreviated extent
+
     if (rc != NO_ERROR)
     {
         return rc;
@@ -1105,13 +1143,14 @@ int FileOp::initAbbrevCompColumnExtent(
     Stats::startParseEvent(WE_STATS_COMPRESS_COL_INIT_ABBREV_EXT);
 #endif
 
-    char hdrs[IDBCompressInterface::HDR_BUF_LEN*2];
+    char hdrs[IDBCompressInterface::HDR_BUF_LEN * 2];
     rc = writeInitialCompColumnChunk( pFile,
-        nBlocks,
-        INITIAL_EXTENT_ROWS_TO_DISK,
-        emptyVal,
-        width,
-        hdrs );   
+                                      nBlocks,
+                                      INITIAL_EXTENT_ROWS_TO_DISK,
+                                      emptyVal,
+                                      width,
+                                      hdrs );
+
     if (rc != NO_ERROR)
     {
         return rc;
@@ -1144,26 +1183,27 @@ int FileOp::writeInitialCompColumnChunk(
     int      nRows,
     uint64_t emptyVal,
     int      width,
-    char*    hdrs) 
+    char*    hdrs)
 {
     const int INPUT_BUFFER_SIZE     = nRows * width;
     char* toBeCompressedInput       = new char[INPUT_BUFFER_SIZE];
     unsigned int userPaddingBytes   = Config::getNumCompressedPadBlks() *
                                       BYTE_PER_BLOCK;
     const int OUTPUT_BUFFER_SIZE    = IDBCompressInterface::maxCompressedSize(INPUT_BUFFER_SIZE) +
-        userPaddingBytes;
+                                      userPaddingBytes;
     unsigned char* compressedOutput = new unsigned char[OUTPUT_BUFFER_SIZE];
     unsigned int outputLen          = OUTPUT_BUFFER_SIZE;
     boost::scoped_array<char> toBeCompressedInputPtr( toBeCompressedInput );
     boost::scoped_array<unsigned char> compressedOutputPtr(compressedOutput);
 
     setEmptyBuf( (unsigned char*)toBeCompressedInput,
-        INPUT_BUFFER_SIZE, emptyVal, width);
+                 INPUT_BUFFER_SIZE, emptyVal, width);
 
     // Compress an initialized abbreviated extent
     IDBCompressInterface compressor( userPaddingBytes );
     int rc = compressor.compressBlock(toBeCompressedInput,
-        INPUT_BUFFER_SIZE, compressedOutput, outputLen );
+                                      INPUT_BUFFER_SIZE, compressedOutput, outputLen );
+
     if (rc != 0)
     {
         return ERR_COMP_COMPRESS;
@@ -1171,7 +1211,8 @@ int FileOp::writeInitialCompColumnChunk(
 
     // Round up the compressed chunk size
     rc = compressor.padCompressedChunks( compressedOutput,
-        outputLen, OUTPUT_BUFFER_SIZE );
+                                         outputLen, OUTPUT_BUFFER_SIZE );
+
     if (rc != 0)
     {
         return ERR_COMP_PAD_DATA;
@@ -1188,14 +1229,14 @@ int FileOp::writeInitialCompColumnChunk(
 
     // Store compression pointers in the header
     std::vector<uint64_t> ptrs;
-    ptrs.push_back( IDBCompressInterface::HDR_BUF_LEN*2 );
-    ptrs.push_back( outputLen + (IDBCompressInterface::HDR_BUF_LEN*2) );
+    ptrs.push_back( IDBCompressInterface::HDR_BUF_LEN * 2 );
+    ptrs.push_back( outputLen + (IDBCompressInterface::HDR_BUF_LEN * 2) );
     compressor.storePtrs(ptrs, hdrs);
 
     RETURN_ON_ERROR( writeHeaders(pFile, hdrs) );
 
     // Write the compressed data
-    if( pFile->write( compressedOutput, outputLen ) != outputLen )
+    if ( pFile->write( compressedOutput, outputLen ) != outputLen )
     {
         return ERR_FILE_WRITE;
     }
@@ -1220,14 +1261,14 @@ int FileOp::writeInitialCompColumnChunk(
  *    returns NO_ERROR if success.
  ***********************************************************/
 int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
-    int          colWidth,
-    uint64_t     emptyVal,
-    uint16_t     dbRoot,   
-    uint32_t     partition,
-    uint16_t     segment,
-    HWM          hwm,
-    std::string& segFile,
-    std::string& failedTask)
+        int          colWidth,
+        uint64_t     emptyVal,
+        uint16_t     dbRoot,
+        uint32_t     partition,
+        uint16_t     segment,
+        HWM          hwm,
+        std::string& segFile,
+        std::string& failedTask)
 {
     int rc = NO_ERROR;
     segFile.clear();
@@ -1236,7 +1277,8 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
     // Open the file and read the headers with the compression chunk pointers
     // @bug 5572 - HDFS usage: incorporate *.tmp file backup flag
     IDBDataFile* pFile = openFile( oid, dbRoot, partition, segment, segFile,
-        "r+b", DEFAULT_COLSIZ, true );
+                                   "r+b", DEFAULT_COLSIZ, true );
+
     if (!pFile)
     {
         failedTask = "Opening file";
@@ -1248,13 +1290,14 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
         args.add("");
         args.add("");
         SimpleSysLog::instance()->logMsg(args,
-            logging::LOG_TYPE_ERROR,
-            logging::M0001);
+                                         logging::LOG_TYPE_ERROR,
+                                         logging::M0001);
         return ERR_FILE_OPEN;
     }
 
     char hdrs[ IDBCompressInterface::HDR_BUF_LEN * 2 ];
     rc = readHeaders( pFile, hdrs );
+
     if (rc != NO_ERROR)
     {
         failedTask = "Reading headers";
@@ -1266,6 +1309,7 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
     IDBCompressInterface compressor( userPadBytes );
     CompChunkPtrList chunkPtrs;
     int rcComp = compressor.getPtrList( hdrs, chunkPtrs );
+
     if (rcComp != 0)
     {
         failedTask = "Getting header ptrs";
@@ -1275,6 +1319,7 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
 
     // Nothing to do if the proposed HWM is < the current block count
     uint64_t blkCount = compressor.getBlockCount(hdrs);
+
     if (blkCount > (hwm + 1))
     {
         closeFile ( pFile );
@@ -1282,7 +1327,7 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
     }
 
     const unsigned int ROWS_PER_EXTENT   =
-        BRMWrapper::getInstance()->getInstance()->getExtentRows(); 
+        BRMWrapper::getInstance()->getInstance()->getExtentRows();
     const unsigned int ROWS_PER_CHUNK    =
         IDBCompressInterface::UNCOMPRESSED_INBUF_LEN / colWidth;
     const unsigned int CHUNKS_PER_EXTENT = ROWS_PER_EXTENT / ROWS_PER_CHUNK;
@@ -1290,27 +1335,28 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
     // If this is an abbreviated extent, we first expand to a full extent
     // @bug 4340 - support moving the DBRoot with a single abbrev extent
     if ( (chunkPtrs.size() == 1) &&
-        ((blkCount * BYTE_PER_BLOCK) ==
-         (uint64_t)(INITIAL_EXTENT_ROWS_TO_DISK * colWidth)) )
+            ((blkCount * BYTE_PER_BLOCK) ==
+             (uint64_t)(INITIAL_EXTENT_ROWS_TO_DISK * colWidth)) )
     {
         if ( getLogger() )
         {
             std::ostringstream oss;
             oss << "Converting abbreviated partial extent to full extent for" <<
-                   ": OID-"    << oid       <<
-                   "; DBRoot-" << dbRoot    <<
-                   "; part-"   << partition <<
-                   "; seg-"    << segment   <<
-                   "; file-"   << segFile   <<
-                   "; wid-"    << colWidth  <<
-                   "; oldBlkCnt-" << blkCount <<
-                   "; newBlkCnt-" << 
-                   ((ROWS_PER_EXTENT * colWidth) / BYTE_PER_BLOCK);
+                ": OID-"    << oid       <<
+                "; DBRoot-" << dbRoot    <<
+                "; part-"   << partition <<
+                "; seg-"    << segment   <<
+                "; file-"   << segFile   <<
+                "; wid-"    << colWidth  <<
+                "; oldBlkCnt-" << blkCount <<
+                "; newBlkCnt-" <<
+                ((ROWS_PER_EXTENT * colWidth) / BYTE_PER_BLOCK);
             getLogger()->logMsg( oss.str(), MSGLVL_INFO2 );
         }
 
         off64_t   endHdrsOffset = pFile->tell();
         rc = expandAbbrevColumnExtent( pFile, dbRoot, emptyVal, colWidth );
+
         if (rc != NO_ERROR)
         {
             failedTask = "Expanding abbreviated extent";
@@ -1320,16 +1366,19 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
 
         CompChunkPtr chunkOutPtr;
         rc = expandAbbrevColumnChunk( pFile, emptyVal, colWidth,
-            chunkPtrs[0], chunkOutPtr );
+                                      chunkPtrs[0], chunkOutPtr );
+
         if (rc != NO_ERROR)
         {
             failedTask = "Expanding abbreviated chunk";
             closeFile ( pFile );
             return rc;
         }
+
         chunkPtrs[0] = chunkOutPtr; // update chunkPtrs with new chunk size
 
         rc = setFileOffset( pFile, endHdrsOffset );
+
         if (rc != NO_ERROR)
         {
             failedTask = "Positioning file to end of headers";
@@ -1345,6 +1394,7 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
     // Calculate the number of empty chunks we need to add to fill this extent
     unsigned numChunksToFill = 0;
     ldiv_t ldivResult = ldiv(chunkPtrs.size(), CHUNKS_PER_EXTENT);
+
     if (ldivResult.rem != 0)
     {
         numChunksToFill = CHUNKS_PER_EXTENT - ldivResult.rem;
@@ -1352,19 +1402,21 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
 
 #if 0
     std::cout << "Number of allocated blocks:     " <<
-        compressor.getBlockCount(hdrs) << std::endl;
+              compressor.getBlockCount(hdrs) << std::endl;
     std::cout << "Pointer Header Size (in bytes): " <<
-        (compressor.getHdrSize(hdrs) -
-        IDBCompressInterface::HDR_BUF_LEN) << std::endl;
+              (compressor.getHdrSize(hdrs) -
+               IDBCompressInterface::HDR_BUF_LEN) << std::endl;
     std::cout << "Chunk Pointers (offset,length): " << std::endl;
-    for (unsigned k=0; k<chunkPtrs.size(); k++)
+
+    for (unsigned k = 0; k < chunkPtrs.size(); k++)
     {
         std::cout << "  " << k << ". " << chunkPtrs[k].first <<
-            " , " << chunkPtrs[k].second << std::endl;
+                  " , " << chunkPtrs[k].second << std::endl;
     }
+
     std::cout << std::endl;
     std::cout << "Number of chunks to fill in: " << numChunksToFill <<
-        std::endl << std::endl;
+              std::endl << std::endl;
 #endif
 
     off64_t   endOffset = 0;
@@ -1373,8 +1425,8 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
     if (numChunksToFill > 0)
     {
         const int IN_BUF_LEN = IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
-        const int OUT_BUF_LEN= IDBCompressInterface::maxCompressedSize(IN_BUF_LEN) + userPadBytes;
-    
+        const int OUT_BUF_LEN = IDBCompressInterface::maxCompressedSize(IN_BUF_LEN) + userPadBytes;
+
         // Allocate buffer, and store in scoped_array to insure it's deletion.
         // Create scope {...} to manage deletion of buffers
         {
@@ -1382,24 +1434,27 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
             unsigned char* compressedBuf     = new unsigned char[ OUT_BUF_LEN ];
             boost::scoped_array<char> toBeCompressedInputPtr(toBeCompressedBuf);
             boost::scoped_array<unsigned char>
-                                      compressedOutputPtr(compressedBuf);
+            compressedOutputPtr(compressedBuf);
 
             // Compress and then pad the compressed chunk
             setEmptyBuf( (unsigned char*)toBeCompressedBuf,
-                IN_BUF_LEN, emptyVal, colWidth );
+                         IN_BUF_LEN, emptyVal, colWidth );
             unsigned int outputLen = OUT_BUF_LEN;
             rcComp = compressor.compressBlock( toBeCompressedBuf,
-                IN_BUF_LEN, compressedBuf, outputLen );
+                                               IN_BUF_LEN, compressedBuf, outputLen );
+
             if (rcComp != 0)
             {
                 failedTask = "Compressing chunk";
                 closeFile ( pFile );
                 return ERR_COMP_COMPRESS;
             }
+
             toBeCompressedInputPtr.reset(); // release memory
 
             rcComp = compressor.padCompressedChunks( compressedBuf,
-                outputLen, OUT_BUF_LEN );
+                     outputLen, OUT_BUF_LEN );
+
             if (rcComp != 0)
             {
                 failedTask = "Padding compressed chunk";
@@ -1410,11 +1465,13 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
             // Position file to write empty chunks; default to end of headers
             // in case there are no chunks listed in the header
             off64_t   startOffset = pFile->tell();
+
             if (chunkPtrs.size() > 0)
             {
-                startOffset = chunkPtrs[chunkPtrs.size()-1].first +
-                              chunkPtrs[chunkPtrs.size()-1].second;
+                startOffset = chunkPtrs[chunkPtrs.size() - 1].first +
+                              chunkPtrs[chunkPtrs.size() - 1].second;
                 rc = setFileOffset( pFile, startOffset );
+
                 if (rc != NO_ERROR)
                 {
                     failedTask = "Positioning file to begin filling chunks";
@@ -1424,19 +1481,21 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
             }
 
             // Write chunks needed to fill out the current extent, add chunk ptr
-            for (unsigned k=0; k<numChunksToFill; k++)
+            for (unsigned k = 0; k < numChunksToFill; k++)
             {
                 rc = writeFile( pFile,
                                 (unsigned char*)compressedBuf,
                                 outputLen );
+
                 if (rc != NO_ERROR)
                 {
                     failedTask = "Writing  a chunk";
                     closeFile ( pFile );
                     return rc;
                 }
+
                 CompChunkPtr compChunk( startOffset, outputLen );
-                chunkPtrs.push_back( compChunk ); 
+                chunkPtrs.push_back( compChunk );
                 startOffset = pFile->tell();
             }
         } // end of scope for boost scoped array pointers
@@ -1445,15 +1504,18 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
 
         // Update the compressed chunk pointers in the header
         std::vector<uint64_t> ptrs;
-        for (unsigned i=0; i<chunkPtrs.size(); i++)
+
+        for (unsigned i = 0; i < chunkPtrs.size(); i++)
         {
             ptrs.push_back( chunkPtrs[i].first );
         }
-        ptrs.push_back( chunkPtrs[chunkPtrs.size()-1].first +
-                        chunkPtrs[chunkPtrs.size()-1].second );
+
+        ptrs.push_back( chunkPtrs[chunkPtrs.size() - 1].first +
+                        chunkPtrs[chunkPtrs.size() - 1].second );
         compressor.storePtrs( ptrs, hdrs );
-    
+
         rc = writeHeaders( pFile, hdrs );
+
         if (rc != NO_ERROR)
         {
             failedTask = "Writing headers";
@@ -1462,12 +1524,13 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
         }
     }  // end of "numChunksToFill > 0"
     else
-    {   // if no chunks to add, then set endOffset to truncate the db file
+    {
+        // if no chunks to add, then set endOffset to truncate the db file
         // strictly based on the chunks that are already in the file
         if (chunkPtrs.size() > 0)
         {
-            endOffset = chunkPtrs[chunkPtrs.size()-1].first +
-                        chunkPtrs[chunkPtrs.size()-1].second;
+            endOffset = chunkPtrs[chunkPtrs.size() - 1].first +
+                        chunkPtrs[chunkPtrs.size() - 1].second;
         }
     }
 
@@ -1475,6 +1538,7 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid,
     if (endOffset > 0)
     {
         rc = truncateFile(pFile, endOffset);
+
         if (rc != NO_ERROR)
         {
             failedTask = "Truncating file";
@@ -1510,33 +1574,35 @@ int FileOp::expandAbbrevColumnChunk(
 {
     int userPadBytes = Config::getNumCompressedPadBlks() * BYTE_PER_BLOCK;
     const int IN_BUF_LEN = IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
-    const int OUT_BUF_LEN= IDBCompressInterface::maxCompressedSize(IN_BUF_LEN) + userPadBytes;
+    const int OUT_BUF_LEN = IDBCompressInterface::maxCompressedSize(IN_BUF_LEN) + userPadBytes;
 
     char* toBeCompressedBuf = new char[ IN_BUF_LEN  ];
     boost::scoped_array<char> toBeCompressedPtr(toBeCompressedBuf);
 
     setEmptyBuf( (unsigned char*)toBeCompressedBuf,
-        IN_BUF_LEN, emptyVal, colWidth );
+                 IN_BUF_LEN, emptyVal, colWidth );
 
     RETURN_ON_ERROR( setFileOffset(pFile, chunkInPtr.first, SEEK_SET) );
 
     char* compressedInBuf = new char[ chunkInPtr.second ];
     boost::scoped_array<char> compressedInBufPtr(compressedInBuf);
     RETURN_ON_ERROR( readFile(pFile, (unsigned char*)compressedInBuf,
-        chunkInPtr.second) );
+                              chunkInPtr.second) );
 
     // Uncompress an "abbreviated" chunk into our 4MB buffer
     unsigned int outputLen = IN_BUF_LEN;
     IDBCompressInterface compressor( userPadBytes );
     int rc = compressor.uncompressBlock(
-        compressedInBuf,
-        chunkInPtr.second,
-        (unsigned char*)toBeCompressedBuf,
-        outputLen);
+                 compressedInBuf,
+                 chunkInPtr.second,
+                 (unsigned char*)toBeCompressedBuf,
+                 outputLen);
+
     if (rc != 0)
     {
         return ERR_COMP_UNCOMPRESS;
     }
+
     compressedInBufPtr.reset(); // release memory
 
     RETURN_ON_ERROR( setFileOffset(pFile, chunkInPtr.first, SEEK_SET) );
@@ -1547,10 +1613,11 @@ int FileOp::expandAbbrevColumnChunk(
     // Compress the data we just read, as a "full" 4MB chunk
     outputLen = OUT_BUF_LEN;
     rc = compressor.compressBlock(
-        reinterpret_cast<char*>(toBeCompressedBuf),
-        IN_BUF_LEN,
-        compressedOutBuf,
-        outputLen );
+             reinterpret_cast<char*>(toBeCompressedBuf),
+             IN_BUF_LEN,
+             compressedOutBuf,
+             outputLen );
+
     if (rc != 0)
     {
         return ERR_COMP_COMPRESS;
@@ -1558,12 +1625,13 @@ int FileOp::expandAbbrevColumnChunk(
 
     // Round up the compressed chunk size
     rc = compressor.padCompressedChunks( compressedOutBuf,
-        outputLen, OUT_BUF_LEN );
+                                         outputLen, OUT_BUF_LEN );
+
     if (rc != 0)
     {
         return ERR_COMP_PAD_DATA;
     }
-    
+
     RETURN_ON_ERROR( writeFile(pFile, compressedOutBuf, outputLen) );
 
     chunkOutPtr.first  = chunkInPtr.first;
@@ -1587,12 +1655,12 @@ int FileOp::writeHeaders(IDBDataFile* pFile, const char* hdr) const
     RETURN_ON_ERROR( setFileOffset(pFile, 0, SEEK_SET) );
 
     // Write the headers
-    if (pFile->write( hdr, IDBCompressInterface::HDR_BUF_LEN*2 ) != IDBCompressInterface::HDR_BUF_LEN*2)
+    if (pFile->write( hdr, IDBCompressInterface::HDR_BUF_LEN * 2 ) != IDBCompressInterface::HDR_BUF_LEN * 2)
     {
         return ERR_FILE_WRITE;
     }
 
-   return NO_ERROR;
+    return NO_ERROR;
 }
 
 /***********************************************************
@@ -1608,7 +1676,7 @@ int FileOp::writeHeaders(IDBDataFile* pFile, const char* hdr) const
  *    else returns NO_ERROR.
  ***********************************************************/
 int FileOp::writeHeaders(IDBDataFile* pFile, const char* controlHdr,
-    const char* pointerHdr, uint64_t ptrHdrSize) const
+                         const char* pointerHdr, uint64_t ptrHdrSize) const
 {
     RETURN_ON_ERROR( setFileOffset(pFile, 0, SEEK_SET) );
 
@@ -1682,6 +1750,7 @@ int FileOp::initDctnryExtent(
         int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
         int loopCount = 1;
         int remWriteSize = 0;
+
         if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
         {
             writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
@@ -1692,17 +1761,21 @@ int FileOp::initDctnryExtent(
         // Allocate a buffer, initialize it, and use it to create the extent
         idbassert(dbRoot > 0);
 #ifdef PROFILE
+
         if (bExpandExtent)
             Stats::startParseEvent(WE_STATS_WAIT_TO_EXPAND_DCT_EXTENT);
         else
             Stats::startParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
+
 #endif
         boost::mutex::scoped_lock lk(*m_DbRootAddExtentMutexes[dbRoot]);
 #ifdef PROFILE
+
         if (bExpandExtent)
             Stats::stopParseEvent(WE_STATS_WAIT_TO_EXPAND_DCT_EXTENT);
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
+
         Stats::startParseEvent(WE_STATS_INIT_DCT_EXTENT);
 #endif
 
@@ -1713,19 +1786,22 @@ int FileOp::initDctnryExtent(
             boost::scoped_array<unsigned char> writeBufPtr( writeBuf );
 
             memset(writeBuf, 0, writeSize);
-            for (int i=0; i<nBlocks; i++)
+
+            for (int i = 0; i < nBlocks; i++)
             {
-                memcpy( writeBuf+(i*BYTE_PER_BLOCK),
+                memcpy( writeBuf + (i * BYTE_PER_BLOCK),
                         blockHdrInit,
                         blockHdrInitSize );
             }
 
 #ifdef PROFILE
             Stats::stopParseEvent(WE_STATS_INIT_DCT_EXTENT);
+
             if (bExpandExtent)
                 Stats::startParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
             else
                 Stats::startParseEvent(WE_STATS_CREATE_DCT_EXTENT);
+
 #endif
 
             //std::ostringstream oss;
@@ -1735,14 +1811,15 @@ int FileOp::initDctnryExtent(
             //std::cout << oss.str() << std::endl;
             if (remWriteSize > 0)
             {
-        	    if (pFile->write( writeBuf, remWriteSize ) != remWriteSize)
+                if (pFile->write( writeBuf, remWriteSize ) != remWriteSize)
                 {
                     return ERR_FILE_WRITE;
                 }
             }
-            for (int j=0; j<loopCount; j++)
+
+            for (int j = 0; j < loopCount; j++)
             {
-        	    if (pFile->write( writeBuf, writeSize ) != writeSize)
+                if (pFile->write( writeBuf, writeSize ) != writeSize)
                 {
                     return ERR_FILE_WRITE;
                 }
@@ -1756,10 +1833,12 @@ int FileOp::initDctnryExtent(
         // controllernode to timeout later when it needs to save a snapshot.
         pFile->flush();
 #ifdef PROFILE
+
         if (bExpandExtent)
             Stats::stopParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
         else
             Stats::stopParseEvent(WE_STATS_CREATE_DCT_EXTENT);
+
 #endif
     }
 
@@ -1776,12 +1855,13 @@ int FileOp::initDctnryExtent(
 void FileOp::initDbRootExtentMutexes( )
 {
     boost::mutex::scoped_lock lk(m_createDbRootMutexes);
+
     if ( m_DbRootAddExtentMutexes.size() == 0 )
     {
         std::vector<uint16_t> rootIds;
         Config::getRootIdList( rootIds );
 
-        for (size_t i=0; i<rootIds.size(); i++)
+        for (size_t i = 0; i < rootIds.size(); i++)
         {
             boost::mutex* pM = new boost::mutex;
             m_DbRootAddExtentMutexes[ rootIds[i] ] = pM;
@@ -1801,7 +1881,8 @@ void FileOp::removeDbRootExtentMutexes( )
 {
     boost::mutex::scoped_lock lk(m_createDbRootMutexes);
 
-    std::map<int,boost::mutex*>::iterator k = m_DbRootAddExtentMutexes.begin();
+    std::map<int, boost::mutex*>::iterator k = m_DbRootAddExtentMutexes.begin();
+
     while (k != m_DbRootAddExtentMutexes.end() )
     {
         delete k->second;
@@ -1833,6 +1914,7 @@ int FileOp::reInitPartialColumnExtent(
     int      width )
 {
     int rc = setFileOffset( pFile, startOffset, SEEK_SET );
+
     if (rc != NO_ERROR)
         return rc;
 
@@ -1846,6 +1928,7 @@ int FileOp::reInitPartialColumnExtent(
     int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
     int loopCount = 0;
     int remainderSize = writeSize;
+
     if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
     {
         writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
@@ -1862,9 +1945,9 @@ int FileOp::reInitPartialColumnExtent(
 
         setEmptyBuf( writeBuf, writeSize, emptyVal, width );
 
-        for (int j=0; j<loopCount; j++)
+        for (int j = 0; j < loopCount; j++)
         {
-        	if (pFile->write( writeBuf, writeSize ) != writeSize)
+            if (pFile->write( writeBuf, writeSize ) != writeSize)
             {
                 return ERR_FILE_WRITE;
             }
@@ -1872,7 +1955,7 @@ int FileOp::reInitPartialColumnExtent(
 
         if (remainderSize > 0)
         {
-        	if (pFile->write( writeBuf, remainderSize ) != remainderSize)
+            if (pFile->write( writeBuf, remainderSize ) != remainderSize)
             {
                 return ERR_FILE_WRITE;
             }
@@ -1909,6 +1992,7 @@ int FileOp::reInitPartialDctnryExtent(
     int            blockHdrInitSize )
 {
     int rc = setFileOffset( pFile, startOffset, SEEK_SET );
+
     if (rc != NO_ERROR)
         return rc;
 
@@ -1922,6 +2006,7 @@ int FileOp::reInitPartialDctnryExtent(
     int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
     int loopCount = 0;
     int remainderSize = writeSize;
+
     if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
     {
         writeSize = MAX_NBLOCKS * BYTE_PER_BLOCK;
@@ -1938,14 +2023,15 @@ int FileOp::reInitPartialDctnryExtent(
         boost::scoped_array<unsigned char> writeBufPtr( writeBuf );
 
         memset(writeBuf, 0, writeSize);
-        for (int i=0; i<nBlocks; i++)
+
+        for (int i = 0; i < nBlocks; i++)
         {
-            memcpy( writeBuf+(i*BYTE_PER_BLOCK),
+            memcpy( writeBuf + (i * BYTE_PER_BLOCK),
                     blockHdrInit,
                     blockHdrInitSize );
         }
 
-        for (int j=0; j<loopCount; j++)
+        for (int j = 0; j < loopCount; j++)
         {
             if (pFile->write( writeBuf, writeSize ) != writeSize)
             {
@@ -1979,14 +2065,16 @@ int FileOp::reInitPartialDctnryExtent(
 int FileOp::getFileSize( IDBDataFile* pFile, long long& fileSize ) const
 {
     fileSize = 0;
+
     if ( pFile == NULL )
         return ERR_FILE_NULL;
 
     fileSize = pFile->size();
-    if( fileSize < 0 )
+
+    if ( fileSize < 0 )
     {
-    	fileSize = 0;
-    	return ERR_FILE_STAT;
+        fileSize = 0;
+        return ERR_FILE_STAT;
     }
 
     return NO_ERROR;
@@ -2005,21 +2093,21 @@ int FileOp::getFileSize( IDBDataFile* pFile, long long& fileSize ) const
  *    NO_ERROR if okay, else an error return code.
  ***********************************************************/
 int FileOp::getFileSize( FID fid, uint16_t dbRoot,
-    uint32_t partition, uint16_t segment,
-    long long& fileSize ) const
+                         uint32_t partition, uint16_t segment,
+                         long long& fileSize ) const
 {
     fileSize = 0;
 
     char fileName[FILE_NAME_SIZE];
     RETURN_ON_ERROR( getFileName(fid, fileName,
-        dbRoot, partition, segment) );
+                                 dbRoot, partition, segment) );
 
     fileSize = IDBPolicy::size( fileName );
 
-    if( fileSize < 0 )
+    if ( fileSize < 0 )
     {
-    	fileSize = 0;
-    	return ERR_FILE_STAT;
+        fileSize = 0;
+        return ERR_FILE_STAT;
     }
 
     return NO_ERROR;
@@ -2035,7 +2123,7 @@ int FileOp::getFileSize( FID fid, uint16_t dbRoot,
  ***********************************************************/
 bool  FileOp::isDir( const char* dirName ) const
 {
-	return IDBPolicy::isDir( dirName );
+    return IDBPolicy::isDir( dirName );
 }
 
 /***********************************************************
@@ -2056,33 +2144,39 @@ bool  FileOp::isDir( const char* dirName ) const
  *    NO_ERROR if success, other if fail
  ***********************************************************/
 int FileOp::oid2FileName( FID fid,
-    char* fullFileName,
-    bool bCreateDir,
-    uint16_t dbRoot,
-    uint32_t partition,
-    uint16_t segment) const
+                          char* fullFileName,
+                          bool bCreateDir,
+                          uint16_t dbRoot,
+                          uint32_t partition,
+                          uint16_t segment) const
 {
 #ifdef SHARED_NOTHING_DEMO_2
-    if (fid >= 10000) {
+
+    if (fid >= 10000)
+    {
         char root[FILE_NAME_SIZE];
         Config::getSharedNothingRoot(root);
         sprintf(fullFileName, "%s/FILE%d", root, fid);
         return NO_ERROR;
     }
+
 #endif
 
     /* If is a version buffer file, the format is different. */
-    if (fid < 1000) {
+    if (fid < 1000)
+    {
         /* Get the dbroot #
          * Get the root of that dbroot
          * Add "/versionbuffer.cdf"
          */
         BRM::DBRM dbrm;
         int _dbroot = dbrm.getDBRootOfVBOID(fid);
+
         if (_dbroot < 0)
             return ERR_INVALID_VBOID;
+
         snprintf(fullFileName, FILE_NAME_SIZE,
-            "%s/versionbuffer.cdf", Config::getDBRootByNum(_dbroot).c_str());
+                 "%s/versionbuffer.cdf", Config::getDBRootByNum(_dbroot).c_str());
         return NO_ERROR;
     }
 
@@ -2091,19 +2185,21 @@ int FileOp::oid2FileName( FID fid,
     char tempFileName[FILE_NAME_SIZE];
     char dbDir[MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
     RETURN_ON_ERROR((Convertor::oid2FileName(
-        fid, tempFileName, dbDir, partition, segment)));
+                         fid, tempFileName, dbDir, partition, segment)));
 
     // see if file exists in specified DBRoot; return if found
-    if (dbRoot > 0) {
+    if (dbRoot > 0)
+    {
         sprintf(fullFileName, "%s/%s", Config::getDBRootByNum(dbRoot).c_str(),
-            tempFileName);
+                tempFileName);
 
         //std::cout << "oid2FileName() OID: " << fid <<
         //   " searching for file: " << fullFileName <<std::endl;
-       // if (access(fullFileName, R_OK) == 0) return NO_ERROR;
-	   //@Bug 5397
-		if (IDBPolicy::exists( fullFileName ))
-			return NO_ERROR;
+        // if (access(fullFileName, R_OK) == 0) return NO_ERROR;
+        //@Bug 5397
+        if (IDBPolicy::exists( fullFileName ))
+            return NO_ERROR;
+
         //file wasn't found, user doesn't want dirs to be created, we're done
         if (!bCreateDir)
             return NO_ERROR;
@@ -2111,19 +2207,22 @@ int FileOp::oid2FileName( FID fid,
         //std::cout << "oid2FileName() OID: " << fid <<
         //   " creating file: " << fullFileName <<std::endl;
     }
-    else {
+    else
+    {
         //Now try to find the file in each of the DBRoots.
         std::vector<std::string> dbRootPathList;
         Config::getDBRootPathList( dbRootPathList );
+
         for (unsigned i = 0; i < dbRootPathList.size(); i++)
         {
             sprintf(fullFileName, "%s/%s", dbRootPathList[i].c_str(),
-                tempFileName);
+                    tempFileName);
+
             //found it, nothing more to do, return
             //if (access(fullFileName, R_OK) == 0) return NO_ERROR;
-			 //@Bug 5397
-			if (IDBPolicy::exists( fullFileName ))
-				return NO_ERROR;
+            //@Bug 5397
+            if (IDBPolicy::exists( fullFileName ))
+                return NO_ERROR;
         }
 
         //file wasn't found, user didn't specify DBRoot so we can't create
@@ -2157,24 +2256,29 @@ int FileOp::oid2FileName( FID fid,
 
     std::stringstream aDirName;
 
-    aDirName << Config::getDBRootByNum(dbRoot).c_str()<<"/" << dbDir[0];
-    if(!isDir((aDirName.str()).c_str()))
+    aDirName << Config::getDBRootByNum(dbRoot).c_str() << "/" << dbDir[0];
+
+    if (!isDir((aDirName.str()).c_str()))
         RETURN_ON_ERROR( createDir((aDirName.str()).c_str()) );
 
     aDirName << "/" << dbDir[1];
-    if(!isDir(aDirName.str().c_str()))
+
+    if (!isDir(aDirName.str().c_str()))
         RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
 
     aDirName << "/" << dbDir[2];
-    if(!isDir(aDirName.str().c_str()))
+
+    if (!isDir(aDirName.str().c_str()))
         RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
 
     aDirName << "/" << dbDir[3];
-    if(!isDir(aDirName.str().c_str()))
+
+    if (!isDir(aDirName.str().c_str()))
         RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
 
     aDirName << "/" << dbDir[4];
-    if(!isDir(aDirName.str().c_str()))
+
+    if (!isDir(aDirName.str().c_str()))
         RETURN_ON_ERROR( createDir(aDirName.str().c_str()) );
 
     return NO_ERROR;
@@ -2197,35 +2301,39 @@ int FileOp::oid2DirName( FID fid, char* oidDirName ) const
     char dbDir[MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
 
     /* If is a version buffer file, the format is different. */
-    if (fid < 1000) {
+    if (fid < 1000)
+    {
         /* Get the dbroot #
          * Get the root of that dbroot
          */
         BRM::DBRM dbrm;
         int _dbroot = dbrm.getDBRootOfVBOID(fid);
+
         if (_dbroot < 0)
             return ERR_INVALID_VBOID;
+
         snprintf(oidDirName, FILE_NAME_SIZE, "%s",
-            Config::getDBRootByNum(_dbroot).c_str());
+                 Config::getDBRootByNum(_dbroot).c_str());
         return NO_ERROR;
     }
 
     RETURN_ON_ERROR((Convertor::oid2FileName(
-        fid, tempFileName, dbDir, 0, 0)));
+                         fid, tempFileName, dbDir, 0, 0)));
 
     //Now try to find the directory in each of the DBRoots.
     std::vector<std::string> dbRootPathList;
     Config::getDBRootPathList( dbRootPathList );
+
     for (unsigned i = 0; i < dbRootPathList.size(); i++)
     {
         sprintf(oidDirName, "%s/%s/%s/%s/%s",
-            dbRootPathList[i].c_str(),
-            dbDir[0], dbDir[1], dbDir[2], dbDir[3]);
+                dbRootPathList[i].c_str(),
+                dbDir[0], dbDir[1], dbDir[2], dbDir[3]);
 
         //found it, nothing more to do, return
-		//@Bug 5397. use the new way to check
-		if (IDBPolicy::exists( oidDirName ))
-			return NO_ERROR;
+        //@Bug 5397. use the new way to check
+        if (IDBPolicy::exists( oidDirName ))
+            return NO_ERROR;
     }
 
     return ERR_FILE_NOT_EXIST;
@@ -2244,14 +2352,14 @@ int FileOp::oid2DirName( FID fid, char* oidDirName ) const
  *    NO_ERROR if path is successfully constructed.
  ***********************************************************/
 int FileOp::getDirName( FID fid, uint16_t dbRoot,
-    uint32_t partition,
-    std::string& dirName) const
+                        uint32_t partition,
+                        std::string& dirName) const
 {
     char tempFileName[FILE_NAME_SIZE];
     char dbDir[MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
 
     RETURN_ON_ERROR((Convertor::oid2FileName(
-        fid, tempFileName, dbDir, partition, 0)));
+                         fid, tempFileName, dbDir, partition, 0)));
 
     std::string rootPath = Config::getDBRootByNum( dbRoot );
     std::ostringstream oss;
@@ -2277,26 +2385,30 @@ int FileOp::getDirName( FID fid, uint16_t dbRoot,
  ***********************************************************/
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
 IDBDataFile* FileOp::openFile( const char* fileName,
-    const char* mode,
-    const int ioColSize,
-    bool useTmpSuffix ) const
+                               const char* mode,
+                               const int ioColSize,
+                               bool useTmpSuffix ) const
 {
     IDBDataFile* pFile;
     errno = 0;
 
     unsigned opts;
+
     if (ioColSize > 0)
         opts = IDBDataFile::USE_VBUF;
     else
         opts = IDBDataFile::USE_NOVBUF;
+
     if ((useTmpSuffix) && idbdatafile::IDBPolicy::useHdfs())
         opts |= IDBDataFile::USE_TMPFILE;
+
     pFile = IDBDataFile::open(
-    						IDBPolicy::getType( fileName, IDBPolicy::WRITEENG ),
-    						fileName,
-    						mode,
-    						opts,
-                            ioColSize );
+                IDBPolicy::getType( fileName, IDBPolicy::WRITEENG ),
+                fileName,
+                mode,
+                opts,
+                ioColSize );
+
     if (pFile == NULL)
     {
         int errRc = errno;
@@ -2304,36 +2416,36 @@ IDBDataFile* FileOp::openFile( const char* fileName,
         std::string errnoMsg;
         Convertor::mapErrnoToString(errRc, errnoMsg);
         oss << "FileOp::openFile(): fopen(" << fileName <<
-               ", " << mode << "): errno = " << errRc <<
-               ": " << errnoMsg;
+            ", " << mode << "): errno = " << errRc <<
+            ": " << errnoMsg;
         logging::Message::Args args;
         args.add(oss.str());
         SimpleSysLog::instance()->logMsg(args,
-            logging::LOG_TYPE_CRITICAL,
-            logging::M0006);
+                                         logging::LOG_TYPE_CRITICAL,
+                                         logging::M0006);
         SimpleSysLog::instance()->logMsg(args,
-            logging::LOG_TYPE_ERROR,
-            logging::M0006);
+                                         logging::LOG_TYPE_ERROR,
+                                         logging::M0006);
     }
 
     return pFile;
 }
 
 // @bug 5572 - HDFS usage: add *.tmp file backup flag
- IDBDataFile* FileOp::openFile( FID fid,
-    uint16_t dbRoot,
-    uint32_t partition,
-    uint16_t segment,
-    std::string&   segFile,
-    const char* mode, int ioColSize,
-    bool useTmpSuffix ) const
+IDBDataFile* FileOp::openFile( FID fid,
+                               uint16_t dbRoot,
+                               uint32_t partition,
+                               uint16_t segment,
+                               std::string&   segFile,
+                               const char* mode, int ioColSize,
+                               bool useTmpSuffix ) const
 {
     char fileName[FILE_NAME_SIZE];
     int  rc;
 
     //fid2FileName( fileName, fid );
     RETURN_ON_WE_ERROR( ( rc = getFileName( fid, fileName,
-        dbRoot, partition, segment ) ), NULL );
+                                            dbRoot, partition, segment ) ), NULL );
 
     // disable buffering for versionbuffer file
     if (fid < 1000)
@@ -2359,10 +2471,11 @@ IDBDataFile* FileOp::openFile( const char* fileName,
  *    ERR_FILE_READ if something wrong in reading the file
  ***********************************************************/
 int FileOp::readFile( IDBDataFile* pFile, unsigned char* readBuf,
-                            int readSize ) const
+                      int readSize ) const
 {
-    if( pFile != NULL ) {
-    	if( pFile->read( readBuf, readSize ) != readSize )
+    if ( pFile != NULL )
+    {
+        if ( pFile->read( readBuf, readSize ) != readSize )
             return ERR_FILE_READ;
     }
     else
@@ -2378,9 +2491,10 @@ int FileOp::readHeaders( IDBDataFile* pFile, char* hdrs ) const
 {
     RETURN_ON_ERROR( setFileOffset(pFile, 0) );
     RETURN_ON_ERROR( readFile( pFile, reinterpret_cast<unsigned char*>(hdrs),
-        (IDBCompressInterface::HDR_BUF_LEN * 2) ) );
+                               (IDBCompressInterface::HDR_BUF_LEN * 2) ) );
     IDBCompressInterface compressor;
     int rc = compressor.verifyHdr( hdrs );
+
     if (rc != 0)
     {
         return ERR_COMP_VERIFY_HDRS;
@@ -2397,7 +2511,7 @@ int FileOp::readHeaders( IDBDataFile* pFile, char* hdr1, char* hdr2 ) const
     unsigned char* hdrPtr = reinterpret_cast<unsigned char*>(hdr1);
     RETURN_ON_ERROR( setFileOffset(pFile, 0) );
     RETURN_ON_ERROR( readFile( pFile, hdrPtr,
-                     IDBCompressInterface::HDR_BUF_LEN ));
+                               IDBCompressInterface::HDR_BUF_LEN ));
 
     IDBCompressInterface compressor;
     int ptrSecSize = compressor.getHdrSize(hdrPtr) -
@@ -2423,13 +2537,16 @@ int FileOp::setFileOffset( IDBDataFile* pFile, long long offset, int origin ) co
     int rc;
     long long fboOffset = offset; // workaround solution to pass leakcheck error
 
-    if( pFile == NULL )
-         return ERR_FILE_NULL;
-    if( offset < 0 )
-         return ERR_FILE_FBO_NEG;
+    if ( pFile == NULL )
+        return ERR_FILE_NULL;
+
+    if ( offset < 0 )
+        return ERR_FILE_FBO_NEG;
+
     rc = pFile->seek( fboOffset, origin );
+
     if (rc)
-         return ERR_FILE_SEEK;
+        return ERR_FILE_SEEK;
 
     return NO_ERROR;
 }
@@ -2456,7 +2573,7 @@ int FileOp::setFileOffsetBlock( IDBDataFile* pFile, uint64_t lbid, int origin) c
     uint32_t  partition;
     uint16_t  segment;
     RETURN_ON_ERROR( BRMWrapper::getInstance()->getFboOffset(
-        lbid, dbRoot, partition, segment, fbo ) );
+                         lbid, dbRoot, partition, segment, fbo ) );
     fboOffset = ((long long)fbo) * (long)BYTE_PER_BLOCK;
 
     return setFileOffset( pFile, fboOffset, origin );
@@ -2475,7 +2592,7 @@ int FileOp::setFileOffsetBlock( IDBDataFile* pFile, uint64_t lbid, int origin) c
  ***********************************************************/
 int FileOp::truncateFile( IDBDataFile* pFile, long long fileSize ) const
 {
-    if( pFile == NULL )
+    if ( pFile == NULL )
         return ERR_FILE_NULL;
 
     if ( pFile->truncate( fileSize ) != 0 )
@@ -2497,14 +2614,16 @@ int FileOp::truncateFile( IDBDataFile* pFile, long long fileSize ) const
  *    ERR_FILE_WRITE if something wrong in writing to the file
  ***********************************************************/
 int FileOp::writeFile( IDBDataFile* pFile, const unsigned char* writeBuf,
-                             int writeSize ) const
+                       int writeSize ) const
 {
-    if( pFile != NULL ) {
-    	if( pFile->write( writeBuf, writeSize ) != writeSize )
+    if ( pFile != NULL )
+    {
+        if ( pFile->write( writeBuf, writeSize ) != writeSize )
             return ERR_FILE_WRITE;
     }
     else
         return ERR_FILE_NULL;
+
     return NO_ERROR;
 }
 
@@ -2526,17 +2645,20 @@ bool FileOp::isDiskSpaceAvail(const std::string& fileName, int nBlocks) const
     bool bSpaceAvail = true;
 
     unsigned maxDiskUsage = Config::getMaxFileSystemDiskUsage();
+
     if (maxDiskUsage < 100) // 100% means to disable the check
     {
 #ifdef _MSC_VER
         ULARGE_INTEGER freeBytesAvail;
         ULARGE_INTEGER totalBytesAvail;
+
         if (GetDiskFreeSpaceEx(fileName.c_str(), &freeBytesAvail,
-            &totalBytesAvail, 0) != 0)
+                               &totalBytesAvail, 0) != 0)
         {
             double avail = (double)freeBytesAvail.QuadPart;
             double total = (double)totalBytesAvail.QuadPart;
             double wanted = (double)nBlocks * (double)BYTE_PER_BLOCK;
+
             //If we want more than there is, return an error
             if (wanted > avail)
                 bSpaceAvail = false;
@@ -2544,17 +2666,20 @@ bool FileOp::isDiskSpaceAvail(const std::string& fileName, int nBlocks) const
             else if ((total - (avail - wanted)) / total * 100.0 > maxDiskUsage)
                 bSpaceAvail = false;
         }
+
 #else
         struct statfs fStats;
         int rc = statfs( fileName.c_str(), &fStats );
+
         if (rc == 0)
         {
             double totalBlocks = fStats.f_blocks;
-            double blksToAlloc = (double)(nBlocks*BYTE_PER_BLOCK) /
+            double blksToAlloc = (double)(nBlocks * BYTE_PER_BLOCK) /
                                  fStats.f_bsize;
             double freeBlocks  = fStats.f_bavail - blksToAlloc;
-            if ((((totalBlocks-freeBlocks)/totalBlocks)*100.0) > maxDiskUsage)
-               bSpaceAvail = false;
+
+            if ((((totalBlocks - freeBlocks) / totalBlocks) * 100.0) > maxDiskUsage)
+                bSpaceAvail = false;
 
             //std::cout         << "isDiskSpaceAvail"   <<
             //": totalBlocks: " << totalBlocks          <<
@@ -2564,8 +2689,10 @@ bool FileOp::isDiskSpaceAvail(const std::string& fileName, int nBlocks) const
             //"; pctUsed: " << (((totalBlocks-freeBlocks)/totalBlocks)*100.0) <<
             //"; bAvail: "      << bSpaceAvail          << std::endl;
         }
+
 #endif
     }
+
     return bSpaceAvail;
 }
 
@@ -2587,10 +2714,11 @@ int FileOp::expandAbbrevColumnExtent(
 {
     // Based on extent size, see how many blocks to add to fill the extent
     int blksToAdd = ( ((int)BRMWrapper::getInstance()->getExtentRows() -
-        INITIAL_EXTENT_ROWS_TO_DISK)/BYTE_PER_BLOCK ) * width;
+                       INITIAL_EXTENT_ROWS_TO_DISK) / BYTE_PER_BLOCK ) * width;
 
     // Make sure there is enough disk space to expand the extent.
     RETURN_ON_ERROR( setFileOffset( pFile, 0, SEEK_END ) );
+
     // TODO-will have to address this DiskSpaceAvail check at some point
     if ( !isDiskSpaceAvail(Config::getDBRootByNum(dbRoot), blksToAdd) )
     {
@@ -2599,9 +2727,9 @@ int FileOp::expandAbbrevColumnExtent(
 
     // Add blocks to turn the abbreviated extent into a full extent.
     int rc = initColumnExtent(pFile, dbRoot, blksToAdd, emptyVal, width,
-        false,   // existing file
-        true,    // expand existing extent
-        false);  // n/a since not adding new extent
+                              false,   // existing file
+                              true,    // expand existing extent
+                              false);  // n/a since not adding new extent
 
     return rc;
 }
@@ -2616,7 +2744,7 @@ void FileOp::setBulkFlag(bool isBulkLoad)
     m_isBulk = isBulkLoad;
 }
 
-int FileOp::flushFile(int rc, std::map<FID,FID> & oids)
+int FileOp::flushFile(int rc, std::map<FID, FID>& oids)
 {
     return NO_ERROR;
 }

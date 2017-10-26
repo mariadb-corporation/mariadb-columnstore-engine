@@ -26,46 +26,54 @@ struct event_base;
 struct evhttp;
 struct evhttp_request;
 
-namespace apache { namespace thrift { namespace async {
+namespace apache
+{
+namespace thrift
+{
+namespace async
+{
 
 class TAsyncBufferProcessor;
 
-class TEvhttpServer {
- public:
-  /**
-   * Create a TEvhttpServer for use with an external evhttp instance.
-   * Must be manually installed with evhttp_set_cb, using
-   * TEvhttpServer::request as the callback and the
-   * address of the server as the extra arg.
-   * Do not call "serve" on this server.
-   */
-  TEvhttpServer(boost::shared_ptr<TAsyncBufferProcessor> processor);
+class TEvhttpServer
+{
+public:
+    /**
+     * Create a TEvhttpServer for use with an external evhttp instance.
+     * Must be manually installed with evhttp_set_cb, using
+     * TEvhttpServer::request as the callback and the
+     * address of the server as the extra arg.
+     * Do not call "serve" on this server.
+     */
+    TEvhttpServer(boost::shared_ptr<TAsyncBufferProcessor> processor);
 
-  /**
-   * Create a TEvhttpServer with an embedded event_base and evhttp,
-   * listening on port and responding on the endpoint "/".
-   * Call "serve" on this server to serve forever.
-   */
-  TEvhttpServer(boost::shared_ptr<TAsyncBufferProcessor> processor, int port);
+    /**
+     * Create a TEvhttpServer with an embedded event_base and evhttp,
+     * listening on port and responding on the endpoint "/".
+     * Call "serve" on this server to serve forever.
+     */
+    TEvhttpServer(boost::shared_ptr<TAsyncBufferProcessor> processor, int port);
 
-  ~TEvhttpServer();
+    ~TEvhttpServer();
 
-  static void request(struct evhttp_request* req, void* self);
-  int serve();
+    static void request(struct evhttp_request* req, void* self);
+    int serve();
 
-  struct event_base* getEventBase();
+    struct event_base* getEventBase();
 
- private:
-  struct RequestContext;
+private:
+    struct RequestContext;
 
-  void process(struct evhttp_request* req);
-  void complete(RequestContext* ctx, bool success);
+    void process(struct evhttp_request* req);
+    void complete(RequestContext* ctx, bool success);
 
-  boost::shared_ptr<TAsyncBufferProcessor> processor_;
-  struct event_base* eb_;
-  struct evhttp* eh_;
+    boost::shared_ptr<TAsyncBufferProcessor> processor_;
+    struct event_base* eb_;
+    struct evhttp* eh_;
 };
 
-}}} // apache::thrift::async
+}
+}
+} // apache::thrift::async
 
 #endif // #ifndef _THRIFT_TEVHTTP_SERVER_H_

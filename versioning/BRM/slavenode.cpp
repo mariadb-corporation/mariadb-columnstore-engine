@@ -40,127 +40,141 @@
 using namespace BRM;
 using namespace std;
 
-SlaveComm *comm;
+SlaveComm* comm;
 bool die;
 boost::thread_group monitorThreads;
 
 void fail()
 {
-	try {
-		oam::Oam oam;
+    try
+    {
+        oam::Oam oam;
 
-		oam.processInitFailure();
-	}
-	catch (exception&) {
-		cerr << "failed to notify OAM of server failure" << endl;
-	}
+        oam.processInitFailure();
+    }
+    catch (exception&)
+    {
+        cerr << "failed to notify OAM of server failure" << endl;
+    }
 }
 
 void stop(int sig)
 {
-	if (!die) {
-		die = true;
-		comm->stop();
-		monitorThreads.interrupt_all();
-	}
+    if (!die)
+    {
+        die = true;
+        comm->stop();
+        monitorThreads.interrupt_all();
+    }
 }
 
 void reset(int sig)
 {
-        comm->reset();
+    comm->reset();
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 
-	// get and set locale language - BUG 5362
-	string systemLang = "C";
-	systemLang = funcexp::utf8::idb_setlocale();
+    // get and set locale language - BUG 5362
+    string systemLang = "C";
+    systemLang = funcexp::utf8::idb_setlocale();
 
-	BRM::logInit ( BRM::SubSystemLogId_workerNode );
+    BRM::logInit ( BRM::SubSystemLogId_workerNode );
 
-	string nodeName;
-	SlaveDBRMNode slave;
-	string arg;
-	int err = 0;
-	ShmKeys keys;
+    string nodeName;
+    SlaveDBRMNode slave;
+    string arg;
+    int err = 0;
+    ShmKeys keys;
 
-	if (argc < 2) {
-		ostringstream os;
-		os << "Usage: " << argv[0] << " DBRM_WorkerN";
-		cerr << os.str() << endl;
-		log(os.str());
-		fail();
-		exit(1);
-	}
+    if (argc < 2)
+    {
+        ostringstream os;
+        os << "Usage: " << argv[0] << " DBRM_WorkerN";
+        cerr << os.str() << endl;
+        log(os.str());
+        fail();
+        exit(1);
+    }
 
-	idbdatafile::IDBPolicy::configIDBPolicy();
+    idbdatafile::IDBPolicy::configIDBPolicy();
 
-	nodeName = argv[1];	
-	try {
-		comm = new SlaveComm(nodeName, &slave);
-	}
-	catch (exception &e) {
-		ostringstream os;
-		os << "An error occured: " << e.what();
-		cerr << os.str() << endl;
-		log(os.str());
-		fail();
-		exit(1);
-	}
+    nodeName = argv[1];
+
+    try
+    {
+        comm = new SlaveComm(nodeName, &slave);
+    }
+    catch (exception& e)
+    {
+        ostringstream os;
+        os << "An error occured: " << e.what();
+        cerr << os.str() << endl;
+        log(os.str());
+        fail();
+        exit(1);
+    }
+
 #ifdef SIGHUP
- 	signal(SIGHUP, reset);
+    signal(SIGHUP, reset);
 #endif
- 	signal(SIGINT, stop);
-	signal(SIGTERM, stop);
+    signal(SIGINT, stop);
+    signal(SIGTERM, stop);
 #ifdef SIGPIPE
-	signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 #endif
 
-	if (!(argc >= 3 && (arg = argv[2]) == "fg"))
-		err = fork();
+    if (!(argc >= 3 && (arg = argv[2]) == "fg"))
+        err = fork();
 
-	if (err == 0) {
+    if (err == 0)
+    {
 
-		/* Start 4 threads to monitor write lock state */
-		monitorThreads.create_thread(RWLockMonitor
-				(&die, slave.getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
-		monitorThreads.create_thread(RWLockMonitor
-				(&die, slave.getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
-		monitorThreads.create_thread(RWLockMonitor
-				(&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
-		monitorThreads.create_thread(RWLockMonitor
-				(&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
+        /* Start 4 threads to monitor write lock state */
+        monitorThreads.create_thread(RWLockMonitor
+                                     (&die, slave.getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
+        monitorThreads.create_thread(RWLockMonitor
+                                     (&die, slave.getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
+        monitorThreads.create_thread(RWLockMonitor
+                                     (&die, slave.getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
+        monitorThreads.create_thread(RWLockMonitor
+                                     (&die, slave.getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
 
-		try {
-			oam::Oam oam;
-			
-			oam.processInitComplete("DBRMWorkerNode");
-		}
-		catch (exception &e) {
-			ostringstream os;
-			os << "failed to notify OAM: " << e.what();
-			os << " continuing anyway";
-			cerr << os.str() << endl;
-			log(os.str(), logging::LOG_TYPE_WARNING);
-		}
+        try
+        {
+            oam::Oam oam;
 
-		try {
-			comm->run();
-		}
-		catch (exception &e) {
-			ostringstream os;
-			os << "An error occurred: " << e.what();
-			cerr << os.str() << endl;
-			log(os.str());
-			exit(1);
-		}
-	}
-	else if (err < 0) {
-		perror(argv[0]);
-		log_errno(string(argv[0]));
-		fail();
-	}
+            oam.processInitComplete("DBRMWorkerNode");
+        }
+        catch (exception& e)
+        {
+            ostringstream os;
+            os << "failed to notify OAM: " << e.what();
+            os << " continuing anyway";
+            cerr << os.str() << endl;
+            log(os.str(), logging::LOG_TYPE_WARNING);
+        }
 
-	exit(0);
+        try
+        {
+            comm->run();
+        }
+        catch (exception& e)
+        {
+            ostringstream os;
+            os << "An error occurred: " << e.what();
+            cerr << os.str() << endl;
+            log(os.str());
+            exit(1);
+        }
+    }
+    else if (err < 0)
+    {
+        perror(argv[0]);
+        log_errno(string(argv[0]));
+        fail();
+    }
+
+    exit(0);
 }

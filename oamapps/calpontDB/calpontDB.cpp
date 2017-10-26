@@ -45,110 +45,118 @@ using namespace std;
 using namespace oam;
 using namespace config;
 
-namespace {
-
-void usage(char *prog)
+namespace
 {
 
-	cout << endl;
-	cout << "Usage: " << prog << " [options]" << endl;
+void usage(char* prog)
+{
 
-	cout << endl;
-	cout << "This utility is used to suspend and resume Calpont Database Writes." << endl;
-	cout << "Normally this would be done while performing Database Backups and" << endl;
-	cout << "Restores " << endl;
-	cout << endl;
+    cout << endl;
+    cout << "Usage: " << prog << " [options]" << endl;
 
-	cout << "Options:" << endl;
-	cout << "-c <command>   Command: suspend or resume" << endl << endl;
-	cout << "-h             Display this help." << endl << endl;
+    cout << endl;
+    cout << "This utility is used to suspend and resume Calpont Database Writes." << endl;
+    cout << "Normally this would be done while performing Database Backups and" << endl;
+    cout << "Restores " << endl;
+    cout << endl;
+
+    cout << "Options:" << endl;
+    cout << "-c <command>   Command: suspend or resume" << endl << endl;
+    cout << "-h             Display this help." << endl << endl;
 }
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-	string command;
-	Oam oam;
-	BRM::DBRM dbrm;
+    string command;
+    Oam oam;
+    BRM::DBRM dbrm;
 
-	char c;
-	
-	// Invokes member function `int operator ()(void);'
-	while ((c = getopt(argc, argv, "c:h")) != -1) {
-		switch (c) {  
-			case 'c': 
-				command = optarg;
-				break;
-			case 'h':
-				usage(argv[0]);
-				exit(-1);
-				break;
-			default: 
-				usage(argv[0]);
-				exit(1);
-				break;
-		}
-	}
+    char c;
 
-	if ( command == "suspend" ) 
-	{
-		try
-		{
+    // Invokes member function `int operator ()(void);'
+    while ((c = getopt(argc, argv, "c:h")) != -1)
+    {
+        switch (c)
+        {
+            case 'c':
+                command = optarg;
+                break;
+
+            case 'h':
+                usage(argv[0]);
+                exit(-1);
+                break;
+
+            default:
+                usage(argv[0]);
+                exit(1);
+                break;
+        }
+    }
+
+    if ( command == "suspend" )
+    {
+        try
+        {
             std::vector<BRM::TableLockInfo> tableLocks = dbrm.getAllTableLocks();
+
             if (!tableLocks.empty())
             {
                 oam.DisplayLockedTables(tableLocks, &dbrm);
             }
-			else
-			{
-				dbrm.setSystemSuspended(true);
-				sleep(5);
-				string cmd = startup::StartUp::installDir() + "/bin/save_brm  > /var/log/mariadb/columnstore/save_brm.log1 2>&1";
-				int rtnCode = system(cmd.c_str());
-				if (rtnCode == 0)
-				{
-					cout << endl << "Suspend Calpont Database Writes Request successfully completed" << endl;
-				}
-				else
-				{
-					cout << endl << "Suspend Calpont Database Writes Failed: save_brm Failed" << endl;
-					dbrm.setSystemSuspended(false);
-				}
-			}
-		}
-		catch (exception& e)
-		{
-			cout << endl << "**** Suspend Calpont Database Writes Failed: " << e.what() << endl;
-		}
-		catch(...)
-		{
-			cout << endl << "**** Suspend Calpont Database Writes Failed" << endl;
-		}
-	}
-	else
-	{
-		if ( command == "resume" ) 
-		{
-			try{
-				dbrm.setSystemSuspended(false);
-				cout << endl << "Resume Calpont Database Writes Request successfully completed" << endl;
-			}
-			catch (exception& e)
-			{
-				cout << endl << "**** Resume Calpont Database Writes Failed: " << e.what() << endl;
-			}
-			catch(...)
-			{
-				cout << endl << "**** Resume Calpont Database Writes Failed" << endl;
-			}
-		}
-		else
-		{
-			cout << "Invalid Command Entered, please try again" << endl;
-			exit(-1);
-		}
-	}
+            else
+            {
+                dbrm.setSystemSuspended(true);
+                sleep(5);
+                string cmd = startup::StartUp::installDir() + "/bin/save_brm  > /var/log/mariadb/columnstore/save_brm.log1 2>&1";
+                int rtnCode = system(cmd.c_str());
 
-	exit(0);
+                if (rtnCode == 0)
+                {
+                    cout << endl << "Suspend Calpont Database Writes Request successfully completed" << endl;
+                }
+                else
+                {
+                    cout << endl << "Suspend Calpont Database Writes Failed: save_brm Failed" << endl;
+                    dbrm.setSystemSuspended(false);
+                }
+            }
+        }
+        catch (exception& e)
+        {
+            cout << endl << "**** Suspend Calpont Database Writes Failed: " << e.what() << endl;
+        }
+        catch (...)
+        {
+            cout << endl << "**** Suspend Calpont Database Writes Failed" << endl;
+        }
+    }
+    else
+    {
+        if ( command == "resume" )
+        {
+            try
+            {
+                dbrm.setSystemSuspended(false);
+                cout << endl << "Resume Calpont Database Writes Request successfully completed" << endl;
+            }
+            catch (exception& e)
+            {
+                cout << endl << "**** Resume Calpont Database Writes Failed: " << e.what() << endl;
+            }
+            catch (...)
+            {
+                cout << endl << "**** Resume Calpont Database Writes Failed" << endl;
+            }
+        }
+        else
+        {
+            cout << "Invalid Command Entered, please try again" << endl;
+            exit(-1);
+        }
+    }
+
+    exit(0);
 }
 

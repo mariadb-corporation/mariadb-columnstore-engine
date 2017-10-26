@@ -20,7 +20,7 @@
  *
  *****************************************************************************/
 
-/** @file 
+/** @file
  * Put LogicalPartition define here to avoid header file include confilct.
  * This struct will be used in connector, brm and writeengine
  */
@@ -30,47 +30,47 @@
 
 #include "bytestream.h"
 
-namespace BRM 
+namespace BRM
 {
 // Logical partition number descriptor
 struct LogicalPartition
 {
-	uint16_t dbroot;  // dbroot #
-	uint32_t pp;      // physical partition #
-	uint16_t seg;     // segment #
+    uint16_t dbroot;  // dbroot #
+    uint32_t pp;      // physical partition #
+    uint16_t seg;     // segment #
 
-	LogicalPartition() : dbroot ((uint16_t)-1),
-	                     pp ((uint32_t)-1),
-	                     seg ((uint16_t)-1) {}
+    LogicalPartition() : dbroot ((uint16_t) - 1),
+        pp ((uint32_t) - 1),
+        seg ((uint16_t) - 1) {}
 
-	LogicalPartition(uint16_t d, uint32_t p, uint16_t s) : dbroot(d),
-	                                                       pp(p),
-	                                                       seg(s)
-	{}
-	
-	bool operator<( const LogicalPartition &n ) const
-	{
-		return ((pp < n.pp) ||
-		        (pp == n.pp && seg < n.seg) ||
-		        (pp == n.pp && seg == n.seg && dbroot < n.dbroot));
-	}
+    LogicalPartition(uint16_t d, uint32_t p, uint16_t s) : dbroot(d),
+        pp(p),
+        seg(s)
+    {}
 
-	void serialize(messageqcpp::ByteStream& b) const
-	{
-		b << (uint16_t)dbroot;
-		b << (uint32_t)pp;
-		b << (uint16_t)seg;
-	}
+    bool operator<( const LogicalPartition& n ) const
+    {
+        return ((pp < n.pp) ||
+                (pp == n.pp && seg < n.seg) ||
+                (pp == n.pp && seg == n.seg && dbroot < n.dbroot));
+    }
 
-	void unserialize(messageqcpp::ByteStream& b)
-	{
-		b >> (uint16_t&)dbroot;
-		b >> (uint32_t&)pp;
-		b >> (uint16_t&)seg;
-	}
-	
-	/** @bug4816. For output to user purpose */
-	std::string toString() const;
+    void serialize(messageqcpp::ByteStream& b) const
+    {
+        b << (uint16_t)dbroot;
+        b << (uint32_t)pp;
+        b << (uint16_t)seg;
+    }
+
+    void unserialize(messageqcpp::ByteStream& b)
+    {
+        b >> (uint16_t&)dbroot;
+        b >> (uint32_t&)pp;
+        b >> (uint16_t&)seg;
+    }
+
+    /** @bug4816. For output to user purpose */
+    std::string toString() const;
 };
 
 /**
@@ -82,9 +82,9 @@ std::istream& operator>>(std::istream& input, LogicalPartition& rhs);
 /**
  * bytestream operator
  */
-messageqcpp::ByteStream& operator<<(messageqcpp::ByteStream &bs, const LogicalPartition& rhs);
+messageqcpp::ByteStream& operator<<(messageqcpp::ByteStream& bs, const LogicalPartition& rhs);
 
-messageqcpp::ByteStream& operator>>(messageqcpp::ByteStream &bs, LogicalPartition& rhs);
+messageqcpp::ByteStream& operator>>(messageqcpp::ByteStream& bs, LogicalPartition& rhs);
 
 }
 #endif

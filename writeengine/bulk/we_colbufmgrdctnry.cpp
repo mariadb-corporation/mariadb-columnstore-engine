@@ -26,7 +26,8 @@
 #include <iostream>
 #include <sstream>
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 //------------------------------------------------------------------------------
 // ColumnBufferManagerDctnry constructor that takes a ColumnInfo, colWidth, and
@@ -62,22 +63,24 @@ int ColumnBufferManagerDctnry::writeToFileExtentCheck(
     {
         std::ostringstream oss;
         oss << "Dctnry writeToFileExtentCheck"
-               ": OID-"    << fColInfo->curCol.dataFile.fid        <<
-               "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
-               "; part-"   << fColInfo->curCol.dataFile.fPartition <<
-               "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
-               "; writeSize-"        << writeSize                  <<
-               "; oldAvailFileSize-" << fColInfo->availFileSize    <<
-               "; newAvailFileSize-" << (fColInfo->availFileSize - writeSize);
+            ": OID-"    << fColInfo->curCol.dataFile.fid        <<
+            "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
+            "; part-"   << fColInfo->curCol.dataFile.fPartition <<
+            "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
+            "; writeSize-"        << writeSize                  <<
+            "; oldAvailFileSize-" << fColInfo->availFileSize    <<
+            "; newAvailFileSize-" << (fColInfo->availFileSize - writeSize);
         fLog->logMsg( oss.str(), MSGLVL_INFO2 );
     }
 
     int rc = fCBuf->writeToFile(startOffset, writeSize);
-    if (rc != NO_ERROR) {
+
+    if (rc != NO_ERROR)
+    {
         WErrorCodes ec;
         std::ostringstream oss;
         oss << "writeToFileExtentCheck: write token extent failed: " <<
-               ec.errorString(rc);
+            ec.errorString(rc);
         fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
         return rc;
     }
@@ -106,12 +109,13 @@ int ColumnBufferManagerDctnry::rowsExtentCheck( int nRows, int& nRows2 )
     int bufferSize    = fCBuf->getSize();
     long long spaceRequired = nRows * fColWidth;
     long dataInBuffer  = 0;
+
     if (bufferSize > 0)
         dataInBuffer = (fBufFreeOffset - fBufWriteOffset + bufferSize) % bufferSize;
 
     // if extent is out of space, see if this is an abbrev extent we can expand
     if (((dataInBuffer + spaceRequired) > fColInfo->availFileSize) &&
-         (fColInfo->isAbbrevExtent()))
+            (fColInfo->isAbbrevExtent()))
     {
         RETURN_ON_ERROR( fColInfo->expandAbbrevExtent(true) )
     }
@@ -125,22 +129,22 @@ int ColumnBufferManagerDctnry::rowsExtentCheck( int nRows, int& nRows2 )
         {
             std::ostringstream oss1;
             oss1 << "Dctnry rowsExtentCheck (filling extent): OID-"    <<
-                   fColInfo->curCol.dataFile.fid <<
-                   "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
-                   "; part-"   << fColInfo->curCol.dataFile.fPartition <<
-                   "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
-                   "; spaceRequired-" << spaceRequired <<
-                   "; dataInBuffer-"  << dataInBuffer <<
-                   "; availSpace-"    << fColInfo->availFileSize;
+                 fColInfo->curCol.dataFile.fid <<
+                 "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
+                 "; part-"   << fColInfo->curCol.dataFile.fPartition <<
+                 "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
+                 "; spaceRequired-" << spaceRequired <<
+                 "; dataInBuffer-"  << dataInBuffer <<
+                 "; availSpace-"    << fColInfo->availFileSize;
             fLog->logMsg( oss1.str(), MSGLVL_INFO2 );
 
             std::ostringstream oss2;
             oss2 << "Dctnry rowsExtentCheck: OID-" <<
-                     fColInfo->curCol.dataFile.fid <<
-                   "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
-                   "; part-"   << fColInfo->curCol.dataFile.fPartition <<
-                   "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
-                   "; Changing nRows from " << nRows << " to " << nRows2;
+                 fColInfo->curCol.dataFile.fid <<
+                 "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
+                 "; part-"   << fColInfo->curCol.dataFile.fPartition <<
+                 "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
+                 "; Changing nRows from " << nRows << " to " << nRows2;
             fLog->logMsg( oss2.str(), MSGLVL_INFO2 );
         }
     }
@@ -150,13 +154,13 @@ int ColumnBufferManagerDctnry::rowsExtentCheck( int nRows, int& nRows2 )
         {
             std::ostringstream oss;
             oss << "Dctnry rowsExtentCheck: OID-" <<
-                    fColInfo->curCol.dataFile.fid <<
-                   "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
-                   "; part-"   << fColInfo->curCol.dataFile.fPartition <<
-                   "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
-                   "; spaceRequired-" << spaceRequired <<
-                   "; dataInBuffer-"  << dataInBuffer <<
-                   "; availSpace-"    << fColInfo->availFileSize;
+                fColInfo->curCol.dataFile.fid <<
+                "; DBRoot-" << fColInfo->curCol.dataFile.fDbRoot    <<
+                "; part-"   << fColInfo->curCol.dataFile.fPartition <<
+                "; seg-"    << fColInfo->curCol.dataFile.fSegment   <<
+                "; spaceRequired-" << spaceRequired <<
+                "; dataInBuffer-"  << dataInBuffer <<
+                "; availSpace-"    << fColInfo->availFileSize;
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
         }
     }

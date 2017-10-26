@@ -32,69 +32,74 @@ using namespace boost;
 namespace utils
 {
 
-PoolAllocator & PoolAllocator::operator=(const PoolAllocator &v)
+PoolAllocator& PoolAllocator::operator=(const PoolAllocator& v)
 {
-	allocSize = v.allocSize;
-	tmpSpace = v.tmpSpace;
-	deallocateAll();
-	return *this;
+    allocSize = v.allocSize;
+    tmpSpace = v.tmpSpace;
+    deallocateAll();
+    return *this;
 }
 
 void PoolAllocator::deallocateAll()
 {
-	capacityRemaining = 0;
-	nextAlloc = NULL;
-	memUsage = 0;
-	mem.clear();
-	oob.clear();
+    capacityRemaining = 0;
+    nextAlloc = NULL;
+    memUsage = 0;
+    mem.clear();
+    oob.clear();
 }
 
 void PoolAllocator::newBlock()
 {
-	shared_array<uint8_t> next;
+    shared_array<uint8_t> next;
 
-	capacityRemaining = allocSize;
-	if (!tmpSpace || mem.size() == 0) {
-		next.reset(new uint8_t[allocSize]);
-		mem.push_back(next);
-		nextAlloc = next.get();
-	}
-	else
-		nextAlloc = mem.front().get();
+    capacityRemaining = allocSize;
+
+    if (!tmpSpace || mem.size() == 0)
+    {
+        next.reset(new uint8_t[allocSize]);
+        mem.push_back(next);
+        nextAlloc = next.get();
+    }
+    else
+        nextAlloc = mem.front().get();
 }
 
-void * PoolAllocator::allocate(uint64_t size)
+void* PoolAllocator::allocate(uint64_t size)
 {
-	void *ret;
+    void* ret;
 
-	if (size > allocSize) {
-		OOBMemInfo memInfo;
-		
-		memUsage += size;
-		memInfo.mem.reset(new uint8_t[size]);
-		memInfo.size = size;
-		ret = (void *) memInfo.mem.get();
-		oob[ret] = memInfo;
-		return ret;
-	}
+    if (size > allocSize)
+    {
+        OOBMemInfo memInfo;
 
-	if (size > capacityRemaining)
-		newBlock();
-	ret = (void *) nextAlloc;
-	nextAlloc += size;
-	capacityRemaining -= size;
-	memUsage += size;
-	return ret;
+        memUsage += size;
+        memInfo.mem.reset(new uint8_t[size]);
+        memInfo.size = size;
+        ret = (void*) memInfo.mem.get();
+        oob[ret] = memInfo;
+        return ret;
+    }
+
+    if (size > capacityRemaining)
+        newBlock();
+
+    ret = (void*) nextAlloc;
+    nextAlloc += size;
+    capacityRemaining -= size;
+    memUsage += size;
+    return ret;
 }
 
-void PoolAllocator::deallocate(void *p)
+void PoolAllocator::deallocate(void* p)
 {
-	OutOfBandMap::iterator it = oob.find(p);
-	
-	if (it == oob.end())
-		return;
-	memUsage -= it->second.size;
-	oob.erase(it);
+    OutOfBandMap::iterator it = oob.find(p);
+
+    if (it == oob.end())
+        return;
+
+    memUsage -= it->second.size;
+    oob.erase(it);
 }
 
 }

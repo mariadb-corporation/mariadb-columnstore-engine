@@ -62,7 +62,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     fErrorCodes[ERR_FILE_FBO_NEG] = " Specified file FBO is negative. ";
     fErrorCodes[ERR_FILE_TRUNCATE] = " Error truncating db file. ";
     fErrorCodes[ERR_FILE_DISK_SPACE] = "Not able to add extent; adding extent "
-       "would exceed max file system disk usage. ";
+                                       "would exceed max file system disk usage. ";
     fErrorCodes[ERR_FILE_STAT] = " Error getting stats on db file. ";
     fErrorCodes[ERR_VB_FILE_NOT_EXIST] = " Version buffer file  does not exists.";
     fErrorCodes[ERR_FILE_FLUSH] = " Error flushing db file. ";
@@ -75,18 +75,18 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     fErrorCodes[ERR_XML_PARSE] = " An XML Parsing error";
 
     // table lock level error
-    fErrorCodes[ERR_TBLLOCK_LOCK_NOT_FOUND]= "Table is not locked.";
+    fErrorCodes[ERR_TBLLOCK_LOCK_NOT_FOUND] = "Table is not locked.";
     fErrorCodes[ERR_TBLLOCK_GET_LOCK]      = "Error getting table lock.";
-    fErrorCodes[ERR_TBLLOCK_GET_LOCK_LOCKED]="Table locked by another user.";
+    fErrorCodes[ERR_TBLLOCK_GET_LOCK_LOCKED] = "Table locked by another user.";
     fErrorCodes[ERR_TBLLOCK_RELEASE_LOCK]  = "Error releasing table lock.";
     fErrorCodes[ERR_TBLLOCK_CHANGE_STATE]  = "Error changing table lock state.";
     fErrorCodes[ERR_TBLLOCK_GET_INFO]      = "Error getting table lock info.";
-    fErrorCodes[ERR_TBLLOCK_LOCKID_CONFLICT]="Table LockID for different table than expected.";
+    fErrorCodes[ERR_TBLLOCK_LOCKID_CONFLICT] = "Table LockID for different table than expected.";
 
     // DDL/DML Interface level error
     fErrorCodes[ERR_STRUCT_VALUE_NOT_MATCH] = " the number of structs does not match with the number of value sets";
     fErrorCodes[ERR_ROWID_VALUE_NOT_MATCH] = " the number of rowids does not match with the number of values";
-	fErrorCodes[ERR_TBL_SYSCAT_ERROR]      = "Error occured when querying systemcatalog.";
+    fErrorCodes[ERR_TBL_SYSCAT_ERROR]      = "Error occured when querying systemcatalog.";
 
     // index error
     fErrorCodes[ERR_IDX_TREE_MOVE_ENTRY] = " an error in moving part of an index tree to a new subblock";
@@ -98,7 +98,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     //index list error
     fErrorCodes[ERR_IDX_LIST_INVALID_ADDHDR] = " a Create indexlist header error";
     fErrorCodes[ERR_IDX_LIST_INVALID_UPDATE] = " an pdate Index List error ";
-    fErrorCodes[ERR_IDX_LIST_INVALID_DELETE] = " a Delete rowid in indexlist err"; 
+    fErrorCodes[ERR_IDX_LIST_INVALID_DELETE] = " a Delete rowid in indexlist err";
     fErrorCodes[ERR_IDX_LIST_INVALID_KEY] =  " an Invalid index listbppseeder.cpp Key passed";
     fErrorCodes[ERR_IDX_LIST_GET_RID_ARRARY] = " an index list RID array";
     fErrorCodes[ERR_IDX_LIST_WRONG_KEY ] = " a not matched Key passed to an index list";
@@ -132,7 +132,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     fErrorCodes[ERR_FM_BAD_TYPE] = "an invalid type that must be pointer or list";
     fErrorCodes[ERR_FM_NO_SPACE] = " that No blocks are available";
     fErrorCodes[ERR_FM_EXTEND] = " while extending a file";
-   
+
     // Dictionary error
     fErrorCodes[ERR_DICT_NO_SPACE_INSERT] = " no space for a dictionary insert";
     fErrorCodes[ERR_DICT_SIZE_GT_2G] = " the dictionary size was > 2GB";
@@ -140,7 +140,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     fErrorCodes[ERR_DICT_NO_OFFSET_DELETE] = " a dictionary bad Delete offset";
     fErrorCodes[ERR_DICT_INVALID_HDR] = " a dictionary bad Delete Hdr";
     fErrorCodes[ERR_DICT_ZERO_LEN] = " a dictionary zero len";
-    fErrorCodes[ERR_DICT_TOKEN_NOT_FOUND] = " a dictionary token not found"; 
+    fErrorCodes[ERR_DICT_TOKEN_NOT_FOUND] = " a dictionary token not found";
     fErrorCodes[ERR_DICT_FILE_NOT_FOUND] = " a dictionary file not found";
     fErrorCodes[ERR_DICT_BAD_TOKEN_LBID] = " a dictionary token lbid is bad";
     fErrorCodes[ERR_DICT_BAD_TOKEN_OP] = " a dictionary token op is bad";
@@ -196,10 +196,10 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     fErrorCodes[ERR_BRM_HWMS_NOT_EQUAL] = " HWMs for same width columns not equal. ";
     fErrorCodes[ERR_BRM_HWMS_OUT_OF_SYNC] = " HWMs for different width columns not in sync. ";
     fErrorCodes[ERR_BRM_DBROOT_HWMS] = " BRM error getting HWMs for DBRoots. ";
-	fErrorCodes[ERR_BRM_NETWORK] = " Network error in DBRM call. ";
-	fErrorCodes[ERR_BRM_READONLY] = " DBRM is read only. ";
-	fErrorCodes[ERR_INVALID_VBOID] = " The VB oid is invalid ";
-	fErrorCodes[ERR_BRM_SET_EXTENTS_CP] = " BRM error setting extents min/max ";
+    fErrorCodes[ERR_BRM_NETWORK] = " Network error in DBRM call. ";
+    fErrorCodes[ERR_BRM_READONLY] = " DBRM is read only. ";
+    fErrorCodes[ERR_INVALID_VBOID] = " The VB oid is invalid ";
+    fErrorCodes[ERR_BRM_SET_EXTENTS_CP] = " BRM error setting extents min/max ";
     fErrorCodes[ERR_BRM_SHUTDOWN] = " The system is being shutdown ";
     fErrorCodes[ERR_BRM_GET_SHUTDOWN] = " BRM error get the system shutdown flag ";
     fErrorCodes[ERR_BRM_SUSPEND] = " The system is in write suspended mode";
@@ -209,13 +209,13 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     // DM error
     fErrorCodes[ERR_DM_CONVERT_OID] = " a DM Conversion error";
 
-    // Cache error 
+    // Cache error
     fErrorCodes[ERR_CACHE_KEY_EXIST ] = " a Cache key exists";
     fErrorCodes[ERR_CACHE_KEY_NOT_EXIST] = " a Cache key does not exist";
     fErrorCodes[ERR_NULL_BLOCK] = " a Block is NULL";
     fErrorCodes[ERR_FREE_LIST_EMPTY] = " a Free list is empty";
 
-    // Compression error 
+    // Compression error
     fErrorCodes[ERR_COMP_COMPRESS] = " Error in compressing data. ";
     fErrorCodes[ERR_COMP_UNCOMPRESS] = " Error in uncompressing data. ";
     fErrorCodes[ERR_COMP_PARSE_HDRS] = " Error parsing compression headers. ";
@@ -238,9 +238,9 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
 
     // Auto-increment error
     fErrorCodes[ERR_AUTOINC_GEN_EXCEED_MAX] = " Generated auto-increment value "
-        "exceeds maximum value for the column type.";
+            "exceeds maximum value for the column type.";
     fErrorCodes[ERR_AUTOINC_USER_OUT_OF_RANGE] = " User specified auto-"
-        "increment value is out of range for the column type.";
+            "increment value is out of range for the column type.";
     fErrorCodes[ERR_AUTOINC_TABLE_NAME] = " Invalid schema/tablename for auto increment. ";
     fErrorCodes[ERR_AUTOINC_INIT1] = " Unable to initialize auto-increment value. ";
     fErrorCodes[ERR_AUTOINC_INIT2] = " Unable to initialize auto-increment value. Unknown exception. ";
@@ -258,9 +258,9 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
     fErrorCodes[ERR_METADATABKUP_FILE_RENAME]         = " Unable to rename temporary bulk meta data file. ";
     fErrorCodes[ERR_METADATABKUP_COMP_PARSE_HDRS]     = " Error parsing compression headers in bulk backup file. ";
     fErrorCodes[ERR_METADATABKUP_COMP_VERIFY_HDRS]    = " Error verifying compression headers in bulk backup file. ";
-    fErrorCodes[ERR_METADATABKUP_COMP_CHUNK_NOT_FOUND]= " Error searching for compressed chunk in db file being backed up. ";
+    fErrorCodes[ERR_METADATABKUP_COMP_CHUNK_NOT_FOUND] = " Error searching for compressed chunk in db file being backed up. ";
     fErrorCodes[ERR_METADATABKUP_COMP_OPEN_BULK_BKUP] = " Error opening compressed chunk in bulk backup file. ";
-    fErrorCodes[ERR_METADATABKUP_COMP_WRITE_BULK_BKUP]= " Error writing compressed chunk to bulk backup file. ";
+    fErrorCodes[ERR_METADATABKUP_COMP_WRITE_BULK_BKUP] = " Error writing compressed chunk to bulk backup file. ";
     fErrorCodes[ERR_METADATABKUP_COMP_READ_BULK_BKUP] = " Error reading compressed chunk from bulk backup file. ";
     fErrorCodes[ERR_METADATABKUP_COMP_RENAME]         = " Unable to rename compressed chunk bulk backup file. ";
 }
@@ -276,12 +276,13 @@ std::string WErrorCodes::errorString(int code)
             std::string msgArg; // empty str arg; no extra info in this context
             args.add( msgArg );
             return logging::IDBErrorInfo::instance()->errorMsg(
-                   logging::ERR_EXTENT_DISK_SPACE, args);
+                       logging::ERR_EXTENT_DISK_SPACE, args);
             break;
         }
     }
 
     int brmRc = BRMWrapper::getBrmRc();
+
     if (brmRc == BRM::ERR_OK)
         return (fErrorCodes[code]);
 

@@ -26,8 +26,8 @@ class IDBDataFile;
 class FileFactoryBase
 {
 public:
-	virtual ~FileFactoryBase() {;}
-	virtual IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth) = 0;
+    virtual ~FileFactoryBase() {;}
+    virtual IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth) = 0;
 };
 
 }

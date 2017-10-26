@@ -205,63 +205,65 @@ using namespace execplan;
 //
 //}
 
-namespace joblist {
+namespace joblist
+{
 
 PassThruStep::PassThruStep(
-	execplan::CalpontSystemCatalog::OID oid,
-	execplan::CalpontSystemCatalog::OID tableOid,
-	const execplan::CalpontSystemCatalog::ColType& colType,
-	const JobInfo& jobInfo) :
-	JobStep(jobInfo),
-	fOid(oid),
-	fTableOid(tableOid),
-	isEM(jobInfo.isExeMgr),
-	fSwallowRows(false),
-	fRm(jobInfo.rm)
+    execplan::CalpontSystemCatalog::OID oid,
+    execplan::CalpontSystemCatalog::OID tableOid,
+    const execplan::CalpontSystemCatalog::ColType& colType,
+    const JobInfo& jobInfo) :
+    JobStep(jobInfo),
+    fOid(oid),
+    fTableOid(tableOid),
+    isEM(jobInfo.isExeMgr),
+    fSwallowRows(false),
+    fRm(jobInfo.rm)
 {
-	colWidth = colType.colWidth;
-	realWidth = colType.colWidth;
-	isDictColumn = ((colType.colDataType == CalpontSystemCatalog::VARCHAR && colType.colWidth > 7)
-					|| (colType.colDataType == CalpontSystemCatalog::CHAR && colType.colWidth > 8)
+    colWidth = colType.colWidth;
+    realWidth = colType.colWidth;
+    isDictColumn = ((colType.colDataType == CalpontSystemCatalog::VARCHAR && colType.colWidth > 7)
+                    || (colType.colDataType == CalpontSystemCatalog::CHAR && colType.colWidth > 8)
                     || (colType.colDataType == CalpontSystemCatalog::TEXT)
                     || (colType.colDataType == CalpontSystemCatalog::BLOB));
-	fColType = colType;
-	fPseudoType = 0;
+    fColType = colType;
+    fPseudoType = 0;
 
 }
 
 PassThruStep::PassThruStep(const pColStep& rhs) : JobStep(rhs), fRm(rhs.fRm)
 {
-	fInputJobStepAssociation = rhs.inputAssociation();
-	fOutputJobStepAssociation = rhs.outputAssociation();
-	colWidth = rhs.fColType.colWidth;
-	realWidth = rhs.realWidth;
-	fOid = rhs.oid();
-	fTableOid = rhs.tableOid();
-	fSwallowRows = rhs.getSwallowRows();
-	isDictColumn = rhs.isDictCol();
-	fColType = rhs.colType();
-	isEM = rhs.isExeMgr();
+    fInputJobStepAssociation = rhs.inputAssociation();
+    fOutputJobStepAssociation = rhs.outputAssociation();
+    colWidth = rhs.fColType.colWidth;
+    realWidth = rhs.realWidth;
+    fOid = rhs.oid();
+    fTableOid = rhs.tableOid();
+    fSwallowRows = rhs.getSwallowRows();
+    isDictColumn = rhs.isDictCol();
+    fColType = rhs.colType();
+    isEM = rhs.isExeMgr();
 
-	const PseudoColStep* pcs = dynamic_cast<const PseudoColStep*>(&rhs);
-	if (pcs)
-		fPseudoType = pcs->pseudoColumnId();
-		
+    const PseudoColStep* pcs = dynamic_cast<const PseudoColStep*>(&rhs);
+
+    if (pcs)
+        fPseudoType = pcs->pseudoColumnId();
+
 }
 
 PassThruStep::PassThruStep(const PseudoColStep& rhs) : JobStep(rhs), fRm(rhs.fRm)
 {
-	fInputJobStepAssociation = rhs.inputAssociation();
-	fOutputJobStepAssociation = rhs.outputAssociation();
-	colWidth = rhs.fColType.colWidth;
-	realWidth = rhs.realWidth;
-	fOid = rhs.oid();
-	fTableOid = rhs.tableOid();
-	fSwallowRows = rhs.getSwallowRows();
-	isDictColumn = rhs.isDictCol();
-	fColType = rhs.colType();
-	fPseudoType = rhs.pseudoColumnId();
-	isEM = rhs.isExeMgr();
+    fInputJobStepAssociation = rhs.inputAssociation();
+    fOutputJobStepAssociation = rhs.outputAssociation();
+    colWidth = rhs.fColType.colWidth;
+    realWidth = rhs.realWidth;
+    fOid = rhs.oid();
+    fTableOid = rhs.tableOid();
+    fSwallowRows = rhs.getSwallowRows();
+    isDictColumn = rhs.isDictCol();
+    fColType = rhs.colType();
+    fPseudoType = rhs.pseudoColumnId();
+    isEM = rhs.isExeMgr();
 }
 
 PassThruStep::~PassThruStep()
@@ -292,20 +294,25 @@ void PassThruStep::join()
 
 const string PassThruStep::toString() const
 {
-	ostringstream oss;
-	oss << "PassThruStep    ses:" << fSessionId << " txn:" << fTxnId << " ver:" << fVerId << " st:" << fStepId <<
-		" tb/col:" << fTableOid << "/" << fOid;
-	if (alias().length()) oss << " alias:" << alias();
-	oss << " " << omitOidInDL
-		<< fOutputJobStepAssociation.outAt(0) << showOidInDL;
-	oss << " in:";
-	for (unsigned i = 0; i < fInputJobStepAssociation.outSize(); i++)
-	{
-		oss << fInputJobStepAssociation.outAt(i) << ", ";
-	}
-	if (fSwallowRows)
-		oss << " (sink)";
-	return oss.str();
+    ostringstream oss;
+    oss << "PassThruStep    ses:" << fSessionId << " txn:" << fTxnId << " ver:" << fVerId << " st:" << fStepId <<
+        " tb/col:" << fTableOid << "/" << fOid;
+
+    if (alias().length()) oss << " alias:" << alias();
+
+    oss << " " << omitOidInDL
+        << fOutputJobStepAssociation.outAt(0) << showOidInDL;
+    oss << " in:";
+
+    for (unsigned i = 0; i < fInputJobStepAssociation.outSize(); i++)
+    {
+        oss << fInputJobStepAssociation.outAt(i) << ", ";
+    }
+
+    if (fSwallowRows)
+        oss << " (sink)";
+
+    return oss.str();
 }
 
 }

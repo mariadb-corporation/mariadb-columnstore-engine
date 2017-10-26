@@ -39,91 +39,103 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_dayofyear::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 int64_t Func_dayofyear::getIntVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+                                  FunctionParm& parm,
+                                  bool& isNull,
+                                  CalpontSystemCatalog::ColType& ct)
 {
-	uint32_t year = 0;
-	uint32_t month = 0;
-	uint32_t day = 0;
-	int64_t val = 0;
+    uint32_t year = 0;
+    uint32_t month = 0;
+    uint32_t day = 0;
+    int64_t val = 0;
 
-	switch (parm[0]->data()->resultType().colDataType)
-	{
-		case CalpontSystemCatalog::DATE:
-			val = parm[0]->data()->getIntVal(row, isNull);
-			year = (uint32_t)((val >> 16) & 0xffff);
-			month = (uint32_t)((val >> 12) & 0xf);
-			day = (uint32_t)((val >> 6) & 0x3f);
-			break;
-		case CalpontSystemCatalog::DATETIME:
-			val = parm[0]->data()->getIntVal(row, isNull);
-			year = (uint32_t)((val >> 48) & 0xffff);
-			month = (uint32_t)((val >> 44) & 0xf);
-			day = (uint32_t)((val >> 38) & 0x3f);
-			break;
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::TEXT:
-		case CalpontSystemCatalog::VARCHAR:
-			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
-			if (val == -1)
-			{
-				isNull = true;
-				return -1;
-			}
-			else
-			{
-				year = (uint32_t)((val >> 48) & 0xffff);
-				month = (uint32_t)((val >> 44) & 0xf);
-				day = (uint32_t)((val >> 38) & 0x3f);
-			}
-			break;
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::INT:
-			val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-			if (val == -1)
-			{
-				isNull = true;
-				return -1;
-			}
-			else
-			{
-				year = (uint32_t)((val >> 48) & 0xffff);
-				month = (uint32_t)((val >> 44) & 0xf);
-				day = (uint32_t)((val >> 38) & 0x3f);
-			}
-			break;	
-		case CalpontSystemCatalog::DECIMAL:
-			if (parm[0]->data()->resultType().scale == 0)
-			{
-				val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-				if (val == -1)
-				{
-					isNull = true;
-					return -1;
-				}
-				else
-				{
-					year = (uint32_t)((val >> 48) & 0xffff);
-					month = (uint32_t)((val >> 44) & 0xf);
-					day = (uint32_t)((val >> 38) & 0x3f);
-				}
-			}
-			break;
-		default:
-			isNull = true;
-			return -1;
-	}	
-	return helpers::calc_mysql_daynr(year, month, day) -
-			helpers::calc_mysql_daynr(year,1,1) + 1;
-}		
+    switch (parm[0]->data()->resultType().colDataType)
+    {
+        case CalpontSystemCatalog::DATE:
+            val = parm[0]->data()->getIntVal(row, isNull);
+            year = (uint32_t)((val >> 16) & 0xffff);
+            month = (uint32_t)((val >> 12) & 0xf);
+            day = (uint32_t)((val >> 6) & 0x3f);
+            break;
+
+        case CalpontSystemCatalog::DATETIME:
+            val = parm[0]->data()->getIntVal(row, isNull);
+            year = (uint32_t)((val >> 48) & 0xffff);
+            month = (uint32_t)((val >> 44) & 0xf);
+            day = (uint32_t)((val >> 38) & 0x3f);
+            break;
+
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
+        case CalpontSystemCatalog::VARCHAR:
+            val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+
+            if (val == -1)
+            {
+                isNull = true;
+                return -1;
+            }
+            else
+            {
+                year = (uint32_t)((val >> 48) & 0xffff);
+                month = (uint32_t)((val >> 44) & 0xf);
+                day = (uint32_t)((val >> 38) & 0x3f);
+            }
+
+            break;
+
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::INT:
+            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+            if (val == -1)
+            {
+                isNull = true;
+                return -1;
+            }
+            else
+            {
+                year = (uint32_t)((val >> 48) & 0xffff);
+                month = (uint32_t)((val >> 44) & 0xf);
+                day = (uint32_t)((val >> 38) & 0x3f);
+            }
+
+            break;
+
+        case CalpontSystemCatalog::DECIMAL:
+            if (parm[0]->data()->resultType().scale == 0)
+            {
+                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+                if (val == -1)
+                {
+                    isNull = true;
+                    return -1;
+                }
+                else
+                {
+                    year = (uint32_t)((val >> 48) & 0xffff);
+                    month = (uint32_t)((val >> 44) & 0xf);
+                    day = (uint32_t)((val >> 38) & 0x3f);
+                }
+            }
+
+            break;
+
+        default:
+            isNull = true;
+            return -1;
+    }
+
+    return helpers::calc_mysql_daynr(year, month, day) -
+           helpers::calc_mysql_daynr(year, 1, 1) + 1;
+}
 
 
 } // namespace funcexp

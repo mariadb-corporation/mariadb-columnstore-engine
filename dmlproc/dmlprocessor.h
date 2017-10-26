@@ -45,39 +45,58 @@
 #include "batchinsertprocessor.h"
 #include "querytele.h"
 
-template<typename T, typename Container=std::deque<T> >
-class iterable_queue : public std::queue<T,Container>
+template<typename T, typename Container = std::deque<T> >
+class iterable_queue : public std::queue<T, Container>
 {
 public:
     typedef typename Container::iterator iterator;
     typedef typename Container::const_iterator const_iterator;
 
-    iterator begin() { return this->c.begin(); }
-    iterator end() { return this->c.end(); }
-    const_iterator begin() const { return this->c.begin(); }
-    const_iterator end() const { return this->c.end(); }
-	iterator find(T t) 
-	{
-		iterator it;
-		for (it = begin(); it != end(); ++it)
-		{
-			if (*it == t)
-			{
-				break;
-			}
-		}
-		return it;
-	}
-	iterator erase(typename Container::iterator it) { return this->c.erase(it); }
-	iterator erase(T t) 
-	{ 
-		iterator it = find(t);
-		if (it != end())
-		{
-			erase(it);
-		}
-		return it; 
-	}
+    iterator begin()
+    {
+        return this->c.begin();
+    }
+    iterator end()
+    {
+        return this->c.end();
+    }
+    const_iterator begin() const
+    {
+        return this->c.begin();
+    }
+    const_iterator end() const
+    {
+        return this->c.end();
+    }
+    iterator find(T t)
+    {
+        iterator it;
+
+        for (it = begin(); it != end(); ++it)
+        {
+            if (*it == t)
+            {
+                break;
+            }
+        }
+
+        return it;
+    }
+    iterator erase(typename Container::iterator it)
+    {
+        return this->c.erase(it);
+    }
+    iterator erase(T t)
+    {
+        iterator it = find(t);
+
+        if (it != end())
+        {
+            erase(it);
+        }
+
+        return it;
+    }
 };
 
 namespace dmlprocessor
@@ -88,37 +107,49 @@ namespace dmlprocessor
 class DMLServer
 {
 public:
-	DMLServer(int packageMaxThreads, int packageWorkQueueSize, BRM::DBRM * aDbrm);
+    DMLServer(int packageMaxThreads, int packageWorkQueueSize, BRM::DBRM* aDbrm);
 
-	~DMLServer() { }
+    ~DMLServer() { }
 
 
-	void start(); //Does not return
+    void start(); //Does not return
 
     /** @brief get the dml package thread pool size
       */
-    inline int  getPackageThreadPoolSize() const { return fPackageMaxThreads; }
+    inline int  getPackageThreadPoolSize() const
+    {
+        return fPackageMaxThreads;
+    }
 
     /** @brief set the dml package thread pool size
       *
       * @param threadPoolSize the maximum number of threads to process dml packages
       */
-    inline void setPackageThreadPoolSize( int threadPoolSize ) { fPackageMaxThreads = threadPoolSize; }
+    inline void setPackageThreadPoolSize( int threadPoolSize )
+    {
+        fPackageMaxThreads = threadPoolSize;
+    }
 
     /** @brief get the maximum number of dml packages allowed in the work queue
       */
-    inline int getPackageWorkQueueSize() const { return fPackageWorkQueueSize; }
+    inline int getPackageWorkQueueSize() const
+    {
+        return fPackageWorkQueueSize;
+    }
 
     /** @brief set the dml package work queue size
       *
       * @param workQueueSize the maximum number of dml packages in the work queue
       */
-    inline void setPackageWorkQueueSize( int workQueueSize ) {  fPackageWorkQueueSize = workQueueSize; }
+    inline void setPackageWorkQueueSize( int workQueueSize )
+    {
+        fPackageWorkQueueSize = workQueueSize;
+    }
 
 private:
-	//not copyable
-	DMLServer(const DMLServer& rhs);
-	DMLServer& operator=(const DMLServer& rhs);
+    //not copyable
+    DMLServer(const DMLServer& rhs);
+    DMLServer& operator=(const DMLServer& rhs);
 
     /** @brief the thread pool for processing dml packages
       */
@@ -128,7 +159,7 @@ private:
     int fPackageWorkQueueSize; /** @brief max number of packages waiting in the work queue */
 
     boost::scoped_ptr<messageqcpp::MessageQueueServer> fMqServer;
-	BRM::DBRM* fDbrm;
+    BRM::DBRM* fDbrm;
 };
 
 /** @brief Thread to process a single dml package.
@@ -138,30 +169,36 @@ class PackageHandler
 {
 public:
     PackageHandler(const messageqcpp::IOSocket& ios, boost::shared_ptr<messageqcpp::ByteStream> bs,
-		uint8_t packageType, joblist::DistributedEngineComm *ec, bool concurrentSuport, uint64_t maxDeleteRows,
-		uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnId, BRM::DBRM * aDbrm,
-		const querytele::QueryTeleClient& qtc, boost::shared_ptr<execplan::CalpontSystemCatalog> csc);
-	~PackageHandler();
+                   uint8_t packageType, joblist::DistributedEngineComm* ec, bool concurrentSuport, uint64_t maxDeleteRows,
+                   uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnId, BRM::DBRM* aDbrm,
+                   const querytele::QueryTeleClient& qtc, boost::shared_ptr<execplan::CalpontSystemCatalog> csc);
+    ~PackageHandler();
 
     void run();
-	void rollbackPending();
-	
-	execplan::CalpontSystemCatalog::SCN getTxnid() {return fTxnid;}
-	uint32_t getSessionID() {return fSessionID;}
+    void rollbackPending();
+
+    execplan::CalpontSystemCatalog::SCN getTxnid()
+    {
+        return fTxnid;
+    }
+    uint32_t getSessionID()
+    {
+        return fSessionID;
+    }
 
 private:
     messageqcpp::IOSocket fIos;
     boost::shared_ptr<messageqcpp::ByteStream> fByteStream;
     boost::scoped_ptr<dmlpackageprocessor::DMLPackageProcessor> fProcessor;
     messageqcpp::ByteStream::quadbyte fPackageType;
-    joblist::DistributedEngineComm *fEC;
-	bool fConcurrentSupport;
+    joblist::DistributedEngineComm* fEC;
+    bool fConcurrentSupport;
     uint64_t fMaxDeleteRows;
     uint32_t fSessionID;
-	uint32_t fTableOid;
+    uint32_t fTableOid;
     execplan::CalpontSystemCatalog::SCN fTxnid;
     execplan::SessionManager sessionManager;
-    BRM::DBRM *fDbrm;
+    BRM::DBRM* fDbrm;
     querytele::QueryTeleClient fQtc;
     boost::shared_ptr<execplan::CalpontSystemCatalog> fcsc;
 
@@ -173,17 +210,17 @@ private:
     // for the table oid. If found, wait until it is no onger here.
     // If this transactionID (SCN) is < the transactionID in the table, don't delay
     // and hope for the best, as we're already out of order.
-    // When the VSS is engineered to handle transactions out of order, all MCOL-140 
+    // When the VSS is engineered to handle transactions out of order, all MCOL-140
     // code is to be removed.
-	int synchTableAccess();
-	int releaseTableAccess();
-	int forceReleaseTableAccess();
-	typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
+    int synchTableAccess();
+    int releaseTableAccess();
+    int forceReleaseTableAccess();
+    typedef iterable_queue<execplan::CalpontSystemCatalog::SCN> tableAccessQueue_t;
     static std::map<uint32_t, tableAccessQueue_t> tableOidMap;
     static boost::condition_variable tableOidCond;
     static boost::mutex tableOidMutex;
 public:
-	static int clearTableAccess();
+    static int clearTableAccess();
 };
 
 /** @brief processes dml packages as they arrive
@@ -202,48 +239,48 @@ public:
       */
     void operator()();
 
-	static void log(const std::string& msg, logging::LOG_TYPE level);
+    static void log(const std::string& msg, logging::LOG_TYPE level);
 private:
-	messageqcpp::IOSocket fIos;
-	
-	execplan::SessionManager sessionManager;
-	boost::shared_ptr<execplan::CalpontSystemCatalog> csc;
-	BRM::DBRM* fDbrm;
-	querytele::QueryTeleClient fQtc;
-	bool fConcurrentSupport;
+    messageqcpp::IOSocket fIos;
 
-	// A map to hold pointers to all active PackageProcessors
-	typedef std::map<uint32_t, boost::shared_ptr<PackageHandler> > PackageHandlerMap_t;
-	static PackageHandlerMap_t packageHandlerMap;
-	static boost::mutex packageHandlerMapLock;
+    execplan::SessionManager sessionManager;
+    boost::shared_ptr<execplan::CalpontSystemCatalog> csc;
+    BRM::DBRM* fDbrm;
+    querytele::QueryTeleClient fQtc;
+    bool fConcurrentSupport;
 
-	// A map to hold pointers to all BatchInsertProc object
-	static std::map<uint32_t, BatchInsertProc*> batchinsertProcessorMap;
-	static boost::mutex batchinsertProcessorMapLock;
-	
+    // A map to hold pointers to all active PackageProcessors
+    typedef std::map<uint32_t, boost::shared_ptr<PackageHandler> > PackageHandlerMap_t;
+    static PackageHandlerMap_t packageHandlerMap;
+    static boost::mutex packageHandlerMapLock;
+
+    // A map to hold pointers to all BatchInsertProc object
+    static std::map<uint32_t, BatchInsertProc*> batchinsertProcessorMap;
+    static boost::mutex batchinsertProcessorMapLock;
+
     friend struct CancellationThread;
-	friend class PackageHandler;
+    friend class PackageHandler;
 };
 
 class RollbackTransactionProcessor : public dmlpackageprocessor::DMLPackageProcessor
 {
 
 public:
-	RollbackTransactionProcessor(BRM::DBRM* aDbrm) : DMLPackageProcessor(aDbrm, 1) {}
+    RollbackTransactionProcessor(BRM::DBRM* aDbrm) : DMLPackageProcessor(aDbrm, 1) {}
     /** @brief process an Rollback transactions
      *
      * @param cpackage the UpdateDMLPackage to process
      */
-	 inline DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage)
-	 {
-		DMLResult result;
-		result.result = NO_ERROR;
-		return result;
-	 }
-	 
-	 void processBulkRollback (BRM::TableLockInfo lockInfo, BRM::DBRM * dbrm, uint64_t uniqueId, 
-			oam::OamCache::dbRootPMMap_t& dbRootPMMap, bool & lockReleased);
-	
+    inline DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage)
+    {
+        DMLResult result;
+        result.result = NO_ERROR;
+        return result;
+    }
+
+    void processBulkRollback (BRM::TableLockInfo lockInfo, BRM::DBRM* dbrm, uint64_t uniqueId,
+                              oam::OamCache::dbRootPMMap_t& dbRootPMMap, bool& lockReleased);
+
 protected:
 };
 

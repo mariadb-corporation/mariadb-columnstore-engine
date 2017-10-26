@@ -20,7 +20,7 @@
  *
  *****************************************************************************/
 
-/** @file 
+/** @file
  * class XXX interface
  */
 
@@ -39,30 +39,31 @@
 #define EXPORT
 #endif
 
-namespace BRM {
+namespace BRM
+{
 
 class TransactionNode : public RGNode
 {
-	public:
-		EXPORT explicit TransactionNode(int txnid=0);
-		EXPORT virtual ~TransactionNode();
+public:
+    EXPORT explicit TransactionNode(int txnid = 0);
+    EXPORT virtual ~TransactionNode();
 
-		EXPORT void setTxnID(VER_t);
-		EXPORT int getTxnID() const;
+    EXPORT void setTxnID(VER_t);
+    EXPORT int getTxnID() const;
 
-		EXPORT void sleep(boost::mutex &mutex);
-		EXPORT void wake();
-		EXPORT void die();
-		EXPORT bool dead();
-		EXPORT bool sleeping();
+    EXPORT void sleep(boost::mutex& mutex);
+    EXPORT void wake();
+    EXPORT void die();
+    EXPORT bool dead();
+    EXPORT bool sleeping();
 
-	private:
-		TransactionNode(const TransactionNode &);
-		TransactionNode& operator=(const TransactionNode &);
-		
-		boost::condition condVar;
-		VER_t txnID;
-		bool _die, _sleeping;
+private:
+    TransactionNode(const TransactionNode&);
+    TransactionNode& operator=(const TransactionNode&);
+
+    boost::condition condVar;
+    VER_t txnID;
+    bool _die, _sleeping;
 };
 
 #undef EXPORT

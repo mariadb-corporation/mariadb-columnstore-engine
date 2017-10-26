@@ -27,9 +27,9 @@ namespace installer
 
 typedef struct Child_Module_struct
 {
-	std::string     moduleName;
-	std::string     moduleIP;
-	std::string     hostName;
+    std::string     moduleName;
+    std::string     moduleIP;
+    std::string     hostName;
 } ChildModule;
 
 typedef std::vector<ChildModule> ChildModuleList;

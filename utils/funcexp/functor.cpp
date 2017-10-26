@@ -50,76 +50,78 @@ namespace funcexp
 
 void Func::init()
 {
-	uint32_t fni = joblist::FLOATNULL;
-	float* fp = reinterpret_cast<float*>(&fni);
-	fFloatNullVal = *fp;
+    uint32_t fni = joblist::FLOATNULL;
+    float* fp = reinterpret_cast<float*>(&fni);
+    fFloatNullVal = *fp;
 
-	uint64_t dni = joblist::DOUBLENULL;
-	double* dp = reinterpret_cast<double*>(&dni);
-	fDoubleNullVal = *dp;
+    uint64_t dni = joblist::DOUBLENULL;
+    double* dp = reinterpret_cast<double*>(&dni);
+    fDoubleNullVal = *dp;
 
 }
 
 
 Func::Func()
 {
-	init();
+    init();
 }
 
 
 Func::Func(const string& funcName) : fFuncName(funcName)
 {
-	init();
+    init();
 }
 
 
 uint32_t Func::stringToDate(const string str)
 {
-	int64_t ret = DataConvert::stringToDate(str);
-	if (ret == -1)
-	{
-		Message::Args args;
-		args.add("date");
-		args.add(str);
-		unsigned errcode = ERR_INCORRECT_VALUE;
-		throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-	}
+    int64_t ret = DataConvert::stringToDate(str);
 
-	return ret;
+    if (ret == -1)
+    {
+        Message::Args args;
+        args.add("date");
+        args.add(str);
+        unsigned errcode = ERR_INCORRECT_VALUE;
+        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+    }
+
+    return ret;
 }
 
 
 uint64_t Func::stringToDatetime(const string str)
 {
-	int64_t ret = DataConvert::stringToDatetime(str);
-	if (ret == -1)
-	{
-		Message::Args args;
-		args.add("datetime");
-		args.add(str);
-		unsigned errcode = ERR_INCORRECT_VALUE;
-		throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-	}
+    int64_t ret = DataConvert::stringToDatetime(str);
 
-	return ret;
+    if (ret == -1)
+    {
+        Message::Args args;
+        args.add("datetime");
+        args.add(str);
+        unsigned errcode = ERR_INCORRECT_VALUE;
+        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+    }
+
+    return ret;
 }
 
 
 uint32_t Func::intToDate(int64_t i)
 {
-	if ((uint64_t) i > 0xFFFFFFFFL)
-		return ((((uint32_t) (i >> 32)) & 0xFFFFFFC0L) | 0x3E);
+    if ((uint64_t) i > 0xFFFFFFFFL)
+        return ((((uint32_t) (i >> 32)) & 0xFFFFFFC0L) | 0x3E);
 
-	return i;
+    return i;
 }
 
 
 uint64_t Func::intToDatetime(int64_t i)
 {
-	if ((uint64_t) i < 0xFFFFFFFFL)
-		return (i << 32);
+    if ((uint64_t) i < 0xFFFFFFFFL)
+        return (i << 32);
 
-	return i;
+    return i;
 }
 
 

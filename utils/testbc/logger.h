@@ -37,29 +37,29 @@ namespace primitiveprocessor
 class Logger
 {
 public:
-	Logger();
+    Logger();
 
-	void logMessage(const logging::Message::MessageID mid,
+    void logMessage(const logging::Message::MessageID mid,
                     const logging::Message::Args& args,
-                    bool  critical=false);
+                    bool  critical = false);
 
-	void logMessage(const std::string& msg, bool critical = true, logging::Message::MessageID mid = 0 )
-	{
-		logging::Message::Args args;
-		args.add(msg);
-		logMessage(mid, args, true);
-	}
+    void logMessage(const std::string& msg, bool critical = true, logging::Message::MessageID mid = 0 )
+    {
+        logging::Message::Args args;
+        args.add(msg);
+        logMessage(mid, args, true);
+    }
 
 private:
-	// defaults okay
-	//Logger(const Logger& rhs);
-	//Logger& operator=(const Logger& rhs);
+    // defaults okay
+    //Logger(const Logger& rhs);
+    //Logger& operator=(const Logger& rhs);
 
-	typedef std::map<logging::Message::MessageID, logging::Message> MsgMap;
+    typedef std::map<logging::Message::MessageID, logging::Message> MsgMap;
 
-	MsgMap fMsgMap;
-	boost::mutex fLogLock;
-	logging::MessageLog fMl1;
+    MsgMap fMsgMap;
+    boost::mutex fLogLock;
+    logging::MessageLog fMl1;
 };
 
 

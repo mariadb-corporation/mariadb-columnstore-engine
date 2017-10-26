@@ -31,21 +31,22 @@ DMLTable::DMLTable()
 
 DMLTable::~DMLTable()
 {
-    
+
     try
     {
         RowList::iterator it = fRows.begin();
-        while(it != fRows.end())
+
+        while (it != fRows.end())
         {
             delete *it;
             it++;
         }
     }
-    catch(...)
+    catch (...)
     {
         cout << "failed to delete the table rows" << endl;
     }
-    
+
 }
 
 int DMLTable::read(messageqcpp::ByteStream& bytestream)
@@ -67,6 +68,7 @@ int DMLTable::read(messageqcpp::ByteStream& bytestream)
         retval = aRow->read(bytestream);
         fRows.push_back(aRow);
     }
+
     return retval;
 }
 
@@ -82,6 +84,7 @@ int DMLTable::write(messageqcpp::ByteStream& bytestream)
     //write the row list
     RowList::iterator rowListPtr;
     rowListPtr = fRows.begin();
+
     for (; rowListPtr != fRows.end(); ++rowListPtr)
     {
         retval = (*rowListPtr)->write(bytestream);

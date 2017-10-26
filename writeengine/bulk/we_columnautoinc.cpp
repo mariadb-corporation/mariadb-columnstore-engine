@@ -64,26 +64,28 @@ ColumnAutoInc::~ColumnAutoInc( )
 // colInfo       - ColumnInfo associated with auto-increment column.
 //------------------------------------------------------------------------------
 int ColumnAutoInc::init( const std::string& fullTableName,
-    ColumnInfo* colInfo )
+                         ColumnInfo* colInfo )
 {
     fMaxIntSat = colInfo->column.fMaxIntSat;
     fTableName = fullTableName;
-    fColumnName= colInfo->column.colName;
+    fColumnName = colInfo->column.colName;
     fColumnOID = colInfo->column.mapOid;
 
     std::string::size_type periodIdx = fTableName.find('.');
+
     if (periodIdx == std::string::npos)
     {
         std::ostringstream oss;
         oss << "Error parsing full table name to get auto-increment value for "
             << fTableName;
         fLog->logMsg( oss.str(), ERR_AUTOINC_TABLE_NAME, MSGLVL_ERROR );
-		BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
+        BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
         return ERR_AUTOINC_TABLE_NAME;
     }
 
     uint64_t nextAuto = 0;
     int rc = getNextValueFromSysCat( nextAuto );
+
     if (rc != NO_ERROR)
     {
         return rc;
@@ -91,21 +93,22 @@ int ColumnAutoInc::init( const std::string& fullTableName,
 
     std::string errMsg;
     rc = BRMWrapper::getInstance()->startAutoIncrementSequence(
-        fColumnOID, nextAuto, colInfo->column.width, colInfo->column.dataType, errMsg );
+             fColumnOID, nextAuto, colInfo->column.width, colInfo->column.dataType, errMsg );
+
     if (rc != NO_ERROR)
     {
         std::ostringstream oss;
         oss << "Unable to initialize auto-increment sequence for " <<
             fTableName << "; " << errMsg;
         fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
-		BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
+        BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
         return rc;
     }
 
     std::ostringstream oss2;
     oss2 << "Initializing next auto increment for table-" << fTableName <<
-        ", column-"        << fColumnName <<
-        "; autoincrement " << nextAuto;
+         ", column-"        << fColumnName <<
+         "; autoincrement " << nextAuto;
     fLog->logMsg( oss2.str(), MSGLVL_INFO2 );
 
     initNextAutoInc( nextAuto );
@@ -119,11 +122,12 @@ int ColumnAutoInc::init( const std::string& fullTableName,
 // Don't need to use fAutoIncMutex in this function as long as we call it from
 // the main thread, during preprocessing.  But we go ahead and use the mutex
 // for completeness.  Using the mutex should not affect performance, since this
-// function is only called once per table. 
+// function is only called once per table.
 //------------------------------------------------------------------------------
 void ColumnAutoInc::initNextAutoInc( uint64_t nextValue )
 {
     boost::mutex::scoped_lock lock(fAutoIncMutex);
+
     // nextValue is unusable if < 1; probably means we already reached max value
     if (nextValue < 1)
         fAutoIncLastValue = fMaxIntSat;
@@ -149,7 +153,8 @@ int ColumnAutoInc::finish( )
 
     // We grab AI lock in order to access/synchronize DBRM and the system
     // catalog as a single operation, to avoid race condition between apps.
-    try {
+    try
+    {
         dbrm.getAILock( fColumnOID );
     }
     catch (std::exception& ex)
@@ -158,28 +163,31 @@ int ColumnAutoInc::finish( )
         oss << "Error locking auto-increment nextValue lock for table " <<
             fTableName << "; column " << fColumnName << "; " << ex.what();
         fLog->logMsg( oss.str(), ERR_AUTOINC_GET_LOCK, MSGLVL_ERROR );
-		BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
+        BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
         return ERR_AUTOINC_GET_LOCK;
     }
 
     uint64_t sysCatNextAuto = 0;
     rc = getNextValueFromSysCat( sysCatNextAuto );
+
     if (rc == NO_ERROR)
     {
         // Update system catalog if my latest AI nextValue is > the current
         // syscat AI nextValue.  max(uint64_t) denotes an AI column that has maxed out.
         uint64_t myNextValue = getNextAutoIncToSave();
+
         if ( (sysCatNextAuto != AUTOINCR_SATURATED) && // do not update if syscat already at max
-            ((myNextValue >  sysCatNextAuto) ||
-             (myNextValue == AUTOINCR_SATURATED)) )
+                ((myNextValue >  sysCatNextAuto) ||
+                 (myNextValue == AUTOINCR_SATURATED)) )
         {
             std::ostringstream oss2;
             oss2 << "Updating next auto increment for table-" << fTableName <<
-                ", column-"        << fColumnName <<
-                "; autoincrement " << myNextValue;
+                 ", column-"        << fColumnName <<
+                 "; autoincrement " << myNextValue;
             fLog->logMsg( oss2.str(), MSGLVL_INFO2 );
 
             rc = BulkLoad::updateNextValue( fColumnOID, myNextValue );
+
             if (rc != NO_ERROR)
             {
                 WErrorCodes ec;
@@ -188,7 +196,7 @@ int ColumnAutoInc::finish( )
                     fTableName << "; column " << fColumnName << "; rc=" << rc <<
                     "; " << ec.errorString(ERR_AUTOINC_UPDATE);
                 fLog->logMsg( oss.str(), ERR_AUTOINC_UPDATE, MSGLVL_ERROR );
-				BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
+                BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
                 // Don't exit this function yet.  We set return code and fall
                 // through to bottom of the function to release the AI lock.
                 rc = ERR_AUTOINC_UPDATE;
@@ -197,15 +205,16 @@ int ColumnAutoInc::finish( )
         else
         {
             std::ostringstream oss2;
-            oss2 << "Skip updating next auto increment for table-"<<fTableName<<
-                ", column-"        << fColumnName <<
-                "; autoincrement " << myNextValue <<
-                "; syscat AI already at " << sysCatNextAuto;
+            oss2 << "Skip updating next auto increment for table-" << fTableName <<
+                 ", column-"        << fColumnName <<
+                 "; autoincrement " << myNextValue <<
+                 "; syscat AI already at " << sysCatNextAuto;
             fLog->logMsg( oss2.str(), MSGLVL_INFO2 );
         }
     } // end of rc==NO_ERROR from getNextValueFromSysCat()
 
-    try {
+    try
+    {
         dbrm.releaseAILock( fColumnOID );
     }
     catch (std::exception& ex)
@@ -213,7 +222,7 @@ int ColumnAutoInc::finish( )
         // If we have trouble releasing AI lock, we log it, but we don't
         // consider it fatal to the job; so we don't return bad return code.
         std::ostringstream oss;
-        oss << "Error releasing auto-increment nextValue lock for table "<<
+        oss << "Error releasing auto-increment nextValue lock for table " <<
             fTableName << "; column " << fColumnName << "; " << ex.what();
         fLog->logMsg( oss.str(), ERR_AUTOINC_REL_LOCK, MSGLVL_WARNING );
         //return ERR_AUTOINC_REL_LOCK;
@@ -232,6 +241,7 @@ uint64_t ColumnAutoInc::getNextAutoIncToSave( )
     uint64_t nextValue = AUTOINCR_SATURATED;
 
     boost::mutex::scoped_lock lock(fAutoIncMutex);
+
     // nextValue is returned as -1 if we reached max value
     if (fAutoIncLastValue < fMaxIntSat)
         nextValue = fAutoIncLastValue + 1;
@@ -249,10 +259,11 @@ int ColumnAutoInc::getNextValueFromSysCat( uint64_t& nextValue )
     std::string sName;
     std::string tName;
     sName.assign(fTableName, 0, periodIdx);
-    tName.assign(fTableName, periodIdx+1,
-        fTableName.length() - (periodIdx+1));
-    execplan::CalpontSystemCatalog::TableName tbl(sName,tName);
+    tName.assign(fTableName, periodIdx + 1,
+                 fTableName.length() - (periodIdx + 1));
+    execplan::CalpontSystemCatalog::TableName tbl(sName, tName);
     uint64_t nextAuto = 0;
+
     try
     {
         boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatPtr =
@@ -263,11 +274,14 @@ int ColumnAutoInc::getNextValueFromSysCat( uint64_t& nextValue )
         // Handle bad return code or thrown exception from
         // system catalog query.
         nextAuto = systemCatPtr->nextAutoIncrValue( tbl );
-        if (nextAuto == 0) {
+
+        if (nextAuto == 0)
+        {
             throw std::runtime_error(
                 "Not an auto-increment column, or column not found");
         }
-        else if (nextAuto == AUTOINCR_SATURATED) {
+        else if (nextAuto == AUTOINCR_SATURATED)
+        {
             throw std::runtime_error(
                 "auto-increment max value already reached");
         }
@@ -280,7 +294,7 @@ int ColumnAutoInc::getNextValueFromSysCat( uint64_t& nextValue )
         oss << "Unable to get current auto-increment value for " <<
             sName << "." << tName << "; " << ex.what();
         fLog->logMsg( oss.str(), ERR_AUTOINC_INIT1, MSGLVL_ERROR );
-		BulkLoad::addErrorMsg2BrmUpdater(tName, oss);
+        BulkLoad::addErrorMsg2BrmUpdater(tName, oss);
         return ERR_AUTOINC_INIT1;
     }
     catch (...)
@@ -289,7 +303,7 @@ int ColumnAutoInc::getNextValueFromSysCat( uint64_t& nextValue )
         oss << "Unable to get current auto-increment value for " <<
             sName << "." << tName << "; unknown exception";
         fLog->logMsg( oss.str(), ERR_AUTOINC_INIT2, MSGLVL_ERROR );
-		BulkLoad::addErrorMsg2BrmUpdater(tName, oss);
+        BulkLoad::addErrorMsg2BrmUpdater(tName, oss);
         return ERR_AUTOINC_INIT2;
     }
 
@@ -321,6 +335,7 @@ int ColumnAutoIncJob::reserveNextRange(
     uint64_t& nextValue )
 {
     boost::mutex::scoped_lock lock(fAutoIncMutex);
+
     if ((fMaxIntSat - autoIncCount) < fAutoIncLastValue)
     {
         return ERR_AUTOINC_GEN_EXCEED_MAX;
@@ -362,17 +377,20 @@ int ColumnAutoIncIncremental::reserveNextRange(
     uint64_t nextValArg = 0;
     std::string errMsg;
     int rc = BRMWrapper::getInstance()->getAutoIncrementRange(
-        fColumnOID, countArg, nextValArg, errMsg );
+                 fColumnOID, countArg, nextValArg, errMsg );
+
     if (rc != NO_ERROR)
     {
         std::ostringstream oss;
         oss << "Error reserving auto-increment range (" << countArg <<
-            " numbers) for table "<<
+            " numbers) for table " <<
             fTableName << "; column " << fColumnName << "; " << errMsg;
+
         if (rc == ERR_AUTOINC_GEN_EXCEED_MAX)
             oss << " Max allowed value is " << fMaxIntSat << ".";
+
         fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
-		BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
+        BulkLoad::addErrorMsg2BrmUpdater(fTableName, oss);
         return rc;
     }
 
@@ -385,6 +403,7 @@ int ColumnAutoIncIncremental::reserveNextRange(
     // update fAutoIncLastValue.  We only update it if the range in question
     // exceeds the current value for fAutoIncLastValue.
     boost::mutex::scoped_lock lock(fAutoIncMutex);
+
     if (autoIncLastValue > fAutoIncLastValue)
         fAutoIncLastValue = autoIncLastValue;
 

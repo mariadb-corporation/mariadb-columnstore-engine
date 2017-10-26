@@ -56,148 +56,156 @@ namespace windowfunction
 template<typename T>
 boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const string& name, int ct)
 {
-	boost::shared_ptr<WindowFunctionType> func;
-	switch (ct)
-	{
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::INT:
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::DECIMAL:
-		{
-			func.reset(new WF_stats<int64_t>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::UTINYINT:
-		case CalpontSystemCatalog::USMALLINT:
-		case CalpontSystemCatalog::UMEDINT:
-		case CalpontSystemCatalog::UINT:
-		case CalpontSystemCatalog::UBIGINT:
-		case CalpontSystemCatalog::UDECIMAL:
-		{
-			func.reset(new WF_stats<uint64_t>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::DOUBLE:
-		case CalpontSystemCatalog::UDOUBLE:
-		{
-			func.reset(new WF_stats<double>(id, name));
-			break;
-		}
-		case CalpontSystemCatalog::FLOAT:
-		case CalpontSystemCatalog::UFLOAT:
-		{
-			func.reset(new WF_stats<float>(id, name));
-			break;
-		}
-		default:
-		{
-			string errStr = name + "(" + colType2String[ct] + ")";
-			errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_INVALID_PARM_TYPE, errStr);
-			cerr << errStr << endl;
-			throw IDBExcept(errStr, ERR_WF_INVALID_PARM_TYPE);
+    boost::shared_ptr<WindowFunctionType> func;
 
-			break;
-		}
-	}
+    switch (ct)
+    {
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::DECIMAL:
+        {
+            func.reset(new WF_stats<int64_t>(id, name));
+            break;
+        }
 
-	return func;
+        case CalpontSystemCatalog::UTINYINT:
+        case CalpontSystemCatalog::USMALLINT:
+        case CalpontSystemCatalog::UMEDINT:
+        case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UBIGINT:
+        case CalpontSystemCatalog::UDECIMAL:
+        {
+            func.reset(new WF_stats<uint64_t>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::DOUBLE:
+        case CalpontSystemCatalog::UDOUBLE:
+        {
+            func.reset(new WF_stats<double>(id, name));
+            break;
+        }
+
+        case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::UFLOAT:
+        {
+            func.reset(new WF_stats<float>(id, name));
+            break;
+        }
+
+        default:
+        {
+            string errStr = name + "(" + colType2String[ct] + ")";
+            errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_INVALID_PARM_TYPE, errStr);
+            cerr << errStr << endl;
+            throw IDBExcept(errStr, ERR_WF_INVALID_PARM_TYPE);
+
+            break;
+        }
+    }
+
+    return func;
 }
 
 
 template<typename T>
 WindowFunctionType* WF_stats<T>::clone() const
 {
-	return new WF_stats<T>(*this);
+    return new WF_stats<T>(*this);
 }
 
 
 template<typename T>
 void WF_stats<T>::resetData()
 {
-	fSum1 = 0;
-	fSum2 = 0;
-	fCount = 0;
-	fStats = 0.0;
+    fSum1 = 0;
+    fSum2 = 0;
+    fCount = 0;
+    fStats = 0.0;
 
-	WindowFunctionType::resetData();
+    WindowFunctionType::resetData();
 }
 
 
 template<typename T>
 void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
 {
-	if ((fFrameUnit == WF__FRAME_ROWS) ||
-		(fPrev == -1) ||
-		(!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
-	{
-		// for unbounded - current row special handling
-		if (fPrev >= b && fPrev < c)
-			b = c;
-		else if (fPrev <= e && fPrev > c)
-			e = c;
+    if ((fFrameUnit == WF__FRAME_ROWS) ||
+            (fPrev == -1) ||
+            (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
+    {
+        // for unbounded - current row special handling
+        if (fPrev >= b && fPrev < c)
+            b = c;
+        else if (fPrev <= e && fPrev > c)
+            e = c;
 
-		uint64_t colIn = fFieldIndex[1];
-		for (int64_t i = b; i <= e; i++)
-		{
-			if (i % 1000 == 0 && fStep->cancelled())
-				break;
+        uint64_t colIn = fFieldIndex[1];
 
-			fRow.setData(getPointer(fRowData->at(i)));
-			if (fRow.isNullValue(colIn) == true)
-				continue;
+        for (int64_t i = b; i <= e; i++)
+        {
+            if (i % 1000 == 0 && fStep->cancelled())
+                break;
 
-			T valIn;
-			getValue(colIn, valIn);
-			long double val = (long double) valIn;
+            fRow.setData(getPointer(fRowData->at(i)));
 
-			fSum1 += val;
-			fSum2 += val * val;
-			fCount++;
-		}
+            if (fRow.isNullValue(colIn) == true)
+                continue;
 
-		if ((fCount > 0) &&
-			!(fCount == 1 && (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP)))
-		{
-			int scale = fRow.getScale(colIn);
-			long double factor = pow(10.0, scale);
-			if (scale != 0) // adjust the scale if necessary
-			{
-				fSum1 /= factor;
-				fSum2 /= factor*factor;
-			}
+            T valIn;
+            getValue(colIn, valIn);
+            long double val = (long double) valIn;
 
-			long double stat = fSum1 * fSum1 / fCount;
-			stat = fSum2 - stat;
+            fSum1 += val;
+            fSum2 += val * val;
+            fCount++;
+        }
 
-			if (fFunctionId == WF__STDDEV_POP)
-				stat = sqrt(stat / fCount);
-			else if (fFunctionId == WF__STDDEV_SAMP)
-				stat = sqrt(stat / (fCount - 1));
-			else if (fFunctionId == WF__VAR_POP)
-				stat = stat / fCount;
-			else if (fFunctionId == WF__VAR_SAMP)
-				stat = stat / (fCount - 1);
+        if ((fCount > 0) &&
+                !(fCount == 1 && (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP)))
+        {
+            int scale = fRow.getScale(colIn);
+            long double factor = pow(10.0, scale);
 
-			fStats = (double) stat;
-		}
-	}
+            if (scale != 0) // adjust the scale if necessary
+            {
+                fSum1 /= factor;
+                fSum2 /= factor * factor;
+            }
 
-	if (fCount == 0)
-	{
-		setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) NULL);
-	}
-	else if (fCount == 1 && (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP))
-	{
-		setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) NULL);
-	}
-	else
-	{
-		setValue(CalpontSystemCatalog::DOUBLE, b, e, c, &fStats);
-	}
+            long double stat = fSum1 * fSum1 / fCount;
+            stat = fSum2 - stat;
 
-	fPrev = c;
+            if (fFunctionId == WF__STDDEV_POP)
+                stat = sqrt(stat / fCount);
+            else if (fFunctionId == WF__STDDEV_SAMP)
+                stat = sqrt(stat / (fCount - 1));
+            else if (fFunctionId == WF__VAR_POP)
+                stat = stat / fCount;
+            else if (fFunctionId == WF__VAR_SAMP)
+                stat = stat / (fCount - 1);
+
+            fStats = (double) stat;
+        }
+    }
+
+    if (fCount == 0)
+    {
+        setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) NULL);
+    }
+    else if (fCount == 1 && (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP))
+    {
+        setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*) NULL);
+    }
+    else
+    {
+        setValue(CalpontSystemCatalog::DOUBLE, b, e, c, &fStats);
+    }
+
+    fPrev = c;
 }
 
 

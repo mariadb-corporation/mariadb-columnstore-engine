@@ -46,62 +46,64 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_ceil::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	return fp[0]->data()->resultType();
+    return fp[0]->data()->resultType();
 }
 
 
 int64_t Func_ceil::getIntVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType& op_ct)
 {
-	int64_t ret = 0;
+    int64_t ret = 0;
 
-	switch (op_ct.colDataType)
-	{
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::INT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::DECIMAL:
+    switch (op_ct.colDataType)
+    {
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-		{
+        {
             if (op_ct.scale == 0)
             {
                 ret = parm[0]->data()->getIntVal(row, isNull);
                 break;
             }
 
-			IDB_Decimal decimal = parm[0]->data()->getDecimalVal(row, isNull);
+            IDB_Decimal decimal = parm[0]->data()->getDecimalVal(row, isNull);
 
-			if (isNull)
-				break;
+            if (isNull)
+                break;
 
-			ret = decimal.value;
-			// negative scale is not supported by CNX yet
-			if (decimal.scale > 0)
-			{
+            ret = decimal.value;
 
-				if (decimal.scale >= 19)
-				{
-					std::ostringstream oss;
-					oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
-						<< " with scale " << (int) decimal.scale << " is beyond supported scale";
-					throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-				}
+            // negative scale is not supported by CNX yet
+            if (decimal.scale > 0)
+            {
 
-				// Adjust to an int based on the scale.
-				int64_t tmp = ret;
-				ret /= helpers::powerOf10_c[decimal.scale];
+                if (decimal.scale >= 19)
+                {
+                    std::ostringstream oss;
+                    oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
+                        << " with scale " << (int) decimal.scale << " is beyond supported scale";
+                    throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+                }
 
-				// Add 1 if this is a positive number and there were values to the right of the
-				// decimal point so that we return the largest integer value not less than X.
-				if ((tmp - (ret * helpers::powerOf10_c[decimal.scale]) > 0))
-				ret += 1;
-			}
-		}
-		break;
+                // Adjust to an int based on the scale.
+                int64_t tmp = ret;
+                ret /= helpers::powerOf10_c[decimal.scale];
+
+                // Add 1 if this is a positive number and there were values to the right of the
+                // decimal point so that we return the largest integer value not less than X.
+                if ((tmp - (ret * helpers::powerOf10_c[decimal.scale]) > 0))
+                    ret += 1;
+            }
+        }
+        break;
+
         case CalpontSystemCatalog::UBIGINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UMEDINT:
@@ -111,73 +113,78 @@ int64_t Func_ceil::getIntVal(Row& row,
             ret = (int64_t)(parm[0]->data()->getUintVal(row, isNull));
         }
         break;
-		case CalpontSystemCatalog::DOUBLE:
+
+        case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
-		case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
-		{
-			ret = (int64_t) ceil(parm[0]->data()->getDoubleVal(row, isNull));
-		}
-		break;
+        {
+            ret = (int64_t) ceil(parm[0]->data()->getDoubleVal(row, isNull));
+        }
+        break;
 
-		case CalpontSystemCatalog::VARCHAR:
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::TEXT:
-		{
-			const string& str = parm[0]->data()->getStrVal(row, isNull);
-			if (!isNull)
-				ret = (int64_t) ceil(strtod(str.c_str(), 0));
-		}
-		break;
+        case CalpontSystemCatalog::VARCHAR:
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
+        {
+            const string& str = parm[0]->data()->getStrVal(row, isNull);
 
-		case CalpontSystemCatalog::DATE:
-		{
-			Date d (parm[0]->data()->getDateIntVal(row, isNull));
-			if (!isNull)
-				ret = d.convertToMySQLint();
-		}
-		break;
+            if (!isNull)
+                ret = (int64_t) ceil(strtod(str.c_str(), 0));
+        }
+        break;
 
-		case CalpontSystemCatalog::DATETIME:
-		{
-			DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
+        case CalpontSystemCatalog::DATE:
+        {
+            Date d (parm[0]->data()->getDateIntVal(row, isNull));
 
-			if (!isNull)
-				ret = dt.convertToMySQLint();
-		}
-		break;
+            if (!isNull)
+                ret = d.convertToMySQLint();
+        }
+        break;
 
-		default:
-		{
-			std::ostringstream oss;
-			oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
-				<< " is not supported";
-			throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-		}
-	}
-	return ret;
+        case CalpontSystemCatalog::DATETIME:
+        {
+            DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
+
+            if (!isNull)
+                ret = dt.convertToMySQLint();
+        }
+        break;
+
+        default:
+        {
+            std::ostringstream oss;
+            oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
+                << " is not supported";
+            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+        }
+    }
+
+    return ret;
 }
 
 uint64_t Func_ceil::getUintVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                               FunctionParm& parm,
+                               bool& isNull,
+                               CalpontSystemCatalog::ColType& op_ct)
 {
-	uint64_t ret = 0;
+    uint64_t ret = 0;
 
-	switch (op_ct.colDataType)
-	{
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::INT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::DECIMAL:
+    switch (op_ct.colDataType)
+    {
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::INT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
-		{
+        {
             ret = (uint64_t)parm[0]->data()->getIntVal(row, isNull);
         }
-		break;
+        break;
+
         case CalpontSystemCatalog::UBIGINT:
         case CalpontSystemCatalog::UINT:
         case CalpontSystemCatalog::UMEDINT:
@@ -187,77 +194,83 @@ uint64_t Func_ceil::getUintVal(Row& row,
             ret = (parm[0]->data()->getUintVal(row, isNull));
         }
         break;
-		case CalpontSystemCatalog::DOUBLE:
+
+        case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
-		case CalpontSystemCatalog::FLOAT:
+        case CalpontSystemCatalog::FLOAT:
         case CalpontSystemCatalog::UFLOAT:
-		{
-			ret = (uint64_t) ceil(parm[0]->data()->getDoubleVal(row, isNull));
-		}
-		break;
+        {
+            ret = (uint64_t) ceil(parm[0]->data()->getDoubleVal(row, isNull));
+        }
+        break;
 
-		case CalpontSystemCatalog::VARCHAR:
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::TEXT:
-		{
-			const string& str = parm[0]->data()->getStrVal(row, isNull);
-			if (!isNull)
-				ret = (uint64_t) ceil(strtod(str.c_str(), 0));
-		}
-		break;
+        case CalpontSystemCatalog::VARCHAR:
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
+        {
+            const string& str = parm[0]->data()->getStrVal(row, isNull);
 
-		case CalpontSystemCatalog::DATE:
-		{
+            if (!isNull)
+                ret = (uint64_t) ceil(strtod(str.c_str(), 0));
+        }
+        break;
+
+        case CalpontSystemCatalog::DATE:
+        {
             Date d (parm[0]->data()->getDateIntVal(row, isNull));
+
             if (!isNull)
                 ret = d.convertToMySQLint();
-		}
-		break;
+        }
+        break;
 
-		case CalpontSystemCatalog::DATETIME:
-		{
+        case CalpontSystemCatalog::DATETIME:
+        {
             DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
 
             if (!isNull)
                 ret = dt.convertToMySQLint();
-		}
-		break;
+        }
+        break;
 
-		default:
-		{
-			std::ostringstream oss;
-			oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
-				<< " is not supported";
-			throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
-		}
-	}
-	return ret;
+        default:
+        {
+            std::ostringstream oss;
+            oss << "ceil: datatype of " << colDataTypeToString(op_ct.colDataType)
+                << " is not supported";
+            throw logging::IDBExcept(oss.str(), ERR_DATATYPE_NOT_SUPPORT);
+        }
+    }
+
+    return ret;
 }
 
 
 double Func_ceil::getDoubleVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                               FunctionParm& parm,
+                               bool& isNull,
+                               CalpontSystemCatalog::ColType& op_ct)
 {
-	double ret = 0.0;
-	if (op_ct.colDataType == CalpontSystemCatalog::DOUBLE ||
-        op_ct.colDataType == CalpontSystemCatalog::UDOUBLE ||
-        op_ct.colDataType == CalpontSystemCatalog::FLOAT ||
-		op_ct.colDataType == CalpontSystemCatalog::UFLOAT)
-	{
-		ret = ceil(parm[0]->data()->getDoubleVal(row, isNull));
-	}
-	else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-			 op_ct.colDataType == CalpontSystemCatalog::CHAR ||
-			 op_ct.colDataType == CalpontSystemCatalog::TEXT)
-	{
-		const string& str = parm[0]->data()->getStrVal(row, isNull);
-		if (!isNull)
-			ret = ceil(strtod(str.c_str(), 0));
-	}
-	else
-	{
+    double ret = 0.0;
+
+    if (op_ct.colDataType == CalpontSystemCatalog::DOUBLE ||
+            op_ct.colDataType == CalpontSystemCatalog::UDOUBLE ||
+            op_ct.colDataType == CalpontSystemCatalog::FLOAT ||
+            op_ct.colDataType == CalpontSystemCatalog::UFLOAT)
+    {
+        ret = ceil(parm[0]->data()->getDoubleVal(row, isNull));
+    }
+    else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
+             op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+             op_ct.colDataType == CalpontSystemCatalog::TEXT)
+    {
+        const string& str = parm[0]->data()->getStrVal(row, isNull);
+
+        if (!isNull)
+            ret = ceil(strtod(str.c_str(), 0));
+    }
+    else
+    {
         if (isUnsigned(op_ct.colDataType))
         {
             ret = (double) getUintVal(row, parm, isNull, op_ct);
@@ -266,34 +279,37 @@ double Func_ceil::getDoubleVal(Row& row,
         {
             ret = (double) getIntVal(row, parm, isNull, op_ct);
         }
-	}
+    }
 
-	return ret;
+    return ret;
 }
 
 
 string Func_ceil::getStrVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                            FunctionParm& parm,
+                            bool& isNull,
+                            CalpontSystemCatalog::ColType& op_ct)
 {
-	char tmp[512] = {'\0'};
-	if (op_ct.colDataType == CalpontSystemCatalog::DOUBLE ||
-        op_ct.colDataType == CalpontSystemCatalog::UDOUBLE ||
-		op_ct.colDataType == CalpontSystemCatalog::FLOAT ||
-        op_ct.colDataType == CalpontSystemCatalog::UFLOAT ||
-		op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-		op_ct.colDataType == CalpontSystemCatalog::CHAR ||
-		op_ct.colDataType == CalpontSystemCatalog::TEXT)
-	{
-		snprintf(tmp, 511, "%f", getDoubleVal(row, parm, isNull, op_ct));
+    char tmp[512] = {'\0'};
 
-		// remove the decimals in the oss string.
-		char *d = tmp;
-		while ((*d != '.') && (*d != '\0'))
-			d++;
-		*d = '\0';
-	}
+    if (op_ct.colDataType == CalpontSystemCatalog::DOUBLE ||
+            op_ct.colDataType == CalpontSystemCatalog::UDOUBLE ||
+            op_ct.colDataType == CalpontSystemCatalog::FLOAT ||
+            op_ct.colDataType == CalpontSystemCatalog::UFLOAT ||
+            op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
+            op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+            op_ct.colDataType == CalpontSystemCatalog::TEXT)
+    {
+        snprintf(tmp, 511, "%f", getDoubleVal(row, parm, isNull, op_ct));
+
+        // remove the decimals in the oss string.
+        char* d = tmp;
+
+        while ((*d != '.') && (*d != '\0'))
+            d++;
+
+        *d = '\0';
+    }
     else if (isUnsigned(op_ct.colDataType))
     {
 #ifndef __LP64__
@@ -302,16 +318,16 @@ string Func_ceil::getStrVal(Row& row,
         snprintf(tmp, 511, "%lu", getUintVal(row, parm, isNull, op_ct));
 #endif
     }
-	else
-	{
+    else
+    {
 #ifndef __LP64__
         snprintf(tmp, 511, "%lld", getIntVal(row, parm, isNull, op_ct));
 #else
         snprintf(tmp, 511, "%ld", getIntVal(row, parm, isNull, op_ct));
 #endif
-	}
+    }
 
-	return string(tmp);
+    return string(tmp);
 }
 
 

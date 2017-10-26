@@ -35,11 +35,11 @@
 
 namespace
 {
-    typedef std::tr1::unordered_multimap<WriteEngine::OID,
-                                WriteEngine::AllocExtEntry,
-                                WriteEngine::AllocExtHasher> AllocExtMap;
-    typedef AllocExtMap::iterator       AllocExtMapIter;
-    typedef AllocExtMap::const_iterator ConstAllocExtMapIter;
+typedef std::tr1::unordered_multimap<WriteEngine::OID,
+        WriteEngine::AllocExtEntry,
+        WriteEngine::AllocExtHasher> AllocExtMap;
+typedef AllocExtMap::iterator       AllocExtMapIter;
+typedef AllocExtMap::const_iterator ConstAllocExtMapIter;
 }
 
 namespace WriteEngine
@@ -49,7 +49,7 @@ namespace WriteEngine
 // Constructor
 //------------------------------------------------------------------------------
 ExtentStripeAlloc::ExtentStripeAlloc( OID tableOID,
-    Log* logger ) : fTableOID(tableOID), fLog(logger), fStripeCount(0)
+                                      Log* logger ) : fTableOID(tableOID), fLog(logger), fStripeCount(0)
 {
 }
 
@@ -80,7 +80,7 @@ void ExtentStripeAlloc::addColumn( OID colOID, int colWidth )
 // number, segment number, etc associated with the allocated extent are
 // returned in the output arguments.
 //
-// Note that a multimap is used for the internal extent collection, with the 
+// Note that a multimap is used for the internal extent collection, with the
 // column OID as the key.  We would typically expect that we would not have
 // more than 1 extent entry for a given column OID in our map at the same
 // time.  If this were always true, then a map (and not a multimap) would
@@ -98,20 +98,20 @@ void ExtentStripeAlloc::addColumn( OID colOID, int colWidth )
 //    one column extent with the same DBRoot.
 //------------------------------------------------------------------------------
 int ExtentStripeAlloc::allocateExtent( OID oid,
-    uint16_t     dbRoot,
-    uint32_t&    partNum, // used as input for empty DBRoot, else output only
-    uint16_t&    segNum,
-    BRM::LBID_t& startLbid,
-    int&         allocSize,
-    HWM&         hwm,
-    std::string& errMsg )
+                                       uint16_t     dbRoot,
+                                       uint32_t&    partNum, // used as input for empty DBRoot, else output only
+                                       uint16_t&    segNum,
+                                       BRM::LBID_t& startLbid,
+                                       int&         allocSize,
+                                       HWM&         hwm,
+                                       std::string& errMsg )
 {
     int retStatus = NO_ERROR;
     bool bFound   = false;
     AllocExtMapIter extentEntryIter;
     errMsg.clear();
-    
-    std::pair<AllocExtMapIter,AllocExtMapIter> iters;
+
+    std::pair<AllocExtMapIter, AllocExtMapIter> iters;
 
     boost::mutex::scoped_lock lock(fMapMutex);
 
@@ -119,18 +119,20 @@ int ExtentStripeAlloc::allocateExtent( OID oid,
     // We also filter by selecting the lowest stripe number.  See
     // function description that precedes this function for more detail.
     iters = fMap.equal_range( oid );
+
     if (iters.first != iters.second)
     {
-        for (AllocExtMapIter it=iters.first; it!=iters.second; ++it)
+        for (AllocExtMapIter it = iters.first; it != iters.second; ++it)
         {
             if (it->second.fDbRoot == dbRoot)
             {
                 if ((!bFound) ||
-                    (it->second.fStripeKey <
-                     extentEntryIter->second.fStripeKey))
+                        (it->second.fStripeKey <
+                         extentEntryIter->second.fStripeKey))
                 {
                     extentEntryIter = it;
                 }
+
                 bFound = true;
             }
         }
@@ -155,13 +157,14 @@ int ExtentStripeAlloc::allocateExtent( OID oid,
 
         std::ostringstream oss1;
         oss1 << "Allocating next stripe(" << fStripeCount <<
-            ") of column extents for table " << fTableOID <<
-            "; DBRoot-" << dbRoot;
+             ") of column extents for table " << fTableOID <<
+             "; DBRoot-" << dbRoot;
         fLog->logMsg( oss1.str(), MSGLVL_INFO2 );
 
         std::vector<BRM::CreateStripeColumnExtentsArgIn>  cols;
         std::vector<BRM::CreateStripeColumnExtentsArgOut> extents;
-        for (unsigned int j=0; j<fColOIDs.size(); ++j)
+
+        for (unsigned int j = 0; j < fColOIDs.size(); ++j)
         {
             BRM::CreateStripeColumnExtentsArgIn colEntry;
             colEntry.oid   = fColOIDs[j];
@@ -178,13 +181,13 @@ int ExtentStripeAlloc::allocateExtent( OID oid,
         std::string allocStatusMsg;
 
         int rc = BRMWrapper::getInstance()->allocateStripeColExtents(
-            cols, dbRoot, allocPartNum, allocSegNum, extents );
+                     cols, dbRoot, allocPartNum, allocSegNum, extents );
 
         // If allocation error occurs, we go ahead and store extent entries
         // with error status, to satisfy subsequent allocations in same stripe.
         if (rc != NO_ERROR)
         {
-            for (unsigned int i=0; i<fColOIDs.size(); ++i)
+            for (unsigned int i = 0; i < fColOIDs.size(); ++i)
             {
                 if (oid != fColOIDs[i])
                 {
@@ -197,11 +200,11 @@ int ExtentStripeAlloc::allocateExtent( OID oid,
 
                     // For error case, just store 0 for part#,segnum, etc.
                     AllocExtEntry extentEntry(fColOIDs[i], fColWidths[i],
-                        dbRoot, 0, 0, 0, 0, 0,
-                        allocStatus, allocStatusMsg, fStripeCount );
+                                              dbRoot, 0, 0, 0, 0, 0,
+                                              allocStatus, allocStatusMsg, fStripeCount );
 
                     fMap.insert( AllocExtMap::value_type(fColOIDs[i],
-                        extentEntry) );
+                                                         extentEntry) );
                 }
             }
 
@@ -215,7 +218,7 @@ int ExtentStripeAlloc::allocateExtent( OID oid,
 
         // Save allocated extents into fMap for later use.  For the OID
         // requested by this function call, we just return the extent info.
-        for (unsigned int i=0; i<fColOIDs.size(); ++i)
+        for (unsigned int i = 0; i < fColOIDs.size(); ++i)
         {
             allocStartLbid = extents[i].startLbid;
             allocAllocSize = extents[i].allocSize;
@@ -246,13 +249,14 @@ int ExtentStripeAlloc::allocateExtent( OID oid,
                 hwm       = allocHwm;
             }
             else // Add all extents in "stripe" (other than requested column)
-            {    // to the collection of extents
+            {
+                // to the collection of extents
                 AllocExtEntry extentEntry(fColOIDs[i], fColWidths[i],
-                    dbRoot, allocPartNum, allocSegNum,
-                    allocStartLbid, allocAllocSize, allocHwm,
-                    allocStatus, allocStatusMsg, fStripeCount );
+                                          dbRoot, allocPartNum, allocSegNum,
+                                          allocStartLbid, allocAllocSize, allocHwm,
+                                          allocStatus, allocStatusMsg, fStripeCount );
 
-                fMap.insert( AllocExtMap::value_type(fColOIDs[i],extentEntry) );
+                fMap.insert( AllocExtMap::value_type(fColOIDs[i], extentEntry) );
             }
         }
     }
@@ -273,22 +277,22 @@ void ExtentStripeAlloc::print( )
 
     if (fMap.size() > 0)
     {
-        for (ConstAllocExtMapIter iter=fMap.begin();
-             iter!= fMap.end();
-             ++iter)
+        for (ConstAllocExtMapIter iter = fMap.begin();
+                iter != fMap.end();
+                ++iter)
         {
             oss << std::endl;
             oss << "  oid: "    << iter->second.fOid       <<
-                   "; wid: "    << iter->second.fColWidth  <<
-                   "; root: "   << iter->second.fDbRoot    <<
-                   "; part: "   << iter->second.fPartNum   <<
-                   "; seg: "    << iter->second.fSegNum    <<
-                   "; lbid: "   << iter->second.fStartLbid <<
-                   "; size: "   << iter->second.fAllocSize <<
-                   "; hwm: "    << iter->second.fHwm       <<
-                   "; stripe: " << iter->second.fStripeKey <<
-                   "; stat: "   << iter->second.fStatus    <<
-                   "; msg: "    << iter->second.fStatusMsg;
+                "; wid: "    << iter->second.fColWidth  <<
+                "; root: "   << iter->second.fDbRoot    <<
+                "; part: "   << iter->second.fPartNum   <<
+                "; seg: "    << iter->second.fSegNum    <<
+                "; lbid: "   << iter->second.fStartLbid <<
+                "; size: "   << iter->second.fAllocSize <<
+                "; hwm: "    << iter->second.fHwm       <<
+                "; stripe: " << iter->second.fStripeKey <<
+                "; stat: "   << iter->second.fStatus    <<
+                "; msg: "    << iter->second.fStatusMsg;
         }
     }
     else

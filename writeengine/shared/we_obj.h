@@ -30,50 +30,65 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-   class Log;
+class Log;
 
 /** Class WEObj */
 class WEObj
 {
 public:
-   /**
-    * @brief Constructor
-    */
-   WEObj() : m_debugLevel( DEBUG_0 ), m_log( 0 ) {}
+    /**
+     * @brief Constructor
+     */
+    WEObj() : m_debugLevel( DEBUG_0 ), m_log( 0 ) {}
 
-   /**
-    * @brief Default Destructor
-    */
-   ~WEObj() {}
+    /**
+     * @brief Default Destructor
+     */
+    ~WEObj() {}
 
-   /**
-    * @brief Is it required to debug
-    */
-   const bool     isDebug( const DebugLevel level ) const { return level <= m_debugLevel; } 
+    /**
+     * @brief Is it required to debug
+     */
+    const bool     isDebug( const DebugLevel level ) const
+    {
+        return level <= m_debugLevel;
+    }
 
-   /**
-    * @brief Get debug level
-    */
-   const DebugLevel   getDebugLevel() const { return m_debugLevel; } 
+    /**
+     * @brief Get debug level
+     */
+    const DebugLevel   getDebugLevel() const
+    {
+        return m_debugLevel;
+    }
 
-   /**
-    * @brief Get Logger object
-    */
-   Log*         getLogger() const { return m_log; } 
+    /**
+     * @brief Get Logger object
+     */
+    Log*         getLogger() const
+    {
+        return m_log;
+    }
 
-   /**
-    * @brief Set debug level
-    */
-   void           setDebugLevel( const DebugLevel level ) { m_debugLevel = level; } 
+    /**
+     * @brief Set debug level
+     */
+    void           setDebugLevel( const DebugLevel level )
+    {
+        m_debugLevel = level;
+    }
 
-   /**
-    * @brief Set debug logger and debug level
-    */
-   void           setLogger( Log* logger ) { m_log = logger; }
+    /**
+     * @brief Set debug logger and debug level
+     */
+    void           setLogger( Log* logger )
+    {
+        m_log = logger;
+    }
 
 private:
-   DebugLevel     m_debugLevel;              // internal use debug level
-   Log*           m_log;                     // logger object for debug output
+    DebugLevel     m_debugLevel;              // internal use debug level
+    Log*           m_log;                     // logger object for debug output
 };
 
 

@@ -20,12 +20,12 @@
 
 #define MAX_CLIENTS 1024
 
-typedef struct participantsDb *participantsDb_t;
+typedef struct participantsDb* participantsDb_t;
 
 #define printNotSet udpc_printNotSet
 #define printSet udpc_printSet
 
-void udpc_printNotSet(participantsDb_t db, char *d);
-void udpc_printSet(participantsDb_t db, char *d);
+void udpc_printNotSet(participantsDb_t db, char* d);
+void udpc_printSet(participantsDb_t db, char* d);
 
 #endif

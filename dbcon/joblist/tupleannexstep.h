@@ -52,81 +52,100 @@ public:
 
     /** @brief TupleAnnexStep destructor
      */
-   ~TupleAnnexStep();
+    ~TupleAnnexStep();
 
-	// inherited methods
-	void run();
-	void join();
-	const std::string toString() const;
+    // inherited methods
+    void run();
+    void join();
+    const std::string toString() const;
 
-	/** @brief TupleJobStep's pure virtual methods
-	 */
-	const rowgroup::RowGroup& getOutputRowGroup() const;
-	void  setOutputRowGroup(const rowgroup::RowGroup&);
+    /** @brief TupleJobStep's pure virtual methods
+     */
+    const rowgroup::RowGroup& getOutputRowGroup() const;
+    void  setOutputRowGroup(const rowgroup::RowGroup&);
 
-	/** @brief TupleDeliveryStep's pure virtual methods
-	 */
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
-	const rowgroup::RowGroup& getDeliveredRowGroup() const;
-	void  deliverStringTableRowGroup(bool b);
-	bool  deliverStringTableRowGroup() const;
+    /** @brief TupleDeliveryStep's pure virtual methods
+     */
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
+    const rowgroup::RowGroup& getDeliveredRowGroup() const;
+    void  deliverStringTableRowGroup(bool b);
+    bool  deliverStringTableRowGroup() const;
 
-	void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
+    void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
 
-	void addOrderBy(LimitedOrderBy* lob)     { fOrderBy = lob; }
-	void addConstant(TupleConstantStep* tcs) { fConstant = tcs; }
-	void setDistinct()                       { fDistinct = true; }
-	void setLimit(uint64_t s, uint64_t c)    { fLimitStart = s; fLimitCount = c; }
-	
-	virtual bool stringTableFriendly() { return true; }
-	
-	rowgroup::Row row1, row2;  // scratch space for distinct comparisons todo: make them private
+    void addOrderBy(LimitedOrderBy* lob)
+    {
+        fOrderBy = lob;
+    }
+    void addConstant(TupleConstantStep* tcs)
+    {
+        fConstant = tcs;
+    }
+    void setDistinct()
+    {
+        fDistinct = true;
+    }
+    void setLimit(uint64_t s, uint64_t c)
+    {
+        fLimitStart = s;
+        fLimitCount = c;
+    }
+
+    virtual bool stringTableFriendly()
+    {
+        return true;
+    }
+
+    rowgroup::Row row1, row2;  // scratch space for distinct comparisons todo: make them private
 
 protected:
-	void execute();
-	void executeNoOrderBy();
-	void executeWithOrderBy();
-	void executeNoOrderByWithDistinct();
-	void formatMiniStats();
-	void printCalTrace();
+    void execute();
+    void executeNoOrderBy();
+    void executeWithOrderBy();
+    void executeNoOrderByWithDistinct();
+    void formatMiniStats();
+    void printCalTrace();
 
-	// input/output rowgroup and row
-	rowgroup::RowGroup      fRowGroupIn;
-	rowgroup::RowGroup      fRowGroupOut;
-	rowgroup::RowGroup      fRowGroupDeliver;
-	rowgroup::Row           fRowIn;
-	rowgroup::Row           fRowOut;
+    // input/output rowgroup and row
+    rowgroup::RowGroup      fRowGroupIn;
+    rowgroup::RowGroup      fRowGroupOut;
+    rowgroup::RowGroup      fRowGroupDeliver;
+    rowgroup::Row           fRowIn;
+    rowgroup::Row           fRowOut;
 
-	// for datalist
-	RowGroupDL*             fInputDL;
-	RowGroupDL*             fOutputDL;
-	uint64_t                fInputIterator;
-	uint64_t                fOutputIterator;
+    // for datalist
+    RowGroupDL*             fInputDL;
+    RowGroupDL*             fOutputDL;
+    uint64_t                fInputIterator;
+    uint64_t                fOutputIterator;
 
-	class Runner
-	{
-	public:
-		Runner(TupleAnnexStep* step) : fStep(step) { }
-		void operator()() { fStep->execute(); }
+    class Runner
+    {
+    public:
+        Runner(TupleAnnexStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->execute();
+        }
 
-		TupleAnnexStep*     fStep;
-	};
-	uint64_t fRunner; // thread pool handle
+        TupleAnnexStep*     fStep;
+    };
+    uint64_t fRunner; // thread pool handle
 
-	uint64_t                fRowsProcessed;
-	uint64_t                fRowsReturned;
-	uint64_t                fLimitStart;
-	uint64_t                fLimitCount;
-	bool                    fLimitHit;
-	bool                    fEndOfResult;
-	bool                    fDistinct;
+    uint64_t                fRowsProcessed;
+    uint64_t                fRowsReturned;
+    uint64_t                fLimitStart;
+    uint64_t                fLimitCount;
+    bool                    fLimitHit;
+    bool                    fEndOfResult;
+    bool                    fDistinct;
 
-	LimitedOrderBy*         fOrderBy;
-	TupleConstantStep*      fConstant;
+    LimitedOrderBy*         fOrderBy;
+    TupleConstantStep*      fConstant;
 
-	funcexp::FuncExp*       fFeInstance;
-	JobList*                fJobList;
-	
+    funcexp::FuncExp*       fFeInstance;
+    JobList*                fJobList;
+
 };
 
 

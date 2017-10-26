@@ -34,8 +34,8 @@
 
 namespace WriteEngine
 {
-    struct ColumnInfo;
-    class Log;
+struct ColumnInfo;
+class Log;
 
 //------------------------------------------------------------------------------
 /** @brief Abstract base class used for derived auto-increment classes.
@@ -58,14 +58,14 @@ public:
      * @param colInfo The auto-increment column.
      */
     int init( const std::string& fullTableName,
-                        ColumnInfo* colInfo );
+              ColumnInfo* colInfo );
 
     /** @brief Reserve next range of auto-increment numbers.
      * @param autoIncCount Number of auto-increment numbers to reserve
      * @param nextValue Starting number of reserved range
      */
     virtual int reserveNextRange(uint32_t autoIncCount,
-                        uint64_t& nextValue) = 0;
+                                 uint64_t& nextValue) = 0;
 
     /** @brief Finished with auto-incrementing; perform any applicable updates.
      */
@@ -87,7 +87,7 @@ protected:
 
 //------------------------------------------------------------------------------
 /** @brief Auto-increment implementation that reserves auto-increment numbers
- *  once for the entire job.  
+ *  once for the entire job.
  *
  *  Assumes a lock is applied to the table throughout the life of the job.
  *  This allows the auto-increment next value to be managed through 2 single
@@ -103,7 +103,7 @@ public:
     virtual ~ColumnAutoIncJob();
 
     virtual int reserveNextRange(uint32_t autoIncCount,
-                        uint64_t& nextValue);
+                                 uint64_t& nextValue);
 };
 
 //------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ public:
     virtual ~ColumnAutoIncIncremental();
 
     virtual int reserveNextRange(uint32_t autoIncCount,
-                        uint64_t& nextValue);
+                                 uint64_t& nextValue);
 };
 
 } //end of namespace

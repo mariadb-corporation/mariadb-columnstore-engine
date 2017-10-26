@@ -33,83 +33,85 @@ namespace idbdatafile
 inline
 int modeStrToFlags(const char* mode)
 {
-	std::string modestr = mode;
-	// this could easily be migrated to a lookup table if performance
-	// ever became a concern, but for now this is fine.
-    if( modestr == "r" || modestr == "rb" )
-	{
-		return O_RDONLY;
-	}
-	else if( modestr == "r+" || modestr == "r+b" )
-	{
-		return O_RDWR;
-	}
-	else if( modestr == "w" || modestr == "wb" )
-	{
-		return O_WRONLY|O_CREAT|O_TRUNC;
-	}
-	else if( modestr == "w+" || modestr == "w+b" )
-	{
-		return O_RDWR|O_CREAT|O_TRUNC;
-	}
-	else if( modestr == "a" || modestr == "ab" )
-	{
-		return O_WRONLY|O_CREAT|O_APPEND;
-	}
-	else if( modestr == "a+" || modestr == "a+b" )
-	{
-		return O_RDWR|O_CREAT|O_APPEND;
-	}
-	else
-	{
-		// error
-		return -1;
-	}
+    std::string modestr = mode;
+
+    // this could easily be migrated to a lookup table if performance
+    // ever became a concern, but for now this is fine.
+    if ( modestr == "r" || modestr == "rb" )
+    {
+        return O_RDONLY;
+    }
+    else if ( modestr == "r+" || modestr == "r+b" )
+    {
+        return O_RDWR;
+    }
+    else if ( modestr == "w" || modestr == "wb" )
+    {
+        return O_WRONLY | O_CREAT | O_TRUNC;
+    }
+    else if ( modestr == "w+" || modestr == "w+b" )
+    {
+        return O_RDWR | O_CREAT | O_TRUNC;
+    }
+    else if ( modestr == "a" || modestr == "ab" )
+    {
+        return O_WRONLY | O_CREAT | O_APPEND;
+    }
+    else if ( modestr == "a+" || modestr == "a+b" )
+    {
+        return O_RDWR | O_CREAT | O_APPEND;
+    }
+    else
+    {
+        // error
+        return -1;
+    }
 }
 
 #ifdef _MSC_VER
 inline
 int modeStrToFlags(const char* mode, int& createflags)
 {
-	std::string modestr = mode;
+    std::string modestr = mode;
     createflags = 0;
-	// this could easily be migrated to a lookup table if performance
-	// ever became a concern, but for now this is fine.
-    if( modestr == "r" || modestr == "rb" )
-	{
+
+    // this could easily be migrated to a lookup table if performance
+    // ever became a concern, but for now this is fine.
+    if ( modestr == "r" || modestr == "rb" )
+    {
         createflags = OPEN_EXISTING;
         return GENERIC_READ;
-	}
-	else if( modestr == "r+" || modestr == "r+b" )
-	{
+    }
+    else if ( modestr == "r+" || modestr == "r+b" )
+    {
         createflags = OPEN_EXISTING;
         return GENERIC_READ | GENERIC_WRITE;
-	}
-	else if( modestr == "w" || modestr == "wb" )
-	{
+    }
+    else if ( modestr == "w" || modestr == "wb" )
+    {
         createflags = CREATE_ALWAYS;
         return GENERIC_WRITE;
-	}
-	else if( modestr == "w+" || modestr == "w+b" )
-	{
+    }
+    else if ( modestr == "w+" || modestr == "w+b" )
+    {
         createflags = CREATE_ALWAYS;
         return GENERIC_READ | GENERIC_WRITE;
-	}
-	else if( modestr == "a" || modestr == "ab" )
-	{
+    }
+    else if ( modestr == "a" || modestr == "ab" )
+    {
         createflags = OPEN_ALWAYS;
         return FILE_APPEND_DATA;
-	}
-	else if( modestr == "a+" || modestr == "a+b" )
-	{
+    }
+    else if ( modestr == "a+" || modestr == "a+b" )
+    {
         createflags = OPEN_ALWAYS;
         return GENERIC_READ | FILE_APPEND_DATA;
-	}
-	else
-	{
-		// error
-		return -1;
-	}
+    }
+    else
+    {
+        // error
+        return -1;
+    }
 }
 #endif
 

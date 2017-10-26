@@ -32,19 +32,22 @@ namespace windowfunction
 class WF_ranking : public WindowFunctionType
 {
 public:
-	WF_ranking(int id, const std::string& name) : WindowFunctionType(id, name) {resetData();}
+    WF_ranking(int id, const std::string& name) : WindowFunctionType(id, name)
+    {
+        resetData();
+    }
 
-	// pure virtual in base
-	void operator()(int64_t b, int64_t e, int64_t c);
-	WindowFunctionType* clone() const;
-	void resetData();
+    // pure virtual in base
+    void operator()(int64_t b, int64_t e, int64_t c);
+    WindowFunctionType* clone() const;
+    void resetData();
 
-	static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
 
 protected:
 
-	uint64_t    fRank;
-	uint64_t    fDups;
+    uint64_t    fRank;
+    uint64_t    fDups;
 };
 
 

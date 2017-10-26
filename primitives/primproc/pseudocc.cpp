@@ -22,7 +22,8 @@
 using namespace std;
 using namespace execplan;
 
-namespace primitiveprocessor {
+namespace primitiveprocessor
+{
 
 PseudoCC::PseudoCC() : ColumnCommand()
 {
@@ -34,29 +35,30 @@ PseudoCC::~PseudoCC()
 
 SCommand PseudoCC::duplicate()
 {
-	SCommand ret;
-	PseudoCC *pseudo;
+    SCommand ret;
+    PseudoCC* pseudo;
 
-	pseudo = new PseudoCC();
-	ret.reset(pseudo);
-	pseudo->function = function;
-	pseudo->valueFromUM = valueFromUM;
-	ColumnCommand::duplicate(pseudo);
-	return ret;
+    pseudo = new PseudoCC();
+    ret.reset(pseudo);
+    pseudo->function = function;
+    pseudo->valueFromUM = valueFromUM;
+    ColumnCommand::duplicate(pseudo);
+    return ret;
 }
 
-void PseudoCC::createCommand(messageqcpp::ByteStream &bs)
+void PseudoCC::createCommand(messageqcpp::ByteStream& bs)
 {
-	bs.advance(1);
-	bs >> function;
-	ColumnCommand::createCommand(bs);
+    bs.advance(1);
+    bs >> function;
+    ColumnCommand::createCommand(bs);
 }
 
-void PseudoCC::resetCommand(messageqcpp::ByteStream &bs)
+void PseudoCC::resetCommand(messageqcpp::ByteStream& bs)
 {
-	if (function == PSEUDO_EXTENTMAX || function == PSEUDO_EXTENTMIN || function == PSEUDO_EXTENTID)
-		bs >> valueFromUM;
-	ColumnCommand::resetCommand(bs);
+    if (function == PSEUDO_EXTENTMAX || function == PSEUDO_EXTENTMIN || function == PSEUDO_EXTENTID)
+        bs >> valueFromUM;
+
+    ColumnCommand::resetCommand(bs);
 }
 
 #ifdef __GNUC__
@@ -69,147 +71,197 @@ __attribute__((optimize("no-tree-vectorize")))
 
 void PseudoCC::loadData()
 {
-	switch (function) {
-	case PSEUDO_PM:
-		switch(colType.colWidth) {
-		case 1:
-			loadPMNumber<uint8_t>();
-			break;
-		case 2:
-			loadPMNumber<uint16_t>();
-			break;
-		case 4:
-			loadPMNumber<uint32_t>();
-			break;
-		case 8:
-			loadPMNumber<uint64_t>();
-			break;
-		default:
-			cout << "PC::loadData(): bad column width" << endl;
-			break;
-		}
-		break;
-	case PSEUDO_EXTENTRELATIVERID:
-		switch(colType.colWidth) {
-		case 1:
-			loadRIDs<uint8_t>();
-			break;
-		case 2:
-			loadRIDs<uint16_t>();
-			break;
-		case 4:
-			loadRIDs<uint32_t>();
-			break;
-		case 8:
-			loadRIDs<uint64_t>();
-			break;
-		default:
-			cout << "PC::loadData(): bad column width" << endl;
-			break;
-		}
-		break;
-	case PSEUDO_SEGMENT:
-		switch(colType.colWidth) {
-		case 1:
-			loadSegmentNum<uint8_t>();
-			break;
-		case 2:
-			loadSegmentNum<uint16_t>();
-			break;
-		case 4:
-			loadSegmentNum<uint32_t>();
-			break;
-		case 8:
-			loadSegmentNum<uint64_t>();
-			break;
-		default:
-			cout << "PC::loadData(): bad column width" << endl;
-			break;
-		}
-		break;
-	case PSEUDO_SEGMENTDIR:
-		switch(colType.colWidth) {
-		case 1:
-			loadPartitionNum<uint8_t>();
-			break;
-		case 2:
-			loadPartitionNum<uint16_t>();
-			break;
-		case 4:
-			loadPartitionNum<uint32_t>();
-			break;
-		case 8:
-			loadPartitionNum<uint64_t>();
-			break;
-		default:
-			cout << "PC::loadData(): bad column width" << endl;
-			break;
-		}
-		break;
-	case PSEUDO_BLOCKID:
-		switch(colType.colWidth) {
-		case 1:
-			loadLBID<uint8_t>();
-			break;
-		case 2:
-			loadLBID<uint16_t>();
-			break;
-		case 4:
-			loadLBID<uint32_t>();
-			break;
-		case 8:
-			loadLBID<uint64_t>();
-			break;
-		default:
-			cout << "PC::loadData(): bad column width" << endl;
-			break;
-		}
-		break;
-	case PSEUDO_DBROOT:
-		switch(colType.colWidth) {
-		case 1:
-			loadDBRootNum<uint8_t>();
-			break;
-		case 2:
-			loadDBRootNum<uint16_t>();
-			break;
-		case 4:
-			loadDBRootNum<uint32_t>();
-			break;
-		case 8:
-			loadDBRootNum<uint64_t>();
-			break;
-		default:
-			cout << "PC::loadData(): bad column width" << endl;
-			break;
-		}
-		break;
-		/* cases where the value to use is sent from the UM */
-	case PSEUDO_EXTENTMAX:
-	case PSEUDO_EXTENTMIN:
-	case PSEUDO_EXTENTID:
-		switch(colType.colWidth) {
-		case 1:
-			loadSingleValue<int8_t>(valueFromUM);
-			break;
-		case 2:
-			loadSingleValue<int16_t>(valueFromUM);
-			break;
-		case 4:
-			loadSingleValue<int32_t>(valueFromUM);
-			break;
-		case 8:
-			loadSingleValue<int64_t>(valueFromUM);
-			break;
-		default:
-			cout << "PC::loadData(): bad column width" << endl;
-			break;
-		}
-		break;
-	default:
-		cout << "PC::loadData(): bad function" << endl;
-		break;
-	}
+    switch (function)
+    {
+        case PSEUDO_PM:
+            switch (colType.colWidth)
+            {
+                case 1:
+                    loadPMNumber<uint8_t>();
+                    break;
+
+                case 2:
+                    loadPMNumber<uint16_t>();
+                    break;
+
+                case 4:
+                    loadPMNumber<uint32_t>();
+                    break;
+
+                case 8:
+                    loadPMNumber<uint64_t>();
+                    break;
+
+                default:
+                    cout << "PC::loadData(): bad column width" << endl;
+                    break;
+            }
+
+            break;
+
+        case PSEUDO_EXTENTRELATIVERID:
+            switch (colType.colWidth)
+            {
+                case 1:
+                    loadRIDs<uint8_t>();
+                    break;
+
+                case 2:
+                    loadRIDs<uint16_t>();
+                    break;
+
+                case 4:
+                    loadRIDs<uint32_t>();
+                    break;
+
+                case 8:
+                    loadRIDs<uint64_t>();
+                    break;
+
+                default:
+                    cout << "PC::loadData(): bad column width" << endl;
+                    break;
+            }
+
+            break;
+
+        case PSEUDO_SEGMENT:
+            switch (colType.colWidth)
+            {
+                case 1:
+                    loadSegmentNum<uint8_t>();
+                    break;
+
+                case 2:
+                    loadSegmentNum<uint16_t>();
+                    break;
+
+                case 4:
+                    loadSegmentNum<uint32_t>();
+                    break;
+
+                case 8:
+                    loadSegmentNum<uint64_t>();
+                    break;
+
+                default:
+                    cout << "PC::loadData(): bad column width" << endl;
+                    break;
+            }
+
+            break;
+
+        case PSEUDO_SEGMENTDIR:
+            switch (colType.colWidth)
+            {
+                case 1:
+                    loadPartitionNum<uint8_t>();
+                    break;
+
+                case 2:
+                    loadPartitionNum<uint16_t>();
+                    break;
+
+                case 4:
+                    loadPartitionNum<uint32_t>();
+                    break;
+
+                case 8:
+                    loadPartitionNum<uint64_t>();
+                    break;
+
+                default:
+                    cout << "PC::loadData(): bad column width" << endl;
+                    break;
+            }
+
+            break;
+
+        case PSEUDO_BLOCKID:
+            switch (colType.colWidth)
+            {
+                case 1:
+                    loadLBID<uint8_t>();
+                    break;
+
+                case 2:
+                    loadLBID<uint16_t>();
+                    break;
+
+                case 4:
+                    loadLBID<uint32_t>();
+                    break;
+
+                case 8:
+                    loadLBID<uint64_t>();
+                    break;
+
+                default:
+                    cout << "PC::loadData(): bad column width" << endl;
+                    break;
+            }
+
+            break;
+
+        case PSEUDO_DBROOT:
+            switch (colType.colWidth)
+            {
+                case 1:
+                    loadDBRootNum<uint8_t>();
+                    break;
+
+                case 2:
+                    loadDBRootNum<uint16_t>();
+                    break;
+
+                case 4:
+                    loadDBRootNum<uint32_t>();
+                    break;
+
+                case 8:
+                    loadDBRootNum<uint64_t>();
+                    break;
+
+                default:
+                    cout << "PC::loadData(): bad column width" << endl;
+                    break;
+            }
+
+            break;
+
+        /* cases where the value to use is sent from the UM */
+        case PSEUDO_EXTENTMAX:
+        case PSEUDO_EXTENTMIN:
+        case PSEUDO_EXTENTID:
+            switch (colType.colWidth)
+            {
+                case 1:
+                    loadSingleValue<int8_t>(valueFromUM);
+                    break;
+
+                case 2:
+                    loadSingleValue<int16_t>(valueFromUM);
+                    break;
+
+                case 4:
+                    loadSingleValue<int32_t>(valueFromUM);
+                    break;
+
+                case 8:
+                    loadSingleValue<int64_t>(valueFromUM);
+                    break;
+
+                default:
+                    cout << "PC::loadData(): bad column width" << endl;
+                    break;
+            }
+
+            break;
+
+        default:
+            cout << "PC::loadData(): bad function" << endl;
+            break;
+    }
 }
 
 }

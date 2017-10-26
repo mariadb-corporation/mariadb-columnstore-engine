@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright (c) 2017, MariaDB
 
    This program is free software; you can redistribute it and/or
@@ -39,23 +39,24 @@ using namespace joblist;
 #include "groupconcatcolumn.h"
 #include "udafcolumn.h"
 
-namespace execplan {
+namespace execplan
+{
 
 /**
  * Constructors/Destructors
  */
 UDAFColumn::UDAFColumn():
-		AggregateColumn()
+    AggregateColumn()
 {
 }
 
 UDAFColumn::UDAFColumn(const uint32_t sessionID):
-		AggregateColumn(sessionID)
+    AggregateColumn(sessionID)
 {
 }
 
 UDAFColumn::UDAFColumn(const UDAFColumn& rhs, const uint32_t sessionID):
-		AggregateColumn(dynamic_cast<const AggregateColumn&>(rhs), sessionID), context(rhs.context)
+    AggregateColumn(dynamic_cast<const AggregateColumn&>(rhs), sessionID), context(rhs.context)
 {
 }
 
@@ -69,64 +70,69 @@ UDAFColumn::~UDAFColumn()
 
 const string UDAFColumn::toString() const
 {
-	ostringstream output;
-	output << "UDAFColumn " << endl;
-	output << AggregateColumn::toString() << endl;
-	output << context.toString() << endl;
-	return output.str();
+    ostringstream output;
+    output << "UDAFColumn " << endl;
+    output << AggregateColumn::toString() << endl;
+    output << context.toString() << endl;
+    return output.str();
 }
 
 ostream& operator<<(ostream& output, const UDAFColumn& rhs)
 {
-	output << rhs.toString();
-	return output;
+    output << rhs.toString();
+    return output;
 }
 
 void UDAFColumn::serialize(messageqcpp::ByteStream& b) const
 {
-	b << (uint8_t) ObjectReader::UDAFCOLUMN;
-	AggregateColumn::serialize(b);
-	context.serialize(b);
+    b << (uint8_t) ObjectReader::UDAFCOLUMN;
+    AggregateColumn::serialize(b);
+    context.serialize(b);
 }
 
 void UDAFColumn::unserialize(messageqcpp::ByteStream& b)
 {
-	ObjectReader::checkType(b, ObjectReader::UDAFCOLUMN);
-	AggregateColumn::unserialize(b);
-	context.unserialize(b);
+    ObjectReader::checkType(b, ObjectReader::UDAFCOLUMN);
+    AggregateColumn::unserialize(b);
+    context.unserialize(b);
 }
 
 bool UDAFColumn::operator==(const UDAFColumn& t) const
 {
-	const AggregateColumn *rc1, *rc2;
+    const AggregateColumn* rc1, *rc2;
 
-	rc1 = static_cast<const AggregateColumn*>(this);
-	rc2 = static_cast<const AggregateColumn*>(&t);
-	if (*rc1 != *rc2)
-		return false;
-	if (context != t.context)
-		return false;
-	return true;
+    rc1 = static_cast<const AggregateColumn*>(this);
+    rc2 = static_cast<const AggregateColumn*>(&t);
+
+    if (*rc1 != *rc2)
+        return false;
+
+    if (context != t.context)
+        return false;
+
+    return true;
 }
 
 bool UDAFColumn::operator==(const TreeNode* t) const
 {
-	const UDAFColumn *ac;
+    const UDAFColumn* ac;
 
-	ac = dynamic_cast<const UDAFColumn*>(t);
-	if (ac == NULL)
-		return false;
-	return *this == *ac;
+    ac = dynamic_cast<const UDAFColumn*>(t);
+
+    if (ac == NULL)
+        return false;
+
+    return *this == *ac;
 }
 
 bool UDAFColumn::operator!=(const UDAFColumn& t) const
 {
-	return !(*this == t);
+    return !(*this == t);
 }
 
 bool UDAFColumn::operator!=(const TreeNode* t) const
 {
-	return !(*this == t);
+    return !(*this == t);
 }
 
 } // namespace execplan

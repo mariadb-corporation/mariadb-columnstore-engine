@@ -39,15 +39,16 @@ int udpc_writeSize(void);
 int udpc_largeReadSize(void);
 int udpc_smallReadSize(void);
 int udpc_makeDataBuffer(int blocksize);
-int udpc_parseCommand(char *pipeName, char **arg);
+int udpc_parseCommand(char* pipeName, char** arg);
 
 int udpc_printLongNum(unsigned long long x);
-int udpc_waitForProcess(int pid, const char *message);
+int udpc_waitForProcess(int pid, const char* message);
 
-struct disk_config {
+struct disk_config
+{
     int origOutFile;
-    const char *fileName;
-    char *pipeName;
+    const char* fileName;
+    char* pipeName;
     int flags;
 
     struct timeval stats_last_printed;
@@ -55,26 +56,28 @@ struct disk_config {
 
 #define MAX_GOVERNORS 10
 
-struct net_config {
-    net_if_t *net_if; /* Network interface (eth0, isdn0, etc.) on which to
+struct net_config
+{
+    net_if_t* net_if; /* Network interface (eth0, isdn0, etc.) on which to
 		       * multicast */
     int portBase; /* Port base */
     int blockSize;
     int sliceSize;
     struct sockaddr_in controlMcastAddr;
     struct sockaddr_in dataMcastAddr;
-    const char *mcastRdv;
+    const char* mcastRdv;
     int ttl;
     int nrGovernors;
-    struct rateGovernor_t *rateGovernor[MAX_GOVERNORS];
-    void *rateGovernorData[MAX_GOVERNORS];
+    struct rateGovernor_t* rateGovernor[MAX_GOVERNORS];
+    void* rateGovernorData[MAX_GOVERNORS];
     /*int async;*/
     /*int pointopoint;*/
     struct timeval ref_tv;
 
-    enum discovery {
-	DSC_DOUBLING,
-	DSC_REDUCING
+    enum discovery
+    {
+        DSC_DOUBLING,
+        DSC_REDUCING
     } discovery;
 
     /* int autoRate; do queue watching using TIOCOUTQ, to avoid overruns */
@@ -117,8 +120,9 @@ struct net_config {
 			  be retransmitted */
 };
 
-struct stat_config {
-    FILE *log; /* Log file for statistics */
+struct stat_config
+{
+    FILE* log; /* Log file for statistics */
     long bwPeriod; /* How often are bandwidth estimations logged? */
 
     int statPeriod;
@@ -127,7 +131,8 @@ struct stat_config {
 
 #define NR_CLIENT_SOCKS 4
 
-struct client_config {
+struct client_config
+{
     int socks[NR_CLIENT_SOCKS];
     struct sockaddr_in serverAddr;
     int clientNumber;
@@ -136,10 +141,10 @@ struct client_config {
     int sender_is_newgen;
 };
 
-void *rgInitGovernor(struct net_config *cfg, struct rateGovernor_t *gov);
-void rgParseRateGovernor(struct net_config *net_config, char *rg);
-void rgWaitAll(struct net_config *cfg, int sock, in_addr_t ip, int size);
-void rgShutdownAll(struct net_config *cfg);
+void* rgInitGovernor(struct net_config* cfg, struct rateGovernor_t* gov);
+void rgParseRateGovernor(struct net_config* net_config, char* rg);
+void rgWaitAll(struct net_config* cfg, int sock, in_addr_t ip, int size);
+void rgShutdownAll(struct net_config* cfg);
 
 /**
  * Answers whether given fd is seekable

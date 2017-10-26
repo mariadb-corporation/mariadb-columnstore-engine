@@ -35,18 +35,18 @@ namespace threadpool
 {
 
 WeightedThreadPool::WeightedThreadPool()
-        :fMaxThreadWeight(0), fMaxThreads( 0 ), fQueueSize( 0 )
+    : fMaxThreadWeight(0), fMaxThreads( 0 ), fQueueSize( 0 )
 {
     init();
 }
 
 WeightedThreadPool::WeightedThreadPool( size_t maxThreadWeight, size_t maxThreads, size_t queueSize )
-        :fMaxThreadWeight(maxThreadWeight), fMaxThreads( maxThreads ), fQueueSize( queueSize )
+    : fMaxThreadWeight(maxThreadWeight), fMaxThreads( maxThreads ), fQueueSize( queueSize )
 {
     init();
 
     if (fQueueSize == 0)
-        fQueueSize = fMaxThreads*2;
+        fQueueSize = fMaxThreads * 2;
 }
 
 
@@ -57,7 +57,7 @@ WeightedThreadPool::~WeightedThreadPool() throw()
     {
         stop();
     }
-    catch(...)
+    catch (...)
     {}
 }
 
@@ -67,9 +67,9 @@ void WeightedThreadPool::init()
     fThreadCount = 0;
     fGeneralErrors = 0;
     fFunctorErrors = 0;
-	fWaitingFunctorsSize = 0;
-	fWaitingFunctorsWeight=0;
-	issued = 0;
+    fWaitingFunctorsSize = 0;
+    fWaitingFunctorsWeight = 0;
+    issued = 0;
     fStop = false;
 //     fThreadCreated = new NoOp();
     fNextFunctor = fWaitingFunctors.end();
@@ -97,7 +97,7 @@ void WeightedThreadPool::setMaxThreadWeight(size_t maxWeight)
 }
 
 
-void WeightedThreadPool::setThreadCreatedListener(const Functor_T &f)
+void WeightedThreadPool::setThreadCreatedListener(const Functor_T& f)
 {
 //     fThreadCreated = f;
 }
@@ -120,40 +120,45 @@ void WeightedThreadPool::wait()
 
     while (fWaitingFunctorsSize > 0)
     {
-		//cout << "waiting ..." << endl;
+        //cout << "waiting ..." << endl;
         fThreadAvailable.wait(lock1);
-		//cerr << "woke!" << endl;
+        //cerr << "woke!" << endl;
     }
 }
 
 void WeightedThreadPool::removeJobs(uint32_t id)
 {
-	boost::mutex::scoped_lock lock1(fMutex);
-	Container_T::iterator it;
+    boost::mutex::scoped_lock lock1(fMutex);
+    Container_T::iterator it;
 
-	it = fNextFunctor;
-	while (it != fWaitingFunctors.end()) {
-		if (it->id == id) {
-			fWaitingFunctorsWeight -= it->functorWeight;
-			fWaitingFunctorsSize--;
-			if (it == fNextFunctor) {
-				fWaitingFunctors.erase(fNextFunctor++);
-				it = fNextFunctor;
-			}
-			else
-				fWaitingFunctors.erase(it++);
-		}
-		else
-			++it;
-	}
+    it = fNextFunctor;
+
+    while (it != fWaitingFunctors.end())
+    {
+        if (it->id == id)
+        {
+            fWaitingFunctorsWeight -= it->functorWeight;
+            fWaitingFunctorsSize--;
+
+            if (it == fNextFunctor)
+            {
+                fWaitingFunctors.erase(fNextFunctor++);
+                it = fNextFunctor;
+            }
+            else
+                fWaitingFunctors.erase(it++);
+        }
+        else
+            ++it;
+    }
 }
 
-void WeightedThreadPool::invoke(const Functor_T &threadfunc, uint32_t functor_weight,
-		uint32_t id)
+void WeightedThreadPool::invoke(const Functor_T& threadfunc, uint32_t functor_weight,
+                                uint32_t id)
 {
     boost::mutex::scoped_lock lock1(fMutex);
 
-    for(;;)
+    for (;;)
     {
         try
         {
@@ -175,11 +180,11 @@ void WeightedThreadPool::invoke(const Functor_T &threadfunc, uint32_t functor_we
                 bAdded = true;
             }
 
-			// add a thread is necessary
+            // add a thread is necessary
             if ( fThreadCount < fMaxThreads)
             {
                 ++fThreadCount;
-				//cout << "\t++invoke() tcnt=" << fThreadCount << endl;
+                //cout << "\t++invoke() tcnt=" << fThreadCount << endl;
                 lock1.unlock();
                 fThreads.create_thread(beginThreadFunc(*this));
 
@@ -192,8 +197,9 @@ void WeightedThreadPool::invoke(const Functor_T &threadfunc, uint32_t functor_we
                 lock1.lock();
                 continue;
             }
-			//else
-			//	cout << "invoke() no thread created c=" << fThreadCount << " m=" << fMaxThreads << endl;
+
+            //else
+            //	cout << "invoke() no thread created c=" << fThreadCount << " m=" << fMaxThreads << endl;
 
             if (bAdded)
             {
@@ -203,7 +209,7 @@ void WeightedThreadPool::invoke(const Functor_T &threadfunc, uint32_t functor_we
 
             fThreadAvailable.wait(lock1);
         }
-        catch(...)
+        catch (...)
         {
             ++fGeneralErrors;
             throw;
@@ -215,13 +221,14 @@ void WeightedThreadPool::invoke(const Functor_T &threadfunc, uint32_t functor_we
 
 void WeightedThreadPool::beginThread() throw()
 {
-	vector<bool> reschedule;
+    vector<bool> reschedule;
+
     try
     {
 //         fThreadCreated();
         boost::mutex::scoped_lock lock1(fMutex);
 
-        for(;;)
+        for (;;)
         {
             if (fStop)
                 break;
@@ -233,78 +240,90 @@ void WeightedThreadPool::beginThread() throw()
             }
             else
             {
-				vector<Container_T::iterator> todoList;
-				int i, num = (fWaitingFunctorsSize - issued);
-				Container_T::const_iterator iter;
-				uint32_t weight=0;
+                vector<Container_T::iterator> todoList;
+                int i, num = (fWaitingFunctorsSize - issued);
+                Container_T::const_iterator iter;
+                uint32_t weight = 0;
 
-				for (i = 0; i < num && weight < fMaxThreadWeight; i++) {
-					weight += (*fNextFunctor).functorWeight;
-                	todoList.push_back(fNextFunctor++);
-				}
-				issued+=i;
-				num=i;
+                for (i = 0; i < num && weight < fMaxThreadWeight; i++)
+                {
+                    weight += (*fNextFunctor).functorWeight;
+                    todoList.push_back(fNextFunctor++);
+                }
+
+                issued += i;
+                num = i;
                 lock1.unlock();
-				
-   				//cerr << "beginThread() " << num
-				//	<< " jobs - fWaitingFunctorsSize=" << fWaitingFunctorsSize
-				//	<< " fWaitingFunctorsWeight=" << fWaitingFunctorsWeight
-				//	<< " weight=" << weight
-				//	<< " issued=" << issued << " todo=" << todoList.size()
-				//	<< " fThreadCount=" << fThreadCount << endl;
 
-				i = 0;
-				reschedule.resize(num);
-				bool allWereRescheduled = true, someWereRescheduled = false;
-				while (i < num) {
-					try {
-						for (; i < num; i++) {
-							reschedule[i] = false;  // in case of exception in the next line
-		                    reschedule[i] = ((*todoList[i]).functor)();
-							allWereRescheduled &= reschedule[i];
-							someWereRescheduled |= reschedule[i];
-						}
-					}
-					catch(exception &e) {
-						i++;
-						++fFunctorErrors;
-						cerr << e.what() << endl;
-					}
-				}
-				
-				// no real work was done, prevent intensive busy waiting
-				if (allWereRescheduled)
-					usleep(1000);
+                //cerr << "beginThread() " << num
+                //	<< " jobs - fWaitingFunctorsSize=" << fWaitingFunctorsSize
+                //	<< " fWaitingFunctorsWeight=" << fWaitingFunctorsWeight
+                //	<< " weight=" << weight
+                //	<< " issued=" << issued << " todo=" << todoList.size()
+                //	<< " fThreadCount=" << fThreadCount << endl;
 
-				//cout << "running " << i << "/" << num << " functor" <<endl;
-				lock1.lock();
+                i = 0;
+                reschedule.resize(num);
+                bool allWereRescheduled = true, someWereRescheduled = false;
 
-				if (someWereRescheduled) {
-					for (i = 0; i < num; i++)
-						if (reschedule[i])
-							addFunctor((*todoList[i]).functor, (*todoList[i]).functorWeight,
-							  (*todoList[i]).id);
-					if (num > 1)
-						fNeedThread.notify_all();
-					else
-						fNeedThread.notify_one();
-				}
+                while (i < num)
+                {
+                    try
+                    {
+                        for (; i < num; i++)
+                        {
+                            reschedule[i] = false;  // in case of exception in the next line
+                            reschedule[i] = ((*todoList[i]).functor)();
+                            allWereRescheduled &= reschedule[i];
+                            someWereRescheduled |= reschedule[i];
+                        }
+                    }
+                    catch (exception& e)
+                    {
+                        i++;
+                        ++fFunctorErrors;
+                        cerr << e.what() << endl;
+                    }
+                }
 
-				issued -= num;
-				for (i = 0; i < num; i++) {
-					fWaitingFunctorsWeight-=(*todoList[i]).functorWeight;
-					fWaitingFunctors.erase(todoList[i]);
-				}
-				fWaitingFunctorsSize -= num;
+                // no real work was done, prevent intensive busy waiting
+                if (allWereRescheduled)
+                    usleep(1000);
 
-				//if (fWaitingFunctorsSize != fWaitingFunctors.size()) ;
-				//	cerr << "num=" << num << " cleaned=" << i << " size="
-				//		<< fWaitingFunctorsSize << " list size="
-				//		<< fWaitingFunctors.size()
-				//		<< " w="<<fWaitingFunctorsWeight << endl;
+                //cout << "running " << i << "/" << num << " functor" <<endl;
+                lock1.lock();
+
+                if (someWereRescheduled)
+                {
+                    for (i = 0; i < num; i++)
+                        if (reschedule[i])
+                            addFunctor((*todoList[i]).functor, (*todoList[i]).functorWeight,
+                                       (*todoList[i]).id);
+
+                    if (num > 1)
+                        fNeedThread.notify_all();
+                    else
+                        fNeedThread.notify_one();
+                }
+
+                issued -= num;
+
+                for (i = 0; i < num; i++)
+                {
+                    fWaitingFunctorsWeight -= (*todoList[i]).functorWeight;
+                    fWaitingFunctors.erase(todoList[i]);
+                }
+
+                fWaitingFunctorsSize -= num;
+
+                //if (fWaitingFunctorsSize != fWaitingFunctors.size()) ;
+                //	cerr << "num=" << num << " cleaned=" << i << " size="
+                //		<< fWaitingFunctorsSize << " list size="
+                //		<< fWaitingFunctors.size()
+                //		<< " w="<<fWaitingFunctorsWeight << endl;
 
                 fThreadAvailable.notify_all();
-				
+
             }
         }
     }
@@ -329,12 +348,12 @@ void WeightedThreadPool::beginThread() throw()
             ml.logErrorMessage( message );
 
         }
-        catch(...)
+        catch (...)
         {
         }
 
     }
-    catch(...)
+    catch (...)
     {
         ++fGeneralErrors;
 
@@ -352,27 +371,27 @@ void WeightedThreadPool::beginThread() throw()
 
             ml.logErrorMessage( message );
         }
-        catch(...)
+        catch (...)
         {
         }
     }
 }
 
-void WeightedThreadPool::addFunctor(const Functor_T &func, uint32_t functor_weight,
-		uint32_t id)
+void WeightedThreadPool::addFunctor(const Functor_T& func, uint32_t functor_weight,
+                                    uint32_t id)
 {
-    bool bAtEnd=false;
+    bool bAtEnd = false;
 
     if (fNextFunctor == fWaitingFunctors.end())
         bAtEnd = true;
 
-	//cout << "addFunctor() w=" << fWaitingFunctorsWeight
-	//	<< " s=" << fWaitingFunctorsSize << " i=" << id << endl;
+    //cout << "addFunctor() w=" << fWaitingFunctorsWeight
+    //	<< " s=" << fWaitingFunctorsSize << " i=" << id << endl;
 
-	FunctorListItem fl = {func, functor_weight, id};
+    FunctorListItem fl = {func, functor_weight, id};
     fWaitingFunctors.push_back(fl);
-	fWaitingFunctorsSize++;
-	fWaitingFunctorsWeight+=functor_weight;
+    fWaitingFunctorsSize++;
+    fWaitingFunctorsWeight += functor_weight;
 
     if (bAtEnd)
     {

@@ -33,7 +33,8 @@
 #include "IDBDataFile.h"
 using namespace idbdatafile;
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 ColumnBuffer::ColumnBuffer(ColumnInfo* pColInfo, Log* logger) :
     fBuffer(0), fBufSize(0), fFile(0), fColInfo(pColInfo), fLog(logger)
@@ -72,16 +73,18 @@ int ColumnBuffer::setDbFile(IDBDataFile* f, HWM startHwm, const char* /*hdrs*/)
 //------------------------------------------------------------------------------
 void ColumnBuffer::resizeAndCopy(int newSize, int startOffset, int endOffset)
 {
-    unsigned char *old_buffer = fBuffer;
+    unsigned char* old_buffer = fBuffer;
     fBuffer = new unsigned char[newSize];
 
-    if (startOffset != -1) {
+    if (startOffset != -1)
+    {
         int destBufferOffset = 0;
 
         // If the data in "buffer" wraps around, then here's where we copy
         // the data at the end of the buffer, before copying the data
         // at the start of the bufffer.
-        if(endOffset < startOffset) { 
+        if (endOffset < startOffset)
+        {
             memcpy(fBuffer, old_buffer + startOffset, fBufSize - startOffset);
             destBufferOffset = fBufSize - startOffset;
             startOffset = 0;
@@ -107,8 +110,10 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize)
     Stats::startParseEvent(WE_STATS_WRITE_COL);
 #endif
     size_t nitems = fFile->write(fBuffer + startOffset, writeSize) / writeSize;
+
     if (nitems != 1)
         return ERR_FILE_WRITE;
+
 #ifdef PROFILE
     Stats::stopParseEvent(WE_STATS_WRITE_COL);
 #endif
@@ -119,7 +124,7 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize)
 //------------------------------------------------------------------------------
 // Add data to output buffer
 //------------------------------------------------------------------------------
-void ColumnBuffer::write(const void * const data, int startOffset, int bytes) const
+void ColumnBuffer::write(const void* const data, int startOffset, int bytes) const
 {
     memcpy(fBuffer + startOffset, data, bytes);
 }

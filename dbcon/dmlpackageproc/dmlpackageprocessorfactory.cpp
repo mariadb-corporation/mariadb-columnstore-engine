@@ -31,34 +31,35 @@
 
 using namespace dmlpackage;
 
-namespace dmlpackageprocessor {
+namespace dmlpackageprocessor
+{
 
 DMLPackageProcessor*  DMLPackageProcessorFactory::
 makePackageProcessor(int packageType, dmlpackage::CalpontDMLPackage& cpackage)
 {
-	DMLPackageProcessor* dmlProcPtr = 0;
+    DMLPackageProcessor* dmlProcPtr = 0;
 
-	switch( packageType )
-   	{
-		case DML_INSERT:
-		  dmlProcPtr = new InsertPackageProcessor();
-		break;
-		
-		case DML_DELETE:
-		  dmlProcPtr = new DeletePackageProcessor();
-		break;
+    switch ( packageType )
+    {
+        case DML_INSERT:
+            dmlProcPtr = new InsertPackageProcessor();
+            break;
 
-		case DML_UPDATE:
-		  dmlProcPtr = new UpdatePackageProcessor();
-		break;
-		
-		case DML_COMMAND:
-		  dmlProcPtr = new CommandPackageProcessor();
-		break;
-	
-	}	
+        case DML_DELETE:
+            dmlProcPtr = new DeletePackageProcessor();
+            break;
 
-	return dmlProcPtr;	  
+        case DML_UPDATE:
+            dmlProcPtr = new UpdatePackageProcessor();
+            break;
+
+        case DML_COMMAND:
+            dmlProcPtr = new CommandPackageProcessor();
+            break;
+
+    }
+
+    return dmlProcPtr;
 }
 
 } // namespace dmlpackageprocessor

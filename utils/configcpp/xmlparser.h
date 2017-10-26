@@ -36,33 +36,33 @@ namespace config
 class XMLParser
 {
 public:
-	XMLParser(const std::string& installDir) : fInstallDir(installDir) { }
-	~XMLParser() { }
+    XMLParser(const std::string& installDir) : fInstallDir(installDir) { }
+    ~XMLParser() { }
 
-	const std::string getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name) const;
+    const std::string getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name) const;
 
-	void getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name,
-		std::vector<std::string>& values) const;
+    void getConfig(const xmlDocPtr doc, const std::string& section, const std::string& name,
+                   std::vector<std::string>& values) const;
 
-	void setConfig(xmlDocPtr doc, const std::string& section, const std::string& name,
-		const std::string& value);
+    void setConfig(xmlDocPtr doc, const std::string& section, const std::string& name,
+                   const std::string& value);
 
-	void delConfig(xmlDocPtr doc, const std::string& section, const std::string& name);
+    void delConfig(xmlDocPtr doc, const std::string& section, const std::string& name);
 
-	const std::vector<std::string> enumConfig(const xmlDocPtr doc) const;
+    const std::vector<std::string> enumConfig(const xmlDocPtr doc) const;
 
-	const std::vector<std::string> enumSection(const xmlDocPtr doc, const std::string& section) const;
+    const std::vector<std::string> enumSection(const xmlDocPtr doc, const std::string& section) const;
 
 private:
-	//defaults okay
-	//XMLParser(const XMLParser& rhs);
-	//XMLParser& operator=(const XMLParser& rhs);
+    //defaults okay
+    //XMLParser(const XMLParser& rhs);
+    //XMLParser& operator=(const XMLParser& rhs);
 
-	/** @brief expand macros in config file to actual values
-	*/
-	const std::string expand(const std::string& in) const;
+    /** @brief expand macros in config file to actual values
+    */
+    const std::string expand(const std::string& in) const;
 
-	const std::string fInstallDir;
+    const std::string fInstallDir;
 
 };
 

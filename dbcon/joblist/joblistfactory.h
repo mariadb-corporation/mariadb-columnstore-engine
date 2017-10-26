@@ -59,15 +59,15 @@ class JobListFactory
 {
 
 public:
-	/** @brief static JobList constructor method
-	 *
-	 * @param cplan the CalpontExecutionPlan from which the JobList is constructed
-	 */
-	EXPORT static SJLP makeJobList(
-		execplan::CalpontExecutionPlan* cplan,
-		ResourceManager* rm,
-		bool tryTuple=false,
-		bool isExeMgr = false);
+    /** @brief static JobList constructor method
+     *
+     * @param cplan the CalpontExecutionPlan from which the JobList is constructed
+     */
+    EXPORT static SJLP makeJobList(
+        execplan::CalpontExecutionPlan* cplan,
+        ResourceManager* rm,
+        bool tryTuple = false,
+        bool isExeMgr = false);
 
 private:
 

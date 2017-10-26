@@ -43,32 +43,33 @@ using namespace messageqcpp;
 
 void sendOne(string sqlfile)
 {
-	MessageQueueClient ddlproc("DDLProc");
- 	ByteStream obs,ibs;
-	ByteStream::byte status;
+    MessageQueueClient ddlproc("DDLProc");
+    ByteStream obs, ibs;
+    ByteStream::byte status;
 
-		
-	SqlFileParser p;
-	p.Parse(sqlfile);
-	assert(p.Good());
 
-	const ParseTree& stmts = p.GetParseTree();
-	SqlStatement* stmt = stmts[0];
-	assert(stmt);
+    SqlFileParser p;
+    p.Parse(sqlfile);
+    assert(p.Good());
 
- 	stmt->serialize(obs);
- 	ddlproc.write(obs);
+    const ParseTree& stmts = p.GetParseTree();
+    SqlStatement* stmt = stmts[0];
+    assert(stmt);
 
-	ibs = ddlproc.read();
+    stmt->serialize(obs);
+    ddlproc.write(obs);
 
-	cout << "bs: " << ibs.length() << endl;
+    ibs = ddlproc.read();
 
-	if (ibs.length() > 0) {
-		ibs >> status;
-		cout << "status: " << (int)status << endl;
-	}
-	
- 	cout << "Bye" << endl;
+    cout << "bs: " << ibs.length() << endl;
+
+    if (ibs.length() > 0)
+    {
+        ibs >> status;
+        cout << "status: " << (int)status << endl;
+    }
+
+    cout << "Bye" << endl;
 }
 
 // ../dbcon/ddlpackage/sql/atac01.sql
@@ -108,21 +109,22 @@ void sendOne(string sqlfile)
 
 int main(int argc, char* argv[])
 {
-	string sqlfile;
+    string sqlfile;
 
- 	po::options_description desc ("Allowed options");
-  	desc.add_options ()
- 		("help", "produce help message")
- 		("sql", po::value < string > (), "sql file");
- 	po::variables_map vm;
-  	po::store (po::parse_command_line (argc, argv, desc), vm);
-  	po::notify (vm);
+    po::options_description desc ("Allowed options");
+    desc.add_options ()
+    ("help", "produce help message")
+    ("sql", po::value < string > (), "sql file");
+    po::variables_map vm;
+    po::store (po::parse_command_line (argc, argv, desc), vm);
+    po::notify (vm);
 
-  	if (vm.count ("sql")) {
-  		sqlfile = vm["sql"].as <string> ();
-		sendOne(sqlfile);
-		return 0;
-	}
-	
+    if (vm.count ("sql"))
+    {
+        sqlfile = vm["sql"].as <string> ();
+        sendOne(sqlfile);
+        return 0;
+    }
+
 }
 

@@ -38,58 +38,88 @@ const int64_t WF__FRAME_RANGE = 1;
 class WindowFrame
 {
 public:
-	/** @brief WindowFrame constructor
-	 */
-	WindowFrame(int64_t t, boost::shared_ptr<FrameBound>& u, boost::shared_ptr<FrameBound>& l) :
-		fUnit(t), fUpper(u), fLower(l)
-	{}
+    /** @brief WindowFrame constructor
+     */
+    WindowFrame(int64_t t, boost::shared_ptr<FrameBound>& u, boost::shared_ptr<FrameBound>& l) :
+        fUnit(t), fUpper(u), fLower(l)
+    {}
 
-	/** @brief WindowFrame copy constructor
-	 */
-	WindowFrame(const WindowFrame& rhs) :
-		fUnit(rhs.fUnit),
-		fUpper(rhs.fUpper->clone()),
-		fLower(rhs.fLower->clone())
-	{}
+    /** @brief WindowFrame copy constructor
+     */
+    WindowFrame(const WindowFrame& rhs) :
+        fUnit(rhs.fUnit),
+        fUpper(rhs.fUpper->clone()),
+        fLower(rhs.fLower->clone())
+    {}
 
-	/** @brief WindowFrame destructor
-	 */
-	virtual ~WindowFrame() {};
+    /** @brief WindowFrame destructor
+     */
+    virtual ~WindowFrame() {};
 
-	/** @brief clone
-	 */
-	virtual WindowFrame* clone() { return new WindowFrame(*this); };
+    /** @brief clone
+     */
+    virtual WindowFrame* clone()
+    {
+        return new WindowFrame(*this);
+    };
 
-	/** @brief virtual void getWindow
-	 */
-	std::pair<uint64_t, uint64_t> getWindow(int64_t, int64_t, int64_t);
+    /** @brief virtual void getWindow
+     */
+    std::pair<uint64_t, uint64_t> getWindow(int64_t, int64_t, int64_t);
 
-	const std::string toString() const;
+    const std::string toString() const;
 
-	/** @brief set methods
-	 */
-	void setRowMetaData(const rowgroup::RowGroup& g, const rowgroup::Row& r)
-			{ fUpper->setRowMetaData(g, r); fLower->setRowMetaData(g, r); }
-	void setRowData(boost::shared_ptr<std::vector<joblist::RowPosition> >& d)
-			{ fUpper->setRowData(d); fLower->setRowData(d); }
-	void setCallback(joblist::WindowFunctionStep* s)
-			{ fUpper->setCallback(s); fLower->setCallback(s); }
+    /** @brief set methods
+     */
+    void setRowMetaData(const rowgroup::RowGroup& g, const rowgroup::Row& r)
+    {
+        fUpper->setRowMetaData(g, r);
+        fLower->setRowMetaData(g, r);
+    }
+    void setRowData(boost::shared_ptr<std::vector<joblist::RowPosition> >& d)
+    {
+        fUpper->setRowData(d);
+        fLower->setRowData(d);
+    }
+    void setCallback(joblist::WindowFunctionStep* s)
+    {
+        fUpper->setCallback(s);
+        fLower->setCallback(s);
+    }
 
-	int64_t unit() const { return fUnit; }
-	void unit(int64_t t) { fUnit = t;    }
-	const boost::shared_ptr<FrameBound>& upper() const { return fUpper; }
-	void upper(const boost::shared_ptr<FrameBound>& u) { fUpper = u;    }
-	const boost::shared_ptr<FrameBound>& lower() const { return fLower; }
-	void lower(const boost::shared_ptr<FrameBound>& l) { fLower = l;    }
+    int64_t unit() const
+    {
+        return fUnit;
+    }
+    void unit(int64_t t)
+    {
+        fUnit = t;
+    }
+    const boost::shared_ptr<FrameBound>& upper() const
+    {
+        return fUpper;
+    }
+    void upper(const boost::shared_ptr<FrameBound>& u)
+    {
+        fUpper = u;
+    }
+    const boost::shared_ptr<FrameBound>& lower() const
+    {
+        return fLower;
+    }
+    void lower(const boost::shared_ptr<FrameBound>& l)
+    {
+        fLower = l;
+    }
 
 protected:
 
-	// type
-	int64_t                                  fUnit;
+    // type
+    int64_t                                  fUnit;
 
-	// data
-	boost::shared_ptr<FrameBound>            fUpper;
-	boost::shared_ptr<FrameBound>            fLower;
+    // data
+    boost::shared_ptr<FrameBound>            fUpper;
+    boost::shared_ptr<FrameBound>            fLower;
 };
 
 

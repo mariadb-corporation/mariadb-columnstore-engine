@@ -48,20 +48,20 @@ namespace WriteEngine
 class SimpleSysLog
 {
 public:
-   /**
-    * @brief Singleton accessor.
-    */
+    /**
+     * @brief Singleton accessor.
+     */
     EXPORT static SimpleSysLog* instance();
 
-   /**
-    * @brief Modify the LoggingID to be used.  Mainly used to control the
-    * subsystem ID.
-    */
+    /**
+     * @brief Modify the LoggingID to be used.  Mainly used to control the
+     * subsystem ID.
+     */
     EXPORT void setLoggingID( const logging::LoggingID& loggingID );
-    
-   /**
-    * @brief Function that logs a syslog msg.
-    */
+
+    /**
+     * @brief Function that logs a syslog msg.
+     */
     EXPORT void logMsg( const logging::Message::Args& msgArgs,
                         logging::LOG_TYPE             logType,
                         logging::Message::MessageID   msgId );

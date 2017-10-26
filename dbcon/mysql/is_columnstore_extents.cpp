@@ -29,7 +29,7 @@
 
 
 // Required declaration as it isn't in a MairaDB include
-bool schema_table_store_record(THD *thd, TABLE *table);
+bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_extents_fields[] =
 {
@@ -52,15 +52,16 @@ ST_FIELD_INFO is_columnstore_extents_fields[] =
     {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
 };
 
-static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
+static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
-    CHARSET_INFO *cs = system_charset_info;
-    TABLE *table = tables->table;
+    CHARSET_INFO* cs = system_charset_info;
+    TABLE* table = tables->table;
     std::vector<struct BRM::EMEntry> entries;
-   	std::vector<struct BRM::EMEntry>::iterator iter;
-	std::vector<struct BRM::EMEntry>::iterator end;
+    std::vector<struct BRM::EMEntry>::iterator iter;
+    std::vector<struct BRM::EMEntry>::iterator end;
 
-    BRM::DBRM *emp = new BRM::DBRM();
+    BRM::DBRM* emp = new BRM::DBRM();
+
     if (!emp || !emp->isDBRMReady())
     {
         return 1;
@@ -69,40 +70,46 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     execplan::ObjectIDManager oidm;
     BRM::OID_t MaxOID = oidm.size();
 
-    for(BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
+    for (BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
     {
         emp->getExtents(oid, entries, false, false, true);
+
         if (entries.size() == 0)
             continue;
 
         iter = entries.begin();
         end = entries.end();
+
         while (iter != end)
         {
             table->field[0]->store(oid);
+
             if (iter->colWid > 0)
             {
                 table->field[1]->store("Column", strlen("Column"), cs);
+
                 if (iter->partition.cprange.lo_val == std::numeric_limits<int64_t>::max() ||
-        			iter->partition.cprange.lo_val <= (std::numeric_limits<int64_t>::min() + 2))
-        		{
-        		    table->field[4]->set_null();
-        		}
-        		else
-        		{
-        		    table->field[4]->set_notnull();
+                        iter->partition.cprange.lo_val <= (std::numeric_limits<int64_t>::min() + 2))
+                {
+                    table->field[4]->set_null();
+                }
+                else
+                {
+                    table->field[4]->set_notnull();
                     table->field[4]->store(iter->partition.cprange.lo_val);
                 }
+
                 if (iter->partition.cprange.hi_val == std::numeric_limits<int64_t>::max() ||
-        			iter->partition.cprange.hi_val <= (std::numeric_limits<int64_t>::min() + 2))
-        		{
-        		    table->field[5]->set_null();
-        		}
-        		else
-        		{
+                        iter->partition.cprange.hi_val <= (std::numeric_limits<int64_t>::min() + 2))
+                {
+                    table->field[5]->set_null();
+                }
+                else
+                {
                     table->field[5]->set_notnull();
                     table->field[5]->store(iter->partition.cprange.hi_val);
                 }
+
                 table->field[6]->store(iter->colWid);
 
             }
@@ -113,6 +120,7 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 table->field[5]->set_null();
                 table->field[6]->store(8192);
             }
+
             table->field[2]->store(iter->range.start);
             table->field[3]->store(iter->range.start + (iter->range.size * 1024) - 1);
 
@@ -128,30 +136,38 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 case 0:
                     table->field[13]->store("Invalid", strlen("Invalid"), cs);
                     break;
+
                 case 1:
                     table->field[13]->store("Updating", strlen("Updating"), cs);
                     break;
+
                 case 2:
                     table->field[13]->store("Valid", strlen("Valid"), cs);
                     break;
+
                 default:
                     table->field[13]->store("Unknown", strlen("Unknown"), cs);
                     break;
             }
+
             switch (iter->status)
             {
                 case BRM::EXTENTAVAILABLE:
                     table->field[14]->store("Available", strlen("Available"), cs);
                     break;
+
                 case BRM::EXTENTUNAVAILABLE:
                     table->field[14]->store("Unavailable", strlen("Unavailable"), cs);
                     break;
+
                 case BRM::EXTENTOUTOFSERVICE:
                     table->field[14]->store("Out of service", strlen("Out of service"), cs);
                     break;
+
                 default:
                     table->field[14]->store("Unknown", strlen("Unknown"), cs);
             }
+
             // MCOL-454: special case, sometimes blockOffset can be > 0 and HWM can be 0
             if (iter->HWM == 0)
             {
@@ -177,9 +193,9 @@ static int is_columnstore_extents_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     return 0;
 }
 
-static int is_columnstore_extents_plugin_init(void *p)
+static int is_columnstore_extents_plugin_init(void* p)
 {
-    ST_SCHEMA_TABLE *schema = (ST_SCHEMA_TABLE*) p;
+    ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_extents_fields;
     schema->fill_table = is_columnstore_extents_fill;
     return 0;

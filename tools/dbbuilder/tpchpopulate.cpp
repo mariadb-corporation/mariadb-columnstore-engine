@@ -39,6 +39,7 @@ void TpchPopulate::populateFromFile(std::string tableName, string& fileName)
 
     std::string dmlStatement;
     ifstream ifdml(fileName.c_str(), ios::in);
+
     if (ifdml)
     {
         while (ifdml.good())
@@ -46,9 +47,11 @@ void TpchPopulate::populateFromFile(std::string tableName, string& fileName)
             char line[256];
             line[0] = '\0';;
             ifdml.getline(line, 256);
+
             //if ( line[0] == '\0' )
             if ( strlen(line) == 0 )
-            	continue;
+                continue;
+
             dmlStatement = "insert into ";
             dmlStatement += tableName;
             dmlStatement += " values(";
@@ -85,7 +88,7 @@ void TpchPopulate::populate_part()
 
     dmlStatement = "insert into tpch.part values(5, 'forest blush chiffon thistle chocolate', 'Manufac#3', 'Brand#32', 'STANDARD POLISHED TIN', 15, 'SM PKG', 905.00, 'pending, spe');";
     insert(dmlStatement);
-    
+
     cout << endl;
     cout << "Commiting inserting to tpch.part table ..." << endl;
     std::string command("COMMIT;");
@@ -98,10 +101,11 @@ void TpchPopulate::populate_part()
 
     if ( DMLPackageProcessor::NO_ERROR != result.result )
     {
-       	cout << "Command process failed!" << endl;
+        cout << "Command process failed!" << endl;
     }
+
     delete pkgProcPtr;
-    delete dmlCommandPkgPtr; 
+    delete dmlCommandPkgPtr;
 
     cout << endl;
     cout << "Finished Populating tpch.part table" << endl;
@@ -123,57 +127,57 @@ void TpchPopulate::populate_customer()
 
 void TpchPopulate::populate_tpch()
 {
-	std::string tableName;
-	std::string filePath;
+    std::string tableName;
+    std::string filePath;
     cout << endl;
     cout << "Populating region table" << endl;
-    cout << "---------------------------------------" << endl;  
+    cout << "---------------------------------------" << endl;
     tableName = "tpch.region";
-    filePath = "region.tbl";      
+    filePath = "region.tbl";
     populateFromFile(tableName, filePath );
-    
+
     cout << "Populating nation table" << endl;
-    cout << "---------------------------------------" << endl;   
+    cout << "---------------------------------------" << endl;
     tableName = "tpch.nation";
-    filePath = "nation.tbl";     
+    filePath = "nation.tbl";
     populateFromFile(tableName, filePath );
-    
+
     cout << "Populating customer table" << endl;
-    cout << "---------------------------------------" << endl;   
+    cout << "---------------------------------------" << endl;
     tableName = "tpch.customer";
-    filePath = "customer.tbl";  
+    filePath = "customer.tbl";
     populateFromFile(tableName, filePath );
-    
+
     cout << "Populating orders table" << endl;
-    cout << "---------------------------------------" << endl; 
+    cout << "---------------------------------------" << endl;
     tableName = "tpch.orders";
-    filePath = "orders.tbl";   
+    filePath = "orders.tbl";
     populateFromFile(tableName, filePath );
-    
+
     cout << "Populating part table" << endl;
-    cout << "---------------------------------------" << endl;  
+    cout << "---------------------------------------" << endl;
     tableName = "part.nation";
-    filePath = "part.tbl";  
+    filePath = "part.tbl";
     populateFromFile(tableName, filePath );
-    
+
     cout << "Populating supplier table" << endl;
-    cout << "---------------------------------------" << endl;  
+    cout << "---------------------------------------" << endl;
     tableName = "tpch.supplier";
-    filePath = "supplier.tbl"; 
+    filePath = "supplier.tbl";
     populateFromFile(tableName, filePath );
-    
+
     cout << "Populating partsupp table" << endl;
-    cout << "---------------------------------------" << endl;  
+    cout << "---------------------------------------" << endl;
     tableName = "tpch.partsupp";
-    filePath = "partsupp.tbl";  
+    filePath = "partsupp.tbl";
     populateFromFile(tableName, filePath );
-    
+
     cout << "Populating lineitem table" << endl;
-    cout << "---------------------------------------" << endl;  
+    cout << "---------------------------------------" << endl;
     tableName = "tpch.lineitem";
-    filePath = "lineitem.tbl";   
+    filePath = "lineitem.tbl";
     populateFromFile(tableName, filePath );
-        
+
     cout << endl;
     cout << "Finished Populating TPCH tables." << endl;
 
@@ -185,7 +189,7 @@ void TpchPopulate::insert(string insertStmt)
     cout << insertStmt << endl;
     cout << "---------------------------------------" << endl;
 
-	boost::timer theTimer;
+    boost::timer theTimer;
     VendorDMLStatement dmlStmt(insertStmt, 1);
     CalpontDMLPackage* dmlPkgPtr = CalpontDMLFactory::makeCalpontDMLPackage(dmlStmt);
 
@@ -193,6 +197,7 @@ void TpchPopulate::insert(string insertStmt)
 
     //pkgProcPtr->setDebugLevel(DMLPackageProcessor::VERBOSE);
     DMLPackageProcessor::DMLResult result = pkgProcPtr->processPackage( *dmlPkgPtr );
+
     if ( DMLPackageProcessor::NO_ERROR != result.result )
     {
         cout << "Insert failed!" << endl;
@@ -202,7 +207,7 @@ void TpchPopulate::insert(string insertStmt)
         cout << "Insert successful" << endl;
     }
 
-	cout << "Insert took :" << theTimer.elapsed() << " seconds to complete." << endl;
+    cout << "Insert took :" << theTimer.elapsed() << " seconds to complete." << endl;
 
     delete pkgProcPtr;
     delete dmlPkgPtr;

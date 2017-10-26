@@ -32,22 +32,25 @@ template<typename T>
 class WF_nth_value : public WindowFunctionType
 {
 public:
-	WF_nth_value(int id, const std::string& name) : WindowFunctionType(id, name) {resetData();}
+    WF_nth_value(int id, const std::string& name) : WindowFunctionType(id, name)
+    {
+        resetData();
+    }
 
-	// pure virtual in base
-	void operator()(int64_t b, int64_t e, int64_t c);
-	WindowFunctionType* clone() const;
-	void resetData();
-	void parseParms(const std::vector<execplan::SRCP>&);
+    // pure virtual in base
+    void operator()(int64_t b, int64_t e, int64_t c);
+    WindowFunctionType* clone() const;
+    void resetData();
+    void parseParms(const std::vector<execplan::SRCP>&);
 
-	static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
+    static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int);
 
 protected:
-	T           fValue;
-	int64_t     fNth;
-	bool        fNthNull;
-	bool        fFromFirst;     // from first | from last
-	bool        fRespectNulls;  // respect null | ignore null
+    T           fValue;
+    int64_t     fNth;
+    bool        fNthNull;
+    bool        fFromFirst;     // from first | from last
+    bool        fRespectNulls;  // respect null | ignore null
 
 };
 

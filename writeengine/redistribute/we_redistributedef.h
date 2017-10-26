@@ -48,49 +48,50 @@ const uint32_t RED_TRANS_FAILED  = 23;
 
 
 // return code to shell or between redistribute entities
-enum RED_ErrorCode {
-	RED_EC_OK,
+enum RED_ErrorCode
+{
+    RED_EC_OK,
 
-	// return code for util, for shell script to check exit status value is [0, 255]
-	RED_EC_HELP,
-	RED_EC_INVALID_OPTION,
-	RED_EC_EXTRA_OPERAND,
-	RED_EC_INVALID_DBROOTID,
-	RED_EC_GET_DBROOT1,
-	RED_EC_CONNECT_FAIL,
-	RED_EC_GET_DBROOT_EXCEPT,
-	RED_EC_NETWORK_FAIL,
-	RED_EC_PROTOCOL_ERROR,
-	RED_EC_NO_ARC_NAME,
-	RED_EC_ARC_NOT_EXIST,
-	RED_EC_READ_ARC_FAIL,
+    // return code for util, for shell script to check exit status value is [0, 255]
+    RED_EC_HELP,
+    RED_EC_INVALID_OPTION,
+    RED_EC_EXTRA_OPERAND,
+    RED_EC_INVALID_DBROOTID,
+    RED_EC_GET_DBROOT1,
+    RED_EC_CONNECT_FAIL,
+    RED_EC_GET_DBROOT_EXCEPT,
+    RED_EC_NETWORK_FAIL,
+    RED_EC_PROTOCOL_ERROR,
+    RED_EC_NO_ARC_NAME,
+    RED_EC_ARC_NOT_EXIST,
+    RED_EC_READ_ARC_FAIL,
 
-	// return code for control and workers
-	RED_EC_CNTL_SETUP_FAIL,
-	RED_EC_MAKEPLAN_FAIL,
-	RED_EC_EXECUTE_FAIL,
-	RED_EC_UPDATE_STATE,
-	RED_EC_USER_STOP,
+    // return code for control and workers
+    RED_EC_CNTL_SETUP_FAIL,
+    RED_EC_MAKEPLAN_FAIL,
+    RED_EC_EXECUTE_FAIL,
+    RED_EC_UPDATE_STATE,
+    RED_EC_USER_STOP,
 
-	RED_EC_WKR_SETUP_FAIL,
-	RED_EC_WKR_MSG_SHORT,
-	RED_EC_FILE_LIST_FAIL,
-	RED_EC_NO_TABLE_LOCK,
-	RED_EC_IDB_HARD_FAIL,
-	RED_EC_EXTENT_ERROR,
-	RED_EC_PART_EXIST_ON_TARGET,
-	RED_EC_OID_TO_FILENAME,
-	RED_EC_OPEN_FILE_FAIL,
-	RED_EC_FSEEK_FAIL,
-	RED_EC_FREAD_FAIL,
-	RED_EC_FWRITE_FAIL,
-	RED_EC_SIZE_NACK,
-	RED_EC_COPY_FILE_FAIL,
-	RED_EC_UPDATE_DBRM_FAIL,
-	RED_EC_BS_TOO_SHORT,
-	RED_EC_FILE_SIZE_NOT_MATCH,
-	RED_EC_UNKNOWN_DATA_MSG,
-	RED_EC_UNKNOWN_JOB_MSG,
+    RED_EC_WKR_SETUP_FAIL,
+    RED_EC_WKR_MSG_SHORT,
+    RED_EC_FILE_LIST_FAIL,
+    RED_EC_NO_TABLE_LOCK,
+    RED_EC_IDB_HARD_FAIL,
+    RED_EC_EXTENT_ERROR,
+    RED_EC_PART_EXIST_ON_TARGET,
+    RED_EC_OID_TO_FILENAME,
+    RED_EC_OPEN_FILE_FAIL,
+    RED_EC_FSEEK_FAIL,
+    RED_EC_FREAD_FAIL,
+    RED_EC_FWRITE_FAIL,
+    RED_EC_SIZE_NACK,
+    RED_EC_COPY_FILE_FAIL,
+    RED_EC_UPDATE_DBRM_FAIL,
+    RED_EC_BS_TOO_SHORT,
+    RED_EC_FILE_SIZE_NOT_MATCH,
+    RED_EC_UNKNOWN_DATA_MSG,
+    RED_EC_UNKNOWN_JOB_MSG,
 
 };
 
@@ -130,76 +131,76 @@ const size_t PRE_ALLOC_SIZE = 4 * 1024;
 // redistribute message header
 struct RedistributeMsgHeader
 {
-	uint32_t  destination;
-	uint32_t  source;
-	uint32_t  sequenceNum;
-	uint32_t  messageId;
+    uint32_t  destination;
+    uint32_t  source;
+    uint32_t  sequenceNum;
+    uint32_t  messageId;
 
-	RedistributeMsgHeader(uint32_t d=0, uint32_t s=0, uint32_t n=0, uint32_t i=0) :
-		destination(d), source(s), sequenceNum(n), messageId(i) {};
+    RedistributeMsgHeader(uint32_t d = 0, uint32_t s = 0, uint32_t n = 0, uint32_t i = 0) :
+        destination(d), source(s), sequenceNum(n), messageId(i) {};
 };
 
 
 // redistribute data transfer control block
 struct RedistributeDataControl
 {
-	uint64_t  oid;
-	uint16_t  dbroot;
-	uint32_t  partition;
-	uint16_t  segment;
-	uint64_t  size;
+    uint64_t  oid;
+    uint16_t  dbroot;
+    uint32_t  partition;
+    uint16_t  segment;
+    uint64_t  size;
 
-	RedistributeDataControl(uint64_t o=0, uint16_t d=0, uint32_t p=0, uint16_t s=0, uint32_t z=0) :
-		oid(o), dbroot(d), partition(p), segment(s), size(z) {};
+    RedistributeDataControl(uint64_t o = 0, uint16_t d = 0, uint32_t p = 0, uint16_t s = 0, uint32_t z = 0) :
+        oid(o), dbroot(d), partition(p), segment(s), size(z) {};
 };
 
 
 // extent entry
 struct RedistributeExtentEntry
 {
-	int64_t  oid;
-	int16_t  dbroot;
-	int32_t  partition;
-	int16_t  segment;
-	int64_t  lbid;
-	int64_t  range;
+    int64_t  oid;
+    int16_t  dbroot;
+    int32_t  partition;
+    int16_t  segment;
+    int64_t  lbid;
+    int64_t  range;
     RedistributeExtentEntry() :
-		oid(0), dbroot(0), partition(0), segment(0), lbid(0), range(0) {}
+        oid(0), dbroot(0), partition(0), segment(0), lbid(0), range(0) {}
 };
 
 
 // RedistributePlanEntry
 struct RedistributePlanEntry
 {
-	int64_t  table;
-	int32_t  source;
-	int32_t  partition;
-	int32_t  destination;
-	int32_t  status;
-	time_t   starttime;
-	time_t   endtime;
+    int64_t  table;
+    int32_t  source;
+    int32_t  partition;
+    int32_t  destination;
+    int32_t  status;
+    time_t   starttime;
+    time_t   endtime;
 
-	RedistributePlanEntry() :
-		table(0), source(0), partition(0), destination(0), status(0), starttime(0), endtime(0) {}
+    RedistributePlanEntry() :
+        table(0), source(0), partition(0), destination(0), status(0), starttime(0), endtime(0) {}
 };
 
 
 // RedistributeInfo
 struct RedistributeInfo
 {
-	uint64_t version;
-	uint64_t state;
-	uint64_t planned;
-	uint64_t success;
-	uint64_t skipped;
-	uint64_t failed;
-	time_t   startTime;
-	time_t   endTime;
+    uint64_t version;
+    uint64_t state;
+    uint64_t planned;
+    uint64_t success;
+    uint64_t skipped;
+    uint64_t failed;
+    time_t   startTime;
+    time_t   endTime;
 
-	RedistributeInfo() :
-		version(RED_VERSION_NUM), state(RED_STATE_UNDEF),
-		planned(0), success(0), skipped(0), failed(0),
-		startTime(0), endTime(0) {}
+    RedistributeInfo() :
+        version(RED_VERSION_NUM), state(RED_STATE_UNDEF),
+        planned(0), success(0), skipped(0), failed(0),
+        startTime(0), endTime(0) {}
 };
 
 

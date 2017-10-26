@@ -45,24 +45,24 @@ namespace joblist
 class JLF_ExecPlanToJobList
 {
 public:
-	/** @brief This function is the entry point into CEP to joblist conversion
-	 *
-	 * @param ParseTree (in) is CEP to be translated to a joblist
-	 * @param JobInfo&  (in/out) is the JobInfo reference that is loaded
-	 */
-	static void walkTree(ParseTree* n, JobInfo& jobInfo);
+    /** @brief This function is the entry point into CEP to joblist conversion
+     *
+     * @param ParseTree (in) is CEP to be translated to a joblist
+     * @param JobInfo&  (in/out) is the JobInfo reference that is loaded
+     */
+    static void walkTree(ParseTree* n, JobInfo& jobInfo);
 
-	/** @brief This function add new job steps to the job step vector in JobInfo
-	 *
-	 * @param JobStepVector& (in) is a vector of new job steps
-	 * @param JobInfo&       (in/out) is the JobInfo reference that is loaded
-	 * @param bool           (in) is combine job step possible
-	 */
-	static void addJobSteps(JobStepVector& nsv, JobInfo& jobInfo, bool tryCombine);
+    /** @brief This function add new job steps to the job step vector in JobInfo
+     *
+     * @param JobStepVector& (in) is a vector of new job steps
+     * @param JobInfo&       (in/out) is the JobInfo reference that is loaded
+     * @param bool           (in) is combine job step possible
+     */
+    static void addJobSteps(JobStepVector& nsv, JobInfo& jobInfo, bool tryCombine);
 
 private:
-	// Disable constructor since this class only contains a static method
-	JLF_ExecPlanToJobList();
+    // Disable constructor since this class only contains a static method
+    JLF_ExecPlanToJobList();
 };
 
 } // end of joblist namespace

@@ -42,8 +42,8 @@ namespace ddlpackageprocessor
 class CreateTableProcessor : public DDLPackageProcessor
 {
 public:
-	
-	CreateTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm){}
+
+    CreateTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm) {}
     /** @brief process a create table statement
      *
      * @param createTableStmt the CreateTableStatement
@@ -51,7 +51,7 @@ public:
     EXPORT DDLResult processPackage(ddlpackage::CreateTableStatement& createTableStmt);
 
 protected:
-	void rollBackCreateTable(const std::string& error, BRM::TxnID txnID, int sessionId, ddlpackage::TableDef& tableDef, DDLResult& result);
+    void rollBackCreateTable(const std::string& error, BRM::TxnID txnID, int sessionId, ddlpackage::TableDef& tableDef, DDLResult& result);
 
 private:
 

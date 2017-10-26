@@ -39,9 +39,9 @@
 
 namespace
 {
-    typedef std::tr1::unordered_map<
-        WriteEngine::RID,WriteEngine::ColExtInfEntry,WriteEngine::uint64Hasher>
-        RowExtMap;
+typedef std::tr1::unordered_map <
+WriteEngine::RID, WriteEngine::ColExtInfEntry, WriteEngine::uint64Hasher >
+RowExtMap;
 }
 
 namespace WriteEngine
@@ -78,6 +78,7 @@ void ColExtInf::addOrUpdateEntry( RID     lastInputRow,
     boost::mutex::scoped_lock lock(fMapMutex);
 
     RowExtMap::iterator iter = fMap.find( lastInputRow );
+
     if (iter == fMap.end()) // Add entry
     {
         ColExtInfEntry entry( minVal, maxVal );
@@ -99,17 +100,19 @@ void ColExtInf::addOrUpdateEntry( RID     lastInputRow,
         {
             if (isUnsigned(colDataType))
             {
-                if (static_cast<uint64_t>(minVal) 
-                    < static_cast<uint64_t>(iter->second.fMinVal))
+                if (static_cast<uint64_t>(minVal)
+                        < static_cast<uint64_t>(iter->second.fMinVal))
                     iter->second.fMinVal = minVal;
+
                 if (static_cast<uint64_t>(maxVal)
-                    > static_cast<uint64_t>(iter->second.fMaxVal))
+                        > static_cast<uint64_t>(iter->second.fMaxVal))
                     iter->second.fMaxVal = maxVal;
             }
             else
             {
                 if (minVal < iter->second.fMinVal)
                     iter->second.fMinVal = minVal;
+
                 if (maxVal > iter->second.fMaxVal)
                     iter->second.fMaxVal = maxVal;
             }
@@ -130,9 +133,11 @@ int ColExtInf::updateEntryLbid( BRM::LBID_t startLbid )
     // row order, so we get the "first" object in fPendingExtentRows, and
     // that should be the extent corresponding to the LBID we just got.
     std::set<RID>::iterator iterPendingExt = fPendingExtentRows.begin();
+
     if (iterPendingExt != fPendingExtentRows.end())
     {
         RowExtMap::iterator iter = fMap.find( *iterPendingExt );
+
         if (iter != fMap.end())
         {
             iter->second.fLbid = startLbid;
@@ -158,11 +163,12 @@ int ColExtInf::updateEntryLbid( BRM::LBID_t startLbid )
 void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
 {
     bool bIsChar = ((column.weType  == WriteEngine::WR_CHAR) &&
-         (column.colType != COL_TYPE_DICT));
+                    (column.colType != COL_TYPE_DICT));
 
     boost::mutex::scoped_lock lock(fMapMutex);
 
     RowExtMap::const_iterator iter = fMap.begin();
+
     while (iter != fMap.end())
     {
         // If/when we support NULL values, we could have an extent with initial
@@ -172,6 +178,7 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
         // if applicable (indicating an extent with no non-NULL values).
         int64_t minVal = iter->second.fMinVal;
         int64_t maxVal = iter->second.fMaxVal;
+
         if ( bIsChar )
         {
             // If we have added 1 or more rows, then we should have a valid
@@ -180,12 +187,12 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
             // else we leave fMinVal & fMaxVal set to LLONG_MIN and send as-is,
             // to let BRM know we added no rows.
             if ((iter->second.fMinVal != iter->second.fMaxVal) ||
-                (iter->second.fMinVal != LLONG_MIN))
+                    (iter->second.fMinVal != LLONG_MIN))
             {
                 minVal = static_cast<int64_t>( uint64ToStr(
-                    static_cast<uint64_t>(iter->second.fMinVal) ) );
+                                                   static_cast<uint64_t>(iter->second.fMinVal) ) );
                 maxVal = static_cast<int64_t>( uint64ToStr(
-                    static_cast<uint64_t>(iter->second.fMaxVal) ) );
+                                                   static_cast<uint64_t>(iter->second.fMaxVal) ) );
             }
         }
 
@@ -194,9 +201,10 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
         {
             std::ostringstream oss;
             oss << "Saving CP  update for OID-" << fColOid <<
-                   "; lbid-"   << iter->second.fLbid <<
-                   "; type-"   << bIsChar            <<
-                   "; isNew-"  << iter->second.fNewExtent;
+                "; lbid-"   << iter->second.fLbid <<
+                "; type-"   << bIsChar            <<
+                "; isNew-"  << iter->second.fNewExtent;
+
             if (bIsChar)
             {
                 char minValStr[sizeof(int64_t) + 1];
@@ -211,12 +219,12 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
             else if (isUnsigned(column.dataType))
             {
                 oss << "; min: "    << static_cast<uint64_t>(minVal)  <<
-                       "; max: "    << static_cast<uint64_t>(maxVal);
+                    "; max: "    << static_cast<uint64_t>(maxVal);
             }
             else
             {
                 oss << "; min: "    << minVal <<
-                       "; max: "    << maxVal;
+                    "; max: "    << maxVal;
             }
 
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
@@ -233,6 +241,7 @@ void ColExtInf::getCPInfoForBRM( JobColumn column, BRMReporter& brmReporter )
 
         ++iter;
     }
+
     fMap.clear(); // don't need map anymore, so release memory
 }
 
@@ -247,21 +256,25 @@ void ColExtInf::print( const JobColumn& column )
     std::ostringstream oss;
     oss << "ColExtInf Map for OID: " << fColOid;
     RowExtMap::const_iterator iter = fMap.begin();
+
     while (iter != fMap.end())
     {
         oss << std::endl <<
             "  RowKey-" << iter->first           <<
             "; lbid-"   << iter->second.fLbid;
+
         if (iter->second.fLbid == (BRM::LBID_t)INVALID_LBID)
             oss << " (unset)";
+
         oss << "; newExt-" << iter->second.fNewExtent;
+
         if ( bIsChar )
         {
             // Swap/restore byte order before printing character string
             int64_t minVal = static_cast<int64_t>( uint64ToStr(
-                static_cast<uint64_t>(iter->second.fMinVal) ) );
+                    static_cast<uint64_t>(iter->second.fMinVal) ) );
             int64_t maxVal = static_cast<int64_t>( uint64ToStr(
-                static_cast<uint64_t>(iter->second.fMaxVal) ) );
+                    static_cast<uint64_t>(iter->second.fMaxVal) ) );
             char minValStr[sizeof(int64_t) + 1];
             char maxValStr[sizeof(int64_t) + 1];
             memcpy(minValStr, &minVal, sizeof(int64_t));
@@ -274,18 +287,20 @@ void ColExtInf::print( const JobColumn& column )
         else if (isUnsigned(column.dataType))
         {
             oss << "; min: "    << static_cast<uint64_t>(iter->second.fMinVal)  <<
-                   "; max: "    << static_cast<uint64_t>(iter->second.fMaxVal);
+                "; max: "    << static_cast<uint64_t>(iter->second.fMaxVal);
         }
         else
         {
             oss << "; min: "    << iter->second.fMinVal  <<
-                   "; max: "    << iter->second.fMaxVal;
+                "; max: "    << iter->second.fMaxVal;
         }
+
         ++iter;
     }
 
     oss << std::endl << "  ColExtInf Rows/Extents waiting LBIDs: ";
-    std::set<RID>::const_iterator iterPendingExt=fPendingExtentRows.begin();
+    std::set<RID>::const_iterator iterPendingExt = fPendingExtentRows.begin();
+
     while (iterPendingExt != fPendingExtentRows.end())
     {
         oss << *iterPendingExt << ", ";

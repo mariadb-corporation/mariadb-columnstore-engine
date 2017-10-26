@@ -36,13 +36,13 @@ namespace threadpool
 {
 
 ThreadPool::ThreadPool()
-:fMaxThreads( 0 ), fQueueSize( 0 )
+    : fMaxThreads( 0 ), fQueueSize( 0 )
 {
     init();
 }
 
 ThreadPool::ThreadPool( size_t maxThreads, size_t queueSize )
-    :fMaxThreads( maxThreads ), fQueueSize( queueSize )
+    : fMaxThreads( maxThreads ), fQueueSize( queueSize )
 {
     init();
 }
@@ -70,7 +70,7 @@ void ThreadPool::init()
     fDebug = false;
     fStop = false;
     fNextFunctor = fWaitingFunctors.end();
-    fNextHandle=1;
+    fNextHandle = 1;
 }
 
 void ThreadPool::setQueueSize(size_t queueSize)
@@ -117,19 +117,23 @@ void ThreadPool::join(uint64_t thrHandle)
         Container_T::iterator iter;
         Container_T::iterator end = fWaitingFunctors.end();
         bool foundit = false;
+
         for (iter = fWaitingFunctors.begin(); iter != end; ++iter)
         {
             foundit = false;
+
             if (iter->hndl == thrHandle)
             {
                 foundit = true;
                 break;
             }
         }
+
         if (!foundit)
         {
             break;
         }
+
         fThreadAvailable.wait(lock1);
     }
 }
@@ -143,11 +147,13 @@ void ThreadPool::join(std::vector<uint64_t>& thrHandle)
         Container_T::iterator iter;
         Container_T::iterator end = fWaitingFunctors.end();
         bool foundit = false;
+
         for (iter = fWaitingFunctors.begin(); iter != end; ++iter)
         {
             foundit = false;
             std::vector<uint64_t>::iterator thrIter;
             std::vector<uint64_t>::iterator thrEnd = thrHandle.end();
+
             for (thrIter = thrHandle.begin(); thrIter != thrEnd; ++thrIter)
             {
                 if (iter->hndl == *thrIter)
@@ -156,24 +162,28 @@ void ThreadPool::join(std::vector<uint64_t>& thrHandle)
                     break;
                 }
             }
+
             if (foundit == true)
             {
                 break;
             }
         }
+
         // If we didn't find any of the handles, then all are complete
         if (!foundit)
         {
             break;
         }
+
         fThreadAvailable.wait(lock1);
     }
 }
 
-uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
+uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
 {
     boost::mutex::scoped_lock lock1(fMutex);
-    uint64_t thrHandle=0;
+    uint64_t thrHandle = 0;
+
     for (;;)
     {
         try
@@ -208,7 +218,7 @@ uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
                 {
                     ostringstream oss;
                     oss << "invoke: Starting thread " << fThreadCount << " max " << fMaxThreads
-                    << " queue " << fQueueSize;
+                        << " queue " << fQueueSize;
                     logging::Message::Args args;
                     logging::Message message(0);
                     args.add(oss.str());
@@ -247,6 +257,7 @@ uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
                 logging::MessageLog ml(lid);
                 ml.logWarningMessage( message );
             }
+
             fThreadAvailable.wait(lock1);
         }
         catch (...)
@@ -265,7 +276,8 @@ void ThreadPool::beginThread() throw()
     try
     {
         boost::mutex::scoped_lock lock1(fMutex);
-        boost::system_time timeout = boost::get_system_time()+boost::posix_time::minutes(10);
+        boost::system_time timeout = boost::get_system_time() + boost::posix_time::minutes(10);
+
         for (;;)
         {
             if (fStop)
@@ -290,7 +302,8 @@ void ThreadPool::beginThread() throw()
                             --fThreadCount;
                             return;
                         }
-                        timeout = boost::get_system_time()+boost::posix_time::minutes(10);
+
+                        timeout = boost::get_system_time() + boost::posix_time::minutes(10);
                     }
                 }
             }
@@ -302,11 +315,12 @@ void ThreadPool::beginThread() throw()
                     Container_T::iterator todo = fNextFunctor++;
                     ++fIssued;
                     lock1.unlock();
+
                     try
                     {
                         todo->functor();
                     }
-                    catch (exception &e)
+                    catch (exception& e)
                     {
                         ++fFunctorErrors;
 #ifndef NOLOGGING
@@ -320,13 +334,14 @@ void ThreadPool::beginThread() throw()
                         ml.logErrorMessage( message );
 #endif
                     }
+
                     lock1.lock();
                     --fIssued;
                     --waitingFunctorsSize;
                     fWaitingFunctors.erase(todo);
                 }
 
-                timeout = boost::get_system_time()+boost::posix_time::minutes(10);
+                timeout = boost::get_system_time() + boost::posix_time::minutes(10);
                 fThreadAvailable.notify_all();
             }
         }
@@ -385,7 +400,7 @@ void ThreadPool::beginThread() throw()
     }
 }
 
-uint64_t ThreadPool::addFunctor(const Functor_T &func)
+uint64_t ThreadPool::addFunctor(const Functor_T& func)
 {
     bool bAtEnd = false;
 
@@ -397,10 +412,12 @@ uint64_t ThreadPool::addFunctor(const Functor_T &func)
     poolFunction.functor = func;
     fWaitingFunctors.push_back(poolFunction);
     waitingFunctorsSize++;
+
     if (bAtEnd)
     {
         --fNextFunctor;
     }
+
     return fNextHandle++;
 }
 
@@ -417,6 +434,7 @@ void ThreadPoolMonitor::operator()()
     ostringstream filename;
     filename << "/var/log/mariadb/columnstore/trace/ThreadPool_" << fPool->name() << ".log";
     fLog = new ofstream(filename.str().c_str());
+
     for (;;)
     {
         if (!fLog || !fLog->is_open())
@@ -432,6 +450,7 @@ void ThreadPoolMonitor::operator()()
             ml.logWarningMessage( message );
             return;
         }
+
         // Get a timestamp for output.
         struct tm tm;
         struct timeval tv;
@@ -440,17 +459,17 @@ void ThreadPoolMonitor::operator()()
         localtime_r(&tv.tv_sec, &tm);
 
         (*fLog) << setfill('0')
-        << setw(2) << tm.tm_hour << ':'
-        << setw(2) << tm.tm_min << ':'
-        << setw(2) << tm.tm_sec
-        << '.'
-        << setw(4) << tv.tv_usec/100
-        << " Name " << fPool->fName
-        << " Active " << fPool->waitingFunctorsSize
-        << " Most " << fPool->fThreadCount
-        << " Max " << fPool->fMaxThreads
-        << " Q " << fPool->fQueueSize
-        << endl;
+                << setw(2) << tm.tm_hour << ':'
+                << setw(2) << tm.tm_min << ':'
+                << setw(2) << tm.tm_sec
+                << '.'
+                << setw(4) << tv.tv_usec / 100
+                << " Name " << fPool->fName
+                << " Active " << fPool->waitingFunctorsSize
+                << " Most " << fPool->fThreadCount
+                << " Max " << fPool->fMaxThreads
+                << " Q " << fPool->fQueueSize
+                << endl;
 
 //		struct timespec req = { 0, 1000 * 100 }; //100 usec
 //		nanosleep(&req, 0);

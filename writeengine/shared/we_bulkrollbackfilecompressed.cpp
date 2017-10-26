@@ -80,15 +80,16 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
 {
     std::ostringstream msgText1;
     msgText1 << "Truncating compressed column file"
-        ": dbRoot-"          << dbRoot         << 
-        "; part#-"           << partNum        <<
-        "; seg#-"            << segNum         <<
-        "; rawTotBlks-"      << fileSizeBlocks;
+             ": dbRoot-"          << dbRoot         <<
+             "; part#-"           << partNum        <<
+             "; seg#-"            << segNum         <<
+             "; rawTotBlks-"      << fileSizeBlocks;
     fMgr->logAMessage( logging::LOG_TYPE_INFO,
-        logging::M0075, columnOID, msgText1.str() );
+                       logging::M0075, columnOID, msgText1.str() );
 
     std::string segFile;
     IDBDataFile* pFile = fDbFile.openFile(columnOID, dbRoot, partNum, segNum, segFile);
+
     if (pFile == 0)
     {
         std::ostringstream oss;
@@ -107,6 +108,7 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
     CompChunkPtrList chunkPtrs;
     std::string      errMsg;
     int rc = loadColumnHdrPtrs(pFile, hdrs, chunkPtrs, errMsg);
+
     if (rc != NO_ERROR)
     {
         std::ostringstream oss;
@@ -131,29 +133,32 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
     if (chunkIndex < chunkPtrs.size())
     {
         long long fileSizeBytes = chunkPtrs[chunkIndex].first +
-            chunkPtrs[chunkIndex].second;
+                                  chunkPtrs[chunkIndex].second;
 
         std::ostringstream msgText2;
         msgText2 << "Compressed column file"
-            ": dbRoot-"        << dbRoot         << 
-            "; part#-"        << partNum        <<
-            "; seg#-"         << segNum         <<
-            "; truncated to " << fileSizeBytes  << " bytes";
+                 ": dbRoot-"        << dbRoot         <<
+                 "; part#-"        << partNum        <<
+                 "; seg#-"         << segNum         <<
+                 "; truncated to " << fileSizeBytes  << " bytes";
         fMgr->logAMessage( logging::LOG_TYPE_INFO,
-            logging::M0075, columnOID, msgText2.str() );
+                           logging::M0075, columnOID, msgText2.str() );
 
         // Drop off any trailing pointers (that point beyond the last block)
         fCompressor.setBlockCount( hdrs, fileSizeBlocks );
         std::vector<uint64_t> ptrs;
-        for (unsigned i=0; i<=chunkIndex; i++)
+
+        for (unsigned i = 0; i <= chunkIndex; i++)
         {
             ptrs.push_back( chunkPtrs[i].first );
         }
+
         ptrs.push_back( chunkPtrs[chunkIndex].first +
-            chunkPtrs[chunkIndex].second );
+                        chunkPtrs[chunkIndex].second );
         fCompressor.storePtrs( ptrs, hdrs );
 
         rc = fDbFile.writeHeaders( pFile, hdrs );
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -171,6 +176,7 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
 
         // Finally, we truncate the data base column segment file
         rc = fDbFile.truncateFile( pFile, fileSizeBytes );
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -194,7 +200,7 @@ void BulkRollbackFileCompressed::truncateSegmentFile(
 // Reinitialize a column segment extent (in the db file) to empty values,
 // following the HWM.  Remaining extents in the file are truncated.
 // Also updates the header(s) as well.
-//  
+//
 // columnOID      - OID of segment file to be reinitialized
 // dbRoot         - DBRoot of segment file to be reinitialized
 // partNum        - Partition number of segment file to be reinitialized
@@ -221,16 +227,17 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
 
     std::ostringstream msgText1;
     msgText1 << "Reinit HWM compressed column extent in db file" <<
-        ": dbRoot-"          << dbRoot      << 
-        "; part#-"           << partNum     <<
-        "; seg#-"            << segNum      <<
-        "; rawOffset(bytes)-"<< startOffset <<
-        "; rawFreeBlks-"     << nBlocks;
+             ": dbRoot-"          << dbRoot      <<
+             "; part#-"           << partNum     <<
+             "; seg#-"            << segNum      <<
+             "; rawOffset(bytes)-" << startOffset <<
+             "; rawFreeBlks-"     << nBlocks;
     fMgr->logAMessage( logging::LOG_TYPE_INFO,
-        logging::M0075, columnOID, msgText1.str() );
+                       logging::M0075, columnOID, msgText1.str() );
 
     std::string segFile;
     IDBDataFile* pFile = fDbFile.openFile(columnOID, dbRoot, partNum, segNum, segFile);
+
     if (pFile == 0)
     {
         std::ostringstream oss;
@@ -249,6 +256,7 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
     CompChunkPtrList     chunkPtrs;
     std::string          errMsg;
     int rc = loadColumnHdrPtrs(pFile, hdrs, chunkPtrs, errMsg);
+
     if (rc != NO_ERROR)
     {
         std::ostringstream oss;
@@ -262,7 +270,7 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
         fDbFile.closeFile( pFile );
         throw WeException( oss.str(), rc );
     }
-        
+
     // Locate the chunk containing the last block we intend to keep
     unsigned int blockOffset      = startOffsetBlk - 1;
     unsigned int chunkIndex       = 0;
@@ -274,11 +282,13 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
         // Read backup copy of HWM chunk and restore it's contents
         uint64_t restoredChunkLen = 0;
         uint64_t restoredFileSize = 0;
+
         if (restoreHwmChk)
         {
             rc = restoreHWMChunk(pFile, columnOID, partNum, segNum,
-                chunkPtrs[chunkIndex].first,
-                restoredChunkLen, restoredFileSize, errMsg);
+                                 chunkPtrs[chunkIndex].first,
+                                 restoredChunkLen, restoredFileSize, errMsg);
+
             if (rc != NO_ERROR)
             {
                 std::ostringstream oss;
@@ -305,7 +315,7 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
             else
                 restoredFileSize = (chunkPtrs[chunkIndex].first   +
                                     chunkPtrs[chunkIndex].second) +
-                                    (uint64_t)(nBlocks * BYTE_PER_BLOCK);
+                                   (uint64_t)(nBlocks * BYTE_PER_BLOCK);
         }
 
         // nBlocks is based on full extents, but if database file only has an
@@ -313,14 +323,16 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
         // file with a single abbreviated extent.
         // (Only the 1st extent in part0, seg0 employs an abbreviated extent.)
         bool bAbbreviatedExtent = false;
+
 // DMC-SHARED_NOTHING_NOTE: Is it safe to assume only part0 seg0 is abbreviated?
         if ((partNum == 0) && (segNum == 0))
         {
             long long nBytesInAbbrevExtent = INITIAL_EXTENT_ROWS_TO_DISK *
                                              colWidth;
+
             if (startOffset <= nBytesInAbbrevExtent)
             {
-                nBlocks = (nBytesInAbbrevExtent-startOffset) / BYTE_PER_BLOCK;
+                nBlocks = (nBytesInAbbrevExtent - startOffset) / BYTE_PER_BLOCK;
                 bAbbreviatedExtent = true;
             }
         }
@@ -329,17 +341,21 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
 
         std::ostringstream msgText2;
         msgText2 << "HWM compressed column file"
-            ": dbRoot-" << dbRoot  <<
-            "; part#-"  << partNum <<
-            "; seg#-"   << segNum;
+                 ": dbRoot-" << dbRoot  <<
+                 "; part#-"  << partNum <<
+                 "; seg#-"   << segNum;
+
         if (bAbbreviatedExtent) // log adjusted nBlock count for abbrev extent
             msgText2 << "; rawFreeBlks-"  << nBlocks << " (abbrev)";
+
         msgText2 << "; restoredChunk-" << restoredChunkLen << " bytes";
+
         if (!restoreHwmChk)
             msgText2 << " (no change)";
+
         msgText2 << "; truncated to "  << fileSizeBytes    << " bytes";
         fMgr->logAMessage( logging::LOG_TYPE_INFO,
-            logging::M0075, columnOID, msgText2.str() );
+                           logging::M0075, columnOID, msgText2.str() );
 
         // Initialize the remainder of the extent after the HWM chunk.
         // Just doing an ftruncate() reinits the file to 0's, which may or may
@@ -350,18 +366,21 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
         const unsigned BLKS_PER_EXTENT =
             (BRMWrapper::getInstance()->getExtentRows() * colWidth) /
             BYTE_PER_BLOCK;
-        long long nBlocksToInit = (fileSizeBytes - 
-            (chunkPtrs[chunkIndex].first + restoredChunkLen)) / BYTE_PER_BLOCK;
+        long long nBlocksToInit = (fileSizeBytes -
+                                   (chunkPtrs[chunkIndex].first + restoredChunkLen)) / BYTE_PER_BLOCK;
+
         if (nBlocksToInit > BLKS_PER_EXTENT)
             nBlocksToInit = BLKS_PER_EXTENT; // don't init > 1 full extent
+
         if (nBlocksToInit > 0)
         {
             uint64_t emptyVal = fDbFile.getEmptyRowValue( colType, colWidth );
             rc = fDbFile.reInitPartialColumnExtent( pFile,
-                (chunkPtrs[chunkIndex].first + restoredChunkLen),
-                nBlocksToInit,
-                emptyVal,
-                colWidth );
+                                                    (chunkPtrs[chunkIndex].first + restoredChunkLen),
+                                                    nBlocksToInit,
+                                                    emptyVal,
+                                                    colWidth );
+
             if (rc != NO_ERROR)
             {
                 WErrorCodes ec;
@@ -384,17 +403,20 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
         // just restore the first pointer (set to 8192).
         fCompressor.setBlockCount( hdrs, (startOffsetBlk + nBlocks) );
         std::vector<uint64_t> newPtrs;
+
         if ((chunkIndex > 0) || (restoredChunkLen > 0))
         {
-            for (unsigned int i=0; i<=chunkIndex; i++)
+            for (unsigned int i = 0; i <= chunkIndex; i++)
             {
                 newPtrs.push_back( chunkPtrs[i].first );
             }
         }
+
         newPtrs.push_back( chunkPtrs[chunkIndex].first + restoredChunkLen );
         fCompressor.storePtrs( newPtrs, hdrs );
 
         rc = fDbFile.writeHeaders( pFile, hdrs );
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -412,6 +434,7 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(
 
         // Finally, we truncate the data base column segment file
         rc = fDbFile.truncateFile( pFile, fileSizeBytes );
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -447,6 +470,7 @@ int BulkRollbackFileCompressed::loadColumnHdrPtrs(
 {
     // Read the header pointers
     int rc = fDbFile.readHeaders( pFile, hdrs );
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
@@ -459,6 +483,7 @@ int BulkRollbackFileCompressed::loadColumnHdrPtrs(
 
     // Parse the header pointers
     int rc1 = fCompressor.getPtrList( hdrs, chunkPtrs );
+
     if (rc1 != 0)
     {
         rc = ERR_METADATABKUP_COMP_PARSE_HDRS;
@@ -478,7 +503,7 @@ int BulkRollbackFileCompressed::loadColumnHdrPtrs(
 // Reinitialize a dictionary segment extent (in the db file) to empty blocks,
 // following the HWM.  Remaining extents in the file are truncated.
 // Also updates the header(s) as well.
-//  
+//
 // dStoreOID      - OID of segment store file to be reinitialized
 // dbRoot         - DBRoot of segment file to be reinitialized
 // partNum        - Partition number of segment file to be reinitialized
@@ -499,16 +524,17 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
 
     std::ostringstream msgText1;
     msgText1 << "Reinit HWM compressed dictionary store extent in db file"
-        ": dbRoot-"           << dbRoot      <<
-        "; part#-"            << partNum     <<
-        "; seg#-"             << segNum      <<
-        "; rawOffset(bytes)-" << startOffset <<
-        "; rawFreeBlks-"      << nBlocks;
+             ": dbRoot-"           << dbRoot      <<
+             "; part#-"            << partNum     <<
+             "; seg#-"             << segNum      <<
+             "; rawOffset(bytes)-" << startOffset <<
+             "; rawFreeBlks-"      << nBlocks;
     fMgr->logAMessage( logging::LOG_TYPE_INFO,
-        logging::M0075, dStoreOID, msgText1.str() );
+                       logging::M0075, dStoreOID, msgText1.str() );
 
     std::string segFile;
     IDBDataFile* pFile = fDbFile.openFile(dStoreOID, dbRoot, partNum, segNum, segFile);
+
     if (pFile == 0)
     {
         std::ostringstream oss;
@@ -526,7 +552,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
     CompChunkPtrList chunkPtrs;
     uint64_t         ptrHdrSize;
     std::string      errMsg;
-    int rc = loadDctnryHdrPtrs(pFile, controlHdr, chunkPtrs, ptrHdrSize,errMsg);
+    int rc = loadDctnryHdrPtrs(pFile, controlHdr, chunkPtrs, ptrHdrSize, errMsg);
+
     if (rc != NO_ERROR)
     {
         std::ostringstream oss;
@@ -540,7 +567,7 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
         fDbFile.closeFile( pFile );
         throw WeException( oss.str(), rc );
     }
-    
+
     // Locate the chunk containing the last block we intend to keep
     unsigned int blockOffset      = startOffsetBlk - 1;
     unsigned int chunkIndex       = 0;
@@ -553,17 +580,18 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
         uint64_t restoredChunkLen = 0;
         uint64_t restoredFileSize = 0;
         rc = restoreHWMChunk(pFile, dStoreOID, partNum, segNum,
-            chunkPtrs[chunkIndex].first,
-            restoredChunkLen, restoredFileSize, errMsg);
+                             chunkPtrs[chunkIndex].first,
+                             restoredChunkLen, restoredFileSize, errMsg);
+
         if (rc == ERR_FILE_NOT_EXIST)
         {
             std::ostringstream msgText3;
             msgText3 << "No restore needed to Compressed dictionary file" <<
-                ": dbRoot-" << dbRoot  <<
-                "; part#-"  << partNum <<
-                "; seg#-"   << segNum;
+                     ": dbRoot-" << dbRoot  <<
+                     "; part#-"  << partNum <<
+                     "; seg#-"   << segNum;
             fMgr->logAMessage( logging::LOG_TYPE_INFO,
-                logging::M0075, dStoreOID, msgText3.str() );
+                               logging::M0075, dStoreOID, msgText3.str() );
 
             fDbFile.closeFile( pFile );
             return;
@@ -591,10 +619,11 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
         bool bAbbreviatedExtent          = false;
         const uint32_t PSEUDO_COL_WIDTH = 8; // simulated col width for dctnry
         long long nBytesInAbbrevExtent   = INITIAL_EXTENT_ROWS_TO_DISK *
-                                     PSEUDO_COL_WIDTH;
+                                           PSEUDO_COL_WIDTH;
+
         if (startOffset <= nBytesInAbbrevExtent)
         {
-            nBlocks = (nBytesInAbbrevExtent-startOffset) / BYTE_PER_BLOCK;
+            nBlocks = (nBytesInAbbrevExtent - startOffset) / BYTE_PER_BLOCK;
             bAbbreviatedExtent = true;
         }
 
@@ -602,15 +631,17 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
 
         std::ostringstream msgText2;
         msgText2 << "HWM compressed dictionary file"
-            ": dbRoot-" << dbRoot  <<
-            "; part#-"  << partNum <<
-            "; seg#-"   << segNum;
+                 ": dbRoot-" << dbRoot  <<
+                 "; part#-"  << partNum <<
+                 "; seg#-"   << segNum;
+
         if (bAbbreviatedExtent) // log adjusted nBlock count for abbrev extent
             msgText2 << "; rawFreeBlks-"  << nBlocks << " (abbrev)";
+
         msgText2 << "; restoredChunk-" << restoredChunkLen << " bytes" <<
-            "; truncated to "          << fileSizeBytes    << " bytes";
+                 "; truncated to "          << fileSizeBytes    << " bytes";
         fMgr->logAMessage( logging::LOG_TYPE_INFO,
-            logging::M0075, dStoreOID, msgText2.str() );
+                           logging::M0075, dStoreOID, msgText2.str() );
 
         // Initialize the remainder of the extent after the HWM chunk
         // Just doing an ftruncate() reinits the file to 0's, which may or may
@@ -621,17 +652,20 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
         const unsigned BLKS_PER_EXTENT =
             (BRMWrapper::getInstance()->getExtentRows() * PSEUDO_COL_WIDTH) /
             BYTE_PER_BLOCK;
-        long long nBlocksToInit = (fileSizeBytes - 
-            (chunkPtrs[chunkIndex].first + restoredChunkLen)) / BYTE_PER_BLOCK;
+        long long nBlocksToInit = (fileSizeBytes -
+                                   (chunkPtrs[chunkIndex].first + restoredChunkLen)) / BYTE_PER_BLOCK;
+
         if (nBlocksToInit > BLKS_PER_EXTENT)
             nBlocksToInit = BLKS_PER_EXTENT; // don't init > 1 full extent
+
         if (nBlocksToInit > 0)
         {
             rc = fDbFile.reInitPartialDctnryExtent( pFile,
-                (chunkPtrs[chunkIndex].first + restoredChunkLen),
-                nBlocksToInit,
-                fDctnryHdr,
-                DCTNRY_HEADER_SIZE );
+                                                    (chunkPtrs[chunkIndex].first + restoredChunkLen),
+                                                    nBlocksToInit,
+                                                    fDctnryHdr,
+                                                    DCTNRY_HEADER_SIZE );
+
             if (rc != NO_ERROR)
             {
                 WErrorCodes ec;
@@ -654,19 +688,22 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
         // just restore the first pointer (set to 8192).
         fCompressor.setBlockCount( controlHdr, (startOffsetBlk + nBlocks) );
         std::vector<uint64_t> newPtrs;
+
         if ((chunkIndex > 0) || (restoredChunkLen > 0))
         {
-            for (unsigned int i=0; i<=chunkIndex; i++)
+            for (unsigned int i = 0; i <= chunkIndex; i++)
             {
                 newPtrs.push_back( chunkPtrs[i].first );
             }
         }
+
         newPtrs.push_back( chunkPtrs[chunkIndex].first + restoredChunkLen );
         char* pointerHdr = new char[ptrHdrSize];
         fCompressor.storePtrs( newPtrs, pointerHdr, ptrHdrSize );
 
         rc = fDbFile.writeHeaders( pFile, controlHdr, pointerHdr, ptrHdrSize );
         delete[] pointerHdr;
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -684,6 +721,7 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(
 
         // Finally, we truncate the data base dictionary store segment file
         rc = fDbFile.truncateFile( pFile, fileSizeBytes );
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -721,7 +759,8 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
     std::string& errMsg) const
 {
     int rc = fDbFile.readFile(
-        pFile, (unsigned char*)controlHdr, IDBCompressInterface::HDR_BUF_LEN);
+                 pFile, (unsigned char*)controlHdr, IDBCompressInterface::HDR_BUF_LEN);
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
@@ -733,6 +772,7 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
     }
 
     int rc1 = fCompressor.verifyHdr( controlHdr );
+
     if (rc1 != 0)
     {
         rc = ERR_METADATABKUP_COMP_VERIFY_HDRS;
@@ -742,15 +782,16 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
         oss << "Control header verify error (" << rc1 << "): " <<
             ec.errorString(rc);
         errMsg = oss.str();
-    
+
         return rc;
     }
-    
+
     uint64_t hdrSize = fCompressor.getHdrSize(controlHdr);
     ptrHdrSize       = hdrSize - IDBCompressInterface::HDR_BUF_LEN;
     char* pointerHdr = new char[ptrHdrSize];
 
     rc = fDbFile.readFile(pFile, (unsigned char*)pointerHdr, ptrHdrSize);
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
@@ -765,6 +806,7 @@ int BulkRollbackFileCompressed::loadDctnryHdrPtrs(
     // Parse the header pointers
     rc1 = fCompressor.getPtrList( pointerHdr, ptrHdrSize, chunkPtrs );
     delete[] pointerHdr;
+
     if (rc1 != 0)
     {
         rc = ERR_METADATABKUP_COMP_PARSE_HDRS;
@@ -824,11 +866,12 @@ int BulkRollbackFileCompressed::restoreHWMChunk(
     }
 
     IDBDataFile* backupFile = IDBDataFile::open(
-    							IDBPolicy::getType( bulkRollbackSubPath.c_str(), IDBPolicy::WRITEENG ),
-    							bulkRollbackSubPath.c_str(),
-    							"rb",
-    							0,
-                                pFile->colWidth() );
+                                  IDBPolicy::getType( bulkRollbackSubPath.c_str(), IDBPolicy::WRITEENG ),
+                                  bulkRollbackSubPath.c_str(),
+                                  "rb",
+                                  0,
+                                  pFile->colWidth() );
+
     if (!backupFile)
     {
         int errrc = errno;
@@ -836,7 +879,7 @@ int BulkRollbackFileCompressed::restoreHWMChunk(
         std::string eMsg;
         Convertor::mapErrnoToString(errrc, eMsg);
         std::ostringstream oss;
-        oss << "Error opening backup file " << 
+        oss << "Error opening backup file " <<
             bulkRollbackSubPath << "; " << eMsg;
         errMsg = oss.str();
 
@@ -846,8 +889,9 @@ int BulkRollbackFileCompressed::restoreHWMChunk(
     // Read the chunk length and file size
     uint64_t sizeHdr[2];
     size_t bytesRead = readFillBuffer(backupFile, (char*)sizeHdr,
-        sizeof(uint64_t)*2);
-    if (bytesRead != sizeof(uint64_t)*2)
+                                      sizeof(uint64_t) * 2);
+
+    if (bytesRead != sizeof(uint64_t) * 2)
     {
         int errrc = errno;
 
@@ -861,12 +905,14 @@ int BulkRollbackFileCompressed::restoreHWMChunk(
         delete backupFile;
         return ERR_METADATABKUP_COMP_READ_BULK_BKUP;
     }
+
     restoredChunkLen = sizeHdr[0];
     restoredFileSize = sizeHdr[1];
 
     // Position the destination offset in the DB file
     int rc = fDbFile.setFileOffset(pFile, fileOffsetByteForRestoredChunk,
-        SEEK_SET);
+                                   SEEK_SET);
+
     if (rc != NO_ERROR)
     {
         WErrorCodes ec;
@@ -888,6 +934,7 @@ int BulkRollbackFileCompressed::restoreHWMChunk(
         unsigned char* chunk = new unsigned char[restoredChunkLen];
         boost::scoped_array<unsigned char> scopedChunk( chunk );
         bytesRead = readFillBuffer(backupFile, (char*)chunk, restoredChunkLen);
+
         if (bytesRead != restoredChunkLen)
         {
             int errrc = errno;
@@ -907,6 +954,7 @@ int BulkRollbackFileCompressed::restoreHWMChunk(
 
         // Write/restore the HWM chunk to the applicable database file
         rc = fDbFile.writeFile(pFile, chunk, restoredChunkLen);
+
         if (rc != NO_ERROR)
         {
             WErrorCodes ec;
@@ -934,9 +982,9 @@ int BulkRollbackFileCompressed::restoreHWMChunk(
 // and thus not needed.
 //------------------------------------------------------------------------------
 bool BulkRollbackFileCompressed::doWeReInitExtent( OID columnOID,
-    uint32_t dbRoot,
-    uint32_t partNum,
-    uint32_t segNum) const
+        uint32_t dbRoot,
+        uint32_t partNum,
+        uint32_t segNum) const
 {
     std::ostringstream oss;
     oss << "/" << columnOID << ".p" << partNum << ".s" << segNum;
@@ -970,6 +1018,7 @@ size_t BulkRollbackFileCompressed::readFillBuffer(
     while (1)
     {
         nBytes = pFile->read(pBuf, bytesToRead);
+
         if (nBytes > 0)
             totalBytesRead += nBytes;
         else

@@ -108,102 +108,161 @@ typedef execplan::CalpontSystemCatalog::ColDataType CDT;
 class WindowFunctionType
 {
 public:
-	// @brief WindowFunctionType constructor
-	WindowFunctionType(int id = 0, const std::string& name = "") :
-		fFunctionId(id), fFunctionName(name), fFrameUnit(0) {};
+    // @brief WindowFunctionType constructor
+    WindowFunctionType(int id = 0, const std::string& name = "") :
+        fFunctionId(id), fFunctionName(name), fFrameUnit(0) {};
 
-	// use default copy construct
-	//WindowFunctionType(const WindowFunctionType&);
+    // use default copy construct
+    //WindowFunctionType(const WindowFunctionType&);
 
-	// @brief WindowFunctionType destructor
-	virtual ~WindowFunctionType() {};
+    // @brief WindowFunctionType destructor
+    virtual ~WindowFunctionType() {};
 
-	// @brief virtual operator(begin, end, current, data, row)
-	virtual void operator()(int64_t, int64_t, int64_t) = 0;
+    // @brief virtual operator(begin, end, current, data, row)
+    virtual void operator()(int64_t, int64_t, int64_t) = 0;
 
-	// @brief virtual clone()
-	virtual WindowFunctionType* clone() const = 0;
+    // @brief virtual clone()
+    virtual WindowFunctionType* clone() const = 0;
 
-	// @brief virtual resetData()
-	virtual void resetData() { fPrev = -1; }
+    // @brief virtual resetData()
+    virtual void resetData()
+    {
+        fPrev = -1;
+    }
 
-	// @brief virtual parseParms()
-	virtual void parseParms(const std::vector<execplan::SRCP>&) {}
+    // @brief virtual parseParms()
+    virtual void parseParms(const std::vector<execplan::SRCP>&) {}
 
-	// @brief virtual dropValues() For UDAnF functions
-	// return false if there's no dropValue() implemented in the function.
-	virtual bool dropValues(int64_t, int64_t) {return false;}
+    // @brief virtual dropValues() For UDAnF functions
+    // return false if there's no dropValue() implemented in the function.
+    virtual bool dropValues(int64_t, int64_t)
+    {
+        return false;
+    }
 
-	// @brief virtual display method
-	virtual const std::string toString() const;
+    // @brief virtual display method
+    virtual const std::string toString() const;
 
-	// @brief access methods
-	int64_t functionId() const                      { return fFunctionId; }
-	void functionId(int id)                         { fFunctionId = id; }
-	const std::vector<int64_t>& fieldIndex() const  { return fFieldIndex; }
-	void fieldIndex(const std::vector<int64_t>& v)  { fFieldIndex = v; }
-	void setRowMetaData(const rowgroup::RowGroup& g, const rowgroup::Row& r)
-		{ fRowGroup = g; fRow = r; }
-	void setRowData(const boost::shared_ptr<std::vector<joblist::RowPosition> >& d) {fRowData = d;}
-	int64_t frameUnit() const                       { return fFrameUnit; }
-	void frameUnit(int u)                           { fFrameUnit = u; }
-	std::pair<int64_t, int64_t> partition() const   { return fPartition; }
-	void partition(std::pair<int64_t, int64_t>& p)  { fPartition = p; }
-	const boost::shared_ptr<ordering::EqualCompData>& peer() const  { return fPeer; }
-	void peer(const boost::shared_ptr<ordering::EqualCompData>& p)  { fPeer = p; }
-	void setCallback(joblist::WindowFunctionStep* step)             { fStep = step; }
+    // @brief access methods
+    int64_t functionId() const
+    {
+        return fFunctionId;
+    }
+    void functionId(int id)
+    {
+        fFunctionId = id;
+    }
+    const std::vector<int64_t>& fieldIndex() const
+    {
+        return fFieldIndex;
+    }
+    void fieldIndex(const std::vector<int64_t>& v)
+    {
+        fFieldIndex = v;
+    }
+    void setRowMetaData(const rowgroup::RowGroup& g, const rowgroup::Row& r)
+    {
+        fRowGroup = g;
+        fRow = r;
+    }
+    void setRowData(const boost::shared_ptr<std::vector<joblist::RowPosition> >& d)
+    {
+        fRowData = d;
+    }
+    int64_t frameUnit() const
+    {
+        return fFrameUnit;
+    }
+    void frameUnit(int u)
+    {
+        fFrameUnit = u;
+    }
+    std::pair<int64_t, int64_t> partition() const
+    {
+        return fPartition;
+    }
+    void partition(std::pair<int64_t, int64_t>& p)
+    {
+        fPartition = p;
+    }
+    const boost::shared_ptr<ordering::EqualCompData>& peer() const
+    {
+        return fPeer;
+    }
+    void peer(const boost::shared_ptr<ordering::EqualCompData>& p)
+    {
+        fPeer = p;
+    }
+    void setCallback(joblist::WindowFunctionStep* step)
+    {
+        fStep = step;
+    }
 
-	static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct, WindowFunctionColumn* wc);
+    static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct, WindowFunctionColumn* wc);
 
 protected:
 
-	static std::map<std::string, int> windowFunctionId;
+    static std::map<std::string, int> windowFunctionId;
 
-	// utility methods
-	template<typename T> void getValue(uint64_t, T&, CDT* cdt = NULL);
-	template<typename T> void setValue(int, int64_t, int64_t, int64_t, T* = NULL);
-	template<typename T> void setValue(uint64_t, T&);
-	template<typename T> void implicit2T(uint64_t, T&, int);
-	template<typename T> void getConstValue(execplan::ConstantColumn*, T&, bool&);
+    // utility methods
+    template<typename T> void getValue(uint64_t, T&, CDT* cdt = NULL);
+    template<typename T> void setValue(int, int64_t, int64_t, int64_t, T* = NULL);
+    template<typename T> void setValue(uint64_t, T&);
+    template<typename T> void implicit2T(uint64_t, T&, int);
+    template<typename T> void getConstValue(execplan::ConstantColumn*, T&, bool&);
 
-	virtual void* getNullValueByType(int, int);
+    virtual void* getNullValueByType(int, int);
 
-	int64_t getIntValue(uint64_t i)                 { return fRow.getIntField(i);    }
-	double  getDoubleValue(uint64_t i)              { return fRow.getDoubleField(i); }
-	void    setIntValue(int64_t i, int64_t v)       { fRow.setIntField(v, i);        }
-	void    setDoubleValue(int64_t i, double  v)    { fRow.setDoubleField(v, i);     }
+    int64_t getIntValue(uint64_t i)
+    {
+        return fRow.getIntField(i);
+    }
+    double  getDoubleValue(uint64_t i)
+    {
+        return fRow.getDoubleField(i);
+    }
+    void    setIntValue(int64_t i, int64_t v)
+    {
+        fRow.setIntField(v, i);
+    }
+    void    setDoubleValue(int64_t i, double  v)
+    {
+        fRow.setDoubleField(v, i);
+    }
 
 
-	// for string table
-	rowgroup::Row::Pointer getPointer(joblist::RowPosition& r)
-	{ return fStep->getPointer(r, fRowGroup, fRow); }
+    // for string table
+    rowgroup::Row::Pointer getPointer(joblist::RowPosition& r)
+    {
+        return fStep->getPointer(r, fRowGroup, fRow);
+    }
 
-	// function type
-	int64_t                                     fFunctionId;
-	std::string                                 fFunctionName;
+    // function type
+    int64_t                                     fFunctionId;
+    std::string                                 fFunctionName;
 
-	// output and input field indices: [0] - output
-	std::vector<int64_t>                        fFieldIndex;
+    // output and input field indices: [0] - output
+    std::vector<int64_t>                        fFieldIndex;
 
-	// row meta data
-	rowgroup::RowGroup	                        fRowGroup;
-	rowgroup::Row                               fRow;
+    // row meta data
+    rowgroup::RowGroup	                        fRowGroup;
+    rowgroup::Row                               fRow;
 
-	// data set
-	boost::shared_ptr<std::vector<joblist::RowPosition> > fRowData;
+    // data set
+    boost::shared_ptr<std::vector<joblist::RowPosition> > fRowData;
 
-	// frame unit ( ROWS | RANGE )
-	int64_t                                     fFrameUnit;
+    // frame unit ( ROWS | RANGE )
+    int64_t                                     fFrameUnit;
 
-	// partition
-	std::pair<int64_t, int64_t>                 fPartition;
+    // partition
+    std::pair<int64_t, int64_t>                 fPartition;
 
-	// functor for peer checking
-	boost::shared_ptr<ordering::EqualCompData>  fPeer;
-	int64_t                                     fPrev;
+    // functor for peer checking
+    boost::shared_ptr<ordering::EqualCompData>  fPeer;
+    int64_t                                     fPrev;
 
-	// for checking if query is cancelled
-	joblist::WindowFunctionStep*                fStep;
+    // for checking if query is cancelled
+    joblist::WindowFunctionStep*                fStep;
 
 };
 

@@ -23,7 +23,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 
-namespace apache { namespace thrift { namespace concurrency {
+namespace apache
+{
+namespace thrift
+{
+namespace concurrency
+{
 
 #ifndef THRIFT_NO_CONTENTION_PROFILING
 
@@ -56,49 +61,51 @@ void enableMutexProfiling(int32_t profilingSampleRate,
  *
  * @version $Id:$
  */
-class Mutex {
- public:
-  typedef void (*Initializer)(void*);
-
-  Mutex(Initializer init = DEFAULT_INITIALIZER);
-  virtual ~Mutex() {}
-  virtual void lock() const;
-  virtual bool trylock() const;
-  virtual bool timedlock(int64_t milliseconds) const;
-  virtual void unlock() const;
-
-  void* getUnderlyingImpl() const;
-
-  static void DEFAULT_INITIALIZER(void*);
-  static void ADAPTIVE_INITIALIZER(void*);
-  static void RECURSIVE_INITIALIZER(void*);
-
- private:
-
-  class impl;
-  boost::shared_ptr<impl> impl_;
-};
-
-class ReadWriteMutex {
+class Mutex
+{
 public:
-  ReadWriteMutex();
-  virtual ~ReadWriteMutex() {}
+    typedef void (*Initializer)(void*);
 
-  // these get the lock and block until it is done successfully
-  virtual void acquireRead() const;
-  virtual void acquireWrite() const;
+    Mutex(Initializer init = DEFAULT_INITIALIZER);
+    virtual ~Mutex() {}
+    virtual void lock() const;
+    virtual bool trylock() const;
+    virtual bool timedlock(int64_t milliseconds) const;
+    virtual void unlock() const;
 
-  // these attempt to get the lock, returning false immediately if they fail
-  virtual bool attemptRead() const;
-  virtual bool attemptWrite() const;
+    void* getUnderlyingImpl() const;
 
-  // this releases both read and write locks
-  virtual void release() const;
+    static void DEFAULT_INITIALIZER(void*);
+    static void ADAPTIVE_INITIALIZER(void*);
+    static void RECURSIVE_INITIALIZER(void*);
 
 private:
 
-  class impl;
-  boost::shared_ptr<impl> impl_;
+    class impl;
+    boost::shared_ptr<impl> impl_;
+};
+
+class ReadWriteMutex
+{
+public:
+    ReadWriteMutex();
+    virtual ~ReadWriteMutex() {}
+
+    // these get the lock and block until it is done successfully
+    virtual void acquireRead() const;
+    virtual void acquireWrite() const;
+
+    // these attempt to get the lock, returning false immediately if they fail
+    virtual bool attemptRead() const;
+    virtual bool attemptWrite() const;
+
+    // this releases both read and write locks
+    virtual void release() const;
+
+private:
+
+    class impl;
+    boost::shared_ptr<impl> impl_;
 };
 
 /**
@@ -108,81 +115,107 @@ private:
  * released it. In some operating systems, this may already be guaranteed
  * by a regular ReadWriteMutex.
  */
-class NoStarveReadWriteMutex : public ReadWriteMutex {
+class NoStarveReadWriteMutex : public ReadWriteMutex
+{
 public:
-  NoStarveReadWriteMutex();
+    NoStarveReadWriteMutex();
 
-  virtual void acquireRead() const;
-  virtual void acquireWrite() const;
+    virtual void acquireRead() const;
+    virtual void acquireWrite() const;
 
 private:
-  Mutex mutex_;
-  mutable volatile bool writerWaiting_;
+    Mutex mutex_;
+    mutable volatile bool writerWaiting_;
 };
 
-class Guard : boost::noncopyable {
- public:
-  Guard(const Mutex& value, int64_t timeout = 0) : mutex_(&value) {
-    if (timeout == 0) {
-      value.lock();
-    } else if (timeout < 0) {
-      if (!value.trylock()) {
-        mutex_ = NULL;
-      }
-    } else {
-      if (!value.timedlock(timeout)) {
-        mutex_ = NULL;
-      }
+class Guard : boost::noncopyable
+{
+public:
+    Guard(const Mutex& value, int64_t timeout = 0) : mutex_(&value)
+    {
+        if (timeout == 0)
+        {
+            value.lock();
+        }
+        else if (timeout < 0)
+        {
+            if (!value.trylock())
+            {
+                mutex_ = NULL;
+            }
+        }
+        else
+        {
+            if (!value.timedlock(timeout))
+            {
+                mutex_ = NULL;
+            }
+        }
     }
-  }
-  ~Guard() {
-    if (mutex_) {
-      mutex_->unlock();
+    ~Guard()
+    {
+        if (mutex_)
+        {
+            mutex_->unlock();
+        }
     }
-  }
 
-  operator bool() const {
-    return (mutex_ != NULL);
-  }
+    operator bool() const
+    {
+        return (mutex_ != NULL);
+    }
 
- private:
-  const Mutex* mutex_;
+private:
+    const Mutex* mutex_;
 };
 
 // Can be used as second argument to RWGuard to make code more readable
 // as to whether we're doing acquireRead() or acquireWrite().
-enum RWGuardType {
-  RW_READ = 0,
-  RW_WRITE = 1
+enum RWGuardType
+{
+    RW_READ = 0,
+    RW_WRITE = 1
 };
 
 
-class RWGuard : boost::noncopyable {
-  public:
+class RWGuard : boost::noncopyable
+{
+public:
     RWGuard(const ReadWriteMutex& value, bool write = false)
-         : rw_mutex_(value) {
-      if (write) {
-        rw_mutex_.acquireWrite();
-      } else {
-        rw_mutex_.acquireRead();
-      }
+        : rw_mutex_(value)
+    {
+        if (write)
+        {
+            rw_mutex_.acquireWrite();
+        }
+        else
+        {
+            rw_mutex_.acquireRead();
+        }
     }
 
     RWGuard(const ReadWriteMutex& value, RWGuardType type)
-         : rw_mutex_(value) {
-      if (type == RW_WRITE) {
-        rw_mutex_.acquireWrite();
-      } else {
-        rw_mutex_.acquireRead();
-      }
+        : rw_mutex_(value)
+    {
+        if (type == RW_WRITE)
+        {
+            rw_mutex_.acquireWrite();
+        }
+        else
+        {
+            rw_mutex_.acquireRead();
+        }
     }
-    ~RWGuard() {
-      rw_mutex_.release();
+    ~RWGuard()
+    {
+        rw_mutex_.release();
     }
-  private:
+private:
     const ReadWriteMutex& rw_mutex_;
 };
 
-}}} // apache::thrift::concurrency
+}
+}
+} // apache::thrift::concurrency
 
 #endif // #ifndef _THRIFT_CONCURRENCY_MUTEX_H_

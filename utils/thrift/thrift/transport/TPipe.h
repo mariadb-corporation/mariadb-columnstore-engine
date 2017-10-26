@@ -26,71 +26,79 @@
 #  include <thrift/transport/TSocket.h>
 #endif
 
-namespace apache { namespace thrift { namespace transport {
+namespace apache
+{
+namespace thrift
+{
+namespace transport
+{
 
 /**
  * Windows Pipes implementation of the TTransport interface.
  *
  */
 #ifdef _WIN32
-class TPipe : public TVirtualTransport<TPipe> {
- public:
+class TPipe : public TVirtualTransport<TPipe>
+{
+public:
 
-  // Constructs a new pipe object.
-  TPipe();
-  // Named pipe constructors -
-  explicit TPipe(HANDLE Pipe); //HANDLE is a void*
-  //need a const char * overload so string literals don't go to the HANDLE overload
-  explicit TPipe(const char *pipename);
-  explicit TPipe(const std::string &pipename);
-  // Anonymous pipe -
-  TPipe(HANDLE PipeRd, HANDLE PipeWrt);
+    // Constructs a new pipe object.
+    TPipe();
+    // Named pipe constructors -
+    explicit TPipe(HANDLE Pipe); //HANDLE is a void*
+    //need a const char * overload so string literals don't go to the HANDLE overload
+    explicit TPipe(const char* pipename);
+    explicit TPipe(const std::string& pipename);
+    // Anonymous pipe -
+    TPipe(HANDLE PipeRd, HANDLE PipeWrt);
 
-  // Destroys the pipe object, closing it if necessary.
-  virtual ~TPipe();
+    // Destroys the pipe object, closing it if necessary.
+    virtual ~TPipe();
 
-  // Returns whether the pipe is open & valid.
-  virtual bool isOpen();
+    // Returns whether the pipe is open & valid.
+    virtual bool isOpen();
 
-  // Checks whether more data is available in the pipe.
-  virtual bool peek();
+    // Checks whether more data is available in the pipe.
+    virtual bool peek();
 
-  // Creates and opens the named/anonymous pipe.
-  virtual void open();
+    // Creates and opens the named/anonymous pipe.
+    virtual void open();
 
-  // Shuts down communications on the pipe.
-  virtual void close();
+    // Shuts down communications on the pipe.
+    virtual void close();
 
-  // Reads from the pipe.
-  virtual uint32_t read(uint8_t* buf, uint32_t len);
+    // Reads from the pipe.
+    virtual uint32_t read(uint8_t* buf, uint32_t len);
 
-  // Writes to the pipe.
-  virtual void write(const uint8_t* buf, uint32_t len);
+    // Writes to the pipe.
+    virtual void write(const uint8_t* buf, uint32_t len);
 
 
-  //Accessors
-  std::string getPipename();
-  void setPipename(const std::string &pipename);
-  HANDLE getPipeHandle(); //doubles as the read handle for anon pipe
-  void setPipeHandle(HANDLE pipehandle);
-  HANDLE getWrtPipeHandle();
-  void setWrtPipeHandle(HANDLE pipehandle);
-  long getConnectTimeout();
-  void setConnectTimeout(long seconds);
+    //Accessors
+    std::string getPipename();
+    void setPipename(const std::string& pipename);
+    HANDLE getPipeHandle(); //doubles as the read handle for anon pipe
+    void setPipeHandle(HANDLE pipehandle);
+    HANDLE getWrtPipeHandle();
+    void setWrtPipeHandle(HANDLE pipehandle);
+    long getConnectTimeout();
+    void setConnectTimeout(long seconds);
 
- private:
-  std::string pipename_;
+private:
+    std::string pipename_;
 
-  //Named pipe handles are R/W, while anonymous pipes are one or the other (half duplex).
-  HANDLE Pipe_, PipeWrt_;
-  long TimeoutSeconds_;
-  bool isAnonymous;
+    //Named pipe handles are R/W, while anonymous pipes are one or the other (half duplex).
+    HANDLE Pipe_, PipeWrt_;
+    long TimeoutSeconds_;
+    bool isAnonymous;
 };
 #else
 typedef TSocket TPipe;
 #endif
 
-}}} // apache::thrift::transport
+}
+}
+} // apache::thrift::transport
 
 #endif // #ifndef _THRIFT_TRANSPORT_TPIPE_H_
 

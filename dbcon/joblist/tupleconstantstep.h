@@ -38,7 +38,7 @@ public:
 
     /** @brief TupleConstantStep destructor
      */
-   ~TupleConstantStep();
+    ~TupleConstantStep();
 
     /** @brief virtual void Run method
      */
@@ -52,57 +52,60 @@ public:
      */
     const std::string toString() const;
 
-	void  setOutputRowGroup(const rowgroup::RowGroup&);
-	const rowgroup::RowGroup& getOutputRowGroup() const;
-	const rowgroup::RowGroup& getDeliveredRowGroup() const;
-	void  deliverStringTableRowGroup(bool b);
-	bool  deliverStringTableRowGroup() const;
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
+    void  setOutputRowGroup(const rowgroup::RowGroup&);
+    const rowgroup::RowGroup& getOutputRowGroup() const;
+    const rowgroup::RowGroup& getDeliveredRowGroup() const;
+    void  deliverStringTableRowGroup(bool b);
+    bool  deliverStringTableRowGroup() const;
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
 
-	virtual void initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn);
-	virtual void fillInConstants(const rowgroup::Row& rowIn, rowgroup::Row& rowOut);
+    virtual void initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn);
+    virtual void fillInConstants(const rowgroup::Row& rowIn, rowgroup::Row& rowOut);
     static SJSTEP addConstantStep(const JobInfo& jobInfo, const rowgroup::RowGroup* rg = NULL);
 
 protected:
-	virtual void execute();
-	virtual void fillInConstants();
-	virtual void formatMiniStats();
-	virtual void printCalTrace();
-	virtual void constructContanstRow(const JobInfo& jobInfo);
+    virtual void execute();
+    virtual void fillInConstants();
+    virtual void formatMiniStats();
+    virtual void printCalTrace();
+    virtual void constructContanstRow(const JobInfo& jobInfo);
 
-	// for base
-	uint64_t fRowsReturned;
+    // for base
+    uint64_t fRowsReturned;
 
-	// input/output rowgroup and row
-	rowgroup::RowGroup fRowGroupIn;
-	rowgroup::RowGroup fRowGroupOut;
-	rowgroup::Row fRowIn;
-	rowgroup::Row fRowOut;
+    // input/output rowgroup and row
+    rowgroup::RowGroup fRowGroupIn;
+    rowgroup::RowGroup fRowGroupOut;
+    rowgroup::Row fRowIn;
+    rowgroup::Row fRowOut;
 
-	// mapping
-	std::vector<uint64_t> fIndexConst;    // consts in output row
-	std::vector<uint64_t> fIndexMapping;  // from input row to output row
+    // mapping
+    std::vector<uint64_t> fIndexConst;    // consts in output row
+    std::vector<uint64_t> fIndexMapping;  // from input row to output row
 
-	// store constants
-	rowgroup::Row fRowConst;
-	boost::scoped_array<uint8_t> fConstRowData;
+    // store constants
+    rowgroup::Row fRowConst;
+    boost::scoped_array<uint8_t> fConstRowData;
 
-	// for datalist
-	RowGroupDL* fInputDL;
-	RowGroupDL* fOutputDL;
-	uint64_t fInputIterator;
+    // for datalist
+    RowGroupDL* fInputDL;
+    RowGroupDL* fOutputDL;
+    uint64_t fInputIterator;
 
-	class Runner
-	{
-	public:
-		Runner(TupleConstantStep* step) : fStep(step) { }
-		void operator()() { fStep->execute(); }
+    class Runner
+    {
+    public:
+        Runner(TupleConstantStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->execute();
+        }
 
-		TupleConstantStep* fStep;
-	};
+        TupleConstantStep* fStep;
+    };
 
-	uint64_t fRunner; // thread pool handle
-	bool fEndOfResult;
+    uint64_t fRunner; // thread pool handle
+    bool fEndOfResult;
 };
 
 
@@ -115,21 +118,21 @@ public:
 
     /** @brief TupleConstantOnlyStep destructor
      */
-   ~TupleConstantOnlyStep();
+    ~TupleConstantOnlyStep();
 
     /** @brief virtual void Run method
      */
     void run();
 
-	/** @brief virtual void initialize method
-	 */
-	virtual void initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn);
+    /** @brief virtual void initialize method
+     */
+    virtual void initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn);
 
     const std::string toString() const;
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
 
 protected:
-	void fillInConstants();
+    void fillInConstants();
 
 };
 
@@ -143,32 +146,38 @@ public:
 
     /** @brief TupleConstantBooleanStep destructor
      */
-   ~TupleConstantBooleanStep();
+    ~TupleConstantBooleanStep();
 
     /** @brief virtual void Run method
      */
     void run();
 
-	/** @brief virtual void initialize method
-	    For some reason, this doesn't match the base class's virtual signature.
-		However (for now), it's ok, because it's only called in one place and
-		doesn't need to be virtual there.
-	 */
-	void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
+    /** @brief virtual void initialize method
+        For some reason, this doesn't match the base class's virtual signature.
+    	However (for now), it's ok, because it's only called in one place and
+    	doesn't need to be virtual there.
+     */
+    void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
 
     const std::string toString() const;
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
 
-	virtual void boolValue(bool b) { fValue = b; }
-	virtual bool boolValue() const { return fValue; }
+    virtual void boolValue(bool b)
+    {
+        fValue = b;
+    }
+    virtual bool boolValue() const
+    {
+        return fValue;
+    }
 
 protected:
-	void execute() {}
-	void fillInConstants() {}
-	void constructContanstRow(const JobInfo& jobInfo) {}
+    void execute() {}
+    void fillInConstants() {}
+    void constructContanstRow(const JobInfo& jobInfo) {}
 
-	// boolean value
-	bool fValue;
+    // boolean value
+    bool fValue;
 };
 
 

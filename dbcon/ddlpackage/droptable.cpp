@@ -27,29 +27,30 @@
 
 using namespace std;
 
-namespace ddlpackage {
+namespace ddlpackage
+{
 
-DropTableStatement::DropTableStatement(QualifiedName *qualifiedName, bool cascade) :
-	fTableName(qualifiedName),
-	fCascade(cascade)
+DropTableStatement::DropTableStatement(QualifiedName* qualifiedName, bool cascade) :
+    fTableName(qualifiedName),
+    fCascade(cascade)
 {
 }
 
 ostream& DropTableStatement::put(ostream& os) const
 {
-	os << "Drop Table: " << *fTableName << " " << "C=" << fCascade << endl;
-	return os;
+    os << "Drop Table: " << *fTableName << " " << "C=" << fCascade << endl;
+    return os;
 }
 
-TruncTableStatement::TruncTableStatement(QualifiedName *qualifiedName) :
-	fTableName(qualifiedName)
+TruncTableStatement::TruncTableStatement(QualifiedName* qualifiedName) :
+    fTableName(qualifiedName)
 {
 }
 
 ostream& TruncTableStatement::put(ostream& os) const
 {
-	os << "Truncate Table: " << *fTableName << endl;
-	return os;
+    os << "Truncate Table: " << *fTableName << endl;
+    return os;
 }
 
 }

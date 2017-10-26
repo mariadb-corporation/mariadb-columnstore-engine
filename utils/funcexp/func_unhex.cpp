@@ -36,15 +36,18 @@ using namespace execplan;
 
 namespace
 {
-	int64_t hex_to_int(char c)
-	{
-	  if (c <= '9' && c >= '0')
-	    return c-'0';
-	  c = toupper(c);
-	  if (c <= 'F' && c >= 'A')
-	    return c-'A'+10;
-	  return -1;
-	}
+int64_t hex_to_int(char c)
+{
+    if (c <= '9' && c >= '0')
+        return c - '0';
+
+    c = toupper(c);
+
+    if (c <= 'F' && c >= 'A')
+        return c - 'A' + 10;
+
+    return -1;
+}
 }
 
 namespace funcexp
@@ -52,50 +55,58 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_unhex::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 
 string Func_unhex::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType& op_ct)
 {
-	const string& from = parm[0]->data()->getStrVal(row, isNull);
-	char* to = new char[2 + from.length()/2];
-	if (!to)
-	{
-		isNull = true;
-		return "";
-	}
-	
-	uint64_t from_pos = 0, to_pos = 0;
-	int64_t hex_char = 0;
-	if (strlen(from.c_str()) % 2)
-	{
-		hex_char = hex_to_int(from[from_pos++]);
-		to[to_pos++] = hex_char;
-		if (hex_char == -1)
-			goto nullHandling;
-	}
+    const string& from = parm[0]->data()->getStrVal(row, isNull);
+    char* to = new char[2 + from.length() / 2];
 
-	for (; from_pos < strlen(from.c_str()); from_pos+=2)
-	{
-		hex_char = hex_to_int(from[from_pos]) << 4;
-		if (hex_char == -1)
-			goto nullHandling;
-		to[to_pos] = hex_char;
-		hex_char = hex_to_int(from[from_pos+1]);
-		if (hex_char == -1)
-			goto nullHandling;
-		to[to_pos++] |= hex_char;
-	}
-	to[to_pos] = 0;
-	return string(to);
+    if (!to)
+    {
+        isNull = true;
+        return "";
+    }
+
+    uint64_t from_pos = 0, to_pos = 0;
+    int64_t hex_char = 0;
+
+    if (strlen(from.c_str()) % 2)
+    {
+        hex_char = hex_to_int(from[from_pos++]);
+        to[to_pos++] = hex_char;
+
+        if (hex_char == -1)
+            goto nullHandling;
+    }
+
+    for (; from_pos < strlen(from.c_str()); from_pos += 2)
+    {
+        hex_char = hex_to_int(from[from_pos]) << 4;
+
+        if (hex_char == -1)
+            goto nullHandling;
+
+        to[to_pos] = hex_char;
+        hex_char = hex_to_int(from[from_pos + 1]);
+
+        if (hex_char == -1)
+            goto nullHandling;
+
+        to[to_pos++] |= hex_char;
+    }
+
+    to[to_pos] = 0;
+    return string(to);
 
 nullHandling:
-	isNull = true;
-	return "";
+    isNull = true;
+    return "";
 }
 
 

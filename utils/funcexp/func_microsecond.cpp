@@ -39,79 +39,90 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_microsecond::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 
 int64_t Func_microsecond::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& op_ct)
 {
-	int64_t val = 0;
-	uint32_t microSecond = 0;
-	
-	switch (parm[0]->data()->resultType().colDataType)
-	{
-		case CalpontSystemCatalog::DATE:
-			val = parm[0]->data()->getIntVal(row, isNull);
-			microSecond = 0;
-			break;
-		case CalpontSystemCatalog::DATETIME:
-			val = parm[0]->data()->getIntVal(row, isNull);
-			microSecond = (uint32_t)((val & 0xfffff));
-			break;
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::TEXT:
-		case CalpontSystemCatalog::VARCHAR:
-			val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
-			if (val == -1)
-			{
-				isNull = true;
-				return -1;
-			}
-			else
-			{
-				microSecond = (uint32_t)((val & 0xfffff));
-			}
-			break;
-		case CalpontSystemCatalog::BIGINT:
-		case CalpontSystemCatalog::MEDINT:
-		case CalpontSystemCatalog::SMALLINT:
-		case CalpontSystemCatalog::TINYINT:
-		case CalpontSystemCatalog::INT:
-			val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-			if (val == -1)
-			{
-				isNull = true;
-				return -1;
-			}
-			else
-			{
-				microSecond = (uint32_t)((val & 0xfffff));
-			}
-			break;	
-		case CalpontSystemCatalog::DECIMAL:
-			if (parm[0]->data()->resultType().scale == 0)
-			{
-				val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
-				if (val == -1)
-				{
-					isNull = true;
-					return -1;
-				}
-				else
-				{
-					microSecond = (uint32_t)((val & 0xfffff));
-				}
-			}
-			break;
-		default:
-			isNull = true;
-			return -1;
-	}
-	
-	return microSecond;
+    int64_t val = 0;
+    uint32_t microSecond = 0;
+
+    switch (parm[0]->data()->resultType().colDataType)
+    {
+        case CalpontSystemCatalog::DATE:
+            val = parm[0]->data()->getIntVal(row, isNull);
+            microSecond = 0;
+            break;
+
+        case CalpontSystemCatalog::DATETIME:
+            val = parm[0]->data()->getIntVal(row, isNull);
+            microSecond = (uint32_t)((val & 0xfffff));
+            break;
+
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
+        case CalpontSystemCatalog::VARCHAR:
+            val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+
+            if (val == -1)
+            {
+                isNull = true;
+                return -1;
+            }
+            else
+            {
+                microSecond = (uint32_t)((val & 0xfffff));
+            }
+
+            break;
+
+        case CalpontSystemCatalog::BIGINT:
+        case CalpontSystemCatalog::MEDINT:
+        case CalpontSystemCatalog::SMALLINT:
+        case CalpontSystemCatalog::TINYINT:
+        case CalpontSystemCatalog::INT:
+            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+            if (val == -1)
+            {
+                isNull = true;
+                return -1;
+            }
+            else
+            {
+                microSecond = (uint32_t)((val & 0xfffff));
+            }
+
+            break;
+
+        case CalpontSystemCatalog::DECIMAL:
+            if (parm[0]->data()->resultType().scale == 0)
+            {
+                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+
+                if (val == -1)
+                {
+                    isNull = true;
+                    return -1;
+                }
+                else
+                {
+                    microSecond = (uint32_t)((val & 0xfffff));
+                }
+            }
+
+            break;
+
+        default:
+            isNull = true;
+            return -1;
+    }
+
+    return microSecond;
 }
 
 

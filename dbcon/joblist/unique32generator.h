@@ -32,7 +32,8 @@
 
 #include "dbrm.h"
 
-namespace joblist {
+namespace joblist
+{
 
 /** @brief Controls unique 32-bit generation for joblist
  *
@@ -43,19 +44,19 @@ namespace joblist {
  */
 class UniqueNumberGenerator
 {
-	public:
-		static UniqueNumberGenerator* instance();      // singleton accessor
-		static void               deleteInstance();// singleton cleanup
-		uint32_t                  getUnique32();   // generate unique 32-bit int
-		uint64_t				  getUnique64();	// generate unique 64-bit int
-		
-	private:
-		UniqueNumberGenerator()  { }
-		~UniqueNumberGenerator() { }
+public:
+    static UniqueNumberGenerator* instance();      // singleton accessor
+    static void               deleteInstance();// singleton cleanup
+    uint32_t                  getUnique32();   // generate unique 32-bit int
+    uint64_t				  getUnique64();	// generate unique 64-bit int
 
-		static UniqueNumberGenerator* fUnique32Generator;
-		static boost::mutex       fLock;
-		BRM::DBRM                 fDbrm;
+private:
+    UniqueNumberGenerator()  { }
+    ~UniqueNumberGenerator() { }
+
+    static UniqueNumberGenerator* fUnique32Generator;
+    static boost::mutex       fLock;
+    BRM::DBRM                 fDbrm;
 };
 
 }  // namespace

@@ -39,157 +39,170 @@ struct JobInfo;
 class TupleAggregateStep : public JobStep, public TupleDeliveryStep
 {
 public:
-	/** @brief TupleAggregateStep constructor
-	 */
-	TupleAggregateStep(
-			const rowgroup::SP_ROWAGG_UM_t&,
-			const rowgroup::RowGroup&,
-			const rowgroup::RowGroup&,
-			const JobInfo&);
+    /** @brief TupleAggregateStep constructor
+     */
+    TupleAggregateStep(
+        const rowgroup::SP_ROWAGG_UM_t&,
+        const rowgroup::RowGroup&,
+        const rowgroup::RowGroup&,
+        const JobInfo&);
 
-	/** @brief TupleAggregateStep destructor
-	 */
-   ~TupleAggregateStep();
+    /** @brief TupleAggregateStep destructor
+     */
+    ~TupleAggregateStep();
 
-	/** @brief virtual void Run method
-	 */
-	void run();
-	void join();
+    /** @brief virtual void Run method
+     */
+    void run();
+    void join();
 
-	const std::string toString() const;
+    const std::string toString() const;
 
-	void setOutputRowGroup(const rowgroup::RowGroup&);
-	const rowgroup::RowGroup& getOutputRowGroup() const;
-	const rowgroup::RowGroup& getDeliveredRowGroup() const;
-	void  deliverStringTableRowGroup(bool b);
-	bool  deliverStringTableRowGroup() const;
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
-	uint32_t nextBand_singleThread(messageqcpp::ByteStream &bs);
-	bool setPmHJAggregation(JobStep* step);
-	void savePmHJData(rowgroup::SP_ROWAGG_t&, rowgroup::SP_ROWAGG_t&, rowgroup::RowGroup&);
+    void setOutputRowGroup(const rowgroup::RowGroup&);
+    const rowgroup::RowGroup& getOutputRowGroup() const;
+    const rowgroup::RowGroup& getDeliveredRowGroup() const;
+    void  deliverStringTableRowGroup(bool b);
+    bool  deliverStringTableRowGroup() const;
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
+    uint32_t nextBand_singleThread(messageqcpp::ByteStream& bs);
+    bool setPmHJAggregation(JobStep* step);
+    void savePmHJData(rowgroup::SP_ROWAGG_t&, rowgroup::SP_ROWAGG_t&, rowgroup::RowGroup&);
 
-	bool umOnly() const { return fUmOnly; }
-	void umOnly(bool b) { fUmOnly = b; }
+    bool umOnly() const
+    {
+        return fUmOnly;
+    }
+    void umOnly(bool b)
+    {
+        fUmOnly = b;
+    }
 
-	void configDeliveredRowGroup(const JobInfo&);
-	//void setEidMap(std::map<int, int>& m) { fIndexEidMap = m; }
+    void configDeliveredRowGroup(const JobInfo&);
+    //void setEidMap(std::map<int, int>& m) { fIndexEidMap = m; }
 
-	static SJSTEP prepAggregate(SJSTEP&, JobInfo&);
+    static SJSTEP prepAggregate(SJSTEP&, JobInfo&);
 
-	// for multi-thread variables
-	void initializeMultiThread();
+    // for multi-thread variables
+    void initializeMultiThread();
 
 private:
-	static void prep1PhaseDistinctAggregate(
-		JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
-	static void prep1PhaseAggregate(
-		JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
-	static void prep2PhasesAggregate(
-		JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
-	static void prep2PhasesDistinctAggregate(
-		JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
+    static void prep1PhaseDistinctAggregate(
+        JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
+    static void prep1PhaseAggregate(
+        JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
+    static void prep2PhasesAggregate(
+        JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
+    static void prep2PhasesDistinctAggregate(
+        JobInfo&, std::vector<rowgroup::RowGroup>&, std::vector<rowgroup::SP_ROWAGG_t>&);
 
-	void prepExpressionOnAggregate(rowgroup::SP_ROWAGG_UM_t&, JobInfo&);
-	void addConstangAggregate(std::vector<rowgroup::ConstantAggData>&);
+    void prepExpressionOnAggregate(rowgroup::SP_ROWAGG_UM_t&, JobInfo&);
+    void addConstangAggregate(std::vector<rowgroup::ConstantAggData>&);
 
-	void doAggregate();
-	void doAggregate_singleThread();
-	uint64_t doThreadedAggregate(messageqcpp::ByteStream &bs, RowGroupDL* dlp);
-	void aggregateRowGroups();
-	void threadedAggregateRowGroups(uint32_t threadID);
-	void doThreadedSecondPhaseAggregate(uint32_t threadID);
-	bool nextDeliveredRowGroup();
-	void pruneAuxColumns();
-	void formatMiniStats();
-	void printCalTrace();
+    void doAggregate();
+    void doAggregate_singleThread();
+    uint64_t doThreadedAggregate(messageqcpp::ByteStream& bs, RowGroupDL* dlp);
+    void aggregateRowGroups();
+    void threadedAggregateRowGroups(uint32_t threadID);
+    void doThreadedSecondPhaseAggregate(uint32_t threadID);
+    bool nextDeliveredRowGroup();
+    void pruneAuxColumns();
+    void formatMiniStats();
+    void printCalTrace();
 
-	boost::shared_ptr<execplan::CalpontSystemCatalog>fCatalog;
-	uint64_t fRowsReturned;
-	bool     fDoneAggregate;
-	bool     fEndOfResult;
+    boost::shared_ptr<execplan::CalpontSystemCatalog>fCatalog;
+    uint64_t fRowsReturned;
+    bool     fDoneAggregate;
+    bool     fEndOfResult;
 
-	rowgroup::SP_ROWAGG_UM_t fAggregator;
-	rowgroup::RowGroup fRowGroupOut;
-	rowgroup::RowGroup fRowGroupDelivered;
-	rowgroup::RGData fRowGroupData;
+    rowgroup::SP_ROWAGG_UM_t fAggregator;
+    rowgroup::RowGroup fRowGroupOut;
+    rowgroup::RowGroup fRowGroupDelivered;
+    rowgroup::RGData fRowGroupData;
 
-	// for setting aggregate column eid in delivered rowgroup
-	//std::map<int, int> fIndexEidMap;
+    // for setting aggregate column eid in delivered rowgroup
+    //std::map<int, int> fIndexEidMap;
 
-	// data from RowGroupDL
-	rowgroup::RowGroup fRowGroupIn;
+    // data from RowGroupDL
+    rowgroup::RowGroup fRowGroupIn;
 
-	// for PM HashJoin
-	// PM hashjoin is selected at runtime, prepare for it anyway.
-	rowgroup::SP_ROWAGG_UM_t fAggregatorUM;
-	rowgroup::SP_ROWAGG_PM_t fAggregatorPM;
-	rowgroup::RowGroup fRowGroupPMHJ;
+    // for PM HashJoin
+    // PM hashjoin is selected at runtime, prepare for it anyway.
+    rowgroup::SP_ROWAGG_UM_t fAggregatorUM;
+    rowgroup::SP_ROWAGG_PM_t fAggregatorPM;
+    rowgroup::RowGroup fRowGroupPMHJ;
 
-	// for run thread (first added for union)
-	class Aggregator
-	{
-	public:
-		Aggregator(TupleAggregateStep* step) : fStep(step) { }
-		void operator()() { fStep->doAggregate(); }
+    // for run thread (first added for union)
+    class Aggregator
+    {
+    public:
+        Aggregator(TupleAggregateStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->doAggregate();
+        }
 
-		TupleAggregateStep* fStep;
-	};
+        TupleAggregateStep* fStep;
+    };
 
-	class ThreadedAggregator
-	{
-		public:
-			ThreadedAggregator(TupleAggregateStep* step, uint32_t threadID) :
-				fStep(step),
-				fThreadID(threadID)
-			{}
-			void operator()() { fStep->threadedAggregateRowGroups(fThreadID); }
+    class ThreadedAggregator
+    {
+    public:
+        ThreadedAggregator(TupleAggregateStep* step, uint32_t threadID) :
+            fStep(step),
+            fThreadID(threadID)
+        {}
+        void operator()()
+        {
+            fStep->threadedAggregateRowGroups(fThreadID);
+        }
 
-			TupleAggregateStep* fStep;
-			uint32_t fThreadID;
-	};
+        TupleAggregateStep* fStep;
+        uint32_t fThreadID;
+    };
 
-	class ThreadedSecondPhaseAggregator
-	{
-		public:
-			ThreadedSecondPhaseAggregator(TupleAggregateStep* step, uint32_t threadID, uint32_t bucketsPerThread) :
-				fStep(step),
-				fThreadID(threadID),
-				bucketCount(bucketsPerThread)
-			{
-			}
-			void operator()() {
-				for (uint32_t i = 0; i < bucketCount; i++)
-					fStep->doThreadedSecondPhaseAggregate(fThreadID+i);
-			}
-			TupleAggregateStep* fStep;
-			uint32_t fThreadID;
-			uint32_t bucketCount;
-	};
+    class ThreadedSecondPhaseAggregator
+    {
+    public:
+        ThreadedSecondPhaseAggregator(TupleAggregateStep* step, uint32_t threadID, uint32_t bucketsPerThread) :
+            fStep(step),
+            fThreadID(threadID),
+            bucketCount(bucketsPerThread)
+        {
+        }
+        void operator()()
+        {
+            for (uint32_t i = 0; i < bucketCount; i++)
+                fStep->doThreadedSecondPhaseAggregate(fThreadID + i);
+        }
+        TupleAggregateStep* fStep;
+        uint32_t fThreadID;
+        uint32_t bucketCount;
+    };
 
-	uint64_t fRunner; // thread pool handle
-	bool fUmOnly;
-	ResourceManager *fRm;
+    uint64_t fRunner; // thread pool handle
+    bool fUmOnly;
+    ResourceManager* fRm;
 
-	// multi-threaded
-	uint32_t fNumOfThreads;
-	uint32_t fNumOfBuckets;
-	uint32_t fNumOfRowGroups;
-	uint32_t fBucketNum;
+    // multi-threaded
+    uint32_t fNumOfThreads;
+    uint32_t fNumOfBuckets;
+    uint32_t fNumOfRowGroups;
+    uint32_t fBucketNum;
 
-	boost::mutex fMutex;
-	std::vector<boost::mutex*> fAgg_mutex;
-	std::vector<rowgroup::RGData > fRowGroupDatas;
-	std::vector<rowgroup::SP_ROWAGG_UM_t> fAggregators;
-	std::vector<rowgroup::RowGroup> fRowGroupIns;
-	vector<rowgroup::RowGroup> fRowGroupOuts;
-	std::vector<std::vector<rowgroup::RGData> > fRowGroupsDeliveredData;
-	bool fIsMultiThread;
-	int fInputIter; // iterator
-	boost::scoped_array<uint64_t> fMemUsage;
-	std::vector<uint64_t> fFirstPhaseRunners; // thread pool handles
-	uint32_t fFirstPhaseThreadCount;
+    boost::mutex fMutex;
+    std::vector<boost::mutex*> fAgg_mutex;
+    std::vector<rowgroup::RGData > fRowGroupDatas;
+    std::vector<rowgroup::SP_ROWAGG_UM_t> fAggregators;
+    std::vector<rowgroup::RowGroup> fRowGroupIns;
+    vector<rowgroup::RowGroup> fRowGroupOuts;
+    std::vector<std::vector<rowgroup::RGData> > fRowGroupsDeliveredData;
+    bool fIsMultiThread;
+    int fInputIter; // iterator
+    boost::scoped_array<uint64_t> fMemUsage;
+    std::vector<uint64_t> fFirstPhaseRunners; // thread pool handles
+    uint32_t fFirstPhaseThreadCount;
 
-	boost::shared_ptr<int64_t> fSessionMemLimit;
+    boost::shared_ptr<int64_t> fSessionMemLimit;
 };
 
 

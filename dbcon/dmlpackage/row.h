@@ -56,7 +56,7 @@ public:
     /** @brief copy constructor
      */
     EXPORT Row(const Row&);
-    
+
     /** @brief read a Row from a ByteStream
       *
       * @param bytestream the ByteStream to read from
@@ -64,26 +64,38 @@ public:
     EXPORT int read(messageqcpp::ByteStream& bytestream);
 
     /** @brief write a Row to a ByteStream
-      * 
+      *
       * @param bytestream the ByteStream to write to
       */
     EXPORT int write(messageqcpp::ByteStream& bytestream);
 
     /** @brief get the list of columns in the row
       */
-    inline ColumnList& get_ColumnList() { return fColumnList; }
+    inline ColumnList& get_ColumnList()
+    {
+        return fColumnList;
+    }
 
     /** @brief get the row id
       */
-    inline WriteEngine::RID get_RowID() const { return fRowID; }
+    inline WriteEngine::RID get_RowID() const
+    {
+        return fRowID;
+    }
 
     /** @brief set the row id
       */
-    inline void set_RowID(WriteEngine::RID rowId) { fRowID = rowId; }
+    inline void set_RowID(WriteEngine::RID rowId)
+    {
+        fRowID = rowId;
+    }
 
     /** @brief  get the number of columns
       */
-    inline unsigned int get_NumberOfColumns() const { return static_cast<unsigned int>(fColumnList.size()); }
+    inline unsigned int get_NumberOfColumns() const
+    {
+        return static_cast<unsigned int>(fColumnList.size());
+    }
 
     /** @brief  get the column at the specified index
       *

@@ -35,7 +35,7 @@ struct timezone
     int  tz_dsttime;     /* type of dst correction */
 };
 
-int thrift_gettimeofday(struct timeval * tv, struct timezone * tz)
+int thrift_gettimeofday(struct timeval* tv, struct timezone* tz)
 {
     FILETIME         ft;
     unsigned __int64 tmpres(0);
@@ -66,6 +66,7 @@ int thrift_gettimeofday(struct timeval * tv, struct timezone * tz)
 
         long time_zone(0);
         errno_t err(_get_timezone(&time_zone));
+
         if (err == NO_ERROR)
         {
             tz->tz_minuteswest = time_zone / 60;
@@ -77,6 +78,7 @@ int thrift_gettimeofday(struct timeval * tv, struct timezone * tz)
 
         int day_light(0);
         err = (_get_daylight(&day_light));
+
         if (err == NO_ERROR)
         {
             tz->tz_dsttime = day_light;
@@ -93,20 +95,20 @@ int thrift_gettimeofday(struct timeval * tv, struct timezone * tz)
 
 int thrift_sleep(unsigned int seconds)
 {
-  ::Sleep(seconds * 1000);
-  return 0;
+    ::Sleep(seconds * 1000);
+    return 0;
 }
 int thrift_usleep(unsigned int microseconds)
 {
-  unsigned int milliseconds = (microseconds + 999)/ 1000;
-  ::Sleep(milliseconds);
-  return 0;
+    unsigned int milliseconds = (microseconds + 999) / 1000;
+    ::Sleep(milliseconds);
+    return 0;
 }
 
-char *thrift_ctime_r(const time_t *_clock, char *_buf)
+char* thrift_ctime_r(const time_t* _clock, char* _buf)
 {
-   strcpy(_buf, ctime(_clock));
-   return _buf;
+    strcpy(_buf, ctime(_clock));
+    return _buf;
 }
 
 

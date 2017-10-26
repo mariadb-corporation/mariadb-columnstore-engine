@@ -39,30 +39,42 @@ public:
     /** @brief ctor
       *
       * @param packageMaxThreads the maximum number of threads to process ddl packages
-      * @param packageWorkQueueSize the maximum number of ddl packages in the work queue 
+      * @param packageWorkQueueSize the maximum number of ddl packages in the work queue
       */
     DDLProcessor( int packageMaxThreads, int packageWorkQueueSize );
-	~DDLProcessor();
+    ~DDLProcessor();
     /** @brief entry point for the DDLProcessor
       */
     void process();
-	int commitTransaction(uint32_t txnID, std::string & errorMsg);
+    int commitTransaction(uint32_t txnID, std::string& errorMsg);
 
     /** @brief get the ddl package thread pool size
       */
-    inline int getPackageThreadPoolSize() const { return fPackageMaxThreads; }
+    inline int getPackageThreadPoolSize() const
+    {
+        return fPackageMaxThreads;
+    }
 
     /** @brief set the ddl package thread pool size
       */
-    inline void setPackageThreadPoolSize( int threadPoolSize ) { fPackageMaxThreads = threadPoolSize; }
+    inline void setPackageThreadPoolSize( int threadPoolSize )
+    {
+        fPackageMaxThreads = threadPoolSize;
+    }
 
     /** @brief get the maximum number of ddl packages allowed in the work queue
       */
-    inline int getPackageWorkQueueSize() const { return fPackageWorkQueueSize; }
+    inline int getPackageWorkQueueSize() const
+    {
+        return fPackageWorkQueueSize;
+    }
 
     /** @brief set the maximum number of ddl packages allowed in the work queue
       */
-    inline void setPackageWorkQueueSize( int workQueueSize ) { fPackageWorkQueueSize = workQueueSize; }
+    inline void setPackageWorkQueueSize( int workQueueSize )
+    {
+        fPackageWorkQueueSize = workQueueSize;
+    }
 
 
 protected:

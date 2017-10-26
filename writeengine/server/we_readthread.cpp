@@ -44,12 +44,13 @@ using namespace WriteEngine;
 namespace WriteEngine
 {
 
-ReadThread::ReadThread(const IOSocket& ios): fIos(ios) 
+ReadThread::ReadThread(const IOSocket& ios): fIos(ios)
 {
 
 }
 
-ReadThread::~ReadThread(){
+ReadThread::~ReadThread()
+{
 
 }
 
@@ -87,8 +88,8 @@ void DmlReadThread::operator()()
     //cout << "DmlReadThread created ..." << endl;
     // queryStats.blocksChanged for delete/update
     uint64_t blocksChanged = 0;
-	
-    while (ibs.length()>0)
+
+    while (ibs.length() > 0)
     {
         try
         {
@@ -96,261 +97,312 @@ void DmlReadThread::operator()()
 
             //do work here...
             ibs >> msgId;
-			if (msgId != WE_SVR_CLOSE_CONNECTION)
-				ibs >> uniqueID;
+
+            if (msgId != WE_SVR_CLOSE_CONNECTION)
+                ibs >> uniqueID;
+
             //cout << "DmlReadThread " << pthread_self () << " received message id " << (uint32_t)msgId << " and bytestream length " << ibs.length() << endl;
             switch (msgId)
             {
-            case WE_SVR_SINGLE_INSERT:
+                case WE_SVR_SINGLE_INSERT:
                 {
                     rc = fWeDMLprocessor->processSingleInsert(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_COMMIT_VERSION:
+
+                case WE_SVR_COMMIT_VERSION:
                 {
                     rc = fWeDMLprocessor->commitVersion(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_ROLLBACK_BLOCKS:
+
+                case WE_SVR_ROLLBACK_BLOCKS:
                 {
                     rc = fWeDMLprocessor->rollbackBlocks(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_ROLLBACK_VERSION:
+
+                case WE_SVR_ROLLBACK_VERSION:
                 {
                     rc = fWeDMLprocessor->rollbackVersion(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_COMMIT_BATCH_AUTO_ON:
+
+                case WE_SVR_COMMIT_BATCH_AUTO_ON:
                 {
                     rc = fWeDMLprocessor->commitBatchAutoOn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_ROLLBACK_BATCH_AUTO_ON:
+
+                case WE_SVR_ROLLBACK_BATCH_AUTO_ON:
                 {
                     rc = fWeDMLprocessor->rollbackBatchAutoOn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_COMMIT_BATCH_AUTO_OFF:
+
+                case WE_SVR_COMMIT_BATCH_AUTO_OFF:
                 {
                     rc = fWeDMLprocessor->commitBatchAutoOn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_ROLLBACK_BATCH_AUTO_OFF:
+
+                case WE_SVR_ROLLBACK_BATCH_AUTO_OFF:
                 {
                     rc = fWeDMLprocessor->rollbackBatchAutoOff(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_BATCH_INSERT:
+
+                case WE_SVR_BATCH_INSERT:
                 {
-					//timer.start("processBatchInsert");
+                    //timer.start("processBatchInsert");
                     rc = fWeDMLprocessor->processBatchInsert(ibs, errMsg, PMId);
-					//timer.stop("processBatchInsert");
-					//cout << "fWeDMLprocessor " << fWeDMLprocessor << " is processing batchinsert ..." << endl;
+                    //timer.stop("processBatchInsert");
+                    //cout << "fWeDMLprocessor " << fWeDMLprocessor << " is processing batchinsert ..." << endl;
                     break;
                 }
-            case WE_SVR_BATCH_INSERT_BINARY:
-	        {
-	            rc = fWeDMLprocessor->processBatchInsertBinary(ibs, errMsg, PMId);
-	            break;
-	        }
-            case WE_SVR_GET_WRITTEN_LBIDS:
-            {
-                rc = fWeDMLprocessor->getWrittenLbids(ibs, errMsg, PMId);
-                break;
-            }
-            case WE_SVR_BATCH_INSERT_END:
+
+                case WE_SVR_BATCH_INSERT_BINARY:
+                {
+                    rc = fWeDMLprocessor->processBatchInsertBinary(ibs, errMsg, PMId);
+                    break;
+                }
+
+                case WE_SVR_GET_WRITTEN_LBIDS:
+                {
+                    rc = fWeDMLprocessor->getWrittenLbids(ibs, errMsg, PMId);
+                    break;
+                }
+
+                case WE_SVR_BATCH_INSERT_END:
                 {
                     rc = fWeDMLprocessor->processBatchInsertHwm(ibs, errMsg);
-					//timer.finish();
+                    //timer.finish();
                     break;
                 }
-            case WE_SVR_UPDATE:
+
+                case WE_SVR_UPDATE:
                 {
                     rc = fWeDMLprocessor->processUpdate(ibs, errMsg, PMId, blocksChanged);
                     break;
                 }
-            case WE_SVR_FLUSH_FILES:
+
+                case WE_SVR_FLUSH_FILES:
                 {
                     rc = fWeDMLprocessor->processFlushFiles(ibs, errMsg);
-                    break;  
+                    break;
                 }
-            case WE_SVR_DELETE:
+
+                case WE_SVR_DELETE:
                 {
                     rc = fWeDMLprocessor->processDelete(ibs, errMsg, PMId, blocksChanged);
                     break;
                 }
-            case WE_SVR_BATCH_AUTOON_REMOVE_META:
+
+                case WE_SVR_BATCH_AUTOON_REMOVE_META:
                 {
                     rc = fWeDMLprocessor->processRemoveMeta(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DML_BULKROLLBACK:
+
+                case WE_SVR_DML_BULKROLLBACK:
                 {
                     rc = fWeDMLprocessor->processBulkRollback(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DML_BULKROLLBACK_CLEANUP:
+
+                case WE_SVR_DML_BULKROLLBACK_CLEANUP:
                 {
                     rc = fWeDMLprocessor->processBulkRollbackCleanup(ibs, errMsg);
                     break;
                 }
-            case WE_UPDATE_NEXTVAL:
+
+                case WE_UPDATE_NEXTVAL:
                 {
                     rc = fWeDMLprocessor->updateSyscolumnNextval(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_SYSTABLE:
+
+                case WE_SVR_WRITE_SYSTABLE:
                 {
                     rc = fWeDDLprocessor->writeSystable(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_SYSCOLUMN:
+
+                case WE_SVR_WRITE_SYSCOLUMN:
                 {
                     rc = fWeDDLprocessor->writeSyscolumn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_CREATE_SYSCOLUMN:
+
+                case WE_SVR_WRITE_CREATE_SYSCOLUMN:
                 {
                     rc = fWeDDLprocessor->writeCreateSyscolumn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_CREATETABLEFILES:
+
+                case WE_SVR_WRITE_CREATETABLEFILES:
                 {
                     rc = fWeDDLprocessor->createtablefiles(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DELETE_SYSCOLUMN:
+
+                case WE_SVR_DELETE_SYSCOLUMN:
                 {
                     rc = fWeDDLprocessor->deleteSyscolumn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DELETE_SYSCOLUMN_ROW:
+
+                case WE_SVR_DELETE_SYSCOLUMN_ROW:
                 {
                     rc = fWeDDLprocessor->deleteSyscolumnRow(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DELETE_SYSTABLE:
+
+                case WE_SVR_DELETE_SYSTABLE:
                 {
                     rc = fWeDDLprocessor->deleteSystable(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DELETE_SYSTABLES:
+
+                case WE_SVR_DELETE_SYSTABLES:
                 {
                     rc = fWeDDLprocessor->deleteSystables(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_DROPFILES:
+
+                case WE_SVR_WRITE_DROPFILES:
                 {
                     rc = fWeDDLprocessor->dropFiles(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSCOLUMN_AUTO:
+
+                case WE_SVR_UPDATE_SYSCOLUMN_AUTO:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnAuto(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSCOLUMN_NEXTVAL:
+
+                case WE_SVR_UPDATE_SYSCOLUMN_NEXTVAL:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnNextvalCol(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSCOLUMN_AUTOVAL:
+
+                case WE_SVR_UPDATE_SYSCOLUMN_AUTOVAL:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnNextval(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSCOLUMN_DEFAULTVAL:
+
+                case WE_SVR_UPDATE_SYSCOLUMN_DEFAULTVAL:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnSetDefault(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSCOLUMN_TABLENAME:
+
+                case WE_SVR_UPDATE_SYSCOLUMN_TABLENAME:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnTablename(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSCOLUMN_RENAMECOLUMN:
+
+                case WE_SVR_UPDATE_SYSCOLUMN_RENAMECOLUMN:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnRenameColumn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSCOLUMN_COLPOS:
+
+                case WE_SVR_UPDATE_SYSCOLUMN_COLPOS:
                 {
                     rc = fWeDDLprocessor->updateSyscolumnColumnposCol(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSTABLE_AUTO:
+
+                case WE_SVR_UPDATE_SYSTABLE_AUTO:
                 {
                     rc = fWeDDLprocessor->updateSystableAuto(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSTABLE_TABLENAME:
+
+                case WE_SVR_UPDATE_SYSTABLE_TABLENAME:
                 {
                     rc = fWeDDLprocessor->updateSystableTablename(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_UPDATE_SYSTABLES_TABLENAME:
+
+                case WE_SVR_UPDATE_SYSTABLES_TABLENAME:
                 {
                     rc = fWeDDLprocessor->updateSystablesTablename(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_FILL_COLUMN:
+
+                case WE_SVR_FILL_COLUMN:
                 {
                     rc = fWeDDLprocessor->fillNewColumn(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DROP_PARTITIONS:
+
+                case WE_SVR_DROP_PARTITIONS:
                 {
                     rc = fWeDDLprocessor->dropPartitions(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_TRUNCATE:
+
+                case WE_SVR_WRITE_TRUNCATE:
                 {
                     rc = fWeDDLprocessor->writeTruncateLog(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_DROPPARTITION:
+
+                case WE_SVR_WRITE_DROPPARTITION:
                 {
                     rc = fWeDDLprocessor->writeDropPartitionLog(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_WRITE_DROPTABLE:
+
+                case WE_SVR_WRITE_DROPTABLE:
                 {
                     rc = fWeDDLprocessor->writeDropTableLog(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_DELETE_DDLLOG:
+
+                case WE_SVR_DELETE_DDLLOG:
                 {
                     rc = fWeDDLprocessor->deleteDDLLog(ibs, errMsg);
                     break;
                 }
-            case WE_SVR_FETCH_DDL_LOGS:
+
+                case WE_SVR_FETCH_DDL_LOGS:
                 {
                     rc = fWeDDLprocessor->fetchDDLLog(ibs, errMsg);
                     break;
                 }
-			case WE_SVR_PURGEFD:
-				{
-					rc = fWeDMLprocessor->processPurgeFDCache(ibs, errMsg);
-					break;
-				}
-			case WE_END_TRANSACTION:
-				{
-					rc = fWeDMLprocessor->processEndTransaction(ibs, errMsg);
-					break;
-				}
-			case WE_SRV_FIX_ROWS:
-				{
-					rc = fWeDMLprocessor->processFixRows(ibs, errMsg, PMId);
-					break;
-				}
-			case WE_SVR_CLOSE_CONNECTION:
-				{
-					break;
-				}
-            default:
-                break;
+
+                case WE_SVR_PURGEFD:
+                {
+                    rc = fWeDMLprocessor->processPurgeFDCache(ibs, errMsg);
+                    break;
+                }
+
+                case WE_END_TRANSACTION:
+                {
+                    rc = fWeDMLprocessor->processEndTransaction(ibs, errMsg);
+                    break;
+                }
+
+                case WE_SRV_FIX_ROWS:
+                {
+                    rc = fWeDMLprocessor->processFixRows(ibs, errMsg, PMId);
+                    break;
+                }
+
+                case WE_SVR_CLOSE_CONNECTION:
+                {
+                    break;
+                }
+
+                default:
+                    break;
             }
         }
         catch (std::exception& ex)
@@ -377,18 +429,18 @@ void DmlReadThread::operator()()
             logger.logMessage(logging::LOG_TYPE_ERROR, msg, logid);
             rc = 1;
             errMsg = msg.msg();
-        }  
-		
-		if (msgId != WE_SVR_CLOSE_CONNECTION) 
-		{
-			//send response
-			obs.restart();
-			obs << uniqueID;
-			obs << rc;
-			obs << errMsg;
-		}
+        }
 
-        if ((msgId == WE_SVR_COMMIT_BATCH_AUTO_ON) || (msgId ==WE_SVR_BATCH_INSERT_END) || (msgId == WE_SVR_FETCH_DDL_LOGS) || (msgId == WE_SVR_GET_WRITTEN_LBIDS))
+        if (msgId != WE_SVR_CLOSE_CONNECTION)
+        {
+            //send response
+            obs.restart();
+            obs << uniqueID;
+            obs << rc;
+            obs << errMsg;
+        }
+
+        if ((msgId == WE_SVR_COMMIT_BATCH_AUTO_ON) || (msgId == WE_SVR_BATCH_INSERT_END) || (msgId == WE_SVR_FETCH_DDL_LOGS) || (msgId == WE_SVR_GET_WRITTEN_LBIDS))
         {
             obs += ibs;
             //cout << " sending back hwm info with ibs length " << endl;
@@ -405,29 +457,32 @@ void DmlReadThread::operator()()
 
         if (msgId == WE_SVR_UPDATE || msgId == WE_SVR_DELETE)
             obs << blocksChanged; // send stats back to DMLProc
+
         blocksChanged = 0; // reset
-		if (msgId == WE_SVR_CLOSE_CONNECTION)
-		{
-			//cout << "received request. closing connection ..." << endl;
-			break;
-		}
-		else
-		{ 
-			try
-			{
-				fIos.write(obs);
-            //cout << "dmlthread sent back response for msgid " << (uint32_t)msgId << " with uniqueID:rc= "
-            //<< (uint32_t)uniqueID<<":"<< (uint32_t)rc<<" and error message is " << errMsg <<endl;
-            //get next message
-				ibs = fIos.read();
-			}
-			catch (...)
-			{
-				break;
-			}
-		}
-	}
-	//cout << "closing connection for thread " << pthread_self () << endl;
+
+        if (msgId == WE_SVR_CLOSE_CONNECTION)
+        {
+            //cout << "received request. closing connection ..." << endl;
+            break;
+        }
+        else
+        {
+            try
+            {
+                fIos.write(obs);
+                //cout << "dmlthread sent back response for msgid " << (uint32_t)msgId << " with uniqueID:rc= "
+                //<< (uint32_t)uniqueID<<":"<< (uint32_t)rc<<" and error message is " << errMsg <<endl;
+                //get next message
+                ibs = fIos.read();
+            }
+            catch (...)
+            {
+                break;
+            }
+        }
+    }
+
+    //cout << "closing connection for thread " << pthread_self () << endl;
     fIos.close();
 }
 
@@ -435,15 +490,15 @@ void DmlReadThread::operator()()
 //-----------------------------------------------------------------------------
 //ctor
 SplitterReadThread::SplitterReadThread(const messageqcpp::IOSocket& ios,
-                                       ByteStream& Ibs):ReadThread(ios), fWeDataLoader(*this)
+                                       ByteStream& Ibs): ReadThread(ios), fWeDataLoader(*this)
 {
     fIbs = Ibs;
 }
 
 //-----------------------------------------------------------------------------
 //copy ctor
-SplitterReadThread::SplitterReadThread(const SplitterReadThread& rhs): 
-ReadThread(rhs.fIos), fWeDataLoader(*this)
+SplitterReadThread::SplitterReadThread(const SplitterReadThread& rhs):
+    ReadThread(rhs.fIos), fWeDataLoader(*this)
 {
     fIbs = rhs.fIbs;
 
@@ -461,7 +516,8 @@ SplitterReadThread::~SplitterReadThread()
 void SplitterReadThread::operator()()
 {
     ByteStream::byte msgId;
-    while (fIbs.length()>0)
+
+    while (fIbs.length() > 0)
     {
         fWeDataLoader.updateRxBytes(fIbs.length());
 
@@ -472,104 +528,124 @@ void SplitterReadThread::operator()()
 
         switch (msgId)
         {
-        case WE_CLT_SRV_KEEPALIVE:
+            case WE_CLT_SRV_KEEPALIVE:
             {
                 fWeDataLoader.onReceiveKeepAlive(fIbs);
                 break;
             }
-        case WE_CLT_SRV_DATA:
+
+            case WE_CLT_SRV_DATA:
             {
                 fWeDataLoader.onReceiveData(fIbs);
                 break;
             }
-        case WE_CLT_SRV_EOD:
+
+            case WE_CLT_SRV_EOD:
             {
                 fWeDataLoader.onReceiveEod(fIbs);
                 break;
             }
-        case WE_CLT_SRV_MODE:
+
+            case WE_CLT_SRV_MODE:
             {
                 fWeDataLoader.onReceiveMode(fIbs);
                 break;
             }
-        case WE_CLT_SRV_IMPFILENAME:
+
+            case WE_CLT_SRV_IMPFILENAME:
             {
                 fWeDataLoader.onReceiveImportFileName(fIbs);
                 break;
             }
-        case WE_CLT_SRV_CMDLINEARGS:
+
+            case WE_CLT_SRV_CMDLINEARGS:
             {
                 fWeDataLoader.onReceiveCmdLineArgs(fIbs);
                 break;
             }
-        case WE_CLT_SRV_CMD:
+
+            case WE_CLT_SRV_CMD:
             {
                 fWeDataLoader.onReceiveCmd(fIbs);   //fig out share_ptr on BS& is better
                 break;
             }
-        case WE_CLT_SRV_ACK:
+
+            case WE_CLT_SRV_ACK:
             {
                 fWeDataLoader.onReceiveAck(fIbs);
                 break;
             }
-        case WE_CLT_SRV_NAK:
+
+            case WE_CLT_SRV_NAK:
             {
                 fWeDataLoader.onReceiveNak(fIbs);
                 break;
             }
-        case WE_CLT_SRV_PM_ERROR:
+
+            case WE_CLT_SRV_PM_ERROR:
             {
                 fWeDataLoader.onReceiveError(fIbs);
                 break;
             }
-        case WE_CLT_SRV_STARTCPI:
+
+            case WE_CLT_SRV_STARTCPI:
             {
                 fWeDataLoader.onReceiveStartCpimport();
                 break;
             }
-        case WE_CLT_SRV_BRMRPT:
+
+            case WE_CLT_SRV_BRMRPT:
             {
                 fWeDataLoader.onReceiveBrmRptFileName(fIbs);
                 break;
             }
-        case WE_CLT_SRV_CLEANUP:
+
+            case WE_CLT_SRV_CLEANUP:
             {
                 fWeDataLoader.onReceiveCleanup(fIbs);
                 break;
             }
-        case WE_CLT_SRV_ROLLBACK:
+
+            case WE_CLT_SRV_ROLLBACK:
             {
                 fWeDataLoader.onReceiveRollback(fIbs);
                 break;
             }
-        case WE_CLT_SRV_JOBID:
+
+            case WE_CLT_SRV_JOBID:
             {
                 fWeDataLoader.onReceiveJobId(fIbs);
                 break;
             }
-        case WE_CLT_SRV_JOBDATA:
+
+            case WE_CLT_SRV_JOBDATA:
             {
                 fWeDataLoader.onReceiveJobData(fIbs);
                 break;
             }
-        case WE_CLT_SRV_ERRLOG:
+
+            case WE_CLT_SRV_ERRLOG:
             {
                 fWeDataLoader.onReceiveErrFileRqst(fIbs);
                 break;
             }
-        case WE_CLT_SRV_BADLOG:
+
+            case WE_CLT_SRV_BADLOG:
             {
                 fWeDataLoader.onReceiveBadFileRqst(fIbs);
                 break;
             }
-        default:
-            break;
+
+            default:
+                break;
 
         }
 
         fIbs.restart();
+
         try
-        {   //get next message
+        {
+            //get next message
             fIbs = fIos.read();
         }
         catch (...)
@@ -595,9 +671,9 @@ void SplitterReadThread::operator()()
 // ClearTableLockReadThread constructor.
 //------------------------------------------------------------------------------
 ClearTableLockReadThread::ClearTableLockReadThread(
-                                                  const messageqcpp::IOSocket& ios,
-                                                  ByteStream& Ibs ): ReadThread(ios),
-fWeClearTableLockCmd(new WE_ClearTableLockCmd("ClearTableLockTool"))
+    const messageqcpp::IOSocket& ios,
+    ByteStream& Ibs ): ReadThread(ios),
+    fWeClearTableLockCmd(new WE_ClearTableLockCmd("ClearTableLockTool"))
 {
     fIbs = Ibs;
 }
@@ -624,19 +700,22 @@ void ClearTableLockReadThread::operator()()
     while (fIbs.length() > 0)
     {
         fIbs >> msgId;
+
         switch (msgId)
         {
-        case WE_CLT_SRV_CLEAR_TABLE_LOCK:
+            case WE_CLT_SRV_CLEAR_TABLE_LOCK:
             {
                 rc = fWeClearTableLockCmd->processRollback(fIbs, errMsg);
                 break;
             }
-        case WE_CLT_SRV_CLEAR_TABLE_LOCK_CLEANUP:
+
+            case WE_CLT_SRV_CLEAR_TABLE_LOCK_CLEANUP:
             {
                 rc = fWeClearTableLockCmd->processCleanup(fIbs, errMsg);
                 break;
             }
-        default:
+
+            default:
             {
                 break;
             }
@@ -675,7 +754,7 @@ void ClearTableLockReadThread::operator()()
 // RedistributeReadThread constructor.
 //------------------------------------------------------------------------------
 RedistributeReadThread::RedistributeReadThread(const messageqcpp::IOSocket& ios, ByteStream& Ibs)
-: ReadThread(ios)
+    : ReadThread(ios)
 {
     fIbs = Ibs;
 }
@@ -714,7 +793,7 @@ void RedistributeReadThread::operator()()
 // GetFileSizeThread constructor.
 //------------------------------------------------------------------------------
 GetFileSizeThread::GetFileSizeThread(const messageqcpp::IOSocket& ios, ByteStream& Ibs, BRM::DBRM& dbrm)
-: ReadThread(ios), fWeGetFileSizes(new WE_GetFileSizes())
+    : ReadThread(ios), fWeGetFileSizes(new WE_GetFileSizes())
 {
     fIbs = Ibs;
     key = dbrm.getUnique32();
@@ -741,19 +820,22 @@ void GetFileSizeThread::operator()()
     while (fIbs.length() > 0)
     {
         fIbs >> msgId;
+
         switch (msgId)
         {
-        case WE_SVR_GET_FILESIZES:
+            case WE_SVR_GET_FILESIZES:
             {
                 rc = fWeGetFileSizes->processTable(fIbs, errMsg, key);
                 break;
             }
-        case WE_SVR_GET_FILESIZE:
+
+            case WE_SVR_GET_FILESIZE:
             {
                 rc = fWeGetFileSizes->processFileName(fIbs, errMsg, key);
                 break;
             }
-        default:
+
+            default:
             {
                 break;
             }
@@ -762,7 +844,7 @@ void GetFileSizeThread::operator()()
         // Send response
         obs.restart();
         obs << rc;
-		obs << errMsg;
+        obs << errMsg;
         obs += fIbs;
 
         try
@@ -794,19 +876,20 @@ void ReadThreadFactory::CreateReadThread(ThreadPool& Tp, IOSocket& Ios, BRM::DBR
 {
     struct timespec rm_ts;
     int sleepTime = 20000; // wait for 20 seconds
-    rm_ts.tv_sec = sleepTime/1000;
-    rm_ts.tv_nsec = sleepTime%1000 *1000000;
+    rm_ts.tv_sec = sleepTime / 1000;
+    rm_ts.tv_nsec = sleepTime % 1000 * 1000000;
     bool isTimeOut = false;
 
     ByteStream::byte msgId;
     ByteStream aBs;
+
     try
     {
         aBs = Ios.read(&rm_ts, &isTimeOut);
     }
     catch (std::exception& ex)
     {
-        cout<< "Handled : " << ex.what() <<endl;
+        cout << "Handled : " << ex.what() << endl;
         logging::LoggingID logid(19, 0, 0);
         logging::Message::Args args;
         logging::Message msg(1);
@@ -816,7 +899,8 @@ void ReadThreadFactory::CreateReadThread(ThreadPool& Tp, IOSocket& Ios, BRM::DBR
         logging::Logger logger(logid.fSubsysID);
         logger.logMessage(logging::LOG_TYPE_ERROR, msg, logid);
     }
-    if ((aBs.length()<=0)||(isTimeOut))
+
+    if ((aBs.length() <= 0) || (isTimeOut))
     {
         Ios.close();
         return;
@@ -826,52 +910,55 @@ void ReadThreadFactory::CreateReadThread(ThreadPool& Tp, IOSocket& Ios, BRM::DBR
 
     switch (msgId)
     {
-    case WE_SVR_DDL_KEEPALIVE:
-    case WE_SVR_DML_KEEPALIVE:
+        case WE_SVR_DDL_KEEPALIVE:
+        case WE_SVR_DML_KEEPALIVE:
         {
             DmlReadThread dmlReadThread(Ios, aBs);
-			boost::thread t(dmlReadThread);
-			//cout << "starting DML thread id " << t.get_id() << endl;
+            boost::thread t(dmlReadThread);
+            //cout << "starting DML thread id " << t.get_id() << endl;
         }
         break;
-    case WE_CLT_SRV_KEEPALIVE:
-    case WE_CLT_SRV_MODE:
-    case WE_CLT_SRV_DATA:
-    case WE_CLT_SRV_CMD:
-    case WE_CLT_SRV_ACK:
-    case WE_CLT_SRV_NAK:
-    case WE_CLT_SRV_PM_ERROR:
-    case WE_CLT_SRV_CMDLINEARGS:
+
+        case WE_CLT_SRV_KEEPALIVE:
+        case WE_CLT_SRV_MODE:
+        case WE_CLT_SRV_DATA:
+        case WE_CLT_SRV_CMD:
+        case WE_CLT_SRV_ACK:
+        case WE_CLT_SRV_NAK:
+        case WE_CLT_SRV_PM_ERROR:
+        case WE_CLT_SRV_CMDLINEARGS:
         {
             //SplitterReadThread aSpReadThread(Ios, aBs);
             //fOwner.attach(reinterpret_cast<Observer*>(&(aSpReadThread.fWeDataLoader)));
             //Tp.invoke(aSpReadThread);
-            Tp.invoke(SplitterReadThread(Ios,aBs));
+            Tp.invoke(SplitterReadThread(Ios, aBs));
         }
         break;
 
-    case WE_CLT_SRV_CLEAR_TABLE_LOCK:
-    case WE_CLT_SRV_CLEAR_TABLE_LOCK_CLEANUP:
+        case WE_CLT_SRV_CLEAR_TABLE_LOCK:
+        case WE_CLT_SRV_CLEAR_TABLE_LOCK_CLEANUP:
         {
             ClearTableLockReadThread clearTableLockThread(Ios, aBs);
             Tp.invoke( clearTableLockThread );
         }
         break;
 
-    case WE_SVR_REDISTRIBUTE:
+        case WE_SVR_REDISTRIBUTE:
         {
             RedistributeReadThread RedistributeReadThread(Ios, aBs);
             Tp.invoke(RedistributeReadThread);
         }
         break;
-	case WE_SVR_GET_FILESIZES:
-    case WE_SVR_GET_FILESIZE:
+
+        case WE_SVR_GET_FILESIZES:
+        case WE_SVR_GET_FILESIZE:
         {
             GetFileSizeThread getFileSizeThread(Ios, aBs, dbrm);
             Tp.invoke(getFileSizeThread);
         }
         break;
-    default:
+
+        default:
         {
             Ios.close();    // don't know who is this
         }

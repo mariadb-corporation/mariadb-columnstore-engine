@@ -43,12 +43,12 @@ AutoincrementData* AutoincrementData::makeAutoincrementData(uint32_t sessionID)
 
     if (it == fAutoincDataMap.end())
     {
-        instance = new AutoincrementData();	 
+        instance = new AutoincrementData();
         fAutoincDataMap[sessionID] = instance;
         return instance;
     }
 
-    return it->second;    
+    return it->second;
 }
 
 /* static */
@@ -56,12 +56,13 @@ void AutoincrementData::removeAutoincrementData(uint32_t sessionID)
 {
     boost::mutex::scoped_lock lock(map_mutex);
     AutoincDataMap::iterator it = fAutoincDataMap.find(sessionID);
+
     if (it != fAutoincDataMap.end())
     {
         delete (*it).second;
         fAutoincDataMap.erase(it);
-    }    
-}	
+    }
+}
 
 AutoincrementData::AutoincrementData()
 {
@@ -72,26 +73,28 @@ AutoincrementData::~AutoincrementData()
 
 void AutoincrementData::setNextValue(uint32_t columnOid, long long nextValue)
 {
-	boost::mutex::scoped_lock lk(fOIDnextvalLock);	
-	fOidNextValueMap[columnOid] = nextValue;	
+    boost::mutex::scoped_lock lk(fOIDnextvalLock);
+    fOidNextValueMap[columnOid] = nextValue;
 }
 
 long long AutoincrementData::getNextValue(uint32_t columnOid)
 {
-	boost::mutex::scoped_lock lk(fOIDnextvalLock);	
-	long long nextValue = 0;
-	OIDNextValue::iterator it = fOidNextValueMap.find(columnOid);
-	if (it != fOidNextValueMap.end())
-	{
-		nextValue = it->second;
-	}
-	return nextValue;
+    boost::mutex::scoped_lock lk(fOIDnextvalLock);
+    long long nextValue = 0;
+    OIDNextValue::iterator it = fOidNextValueMap.find(columnOid);
+
+    if (it != fOidNextValueMap.end())
+    {
+        nextValue = it->second;
+    }
+
+    return nextValue;
 }
 
-AutoincrementData::OIDNextValue & AutoincrementData::getOidNextValueMap()
+AutoincrementData::OIDNextValue& AutoincrementData::getOidNextValueMap()
 {
-	boost::mutex::scoped_lock lk(fOIDnextvalLock);	
-		
-	return fOidNextValueMap;
+    boost::mutex::scoped_lock lk(fOIDnextvalLock);
+
+    return fOidNextValueMap;
 }
 // vim:ts=4 sw=4:

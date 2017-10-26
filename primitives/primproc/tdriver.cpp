@@ -47,7 +47,7 @@ void testColByScan()
     cout << "Sending COL_BY_SCAN primitive" << endl;
 
     MessageQueueClient proc("PMS1");
-    ByteStream obs,ibs;
+    ByteStream obs, ibs;
 
     ISMPacketHeader packetHeader;
     packetHeader.Reserve = 0;
@@ -91,6 +91,7 @@ void testColByScan()
 
     ibs = proc.read();
     int messageLen = ibs.length();
+
     if (messageLen)
     {
         cout << "Received results" << endl << endl;
@@ -131,12 +132,13 @@ void testColByScan()
             char* data = new char[remaining];
             memmove(data, bytePtr + sizeof(ISMPacketHeader) + sizeof(ColResultHeader), remaining);
 
-            char *ptr = data;
+            char* ptr = data;
 
-            for(int i = 0; i < remaining; i++)
+            for (int i = 0; i < remaining; i++)
             {
                 for (int j = 0; j < 10 && j < remaining; j++)
                     printf("%02x ", *ptr++);
+
                 printf("\n");
             }
 
@@ -154,7 +156,7 @@ void testColByRid()
     cout << "Sending COL_BY_RID primitive" << endl;
 
     MessageQueueClient proc("PMS1");
-    ByteStream obs,ibs;
+    ByteStream obs, ibs;
 
     ISMPacketHeader packetHeader;
     packetHeader.Reserve = 0;
@@ -198,6 +200,7 @@ void testColByRid()
 
     ibs = proc.read();
     int messageLen = ibs.length();
+
     if (messageLen)
     {
 
@@ -239,12 +242,13 @@ void testColByRid()
             char* data = new char[remaining];
             memmove(data, bytePtr + sizeof(ISMPacketHeader) + sizeof(ColResultHeader), remaining);
 
-            char *ptr = data;
+            char* ptr = data;
 
-            for(int i = 0; i < remaining; i++)
+            for (int i = 0; i < remaining; i++)
             {
                 for (int j = 0; j < 10 && j < remaining; j++)
                     printf("%02x ", *ptr++);
+
                 printf("\n");
             }
 
@@ -263,7 +267,7 @@ void testColAggByScan()
     cout << "Sending COL_AGG_BY_SCAN primitive" << endl;
 
     MessageQueueClient proc("PMS1");
-    ByteStream obs,ibs;
+    ByteStream obs, ibs;
 
     ISMPacketHeader packetHeader;
     packetHeader.Reserve = 0;
@@ -298,7 +302,7 @@ void testColAggByScan()
     memmove(message + sizeof(ISMPacketHeader) + sizeof(ColAggByScanRequestHeader),  &TempData, sizeof(Int64));
 
     obs.append((messageqcpp::ByteStream::byte*)message, sizeof(ISMPacketHeader) + sizeof(ColAggByScanRequestHeader)
-        + sizeof(Int64));
+               + sizeof(Int64));
 
     cout << "Sending to Primitive Server" << endl;
 
@@ -308,6 +312,7 @@ void testColAggByScan()
 
     ibs = proc.read();
     int messageLen = ibs.length();
+
     if (messageLen)
     {
         ISMPacketHeader pktHeader;
@@ -351,12 +356,13 @@ void testColAggByScan()
             char* data = new char[remaining];
             memmove(data, bytePtr + sizeof(ISMPacketHeader) + sizeof(ColResultHeader), remaining);
 
-            char *ptr = data;
+            char* ptr = data;
 
-            for(int i = 0; i < remaining; i++)
+            for (int i = 0; i < remaining; i++)
             {
                 for (int j = 0; j < 10 && j < remaining; j++)
                     printf("%02x ", *ptr++);
+
                 printf("\n");
             }
 
@@ -374,7 +380,7 @@ void testColAggByRid()
     cout << "Sending COL_AGG_BY_RID primitive" << endl;
 
     MessageQueueClient proc("PMS1");
-    ByteStream obs,ibs;
+    ByteStream obs, ibs;
 
     ByteStream::octbyte value64;
     ByteStream::quadbyte value32;
@@ -496,6 +502,7 @@ void testColAggByRid()
     cout << "Sent... awaiting results" << endl;
 
     ibs = proc.read();
+
     if (ibs.length() > 0)
     {
         ISMPacketHeader pktHeader;
@@ -583,6 +590,7 @@ void testColAggByRid()
         cout << "Data" << endl;
         cout << "----" << endl << endl;
         cout << "Data Size: " << ibs.length() << endl;
+
         for (int i = 0; i < colAggResult.NVALS && ibs.length(); i++)
         {
             if (colAggByRID.OutputType == 1 || colAggByRID.OutputType == 3 )
@@ -590,9 +598,11 @@ void testColAggByRid()
                 ibs >> value16;
                 cout << "RID: " << value16 << endl;
             }
+
             if (colAggByRID.OutputType == 2 || colAggByRID.OutputType == 3)
             {
                 cout << "Token: ";
+
                 switch (colAggByRID.DataSize)
                 {
                     case 1:
@@ -629,7 +639,7 @@ void testDictTokenByIndexCompare()
     cout << "Sending DICT_TOKEN_BY_INDEX_COMPARE primitive" << endl;
 
     MessageQueueClient proc("PMS1");
-    ByteStream obs,ibs;
+    ByteStream obs, ibs;
 
     ByteStream::octbyte value64;
     ByteStream::quadbyte value32;
@@ -741,9 +751,11 @@ void testDictTokenByIndexCompare()
     ibs = proc.read();
     cout << "Data" << endl;
     cout << "----" << endl << endl;
+
     if (ibs.length() > 0)
     {
         cout << "Data Size: " << ibs.length() << endl;
+
         while (ibs.length())
         {
             ibs >> value16;
@@ -764,7 +776,7 @@ void testDictSignature()
     cout << "DICT_SIGNATURE primitive" << endl;
 
     MessageQueueClient proc("PMS1");
-    ByteStream obs,ibs;
+    ByteStream obs, ibs;
 
     ByteStream::octbyte value64;
     ByteStream::quadbyte value32;
@@ -877,9 +889,11 @@ void testDictSignature()
 
     cout << "Data" << endl;
     cout << "----" << endl << endl;
+
     if (ibs.length() > 0)
     {
         cout << "Data Size: " << ibs.length() << endl;
+
         while (ibs.length())
         {
             ibs >> value16;
@@ -914,9 +928,9 @@ int main(int argc, char* argv[])
 
     po::options_description desc ("Allowed options");
     desc.add_options ()
-        ("help", "produce help message")
-        ("all", "process all tests" )
-        ("loop", "loop processing all tests");
+    ("help", "produce help message")
+    ("all", "process all tests" )
+    ("loop", "loop processing all tests");
     po::variables_map vm;
     po::store (po::parse_command_line (argc, argv, desc), vm);
     po::notify (vm);
@@ -932,7 +946,7 @@ int main(int argc, char* argv[])
     }
     else if (vm.count ("loop"))
     {
-        while(1)
+        while (1)
         {
             testColByScan();
             testColByRid();

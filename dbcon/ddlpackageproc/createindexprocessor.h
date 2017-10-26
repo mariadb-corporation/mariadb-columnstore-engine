@@ -29,26 +29,26 @@
 const int BULK_LOAD = 1;
 namespace ddlpackageprocessor
 {
-    /** @brief specialization of a DDLPackageProcessor
-     * for interacting with the Write Engine to process
-     * create index ddl statements
+/** @brief specialization of a DDLPackageProcessor
+ * for interacting with the Write Engine to process
+ * create index ddl statements
+ */
+class CreateIndexProcessor : public DDLPackageProcessor
+{
+public:
+    /** @brief process a create index statement
+     *
+     * @param createIndexStmt the create index statement
      */
-    class CreateIndexProcessor : public DDLPackageProcessor
-    {
-        public:
-            /** @brief process a create index statement
-             *
-             * @param createIndexStmt the create index statement
-             */
-            DDLResult processPackage(ddlpackage::CreateIndexStatement& createIndexStmt);
+    DDLResult processPackage(ddlpackage::CreateIndexStatement& createIndexStmt);
 
-        protected:
-	    DDLResult rollBackCreateIndex(const std::string& error, BRM::TxnID& txnID, int sessionId);
-	    void rollBackIndex(BRM::TxnID& txnID);
-	    std::string  errorString(const std::string& msg, int error);
-        private:
+protected:
+    DDLResult rollBackCreateIndex(const std::string& error, BRM::TxnID& txnID, int sessionId);
+    void rollBackIndex(BRM::TxnID& txnID);
+    std::string  errorString(const std::string& msg, int error);
+private:
 
-    };
+};
 
 }                                                 //namespace ddlpackageprocessor
 #endif                                            //CREATEINDEXPROCESSOR_H

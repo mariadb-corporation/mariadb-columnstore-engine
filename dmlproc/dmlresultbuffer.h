@@ -48,9 +48,9 @@ public:
     };
 
     /** @brief ctor
-      */	
+      */
     DMLResultBuffer();
-	
+
     /** @brief ctor
       *
       */
@@ -60,13 +60,16 @@ public:
       *
       */
     ~DMLResultBuffer();
-	
+
     /** @brief set the size of the buffer
       *
       * @param bufferSize the size of the buffer
       */
-    inline void setBufferSize(int bufferSize) {fBufferSize=bufferSize;}
-	
+    inline void setBufferSize(int bufferSize)
+    {
+        fBufferSize = bufferSize;
+    }
+
     /** @brief put results in the buffer
       *
       */

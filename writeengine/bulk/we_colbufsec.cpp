@@ -26,61 +26,73 @@
 
 #include "we_colbufsec.h"
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 ColumnBufferSection::ColumnBufferSection(
-    ColumnBuffer * const cb,
+    ColumnBuffer* const cb,
     RID sRowId,
     RID eRowId,
     int width,
     int sOffset)
-        :fCBuf(cb),
-        fStartRowId(sRowId),
-        fEndRowId(eRowId),
-        fColWidth(width),
-        fBufStartOffset(sOffset),
-        fCurrRowId(sRowId),
-        fStatus(INIT_COMPLETE) {
-} 
-
-ColumnBufferSection::~ColumnBufferSection() {
+    : fCBuf(cb),
+      fStartRowId(sRowId),
+      fEndRowId(eRowId),
+      fColWidth(width),
+      fBufStartOffset(sOffset),
+      fCurrRowId(sRowId),
+      fStatus(INIT_COMPLETE)
+{
 }
 
-void ColumnBufferSection::write(const void * const data, int nRows) {
-//Casting void * to unsigned char * without modifying the constness
-    const unsigned char * const tData =
-        static_cast<const unsigned char * const>(data);
+ColumnBufferSection::~ColumnBufferSection()
+{
+}
 
-    if(fCurrRowId + nRows + 1> fEndRowId) {
-    //TODO: Handle error (old-dmc)
+void ColumnBufferSection::write(const void* const data, int nRows)
+{
+//Casting void * to unsigned char * without modifying the constness
+    const unsigned char* const tData =
+        static_cast<const unsigned char* const>(data);
+
+    if (fCurrRowId + nRows + 1 > fEndRowId)
+    {
+        //TODO: Handle error (old-dmc)
     }
 
-    int startOffset = (fBufStartOffset + (fCurrRowId-fStartRowId) *
-                      fColWidth) % fCBuf->getSize();
+    int startOffset = (fBufStartOffset + (fCurrRowId - fStartRowId) *
+                       fColWidth) % fCBuf->getSize();
     int nBytes = nRows * fColWidth;
     int bytesWritten = 0;
-    if((startOffset + nBytes) > fCBuf->getSize()) {
+
+    if ((startOffset + nBytes) > fCBuf->getSize())
+    {
         fCBuf->write(tData, startOffset, fCBuf->getSize() - startOffset);
         bytesWritten = fCBuf->getSize() - startOffset;
         startOffset = 0;
     }
+
     fCBuf->write(tData + bytesWritten, startOffset, nBytes - bytesWritten);
     fCurrRowId += nRows;
 }
-    
-void ColumnBufferSection::setStatus(int s) {
+
+void ColumnBufferSection::setStatus(int s)
+{
     fStatus = s;
 }
 
-int ColumnBufferSection::getStatus() const {
+int ColumnBufferSection::getStatus() const
+{
     return fStatus;
 }
 
-int ColumnBufferSection::getStartOffset() const {
+int ColumnBufferSection::getStartOffset() const
+{
     return fBufStartOffset;
 }
 
-int ColumnBufferSection::getSectionSize() const {
+int ColumnBufferSection::getSectionSize() const
+{
     return (fEndRowId - fStartRowId + 1) * fColWidth;
 }
 

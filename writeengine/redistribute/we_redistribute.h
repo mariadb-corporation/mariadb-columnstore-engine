@@ -35,13 +35,13 @@ namespace redistribute
 
 class Redistribute
 {
-  public:
-	Redistribute();
-	~Redistribute() {};
+public:
+    Redistribute();
+    ~Redistribute() {};
 
-	static void handleRedistributeMessage(messageqcpp::ByteStream&, messageqcpp::IOSocket&);
+    static void handleRedistributeMessage(messageqcpp::ByteStream&, messageqcpp::IOSocket&);
 
-  private:
+private:
 };
 
 

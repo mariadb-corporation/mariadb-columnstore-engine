@@ -58,19 +58,20 @@ namespace execplan
  */
 RowColumn::RowColumn(const uint32_t sessionID):
     ReturnedColumn(sessionID)
-{}    
+{}
 
 RowColumn::RowColumn (const RowColumn& rhs, const uint32_t sessionID):
-                ReturnedColumn(rhs, sessionID)                
+    ReturnedColumn(rhs, sessionID)
 {
-	fColumnVec.clear();
-	//fColumnVec = rhs.fColumnVec;
-	SRCP srcp;
-	for (uint32_t i = 0; i < rhs.fColumnVec.size(); i++)
-	{
-		srcp.reset(rhs.fColumnVec[i]->clone());
-		fColumnVec.push_back(srcp);
-	}
+    fColumnVec.clear();
+    //fColumnVec = rhs.fColumnVec;
+    SRCP srcp;
+
+    for (uint32_t i = 0; i < rhs.fColumnVec.size(); i++)
+    {
+        srcp.reset(rhs.fColumnVec[i]->clone());
+        fColumnVec.push_back(srcp);
+    }
 }
 
 RowColumn::~RowColumn()
@@ -82,105 +83,112 @@ RowColumn::~RowColumn()
 
 RowColumn& RowColumn::operator=(const RowColumn& rhs)
 {
-	if (this != &rhs)
-	{
-		fColumnVec.clear();
-		fColumnVec = rhs.fColumnVec;
-	}
+    if (this != &rhs)
+    {
+        fColumnVec.clear();
+        fColumnVec = rhs.fColumnVec;
+    }
 
-	return *this;
+    return *this;
 }
 
 ostream& operator<<(ostream& output, const RowColumn& rhs)
 {
-	output << rhs.toString();
+    output << rhs.toString();
 
-	return output;
+    return output;
 }
 
 const string RowColumn::toString() const
 {
-	ostringstream output;
-	output << "RowColumn" << endl;
-	for (uint32_t i = 0; i < fColumnVec.size(); i++)
-		output << fColumnVec[i]->toString();
+    ostringstream output;
+    output << "RowColumn" << endl;
 
-	return output.str();
+    for (uint32_t i = 0; i < fColumnVec.size(); i++)
+        output << fColumnVec[i]->toString();
+
+    return output.str();
 }
 
 void RowColumn::serialize(messageqcpp::ByteStream& b) const
 {
-	b << (ObjectReader::id_t) ObjectReader::ROWCOLUMN;
-	ReturnedColumn::serialize(b);
-	b << (uint32_t)fColumnVec.size();
-	for (uint32_t i = 0; i < fColumnVec.size(); i++)
-		fColumnVec[i]->serialize(b);
+    b << (ObjectReader::id_t) ObjectReader::ROWCOLUMN;
+    ReturnedColumn::serialize(b);
+    b << (uint32_t)fColumnVec.size();
+
+    for (uint32_t i = 0; i < fColumnVec.size(); i++)
+        fColumnVec[i]->serialize(b);
 }
 
 void RowColumn::unserialize(messageqcpp::ByteStream& b)
 {
-	fColumnVec.clear();
-	ObjectReader::checkType(b, ObjectReader::ROWCOLUMN);
-	ReturnedColumn::unserialize(b);
-	uint32_t size;
-	SRCP srcp;
-	b >> (uint32_t&)size;
-	for (uint32_t i = 0; i < size; i++)
-	{
-		srcp.reset(dynamic_cast<ReturnedColumn*>((ObjectReader::createTreeNode(b))));
-		fColumnVec.push_back(srcp);
-	}
+    fColumnVec.clear();
+    ObjectReader::checkType(b, ObjectReader::ROWCOLUMN);
+    ReturnedColumn::unserialize(b);
+    uint32_t size;
+    SRCP srcp;
+    b >> (uint32_t&)size;
+
+    for (uint32_t i = 0; i < size; i++)
+    {
+        srcp.reset(dynamic_cast<ReturnedColumn*>((ObjectReader::createTreeNode(b))));
+        fColumnVec.push_back(srcp);
+    }
 }
 
 bool RowColumn::operator==(const RowColumn& t) const
 {
-	if (fColumnVec.size() != t.columnVec().size())
-		return false;
-	for (uint32_t i = 0; i < fColumnVec.size(); i++)
-	{
-		if (fColumnVec[i].get() != NULL)
-		{
-			if (t.columnVec()[i].get() == NULL)
-				return false;
-			if (*(fColumnVec[i].get()) != t.columnVec()[i].get())
-				return false;
-		}
-		else
-			if (t.columnVec()[i].get() != NULL)
-				return false;
-	}
-	return true;
+    if (fColumnVec.size() != t.columnVec().size())
+        return false;
+
+    for (uint32_t i = 0; i < fColumnVec.size(); i++)
+    {
+        if (fColumnVec[i].get() != NULL)
+        {
+            if (t.columnVec()[i].get() == NULL)
+                return false;
+
+            if (*(fColumnVec[i].get()) != t.columnVec()[i].get())
+                return false;
+        }
+        else if (t.columnVec()[i].get() != NULL)
+            return false;
+    }
+
+    return true;
 }
 
 bool RowColumn::operator==(const TreeNode* t) const
 {
-	const RowColumn *rc;
+    const RowColumn* rc;
 
-	rc = dynamic_cast<const RowColumn*>(t);
-	if (rc == NULL)
-		return false;
-	return *this == *rc;
+    rc = dynamic_cast<const RowColumn*>(t);
+
+    if (rc == NULL)
+        return false;
+
+    return *this == *rc;
 }
 
 bool RowColumn::operator!=(const RowColumn& t) const
 {
-	return !(*this == t);
+    return !(*this == t);
 }
 
 bool RowColumn::operator!=(const TreeNode* t) const
 {
-	return !(*this == t);
+    return !(*this == t);
 }
 
-ostream& operator<<(ostream &output, const SubSelect& ss)
+ostream& operator<<(ostream& output, const SubSelect& ss)
 {
-	output << ss.toString() << endl;
-	return output;
+    output << ss.toString() << endl;
+    return output;
 }
 
 const string SubSelect::toString() const
 {
-	return string(">SubSelect<");
+    return string(">SubSelect<");
 }
 
 } // namespace execplan

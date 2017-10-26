@@ -20,10 +20,10 @@
  *
  *****************************************************************************/
 
-/** @file 
+/** @file
  * class XXX interface
  */
- 
+
 #ifndef COPYLOCKS_H_
 #define COPYLOCKS_H_
 
@@ -55,93 +55,119 @@
 #endif
 
 
-namespace idbdatafile {
+namespace idbdatafile
+{
 class IDBDataFile;
 }
 
-namespace BRM {
+namespace BRM
+{
 
-struct CopyLockEntry {
-	LBID_t start;
-	int size;
-	VER_t txnID;
-	EXPORT CopyLockEntry();
+struct CopyLockEntry
+{
+    LBID_t start;
+    int size;
+    VER_t txnID;
+    EXPORT CopyLockEntry();
 };
 
 class CopyLocksImpl
 {
 public:
-	static CopyLocksImpl* makeCopyLocksImpl(unsigned key, off_t size, bool readOnly=false);
+    static CopyLocksImpl* makeCopyLocksImpl(unsigned key, off_t size, bool readOnly = false);
 
-	inline void grow(unsigned key, off_t size)
+    inline void grow(unsigned key, off_t size)
 #ifdef NDEBUG
-		{ fCopyLocks.grow(key, size); }
+    {
+        fCopyLocks.grow(key, size);
+    }
 #else
-		{ int rc=fCopyLocks.grow(key, size); idbassert(rc==0); }
+    {
+        int rc = fCopyLocks.grow(key, size);
+        idbassert(rc == 0);
+    }
 #endif
-	inline void makeReadOnly() { fCopyLocks.setReadOnly(); }
-	inline void clear(unsigned key, off_t size) { fCopyLocks.clear(key, size); }
-	inline void swapout(BRMShmImpl& rhs) { fCopyLocks.swap(rhs); rhs.destroy(); }
-	inline unsigned key() const { return fCopyLocks.key(); }
+    inline void makeReadOnly()
+    {
+        fCopyLocks.setReadOnly();
+    }
+    inline void clear(unsigned key, off_t size)
+    {
+        fCopyLocks.clear(key, size);
+    }
+    inline void swapout(BRMShmImpl& rhs)
+    {
+        fCopyLocks.swap(rhs);
+        rhs.destroy();
+    }
+    inline unsigned key() const
+    {
+        return fCopyLocks.key();
+    }
 
-	inline CopyLockEntry* get() const { return reinterpret_cast<CopyLockEntry*>(fCopyLocks.fMapreg.get_address()); }
+    inline CopyLockEntry* get() const
+    {
+        return reinterpret_cast<CopyLockEntry*>(fCopyLocks.fMapreg.get_address());
+    }
 
 private:
-	CopyLocksImpl(unsigned key, off_t size, bool readOnly=false);
-	~CopyLocksImpl();
-	CopyLocksImpl(const CopyLocksImpl& rhs);
-	CopyLocksImpl& operator=(const CopyLocksImpl& rhs);
+    CopyLocksImpl(unsigned key, off_t size, bool readOnly = false);
+    ~CopyLocksImpl();
+    CopyLocksImpl(const CopyLocksImpl& rhs);
+    CopyLocksImpl& operator=(const CopyLocksImpl& rhs);
 
-	BRMShmImpl fCopyLocks;
+    BRMShmImpl fCopyLocks;
 
-	static boost::mutex fInstanceMutex;
-	static CopyLocksImpl* fInstance;
+    static boost::mutex fInstanceMutex;
+    static CopyLocksImpl* fInstance;
 };
 
-class CopyLocks : public Undoable {
-	public:
-		
-		enum OPS {
-			NONE,
-			READ,
-			WRITE
-		};
-		
-		EXPORT CopyLocks();
-		EXPORT ~CopyLocks();
-		
-		EXPORT void lockRange(const LBIDRange& range, VER_t txnID);
-		EXPORT void releaseRange(const LBIDRange& range);
-		EXPORT bool isLocked(const LBIDRange& range) const;
-		EXPORT void rollback(VER_t txnID);
-		
-		EXPORT void lock(OPS op);
-		EXPORT void release(OPS op);
-		EXPORT void setReadOnly();
-		EXPORT void getCurrentTxnIDs(std::set<VER_t> &txnList) const;
+class CopyLocks : public Undoable
+{
+public:
 
-		EXPORT void forceRelease(const LBIDRange &range);
+    enum OPS
+    {
+        NONE,
+        READ,
+        WRITE
+    };
 
-	private:
-		CopyLocks(const CopyLocks &);
-		CopyLocks& operator=(const CopyLocks &);
-		
-		key_t chooseShmkey();
-		void growCL();
-		
-		CopyLockEntry* entries;
-		key_t currentShmkey;
-		int shmid;    //shmid's necessary?
-		MSTEntry* shminfo;
-		MasterSegmentTable mst;
-		bool r_only;
-		static boost::mutex mutex;
-		static const int MAX_IO_RETRIES=10;
-		ShmKeys fShmKeys;
-		CopyLocksImpl* fCopyLocksImpl;
+    EXPORT CopyLocks();
+    EXPORT ~CopyLocks();
+
+    EXPORT void lockRange(const LBIDRange& range, VER_t txnID);
+    EXPORT void releaseRange(const LBIDRange& range);
+    EXPORT bool isLocked(const LBIDRange& range) const;
+    EXPORT void rollback(VER_t txnID);
+
+    EXPORT void lock(OPS op);
+    EXPORT void release(OPS op);
+    EXPORT void setReadOnly();
+    EXPORT void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
+
+    EXPORT void forceRelease(const LBIDRange& range);
+
+private:
+    CopyLocks(const CopyLocks&);
+    CopyLocks& operator=(const CopyLocks&);
+
+    key_t chooseShmkey();
+    void growCL();
+
+    CopyLockEntry* entries;
+    key_t currentShmkey;
+    int shmid;    //shmid's necessary?
+    MSTEntry* shminfo;
+    MasterSegmentTable mst;
+    bool r_only;
+    static boost::mutex mutex;
+    static const int MAX_IO_RETRIES = 10;
+    ShmKeys fShmKeys;
+    CopyLocksImpl* fCopyLocksImpl;
 };
 
-} 
+}
 
 #undef EXPORT
 

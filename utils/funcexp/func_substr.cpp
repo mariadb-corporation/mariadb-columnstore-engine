@@ -42,97 +42,107 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_substr::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
 std::string Func_substr::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType&)
+                                   FunctionParm& fp,
+                                   bool& isNull,
+                                   execplan::CalpontSystemCatalog::ColType&)
 {
 #ifdef STRCOLL_ENH__
-	const string& tstr = fp[0]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
-	size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-	wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
-	strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-	wstring str(wcbuf, strwclen);
+    if (isNull)
+        return "";
 
-	int64_t start = fp[1]->data()->getIntVal(row, isNull) - 1;
-	if (isNull)
-		return "";
+    size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
+    wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
+    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
+    wstring str(wcbuf, strwclen);
 
-	if (start == -1)  // pos == 0
-		return "";
+    int64_t start = fp[1]->data()->getIntVal(row, isNull) - 1;
 
-	wstring::size_type n = wstring::npos;
-	if (fp.size() == 3)
-	{
-		int64_t len = fp[2]->data()->getIntVal(row,isNull);
-		if (isNull)
-			return "";
+    if (isNull)
+        return "";
 
-		if (len < 1)
-			return "";
+    if (start == -1)  // pos == 0
+        return "";
 
-		n = len;
-	}
+    wstring::size_type n = wstring::npos;
 
-	int64_t strLen = static_cast<int64_t>(str.length());
-	if (start < -1)  // negative pos, beginning from end
-		start += strLen + 1;
+    if (fp.size() == 3)
+    {
+        int64_t len = fp[2]->data()->getIntVal(row, isNull);
 
-	if (start < 0 || strLen <= start)
-	{
-		return "";
-	}
+        if (isNull)
+            return "";
 
-	wstring out = str.substr(start, n);
-	size_t strmblen = utf8::idb_wcstombs(0, out.c_str(), 0) + 1;
-	char* outbuf = (char*)alloca(strmblen * sizeof(char));
-	strmblen = utf8::idb_wcstombs(outbuf, out.c_str(), strmblen);
-	return string(outbuf, strmblen);
+        if (len < 1)
+            return "";
+
+        n = len;
+    }
+
+    int64_t strLen = static_cast<int64_t>(str.length());
+
+    if (start < -1)  // negative pos, beginning from end
+        start += strLen + 1;
+
+    if (start < 0 || strLen <= start)
+    {
+        return "";
+    }
+
+    wstring out = str.substr(start, n);
+    size_t strmblen = utf8::idb_wcstombs(0, out.c_str(), 0) + 1;
+    char* outbuf = (char*)alloca(strmblen * sizeof(char));
+    strmblen = utf8::idb_wcstombs(outbuf, out.c_str(), strmblen);
+    return string(outbuf, strmblen);
 #else
-	const string& str = fp[0]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    const string& str = fp[0]->data()->getStrVal(row, isNull);
 
-	int64_t start = fp[1]->data()->getIntVal(row, isNull) - 1;
-	if (isNull)
-		return "";
+    if (isNull)
+        return "";
 
-	if (start == -1)  // pos == 0
-		return "";
+    int64_t start = fp[1]->data()->getIntVal(row, isNull) - 1;
 
-	size_t n = string::npos;
-	if (fp.size() == 3)
-	{
-		int64_t len = fp[2]->data()->getIntVal(row,isNull);
-		if (isNull)
-			return "";
+    if (isNull)
+        return "";
 
-		if (len < 1)
-			return "";
+    if (start == -1)  // pos == 0
+        return "";
 
-		n = len;
-	}
+    size_t n = string::npos;
 
-	size_t strLen = strlen(str.c_str());
-	if (start < -1)  // negative pos, beginning from end
-		start += strLen + 1;
+    if (fp.size() == 3)
+    {
+        int64_t len = fp[2]->data()->getIntVal(row, isNull);
 
-	if (start < 0 || (int64_t)strLen <= start)
-	{
-		return "";
-	}
+        if (isNull)
+            return "";
 
-	return str.substr(start, n);
+        if (len < 1)
+            return "";
+
+        n = len;
+    }
+
+    size_t strLen = strlen(str.c_str());
+
+    if (start < -1)  // negative pos, beginning from end
+        start += strLen + 1;
+
+    if (start < 0 || (int64_t)strLen <= start)
+    {
+        return "";
+    }
+
+    return str.substr(start, n);
 #endif
-}							
+}
 
 
 } // namespace funcexp

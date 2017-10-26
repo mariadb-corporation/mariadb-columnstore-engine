@@ -34,7 +34,7 @@
 
 namespace execplan
 {
-	class PredicateOperator;
+class PredicateOperator;
 }
 
 namespace cal_impl_if
@@ -45,16 +45,25 @@ namespace cal_impl_if
 class SubQuery
 {
 public:
-	SubQuery(gp_walk_info& gwip) : fGwip(gwip), fCorrelated(false) {}
-	virtual ~SubQuery() {}
-	virtual gp_walk_info& gwip() const { return fGwip; }
-	const bool correlated() const { return fCorrelated; }
-	void correlated (const bool correlated) { fCorrelated = correlated; }
-	virtual void handleFunc (gp_walk_info* gwip, Item_func* func) {}
-	virtual void handleNot () {}
+    SubQuery(gp_walk_info& gwip) : fGwip(gwip), fCorrelated(false) {}
+    virtual ~SubQuery() {}
+    virtual gp_walk_info& gwip() const
+    {
+        return fGwip;
+    }
+    const bool correlated() const
+    {
+        return fCorrelated;
+    }
+    void correlated (const bool correlated)
+    {
+        fCorrelated = correlated;
+    }
+    virtual void handleFunc (gp_walk_info* gwip, Item_func* func) {}
+    virtual void handleNot () {}
 protected:
-	gp_walk_info& fGwip;
-	bool fCorrelated;
+    gp_walk_info& fGwip;
+    bool fCorrelated;
 };
 
 /**
@@ -62,29 +71,41 @@ protected:
  */
 class WhereSubQuery : public SubQuery
 {
-public:	
-	WhereSubQuery(gp_walk_info& gwip) : SubQuery(gwip),
-		                fSub(NULL), 
-		                fFunc(NULL) {}
-	WhereSubQuery(gp_walk_info& gwip, const execplan::SRCP& column, Item_subselect* sub, Item_func* func) : 
-	                  SubQuery(gwip),
-	                  fColumn(column), 
-	                  fSub(sub), 
-	                  fFunc(func) {}
-	WhereSubQuery(gp_walk_info& gwip, Item_func* func) : SubQuery(gwip), fFunc(func) {}
-	WhereSubQuery(gp_walk_info& gwip, Item_subselect* sub) : SubQuery(gwip), fSub(sub) {} // for exists
-	virtual ~WhereSubQuery() {}
-	
-	/** Accessors and mutators */
-	virtual Item_subselect* sub() const { return fSub; }
-	virtual void sub(Item_subselect* sub) { fSub = sub; }
-	virtual Item_func* func() const { return fFunc; }
-	virtual void func(Item_func* func) { fFunc = func; }
-	virtual execplan::ParseTree* transform() = 0;
+public:
+    WhereSubQuery(gp_walk_info& gwip) : SubQuery(gwip),
+        fSub(NULL),
+        fFunc(NULL) {}
+    WhereSubQuery(gp_walk_info& gwip, const execplan::SRCP& column, Item_subselect* sub, Item_func* func) :
+        SubQuery(gwip),
+        fColumn(column),
+        fSub(sub),
+        fFunc(func) {}
+    WhereSubQuery(gp_walk_info& gwip, Item_func* func) : SubQuery(gwip), fFunc(func) {}
+    WhereSubQuery(gp_walk_info& gwip, Item_subselect* sub) : SubQuery(gwip), fSub(sub) {} // for exists
+    virtual ~WhereSubQuery() {}
+
+    /** Accessors and mutators */
+    virtual Item_subselect* sub() const
+    {
+        return fSub;
+    }
+    virtual void sub(Item_subselect* sub)
+    {
+        fSub = sub;
+    }
+    virtual Item_func* func() const
+    {
+        return fFunc;
+    }
+    virtual void func(Item_func* func)
+    {
+        fFunc = func;
+    }
+    virtual execplan::ParseTree* transform() = 0;
 protected:
-	execplan::SRCP fColumn;
-	Item_subselect* fSub;
-	Item_func* fFunc;
+    execplan::SRCP fColumn;
+    Item_subselect* fSub;
+    Item_func* fFunc;
 };
 
 /**
@@ -93,20 +114,26 @@ protected:
 class ScalarSub : public WhereSubQuery
 {
 public:
-	ScalarSub(gp_walk_info& gwip);
-	ScalarSub(gp_walk_info& gwip, Item_func* func);
-	ScalarSub(gp_walk_info& gwip, const execplan::SRCP& column, Item_subselect* sub, Item_func* func);
-	ScalarSub(const ScalarSub& rhs);
-	~ScalarSub();
-	execplan::ParseTree* transform();
-	execplan::ParseTree* transform_between();
-	execplan::ParseTree* transform_in();
-	execplan::ParseTree* buildParseTree(execplan::PredicateOperator* op);
-	const uint64_t returnedColPos() const { return fReturnedColPos; }
-	void returnedColPos(const uint64_t returnedColPos) {fReturnedColPos = returnedColPos;}
-	
+    ScalarSub(gp_walk_info& gwip);
+    ScalarSub(gp_walk_info& gwip, Item_func* func);
+    ScalarSub(gp_walk_info& gwip, const execplan::SRCP& column, Item_subselect* sub, Item_func* func);
+    ScalarSub(const ScalarSub& rhs);
+    ~ScalarSub();
+    execplan::ParseTree* transform();
+    execplan::ParseTree* transform_between();
+    execplan::ParseTree* transform_in();
+    execplan::ParseTree* buildParseTree(execplan::PredicateOperator* op);
+    const uint64_t returnedColPos() const
+    {
+        return fReturnedColPos;
+    }
+    void returnedColPos(const uint64_t returnedColPos)
+    {
+        fReturnedColPos = returnedColPos;
+    }
+
 private:
-	uint64_t fReturnedColPos;
+    uint64_t fReturnedColPos;
 };
 
 /**
@@ -114,14 +141,14 @@ private:
  */
 class InSub : public WhereSubQuery
 {
-public:	
-	InSub(gp_walk_info& gwip);
-	InSub(gp_walk_info& gwip, Item_func* func);
-	InSub(const InSub& rhs);
-	~InSub();
-	execplan::ParseTree* transform();
-	void handleFunc(gp_walk_info* gwip, Item_func* func);
-	void handleNot();
+public:
+    InSub(gp_walk_info& gwip);
+    InSub(gp_walk_info& gwip, Item_func* func);
+    InSub(const InSub& rhs);
+    ~InSub();
+    execplan::ParseTree* transform();
+    void handleFunc(gp_walk_info* gwip, Item_func* func);
+    void handleNot();
 };
 
 /**
@@ -130,11 +157,11 @@ public:
 class ExistsSub : public WhereSubQuery
 {
 public:
-	ExistsSub(gp_walk_info&); // not complete. just for compile
-	ExistsSub(gp_walk_info&, Item_subselect* sub);
-	~ExistsSub();
-	execplan::ParseTree* transform();
-	void handleNot();
+    ExistsSub(gp_walk_info&); // not complete. just for compile
+    ExistsSub(gp_walk_info&, Item_subselect* sub);
+    ~ExistsSub();
+    execplan::ParseTree* transform();
+    void handleNot();
 };
 
 /**
@@ -149,31 +176,49 @@ class AggregateSub : public WhereSubQuery
  */
 class FromSubQuery : public SubQuery
 {
-public:	
-	FromSubQuery(gp_walk_info&);
-	FromSubQuery(gp_walk_info&, SELECT_LEX* fromSub);
-	~FromSubQuery();
-	const SELECT_LEX* fromSub() const { return fFromSub; }
-	void fromSub(SELECT_LEX* fromSub) {fFromSub = fromSub; }
-	const std::string alias () const { return fAlias; }
-	void alias (const std::string alias) { fAlias = alias; }
-	execplan::SCSEP transform();
+public:
+    FromSubQuery(gp_walk_info&);
+    FromSubQuery(gp_walk_info&, SELECT_LEX* fromSub);
+    ~FromSubQuery();
+    const SELECT_LEX* fromSub() const
+    {
+        return fFromSub;
+    }
+    void fromSub(SELECT_LEX* fromSub)
+    {
+        fFromSub = fromSub;
+    }
+    const std::string alias () const
+    {
+        return fAlias;
+    }
+    void alias (const std::string alias)
+    {
+        fAlias = alias;
+    }
+    execplan::SCSEP transform();
 private:
-	SELECT_LEX* fFromSub;
-	std::string fAlias;
+    SELECT_LEX* fFromSub;
+    std::string fAlias;
 };
 
 class SelectSubQuery :  public SubQuery
 {
 public:
-	SelectSubQuery(gp_walk_info&);
-	SelectSubQuery(gp_walk_info&, Item_subselect* sel);
-	~SelectSubQuery();
-	execplan::SCSEP transform();
-	Item_subselect* selSub() { return fSelSub; }
-	void selSub( Item_subselect* selSub ) { fSelSub = selSub; }
+    SelectSubQuery(gp_walk_info&);
+    SelectSubQuery(gp_walk_info&, Item_subselect* sel);
+    ~SelectSubQuery();
+    execplan::SCSEP transform();
+    Item_subselect* selSub()
+    {
+        return fSelSub;
+    }
+    void selSub( Item_subselect* selSub )
+    {
+        fSelSub = selSub;
+    }
 private:
-	Item_subselect* fSelSub;
+    Item_subselect* fSelSub;
 };
 
 }

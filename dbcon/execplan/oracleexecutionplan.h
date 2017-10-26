@@ -30,70 +30,72 @@
 /**
  * Namespace
  */
-namespace execplan { 
+namespace execplan
+{
 /**
  * Class OracleExecutionPlan
- * 
+ *
  */
-class OracleExecutionPlan : public VendorExecutionPlan {
-/**
- * Public stuff
- */
+class OracleExecutionPlan : public VendorExecutionPlan
+{
+    /**
+     * Public stuff
+     */
 public:
-	/**
-	 * Fields
-	 */
-	/**
-	 * 
-	 */
-	/**
-	 * Constructors
-	 */
-	/**
-	 * Accessor Methods
-	 */
-	/**
-	 * Operations
-	 */
-/**
- * Protected stuff
- */
+    /**
+     * Fields
+     */
+    /**
+     *
+     */
+    /**
+     * Constructors
+     */
+    /**
+     * Accessor Methods
+     */
+    /**
+     * Operations
+     */
+    /**
+     * Protected stuff
+     */
 protected:
-	/**
-	 * Fields
-	 */
-	/**
-	 * 
-	 */
-	/**
-	 * Constructors
-	 */
-	/**
-	 * Accessor Methods
-	 */
-	/**
-	 * Operations
-	 */
-/**
- * Private stuff
- */
+    /**
+     * Fields
+     */
+    /**
+     *
+     */
+    /**
+     * Constructors
+     */
+    /**
+     * Accessor Methods
+     */
+    /**
+     * Operations
+     */
+    /**
+     * Private stuff
+     */
 private:
-	/**
-	 * Fields
-	 */
-	/**
-	 * 
-	 */
-	/**
-	 * Constructors
-	 */
-	/**
-	 * Accessor Methods
-	 */
-	/**
-	 * Operations
-	 */
+    /**
+     * Fields
+     */
+    /**
+     *
+     */
+    /**
+     * Constructors
+     */
+    /**
+     * Accessor Methods
+     */
+    /**
+     * Operations
+     */
 };
-} 
+}
 #endif //ORACLEEXECUTIONPLAN_H
 

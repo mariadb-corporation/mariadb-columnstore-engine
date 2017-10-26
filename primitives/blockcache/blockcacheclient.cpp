@@ -21,11 +21,12 @@
  *
  *   jrodriguez@calpont.com   *
  ***************************************************************************/
- 
+
 #include <sstream>
 #include <string>
 #include "blockcacheclient.h"
 
-namespace dbbc {
+namespace dbbc
+{
 
 }

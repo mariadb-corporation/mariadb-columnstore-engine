@@ -20,10 +20,10 @@
  * We want free and open source software applications under certain
  * licenses to be able to use the GPL-licensed InfiniDB idbhdfs
  * libraries despite the fact that not all such FOSS licenses are
- * compatible with version 2 of the GNU General Public License.  
- * Therefore there are special exceptions to the terms and conditions 
- * of the GPLv2 as applied to idbhdfs libraries, which are 
- * identified and described in more detail in the FOSS License 
+ * compatible with version 2 of the GNU General Public License.
+ * Therefore there are special exceptions to the terms and conditions
+ * of the GPLv2 as applied to idbhdfs libraries, which are
+ * identified and described in more detail in the FOSS License
  * Exception in the file utils/idbhdfs/FOSS-EXCEPTION.txt
  */
 
@@ -50,30 +50,31 @@ namespace idbdatafile
 class HdfsFile: public IDBDataFile, boost::noncopyable
 {
 public:
-	HdfsFile(const char* fname, const char* mode, unsigned opts);
-	/* virtual */ ~HdfsFile();
+    HdfsFile(const char* fname, const char* mode, unsigned opts);
+    /* virtual */ ~HdfsFile();
 
-	/* virtual */ ssize_t pread(void *ptr, off64_t offset, size_t count);
-	/* virtual */ ssize_t read(void *ptr, size_t count);
-	/* virtual */ ssize_t write(const void *ptr, size_t count);
-	/* virtual */ int seek(off64_t offset, int whence);
-	/* virtual */ int truncate(off64_t length);
-	/* virtual */ off64_t size();
-	/* virtual */ off64_t tell();
-	/* virtual */ int flush();
-	/* virtual */ time_t mtime();
+    /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count);
+    /* virtual */ ssize_t read(void* ptr, size_t count);
+    /* virtual */ ssize_t write(const void* ptr, size_t count);
+    /* virtual */ int seek(off64_t offset, int whence);
+    /* virtual */ int truncate(off64_t length);
+    /* virtual */ off64_t size();
+    /* virtual */ off64_t tell();
+    /* virtual */ int flush();
+    /* virtual */ time_t mtime();
 
 protected:
-	/* virtual */ int close();
+    /* virtual */
+    int close();
 
 private:
-	int reopen();  // 0 is success, < 0 is failure, errno is set.
-	ssize_t real_pread(void *ptr, off64_t offset, size_t count);
+    int reopen();  // 0 is success, < 0 is failure, errno is set.
+    ssize_t real_pread(void* ptr, off64_t offset, size_t count);
 
-	volatile hdfsFile m_file;
-	hdfsFS   m_fs;
-	int      m_flags;
-	boost::mutex m_mutex;
+    volatile hdfsFile m_file;
+    hdfsFS   m_fs;
+    int      m_flags;
+    boost::mutex m_mutex;
 };
 
 }

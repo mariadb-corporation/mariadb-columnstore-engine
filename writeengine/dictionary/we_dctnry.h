@@ -88,7 +88,7 @@ public:
 
     /**
      * @brief Create a dictionary extent
-     * 
+     *
      * If 'flag' is true, a new file is created with an abbreviated extent.
      * If 'flag' is false, then function adds a full exent to an already open
      * file, basically assuming that the file already has 1 or more extents.
@@ -107,7 +107,7 @@ public:
                               const uint32_t partition,
                               const uint16_t segment,
                               BRM::LBID_t&   startLbid,
-                              bool flag=true);
+                              bool flag = true);
 
     /**
      * @brief Drop dictionary store
@@ -119,10 +119,19 @@ public:
     /**
      * @brief Accessors
      */
-    const std::string& getFileName() const { return m_segFileName; }
-    HWM                getHWM()           const { return m_hwm; }
+    const std::string& getFileName() const
+    {
+        return m_segFileName;
+    }
+    HWM                getHWM()           const
+    {
+        return m_hwm;
+    }
     EXPORT bool        getTokenFromArray(Signature& sig);
-    EXPORT uint64_t     getCurLbid(){return m_curLbid;}
+    EXPORT uint64_t     getCurLbid()
+    {
+        return m_curLbid;
+    }
 
     /**
      * @brief Insert a signature value to a file block and return token/pointer.
@@ -133,7 +142,7 @@ public:
      * @param token          - (output) token associated with inserted signature
      */
     EXPORT int   insertDctnry(const int& sgnature_size,
-                      const unsigned char* sgnature_value, Token& token);
+                              const unsigned char* sgnature_value, Token& token);
 
     /**
      * @brief Insert a signature value to a file block and return token/pointer
@@ -146,10 +155,10 @@ public:
      * @param tokenBuf  - (output) list of tokens for the parsed strings
      */
     EXPORT int   insertDctnry(const char* buf,
-                      ColPosPair ** pos,
-                      const int totalRow, const int col,
-                      char* tokenBuf,
-                      long long& truncCount);
+                              ColPosPair** pos,
+                              const int totalRow, const int col,
+                              char* tokenBuf,
+                              long long& truncCount);
 
     /**
      * @brief Update dictionary store with tokenized strings (for DDL/DML use)
@@ -172,8 +181,8 @@ public:
      * @param useTmpSuffix - for Bulk HDFS usage: use or not use *.tmp file suffix
      */
     EXPORT int   openDctnry(const OID& dctnryOID, const uint16_t dbRoot,
-                    const uint32_t partition, const uint16_t segment,
-                    const bool useTmpSuffix);
+                            const uint32_t partition, const uint16_t segment,
+                            const bool useTmpSuffix);
 
     /**
      * @brief copy the dictionary header to buffer
@@ -183,22 +192,36 @@ public:
     /**
      * @brief Set logger that can be used for logging (primarily by bulk load)
      */
-    void         setLogger(Log* logger) { m_logger = logger; }
+    void         setLogger(Log* logger)
+    {
+        m_logger = logger;
+    }
 
     /**
      * @brief Set dictionary column width for this column
      */
-    void         setColWidth(int colWidth) { m_colWidth = colWidth; }
+    void         setColWidth(int colWidth)
+    {
+        m_colWidth = colWidth;
+    }
 
     /**
      * @brief Set dictionary default for this column
      */
-    void         setDefault(const std::string& defVal) { m_defVal = defVal; }
+    void         setDefault(const std::string& defVal)
+    {
+        m_defVal = defVal;
+    }
 
     void         setImportDataMode( ImportDataMode importMode )
-                 { m_importDataMode = importMode; }
-                 
-    virtual int checkFixLastDictChunk() {return NO_ERROR;}
+    {
+        m_importDataMode = importMode;
+    }
+
+    virtual int checkFixLastDictChunk()
+    {
+        return NO_ERROR;
+    }
 
 //------------------------------------------------------------------------------
 // Protected members
@@ -213,7 +236,11 @@ protected:
     //
     // Clear the dictionary store.
     //
-    void         clear() { m_dFile = NULL; m_dctnryOID =(OID)INVALID_NUM; }
+    void         clear()
+    {
+        m_dFile = NULL;
+        m_dctnryOID = (OID)INVALID_NUM;
+    }
 
     // Expand an abbreviated extent on disk.
     int          expandDctnryExtent();
@@ -226,8 +253,8 @@ protected:
     //   getBlockOpCount - get the ordinal position (OP) count from the header
     //   getEndOp        - read OP of the end of header for specified fbo
     //
-    void  getBlockOpCount(const DataBlock& fileBlock, int & op_count);
-    int   getEndOp       (IDBDataFile* dFile, int fbo, int &op);
+    void  getBlockOpCount(const DataBlock& fileBlock, int& op_count);
+    int   getEndOp       (IDBDataFile* dFile, int fbo, int& op);
 
     //
     // Initialization
@@ -242,7 +269,7 @@ protected:
     int          insertDctnry2(Signature& sig);
     void         insertDctnryHdr( unsigned char* blockBuf, const int& size);
     void         insertSgnture(unsigned char* blockBuf,
-                               const int& size, unsigned char*value);
+                               const int& size, unsigned char* value);
 
     //
     // Preloads the strings from the specified DataBlock.  Currently
@@ -252,10 +279,10 @@ protected:
 
     // methods to be overriden by compression classes
     // (width argument in createDctnryFile() is string width, not token width)
-    virtual IDBDataFile* createDctnryFile(const char *name, int width,
-                                   const char *mode, int ioBuffSize);
+    virtual IDBDataFile* createDctnryFile(const char* name, int width,
+                                          const char* mode, int ioBuffSize);
     virtual IDBDataFile* openDctnryFile(bool useTmpSuffix);
-    virtual void  closeDctnryFile(bool doFlush, std::map<FID,FID> & oids);
+    virtual void  closeDctnryFile(bool doFlush, std::map<FID, FID>& oids);
     virtual int   numOfBlocksInFile();
 
     Signature    m_sigArray[MAX_STRING_CACHE_SIZE]; // string cache

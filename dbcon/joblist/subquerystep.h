@@ -46,7 +46,7 @@ public:
 
     /** @brief SubQueryStep destructor
      */
-   ~SubQueryStep();
+    ~SubQueryStep();
 
     /** @brief virtual void run method
      */
@@ -58,50 +58,68 @@ public:
 
     /** @brief virtual void abort method
      */
-	void abort();
+    void abort();
 
-	/** @brief virtual get table OID
+    /** @brief virtual get table OID
      *  @returns OID
-	 */
-	execplan::CalpontSystemCatalog::OID tableOid() const { return fTableOid; }
+     */
+    execplan::CalpontSystemCatalog::OID tableOid() const
+    {
+        return fTableOid;
+    }
 
-	/** @brief virtual set table OID
-	 */
-	void tableOid(const execplan::CalpontSystemCatalog::OID& id) { fTableOid = id; }
+    /** @brief virtual set table OID
+     */
+    void tableOid(const execplan::CalpontSystemCatalog::OID& id)
+    {
+        fTableOid = id;
+    }
 
-	/** @brief virtual output info to a string
+    /** @brief virtual output info to a string
      *  @returns string
-	 */
+     */
     const std::string toString() const;
 
-	/** @brief virtual set the output rowgroup
-	 */
-	virtual void setOutputRowGroup(const rowgroup::RowGroup& rg) { fOutputRowGroup = rg; }
+    /** @brief virtual set the output rowgroup
+     */
+    virtual void setOutputRowGroup(const rowgroup::RowGroup& rg)
+    {
+        fOutputRowGroup = rg;
+    }
 
-	/** @brief virtual get the output rowgroup
+    /** @brief virtual get the output rowgroup
      *  @returns RowGroup
-	 */
-	virtual const rowgroup::RowGroup& getOutputRowGroup() const { return fOutputRowGroup; }
+     */
+    virtual const rowgroup::RowGroup& getOutputRowGroup() const
+    {
+        return fOutputRowGroup;
+    }
 
-	/** @brief virtual set the sub-query's joblist
-	 */
-	virtual void subJoblist(const STJLP& sjl) { fSubJobList = sjl; }
+    /** @brief virtual set the sub-query's joblist
+     */
+    virtual void subJoblist(const STJLP& sjl)
+    {
+        fSubJobList = sjl;
+    }
 
-	/** @brief virtual get the sub-query's joblist
+    /** @brief virtual get the sub-query's joblist
      *  @returns boost::shared_ptr<TupleJobList>
-	 */
-	virtual const STJLP& subJoblist() const   { return fSubJobList; }
+     */
+    virtual const STJLP& subJoblist() const
+    {
+        return fSubJobList;
+    }
 
 
 protected:
-	uint64_t                                         fRowsReturned;
+    uint64_t                                         fRowsReturned;
 
-	execplan::CalpontSystemCatalog::OID              fTableOid;
-	std::vector<execplan::CalpontSystemCatalog::OID> fColumnOids;
-	rowgroup::RowGroup                               fOutputRowGroup;
-	STJLP                                            fSubJobList;
+    execplan::CalpontSystemCatalog::OID              fTableOid;
+    std::vector<execplan::CalpontSystemCatalog::OID> fColumnOids;
+    rowgroup::RowGroup                               fOutputRowGroup;
+    STJLP                                            fSubJobList;
 
-	boost::scoped_ptr<boost::thread>                 fRunner;
+    boost::scoped_ptr<boost::thread>                 fRunner;
 };
 
 
@@ -115,7 +133,7 @@ public:
 
     /** @brief SubAdapterStep destructor
      */
-   ~SubAdapterStep();
+    ~SubAdapterStep();
 
     /** @brief virtual void run method
      */
@@ -127,112 +145,133 @@ public:
 
     /** @brief virtual void abort method
      */
-	void abort();
+    void abort();
 
-	/** @brief virtual get table OID
+    /** @brief virtual get table OID
      *  @returns OID
-	 */
-	execplan::CalpontSystemCatalog::OID tableOid() const { return fTableOid; }
+     */
+    execplan::CalpontSystemCatalog::OID tableOid() const
+    {
+        return fTableOid;
+    }
 
-	/** @brief virtual set table OID
-	 */
-	void tableOid(const execplan::CalpontSystemCatalog::OID& id) { fTableOid = id; }
+    /** @brief virtual set table OID
+     */
+    void tableOid(const execplan::CalpontSystemCatalog::OID& id)
+    {
+        fTableOid = id;
+    }
 
-	/** @brief virtual output info to a string
+    /** @brief virtual output info to a string
      *  @returns string
-	 */
+     */
     const std::string toString() const;
 
-	/** @brief virtual set the output rowgroup
-	 */
-	void setOutputRowGroup(const rowgroup::RowGroup& rg);
+    /** @brief virtual set the output rowgroup
+     */
+    void setOutputRowGroup(const rowgroup::RowGroup& rg);
 
-	/** @brief virtual get the output rowgroup
+    /** @brief virtual get the output rowgroup
      *  @returns RowGroup
-	 */
-	const rowgroup::RowGroup& getOutputRowGroup() const { return fRowGroupOut; }
+     */
+    const rowgroup::RowGroup& getOutputRowGroup() const
+    {
+        return fRowGroupOut;
+    }
 
-	/** @brief TupleDeliveryStep's pure virtual methods nextBand
+    /** @brief TupleDeliveryStep's pure virtual methods nextBand
      *  @returns row count
-	 */
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
+     */
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
 
-	/** @brief Delivered Row Group
+    /** @brief Delivered Row Group
      *  @returns RowGroup
-	 */
-	const rowgroup::RowGroup& getDeliveredRowGroup() const { return fRowGroupDeliver; }
+     */
+    const rowgroup::RowGroup& getDeliveredRowGroup() const
+    {
+        return fRowGroupDeliver;
+    }
 
-	/** @brief Turn on/off string table delivery
-	 */
-	void  deliverStringTableRowGroup(bool b);
+    /** @brief Turn on/off string table delivery
+     */
+    void  deliverStringTableRowGroup(bool b);
 
-	/** @brief Check useStringTable flag on delivered RowGroup
+    /** @brief Check useStringTable flag on delivered RowGroup
      *  @returns boolean
-	 */
-	bool  deliverStringTableRowGroup() const;
+     */
+    bool  deliverStringTableRowGroup() const;
 
-	/** @brief set the rowgroup for FE to work on
-	 */
-	void setFeRowGroup(const rowgroup::RowGroup& rg);
+    /** @brief set the rowgroup for FE to work on
+     */
+    void setFeRowGroup(const rowgroup::RowGroup& rg);
 
-	/** @brief get the rowgroup for FE
+    /** @brief get the rowgroup for FE
      *  @returns RowGroup
-	 */
-	const rowgroup::RowGroup& getFeRowGroup() const { return fRowGroupFe; }
+     */
+    const rowgroup::RowGroup& getFeRowGroup() const
+    {
+        return fRowGroupFe;
+    }
 
-	/** @brief get subquery step
-	 */
-	const SJSTEP& subStep() const { return fSubStep; }
+    /** @brief get subquery step
+     */
+    const SJSTEP& subStep() const
+    {
+        return fSubStep;
+    }
 
-	/** @brief add filters (expression steps)
-	 */
-	void addExpression(const JobStepVector&, JobInfo&);
+    /** @brief add filters (expression steps)
+     */
+    void addExpression(const JobStepVector&, JobInfo&);
 
-	/** @brief add function columns (returned columns)
-	 */
-	void addExpression(const vector<execplan::SRCP>&);
+    /** @brief add function columns (returned columns)
+     */
+    void addExpression(const vector<execplan::SRCP>&);
 
-	/** @brief add function join expresssion
-	 */
-	void addFcnJoinExp(const vector<execplan::SRCP>&);
+    /** @brief add function join expresssion
+     */
+    void addFcnJoinExp(const vector<execplan::SRCP>&);
 
 
 protected:
-	void execute();
-	void outputRow(rowgroup::Row&, rowgroup::Row&);
-	void checkDupOutputColumns();
-	void dupOutputColumns(rowgroup::Row&);
-	void printCalTrace();
-	void formatMiniStats();
+    void execute();
+    void outputRow(rowgroup::Row&, rowgroup::Row&);
+    void checkDupOutputColumns();
+    void dupOutputColumns(rowgroup::Row&);
+    void printCalTrace();
+    void formatMiniStats();
 
-	execplan::CalpontSystemCatalog::OID              fTableOid;
-	rowgroup::RowGroup                               fRowGroupIn;
-	rowgroup::RowGroup                               fRowGroupOut;
-	rowgroup::RowGroup                               fRowGroupFe;
-	rowgroup::RowGroup                               fRowGroupDeliver;
-	SJSTEP                                           fSubStep;
-	uint64_t                                         fRowsInput;
-	uint64_t                                         fRowsReturned;
-	bool                                             fEndOfResult;
-	boost::shared_array<int>                         fIndexMap;
-	std::vector<std::pair<uint32_t, uint32_t> >      fDupColumns;
+    execplan::CalpontSystemCatalog::OID              fTableOid;
+    rowgroup::RowGroup                               fRowGroupIn;
+    rowgroup::RowGroup                               fRowGroupOut;
+    rowgroup::RowGroup                               fRowGroupFe;
+    rowgroup::RowGroup                               fRowGroupDeliver;
+    SJSTEP                                           fSubStep;
+    uint64_t                                         fRowsInput;
+    uint64_t                                         fRowsReturned;
+    bool                                             fEndOfResult;
+    boost::shared_array<int>                         fIndexMap;
+    std::vector<std::pair<uint32_t, uint32_t> >      fDupColumns;
 
-	RowGroupDL*                                      fInputDL;
-	RowGroupDL*                                      fOutputDL;
-	uint64_t                                         fInputIterator;
-	uint64_t                                         fOutputIterator;
+    RowGroupDL*                                      fInputDL;
+    RowGroupDL*                                      fOutputDL;
+    uint64_t                                         fInputIterator;
+    uint64_t                                         fOutputIterator;
 
-	class Runner
-	{
-	public:
-		Runner(SubAdapterStep* step) : fStep(step) { }
-		void operator()() { fStep->execute(); }
+    class Runner
+    {
+    public:
+        Runner(SubAdapterStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->execute();
+        }
 
-		SubAdapterStep* fStep;
-	};
-	uint64_t				                         fRunner; // thread pool handle
+        SubAdapterStep* fStep;
+    };
+    uint64_t				                         fRunner; // thread pool handle
 
-	boost::scoped_ptr<funcexp::FuncExpWrapper>       fExpression;
+    boost::scoped_ptr<funcexp::FuncExpWrapper>       fExpression;
 };
 
 

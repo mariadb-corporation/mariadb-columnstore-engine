@@ -21,7 +21,8 @@
 
 #include "../../dbcon/execplan/calpontsystemcatalog.h"
 
-namespace utils {
+namespace utils
+{
 
 // returns the NULL value for our 'numeric' types including short strings.
 // The width is only relevant for long string columns.

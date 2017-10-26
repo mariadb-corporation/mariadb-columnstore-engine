@@ -59,16 +59,16 @@ namespace WriteEngine
 class BrmReportParser
 {
 public:
-	BrmReportParser();
-	virtual ~BrmReportParser();
+    BrmReportParser();
+    virtual ~BrmReportParser();
 
 public:
-	bool serialize(std::string RptFileName, messageqcpp::ByteStream& Bs);
-	bool serializeBlocks(std::string RptFileName, messageqcpp::ByteStream& Bs);
-	void unserialize(messageqcpp::ByteStream& Bs);
+    bool serialize(std::string RptFileName, messageqcpp::ByteStream& Bs);
+    bool serializeBlocks(std::string RptFileName, messageqcpp::ByteStream& Bs);
+    void unserialize(messageqcpp::ByteStream& Bs);
 
 private:
-	ifstream fRptFile;
+    ifstream fRptFile;
 
 };
 

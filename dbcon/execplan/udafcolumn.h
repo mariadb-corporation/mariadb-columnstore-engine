@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright (c) 2017, MariaDB
 
    This program is free software; you can redistribute it and/or
@@ -25,7 +25,8 @@
 #include "aggregatecolumn.h"
 #include "mcsv1_udaf.h"
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 class ByteStream;
 }
 
@@ -33,87 +34,95 @@ using namespace mcsv1sdk;
 /**
  * Namespace
  */
-namespace execplan {
+namespace execplan
+{
 /**
  * @brief A class to represent an aggregate return column
  *
  * This class is a specialization of class ReturnedColumn that
- * handles a user defined aggregate function (UDAF) call. 
+ * handles a user defined aggregate function (UDAF) call.
  */
-class UDAFColumn : public AggregateColumn {
+class UDAFColumn : public AggregateColumn
+{
 
 public:
 
-	/**
-	 * Constructors
-	 */
-	UDAFColumn();
+    /**
+     * Constructors
+     */
+    UDAFColumn();
 
-	UDAFColumn(const uint32_t sessionID);
+    UDAFColumn(const uint32_t sessionID);
 
-	UDAFColumn(const UDAFColumn& rhs, const uint32_t sessionID=0);
+    UDAFColumn(const UDAFColumn& rhs, const uint32_t sessionID = 0);
 
-	/**
-	 * Destructors
-	 */
-	virtual ~UDAFColumn();
+    /**
+     * Destructors
+     */
+    virtual ~UDAFColumn();
 
-	/**
-	 * Overloaded stream operator
-	 */
-	virtual const std::string toString() const;
+    /**
+     * Overloaded stream operator
+     */
+    virtual const std::string toString() const;
 
-	/** return a copy of this pointer
-	 *
-	 * deep copy of this pointer and return the copy
-	 */
-	virtual UDAFColumn* clone() const { return new UDAFColumn(*this); }
+    /** return a copy of this pointer
+     *
+     * deep copy of this pointer and return the copy
+     */
+    virtual UDAFColumn* clone() const
+    {
+        return new UDAFColumn(*this);
+    }
 
-	/**
-	 * Accessors and Mutators
-	 */
-	mcsv1Context& getContext() {return context;}
+    /**
+     * Accessors and Mutators
+     */
+    mcsv1Context& getContext()
+    {
+        return context;
+    }
 
-	/**
-	 * Serialize interface
-	 */
-	virtual void serialize(messageqcpp::ByteStream&) const;
-	virtual void unserialize(messageqcpp::ByteStream&);
+    /**
+     * Serialize interface
+     */
+    virtual void serialize(messageqcpp::ByteStream&) const;
+    virtual void unserialize(messageqcpp::ByteStream&);
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this;
-	 *         false otherwise
-	 */
-	virtual bool operator==(const TreeNode* t) const;
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this;
+     *         false otherwise
+     */
+    virtual bool operator==(const TreeNode* t) const;
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return true iff every member of t is a duplicate copy of every member of this;
-	 *         false otherwise
-	 */
-	virtual bool operator==(const UDAFColumn& t) const;
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this;
+     *         false otherwise
+     */
+    virtual bool operator==(const UDAFColumn& t) const;
 
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this;
-	 *         true otherwise
-	 */
-	virtual bool operator!=(const TreeNode* t) const;
-
-	/** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	 *
-	 * Do a deep, strict (as opposed to semantic) equivalence test.
-	 * @return false iff every member of t is a duplicate copy of every member of this;
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this;
      *         true otherwise
-	 */
-	virtual bool operator!=(const UDAFColumn& t) const;
+     */
+    virtual bool operator!=(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this;
+     *         true otherwise
+     */
+    virtual bool operator!=(const UDAFColumn& t) const;
 
 private:
-	mcsv1Context context;
+    mcsv1Context context;
 };
 
 /**

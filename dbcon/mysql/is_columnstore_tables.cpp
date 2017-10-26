@@ -29,7 +29,7 @@
 
 
 // Required declaration as it isn't in a MairaDB include
-bool schema_table_store_record(THD *thd, TABLE *table);
+bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_tables_fields[] =
 {
@@ -42,10 +42,10 @@ ST_FIELD_INFO is_columnstore_tables_fields[] =
     {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
 };
 
-static int is_columnstore_tables_fill(THD *thd, TABLE_LIST *tables, COND *cond)
+static int is_columnstore_tables_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
-    CHARSET_INFO *cs = system_charset_info;
-    TABLE *table = tables->table;
+    CHARSET_INFO* cs = system_charset_info;
+    TABLE* table = tables->table;
 
     boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
@@ -56,7 +56,7 @@ static int is_columnstore_tables_fill(THD *thd, TABLE_LIST *tables, COND *cond)
         = systemCatalogPtr->getTables();
 
     for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >::const_iterator it = catalog_tables.begin();
-         it != catalog_tables.end(); ++it)
+            it != catalog_tables.end(); ++it)
     {
         execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second);
         std::string create_date = dataconvert::DataConvert::dateToString((*it).second.create_date);
@@ -65,6 +65,7 @@ static int is_columnstore_tables_fill(THD *thd, TABLE_LIST *tables, COND *cond)
         table->field[2]->store((*it).first);
         table->field[3]->store(create_date.c_str(), create_date.length(), cs);
         table->field[4]->store(tb_info.numOfCols);
+
         if (tb_info.tablewithautoincr)
         {
             table->field[5]->set_notnull();
@@ -74,7 +75,9 @@ static int is_columnstore_tables_fill(THD *thd, TABLE_LIST *tables, COND *cond)
         {
             table->field[5]->set_null();
         }
+
         table->field[5]->store(tb_info.tablewithautoincr);
+
         if (schema_table_store_record(thd, table))
             return 1;
     }
@@ -82,9 +85,9 @@ static int is_columnstore_tables_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     return 0;
 }
 
-static int is_columnstore_tables_plugin_init(void *p)
+static int is_columnstore_tables_plugin_init(void* p)
 {
-    ST_SCHEMA_TABLE *schema = (ST_SCHEMA_TABLE*) p;
+    ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_tables_fields;
     schema->fill_table = is_columnstore_tables_fill;
     return 0;

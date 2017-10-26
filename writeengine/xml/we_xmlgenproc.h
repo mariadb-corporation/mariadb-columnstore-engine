@@ -72,11 +72,11 @@ public:
     /** @brief start constructing XML file document.
      */
     EXPORT void  startXMLFile( );
-    
-     /** @brief Creates table tag for the specified table.
-     *
-     * @param table Name of table for which the table tag is to be generated.
-     */ 
+
+    /** @brief Creates table tag for the specified table.
+    *
+    * @param table Name of table for which the table tag is to be generated.
+    */
     EXPORT void  makeTableData(
         const execplan::CalpontSystemCatalog::TableName& table);
 
@@ -84,18 +84,18 @@ public:
      *
      * @param table Name of table for which the column tags are to be generated.
      * @return true means column tags created; else false is returned
-     */  
+     */
     EXPORT bool  makeColumnData(
         const execplan::CalpontSystemCatalog::TableName& table);
-    
+
     /** @brief Generate Job XML file name
-     */   
+     */
     EXPORT std::string genJobXMLFileName( ) const;
 
     /** @brief Write xml file document to the destination Job XML file.
      *
      * @param xmlFileName Name of XML file to be generated.
-     */   
+     */
     EXPORT void  writeXMLFile( const std::string& xmlFileName );
 
     /** @brief log a message.
@@ -103,11 +103,17 @@ public:
      * @param msg The message to be logged to the error log file.
      */
     EXPORT void logErrorMessage(const std::string& msg);
-    std::string errorString() { return fErrorString; }
+    std::string errorString()
+    {
+        return fErrorString;
+    }
 
     /** @brief set debug level
      */
-    void setDebugLevel( int dbg ) { fDebugLevel = dbg; }
+    void setDebugLevel( int dbg )
+    {
+        fDebugLevel = dbg;
+    }
 
 protected:
 
@@ -115,9 +121,9 @@ private:
     XMLGenProc(const XMLGenProc&);             // disable default copy ctor
     XMLGenProc& operator=(const XMLGenProc&);  // disable default assignment
     void getColumnsForTable(const std::string& schema,
-        const std::string& table, SysCatColumnList& colList);
-    void sortColumnsByPosition(SysCatColumnList &columns);
- 
+                            const std::string& table, SysCatColumnList& colList);
+    void sortColumnsByPosition(SysCatColumnList& columns);
+
     Log               fLog;
     xmlDocPtr         fDoc;
     xmlTextWriterPtr  fWriter;
@@ -132,4 +138,4 @@ private:
 
 #undef EXPORT
 
-#endif                                            
+#endif

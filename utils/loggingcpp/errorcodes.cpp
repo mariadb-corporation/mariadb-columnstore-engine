@@ -26,10 +26,11 @@ using namespace std;
 
 #include "errorcodes.h"
 
-namespace logging { 
+namespace logging
+{
 
-  ErrorCodes::ErrorCodes(): fErrorCodes(), fPreamble("An unexpected condition within the query caused an internal processing error within InfiniDB. Please check the log files for more details. Additional Information: ")
-  {
+ErrorCodes::ErrorCodes(): fErrorCodes(), fPreamble("An unexpected condition within the query caused an internal processing error within InfiniDB. Please check the log files for more details. Additional Information: ")
+{
     fErrorCodes[batchPrimitiveStepErr] = "error in BatchPrimitiveStep.";
     fErrorCodes[tupleBPSErr] = "error in TupleBPS.";
     fErrorCodes[batchPrimitiveStepLargeDataListFileErr] = "error in BatchPrimitiveStep LargeDataList File handling.";
@@ -72,26 +73,27 @@ namespace logging {
     fErrorCodes[dataTypeErr] = "data type unknown.";
     fErrorCodes[incompatJoinCols] = "incompatible column types specified for join condition.";
     fErrorCodes[incompatFilterCols] = "incompatible column types specified for filter condition.";
-  }
+}
 
-  string ErrorCodes::errorString(uint16_t code) const
-  {
+string ErrorCodes::errorString(uint16_t code) const
+{
     CodeMap::const_iterator iter;
     CodeMap::key_type key = static_cast<CodeMap::key_type>(code);
     CodeMap::mapped_type msg;
 
     iter = fErrorCodes.find(key);
+
     if (iter == fErrorCodes.end())
     {
         msg = "was an unknown internal error.";
     }
     else
     {
-       msg = iter->second;
+        msg = iter->second;
     }
 
     return (fPreamble + msg);
-  }
+}
 } //namespace logging
 // vim:ts=4 sw=4:
 

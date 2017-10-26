@@ -45,25 +45,29 @@ using namespace messageqcpp;
 
 using namespace execplan;
 
-class TPCH_EXECPLAN : public CppUnit::TestFixture {
+class TPCH_EXECPLAN : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE( TPCH_EXECPLAN );
+    CPPUNIT_TEST_SUITE( TPCH_EXECPLAN );
 
-CPPUNIT_TEST( Q1 );
+    CPPUNIT_TEST( Q1 );
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
 public:
-   
-    void setUp() {
+
+    void setUp()
+    {
     }
-    
-    void tearDown() {
+
+    void tearDown()
+    {
     }
-    
-    void Q1() {
-            string sql = "\
+
+    void Q1()
+    {
+        string sql = "\
     select\
 	    supp_nation,\
 	    cust_nation,\
@@ -103,145 +107,145 @@ public:
 	    supp_nation,\
 	    cust_nation,\
 	    l_year;";
-        
+
         CalpontSelectExecutionPlan csep;
-               
+
         // Returned columns
         CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
-        
-        // these columns are from the temp table of FROM clause. 
+
+        // these columns are from the temp table of FROM clause.
         // I hereby give schema name "calpont", table name "FROMTABLE",
-        // and alias name "shipping"        
-        SimpleColumn *c1 = new SimpleColumn("calpont.FROMTABLE.supp_nation");
+        // and alias name "shipping"
+        SimpleColumn* c1 = new SimpleColumn("calpont.FROMTABLE.supp_nation");
         c1->tableAlias ("shipping");
         returnedColumnList.push_back(c1);
-        
-        SimpleColumn *c2 = new SimpleColumn("calpont.FROMTABLE.cust_nation");
+
+        SimpleColumn* c2 = new SimpleColumn("calpont.FROMTABLE.cust_nation");
         c2->tableAlias ("shipping");
         returnedColumnList.push_back(c2);
-        
-        SimpleColumn *c3 = new SimpleColumn("tpch.lineitem.l_year");
-        returnedColumnList.push_back(c3);        
-        
-        ArithmeticColumn *c4 = new ArithmeticColumn("sum(volumn)");
+
+        SimpleColumn* c3 = new SimpleColumn("tpch.lineitem.l_year");
+        returnedColumnList.push_back(c3);
+
+        ArithmeticColumn* c4 = new ArithmeticColumn("sum(volumn)");
         c4->alias("revenue");
         returnedColumnList.push_back(c4);
-                  
+
         csep.returnedCols(returnedColumnList);
-        
-        // from subselect                                                       
-        CalpontSelectExecutionPlan *subsep = 
-           new CalpontSelectExecutionPlan(CalpontSelectExecutionPlan::FROM);
-        
+
+        // from subselect
+        CalpontSelectExecutionPlan* subsep =
+            new CalpontSelectExecutionPlan(CalpontSelectExecutionPlan::FROM);
+
         // subselect returned columns
         CalpontSelectExecutionPlan::ReturnedColumnList subReturnedColList;
-        SimpleColumn *sc1 = new SimpleColumn("tpch.nation.n_name");
+        SimpleColumn* sc1 = new SimpleColumn("tpch.nation.n_name");
         sc1->alias ("supp_nation");
         sc1->tableAlias ("n1");
         subReturnedColList.push_back(sc1);
-        
-        SimpleColumn *sc2 = new SimpleColumn("tpch.nation.n_name");
+
+        SimpleColumn* sc2 = new SimpleColumn("tpch.nation.n_name");
         sc1->alias ("cust_nation");
         sc1->tableAlias ("n2");
         subReturnedColList.push_back(sc2);
-        
-        ArithmeticColumn *sc3 = new ArithmeticColumn("extract(year from tpch.lineitem.l_shipdate)");
+
+        ArithmeticColumn* sc3 = new ArithmeticColumn("extract(year from tpch.lineitem.l_shipdate)");
         sc3->alias("l_year");
         subReturnedColList.push_back(sc3);
-        
-        ArithmeticColumn *sc4 = new ArithmeticColumn("tpch.lineitem.l_extendeprice * (1-tpch.lineitem.l_discount)");
+
+        ArithmeticColumn* sc4 = new ArithmeticColumn("tpch.lineitem.l_extendeprice * (1-tpch.lineitem.l_discount)");
         sc3->alias("volume");
         subReturnedColList.push_back(sc4);
-        
+
         subsep->returnedCols(subReturnedColList);
-        
+
         // subselect filters
         CalpontSelectExecutionPlan::FilterTokenList subFilterTokenList;
-        
-        SimpleFilter *sf1 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.supplier.s_suppkey"),
-                                             new SimpleColumn("tpch.lineitem.l_suppkey"));
+
+        SimpleFilter* sf1 = new SimpleFilter (new Operator("="),
+                                              new SimpleColumn("tpch.supplier.s_suppkey"),
+                                              new SimpleColumn("tpch.lineitem.l_suppkey"));
         subFilterTokenList.push_back(sf1);
-                                             
+
         subFilterTokenList.push_back(new Operator("and"));
-        SimpleFilter *sf2 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.orders.o_orderkey"),
-                                             new SimpleColumn("tpch.lineitem.l_orderkey"));
+        SimpleFilter* sf2 = new SimpleFilter (new Operator("="),
+                                              new SimpleColumn("tpch.orders.o_orderkey"),
+                                              new SimpleColumn("tpch.lineitem.l_orderkey"));
         subFilterTokenList.push_back(sf2);
         subFilterTokenList.push_back(new Operator("and"));
-        
-        SimpleFilter *sf3 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.customer.c_custkey"),
-                                             new SimpleColumn("tpch.orders.o_custkey"));
+
+        SimpleFilter* sf3 = new SimpleFilter (new Operator("="),
+                                              new SimpleColumn("tpch.customer.c_custkey"),
+                                              new SimpleColumn("tpch.orders.o_custkey"));
         subFilterTokenList.push_back(sf3);
         subFilterTokenList.push_back(new Operator("and"));
-        
-        SimpleColumn *n1 = new SimpleColumn ("tpch.nation.n_nationkey");
-        n1->tableAlias("n1");
-        SimpleFilter *sf4 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.supplier.s_nationkey"),
-                                             n1);
-        subFilterTokenList.push_back(sf4);
-        subFilterTokenList.push_back(new Operator("and"));        
-        
-        SimpleColumn *n2 = new SimpleColumn ("tpch.nation.n_nationkey");
-        n2->tableAlias("n2");
-        SimpleFilter *sf5 = new SimpleFilter (new Operator("="),
-                                             new SimpleColumn("tpch.customer.c_nationkey"),
-                                             n2);
-        subFilterTokenList.push_back(sf5);
-        subFilterTokenList.push_back(new Operator("and")); 
-        
-        // ((n1.n_name = ':1' and n2.n_name = ':2')
-		//	or (n1.n_name = ':2' and n2.n_name = ':1'))      
-        subFilterTokenList.push_back(new Operator("("));        
-        subFilterTokenList.push_back(new Operator("("));        
 
-        SimpleColumn *n1_name = new SimpleColumn("tpch.nation.n_name");
+        SimpleColumn* n1 = new SimpleColumn ("tpch.nation.n_nationkey");
+        n1->tableAlias("n1");
+        SimpleFilter* sf4 = new SimpleFilter (new Operator("="),
+                                              new SimpleColumn("tpch.supplier.s_nationkey"),
+                                              n1);
+        subFilterTokenList.push_back(sf4);
+        subFilterTokenList.push_back(new Operator("and"));
+
+        SimpleColumn* n2 = new SimpleColumn ("tpch.nation.n_nationkey");
+        n2->tableAlias("n2");
+        SimpleFilter* sf5 = new SimpleFilter (new Operator("="),
+                                              new SimpleColumn("tpch.customer.c_nationkey"),
+                                              n2);
+        subFilterTokenList.push_back(sf5);
+        subFilterTokenList.push_back(new Operator("and"));
+
+        // ((n1.n_name = ':1' and n2.n_name = ':2')
+        //	or (n1.n_name = ':2' and n2.n_name = ':1'))
+        subFilterTokenList.push_back(new Operator("("));
+        subFilterTokenList.push_back(new Operator("("));
+
+        SimpleColumn* n1_name = new SimpleColumn("tpch.nation.n_name");
         n1_name->tableAlias ("n1");
-        SimpleFilter *sf6 = new SimpleFilter ( new Operator("="),
-                                              n1_name,
-                                              new ConstantColumn (":1"));
+        SimpleFilter* sf6 = new SimpleFilter ( new Operator("="),
+                                               n1_name,
+                                               new ConstantColumn (":1"));
         subFilterTokenList.push_back(sf6);
         subFilterTokenList.push_back(new Operator("and"));
 
-        SimpleColumn *n2_name = new SimpleColumn("tpch.nation.n_name");
+        SimpleColumn* n2_name = new SimpleColumn("tpch.nation.n_name");
         n1_name->tableAlias ("n2");
-        SimpleFilter *sf7 = new SimpleFilter ( new Operator("="),
-                                              n2_name,
-                                              new ConstantColumn (":2"));
-        subFilterTokenList.push_back(sf7); 
-        subFilterTokenList.push_back(new Operator (")"));                                     
+        SimpleFilter* sf7 = new SimpleFilter ( new Operator("="),
+                                               n2_name,
+                                               new ConstantColumn (":2"));
+        subFilterTokenList.push_back(sf7);
+        subFilterTokenList.push_back(new Operator (")"));
         subFilterTokenList.push_back(new Operator("or"));
-        subFilterTokenList.push_back(new Operator("("));        
-        
-        SimpleFilter *sf8 = new SimpleFilter ( new Operator("="),
-                                              new SimpleColumn(*n1_name),
-                                              new ConstantColumn (":2"));
+        subFilterTokenList.push_back(new Operator("("));
+
+        SimpleFilter* sf8 = new SimpleFilter ( new Operator("="),
+                                               new SimpleColumn(*n1_name),
+                                               new ConstantColumn (":2"));
         subFilterTokenList.push_back(sf8);
         subFilterTokenList.push_back(new Operator("and"));
-        SimpleFilter *sf9 = new SimpleFilter ( new Operator("="),
-                                              new SimpleColumn(*n2_name),
-                                              new ConstantColumn (":1"));   
+        SimpleFilter* sf9 = new SimpleFilter ( new Operator("="),
+                                               new SimpleColumn(*n2_name),
+                                               new ConstantColumn (":1"));
         subFilterTokenList.push_back(sf9);
-        subFilterTokenList.push_back(new Operator (")"));                                     
-        subFilterTokenList.push_back(new Operator (")"));                                     
-                                                                                         
-        
-        subFilterTokenList.push_back(new Operator("and"));      
-        
-        SimpleFilter *sf10 = new SimpleFilter (new Operator (">="),
+        subFilterTokenList.push_back(new Operator (")"));
+        subFilterTokenList.push_back(new Operator (")"));
+
+
+        subFilterTokenList.push_back(new Operator("and"));
+
+        SimpleFilter* sf10 = new SimpleFilter (new Operator (">="),
                                                new SimpleColumn ("tpch.lineitem.l_shipdate"),
-                                               new ConstantColumn ("1995-01-01")); 
+                                               new ConstantColumn ("1995-01-01"));
         subFilterTokenList.push_back(sf10);
         subFilterTokenList.push_back(new Operator("and"));
-        SimpleFilter *sf11 = new SimpleFilter (new Operator ("<="),
+        SimpleFilter* sf11 = new SimpleFilter (new Operator ("<="),
                                                new SimpleColumn ("tpch.lineitem.l_shipdate"),
-                                               new ConstantColumn ("1995-01-06"));                                                         
+                                               new ConstantColumn ("1995-01-06"));
         subFilterTokenList.push_back(sf11);
-            
-        subsep->filterTokenList(subFilterTokenList);  
-        
+
+        subsep->filterTokenList(subFilterTokenList);
+
         // end of subselect in FROM. push FROM subselect to selectList
         // NOTE: only FROM subselect needs to be pushed into selectList.
         // Subselects in WHERE or HAVING clause are in where or having
@@ -250,54 +254,54 @@ public:
         CalpontSelectExecutionPlan::SelectList fromSubSelectList;
         fromSubSelectList.push_back(subsep);
         csep.subSelects(fromSubSelectList);
-       
-        ParseTree* pt = const_cast<ParseTree*>(subsep->filters());
-        pt->drawTree("q7.dot");   
-        
-        // Group by
-	    CalpontSelectExecutionPlan::GroupByColumnList groupByList;
-	    SimpleColumn *g1 = new SimpleColumn (*c1);
-	    groupByList.push_back (g1);
-	    
-	    SimpleColumn *g2 = new SimpleColumn (*c2);
-	    groupByList.push_back (g2);
-	    
-	    SimpleColumn *g3 = new SimpleColumn (*c3);
-	    groupByList.push_back (g3);
-	    
-	    csep.groupByCols(groupByList);
-	    
-        // Order by                                                
-	    CalpontSelectExecutionPlan::OrderByColumnList orderByList;
-	    SimpleColumn *o1 = new SimpleColumn(*c1);
-	    orderByList.push_back(o1);
-	    
-	    SimpleColumn *o2 = new SimpleColumn(*c2);
-	    orderByList.push_back(o2);	   
-	    
-	    SimpleColumn *o3 = new SimpleColumn(*c3);
-	    orderByList.push_back(o3); 
-        
-        csep.orderByCols(orderByList);
-        
-        cout << csep;
-    }  
 
-    
-}; 
+        ParseTree* pt = const_cast<ParseTree*>(subsep->filters());
+        pt->drawTree("q7.dot");
+
+        // Group by
+        CalpontSelectExecutionPlan::GroupByColumnList groupByList;
+        SimpleColumn* g1 = new SimpleColumn (*c1);
+        groupByList.push_back (g1);
+
+        SimpleColumn* g2 = new SimpleColumn (*c2);
+        groupByList.push_back (g2);
+
+        SimpleColumn* g3 = new SimpleColumn (*c3);
+        groupByList.push_back (g3);
+
+        csep.groupByCols(groupByList);
+
+        // Order by
+        CalpontSelectExecutionPlan::OrderByColumnList orderByList;
+        SimpleColumn* o1 = new SimpleColumn(*c1);
+        orderByList.push_back(o1);
+
+        SimpleColumn* o2 = new SimpleColumn(*c2);
+        orderByList.push_back(o2);
+
+        SimpleColumn* o3 = new SimpleColumn(*c3);
+        orderByList.push_back(o3);
+
+        csep.orderByCols(orderByList);
+
+        cout << csep;
+    }
+
+
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION( TPCH_EXECPLAN );
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  bool wasSuccessful = runner.run( "", false );
-  return (wasSuccessful ? 0 : 1);
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    bool wasSuccessful = runner.run( "", false );
+    return (wasSuccessful ? 0 : 1);
 }
 
 

@@ -34,7 +34,7 @@
 
 namespace batchloader
 {
-    
+
 //------------------------------------------------------------------------------
 /** @brief Class to find the PM id to send a batch of row
  */
@@ -58,22 +58,22 @@ public:
     uint32_t selectNextPM();
 
     /**
-	 * 	@brief Move to previous Sequence in the array.
-	 * 	This can be used when we find that we cannot use the PM right now
-	 * 	and want to use it later. for example the queue is full of the
-	 * 	current PM and we want to get the same PM Id when we call selectNextPM()
-	 * 	next time also.
-	 */
+     * 	@brief Move to previous Sequence in the array.
+     * 	This can be used when we find that we cannot use the PM right now
+     * 	and want to use it later. for example the queue is full of the
+     * 	current PM and we want to get the same PM Id when we call selectNextPM()
+     * 	next time also.
+     */
     void reverseSequence();
 
-	/*
+    /*
      * @brief After calling selectFirstPM(), if we need to keep continuing to
      * the next PM in the list, we need to call this. If we just want to start
      * distributing from dbroot 1 onwards, no need to call this function.
      */
     void prepareForSecondPM();
-	
-	struct RootExtentsBlocks
+
+    struct RootExtentsBlocks
     {
         /** @brief the dbroot
          */
@@ -81,20 +81,20 @@ public:
         /** @brief the number of extents
          */
         uint64_t numExtents;
-		 /** @brief the number of blocks in the last partition
-         */
-		uint64_t numBlocks;
+        /** @brief the number of blocks in the last partition
+        */
+        uint64_t numBlocks;
     };
-	
-	struct PMRootInfo
-	{
-		/** @brief the module id
+
+    struct PMRootInfo
+    {
+        /** @brief the module id
          */
         uint32_t PMId;
-		/** @brief the dbroot info
-		*/
-		std::vector<RootExtentsBlocks> rootInfo;
-	};
+        /** @brief the dbroot info
+        */
+        std::vector<RootExtentsBlocks> rootInfo;
+    };
 
 private:
     /** @brief Select the first PM to send the first batch of rows.
@@ -104,9 +104,9 @@ private:
      */
     void selectFirstPM ( uint32_t& PMId);
 
-   /** @brief build the batch distribution sequence in a vector
-     * return void
-     */
+    /** @brief build the batch distribution sequence in a vector
+      * return void
+      */
     void buildBatchDistSeqVector();
 
     /** @brief build the batch distribution sequence in a vector
@@ -115,15 +115,15 @@ private:
     void buildBatchDistSeqVector(uint32_t StartPm);
 
     typedef std::vector<uint32_t> BlIntVec;
-	BlIntVec fPMs;
-	BlIntVec fDbRoots;
-	BlIntVec fPmDistSeq;
-	uint32_t fNextIdx;
-	uint32_t fFirstPm;
-	execplan::CalpontSystemCatalog::SCN fSessionId;
-	uint32_t fTableOid;
-	oam::OamCache::PMDbrootsMap_t fPmDbrootMap;
-	oam::OamCache::dbRootPMMap_t fDbrootPMmap;
+    BlIntVec fPMs;
+    BlIntVec fDbRoots;
+    BlIntVec fPmDistSeq;
+    uint32_t fNextIdx;
+    uint32_t fFirstPm;
+    execplan::CalpontSystemCatalog::SCN fSessionId;
+    uint32_t fTableOid;
+    oam::OamCache::PMDbrootsMap_t fPmDbrootMap;
+    oam::OamCache::dbRootPMMap_t fDbrootPMmap;
 };
 
 } //end of namespace

@@ -19,7 +19,7 @@
 // $Id: passthrucommand.h 2035 2013-01-21 14:12:19Z rdempsey $
 // C++ Interface: passthrucommand
 //
-// Description: 
+// Description:
 //
 //
 // Author: Patrick <pleblanc@localhost.localdomain>, (C) 2008
@@ -38,31 +38,34 @@ namespace primitiveprocessor
 
 class PassThruCommand : public Command
 {
-	public:
-		PassThruCommand();
-		virtual ~PassThruCommand();
+public:
+    PassThruCommand();
+    virtual ~PassThruCommand();
 
-		void prep(int8_t outputType, bool makeAbsRids);
-		void execute();
-		void project();
-		void projectIntoRowGroup(rowgroup::RowGroup &rg, uint32_t col);
-		uint64_t getLBID();
-		void nextLBID();
-		void createCommand(messageqcpp::ByteStream &);
-		void resetCommand(messageqcpp::ByteStream &);
-		SCommand duplicate();
-		bool operator==(const PassThruCommand &) const;
-		bool operator!=(const PassThruCommand &) const;
+    void prep(int8_t outputType, bool makeAbsRids);
+    void execute();
+    void project();
+    void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
+    uint64_t getLBID();
+    void nextLBID();
+    void createCommand(messageqcpp::ByteStream&);
+    void resetCommand(messageqcpp::ByteStream&);
+    SCommand duplicate();
+    bool operator==(const PassThruCommand&) const;
+    bool operator!=(const PassThruCommand&) const;
 
-		int getCompType() const { return 0; }
-	private:
-		PassThruCommand(const PassThruCommand &);
+    int getCompType() const
+    {
+        return 0;
+    }
+private:
+    PassThruCommand(const PassThruCommand&);
 
-		uint8_t colWidth;
+    uint8_t colWidth;
 
-		/* Minor optimization for projectIntoRowGroup() */
-		rowgroup::Row r;
-		uint32_t rowSize;
+    /* Minor optimization for projectIntoRowGroup() */
+    rowgroup::Row r;
+    uint32_t rowSize;
 };
 
 }

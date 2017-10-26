@@ -36,7 +36,8 @@ using namespace execplan;
 #ifndef _WE_BRMREPORTER_H_
 #define _WE_BRMREPORTER_H_
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 class Log;
 
 /** @brief Accumulate update info that is later forwarded to BRM.
@@ -47,7 +48,7 @@ class Log;
  */
 class BRMReporter
 {
-  public:
+public:
 
     /** @brief Constructor
      *  @param logger Object used for logging
@@ -106,8 +107,8 @@ class BRMReporter
      */
     void reportTotals(uint64_t totalReadRows,
                       uint64_t totalInsertedRows,
-               const std::vector<boost::tuple<CalpontSystemCatalog::ColDataType,
-                                 uint64_t,uint64_t> >& satCounts);
+                      const std::vector<boost::tuple<CalpontSystemCatalog::ColDataType,
+                      uint64_t, uint64_t> >& satCounts);
 
     /** @brief Generate report for job that exceeds error limit
      *  @param rptFileName Name of file to save info, else info is dropped
@@ -115,10 +116,10 @@ class BRMReporter
      *  @param badFiles    List of *.bad filenames to record in report file
      */
     void rptMaxErrJob(const std::string& rptFileName,
-                     const std::vector<std::string>& errFiles,
-                     const std::vector<std::string>& badFiles );
+                      const std::vector<std::string>& errFiles,
+                      const std::vector<std::string>& badFiles );
 
-  private:  
+private:
 
     // Disable copy constructor and assignment operator by declaring and
     // not defining.

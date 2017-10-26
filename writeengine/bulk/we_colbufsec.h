@@ -30,11 +30,13 @@
 #include "we_type.h"
 #include "we_colbuf.h"
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 /* @brief Status codes for the ColumnBufferSection
  */
-enum {
+enum
+{
     INIT_COMPLETE,
     WRITE_COMPLETE,
 };
@@ -43,19 +45,20 @@ enum {
  * @brief ColumnBufferSection class represent a section of the ColumnBuffer and
  * provides functionality for writing to the ColumnBuffer.
  */
-class ColumnBufferSection {
+class ColumnBufferSection
+{
 
-  public:
+public:
     /* @brief Constructor
      *
      * @param cb Ptr to this section's corresponding CoulmnBuffer
      * @param startRowId Starting row-id of the column
      * @param endRowId Ending row-id of the column
      * @param Width Width of the underlying column
-     * @param startOffset 
+     * @param startOffset
      */
     ColumnBufferSection(ColumnBuffer* const cb, RID startRowId,
-        RID endRowId, int colWidth, int startOffset);
+                        RID endRowId, int colWidth, int startOffset);
 
     /* @brief Default destructor
      */
@@ -72,7 +75,7 @@ class ColumnBufferSection {
      * @param data pointer to the data
      * @param nRows Number of rows to be written, starting from data pointer
      */
-    void write(const void * const data, int nRows);
+    void write(const void* const data, int nRows);
 
     /* @brief Returns the current status of the section
      */
@@ -88,13 +91,19 @@ class ColumnBufferSection {
 
     /* @brief Returns the ending row-id of this section
      */
-    RID endRowId()   const { return fEndRowId;   }
+    RID endRowId()   const
+    {
+        return fEndRowId;
+    }
 
     /* @brief Returns the starting row-id of this section
      */
-    RID startRowId() const { return fStartRowId; }
+    RID startRowId() const
+    {
+        return fStartRowId;
+    }
 
-  private:
+private:
 
     const ColumnBuffer* const fCBuf; //ColumnBuffer associated with this section
     RID fStartRowId;        // Starting row-id for this section

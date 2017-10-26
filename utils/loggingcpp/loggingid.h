@@ -27,24 +27,25 @@
 
 #include <string>
 
-namespace logging {
+namespace logging
+{
 
 /** @brief a logging context structure
  *
  */
 struct LoggingID
 {
-	/** @brief LoggingID ctor
-	 *
-	 */
-	explicit LoggingID(unsigned subsysID=0, unsigned sessionID=0, unsigned txnID=0, unsigned ThdID=0)
-		: fSubsysID(subsysID), fSessionID(sessionID), fTxnID(txnID), fThdID(ThdID)
-		{}
+    /** @brief LoggingID ctor
+     *
+     */
+    explicit LoggingID(unsigned subsysID = 0, unsigned sessionID = 0, unsigned txnID = 0, unsigned ThdID = 0)
+        : fSubsysID(subsysID), fSessionID(sessionID), fTxnID(txnID), fThdID(ThdID)
+    {}
 
-	unsigned fSubsysID;	/// subsystem ID
-	unsigned fSessionID;	/// session ID
-	unsigned fTxnID;	/// transaction ID
-	unsigned fThdID;	/// thread ID
+    unsigned fSubsysID;	/// subsystem ID
+    unsigned fSessionID;	/// session ID
+    unsigned fTxnID;	/// transaction ID
+    unsigned fThdID;	/// thread ID
 };
 
 }

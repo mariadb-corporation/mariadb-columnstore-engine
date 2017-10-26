@@ -27,34 +27,35 @@
 #include "ddlpkg.h"
 #undef DDLPKG_DLLEXPORT
 
-namespace ddlpackage {
+namespace ddlpackage
+{
 
-	using namespace std;
-	
-	CreateTableStatement::CreateTableStatement() :
-		fTableDef(0)
-	{
-	}
-	
-	CreateTableStatement::CreateTableStatement(TableDef* tableDef) :
-		fTableDef(tableDef)
-	{
-	}
+using namespace std;
 
-		
-	CreateTableStatement::~CreateTableStatement()
-	{
-		if (fTableDef)
-		{
-			delete fTableDef;
-		}
-	}
+CreateTableStatement::CreateTableStatement() :
+    fTableDef(0)
+{
+}
 
-	/** \brief Put to ostream. */
-	ostream& CreateTableStatement::put(ostream& os) const
-	{
-		os << "CreateTable "
-		   << *fTableDef;
-		return os;
-	}
+CreateTableStatement::CreateTableStatement(TableDef* tableDef) :
+    fTableDef(tableDef)
+{
+}
+
+
+CreateTableStatement::~CreateTableStatement()
+{
+    if (fTableDef)
+    {
+        delete fTableDef;
+    }
+}
+
+/** \brief Put to ostream. */
+ostream& CreateTableStatement::put(ostream& os) const
+{
+    os << "CreateTable "
+       << *fTableDef;
+    return os;
+}
 }

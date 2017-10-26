@@ -30,66 +30,72 @@ namespace
 {
 void usage()
 {
-	cout << "usage: cplogger [-s subsys] [-cwi] [-h] msg_id [args...]" << endl;
+    cout << "usage: cplogger [-s subsys] [-cwi] [-h] msg_id [args...]" << endl;
 }
 }
 
 int main(int argc, char** argv)
 {
-	int c;
-	opterr = 0;
-	bool cflg = true;
-	bool wflg = false;
-	unsigned subsysID = 8; //oamcpp
+    int c;
+    opterr = 0;
+    bool cflg = true;
+    bool wflg = false;
+    unsigned subsysID = 8; //oamcpp
 
-	while ((c = getopt(argc, argv, "s:cwih")) != EOF)
-		switch (c)
-		{
-		case 'c':
-			cflg = true;
-			wflg = false;
-			break;
-		case 'w':
-			cflg = false;
-			wflg = true;
-			break;
-		case 'i':
-			cflg = false;
-			wflg = false;
-			break;
-		case 's':
-			subsysID = strtoul(optarg, 0, 0);
-			break;
-		case 'h':
-		case '?':
-		default:
-			usage();
-			return (c == 'h' ? 0 : 1);
-			break;
-		}
+    while ((c = getopt(argc, argv, "s:cwih")) != EOF)
+        switch (c)
+        {
+            case 'c':
+                cflg = true;
+                wflg = false;
+                break;
 
-	if ((argc - optind) < 1)
-	{
-		usage();
-		return 1;
-	}
+            case 'w':
+                cflg = false;
+                wflg = true;
+                break;
 
-	Message::MessageID mid = strtoul(argv[optind++], 0, 0);;
-	Message::Args args;
-	for (int i = optind; i < argc; i++)
-		args.add(argv[optind++]);
-	LoggingID logInfo(subsysID);
-	Message msg(mid);
-	msg.format(args);
-	MessageLog log(logInfo);
+            case 'i':
+                cflg = false;
+                wflg = false;
+                break;
 
-	if (cflg)
-		log.logCriticalMessage(msg);
-	else if (wflg)
-		log.logWarningMessage(msg);
-	else
-		log.logInfoMessage(msg);
+            case 's':
+                subsysID = strtoul(optarg, 0, 0);
+                break;
 
-	return 0;
+            case 'h':
+            case '?':
+            default:
+                usage();
+                return (c == 'h' ? 0 : 1);
+                break;
+        }
+
+    if ((argc - optind) < 1)
+    {
+        usage();
+        return 1;
+    }
+
+    Message::MessageID mid = strtoul(argv[optind++], 0, 0);;
+    Message::Args args;
+
+    for (int i = optind; i < argc; i++)
+        args.add(argv[optind++]);
+
+    LoggingID logInfo(subsysID);
+    Message msg(mid);
+    msg.format(args);
+    MessageLog log(logInfo);
+
+    if (cflg)
+        log.logCriticalMessage(msg);
+    else if (wflg)
+        log.logWarningMessage(msg);
+    else
+        log.logInfoMessage(msg);
+
+    return 0;
 }
 

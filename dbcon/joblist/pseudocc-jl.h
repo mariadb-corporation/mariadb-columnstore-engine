@@ -21,21 +21,25 @@
 
 #include "columncommand-jl.h"
 
-namespace joblist {
+namespace joblist
+{
 
 class PseudoCCJL : public ColumnCommandJL
 {
-	public:
-		PseudoCCJL(const PseudoColStep &);
-		virtual ~PseudoCCJL();
+public:
+    PseudoCCJL(const PseudoColStep&);
+    virtual ~PseudoCCJL();
 
-		virtual void createCommand(messageqcpp::ByteStream &) const;
-		virtual void runCommand(messageqcpp::ByteStream &) const;
-		virtual std::string toString();
-		uint32_t getFunction() const { return function; }
-	protected:
-	private:
-		uint32_t function;
+    virtual void createCommand(messageqcpp::ByteStream&) const;
+    virtual void runCommand(messageqcpp::ByteStream&) const;
+    virtual std::string toString();
+    uint32_t getFunction() const
+    {
+        return function;
+    }
+protected:
+private:
+    uint32_t function;
 };
 
 

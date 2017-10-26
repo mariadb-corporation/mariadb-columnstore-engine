@@ -25,26 +25,26 @@
 class FEMsgHandler
 {
 public:
-	FEMsgHandler();
-	FEMsgHandler(boost::shared_ptr<joblist::JobList>, messageqcpp::IOSocket *);
-	virtual ~FEMsgHandler();
+    FEMsgHandler();
+    FEMsgHandler(boost::shared_ptr<joblist::JobList>, messageqcpp::IOSocket*);
+    virtual ~FEMsgHandler();
 
-	void start();
-	void stop();
-	void setJobList(boost::shared_ptr<joblist::JobList>);
-	void setSocket(messageqcpp::IOSocket *);
-	bool aborted();
+    void start();
+    void stop();
+    void setJobList(boost::shared_ptr<joblist::JobList>);
+    void setSocket(messageqcpp::IOSocket*);
+    bool aborted();
 
-	void threadFcn();
+    void threadFcn();
 
     static threadpool::ThreadPool threadPool;
 
 private:
-	bool die, running, sawData;
-	messageqcpp::IOSocket *sock;
-	boost::shared_ptr<joblist::JobList> jl;
-	boost::mutex mutex;
-	uint64_t thr;
+    bool die, running, sawData;
+    messageqcpp::IOSocket* sock;
+    boost::shared_ptr<joblist::JobList> jl;
+    boost::mutex mutex;
+    uint64_t thr;
 };
 
 #endif /* FEMSGHANDLER_H_ */

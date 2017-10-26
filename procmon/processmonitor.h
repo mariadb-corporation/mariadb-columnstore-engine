@@ -34,7 +34,8 @@
 #include "alarmglobal.h"
 #include "socketclosed.h"
 
-namespace processmonitor {
+namespace processmonitor
+{
 
 #define INIT_SUPPORT 0	// 0 = 'INIT -0' COMMAND COMPILED IN, 1 = 'INIT -0' COMMANDS COMPILED OUT 
 
@@ -46,20 +47,20 @@ namespace processmonitor {
  */
 typedef   struct processStructure
 {
-	std::string ProcessModuleType;
-	std::string ProcessName;
-	std::string ProcessLocation;
-	std::string	ProcessArgs[MAXARGUMENTS]; 
-	time_t 		currentTime;
-	uint16_t 	launchID;
-	pid_t  		processID;
-	uint16_t	state;
-	uint16_t 	BootLaunch;
-	uint16_t 	dieCounter;
-	std::string RunType;
-	std::string	DepProcessName[MAXDEPENDANCY]; 
-	std::string	DepModuleName[MAXDEPENDANCY];
-	std::string LogFile;
+    std::string ProcessModuleType;
+    std::string ProcessName;
+    std::string ProcessLocation;
+    std::string	ProcessArgs[MAXARGUMENTS];
+    time_t 		currentTime;
+    uint16_t 	launchID;
+    pid_t  		processID;
+    uint16_t	state;
+    uint16_t 	BootLaunch;
+    uint16_t 	dieCounter;
+    std::string RunType;
+    std::string	DepProcessName[MAXDEPENDANCY];
+    std::string	DepModuleName[MAXDEPENDANCY];
+    std::string LogFile;
 } processInfo;
 
 typedef   std::vector<processInfo>		processList;
@@ -70,9 +71,9 @@ typedef   std::vector<processInfo>		processList;
  */
 struct shmProcessStatus
 {
-	pid_t     	ProcessID;                    //!< Process ID number
-	char 		StateChangeDate[24];          //!< Last time/date state change
-	uint16_t 	ProcessOpState;               //!< Process Operational State
+    pid_t     	ProcessID;                    //!< Process ID number
+    char 		StateChangeDate[24];          //!< Last time/date state change
+    uint16_t 	ProcessOpState;               //!< Process Operational State
 };
 
 /**
@@ -80,9 +81,9 @@ struct shmProcessStatus
  */
 typedef   struct processStatus
 {
-	std::string ProcessName;
-	std::string ModuleName;	
-	uint16_t 	tableIndex;
+    std::string ProcessName;
+    std::string ModuleName;
+    uint16_t 	tableIndex;
 } processstatus;
 
 typedef   std::vector<processstatus>	processStatusList;
@@ -95,9 +96,9 @@ typedef   std::vector<processstatus>	processStatusList;
 
 struct shmDeviceStatus
 {
-	char 		Name[NAMESIZE];                      //!< Device Name
-	char 		StateChangeDate[DATESIZE];          //!< Last time/date state change
-	uint16_t 	OpState;                      		//!< Device Operational State
+    char 		Name[NAMESIZE];                      //!< Device Name
+    char 		StateChangeDate[DATESIZE];          //!< Last time/date state change
+    uint16_t 	OpState;                      		//!< Device Operational State
 };
 
 
@@ -108,15 +109,15 @@ struct shmDeviceStatus
 class MonitorConfig
 {
 public:
-    	/**
-	 * @brief constructor
-	 *
-	 */
+    /**
+    * @brief constructor
+    *
+    */
     MonitorConfig();
-    	/**
-	 * @brief destructor
-	 *
-	 */
+    /**
+    * @brief destructor
+    *
+    */
     ~MonitorConfig();
 
     /**
@@ -124,7 +125,7 @@ public:
      */
     const std::string&	moduleName() const
     {
-	return flocalModuleName;
+        return flocalModuleName;
     }
 
     /**
@@ -132,125 +133,125 @@ public:
      */
     const std::string&	moduleType() const
     {
-	return flocalModuleType;
+        return flocalModuleType;
     }
 
-     /**
-     * moduleName accessor
-     */
+    /**
+    * moduleName accessor
+    */
     const uint16_t&	moduleID() const
     {
-	return flocalModuleID;
+        return flocalModuleID;
     }
 
-     /**
-     * parentName accessor
-     */
+    /**
+    * parentName accessor
+    */
     const std::string&	OAMParentName() const
     {
-	return fOAMParentModuleName;
+        return fOAMParentModuleName;
     }
 
-   /**
-     * parentFlag accessor
-     */
+    /**
+      * parentFlag accessor
+      */
     const bool&	OAMParentFlag() const
     {
-	return fOAMParentModuleFlag;
+        return fOAMParentModuleFlag;
     }
 
-   /**
-     * ServerInstallType accessor
-     */
+    /**
+      * ServerInstallType accessor
+      */
     const uint16_t&	ServerInstallType() const
     {
-	return fserverInstallType;
+        return fserverInstallType;
     }
 
-     /**
-     * StandbyName accessor
-     */
+    /**
+    * StandbyName accessor
+    */
     const std::string&	OAMStandbyName() const
     {
-	return fOAMStandbyModuleName;
+        return fOAMStandbyModuleName;
     }
 
-   /**
-     * standbyParentFlag accessor
-     */
+    /**
+      * standbyParentFlag accessor
+      */
     const bool&	OAMStandbyParentFlag() const
     {
-	return fOAMStandbyModuleFlag;
+        return fOAMStandbyModuleFlag;
     }
 
-   /**
-     * SoftwareVersion accessor
-     */
+    /**
+      * SoftwareVersion accessor
+      */
     const std::string&	SoftwareVersion() const
     {
-	return fsoftwareVersion;
+        return fsoftwareVersion;
     }
 
-   /**
-     * SoftwareRelease accessor
-     */
+    /**
+      * SoftwareRelease accessor
+      */
     const std::string&	SoftwareRelease() const
     {
-	return fsoftwareRelease;
+        return fsoftwareRelease;
     }
 
     /**
      * Build a list of processes the monitor started
      */
     void	buildList(std::string ProcessModuleType,
-						std::string processName,
-						std::string ProcessLocation, 
-						std::string arg_list[MAXARGUMENTS], 
-						uint16_t launchID, 
-						pid_t processID, 
-						uint16_t state,
-  						uint16_t BootLaunch,
-						std::string RunType,
-						std::string DepProcessName[MAXDEPENDANCY], 
-						std::string DepModuleName[MAXDEPENDANCY],
-						std::string logFile);
+                      std::string processName,
+                      std::string ProcessLocation,
+                      std::string arg_list[MAXARGUMENTS],
+                      uint16_t launchID,
+                      pid_t processID,
+                      uint16_t state,
+                      uint16_t BootLaunch,
+                      std::string RunType,
+                      std::string DepProcessName[MAXDEPENDANCY],
+                      std::string DepModuleName[MAXDEPENDANCY],
+                      std::string logFile);
 
     /**
      * return the process list
      */
     processList*	monitoredListPtr();
 
-     /**
-     * return the process ID
-     */
-    
+    /**
+    * return the process ID
+    */
+
     void  findProcessInfo (pid_t processID, processInfo& info);
 
-  	/**
-	 * @brief copy constructor
-	 *
-	 */
+    /**
+     * @brief copy constructor
+     *
+     */
     MonitorConfig(const MonitorConfig& rhs);
-  	/**
-	 * @brief copy assignment operator
-	 *
-	 */
+    /**
+     * @brief copy assignment operator
+     *
+     */
     MonitorConfig& operator=(const MonitorConfig& rhs);
 
 
 private:
     std::string flocalModuleName;
     std::string flocalModuleType;
-	uint16_t	flocalModuleID;
+    uint16_t	flocalModuleID;
     std::string fOAMParentModuleName;
     bool 		fOAMParentModuleFlag;
-	uint16_t		fserverInstallType;
+    uint16_t		fserverInstallType;
     std::string fOAMStandbyModuleName;
-	bool			fOAMStandbyModuleFlag;
+    bool			fOAMStandbyModuleFlag;
 
     processList fmonitoredListPtr;
-	std::string fsoftwareVersion;
-	std::string fsoftwareRelease;
+    std::string fsoftwareVersion;
+    std::string fsoftwareRelease;
 };
 
 /**
@@ -270,30 +271,30 @@ public:
      */
     ~MonitorLog();
 
-  /**
-   * @brief Write the message to the log
-   */
+    /**
+     * @brief Write the message to the log
+     */
     void writeLog(const int lineNumber, const std::string logContent, const logging::LOG_TYPE logType = logging::LOG_TYPE_INFO);
 
-  /**
-   * @brief Write the message to the log
-   */
+    /**
+     * @brief Write the message to the log
+     */
     void writeLog(const int lineNumber, const int logContent, const logging::LOG_TYPE logType = logging::LOG_TYPE_INFO);
 
- 
+
 private:
     std::ofstream	logFile;
-    	/**
-	 * @brief copy constructor
-	 *
-	 */
+    /**
+    * @brief copy constructor
+    *
+    */
     MonitorLog(const MonitorLog& rhs);
-    	/**
-	 * @brief copy assignment operator
-	 *
-	 */
+    /**
+    * @brief copy assignment operator
+    *
+    */
     MonitorLog& operator=(const MonitorLog& rhs);
-    
+
 };
 
 
@@ -308,7 +309,7 @@ public:
     /**
      * Constructor
      */
-    ProcessMonitor(MonitorConfig &config, MonitorLog &log);
+    ProcessMonitor(MonitorConfig& config, MonitorLog& log);
 
     /**
      * Default Destructor
@@ -317,16 +318,16 @@ public:
     /**
      * Start a process
      */
-    pid_t	startProcess(std::string processModuleType, std::string processName, std::string processLocation, 
-						std::string arg_list[MAXARGUMENTS], uint16_t launchID, uint16_t BootLaunch, 
-						std::string RunType, std::string DepProcessName[MAXDEPENDANCY] , 
-						std::string DepModuleName[MAXDEPENDANCY], std::string LogFile, uint16_t startType,
-						uint16_t actIndicator = oam::FORCEFUL);
+    pid_t	startProcess(std::string processModuleType, std::string processName, std::string processLocation,
+                         std::string arg_list[MAXARGUMENTS], uint16_t launchID, uint16_t BootLaunch,
+                         std::string RunType, std::string DepProcessName[MAXDEPENDANCY],
+                         std::string DepModuleName[MAXDEPENDANCY], std::string LogFile, uint16_t startType,
+                         uint16_t actIndicator = oam::FORCEFUL);
 
     /**
      * get Alarm Data and send to requester
      */
-	int getAlarmData(messageqcpp::IOSocket mq, int type, std::string date);
+    int getAlarmData(messageqcpp::IOSocket mq, int type, std::string date);
 
     /**
      * Stop a process
@@ -358,220 +359,220 @@ public:
      */
     int		checkHeartBeat(const std::string processName);
 
-     /**
-     * send a trap and log the process information
-     */
+    /**
+    * send a trap and log the process information
+    */
     void	sendAlarm(std::string alarmItem, oam::ALARMS alarmID, int action);
 
     /**
      *@brief update process disk state
      */
-	bool 	updateProcessInfo(std::string processName, int state, pid_t pid);
+    bool 	updateProcessInfo(std::string processName, int state, pid_t pid);
 
     /**
      *@brief update log configuration
      */
-	int 	updateLog(std::string action, std::string level);
+    int 	updateLog(std::string action, std::string level);
 
     /**
      *@brief  get log configuration
      */
-	int 	getConfigLog();
+    int 	getConfigLog();
 
     /**
      *@brief  change Log File priviledges
      */
-	void 	changeModLog();
+    void 	changeModLog();
 
     /**
      *@brief  check Power-On Test results
      */
-	void 	checkPowerOnResults();
+    void 	checkPowerOnResults();
 
     /**
      *@brief  update Config
      */
-	int  updateConfig();
+    int  updateConfig();
 
     /**
      *@brief  build System Tables
      */
-	int  buildSystemTables();
+    int  buildSystemTables();
 
     /**
      *@brief  configure Module fucntionality
      */
-	int configureModule(std::string configureModuleName);
+    int configureModule(std::string configureModuleName);
 
     /**
      *@brief  reconfigure Module fucntionality
      */
-	int reconfigureModule(std::string reconfigureModuleName);
+    int reconfigureModule(std::string reconfigureModuleName);
 
     /**
      *@brief  check Single Process State
      */
-	int checkSpecialProcessState( std::string processName, std::string runType, std::string processModuleType );
+    int checkSpecialProcessState( std::string processName, std::string runType, std::string processModuleType );
 
     /**
      *@brief  Check if Mate Module is Active
      */
-	int checkMateModuleState();
+    int checkMateModuleState();
 
     /**
      *@brief  Create the Calpont Data directories
      */
 
-	int createDataDirs(std::string cloud);
+    int createDataDirs(std::string cloud);
 
     /**
      *@brief  Process Restarted, inform Process Mgr
      */
 
-	int processRestarted( std::string processName, bool manual = true );
+    int processRestarted( std::string processName, bool manual = true );
 
     /**
      *@brief  update crontab to have logs archived at midnight
      */
 
-	int changeCrontab();
+    int changeCrontab();
 
     /**
      *@brief  Update Transaction Log
      */
 
-	int changeTransactionLog();
+    int changeTransactionLog();
 
     /**
      *@brief update Core Dump configuration
      */
-	int updateCore(std::string action);
+    int updateCore(std::string action);
 
     /**
      *@brief setup Tranaction Logging
      */
-	void setTransactionLog(bool action);
+    void setTransactionLog(bool action);
 
     /**
      *@brief Remove XM ProcMon setup
      */
-	int removeXMProcMon();
+    int removeXMProcMon();
 
     /**
      *@brief unmount from associated system
      */
-	int umountSystem();
+    int umountSystem();
 
     /**
      *@brief Runs DB sanity test
      */
-	int runStartupTest();
+    int runStartupTest();
 
     /**
      *@brief Runs HDFS sanity test
      */
-	int runHDFSTest();
+    int runHDFSTest();
 
-     /**
-     *@brief Update Calpont Config File
-     */
-	int updateConfigFile(messageqcpp::ByteStream msg);
+    /**
+    *@brief Update Calpont Config File
+    */
+    int updateConfigFile(messageqcpp::ByteStream msg);
 
-	int getDBRMdata();
+    int getDBRMdata();
 
     /**
      *@brief Send Msg to Process Monitor
      */
-	std::string sendMsgProcMon1( std::string module, messageqcpp::ByteStream msg, int requestID );
+    std::string sendMsgProcMon1( std::string module, messageqcpp::ByteStream msg, int requestID );
 
     /**
      *@brief check if module failover is needed due to a process outage
      */
-	void checkProcessFailover( std::string processName);
+    void checkProcessFailover( std::string processName);
 
     /**
      *@brief run upgrade script
      */
-	int runUpgrade(std::string mysqlpw);
+    int runUpgrade(std::string mysqlpw);
 
     /**
      *@brief change my.cnf
      */
-	int changeMyCnf(std::string type);
+    int changeMyCnf(std::string type);
 
     /**
      *@brief run Master Replication script
      */
-	int runMasterRep(std::string& masterLogFile, std::string& masterLogPos);
+    int runMasterRep(std::string& masterLogFile, std::string& masterLogPos);
 
     /**
      *@brief run Master Distribution
      */
-	int runMasterDist(std::string& password, std::string& slaveModule);
+    int runMasterDist(std::string& password, std::string& slaveModule);
 
     /**
      *@brief run Slave Replication script
      */
-	int runSlaveRep(std::string& masterLogFile, std::string& masterLogPos, std::string& port);
+    int runSlaveRep(std::string& masterLogFile, std::string& masterLogPos, std::string& port);
 
     /**
      *@brief run Disable Replication script
      */
 
-	int runDisableRep();
+    int runDisableRep();
 
     /**
      *@brief Amazon Instance and IP check
      */
-	bool amazonIPCheck();
+    bool amazonIPCheck();
 
     /**
      *@brief UnMOunt any extra dbroots
      */
-	void unmountExtraDBroots();
+    void unmountExtraDBroots();
 
     /**
      *@brief Calculate TotalUmMemory
      */
-	void calTotalUmMemory();
+    void calTotalUmMemory();
 
     /**
      *@brief Amazon Volume check
      */
-	bool amazonVolumeCheck(int dbrootID = 0);
+    bool amazonVolumeCheck(int dbrootID = 0);
 
     /**
      *@brief  Check Data Mounts
      */
-	int checkDataMount();
+    int checkDataMount();
 
-	/** @brief flush inode cache
-		*/
-	void flushInodeCache();
+    /** @brief flush inode cache
+    	*/
+    void flushInodeCache();
 
-	/** @brief glusterAssign
-		*/
-	int glusterAssign(std::string dbrootID);
+    /** @brief glusterAssign
+    	*/
+    int glusterAssign(std::string dbrootID);
 
-	/** @brief glusterUnassign
-		*/
-	int glusterUnassign(std::string dbrootID);
+    /** @brief glusterUnassign
+    	*/
+    int glusterUnassign(std::string dbrootID);
 
-	/**
-	* return the process list
-	*/
+    /**
+    * return the process list
+    */
 //	processStatusList*	statusListPtr();
 
 //	processStatusList fstatusListPtr;
 
 private:
     /*need define copy ans assignment constructor */
-    MonitorConfig	&config;
-    MonitorLog		&log;
+    MonitorConfig&	config;
+    MonitorLog&		log;
 };
 
 }   //end of namespace
 
 
-	
+
 #endif // _PROCESSMONITOR_H_

@@ -50,7 +50,7 @@ class BRMReporter;
 class TableInfo;
 struct DBRootExtentInfo;
 
-enum Status 
+enum Status
 {
     PARSE_COMPLETE = 0,
     READ_COMPLETE,
@@ -129,7 +129,7 @@ struct ColumnInfo
     // Public Data Members
     //--------------------------------------------------------------------------
 
-    /** @brief Current column 
+    /** @brief Current column
      */
     Column curCol;
 
@@ -157,7 +157,7 @@ struct ColumnInfo
 
     /** @brief Instance of the write buffer manager.
      */
-    ColumnBufferManager *fColBufferMgr;
+    ColumnBufferManager* fColBufferMgr;
 
     /** @brief Freespace (in bytes) at the end of the current db column file
      *   For compressed data files, this is the "raw" data byte count,
@@ -207,7 +207,7 @@ struct ColumnInfo
      *  corresponding column token file.
      */
     int  updateDctnryStore(char* buf,
-                           ColPosPair ** pos,
+                           ColPosPair** pos,
                            const int totalRow,
                            char* tokenBuf);
 
@@ -311,33 +311,33 @@ struct ColumnInfo
      *  @param bIsNewExtent Treat as new extent when updating CP min/max
      */
     int setupInitialColumnExtent( uint16_t dbRoot,
-                       uint32_t partition,
-                       uint16_t segment,
-                       const std::string& tblName,
-                       BRM::LBID_t lbid,
-                       HWM     oldHwm,
-                       HWM     hwm,
-                       bool    bSkippedToNewExtent,
-                       bool    bIsNewExtent );
+                                  uint32_t partition,
+                                  uint16_t segment,
+                                  const std::string& tblName,
+                                  BRM::LBID_t lbid,
+                                  HWM     oldHwm,
+                                  HWM     hwm,
+                                  bool    bSkippedToNewExtent,
+                                  bool    bIsNewExtent );
 
-   /** @brief Setup a DB file to be created for starting extent only when needed
-    *  @param dbRoot     DBRoot of starting extent
-    *  @param partition  Partition number of starting extent
-    *  @param segment    Segment file number of starting extent
-    *  @param hwm        Starting HWM for new start extent
-    *  @param bEmptyPM   Are we setting up delayed file creation because a PM
-    *                    has no extents (or is the HWM extent just disabled)
-    */
+    /** @brief Setup a DB file to be created for starting extent only when needed
+     *  @param dbRoot     DBRoot of starting extent
+     *  @param partition  Partition number of starting extent
+     *  @param segment    Segment file number of starting extent
+     *  @param hwm        Starting HWM for new start extent
+     *  @param bEmptyPM   Are we setting up delayed file creation because a PM
+     *                    has no extents (or is the HWM extent just disabled)
+     */
     void setupDelayedFileCreation(
-                       uint16_t dbRoot,
-                       uint32_t partition,
-                       uint16_t segment,
-                       HWM       hwm,
-                       bool      bEmptyPM );
+        uint16_t dbRoot,
+        uint32_t partition,
+        uint16_t segment,
+        HWM       hwm,
+        bool      bEmptyPM );
 
-   /** @brief Belatedly create a starting DB file for a PM that has none.
-    *  @param tableName Name of table for which this column belongs
-    */
+    /** @brief Belatedly create a starting DB file for a PM that has none.
+     *  @param tableName Name of table for which this column belongs
+     */
     int createDelayedFileIfNeeded( const std::string& tableName );
 
     /** @brief Update how many bytes of data are in the column segment file and
@@ -371,7 +371,7 @@ struct ColumnInfo
      * @param sNum Segment number of relevant dictionary store segment file.
      */
     virtual int truncateDctnryStore(OID dctnryOid,
-        uint16_t root, uint32_t pNum, uint16_t sNum) const;
+                                    uint16_t root, uint32_t pNum, uint16_t sNum) const;
 
     /** @brief Increment saturated row count for this column in current import
      * @param satIncCnt Increment count to add to the total saturation count.
@@ -397,7 +397,7 @@ struct ColumnInfo
      */
     unsigned rowsPerExtent( );
 
-  protected:
+protected:
 
     //--------------------------------------------------------------------------
     // Protected Functions
@@ -416,7 +416,7 @@ struct ColumnInfo
     void lastInputRowInExtentInit( bool bIsNewExtent );
 
     virtual int resetFileOffsetsNewExtent(const char* hdr);
-                                            // Reset file; start new extent
+    // Reset file; start new extent
     void setFileSize( HWM hwm, int abbrevFlag ); // Set fileSize data member
 
     // Prepare initial column segment file for importing of data.
@@ -424,7 +424,7 @@ struct ColumnInfo
     //     used for abbreviated extents, to detect when block skipping has
     //     caused us to require a full expanded extent.
     // newHWM - Starting point for adding data after initial blockskipping
-    virtual int setupInitialColumnFile( HWM oldHWM,   // original HWM 
+    virtual int setupInitialColumnFile( HWM oldHWM,   // original HWM
                                         HWM newHWM ); // new HWM to start from
 
     virtual int saveDctnryStoreHWMChunk(bool& needBackup);//Backup Dct HWM Chunk
@@ -499,7 +499,7 @@ struct ColumnInfo
     int          fColWidthFactor;           // Wid factor relative to other cols
 
     InitialDBFileStat fDelayedFileCreation; // Denotes when initial DB file is
-                                            // to be created after preprocessing
+    // to be created after preprocessing
 
     unsigned     fRowsPerExtent;            // Number of rows per column extent
 };
@@ -524,7 +524,7 @@ inline int64_t ColumnInfo::getFileSize( ) const
 
 inline void ColumnInfo::incSaturatedCnt( int64_t satIncCnt )
 {
-	(void)atomicops::atomicAdd(&fSaturatedRowCnt, satIncCnt);
+    (void)atomicops::atomicAdd(&fSaturatedRowCnt, satIncCnt);
 }
 
 inline bool ColumnInfo::isAbbrevExtent( )

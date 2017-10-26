@@ -19,24 +19,24 @@
 #define STATISTICS_H
 
 
-typedef struct receiver_stats *receiver_stats_t;
-typedef struct sender_stats *sender_stats_t;
+typedef struct receiver_stats* receiver_stats_t;
+typedef struct sender_stats* sender_stats_t;
 
 #define allocReadStats udpc_allocReadStats
 #define receiverStatsStartTimer udpc_receiverStatsStartTimer
 #define displayReceiverStats udpc_displayReceiverStats
 
 receiver_stats_t udpc_allocReadStats(int fd, long statPeriod,
-				     int printUncompressedPos);
+                                     int printUncompressedPos);
 void udpc_receiverStatsStartTimer(receiver_stats_t);
 void udpc_displayReceiverStats(receiver_stats_t, int isFinal);
 
 #define allocSenderStats udpc_allocSenderStats
 #define displaySenderStats udpc_displaySenderStats
 
-sender_stats_t udpc_allocSenderStats(int fd, FILE *logfile, long bwPeriod,
-				     long statPeriod, int printUncompressedPos);
-void udpc_displaySenderStats(sender_stats_t,int blockSize, int sliceSize,
-			     int isFinal);
+sender_stats_t udpc_allocSenderStats(int fd, FILE* logfile, long bwPeriod,
+                                     long statPeriod, int printUncompressedPos);
+void udpc_displaySenderStats(sender_stats_t, int blockSize, int sliceSize,
+                             int isFinal);
 
 #endif

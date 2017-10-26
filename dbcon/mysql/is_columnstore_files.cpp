@@ -37,7 +37,7 @@
 #include "we_messages.h"
 
 // Required declaration as it isn't in a MairaDB include
-bool schema_table_store_record(THD *thd, TABLE *table);
+bool schema_table_store_record(THD* thd, TABLE* table);
 
 ST_FIELD_INFO is_columnstore_files_fields[] =
 {
@@ -50,7 +50,7 @@ ST_FIELD_INFO is_columnstore_files_fields[] =
     {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
 };
 
-static bool get_file_sizes(messageqcpp::MessageQueueClient *msgQueueClient, const char *fileName, off_t *fileSize, off_t *compressedFileSize)
+static bool get_file_sizes(messageqcpp::MessageQueueClient* msgQueueClient, const char* fileName, off_t* fileSize, off_t* compressedFileSize)
 {
     messageqcpp::ByteStream bs;
     messageqcpp::ByteStream::byte rc;
@@ -65,11 +65,13 @@ static bool get_file_sizes(messageqcpp::MessageQueueClient *msgQueueClient, cons
         // namespace??
         messageqcpp::SBS sbs;
         sbs = msgQueueClient->read();
+
         if (sbs->length() == 0)
         {
             delete msgQueueClient;
             return false;
         }
+
         *sbs >> rc;
         *sbs >> errMsg;
         *sbs >> *fileSize;
@@ -82,22 +84,22 @@ static bool get_file_sizes(messageqcpp::MessageQueueClient *msgQueueClient, cons
     }
 }
 
-static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
+static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
-    BRM::DBRM *emp = new BRM::DBRM();
+    BRM::DBRM* emp = new BRM::DBRM();
     std::vector<struct BRM::EMEntry> entries;
-    CHARSET_INFO *cs = system_charset_info;
-    TABLE *table = tables->table;
+    CHARSET_INFO* cs = system_charset_info;
+    TABLE* table = tables->table;
 
     char oidDirName[WriteEngine::FILE_NAME_SIZE];
-	char fullFileName[WriteEngine::FILE_NAME_SIZE];
+    char fullFileName[WriteEngine::FILE_NAME_SIZE];
     char dbDir[WriteEngine::MAX_DB_DIR_LEVEL][WriteEngine::MAX_DB_DIR_NAME_SIZE];
     config::Config* config = config::Config::makeConfig();
     WriteEngine::Config we_config;
     off_t fileSize = 0;
     off_t compressedFileSize = 0;
     we_config.initConfigCache();
-    messageqcpp::MessageQueueClient *msgQueueClient;
+    messageqcpp::MessageQueueClient* msgQueueClient;
     oam::Oam oam_instance;
     int pmId = 0;
 
@@ -109,13 +111,15 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     execplan::ObjectIDManager oidm;
     BRM::OID_t MaxOID = oidm.size();
 
-    for(BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
+    for (BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
     {
         emp->getExtents(oid, entries, false, false, true);
+
         if (entries.size() == 0)
             continue;
 
         std::vector<struct BRM::EMEntry>::const_iterator iter = entries.begin();
+
         while ( iter != entries.end() ) //organize extents into files
         {
             // Don't include files more than once at different block offsets
@@ -124,6 +128,7 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 iter++;
                 continue;
             }
+
             table->field[0]->store(oid);
             table->field[1]->store(iter->segmentNum);
             table->field[2]->store(iter->partitionNum);
@@ -139,19 +144,21 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
             oss << "pm" << pmId << "_WriteEngineServer";
             std::string client = oss.str();
             msgQueueClient = messageqcpp::MessageQueueClientPool::getInstance(oss.str());
-        
+
             if (!get_file_sizes(msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
             {
                 messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
                 delete emp;
                 return 1;
             }
+
             table->field[3]->store(fullFileName, strlen(fullFileName), cs);
 
             if (fileSize > 0)
             {
                 table->field[4]->set_notnull();
                 table->field[4]->store(fileSize);
+
                 if (compressedFileSize > 0)
                 {
                     table->field[5]->set_notnull();
@@ -174,18 +181,20 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 delete emp;
                 return 1;
             }
+
             iter++;
             messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
             msgQueueClient = NULL;
         }
     }
+
     delete emp;
     return 0;
 }
 
-static int is_columnstore_files_plugin_init(void *p)
+static int is_columnstore_files_plugin_init(void* p)
 {
-    ST_SCHEMA_TABLE *schema = (ST_SCHEMA_TABLE*) p;
+    ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*) p;
     schema->fields_info = is_columnstore_files_fields;
     schema->fill_table = is_columnstore_files_fill;
     return 0;

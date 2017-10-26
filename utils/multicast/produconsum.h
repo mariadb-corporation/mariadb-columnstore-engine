@@ -18,7 +18,7 @@
 #ifndef PRODUCONSUM_H
 #define PRODUCONSUM_H
 
-typedef struct produconsum *produconsum_t;
+typedef struct produconsum* produconsum_t;
 
 /**
  * Get contiguous chunk of data

@@ -404,60 +404,64 @@ public:
 
 };
 
-   void destroySemaphores()
-    {
-        key_t semkey;
-        int sems, err;
+void destroySemaphores()
+{
+    key_t semkey;
+    int sems, err;
 
-        semkey = 0x2149bdd2;
-        sems = semget(semkey, 2, 0666);
-        if (sems != -1)
+    semkey = 0x2149bdd2;
+    sems = semget(semkey, 2, 0666);
+
+    if (sems != -1)
+    {
+        err = semctl(sems, 0, IPC_RMID);
+
+        if (err == -1)
+            perror("tdriver: semctl");
+    }
+}
+
+
+
+void destroyShmseg()
+{
+    key_t shmkey;
+    int shms, err;
+
+    shmkey = 0x2149bdd2;
+    shms = shmget(shmkey, 0, 0666);
+
+    if (shms != -1)
+    {
+        err = shmctl(shms, IPC_RMID, NULL);
+
+        if (err == -1 && errno != EINVAL)
         {
-            err = semctl(sems, 0, IPC_RMID);
-            if (err == -1)
-                perror("tdriver: semctl");
+            perror("tdriver: shmctl");
+            return;
         }
     }
+}
 
+void setUp()
+{
+    destroySemaphores();
+    destroyShmseg();
+    unlink("/tmp/oidbitmap");
+    SystemCatalogBuilder::build();
+}
 
-
-    void destroyShmseg()
-    {
-        key_t shmkey;
-        int shms, err;
-
-        shmkey = 0x2149bdd2;
-        shms = shmget(shmkey, 0, 0666);
-        if (shms != -1)
-        {
-            err = shmctl(shms, IPC_RMID, NULL);
-            if (err == -1 && errno != EINVAL)
-            {
-                perror("tdriver: shmctl");
-                return;
-            }
-        }
-    }
-
-    void setUp()
-    {
-        destroySemaphores();
-        destroyShmseg();
-        unlink("/tmp/oidbitmap");
-        SystemCatalogBuilder::build();
-    }
-
-    void tearDown()
-    {
-        destroySemaphores();
-        destroyShmseg();
-        unlink("/tmp/oidbitmap");
-    }
+void tearDown()
+{
+    destroySemaphores();
+    destroyShmseg();
+    unlink("/tmp/oidbitmap");
+}
 
 class DDLPackageProcessorTest : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(DDLPackageProcessorTest);
-   
+
     /*
     CPPUNIT_TEST( test_createtable );
     CPPUNIT_TEST( test_createtable_region );
@@ -474,10 +478,10 @@ class DDLPackageProcessorTest : public CppUnit::TestFixture
     CPPUNIT_TEST( test_altertable_dropcolumns );
     CPPUNIT_TEST( test_altertable_addcolumns );
     CPPUNIT_TEST( test_altertable_addtableconstraint );
-    CPPUNIT_TEST( test_altertable_droptableconstraint ); 
+    CPPUNIT_TEST( test_altertable_droptableconstraint );
     CPPUNIT_TEST( test_altertable_setcolumndefault );
-    CPPUNIT_TEST( test_altertable_dropcolumndefault ); 
-    CPPUNIT_TEST( test_altertable_renametable ); 
+    CPPUNIT_TEST( test_altertable_dropcolumndefault );
+    CPPUNIT_TEST( test_altertable_renametable );
     CPPUNIT_TEST( test_dropindex );
     CPPUNIT_TEST( test_droptable );  */
 
@@ -492,30 +496,33 @@ public:
      */
     void test_createtable_region()
     {
-	cout << "Begining create region table testing..." << endl;
-        std::string sqlbuf = "create table region( r_regionkey integer NOT NULL, r_name char(25) ,r_comment varchar(152));"; 
+        cout << "Begining create region table testing..." << endl;
+        std::string sqlbuf = "create table region( r_regionkey integer NOT NULL, r_name char(25) ,r_comment varchar(152));";
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 CreateTableProcessor processor;
                 processor.setDebugLevel(CreateTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 CreateTableProcessor::DDLResult result;
 
                 result  = processor.processPackage(dynamic_cast<CreateTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -524,36 +531,39 @@ public:
         //setUp();
         //removeSystemCatalog();
         //createSystemCatalog();
-	cout << "Begining create table testing..." << endl;
-        std::string sqlbuf = "create table tpch.part( p_partkey integer NOT NULL ,p_name varchar(55) default 'helloworld', p_mfgr char(6), p_brand char(10) , p_type varchar(25) default 'foobar' , p_size integer , p_container char(10) ,p_retailprice integer , p_comment varchar(23), CONSTRAINT PK_PART PRIMARY KEY(p_partkey) )"; 
+        cout << "Begining create table testing..." << endl;
+        std::string sqlbuf = "create table tpch.part( p_partkey integer NOT NULL ,p_name varchar(55) default 'helloworld', p_mfgr char(6), p_brand char(10) , p_type varchar(25) default 'foobar' , p_size integer , p_container char(10) ,p_retailprice integer , p_comment varchar(23), CONSTRAINT PK_PART PRIMARY KEY(p_partkey) )";
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 CreateTableProcessor processor;
                 processor.setDebugLevel(CreateTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
-		        
-				CreateTableStatement& ct = dynamic_cast<CreateTableStatement&>(stmt);
-					
-				cout << "Parsed CreateTable:" << endl;
-				cout << ct << endl;
+                SqlStatement& stmt = *ptree.fList[0];
+
+                CreateTableStatement& ct = dynamic_cast<CreateTableStatement&>(stmt);
+
+                cout << "Parsed CreateTable:" << endl;
+                cout << ct << endl;
 
                 CreateTableProcessor::DDLResult result;
 
                 result  = processor.processPackage(ct);
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -563,86 +573,93 @@ public:
         std::string sqlbuf = "CREATE  INDEX test_idx ON tpch.part (p_size)";
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
 
             try
             {
                 CreateIndexProcessor processor;
                 processor.setDebugLevel(CreateIndexProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 CreateIndexProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<CreateIndexStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
     void test_createuniqueindex()
     {
-	cout << "Begining create unique index test ..." << endl;
+        cout << "Begining create unique index test ..." << endl;
         std::string sqlbuf = "CREATE UNIQUE INDEX test_idx ON tpch.part (p_mfgr)";
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
 
             try
             {
                 CreateIndexProcessor processor;
                 processor.setDebugLevel(CreateIndexProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 CreateIndexProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<CreateIndexStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
     void test_altertable_addacolumn()
     {
-	cout << "Begoning Alter Table Add column test ..." << endl;
+        cout << "Begoning Alter Table Add column test ..." << endl;
         std::string sqlbuf = "ALTER TABLE tpch.part ADD COLUMN c3 char(50)";
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -653,56 +670,62 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
-   void test_altertable_addacolumnunique()
+    void test_altertable_addacolumnunique()
     {
         cout << "Begining Alter Table add column with constraint test ..." << endl;
         std::string sqlbuf = "ALTER TABLE tpch.part ADD COLUMN c3 char(50) UNIQUE";
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
     void test_altertable_dropacolumn()
@@ -712,26 +735,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -742,26 +768,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -772,26 +801,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
     void test_dropindex()
@@ -801,27 +833,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
 
             try
             {
                 DropIndexProcessor processor;
                 processor.setDebugLevel(DropIndexProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 DropIndexProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<DropIndexStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
     void test_altertable_renamecolumn()
@@ -831,26 +865,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -862,26 +899,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
     void test_altertable_addtableconstraint()
@@ -891,26 +931,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -921,26 +964,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -951,26 +997,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
     void test_altertable_dropcolumndefault()
@@ -980,26 +1029,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -1010,26 +1062,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 AlterTableProcessor processor;
-				processor.setDebugLevel(AlterTableProcessor::VERBOSE);
+                processor.setDebugLevel(AlterTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 AlterTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<AlterTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -1040,27 +1095,29 @@ public:
 
         SqlParser parser;
         parser.Parse(sqlbuf.c_str());
+
         if (parser.Good())
         {
-            const ParseTree &ptree = parser.GetParseTree();
+            const ParseTree& ptree = parser.GetParseTree();
 
             try
             {
                 DropTableProcessor processor;
                 processor.setDebugLevel(DropTableProcessor::VERBOSE);
 
-                SqlStatement &stmt = *ptree.fList[0];
+                SqlStatement& stmt = *ptree.fList[0];
                 DropTableProcessor::DDLResult result;
 
                 result = processor.processPackage(dynamic_cast<DropTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 tearDown();
                 throw;
             }
         }
+
         tearDown();
     }
 
@@ -1071,12 +1128,12 @@ CPPUNIT_TEST_SUITE_REGISTRATION( DDLPackageProcessorTest );
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
     // Uncomment before running tests
     //setUp();
     CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
     runner.addTest( registry.makeTest() );
     bool wasSuccessful = runner.run( "", false );
     return (wasSuccessful ? 0 : 1);

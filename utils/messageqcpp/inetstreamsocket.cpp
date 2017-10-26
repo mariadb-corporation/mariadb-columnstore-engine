@@ -20,13 +20,13 @@
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
+modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -40,7 +40,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The views and conclusions contained in the software and documentation are those
-of the authors and should not be interpreted as representing official policies, 
+of the authors and should not be interpreted as representing official policies,
 either expressed or implied, of the FreeBSD Project.
 */
 
@@ -96,7 +96,8 @@ using boost::scoped_array;
 #include "idbcompress.h"
 
 // some static functions
-namespace {
+namespace
+{
 using messageqcpp::ByteStream;
 
 // @bug 2441 - Retry after 512 read() error.
@@ -107,45 +108,48 @@ using messageqcpp::ByteStream;
 //const int KERR_ERESTARTSYS = 512;
 
 #ifdef _MSC_VER
-const int MaxSendPacketSize=64 * 1024;
+const int MaxSendPacketSize = 64 * 1024;
 #endif
 
 int in_cksum(unsigned short* buf, int sz)
 {
-	int nleft = sz;
-	int sum = 0;
-	unsigned short* w = buf;
-	unsigned short ans = 0;
+    int nleft = sz;
+    int sum = 0;
+    unsigned short* w = buf;
+    unsigned short ans = 0;
 
-	while (nleft > 1) {
-		sum += *w++;
-		nleft -= 2;
-	}
+    while (nleft > 1)
+    {
+        sum += *w++;
+        nleft -= 2;
+    }
 
-	if (nleft == 1) {
-		*(unsigned char*)(&ans) = *(unsigned char*)w;
-		sum += ans;
-	}
+    if (nleft == 1)
+    {
+        *(unsigned char*)(&ans) = *(unsigned char*)w;
+        sum += ans;
+    }
 
-	sum = (sum >> 16) + (sum & 0xFFFF);
-	sum += (sum >> 16);
-	ans = ~sum;
-	return ans;
+    sum = (sum >> 16) + (sum & 0xFFFF);
+    sum += (sum >> 16);
+    ans = ~sum;
+    return ans;
 }
 
 } //namespace anon
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 
 InetStreamSocket::InetStreamSocket(size_t blocksize) :
-	fSocketParms(PF_INET, SOCK_STREAM, IPPROTO_TCP),
-	fBlocksize(blocksize),
-	fSyncProto(true),
-	fMagicBuffer(0)
+    fSocketParms(PF_INET, SOCK_STREAM, IPPROTO_TCP),
+    fBlocksize(blocksize),
+    fSyncProto(true),
+    fMagicBuffer(0)
 {
-	memset(&fSa, 0, sizeof(fSa));
-	fConnectionTimeout.tv_sec = 20;
-	fConnectionTimeout.tv_nsec = 0;
+    memset(&fSa, 0, sizeof(fSa));
+    fConnectionTimeout.tv_sec = 20;
+    fConnectionTimeout.tv_nsec = 0;
 }
 
 InetStreamSocket::~InetStreamSocket()
@@ -154,129 +158,144 @@ InetStreamSocket::~InetStreamSocket()
 
 void InetStreamSocket::open()
 {
-	int bufferSize;
-	int ret;
-	socklen_t bufferSizeSize;
+    int bufferSize;
+    int ret;
+    socklen_t bufferSizeSize;
 
-	if (isOpen())
-		throw logic_error("InetStreamSocket::open: socket is already open");
+    if (isOpen())
+        throw logic_error("InetStreamSocket::open: socket is already open");
 
-	int sd;
-	sd = ::socket(fSocketParms.domain(), fSocketParms.type(), fSocketParms.protocol());
-	int e = errno;
+    int sd;
+    sd = ::socket(fSocketParms.domain(), fSocketParms.type(), fSocketParms.protocol());
+    int e = errno;
 
-	if (sd < 0)
-	{
+    if (sd < 0)
+    {
 #ifdef _MSC_VER
-		int wsaError = WSAGetLastError();
-		if (wsaError == WSANOTINITIALISED)
-		{
-			WSAData wsadata;
-			const WORD minVersion = MAKEWORD(2, 2);
-			if (WSAStartup(minVersion, &wsadata) == 0)
-			{
-				if (wsadata.wVersion == minVersion)
-				{
-					sd = ::socket(fSocketParms.domain(), fSocketParms.type(), fSocketParms.protocol());
-					e = errno;
-					if (sd >= 0) goto setopts;
-				}
-				//Didn't get the required min version, error out
-			}
-			//WSAStartup failed, continue to report error
-		}
+        int wsaError = WSAGetLastError();
+
+        if (wsaError == WSANOTINITIALISED)
+        {
+            WSAData wsadata;
+            const WORD minVersion = MAKEWORD(2, 2);
+
+            if (WSAStartup(minVersion, &wsadata) == 0)
+            {
+                if (wsadata.wVersion == minVersion)
+                {
+                    sd = ::socket(fSocketParms.domain(), fSocketParms.type(), fSocketParms.protocol());
+                    e = errno;
+
+                    if (sd >= 0) goto setopts;
+                }
+
+                //Didn't get the required min version, error out
+            }
+
+            //WSAStartup failed, continue to report error
+        }
+
 #endif
-		string msg = "InetStreamSocket::open: socket() error: ";
- 		scoped_array<char> buf(new char[80]);
+        string msg = "InetStreamSocket::open: socket() error: ";
+        scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
-		const char* p;
-		if ((p = strerror_r(e, buf.get(), 80)) != 0)
-			msg += p;
+        const char* p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) != 0)
+            msg += p;
+
 #else
-		int p;
-		if ((p = strerror_r(e, buf.get(), 80)) == 0)
-			msg += buf.get();
+        int p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) == 0)
+            msg += buf.get();
+
 #endif
-		throw runtime_error(msg);
-	}
+        throw runtime_error(msg);
+    }
 
 #ifdef _MSC_VER
 setopts:
 #endif
 
-/*  XXXPAT:  If we have latency problems again, try these... 
-	bufferSizeSize = 4;
-	bufferSize = 512000;
-	setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &bufferSize, bufferSizeSize);
-	bufferSize = 512000;
-	setsockopt(sd, SOL_SOCKET, SO_RCVBUF, &bufferSize, bufferSizeSize);
-	bufferSize = 1;
-	setsockopt(sd, SOL_SOCKET, SO_RCVLOWAT, &bufferSize, bufferSizeSize);
-	setsockopt(sd, SOL_SOCKET, SO_SNDLOWAT, &bufferSize, bufferSizeSize);
-*/
-	bufferSize = 1;
-	bufferSizeSize = 4;
-	ret = setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const char*)&bufferSize, bufferSizeSize);
-	if (ret < 0) {
-		perror("setsockopt");
-		exit(1);
-	}
-	bufferSize = 1;
-	ret = setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*)&bufferSize, bufferSizeSize);
-	if (ret < 0) {
-		perror("setsockopt");
-		exit(1);
-	}
+    /*  XXXPAT:  If we have latency problems again, try these...
+    	bufferSizeSize = 4;
+    	bufferSize = 512000;
+    	setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &bufferSize, bufferSizeSize);
+    	bufferSize = 512000;
+    	setsockopt(sd, SOL_SOCKET, SO_RCVBUF, &bufferSize, bufferSizeSize);
+    	bufferSize = 1;
+    	setsockopt(sd, SOL_SOCKET, SO_RCVLOWAT, &bufferSize, bufferSizeSize);
+    	setsockopt(sd, SOL_SOCKET, SO_SNDLOWAT, &bufferSize, bufferSizeSize);
+    */
+    bufferSize = 1;
+    bufferSizeSize = 4;
+    ret = setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const char*)&bufferSize, bufferSizeSize);
 
-	fSocketParms.sd(sd);
+    if (ret < 0)
+    {
+        perror("setsockopt");
+        exit(1);
+    }
+
+    bufferSize = 1;
+    ret = setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*)&bufferSize, bufferSizeSize);
+
+    if (ret < 0)
+    {
+        perror("setsockopt");
+        exit(1);
+    }
+
+    fSocketParms.sd(sd);
 }
 
 void InetStreamSocket::close()
 {
-	if (isOpen())
-	{
-		::shutdown(fSocketParms.sd(), SHUT_RDWR);
+    if (isOpen())
+    {
+        ::shutdown(fSocketParms.sd(), SHUT_RDWR);
 #ifdef _MSC_VER
-		::closesocket(fSocketParms.sd());
+        ::closesocket(fSocketParms.sd());
 #else
-		::close(fSocketParms.sd());
+        ::close(fSocketParms.sd());
 #endif
-		fSocketParms.sd(-1);
-	}
+        fSocketParms.sd(-1);
+    }
 }
 
 // needs to be in sync with clone()
 void InetStreamSocket::doCopy(const InetStreamSocket& rhs)
 {
-	fBlocksize = rhs.fBlocksize;
-	fSocketParms = rhs.fSocketParms;
-	fSa = rhs.fSa;
-	fConnectionTimeout = rhs.fConnectionTimeout;
-	fSyncProto = rhs.fSyncProto;
+    fBlocksize = rhs.fBlocksize;
+    fSocketParms = rhs.fSocketParms;
+    fSa = rhs.fSa;
+    fConnectionTimeout = rhs.fConnectionTimeout;
+    fSyncProto = rhs.fSyncProto;
 }
 
 // needs to be in sync with doCopy()
 Socket* InetStreamSocket::clone() const
 {
-	InetStreamSocket* iss = new InetStreamSocket(fBlocksize);
-	iss->fSocketParms = fSocketParms;
-	iss->fSa = fSa;
-	iss->fConnectionTimeout = fConnectionTimeout;
-	iss->fSyncProto = fSyncProto;
-	return iss;
+    InetStreamSocket* iss = new InetStreamSocket(fBlocksize);
+    iss->fSocketParms = fSocketParms;
+    iss->fSa = fSa;
+    iss->fConnectionTimeout = fConnectionTimeout;
+    iss->fSyncProto = fSyncProto;
+    return iss;
 }
 
 InetStreamSocket::InetStreamSocket(const InetStreamSocket& rhs)
 {
-	doCopy(rhs);
+    doCopy(rhs);
 }
 
 InetStreamSocket& InetStreamSocket::operator=(const InetStreamSocket& rhs)
 {
-	if (this != &rhs)
-		doCopy(rhs);
+    if (this != &rhs)
+        doCopy(rhs);
 
-	return *this;
+    return *this;
 }
 
 /* The caller needs to know when/if the remote closes the connection or sends data.
@@ -284,310 +303,375 @@ InetStreamSocket& InetStreamSocket::operator=(const InetStreamSocket& rhs)
  */
 int InetStreamSocket::pollConnection(int connectionNum, long msecs)
 {
-	struct pollfd pfd[1];
-	int err;
+    struct pollfd pfd[1];
+    int err;
 
 retry:
-	memset(&pfd, 0, sizeof(struct pollfd));
-	pfd[0].fd = connectionNum;
-	pfd[0].events = POLLIN;
-	err = poll(pfd, 1, msecs);
-	if (err < 0) {
-		int e = errno;
-		if (e == EINTR || e == KERR_ERESTARTSYS)
-			goto retry;
-	}
+    memset(&pfd, 0, sizeof(struct pollfd));
+    pfd[0].fd = connectionNum;
+    pfd[0].events = POLLIN;
+    err = poll(pfd, 1, msecs);
 
-	// Linux doesn't set POLLHUP, need add'l check for data or EOF
-	if (pfd[0].revents & POLLIN) {
-		char buf;
-		err = ::recv(connectionNum, &buf, 1, MSG_PEEK);
-		if (err == 0)
-			return 2;
-		else if (err == 1)	// there is in fact data to read
-			return 1;
-		else
-			return 3;
-	}
-	if (err == 0)	// timeout
-		return 0;
-	return 3;       // catch-all error code
+    if (err < 0)
+    {
+        int e = errno;
+
+        if (e == EINTR || e == KERR_ERESTARTSYS)
+            goto retry;
+    }
+
+    // Linux doesn't set POLLHUP, need add'l check for data or EOF
+    if (pfd[0].revents & POLLIN)
+    {
+        char buf;
+        err = ::recv(connectionNum, &buf, 1, MSG_PEEK);
+
+        if (err == 0)
+            return 2;
+        else if (err == 1)	// there is in fact data to read
+            return 1;
+        else
+            return 3;
+    }
+
+    if (err == 0)	// timeout
+        return 0;
+
+    return 3;       // catch-all error code
 }
 
 /* returns true when the next thing in the stream is the beginning of a new
 ByteStream object. */
-bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats *stats) const
+bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) const
 {
-	int err;
-	struct pollfd pfd[1];
-	uint8_t *magicBuffer8;
+    int err;
+    struct pollfd pfd[1];
+    uint8_t* magicBuffer8;
 
-	fMagicBuffer = 0;
-	magicBuffer8 = reinterpret_cast<uint8_t*>(&fMagicBuffer);
-	pfd[0].fd = fSocketParms.sd();
-	pfd[0].events = POLLIN;
-	
-	while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC)) {
+    fMagicBuffer = 0;
+    magicBuffer8 = reinterpret_cast<uint8_t*>(&fMagicBuffer);
+    pfd[0].fd = fSocketParms.sd();
+    pfd[0].events = POLLIN;
 
-		if (msecs >= 0) {
-			pfd[0].revents = 0;
+    while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
+    {
 
-			err = poll(pfd, 1, msecs);
-			if (err < 0) {
-				int e = errno;
-				if (e == EINTR) {
-					continue;
-				}
-				if (e == KERR_ERESTARTSYS) {
-					logIoError("InetStreamSocket::readToMagic(): I/O error1",e);
-					continue;
-				}
+        if (msecs >= 0)
+        {
+            pfd[0].revents = 0;
 
-				ostringstream oss;
-				oss << "InetStreamSocket::readToMagic(): I/O error1: " <<
-					strerror(e);
-				throw runtime_error(oss.str());
-			}
+            err = poll(pfd, 1, msecs);
 
-			if (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR)) {
-				ostringstream oss;
-				oss << "InetStreamSocket::readToMagic(): I/O error1: rc-" <<
-					err << "; poll signal interrupt ( ";
-				if (pfd[0].revents & POLLHUP)
-					oss << "POLLHUP ";
-				if (pfd[0].revents & POLLNVAL)
-					oss << "POLLNVAL ";
-				if (pfd[0].revents & POLLERR)
-					oss << "POLLERR ";
-				oss << ")";
-				throw runtime_error(oss.str());
-			}
+            if (err < 0)
+            {
+                int e = errno;
 
-			if (err == 0) // timeout
-			{
-				if (isTimeOut)
-					*isTimeOut = true;
-				return false;
-			}
-		}
+                if (e == EINTR)
+                {
+                    continue;
+                }
 
-		fMagicBuffer = fMagicBuffer >> 8;
+                if (e == KERR_ERESTARTSYS)
+                {
+                    logIoError("InetStreamSocket::readToMagic(): I/O error1", e);
+                    continue;
+                }
+
+                ostringstream oss;
+                oss << "InetStreamSocket::readToMagic(): I/O error1: " <<
+                    strerror(e);
+                throw runtime_error(oss.str());
+            }
+
+            if (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR))
+            {
+                ostringstream oss;
+                oss << "InetStreamSocket::readToMagic(): I/O error1: rc-" <<
+                    err << "; poll signal interrupt ( ";
+
+                if (pfd[0].revents & POLLHUP)
+                    oss << "POLLHUP ";
+
+                if (pfd[0].revents & POLLNVAL)
+                    oss << "POLLNVAL ";
+
+                if (pfd[0].revents & POLLERR)
+                    oss << "POLLERR ";
+
+                oss << ")";
+                throw runtime_error(oss.str());
+            }
+
+            if (err == 0) // timeout
+            {
+                if (isTimeOut)
+                    *isTimeOut = true;
+
+                return false;
+            }
+        }
+
+        fMagicBuffer = fMagicBuffer >> 8;
 retry:
 #ifdef _MSC_VER
-		err = ::recv(fSocketParms.sd(), (char*)&magicBuffer8[3], 1, 0);
+        err = ::recv(fSocketParms.sd(), (char*)&magicBuffer8[3], 1, 0);
 #else
-		err = ::read(fSocketParms.sd(), &magicBuffer8[3], 1);
+        err = ::read(fSocketParms.sd(), &magicBuffer8[3], 1);
 #endif
-		if (err < 0) {
-			int e = errno;
-#ifdef _MSC_VER
-			if (WSAGetLastError() == WSAECONNRESET)
-			{
-				//throw runtime_error("connection reset by peer");
-				if (msecs < 0) return false;
-				else throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
-			}
-#endif
-			if (e == EINTR) {
-				goto retry;
-			}
-			if (e == KERR_ERESTARTSYS) {
-				logIoError("InetStreamSocket::readToMagic(): I/O error2.0",e);
-				goto retry;
-			}
 
-			ostringstream oss;
-			oss << "InetStreamSocket::readToMagic(): I/O error2.1: " <<
-				"err = " << err << " e = " << e <<
+        if (err < 0)
+        {
+            int e = errno;
 #ifdef _MSC_VER
-				" WSA error = " << WSAGetLastError() <<
-#endif
-				": " << strerror(e);
-			throw runtime_error(oss.str());
-		}
 
-		// EOF. If no timeout was specified, ByteStream() gets returned to the caller.
-		// If one was, throw SocketClosed.
-		if (err == 0)	// EOF. if a timeout was specified, ByteStream() 
-		{
-			if (msecs < 0)
-				return false;
-			else 
-				throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
-		}
-		if (stats)
-			stats->dataRecvd(1);
-	}
-	return true;
+            if (WSAGetLastError() == WSAECONNRESET)
+            {
+                //throw runtime_error("connection reset by peer");
+                if (msecs < 0) return false;
+                else throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
+            }
+
+#endif
+
+            if (e == EINTR)
+            {
+                goto retry;
+            }
+
+            if (e == KERR_ERESTARTSYS)
+            {
+                logIoError("InetStreamSocket::readToMagic(): I/O error2.0", e);
+                goto retry;
+            }
+
+            ostringstream oss;
+            oss << "InetStreamSocket::readToMagic(): I/O error2.1: " <<
+                "err = " << err << " e = " << e <<
+#ifdef _MSC_VER
+                " WSA error = " << WSAGetLastError() <<
+#endif
+                ": " << strerror(e);
+            throw runtime_error(oss.str());
+        }
+
+        // EOF. If no timeout was specified, ByteStream() gets returned to the caller.
+        // If one was, throw SocketClosed.
+        if (err == 0)	// EOF. if a timeout was specified, ByteStream()
+        {
+            if (msecs < 0)
+                return false;
+            else
+                throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
+        }
+
+        if (stats)
+            stats->dataRecvd(1);
+    }
+
+    return true;
 }
 
-const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeOut, Stats *stats) const
+const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeOut, Stats* stats) const
 {
- 	long msecs = -1;
+    long msecs = -1;
 
-	struct pollfd pfd[1];
-	pfd[0].fd = fSocketParms.sd();
-	pfd[0].events = POLLIN;
+    struct pollfd pfd[1];
+    pfd[0].fd = fSocketParms.sd();
+    pfd[0].events = POLLIN;
 
-	if (timeout != 0)
-		msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
+    if (timeout != 0)
+        msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
-	// we need to read the 4-byte message length first.
-	uint32_t msglen;
-	uint8_t* msglenp = reinterpret_cast<uint8_t*>(&msglen);
-	size_t mlread = 0;
-	
-	if (readToMagic(msecs, isTimeOut, stats) == false)	//indicates a timeout or EOF
-	{
-		// MCOL-480 The connector calls with timeout in a loop so that
-		// it can check a killed flag. This means that for a long running query,
-		// the following fills the warning log.
+    // we need to read the 4-byte message length first.
+    uint32_t msglen;
+    uint8_t* msglenp = reinterpret_cast<uint8_t*>(&msglen);
+    size_t mlread = 0;
+
+    if (readToMagic(msecs, isTimeOut, stats) == false)	//indicates a timeout or EOF
+    {
+        // MCOL-480 The connector calls with timeout in a loop so that
+        // it can check a killed flag. This means that for a long running query,
+        // the following fills the warning log.
 //		if (isTimeOut && *isTimeOut)
 //		{
 //			logIoError("InetStreamSocket::read: timeout during readToMagic", 0);
 //		}
-	    return SBS(new ByteStream(0));
-	}
+        return SBS(new ByteStream(0));
+    }
 
-	//FIXME: This seems like a lot of work to read 4 bytes...
-	while (mlread < sizeof(msglen))
-	{
-		ssize_t t;
-		if (timeout != NULL) {
-			int err;
+    //FIXME: This seems like a lot of work to read 4 bytes...
+    while (mlread < sizeof(msglen))
+    {
+        ssize_t t;
 
-			pfd[0].revents = 0;
-			err = poll(pfd, 1, msecs);
-			if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-				ostringstream oss;
-				oss << "InetStreamSocket::read: I/O error1: " <<
-				  strerror(errno);
-				throw runtime_error(oss.str());
-			}
-			if (err == 0)  // timeout
-			{
-				if (isTimeOut)
-					*isTimeOut = true;
-				logIoError("InetStreamSocket::read: timeout during first poll", 0);
-				return SBS(new ByteStream(0));
-			}
-		}
+        if (timeout != NULL)
+        {
+            int err;
 
-#ifdef _MSC_VER
-		t = ::recv(fSocketParms.sd(), (char*)(msglenp + mlread), sizeof(msglen) - mlread, 0);
-#else
-		t = ::read(fSocketParms.sd(), msglenp + mlread, sizeof(msglen) - mlread);
-#endif
-		if (t == 0)
-		{
-			if (timeout == NULL)
-			{
-				logIoError("InetStreamSocket::read: timeout during first read", 0);
-				return SBS(new ByteStream(0));  // don't return an incomplete message
-			}
-			else
-				throw SocketClosed("InetStreamSocket::read: Remote is closed");
-		}
-		if (t < 0) {
-			int e = errno;
-			if (e == EINTR) {
-				continue;
-			}
-			if (e == KERR_ERESTARTSYS) {
-				logIoError("InetStreamSocket::read: I/O error2",e);
-				continue;
-			}
+            pfd[0].revents = 0;
+            err = poll(pfd, 1, msecs);
 
-			ostringstream oss;
-			oss << "InetStreamSocket::read: I/O error2: " <<
-			  strerror(e);
-			throw runtime_error(oss.str());
-		}
-		mlread += t;
-	}
-	if (stats)
-		stats->dataRecvd(sizeof(msglen));
+            if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+            {
+                ostringstream oss;
+                oss << "InetStreamSocket::read: I/O error1: " <<
+                    strerror(errno);
+                throw runtime_error(oss.str());
+            }
 
-	SBS res(new ByteStream(msglen));
- 	uint8_t* bufp = res->getInputPtr();
+            if (err == 0)  // timeout
+            {
+                if (isTimeOut)
+                    *isTimeOut = true;
 
-	size_t nread = 0;
-
-	//Finally read the actual message...
-	while (nread < msglen)
-	{
-		ssize_t t;
-
-		if (timeout != NULL) {
-			int err;
-
-			pfd[0].revents = 0;
-			err = poll(pfd, 1, msecs);
-			if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-				ostringstream oss;
-				oss << "InetStreamSocket::read: I/O error3: " <<
-					strerror(errno);
-				throw runtime_error(oss.str());
-			}
-			if (err == 0)  // timeout
-			{
-				if (isTimeOut)
-				{
-					logIoError("InetStreamSocket::read: timeout during second poll", 0);
-					*isTimeOut = true;
-				}
-				if (stats) 
-					stats->dataRecvd(nread);
-				return SBS(new ByteStream(0));
-			}
-		}
+                logIoError("InetStreamSocket::read: timeout during first poll", 0);
+                return SBS(new ByteStream(0));
+            }
+        }
 
 #ifdef _MSC_VER
-		int readAmount = std::min((int)msglen - (int)nread, MaxSendPacketSize);
-		t = ::recv(fSocketParms.sd(), (char*)(bufp + nread), readAmount, 0);
+        t = ::recv(fSocketParms.sd(), (char*)(msglenp + mlread), sizeof(msglen) - mlread, 0);
 #else
- 		t = ::read(fSocketParms.sd(), bufp + nread, msglen - nread);
+        t = ::read(fSocketParms.sd(), msglenp + mlread, sizeof(msglen) - mlread);
 #endif
-		if (t == 0) 
-		{
-			if (stats) 
-				stats->dataRecvd(nread);
-			if (timeout == NULL)
-				return SBS(new ByteStream(0));	// don't return an incomplete message
-			else
-			{
-				logIoError("InetStreamSocket::read: timeout during second read", 0);
-				throw SocketClosed("InetStreamSocket::read: Remote is closed");
-			}
-		}
-		if (t < 0) {
-			ostringstream oss;
-#ifdef _MSC_VER
-			int e = WSAGetLastError();
-			oss << "InetStreamSocket::read: I/O error4: WSA: " << e;
-#else
-			int e = errno;
-			if (e == EINTR) {
-				continue;
-			}
-			if (e == KERR_ERESTARTSYS) {
-				logIoError("InetStreamSocket::read: I/O error4",e);
-				continue;
-			}
 
-			oss << "InetStreamSocket::read: I/O error4: " <<
-				strerror(e);
+        if (t == 0)
+        {
+            if (timeout == NULL)
+            {
+                logIoError("InetStreamSocket::read: timeout during first read", 0);
+                return SBS(new ByteStream(0));  // don't return an incomplete message
+            }
+            else
+                throw SocketClosed("InetStreamSocket::read: Remote is closed");
+        }
+
+        if (t < 0)
+        {
+            int e = errno;
+
+            if (e == EINTR)
+            {
+                continue;
+            }
+
+            if (e == KERR_ERESTARTSYS)
+            {
+                logIoError("InetStreamSocket::read: I/O error2", e);
+                continue;
+            }
+
+            ostringstream oss;
+            oss << "InetStreamSocket::read: I/O error2: " <<
+                strerror(e);
+            throw runtime_error(oss.str());
+        }
+
+        mlread += t;
+    }
+
+    if (stats)
+        stats->dataRecvd(sizeof(msglen));
+
+    SBS res(new ByteStream(msglen));
+    uint8_t* bufp = res->getInputPtr();
+
+    size_t nread = 0;
+
+    //Finally read the actual message...
+    while (nread < msglen)
+    {
+        ssize_t t;
+
+        if (timeout != NULL)
+        {
+            int err;
+
+            pfd[0].revents = 0;
+            err = poll(pfd, 1, msecs);
+
+            if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+            {
+                ostringstream oss;
+                oss << "InetStreamSocket::read: I/O error3: " <<
+                    strerror(errno);
+                throw runtime_error(oss.str());
+            }
+
+            if (err == 0)  // timeout
+            {
+                if (isTimeOut)
+                {
+                    logIoError("InetStreamSocket::read: timeout during second poll", 0);
+                    *isTimeOut = true;
+                }
+
+                if (stats)
+                    stats->dataRecvd(nread);
+
+                return SBS(new ByteStream(0));
+            }
+        }
+
+#ifdef _MSC_VER
+        int readAmount = std::min((int)msglen - (int)nread, MaxSendPacketSize);
+        t = ::recv(fSocketParms.sd(), (char*)(bufp + nread), readAmount, 0);
+#else
+        t = ::read(fSocketParms.sd(), bufp + nread, msglen - nread);
 #endif
-			if (stats) 
-				stats->dataRecvd(nread);
-			throw runtime_error(oss.str());
-		}
-		nread += t;
-	}
-	if (stats) 
-		stats->dataRecvd(msglen);
-	res->advanceInputPtr(msglen);
-	return res;
+
+        if (t == 0)
+        {
+            if (stats)
+                stats->dataRecvd(nread);
+
+            if (timeout == NULL)
+                return SBS(new ByteStream(0));	// don't return an incomplete message
+            else
+            {
+                logIoError("InetStreamSocket::read: timeout during second read", 0);
+                throw SocketClosed("InetStreamSocket::read: Remote is closed");
+            }
+        }
+
+        if (t < 0)
+        {
+            ostringstream oss;
+#ifdef _MSC_VER
+            int e = WSAGetLastError();
+            oss << "InetStreamSocket::read: I/O error4: WSA: " << e;
+#else
+            int e = errno;
+
+            if (e == EINTR)
+            {
+                continue;
+            }
+
+            if (e == KERR_ERESTARTSYS)
+            {
+                logIoError("InetStreamSocket::read: I/O error4", e);
+                continue;
+            }
+
+            oss << "InetStreamSocket::read: I/O error4: " <<
+                strerror(e);
+#endif
+
+            if (stats)
+                stats->dataRecvd(nread);
+
+            throw runtime_error(oss.str());
+        }
+
+        nread += t;
+    }
+
+    if (stats)
+        stats->dataRecvd(msglen);
+
+    res->advanceInputPtr(msglen);
+    return res;
 }
 
 /*
@@ -595,287 +679,335 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
 * read side, we reverse it.
 */
 
-void InetStreamSocket::write(SBS msg, Stats *stats)
+void InetStreamSocket::write(SBS msg, Stats* stats)
 {
-	write(*msg, stats);
+    write(*msg, stats);
 }
 
-void InetStreamSocket::do_write(const ByteStream &msg, uint32_t whichMagic, Stats *stats) const
+void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stats* stats) const
 {
-	uint32_t msglen = msg.length();
-	uint32_t magic = whichMagic;
-	uint32_t *realBuf;
+    uint32_t msglen = msg.length();
+    uint32_t magic = whichMagic;
+    uint32_t* realBuf;
 
-	if (msglen == 0) return;
+    if (msglen == 0) return;
 
-	/* buf.fCurOutPtr points to the data to send; ByteStream guarantees that there
-	   are at least 8 bytes before that for the magic & length fields */
-	realBuf = (uint32_t *)msg.buf();
-	realBuf -= 2;
-	realBuf[0] = magic;
-	realBuf[1] = msglen;
+    /* buf.fCurOutPtr points to the data to send; ByteStream guarantees that there
+       are at least 8 bytes before that for the magic & length fields */
+    realBuf = (uint32_t*)msg.buf();
+    realBuf -= 2;
+    realBuf[0] = magic;
+    realBuf[1] = msglen;
 
-	try {
-		written(fSocketParms.sd(), (const uint8_t*)realBuf, msglen + sizeof(msglen) + sizeof(magic));
-	}
-	catch (std::exception& ex) {
-		string errorMsg(ex.what());
-		errorMsg += " -- write from " + toString();
-		throw runtime_error(errorMsg);
-	}
-	if (stats)
-		stats->dataSent(msglen + sizeof(msglen) + sizeof(magic));
+    try
+    {
+        written(fSocketParms.sd(), (const uint8_t*)realBuf, msglen + sizeof(msglen) + sizeof(magic));
+    }
+    catch (std::exception& ex)
+    {
+        string errorMsg(ex.what());
+        errorMsg += " -- write from " + toString();
+        throw runtime_error(errorMsg);
+    }
+
+    if (stats)
+        stats->dataSent(msglen + sizeof(msglen) + sizeof(magic));
 }
 
-void InetStreamSocket::write(const ByteStream& msg, Stats *stats)
+void InetStreamSocket::write(const ByteStream& msg, Stats* stats)
 {
-	do_write(msg, BYTESTREAM_MAGIC, stats);
+    do_write(msg, BYTESTREAM_MAGIC, stats);
 }
 
-void InetStreamSocket::write_raw(const ByteStream& msg, Stats *stats) const
+void InetStreamSocket::write_raw(const ByteStream& msg, Stats* stats) const
 {
-	uint32_t msglen = msg.length();
+    uint32_t msglen = msg.length();
 
-	if (msglen == 0) return;
+    if (msglen == 0) return;
 
-	try {
-		written(fSocketParms.sd(), msg.buf(), msglen);
-	}
-	catch (std::exception& ex) {
-		string errorMsg(ex.what());
-		errorMsg += " -- write_raw from " + toString();
-		throw runtime_error(errorMsg);
-	}
-	if (stats)
-		stats->dataSent(msglen);
+    try
+    {
+        written(fSocketParms.sd(), msg.buf(), msglen);
+    }
+    catch (std::exception& ex)
+    {
+        string errorMsg(ex.what());
+        errorMsg += " -- write_raw from " + toString();
+        throw runtime_error(errorMsg);
+    }
+
+    if (stats)
+        stats->dataSent(msglen);
 }
 
 void InetStreamSocket::bind(const sockaddr* serv_addr)
 {
-	memcpy(&fSa, serv_addr, sizeof(sockaddr_in));
-	if (::bind(fSocketParms.sd(), serv_addr, sizeof(sockaddr_in)) != 0)
-	{
-		int e = errno;
-		string msg = "InetStreamSocket::bind: bind() error: ";
- 		scoped_array<char> buf(new char[80]);
+    memcpy(&fSa, serv_addr, sizeof(sockaddr_in));
+
+    if (::bind(fSocketParms.sd(), serv_addr, sizeof(sockaddr_in)) != 0)
+    {
+        int e = errno;
+        string msg = "InetStreamSocket::bind: bind() error: ";
+        scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
-		const char* p;
-		if ((p = strerror_r(e, buf.get(), 80)) != 0)
-			msg += p;
+        const char* p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) != 0)
+            msg += p;
+
 #else
-		int p;
-		if ((p = strerror_r(e, buf.get(), 80)) == 0)
-			msg += buf.get();
+        int p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) == 0)
+            msg += buf.get();
+
 #endif
-		throw runtime_error(msg);
-	}
+        throw runtime_error(msg);
+    }
 
 }
 
 void InetStreamSocket::listen(int backlog)
 {
 #ifndef _MSC_VER
-	fcntl(socketParms().sd(), F_SETFD, fcntl(socketParms().sd(), F_GETFD) | FD_CLOEXEC);
+    fcntl(socketParms().sd(), F_SETFD, fcntl(socketParms().sd(), F_GETFD) | FD_CLOEXEC);
 #endif
-	if (::listen(socketParms().sd(), backlog) != 0)
-	{
-		int e = errno;
-		string msg = "InetStreamSocket::listen: listen() error: ";
- 		scoped_array<char> buf(new char[80]);
+
+    if (::listen(socketParms().sd(), backlog) != 0)
+    {
+        int e = errno;
+        string msg = "InetStreamSocket::listen: listen() error: ";
+        scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
-		const char* p;
-		if ((p = strerror_r(e, buf.get(), 80)) != 0)
-			msg += p;
+        const char* p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) != 0)
+            msg += p;
+
 #else
-		int p;
-		if ((p = strerror_r(e, buf.get(), 80)) == 0)
-			msg += buf.get();
+        int p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) == 0)
+            msg += buf.get();
+
 #endif
-		throw runtime_error(msg);
-	}
+        throw runtime_error(msg);
+    }
 
 }
 
 const IOSocket InetStreamSocket::accept(const struct timespec* timeout)
 {
-	int clientfd;
-	long msecs = 0;
+    int clientfd;
+    long msecs = 0;
 
-	IOSocket ios(new InetStreamSocket(fBlocksize));
+    IOSocket ios(new InetStreamSocket(fBlocksize));
 
-	struct pollfd pfd[1];
-	pfd[0].fd = socketParms().sd();
-	pfd[0].events = POLLIN;
+    struct pollfd pfd[1];
+    pfd[0].fd = socketParms().sd();
+    pfd[0].events = POLLIN;
 
-	if (timeout != 0)
-	{
-		msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
-		if (poll(pfd, 1, msecs) != 1 || (pfd[0].revents & POLLIN) == 0 ||
-			pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
-			return ios;
-	}
+    if (timeout != 0)
+    {
+        msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
-	struct sockaddr sa;
-	socklen_t sl = sizeof(sa);
-	int e;
-	do
-	{
-		clientfd = ::accept(socketParms().sd(), &sa, &sl);
-		e = errno;
-	} while (clientfd < 0 && (e == EINTR ||
+        if (poll(pfd, 1, msecs) != 1 || (pfd[0].revents & POLLIN) == 0 ||
+                pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+            return ios;
+    }
+
+    struct sockaddr sa;
+
+    socklen_t sl = sizeof(sa);
+
+    int e;
+
+    do
+    {
+        clientfd = ::accept(socketParms().sd(), &sa, &sl);
+        e = errno;
+    }
+    while (clientfd < 0 && (e == EINTR ||
 #ifdef ERESTART
-		e == ERESTART ||
+                            e == ERESTART ||
 #endif
 #ifdef ECONNABORTED
-		e == ECONNABORTED ||
+                            e == ECONNABORTED ||
 #endif
-		false));
-	if (clientfd < 0)
-	{
-		string msg = "InetStreamSocket::accept: accept() error: ";
- 		scoped_array<char> buf(new char[80]);
+                            false));
+
+    if (clientfd < 0)
+    {
+        string msg = "InetStreamSocket::accept: accept() error: ";
+        scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
-		const char* p;
-		if ((p = strerror_r(e, buf.get(), 80)) != 0)
-			msg += p;
+        const char* p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) != 0)
+            msg += p;
+
 #else
-		int p;
-		if ((p = strerror_r(e, buf.get(), 80)) == 0)
-			msg += buf.get();
+        int p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) == 0)
+            msg += buf.get();
+
 #endif
-		throw runtime_error(msg);
-	}
+        throw runtime_error(msg);
+    }
 
-	if (fSyncProto)
-	{
-		/* send a byte to artificially synchronize with connect() on the remote */
-		char b = 'A';
-		int ret;
+    if (fSyncProto)
+    {
+        /* send a byte to artificially synchronize with connect() on the remote */
+        char b = 'A';
+        int ret;
 
-		ret = ::send(clientfd, &b, 1, 0);
-		e = errno;
-		if (ret < 0) {
-			ostringstream  os;
-			char blah[80];
+        ret = ::send(clientfd, &b, 1, 0);
+        e = errno;
+
+        if (ret < 0)
+        {
+            ostringstream  os;
+            char blah[80];
 #if STRERROR_R_CHAR_P
-			const char* p;
-			if ((p = strerror_r(e, blah, 80)) != 0)
-				os << "InetStreamSocket::accept sync: " << p;
-#else
-			int p;
-			if ((p = strerror_r(e, blah, 80)) == 0)
-				os << "InetStreamSocket::accept sync: " << blah;
-#endif
-			::close(clientfd);
-			throw runtime_error(os.str());
-		}
-		else if (ret == 0) {
-			::close(clientfd);
-			throw runtime_error("InetStreamSocket::accept sync: got unexpected error code");
-		}
-	}
+            const char* p;
 
-	SocketParms sp;
-	sp = ios.socketParms();
-	sp.sd(clientfd);
-	ios.socketParms(sp);
-	ios.sa(&sa);
-	return ios;
+            if ((p = strerror_r(e, blah, 80)) != 0)
+                os << "InetStreamSocket::accept sync: " << p;
+
+#else
+            int p;
+
+            if ((p = strerror_r(e, blah, 80)) == 0)
+                os << "InetStreamSocket::accept sync: " << blah;
+
+#endif
+            ::close(clientfd);
+            throw runtime_error(os.str());
+        }
+        else if (ret == 0)
+        {
+            ::close(clientfd);
+            throw runtime_error("InetStreamSocket::accept sync: got unexpected error code");
+        }
+    }
+
+    SocketParms sp;
+    sp = ios.socketParms();
+    sp.sd(clientfd);
+    ios.socketParms(sp);
+    ios.sa(&sa);
+    return ios;
 
 }
 
 void InetStreamSocket::connect(const sockaddr* serv_addr)
 {
-	memcpy(&fSa, serv_addr, sizeof(sockaddr_in));
-	if (::connect(socketParms().sd(), serv_addr, sizeof(sockaddr_in)))
-	{
-		int e = errno;
-		string msg = "InetStreamSocket::connect: connect() error: ";
+    memcpy(&fSa, serv_addr, sizeof(sockaddr_in));
+
+    if (::connect(socketParms().sd(), serv_addr, sizeof(sockaddr_in)))
+    {
+        int e = errno;
+        string msg = "InetStreamSocket::connect: connect() error: ";
 #ifdef _MSC_VER
-		char m[80];
-		int x = WSAGetLastError();
-		if (x == WSAECONNREFUSED)
-			strcpy(m, "connection refused");
-		else
-			sprintf(m, "%d 0x%x", x, x);
-		msg += m;
+        char m[80];
+        int x = WSAGetLastError();
+
+        if (x == WSAECONNREFUSED)
+            strcpy(m, "connection refused");
+        else
+            sprintf(m, "%d 0x%x", x, x);
+
+        msg += m;
 #else
- 		scoped_array<char> buf(new char[80]);
-  #if STRERROR_R_CHAR_P
-		const char* p;
-		if ((p = strerror_r(e, buf.get(), 80)) != 0)
-			msg += p;
-  #else
-		int p;
-		if ((p = strerror_r(e, buf.get(), 80)) == 0)
-			msg += buf.get();
-  #endif
-#endif
-		msg += " to: " + toString();
-		throw runtime_error(msg);
-	}
-
-	if (!fSyncProto)
-		return;
-
-	/* read a byte to artificially synchronize with accept() on the remote */
-	int ret = -1;
-	int e = EBADF;
-	char buf = '\0';
-	struct pollfd pfd;
-
-	long msecs = fConnectionTimeout.tv_sec * 1000 + fConnectionTimeout.tv_nsec / 1000000;
-
-	do {
-		pfd.fd = socketParms().sd();
-		pfd.revents = 0;
-		pfd.events = POLLIN;
-		ret = poll(&pfd, 1, msecs);
-		e = errno;
-	} while (ret == -1 && e == EINTR && !(pfd.revents & (POLLERR | POLLHUP | POLLNVAL)));
-
-	// success
-	if (ret == 1) {
-#ifdef _MSC_VER
-		(void)::recv(socketParms().sd(), &buf, 1, 0);
-#else
-		(void)::read(socketParms().sd(), &buf, 1);
-#endif
-		return;
-	}
-
-	/* handle the various errors */
-	if (ret == 0)
-		throw runtime_error("InetStreamSocket::connect: connection timed out");
-	else if (ret == -1 && e != EINTR) {
-		ostringstream  os;
-		char blah[80];
+        scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P
-		const char* p;
-		if ((p = strerror_r(e, blah, 80)) != 0)
-			os << "InetStreamSocket::connect: " << p;
+        const char* p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) != 0)
+            msg += p;
+
 #else
-		int p;
-		if ((p = strerror_r(e, blah, 80)) == 0)
-			os << "InetStreamSocket::connect: " << blah;
+        int p;
+
+        if ((p = strerror_r(e, buf.get(), 80)) == 0)
+            msg += buf.get();
+
 #endif
-		throw runtime_error(os.str());
-	}
-	else
-		throw runtime_error("InetStreamSocket::connect: unknown connection error");
+#endif
+        msg += " to: " + toString();
+        throw runtime_error(msg);
+    }
+
+    if (!fSyncProto)
+        return;
+
+    /* read a byte to artificially synchronize with accept() on the remote */
+    int ret = -1;
+    int e = EBADF;
+    char buf = '\0';
+    struct pollfd pfd;
+
+    long msecs = fConnectionTimeout.tv_sec * 1000 + fConnectionTimeout.tv_nsec / 1000000;
+
+    do
+    {
+        pfd.fd = socketParms().sd();
+        pfd.revents = 0;
+        pfd.events = POLLIN;
+        ret = poll(&pfd, 1, msecs);
+        e = errno;
+    }
+    while (ret == -1 && e == EINTR && !(pfd.revents & (POLLERR | POLLHUP | POLLNVAL)));
+
+    // success
+    if (ret == 1)
+    {
+#ifdef _MSC_VER
+        (void)::recv(socketParms().sd(), &buf, 1, 0);
+#else
+        (void)::read(socketParms().sd(), &buf, 1);
+#endif
+        return;
+    }
+
+    /* handle the various errors */
+    if (ret == 0)
+        throw runtime_error("InetStreamSocket::connect: connection timed out");
+    else if (ret == -1 && e != EINTR)
+    {
+        ostringstream  os;
+        char blah[80];
+#if STRERROR_R_CHAR_P
+        const char* p;
+
+        if ((p = strerror_r(e, blah, 80)) != 0)
+            os << "InetStreamSocket::connect: " << p;
+
+#else
+        int p;
+
+        if ((p = strerror_r(e, blah, 80)) == 0)
+            os << "InetStreamSocket::connect: " << blah;
+
+#endif
+        throw runtime_error(os.str());
+    }
+    else
+        throw runtime_error("InetStreamSocket::connect: unknown connection error");
 }
 
 const string InetStreamSocket::toString() const
 {
-	ostringstream oss;
-	char buf[INET_ADDRSTRLEN];
-	const SocketParms& sp = fSocketParms;
-	oss << "InetStreamSocket: sd: " << sp.sd() <<
+    ostringstream oss;
+    char buf[INET_ADDRSTRLEN];
+    const SocketParms& sp = fSocketParms;
+    oss << "InetStreamSocket: sd: " << sp.sd() <<
 #ifndef _MSC_VER
-	       " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN) <<
+        " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN) <<
 #endif
-	       " port: " << ntohs(fSa.sin_port);
-	return oss.str();
+        " port: " << ntohs(fSa.sin_port);
+    return oss.str();
 }
 
 //
@@ -885,190 +1017,206 @@ const string InetStreamSocket::toString() const
 //
 void InetStreamSocket::logIoError(const char* errMsg, int errNum) const
 {
-	logging::Logger        logger(31);
-	logging::Message::Args args;
-	logging::LoggingID     li(31);
-	args.add(errMsg);
-	args.add(strerror(errNum));
-	args.add(toString());
+    logging::Logger        logger(31);
+    logging::Message::Args args;
+    logging::LoggingID     li(31);
+    args.add(errMsg);
+    args.add(strerror(errNum));
+    args.add(toString());
 
-	logging::MsgMap msgMap;
-	msgMap[logging::M0071] = logging::Message( logging::M0071 );
-	logger.msgMap(msgMap);
+    logging::MsgMap msgMap;
+    msgMap[logging::M0071] = logging::Message( logging::M0071 );
+    logger.msgMap(msgMap);
 
-	logger.logMessage(logging::LOG_TYPE_WARNING, logging::M0071, args, li);
+    logger.logMessage(logging::LOG_TYPE_WARNING, logging::M0071, args, li);
 }
 
 ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) const
 {
-	size_t nleft;
-	ssize_t nwritten;
-	const char* bufp;
-	
-	nleft = nbytes;
-	bufp = reinterpret_cast<const char*>(ptr);
+    size_t nleft;
+    ssize_t nwritten;
+    const char* bufp;
 
-	while (nleft > 0)
-	{
-		// the O_NONBLOCK flag is not set, this is a blocking I/O.
+    nleft = nbytes;
+    bufp = reinterpret_cast<const char*>(ptr);
+
+    while (nleft > 0)
+    {
+        // the O_NONBLOCK flag is not set, this is a blocking I/O.
 #ifdef _MSC_VER
-		int writeAmount = std::min((int)nleft, MaxSendPacketSize);
-		if ((nwritten = ::send(fd, bufp, writeAmount, 0)) < 0)
-#else
-  		if ((nwritten = ::write(fd, bufp, nleft)) < 0)
-#endif
-		{
-			if (errno == EINTR)
-				nwritten = 0;
-			else {
-				// save the error no first
-				int e = errno;
-				string errorMsg = "InetStreamSocket::write error: ";
-		 		scoped_array<char> buf(new char[80]);
-#if STRERROR_R_CHAR_P
-				const char* p;
-		 		if ((p = strerror_r(e, buf.get(), 80)) != 0)
-					errorMsg += p;
-#else
-				int p;
-		 		if ((p = strerror_r(e, buf.get(), 80)) == 0)
-					errorMsg += buf.get();
-#endif
-				throw runtime_error(errorMsg);
-			}
-		}
-		nleft -= nwritten;
-		bufp += nwritten;
-	}
+        int writeAmount = std::min((int)nleft, MaxSendPacketSize);
 
-	return nbytes;
+        if ((nwritten = ::send(fd, bufp, writeAmount, 0)) < 0)
+#else
+        if ((nwritten = ::write(fd, bufp, nleft)) < 0)
+#endif
+        {
+            if (errno == EINTR)
+                nwritten = 0;
+            else
+            {
+                // save the error no first
+                int e = errno;
+                string errorMsg = "InetStreamSocket::write error: ";
+                scoped_array<char> buf(new char[80]);
+#if STRERROR_R_CHAR_P
+                const char* p;
+
+                if ((p = strerror_r(e, buf.get(), 80)) != 0)
+                    errorMsg += p;
+
+#else
+                int p;
+
+                if ((p = strerror_r(e, buf.get(), 80)) == 0)
+                    errorMsg += buf.get();
+
+#endif
+                throw runtime_error(errorMsg);
+            }
+        }
+
+        nleft -= nwritten;
+        bufp += nwritten;
+    }
+
+    return nbytes;
 }
 
 const string InetStreamSocket::addr2String() const
 {
-	string s;
+    string s;
 #ifdef _MSC_VER
-	//This is documented to be thread-safe in Windows
-	s = inet_ntoa(fSa.sin_addr);
+    //This is documented to be thread-safe in Windows
+    s = inet_ntoa(fSa.sin_addr);
 #else
-	char dst[INET_ADDRSTRLEN];
-	s = inet_ntop(AF_INET, &fSa.sin_addr, dst, INET_ADDRSTRLEN);
+    char dst[INET_ADDRSTRLEN];
+    s = inet_ntop(AF_INET, &fSa.sin_addr, dst, INET_ADDRSTRLEN);
 #endif
-	return s;
+    return s;
 }
 
 const bool InetStreamSocket::isSameAddr(const Socket* rhs) const
 {
-	const InetStreamSocket* issp = dynamic_cast<const InetStreamSocket*>(rhs);
-	if (!issp) return false;
-	return (fSa.sin_addr.s_addr == issp->fSa.sin_addr.s_addr);
+    const InetStreamSocket* issp = dynamic_cast<const InetStreamSocket*>(rhs);
+
+    if (!issp) return false;
+
+    return (fSa.sin_addr.s_addr == issp->fSa.sin_addr.s_addr);
 }
 
 /*static*/
 int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* timeout)
 {
-	sockaddr_in pingaddr;
-	memset(&pingaddr, 0, sizeof(pingaddr));
-	if (inet_aton(ipaddr.c_str(), &pingaddr.sin_addr) == 0)
-		return -1;
+    sockaddr_in pingaddr;
+    memset(&pingaddr, 0, sizeof(pingaddr));
 
-	long msecs = 30 * 1000;
+    if (inet_aton(ipaddr.c_str(), &pingaddr.sin_addr) == 0)
+        return -1;
 
-	if (timeout)
-		msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
+    long msecs = 30 * 1000;
+
+    if (timeout)
+        msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
 #ifndef _MSC_VER
-	int pingsock;
-	pingsock = ::socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (pingsock < 0)
-		return -1;
+    int pingsock;
+    pingsock = ::socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
-	ssize_t len = 0;
-	size_t pktlen = 0;
-	const size_t PktSize = 1024;
-	char pkt[PktSize];
-	memset(pkt, 0, PktSize);
-	struct icmp* pingPktPtr = reinterpret_cast<struct icmp*>(pkt);
+    if (pingsock < 0)
+        return -1;
 
-	pingPktPtr->icmp_type = ICMP_ECHO;
-	pingPktPtr->icmp_cksum = in_cksum(reinterpret_cast<unsigned short*>(pkt), PktSize);
+    ssize_t len = 0;
+    size_t pktlen = 0;
+    const size_t PktSize = 1024;
+    char pkt[PktSize];
+    memset(pkt, 0, PktSize);
+    struct icmp* pingPktPtr = reinterpret_cast<struct icmp*>(pkt);
 
-	pktlen = 56 + ICMP_MINLEN;
-	len = ::sendto(pingsock, pkt, pktlen, 0, reinterpret_cast<const struct sockaddr*>(&pingaddr),
-		sizeof(pingaddr));
-	if (len < 0 || static_cast<size_t>(len) != pktlen)
-	{
-		::close(pingsock);
-		return -1;
-	}
+    pingPktPtr->icmp_type = ICMP_ECHO;
+    pingPktPtr->icmp_cksum = in_cksum(reinterpret_cast<unsigned short*>(pkt), PktSize);
 
-	memset(pkt, 0, PktSize);
-	pktlen = PktSize;
+    pktlen = 56 + ICMP_MINLEN;
+    len = ::sendto(pingsock, pkt, pktlen, 0, reinterpret_cast<const struct sockaddr*>(&pingaddr),
+                   sizeof(pingaddr));
 
-	int pollrc = 0;
-	pollrc = pollConnection(pingsock, msecs);
+    if (len < 0 || static_cast<size_t>(len) != pktlen)
+    {
+        ::close(pingsock);
+        return -1;
+    }
 
-	if (pollrc != 1)
-	{
-		::close(pingsock);
-		return -1;
-	}
+    memset(pkt, 0, PktSize);
+    pktlen = PktSize;
 
-	len = ::recvfrom(pingsock, pkt, pktlen, 0, 0, 0);
+    int pollrc = 0;
+    pollrc = pollConnection(pingsock, msecs);
 
-	if (len < 76)
-	{
-		::close(pingsock);
-		return -1;
-	}
+    if (pollrc != 1)
+    {
+        ::close(pingsock);
+        return -1;
+    }
 
-	struct ip* iphdr = reinterpret_cast<struct ip*>(pkt);
-	pingPktPtr = reinterpret_cast<struct icmp*>(pkt + (iphdr->ip_hl << 2));
-	if (pingPktPtr->icmp_type != ICMP_ECHOREPLY)
-	{
-		::close(pingsock);
-		return -1;
-	}
+    len = ::recvfrom(pingsock, pkt, pktlen, 0, 0, 0);
 
-	::close(pingsock);
+    if (len < 76)
+    {
+        ::close(pingsock);
+        return -1;
+    }
+
+    struct ip* iphdr = reinterpret_cast<struct ip*>(pkt);
+
+    pingPktPtr = reinterpret_cast<struct icmp*>(pkt + (iphdr->ip_hl << 2));
+
+    if (pingPktPtr->icmp_type != ICMP_ECHOREPLY)
+    {
+        ::close(pingsock);
+        return -1;
+    }
+
+    ::close(pingsock);
 
 #else //Windows version
-	HANDLE icmpFile;
-	icmpFile = IcmpCreateFile();
-	if (icmpFile == INVALID_HANDLE_VALUE)
-		return -1;
+    HANDLE icmpFile;
+    icmpFile = IcmpCreateFile();
 
-	DWORD ret;
-	const size_t PingPktSize=1024;
-	char rqd[PingPktSize];
-	WORD rqs = PingPktSize;
-	char rpd[PingPktSize];
-	DWORD rps = PingPktSize;
+    if (icmpFile == INVALID_HANDLE_VALUE)
+        return -1;
 
-	ZeroMemory(rqd, PingPktSize);
-	ZeroMemory(rpd, PingPktSize);
+    DWORD ret;
+    const size_t PingPktSize = 1024;
+    char rqd[PingPktSize];
+    WORD rqs = PingPktSize;
+    char rpd[PingPktSize];
+    DWORD rps = PingPktSize;
 
-	rqs = 64;
+    ZeroMemory(rqd, PingPktSize);
+    ZeroMemory(rpd, PingPktSize);
 
-	ret = IcmpSendEcho(icmpFile, pingaddr.sin_addr.s_addr, rqd, rqs, 0, rpd, rps, msecs);
+    rqs = 64;
 
-	if (ret <= 0)
-	{
-		IcmpCloseHandle(icmpFile);
-		return -1;
-	}
+    ret = IcmpSendEcho(icmpFile, pingaddr.sin_addr.s_addr, rqd, rqs, 0, rpd, rps, msecs);
 
-	PICMP_ECHO_REPLY echoReply = (PICMP_ECHO_REPLY)rpd;
-	if (echoReply->Status != IP_SUCCESS)
-	{
-		IcmpCloseHandle(icmpFile);
-		return -1;
-	}
+    if (ret <= 0)
+    {
+        IcmpCloseHandle(icmpFile);
+        return -1;
+    }
 
-	IcmpCloseHandle(icmpFile);
+    PICMP_ECHO_REPLY echoReply = (PICMP_ECHO_REPLY)rpd;
+
+    if (echoReply->Status != IP_SUCCESS)
+    {
+        IcmpCloseHandle(icmpFile);
+        return -1;
+    }
+
+    IcmpCloseHandle(icmpFile);
 #endif
 
-	return 0;
+    return 0;
 }
 
 bool InetStreamSocket::isConnected() const
@@ -1076,20 +1224,22 @@ bool InetStreamSocket::isConnected() const
     int error = 0;
     socklen_t len = sizeof(error);
     int retval = getsockopt(fSocketParms.sd(), SOL_SOCKET, SO_ERROR, &error, &len);
-    
+
     if (error || retval)
         return false;
-        
+
     struct pollfd pfd[1];
     pfd[0].fd = fSocketParms.sd();
     pfd[0].events = POLLIN;
     pfd[0].revents = 0;
 
     error = poll(pfd, 1, 0);
-    if ((error < 0) || (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR))) {
+
+    if ((error < 0) || (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR)))
+    {
         return false;
     }
-    
+
     return true;
 }
 
@@ -1099,14 +1249,16 @@ bool InetStreamSocket::hasData() const
     char buf[1];
     ssize_t retval;
     ioctl(fSocketParms.sd(), FIONREAD, &count);
+
     if (count)
         return true;
-        
+
     // EAGAIN | EWOULDBLOCK means the socket is clear. Anything else is data or error
     retval = recv(fSocketParms.sd(), buf, 1, MSG_DONTWAIT);
+
     if (retval & (EAGAIN | EWOULDBLOCK))
         return false;
-        
+
     return true;
 }
 

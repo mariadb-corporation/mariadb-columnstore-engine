@@ -31,7 +31,8 @@
 #include "messageobj.h"
 #include "messagelog.h"
 
-namespace logging {
+namespace logging
+{
 
 /** @brief an IDB error info class
  *
@@ -43,23 +44,23 @@ typedef std::map<unsigned, std::string> ErrorMap;
 class IDBErrorInfo
 {
 public:
-	static IDBErrorInfo* instance();
-	std::string errorMsg(const unsigned eid, const Message::Args& args);
-	std::string errorMsg(const unsigned eid);
-	std::string errorMsg(const unsigned eid, int i);
-	std::string errorMsg(const unsigned eid, const std::string& s);
-	std::string logError(const logging::LOG_TYPE logLevel,
-		                   const LoggingID logid,
-		                   const unsigned eid,
-		                   const Message::Args& args);
-	~IDBErrorInfo();
+    static IDBErrorInfo* instance();
+    std::string errorMsg(const unsigned eid, const Message::Args& args);
+    std::string errorMsg(const unsigned eid);
+    std::string errorMsg(const unsigned eid, int i);
+    std::string errorMsg(const unsigned eid, const std::string& s);
+    std::string logError(const logging::LOG_TYPE logLevel,
+                         const LoggingID logid,
+                         const unsigned eid,
+                         const Message::Args& args);
+    ~IDBErrorInfo();
 
 private:
-	static IDBErrorInfo* fInstance;
-	ErrorMap fErrMap;
-	IDBErrorInfo();
-	void format(std::string& messageFormat, const Message::Args& args);
-	std::string lookupError(const unsigned eid);
+    static IDBErrorInfo* fInstance;
+    ErrorMap fErrMap;
+    IDBErrorInfo();
+    void format(std::string& messageFormat, const Message::Args& args);
+    std::string lookupError(const unsigned eid);
 };
 
 }//namespace logging

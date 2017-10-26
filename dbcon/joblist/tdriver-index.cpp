@@ -23,7 +23,7 @@
  * Brief description of the file contents
  *
  * More detailed description
- */	
+ */
 
 #include <iostream>
 
@@ -46,288 +46,302 @@ using namespace execplan;
 CalpontSystemCatalog::TableColName testcol = { "tpch", "orders", "o_orderkey"};
 CalpontSystemCatalog::TableColName largecol = { "tpch", "lineitem", "l_orderkey"};
 
-class JobStepDriver : public CppUnit::TestFixture {
+class JobStepDriver : public CppUnit::TestFixture
+{
 
-CPPUNIT_TEST_SUITE(JobStepDriver);
+    CPPUNIT_TEST_SUITE(JobStepDriver);
 
 // CPPUNIT_TEST(indexTest_ss1);
 // CPPUNIT_TEST(indexTest_ss2);
 // CPPUNIT_TEST(indexTest_many);
 // CPPUNIT_TEST(indexTest_many2);
-CPPUNIT_TEST(indexTest_lists);
+    CPPUNIT_TEST(indexTest_lists);
 
-CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE_END();
 
 
 private:
-     	int getIndexOID(const CalpontSystemCatalog::TableColName&  col, boost::shared_ptr<CalpontSystemCatalog> cat)
-	{	
-		const CalpontSystemCatalog::IndexNameList iNames = cat->colValueSysindexCol(col);
-		if (0 == iNames.size())
-		{
-			cout << "No index for " << col << endl;
-			return -1;
-		}
-		CalpontSystemCatalog::IndexOID ixoid = cat->lookupIndexNbr(*iNames.begin());
-		return ixoid.objnum;
-	}
+    int getIndexOID(const CalpontSystemCatalog::TableColName&  col, boost::shared_ptr<CalpontSystemCatalog> cat)
+    {
+        const CalpontSystemCatalog::IndexNameList iNames = cat->colValueSysindexCol(col);
+
+        if (0 == iNames.size())
+        {
+            cout << "No index for " << col << endl;
+            return -1;
+        }
+
+        CalpontSystemCatalog::IndexOID ixoid = cat->lookupIndexNbr(*iNames.begin());
+        return ixoid.objnum;
+    }
 
 public:
-	// 1 search string
-    	void indexTest_ss1() 
-	{
-		ResourceManager rm;
-		DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
-		boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
+    // 1 search string
+    void indexTest_ss1()
+    {
+        ResourceManager rm;
+        DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
+        boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
 
-		JobStepAssociation inJs;
-		JobStepAssociation walkJs;
+        JobStepAssociation inJs;
+        JobStepAssociation walkJs;
 
-		AnyDataListSPtr spdlw(new AnyDataList());
-		BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
-		spdlw->bandedDL(dlw);
-		walkJs.outAdd(spdlw);
+        AnyDataListSPtr spdlw(new AnyDataList());
+        BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
+        spdlw->bandedDL(dlw);
+        walkJs.outAdd(spdlw);
 
- 		int oid = getIndexOID(testcol, cat); //returns 3154 
-		if (0 > oid) return;
-	
-		pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
+        int oid = getIndexOID(testcol, cat); //returns 3154
 
-		step0.addSearchStr(COMPARE_EQ, 3);
+        if (0 > oid) return;
 
-		step0.run();
+        pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
 
-		step0.join();
+        step0.addSearchStr(COMPARE_EQ, 3);
 
+        step0.run();
 
-		ElementType e;
-
-		JobStepAssociation outJs;
-		AnyDataListSPtr spdlo(new AnyDataList());
-		BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
-		spdlo->bandedDL(dlo);
-		outJs.outAdd(spdlo);
+        step0.join();
 
 
-		pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
-		step1.run();
-		step1.join();
+        ElementType e;
 
-		int it = dlo->getIterator();
-		int i = 1;
-		while  (dlo->next(it, &e) ) 
-		{
-			cout << i++ << " <ss1 Rid:  " << (int)e.first << ">\n";
-		}
+        JobStepAssociation outJs;
+        AnyDataListSPtr spdlo(new AnyDataList());
+        BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
+        spdlo->bandedDL(dlo);
+        outJs.outAdd(spdlo);
 
 
-	}
-		// 2 search strings
-    	void indexTest_ss2() 
-	{
-		ResourceManager rm;
-		DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
-		boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
+        pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
+        step1.run();
+        step1.join();
 
-		JobStepAssociation inJs;
-		JobStepAssociation walkJs;
+        int it = dlo->getIterator();
+        int i = 1;
 
-		AnyDataListSPtr spdlw(new AnyDataList());
-		BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
-		spdlw->bandedDL(dlw);	
+        while  (dlo->next(it, &e) )
+        {
+            cout << i++ << " <ss1 Rid:  " << (int)e.first << ">\n";
+        }
 
 
-		walkJs.outAdd(spdlw);
+    }
+    // 2 search strings
+    void indexTest_ss2()
+    {
+        ResourceManager rm;
+        DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
+        boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
 
- 		int oid = getIndexOID(testcol, cat); //returns 3154 
-		if (0 > oid) return;
+        JobStepAssociation inJs;
+        JobStepAssociation walkJs;
 
-		pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
-
-		step0.addSearchStr(COMPARE_GT, 3);
-		step0.addSearchStr(COMPARE_LT, 60);
-		step0.setBOP(BOP_AND);
-
-		step0.run();
-
-		step0.join();
-
-		JobStepAssociation outJs;
-
-		AnyDataListSPtr spdlo(new AnyDataList());
-		BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
-		spdlo->bandedDL(dlo);
-		outJs.outAdd(spdlo);
-
-		pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
-
-		step1.run();
-		step1.join();
-
-		int it = dlo->getIterator();
-		int i = 1;
-		ElementType e;
-		while  (dlo->next(it, &e) ) 
-		{
-			cout << i++ << " <ss2 Rid:  " << (int)e.first << ">\n";
-		}
-	}
-		// input list of tokens
-    	void indexTest_many() 
-	{
-		ResourceManager rm;
-		DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
-		boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
-
-// 		dec->addSession(12345);
-// 		dec->addStep(12345, 0);
-
-		JobStepAssociation inJs;
-		AnyDataListSPtr spdli(new AnyDataList());
-		BandedDL<ElementType>* dli = new BandedDL<ElementType>(1, rm);
-		spdli->bandedDL(dli);
-		ElementType e;
-		for (e.second = 1; e.second < 100; ++e.second) 
-		{
-			if (0 == e.second % 3 )   
-				dli->insert(e);
-		}
-		dli->endOfInput();
-		inJs.outAdd(spdli);
-
-		JobStepAssociation walkJs;
-
-		AnyDataListSPtr spdlw(new AnyDataList());
-		BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
-		spdlw->bandedDL(dlw);
-		walkJs.outAdd(spdlw);
-
- 		int oid = getIndexOID(testcol, cat); //returns 3154 
-		if (0 > oid) return;
+        AnyDataListSPtr spdlw(new AnyDataList());
+        BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
+        spdlw->bandedDL(dlw);
 
 
-		pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
+        walkJs.outAdd(spdlw);
 
-		step0.run();
-		step0.join();
+        int oid = getIndexOID(testcol, cat); //returns 3154
 
-		JobStepAssociation outJs;
+        if (0 > oid) return;
 
-		AnyDataListSPtr spdlo(new AnyDataList());
-		BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
-		spdlo->bandedDL(dlo);
-		outJs.outAdd(spdlo);
+        pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
 
-		pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
+        step0.addSearchStr(COMPARE_GT, 3);
+        step0.addSearchStr(COMPARE_LT, 60);
+        step0.setBOP(BOP_AND);
 
-		step1.run();
-		step1.join();
-// 		dec->removeSession(12345);
+        step0.run();
 
-		int it = dlo->getIterator();
-		int i = 1;
-		while  (dlo->next(it, &e) ) 
-		{
-			cout << i++ << " <many Rid:  " << (int)e.first << ">\n";
-		}
-	}
-	// 2 tokens; should use search string
-   	void indexTest_many2() 
-	{
-		ResourceManager rm;
-		DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
-		boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
+        step0.join();
+
+        JobStepAssociation outJs;
+
+        AnyDataListSPtr spdlo(new AnyDataList());
+        BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
+        spdlo->bandedDL(dlo);
+        outJs.outAdd(spdlo);
+
+        pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
+
+        step1.run();
+        step1.join();
+
+        int it = dlo->getIterator();
+        int i = 1;
+        ElementType e;
+
+        while  (dlo->next(it, &e) )
+        {
+            cout << i++ << " <ss2 Rid:  " << (int)e.first << ">\n";
+        }
+    }
+    // input list of tokens
+    void indexTest_many()
+    {
+        ResourceManager rm;
+        DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
+        boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
 
 // 		dec->addSession(12345);
 // 		dec->addStep(12345, 0);
 
-		JobStepAssociation inJs;
-		AnyDataListSPtr spdli(new AnyDataList());
-		BandedDL<ElementType>* dli = new BandedDL<ElementType>(1, rm);
-		spdli->bandedDL(dli);
-		ElementType e;
-		e.second = 3;
-		dli->insert(e);
-		e.second = 32;
-		dli->insert(e);
+        JobStepAssociation inJs;
+        AnyDataListSPtr spdli(new AnyDataList());
+        BandedDL<ElementType>* dli = new BandedDL<ElementType>(1, rm);
+        spdli->bandedDL(dli);
+        ElementType e;
 
-		dli->endOfInput();
-		inJs.outAdd(spdli);
+        for (e.second = 1; e.second < 100; ++e.second)
+        {
+            if (0 == e.second % 3 )
+                dli->insert(e);
+        }
 
-		JobStepAssociation walkJs;
+        dli->endOfInput();
+        inJs.outAdd(spdli);
 
-		AnyDataListSPtr spdlw(new AnyDataList());
-		BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
-		spdlw->bandedDL(dlw);
-		walkJs.outAdd(spdlw);
+        JobStepAssociation walkJs;
 
- 		int oid = getIndexOID(testcol, cat); //returns 3154 
-		if (0 > oid) return;
+        AnyDataListSPtr spdlw(new AnyDataList());
+        BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
+        spdlw->bandedDL(dlw);
+        walkJs.outAdd(spdlw);
 
-		pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
+        int oid = getIndexOID(testcol, cat); //returns 3154
 
-		step0.run();
-		step0.join();
+        if (0 > oid) return;
 
-		JobStepAssociation outJs;
 
-		AnyDataListSPtr spdlo(new AnyDataList());
-		BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
-		spdlo->bandedDL(dlo);
-		outJs.outAdd(spdlo);
+        pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
 
-		pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
+        step0.run();
+        step0.join();
 
-		step1.run();
-		step1.join();
+        JobStepAssociation outJs;
+
+        AnyDataListSPtr spdlo(new AnyDataList());
+        BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
+        spdlo->bandedDL(dlo);
+        outJs.outAdd(spdlo);
+
+        pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
+
+        step1.run();
+        step1.join();
 // 		dec->removeSession(12345);
 
-		int it = dlo->getIterator();
-		int i = 1;
-		while  (dlo->next(it, &e) ) 
-		{
-			cout << i++ << " <many2 Rid:  " << (int)e.first << ">\n";
-		}
-	}
-		//Send enough data so that index list must send it back to primitives
-    	void indexTest_lists() 
-	{
-		ResourceManager rm;
-		DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
-		boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
+        int it = dlo->getIterator();
+        int i = 1;
 
-		JobStepAssociation inJs;
-		JobStepAssociation walkJs;
+        while  (dlo->next(it, &e) )
+        {
+            cout << i++ << " <many Rid:  " << (int)e.first << ">\n";
+        }
+    }
+    // 2 tokens; should use search string
+    void indexTest_many2()
+    {
+        ResourceManager rm;
+        DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
+        boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
 
-		AnyDataListSPtr spdlw(new AnyDataList());
-		BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
-		spdlw->bandedDL(dlw);
-		walkJs.outAdd(spdlw);
+// 		dec->addSession(12345);
+// 		dec->addStep(12345, 0);
 
- 		int oid = getIndexOID(largecol, cat); //returns 3152 
-		if (0 > oid) return;
+        JobStepAssociation inJs;
+        AnyDataListSPtr spdli(new AnyDataList());
+        BandedDL<ElementType>* dli = new BandedDL<ElementType>(1, rm);
+        spdli->bandedDL(dli);
+        ElementType e;
+        e.second = 3;
+        dli->insert(e);
+        e.second = 32;
+        dli->insert(e);
+
+        dli->endOfInput();
+        inJs.outAdd(spdli);
+
+        JobStepAssociation walkJs;
+
+        AnyDataListSPtr spdlw(new AnyDataList());
+        BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
+        spdlw->bandedDL(dlw);
+        walkJs.outAdd(spdlw);
+
+        int oid = getIndexOID(testcol, cat); //returns 3154
+
+        if (0 > oid) return;
+
+        pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
+
+        step0.run();
+        step0.join();
+
+        JobStepAssociation outJs;
+
+        AnyDataListSPtr spdlo(new AnyDataList());
+        BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
+        spdlo->bandedDL(dlo);
+        outJs.outAdd(spdlo);
+
+        pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
+
+        step1.run();
+        step1.join();
+// 		dec->removeSession(12345);
+
+        int it = dlo->getIterator();
+        int i = 1;
+
+        while  (dlo->next(it, &e) )
+        {
+            cout << i++ << " <many2 Rid:  " << (int)e.first << ">\n";
+        }
+    }
+    //Send enough data so that index list must send it back to primitives
+    void indexTest_lists()
+    {
+        ResourceManager rm;
+        DistributedEngineComm* dec = DistributedEngineComm::instance(rm);
+        boost::shared_ptr<CalpontSystemCatalog> cat = CalpontSystemCatalog::makeCalpontSystemCatalog();
+
+        JobStepAssociation inJs;
+        JobStepAssociation walkJs;
+
+        AnyDataListSPtr spdlw(new AnyDataList());
+        BandedDL<ElementType>* dlw = new BandedDL<ElementType>(1, rm);
+        spdlw->bandedDL(dlw);
+        walkJs.outAdd(spdlw);
+
+        int oid = getIndexOID(largecol, cat); //returns 3152
+
+        if (0 > oid) return;
 
 
-		pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
+        pIdxWalk step0(inJs, walkJs, dec, cat, oid, 12345, 999, 7, 0, 0, 0, 0);
 
-		step0.addSearchStr(COMPARE_GT, 3);
+        step0.addSearchStr(COMPARE_GT, 3);
 
-		step0.run();
+        step0.run();
 
-		step0.join();
+        step0.join();
 
-		JobStepAssociation outJs;
-		AnyDataListSPtr spdlo(new AnyDataList());
-		BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
-		spdlo->bandedDL(dlo);
-		outJs.outAdd(spdlo);
+        JobStepAssociation outJs;
+        AnyDataListSPtr spdlo(new AnyDataList());
+        BandedDL<ElementType>* dlo = new BandedDL<ElementType>(1, rm);
+        spdlo->bandedDL(dlo);
+        outJs.outAdd(spdlo);
 
-		pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
+        pIdxList step1(walkJs, outJs, dec, cat, 12345, 999, 7, 0, 0, 0, 0);
 
-		step1.run();
-		step1.join();
-		//cout << "lists returned " <<  dlo->size() << " values.\n";
-	}
+        step1.run();
+        step1.join();
+        //cout << "lists returned " <<  dlo->size() << " values.\n";
+    }
 
 
 };
@@ -335,11 +349,11 @@ public:
 CPPUNIT_TEST_SUITE_REGISTRATION(JobStepDriver);
 
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  bool wasSuccessful = runner.run( "", false );
-  return (wasSuccessful ? 0 : 1);
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    bool wasSuccessful = runner.run( "", false );
+    return (wasSuccessful ? 0 : 1);
 }

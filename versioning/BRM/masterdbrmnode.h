@@ -20,7 +20,7 @@
  *
  *****************************************************************************/
 
-/** @file 
+/** @file
  * class MasterDBRMNode interface
  */
 
@@ -41,7 +41,8 @@
 #include "tablelockserver.h"
 #include "autoincrementmanager.h"
 
-namespace BRM {
+namespace BRM
+{
 
 /** @brief The Master node of the DBRM system.
  *
@@ -78,172 +79,177 @@ namespace BRM {
  *	<Port>
  * </DBRM_WorkerN>
  * \endcode
- */	
+ */
 
 class MasterDBRMNode
 {
 public:
-	MasterDBRMNode();
-	~MasterDBRMNode();
+    MasterDBRMNode();
+    ~MasterDBRMNode();
 
-	/** @brief The primary function of the class.
-	 * 
-	 * The main loop of the master node.  It accepts connections from the DBRM
-	 * class, receives commands, and distributes them to each slave.  It returns
-	 * only after stop() or the destructor is called by another thread.
-	 */
-	void run();
+    /** @brief The primary function of the class.
+     *
+     * The main loop of the master node.  It accepts connections from the DBRM
+     * class, receives commands, and distributes them to each slave.  It returns
+     * only after stop() or the destructor is called by another thread.
+     */
+    void run();
 
-	/** @brief Tells the Master to shut down cleanly.
-	 * 
-	 * Tells the Master to shut down cleanly.
-	 */
-	void stop();
+    /** @brief Tells the Master to shut down cleanly.
+     *
+     * Tells the Master to shut down cleanly.
+     */
+    void stop();
 
-	/** @brief Effectively makes the whole DBRM system stop.
-	 *
-	 * Grabs a lock that effectively halts all further BRM data changes.
-	 * @warning Use with care.  It's basically an accessor to a raw pthread_mutex.
-	 */
-	void lock();
-	
-	/** @brief Resumes DBRM functionality.
-	 *
-	 * Releases a lock that allows the DBRM to continue processing changes.
-	 * @warning Use with care.  It's basically an accessor to a raw pthread_mutex.
-	 */
-	void unlock();
+    /** @brief Effectively makes the whole DBRM system stop.
+     *
+     * Grabs a lock that effectively halts all further BRM data changes.
+     * @warning Use with care.  It's basically an accessor to a raw pthread_mutex.
+     */
+    void lock();
 
-	/** @brief Reload the config file and reconnect to all slaves.
-	 *
-	 * Drops all existing connections, reloads the config file and
-	 * reconnects with all slaves.
-	 * @note Doesn't work yet.  Redundant anyway.
-	 */
-	void reload();
+    /** @brief Resumes DBRM functionality.
+     *
+     * Releases a lock that allows the DBRM to continue processing changes.
+     * @warning Use with care.  It's basically an accessor to a raw pthread_mutex.
+     */
+    void unlock();
 
-	/** @brief Sets either read/write or read-only mode
-	 * 
-	 * Sets either read/write or read-only mode.  When in read-only mode
-	 * all BRM change requests will return ERR_READONLY immediately.
-	 * @param ro true specifies read-only, false specifies read/write
-	 */
-	void setReadOnly(bool ro);
+    /** @brief Reload the config file and reconnect to all slaves.
+     *
+     * Drops all existing connections, reloads the config file and
+     * reconnects with all slaves.
+     * @note Doesn't work yet.  Redundant anyway.
+     */
+    void reload();
 
-	/** @brief Returns true if the Master is in read-only mode, false if in RW mode.
-	 * 
-	 * @returns true if the Master is in read-only mode, false if in read-write 
-	 * mode
-	 */
-	bool isReadOnly() const { return readOnly; }
+    /** @brief Sets either read/write or read-only mode
+     *
+     * Sets either read/write or read-only mode.  When in read-only mode
+     * all BRM change requests will return ERR_READONLY immediately.
+     * @param ro true specifies read-only, false specifies read/write
+     */
+    void setReadOnly(bool ro);
+
+    /** @brief Returns true if the Master is in read-only mode, false if in RW mode.
+     *
+     * @returns true if the Master is in read-only mode, false if in read-write
+     * mode
+     */
+    bool isReadOnly() const
+    {
+        return readOnly;
+    }
 
 private:
 
-	class MsgProcessor {
-		public:
-			MsgProcessor(MasterDBRMNode *master);
-			~MsgProcessor();
-			void operator()();
-		private:
-			MasterDBRMNode *m;
-	};
+    class MsgProcessor
+    {
+    public:
+        MsgProcessor(MasterDBRMNode* master);
+        ~MsgProcessor();
+        void operator()();
+    private:
+        MasterDBRMNode* m;
+    };
 
-	struct ThreadParams {
-		messageqcpp::IOSocket *sock;
-		boost::thread *t;
-	};
-
-
-	MasterDBRMNode(const MasterDBRMNode &m);
-	MasterDBRMNode& operator=(const MasterDBRMNode &m);
-
-	void initMsgQueues(config::Config *config);
-	void msgProcessor();
-	void distribute(messageqcpp::ByteStream *msg);
-	void undo() throw();
-	void confirm();
-	void sendError(messageqcpp::IOSocket *dest, uint8_t err) const throw();
-	int gatherResponses(uint8_t cmd, uint32_t msgCmdLength,
-		std::vector<messageqcpp::ByteStream *>* responses,
-		bool& readErrFlag) throw();
-	int compareResponses(uint8_t cmd, uint32_t msgCmdLength,
-		const std::vector <messageqcpp::ByteStream *>& responses) const;
-	void finalCleanup();
-
-	/* Commands the master executes */
-	void doHalt(messageqcpp::IOSocket *sock);
-	void doResume(messageqcpp::IOSocket *sock);
-	void doReload(messageqcpp::IOSocket *sock);
-	void doSetReadOnly(messageqcpp::IOSocket *sock, bool b);
-	void doGetReadOnly(messageqcpp::IOSocket *sock);
-	
-	/* SessionManager interface */
-	SessionManagerServer sm;
-	void doVerID(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetSystemCatalog(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doSysCatVerID(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doNewTxnID(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doCommitted(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doRolledBack(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetTxnID(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doSIDTIDMap(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetShmContents(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetUniqueUint32(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetUniqueUint64(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetSystemState(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doSetSystemState(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doClearSystemState(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doSessionManagerReset(messageqcpp::ByteStream &msg, ThreadParams *p);
-    void doGetUncommittedLbids(messageqcpp::ByteStream &msg, ThreadParams *p);
+    struct ThreadParams
+    {
+        messageqcpp::IOSocket* sock;
+        boost::thread* t;
+    };
 
 
-	/* OID Manager interface */
-	OIDServer oids;
-	boost::mutex oidsMutex;
-	void doAllocOIDs(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doReturnOIDs(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doOidmSize(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doAllocVBOID(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetDBRootOfVBOID(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetVBOIDToDBRootMap(messageqcpp::ByteStream &msg, ThreadParams *p);
+    MasterDBRMNode(const MasterDBRMNode& m);
+    MasterDBRMNode& operator=(const MasterDBRMNode& m);
 
-	/* Table lock interface */
-	boost::scoped_ptr<TableLockServer> tableLockServer;
-	void doGetTableLock(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doReleaseTableLock(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doChangeTableLockState(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doChangeTableLockOwner(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetAllTableLocks(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doReleaseAllTableLocks(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetTableLockInfo(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doOwnerCheck(messageqcpp::ByteStream &msg, ThreadParams *p);
+    void initMsgQueues(config::Config* config);
+    void msgProcessor();
+    void distribute(messageqcpp::ByteStream* msg);
+    void undo() throw();
+    void confirm();
+    void sendError(messageqcpp::IOSocket* dest, uint8_t err) const throw();
+    int gatherResponses(uint8_t cmd, uint32_t msgCmdLength,
+                        std::vector<messageqcpp::ByteStream*>* responses,
+                        bool& readErrFlag) throw();
+    int compareResponses(uint8_t cmd, uint32_t msgCmdLength,
+                         const std::vector <messageqcpp::ByteStream*>& responses) const;
+    void finalCleanup();
 
-	/* Autoincrement interface */
-	AutoincrementManager aiManager;
-	void doStartAISequence(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetAIRange(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doResetAISequence(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doGetAILock(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doReleaseAILock(messageqcpp::ByteStream &msg, ThreadParams *p);
-	void doDeleteAISequence(messageqcpp::ByteStream &msg, ThreadParams *p);
+    /* Commands the master executes */
+    void doHalt(messageqcpp::IOSocket* sock);
+    void doResume(messageqcpp::IOSocket* sock);
+    void doReload(messageqcpp::IOSocket* sock);
+    void doSetReadOnly(messageqcpp::IOSocket* sock, bool b);
+    void doGetReadOnly(messageqcpp::IOSocket* sock);
 
-	messageqcpp::MessageQueueServer *dbrmServer;
-	std::vector<messageqcpp::MessageQueueClient *> slaves;
-	std::vector<messageqcpp::MessageQueueClient *>::iterator iSlave;
-	std::vector<messageqcpp::IOSocket *> activeSessions;
+    /* SessionManager interface */
+    SessionManagerServer sm;
+    void doVerID(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetSystemCatalog(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doSysCatVerID(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doNewTxnID(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doCommitted(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doRolledBack(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetTxnID(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doSIDTIDMap(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetShmContents(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetUniqueUint32(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetUniqueUint64(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetSystemState(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doSetSystemState(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doClearSystemState(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doSessionManagerReset(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetUncommittedLbids(messageqcpp::ByteStream& msg, ThreadParams* p);
 
-	LBIDResourceGraph *rg;
 
-	boost::mutex mutex;
-	boost::mutex mutex2;		// protects params and the hand-off  TODO: simplify
-	boost::mutex slaveLock;	// syncs communication with the slaves
-	boost::mutex serverLock;	// kludge to synchronize reloading
-	int runners, NumWorkers;
-	ThreadParams *params;
-	volatile bool die, halting;
-	bool reloadCmd;
-	mutable bool readOnly;
-	struct timespec MSG_TIMEOUT;
+    /* OID Manager interface */
+    OIDServer oids;
+    boost::mutex oidsMutex;
+    void doAllocOIDs(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doReturnOIDs(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doOidmSize(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doAllocVBOID(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetDBRootOfVBOID(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetVBOIDToDBRootMap(messageqcpp::ByteStream& msg, ThreadParams* p);
+
+    /* Table lock interface */
+    boost::scoped_ptr<TableLockServer> tableLockServer;
+    void doGetTableLock(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doReleaseTableLock(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doChangeTableLockState(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doChangeTableLockOwner(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetAllTableLocks(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doReleaseAllTableLocks(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetTableLockInfo(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doOwnerCheck(messageqcpp::ByteStream& msg, ThreadParams* p);
+
+    /* Autoincrement interface */
+    AutoincrementManager aiManager;
+    void doStartAISequence(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetAIRange(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doResetAISequence(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doGetAILock(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doReleaseAILock(messageqcpp::ByteStream& msg, ThreadParams* p);
+    void doDeleteAISequence(messageqcpp::ByteStream& msg, ThreadParams* p);
+
+    messageqcpp::MessageQueueServer* dbrmServer;
+    std::vector<messageqcpp::MessageQueueClient*> slaves;
+    std::vector<messageqcpp::MessageQueueClient*>::iterator iSlave;
+    std::vector<messageqcpp::IOSocket*> activeSessions;
+
+    LBIDResourceGraph* rg;
+
+    boost::mutex mutex;
+    boost::mutex mutex2;		// protects params and the hand-off  TODO: simplify
+    boost::mutex slaveLock;	// syncs communication with the slaves
+    boost::mutex serverLock;	// kludge to synchronize reloading
+    int runners, NumWorkers;
+    ThreadParams* params;
+    volatile bool die, halting;
+    bool reloadCmd;
+    mutable bool readOnly;
+    struct timespec MSG_TIMEOUT;
 };
 
 }

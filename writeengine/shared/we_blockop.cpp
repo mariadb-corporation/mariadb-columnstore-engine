@@ -64,11 +64,11 @@ BlockOp::~BlockOp()
 bool BlockOp::calculateRowId(
     RID rowId, const int epb, const int width, int& fbo, int& bio ) const
 {
-    if( std::numeric_limits<WriteEngine::RID>::max() == rowId )
+    if ( std::numeric_limits<WriteEngine::RID>::max() == rowId )
         return false;
-         
-	fbo = (int)( rowId/epb );
-	bio = ( rowId & ( epb - 1 )) * width;
+
+    fbo = (int)( rowId / epb );
+    bio = ( rowId & ( epb - 1 )) * width;
 
     return true;
 }
@@ -88,61 +88,94 @@ uint64_t BlockOp::getEmptyRowValue(
     uint64_t emptyVal = 0;
     int offset = 0;
 
-    switch( colDataType ) {
-        case CalpontSystemCatalog::TINYINT : emptyVal = joblist::TINYINTEMPTYROW; break;
-        case CalpontSystemCatalog::SMALLINT: emptyVal = joblist::SMALLINTEMPTYROW; break;
-        case CalpontSystemCatalog::MEDINT :  
-        case CalpontSystemCatalog::INT :     emptyVal = joblist::INTEMPTYROW; break;
-        case CalpontSystemCatalog::BIGINT :  emptyVal = joblist::BIGINTEMPTYROW; break;
-        case CalpontSystemCatalog::FLOAT :
-        case CalpontSystemCatalog::UFLOAT :   emptyVal = joblist::FLOATEMPTYROW; break;
-        case CalpontSystemCatalog::DOUBLE :
-        case CalpontSystemCatalog::UDOUBLE :  emptyVal = joblist::DOUBLEEMPTYROW; break;
-        case CalpontSystemCatalog::DECIMAL : 
-        case CalpontSystemCatalog::UDECIMAL : 
-/*          if( width <= 4 )
-                emptyVal = joblist::SMALLINTEMPTYROW;
-            else
-                if( width <= 9 )
-                    emptyVal = 0x80000001;
-                else
-                if( width <= 18 )
-                    emptyVal = 0x8000000000000001LL; 
-                else
-                    emptyVal = 0xFFFFFFFFFFFFFFFFLL; 
-*/ 
-                // @bug 194 use the correct logic in handling empty value for decimal
-				if (width <= 1)
-					emptyVal = joblist::TINYINTEMPTYROW;
-                else if( width <= 2 )
-                    emptyVal = joblist::SMALLINTEMPTYROW;
-                else if( width <= 4 )
-                    emptyVal = joblist::INTEMPTYROW;
-                else
-                    emptyVal = joblist::BIGINTEMPTYROW;
-                break;
-        case CalpontSystemCatalog::UTINYINT : emptyVal = joblist::UTINYINTEMPTYROW; break;
-        case CalpontSystemCatalog::USMALLINT: emptyVal = joblist::USMALLINTEMPTYROW; break;
-        case CalpontSystemCatalog::UMEDINT :  
-        case CalpontSystemCatalog::UINT :     emptyVal = joblist::UINTEMPTYROW; break;
-        case CalpontSystemCatalog::UBIGINT :  emptyVal = joblist::UBIGINTEMPTYROW; break;
+    switch ( colDataType )
+    {
+        case CalpontSystemCatalog::TINYINT :
+            emptyVal = joblist::TINYINTEMPTYROW;
+            break;
 
-        case CalpontSystemCatalog::CHAR : 
-        case CalpontSystemCatalog::VARCHAR : 
+        case CalpontSystemCatalog::SMALLINT:
+            emptyVal = joblist::SMALLINTEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::MEDINT :
+        case CalpontSystemCatalog::INT :
+            emptyVal = joblist::INTEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::BIGINT :
+            emptyVal = joblist::BIGINTEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::FLOAT :
+        case CalpontSystemCatalog::UFLOAT :
+            emptyVal = joblist::FLOATEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::DOUBLE :
+        case CalpontSystemCatalog::UDOUBLE :
+            emptyVal = joblist::DOUBLEEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::DECIMAL :
+        case CalpontSystemCatalog::UDECIMAL :
+
+            /*          if( width <= 4 )
+                            emptyVal = joblist::SMALLINTEMPTYROW;
+                        else
+                            if( width <= 9 )
+                                emptyVal = 0x80000001;
+                            else
+                            if( width <= 18 )
+                                emptyVal = 0x8000000000000001LL;
+                            else
+                                emptyVal = 0xFFFFFFFFFFFFFFFFLL;
+            */
+            // @bug 194 use the correct logic in handling empty value for decimal
+            if (width <= 1)
+                emptyVal = joblist::TINYINTEMPTYROW;
+            else if ( width <= 2 )
+                emptyVal = joblist::SMALLINTEMPTYROW;
+            else if ( width <= 4 )
+                emptyVal = joblist::INTEMPTYROW;
+            else
+                emptyVal = joblist::BIGINTEMPTYROW;
+
+            break;
+
+        case CalpontSystemCatalog::UTINYINT :
+            emptyVal = joblist::UTINYINTEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::USMALLINT:
+            emptyVal = joblist::USMALLINTEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::UMEDINT :
+        case CalpontSystemCatalog::UINT :
+            emptyVal = joblist::UINTEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::UBIGINT :
+            emptyVal = joblist::UBIGINTEMPTYROW;
+            break;
+
+        case CalpontSystemCatalog::CHAR :
+        case CalpontSystemCatalog::VARCHAR :
         case CalpontSystemCatalog::DATE :
         case CalpontSystemCatalog::DATETIME :
         default:
-            offset = ( colDataType == CalpontSystemCatalog::VARCHAR )? -1 : 0;
+            offset = ( colDataType == CalpontSystemCatalog::VARCHAR ) ? -1 : 0;
             emptyVal = joblist::CHAR1EMPTYROW;
-            if( width == (2 + offset) )
-                emptyVal = joblist::CHAR2EMPTYROW; 
-            else
-                if( width >= (3 + offset) && width <= ( 4 + offset ) )
-                    emptyVal = joblist::CHAR4EMPTYROW; 
-                else
-                if( width >= (5 + offset)  )
-                    emptyVal = joblist::CHAR8EMPTYROW;
-                break;
+
+            if ( width == (2 + offset) )
+                emptyVal = joblist::CHAR2EMPTYROW;
+            else if ( width >= (3 + offset) && width <= ( 4 + offset ) )
+                emptyVal = joblist::CHAR4EMPTYROW;
+            else if ( width >= (5 + offset)  )
+                emptyVal = joblist::CHAR8EMPTYROW;
+
+            break;
     }
 
     return emptyVal;
@@ -178,7 +211,7 @@ RID BlockOp::getRowId(
     /*const int bio, const int bbo*/ ) const
 {
 //      return fbo*BYTE_PER_BLOCK*ROW_PER_BYTE + bio*ROW_PER_BYTE + bbo;
-    return (BYTE_PER_BLOCK/width) * fbo + rowPos;
+    return (BYTE_PER_BLOCK / width) * fbo + rowPos;
 }
 
 /***********************************************************
@@ -228,34 +261,34 @@ void BlockOp::setEmptyBuf(
     const int ARRAY_COUNT     = 128;
     const int NBYTES_IN_ARRAY = width * ARRAY_COUNT;
     //unsigned char emptyValArray[NBYTES_IN_ARRAY];
-	unsigned char* emptyValArray = (unsigned char*)alloca(NBYTES_IN_ARRAY);
+    unsigned char* emptyValArray = (unsigned char*)alloca(NBYTES_IN_ARRAY);
 
     // Optimize buffer initialization by constructing and copying in an array
     // instead of individual values.  This reduces the number of calls to
     // memcpy().
-    for (int j=0; j<ARRAY_COUNT; j++)
+    for (int j = 0; j < ARRAY_COUNT; j++)
     {
-        memcpy(emptyValArray+(j*width), &emptyVal, width);
+        memcpy(emptyValArray + (j * width), &emptyVal, width);
     }
 
-    int countFull128 = (bufSize/width) / ARRAY_COUNT;
-    int countRemain  = (bufSize/width) % ARRAY_COUNT;
+    int countFull128 = (bufSize / width) / ARRAY_COUNT;
+    int countRemain  = (bufSize / width) % ARRAY_COUNT;
 
     // Copy in the 128 element array into "buf" as many times as needed
     if (countFull128 > 0)
     {
-        for( int i = 0; i < countFull128; i++ )
+        for ( int i = 0; i < countFull128; i++ )
             memcpy( buf + (i * (NBYTES_IN_ARRAY)),
-                  emptyValArray,
-                  NBYTES_IN_ARRAY );
+                    emptyValArray,
+                    NBYTES_IN_ARRAY );
     }
 
     // Initialize the remainder of "buf" that is leftover
     if (countRemain > 0)
     {
         memcpy( buf + (countFull128 * NBYTES_IN_ARRAY),
-                  emptyValArray,
-                  width*countRemain );
+                emptyValArray,
+                width * countRemain );
     }
 }
 
@@ -272,7 +305,7 @@ void BlockOp::setEmptyBuf(
 void BlockOp::writeBufValue(
     unsigned char* buf, void* val, const size_t width, const bool clear ) const
 {
-    if( clear )
+    if ( clear )
         memset( buf, 0, width );
 
     memcpy( buf, val, width );

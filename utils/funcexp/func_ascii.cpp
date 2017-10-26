@@ -40,18 +40,20 @@ namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_ascii::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 int64_t Func_ascii::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType& op_ct)
 {
-	const string& str = parm[0]->data()->getStrVal(row, isNull);
-	if (str.empty())
-		return 0;
-	return (unsigned char)str[0];
+    const string& str = parm[0]->data()->getStrVal(row, isNull);
+
+    if (str.empty())
+        return 0;
+
+    return (unsigned char)str[0];
 }
 
 

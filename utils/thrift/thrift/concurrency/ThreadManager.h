@@ -25,7 +25,12 @@
 #include <sys/types.h>
 #include <thrift/concurrency/Thread.h>
 
-namespace apache { namespace thrift { namespace concurrency {
+namespace apache
+{
+namespace thrift
+{
+namespace concurrency
+{
 
 /**
  * Thread Pool Manager and related classes
@@ -51,152 +56,156 @@ class ThreadManager;
  * policy issues. The simplest policy, StaticPolicy, does nothing other than
  * create a fixed number of threads.
  */
-class ThreadManager {
+class ThreadManager
+{
 
- protected:
-  ThreadManager() {}
+protected:
+    ThreadManager() {}
 
- public:
-  class Task;
-  typedef apache::thrift::stdcxx::function<void(boost::shared_ptr<Runnable>)> ExpireCallback;
+public:
+    class Task;
+    typedef apache::thrift::stdcxx::function<void(boost::shared_ptr<Runnable>)> ExpireCallback;
 
-  virtual ~ThreadManager() {}
+    virtual ~ThreadManager() {}
 
-  /**
-   * Starts the thread manager. Verifies all attributes have been properly
-   * initialized, then allocates necessary resources to begin operation
-   */
-  virtual void start() = 0;
+    /**
+     * Starts the thread manager. Verifies all attributes have been properly
+     * initialized, then allocates necessary resources to begin operation
+     */
+    virtual void start() = 0;
 
-  /**
-   * Stops the thread manager. Aborts all remaining unprocessed task, shuts
-   * down all created worker threads, and realeases all allocated resources.
-   * This method blocks for all worker threads to complete, thus it can
-   * potentially block forever if a worker thread is running a task that
-   * won't terminate.
-   */
-  virtual void stop() = 0;
+    /**
+     * Stops the thread manager. Aborts all remaining unprocessed task, shuts
+     * down all created worker threads, and realeases all allocated resources.
+     * This method blocks for all worker threads to complete, thus it can
+     * potentially block forever if a worker thread is running a task that
+     * won't terminate.
+     */
+    virtual void stop() = 0;
 
-  /**
-   * Joins the thread manager. This is the same as stop, except that it will
-   * block until all the workers have finished their work. At that point
-   * the ThreadManager will transition into the STOPPED state.
-   */
-  virtual void join() = 0;
+    /**
+     * Joins the thread manager. This is the same as stop, except that it will
+     * block until all the workers have finished their work. At that point
+     * the ThreadManager will transition into the STOPPED state.
+     */
+    virtual void join() = 0;
 
-  enum STATE {
-    UNINITIALIZED,
-    STARTING,
-    STARTED,
-    JOINING,
-    STOPPING,
-    STOPPED
-  };
+    enum STATE
+    {
+        UNINITIALIZED,
+        STARTING,
+        STARTED,
+        JOINING,
+        STOPPING,
+        STOPPED
+    };
 
-  virtual STATE state() const = 0;
+    virtual STATE state() const = 0;
 
-  virtual boost::shared_ptr<ThreadFactory> threadFactory() const = 0;
+    virtual boost::shared_ptr<ThreadFactory> threadFactory() const = 0;
 
-  virtual void threadFactory(boost::shared_ptr<ThreadFactory> value) = 0;
+    virtual void threadFactory(boost::shared_ptr<ThreadFactory> value) = 0;
 
-  virtual void addWorker(size_t value=1) = 0;
+    virtual void addWorker(size_t value = 1) = 0;
 
-  virtual void removeWorker(size_t value=1) = 0;
+    virtual void removeWorker(size_t value = 1) = 0;
 
-  /**
-   * Gets the current number of idle worker threads
-   */
-  virtual size_t idleWorkerCount() const = 0;
+    /**
+     * Gets the current number of idle worker threads
+     */
+    virtual size_t idleWorkerCount() const = 0;
 
-  /**
-   * Gets the current number of total worker threads
-   */
-  virtual size_t workerCount() const = 0;
+    /**
+     * Gets the current number of total worker threads
+     */
+    virtual size_t workerCount() const = 0;
 
-  /**
-   * Gets the current number of pending tasks
-   */
-  virtual size_t pendingTaskCount() const  = 0;
+    /**
+     * Gets the current number of pending tasks
+     */
+    virtual size_t pendingTaskCount() const  = 0;
 
-  /**
-   * Gets the current number of pending and executing tasks
-   */
-  virtual size_t totalTaskCount() const = 0;
+    /**
+     * Gets the current number of pending and executing tasks
+     */
+    virtual size_t totalTaskCount() const = 0;
 
-  /**
-   * Gets the maximum pending task count.  0 indicates no maximum
-   */
-  virtual size_t pendingTaskCountMax() const = 0;
+    /**
+     * Gets the maximum pending task count.  0 indicates no maximum
+     */
+    virtual size_t pendingTaskCountMax() const = 0;
 
-  /**
-   * Gets the number of tasks which have been expired without being run.
-   */
-  virtual size_t expiredTaskCount() = 0;
+    /**
+     * Gets the number of tasks which have been expired without being run.
+     */
+    virtual size_t expiredTaskCount() = 0;
 
-  /**
-   * Adds a task to be executed at some time in the future by a worker thread.
-   *
-   * This method will block if pendingTaskCountMax() in not zero and pendingTaskCount()
-   * is greater than or equalt to pendingTaskCountMax().  If this method is called in the
-   * context of a ThreadManager worker thread it will throw a
-   * TooManyPendingTasksException
-   *
-   * @param task  The task to queue for execution
-   *
-   * @param timeout Time to wait in milliseconds to add a task when a pending-task-count
-   * is specified. Specific cases:
-   * timeout = 0  : Wait forever to queue task.
-   * timeout = -1 : Return immediately if pending task count exceeds specified max
-   * @param expiration when nonzero, the number of milliseconds the task is valid
-   * to be run; if exceeded, the task will be dropped off the queue and not run.
-   *
-   * @throws TooManyPendingTasksException Pending task count exceeds max pending task count
-   */
-  virtual void add(boost::shared_ptr<Runnable>task,
-                   int64_t timeout=0LL,
-                   int64_t expiration=0LL) = 0;
+    /**
+     * Adds a task to be executed at some time in the future by a worker thread.
+     *
+     * This method will block if pendingTaskCountMax() in not zero and pendingTaskCount()
+     * is greater than or equalt to pendingTaskCountMax().  If this method is called in the
+     * context of a ThreadManager worker thread it will throw a
+     * TooManyPendingTasksException
+     *
+     * @param task  The task to queue for execution
+     *
+     * @param timeout Time to wait in milliseconds to add a task when a pending-task-count
+     * is specified. Specific cases:
+     * timeout = 0  : Wait forever to queue task.
+     * timeout = -1 : Return immediately if pending task count exceeds specified max
+     * @param expiration when nonzero, the number of milliseconds the task is valid
+     * to be run; if exceeded, the task will be dropped off the queue and not run.
+     *
+     * @throws TooManyPendingTasksException Pending task count exceeds max pending task count
+     */
+    virtual void add(boost::shared_ptr<Runnable>task,
+                     int64_t timeout = 0LL,
+                     int64_t expiration = 0LL) = 0;
 
-  /**
-   * Removes a pending task
-   */
-  virtual void remove(boost::shared_ptr<Runnable> task) = 0;
+    /**
+     * Removes a pending task
+     */
+    virtual void remove(boost::shared_ptr<Runnable> task) = 0;
 
-  /**
-   * Remove the next pending task which would be run.
-   *
-   * @return the task removed.
-   */
-  virtual boost::shared_ptr<Runnable> removeNextPending() = 0;
+    /**
+     * Remove the next pending task which would be run.
+     *
+     * @return the task removed.
+     */
+    virtual boost::shared_ptr<Runnable> removeNextPending() = 0;
 
-  /**
-   * Remove tasks from front of task queue that have expired.
-   */
-  virtual void removeExpiredTasks() = 0;
+    /**
+     * Remove tasks from front of task queue that have expired.
+     */
+    virtual void removeExpiredTasks() = 0;
 
-  /**
-   * Set a callback to be called when a task is expired and not run.
-   *
-   * @param expireCallback a function called with the shared_ptr<Runnable> for
-   * the expired task.
-   */
-  virtual void setExpireCallback(ExpireCallback expireCallback) = 0;
+    /**
+     * Set a callback to be called when a task is expired and not run.
+     *
+     * @param expireCallback a function called with the shared_ptr<Runnable> for
+     * the expired task.
+     */
+    virtual void setExpireCallback(ExpireCallback expireCallback) = 0;
 
-  static boost::shared_ptr<ThreadManager> newThreadManager();
+    static boost::shared_ptr<ThreadManager> newThreadManager();
 
-  /**
-   * Creates a simple thread manager the uses count number of worker threads and has
-   * a pendingTaskCountMax maximum pending tasks. The default, 0, specified no limit
-   * on pending tasks
-   */
-  static boost::shared_ptr<ThreadManager> newSimpleThreadManager(size_t count=4, size_t pendingTaskCountMax=0);
+    /**
+     * Creates a simple thread manager the uses count number of worker threads and has
+     * a pendingTaskCountMax maximum pending tasks. The default, 0, specified no limit
+     * on pending tasks
+     */
+    static boost::shared_ptr<ThreadManager> newSimpleThreadManager(size_t count = 4, size_t pendingTaskCountMax = 0);
 
-  class Task;
+    class Task;
 
-  class Worker;
+    class Worker;
 
-  class Impl;
+    class Impl;
 };
 
-}}} // apache::thrift::concurrency
+}
+}
+} // apache::thrift::concurrency
 
 #endif // #ifndef _THRIFT_CONCURRENCY_THREADMANAGER_H_

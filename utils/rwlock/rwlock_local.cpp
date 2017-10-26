@@ -28,7 +28,7 @@
 
 #include <iostream>
 using namespace std;
- 
+
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 using namespace boost;
@@ -57,7 +57,7 @@ using namespace std;
 		PRINTSTATE(); \
 		throw std::logic_error("RWLock_local: safety invariant violation"); \
 	}
-	
+
 #define CHECKLIVENESS() \
 	if (!( \
 		(!(state.readerswaiting > 0 || state.writerswaiting > 0) || \
@@ -75,14 +75,15 @@ using namespace std;
 
 #endif
 
-namespace rwlock {
+namespace rwlock
+{
 
 RWLock_local::RWLock_local()
 {
-	state.reading = 0;
-	state.readerswaiting = 0;
-	state.writing = 0;
-	state.writerswaiting = 0;
+    state.reading = 0;
+    state.readerswaiting = 0;
+    state.writing = 0;
+    state.writerswaiting = 0;
 }
 
 RWLock_local::~RWLock_local()
@@ -91,75 +92,84 @@ RWLock_local::~RWLock_local()
 
 void RWLock_local::read_lock()
 {
-	mutex.lock();
+    mutex.lock();
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
+    CHECKSAFETY();
+    CHECKLIVENESS();
 #endif
 
-	if (state.writerswaiting > 0 || state.writing > 0) {
-		state.readerswaiting++;
+    if (state.writerswaiting > 0 || state.writing > 0)
+    {
+        state.readerswaiting++;
 #ifdef DEBUG
-		CHECKSAFETY();
-		CHECKLIVENESS();
-#endif
-		while (state.writerswaiting > 0 || state.writing > 0)
-			okToRead.wait(mutex);
-		state.readerswaiting--;
-	}
-	state.reading++;	
-
-#ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
+        CHECKSAFETY();
+        CHECKLIVENESS();
 #endif
 
-	mutex.unlock();
+        while (state.writerswaiting > 0 || state.writing > 0)
+            okToRead.wait(mutex);
+
+        state.readerswaiting--;
+    }
+
+    state.reading++;
+
+#ifdef DEBUG
+    CHECKSAFETY();
+    CHECKLIVENESS();
+#endif
+
+    mutex.unlock();
 }
-	
+
 void RWLock_local::read_unlock()
 {
-	mutex.lock();
+    mutex.lock();
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
+    CHECKSAFETY();
+    CHECKLIVENESS();
 #endif
 
-	state.reading--;
-	if (state.writerswaiting > 0 && state.reading == 0) 
-		okToWrite.notify_one();
-	
+    state.reading--;
+
+    if (state.writerswaiting > 0 && state.reading == 0)
+        okToWrite.notify_one();
+
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
-#endif	
-	mutex.unlock();
+    CHECKSAFETY();
+    CHECKLIVENESS();
+#endif
+    mutex.unlock();
 }
 
 void RWLock_local::write_lock()
 {
-	mutex.lock();
+    mutex.lock();
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
+    CHECKSAFETY();
+    CHECKLIVENESS();
 #endif
 
-	if (state.writing > 0 || state.reading > 0) {
-		state.writerswaiting++;
-		
-#ifdef DEBUG
-		CHECKSAFETY();
-		CHECKLIVENESS();
-#endif
-		while (state.writing > 0 || state.reading > 0)
-			okToWrite.wait(mutex);
-		state.writerswaiting--;
-	}
-	state.writing++;
+    if (state.writing > 0 || state.reading > 0)
+    {
+        state.writerswaiting++;
 
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
+        CHECKSAFETY();
+        CHECKLIVENESS();
+#endif
+
+        while (state.writing > 0 || state.reading > 0)
+            okToWrite.wait(mutex);
+
+        state.writerswaiting--;
+    }
+
+    state.writing++;
+
+#ifdef DEBUG
+    CHECKSAFETY();
+    CHECKLIVENESS();
 #endif
 
 }
@@ -168,55 +178,61 @@ void RWLock_local::write_unlock()
 {
 
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
+    CHECKSAFETY();
+    CHECKLIVENESS();
 #endif
-	
-	state.writing--;
-	if (state.writerswaiting > 0)
-		okToWrite.notify_one();
-	else if (state.readerswaiting > 0)
-		okToRead.notify_all();
-	
+
+    state.writing--;
+
+    if (state.writerswaiting > 0)
+        okToWrite.notify_one();
+    else if (state.readerswaiting > 0)
+        okToRead.notify_all();
+
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
-#endif	
-	mutex.unlock();
+    CHECKSAFETY();
+    CHECKLIVENESS();
+#endif
+    mutex.unlock();
 }
 
 void RWLock_local::upgrade_to_write()
 {
-	mutex.lock();
+    mutex.lock();
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
+    CHECKSAFETY();
+    CHECKLIVENESS();
 #endif
-	state.reading--;
-	
-	// try to cut in line
-	if (state.reading == 0) {
-		state.writing++;
+    state.reading--;
+
+    // try to cut in line
+    if (state.reading == 0)
+    {
+        state.writing++;
 #ifdef DEBUG
-		CHECKSAFETY();
-		CHECKLIVENESS();
+        CHECKSAFETY();
+        CHECKLIVENESS();
 #endif
-		return;
-	}
-		
-	// cut & paste from write_lock()
-	if (state.writing > 0 || state.reading > 0) {
-		state.writerswaiting++;
-		
+        return;
+    }
+
+    // cut & paste from write_lock()
+    if (state.writing > 0 || state.reading > 0)
+    {
+        state.writerswaiting++;
+
 #ifdef DEBUG
-		CHECKSAFETY();
-		CHECKLIVENESS();
+        CHECKSAFETY();
+        CHECKLIVENESS();
 #endif
-		while (state.writing > 0 || state.reading > 0)
-			okToWrite.wait(mutex);
-		state.writerswaiting--;
-	}
-	state.writing++;
+
+        while (state.writing > 0 || state.reading > 0)
+            okToWrite.wait(mutex);
+
+        state.writerswaiting--;
+    }
+
+    state.writing++;
 }
 
 /* It's safe (and necessary) to simply convert this writer to a reader without
@@ -224,84 +240,87 @@ void RWLock_local::upgrade_to_write()
 void RWLock_local::downgrade_to_read()
 {
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
-#endif	
+    CHECKSAFETY();
+    CHECKLIVENESS();
+#endif
 
-	state.writing--;
-	
-	if (state.readerswaiting > 0) 
-		okToRead.notify_all();
-	state.reading++;
-	
+    state.writing--;
+
+    if (state.readerswaiting > 0)
+        okToRead.notify_all();
+
+    state.reading++;
+
 #ifdef DEBUG
-	CHECKSAFETY();
-	CHECKLIVENESS();
-#endif	
-	mutex.unlock();
+    CHECKSAFETY();
+    CHECKLIVENESS();
+#endif
+    mutex.unlock();
 }
 
-void RWLock_local::lock() 
+void RWLock_local::lock()
 {
-	mutex.lock();
+    mutex.lock();
 }
 
 void RWLock_local::unlock()
 {
-	mutex.unlock();
+    mutex.unlock();
 }
 
 int RWLock_local::getWriting()
 {
-	return state.writing;
-}
-		
-int RWLock_local::getReading() 
-{
-	return state.reading;
+    return state.writing;
 }
 
-int RWLock_local::getWritersWaiting() 
+int RWLock_local::getReading()
 {
-	return state.writerswaiting;
+    return state.reading;
+}
+
+int RWLock_local::getWritersWaiting()
+{
+    return state.writerswaiting;
 }
 
 int RWLock_local::getReadersWaiting()
 {
-	return state.readerswaiting;
+    return state.readerswaiting;
 }
 
-ScopedRWLock_local::ScopedRWLock_local(RWLock_local *l, rwlock_mode m)
+ScopedRWLock_local::ScopedRWLock_local(RWLock_local* l, rwlock_mode m)
 {
-	thelock = l;
-	mode = m;
-	assert(m == R || m == W);
-	locked = false;
-	lock();
+    thelock = l;
+    mode = m;
+    assert(m == R || m == W);
+    locked = false;
+    lock();
 }
 
 ScopedRWLock_local::~ScopedRWLock_local()
 {
-	if (locked)
-		unlock();
+    if (locked)
+        unlock();
 }
 
 void ScopedRWLock_local::lock()
 {
-	if (mode == R)
-		thelock->read_lock();
-	else
-		thelock->write_lock();
-	locked = true;
+    if (mode == R)
+        thelock->read_lock();
+    else
+        thelock->write_lock();
+
+    locked = true;
 }
 
 void ScopedRWLock_local::unlock()
 {
-	if (mode == R)
-		thelock->read_unlock();
-	else
-		thelock->write_unlock();
-	locked = false;
+    if (mode == R)
+        thelock->read_unlock();
+    else
+        thelock->write_unlock();
+
+    locked = false;
 }
 
 }

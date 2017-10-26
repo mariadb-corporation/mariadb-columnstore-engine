@@ -26,18 +26,18 @@ namespace idbdatafile
 class PosixFileSystem : public IDBFileSystem
 {
 public:
-	PosixFileSystem();
-	/* virtual */  ~PosixFileSystem();
+    PosixFileSystem();
+    /* virtual */  ~PosixFileSystem();
 
-	/* virtual */ int mkdir(const char *pathname);
-	/* virtual */ off64_t size(const char* path) const;
-    /* virtual */ off64_t compressedSize(const char *path) const;
-	/* virtual */ int remove(const char *pathname);
-	/* virtual */ int rename(const char *oldpath, const char *newpath);
-	/* virtual */ bool exists(const char* pathname) const;
-	/* virtual */ int listDirectory(const char* pathname, std::list<std::string>& contents) const;
-	/* virtual */ bool isDir(const char* pathname) const;
-	/* virtual */ int copyFile(const char* srcPath, const char* destPath) const;
+    /* virtual */ int mkdir(const char* pathname);
+    /* virtual */ off64_t size(const char* path) const;
+    /* virtual */ off64_t compressedSize(const char* path) const;
+    /* virtual */ int remove(const char* pathname);
+    /* virtual */ int rename(const char* oldpath, const char* newpath);
+    /* virtual */ bool exists(const char* pathname) const;
+    /* virtual */ int listDirectory(const char* pathname, std::list<std::string>& contents) const;
+    /* virtual */ bool isDir(const char* pathname) const;
+    /* virtual */ int copyFile(const char* srcPath, const char* destPath) const;
 };
 
 }

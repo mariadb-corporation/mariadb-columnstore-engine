@@ -33,39 +33,44 @@
 #include "objectreader.h"
 
 using namespace std;
-namespace execplan{
+namespace execplan
+{
 
 /**
  * Constructors/Destructors
  */
 TreeNode::TreeNode(): fDerivedTable(""),
-                      fRefCount(0),
-                      fDerivedRefCol(NULL)
-{ memset(tmp, 0, 312); }
+    fRefCount(0),
+    fDerivedRefCol(NULL)
+{
+    memset(tmp, 0, 312);
+}
 
 TreeNode::TreeNode(const TreeNode& rhs):
-           fResult(rhs.fResult),
-           fResultType(rhs.resultType()),
-           fOperationType(rhs.operationType()),
-           fRegex (rhs.regex()),
-           fDerivedTable (rhs.derivedTable()),
-           fRefCount(rhs.refCount()),
-           fDerivedRefCol(rhs.derivedRefCol())
-{ memcpy(tmp, rhs.tmp, 312); }
+    fResult(rhs.fResult),
+    fResultType(rhs.resultType()),
+    fOperationType(rhs.operationType()),
+    fRegex (rhs.regex()),
+    fDerivedTable (rhs.derivedTable()),
+    fRefCount(rhs.refCount()),
+    fDerivedRefCol(rhs.derivedRefCol())
+{
+    memcpy(tmp, rhs.tmp, 312);
+}
 
 TreeNode::~TreeNode() {}
 
 void TreeNode::resultType ( const execplan::CalpontSystemCatalog::ColType& resultType)
 {
-	fResultType = resultType;
+    fResultType = resultType;
 
-	// set scale/precision for the result
-	if (fResultType.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
-	    fResultType.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
-	{
-		fResult.decimalVal.scale = fResultType.scale;
-		fResult.decimalVal.precision = fResultType.precision;
-	}
+    // set scale/precision for the result
+    if (fResultType.colDataType == execplan::CalpontSystemCatalog::DECIMAL ||
+            fResultType.colDataType == execplan::CalpontSystemCatalog::UDECIMAL)
+    {
+        fResult.decimalVal.scale = fResultType.scale;
+        fResult.decimalVal.precision = fResultType.precision;
+    }
 }
 
 /**
@@ -73,8 +78,8 @@ void TreeNode::resultType ( const execplan::CalpontSystemCatalog::ColType& resul
  */
 ostream& operator<<(ostream& output, const TreeNode& rhs)
 {
-	output << rhs.toString();
-	return output;
+    output << rhs.toString();
+    return output;
 }
 
 }  /* namespace */

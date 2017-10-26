@@ -38,48 +38,54 @@ using namespace std;
 
 void usage()
 {
-	cout << "Usage: print_indextree_subblock filename block_offset subblock_number" << endl;
-	exit(1);
+    cout << "Usage: print_indextree_subblock filename block_offset subblock_number" << endl;
+    exit(1);
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char** argv)
 {
-	char buf[256];
-	int fd, err, subblock, fbo, byteoffset, i;
-	string filename;
-	WriteEngine::IdxBitTestEntry *entry;
+    char buf[256];
+    int fd, err, subblock, fbo, byteoffset, i;
+    string filename;
+    WriteEngine::IdxBitTestEntry* entry;
 
-	if (argc != 4)
-		usage();
-	
-	filename = argv[1];
-	fbo = atoi(argv[2]);
-	subblock = atoi(argv[3]);
+    if (argc != 4)
+        usage();
 
-	cout << "FBO: " << fbo << " Subblock: " << subblock << endl;
-	fd = open(filename.c_str(), O_RDONLY);
-	if (fd < 0) {
-		perror("open");
-		exit(1);
-	}
+    filename = argv[1];
+    fbo = atoi(argv[2]);
+    subblock = atoi(argv[3]);
 
-	byteoffset = fbo * BLOCK_SIZE + subblock * 256;
-	lseek(fd, byteoffset, SEEK_SET);
-	err = read(fd, buf, 256);
-	if (err != 256) {
-		perror("read");
-		exit(1);
-	}
-	close(fd);
+    cout << "FBO: " << fbo << " Subblock: " << subblock << endl;
+    fd = open(filename.c_str(), O_RDONLY);
 
-	for (i = 0, byteoffset = 0; byteoffset < 256; 
-	  byteoffset += sizeof(WriteEngine::IdxBitTestEntry), i++) {
-		entry = (WriteEngine::IdxBitTestEntry *) &buf[byteoffset];
-		cout << "Entry " << i << ": fbo=" << (int)entry->fbo << 
-			" sbid=" << entry->sbid << " sbentry=" << entry->entry <<
-			" group=" << entry->group << " bittest=" << entry->bitTest <<
-			" type=" << entry->type << endl;
-	}
+    if (fd < 0)
+    {
+        perror("open");
+        exit(1);
+    }
 
-	exit(0);
+    byteoffset = fbo * BLOCK_SIZE + subblock * 256;
+    lseek(fd, byteoffset, SEEK_SET);
+    err = read(fd, buf, 256);
+
+    if (err != 256)
+    {
+        perror("read");
+        exit(1);
+    }
+
+    close(fd);
+
+    for (i = 0, byteoffset = 0; byteoffset < 256;
+            byteoffset += sizeof(WriteEngine::IdxBitTestEntry), i++)
+    {
+        entry = (WriteEngine::IdxBitTestEntry*) &buf[byteoffset];
+        cout << "Entry " << i << ": fbo=" << (int)entry->fbo <<
+             " sbid=" << entry->sbid << " sbentry=" << entry->entry <<
+             " group=" << entry->group << " bittest=" << entry->bitTest <<
+             " type=" << entry->type << endl;
+    }
+
+    exit(0);
 }

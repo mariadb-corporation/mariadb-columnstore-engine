@@ -36,319 +36,336 @@ using namespace winport;
 
 namespace
 {
-	bool vFlg;
+bool vFlg;
 
-	string installDir;
+string installDir;
 
-	const size_t cmdLineLen = 2 * 1024;
+const size_t cmdLineLen = 2 * 1024;
 
-	int fixPath()
-	{
-		int rc;
-		string newDir = installDir + "\\bin";
-		rc = _chdir(newDir.c_str());
-		return rc;
-	}
+int fixPath()
+{
+    int rc;
+    string newDir = installDir + "\\bin";
+    rc = _chdir(newDir.c_str());
+    return rc;
+}
 
-	int runIt(const string& pName)
-	{
-		char* cmdLine = (char*)_malloca(cmdLineLen);
-		strncpy_s(cmdLine, cmdLineLen, pName.c_str(), pName.size());
-		PROCESS_INFORMATION pInfo;
-		ZeroMemory(&pInfo, sizeof(pInfo));
-		STARTUPINFO sInfo;
-		ZeroMemory(&sInfo, sizeof(sInfo));
-		if (CreateProcess(0, cmdLine, 0, 0, false, 0, 0, 0, &sInfo, &pInfo) == 0)
-		{
-			_freea(cmdLine);
-			return -1;
-		}
-		if (WaitForSingleObject(pInfo.hProcess, INFINITE) != WAIT_OBJECT_0)
-		{
-			_freea(cmdLine);
-			return -1;
-		}
-		DWORD exitCode;
-		GetExitCodeProcess(pInfo.hProcess, &exitCode);
-		if (exitCode != 0)
-		{
-			_freea(cmdLine);
-			return -1;
-		}
-		CloseHandle(pInfo.hProcess);
-		_freea(cmdLine);
-		return 0;
-	}
+int runIt(const string& pName)
+{
+    char* cmdLine = (char*)_malloca(cmdLineLen);
+    strncpy_s(cmdLine, cmdLineLen, pName.c_str(), pName.size());
+    PROCESS_INFORMATION pInfo;
+    ZeroMemory(&pInfo, sizeof(pInfo));
+    STARTUPINFO sInfo;
+    ZeroMemory(&sInfo, sizeof(sInfo));
 
-	int installMySQL()
-	{
-		int rc;
-		char* cmdLine = (char*)_malloca(cmdLineLen);
-		sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysqld.exe --defaults-file=%s\\my.ini --bootstrap --loose-skip-innodb < %s\\etc\\win_setup_mysql_part1.sql",
-			installDir.c_str(), installDir.c_str(), installDir.c_str());
-		rc = system(cmdLine);
-		_freea(cmdLine);
-		return rc;
-	}
+    if (CreateProcess(0, cmdLine, 0, 0, false, 0, 0, 0, &sInfo, &pInfo) == 0)
+    {
+        _freea(cmdLine);
+        return -1;
+    }
 
-	int installIDBConn()
-	{
-		int rc;
-		char* cmdLine = (char*)_malloca(cmdLineLen);
-		sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part2.sql > nul 2>&1",
-			installDir.c_str(), installDir.c_str(), installDir.c_str());
-		rc = system(cmdLine);
-		_freea(cmdLine);
-		return rc;
-	}
+    if (WaitForSingleObject(pInfo.hProcess, INFINITE) != WAIT_OBJECT_0)
+    {
+        _freea(cmdLine);
+        return -1;
+    }
 
-	int installIDBConnStep2()
-	{
-		int rc = -1;
-		char* cmdLine = (char*)_malloca(cmdLineLen);
-		FILE* p;
-		bool needAlterTable1 = false;
-		bool needAlterTable2 = false;
+    DWORD exitCode;
+    GetExitCodeProcess(pInfo.hProcess, &exitCode);
 
-		sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --execute=\"describe syscolumn;\" calpontsys 2>&1",
-			installDir.c_str(), installDir.c_str());
+    if (exitCode != 0)
+    {
+        _freea(cmdLine);
+        return -1;
+    }
 
-		p = _popen(cmdLine, "rt");
+    CloseHandle(pInfo.hProcess);
+    _freea(cmdLine);
+    return 0;
+}
 
-		if (p == NULL) goto out;
+int installMySQL()
+{
+    int rc;
+    char* cmdLine = (char*)_malloca(cmdLineLen);
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysqld.exe --defaults-file=%s\\my.ini --bootstrap --loose-skip-innodb < %s\\etc\\win_setup_mysql_part1.sql",
+              installDir.c_str(), installDir.c_str(), installDir.c_str());
+    rc = system(cmdLine);
+    _freea(cmdLine);
+    return rc;
+}
 
-		if (!grepit(syncstream::isyncstream(p), "^compressiontype[ \t].*"))
-			needAlterTable1 = true;
+int installIDBConn()
+{
+    int rc;
+    char* cmdLine = (char*)_malloca(cmdLineLen);
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part2.sql > nul 2>&1",
+              installDir.c_str(), installDir.c_str(), installDir.c_str());
+    rc = system(cmdLine);
+    _freea(cmdLine);
+    return rc;
+}
 
-		_pclose(p);
+int installIDBConnStep2()
+{
+    int rc = -1;
+    char* cmdLine = (char*)_malloca(cmdLineLen);
+    FILE* p;
+    bool needAlterTable1 = false;
+    bool needAlterTable2 = false;
 
-		p = _popen(cmdLine, "rt");
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --execute=\"describe syscolumn;\" calpontsys 2>&1",
+              installDir.c_str(), installDir.c_str());
 
-		if (p == NULL) goto out;
+    p = _popen(cmdLine, "rt");
 
-		if (!grepit(syncstream::isyncstream(p), "^nextvalue[ \t].*"))
-			needAlterTable2 = true;
+    if (p == NULL) goto out;
 
-		_pclose(p);
+    if (!grepit(syncstream::isyncstream(p), "^compressiontype[ \t].*"))
+        needAlterTable1 = true;
 
-		if (needAlterTable1 || needAlterTable2)
-		{
-			cout << "Checking InfiniDB components and system catalog for necessary upgrades..." << endl;
+    _pclose(p);
 
-			//This script needs to be force-fed to mysqld and any errors ignored
-			if (needAlterTable1)
-			{
-				sprintf_s(cmdLine, cmdLineLen,
-					"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part3.sql > nul 2>&1",
-					installDir.c_str(), installDir.c_str(), installDir.c_str());
+    p = _popen(cmdLine, "rt");
 
-				rc = system(cmdLine);
-			}
-			if (needAlterTable2)
-			{
-				sprintf_s(cmdLine, cmdLineLen,
-					"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part3.1.sql > nul 2>&1",
-					installDir.c_str(), installDir.c_str(), installDir.c_str());
+    if (p == NULL) goto out;
 
-				rc = system(cmdLine);
-			}
-		}
+    if (!grepit(syncstream::isyncstream(p), "^nextvalue[ \t].*"))
+        needAlterTable2 = true;
+
+    _pclose(p);
+
+    if (needAlterTable1 || needAlterTable2)
+    {
+        cout << "Checking InfiniDB components and system catalog for necessary upgrades..." << endl;
+
+        //This script needs to be force-fed to mysqld and any errors ignored
+        if (needAlterTable1)
+        {
+            sprintf_s(cmdLine, cmdLineLen,
+                      "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part3.sql > nul 2>&1",
+                      installDir.c_str(), installDir.c_str(), installDir.c_str());
+
+            rc = system(cmdLine);
+        }
+
+        if (needAlterTable2)
+        {
+            sprintf_s(cmdLine, cmdLineLen,
+                      "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part3.1.sql > nul 2>&1",
+                      installDir.c_str(), installDir.c_str(), installDir.c_str());
+
+            rc = system(cmdLine);
+        }
+    }
+
 #ifndef SKIP_MYSQL_SETUP4
-		sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part4.sql > nul 2>&1",
-			installDir.c_str(), installDir.c_str(), installDir.c_str());
-		rc = system(cmdLine);
-		rc = 0;
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part4.sql > nul 2>&1",
+              installDir.c_str(), installDir.c_str(), installDir.c_str());
+    rc = system(cmdLine);
+    rc = 0;
 #endif
-		sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part5.sql > nul 2>&1",
-			installDir.c_str(), installDir.c_str(), installDir.c_str());
-		rc = system(cmdLine);
-		rc = 0;
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\etc\\win_setup_mysql_part5.sql > nul 2>&1",
+              installDir.c_str(), installDir.c_str(), installDir.c_str());
+    rc = system(cmdLine);
+    rc = 0;
 
-        // Install the user priority stored procedures
-        sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\sql\\calsetuserpriority.sql > nul 2>&1",
-			installDir.c_str(), installDir.c_str(), installDir.c_str());
-		rc = system(cmdLine);
-		rc = 0;
+    // Install the user priority stored procedures
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\sql\\calsetuserpriority.sql > nul 2>&1",
+              installDir.c_str(), installDir.c_str(), installDir.c_str());
+    rc = system(cmdLine);
+    rc = 0;
 
-        sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\sql\\calremoveuserpriority.sql > nul 2>&1",
-			installDir.c_str(), installDir.c_str(), installDir.c_str());
-		rc = system(cmdLine);
-		rc = 0;
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\sql\\calremoveuserpriority.sql > nul 2>&1",
+              installDir.c_str(), installDir.c_str(), installDir.c_str());
+    rc = system(cmdLine);
+    rc = 0;
 
-        sprintf_s(cmdLine, cmdLineLen,
-			"%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\sql\\calshowprocesslist.sql > nul 2>&1",
-			installDir.c_str(), installDir.c_str(), installDir.c_str());
-		rc = system(cmdLine);
-		rc = 0;
+    sprintf_s(cmdLine, cmdLineLen,
+              "%s\\bin\\mysql.exe --defaults-file=%s\\my.ini --user=root --force < %s\\sql\\calshowprocesslist.sql > nul 2>&1",
+              installDir.c_str(), installDir.c_str(), installDir.c_str());
+    rc = system(cmdLine);
+    rc = 0;
 
 out:
-		_freea(cmdLine);
-		return rc;
-	}
+    _freea(cmdLine);
+    return rc;
+}
 
-	int startupIDB()
-	{
-		int rc;
-		string cmd;
-		cmd = installDir + "\\bin\\winfinidb.exe start";
-		rc = runIt(cmd);
-		return rc;
-	}
+int startupIDB()
+{
+    int rc;
+    string cmd;
+    cmd = installDir + "\\bin\\winfinidb.exe start";
+    rc = runIt(cmd);
+    return rc;
+}
 
-	int installIDBDB()
-	{
-		int rc;
+int installIDBDB()
+{
+    int rc;
 
-		for (int retry = 0; retry < 5; retry++)
-		{
-			rc = installIDBConn();
-			if (rc == 0)
-				break;
-			Sleep(5 * (retry + 1) * 1000);
-		}
-		if (rc)
-			return rc;
+    for (int retry = 0; retry < 5; retry++)
+    {
+        rc = installIDBConn();
 
-		rc = installIDBConnStep2();
-		if (rc)
-			return rc;
+        if (rc == 0)
+            break;
 
-		string cmd;
-		cmd = installDir + "\\bin\\dbbuilder.exe 7";
-		rc = runIt(cmd);
-		return rc;
-	}
+        Sleep(5 * (retry + 1) * 1000);
+    }
 
-	int upgradeInfiniDB()
-	{
-		int rc = 0;
+    if (rc)
+        return rc;
 
-		//We'll just have to blast these changes in...
-		installIDBConn();
+    rc = installIDBConnStep2();
 
-		//Add new enterprise functions & new syscolumn columns
-		rc = installIDBConnStep2();
-		if (rc)
-			return rc;
+    if (rc)
+        return rc;
 
-		return rc;
-	}
+    string cmd;
+    cmd = installDir + "\\bin\\dbbuilder.exe 7";
+    rc = runIt(cmd);
+    return rc;
+}
+
+int upgradeInfiniDB()
+{
+    int rc = 0;
+
+    //We'll just have to blast these changes in...
+    installIDBConn();
+
+    //Add new enterprise functions & new syscolumn columns
+    rc = installIDBConnStep2();
+
+    if (rc)
+        return rc;
+
+    return rc;
+}
 
 }
 
 int main(int argc, char** argv)
 {
-	opterr = 0;
-	vFlg = false;
-	int c;
+    opterr = 0;
+    vFlg = false;
+    int c;
 
-	while ((c = getopt(argc, argv, "v")) != EOF)
-		switch (c)
-		{
-		case 'v':
-			vFlg = true;
-			break;
-		case '?':
-		default:
-			break;
-		}
+    while ((c = getopt(argc, argv, "v")) != EOF)
+        switch (c)
+        {
+            case 'v':
+                vFlg = true;
+                break;
 
-	string mysqlPort("3306");
+            case '?':
+            default:
+                break;
+        }
 
-	if (argc - optind >= 1)
-		mysqlPort = argv[optind++];
+    string mysqlPort("3306");
 
-	installDir = IDBreadRegistry("", true);
+    if (argc - optind >= 1)
+        mysqlPort = argv[optind++];
 
-	if (fixPath())
-	{
-		cerr << "Something went wrong trying to change to the install directory " << installDir << endl;
-		return 1;
-	}
+    installDir = IDBreadRegistry("", true);
 
-	cout << "Running InfiniDB bootstrap installer..." << endl;
+    if (fixPath())
+    {
+        cerr << "Something went wrong trying to change to the install directory " << installDir << endl;
+        return 1;
+    }
 
-	cout << "Tuning configuration..." << endl;
+    cout << "Running InfiniDB bootstrap installer..." << endl;
 
-	string moduleFile = installDir + "\\local\\module";
-	if (_access(moduleFile.c_str(), F_OK) != 0)
-	{
-		ofstream mfs(moduleFile.c_str());
-		if (!mfs.good())
-		{
-			cerr << "Something went wrong creating the module file" << endl;
-			return 1;
-		}
-		mfs << "pm1" << endl;
-		mfs.close();
-	}
+    cout << "Tuning configuration..." << endl;
 
-	if (fixupConfig(installDir, mysqlPort))
-	{
-		cerr << "Something went wrong fixing up a config file" << endl;
-		return 1;
-	}
+    string moduleFile = installDir + "\\local\\module";
 
-	string mysqldb = installDir + "\\mysqldb\\mysql\\user.frm";
-	struct _stat statbuf;
+    if (_access(moduleFile.c_str(), F_OK) != 0)
+    {
+        ofstream mfs(moduleFile.c_str());
 
-	if (_stat(mysqldb.c_str(), &statbuf) == 0)
-	{
-		cout << "Using existing MySQL database." << endl;
-	}
-	else
-	{
-		cout << "Installing empty MySQL database..." << endl;
+        if (!mfs.good())
+        {
+            cerr << "Something went wrong creating the module file" << endl;
+            return 1;
+        }
 
-		if (installMySQL())
-		{
-			cerr << "Something went wrong trying to setup MySQL" << endl;
-			return 1;
-		}
-	}
+        mfs << "pm1" << endl;
+        mfs.close();
+    }
 
-	cout << "Starting InfiniDB..." << endl;
+    if (fixupConfig(installDir, mysqlPort))
+    {
+        cerr << "Something went wrong fixing up a config file" << endl;
+        return 1;
+    }
 
-	if (startupIDB())
-	{
-		cerr << "Something went wrong trying to start InfiniDB" << endl;
-		return 1;
-	}
-	Sleep(5 * 1000);
+    string mysqldb = installDir + "\\mysqldb\\mysql\\user.frm";
+    struct _stat statbuf;
 
-	string cnffile = installDir + "\\data1\\000.dir";
+    if (_stat(mysqldb.c_str(), &statbuf) == 0)
+    {
+        cout << "Using existing MySQL database." << endl;
+    }
+    else
+    {
+        cout << "Installing empty MySQL database..." << endl;
 
-	if (_stat(cnffile.c_str(), &statbuf) == 0)
-	{
-		cout << "Using existing InfiniDB database." << endl;
-	}
-	else
-	{
-		cout << "Installing InfiniDB components and system catalog..." << endl;
+        if (installMySQL())
+        {
+            cerr << "Something went wrong trying to setup MySQL" << endl;
+            return 1;
+        }
+    }
 
-		if (installIDBDB())
-		{
-			cerr << "Something went wrong trying to install InfiniDB components" << endl;
-			return 1;
-		}
-	}
+    cout << "Starting InfiniDB..." << endl;
 
-	if (upgradeInfiniDB())
-	{
-		cerr << "Something went wrong trying to upgrade InfiniDB components" << endl;
-		return 1;
-	}
+    if (startupIDB())
+    {
+        cerr << "Something went wrong trying to start InfiniDB" << endl;
+        return 1;
+    }
 
-	cout << "Done!" << endl;
+    Sleep(5 * 1000);
 
-	Sleep(3 * 1000);
+    string cnffile = installDir + "\\data1\\000.dir";
 
-	return 0;
+    if (_stat(cnffile.c_str(), &statbuf) == 0)
+    {
+        cout << "Using existing InfiniDB database." << endl;
+    }
+    else
+    {
+        cout << "Installing InfiniDB components and system catalog..." << endl;
+
+        if (installIDBDB())
+        {
+            cerr << "Something went wrong trying to install InfiniDB components" << endl;
+            return 1;
+        }
+    }
+
+    if (upgradeInfiniDB())
+    {
+        cerr << "Something went wrong trying to upgrade InfiniDB components" << endl;
+        return 1;
+    }
+
+    cout << "Done!" << endl;
+
+    Sleep(3 * 1000);
+
+    return 0;
 }

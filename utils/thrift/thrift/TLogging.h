@@ -55,12 +55,12 @@
  * @param format_string
  */
 #if T_GLOBAL_DEBUGGING_LEVEL > 0
-  #define T_DEBUG(format_string,...)                                        \
+#define T_DEBUG(format_string,...)                                        \
     if (T_GLOBAL_DEBUGGING_LEVEL > 0) {                                     \
       fprintf(stderr,"[%s,%d] " format_string " \n", __FILE__, __LINE__,##__VA_ARGS__); \
   }
 #else
-  #define T_DEBUG(format_string,...)
+#define T_DEBUG(format_string,...)
 #endif
 
 
@@ -70,7 +70,7 @@
  * @param string  format_string input: printf style format string
  */
 #if T_GLOBAL_DEBUGGING_LEVEL > 0
-  #define T_DEBUG_T(format_string,...)                                    \
+#define T_DEBUG_T(format_string,...)                                    \
     {                                                                     \
       if (T_GLOBAL_DEBUGGING_LEVEL > 0) {                                 \
         time_t now;                                                       \
@@ -82,7 +82,7 @@
       }                                                                   \
     }
 #else
-  #define T_DEBUG_T(format_string,...)
+#define T_DEBUG_T(format_string,...)
 #endif
 
 
@@ -139,7 +139,7 @@
  * @param string  format_string input: printf style format string
  */
 #if T_GLOBAL_LOGGING_LEVEL > 0
-  #define T_LOG_OPER(format_string,...)                                       \
+#define T_LOG_OPER(format_string,...)                                       \
     {                                                                         \
       if (T_GLOBAL_LOGGING_LEVEL > 0) {                                       \
         time_t now;                                                           \
@@ -151,7 +151,7 @@
       }                                                                       \
     }
 #else
-  #define T_LOG_OPER(format_string,...)
+#define T_LOG_OPER(format_string,...)
 #endif
 
 
@@ -165,9 +165,9 @@
  *                                      apache::thrift::profile_print_info()
  */
 #if T_GLOBAL_DEBUG_VIRTUAL > 1
-  #define T_VIRTUAL_CALL()                                                \
+#define T_VIRTUAL_CALL()                                                \
     ::apache::thrift::profile_virtual_call(typeid(*this))
-  #define T_GENERIC_PROTOCOL(template_class, generic_prot, specific_prot) \
+#define T_GENERIC_PROTOCOL(template_class, generic_prot, specific_prot) \
     do {                                                                  \
       if (!(specific_prot)) {                                             \
         ::apache::thrift::profile_generic_protocol(                     \
@@ -175,9 +175,9 @@
       }                                                                   \
     } while (0)
 #elif T_GLOBAL_DEBUG_VIRTUAL == 1
-  #define T_VIRTUAL_CALL()                                                \
+#define T_VIRTUAL_CALL()                                                \
     fprintf(stderr,"[%s,%d] virtual call\n", __FILE__, __LINE__)
-  #define T_GENERIC_PROTOCOL(template_class, generic_prot, specific_prot) \
+#define T_GENERIC_PROTOCOL(template_class, generic_prot, specific_prot) \
     do {                                                                  \
       if (!(specific_prot)) {                                             \
         fprintf(stderr,                                                   \
@@ -186,8 +186,8 @@
       }                                                                   \
     } while (0)
 #else
-  #define T_VIRTUAL_CALL()
-  #define T_GENERIC_PROTOCOL(template_class, generic_prot, specific_prot)
+#define T_VIRTUAL_CALL()
+#define T_GENERIC_PROTOCOL(template_class, generic_prot, specific_prot)
 #endif
 
 #endif // #ifndef _THRIFT_TLOGGING_H_

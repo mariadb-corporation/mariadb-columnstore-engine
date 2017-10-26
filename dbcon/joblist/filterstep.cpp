@@ -62,11 +62,11 @@ namespace joblist
 //};
 
 FilterStep::FilterStep(
-	const execplan::CalpontSystemCatalog::ColType& colType,
-	const JobInfo& jobInfo) :
-		JobStep(jobInfo),
-		fTableOID(0),
-		fColType(colType)
+    const execplan::CalpontSystemCatalog::ColType& colType,
+    const JobInfo& jobInfo) :
+    JobStep(jobInfo),
+    fTableOID(0),
+    fColType(colType)
 {
 }
 
@@ -81,7 +81,7 @@ void FilterStep::join()
 
 void FilterStep::setBOP(int8_t b)
 {
-	fBOP = b;
+    fBOP = b;
 }
 
 
@@ -230,33 +230,33 @@ void FilterStep::doFilter()
 
 void FilterStep::addFilter(const execplan::Filter* f)
 {
-	if (NULL != f)
-		fFilters.push_back(f);
+    if (NULL != f)
+        fFilters.push_back(f);
 }
 
 
 const string FilterStep::toString() const
 {
-	ostringstream oss;
-	size_t idlsz;
+    ostringstream oss;
+    size_t idlsz;
 
-	idlsz = fInputJobStepAssociation.outSize();
-	idbassert(idlsz == 2);
+    idlsz = fInputJobStepAssociation.outSize();
+    idbassert(idlsz == 2);
 
-	oss << "FilterStep      ses:" << fSessionId << " txn:" << fTxnId <<
-		" st:" << fStepId;
-	oss << " in  tb/col1:" << fTableOID << "/";
-	oss << " " << fInputJobStepAssociation.outAt(0); // output will include oid
-	oss << " in  tb/col2:" << fTableOID << "/";
-	oss << " " << fInputJobStepAssociation.outAt(1);
+    oss << "FilterStep      ses:" << fSessionId << " txn:" << fTxnId <<
+        " st:" << fStepId;
+    oss << " in  tb/col1:" << fTableOID << "/";
+    oss << " " << fInputJobStepAssociation.outAt(0); // output will include oid
+    oss << " in  tb/col2:" << fTableOID << "/";
+    oss << " " << fInputJobStepAssociation.outAt(1);
 
-	idlsz = fOutputJobStepAssociation.outSize();
-	idbassert(idlsz == 1);
+    idlsz = fOutputJobStepAssociation.outSize();
+    idbassert(idlsz == 1);
 
-	oss << endl << "                     out tb/col:" << fTableOID << "/";
-	oss << " " << fOutputJobStepAssociation.outAt(0);// output will include oid
+    oss << endl << "                     out tb/col:" << fTableOID << "/";
+    oss << " " << fOutputJobStepAssociation.outAt(0);// output will include oid
 
-	return oss.str();
+    return oss.str();
 }
 
 }

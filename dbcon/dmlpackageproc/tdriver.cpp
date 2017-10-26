@@ -446,9 +446,9 @@ public:
         buildTable(createStmt);
 
         createStmt = "create table tpch.supplier( s_suppkey integer NOT NULL, s_name char(25) , s_address varchar(40),    s_nationkey integer , s_phone char(15) , s_acctbal integer, s_comment varchar(101))";
-        buildTable(createStmt);  
-	
-	createStmt = "create table tpch.part( p_partkey integer NOT NULL ,p_name varchar(55) , p_mfgr char(25), p_brand char(10) , p_type varchar(25) , p_size integer , p_container char(10) ,p_retailprice integer , p_comment varchar(23), PRIMARY KEY(p_partkey))";
+        buildTable(createStmt);
+
+        createStmt = "create table tpch.part( p_partkey integer NOT NULL ,p_name varchar(55) , p_mfgr char(25), p_brand char(10) , p_type varchar(25) , p_size integer , p_container char(10) ,p_retailprice integer , p_comment varchar(23), PRIMARY KEY(p_partkey))";
         buildTable(createStmt);
 
     }
@@ -458,21 +458,23 @@ public:
 
         ddlpackage::SqlParser parser;
         parser.Parse(createText.c_str());
+
         if (parser.Good())
         {
-            const ddlpackage::ParseTree &ptree = parser.GetParseTree();
+            const ddlpackage::ParseTree& ptree = parser.GetParseTree();
+
             try
             {
                 ddlpackageprocessor::CreateTableProcessor processor;
                 processor.setDebugLevel(ddlpackageprocessor::CreateTableProcessor::VERBOSE);
 
-                ddlpackage::SqlStatement &stmt = *ptree.fList[0];
+                ddlpackage::SqlStatement& stmt = *ptree.fList[0];
                 ddlpackageprocessor::CreateTableProcessor::DDLResult result;
 
                 result  = processor.processPackage(dynamic_cast<ddlpackage::CreateTableStatement&>(stmt));
                 std::cout << "return: " << result.result << std::endl;
             }
-            catch(...)
+            catch (...)
             {
 
                 throw;
@@ -493,9 +495,11 @@ void destroySemaphores()
 
     semkey = 0x2149bdd2;
     sems = semget(semkey, 2, 0666);
+
     if (sems != -1)
     {
         err = semctl(sems, 0, IPC_RMID);
+
         if (err == -1)
             perror("tdriver: semctl");
     }
@@ -508,9 +512,11 @@ void destroyShmseg()
 
     shmkey = 0x2149bdd2;
     shms = shmget(shmkey, 0, 0666);
+
     if (shms != -1)
     {
         err = shmctl(shms, IPC_RMID, NULL);
+
         if (err == -1 && errno != EINVAL)
         {
             perror("tdriver: shmctl");
@@ -555,7 +561,7 @@ class DMLPackageProcessorTest : public CppUnit::TestFixture
     CPPUNIT_TEST( test_insert_package_fail);
     CPPUNIT_TEST( test_update_package_fail);
     CPPUNIT_TEST( test_delete_package_fail);
-    CPPUNIT_TEST( test_command_package ); 
+    CPPUNIT_TEST( test_command_package );
     */
     CPPUNIT_TEST_SUITE_END();
 
@@ -650,7 +656,7 @@ public:
 
         cout << "\nDML statement:" << dmlStatement.c_str() << endl;
 
-        VendorDMLStatement dmlStmt(dmlStatement,1);
+        VendorDMLStatement dmlStmt(dmlStatement, 1);
         CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackage(dmlStmt);
         CPPUNIT_ASSERT( 0 != pDMLPackage );
 
@@ -676,7 +682,7 @@ public:
 
         cout << "\nDML statement:" << dmlStatement.c_str() << endl;
 
-        VendorDMLStatement dmlStmt(dmlStatement,1);
+        VendorDMLStatement dmlStmt(dmlStatement, 1);
         CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackage(dmlStmt);
         CPPUNIT_ASSERT( 0 != pDMLPackage );
 
@@ -708,7 +714,7 @@ public:
 
         CPPUNIT_ASSERT( DML_INSERT == package_type );
 
-        InsertDMLPackage *pObject = new InsertDMLPackage();
+        InsertDMLPackage* pObject = new InsertDMLPackage();
 
         pObject->read( bs );
 
@@ -720,6 +726,7 @@ public:
 
         pkgProcPtr->setDebugLevel(DMLPackageProcessor::VERBOSE);
         DMLPackageProcessor::DMLResult result = pkgProcPtr->processPackage( *pObject );
+
         if ( DMLPackageProcessor::NO_ERROR != result.result )
         {
             cout << "Insert failed!" << endl;
@@ -770,7 +777,7 @@ public:
 
         cout << "\nDML statement:" << dmlStatement.c_str() << endl;
 
-        VendorDMLStatement dmlStmt(dmlStatement,1);
+        VendorDMLStatement dmlStmt(dmlStatement, 1);
         CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackage(dmlStmt);
         CPPUNIT_ASSERT( 0 != pDMLPackage );
 
@@ -801,7 +808,7 @@ public:
 
         CPPUNIT_ASSERT( DML_DELETE == package_type );
 
-        DeleteDMLPackage *pObject = new DeleteDMLPackage();
+        DeleteDMLPackage* pObject = new DeleteDMLPackage();
 
         pObject->read( bs );
 
@@ -822,6 +829,7 @@ public:
 
             ml.logDebugMessage( result.message );
         }
+
         delete pkgProcPtr;
         delete pObject;
 
@@ -837,7 +845,7 @@ public:
 
         cout << "\nDML statement:" << dmlStatement.c_str() << endl;
 
-        VendorDMLStatement dmlStmt(dmlStatement,1);
+        VendorDMLStatement dmlStmt(dmlStatement, 1);
         CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackage(dmlStmt);
         CPPUNIT_ASSERT( 0 != pDMLPackage );
 
@@ -866,6 +874,7 @@ public:
         ByteStream  bytestream;
 
         std::vector<std::string>::const_iterator iter = commands.begin();
+
         while (iter != commands.end())
         {
             std::string command = *iter;
@@ -873,6 +882,7 @@ public:
 
             VendorDMLStatement dml_command(command, 1);
             CalpontDMLPackage* dmlCommandPkgPtr = CalpontDMLFactory::makeCalpontDMLPackage(dml_command);
+
             if (dmlCommandPkgPtr)
             {
                 cout << "CalpontDMLFactory::makeCalpontDMLPackage: success"  << endl;
@@ -900,7 +910,7 @@ public:
 
         CPPUNIT_ASSERT( DML_COMMAND == package_type );
 
-        CommandDMLPackage *pObject = new CommandDMLPackage();
+        CommandDMLPackage* pObject = new CommandDMLPackage();
 
         pObject->read( bs );
 
@@ -921,6 +931,7 @@ public:
 
             ml.logDebugMessage( result.message );
         }
+
         delete pkgProcPtr;
         delete pObject;
     }
@@ -967,7 +978,7 @@ public:
 
         CPPUNIT_ASSERT( DML_UPDATE == package_type );
 
-        UpdateDMLPackage *pObject = new UpdateDMLPackage();
+        UpdateDMLPackage* pObject = new UpdateDMLPackage();
 
         pObject->read( bs );
 
@@ -1002,13 +1013,13 @@ CPPUNIT_TEST_SUITE_REGISTRATION( DMLPackageProcessorTest );
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
     // Uncomment before running tests
-     //setUp();
+    //setUp();
 
     CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
     runner.addTest( registry.makeTest() );
     bool wasSuccessful = runner.run( "", false );
 

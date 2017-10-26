@@ -29,48 +29,48 @@
  */
 namespace cacheutils
 {
-	/** @brief flush the block cache
-	 *
-	 * Use the config file and messaging to signal all PrimProc's to flush their caches.
-	 */
-	int flushPrimProcCache();
+/** @brief flush the block cache
+ *
+ * Use the config file and messaging to signal all PrimProc's to flush their caches.
+ */
+int flushPrimProcCache();
 
-	/** @brief flush these blocks from cache
-	 *
-	 * Use the config file and messaging to signal all PrimProc's to flush their caches of any of
-	 * the specified LBID@@Vers.
-	 */
-	int flushPrimProcBlocks(const BRM::BlockList_t& list);
-	
-	/** @brief flush all version of blocks from cache
-	 *
-	 * Use the config file and messaging to signal all PrimProc's to flush their caches of any of
-	 * the specified LBIDs.
-	 */
-	int flushPrimProcAllverBlocks(const std::vector<BRM::LBID_t> &list);
+/** @brief flush these blocks from cache
+ *
+ * Use the config file and messaging to signal all PrimProc's to flush their caches of any of
+ * the specified LBID@@Vers.
+ */
+int flushPrimProcBlocks(const BRM::BlockList_t& list);
 
-	/** @brief flush all versions of all lbids belonging to the given oids.
-	 *
-	 * Flush all versions of all lbids belonging to the given oids.
-	 */
-	int flushOIDsFromCache(const std::vector<BRM::OID_t> &);
+/** @brief flush all version of blocks from cache
+ *
+ * Use the config file and messaging to signal all PrimProc's to flush their caches of any of
+ * the specified LBIDs.
+ */
+int flushPrimProcAllverBlocks(const std::vector<BRM::LBID_t>& list);
 
-	/** @brief Flush all versions of all lbids for the given OIDs and partition number.
-	 *
-	 * Flush all versions of all lbids for the given OIDs and partition number.
-	 */
-	int flushPartition(const std::vector<BRM::OID_t> &, std::set<BRM::LogicalPartition>& partitionNum);
+/** @brief flush all versions of all lbids belonging to the given oids.
+ *
+ * Flush all versions of all lbids belonging to the given oids.
+ */
+int flushOIDsFromCache(const std::vector<BRM::OID_t>&);
 
-	/** @brief drop file descriptor cache
-	 *
-	 * Use the config file and messaging to signal all PrimProc's to drop the fd cache
-	 */
-	int dropPrimProcFdCache();
-	/** @brief drop the files from file descriptor cache
-	 *
-	 * Use the config file and messaging to signal all PrimProc's to drop the fd cache
-	 */
-	int purgePrimProcFdCache(const std::vector<BRM::FileInfo> files, const int pmId);
+/** @brief Flush all versions of all lbids for the given OIDs and partition number.
+ *
+ * Flush all versions of all lbids for the given OIDs and partition number.
+ */
+int flushPartition(const std::vector<BRM::OID_t>&, std::set<BRM::LogicalPartition>& partitionNum);
+
+/** @brief drop file descriptor cache
+ *
+ * Use the config file and messaging to signal all PrimProc's to drop the fd cache
+ */
+int dropPrimProcFdCache();
+/** @brief drop the files from file descriptor cache
+ *
+ * Use the config file and messaging to signal all PrimProc's to drop the fd cache
+ */
+int purgePrimProcFdCache(const std::vector<BRM::FileInfo> files, const int pmId);
 
 }
 // vim:ts=4 sw=4:

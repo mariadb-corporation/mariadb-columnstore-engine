@@ -3,7 +3,7 @@
 
 
 #ifndef CONFIG_H
-#define CONFIG_H 
+#define CONFIG_H
 
 
 /* Define if the AI_ADDRCONFIG symbol is unavailable */

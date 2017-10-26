@@ -28,30 +28,39 @@
 
 using namespace std;
 
-namespace {
-    
+namespace
+{
+
 /**@brief util struct for converting string to lower case */
 struct to_lower
 {
-    char operator() (char c) const { return tolower(c); }
+    char operator() (char c) const
+    {
+        return tolower(c);
+    }
 };
 
 //Trim any leading/trailing ws
 const string lrtrim(const string& in)
 {
-	string::size_type p1;
-	p1 = in.find_first_not_of(" \t\n");
-	if (p1 == string::npos) p1 = 0;
-	string::size_type p2;
-	p2 = in.find_last_not_of(" \t\n");
-	if (p2 == string::npos) p2 = in.size() - 1;
-	return string(in, p1, (p2 - p1 + 1));
+    string::size_type p1;
+    p1 = in.find_first_not_of(" \t\n");
+
+    if (p1 == string::npos) p1 = 0;
+
+    string::size_type p2;
+    p2 = in.find_last_not_of(" \t\n");
+
+    if (p2 == string::npos) p2 = in.size() - 1;
+
+    return string(in, p1, (p2 - p1 + 1));
 }
 
 }
 
-namespace execplan {
-    
+namespace execplan
+{
+
 /**
  * Constructors/Destructors
  */
@@ -61,12 +70,12 @@ LogicOperator::LogicOperator()
 
 LogicOperator::LogicOperator(const string& operatorName)
 {
-	data(operatorName);
-}					
+    data(operatorName);
+}
 
 LogicOperator::LogicOperator(const LogicOperator& rhs) : Operator(rhs)
 {
-	data(rhs.fData);
+    data(rhs.fData);
 }
 
 LogicOperator:: ~LogicOperator()
@@ -81,54 +90,57 @@ LogicOperator:: ~LogicOperator()
 /**
  * friend function
  */
-ostream& operator<<(ostream &output, const LogicOperator& rhs) 
+ostream& operator<<(ostream& output, const LogicOperator& rhs)
 {
-	output << rhs.toString();
-	return output;
-} 
+    output << rhs.toString();
+    return output;
+}
 
 /**
  * The serialization interface
  */
 void LogicOperator::serialize(messageqcpp::ByteStream& b) const
 {
-	b << (ObjectReader::id_t) ObjectReader::LOGICOPERATOR;
-	//b << fData;
-	Operator::serialize(b);
+    b << (ObjectReader::id_t) ObjectReader::LOGICOPERATOR;
+    //b << fData;
+    Operator::serialize(b);
 }
 
 void LogicOperator::unserialize(messageqcpp::ByteStream& b)
 {
-	ObjectReader::checkType(b, ObjectReader::LOGICOPERATOR);
-	//b >> fData;
-	Operator::unserialize(b);
+    ObjectReader::checkType(b, ObjectReader::LOGICOPERATOR);
+    //b >> fData;
+    Operator::unserialize(b);
 }
 
 bool LogicOperator::operator==(const LogicOperator& t) const
 {
-	if (fData == t.fData)
-		return true;
-	return false;
+    if (fData == t.fData)
+        return true;
+
+    return false;
 }
 
 bool LogicOperator::operator==(const TreeNode* t) const
 {
-	const LogicOperator *o;
+    const LogicOperator* o;
 
-	o = dynamic_cast<const LogicOperator*>(t);
-	if (o == NULL)
-		return false;
-	return *this == *o;
+    o = dynamic_cast<const LogicOperator*>(t);
+
+    if (o == NULL)
+        return false;
+
+    return *this == *o;
 }
 
 bool LogicOperator::operator!=(const LogicOperator& t) const
 {
-	return (!(*this == t));
+    return (!(*this == t));
 }
 
 bool LogicOperator::operator!=(const TreeNode* t) const
 {
-	return (!(*this == t));
+    return (!(*this == t));
 }
 
 }  // namespace

@@ -40,51 +40,51 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_from_days::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 int64_t Func_from_days::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                                  FunctionParm& parm,
+                                  bool& isNull,
+                                  CalpontSystemCatalog::ColType& op_ct)
 {
-	return getDatetimeIntVal(row, parm, isNull, op_ct);
+    return getDatetimeIntVal(row, parm, isNull, op_ct);
 }
 
 string Func_from_days::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+                                 FunctionParm& parm,
+                                 bool& isNull,
+                                 CalpontSystemCatalog::ColType& ct)
 {
-	return intToString(getIntVal(row, parm, isNull, ct));
+    return intToString(getIntVal(row, parm, isNull, ct));
 }
 
 int32_t Func_from_days::getDateIntVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+                                      FunctionParm& parm,
+                                      bool& isNull,
+                                      CalpontSystemCatalog::ColType& ct)
 {
-	return (((getDatetimeIntVal(row, parm, isNull, ct) >> 32) & 0xFFFFFFC0) | 0x3E);
+    return (((getDatetimeIntVal(row, parm, isNull, ct) >> 32) & 0xFFFFFFC0) | 0x3E);
 }
 
 int64_t Func_from_days::getDatetimeIntVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& ct)
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
 {
-	double val1 = parm[0]->data()->getDoubleVal(row, isNull);
-	int64_t daynr = (int64_t)(val1 > 0 ? val1 + 0.5 : val1 - 0.5);
+    double val1 = parm[0]->data()->getDoubleVal(row, isNull);
+    int64_t daynr = (int64_t)(val1 > 0 ? val1 + 0.5 : val1 - 0.5);
 
-	DateTime aDaytime;
-	helpers::get_date_from_mysql_daynr( daynr, aDaytime );
-	
-	// to be safe
-	aDaytime.hour = 0;
-	aDaytime.minute = 0;
-	aDaytime.second = 0;
-	aDaytime.msecond = 0;
+    DateTime aDaytime;
+    helpers::get_date_from_mysql_daynr( daynr, aDaytime );
 
-	return (*(reinterpret_cast<uint64_t *> (&aDaytime)));
+    // to be safe
+    aDaytime.hour = 0;
+    aDaytime.minute = 0;
+    aDaytime.second = 0;
+    aDaytime.msecond = 0;
+
+    return (*(reinterpret_cast<uint64_t*> (&aDaytime)));
 }
 
 

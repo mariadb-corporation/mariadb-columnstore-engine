@@ -38,30 +38,30 @@ namespace WriteEngine
 class WEXmlgetter
 {
 public:
-	WEXmlgetter(std::string& ConfigName);
-	virtual ~WEXmlgetter();
+    WEXmlgetter(std::string& ConfigName);
+    virtual ~WEXmlgetter();
 
 public:
-	//..Public methods
-	std::string getValue(const vector<string>& section) const;
-	std::string getAttribute(const std::vector<string>& sections,
-		const std::string& Tag) const;
-	void getConfig(const std::string& section,
-		const std::string& name, std::vector<std::string>& values ) const;
-	void getAttributeListForAllChildren(
-		const vector<string>& sections,
-		const string& attributeTag,
-		vector<string>& attributeValues);
+    //..Public methods
+    std::string getValue(const vector<string>& section) const;
+    std::string getAttribute(const std::vector<string>& sections,
+                             const std::string& Tag) const;
+    void getConfig(const std::string& section,
+                   const std::string& name, std::vector<std::string>& values ) const;
+    void getAttributeListForAllChildren(
+        const vector<string>& sections,
+        const string& attributeTag,
+        vector<string>& attributeValues);
 
 private:
-	//..Private methods
-	const xmlNode* getNode(const xmlNode* pParent,
-		const std::string& section)const;
-	bool getNodeAttribute(const xmlNode* pNode,
-		const char* pTag, std::string& strVal ) const;
-	bool getNodeContent( const xmlNode* pNode, std::string& strVal) const;
+    //..Private methods
+    const xmlNode* getNode(const xmlNode* pParent,
+                           const std::string& section)const;
+    bool getNodeAttribute(const xmlNode* pNode,
+                          const char* pTag, std::string& strVal ) const;
+    bool getNodeContent( const xmlNode* pNode, std::string& strVal) const;
 
-	//..Private data members
+    //..Private data members
     std::string 	fConfigName;				// xml filename
     xmlDocPtr      	fDoc;                    	// xml document pointer
     xmlNode*       	fpRoot;                   	// root element

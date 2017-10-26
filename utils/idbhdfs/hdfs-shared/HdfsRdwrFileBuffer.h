@@ -20,10 +20,10 @@
  * We want free and open source software applications under certain
  * licenses to be able to use the GPL-licensed InfiniDB idbhdfs
  * libraries despite the fact that not all such FOSS licenses are
- * compatible with version 2 of the GNU General Public License.  
- * Therefore there are special exceptions to the terms and conditions 
- * of the GPLv2 as applied to idbhdfs libraries, which are 
- * identified and described in more detail in the FOSS License 
+ * compatible with version 2 of the GNU General Public License.
+ * Therefore there are special exceptions to the terms and conditions
+ * of the GPLv2 as applied to idbhdfs libraries, which are
+ * identified and described in more detail in the FOSS License
  * Exception in the file utils/idbhdfs/FOSS-EXCEPTION.txt
  */
 
@@ -49,27 +49,28 @@ class HdfsRdwrMemBuffer;
 class HdfsRdwrFileBuffer: public IDBDataFile, boost::noncopyable
 {
 public:
-	HdfsRdwrFileBuffer(const char* fname, const char* mode, unsigned opts);
-	HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer) throw (std::exception);
-	/* virtual */ ~HdfsRdwrFileBuffer();
+    HdfsRdwrFileBuffer(const char* fname, const char* mode, unsigned opts);
+    HdfsRdwrFileBuffer(HdfsRdwrMemBuffer* pMemBuffer) throw (std::exception);
+    /* virtual */ ~HdfsRdwrFileBuffer();
 
-	/* virtual */ ssize_t pread(void *ptr, off64_t offset, size_t count);
-	/* virtual */ ssize_t read(void *ptr, size_t count);
-	/* virtual */ ssize_t write(const void *ptr, size_t count);
-	/* virtual */ int seek(off64_t offset, int whence);
-	/* virtual */ int truncate(off64_t length);
-	/* virtual */ off64_t size();
-	/* virtual */ off64_t tell();
-	/* virtual */ int flush();
-	/* virtual */ time_t mtime();
+    /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count);
+    /* virtual */ ssize_t read(void* ptr, size_t count);
+    /* virtual */ ssize_t write(const void* ptr, size_t count);
+    /* virtual */ int seek(off64_t offset, int whence);
+    /* virtual */ int truncate(off64_t length);
+    /* virtual */ off64_t size();
+    /* virtual */ off64_t tell();
+    /* virtual */ int flush();
+    /* virtual */ time_t mtime();
 
 protected:
-	/* virtual */ int close();
+    /* virtual */
+    int close();
 
 private:
-	BufferedFile* m_buffer;
-	bool          m_dirty;
-	bool          m_new;
+    BufferedFile* m_buffer;
+    bool          m_dirty;
+    bool          m_new;
 };
 
 }

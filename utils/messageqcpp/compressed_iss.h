@@ -35,23 +35,24 @@
 #include "inetstreamsocket.h"
 #include "idbcompress.h"
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 
 class CompressedInetStreamSocket : public InetStreamSocket
 {
 public:
-	CompressedInetStreamSocket();
+    CompressedInetStreamSocket();
 
-	virtual Socket * clone() const;
-	virtual const SBS read(const struct timespec* timeout=0, bool* isTimeOut = NULL, 
-		Stats *stats = NULL) const;
-	virtual void write(const ByteStream& msg, Stats *stats = NULL);
-	virtual void write(SBS msg, Stats *stats = NULL);
-	virtual const IOSocket accept(const struct timespec *timeout);
-	virtual void connect(const sockaddr *addr);
+    virtual Socket* clone() const;
+    virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
+                           Stats* stats = NULL) const;
+    virtual void write(const ByteStream& msg, Stats* stats = NULL);
+    virtual void write(SBS msg, Stats* stats = NULL);
+    virtual const IOSocket accept(const struct timespec* timeout);
+    virtual void connect(const sockaddr* addr);
 private:
-	compress::IDBCompressInterface alg;
-	bool useCompression;
+    compress::IDBCompressInterface alg;
+    bool useCompression;
 };
 
 } //namespace messageqcpp

@@ -25,30 +25,31 @@
 #ifndef DBCON_CALPONTSYSTEMCATALOG_H
 #define DBCON_CALPONTSYSTEMCATALOG_H
 
-namespace dbcon {
+namespace dbcon
+{
 
 class CalpontSystemCatalog
 {
 public:
-	/** looks up a column's TCN in the System Catalog
-	 *
-	 * For a unique table_name.column_name return the internal TCN
-	 */
-	TCN lookupTCN(const TableColName& tableColName) const;
+    /** looks up a column's TCN in the System Catalog
+     *
+     * For a unique table_name.column_name return the internal TCN
+     */
+    TCN lookupTCN(const TableColName& tableColName) const;
 
-	/** returns the colunm type attribute(s) for a column
-	 *
-	 * return the various colunm attributes for a given TCN:
-	 *    dictionary/native
-	 *    DDN
-	 */
-	ColType colType(const TCN& tcn) const;
+    /** returns the colunm type attribute(s) for a column
+     *
+     * return the various colunm attributes for a given TCN:
+     *    dictionary/native
+     *    DDN
+     */
+    ColType colType(const TCN& tcn) const;
 
-	/** return the current SCN
-	 *
-	 * returns the current System Change Number (for versioning support)
-	 */
-	SCN scn(void) const;
+    /** return the current SCN
+     *
+     * returns the current System Change Number (for versioning support)
+     */
+    SCN scn(void) const;
 };
 
 } //namespace dbcon

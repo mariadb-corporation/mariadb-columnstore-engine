@@ -26,7 +26,8 @@
 /**
  * This file describes the UDPCast protocol
  */
-enum opCode {    
+enum opCode
+{
     /* Receiver to sender */
 
     CMD_OK,	     /* all is ok, no need to retransmit anything */
@@ -60,26 +61,30 @@ enum opCode {
  * "unexpected opcode" on retransmitted hello */
 #define CMD_HELLO 0x0500
 
-    struct connectReq {
-	unsigned short opCode;
-	short reserved;
-	int capabilities;
-	unsigned int rcvbuf;
-    };
-    struct retransmit {
-	unsigned short opCode;
-	short reserved;
-	int sliceNo;
-	int rxmit;
-	unsigned char map[MAX_SLICE_SIZE / BITS_PER_CHAR];
-    };
-    struct ok {
-	unsigned short opCode;
-	short reserved;
-	int sliceNo;
-    } ok;
+struct connectReq
+{
+    unsigned short opCode;
+    short reserved;
+    int capabilities;
+    unsigned int rcvbuf;
+};
+struct retransmit
+{
+    unsigned short opCode;
+    short reserved;
+    int sliceNo;
+    int rxmit;
+    unsigned char map[MAX_SLICE_SIZE / BITS_PER_CHAR];
+};
+struct ok
+{
+    unsigned short opCode;
+    short reserved;
+    int sliceNo;
+} ok;
 
-union message {
+union message
+{
     unsigned short opCode;
     struct ok ok;
 
@@ -87,20 +92,23 @@ union message {
 
     struct connectReq connectReq;
 
-    struct go {
-	unsigned short opCode;
-	short reserved;
+    struct go
+    {
+        unsigned short opCode;
+        short reserved;
     } go;
 
-    struct disconnect {
-	unsigned short opCode;
-	short reserved;
+    struct disconnect
+    {
+        unsigned short opCode;
+        short reserved;
     } disconnect;
 };
 
 
 
-struct connectReply {
+struct connectReply
+{
     unsigned short opCode;
     short reserved;
     int clNr;
@@ -109,7 +117,8 @@ struct connectReply {
     unsigned char mcastAddr[16]; /* provide enough place for IPV6 */
 };
 
-struct hello {
+struct hello
+{
     unsigned short opCode;
     short reserved;
     int capabilities;
@@ -117,7 +126,8 @@ struct hello {
     short blockSize;
 };
 
-union serverControlMsg {
+union serverControlMsg
+{
     unsigned short opCode;
     short reserved;
     struct hello hello;
@@ -126,7 +136,8 @@ union serverControlMsg {
 };
 
 
-struct dataBlock {
+struct dataBlock
+{
     unsigned short opCode;
     short reserved;
     int sliceNo;
@@ -135,7 +146,8 @@ struct dataBlock {
     int bytes;
 };
 
-struct fecBlock {
+struct fecBlock
+{
     unsigned short opCode;
     short stripes;
     int sliceNo;
@@ -144,7 +156,8 @@ struct fecBlock {
     int bytes;
 };
 
-struct reqack {
+struct reqack
+{
     unsigned short opCode;
     short reserved;
     int sliceNo;
@@ -152,7 +165,8 @@ struct reqack {
     int rxmit;
 };
 
-union serverDataMsg {
+union serverDataMsg
+{
     unsigned short opCode;
     struct reqack reqack;
     struct dataBlock dataBlock;

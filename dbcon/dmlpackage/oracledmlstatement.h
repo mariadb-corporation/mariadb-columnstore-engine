@@ -36,7 +36,7 @@ class OracleDMLStatement : public VendorDMLStatement
 {
 
 public:
-	OracleDMLStatement() : VendorDMLStatement("", 0) {}
+    OracleDMLStatement() : VendorDMLStatement("", 0) {}
 
 protected:
 

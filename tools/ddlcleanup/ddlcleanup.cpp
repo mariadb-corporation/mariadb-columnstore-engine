@@ -55,30 +55,32 @@ using namespace ddlpackageprocessor;
 
 namespace fs = boost::filesystem;
 
-namespace {
+namespace
+{
 
 
 void usage()
 {
-	cout << "Usage: ddlcleanup" << endl;
+    cout << "Usage: ddlcleanup" << endl;
 }
 }
 
 int main(int argc, char** argv)
 {
-	int c;
-	while ((c = getopt(argc, argv, "h")) != EOF)
-	switch (c)
-	{
-		case 'h':
-		case '?':
-		default:
-			usage();
-		return (c == 'h' ? 0 : 1);
-			break;
-	}
-	
-	return ddlcleanuputil::ddl_cleanup();
+    int c;
+
+    while ((c = getopt(argc, argv, "h")) != EOF)
+        switch (c)
+        {
+            case 'h':
+            case '?':
+            default:
+                usage();
+                return (c == 'h' ? 0 : 1);
+                break;
+        }
+
+    return ddlcleanuputil::ddl_cleanup();
 }
 
 // vim:ts=4 sw=4:

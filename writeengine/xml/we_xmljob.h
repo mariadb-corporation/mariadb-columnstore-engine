@@ -87,7 +87,10 @@ public:
     /**
      * @brief Get job structure
      */
-    const Job&     getJob()  const { return fJob; }
+    const Job&     getJob()  const
+    {
+        return fJob;
+    }
 
     /**
      * @brief Load job information
@@ -115,7 +118,7 @@ public:
     EXPORT void    printJobInfoBrief(Log& logger) const;
 
     /**
-     * @brief Process node 
+     * @brief Process node
      * @param pParentNode Node to be parsed from XML
      */
     EXPORT bool    processNode( xmlNode* pParentNode );
@@ -132,24 +135,24 @@ private:
     void           setSchema       ( xmlNode* pNode );
     void           initSatLimits( JobColumn& column ) const;
     void           fillInXMLDataAsLoaded(
-                     execplan::CalpontSystemCatalog::RIDList& colRidList);
+        execplan::CalpontSystemCatalog::RIDList& colRidList);
     void           fillInXMLDataNotNullDefault(
-                     const std::string& fullTblName,
-                     execplan::CalpontSystemCatalog::ColType& colType,
-                     JobColumn& col );
+        const std::string& fullTblName,
+        execplan::CalpontSystemCatalog::ColType& colType,
+        JobColumn& col );
     void           validateAllColumnsHaveTags( const
-                     execplan::CalpontSystemCatalog::RIDList& colRidList) const;
+            execplan::CalpontSystemCatalog::RIDList& colRidList) const;
     void           postProcessTableNode( );
     static int     createTempJobDir( const std::string& xmlFilePath,
                                      std::string& errMsg );
 
-    Job            fJob;                     // current job xml 
+    Job            fJob;                     // current job xml
 
     DebugLevel     fDebugLevel;              // internal use debug level
     bool           fDeleteTempFile;          // delete tmp jobfile in destructor
     std::string    fJobFileName;             // job file name
     JobColList     fDefaultColumns;          // temporary list of default cols
-                                             //   for table node being processed
+    //   for table node being processed
     bool           fValidateColList;         // Validate all cols have XML tag
 };
 

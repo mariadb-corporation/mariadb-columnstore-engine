@@ -32,7 +32,7 @@ using namespace std;
 #include "idbregistry.h"
 #include "WinSysLog.h"
 
-// WinSyslog class encapsulates what substitutes for the syslog in the 
+// WinSyslog class encapsulates what substitutes for the syslog in the
 // InfiniDB Windows version.
 
 // Singleton instance
@@ -64,16 +64,16 @@ WinSyslog::WinSyslog() :
     char* pEnd = fLogLineHeader + LOG_BUF_SIZE;
     char* pHeader = fLogLineHeader + TIMESTAMP_SIZE;
     char  exePath[LOG_BUF_SIZE];
-    DWORD nameSize = (DWORD)(pEnd-pHeader);
+    DWORD nameSize = (DWORD)(pEnd - pHeader);
     GetComputerName(pHeader, &nameSize);
     pHeader += nameSize;
     *pHeader++ = ' ';
     GetModuleFileName(0, exePath, LOG_BUF_SIZE);
-    _splitpath_s(exePath, NULL, 0, NULL, 0, pHeader, pEnd-pHeader, NULL, 0); 
+    _splitpath_s(exePath, NULL, 0, NULL, 0, pHeader, pEnd - pHeader, NULL, 0);
     pHeader += strlen(pHeader);;
     *pHeader++ = '[';
     int pid = GetCurrentProcessId();
-    snprintf(pHeader, pEnd-pHeader, "%d", pid);
+    snprintf(pHeader, pEnd - pHeader, "%d", pid);
     pHeader += strlen(pHeader);;
     *pHeader++ = ']';
     *pHeader++ = ':';
@@ -81,14 +81,16 @@ WinSyslog::WinSyslog() :
     // Set up the date we compare against for archiving.
     // This will either be today (if fTimeFileName doesn't exist)
     // or the the date stored in fTimeFileName.
-	time_t now = time(0);
+    time_t now = time(0);
     FILE* lf;
     lf = fopen(fTimeFileName.c_str(), "r+b");
+
     if (lf == NULL)		// First time archiving.
     {
         fLastArchiveTime = now;
         // Persist the timestamp of last archive.
         lf = fopen(fTimeFileName.c_str(), "w+b");
+
         if (lf != 0)
         {
             fwrite(&fLastArchiveTime, sizeof(time_t), 1, lf);
@@ -100,13 +102,17 @@ WinSyslog::WinSyslog() :
         fread(&fLastArchiveTime, sizeof(time_t), 1, lf);
         fclose(lf);
     }
+
     struct tm lasttm;
+
     localtime_s(&lasttm, &fLastArchiveTime);
+
     fLastArchiveDay = lasttm.tm_yday;
 
     // Create an interprocess mutex to coordinate the archiving function
     fhMutex = CreateMutex(NULL, FALSE, WINSYSLOG_MUTEX_NAME);
-    if (fhMutex == NULL) 
+
+    if (fhMutex == NULL)
     {
         syslog(LOG_ERR, "WinSyslog CreateMutex error: %d\n", GetLastError());
     }
@@ -126,8 +132,8 @@ int WinSyslog::Log(int priority, const char* format, va_list& args)
 {
     struct tm nowtm;
     FILE*   f;
-	time_t  now = time(0);
-	
+    time_t  now = time(0);
+
     localtime_s(&nowtm, &now);
 
     // If now isn't the same day as the last archive date, archve.
@@ -138,9 +144,11 @@ int WinSyslog::Log(int priority, const char* format, va_list& args)
 
     // Log the line.
     strftime(fLogLineHeader, TIMESTAMP_SIZE, "%b %d %H:%M:%S", &nowtm);
-    fLogLineHeader[TIMESTAMP_SIZE-1] = ' ';
+    fLogLineHeader[TIMESTAMP_SIZE - 1] = ' ';
     f = fopen(fLogFileName.c_str(), "a+");
+
     if (f == 0) return -1;
+
     fwrite(fLogLineHeader, 1, fLogLineheaderSize, f);
     vfprintf(f, format, args);
     fwrite("\n", 1, 1, f);
@@ -152,34 +160,38 @@ int WinSyslog::Log(int priority, const char* format, va_list& args)
 // Here we rename our log file to an archive name and delete
 // any old files.
 void WinSyslog::Archive(const tm& nowtm)
-{        
+{
     struct tm   yesterdaytm;
     bool        bArchive = true;
     time_t      writeTime;
     char        ctimebuf[TIME_BUF_SIZE] = {0};
     DWORD       dwWaitResult;
     char*       szError = "";
-    // Lock it so we don't have two threads archiving. 
+
+    // Lock it so we don't have two threads archiving.
     if (fbGoodIPMutex)
     {
         // We have a good interprocess mutex. Try for one second to
         // lock it. Abandon trying after a second. Something's stuck.
         dwWaitResult = WaitForSingleObject(fhMutex, 1000);
- 
-        switch (dwWaitResult) 
+
+        switch (dwWaitResult)
         {
             // The thread got ownership of the mutex. Continue on.
-            case WAIT_OBJECT_0: 
-                break; 
+            case WAIT_OBJECT_0:
+                break;
+
             // The thread got ownership of an abandoned mutex, most likely because
-            // some process crashed in the middle of archiving. Continue on. 
-            case WAIT_ABANDONED: 
-                break; 
+            // some process crashed in the middle of archiving. Continue on.
+            case WAIT_ABANDONED:
+                break;
+
             // We timed out. Something's not right. Don't archive.
             case WAIT_TIMEOUT:
                 szError = "WinSyslog::Archive WAIT_TIMEOUT";
                 bArchive = false;
                 break;
+
             // Horrible failure. Don't archive
             case WAIT_FAILED:
                 szError = "WinSyslog::Archive WAIT_FAILED";
@@ -200,10 +212,12 @@ void WinSyslog::Archive(const tm& nowtm)
         time_t  storedLastArchiveTime;
         FILE* lf;
         lf = fopen(fTimeFileName.c_str(), "r+b");
+
         if (lf != NULL)
         {
             fread(&storedLastArchiveTime, sizeof(time_t), 1, lf);
             fclose(lf);
+
             if (storedLastArchiveTime != fLastArchiveTime)
             {
                 bArchive = false;
@@ -215,18 +229,22 @@ void WinSyslog::Archive(const tm& nowtm)
             // this should prevent retrying to archive every log line.
             storedLastArchiveTime = fLastArchiveTime = time(NULL);
         }
+
         if (bArchive == false)
         {
             // Something's not right. Try to set the internals so we don't attempt
             // archiving again.
             fLastArchiveTime = storedLastArchiveTime;
             fLastArchiveDay = nowtm.tm_yday;
+
             if (szError)
             {
                 syslog(LOG_ERR, szError);
             }
+
             return;
         }
+
         // Get last archive date (usually yesterday)
         yesterdaytm = nowtm;
         yesterdaytm.tm_mday -= 1;					// May be 0. mktime() adjusts accordingly.
@@ -238,26 +256,30 @@ void WinSyslog::Archive(const tm& nowtm)
         strftime(ctimebuf, TIME_BUF_SIZE, "-%Y-%m-%d.txt", &yesterdaytm);
         archiveFileName += ctimebuf;
         rename(fLogFileName.c_str(), archiveFileName.c_str());
-        
+
         // Persist the timestamp of last archive. In case of reboot, we
         // can still archive properly
         lf = fopen(fTimeFileName.c_str(), "w+b");
+
         if (lf != 0)
         {
             fLastArchiveTime = time(0);
             fwrite(&fLastArchiveTime, sizeof(time_t), 1, lf);
             fclose(lf);
         }
+
         fLastArchiveDay = nowtm.tm_yday;
 
         // Get the dates of all archive files.
-        fs::path sourceDir(fLogDirName); 
+        fs::path sourceDir(fLogDirName);
         fs::directory_iterator iter(sourceDir);
         fs::directory_iterator end_iter;
         std::multimap<std::time_t, fs::path> fileSet;  // Stays sorted
+
         while (iter != end_iter)
         {
             fs::path archiveFile = *iter;
+
             if (fs::is_regular_file(archiveFile) )
             {
                 if (archiveFile.extension() == ".txt")
@@ -266,8 +288,10 @@ void WinSyslog::Archive(const tm& nowtm)
                     fileSet.insert(make_pair(writeTime, archiveFile));
                 }
             }
+
             ++iter;
         }
+
         // Delete anything past the first seven newest files
         typedef std::multimap<std::time_t, fs::path>::iterator PATH_ITER;
         PATH_ITER fileIter = fileSet.begin();
@@ -275,10 +299,12 @@ void WinSyslog::Archive(const tm& nowtm)
         std::reverse_iterator<PATH_ITER> revEnd(fileIter);
         std::reverse_iterator<PATH_ITER> revIter(fileIterEnd);
         int cnt = 0;
+
         for (; revIter != revEnd; ++revIter)
         {
             if (cnt++ < 7)
                 continue;
+
             _wunlink(revIter->second.c_str());
         }
     }
@@ -290,6 +316,7 @@ void WinSyslog::Archive(const tm& nowtm)
     {
         syslog(LOG_ERR, "WinSyslog::Archive Exception ...");
     }
+
     if (fbGoodIPMutex)
     {
         if (!ReleaseMutex(fhMutex))

@@ -30,43 +30,48 @@ using namespace boost;
 
 using namespace WriteEngine;
 
-class XmlTest : public CppUnit::TestFixture {
+class XmlTest : public CppUnit::TestFixture
+{
 
 
-CPPUNIT_TEST_SUITE( XmlTest );
+    CPPUNIT_TEST_SUITE( XmlTest );
 
 
-CPPUNIT_TEST( test1 );
+    CPPUNIT_TEST( test1 );
 
 // XML basic testing
-CPPUNIT_TEST( testBasicXMLRead );
-/*CPPUNIT_TEST( testAddTreeNode );
+    CPPUNIT_TEST( testBasicXMLRead );
+    /*CPPUNIT_TEST( testAddTreeNode );
 
-// Index tree testing
-CPPUNIT_TEST( testTreeGetTestbitValue );
-*/
-CPPUNIT_TEST_SUITE_END();
+    // Index tree testing
+    CPPUNIT_TEST( testTreeGetTestbitValue );
+    */
+    CPPUNIT_TEST_SUITE_END();
 
 private:
 
 public:
-	void setUp() {
-	}
+    void setUp()
+    {
+    }
 
-	void tearDown() {
-	}
+    void tearDown()
+    {
+    }
 
-   void test1() {
-   }
-   void testBasicXMLRead() {
-      int      rc;
-      XMLJob   myJob;
+    void test1()
+    {
+    }
+    void testBasicXMLRead()
+    {
+        int      rc;
+        XMLJob   myJob;
 
-      rc = myJob.loadJobXmlFile( "../test/bulk/job/Job_127.xml" );
-      CPPUNIT_ASSERT( rc == NO_ERROR );
-      
-      myJob.printJobInfo();
-   }
+        rc = myJob.loadJobXmlFile( "../test/bulk/job/Job_127.xml" );
+        CPPUNIT_ASSERT( rc == NO_ERROR );
+
+        myJob.printJobInfo();
+    }
 
 };
 
@@ -75,13 +80,13 @@ CPPUNIT_TEST_SUITE_REGISTRATION( XmlTest );
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char **argv)
+int main( int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  bool wasSuccessful = runner.run( "", false );
-  return (wasSuccessful ? 0 : 1);
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    bool wasSuccessful = runner.run( "", false );
+    return (wasSuccessful ? 0 : 1);
 }
 
 

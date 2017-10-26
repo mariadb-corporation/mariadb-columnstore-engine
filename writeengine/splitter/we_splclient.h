@@ -47,8 +47,8 @@ class WESplClient;			//forward decleration
 class WEColOORInfo		// Column Out-Of-Range Info
 {
 public:
-    WEColOORInfo():fColNum(0),fColType(CalpontSystemCatalog::INT), fNoOfOORs(0){}
-    ~WEColOORInfo(){}
+    WEColOORInfo(): fColNum(0), fColType(CalpontSystemCatalog::INT), fNoOfOORs(0) {}
+    ~WEColOORInfo() {}
 public:
     int fColNum;
     CalpontSystemCatalog::ColDataType fColType;
@@ -62,7 +62,10 @@ class WESdHandlerException: public std::exception
 {
 public:
     std::string fWhat;
-    WESdHandlerException(std::string& What) throw() { fWhat = What; }
+    WESdHandlerException(std::string& What) throw()
+    {
+        fWhat = What;
+    }
     virtual ~WESdHandlerException() throw() {}
     virtual const char* what() const throw()
     {
@@ -77,12 +80,12 @@ public:
 class WESplClientRunner
 {
 public:
-	WESplClientRunner(WESplClient& Sc): fOwner(Sc){ /* ctor */ }
-	virtual ~WESplClientRunner(){/* dtor */}
-	void operator()();
+    WESplClientRunner(WESplClient& Sc): fOwner(Sc) { /* ctor */ }
+    virtual ~WESplClientRunner() {/* dtor */}
+    void operator()();
 
 public:
-	WESplClient& fOwner;
+    WESplClient& fOwner;
 };
 
 //------------------------------------------------------------------------------
@@ -90,143 +93,252 @@ public:
 class WESplClient
 {
 public:
-	WESplClient(WESDHandler& Sdh, int PmId);
-	virtual ~WESplClient();
+    WESplClient(WESDHandler& Sdh, int PmId);
+    virtual ~WESplClient();
 
-	void setup();
-	void startClientThread();
-	void sendAndRecv();
-	void send();
-	void recv();
-	void write(const messageqcpp::ByteStream& Msg);
-	void read(messageqcpp::SBS& Sbs);
-	void add2SendQueue(const messageqcpp::SBS& Sbs);
-	void clearSendQueue();
-	int getSendQSize();
+    void setup();
+    void startClientThread();
+    void sendAndRecv();
+    void send();
+    void recv();
+    void write(const messageqcpp::ByteStream& Msg);
+    void read(messageqcpp::SBS& Sbs);
+    void add2SendQueue(const messageqcpp::SBS& Sbs);
+    void clearSendQueue();
+    int getSendQSize();
 
-	void printStats();
-	void onConnect();
-	void onDisconnect();
+    void printStats();
+    void onConnect();
+    void onDisconnect();
 
-    unsigned int getRowTx() const {	return fRowTx; }
-    uint32_t getBytesRcv() const { 	return fBytesRcv;   }
+    unsigned int getRowTx() const
+    {
+        return fRowTx;
+    }
+    uint32_t getBytesRcv() const
+    {
+        return fBytesRcv;
+    }
     uint32_t getBytesTx()
     {
-    	boost::mutex::scoped_lock aLock(fTxMutex);
-    	return fBytesTx;
+        boost::mutex::scoped_lock aLock(fTxMutex);
+        return fBytesTx;
     }
-    boost::thread* getFpThread() const  { return fpThread; }
+    boost::thread* getFpThread() const
+    {
+        return fpThread;
+    }
     time_t getLastInTime()
     {
-    	boost::mutex::scoped_lock aLock(fLastInMutex);
-    	return(fLastInTime>0)?fLastInTime:fStartTime; //BUG 4309
+        boost::mutex::scoped_lock aLock(fLastInMutex);
+        return (fLastInTime > 0) ? fLastInTime : fStartTime; //BUG 4309
     }
-    time_t getStartTime() const  { return fStartTime; }
-    time_t getElapsedTime() { return (getLastInTime() - getStartTime()); }
-    bool isCpiStarted() const { return fCpiStarted; }
-    bool isCpiPassed() const { return fCpiPassed; }
-    bool isCpiFailed() const {	return fCpiFailed;  }
-    bool isBrmRptRcvd() const {	return fBrmRptRcvd;  }
-    int getRollbackRslt() const  {	return fRollbackRslt; }
-    int getCleanupRslt() const  { return fCleanupRslt; }
-    bool getSendFlag() const { 	return fSend; }
-    unsigned int getPmId() const  {	return fPmId; }
-    unsigned int getDbRootCnt() const {	return fDbrCnt;  }
+    time_t getStartTime() const
+    {
+        return fStartTime;
+    }
+    time_t getElapsedTime()
+    {
+        return (getLastInTime() - getStartTime());
+    }
+    bool isCpiStarted() const
+    {
+        return fCpiStarted;
+    }
+    bool isCpiPassed() const
+    {
+        return fCpiPassed;
+    }
+    bool isCpiFailed() const
+    {
+        return fCpiFailed;
+    }
+    bool isBrmRptRcvd() const
+    {
+        return fBrmRptRcvd;
+    }
+    int getRollbackRslt() const
+    {
+        return fRollbackRslt;
+    }
+    int getCleanupRslt() const
+    {
+        return fCleanupRslt;
+    }
+    bool getSendFlag() const
+    {
+        return fSend;
+    }
+    unsigned int getPmId() const
+    {
+        return fPmId;
+    }
+    unsigned int getDbRootCnt() const
+    {
+        return fDbrCnt;
+    }
     unsigned int getDbRootVar()
     {
-    	boost::mutex::scoped_lock aLock(fDataRqstMutex);
-    	return fDbrVar;
+        boost::mutex::scoped_lock aLock(fDataRqstMutex);
+        return fDbrVar;
     }
     int getDataRqstCount()
     {
-    	boost::mutex::scoped_lock aLock(fDataRqstMutex);
-    	return fDataRqstCnt;
+        boost::mutex::scoped_lock aLock(fDataRqstMutex);
+        return fDataRqstCnt;
     }
-    long getRdSecTo() const { return fRdSecTo; }
-    bool isConnected() const { return fConnected; }
-    bool isContinue() const { return fContinue; }
-    const std::string& getServer() const { return fServer; }
-    const std::string& getIpAddress() const { return fIpAddress;  }
-    void setBytesRcv(uint32_t BytesRcv) { fBytesRcv = BytesRcv; }
+    long getRdSecTo() const
+    {
+        return fRdSecTo;
+    }
+    bool isConnected() const
+    {
+        return fConnected;
+    }
+    bool isContinue() const
+    {
+        return fContinue;
+    }
+    const std::string& getServer() const
+    {
+        return fServer;
+    }
+    const std::string& getIpAddress() const
+    {
+        return fIpAddress;
+    }
+    void setBytesRcv(uint32_t BytesRcv)
+    {
+        fBytesRcv = BytesRcv;
+    }
     void setBytesTx(uint32_t BytesTx)
     {
-    	boost::mutex::scoped_lock aLock(fTxMutex);
-    	BytesTx = BytesTx;
-    	aLock.unlock();
+        boost::mutex::scoped_lock aLock(fTxMutex);
+        BytesTx = BytesTx;
+        aLock.unlock();
     }
     void updateBytesTx(uint32_t fBytes)
     {
-    	boost::mutex::scoped_lock aLock(fTxMutex);
-    	fBytesTx += fBytes;
-    	aLock.unlock();
+        boost::mutex::scoped_lock aLock(fTxMutex);
+        fBytesTx += fBytes;
+        aLock.unlock();
     }
-    void setConnected(bool Connected) {	fConnected = Connected; }
-    void setContinue(bool Continue) { fContinue = Continue; }
-    void setFpThread(boost::thread* pThread) { fpThread = pThread; }
-    void setLastInTime(time_t LastInTime) {	fLastInTime = LastInTime; }
+    void setConnected(bool Connected)
+    {
+        fConnected = Connected;
+    }
+    void setContinue(bool Continue)
+    {
+        fContinue = Continue;
+    }
+    void setFpThread(boost::thread* pThread)
+    {
+        fpThread = pThread;
+    }
+    void setLastInTime(time_t LastInTime)
+    {
+        fLastInTime = LastInTime;
+    }
     void setStartTime(time_t StartTime)
     {
-    	boost::mutex::scoped_lock aLock(fLastInMutex);
-    	fStartTime = StartTime;
-    	aLock.lock();
+        boost::mutex::scoped_lock aLock(fLastInMutex);
+        fStartTime = StartTime;
+        aLock.lock();
     }
-    void setSendFlag(bool Send) { fSend = Send; }
-    void setCpiStarted(bool Start)  { fCpiStarted = Start; }
+    void setSendFlag(bool Send)
+    {
+        fSend = Send;
+    }
+    void setCpiStarted(bool Start)
+    {
+        fCpiStarted = Start;
+    }
     void setCpiPassed(bool Pass)
     {
-    	setLastInTime(time(0));
-    	fCpiPassed = Pass;
+        setLastInTime(time(0));
+        fCpiPassed = Pass;
     }
     void setCpiFailed(bool Fail)
     {
-    	setLastInTime(time(0));
-    	fCpiFailed = Fail;
-    	fRowsUploadInfo.fRowsRead = 0;
-    	fRowsUploadInfo.fRowsInserted = 0;
+        setLastInTime(time(0));
+        fCpiFailed = Fail;
+        fRowsUploadInfo.fRowsRead = 0;
+        fRowsUploadInfo.fRowsInserted = 0;
     }
-    void setBrmRptRcvd(bool Rcvd) { fBrmRptRcvd = Rcvd; }
-    void setRollbackRslt(int Rslt) { fRollbackRslt = Rslt; }
-    void setCleanupRslt(int Rslt) {	fCleanupRslt = Rslt; }
-    void setPmId(unsigned int PmId) { fPmId = PmId; }
-    void setDbRootCnt(unsigned int DbrCnt) { fDbrCnt = DbrCnt; }
+    void setBrmRptRcvd(bool Rcvd)
+    {
+        fBrmRptRcvd = Rcvd;
+    }
+    void setRollbackRslt(int Rslt)
+    {
+        fRollbackRslt = Rslt;
+    }
+    void setCleanupRslt(int Rslt)
+    {
+        fCleanupRslt = Rslt;
+    }
+    void setPmId(unsigned int PmId)
+    {
+        fPmId = PmId;
+    }
+    void setDbRootCnt(unsigned int DbrCnt)
+    {
+        fDbrCnt = DbrCnt;
+    }
     void resetDbRootVar()
     {
-    	boost::mutex::scoped_lock aLock(fDataRqstMutex);
-    	fDbrVar = fDbrCnt;
-    	aLock.unlock();
+        boost::mutex::scoped_lock aLock(fDataRqstMutex);
+        fDbrVar = fDbrCnt;
+        aLock.unlock();
     }
     void decDbRootVar()
     {
-    	boost::mutex::scoped_lock aLock(fDataRqstMutex);
-    	if(fDbrVar>0) --fDbrVar;
-    	aLock.unlock();
+        boost::mutex::scoped_lock aLock(fDataRqstMutex);
+
+        if (fDbrVar > 0) --fDbrVar;
+
+        aLock.unlock();
     }
     void setRdSecTo(long RdSecTo)
     {
-    	fRdSecTo = RdSecTo;
+        fRdSecTo = RdSecTo;
     }
     void setDataRqstCount(int DataRqstCnt)
     {
-    	boost::mutex::scoped_lock aLock(fDataRqstMutex);
-    	fDataRqstCnt = DataRqstCnt;
-    	aLock.unlock();
+        boost::mutex::scoped_lock aLock(fDataRqstMutex);
+        fDataRqstCnt = DataRqstCnt;
+        aLock.unlock();
     }
     void decDataRqstCount()
     {
-    	boost::mutex::scoped_lock aLock(fDataRqstMutex);
-    	if(fDataRqstCnt>0) --fDataRqstCnt;
-    	aLock.unlock();
+        boost::mutex::scoped_lock aLock(fDataRqstMutex);
+
+        if (fDataRqstCnt > 0) --fDataRqstCnt;
+
+        aLock.unlock();
     }
     void incDataRqstCount()
     {
-    	boost::mutex::scoped_lock aLock(fDataRqstMutex);
-    	++fDataRqstCnt;
-    	aLock.unlock();
+        boost::mutex::scoped_lock aLock(fDataRqstMutex);
+        ++fDataRqstCnt;
+        aLock.unlock();
     }
-    void setServer(const std::string& Server) {	fServer = Server; }
-    void setIpAddress(const std::string& IpAddr) { fIpAddress = IpAddr; }
-    void updateRowTx(unsigned int aCnt) { fRowTx += aCnt; }
-    void resetRowTx() { fRowTx = 0; }
+    void setServer(const std::string& Server)
+    {
+        fServer = Server;
+    }
+    void setIpAddress(const std::string& IpAddr)
+    {
+        fIpAddress = IpAddr;
+    }
+    void updateRowTx(unsigned int aCnt)
+    {
+        fRowTx += aCnt;
+    }
+    void resetRowTx()
+    {
+        fRowTx = 0;
+    }
 
 private:
     bool fContinue;
@@ -260,17 +372,17 @@ private:
     std::string fServer;
     std::string fIpAddress;
     boost::shared_ptr<messageqcpp::MessageQueueClient> fClnt;
-    boost::thread *fpThread;
+    boost::thread* fpThread;
     WESDHandler& fOwner;
 
     class WERowsUploadInfo
     {
     public:
-    	WERowsUploadInfo():fRowsRead(0),fRowsInserted(0){}
-    	~WERowsUploadInfo(){}
+        WERowsUploadInfo(): fRowsRead(0), fRowsInserted(0) {}
+        ~WERowsUploadInfo() {}
     public:
-    	int64_t fRowsRead;
-    	int64_t fRowsInserted;
+        int64_t fRowsRead;
+        int64_t fRowsInserted;
     };
     WERowsUploadInfo fRowsUploadInfo;
     WEColOorVec fColOorVec;
@@ -278,8 +390,8 @@ private:
     std::string fErrInfoFile;
 
     void setRowsUploadInfo(int64_t RowsRead, int64_t RowsInserted);
-    void add2ColOutOfRangeInfo(int ColNum, 
-                               CalpontSystemCatalog::ColDataType ColType, 
+    void add2ColOutOfRangeInfo(int ColNum,
+                               CalpontSystemCatalog::ColDataType ColType,
                                std::string&  ColName, int NoOfOors);
     void setBadDataFile(const std::string& BadDataFile);
     void setErrInfoFile(const std::string& ErrInfoFile);

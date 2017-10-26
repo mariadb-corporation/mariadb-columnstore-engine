@@ -43,9 +43,9 @@
 
 namespace WriteEngine
 {
-    class Log;
-    class BRMReporter;
-    typedef execplan::CalpontSystemCatalog::ColDataType ColDataType;
+class Log;
+class BRMReporter;
+typedef execplan::CalpontSystemCatalog::ColDataType ColDataType;
 //------------------------------------------------------------------------------
 /** @brief Class to store min/max and LBID information for an extent.
  *  For character data, the min and max values are maintained in reverse
@@ -60,34 +60,34 @@ class ColExtInfEntry
 public:
     // Default constructor
     ColExtInfEntry() : fLbid(INVALID_LBID),
-                       fMinVal(LLONG_MIN),
-                       fMaxVal(LLONG_MIN),
-                       fNewExtent(true)   { }
+        fMinVal(LLONG_MIN),
+        fMaxVal(LLONG_MIN),
+        fNewExtent(true)   { }
 
     // Used to create entry for an existing extent we are going to add data to.
     ColExtInfEntry(BRM::LBID_t lbid, bool bIsNewExtent) :
-                       fLbid(lbid),
-                       fMinVal(LLONG_MIN),
-                       fMaxVal(LLONG_MIN),
-                       fNewExtent(bIsNewExtent)  { }
+        fLbid(lbid),
+        fMinVal(LLONG_MIN),
+        fMaxVal(LLONG_MIN),
+        fNewExtent(bIsNewExtent)  { }
 
     // Used to create entry for a new extent, with LBID not yet allocated
     ColExtInfEntry(int64_t minVal, int64_t maxVal) :
-                       fLbid(INVALID_LBID),
-                       fMinVal(minVal),
-                       fMaxVal(maxVal),
-                       fNewExtent(true)   { }
+        fLbid(INVALID_LBID),
+        fMinVal(minVal),
+        fMaxVal(maxVal),
+        fNewExtent(true)   { }
 
     // Used to create entry for a new extent, with LBID not yet allocated
     ColExtInfEntry(uint64_t minVal, uint64_t maxVal) :
-                       fLbid(INVALID_LBID),
-                       fMinVal(static_cast<int64_t>(minVal)),
-                       fMaxVal(static_cast<int64_t>(maxVal)),
-                       fNewExtent(true)   { }
+        fLbid(INVALID_LBID),
+        fMinVal(static_cast<int64_t>(minVal)),
+        fMaxVal(static_cast<int64_t>(maxVal)),
+        fNewExtent(true)   { }
 
     BRM::LBID_t fLbid;     // LBID for an extent; should be the starting LBID
     int64_t     fMinVal;   // minimum value for extent associated with LBID
-    int64_t     fMaxVal;   // maximum value for extent associated with LBID 
+    int64_t     fMaxVal;   // maximum value for extent associated with LBID
     bool        fNewExtent;// is this a new extent
 };
 
@@ -96,10 +96,12 @@ public:
  *  the last input Row number in the extent, as the key.
  */
 //------------------------------------------------------------------------------
-struct uint64Hasher : public std::unary_function<RID,std::size_t>
+struct uint64Hasher : public std::unary_function<RID, std::size_t>
 {
     std::size_t operator()(RID val) const
-    { return static_cast<std::size_t>(val); }
+    {
+        return static_cast<std::size_t>(val);
+    }
 };
 
 //------------------------------------------------------------------------------
@@ -120,12 +122,15 @@ public:
     virtual void addOrUpdateEntry( RID     lastInputRow,
                                    int64_t minVal,
                                    int64_t maxVal,
-                                   ColDataType colDataType ){ }
+                                   ColDataType colDataType ) { }
 
     virtual void getCPInfoForBRM ( JobColumn column,
-                                   BRMReporter& brmReporter){ }
+                                   BRMReporter& brmReporter) { }
     virtual void print( const JobColumn& column )           { }
-    virtual int updateEntryLbid( BRM::LBID_t startLbid )    { return NO_ERROR; }
+    virtual int updateEntryLbid( BRM::LBID_t startLbid )
+    {
+        return NO_ERROR;
+    }
 };
 
 //------------------------------------------------------------------------------
@@ -193,10 +198,10 @@ private:
     Log*            fLog;                 // Log used for debug logging
     boost::mutex    fMapMutex;            // protects unordered map access
     std::set<RID>   fPendingExtentRows;   // list of lastInputRow entries that
-                                          // are awaiting an LBID assignment.
+    // are awaiting an LBID assignment.
 
     // unordered map where we collect the min/max values per extent
-    std::tr1::unordered_map<RID,ColExtInfEntry,uint64Hasher> fMap;
+    std::tr1::unordered_map<RID, ColExtInfEntry, uint64Hasher> fMap;
 
     // disable copy constructor and assignment operator
     ColExtInf(const ColExtInf&);

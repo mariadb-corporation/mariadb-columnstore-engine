@@ -21,43 +21,43 @@
 *   mcsv1_UDAF.h
 ***********************************************************************/
 
-/** 
- * Columnstore interface for writing a User Defined Aggregate 
- * Functions (UDAF) and User Defined Analytic Functions (UDAnF) 
- * or a function that can act as either - UDA(n)F 
- *  
+/**
+ * Columnstore interface for writing a User Defined Aggregate
+ * Functions (UDAF) and User Defined Analytic Functions (UDAnF)
+ * or a function that can act as either - UDA(n)F
+ *
  * The basic steps are:
  *
- * 1. Create a the UDA(n)F function interface in some .h file. 
- * 2. Create the UDF function implementation in some .cpp file 
- * 3. Create the connector stub (MariaDB UDAF definition) for 
- * this UDF function.  
- * 4. build the dynamic librarys using all of the source. 
- * 5  Put the library in $COLUMNSTORE_INSTALL/lib of 
- * all modules 
- * 6. Put the connector stub in $COLUMNSTORE_INSTALL/mysql/lib 
- * of all UMs 
- * 7. restart the Columnstore system. 7. notify mysqld about the 
- * new functions with commands like: 
- *  
+ * 1. Create a the UDA(n)F function interface in some .h file.
+ * 2. Create the UDF function implementation in some .cpp file
+ * 3. Create the connector stub (MariaDB UDAF definition) for
+ * this UDF function.
+ * 4. build the dynamic librarys using all of the source.
+ * 5  Put the library in $COLUMNSTORE_INSTALL/lib of
+ * all modules
+ * 6. Put the connector stub in $COLUMNSTORE_INSTALL/mysql/lib
+ * of all UMs
+ * 7. restart the Columnstore system. 7. notify mysqld about the
+ * new functions with commands like:
+ *
  *    CREATE AGGREGATE FUNCTION all_null returns BOOL soname
  *    'libudf_mysql.so';
- *  
+ *
  *    // An example that only makes sense as a UDAnF
  *    CREATE AGGREGATE FUNCTION mcs_interpolate returns REAL
  *    soname 'libudf_mysql.so';
- *  
- * Use the name of the connector stub library in CREATE 
- * AGGREGATE FUNCTION 
- *  
- * The UDAF functions may run distributed in the Columnstore 
- * engine. UDAnF do not run distributed. 
- *  
- * UDAF is User Defined Aggregate Function. 
- * UDAnF is User Defined Analytic Function. 
- * UDA(n)F is an acronym for a function that could be either. It 
- * is also used to describe the interface that is used for 
- * either. 
+ *
+ * Use the name of the connector stub library in CREATE
+ * AGGREGATE FUNCTION
+ *
+ * The UDAF functions may run distributed in the Columnstore
+ * engine. UDAnF do not run distributed.
+ *
+ * UDAF is User Defined Aggregate Function.
+ * UDAnF is User Defined Analytic Function.
+ * UDA(n)F is an acronym for a function that could be either. It
+ * is also used to describe the interface that is used for
+ * either.
  */
 
 #ifndef HEADER_mcsv1_udaf
@@ -88,13 +88,13 @@ using namespace execplan;
 
 namespace mcsv1sdk
 {
-/** 
+/**
  * A map from name to function object.
- *  
- * This is temporary until we get the library loading task 
- * complete 
- *  
- * TODO: Remove when library loading is enabled. 
+ *
+ * This is temporary until we get the library loading task
+ * complete
+ *
+ * TODO: Remove when library loading is enabled.
  */
 class mcsv1_UDAF;
 typedef std::tr1::unordered_map<std::string, mcsv1_UDAF*> UDAF_MAP;
@@ -102,74 +102,81 @@ typedef std::tr1::unordered_map<std::string, mcsv1_UDAF*> UDAF_MAP;
 class UDAFMap
 {
 public:
-	EXPORT UDAFMap(){};
+    EXPORT UDAFMap() {};
 
-	EXPORT ~UDAFMap(){};
+    EXPORT ~UDAFMap() {};
 
-	static EXPORT UDAF_MAP& getMap();
+    static EXPORT UDAF_MAP& getMap();
 private:
-	static UDAF_MAP fm;
+    static UDAF_MAP fm;
 };
 
-/** 
+/**
  * A class to hold your user data
- *  
+ *
  * If your UDAF only needs a fixed sized data struct, you need
  * do nothing with this. Call setUserDataSize in your init
- * function with the required size and the framework will take 
- * care of it. 
- *  
- * If you need something more or just want to control things, 
+ * function with the required size and the framework will take
+ * care of it.
+ *
+ * If you need something more or just want to control things,
  * then override UserData with your data structure and
- * implement createUserData in your function object to create 
- * your data structure. Your UserData destuctor should take care 
- * of any cleanup you may need (Simple containers clean 
- * themselves up). 
+ * implement createUserData in your function object to create
+ * your data structure. Your UserData destuctor should take care
+ * of any cleanup you may need (Simple containers clean
+ * themselves up).
  */
 class mcsv1Context;
 
 struct UserData
 {
-	UserData() : size(0), data(NULL) {};
-	UserData(size_t sz) {size = sz; data = new uint8_t[sz];}
+    UserData() : size(0), data(NULL) {};
+    UserData(size_t sz)
+    {
+        size = sz;
+        data = new uint8_t[sz];
+    }
 
-	virtual ~UserData() { if (data) delete [] data;}
+    virtual ~UserData()
+    {
+        if (data) delete [] data;
+    }
 
-	/** 
-	 * serialize()
-	 *  
-	 * User data is passed between processes. In order to do so, it 
-	 * must be serialized. Since user data can have sub objects, 
-	 * containers and the like, it is up to the UDAF to provide the
-	 * serialize function. The streaming functionality of 
-	 * messageqcpp::ByteStream must be used. 
-	 *  
-	 * The default streams the size and data buffer to the 
-	 * ByteStream 
-	 */ 
-	virtual void serialize(messageqcpp::ByteStream& bs) const;
+    /**
+     * serialize()
+     *
+     * User data is passed between processes. In order to do so, it
+     * must be serialized. Since user data can have sub objects,
+     * containers and the like, it is up to the UDAF to provide the
+     * serialize function. The streaming functionality of
+     * messageqcpp::ByteStream must be used.
+     *
+     * The default streams the size and data buffer to the
+     * ByteStream
+     */
+    virtual void serialize(messageqcpp::ByteStream& bs) const;
 
-	/** 
-	 * unserialize()
-	 *  
-	 * User data is passed between processes. In order to do so, it 
-	 * must be unserialized. Since user data can have sub objects, 
-	 * containers and the like, it is up to the UDAF to provide the 
-	 * unserialize function. The streaming functionality of 
-	 * messageqcpp::ByteStream must be used. 
-	 *  
-	 * data is the datablock returned by createUserData. 
-	 *  
-	 * The default creates the data array and streams into data.
-	 */ 
-	virtual void unserialize(messageqcpp::ByteStream& bs);
+    /**
+     * unserialize()
+     *
+     * User data is passed between processes. In order to do so, it
+     * must be unserialized. Since user data can have sub objects,
+     * containers and the like, it is up to the UDAF to provide the
+     * unserialize function. The streaming functionality of
+     * messageqcpp::ByteStream must be used.
+     *
+     * data is the datablock returned by createUserData.
+     *
+     * The default creates the data array and streams into data.
+     */
+    virtual void unserialize(messageqcpp::ByteStream& bs);
 
-	// The default data store. You may or may not wish to use these fields.
-	uint32_t size;
-	uint8_t* data;
+    // The default data store. You may or may not wish to use these fields.
+    uint32_t size;
+    uint8_t* data;
 private:
-	// For now, copy construction is unwanted
-	UserData(UserData&);
+    // For now, copy construction is unwanted
+    UserData(UserData&);
 };
 
 // Flags to define the type and limitations of a UDA(n)F
@@ -201,7 +208,7 @@ static uint64_t	PARAM_IS_CONSTANT __attribute__ ((unused)) = 1 << 1;
 typedef std::vector<std::pair<std::string, CalpontSystemCatalog::ColDataType> >COL_TYPES;
 
 // This is the context class that is passed to all API callbacks
-// The framework potentially sets data here for each invocation of 
+// The framework potentially sets data here for each invocation of
 // mcsv1_UDAF methods. Access methods are given for data useful to UDA(n)F.
 // Don't modify anything directly except the struct retrieved with getUserData().
 
@@ -213,195 +220,195 @@ typedef std::vector<std::pair<std::string, CalpontSystemCatalog::ColDataType> >C
 class mcsv1Context
 {
 public:
-	EXPORT mcsv1Context();
-	EXPORT mcsv1Context(const mcsv1Context& rhs);
-	// The destructor is virtual only in case a version 2 is made derived from v1
-	// to promote backward compatibility.
-	// mcsv1Context should never be subclassed by UDA(n)F developers
-	EXPORT virtual ~mcsv1Context();
+    EXPORT mcsv1Context();
+    EXPORT mcsv1Context(const mcsv1Context& rhs);
+    // The destructor is virtual only in case a version 2 is made derived from v1
+    // to promote backward compatibility.
+    // mcsv1Context should never be subclassed by UDA(n)F developers
+    EXPORT virtual ~mcsv1Context();
 
-	// Set an error message if something goes wrong
-	EXPORT void setErrorMessage(std::string errmsg);
+    // Set an error message if something goes wrong
+    EXPORT void setErrorMessage(std::string errmsg);
 
-	// Get the previously set error message
-	EXPORT const std::string& getErrorMessage() const;
+    // Get the previously set error message
+    EXPORT const std::string& getErrorMessage() const;
 
-	// Set the flags as a set. Return the previous flags.
-	EXPORT uint64_t setRunFlags(uint64_t flags);
-	// return the flags
-	EXPORT uint64_t getRunFlags() const;
+    // Set the flags as a set. Return the previous flags.
+    EXPORT uint64_t setRunFlags(uint64_t flags);
+    // return the flags
+    EXPORT uint64_t getRunFlags() const;
 
-	// The following set, get, clear and toggle methods can be used to manipulate
-	// multiple flags by ORing them together in the call sequence.
-	// Ex setRunFlag(UDAF_OVER_REQUIRED | UDAF_ORDER_REQUIRED);
-	// sets both flags and returns true if BOTH flags are already set.
-	// 
-	// Set a specific flag and return its previous setting
-	EXPORT bool setRunFlag(uint64_t flag);
-	// Get a specific flag
-	EXPORT bool getRunFlag(uint64_t flag);
-	// clear a specific flag and return its previous setting
-	EXPORT bool clearRunFlag(uint64_t flag);
-	// toggle a specific flag and return its previous setting
-	EXPORT bool toggleRunFlag(uint64_t flag);
+    // The following set, get, clear and toggle methods can be used to manipulate
+    // multiple flags by ORing them together in the call sequence.
+    // Ex setRunFlag(UDAF_OVER_REQUIRED | UDAF_ORDER_REQUIRED);
+    // sets both flags and returns true if BOTH flags are already set.
+    //
+    // Set a specific flag and return its previous setting
+    EXPORT bool setRunFlag(uint64_t flag);
+    // Get a specific flag
+    EXPORT bool getRunFlag(uint64_t flag);
+    // clear a specific flag and return its previous setting
+    EXPORT bool clearRunFlag(uint64_t flag);
+    // toggle a specific flag and return its previous setting
+    EXPORT bool toggleRunFlag(uint64_t flag);
 
-	// Use these to determine the way your UDA(n)F was called
-	// Valid in all method calls
-	EXPORT bool isAnalytic();
-	EXPORT bool isWindowHasCurrentRow();
+    // Use these to determine the way your UDA(n)F was called
+    // Valid in all method calls
+    EXPORT bool isAnalytic();
+    EXPORT bool isWindowHasCurrentRow();
 
-	// Determine if the call is made by the UM
-	// This could be because the UDA(n)F is not being distributed
-	// Or it could be during setup or during consolodation of PM values.
-	// valid in all calls
-	EXPORT bool isUM();
+    // Determine if the call is made by the UM
+    // This could be because the UDA(n)F is not being distributed
+    // Or it could be during setup or during consolodation of PM values.
+    // valid in all calls
+    EXPORT bool isUM();
 
-	// Determine if the call is made by the PM
-	// This will be during partial aggregation performed on the PM
-	// valid in all calls
-	EXPORT bool isPM();
+    // Determine if the call is made by the PM
+    // This will be during partial aggregation performed on the PM
+    // valid in all calls
+    EXPORT bool isPM();
 
-	// Parameter refinement description accessors
-	// valid in nextValue and dropValue
-	size_t getParameterCount() const;
+    // Parameter refinement description accessors
+    // valid in nextValue and dropValue
+    size_t getParameterCount() const;
 
-	// Determine if an input parameter is NULL
-	// valid in nextValue and dropValue
-	EXPORT bool isParamNull(int paramIdx);
+    // Determine if an input parameter is NULL
+    // valid in nextValue and dropValue
+    EXPORT bool isParamNull(int paramIdx);
 
-	// If a parameter is a constant, the UDA(n)F could presumably optimize its workings
-	// during the first call to nextValue().
-	// Is there a better way to determine this?
-	// valid in nextValue
-	EXPORT bool isParamConstant(int paramIdx);
+    // If a parameter is a constant, the UDA(n)F could presumably optimize its workings
+    // during the first call to nextValue().
+    // Is there a better way to determine this?
+    // valid in nextValue
+    EXPORT bool isParamConstant(int paramIdx);
 
-	// For getting the result type.
-	EXPORT CalpontSystemCatalog::ColDataType getResultType() const;
+    // For getting the result type.
+    EXPORT CalpontSystemCatalog::ColDataType getResultType() const;
 
-	// For getting the decimal characteristics for the return type.
-	// These will be set to the default before init().
-	EXPORT int32_t getScale() const;
-	EXPORT int32_t getPrecision() const;
+    // For getting the decimal characteristics for the return type.
+    // These will be set to the default before init().
+    EXPORT int32_t getScale() const;
+    EXPORT int32_t getPrecision() const;
 
-	// If you want to change the result type
-	// valid in init()
-	EXPORT bool setResultType(CalpontSystemCatalog::ColDataType resultType);
+    // If you want to change the result type
+    // valid in init()
+    EXPORT bool setResultType(CalpontSystemCatalog::ColDataType resultType);
 
-	// For setting the decimal characteristics for the return value.
-	// This only makes sense if the return type is decimal, but should be set
-	// to (0, -1) for other types if the inout is decimal. 
-	// valid in init()
-	EXPORT bool setScale(int32_t scale);
-	EXPORT bool setPrecision(int32_t precision);
+    // For setting the decimal characteristics for the return value.
+    // This only makes sense if the return type is decimal, but should be set
+    // to (0, -1) for other types if the inout is decimal.
+    // valid in init()
+    EXPORT bool setScale(int32_t scale);
+    EXPORT bool setPrecision(int32_t precision);
 
-	// For all types, get the return column width in bytes. Ex. INT will return 4.
-	EXPORT int32_t getColWidth();
+    // For all types, get the return column width in bytes. Ex. INT will return 4.
+    EXPORT int32_t getColWidth();
 
-	// For non-numric return types, set the return column width. This defaults
-	// to the the length of the input.
-	// valid in init()
-	EXPORT bool setColWidth(int32_t colWidth);
+    // For non-numric return types, set the return column width. This defaults
+    // to the the length of the input.
+    // valid in init()
+    EXPORT bool setColWidth(int32_t colWidth);
 
-	// If a method is known to take a while, call this periodically to see if something
-	// interupted the processing. If getInterrupted() returns true, then the executing
-	// method should clean up and exit.
-	EXPORT bool getInterrupted() const;
+    // If a method is known to take a while, call this periodically to see if something
+    // interupted the processing. If getInterrupted() returns true, then the executing
+    // method should clean up and exit.
+    EXPORT bool getInterrupted() const;
 
-	// Allocate instance specific memory. This should be type cast to a structure overlay
-	// defined by the function. The actual allocatoin occurs in the various modules that
-	// do the aggregation. If the UDAF is being calculated in a distributed fashion, then
-	// multiple instances of this data may be allocated. Calls to the subaggregate functions
-	// do not share a context.
-	// You do not need to worry about freeing this memory. The framework handles all management.
-	// Call this during init()
-	EXPORT void  setUserDataSize(int bytes);
+    // Allocate instance specific memory. This should be type cast to a structure overlay
+    // defined by the function. The actual allocatoin occurs in the various modules that
+    // do the aggregation. If the UDAF is being calculated in a distributed fashion, then
+    // multiple instances of this data may be allocated. Calls to the subaggregate functions
+    // do not share a context.
+    // You do not need to worry about freeing this memory. The framework handles all management.
+    // Call this during init()
+    EXPORT void  setUserDataSize(int bytes);
 
-	// Call this everywhere except init()
-	EXPORT UserData* getUserData();
+    // Call this everywhere except init()
+    EXPORT UserData* getUserData();
 
-	// Many UDAnF need a default Window Frame. If none is set here, the default is 
-	// UNBOUNDED PRECEDING to CURRENT ROW. 
-	// It's possible to not allow the the WINDOW FRAME phrase in the UDAnF by setting
-	// the UDAF_WINDOWFRAME_REQUIRED and UDAF_WINDOWFRAME_ALLOWED both to false. Columnstore
-	// requires a Window Frame in order to process UDAnF. In this case, the default will
-	// be used for all calls.
-	// Possible values for start frame are
-	// WF_UNBOUNDED_PRECEDING, WF_CURRENT_ROW, WF_PRECEDING or WF_FOLLOWING
-	// possible values for end frame are
-	// WF_CURRENT_ROW, WF_UNBOUNDED_FOLLOWING, WF_PRECEDING or WF_FOLLOWING
-	// If WF_PRECEEdING and/or WF_FOLLOWING, a start or end constant should
-	// be included to say how many preceeding or following is the default
-	// Set this during init()
-	EXPORT bool  setDefaultWindowFrame(WF_FRAME defaultStartFrame, 
-									   WF_FRAME defaultEndFrame,
-									   int32_t startConstant = 0, // For WF_PRECEEDING or WF_FOLLOWING
-									   int32_t endConstant = 0);  // For WF_PRECEEDING or WF_FOLLOWING
+    // Many UDAnF need a default Window Frame. If none is set here, the default is
+    // UNBOUNDED PRECEDING to CURRENT ROW.
+    // It's possible to not allow the the WINDOW FRAME phrase in the UDAnF by setting
+    // the UDAF_WINDOWFRAME_REQUIRED and UDAF_WINDOWFRAME_ALLOWED both to false. Columnstore
+    // requires a Window Frame in order to process UDAnF. In this case, the default will
+    // be used for all calls.
+    // Possible values for start frame are
+    // WF_UNBOUNDED_PRECEDING, WF_CURRENT_ROW, WF_PRECEDING or WF_FOLLOWING
+    // possible values for end frame are
+    // WF_CURRENT_ROW, WF_UNBOUNDED_FOLLOWING, WF_PRECEDING or WF_FOLLOWING
+    // If WF_PRECEEdING and/or WF_FOLLOWING, a start or end constant should
+    // be included to say how many preceeding or following is the default
+    // Set this during init()
+    EXPORT bool  setDefaultWindowFrame(WF_FRAME defaultStartFrame,
+                                       WF_FRAME defaultEndFrame,
+                                       int32_t startConstant = 0, // For WF_PRECEEDING or WF_FOLLOWING
+                                       int32_t endConstant = 0);  // For WF_PRECEEDING or WF_FOLLOWING
 
-	// There may be times you want to know the actual frame set by the caller
+    // There may be times you want to know the actual frame set by the caller
     EXPORT void  getStartFrame(WF_FRAME& startFrame, int32_t& startConstant) const;
-	EXPORT void  getEndFrame(WF_FRAME& endFrame, int32_t& endConstant) const;
-	
-	// Deep Equivalence
-	bool operator==(const mcsv1Context& c) const;
-	bool operator!=(const mcsv1Context& c) const;
+    EXPORT void  getEndFrame(WF_FRAME& endFrame, int32_t& endConstant) const;
 
-	// stream operator for debugging
-	EXPORT const std::string toString() const;
+    // Deep Equivalence
+    bool operator==(const mcsv1Context& c) const;
+    bool operator!=(const mcsv1Context& c) const;
 
-	// Get the name of the function
-	EXPORT const std::string& getName() const;
+    // stream operator for debugging
+    EXPORT const std::string toString() const;
 
-	EXPORT mcsv1Context& operator=(const mcsv1Context& rhs); 
-	EXPORT mcsv1Context& copy(const mcsv1Context& rhs);
-	
+    // Get the name of the function
+    EXPORT const std::string& getName() const;
+
+    EXPORT mcsv1Context& operator=(const mcsv1Context& rhs);
+    EXPORT mcsv1Context& copy(const mcsv1Context& rhs);
+
 private:
 
-	uint64_t fRunFlags;       // Set by the user to define the type of UDA(n)F
-	uint64_t fContextFlags;   // Set by the framework to define this specific call.
-	int32_t fUserDataSize;
-	boost::shared_ptr<UserData> fUserData;
-	CalpontSystemCatalog::ColDataType fResultType;
-	int32_t  fColWidth;       // The length in bytes of the return type
-	int32_t  fResultscale;    // For scale, the number of digits to the right of the decimal
-	int32_t  fResultPrecision; // The max number of digits allowed in the decimal value
-	std::string errorMsg;
-	std::vector<uint32_t>* dataFlags; // one entry for each parameter
-	bool*    bInterrupted;    // Gets set to true by the Framework if something happens
-	WF_FRAME fStartFrame;     // Is set to default to start, then modified by the actual frame in the call
-	WF_FRAME fEndFrame;       // Is set to default to start, then modified by the actual frame in the call
-	int32_t  fStartConstant;  // for start frame WF_PRECEEDIMG or WF_FOLLOWING
-	int32_t  fEndConstant;    // for end frame WF_PRECEEDIMG or WF_FOLLOWING
-	std::string functionName;
-	mcsv1sdk::mcsv1_UDAF* func;
+    uint64_t fRunFlags;       // Set by the user to define the type of UDA(n)F
+    uint64_t fContextFlags;   // Set by the framework to define this specific call.
+    int32_t fUserDataSize;
+    boost::shared_ptr<UserData> fUserData;
+    CalpontSystemCatalog::ColDataType fResultType;
+    int32_t  fColWidth;       // The length in bytes of the return type
+    int32_t  fResultscale;    // For scale, the number of digits to the right of the decimal
+    int32_t  fResultPrecision; // The max number of digits allowed in the decimal value
+    std::string errorMsg;
+    std::vector<uint32_t>* dataFlags; // one entry for each parameter
+    bool*    bInterrupted;    // Gets set to true by the Framework if something happens
+    WF_FRAME fStartFrame;     // Is set to default to start, then modified by the actual frame in the call
+    WF_FRAME fEndFrame;       // Is set to default to start, then modified by the actual frame in the call
+    int32_t  fStartConstant;  // for start frame WF_PRECEEDIMG or WF_FOLLOWING
+    int32_t  fEndConstant;    // for end frame WF_PRECEEDIMG or WF_FOLLOWING
+    std::string functionName;
+    mcsv1sdk::mcsv1_UDAF* func;
 
 public:
-	// For use by the framework
-	EXPORT void serialize(messageqcpp::ByteStream& b) const;
-	EXPORT void unserialize(messageqcpp::ByteStream& b);
-	EXPORT void createUserData();
-	EXPORT void setUserData(boost::shared_ptr<UserData> userData);
-	EXPORT void setUserData(UserData* userData);
-	EXPORT void setName(std::string name);
-	EXPORT void setContextFlags(uint64_t flags);
-	EXPORT void setContextFlag(uint64_t flag);
-	EXPORT void clearContextFlag(uint64_t flag);
-	EXPORT uint64_t getContextFlags() const;
-	EXPORT uint32_t getUserDataSize() const;
-	EXPORT std::vector<uint32_t>& getDataFlags();
-	EXPORT void setDataFlags(std::vector<uint32_t>* flags);
-	EXPORT void setInterrupted(bool interrupted);
-	EXPORT void setInterrupted(bool* interrupted);
-	EXPORT mcsv1sdk::mcsv1_UDAF* getFunction();
-	EXPORT mcsv1sdk::mcsv1_UDAF* getFunction() const;
-	EXPORT boost::shared_ptr<UserData> getUserDataSP();
+    // For use by the framework
+    EXPORT void serialize(messageqcpp::ByteStream& b) const;
+    EXPORT void unserialize(messageqcpp::ByteStream& b);
+    EXPORT void createUserData();
+    EXPORT void setUserData(boost::shared_ptr<UserData> userData);
+    EXPORT void setUserData(UserData* userData);
+    EXPORT void setName(std::string name);
+    EXPORT void setContextFlags(uint64_t flags);
+    EXPORT void setContextFlag(uint64_t flag);
+    EXPORT void clearContextFlag(uint64_t flag);
+    EXPORT uint64_t getContextFlags() const;
+    EXPORT uint32_t getUserDataSize() const;
+    EXPORT std::vector<uint32_t>& getDataFlags();
+    EXPORT void setDataFlags(std::vector<uint32_t>* flags);
+    EXPORT void setInterrupted(bool interrupted);
+    EXPORT void setInterrupted(bool* interrupted);
+    EXPORT mcsv1sdk::mcsv1_UDAF* getFunction();
+    EXPORT mcsv1sdk::mcsv1_UDAF* getFunction() const;
+    EXPORT boost::shared_ptr<UserData> getUserDataSP();
 };
 
 // Since aggregate functions can operate on any data type, we use the following structure
 // to define the input row data. To be type insensiteve, data is stored in type static_any::any.
-// 
+//
 // To access the data it must be type cast to the correct type using static_any::cast.
 // example for int data:
-// 
+//
 // if (valIn.compatible(intTypeId)
 //     int myint = valIn.cast<int>();
 //
@@ -411,255 +418,255 @@ public:
 // For char, varchar, text, varbinary and blob types, columnData will be std::string.
 struct ColumnDatum
 {
-	CalpontSystemCatalog::ColDataType dataType;   // defined in calpontsystemcatalog.h
-	static_any::any  columnData;
-	uint32_t    scale;     // If dataType is a DECIMAL type
-	uint32_t    precision; // If dataType is a DECIMAL type
-	ColumnDatum() : dataType(CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1){};
+    CalpontSystemCatalog::ColDataType dataType;   // defined in calpontsystemcatalog.h
+    static_any::any  columnData;
+    uint32_t    scale;     // If dataType is a DECIMAL type
+    uint32_t    precision; // If dataType is a DECIMAL type
+    ColumnDatum() : dataType(CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1) {};
 };
 
-// Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or 
+// Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or
 // User Defined Analytic Function (UDAnF).
 // These will be singleton classes, so don't put any instance
 // specific data in here. All instance data is stored in mcsv1Context
 // passed to each user function and retrieved by the getUserData() method.
-// 
-// Each API function returns a ReturnCode. If ERROR is returned at any time, 
-// the query is aborted, getInterrupted() will begin to return true and the 
-// message set in config->setErrorMessage() is returned to MariaDB. 
+//
+// Each API function returns a ReturnCode. If ERROR is returned at any time,
+// the query is aborted, getInterrupted() will begin to return true and the
+// message set in config->setErrorMessage() is returned to MariaDB.
 class mcsv1_UDAF
 {
 public:
-	enum ReturnCode
-	{
-		ERROR = 0,
-		SUCCESS = 1,
-		NOT_IMPLEMENTED = 2   // User UDA(n)F shouldn't return this
-	};
-	// Defaults OK
-	mcsv1_UDAF(){};
-	virtual ~mcsv1_UDAF(){};
+    enum ReturnCode
+    {
+        ERROR = 0,
+        SUCCESS = 1,
+        NOT_IMPLEMENTED = 2   // User UDA(n)F shouldn't return this
+    };
+    // Defaults OK
+    mcsv1_UDAF() {};
+    virtual ~mcsv1_UDAF() {};
 
-	/** 
-	 * init() 
-	 *  
-	 * Mandatory. Implement this to initialize flags and instance 
-	 * data. Called once per SQL statement. You can do any sanity 
-	 * checks here. 
-	 *  
-	 * colTypes (in) - A vector of ColDataType defining the 
-	 * parameters of the UDA(n)F call. These can be used to decide 
-	 * to override the default return type. If desired, the new 
-	 * return type can be set by context->setReturnType() and 
-	 * decimal scale and precision can be set by context->setScale 
-	 * and context->setPrecision respectively. 
-	 *  
-	 * Return mcsv1_UDAF::ERROR on any error, such as non-compatible
-	 * colTypes or wrong number of arguments. Else return 
-	 * mcsv1_UDAF::SUCCESS. 
-	 */
-	virtual ReturnCode init(mcsv1Context* context,
-							COL_TYPES& colTypes) = 0;
+    /**
+     * init()
+     *
+     * Mandatory. Implement this to initialize flags and instance
+     * data. Called once per SQL statement. You can do any sanity
+     * checks here.
+     *
+     * colTypes (in) - A vector of ColDataType defining the
+     * parameters of the UDA(n)F call. These can be used to decide
+     * to override the default return type. If desired, the new
+     * return type can be set by context->setReturnType() and
+     * decimal scale and precision can be set by context->setScale
+     * and context->setPrecision respectively.
+     *
+     * Return mcsv1_UDAF::ERROR on any error, such as non-compatible
+     * colTypes or wrong number of arguments. Else return
+     * mcsv1_UDAF::SUCCESS.
+     */
+    virtual ReturnCode init(mcsv1Context* context,
+                            COL_TYPES& colTypes) = 0;
 
-	/** 
-	 * reset() 
-	 *  
-	 * Mandatory. Reset the UDA(n)F for a new group, partition or, 
-	 * in some cases, new Window Frame. Do not free any memory 
-	 * allocated by createUserData(). The SDK Framework owns 
-	 * that memory and will handle that. Use this opportunity to 
-	 * reset any variables in context->getUserData() needed for the 
-	 * next aggregation. May be called multiple times if running in 
-	 * a ditributed fashion. 
-	 *  
-	 * Use this opportunity to initialize the userData.
-	 */
-	virtual ReturnCode reset(mcsv1Context* context) = 0;
+    /**
+     * reset()
+     *
+     * Mandatory. Reset the UDA(n)F for a new group, partition or,
+     * in some cases, new Window Frame. Do not free any memory
+     * allocated by createUserData(). The SDK Framework owns
+     * that memory and will handle that. Use this opportunity to
+     * reset any variables in context->getUserData() needed for the
+     * next aggregation. May be called multiple times if running in
+     * a ditributed fashion.
+     *
+     * Use this opportunity to initialize the userData.
+     */
+    virtual ReturnCode reset(mcsv1Context* context) = 0;
 
-	/** 
-	 * nextValue() 
-	 *  
-	 * Mandatory. Handle a single row. 
-	 *  
-	 * colsIn - A vector of data structure describing the input 
-	 * data. 
-	 *  
-	 * This function is called once for every row in the filtered 
-	 * result set (before aggregation). It is very important that 
-	 * this function is efficient. 
-	 *  
-	 * If the UDAF is running in a distributed fashion, nextValue 
-	 * cannot depend on order, as it will only be called for each 
-	 * row found on the specific PM. 
-	 *  
-	 * valsIn (in) - a vector of the parameters from the row.
-	 */
-	virtual ReturnCode nextValue(mcsv1Context* context, 
-								 std::vector<ColumnDatum>& valsIn) = 0;
+    /**
+     * nextValue()
+     *
+     * Mandatory. Handle a single row.
+     *
+     * colsIn - A vector of data structure describing the input
+     * data.
+     *
+     * This function is called once for every row in the filtered
+     * result set (before aggregation). It is very important that
+     * this function is efficient.
+     *
+     * If the UDAF is running in a distributed fashion, nextValue
+     * cannot depend on order, as it will only be called for each
+     * row found on the specific PM.
+     *
+     * valsIn (in) - a vector of the parameters from the row.
+     */
+    virtual ReturnCode nextValue(mcsv1Context* context,
+                                 std::vector<ColumnDatum>& valsIn) = 0;
 
-	 /** 
-	  * subEvaluate() 
-	  *  
-	  * Mandatory -- Called if the UDAF is running in a distributed 
-	  * fashion. Columnstore tries to run all aggregate functions 
-	  * distributed, depending on context. 
-	  *  
-	  * Perform an aggregation on rows partially aggregated by 
-	  * nextValue. Columnstore calls nextValue for each row on a 
-	  * given PM for a group (GROUP BY). subEvaluate is called on the
-	  * UM to consolodate those values into a single instance of 
-	  * userData. Keep your aggregated totals in context's userData. 
-	  * The first time this is called for a group, reset() would have 
-	  * been called with this version of userData. 
-	  *  
-	  * Called for every partial data set in each group in GROUP BY.
-	  *  
-	  * When subEvaluate has been called for all subAggregated data 
-	  * sets, Evaluate will be called with the same context as here.
-	  *  
-	  * valIn (In) - This is a pointer to a UserData class with the 
-	  * partially aggregated values. It will contain the value of 
-	  * userData as seen in the last call to NextValue for a given 
-	  * PM. 
-	  *  
-	  */
-	 virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn) = 0;
+    /**
+     * subEvaluate()
+     *
+     * Mandatory -- Called if the UDAF is running in a distributed
+     * fashion. Columnstore tries to run all aggregate functions
+     * distributed, depending on context.
+     *
+     * Perform an aggregation on rows partially aggregated by
+     * nextValue. Columnstore calls nextValue for each row on a
+     * given PM for a group (GROUP BY). subEvaluate is called on the
+     * UM to consolodate those values into a single instance of
+     * userData. Keep your aggregated totals in context's userData.
+     * The first time this is called for a group, reset() would have
+     * been called with this version of userData.
+     *
+     * Called for every partial data set in each group in GROUP BY.
+     *
+     * When subEvaluate has been called for all subAggregated data
+     * sets, Evaluate will be called with the same context as here.
+     *
+     * valIn (In) - This is a pointer to a UserData class with the
+     * partially aggregated values. It will contain the value of
+     * userData as seen in the last call to NextValue for a given
+     * PM.
+     *
+     */
+    virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn) = 0;
 
-	/** 
-	 * evaluate() 
-	 *  
-	 * Mandatory. Get the aggregated value.
-	 *  
-	 * Called for every new group if UDAF GROUP BY, UDAnF partition 
-	 * or, in some cases, new Window Frame. 
-	 *  
-	 * Set the aggregated value into valOut. The datatype is assumed
-	 * to be the same as that set in the init() function; 
-	 *  
-	 * If the UDAF is running in a distributed fashion, evaluate is 
-	 * called after a series of subEvaluate calls. 
-	 *  
-	 * valOut (out) - Set the aggregated value here. The datatype is
-	 * assumed to be the same as that set in the init() function; 
-	 *  
-	 * To return a NULL value, don't assign to valOut.
-	 */
-	virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) = 0;
+    /**
+     * evaluate()
+     *
+     * Mandatory. Get the aggregated value.
+     *
+     * Called for every new group if UDAF GROUP BY, UDAnF partition
+     * or, in some cases, new Window Frame.
+     *
+     * Set the aggregated value into valOut. The datatype is assumed
+     * to be the same as that set in the init() function;
+     *
+     * If the UDAF is running in a distributed fashion, evaluate is
+     * called after a series of subEvaluate calls.
+     *
+     * valOut (out) - Set the aggregated value here. The datatype is
+     * assumed to be the same as that set in the init() function;
+     *
+     * To return a NULL value, don't assign to valOut.
+     */
+    virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) = 0;
 
-	 /** 
-	  * dropValue() 
-	  *  
-	  * Optional -- If defined, the server will call this instead of 
-	  * reset for UDAnF. 
-	  *  
-	  * Don't implement if a UDAnF has one or more of the following: 
-	  * The UDAnF can't be used with a Window Frame
-	  * The UDAnF is not reversable in some way 
-	  * The UDAnF is not interested in optimal performance 
-	  *  
-	  * If not implemented, reset() followed by a series of 
-	  * nextValue() will be called for each movement of the Window 
-	  * Frame. 
-	  *  
-	  * If implemented, then each movement of the Window Frame will 
-	  * result in dropValue() being called for each row falling out 
-	  * of the Frame and nextValue() being called for each new row 
-	  * coming into the Frame. 
-	  *  
-	  * valsDropped (in) - a vector of the parameters from the row 
-	  * leaving the Frame 
-	  *  
-	  * dropValue() will not be called for unbounded/current row type
-	  * frames, as those are already optimized. 
-	  */
-	 virtual ReturnCode dropValue(mcsv1Context* context, 
-								  std::vector<ColumnDatum>& valsDropped);
+    /**
+     * dropValue()
+     *
+     * Optional -- If defined, the server will call this instead of
+     * reset for UDAnF.
+     *
+     * Don't implement if a UDAnF has one or more of the following:
+     * The UDAnF can't be used with a Window Frame
+     * The UDAnF is not reversable in some way
+     * The UDAnF is not interested in optimal performance
+     *
+     * If not implemented, reset() followed by a series of
+     * nextValue() will be called for each movement of the Window
+     * Frame.
+     *
+     * If implemented, then each movement of the Window Frame will
+     * result in dropValue() being called for each row falling out
+     * of the Frame and nextValue() being called for each new row
+     * coming into the Frame.
+     *
+     * valsDropped (in) - a vector of the parameters from the row
+     * leaving the Frame
+     *
+     * dropValue() will not be called for unbounded/current row type
+     * frames, as those are already optimized.
+     */
+    virtual ReturnCode dropValue(mcsv1Context* context,
+                                 std::vector<ColumnDatum>& valsDropped);
 
-	 /** 
-	  * createUserData()
-	  *  
-	  * Optional -- The default is to create a data byte array of 
-	  * size as set in context->setUserDataSize()
-	  *  
-	  * Create your variable length data structure via 
-	  * userData = new <UserData_type> 
-	  *  
-	  * The data structure may contain references to containers or 
-	  * pointers to other objects. Remember that for distributed 
-	  * processing, this may be called multiple times for variaous 
-	  * computing blocks. At the least, it will be called once per PM 
-	  * that processes the data, and once more for the UM. For UDAnF, 
-	  * it may only be called once. 
-	  *  
-	  * Set length to the base length of the data structure you 
-	  * create. 
-	  *  
-	  */ 
-	 virtual ReturnCode createUserData(UserData*& userdata, int32_t& length);
+    /**
+     * createUserData()
+     *
+     * Optional -- The default is to create a data byte array of
+     * size as set in context->setUserDataSize()
+     *
+     * Create your variable length data structure via
+     * userData = new <UserData_type>
+     *
+     * The data structure may contain references to containers or
+     * pointers to other objects. Remember that for distributed
+     * processing, this may be called multiple times for variaous
+     * computing blocks. At the least, it will be called once per PM
+     * that processes the data, and once more for the UM. For UDAnF,
+     * it may only be called once.
+     *
+     * Set length to the base length of the data structure you
+     * create.
+     *
+     */
+    virtual ReturnCode createUserData(UserData*& userdata, int32_t& length);
 
 protected:
-	// These are handy for testing the actual type of static_any
-	static const static_any::any& charTypeId;
-	static const static_any::any& scharTypeId;
-	static const static_any::any& shortTypeId;
-	static const static_any::any& intTypeId;
-	static const static_any::any& longTypeId;
-	static const static_any::any& llTypeId;
-	static const static_any::any& ucharTypeId;
-	static const static_any::any& ushortTypeId;
-	static const static_any::any& uintTypeId;
-	static const static_any::any& ulongTypeId;
-	static const static_any::any& ullTypeId;
-	static const static_any::any& floatTypeId;
-	static const static_any::any& doubleTypeId;
-	static const static_any::any& strTypeId;
+    // These are handy for testing the actual type of static_any
+    static const static_any::any& charTypeId;
+    static const static_any::any& scharTypeId;
+    static const static_any::any& shortTypeId;
+    static const static_any::any& intTypeId;
+    static const static_any::any& longTypeId;
+    static const static_any::any& llTypeId;
+    static const static_any::any& ucharTypeId;
+    static const static_any::any& ushortTypeId;
+    static const static_any::any& uintTypeId;
+    static const static_any::any& ulongTypeId;
+    static const static_any::any& ullTypeId;
+    static const static_any::any& floatTypeId;
+    static const static_any::any& doubleTypeId;
+    static const static_any::any& strTypeId;
 };
 
 /***********************************************************************
  * There is no user modifiable code past this point
  ***********************************************************************/
 // Function definitions for mcsv1Context
-inline mcsv1Context::mcsv1Context() : 
+inline mcsv1Context::mcsv1Context() :
     fRunFlags(UDAF_OVER_ALLOWED | UDAF_ORDER_ALLOWED | UDAF_WINDOWFRAME_ALLOWED),
     fContextFlags(0),
-	fUserDataSize(0),
-	fResultType(CalpontSystemCatalog::UNDEFINED),
-	fColWidth(0),
+    fUserDataSize(0),
+    fResultType(CalpontSystemCatalog::UNDEFINED),
+    fColWidth(0),
     fResultscale(0),
     fResultPrecision(18),
-	dataFlags(NULL),
-	bInterrupted(NULL),
-	fStartFrame(WF_UNBOUNDED_PRECEDING),
-	fEndFrame(WF_CURRENT_ROW),
-	fStartConstant(0),
-	fEndConstant(0),
-	func(NULL)
+    dataFlags(NULL),
+    bInterrupted(NULL),
+    fStartFrame(WF_UNBOUNDED_PRECEDING),
+    fEndFrame(WF_CURRENT_ROW),
+    fStartConstant(0),
+    fEndConstant(0),
+    func(NULL)
 {
 }
 
 inline mcsv1Context::mcsv1Context(const mcsv1Context& rhs) :
     fContextFlags(0),
-	fColWidth(0),
-	dataFlags(NULL),
-	bInterrupted(NULL),
-	func(NULL)
+    fColWidth(0),
+    dataFlags(NULL),
+    bInterrupted(NULL),
+    func(NULL)
 {
-	copy(rhs);
+    copy(rhs);
 }
 
 inline mcsv1Context& mcsv1Context::copy(const mcsv1Context& rhs)
 {
-	fRunFlags        = rhs.getRunFlags();
-	fResultType      = rhs.getResultType();
-	fUserDataSize    = rhs.getUserDataSize();
-	fResultscale     = rhs.getScale();
-	fResultPrecision = rhs.getPrecision();
-	rhs.getStartFrame(fStartFrame, fStartConstant);
-	rhs.getEndFrame(fEndFrame, fEndConstant);
-	functionName = rhs.getName();
-	bInterrupted = rhs.bInterrupted;  // Multiple threads will use the same reference
-	func = rhs.func;
-	return *this;
+    fRunFlags        = rhs.getRunFlags();
+    fResultType      = rhs.getResultType();
+    fUserDataSize    = rhs.getUserDataSize();
+    fResultscale     = rhs.getScale();
+    fResultPrecision = rhs.getPrecision();
+    rhs.getStartFrame(fStartFrame, fStartConstant);
+    rhs.getEndFrame(fEndFrame, fEndConstant);
+    functionName = rhs.getName();
+    bInterrupted = rhs.bInterrupted;  // Multiple threads will use the same reference
+    func = rhs.func;
+    return *this;
 }
 
 inline mcsv1Context::~mcsv1Context()
@@ -668,285 +675,291 @@ inline mcsv1Context::~mcsv1Context()
 
 inline mcsv1Context& mcsv1Context::operator=(const mcsv1Context& rhs)
 {
-	fContextFlags = 0;
-	fColWidth = 0;
-	dataFlags = NULL;
-	bInterrupted = NULL;
-	func = NULL;
-	return copy(rhs);
+    fContextFlags = 0;
+    fColWidth = 0;
+    dataFlags = NULL;
+    bInterrupted = NULL;
+    func = NULL;
+    return copy(rhs);
 }
 
-inline void mcsv1Context::setErrorMessage(std::string errmsg) 
+inline void mcsv1Context::setErrorMessage(std::string errmsg)
 {
-	errorMsg = errmsg;
+    errorMsg = errmsg;
 }
 
 inline const std::string& mcsv1Context::getErrorMessage() const
 {
-	return errorMsg;
+    return errorMsg;
 }
 
-inline uint64_t mcsv1Context::setRunFlags(uint64_t flags) 
+inline uint64_t mcsv1Context::setRunFlags(uint64_t flags)
 {
-	uint64_t f = fRunFlags; 
-	fRunFlags = flags; 
-	return f;
+    uint64_t f = fRunFlags;
+    fRunFlags = flags;
+    return f;
 }
 
-inline uint64_t mcsv1Context::getRunFlags() const 
+inline uint64_t mcsv1Context::getRunFlags() const
 {
-	return fRunFlags;
+    return fRunFlags;
 }
 
-inline bool mcsv1Context::setRunFlag(uint64_t flag) 
+inline bool mcsv1Context::setRunFlag(uint64_t flag)
 {
-	bool b = fRunFlags & flag; 
-	fRunFlags |= flag; 
-	return b;
+    bool b = fRunFlags & flag;
+    fRunFlags |= flag;
+    return b;
 }
 
-inline bool mcsv1Context::getRunFlag(uint64_t flag) 
+inline bool mcsv1Context::getRunFlag(uint64_t flag)
 {
-	return fRunFlags & flag;
+    return fRunFlags & flag;
 }
 
-inline bool mcsv1Context::clearRunFlag(uint64_t flag) 
+inline bool mcsv1Context::clearRunFlag(uint64_t flag)
 {
-	bool b = fRunFlags & flag; 
-	fRunFlags &= ~flag; 
-	return b;
+    bool b = fRunFlags & flag;
+    fRunFlags &= ~flag;
+    return b;
 }
 
-inline bool mcsv1Context::toggleRunFlag(uint64_t flag) 
+inline bool mcsv1Context::toggleRunFlag(uint64_t flag)
 {
-	bool b = fRunFlags & flag; 
-	fRunFlags ^= flag; 
-	return b;
+    bool b = fRunFlags & flag;
+    fRunFlags ^= flag;
+    return b;
 }
 
-inline bool mcsv1Context::isAnalytic() 
+inline bool mcsv1Context::isAnalytic()
 {
-	return fContextFlags & CONTEXT_IS_ANALYTIC;
+    return fContextFlags & CONTEXT_IS_ANALYTIC;
 }
 
-inline bool mcsv1Context::isWindowHasCurrentRow() 
+inline bool mcsv1Context::isWindowHasCurrentRow()
 {
-	return fContextFlags & CONTEXT_HAS_CURRENT_ROW;
+    return fContextFlags & CONTEXT_HAS_CURRENT_ROW;
 }
 
 inline bool mcsv1Context::isUM()
 {
-	return !(fContextFlags & CONTEXT_IS_PM);
+    return !(fContextFlags & CONTEXT_IS_PM);
 }
 
 inline bool mcsv1Context::isPM()
 {
-	return fContextFlags & CONTEXT_IS_PM;
+    return fContextFlags & CONTEXT_IS_PM;
 }
 
 inline size_t mcsv1Context::getParameterCount() const
 {
-	if (dataFlags)
-		return dataFlags->size();
-	return 0;
+    if (dataFlags)
+        return dataFlags->size();
+
+    return 0;
 }
 
-inline bool mcsv1Context::isParamNull(int paramIdx) 
+inline bool mcsv1Context::isParamNull(int paramIdx)
 {
-	if (dataFlags)
-		return (*dataFlags)[paramIdx] & PARAM_IS_NULL;
-	return false;
+    if (dataFlags)
+        return (*dataFlags)[paramIdx] & PARAM_IS_NULL;
+
+    return false;
 }
 
-inline bool mcsv1Context::isParamConstant(int paramIdx) 
+inline bool mcsv1Context::isParamConstant(int paramIdx)
 {
-	if (dataFlags)
-		return (*dataFlags)[paramIdx] & PARAM_IS_CONSTANT;
-	return false;
+    if (dataFlags)
+        return (*dataFlags)[paramIdx] & PARAM_IS_CONSTANT;
+
+    return false;
 }
 
 inline CalpontSystemCatalog::ColDataType mcsv1Context::getResultType() const
 {
-	return fResultType;
+    return fResultType;
 }
 
-inline bool mcsv1Context::setResultType(CalpontSystemCatalog::ColDataType resultType) 
+inline bool mcsv1Context::setResultType(CalpontSystemCatalog::ColDataType resultType)
 {
-	fResultType = resultType;
-	return true;  // We may want to sanity check here.
+    fResultType = resultType;
+    return true;  // We may want to sanity check here.
 }
 
 inline int32_t mcsv1Context::getScale() const
 {
-	return fResultscale;
+    return fResultscale;
 }
 
 inline int32_t mcsv1Context::getPrecision() const
 {
-	return fResultPrecision;
+    return fResultPrecision;
 }
 
 inline bool mcsv1Context::setScale(int32_t scale)
 {
-	fResultscale = scale;
-	return true;
+    fResultscale = scale;
+    return true;
 }
 
 inline bool mcsv1Context::setPrecision(int32_t precision)
 {
-	fResultPrecision = precision;
-	return true;
+    fResultPrecision = precision;
+    return true;
 }
 
 inline bool mcsv1Context::setColWidth(int32_t colWidth)
 {
-	fColWidth = colWidth;
-	return true;
+    fColWidth = colWidth;
+    return true;
 }
 
-inline void mcsv1Context::setInterrupted(bool interrupted) 
+inline void mcsv1Context::setInterrupted(bool interrupted)
 {
-	if (bInterrupted)
-	{
-		*bInterrupted = interrupted;
-	}
+    if (bInterrupted)
+    {
+        *bInterrupted = interrupted;
+    }
 }
 
-inline void mcsv1Context::setInterrupted(bool* interrupted) 
+inline void mcsv1Context::setInterrupted(bool* interrupted)
 {
-	bInterrupted = interrupted;
+    bInterrupted = interrupted;
 }
 
 inline bool mcsv1Context::getInterrupted() const
 {
-	if (bInterrupted)
-	{
-		return bInterrupted;
-	}
-	return false;
+    if (bInterrupted)
+    {
+        return bInterrupted;
+    }
+
+    return false;
 }
 
 inline void mcsv1Context::setUserDataSize(int bytes)
 {
-	fUserDataSize = bytes;
+    fUserDataSize = bytes;
 }
 
-inline UserData* mcsv1Context::getUserData() 
+inline UserData* mcsv1Context::getUserData()
 {
-	if (!fUserData)
-	{
-		createUserData();
-	}
-	return fUserData.get();
+    if (!fUserData)
+    {
+        createUserData();
+    }
+
+    return fUserData.get();
 }
 
 inline boost::shared_ptr<UserData> mcsv1Context::getUserDataSP()
 {
-	if (!fUserData)
-	{
-		createUserData();
-	}
-	return fUserData;
+    if (!fUserData)
+    {
+        createUserData();
+    }
+
+    return fUserData;
 }
 
 inline void mcsv1Context::setUserData(boost::shared_ptr<UserData> userData)
 {
-	fUserData = userData;
+    fUserData = userData;
 }
 
 inline void mcsv1Context::setUserData(UserData* userData)
 {
-	if (userData)
-	{
-		fUserData.reset(userData);
-	}
-	else
-	{
-		fUserData.reset();
-	}
+    if (userData)
+    {
+        fUserData.reset(userData);
+    }
+    else
+    {
+        fUserData.reset();
+    }
 }
 
-inline bool mcsv1Context::setDefaultWindowFrame(WF_FRAME defaultStartFrame, 
-								WF_FRAME defaultEndFrame,
-								int32_t startConstant,
-								int32_t endConstant)
+inline bool mcsv1Context::setDefaultWindowFrame(WF_FRAME defaultStartFrame,
+        WF_FRAME defaultEndFrame,
+        int32_t startConstant,
+        int32_t endConstant)
 {
-	// TODO: Add sanity checks
-	fStartFrame = defaultStartFrame;
-	fEndFrame = defaultEndFrame;
-	fStartConstant = startConstant;
-	fEndConstant = endConstant;
-	return true;
+    // TODO: Add sanity checks
+    fStartFrame = defaultStartFrame;
+    fEndFrame = defaultEndFrame;
+    fStartConstant = startConstant;
+    fEndConstant = endConstant;
+    return true;
 }
 
 inline void mcsv1Context::getStartFrame(WF_FRAME& startFrame, int32_t& startConstant) const
 {
-	startFrame = fStartFrame;
-	startConstant = fStartConstant;
+    startFrame = fStartFrame;
+    startConstant = fStartConstant;
 }
 
 inline void mcsv1Context::getEndFrame(WF_FRAME& endFrame, int32_t& endConstant) const
 {
-	endFrame = fEndFrame;
-	endConstant = fEndConstant;
+    endFrame = fEndFrame;
+    endConstant = fEndConstant;
 }
 
 inline const std::string& mcsv1Context::getName() const
 {
-	return functionName;
+    return functionName;
 }
 
 inline void mcsv1Context::setName(std::string name)
 {
-	functionName = name;
+    functionName = name;
 }
 
 inline uint64_t mcsv1Context::getContextFlags() const
 {
-	return fContextFlags;
+    return fContextFlags;
 }
 
 inline void mcsv1Context::setContextFlags(uint64_t flags)
 {
-	fContextFlags = flags;
+    fContextFlags = flags;
 }
 
 inline void mcsv1Context::setContextFlag(uint64_t flag)
 {
-	fContextFlags |= flag;
+    fContextFlags |= flag;
 }
 
 inline void mcsv1Context::clearContextFlag(uint64_t flag)
 {
-	fContextFlags &= ~flag;
+    fContextFlags &= ~flag;
 }
 
 inline uint32_t mcsv1Context::getUserDataSize() const
 {
-	return fUserDataSize;
+    return fUserDataSize;
 }
 
 inline std::vector<uint32_t>& mcsv1Context::getDataFlags()
 {
-	return *dataFlags;
+    return *dataFlags;
 }
 
 inline void mcsv1Context::setDataFlags(std::vector<uint32_t>* flags)
 {
-	dataFlags = flags;
+    dataFlags = flags;
 }
 
-inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context, 
-													std::vector<ColumnDatum>& valsDropped)
+inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context,
+        std::vector<ColumnDatum>& valsDropped)
 {
-	return NOT_IMPLEMENTED;
+    return NOT_IMPLEMENTED;
 }
 
 inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::createUserData(UserData*& userData, int32_t& length)
 {
-	userData = new UserData(length);
-	userData->size = length;
-	return SUCCESS;
+    userData = new UserData(length);
+    userData->size = length;
+    return SUCCESS;
 }
 
 }; // namespace mcssdk

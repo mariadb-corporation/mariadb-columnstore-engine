@@ -31,22 +31,22 @@
 class AutoincrementData
 {
 public:
-	typedef std::map <uint32_t, AutoincrementData*> AutoincDataMap;
-	typedef std::map<uint32_t, long long> OIDNextValue;
-	static AutoincrementData* makeAutoincrementData(uint32_t sessionID = 0);
-	static void removeAutoincrementData(uint32_t sessionID = 0);
-	void setNextValue(uint32_t columnOid, long long nextValue);
-	long long getNextValue(uint32_t columnOid);
-	OIDNextValue & getOidNextValueMap();
+    typedef std::map <uint32_t, AutoincrementData*> AutoincDataMap;
+    typedef std::map<uint32_t, long long> OIDNextValue;
+    static AutoincrementData* makeAutoincrementData(uint32_t sessionID = 0);
+    static void removeAutoincrementData(uint32_t sessionID = 0);
+    void setNextValue(uint32_t columnOid, long long nextValue);
+    long long getNextValue(uint32_t columnOid);
+    OIDNextValue& getOidNextValueMap();
 
 private:
-	/** Constuctors */
+    /** Constuctors */
     explicit AutoincrementData();
     explicit AutoincrementData(const AutoincrementData& rhs);
-	~AutoincrementData();
+    ~AutoincrementData();
 
-	static boost::mutex map_mutex;
-	static AutoincDataMap fAutoincDataMap;
+    static boost::mutex map_mutex;
+    static AutoincDataMap fAutoincDataMap;
     OIDNextValue fOidNextValueMap;
     boost::mutex fOIDnextvalLock;
 };

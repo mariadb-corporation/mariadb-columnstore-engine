@@ -32,60 +32,73 @@
 #include "we_observer.h"
 
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 //-----------------------------------------------------------------------------
 
 //	ctor
-Observer::Observer() {
+Observer::Observer()
+{
 
 }
 
 //-----------------------------------------------------------------------------
 //dtor
-Observer::~Observer() {
-	//
+Observer::~Observer()
+{
+    //
 }
 
 //-----------------------------------------------------------------------------
 //ctor
-Subject::Subject(){
+Subject::Subject()
+{
 
 }
 //-----------------------------------------------------------------------------
 //dtor
-Subject::~Subject(){
+Subject::~Subject()
+{
 
 }
 
 //-----------------------------------------------------------------------------
 
-void Subject::attach(Observer* Obs) {
-	boost::mutex::scoped_lock aLstLock;
-	fObs.push_back(Obs);
+void Subject::attach(Observer* Obs)
+{
+    boost::mutex::scoped_lock aLstLock;
+    fObs.push_back(Obs);
 }
 
 //-----------------------------------------------------------------------------
 
-void Subject::detach(Observer* Obs) {
-	boost::mutex::scoped_lock aLstLock;
-	Observers::iterator aIt = fObs.begin();
-	while (aIt != fObs.end()) {
-		if ((*aIt) == Obs) {
-			fObs.erase(aIt);
-			break;
-		}
-	}
+void Subject::detach(Observer* Obs)
+{
+    boost::mutex::scoped_lock aLstLock;
+    Observers::iterator aIt = fObs.begin();
+
+    while (aIt != fObs.end())
+    {
+        if ((*aIt) == Obs)
+        {
+            fObs.erase(aIt);
+            break;
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------
 
-void Subject::notify() {
-	boost::mutex::scoped_lock aLstLock;
-	Observers::iterator aIt = fObs.begin();
-	while (aIt != fObs.end()) {
-		(*aIt)->update(this);
-	}
+void Subject::notify()
+{
+    boost::mutex::scoped_lock aLstLock;
+    Observers::iterator aIt = fObs.begin();
+
+    while (aIt != fObs.end())
+    {
+        (*aIt)->update(this);
+    }
 }
 
 //-----------------------------------------------------------------------------

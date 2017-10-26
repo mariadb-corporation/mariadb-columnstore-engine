@@ -51,7 +51,7 @@
 
 namespace WriteEngine
 {
-    class Log;
+class Log;
 
 //------------------------------------------------------------------------------
 /** @brief Class used to store Dictionary store file information used in backing
@@ -61,12 +61,12 @@ namespace WriteEngine
 struct RBChunkInfo
 {
     OID                fOid;       // dctnry store OID containing relevant chunk
-    uint16_t           fDbRoot;    // dbroot, partition, segment of file 
+    uint16_t           fDbRoot;    // dbroot, partition, segment of file
     uint32_t           fPartition; //   containing relevant HWM chunk
     uint16_t           fSegment;   //
     HWM                fHwm;       // HWM block of interest
     RBChunkInfo(OID oid, uint16_t dbRoot, uint32_t partition,
-        uint16_t segment, HWM hwm ) :
+                uint16_t segment, HWM hwm ) :
         fOid(oid), fDbRoot(dbRoot), fPartition(partition),
         fSegment(segment), fHwm(hwm) { }
 };
@@ -81,7 +81,7 @@ typedef std::set< RBChunkInfo, RBChunkInfoCompare > RBChunkSet;
 
 //------------------------------------------------------------------------------
 /** @brief Class to write HWM-related information to support bulk rollbacks.
- * 
+ *
  * Should cpimport.bin terminate abnormally, leaving the db in an inconsistent
  * state, then the information written by this class can be used to perform
  * a bulk rollback, to restore the db to its previous state, prior to the
@@ -119,7 +119,7 @@ typedef std::set< RBChunkInfo, RBChunkInfoCompare > RBChunkSet;
  *        writeDictionaryStoreMetaData()
  *        writeDictionaryStoreMetaNoDataMarker()
  *        closeMetaFile()
- *   3. Backup necessary HWM chunks to backup chunk files:   
+ *   3. Backup necessary HWM chunks to backup chunk files:
  *        a. backupColumnHWMChunk()
  *        b. backupDctnryHWMChunk()
  *   4. Delete meta data file and HWM chunk files at end of successful job:
@@ -149,7 +149,10 @@ public:
 
     /** @brief RBMetaWriter destructor
      */
-    EXPORT ~RBMetaWriter ( ) { closeMetaFile ( ); }
+    EXPORT ~RBMetaWriter ( )
+    {
+        closeMetaFile ( );
+    }
 
     /** @brief Initialize this RBMetaWriter object
      * Warning: This function may throw a WeException.
@@ -158,7 +161,7 @@ public:
      * @param tableName Name of the table associated with tableOID.
      */
     EXPORT void init ( OID  tableOID,
-        const std::string& tableName );
+                       const std::string& tableName );
 
     /** @brief Make a backup copy of the specified HWM dictionary store chunk.
      * This operation only applies to compressed columns.  Backup may not be
@@ -249,7 +252,7 @@ private:
 
     // This function must be thread-safe since it is called directly by
     // backupDctnryHWMChunk().  Employed by non-hdfs.
-    void backupHWMChunk ( 
+    void backupHWMChunk (
         bool               bColumnFile,
         OID                columnOID,
         uint16_t           dbRoot,
@@ -259,7 +262,7 @@ private:
 
     // This function must be thread-safe since it is called directly by
     // backupDctnryHWMFile().   Employed by hdfs.
-    void backupHWMFile ( 
+    void backupHWMFile (
         bool               bColumnFile,
         OID                columnOID,
         uint16_t           dbRoot,
@@ -273,7 +276,7 @@ private:
     void createSubDir( const std::string& metaFileName );
     void deleteSubDir( const std::string& metaFileName );
     int  getSubDirPath(const uint16_t dbRoot,
-                           std::string& subDirPath ) const;
+                       std::string& subDirPath ) const;
 
     // Open a meta data file to save HWM bulk rollback info for tableOID
     // Warning: This function may throw a WeException.

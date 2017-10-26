@@ -27,12 +27,12 @@
 
 namespace compress
 {
-	namespace v1
-	{
+namespace v1
+{
 
-		bool decompress(const char* in, const uint32_t inLen, unsigned char* out, size_t* ol);
+bool decompress(const char* in, const uint32_t inLen, unsigned char* out, size_t* ol);
 
-	} //namespace v1
+} //namespace v1
 } // namespace compress
 
 #endif

@@ -49,34 +49,49 @@ namespace joblist
 class LibMySQL
 {
 public:
-	LibMySQL();
-	~LibMySQL();
+    LibMySQL();
+    ~LibMySQL();
 
-	// init:   host          port        username      passwd         db
-	int init(const char*, unsigned int, const char*, const char*, const char*);
+    // init:   host          port        username      passwd         db
+    int init(const char*, unsigned int, const char*, const char*, const char*);
 
-	// run the query
-	int run(const char* q);
+    // run the query
+    int run(const char* q);
 
-	int getFieldCount()      { return mysql_num_fields(fRes); }
-	int getRowCount()        { return mysql_num_rows(fRes); }
-	char** nextRow()
-	{
-		char** row = mysql_fetch_row(fRes);
-		fieldLengths = mysql_fetch_lengths(fRes);
-		fFields = mysql_fetch_fields(fRes);
-		return row;
-	}
-	long getFieldLength(int field) { return fieldLengths[field]; }
-	MYSQL_FIELD* getField(int field) { return &fFields[field]; }
-	const std::string& getError() { return fErrStr; }
+    int getFieldCount()
+    {
+        return mysql_num_fields(fRes);
+    }
+    int getRowCount()
+    {
+        return mysql_num_rows(fRes);
+    }
+    char** nextRow()
+    {
+        char** row = mysql_fetch_row(fRes);
+        fieldLengths = mysql_fetch_lengths(fRes);
+        fFields = mysql_fetch_fields(fRes);
+        return row;
+    }
+    long getFieldLength(int field)
+    {
+        return fieldLengths[field];
+    }
+    MYSQL_FIELD* getField(int field)
+    {
+        return &fFields[field];
+    }
+    const std::string& getError()
+    {
+        return fErrStr;
+    }
 
 private:
-	MYSQL*        fCon;
-	MYSQL_RES*    fRes;
-	MYSQL_FIELD*  fFields;
+    MYSQL*        fCon;
+    MYSQL_RES*    fRes;
+    MYSQL_FIELD*  fFields;
     std::string             fErrStr;
-	unsigned long *fieldLengths;
+    unsigned long* fieldLengths;
 };
 
 /** @brief class CrossEngineStep
@@ -88,14 +103,14 @@ public:
     /** @brief CrossEngineStep constructor
      */
     CrossEngineStep(
-			const string& schema,
-			const string& table,
-			const string& alias,
-			const JobInfo& jobInfo);
+        const string& schema,
+        const string& table,
+        const string& alias,
+        const JobInfo& jobInfo);
 
     /** @brief CrossEngineStep destructor
      */
-   ~CrossEngineStep();
+    ~CrossEngineStep();
 
     /** @brief virtual void Run method
      */
@@ -109,120 +124,156 @@ public:
      */
     const std::string toString() const;
 
-	// from BatchPrimitive
-	bool getFeederFlag() const { return false; }
-	uint64_t getLastTupleId() const { return 0; }
-	uint32_t getStepCount () const { return 1; }
-	void setBPP(JobStep* jobStep);
-	void setFirstStepType(PrimitiveStepType firstStepType) {}
-	void setIsProjectionOnly() {}
-	void setLastTupleId(uint64_t id) {}
-	void setOutputType(BPSOutputType outputType) {}
-	void setProjectBPP(JobStep* jobStep1, JobStep* jobStep2);
-	void setStepCount() {}
-	void setSwallowRows(const bool swallowRows) {}
-	void setBppStep() {}
-	void dec(DistributedEngineComm* dec) {}
-	const OIDVector& getProjectOids() const { return fOIDVector; }
-	uint64_t blksSkipped() const { return 0; }
-	bool wasStepRun() const { return fRunExecuted; }
-	BPSOutputType getOutputType() const { return ROW_GROUP; }
-	uint64_t getRows() const { return fRowsReturned; }
-	const string& schemaName() const { return fSchema; }
-	const string& tableName() const { return fTable; }
-	const string& tableAlias() const { return fAlias; }
-	void useJoiner(boost::shared_ptr<joiner::Joiner>) {}
-	void setJobInfo(const JobInfo* jobInfo) {}
-	void  setOutputRowGroup(const rowgroup::RowGroup&);
-	const rowgroup::RowGroup& getOutputRowGroup() const;
+    // from BatchPrimitive
+    bool getFeederFlag() const
+    {
+        return false;
+    }
+    uint64_t getLastTupleId() const
+    {
+        return 0;
+    }
+    uint32_t getStepCount () const
+    {
+        return 1;
+    }
+    void setBPP(JobStep* jobStep);
+    void setFirstStepType(PrimitiveStepType firstStepType) {}
+    void setIsProjectionOnly() {}
+    void setLastTupleId(uint64_t id) {}
+    void setOutputType(BPSOutputType outputType) {}
+    void setProjectBPP(JobStep* jobStep1, JobStep* jobStep2);
+    void setStepCount() {}
+    void setSwallowRows(const bool swallowRows) {}
+    void setBppStep() {}
+    void dec(DistributedEngineComm* dec) {}
+    const OIDVector& getProjectOids() const
+    {
+        return fOIDVector;
+    }
+    uint64_t blksSkipped() const
+    {
+        return 0;
+    }
+    bool wasStepRun() const
+    {
+        return fRunExecuted;
+    }
+    BPSOutputType getOutputType() const
+    {
+        return ROW_GROUP;
+    }
+    uint64_t getRows() const
+    {
+        return fRowsReturned;
+    }
+    const string& schemaName() const
+    {
+        return fSchema;
+    }
+    const string& tableName() const
+    {
+        return fTable;
+    }
+    const string& tableAlias() const
+    {
+        return fAlias;
+    }
+    void useJoiner(boost::shared_ptr<joiner::Joiner>) {}
+    void setJobInfo(const JobInfo* jobInfo) {}
+    void  setOutputRowGroup(const rowgroup::RowGroup&);
+    const rowgroup::RowGroup& getOutputRowGroup() const;
 
-	// from DECEventListener
-	void newPMOnline(uint32_t) {}
+    // from DECEventListener
+    void newPMOnline(uint32_t) {}
 
-	const rowgroup::RowGroup& getDeliveredRowGroup() const;
-	void  deliverStringTableRowGroup(bool b);
-	bool  deliverStringTableRowGroup() const;
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
+    const rowgroup::RowGroup& getDeliveredRowGroup() const;
+    void  deliverStringTableRowGroup(bool b);
+    bool  deliverStringTableRowGroup() const;
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
 
-	void addFcnJoinExp(const vector<execplan::SRCP>&);
-	void addFcnExpGroup1(const boost::shared_ptr<execplan::ParseTree>&);
-	void setFE1Input(const rowgroup::RowGroup&);
-	void setFcnExpGroup3(const vector<execplan::SRCP>&);
-	void setFE23Output(const rowgroup::RowGroup&);
+    void addFcnJoinExp(const vector<execplan::SRCP>&);
+    void addFcnExpGroup1(const boost::shared_ptr<execplan::ParseTree>&);
+    void setFE1Input(const rowgroup::RowGroup&);
+    void setFcnExpGroup3(const vector<execplan::SRCP>&);
+    void setFE23Output(const rowgroup::RowGroup&);
 
-	void addFilter(JobStep* jobStep);
-	void addProject(JobStep* jobStep);
+    void addFilter(JobStep* jobStep);
+    void addProject(JobStep* jobStep);
 
 
 protected:
-	virtual void execute();
-	virtual void getMysqldInfo(const JobInfo&);
-	virtual void makeMappings();
-	virtual void addFilterStr(const std::vector<const execplan::Filter*>&, const std::string&);
-	virtual std::string makeQuery();
-	virtual void setField(int, const char*, unsigned long, MYSQL_FIELD*, rowgroup::Row&);
-	inline void addRow(rowgroup::RGData &);
-	//inline  void addRow(boost::shared_array<uint8_t>&);
-	virtual int64_t convertValueNum(
-						const char*, const execplan::CalpontSystemCatalog::ColType&, int64_t);
-	virtual void formatMiniStats();
-	virtual void printCalTrace();
-	virtual void handleMySqlError(const char*, unsigned int);
+    virtual void execute();
+    virtual void getMysqldInfo(const JobInfo&);
+    virtual void makeMappings();
+    virtual void addFilterStr(const std::vector<const execplan::Filter*>&, const std::string&);
+    virtual std::string makeQuery();
+    virtual void setField(int, const char*, unsigned long, MYSQL_FIELD*, rowgroup::Row&);
+    inline void addRow(rowgroup::RGData&);
+    //inline  void addRow(boost::shared_array<uint8_t>&);
+    virtual int64_t convertValueNum(
+        const char*, const execplan::CalpontSystemCatalog::ColType&, int64_t);
+    virtual void formatMiniStats();
+    virtual void printCalTrace();
+    virtual void handleMySqlError(const char*, unsigned int);
 
-	uint64_t fRowsRetrieved;
-	uint64_t fRowsReturned;
-	uint64_t fRowsPerGroup;
+    uint64_t fRowsRetrieved;
+    uint64_t fRowsReturned;
+    uint64_t fRowsPerGroup;
 
-	// output rowgroup and row
-	rowgroup::RowGroup fRowGroupOut;
-	rowgroup::RowGroup fRowGroupDelivered;
+    // output rowgroup and row
+    rowgroup::RowGroup fRowGroupOut;
+    rowgroup::RowGroup fRowGroupDelivered;
     rowgroup::RowGroup fRowGroupAdded;
-	rowgroup::Row fRowDelivered;
+    rowgroup::Row fRowDelivered;
 
-	// for datalist
-	RowGroupDL* fOutputDL;
-	uint64_t    fOutputIterator;
+    // for datalist
+    RowGroupDL* fOutputDL;
+    uint64_t    fOutputIterator;
 
-	class Runner
-	{
-	public:
-		Runner(CrossEngineStep* step) : fStep(step) { }
-		void operator()() { fStep->execute(); }
+    class Runner
+    {
+    public:
+        Runner(CrossEngineStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->execute();
+        }
 
-		CrossEngineStep* fStep;
-	};
+        CrossEngineStep* fStep;
+    };
 
-	uint64_t fRunner;  // thread pool handle
-	OIDVector fOIDVector;
-	bool fEndOfResult;
-	bool fRunExecuted;
+    uint64_t fRunner;  // thread pool handle
+    OIDVector fOIDVector;
+    bool fEndOfResult;
+    bool fRunExecuted;
 
-	// MySQL server info
-	std::string  fHost;
-	std::string  fUser;
-	std::string  fPasswd;
-	std::string  fSchema;
-	std::string  fTable;
-	std::string  fAlias;
-	unsigned int fPort;
+    // MySQL server info
+    std::string  fHost;
+    std::string  fUser;
+    std::string  fPasswd;
+    std::string  fSchema;
+    std::string  fTable;
+    std::string  fAlias;
+    unsigned int fPort;
 
-	// returned columns and primitive filters
-	std::string fWhereClause;
-	std::string fSelectClause;
+    // returned columns and primitive filters
+    std::string fWhereClause;
+    std::string fSelectClause;
 
-	// Function & Expression columns
+    // Function & Expression columns
     std::vector<boost::shared_ptr<execplan::ParseTree> > fFeFilters;
-	std::vector<boost::shared_ptr<execplan::ReturnedColumn> > fFeSelects;
-	std::vector<boost::shared_ptr<execplan::ReturnedColumn> > fFeFcnJoin;
-	std::map<uint32_t, uint32_t> fColumnMap;   // projected key position (k->p)
-	uint64_t fColumnCount;
-	boost::scoped_array<int> fFe1Column;
-	boost::shared_array<int> fFeMapping1;
-	boost::shared_array<int> fFeMapping3;
-	rowgroup::RowGroup fRowGroupFe1;
-	rowgroup::RowGroup fRowGroupFe3;
+    std::vector<boost::shared_ptr<execplan::ReturnedColumn> > fFeSelects;
+    std::vector<boost::shared_ptr<execplan::ReturnedColumn> > fFeFcnJoin;
+    std::map<uint32_t, uint32_t> fColumnMap;   // projected key position (k->p)
+    uint64_t fColumnCount;
+    boost::scoped_array<int> fFe1Column;
+    boost::shared_array<int> fFeMapping1;
+    boost::shared_array<int> fFeMapping3;
+    rowgroup::RowGroup fRowGroupFe1;
+    rowgroup::RowGroup fRowGroupFe3;
 
-	funcexp::FuncExp* fFeInstance;
+    funcexp::FuncExp* fFeInstance;
     LibMySQL* mysql;
 };
 

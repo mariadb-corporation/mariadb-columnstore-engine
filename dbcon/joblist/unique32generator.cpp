@@ -31,7 +31,8 @@
 
 #include "dbrm.h"
 
-namespace joblist {
+namespace joblist
+{
 
 /* static */ UniqueNumberGenerator* UniqueNumberGenerator::fUnique32Generator = 0;
 /* static */ boost::mutex       UniqueNumberGenerator::fLock;
@@ -42,14 +43,14 @@ namespace joblist {
 /* static */
 UniqueNumberGenerator* UniqueNumberGenerator::instance()
 {
-	boost::mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
-	if ( !fUnique32Generator )
-	{
-		fUnique32Generator = new UniqueNumberGenerator();
-	}
+    if ( !fUnique32Generator )
+    {
+        fUnique32Generator = new UniqueNumberGenerator();
+    }
 
-	return fUnique32Generator;
+    return fUnique32Generator;
 }
 
 //------------------------------------------------------------------------------
@@ -60,13 +61,13 @@ UniqueNumberGenerator* UniqueNumberGenerator::instance()
 /* static */
 void UniqueNumberGenerator::deleteInstance()
 {
-	boost::mutex::scoped_lock lk(fLock);
+    boost::mutex::scoped_lock lk(fLock);
 
-	if ( fUnique32Generator )
-	{
-		delete fUnique32Generator;
-		fUnique32Generator = 0;
-	}
+    if ( fUnique32Generator )
+    {
+        delete fUnique32Generator;
+        fUnique32Generator = 0;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -74,12 +75,12 @@ void UniqueNumberGenerator::deleteInstance()
 //------------------------------------------------------------------------------
 uint32_t UniqueNumberGenerator::getUnique32()
 {
-	return fDbrm.getUnique32();
+    return fDbrm.getUnique32();
 }
 
 uint64_t UniqueNumberGenerator::getUnique64()
 {
-	return fDbrm.getUnique64();
+    return fDbrm.getUnique64();
 }
 
 } // namespace

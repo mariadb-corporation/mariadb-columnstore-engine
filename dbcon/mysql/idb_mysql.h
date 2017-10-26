@@ -95,13 +95,14 @@ template <class T> bool isnan(T);
 #undef DEBUG
 #undef set_bits
 
-namespace {
+namespace
+{
 inline char* idb_mysql_query_str(THD* thd)
 {
 #if MYSQL_VERSION_ID >= 50172
-	return thd->query();
+    return thd->query();
 #else
-	return thd->query;
+    return thd->query;
 #endif
 }
 }

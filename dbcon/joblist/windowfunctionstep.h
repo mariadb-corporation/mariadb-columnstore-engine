@@ -60,10 +60,10 @@ class ResourceManager;
 
 struct RowPosition
 {
-	uint64_t fGroupId : 48;
-	uint64_t fRowId   : 16;
+    uint64_t fGroupId : 48;
+    uint64_t fRowId   : 16;
 
-	inline RowPosition(uint64_t i = 0, uint64_t j = 0) : fGroupId(i), fRowId(j) {};
+    inline RowPosition(uint64_t i = 0, uint64_t j = 0) : fGroupId(i), fRowId(j) {};
 };
 
 
@@ -73,145 +73,154 @@ struct RowPosition
 class WindowFunctionStep : public JobStep, public TupleDeliveryStep
 {
 public:
-	/** @brief WindowFunctionStep constructor
-	 * @param
-	 * @param
-	 */
-	WindowFunctionStep(const JobInfo&);
+    /** @brief WindowFunctionStep constructor
+     * @param
+     * @param
+     */
+    WindowFunctionStep(const JobInfo&);
 
-	/** @brief WindowFunctionStep destructor
-	 */
-   virtual ~WindowFunctionStep();
+    /** @brief WindowFunctionStep destructor
+     */
+    virtual ~WindowFunctionStep();
 
-	/** @brief virtual methods
-	 */
-	void run();
-	void join();
-	const std::string toString() const;
-	void setOutputRowGroup(const rowgroup::RowGroup&);
-	const rowgroup::RowGroup& getOutputRowGroup() const;
-	const rowgroup::RowGroup& getDeliveredRowGroup() const;
-	void  deliverStringTableRowGroup(bool b);
-	bool  deliverStringTableRowGroup() const;
-	uint32_t nextBand(messageqcpp::ByteStream &bs);
+    /** @brief virtual methods
+     */
+    void run();
+    void join();
+    const std::string toString() const;
+    void setOutputRowGroup(const rowgroup::RowGroup&);
+    const rowgroup::RowGroup& getOutputRowGroup() const;
+    const rowgroup::RowGroup& getDeliveredRowGroup() const;
+    void  deliverStringTableRowGroup(bool b);
+    bool  deliverStringTableRowGroup() const;
+    uint32_t nextBand(messageqcpp::ByteStream& bs);
 
-	/** @brief initialize methods
-	 */
-	void initialize(const rowgroup::RowGroup& rg, JobInfo& jobInfo);
+    /** @brief initialize methods
+     */
+    void initialize(const rowgroup::RowGroup& rg, JobInfo& jobInfo);
 
-	static void checkWindowFunction(execplan::CalpontSelectExecutionPlan*, JobInfo&);
-	static SJSTEP makeWindowFunctionStep(SJSTEP&, JobInfo&);
+    static void checkWindowFunction(execplan::CalpontSelectExecutionPlan*, JobInfo&);
+    static SJSTEP makeWindowFunctionStep(SJSTEP&, JobInfo&);
 
-	// for WindowFunction and WindowFunctionWrapper callback
-	const std::vector<RowPosition>& getRowData() const  { return fRows; }
-	void handleException(std::string, int);
+    // for WindowFunction and WindowFunctionWrapper callback
+    const std::vector<RowPosition>& getRowData() const
+    {
+        return fRows;
+    }
+    void handleException(std::string, int);
 
-	// for string table
-	rowgroup::Row::Pointer getPointer(RowPosition& pos)
-	{
-		fRowGroupIn.setData(&(fInRowGroupData[pos.fGroupId]));
-		fRowGroupIn.getRow(pos.fRowId, &fRowIn);
-		return fRowIn.getPointer();
-	}
+    // for string table
+    rowgroup::Row::Pointer getPointer(RowPosition& pos)
+    {
+        fRowGroupIn.setData(&(fInRowGroupData[pos.fGroupId]));
+        fRowGroupIn.getRow(pos.fRowId, &fRowIn);
+        return fRowIn.getPointer();
+    }
 
-	rowgroup::Row::Pointer getPointer(RowPosition& pos, rowgroup::RowGroup& rg, rowgroup::Row& row)
-	{
-		rg.setData(&(fInRowGroupData[pos.fGroupId]));
-		rg.getRow(pos.fRowId, &row);
-		return row.getPointer();
-	}
+    rowgroup::Row::Pointer getPointer(RowPosition& pos, rowgroup::RowGroup& rg, rowgroup::Row& row)
+    {
+        rg.setData(&(fInRowGroupData[pos.fGroupId]));
+        rg.getRow(pos.fRowId, &row);
+        return row.getPointer();
+    }
 
 private:
-	void execute();
-	void doFunction();
-	void doPostProcessForSelect();
-	void doPostProcessForDml();
+    void execute();
+    void doFunction();
+    void doPostProcessForSelect();
+    void doPostProcessForDml();
 
-	uint64_t nextFunctionIndex();
+    uint64_t nextFunctionIndex();
 
-	boost::shared_ptr<windowfunction::FrameBound> parseFrameBound(const execplan::WF_Boundary&,
-		const map<uint64_t, uint64_t>&, const vector<execplan::SRCP>&,
-		const boost::shared_ptr<ordering::EqualCompData>&, JobInfo&, bool, bool);
-	boost::shared_ptr<windowfunction::FrameBound> parseFrameBoundRows(
-		const execplan::WF_Boundary&, const map<uint64_t, uint64_t>&, JobInfo&);
-	boost::shared_ptr<windowfunction::FrameBound> parseFrameBoundRange(
-		const execplan::WF_Boundary&, const map<uint64_t,uint64_t>&, const vector<execplan::SRCP>&,
-		JobInfo&);
-	void updateWindowCols(execplan::ParseTree*, const map<uint64_t, uint64_t>&, JobInfo&);
-	void updateWindowCols(execplan::ReturnedColumn*, const map<uint64_t, uint64_t>&, JobInfo&);
-	void sort(std::vector<joblist::RowPosition>::iterator, uint64_t);
+    boost::shared_ptr<windowfunction::FrameBound> parseFrameBound(const execplan::WF_Boundary&,
+            const map<uint64_t, uint64_t>&, const vector<execplan::SRCP>&,
+            const boost::shared_ptr<ordering::EqualCompData>&, JobInfo&, bool, bool);
+    boost::shared_ptr<windowfunction::FrameBound> parseFrameBoundRows(
+        const execplan::WF_Boundary&, const map<uint64_t, uint64_t>&, JobInfo&);
+    boost::shared_ptr<windowfunction::FrameBound> parseFrameBoundRange(
+        const execplan::WF_Boundary&, const map<uint64_t, uint64_t>&, const vector<execplan::SRCP>&,
+        JobInfo&);
+    void updateWindowCols(execplan::ParseTree*, const map<uint64_t, uint64_t>&, JobInfo&);
+    void updateWindowCols(execplan::ReturnedColumn*, const map<uint64_t, uint64_t>&, JobInfo&);
+    void sort(std::vector<joblist::RowPosition>::iterator, uint64_t);
 
-	void formatMiniStats();
-	void printCalTrace();
+    void formatMiniStats();
+    void printCalTrace();
 
-	class Runner
-	{
-	public:
-		Runner(WindowFunctionStep* step) : fStep(step) { }
-		void operator()() { fStep->execute(); }
+    class Runner
+    {
+    public:
+        Runner(WindowFunctionStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->execute();
+        }
 
-		WindowFunctionStep* fStep;
-	};
+        WindowFunctionStep* fStep;
+    };
 
-	uint64_t fRunner; // thread pool handle
+    uint64_t fRunner; // thread pool handle
 
-	boost::shared_ptr<execplan::CalpontSystemCatalog>  fCatalog;
-	uint64_t                         fRowsReturned;
-	bool                             fEndOfResult;
-	bool                             fIsSelect;
-	bool                             fUseSSMutex; //@bug6065, mutex for setStringField
-	bool                             fUseUFMutex; // To ensure thread safety of User Data (UDAnF)
-	// for input/output datalist
-	RowGroupDL*                      fInputDL;
-	RowGroupDL*                      fOutputDL;
-	int                              fInputIterator;
-	int                              fOutputIterator;
+    boost::shared_ptr<execplan::CalpontSystemCatalog>  fCatalog;
+    uint64_t                         fRowsReturned;
+    bool                             fEndOfResult;
+    bool                             fIsSelect;
+    bool                             fUseSSMutex; //@bug6065, mutex for setStringField
+    bool                             fUseUFMutex; // To ensure thread safety of User Data (UDAnF)
+    // for input/output datalist
+    RowGroupDL*                      fInputDL;
+    RowGroupDL*                      fOutputDL;
+    int                              fInputIterator;
+    int                              fOutputIterator;
 
-	// rowgroups
-	rowgroup::RowGroup               fRowGroupIn;
-	rowgroup::RowGroup               fRowGroupOut;
-	rowgroup::RowGroup               fRowGroupDelivered;
-	rowgroup::Row                    fRowIn;
+    // rowgroups
+    rowgroup::RowGroup               fRowGroupIn;
+    rowgroup::RowGroup               fRowGroupOut;
+    rowgroup::RowGroup               fRowGroupDelivered;
+    rowgroup::Row                    fRowIn;
 
-	// data storage
-	std::vector<rowgroup::RGData>    fInRowGroupData;
+    // data storage
+    std::vector<rowgroup::RGData>    fInRowGroupData;
 
-	//	for funciton/expression taking window function as parameter
-	std::vector<execplan::SRCP>       fExpression;
+    //	for funciton/expression taking window function as parameter
+    std::vector<execplan::SRCP>       fExpression;
 
-	// for threads computing window functions and partitions
-	class WFunction
-	{
-	public:
-		WFunction(WindowFunctionStep* step) : fStep(step) { }
-		void operator()() { fStep->doFunction(); }
+    // for threads computing window functions and partitions
+    class WFunction
+    {
+    public:
+        WFunction(WindowFunctionStep* step) : fStep(step) { }
+        void operator()()
+        {
+            fStep->doFunction();
+        }
 
-		WindowFunctionStep* fStep;
-	};
-	std::vector<uint64_t> fFunctionThreads;
+        WindowFunctionStep* fStep;
+    };
+    std::vector<uint64_t> fFunctionThreads;
 
-	std::vector<RowPosition>         fRows;
-	std::vector<boost::shared_ptr<windowfunction::WindowFunction> > fFunctions;
-	uint64_t                         fFunctionCount;
-	uint64_t                         fTotalThreads;
+    std::vector<RowPosition>         fRows;
+    std::vector<boost::shared_ptr<windowfunction::WindowFunction> > fFunctions;
+    uint64_t                         fFunctionCount;
+    uint64_t                         fTotalThreads;
 #ifdef _MSC_VER
-	volatile LONG                    fNextIndex;
+    volatile LONG                    fNextIndex;
 #else
-	int                              fNextIndex;
+    int                              fNextIndex;
 #endif
 
 
-	// query order by
-	boost::shared_ptr<ordering::OrderByData> fQueryOrderBy;
-	uint64_t                         fQueryLimitStart;
-	uint64_t                         fQueryLimitCount;
+    // query order by
+    boost::shared_ptr<ordering::OrderByData> fQueryOrderBy;
+    uint64_t                         fQueryLimitStart;
+    uint64_t                         fQueryLimitCount;
 
-	// for resource management
-	uint64_t                         fMemUsage;
-	ResourceManager*                 fRm;
-	boost::shared_ptr<int64_t>		 fSessionMemLimit;
+    // for resource management
+    uint64_t                         fMemUsage;
+    ResourceManager*                 fRm;
+    boost::shared_ptr<int64_t>		 fSessionMemLimit;
 
-	friend class windowfunction::WindowFunction;
+    friend class windowfunction::WindowFunction;
 };
 
 

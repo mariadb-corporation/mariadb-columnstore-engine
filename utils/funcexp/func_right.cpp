@@ -40,43 +40,45 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_right::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
 std::string Func_right::getStrVal(rowgroup::Row& row,
-						FunctionParm& fp,
-						bool& isNull,
-						execplan::CalpontSystemCatalog::ColType&)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType&)
 {
-	const string& tstr = fp[0]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    const string& tstr = fp[0]->data()->getStrVal(row, isNull);
 
-	int64_t pos = fp[1]->data()->getIntVal(row, isNull);
-	if (isNull)
-		return "";
+    if (isNull)
+        return "";
 
-	if (pos == -1)  // pos == 0
-		return "";
+    int64_t pos = fp[1]->data()->getIntVal(row, isNull);
 
-	size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
-	//wchar_t wcbuf[strwclen];
-	wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
-	strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
-	wstring str(wcbuf, strwclen);
+    if (isNull)
+        return "";
 
-	if ( (unsigned) pos >= strwclen )
-		pos = strwclen;
-	
-	wstring out = str.substr(strwclen-pos,strwclen);
-	size_t strmblen = utf8::idb_wcstombs(0, out.c_str(), 0) + 1;
-	//char outbuf[strmblen];
-	char* outbuf = (char*)alloca(strmblen * sizeof(char));
-	strmblen = utf8::idb_wcstombs(outbuf, out.c_str(), strmblen);
-	return string(outbuf, strmblen);
-}							
+    if (pos == -1)  // pos == 0
+        return "";
+
+    size_t strwclen = utf8::idb_mbstowcs(0, tstr.c_str(), 0) + 1;
+    //wchar_t wcbuf[strwclen];
+    wchar_t* wcbuf = (wchar_t*)alloca(strwclen * sizeof(wchar_t));
+    strwclen = utf8::idb_mbstowcs(wcbuf, tstr.c_str(), strwclen);
+    wstring str(wcbuf, strwclen);
+
+    if ( (unsigned) pos >= strwclen )
+        pos = strwclen;
+
+    wstring out = str.substr(strwclen - pos, strwclen);
+    size_t strmblen = utf8::idb_wcstombs(0, out.c_str(), 0) + 1;
+    //char outbuf[strmblen];
+    char* outbuf = (char*)alloca(strmblen * sizeof(char));
+    strmblen = utf8::idb_wcstombs(outbuf, out.c_str(), strmblen);
+    return string(outbuf, strmblen);
+}
 
 
 } // namespace funcexp

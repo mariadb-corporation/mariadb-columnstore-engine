@@ -23,23 +23,24 @@
 
 #include "ddlpkg.h"
 
-namespace ddlpackage {
-	using namespace std;
+namespace ddlpackage
+{
+using namespace std;
 
-	DropIndexStatement::~DropIndexStatement()
-	{
-		delete fIndexName;
-	}
+DropIndexStatement::~DropIndexStatement()
+{
+    delete fIndexName;
+}
 
-	DropIndexStatement::DropIndexStatement(QualifiedName *qualifiedName) :
-		fIndexName(qualifiedName)
-	{
-	}
+DropIndexStatement::DropIndexStatement(QualifiedName* qualifiedName) :
+    fIndexName(qualifiedName)
+{
+}
 
-	std::ostream& DropIndexStatement::put(std::ostream& os) const 
-	{
-		os << "Drop Index: " << *fIndexName << endl;
-		return os;
-	}
+std::ostream& DropIndexStatement::put(std::ostream& os) const
+{
+    os << "Drop Index: " << *fIndexName << endl;
+    return os;
+}
 
 }

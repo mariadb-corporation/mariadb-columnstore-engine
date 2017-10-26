@@ -29,100 +29,109 @@
 
 #include "treenode.h"
 
-namespace messageqcpp {
+namespace messageqcpp
+{
 class ByteStream;
 }
 
 /**
  * Namespace
  */
-namespace execplan { 
+namespace execplan
+{
 /** @brief A class to represent a generic TreeNode
- * 
- * This class is a concrete implementation of the abstract class TreeNode. It's only used to 
+ *
+ * This class is a concrete implementation of the abstract class TreeNode. It's only used to
  *  hold generic data long enough to parse into specific derrived classes.
  */
-class TreeNodeImpl : public TreeNode {
+class TreeNodeImpl : public TreeNode
+{
 
 public:
 
-	/**
-	 * Constructors
-	 */
-	TreeNodeImpl();
-	TreeNodeImpl(const std::string& sql);
-	// not needed yet
-	//TreeNodeImpl(const TreeNodeImpl& rhs);
-	
-	/**
-	 * Destructors
-	 */
-	virtual ~TreeNodeImpl();
-	/**
-	 * Accessor Methods
-	 */
-	
-	/**
-	 * Operations
-	 */
-	virtual const std::string toString() const;
+    /**
+     * Constructors
+     */
+    TreeNodeImpl();
+    TreeNodeImpl(const std::string& sql);
+    // not needed yet
+    //TreeNodeImpl(const TreeNodeImpl& rhs);
 
-	virtual const std::string data() const { return fData; }
-	virtual void data(const std::string data) { fData = data; }
-	 
+    /**
+     * Destructors
+     */
+    virtual ~TreeNodeImpl();
+    /**
+     * Accessor Methods
+     */
+
+    /**
+     * Operations
+     */
+    virtual const std::string toString() const;
+
+    virtual const std::string data() const
+    {
+        return fData;
+    }
+    virtual void data(const std::string data)
+    {
+        fData = data;
+    }
+
     /** return a copy of this pointer
-	 *
-	 * deep copy of this pointer and return the copy
-	 */	
-	inline virtual TreeNodeImpl* clone() const
-	{
-	    return new TreeNodeImpl (*this);
-	}
-		 
-	 /**
-	  * The serialization interface
-	  */
-	 virtual void serialize(messageqcpp::ByteStream&) const;
-	 virtual void unserialize(messageqcpp::ByteStream&);
-	 
-	 /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	  *
-	  * Do a deep, strict (as opposed to semantic) equivalence test.
-	  * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-	  */
-	 virtual bool operator==(const TreeNode* t) const;
-	 
-	 /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	  *
-	  * Do a deep, strict (as opposed to semantic) equivalence test.
-	  * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
-	  */
-	 bool operator==(const TreeNodeImpl& t) const;
-	 
-	 /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	  *
-	  * Do a deep, strict (as opposed to semantic) equivalence test.
-	  * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-	  */
-	 virtual bool operator!=(const TreeNode* t) const;
-	 
-	 /** @brief Do a deep, strict (as opposed to semantic) equivalence test
-	  *
-	  * Do a deep, strict (as opposed to semantic) equivalence test.
-	  * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
-	  */
-	 bool operator!=(const TreeNodeImpl& t) const;
-	 
-private:
-	//default okay
-	//TreeNodeImpl& operator=(const TreeNodeImpl& rhs);
+     *
+     * deep copy of this pointer and return the copy
+     */
+    inline virtual TreeNodeImpl* clone() const
+    {
+        return new TreeNodeImpl (*this);
+    }
 
-	std::string fData;
+    /**
+     * The serialization interface
+     */
+    virtual void serialize(messageqcpp::ByteStream&) const;
+    virtual void unserialize(messageqcpp::ByteStream&);
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     */
+    virtual bool operator==(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
+     */
+    bool operator==(const TreeNodeImpl& t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     */
+    virtual bool operator!=(const TreeNode* t) const;
+
+    /** @brief Do a deep, strict (as opposed to semantic) equivalence test
+     *
+     * Do a deep, strict (as opposed to semantic) equivalence test.
+     * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
+     */
+    bool operator!=(const TreeNodeImpl& t) const;
+
+private:
+    //default okay
+    //TreeNodeImpl& operator=(const TreeNodeImpl& rhs);
+
+    std::string fData;
 
 };
 
 std::ostream& operator<<(std::ostream& os, const TreeNodeImpl& rhs);
 
-} 
+}
 #endif //EXECPLAN_TREENODEIMPL_H
 

@@ -43,7 +43,8 @@
 
 #include "we_cpifeederthread.h"
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 class SplitterReadThread;
 
@@ -53,35 +54,35 @@ class SplitterReadThread;
 class WEDataLoader : public Observer
 {
 public:
-	explicit WEDataLoader(SplitterReadThread& pSrt );
-	virtual ~WEDataLoader();
+    explicit WEDataLoader(SplitterReadThread& pSrt );
+    virtual ~WEDataLoader();
 
-	virtual bool update(Subject* pSub);
+    virtual bool update(Subject* pSub);
 
 public:
-	bool setupCpimport();		// fork the cpimport
-	void teardownCpimport(bool useStoredWaitPidStatus); // @bug 4267
-	void pushData2Cpimport(ByteStream& Ibs);	// push data to cpimport from the queue
-	void closeWritePipe();
-	void str2Argv(std::string CmdLine, std::vector<char*>& V);
-	std::string getCalpontHome();
-	std::string getPrgmPath(std::string& PrgmName);
-	void updateCmdLineWithPath(string& CmdLine);
+    bool setupCpimport();		// fork the cpimport
+    void teardownCpimport(bool useStoredWaitPidStatus); // @bug 4267
+    void pushData2Cpimport(ByteStream& Ibs);	// push data to cpimport from the queue
+    void closeWritePipe();
+    void str2Argv(std::string CmdLine, std::vector<char*>& V);
+    std::string getCalpontHome();
+    std::string getPrgmPath(std::string& PrgmName);
+    void updateCmdLineWithPath(string& CmdLine);
 
-    
+
 public:
-	void onReceiveKeepAlive(ByteStream& Ibs);
-	void onReceiveData(ByteStream& Ibs);
-	void onReceiveEod(ByteStream& Ibs);		//end of data
-	void onReceiveMode(ByteStream& Ibs);
-	//void onReceiveCmd(messageqcpp::SBS bs);// {(ByteStream& Ibs);
-	void onReceiveCmd(ByteStream& bs);// {(ByteStream& Ibs);
-	void onReceiveAck(ByteStream& Ibs);
-	void onReceiveNak(ByteStream& Ibs);
-	void onReceiveError(ByteStream& Ibs);
-   
-	void onReceiveJobId(ByteStream& Ibs);
-	void onReceiveJobData(ByteStream& Ibs);
+    void onReceiveKeepAlive(ByteStream& Ibs);
+    void onReceiveData(ByteStream& Ibs);
+    void onReceiveEod(ByteStream& Ibs);		//end of data
+    void onReceiveMode(ByteStream& Ibs);
+    //void onReceiveCmd(messageqcpp::SBS bs);// {(ByteStream& Ibs);
+    void onReceiveCmd(ByteStream& bs);// {(ByteStream& Ibs);
+    void onReceiveAck(ByteStream& Ibs);
+    void onReceiveNak(ByteStream& Ibs);
+    void onReceiveError(ByteStream& Ibs);
+
+    void onReceiveJobId(ByteStream& Ibs);
+    void onReceiveJobData(ByteStream& Ibs);
     void onReceiveImportFileName(ByteStream& Ibs);
     void onReceiveCmdLineArgs(ByteStream& Ibs);
     void onReceiveStartCpimport();
@@ -98,8 +99,8 @@ public:
     void sendDataRequest();
     void sendCpimportFailureNotice();
 
-	void serialize(messageqcpp::ByteStream& b) const;
-	void unserialize(messageqcpp::ByteStream& b);
+    void serialize(messageqcpp::ByteStream& b) const;
+    void unserialize(messageqcpp::ByteStream& b);
 
 
     // setup the signal handlers for the main app
@@ -107,63 +108,111 @@ public:
     static void onSigChild(int aInt);
 
 public:
-	void setMode(int Mode){ fMode = Mode; }
-    void updateTxBytes(unsigned int Tx){ fTxBytes += Tx; }
-    void updateRxBytes(unsigned int Rx){ fRxBytes += Rx; }
-    void setChPid(pid_t pid){ fCh_pid = pid; }
-    void setPid(pid_t pid){ fThis_pid = pid; }
-    void setPPid(pid_t pid){ fP_pid = pid; }
-    void setCmdLineStr(std::string& Str){ fCmdLineStr = Str; }
-    void setObjId(int ObjId){ fObjId = ObjId; }
+    void setMode(int Mode)
+    {
+        fMode = Mode;
+    }
+    void updateTxBytes(unsigned int Tx)
+    {
+        fTxBytes += Tx;
+    }
+    void updateRxBytes(unsigned int Rx)
+    {
+        fRxBytes += Rx;
+    }
+    void setChPid(pid_t pid)
+    {
+        fCh_pid = pid;
+    }
+    void setPid(pid_t pid)
+    {
+        fThis_pid = pid;
+    }
+    void setPPid(pid_t pid)
+    {
+        fP_pid = pid;
+    }
+    void setCmdLineStr(std::string& Str)
+    {
+        fCmdLineStr = Str;
+    }
+    void setObjId(int ObjId)
+    {
+        fObjId = ObjId;
+    }
 
-    unsigned int getTxBytes(){ return fTxBytes; }
-    unsigned int getRxBytes(){ return fRxBytes; }
+    unsigned int getTxBytes()
+    {
+        return fTxBytes;
+    }
+    unsigned int getRxBytes()
+    {
+        return fRxBytes;
+    }
 
-    int getObjId(){ return fObjId; }
-    int getMode(){ return fMode; }
-    pid_t getChPid(){ return fCh_pid; }
-    pid_t getPid(){ return fThis_pid; }
-    pid_t getPPid(){ return fP_pid; }
-    std::string getCmdLineStr(){ return fCmdLineStr; }
+    int getObjId()
+    {
+        return fObjId;
+    }
+    int getMode()
+    {
+        return fMode;
+    }
+    pid_t getChPid()
+    {
+        return fCh_pid;
+    }
+    pid_t getPid()
+    {
+        return fThis_pid;
+    }
+    pid_t getPPid()
+    {
+        return fP_pid;
+    }
+    std::string getCmdLineStr()
+    {
+        return fCmdLineStr;
+    }
 
 private:
-	SplitterReadThread& fRef;
+    SplitterReadThread& fRef;
 
-	int fMode;
-	ofstream fDataDumpFile;
-	ofstream fJobFile;
+    int fMode;
+    ofstream fDataDumpFile;
+    ofstream fJobFile;
     unsigned int fTxBytes;
     unsigned int fRxBytes;
-	char fPmId;
-	int fObjId;					// Object Identifier for logging
+    char fPmId;
+    int fObjId;					// Object Identifier for logging
 
-	// CpImport related Member variables
-	int fFIFO[2];			//I/O Pipes
-	pid_t fCh_pid;
-	pid_t fThis_pid;
-	pid_t fP_pid;
-	bool fCpIStarted;
-	std::string fCmdLineStr;
-	std::string fBrmRptFileName;
+    // CpImport related Member variables
+    int fFIFO[2];			//I/O Pipes
+    pid_t fCh_pid;
+    pid_t fThis_pid;
+    pid_t fP_pid;
+    bool fCpIStarted;
+    std::string fCmdLineStr;
+    std::string fBrmRptFileName;
 
-	//CPI Feeder Thread
-	WECpiFeederThread* fpCfThread;
+    //CPI Feeder Thread
+    WECpiFeederThread* fpCfThread;
 
-	boost::mutex fClntMsgMutex;		//mutex in sending messages to client.
+    boost::mutex fClntMsgMutex;		//mutex in sending messages to client.
 
     //static bool fTearDownCpimport; // @bug 4267
     bool fTearDownCpimport; // @bug 4267
-	pid_t fWaitPidRc;       // @bug 4267
-	int   fWaitPidStatus;   // @bug 4267
+    pid_t fWaitPidRc;       // @bug 4267
+    int   fWaitPidStatus;   // @bug 4267
 
-	bool fForceKill;
-	bool fPipeErr;			// Err Flag to restrict err msgs logging.
+    bool fForceKill;
+    bool fPipeErr;			// Err Flag to restrict err msgs logging.
 
 private:
-	// more enums follow
-	enum CmdId { BULKFILENAME };
+    // more enums follow
+    enum CmdId { BULKFILENAME };
 public:
-	enum { MIN_QSIZE=25, MAX_QSIZE=250};
+    enum { MIN_QSIZE = 25, MAX_QSIZE = 250};
 
 public:
     SimpleSysLog* fpSysLog;

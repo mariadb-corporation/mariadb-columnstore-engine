@@ -23,7 +23,8 @@
 
 #include "calpontexecutionplan.h"
 
-namespace execplan{
+namespace execplan
+{
 /**
  * Constructors/Destructors
  */
@@ -34,7 +35,7 @@ CalpontExecutionPlan::CalpontExecutionPlan()
 CalpontExecutionPlan::~CalpontExecutionPlan()
 {
 }
- 
+
 /**
  * Methods
  */

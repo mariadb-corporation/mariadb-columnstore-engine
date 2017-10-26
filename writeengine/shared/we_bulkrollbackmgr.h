@@ -50,8 +50,8 @@
 
 namespace WriteEngine
 {
-    class Log;
-    class BulkRollbackFile;
+class Log;
+class BulkRollbackFile;
 
 //------------------------------------------------------------------------------
 /** @brief Class to clear a database table lock, and rolls back extents
@@ -82,12 +82,15 @@ public:
                            uint64_t lockID,
                            const std::string& tableName,
                            const std::string& applName,
-                           Log* logger=0);
+                           Log* logger = 0);
 
     /**
      * @brief BulkRollbackMgr destructor
      */
-    EXPORT ~BulkRollbackMgr( ) { closeMetaDataFile ( ); }
+    EXPORT ~BulkRollbackMgr( )
+    {
+        closeMetaDataFile ( );
+    }
 
     /**
      * @brief Clear table lock and rollback extents for fTableOID
@@ -100,17 +103,26 @@ public:
      * @brief Accessor to any error msg related to a bad return code.
      * @return error message if rollback rejected or failed.
      */
-    const std::string& getErrorMsg( ) const { return fErrorMsg; }
+    const std::string& getErrorMsg( ) const
+    {
+        return fErrorMsg;
+    }
 
     /**
      * @brief Accessor to the name of the meta file we are processing
      */
-    const std::string& getMetaFileName() const { return fMetaFileName; }
+    const std::string& getMetaFileName() const
+    {
+        return fMetaFileName;
+    }
 
     /**
      * @brief Mutator to enable/disable debug logging to console.
      */
-    const void setDebugConsole ( bool debug ) { fDebugConsole = debug; }
+    const void setDebugConsole ( bool debug )
+    {
+        fDebugConsole = debug;
+    }
 
     /**
      * @brief Log the specified message.
@@ -138,9 +150,9 @@ public:
      * @param errMsg Error msg if return code is not NO_ERROR
      */
     EXPORT static int getSegFileList( const std::string& dirName,
-                                bool bIncludeAlternateSegFileNames,
-                                std::vector<uint32_t>& segList,
-                                std::string& errMsg );
+                                      bool bIncludeAlternateSegFileNames,
+                                      std::vector<uint32_t>& segList,
+                                      std::string& errMsg );
 
 private:
     // Declare but don't define copy constructor and assignment operator
@@ -159,11 +171,11 @@ private:
     };
 
     void createFileDeletionEntry( OID     columnOID,
-                                bool      fileTypeFlag,
-                                uint32_t dbRoot,
-                                uint32_t partNum,
-                                uint32_t segNum,
-                                const std::string& segFileName );
+                                  bool      fileTypeFlag,
+                                  uint32_t dbRoot,
+                                  uint32_t partNum,
+                                  uint32_t segNum,
+                                  const std::string& segFileName );
     void deleteColumn1Extents ( const char* inBuf ); // delete col extents
     void deleteColumn1ExtentsV3(const char* inBuf );
     void deleteColumn1ExtentsV4(const char* inBuf );
@@ -175,11 +187,11 @@ private:
     void deleteDctnryExtentsV3( );
     void deleteDctnryExtentsV4( );
     void deleteExtents        ( std::istringstream& metaDataStream );
-                                   // function that drives extent deletion
+    // function that drives extent deletion
     void readMetaDataRecDctnry(const char* inBuf );//read meta-data dct rec
 
     void deleteSubDir         ( const std::string& metaFileName ); // delete
-                                   // subdirectory used for backup chunks
+    // subdirectory used for backup chunks
     EXPORT void closeMetaDataFile    ( ); // close a metafile
     void deleteMetaDataFiles  ( ); // delete metafiles
     int  metaDataFileExists   ( bool& exists ); // does meta-data file exists

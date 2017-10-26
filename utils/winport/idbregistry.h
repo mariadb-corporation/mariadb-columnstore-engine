@@ -20,6 +20,6 @@
 
 #include <string>
 
-const std::string IDBreadRegistry(const std::string& name, bool returnShortName=false);
+const std::string IDBreadRegistry(const std::string& name, bool returnShortName = false);
 
 #endif

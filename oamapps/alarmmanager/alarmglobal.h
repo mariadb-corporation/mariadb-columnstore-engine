@@ -25,7 +25,8 @@
 #include <string>
 #include <stdint.h>
 
-namespace alarmmanager {
+namespace alarmmanager
+{
 
 
 /** @brief constant define

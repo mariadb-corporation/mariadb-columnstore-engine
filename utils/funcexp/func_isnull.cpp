@@ -37,12 +37,12 @@ using namespace rowgroup;
 namespace funcexp
 {
 
-CalpontSystemCatalog::ColType Func_isnull::operationType (FunctionParm& fp, 
-                       CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_isnull::operationType (FunctionParm& fp,
+        CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type of idb_isnull should be the same as the argument type
-	assert (fp.size() == 1);
-	return fp[0]->data()->resultType();
+    // operation type of idb_isnull should be the same as the argument type
+    assert (fp.size() == 1);
+    return fp[0]->data()->resultType();
 }
 
 /**
@@ -51,34 +51,37 @@ CalpontSystemCatalog::ColType Func_isnull::operationType (FunctionParm& fp,
  * This would be the most commonly called API for idb_isnull function
  */
 bool Func_isnull::getBoolVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType& op_ct)
+                             FunctionParm& parm,
+                             bool& isNull,
+                             CalpontSystemCatalog::ColType& op_ct)
 {
-	switch (op_ct.colDataType)
-	{
-		// For the purpose of this function, one does not need to get the value of
-		// the argument. One only need to know if the argument is NULL. The passed
-		// in parameter isNull will be set if the parameter is evaluated NULL. 
-		// Please note that before this function returns, isNull should be set to 
-		// false, otherwise the result of the function would be considered NULL,
-		// which is not possible for idb_isnull().
+    switch (op_ct.colDataType)
+    {
+        // For the purpose of this function, one does not need to get the value of
+        // the argument. One only need to know if the argument is NULL. The passed
+        // in parameter isNull will be set if the parameter is evaluated NULL.
+        // Please note that before this function returns, isNull should be set to
+        // false, otherwise the result of the function would be considered NULL,
+        // which is not possible for idb_isnull().
         case CalpontSystemCatalog::DECIMAL:
-		case CalpontSystemCatalog::UDECIMAL:
-			parm[0]->data()->getDecimalVal(row, isNull);
-			break;
-		case CalpontSystemCatalog::CHAR:
-		case CalpontSystemCatalog::TEXT:
-		case CalpontSystemCatalog::VARCHAR:
-			parm[0]->data()->getStrVal(row, isNull);
-			break;
-		default:
-			parm[0]->data()->getIntVal(row, isNull);
-	}
-	bool ret = isNull;
-	// It's important to reset isNull indicator.
-	isNull = false;
-	return (fIsNotNull? !ret : ret);
+        case CalpontSystemCatalog::UDECIMAL:
+            parm[0]->data()->getDecimalVal(row, isNull);
+            break;
+
+        case CalpontSystemCatalog::CHAR:
+        case CalpontSystemCatalog::TEXT:
+        case CalpontSystemCatalog::VARCHAR:
+            parm[0]->data()->getStrVal(row, isNull);
+            break;
+
+        default:
+            parm[0]->data()->getIntVal(row, isNull);
+    }
+
+    bool ret = isNull;
+    // It's important to reset isNull indicator.
+    isNull = false;
+    return (fIsNotNull ? !ret : ret);
 }
 
 

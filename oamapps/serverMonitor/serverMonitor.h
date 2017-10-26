@@ -36,8 +36,8 @@
 #include <stdexcept>
 #include <pthread.h>
 #include <list>
-#include <sys/statvfs.h> 
-#include <stdio.h> 
+#include <sys/statvfs.h>
+#include <stdio.h>
 #include <sys/sysinfo.h>
 #include <string>
 #include <sys/shm.h>
@@ -64,29 +64,29 @@
 
 #define MONITOR_PERIOD 60	// 60 seconds
 
-typedef struct 
+typedef struct
 {
-	std::string processName;
-	double usedPercent;
+    std::string processName;
+    double usedPercent;
 } processCPU;
 
 typedef   std::list<processCPU> ProcessCPUList;
 
-typedef struct 
+typedef struct
 {
-	std::string processName;
-	long long usedBlocks;
-	double usedPercent;
+    std::string processName;
+    long long usedBlocks;
+    double usedPercent;
 } processMemory;
 
 typedef   std::list<processMemory> ProcessMemoryList;
 
-typedef struct 
+typedef struct
 {
-	std::string deviceName;
-	uint64_t totalBlocks;
-	uint64_t usedBlocks;
-	uint64_t usedPercent;
+    std::string deviceName;
+    uint64_t totalBlocks;
+    uint64_t usedBlocks;
+    uint64_t usedPercent;
 } SMSystemDisk;
 
 typedef   std::list<SMSystemDisk> SystemDiskList;
@@ -137,7 +137,8 @@ void diskTest();
 */
 void dbhealthMonitor();
 
-namespace servermonitor{
+namespace servermonitor
+{
 
 // Log ID
 #define SERVER_MONITOR_LOG_ID 9
@@ -155,91 +156,91 @@ public:
      * @brief Default Destructor
      */
     ~ServerMonitor();
-	
-	/**
-	* @brief send alarm
-	*/
-	void sendAlarm(std::string alarmItem, oam::ALARMS alarmID, int action, float sensorValue);
-	
-	/**
-	* @brief check alarm
-	*/
-	void checkAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
-	
-	/**
-	* @brief clear alarm
-	*/
-	void clearAlarm(std::string alarmItem, oam::ALARMS alarmID);
-	
-	/**
-	* @brief send msg to shutdown server
-	*/
-	void sendMsgShutdownServer();
-	
-	/**
-	* @brief strip off whitespaces from a string
-	*/
-	std::string StripWhitespace(std::string value);
-	
-	/**
-	* @brief log cpu usage to active log file
-	*/
-	void logCPUactive (unsigned int); 
-	
-	/**
-	* @brief log cpu peak and average to stat file
-	*/
-	void logCPUstat (int usageCount);
-	
-	/**
-	* @brief send alarm
-	*/
-	bool sendResourceAlarm(std::string alarmItem, oam::ALARMS alarmID, int action, int usage);
-	
-	/**
-	* @brief check CPU alarm
-	*/
-	void checkCPUAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
 
-	/**
-	* @brief check Disk alarm
-	*/
-	void checkDiskAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
+    /**
+    * @brief send alarm
+    */
+    void sendAlarm(std::string alarmItem, oam::ALARMS alarmID, int action, float sensorValue);
 
-	/**
-	* @brief check Memory alarm
-	*/
-	void checkMemoryAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
+    /**
+    * @brief check alarm
+    */
+    void checkAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
 
-	/**
-	* @brief check Swap alarm
-	*/
-	void checkSwapAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
+    /**
+    * @brief clear alarm
+    */
+    void clearAlarm(std::string alarmItem, oam::ALARMS alarmID);
 
-	/**
-	* @brief check Swap action
-	*/
-	void checkSwapAction();
+    /**
+    * @brief send msg to shutdown server
+    */
+    void sendMsgShutdownServer();
 
-	/**
-	* @brief output Proc Memory
-	*/
-	void outputProcMemory(bool);
+    /**
+    * @brief strip off whitespaces from a string
+    */
+    std::string StripWhitespace(std::string value);
 
-	/**
-	* @brief get CPU Data
-	*/
-	void getCPUdata();
+    /**
+    * @brief log cpu usage to active log file
+    */
+    void logCPUactive (unsigned int);
 
-	/**
-	* @brief db health check 
-	*/
-	int healthCheck(bool action = true);
-	
-	/**
-	* @brief Check Active Alarm 
-	*/
-	bool checkActiveAlarm(const int alarmid, const std::string moduleName, const std::string deviceName);
+    /**
+    * @brief log cpu peak and average to stat file
+    */
+    void logCPUstat (int usageCount);
+
+    /**
+    * @brief send alarm
+    */
+    bool sendResourceAlarm(std::string alarmItem, oam::ALARMS alarmID, int action, int usage);
+
+    /**
+    * @brief check CPU alarm
+    */
+    void checkCPUAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
+
+    /**
+    * @brief check Disk alarm
+    */
+    void checkDiskAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
+
+    /**
+    * @brief check Memory alarm
+    */
+    void checkMemoryAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
+
+    /**
+    * @brief check Swap alarm
+    */
+    void checkSwapAlarm(std::string alarmItem, oam::ALARMS alarmID = oam::ALARM_NONE);
+
+    /**
+    * @brief check Swap action
+    */
+    void checkSwapAction();
+
+    /**
+    * @brief output Proc Memory
+    */
+    void outputProcMemory(bool);
+
+    /**
+    * @brief get CPU Data
+    */
+    void getCPUdata();
+
+    /**
+    * @brief db health check
+    */
+    int healthCheck(bool action = true);
+
+    /**
+    * @brief Check Active Alarm
+    */
+    bool checkActiveAlarm(const int alarmid, const std::string moduleName, const std::string deviceName);
 
 
 }; // end of class

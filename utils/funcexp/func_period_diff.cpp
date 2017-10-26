@@ -40,117 +40,128 @@ namespace funcexp
 
 inline int64_t convert_period_to_month(int64_t period)
 {
-  int64_t a,b;
-  if (period == 0)
-    return 0L;
-  if ((a=period/100) < YY_PART_YEAR)
-    a+=2000;
-  else if (a < 100)
-    a+=1900;
-  b=period%100;
-  return a*12+b-1;
+    int64_t a, b;
+
+    if (period == 0)
+        return 0L;
+
+    if ((a = period / 100) < YY_PART_YEAR)
+        a += 2000;
+    else if (a < 100)
+        a += 1900;
+
+    b = period % 100;
+    return a * 12 + b - 1;
 }
 
 
 CalpontSystemCatalog::ColType Func_period_diff::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 int64_t Func_period_diff::getIntVal(rowgroup::Row& row,
-						FunctionParm& parm,
-						bool& isNull,
-						CalpontSystemCatalog::ColType& op_ct)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& op_ct)
 {
-	int64_t period1 = 0;
+    int64_t period1 = 0;
 
-	switch (parm[0]->data()->resultType().colDataType)
-	{
-		case execplan::CalpontSystemCatalog::BIGINT:
-		case execplan::CalpontSystemCatalog::INT:
-		case execplan::CalpontSystemCatalog::MEDINT:
-		case execplan::CalpontSystemCatalog::TINYINT:
-		case execplan::CalpontSystemCatalog::SMALLINT:
-		case execplan::CalpontSystemCatalog::DATE:
-		case execplan::CalpontSystemCatalog::DATETIME:
-		{
-			period1 = parm[0]->data()->getIntVal(row, isNull);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DECIMAL:
+    switch (parm[0]->data()->resultType().colDataType)
+    {
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::DATE:
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            period1 = parm[0]->data()->getIntVal(row, isNull);
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-		{
-			IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-			period1 = d.value / helpers::power(d.scale);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::VARCHAR:
-		case execplan::CalpontSystemCatalog::CHAR:
-		case execplan::CalpontSystemCatalog::TEXT:
-		{
-			period1 = atoi(parm[0]->data()->getStrVal(row, isNull).c_str());
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DOUBLE:
-		case execplan::CalpontSystemCatalog::FLOAT:
-		{
-			period1 = (int64_t) parm[0]->data()->getDoubleVal(row, isNull);
-			break;
-		}
-		default:
-		{
-			isNull = true;
-		}
-	}
+        {
+            IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+            period1 = d.value / helpers::power(d.scale);
+            break;
+        }
 
-	if (isNull)
-		return 0;
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
+        {
+            period1 = atoi(parm[0]->data()->getStrVal(row, isNull).c_str());
+            break;
+        }
 
-	int64_t period2 = 0;
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::FLOAT:
+        {
+            period1 = (int64_t) parm[0]->data()->getDoubleVal(row, isNull);
+            break;
+        }
 
-	switch (parm[1]->data()->resultType().colDataType)
-	{
-		case execplan::CalpontSystemCatalog::BIGINT:
-		case execplan::CalpontSystemCatalog::INT:
-		case execplan::CalpontSystemCatalog::MEDINT:
-		case execplan::CalpontSystemCatalog::TINYINT:
-		case execplan::CalpontSystemCatalog::SMALLINT:
-		case execplan::CalpontSystemCatalog::DATE:
-		case execplan::CalpontSystemCatalog::DATETIME:
-		{
-			period2 = parm[1]->data()->getIntVal(row, isNull);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DECIMAL:
+        default:
+        {
+            isNull = true;
+        }
+    }
+
+    if (isNull)
+        return 0;
+
+    int64_t period2 = 0;
+
+    switch (parm[1]->data()->resultType().colDataType)
+    {
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::DATE:
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            period2 = parm[1]->data()->getIntVal(row, isNull);
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-		{
-			IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
-			period2 = d.value / helpers::power(d.scale);
-			break;
-		}
-		case execplan::CalpontSystemCatalog::VARCHAR:
-		case execplan::CalpontSystemCatalog::CHAR:
-		case execplan::CalpontSystemCatalog::TEXT:
-		{
-			period2 = atoi(parm[1]->data()->getStrVal(row, isNull).c_str());
-			break;
-		}
-		case execplan::CalpontSystemCatalog::DOUBLE:
-		case execplan::CalpontSystemCatalog::FLOAT:
-		{
-			period2 = (int64_t) parm[1]->data()->getDoubleVal(row, isNull);
-			break;
-		}
-		default:
-		{
-			isNull = true;
-		}
-	}
+        {
+            IDB_Decimal d = parm[1]->data()->getDecimalVal(row, isNull);
+            period2 = d.value / helpers::power(d.scale);
+            break;
+        }
 
-	if (isNull)
-		return 0;
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
+        {
+            period2 = atoi(parm[1]->data()->getStrVal(row, isNull).c_str());
+            break;
+        }
 
-	return convert_period_to_month(period1) - convert_period_to_month(period2);
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::FLOAT:
+        {
+            period2 = (int64_t) parm[1]->data()->getDoubleVal(row, isNull);
+            break;
+        }
+
+        default:
+        {
+            isNull = true;
+        }
+    }
+
+    if (isNull)
+        return 0;
+
+    return convert_period_to_month(period1) - convert_period_to_month(period2);
 }
 
 

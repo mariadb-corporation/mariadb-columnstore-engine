@@ -20,10 +20,10 @@
  * We want free and open source software applications under certain
  * licenses to be able to use the GPL-licensed InfiniDB idbhdfs
  * libraries despite the fact that not all such FOSS licenses are
- * compatible with version 2 of the GNU General Public License.  
- * Therefore there are special exceptions to the terms and conditions 
- * of the GPLv2 as applied to idbhdfs libraries, which are 
- * identified and described in more detail in the FOSS License 
+ * compatible with version 2 of the GNU General Public License.
+ * Therefore there are special exceptions to the terms and conditions
+ * of the GPLv2 as applied to idbhdfs libraries, which are
+ * identified and described in more detail in the FOSS License
  * Exception in the file utils/idbhdfs/FOSS-EXCEPTION.txt
  */
 
@@ -49,13 +49,13 @@ namespace idbdatafile
 class HdfsFsCache
 {
 public:
-	/**
-	 * accessor method to retrieve the hdfsFS handle
-	 */
-	static hdfsFS fs();
+    /**
+     * accessor method to retrieve the hdfsFS handle
+     */
+    static hdfsFS fs();
 
 private:
-	static hdfsFS s_fs;
+    static hdfsFS s_fs;
 };
 
 }

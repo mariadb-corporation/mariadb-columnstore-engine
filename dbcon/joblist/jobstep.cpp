@@ -24,7 +24,7 @@ using namespace std;
 #include <boost/thread.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
-namespace bu=boost::uuids;
+namespace bu = boost::uuids;
 
 #include "configcpp.h"
 using namespace config;
@@ -47,8 +47,9 @@ namespace
 
 int toInt(const string& val)
 {
-	if (val.length() == 0) return -1;
-	return static_cast<int>(config::Config::fromText(val));
+    if (val.length() == 0) return -1;
+
+    return static_cast<int>(config::Config::fromText(val));
 }
 }
 
@@ -68,49 +69,52 @@ ostream& operator<<(ostream& os, const JobStep* rhs)
 // constructor
 //------------------------------------------------------------------------------
 JobStep::JobStep(const JobInfo& j) :
-        fSessionId(j.sessionId),
-        fTxnId(j.txnId),
-        fVerId(j.verId),
-        fStatementId(j.statementId),
-        fStepId(0),
-        fTupleId(-1),
-        fTraceFlags(0),
-        fCardinality(0),
-        fDelayedRunFlag(false),
-        fDelivery(false),
-        fOnClauseFilter(false),
-        fDie(false),
-        fWaitToRunStepCnt(0),
-        fPriority(1),
-        fErrorInfo(j.errorInfo),
-        fLogger(j.logger),
-        fLocalQuery(j.localQuery),
-        fQueryUuid(j.uuid),
-		fProgress(0),
-		fStartTime(-1)
+    fSessionId(j.sessionId),
+    fTxnId(j.txnId),
+    fVerId(j.verId),
+    fStatementId(j.statementId),
+    fStepId(0),
+    fTupleId(-1),
+    fTraceFlags(0),
+    fCardinality(0),
+    fDelayedRunFlag(false),
+    fDelivery(false),
+    fOnClauseFilter(false),
+    fDie(false),
+    fWaitToRunStepCnt(0),
+    fPriority(1),
+    fErrorInfo(j.errorInfo),
+    fLogger(j.logger),
+    fLocalQuery(j.localQuery),
+    fQueryUuid(j.uuid),
+    fProgress(0),
+    fStartTime(-1)
 {
-	QueryTeleServerParms tsp;
-	string teleServerHost(Config::makeConfig()->getConfig("QueryTele", "Host"));
-	if (!teleServerHost.empty())
-	{
-		int teleServerPort = toInt(Config::makeConfig()->getConfig("QueryTele", "Port"));
-		if (teleServerPort > 0)
-		{
-			tsp.host = teleServerHost;
-			tsp.port = teleServerPort;
-		}
-	}
-	fQtc.serverParms(tsp);
-	//fStepUuid = bu::random_generator()();
-	fStepUuid = QueryTeleClient::genUUID();
+    QueryTeleServerParms tsp;
+    string teleServerHost(Config::makeConfig()->getConfig("QueryTele", "Host"));
+
+    if (!teleServerHost.empty())
+    {
+        int teleServerPort = toInt(Config::makeConfig()->getConfig("QueryTele", "Port"));
+
+        if (teleServerPort > 0)
+        {
+            tsp.host = teleServerHost;
+            tsp.port = teleServerPort;
+        }
+    }
+
+    fQtc.serverParms(tsp);
+    //fStepUuid = bu::random_generator()();
+    fStepUuid = QueryTeleClient::genUUID();
 }
 
 //------------------------------------------------------------------------------
 // Log a syslog msg for the start of this specified job step
 //------------------------------------------------------------------------------
 void JobStep::syslogStartStep (
-        uint32_t subSystem,
-        const string& stepName) const
+    uint32_t subSystem,
+    const string& stepName) const
 {
     LoggingID  logId  ( subSystem, sessionId(), txnId() );
     MessageLog msgLog ( logId );
@@ -128,11 +132,11 @@ void JobStep::syslogStartStep (
 // Log a syslog message for the end of this specified job step
 //------------------------------------------------------------------------------
 void JobStep::syslogEndStep (
-        uint32_t subSystem,
-        uint64_t blockedDLInput,
-        uint64_t blockedDLOutput,
-        uint64_t msgBytesInput,
-        uint64_t msgBytesOutput) const
+    uint32_t subSystem,
+    uint64_t blockedDLInput,
+    uint64_t blockedDLOutput,
+    uint64_t msgBytesInput,
+    uint64_t msgBytesOutput) const
 {
     LoggingID  logId  ( subSystem, sessionId(), txnId() );
     MessageLog msgLog ( logId );
@@ -153,10 +157,10 @@ void JobStep::syslogEndStep (
 // Log a syslog message for the physical vs cache block I/O counts
 //------------------------------------------------------------------------------
 void JobStep::syslogReadBlockCounts (
-        uint32_t subSystem,
-        uint64_t physicalReadCount,
-        uint64_t cacheReadCount,
-        uint64_t casualPartBlocks) const
+    uint32_t subSystem,
+    uint64_t physicalReadCount,
+    uint64_t cacheReadCount,
+    uint64_t casualPartBlocks) const
 {
     LoggingID  logId  ( subSystem, sessionId(), txnId() );
     MessageLog msgLog ( logId );
@@ -178,11 +182,11 @@ void JobStep::syslogReadBlockCounts (
 // (lastWriteTime denotes when the EndOfInput marker was written out).
 //------------------------------------------------------------------------------
 void JobStep::syslogProcessingTimes (
-        uint32_t subSystem,
-        const struct timeval&   firstReadTime,
-        const struct timeval&   lastReadTime,
-        const struct timeval&   firstWriteTime,
-        const struct timeval&   lastWriteTime) const
+    uint32_t subSystem,
+    const struct timeval&   firstReadTime,
+    const struct timeval&   lastReadTime,
+    const struct timeval&   firstWriteTime,
+    const struct timeval&   lastWriteTime) const
 {
     LoggingID  logId  ( subSystem, sessionId(), txnId() );
     MessageLog msgLog ( logId );

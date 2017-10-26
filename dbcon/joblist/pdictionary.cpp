@@ -91,31 +91,31 @@ namespace joblist
 
 
 pDictionaryStep::pDictionaryStep(
-	CalpontSystemCatalog::OID o,
-	CalpontSystemCatalog::OID t,
-	const CalpontSystemCatalog::ColType& ct,
-	const JobInfo& jobInfo) :
-	JobStep(jobInfo),
-	fOid(o),
-	fTableOid(t),
-	fBOP(BOP_NONE),
-	msgsSent(0),
-	msgsRecvd(0),
-	finishedSending(false),
-	recvWaiting(false),
-	ridCount(0),
-	fColType(ct),
-	pThread(0),
-	cThread(0),
-	fFilterCount(0),
-	requestList(0),
-	fInterval(jobInfo.flushInterval),
-	fPhysicalIO(0),
-	fCacheIO(0),
-	fMsgBytesIn(0),
-	fMsgBytesOut(0),
-	fRm(jobInfo.rm),
-	hasEqualityFilter(false)
+    CalpontSystemCatalog::OID o,
+    CalpontSystemCatalog::OID t,
+    const CalpontSystemCatalog::ColType& ct,
+    const JobInfo& jobInfo) :
+    JobStep(jobInfo),
+    fOid(o),
+    fTableOid(t),
+    fBOP(BOP_NONE),
+    msgsSent(0),
+    msgsRecvd(0),
+    finishedSending(false),
+    recvWaiting(false),
+    ridCount(0),
+    fColType(ct),
+    pThread(0),
+    cThread(0),
+    fFilterCount(0),
+    requestList(0),
+    fInterval(jobInfo.flushInterval),
+    fPhysicalIO(0),
+    fCacheIO(0),
+    fMsgBytesIn(0),
+    fMsgBytesOut(0),
+    fRm(jobInfo.rm),
+    hasEqualityFilter(false)
 {
 //	uniqueID = UniqueNumberGenerator::instance()->getUnique32();
 
@@ -162,33 +162,37 @@ void pDictionaryStep::join()
 
 void pDictionaryStep::setInputList(DataList_t* dl)
 {
-	requestList = dl;
+    requestList = dl;
 }
 
 void pDictionaryStep::setBOP(int8_t b)
 {
-	fBOP = b;
+    fBOP = b;
 }
 
 void pDictionaryStep::addFilter(int8_t COP, const string& value)
 {
-	fFilterString << (uint8_t) COP;
-	fFilterString << (uint16_t) value.size();
-	fFilterString.append((const uint8_t *) value.c_str(), value.size());
-	fFilterCount++;
-	if (fFilterCount == 1 && (COP == COMPARE_EQ || COP == COMPARE_NE)) {
-		hasEqualityFilter = true;
-		tmpCOP = COP;
-	}
+    fFilterString << (uint8_t) COP;
+    fFilterString << (uint16_t) value.size();
+    fFilterString.append((const uint8_t*) value.c_str(), value.size());
+    fFilterCount++;
 
-	if (hasEqualityFilter) {
-		if (COP != tmpCOP) {
-			hasEqualityFilter = false;
-			eqFilter.clear();
-		}
-		else
-			eqFilter.push_back(value);
-	}
+    if (fFilterCount == 1 && (COP == COMPARE_EQ || COP == COMPARE_NE))
+    {
+        hasEqualityFilter = true;
+        tmpCOP = COP;
+    }
+
+    if (hasEqualityFilter)
+    {
+        if (COP != tmpCOP)
+        {
+            hasEqualityFilter = false;
+            eqFilter.clear();
+        }
+        else
+            eqFilter.push_back(value);
+    }
 }
 
 void pDictionaryStep::sendPrimitiveMessages()
@@ -510,44 +514,49 @@ void pDictionaryStep::receivePrimitiveMessages()
 
 const string pDictionaryStep::toString() const
 {
-	ostringstream oss;
+    ostringstream oss;
 
-	oss << "pDictionaryStep ses:"
-		<< fSessionId << " txn:"
-		<< fTxnId 	<< " ver:"
-		<< fVerId 	<< " st:"
-		<< fStepId 	<< " tb/col:"
-		<< fTableOid << "/" << fOid;
-	oss << " " << omitOidInDL
-		<< fOutputJobStepAssociation.outAt(0) << showOidInDL;
-	oss << " in:";
-	for (unsigned i = 0; i < fInputJobStepAssociation.outSize(); i++)
-	{
-		oss << fInputJobStepAssociation.outAt(i) << ", ";
-	}
+    oss << "pDictionaryStep ses:"
+        << fSessionId << " txn:"
+        << fTxnId 	<< " ver:"
+        << fVerId 	<< " st:"
+        << fStepId 	<< " tb/col:"
+        << fTableOid << "/" << fOid;
+    oss << " " << omitOidInDL
+        << fOutputJobStepAssociation.outAt(0) << showOidInDL;
+    oss << " in:";
+
+    for (unsigned i = 0; i < fInputJobStepAssociation.outSize(); i++)
+    {
+        oss << fInputJobStepAssociation.outAt(i) << ", ";
+    }
+
 #ifdef FIFO_SINK
-	if (fOid < 3000))
-		oss << " (sink)";
+
+    if (fOid < 3000))
+        oss << " (sink)";
+
 #endif
-	return oss.str();
-}
+        return oss.str();
+    }
 
 void pDictionaryStep::appendFilter(const messageqcpp::ByteStream& filter, unsigned count)
 {
-	ByteStream bs(filter);  // need to preserve the input BS
-	uint8_t *buf;
-	uint8_t COP;
-	uint16_t size;
-	string value;
+    ByteStream bs(filter);  // need to preserve the input BS
+    uint8_t* buf;
+    uint8_t COP;
+    uint16_t size;
+    string value;
 
-	while (bs.length() > 0) {
-		bs >> COP;
-		bs >> size;
-		buf = bs.buf();
-		value = string((char *) buf, size);
-		addFilter(COP, value);
-		bs.advance(size);
-	}
+    while (bs.length() > 0)
+    {
+        bs >> COP;
+        bs >> size;
+        buf = bs.buf();
+        value = string((char*) buf, size);
+        addFilter(COP, value);
+        bs.advance(size);
+    }
 
 
 
@@ -560,7 +569,7 @@ void pDictionaryStep::appendFilter(const messageqcpp::ByteStream& filter, unsign
 void pDictionaryStep::addFilter(const Filter* f)
 {
     if (NULL != f)
-    	fFilters.push_back(f);
+        fFilters.push_back(f);
 }
 
 

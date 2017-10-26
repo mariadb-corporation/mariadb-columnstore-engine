@@ -36,81 +36,86 @@ using namespace dataconvert;
 
 class to_upper
 {
-    public:
-        char operator() (char c) const            // notice the return type
-        {
-            return toupper(c);
-        }
+public:
+    char operator() (char c) const            // notice the return type
+    {
+        return toupper(c);
+    }
 };
 
 
 namespace funcexp
 {
 
-string known_date_time_formats[5][4]=
+string known_date_time_formats[5][4] =
 {
-  {"USA", "%m.%d.%Y", "%Y-%m-%d %H.%i.%s", "%h:%i:%s %p" },
-  {"JIS", "%Y-%m-%d", "%Y-%m-%d %H:%i:%s", "%H:%i:%s" },
-  {"ISO", "%Y-%m-%d", "%Y-%m-%d %H:%i:%s", "%H:%i:%s" },
-  {"EUR", "%d.%m.%Y", "%Y-%m-%d %H.%i.%s", "%H.%i.%s" },
-  {"INTERNAL", "%Y%m%d",   "%Y%m%d%H%i%s", "%H%i%s" }
+    {"USA", "%m.%d.%Y", "%Y-%m-%d %H.%i.%s", "%h:%i:%s %p" },
+    {"JIS", "%Y-%m-%d", "%Y-%m-%d %H:%i:%s", "%H:%i:%s" },
+    {"ISO", "%Y-%m-%d", "%Y-%m-%d %H:%i:%s", "%H:%i:%s" },
+    {"EUR", "%d.%m.%Y", "%Y-%m-%d %H.%i.%s", "%H.%i.%s" },
+    {"INTERNAL", "%Y%m%d",   "%Y%m%d%H%i%s", "%H%i%s" }
 };
 
-string know_types[3]=
+string know_types[3] =
 {
-	"DATE", "DATETIME", "TIME"
+    "DATE", "DATETIME", "TIME"
 };
 
 CalpontSystemCatalog::ColType Func_get_format::operationType( FunctionParm& fp, CalpontSystemCatalog::ColType& resultType )
 {
-	return resultType;
+    return resultType;
 }
 
 string Func_get_format::getStrVal(rowgroup::Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                                  FunctionParm& parm,
+                                  bool& isNull,
+                                  CalpontSystemCatalog::ColType&)
 {
-	// parm[0] -- format
-	// parm[1] -- type
-	string format = parm[0]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    // parm[0] -- format
+    // parm[1] -- type
+    string format = parm[0]->data()->getStrVal(row, isNull);
 
-	transform (format.begin(), format.end(), format.begin(), to_upper());
+    if (isNull)
+        return "";
 
-	string type = parm[1]->data()->getStrVal(row, isNull);
-	if (isNull)
-		return "";
+    transform (format.begin(), format.end(), format.begin(), to_upper());
 
-	transform (type.begin(), type.end(), type.begin(), to_upper());
+    string type = parm[1]->data()->getStrVal(row, isNull);
 
-	int itype = 0;
-	for ( ; itype < 3 ; itype++ )
-	{
-		if ( know_types[itype] == type )
-			break;
-	}
+    if (isNull)
+        return "";
 
-	// check for match
-	if ( itype == 3 )
-		return "";
+    transform (type.begin(), type.end(), type.begin(), to_upper());
 
-	for ( int i = 0 ; i < 5 ; i ++ )
-	{
-		if ( known_date_time_formats[i][0] == format )
-		{
-			switch (itype) {
-				case 0:
-					return known_date_time_formats[i][2];
-					break;
-				default:
-					return "";
-			}
-		}
-	}
+    int itype = 0;
 
-	return "";
+    for ( ; itype < 3 ; itype++ )
+    {
+        if ( know_types[itype] == type )
+            break;
+    }
+
+    // check for match
+    if ( itype == 3 )
+        return "";
+
+    for ( int i = 0 ; i < 5 ; i ++ )
+    {
+        if ( known_date_time_formats[i][0] == format )
+        {
+            switch (itype)
+            {
+                case 0:
+                    return known_date_time_formats[i][2];
+                    break;
+
+                default:
+                    return "";
+            }
+        }
+    }
+
+    return "";
 }
 
 

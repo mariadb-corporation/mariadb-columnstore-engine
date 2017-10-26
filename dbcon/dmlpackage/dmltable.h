@@ -51,23 +51,38 @@ public:
 
     /** @brief get the schema name
       */
-    inline const std::string get_SchemaName() const { return fSchema; }
+    inline const std::string get_SchemaName() const
+    {
+        return fSchema;
+    }
 
     /** @brief set the schema name
       */
-    inline void set_SchemaName( std::string& sName ) { fSchema = sName; }
+    inline void set_SchemaName( std::string& sName )
+    {
+        fSchema = sName;
+    }
 
     /** @brief get the table name
       */
-    inline const std::string get_TableName() const { return fName; }
+    inline const std::string get_TableName() const
+    {
+        return fName;
+    }
 
     /** @brief set the table name
       */
-    inline void set_TableName( std::string& tName ) { fName = tName; }
+    inline void set_TableName( std::string& tName )
+    {
+        fName = tName;
+    }
 
     /** @brief get the row list
       */
-    inline RowList& get_RowList() { return fRows; }
+    inline RowList& get_RowList()
+    {
+        return fRows;
+    }
 
     /** @brief read a DMLTable from a ByteStream
       *

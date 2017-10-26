@@ -9,11 +9,13 @@
 
 #include "querytele_types.h"
 
-namespace querytele {
+namespace querytele
+{
 
-class queryteleConstants {
- public:
-  queryteleConstants();
+class queryteleConstants
+{
+public:
+    queryteleConstants();
 
 };
 

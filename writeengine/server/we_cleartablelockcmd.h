@@ -28,34 +28,35 @@
 
 #include "writeengine.h"
 
-namespace WriteEngine {
+namespace WriteEngine
+{
 
 /** @brief Process messages from a cleartablelock or filesplitter client
  */
 class WE_ClearTableLockCmd
 {
 public:
-	/** @brief WE_ClearTableLockCmd constructor
-	 */
-	WE_ClearTableLockCmd(const char* userDesc) : fUserDesc(userDesc) { }
+    /** @brief WE_ClearTableLockCmd constructor
+     */
+    WE_ClearTableLockCmd(const char* userDesc) : fUserDesc(userDesc) { }
 
-	/** @brief Process bulk rollback request
-	 *  @param ibs Input byte stream
-	 *  @param errMsg Return error message
-	 */
-	int processRollback(messageqcpp::ByteStream& ibs,
-						std::string& errMsg);
+    /** @brief Process bulk rollback request
+     *  @param ibs Input byte stream
+     *  @param errMsg Return error message
+     */
+    int processRollback(messageqcpp::ByteStream& ibs,
+                        std::string& errMsg);
 
-	/** @brief Process bulk rollback cleanup request
-	 *  @param ibs Input byte stream
-	 *  @param errMsg Return error message
-	 */
-	int processCleanup (messageqcpp::ByteStream& ibs,
-						std::string& errMsg);
+    /** @brief Process bulk rollback cleanup request
+     *  @param ibs Input byte stream
+     *  @param errMsg Return error message
+     */
+    int processCleanup (messageqcpp::ByteStream& ibs,
+                        std::string& errMsg);
 
 private:
-	WriteEngineWrapper fWEWrapper; // WriteEngineWrapper object
-	std::string fUserDesc;
+    WriteEngineWrapper fWEWrapper; // WriteEngineWrapper object
+    std::string fUserDesc;
 };
 
 }

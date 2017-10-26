@@ -31,44 +31,48 @@ namespace po = boost::program_options;
 
 int main(int argc, char* argv[])
 {
-	string sqlfile;
-	int count;
+    string sqlfile;
+    int count;
 
- 	po::options_description desc ("Allowed options");
-  	desc.add_options ()
- 		("help", "produce help message")
-		("bisond", /* po::value <string>(),*/ "Have bison produce debug output")
-		("count", po::value <int>(), "number of runs")
- 		("sql", po::value < string > (), "sql file");
- 	po::variables_map vm;
-  	po::store (po::parse_command_line (argc, argv, desc), vm);
-  	po::notify (vm);
-  	if (vm.count ("sql"))
-  		sqlfile = vm["sql"].as <string> ();
+    po::options_description desc ("Allowed options");
+    desc.add_options ()
+    ("help", "produce help message")
+    ("bisond", /* po::value <string>(),*/ "Have bison produce debug output")
+    ("count", po::value <int>(), "number of runs")
+    ("sql", po::value < string > (), "sql file");
+    po::variables_map vm;
+    po::store (po::parse_command_line (argc, argv, desc), vm);
+    po::notify (vm);
+
+    if (vm.count ("sql"))
+        sqlfile = vm["sql"].as <string> ();
 
 
-	if (vm.count("count"))
-		count = vm["count"].as<int>();
-	
-	SqlFileParser parser;
-	if (vm.count ("bisond"))
-		parser.SetDebug(true);
-		
- 	parser.Parse(sqlfile);
+    if (vm.count("count"))
+        count = vm["count"].as<int>();
 
-	if(parser.Good()) {
-		const ParseTree &ptree = parser.GetParseTree();
+    SqlFileParser parser;
 
-		cout << "Parser succeeded." << endl;
-		cout << ptree.fList.size() << " " << "SQL statements" << endl;
-		cout << ptree;
-		cout << endl;
-	}
-	else {
-		cout << "Parser failed." << endl;
-	}
-	
-	return parser.Good() ? 0 : -1;
+    if (vm.count ("bisond"))
+        parser.SetDebug(true);
+
+    parser.Parse(sqlfile);
+
+    if (parser.Good())
+    {
+        const ParseTree& ptree = parser.GetParseTree();
+
+        cout << "Parser succeeded." << endl;
+        cout << ptree.fList.size() << " " << "SQL statements" << endl;
+        cout << ptree;
+        cout << endl;
+    }
+    else
+    {
+        cout << "Parser failed." << endl;
+    }
+
+    return parser.Good() ? 0 : -1;
 }
 
 

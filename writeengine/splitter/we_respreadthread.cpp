@@ -39,24 +39,24 @@ namespace WriteEngine
 {
 
 WERespReadThread::WERespReadThread(WESDHandler& aSdh):
-		fSdh(aSdh)
+    fSdh(aSdh)
 {
-	// ctor
+    // ctor
 }
 WERespReadThread::WERespReadThread(const WERespReadThread& rhs):
-		fSdh(rhs.fSdh)
+    fSdh(rhs.fSdh)
 {
-	// copy ctor
+    // copy ctor
 }
 WERespReadThread::~WERespReadThread()
 {
-	// dtor
+    // dtor
 }
 
 void WERespReadThread::operator()()
 {
-	//call datahandler checkForAllPmMsgs()
-	fSdh.checkForRespMsgs();
+    //call datahandler checkForAllPmMsgs()
+    fSdh.checkForRespMsgs();
 }
 
 

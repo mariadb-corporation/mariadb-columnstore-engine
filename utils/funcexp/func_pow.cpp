@@ -47,45 +47,46 @@ namespace funcexp
 
 CalpontSystemCatalog::ColType Func_pow::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
-	// operation type is not used by this functor
-	return fp[0]->data()->resultType();
+    // operation type is not used by this functor
+    return fp[0]->data()->resultType();
 }
 
 
 double Func_pow::getDoubleVal(Row& row,
-							FunctionParm& parm,
-							bool& isNull,
-							CalpontSystemCatalog::ColType&)
+                              FunctionParm& parm,
+                              bool& isNull,
+                              CalpontSystemCatalog::ColType&)
 {
-	// null value is indicated by isNull
-	double base = parm[0]->data()->getDoubleVal(row, isNull);
-	if (!isNull)
-	{
-		double exponent = parm[1]->data()->getDoubleVal(row, isNull); 
+    // null value is indicated by isNull
+    double base = parm[0]->data()->getDoubleVal(row, isNull);
 
-		if (!isNull)
-		{
-			errno = 0;
-			double x = pow(base, exponent);
+    if (!isNull)
+    {
+        double exponent = parm[1]->data()->getDoubleVal(row, isNull);
 
-			// @bug3490, 4461, rule out domain error, pole error and overflow range error.
-			if (!isfinite(x))
-			{
-				isNull = true;
+        if (!isNull)
+        {
+            errno = 0;
+            double x = pow(base, exponent);
+
+            // @bug3490, 4461, rule out domain error, pole error and overflow range error.
+            if (!isfinite(x))
+            {
+                isNull = true;
                 Message::Args args;
                 args.add("pow");
                 args.add(base);
                 args.add(exponent);
                 unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
                 throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-			}
+            }
 
 
-			return x;
-		}
-	}
+            return x;
+        }
+    }
 
-	return 0.0;
+    return 0.0;
 }
 
 
