@@ -1472,6 +1472,19 @@ int main(int argc, char *argv[])
 					catch(...)
 					{}
 				}
+				if ( !DataRedundancyConfig.empty() ) {
+					try {
+						string dbrootPMsID = "DBRoot" + oam.itoa(id) + "PMs";
+						string dbrootPMs = sysConfigOld->getConfig("DataRedundancyConfig", dbrootPMsID);
+						try {
+							sysConfigNew->setConfig("DataRedundancyConfig", dbrootPMsID, dbrootPMs);
+						}
+						catch(...)
+						{}
+					}
+					catch(...)
+					{}
+				}
 			}
 		}
 		catch (exception& e)
