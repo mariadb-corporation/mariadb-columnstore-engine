@@ -2655,7 +2655,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 			}
 		}
 
-		if (!lhs->data() || !rhs->data() || nonSupport)
+		if (nonSupport || !lhs->data() || !rhs->data())
 		{
 			gwi.fatalParseError = true;
 			if (gwi.parseErrorText.empty())
@@ -2688,7 +2688,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 				gwi.rcWorkStack.pop();
 			}
 		}
-		if (!rhs->data() || nonSupport)
+		if (nonSupport || !rhs->data())
 		{
 			gwi.fatalParseError = true;
 			if (gwi.parseErrorText.empty())
@@ -3606,6 +3606,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             else
             {
                 rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
+				if (!rc || gwi.fatalParseError)
+				{
+					return NULL;
+				}
             }
             // 10.2 TODO: direction is now a tri-state flag
 			rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);

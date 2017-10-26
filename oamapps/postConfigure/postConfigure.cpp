@@ -23,7 +23,7 @@
 * List of files being updated by post-install configure:
 *		mariadb/columnstore/etc/Columnstore.xml
 *		mariadb/columnstore/etc/ProcessConfig.xml
-*		/etc/rc.local
+*		/etc/rc.d/rc.local
 *		
 ******************************************************************************************/
 /**
@@ -191,7 +191,7 @@ string installDir;
 string HOME = "/root";
 
 extern string pwprompt;
-string mysqlpw = " ";
+string mysqlpw = oam::UnassignedName;
 
 extern const char* pcommand;
 extern string prompt;
@@ -458,14 +458,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-        //if binary install, then run post-install just in case the user didnt run it
-    	if ( EEPackageType == "binary" )
-    	{
-        	//run post install
-        	cmd = installDir + "/bin/post-install --installdir=" + installDir + " > /dev/null 2>&1";
-        	system(cmd.c_str());
-    	}
-
 	//check for local ip address as pm1
 	ModuleConfig moduleconfig;
 
@@ -592,11 +584,6 @@ int main(int argc, char *argv[])
 		{}
 	}
 
-	try {
-		oam.setSystemConfig("MySQLPasswordConfig", oam::UnassignedName);
-	}
-	catch(...) {}
-
 	//check for non-Distributed Install
 	if ( nonDistribute )
 	{
@@ -616,6 +603,13 @@ int main(int argc, char *argv[])
 	    
 	    if ( DistributedInstall == "n" )
 		nonDistribute = true;
+	}
+	
+	// setup to start on reboot, for non-root amazon installs
+	if ( !rootUser )
+	{
+	    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+	    system("sudo chmod 777 /etc/rc.d/rc.local >/dev/null 2>&1");
 	}
 	
 	cout << endl;
@@ -1071,10 +1065,6 @@ int main(int argc, char *argv[])
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
 		}
-		
-		// setup to start on reboot
-		system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-		system("sudo chmod 777 /etc/rc.d/rc.local >/dev/null 2>&1");
 	}
 	
 	if ( pmwithum )
@@ -2947,143 +2937,149 @@ int main(int argc, char *argv[])
 							string temppwprompt = pwprompt;
 							if ( pwprompt == " " )
 								temppwprompt = "none";
+              
+              //run remote installer script
+					    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
-							//run remote installer script
-							cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
+					    if ( thread_remote_installer ) {
+						    thr_data[thread_id].command = cmd;
 
-							if ( thread_remote_installer ) {
-								thr_data[thread_id].command = cmd;
+						    int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
+				    
+						    if ( status != 0 )
+						    {
+							    cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
+							    exit (1);
+						    }
+						    thread_id++;
+					    }
+					    else
+					    {
+						    int rtnCode = system(cmd.c_str());
+						    if (WEXITSTATUS(rtnCode) != 0) {
+							    cout << endl << "Error returned from package_installer.sh" << endl;
+							    exit(1);
+						    }
 
-								int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
+						    //check for mysql password on remote UM
+/*						    if ( pwprompt == " " ) {
+							    //start mysqld
+							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
+							    int rtnCode = system(cmd.c_str());
+							    if (WEXITSTATUS(rtnCode) != 0) {
+								    cout << endl << "Error returned from mysql-Columnstore start" << endl;
+								    exit(1);
+							    }
 
-								if ( status != 0 )
-								{
-									cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
-									exit (1);
-								}
-								thread_id++;
-							}
-							else
-							{
-								int rtnCode = system(cmd.c_str());
-								if (WEXITSTATUS(rtnCode) != 0) {
-									cout << endl << "Error returned from package_installer.sh" << endl;
-									exit(1);
-								}
+							    //try to login
+							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+							    rtnCode = system(cmd.c_str());
+							    if (WEXITSTATUS(rtnCode) != 0) {
+								    cout << endl << "Error returned from remote_command.sh" << endl;
+								    exit(1);
+							    }
+    
+							    if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR .my.cnf") ) {
+								    // password needed check and get password from remote UM
+								    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
+								    rtnCode = system(cmd.c_str());
+								    if (WEXITSTATUS(rtnCode) != 0) {
+									    cout << endl << "MariaDB ColumnStore login failure, MySQL Root password is set." << endl;
+									    cout <<  "Need MariaDB ColumnStore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
+									    exit(1);
+								    }
 
-								//check for mysql password on remote UM
-								if ( pwprompt == " " ) {
-									//start mysqld
-									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore start'";
-									int rtnCode = system(cmd.c_str());
-									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "Error returned from mysql-Columnstore start" << endl;
-										exit(1);
-									}
+								    //get password from local tmp file
+								    try {
+									mysqlpw = oam.getMySQLPassword();
+								    }
+								    catch(...)
+								    {
+									mysqlpw = oam::UnassignedName;
+								    }
+								    
+								    if ( mysqlpw != oam::UnassignedName )
+								    {
+									    mysqlpw = "'" + mysqlpw + "'";
+									    pwprompt = "--password=" + mysqlpw;
+								    }
 
-									//try to login
-									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
-									rtnCode = system(cmd.c_str());
-									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "Error returned from remote_command.sh" << endl;
-										exit(1);
-									}
+								    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+								    rtnCode = system(cmd.c_str());
+								    if (WEXITSTATUS(rtnCode) != 0) {
+									    cout << endl << "MariaDB ColumnStore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
+									    exit(1);
+								    }
+							    }
+							    else
+							    {
+								    if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
+									    cout << endl << "ERROR: MariaDB ColumnStore runtime error, exit..." << endl << endl;
+									    system("cat /tmp/idbmysql.log");
+									    exit (1);
+								    }
+								    else
+								    {
+									    cout << endl << "Additional MariaDB ColumnStore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
 
-									if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR .my.cnf") ) {
-										// password needed check and get password from remote UM
-										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "bin/getMySQLpw > /tmp/mysqlpw.log 2>&1";
-										rtnCode = system(cmd.c_str());
-										if (WEXITSTATUS(rtnCode) != 0) {
-											cout << endl << "MariaDB ColumnStore login failure, MySQL Root password is set." << endl;
-											cout <<  "Need MariaDB ColumnStore password configuration file " + HOME + "/.my.cnf on " << remoteModuleName << endl;
-											exit(1);
-										}
+									    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
+									    int rtnCode = system(cmd.c_str());
+									    if (WEXITSTATUS(rtnCode) != 0) {
+										    cout << endl << "Error returned from mysql-Columnstore stop" << endl;
+										    exit(1);
+									    }
+									    unlink("/tmp/idbmysql.log");
+									    break;
+								    }
+							    }
+    
+							    //re-run post-mysql-install with password
+							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "' < /tmp/post-mysql-install.log";
+							    rtnCode = system(cmd.c_str());
+							    if (WEXITSTATUS(rtnCode) != 0) {
+								    cout << endl << "Error returned from post-mysql-install, check /tmp/post-mysql-install.log" << endl;
+								    exit(1);
+							    }
+							    else
+								    cout << endl << "post-mysql-install Successfully Completed" << endl;
+						    }
+*/					    }
+				    }
+				    else
+				    {	// do a binary package install
+					    string binservertype = serverTypeInstall;
+					    if ( pmwithum )
+						    binservertype = "pmwithum";
 
-										//get password from local tmp file
-										mysqlpw = getmysqlpw("/tmp/mysqlpw.log");
+					    cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
+						    remoteModuleIP + " " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " + remote_installer_debug +
+						    " " + installDir + " " + debug_logfile;
+					    
+					    if ( thread_remote_installer ) {
+						    thr_data[thread_id].command = cmd;
 
-										if ( mysqlpw != oam::UnassignedName )
-										{
-											mysqlpw = "'" + mysqlpw + "'";
-											pwprompt = "--password=" + mysqlpw;
-										}
-
-										cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
-										rtnCode = system(cmd.c_str());
-										if (WEXITSTATUS(rtnCode) != 0) {
-											cout << endl << "MariaDB ColumnStore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;
-											exit(1);
-										}
-									}
-									else
-									{
-										if (!oam.checkLogStatus("/tmp/idbmysql.log", "Columnstore") ) {
-											cout << endl << "ERROR: MariaDB ColumnStore runtime error, exit..." << endl << endl;
-											system("cat /tmp/idbmysql.log");
-											exit (1);
-										}
-										else
-										{
-											cout << endl << "Additional MariaDB ColumnStore Installation steps Successfully Completed on '" + remoteModuleName + "'" << endl << endl;
-
-											cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/mysql-Columnstore stop'";
-											int rtnCode = system(cmd.c_str());
-											if (WEXITSTATUS(rtnCode) != 0) {
-												cout << endl << "Error returned from mysql-Columnstore stop" << endl;
-												exit(1);
-											}
-											unlink("/tmp/idbmysql.log");
-											break;
-										}
-									}
-
-									//re-run post-mysql-install with password
-									cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/bin/post-mysql-install " + pwprompt + "' < /tmp/post-mysql-install.log";
-									rtnCode = system(cmd.c_str());
-									if (WEXITSTATUS(rtnCode) != 0) {
-										cout << endl << "Error returned from post-mysql-install, check /tmp/post-mysql-install.log" << endl;
-										exit(1);
-									}
-									else
-										cout << endl << "post-mysql-install Successfully Completed" << endl;
-								}
-							}
-						}
-						else
-						{	// do a binary package install
-							string binservertype = serverTypeInstall;
-							if ( pmwithum )
-								binservertype = "pmwithum";
-
-							cmd = installDir + "/bin/binary_installer.sh " + remoteModuleName + " " +
-								remoteModuleIP + " " + password + " " + columnstorePackage + " " + installType + " " + AmazonInstall + " " + remote_installer_debug +
-								" " + installDir + " " + debug_logfile;
-
-							if ( thread_remote_installer ) {
-								thr_data[thread_id].command = cmd;
-
-								int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
-
-								if ( status != 0 )
-								{
-									cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
-									exit (1);
-								}
-
-								thread_id++;
-							}
-							else
-							{
-								int rtnCode = system(cmd.c_str());
-								if (WEXITSTATUS(rtnCode) != 0) {
-									cout << endl << "Error returned from package_installer.sh" << endl;
-									exit(1);
-								}
-							}
-						}
-					}
-					else
-					{
+						    int status = pthread_create (&thr[thread_id], NULL, (void*(*)(void*)) &remoteInstallThread, &thr_data[thread_id]);
+				    
+						    if ( status != 0 )
+						    {
+							    cout << "remoteInstallThread failed for " << remoteModuleName << ", exiting" << endl;
+							    exit (1);
+						    }
+				    
+						    thread_id++;
+					    }
+					    else
+					    {
+						    int rtnCode = system(cmd.c_str());
+						    if (WEXITSTATUS(rtnCode) != 0) {
+							    cout << endl << "Error returned from package_installer.sh" << endl;
+							    exit(1);
+						    }
+					    }
+				    }
+				}
+				else
+				{
 						if ( (remoteModuleType == "pm" && IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) ||
 							(remoteModuleType == "pm" && !pmwithum ) )
 						{
@@ -3487,14 +3483,15 @@ int main(int argc, char *argv[])
 		}
 
 		//set mysql replication, if wasn't setup before on system
-/*		if ( ( mysqlRep && pmwithum ) || 
-			( mysqlRep && (umNumber > 1) ) ||
-			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
+//		if ( ( mysqlRep && pmwithum ) || 
+//			( mysqlRep && (umNumber > 1) ) ||
+//			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
+		if ( mysqlRep )
 		{
 			cout << endl << "Run MariaDB ColumnStore Replication Setup.. ";
 			cout.flush();
 
-			//send message to procmon's to run upgrade script
+			//send message to procmon's to run mysql replication script
 			int status = sendReplicationRequest(IserverTypeInstall, password, mysqlPort, pmwithum);
 
 			if ( status != 0 ) {
@@ -3504,7 +3501,7 @@ int main(int argc, char *argv[])
 			else
 				cout << " DONE" << endl;
 		}
-*/
+
 		cout << endl << "MariaDB ColumnStore Install Successfully Completed, System is Active" << endl << endl;
 
 		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
@@ -3513,11 +3510,21 @@ int main(int argc, char *argv[])
 
 		cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
+		
+		cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias" << endl << endl;
 	}
 	else
 	{
 		cout << " FAILED" << endl;
 		cout << endl << "MariaDB ColumnStore System failed to start, check log files in /var/log/mariadb/columnstore" << endl;
+
+		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
+
+		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
+
+		cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
+		cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
+
 		exit(1);
 	}
 
@@ -4005,9 +4012,9 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 	close(fd);
 	
 	if (rootUser)
-	    system("cat /tmp/rc.local >> /etc/rc.local > /dev/null");
+	    system("cat /tmp/rc.local >> /etc/rc.d/rc.local > /dev/null");
 	else
-	    system("sudo cat /tmp/rc.local >> /etc/rc.local > /dev/null");
+	    system("sudo cat /tmp/rc.local >> /etc/rc.d/rc.local > /dev/null");
 
 	unlink(fileName.c_str());
 	  

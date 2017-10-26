@@ -95,39 +95,32 @@ fi
 # softlink for libperl.sp, used by cplogger
 $SUDO ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
-#setup .bashrc
-if [ $user = "root" ]; then
-	bashFile=/root/.bashrc
-else
-	bashFile=$HOME/.bashrc
-fi
-
-touch ${bashFile}
-/bin/cp -f ${bashFile} ${bashFile}.columnstoreSave > /dev/null 2>&1
-
-if [ $user != "root" ]; then
-
-	egrep -qs 'MariaDB Columnstore Non-Root' ${bashFile}
-	rc1=$?
-	if [ $rc1 -ne 0 ]; then
-        	echo " " >> ${bashFile}
-		echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${bashFile}
-        	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${bashFile}
-        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${bashFile}
-        	. ${bashFile}
-	fi
-fi
+#setup profile files
+profileFileAlias=/etc/profile.d/columnstoreAlias.sh
+profileFileEnv=/etc/profile.d/columnstoreEnv.sh
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
         sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
 fi
-egrep -qs 'MariaDB Columnstore Database Platform Alias Commands' ${bashFile}
-rc1=$?
-egrep -qs 'MariaDB Columnstore Alias Commands' ${bashFile}
-rc2=$?
-if [ $rc1 -ne 0 -a $rc2 -ne 0 ]; then
-        cat $installdir/bin/columnstoreAlias >> ${bashFile}
-        echo " " >> ${bashFile}
+
+if [ $user != "root" ]; then
+	sudo touch $profileFileEnv
+	sudo chmod 666 $profileFileEnv
+	egrep -qs 'MariaDB Columnstore Non-Root' ${profileFileEnv}
+	rc1=$?
+	if [ $rc1 -ne 0 ]; then
+        	sudo echo " " >> ${profileFileEnv}
+		sudo echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFileEnv}
+        	sudo echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFileEnv}
+        	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${profileFileEnv}
+        	. ${profileFileEnv}
+	fi
+	
+	sudo /bin/cp -f $installdir/bin/columnstoreAlias $profileFileAlias
+	sudo chmod 666 $profileFileAlias
+else
+	/bin/cp -f $installdir/bin/columnstoreAlias $profileFileAlias
+	chmod 644 $profileFileAlias
 fi
 
 cd /
@@ -184,9 +177,9 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 systemctl=`which systemctl 2>/dev/null`
 
 #check and create rc.local file if missing
-if [ ! -f /etc/rc.local ]; then
+if [ ! -f /etc/rc.d/rc.local ]; then
 	printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a /etc/rc.local > /dev/null 2>&1
-    	$SUDO chmod +x /etc/rc.local
+    	$SUDO chmod +x /etc/rc.d/rc.local
     
     if [ -n "$systemctl" ]; then
 	systemctl restart rc-local >/dev/null 2>&1
@@ -248,7 +241,7 @@ else
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
 	$SUDO chmod 666 /etc/fstab
-	$SUDO chmod 777 /etc/rc.local
+	$SUDO chmod 777 /etc/rc.d/rc.local
 fi
 
 # install Columnstore Log Rotate File
@@ -263,24 +256,6 @@ fi
 
 #backup copy of Alarm Config File
 /bin/cp -f $installdir/etc/AlarmConfig.xml $installdir/etc/AlarmConfig.xml.installSave > /dev/null 2>&1
-
-#setup alias commands
-eval userhome=~$user
-bashFile=$userhome/.bashrc
-touch ${bashFile}
-if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
-fi
-egrep -qs 'MariaDB Columnstore Database Platform Alias Commands' ${bashFile}
-rc1=$?
-egrep -qs 'MariaDB Columnstore Alias Commands' ${bashFile}
-rc2=$?
-if [ $rc1 -ne 0 -a $rc2 -ne 0 ]; then
-	rm -f ${bashFile}.columnstoreSave
-	cp ${bashFile} ${bashFile}.columnstoreSave >/dev/null 2>&1
-	cat $installdir/bin/columnstoreAlias >> ${bashFile}
-	echo " " >> ${bashFile}
-fi
 
 #check and get amazon env variables
 aws=`which aws 2>/dev/null`

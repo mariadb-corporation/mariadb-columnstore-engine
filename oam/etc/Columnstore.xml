@@ -463,7 +463,6 @@
 		<DataRedundancyStorageType>unassigned</DataRedundancyStorageType>
 		<CoreFileFlag>n</CoreFileFlag>
 		<MySQLPort>3306</MySQLPort>
-		<MySQLPasswordConfig>unassigned</MySQLPasswordConfig>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 		<DistributedInstall>y</DistributedInstall>
 	</Installation>

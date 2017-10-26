@@ -60,7 +60,9 @@ cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
 	--defaults-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
+
+checkForError
 
 #
 # Run Change Master Command
@@ -81,7 +83,9 @@ cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
 	--defaults-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
+
+checkForError
 
 #
 # Run start slave command
@@ -95,7 +99,9 @@ cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
 	--defaults-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
+
+checkForError
 
 #
 # Run SHOW SLAVE STATUS
@@ -109,7 +115,7 @@ cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
 	--defaults-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
-	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
+	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log 2>&1
 
 checkForError
 

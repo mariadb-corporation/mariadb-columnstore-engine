@@ -3416,29 +3416,13 @@ int processCommand(string* arguments)
 			}
 
 		string MySQLRep;
-		string MySQLPasswordConfig;
 		try {
 			oam.getSystemConfig("MySQLRep", MySQLRep);
-			oam.getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
 		}
 		catch(...) {}
 	
-		if ( MySQLRep == "y" && MySQLPasswordConfig == oam::UnassignedName ) {
-			cout << endl;
-			string prompt = "MariaDB ColumnStore Replication is enabled, is there a 'MariaDB ColumnStore' Password configured in " + HOME + "/.my.cnf  (y,n): ";
-			MySQLPasswordConfig = dataPrompt(prompt);
-		}
-
-		if ( MySQLPasswordConfig != "y" )
-			MySQLPasswordConfig = "n";
-
-		try {
-			oam.setSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
-
-            try
-            {
+		try
+		{
                 cout << endl << "   Check for active transactions" << endl;
 
                 if (!bDBRMReady ||
@@ -4990,6 +4974,12 @@ int processCommand(string* arguments)
 
         case 46: // enableReplication
         {
+		if ( SingleServerInstall == "y" ) {
+		    // exit out since not on single-server install
+		    cout << endl << "**** enableReplication Failed : not supported on a Single-Server type installs  " << endl;
+		    break;
+		}
+
 		string MySQLRep;
 		try {
 			oam.getSystemConfig("MySQLRep", MySQLRep);
@@ -5014,26 +5004,6 @@ int processCommand(string* arguments)
 
 		if ( password == "")
 			password = oam::UnassignedName;
-
-		string MySQLPasswordConfig;
-		try {
-			oam.getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
-	
-		if ( MySQLPasswordConfig == oam::UnassignedName ) {
-			cout << endl;
-			string prompt = "Is there a 'MariaDB ColumnStore' Password configured on the MariaDB ColumnStore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
-			MySQLPasswordConfig = dataPrompt(prompt);
-		}
-
-		if ( MySQLPasswordConfig != "y" )
-			MySQLPasswordConfig = "n";
-
-		try {
-			oam.setSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
 
 		//set flag
 		try {
@@ -6117,6 +6087,12 @@ int processCommand(string* arguments)
 
         case 51: // disableReplication
         {
+		if ( SingleServerInstall == "y" ) {
+		    // exit out since not on single-server install
+		    cout << endl << "**** disableReplication Failed : not supported on a Single-Server type installs  " << endl;
+		    break;
+		}
+
 		string MySQLRep;
 		try {
 			oam.getSystemConfig("MySQLRep", MySQLRep);
@@ -6129,26 +6105,6 @@ int processCommand(string* arguments)
 			if (confirmPrompt(warning))
 				break;
 		}
-
-		string MySQLPasswordConfig;
-		try {
-			oam.getSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
-	
-		if ( MySQLPasswordConfig == oam::UnassignedName ) {
-			cout << endl;
-			string prompt = "Is there a 'MariaDB ColumnStore' Password configured on the MariaDB ColumnStore Front-end Modules in " + HOME + "/.my.cnf (y,n): ";
-			MySQLPasswordConfig = dataPrompt(prompt);
-		}
-
-		if ( MySQLPasswordConfig != "y" )
-			MySQLPasswordConfig = "n";
-
-		try {
-			oam.setSystemConfig("MySQLPasswordConfig", MySQLPasswordConfig);
-		}
-		catch(...) {}
 
 		//set flag
 		try {

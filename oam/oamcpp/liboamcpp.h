@@ -33,6 +33,7 @@
 #include <limits.h>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #ifdef __linux__
 #include <sys/sysinfo.h>
 #include <netdb.h>
@@ -2468,7 +2469,7 @@ namespace oam
 
 		/** @brief check and get mysql user password
 		*/
-		EXPORT std::string getMySQLPassword(bool bypassConfig = false);
+		EXPORT std::string getMySQLPassword();
 
 		/** @brief update fstab with dbroot mounts
 		*/
