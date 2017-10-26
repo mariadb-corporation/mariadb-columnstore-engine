@@ -204,10 +204,12 @@ int main(int argc, char *argv[])
 	string DataRedundancyConfig;
 	string DataRedundancyCopies;
 	string DataRedundancyStorageType;
+	string DataRedundancyNetworkType;
 	try {
 		DataRedundancyConfig = sysConfigOld->getConfig(InstallSection, "DataRedundancyConfig");
 		DataRedundancyCopies = sysConfigOld->getConfig(InstallSection, "DataRedundancyCopies");
 		DataRedundancyStorageType = sysConfigOld->getConfig(InstallSection, "DataRedundancyStorageType");
+		DataRedundancyNetworkType = sysConfigOld->getConfig(InstallSection, "DataRedundancyNetworkType");
 	}
 	catch(...)
 	{}
@@ -216,6 +218,7 @@ int main(int argc, char *argv[])
 			sysConfigNew->setConfig(InstallSection, "DataRedundancyConfig", DataRedundancyConfig);
 			sysConfigNew->setConfig(InstallSection, "DataRedundancyCopies", DataRedundancyCopies);
 			sysConfigNew->setConfig(InstallSection, "DataRedundancyStorageType", DataRedundancyStorageType);
+			sysConfigNew->setConfig(InstallSection, "DataRedundancyNetworkType", DataRedundancyNetworkType);
 		}
 		catch(...)
 		{}
@@ -1468,6 +1471,19 @@ int main(int argc, char *argv[])
 					try {
 						sysConfigNew->setConfig(InstallSection, "UMVolumeSize", UMVolumeSize);
 						sysConfigNew->setConfig(InstallSection, "PMVolumeSize", PMVolumeSize);
+					}
+					catch(...)
+					{}
+				}
+				if ( !DataRedundancyConfig.empty() ) {
+					try {
+						string dbrootPMsID = "DBRoot" + oam.itoa(id) + "PMs";
+						string dbrootPMs = sysConfigOld->getConfig("DataRedundancyConfig", dbrootPMsID);
+						try {
+							sysConfigNew->setConfig("DataRedundancyConfig", dbrootPMsID, dbrootPMs);
+						}
+						catch(...)
+						{}
 					}
 					catch(...)
 					{}
