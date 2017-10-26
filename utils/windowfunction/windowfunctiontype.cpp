@@ -496,7 +496,8 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 			break;
 		case CalpontSystemCatalog::CHAR:
 		case CalpontSystemCatalog::VARCHAR: {
-			uint64_t len = fRow.getColumnWidth(pos);
+//			uint64_t len = fRow.getColumnWidth(pos);
+#if 0
 			switch (len) {
 				case 1:
 					v = &char1Null;
@@ -514,10 +515,12 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 				case 8:
 					v = &char8Null;
 					break;
-				default:
+					default:
 					v = &stringNull;
 					break;
 			}
+#endif
+			v = &stringNull;
 			break;
 		}
 		case CalpontSystemCatalog::DECIMAL:
