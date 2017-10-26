@@ -123,7 +123,7 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 	fLead = 1;
     fRespectNulls = true;
     fDefNull = false;
-    fDefault = (T)0;
+//    fDefault = (T)0; // Won't work for std::string. Default should always be set below.
     fOffsetNull = false;
     fOffset = 0;
 	if (fFunctionId == WF__LAG)
