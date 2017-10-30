@@ -76,19 +76,19 @@ namespace
 
 struct cmpTuple
 {
-    bool operator()(tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*> a,
-                    tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*> b)
+    bool operator()(boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*> a,
+                    boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*> b)
     {
-        if (get<0>(a) < get<0>(b))
+        if (boost::get<0>(a) < boost::get<0>(b))
             return true;
 
-        if (get<0>(a) == get<0>(b))
+        if (boost::get<0>(a) == boost::get<0>(b))
         {
-            if (get<1>(a) < get<1>(b))
+            if (boost::get<1>(a) < boost::get<1>(b))
                 return true;
 
-            if (get<1>(a) == get<1>(b))
-                return get<2>(a) < get<2>(b);
+            if (boost::get<1>(a) == boost::get<1>(b))
+                return boost::get<2>(a) < boost::get<2>(b);
         }
 
         return false;
@@ -101,7 +101,7 @@ typedef vector<RowBucket> RowBucketVec;
 // The AGG_MAP type is used to maintain a list of aggregate functions in order to
 // detect duplicates. Since all UDAF have the same op type (ROWAGG_UDAF), we add in
 // the function pointer in order to ensure uniqueness.
-typedef map<tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*>, uint64_t, cmpTuple> AGG_MAP;
+typedef map<boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*>, uint64_t, cmpTuple> AGG_MAP;
 
 inline RowAggFunctionType functionIdMap(int planFuncId)
 {
@@ -1477,7 +1477,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
         }
 
         // find if this func is a duplicate
-        AGG_MAP::iterator iter = aggFuncMap.find(make_tuple(key, aggOp, pUDAFFunc));
+        AGG_MAP::iterator iter = aggFuncMap.find(boost::make_tuple(key, aggOp, pUDAFFunc));
 
         if (iter != aggFuncMap.end())
         {
@@ -1494,7 +1494,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
         }
         else
         {
-            aggFuncMap.insert(make_pair(make_tuple(key, aggOp, pUDAFFunc), funct->fOutputColumnIndex));
+            aggFuncMap.insert(make_pair(boost::make_tuple(key, aggOp, pUDAFFunc), funct->fOutputColumnIndex));
         }
     }
 
@@ -1704,7 +1704,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             typeAgg.push_back(typeProj[colProj]);
             widthAgg.push_back(widthProj[colProj]);
 
-            aggFuncMap.insert(make_pair(make_tuple(keysAgg[colAgg], 0, pUDAFFunc), colAgg));
+            aggFuncMap.insert(make_pair(boost::make_tuple(keysAgg[colAgg], 0, pUDAFFunc), colAgg));
             colAgg++;
         }
 
@@ -1745,7 +1745,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             typeAgg.push_back(typeProj[colProj]);
             widthAgg.push_back(widthProj[colProj]);
 
-            aggFuncMap.insert(make_pair(make_tuple(keysAgg[colAgg], 0, pUDAFFunc), colAgg));
+            aggFuncMap.insert(make_pair(boost::make_tuple(keysAgg[colAgg], 0, pUDAFFunc), colAgg));
             colAgg++;
         }
 
@@ -1775,7 +1775,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 SP_ROWAGG_FUNC_t funct(new RowAggFunctionCol(
                                            aggOp, stats, colAgg, colAgg, -1));
                 functionVec1.push_back(funct);
-                aggFuncMap.insert(make_pair(make_tuple(aggKey, aggOp, pUDAFFunc), colAgg));
+                aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc), colAgg));
                 colAgg++;
 
                 continue;
@@ -1831,11 +1831,11 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(make_tuple(aggKey, aggOp, pUDAFFunc)) != aggFuncMap.end())
+            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc)) != aggFuncMap.end())
                 continue;
 
             functionVec1.push_back(funct);
-            aggFuncMap.insert(make_pair(make_tuple(aggKey, aggOp, pUDAFFunc), colAgg));
+            aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc), colAgg));
 
             switch (aggOp)
             {
@@ -2081,7 +2081,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
         {
             SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(i, -1));
             groupByNoDist.push_back(groupby);
-            aggFuncMap.insert(make_pair(make_tuple(keysAgg[i], 0, pUDAFFunc), i));
+            aggFuncMap.insert(make_pair(boost::make_tuple(keysAgg[i], 0, pUDAFFunc), i));
         }
 
         // locate the return column position in aggregated rowgroup
@@ -2096,7 +2096,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             if  (find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), retKey) !=
                     jobInfo.distinctColVec.end() )
             {
-                AGG_MAP::iterator it = aggFuncMap.find(make_tuple(retKey, 0, pUDAFFunc));
+                AGG_MAP::iterator it = aggFuncMap.find(boost::make_tuple(retKey, 0, pUDAFFunc));
 
                 if (it != aggFuncMap.end())
                 {
@@ -2208,7 +2208,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 case ROWAGG_BIT_XOR:
                 default:
                 {
-                    AGG_MAP::iterator it = aggFuncMap.find(make_tuple(retKey, aggOp, pUDAFFunc));
+                    AGG_MAP::iterator it = aggFuncMap.find(boost::make_tuple(retKey, aggOp, pUDAFFunc));
 
                     if (it != aggFuncMap.end())
                     {
@@ -2239,7 +2239,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                         // check if a SUM or COUNT covered by AVG
                         if (aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME)
                         {
-                            it = aggFuncMap.find(make_tuple(returnedColVec[i].first, ROWAGG_AVG, pUDAFFunc));
+                            it = aggFuncMap.find(boost::make_tuple(returnedColVec[i].first, ROWAGG_AVG, pUDAFFunc));
 
                             if (it != aggFuncMap.end())
                             {
@@ -2417,7 +2417,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 functionVec2.push_back(funct);
 
                 // find if this func is a duplicate
-                AGG_MAP::iterator iter = aggDupFuncMap.find(make_tuple(retKey, aggOp, pUDAFFunc));
+                AGG_MAP::iterator iter = aggDupFuncMap.find(boost::make_tuple(retKey, aggOp, pUDAFFunc));
 
                 if (iter != aggDupFuncMap.end())
                 {
@@ -2434,7 +2434,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                 }
                 else
                 {
-                    aggDupFuncMap.insert(make_pair(make_tuple(retKey, aggOp, pUDAFFunc),
+                    aggDupFuncMap.insert(make_pair(boost::make_tuple(retKey, aggOp, pUDAFFunc),
                                                    funct->fOutputColumnIndex));
                 }
 
@@ -2910,7 +2910,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
             typeAggPm.push_back(typeProj[colProj]);
             widthAggPm.push_back(width[colProj]);
 
-            aggFuncMap.insert(make_pair(make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
+            aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
             colAggPm++;
         }
 
@@ -2951,7 +2951,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
             typeAggPm.push_back(typeProj[colProj]);
             widthAggPm.push_back(width[colProj]);
 
-            aggFuncMap.insert(make_pair(make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
+            aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
             colAggPm++;
         }
 
@@ -3011,11 +3011,11 @@ void TupleAggregateStep::prep2PhasesAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(make_tuple(aggKey, aggOp, pUDAFFunc)) != aggFuncMap.end())
+            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc)) != aggFuncMap.end())
                 continue;
 
             functionVecPm.push_back(funct);
-            aggFuncMap.insert(make_pair(make_tuple(aggKey, aggOp, pUDAFFunc), colAggPm));
+            aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc), colAggPm));
 
             switch (aggOp)
             {
@@ -3269,7 +3269,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     pUDAFFunc = udafc->getContext().getFunction();
             }
 
-            AGG_MAP::iterator it = aggFuncMap.find(make_tuple(retKey, aggOp, pUDAFFunc));
+            AGG_MAP::iterator it = aggFuncMap.find(boost::make_tuple(retKey, aggOp, pUDAFFunc));
 
             if (it != aggFuncMap.end())
             {
@@ -3290,7 +3290,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                 // check if a SUM or COUNT covered by AVG
                 if (aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME)
                 {
-                    it = aggFuncMap.find(make_tuple(returnedColVec[i].first, ROWAGG_AVG, pUDAFFunc));
+                    it = aggFuncMap.find(boost::make_tuple(returnedColVec[i].first, ROWAGG_AVG, pUDAFFunc));
 
                     if (it != aggFuncMap.end())
                     {
@@ -3435,7 +3435,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                 functionVecUm.push_back(funct);
 
                 // find if this func is a duplicate
-                AGG_MAP::iterator iter = aggDupFuncMap.find(make_tuple(retKey, aggOp, pUDAFFunc));
+                AGG_MAP::iterator iter = aggDupFuncMap.find(boost::make_tuple(retKey, aggOp, pUDAFFunc));
 
                 if (iter != aggDupFuncMap.end())
                 {
@@ -3452,7 +3452,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
                 }
                 else
                 {
-                    aggDupFuncMap.insert(make_pair(make_tuple(retKey, aggOp, pUDAFFunc),
+                    aggDupFuncMap.insert(make_pair(boost::make_tuple(retKey, aggOp, pUDAFFunc),
                                                    funct->fOutputColumnIndex));
                 }
 
@@ -3707,7 +3707,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             typeAggPm.push_back(typeProj[colProj]);
             widthAggPm.push_back(width[colProj]);
 
-            aggFuncMap.insert(make_pair(make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
+            aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
             colAggPm++;
         }
 
@@ -3748,7 +3748,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             typeAggPm.push_back(typeProj[colProj]);
             widthAggPm.push_back(width[colProj]);
 
-            aggFuncMap.insert(make_pair(make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
+            aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc), colAggPm));
             colAggPm++;
         }
 
@@ -3815,11 +3815,11 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             }
 
             // skip if this is a duplicate
-            if (aggFuncMap.find(make_tuple(aggKey, aggOp, pUDAFFunc)) != aggFuncMap.end())
+            if (aggFuncMap.find(boost::make_tuple(aggKey, aggOp, pUDAFFunc)) != aggFuncMap.end())
                 continue;
 
             functionVecPm.push_back(funct);
-            aggFuncMap.insert(make_pair(make_tuple(aggKey, aggOp, pUDAFFunc), colAggPm));
+            aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc), colAggPm));
 
             switch (aggOp)
             {
@@ -4110,7 +4110,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             if  (find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), retKey) !=
                     jobInfo.distinctColVec.end() )
             {
-                AGG_MAP::iterator it = aggFuncMap.find(make_tuple(retKey, 0, pUDAFFunc));
+                AGG_MAP::iterator it = aggFuncMap.find(boost::make_tuple(retKey, 0, pUDAFFunc));
 
                 if (it != aggFuncMap.end())
                 {
@@ -4228,7 +4228,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 case ROWAGG_CONSTANT:
                 default:
                 {
-                    AGG_MAP::iterator it = aggFuncMap.find(make_tuple(retKey, aggOp, pUDAFFunc));
+                    AGG_MAP::iterator it = aggFuncMap.find(boost::make_tuple(retKey, aggOp, pUDAFFunc));
 
                     if (it != aggFuncMap.end())
                     {
@@ -4249,7 +4249,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                         // check if a SUM or COUNT covered by AVG
                         if (aggOp == ROWAGG_SUM || aggOp == ROWAGG_COUNT_COL_NAME)
                         {
-                            it = aggFuncMap.find(make_tuple(returnedColVec[i].first, ROWAGG_AVG, pUDAFFunc));
+                            it = aggFuncMap.find(boost::make_tuple(returnedColVec[i].first, ROWAGG_AVG, pUDAFFunc));
 
                             if (it != aggFuncMap.end())
                             {
@@ -4384,7 +4384,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 functionVecUm.push_back(funct);
 
                 // find if this func is a duplicate
-                AGG_MAP::iterator iter = aggDupFuncMap.find(make_tuple(retKey, aggOp, pUDAFFunc));
+                AGG_MAP::iterator iter = aggDupFuncMap.find(boost::make_tuple(retKey, aggOp, pUDAFFunc));
 
                 if (iter != aggDupFuncMap.end())
                 {
@@ -4401,7 +4401,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 }
                 else
                 {
-                    aggDupFuncMap.insert(make_pair(make_tuple(retKey, aggOp, pUDAFFunc),
+                    aggDupFuncMap.insert(make_pair(boost::make_tuple(retKey, aggOp, pUDAFFunc),
                                                    funct->fOutputColumnIndex));
                 }
 

@@ -458,6 +458,7 @@
 		<JavaHome>unassigned</JavaHome>
 		<JavaPath>unassigned</JavaPath>
 		<MySQLPort>3306</MySQLPort>
+		<DistributedInstall>y</DistributedInstall>
 	</Installation>
 	<ExtentMap>
 		<!--

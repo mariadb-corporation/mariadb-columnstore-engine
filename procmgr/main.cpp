@@ -602,7 +602,7 @@ static void startMgrProcessThread()
     }
     catch (...)
     {
-        log.writeLog(__LINE__, "addModule - ERROR: get DistributedInstall", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "ERROR: get DistributedInstall", LOG_TYPE_ERROR);
     }
 
     //Send out a start service just to make sure Columnstore is runing on remote nodes
