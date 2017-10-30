@@ -30,7 +30,7 @@ set COMMAND "rsync -vopgr -e ssh --exclude=mysql/ --exclude=test/ --exclude=infi
 #
 # run command
 #
-set timeout 60
+set timeout 20
 send "$COMMAND\n"
 expect {
 	-re "Host key verification failed" { send_user "FAILED: Host key verification failed\n" ; exit -1}
@@ -57,25 +57,27 @@ expect {
 
 set HOME "$env(HOME)"
 
-set COMMAND "rsync -vopgr -e ssh $HOME/.my.cnf $USERNAME@$SERVER:$HOME/"
+if {[file exist $HOME/.my.cnf]} {
 
-#
-# run command
-#
-set timeout 20
-send "$COMMAND\n"
-expect {
-        -re "word: " { send "$PASSWORD\n" }
-        -re "passphrase" { send "$PASSWORD\n" }
-	-re "total size" {} abort
-	-re "failed" { exit 0 }
-        timeout { exit 0 }
-}
-expect {
-	-re "total size" {} abort
-        -re "failed" { exit 0 }
-        timeout { exit 0 }
-}
+	set COMMAND "rsync -vopgr -e ssh $HOME/.my.cnf $USERNAME@$SERVER:$HOME/"
 
+	#
+	# run command
+	#
+	set timeout 10
+	send "$COMMAND\n"
+	expect {
+		-re "word: " { send "$PASSWORD\n" }
+		-re "passphrase" { send "$PASSWORD\n" }
+		-re "total size" {} abort
+		-re "failed" { exit 0 }
+		timeout { exit 0 }
+	}
+	expect {
+		-re "total size" {} abort
+		-re "failed" { exit 0 }
+		timeout { exit 0 }
+	}
+}
 
 exit 0

@@ -1791,7 +1791,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string masterLogFile = oam::UnassignedName;
 			string masterLogPos = oam::UnassignedName;
 
-			if ( (PMwithUM == "n") && (config.moduleType() == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
+			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
 			{
 				ackMsg << (ByteStream::byte) ACK;
 				ackMsg << (ByteStream::byte) MASTERREP;
@@ -1864,7 +1865,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string port;
 			msg >> port;
 
-			if ( (PMwithUM == "n") && (config.moduleType() == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
+			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
 			{
 				ackMsg << (ByteStream::byte) ACK;
 				ackMsg << (ByteStream::byte) SLAVEREP;
@@ -1911,7 +1913,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			string module;
 			msg >> module;
 
-			if ( (PMwithUM == "n") && (config.moduleType() == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
+			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
 			{
 				ackMsg << (ByteStream::byte) ACK;
 				ackMsg << (ByteStream::byte) MASTERDIST;
@@ -5008,7 +5011,8 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 
 			string moduleType = systemModuleTypeConfig.moduletypeconfig[i].ModuleType;
 	
-			if ( (PMwithUM == "n") && (moduleType == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
+			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
 				continue;
 
 			HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
@@ -5304,7 +5308,8 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 	
 			string moduleType = systemModuleTypeConfig.moduletypeconfig[i].ModuleType;
 	
-			if ( (PMwithUM == "n") && (moduleType == "pm") && ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
+			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
+			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
 				continue;
 	
 			DeviceNetworkList::iterator pt = systemModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();

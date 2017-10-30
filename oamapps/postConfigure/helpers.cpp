@@ -459,7 +459,9 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 						{ // set for slave repl request
 							// don't do PMs unless PMwithUM flag is set
 							string moduleType = (*pt).DeviceName.substr(0,MAX_MODULE_TYPE_SIZE);
-							if ( moduleType == "pm" && !pmwithum ) {
+
+							if ( ( moduleType == "pm" && !pmwithum ) &&
+							     ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) ) {
 								pt++;
 								continue;
 							}
@@ -678,15 +680,19 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 			if ( size != 0 ) {
 				if ( noPrompting ) {
 					cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use" << endl;
-					cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
+					cout << "Either use the command line argument of 'port' to enter a different number" << endl;
+					cout << "or stop the process that is using port '" + mysqlPort + "'" << endl;
+					cout << "For No-prompt install, exiting" << endl;
 					exit(1);
 				}
 
 				cout << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use on local server" << endl;
-
+				cout << "Either enter a different port to use" << endl;
+				cout << "or stop the process that is using port '" + mysqlPort + "' and enter '" + mysqlPort + "' to continue" << endl;
+		
 				while(true)
 				{
-					prompt = "Enter a different port number > ";
+					prompt = "Enter port number > ";
 					pcommand = callReadline(prompt.c_str());
 					if (pcommand)
 					{
@@ -756,7 +762,9 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 				if ( size != 0 ) {
 					if ( noPrompting ) {
 						cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use" << endl;
-						cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
+						cout << "Either use the command line argument of 'port' to enter a different number" << endl;
+						cout << "or stop the process that is using port '" + mysqlPort + "'" << endl;
+						cout << "For No-prompt install, exiting" << endl;
 						exit(1);
 					}
 					else
@@ -787,7 +795,9 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 					if (WEXITSTATUS(rtnCode) == 0) {
 						if ( noPrompting ) {
 							cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use on " << remoteModuleName << endl;
-							cout << "For No-prompt install, use the command line argument of 'port' to enter a different number" << endl;
+							cout << "Either use the command line argument of 'port' to enter a different number" << endl;
+							cout << "or stop the process that is using port '" + mysqlPort + "'" << endl;
+							cout << "For No-prompt install, exiting" << endl;
 							cout << "exiting..." << endl;
 							exit(1);
 						}
@@ -805,10 +815,12 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 		if ( inUse )
 		{
 			cout << endl << "The MariaDB ColumnStore port of '" + mysqlPort + "' is already in-use on " << inUseServer << endl;
+			cout << "Either enter a different port to use" << endl;
+			cout << "or stop the process that is using port '" + mysqlPort + "' and enter '" + mysqlPort + "' to continue" << endl;
 
 			while(true)
 			{
-				prompt = "Enter a different port number > ";
+				prompt = "Enter a port number > ";
 				pcommand = callReadline(prompt.c_str());
 				if (pcommand)
 				{
