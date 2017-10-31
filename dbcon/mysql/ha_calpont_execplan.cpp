@@ -2032,7 +2032,7 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
 		errcode = ER_UNKNOWN_ERROR;
 	}
 	thd->raise_error_printf(errcode, errmsg.c_str());
-	thd->infinidb_vtable.mysql_optimizer_off = false;
+    thd->infinidb_vtable.isNewQuery = true;
 	thd->infinidb_vtable.override_largeside_estimate = false;
 	// reset expressionID
 	if (!(thd->infinidb_vtable.cal_conn_info))
@@ -6369,8 +6369,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 				}
 			}
 
-			// populate string to be added to the select list for order by
-			redo = (redo || fieldVec.size() != 0);
+            redo = (redo || fieldVec.size() != 0);
+            // populate string to be added to the select list for order by
 			for (uint32_t i = 0; i < fieldVec.size(); i++)
 			{
 				SimpleColumn* sc = buildSimpleColumn(fieldVec[i], gwi);
@@ -6483,11 +6483,12 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
 		{
 			std::ostringstream vtb;
-		  vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
-		  //vtb << "$vtable_" << gwi.thd->thread_id;
+		    vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
+		    //vtb << "$vtable_" << gwi.thd->thread_id;
 			// re-construct the select query and redo phase 1
 			if (redo)
 			{
+                ++gwi.thd->infinidb_vtable.redo_count;
 				// select now() from region case. returnedCols should have minSc.
 				if (sel_cols_in_create.length() == 0)
 				{
