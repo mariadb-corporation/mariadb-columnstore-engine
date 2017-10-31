@@ -1097,7 +1097,7 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 	if ( lines.begin() == lines.end())
 		return true;
 
-	string fileName = "etc/rc.local";
+	string fileName = "etc/rc.d/rc.local";
 
    	ofstream newFile (fileName.c_str());	
 	

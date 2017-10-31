@@ -609,7 +609,6 @@ int main(int argc, char *argv[])
 	if ( !rootUser )
 	{
 	    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-	    system("sudo chmod 777 /etc/rc.d/rc.local >/dev/null 2>&1");
 	}
 	
 	cout << endl;

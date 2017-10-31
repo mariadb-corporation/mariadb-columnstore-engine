@@ -59,8 +59,6 @@ cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	echo "Amazon setup on Module"
 	cp $COLUMNSTORE_INSTALL_DIR/local/etc/credentials $HOME/.aws/. > /dev/null 2>&1
-        sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local
-	sudo chmod 777 /etc/rc.d/rc.local
 	
 	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
@@ -88,6 +86,8 @@ mid=`module_id`
 #if um, cloud, separate system type, external um storage, then setup mount
 if [ $module = "um" ]; then
 	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+		$SUDO sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
+
 		systemtype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation ServerTypeInstall`
 		if [ $systemtype = "1" ]; then
 			umstoragetype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMStorageType`
@@ -179,35 +179,42 @@ if [ $? -ne 0 ]; then
 fi
  
 #setup rc.local
+if [ -f /etc/rc.d ]; then
+    RCFILE=/etc/rc.d/rc.local
+else
+    RCFILE=/etc/rc.local
+fi
+touch $RCFILE
+
 if [ $module = "um" ]; then
 	if [ $user = "root" ]; then
-		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
-		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
-		echo "done" >> /etc/rc.local
+		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+		echo "done" >> $RCFILE
 	else
-		sudo chmod 666 /etc/rc.local
-                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
-                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
-                sudo echo "done" >> /etc/rc.local
+		sudo chmod 666 $RCFILE
+                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+                sudo echo "done" >> $RCFILE
 	fi
 else
         if [ $user = "root" ]; then
-		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
-		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
-		echo "done" >> /etc/rc.local
+		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+		echo "done" >> $RCFILE
 
-		echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
-		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
-		echo "done" >> /etc/rc.local
+		echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+		echo "done" >> $RCFILE
 	else
-		sudo chmod 666 /etc/rc.local
-                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
-                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
-                sudo echo "done" >> /etc/rc.local
+		sudo chmod 666 $RCFILE
+                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+                sudo echo "done" >> $RCFILE
 
-                sudo echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> /etc/rc.local
-                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> /etc/rc.local
-                sudo echo "done" >> /etc/rc.local
+                sudo echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+                sudo echo "done" >> $RCFILE
 	fi
 fi
 
