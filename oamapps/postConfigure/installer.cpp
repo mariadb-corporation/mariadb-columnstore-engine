@@ -1097,10 +1097,18 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 	if ( lines.begin() == lines.end())
 		return true;
 
-	string fileName = "etc/rc.d/rc.local";
+	string fileName = "/etc/rc.d/rc.local";
 
    	ofstream newFile (fileName.c_str());	
-	
+	if (!newFile)
+	{
+	      fileName = "/etc/rc.local";
+
+	      ofstream newFile (fileName.c_str());	
+	      if (!newFile)
+		  return true;
+	}
+
 	//create new file
 	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0666);
 	

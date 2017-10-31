@@ -604,13 +604,7 @@ int main(int argc, char *argv[])
 	    if ( DistributedInstall == "n" )
 		nonDistribute = true;
 	}
-	
-	// setup to start on reboot, for non-root amazon installs
-	if ( !rootUser )
-	{
-	    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-	}
-	
+
 	cout << endl;
 
 	cout << "===== Setup System Server Type Configuration =====" << endl << endl;
@@ -1060,6 +1054,12 @@ int main(int argc, char *argv[])
 			}
 		}
 			
+		// setup to start on reboot, for non-root amazon installs
+		if ( !rootUser )
+		{
+		    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+		}
+
 		if ( !writeConfig(sysConfig) ) { 
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
@@ -4000,24 +4000,25 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 	if ( lines.begin() == lines.end())
 		return true;
 	
-	string fileName = "/tmp/rc.local";
+	string fileName = "/etc/rc.d/rc.local";
 
    	ofstream newFile (fileName.c_str());	
+	if (!newFile)
+	{
+	      fileName = "/etc/rc.local";
+
+	      ofstream newFile (fileName.c_str());	
+	      if (!newFile)
+		  return true;
+	}
 
 	//create new file
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0664);
+	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0666);
 	
 	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
 	newFile.close();
 	
 	close(fd);
-	
-	if (rootUser)
-	    system("cat /tmp/rc.local >> /etc/rc.d/rc.local > /dev/null");
-	else
-	    system("sudo cat /tmp/rc.local >> /etc/rc.d/rc.local > /dev/null");
-
-	unlink(fileName.c_str());
 	  
 	return true;
 }
