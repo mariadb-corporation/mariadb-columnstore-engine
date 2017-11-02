@@ -186,7 +186,7 @@ function execOneTestRun {
          fi
          if [ $dbmsType = "M" ]; then
             pathSfn=$1\/$sess
-            /usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root $testDB <$sfn 2> $pathSfn\/$sfn.err.log |grep "^Calpont" > $pathSfn\/$sfn.log &
+            /usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-extra-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root $testDB <$sfn 2> $pathSfn\/$sfn.err.log |grep "^Calpont" > $pathSfn\/$sfn.log &
          else
             su - oracle -c "sqlplus /nolog @/home/qa/srv/common/script/callogin.sql $testDB $testDB xe srvqaperf2 <$sfn" |grep "^Calpont" > $1\/$sess\/$sfn.log &
          fi

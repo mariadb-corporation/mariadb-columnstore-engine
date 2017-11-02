@@ -2567,7 +2567,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					// target = root password
 					oam::DeviceNetworkList devicenetworklist;
-					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target, false);
+					status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, false, target, false);
 	
 					log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
 
@@ -3439,6 +3439,9 @@ void ProcessManager::recycleProcess(string module)
 
 	//restart ExeMgrs/mysql if module is a pm
 	if ( moduleType == "pm" ) {
+//		restartProcessType("DBRMWorkerNode");
+//		restartProcessType("PrimProc");
+//		restartProcessType("WriteEngineServer");
 		restartProcessType("ExeMgr");
 		restartProcessType("mysql");
 	}
@@ -3448,20 +3451,60 @@ void ProcessManager::recycleProcess(string module)
 	if ( PrimaryUMModuleName == module )
 	{
 		restartProcessType("DDLProc", module);
-//		restartProcessType("DDLProc", module, false);
 		sleep(1);
 		restartProcessType("DMLProc", module);
-//		restartProcessType("DMLProc", module, false);
 	}
 
 	if( moduleType == "pm" && PrimaryUMModuleName != module)
 	{
+//		restartProcessType("DBRMControllerNode", module);
+//		sleep(1);
 		reinitProcessType("DDLProc");
 		sleep(1);
 		restartProcessType("DMLProc", module);
-//		restartProcessType("DMLProc", module, false);
 	}
+	
+	//wait for DMLProc to go ACTIVE
+/*	uint16_t rtn = 0;
+	bool bfirst = true;
+	while (rtn == 0)
+	{
+		ProcessStatus DMLprocessstatus;
+		try {
+			oam.getProcessStatus("DMLProc", PrimaryUMModuleName, DMLprocessstatus);
+		}
+		catch (exception& ex)
+		{
+//			string error = ex.what();
+//			log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
+		}
+		catch(...)
+		{
+//			log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
+		}
 
+		if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT) {
+			if (bfirst)
+			{
+				log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback" , LOG_TYPE_INFO);
+				bfirst = false;
+			}
+		}
+
+		if (DMLprocessstatus.ProcessOpState == oam::ACTIVE) {
+			rtn = oam::ACTIVE;
+			break;
+		}
+
+		if (DMLprocessstatus.ProcessOpState == oam::FAILED) {
+			rtn = oam::FAILED;
+			break;
+		}
+
+		// wait some more
+		sleep(2);
+	}
+*/
 	return;
 }
 

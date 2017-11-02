@@ -8770,6 +8770,9 @@ namespace oam
 	******************************************************************************************/
 	std::string Oam::getMySQLPassword()
 	{
+	  
+		return oam::UnassignedName;
+		
 		string mysqlUser = "root";
 		
 		string USER = "root";

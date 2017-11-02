@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
 			cout << "It should be run on the server with the DBRM front-end." << endl;
 			cout << "Check the Admin Guide for additional information." << endl;
 			cout << endl;
-			cout << "Usage: columnstoreSupport [-h][-a][-hw][-s][-c][-db][-r][-l][-bl][-lc][-p 'root-password'][-mp 'mariadb-columnstore-root-password'][-de]";
+			cout << "Usage: columnstoreSupport [-h][-a][-hw][-s][-c][-db][-r][-l][-bl][-lc][-p 'root-password'][-de]";
 			// if hdfs set up print the hadoop option
 			if (!DataFilePlugin.empty())
 				cout << "[-hd]";
@@ -439,7 +439,6 @@ int main(int argc, char *argv[])
 			cout << "			-bl Output Columnstore Bulk Log Reports only" << endl;
 			cout << "			-lc Output Reports for Local Server only" << endl;
 			cout << "			-p  password (multi-server systems), root-password or 'ssh' to use 'ssh keys'" << endl;
-			cout << "			-mp MariaDB Columnstore root user password" << endl;
 			cout << "			-de Debug Flag" << endl;
 			// if hdfs set up print the hadoop option
 			if (!DataFilePlugin.empty())
@@ -783,7 +782,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			// check if mysql is supported and get info
-			string columnstoreMysql = installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root ";
+			string columnstoreMysql = installDir + "/mysql/bin/mysql --defaults-extra-file=" + installDir + "/mysql/my.cnf -u root ";
 			string cmd = columnstoreMysql + " -e 'status' > /tmp/idbmysql.log 2>&1";
 			system(cmd.c_str());
 
@@ -846,7 +845,7 @@ int main(int argc, char *argv[])
 			if (!FAILED)
 			{	
 				// check if mysql is supported and get info
-				string columnstoreMysql = installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt;
+				string columnstoreMysql = installDir + "/mysql/bin/mysql --defaults-extra-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt;
 				string cmd = columnstoreMysql + " -V > /dev/null 2>&1";
 				int ret = system(cmd.c_str());
 				if ( WEXITSTATUS(ret) == 0) {

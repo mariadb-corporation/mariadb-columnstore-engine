@@ -2971,7 +2971,7 @@ int main(int argc, char *argv[])
 							    }
 
 							    //try to login
-							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+							    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-extra-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
 							    rtnCode = system(cmd.c_str());
 							    if (WEXITSTATUS(rtnCode) != 0) {
 								    cout << endl << "Error returned from remote_command.sh" << endl;
@@ -3003,7 +3003,7 @@ int main(int argc, char *argv[])
 									    pwprompt = "--password=" + mysqlpw;
 								    }
 
-								    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
+								    cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '" + installDir + "/mysql/bin/mysql --defaults-extra-file=" + installDir + "/mysql/my.cnf -u root " + pwprompt + " -e status' 1 > /tmp/idbmysql.log 2>&1";
 								    rtnCode = system(cmd.c_str());
 								    if (WEXITSTATUS(rtnCode) != 0) {
 									    cout << endl << "MariaDB ColumnStore  login failure, password mismatch in " + HOME + ".my.cnf on " << remoteModuleName << endl;

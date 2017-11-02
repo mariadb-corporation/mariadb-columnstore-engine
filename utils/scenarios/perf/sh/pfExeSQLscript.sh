@@ -19,5 +19,5 @@
 #
 #  Execute script on test database
 #
-   /usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root $1 <$2 > $logFileName.test.log
+   /usr/local/mariadb/columnstore/mysql/bin/mysql --defaults-extra-file=/usr/local/mariadb/columnstore/mysql/my.cnf -u root $1 <$2 > $logFileName.test.log
    exit 0

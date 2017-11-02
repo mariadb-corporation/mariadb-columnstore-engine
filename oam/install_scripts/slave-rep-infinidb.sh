@@ -58,7 +58,7 @@ EOD
 
 cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 
@@ -80,7 +80,7 @@ EOD
 
 cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 
@@ -94,7 +94,7 @@ EOD
 
 cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 
@@ -108,7 +108,7 @@ EOD
 
 cat /tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_slave-rep.sql >>/tmp/slave-rep-status.log
 

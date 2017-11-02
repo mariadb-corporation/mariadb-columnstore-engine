@@ -4970,17 +4970,6 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 
 	log.writeLog(__LINE__, "runMasterRep function called", LOG_TYPE_DEBUG);
 
-	//get mysql user password
-	string mysqlpw = oam::UnassignedName;
-	try {
-		mysqlpw = oam.getMySQLPassword();
-	}
-	catch (...)
-	{}
-
-	if ( mysqlpw == oam::UnassignedName )
-		mysqlpw = "";
-
 	SystemModuleTypeConfig systemModuleTypeConfig;
 	try {
 		oam.getSystemConfig(systemModuleTypeConfig);
@@ -5023,8 +5012,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 					string ipAddr = (*pt1).IPAddr;
 	
 					string logFile = "/tmp/master-rep-columnstore-" + moduleName + ".log";
-					string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --password=" +
-						mysqlpw + " --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + "  > " + logFile + " 2>&1";
+					string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + "  > " + logFile + " 2>&1";
 					log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 	
 					system(cmd.c_str());
@@ -5050,24 +5038,8 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 						}
 					}
 				}
-	
-				//got check for password and bypass config check
-				if ( passwordError ) 
-				{
-					try {
-						mysqlpw = oam.getMySQLPassword();
-					}
-					catch (...)
-					{}
 				
-					if ( mysqlpw == oam::UnassignedName )
-					{
-						log.writeLog(__LINE__, "master-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
-						return oam::API_FAILURE;
-					}
-				}
-				else
-					break;
+				break;
 			}
 		}
 	}
@@ -5140,17 +5112,6 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 
 	log.writeLog(__LINE__, "runSlaveRep function called", LOG_TYPE_DEBUG);
 
-	//get mysql user password
-	string mysqlpw = oam::UnassignedName;
-	try {
-		mysqlpw = oam.getMySQLPassword();
-	}
-	catch (...)
-	{}
-
-	if ( mysqlpw == oam::UnassignedName )
-		mysqlpw = "";
-
 	// get master replicaion module IP Address
 	string PrimaryUMModuleName;
 	oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
@@ -5169,8 +5130,7 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 	bool passwordError = false;
 	while(true)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --password=" +
-			mysqlpw + " --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + + " --port=" + port + "  >   /tmp/slave-rep-columnstore.log 2>&1";
+		string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + + " --port=" + port + "  >   /tmp/slave-rep-columnstore.log 2>&1";
 	
 		log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 	
@@ -5200,24 +5160,6 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 				return oam::API_FAILURE;
 			}
 		}
-	
-		//got check for password and bypass config check
-		if ( passwordError ) 
-		{
-			try {
-				mysqlpw = oam.getMySQLPassword();
-			}
-			catch (...)
-			{}
-		
-			if ( mysqlpw == oam::UnassignedName )
-			{
-				log.writeLog(__LINE__, "slave-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
-				return oam::API_FAILURE;
-			}
-		}
-		else
-			break;
 	}
 
 	return oam::API_FAILURE;
@@ -5235,19 +5177,7 @@ int ProcessMonitor::runDisableRep()
 
 	log.writeLog(__LINE__, "runDisableRep function called", LOG_TYPE_DEBUG);
 
-	//get mysql user password
-	string mysqlpw = oam::UnassignedName;
-	try {
-		mysqlpw = oam.getMySQLPassword();
-	}
-	catch (...)
-	{}
-
-	if ( mysqlpw == oam::UnassignedName )
-		mysqlpw = "";
-
-	string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --password=" +
-		mysqlpw + " --installdir=" + startup::StartUp::installDir() + "  >   /tmp/disable-rep-columnstore.log 2>&1";
+	string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + "  >   /tmp/disable-rep-columnstore.log 2>&1";
 
 	log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 

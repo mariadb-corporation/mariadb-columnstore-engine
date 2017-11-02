@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-
+   Copyright (C) 2017 MariaDB 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; version 2 of
@@ -56,6 +56,10 @@ using namespace oam;
 int main(int argc, char *argv[])
 {
 	Oam oam;
+	
+	cout << oam::UnassignedName << endl;
+
+	exit (0);
 
 	string USER = "root";
 	char* p= getenv("USER");

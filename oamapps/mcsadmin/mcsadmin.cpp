@@ -6122,6 +6122,8 @@ int processCommand(string* arguments)
                 {
                     cout << endl << "**** disableRep Failed :  " << e.what() << endl;
                 }
+                
+                cout << endl;
 
             	break;
 	}

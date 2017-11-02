@@ -47,7 +47,7 @@ EOD
 
 cat /tmp/idb_disable-rep.sql >>/tmp/disable-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_disable-rep.sql >>/tmp/disable-rep-status.log
 
@@ -63,7 +63,7 @@ EOD
 
 cat /tmp/idb_disable-rep.sql >>/tmp/disable-rep-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_disable-rep.sql >>/tmp/disable-rep-status.log
 

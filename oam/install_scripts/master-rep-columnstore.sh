@@ -53,7 +53,7 @@ EOD
 
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
@@ -71,7 +71,7 @@ EOD
 
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
@@ -87,7 +87,7 @@ EOD
 
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
@@ -100,7 +100,7 @@ EOD
 
 cat /tmp/idb_master-rep.sql >/tmp/show-master-status.log
 $installdir/mysql/bin/mysql \
-	--defaults-file=$installdir/mysql/my.cnf \
+	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root $pwprompt \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/show-master-status.log
 
