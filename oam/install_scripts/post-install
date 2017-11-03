@@ -193,8 +193,8 @@ else
 fi
 
 if [ -n "$systemctl" ]; then
-    systemctl restart rc-local >/dev/null 2>&1
-    systemctl enable rc-local >/dev/null 2>&1
+    $SUDO systemctl restart rc-local >/dev/null 2>&1
+    $SUDO systemctl enable rc-local >/dev/null 2>&1
 fi
 
 #setup the columnstore service script
@@ -228,6 +228,7 @@ if [ $user = "root" ]; then
 		fi
 	fi
 fi
+
 #setup MariaDB Columnstore system logging
 sed -i -e s/groupname/$user/g $installdir/bin/columnstoreSyslog7
 sed -i -e s/username/$user/g $installdir/bin/columnstoreSyslog7
