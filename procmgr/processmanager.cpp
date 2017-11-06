@@ -10328,18 +10328,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 */
 	log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
 
-	// mysql port number
-	string MySQLPort;
-	try {
-		oam.getSystemConfig("MySQLPort", MySQLPort);
-	}
-	catch(...) {
-		MySQLPort = "3306";
-	}
-
-	if ( MySQLPort.empty() )
-		MySQLPort = "3306";
-
 	//get master info
 	if ( masterModule == oam::UnassignedName)
 	{
@@ -10390,6 +10378,13 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 				if ( remoteModuleName == masterModule )
 					continue;
 
+				// don't do PMs unless PMwithUM flag is set
+				if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
+					string moduleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
+					if ( moduleType == "pm" && PMwithUM == "n" )
+						continue;
+				}
+		
 				ByteStream msg;
 				ByteStream::byte requestID = oam::MASTERDIST;
 				msg << requestID;
@@ -10485,7 +10480,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 				
 					msg1 << masterLogFile;
 					msg1 << masterLogPos;
-					msg1 << MySQLPort;
 				}
 
 				returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );
@@ -10534,7 +10528,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 			
 				msg1 << masterLogFile;
 				msg1 << masterLogPos;
-				msg1 << MySQLPort;
 			}
 		
 			returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );

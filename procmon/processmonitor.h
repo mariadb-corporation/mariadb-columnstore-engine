@@ -492,12 +492,18 @@ public:
     /**
      *@brief run upgrade script
      */
-	int runUpgrade(std::string mysqlpw);
+//	int runUpgrade(std::string mysqlpw);
 
     /**
      *@brief change my.cnf
      */
 	int changeMyCnf(std::string type);
+
+
+    /**
+     *@brief run MariaDB Command Line script
+     */
+        int runMariaDBCommandLine(std::string command);
 
     /**
      *@brief run Master Replication script
@@ -512,7 +518,7 @@ public:
     /**
      *@brief run Slave Replication script
      */
-	int runSlaveRep(std::string& masterLogFile, std::string& masterLogPos, std::string& port);
+	int runSlaveRep(std::string& masterLogFile, std::string& masterLogPos);
 
     /**
      *@brief run Disable Replication script

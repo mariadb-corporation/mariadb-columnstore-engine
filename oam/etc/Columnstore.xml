@@ -226,7 +226,7 @@
 	<SystemConfig>
 		<SystemLang>C</SystemLang>
 		<SystemName>columnstore-1</SystemName>
-		<ParentOAMModuleName>unassigned</ParentOAMModuleName>
+		<ParentOAMModuleName>pm1</ParentOAMModuleName>
 		<StandbyOAMModuleName>unassigned</StandbyOAMModuleName>
 		<PrimaryUMModuleName>unassigned</PrimaryUMModuleName>
 		<ModuleHeartbeatPeriod>1</ModuleHeartbeatPeriod>

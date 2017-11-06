@@ -1582,7 +1582,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 		}
 
 
-		case RUNUPGRADE:
+/*		case RUNUPGRADE:
 		{
 			log.writeLog(__LINE__,  "MSG RECEIVED: Run upgrade script ");
 
@@ -1601,7 +1601,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 			break;
 		}
-
+*/
 		case PROCUNMOUNT:
 		{
 			string dbrootID;
@@ -1862,8 +1862,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			msg >> masterLogFile;
 			string masterLogPos;
 			msg >> masterLogPos;
-			string port;
-			msg >> port;
 
 			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
 			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
@@ -1892,7 +1890,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 			}
 
 			// run Slave Rep script
-			ret = runSlaveRep(masterLogFile, masterLogPos, port);
+			ret = runSlaveRep(masterLogFile, masterLogPos);
 
 			ackMsg << (ByteStream::byte) ACK;
 			ackMsg << (ByteStream::byte) SLAVEREP;
@@ -4677,7 +4675,7 @@ void ProcessMonitor::checkProcessFailover( std::string processName)
 * purpose:	run upgrade script
 *
 ******************************************************************************************/
-int ProcessMonitor::runUpgrade(std::string mysqlpw)
+/*int ProcessMonitor::runUpgrade(std::string mysqlpw)
 {
 	Oam oam;
 
@@ -4711,7 +4709,7 @@ int ProcessMonitor::runUpgrade(std::string mysqlpw)
 	}
 	return oam::API_FAILURE;
 }
-
+*/
 
 /******************************************************************************************
 * @brief	changeMyCnf
@@ -4734,204 +4732,103 @@ int ProcessMonitor::changeMyCnf(std::string type)
 
 	string dbDir = startup::StartUp::installDir() + "/mysql/db";
 
-/*	if ( type == "master" )
+	//get server-id based on ExeMgrx setup
+	string serverID = "0";
+	string localModuleName = config.moduleName();
+	for ( int id = 1 ; ; id++ )
 	{
-		// set master replication entries
-		vector <string> lines;
-		char line[200];
-		string buf;
-		while (file.getline(line, 200))
-		{
-			buf = line;
-			string::size_type pos = buf.find("server-id =",0);
-			if ( pos != string::npos ) {
-				buf = "server-id = 1";
+		string Section = "ExeMgr" + oam.itoa(id);
+
+		string moduleName;
+
+		try {
+			Config* sysConfig = Config::makeConfig();
+			moduleName = sysConfig->getConfig(Section, "Module");
+
+			if ( moduleName == localModuleName )
+			{
+				serverID = oam.itoa(id);
+				break;
 			}
-
-//			pos = buf.find("# binlog_format=ROW",0);
-//			if ( pos != string::npos ) {
-//				buf = "binlog_format=ROW";
-//			}
-
-			pos = buf.find("infinidb_local_query=1",0);
-			if ( pos != string::npos && pos == 0) {
-				buf = "# infinidb_local_query=1";
-			}
-
-			//output to temp file
-			lines.push_back(buf);
 		}
-
-		file.close();
-		unlink (mycnfFile.c_str());
-		ofstream newFile (mycnfFile.c_str());	
-		
-		//create new file
-		int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0664);
-		
-		copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-		newFile.close();
-		
-		close(fd);
+		catch (...) {}
 	}
 
-	if ( type == "slave" )
+	if ( serverID == "0" )
 	{
-*/		//get slave id based on ExeMgrx setup
-		string slaveID = "0";
-		string localModuleName = config.moduleName();
-		for ( int id = 1 ; ; id++ )
+		log.writeLog(__LINE__, "changeMyCnf: ExeMgr for local module doesn't exist", LOG_TYPE_ERROR);
+		return oam::API_FAILURE;
+	}
+
+	// set server-id and other options in my.cnf
+	vector <string> lines;
+	char line[200];
+	string buf;
+	while (file.getline(line, 200))
+	{
+		buf = line;
+		string::size_type pos = buf.find("server-id",0);
+		if ( pos != string::npos ) {
+			buf = "server-id = " + serverID;
+			
+			string command = "SET GLOBAL server_id=" + serverID + ";";
+			int ret = runMariaDBCommandLine(command);
+			if (ret != 0)
+			{
+			      log.writeLog(__LINE__, "changeMyCnf: runMariaDBCommandLine Error", LOG_TYPE_ERROR);
+			      return oam::API_FAILURE;
+			} 
+		}
+
+		// set local query flag if on pm
+		if ( (PMwithUM == "y") && config.moduleType() == "pm" )
 		{
-			string Section = "ExeMgr" + oam.itoa(id);
+			pos = buf.find("infinidb_local_query",0);
+			if ( pos != string::npos ) {
+				buf = "infinidb_local_query=1";
+				
+				string command = "SET GLOBAL " + buf + ";";
 
-			string moduleName;
-
-			try {
-				Config* sysConfig = Config::makeConfig();
-				moduleName = sysConfig->getConfig(Section, "Module");
-
-				if ( moduleName == localModuleName )
+				int ret = runMariaDBCommandLine(command);
+				if (ret != 0)
 				{
-					slaveID = oam.itoa(id);
-					break;
-				}
+				      log.writeLog(__LINE__, "changeMyCnf: runMariaDBCommandLine Error", LOG_TYPE_ERROR);
+				      return oam::API_FAILURE;
+				} 
 			}
-			catch (...) {}
 		}
-
-		if ( slaveID == "0" )
-		{
-			log.writeLog(__LINE__, "changeMyCnf: ExeMgr for local module doesn't exist", LOG_TYPE_ERROR);
-			return oam::API_FAILURE;
-		}
-
-		// get local host name
-/*		string HOSTNAME = "localhost";
-		try
-		{
-			ModuleConfig moduleconfig;
-			oam.getSystemConfig(config.moduleName(), moduleconfig);
-			HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-			HOSTNAME = (*pt1).HostName;
-		}
-		catch(...)
-		{}
-
-		char* p= getenv("HOSTNAME");
-		if (p && *p)
-			HOSTNAME = p;
-*/
-		// set slave replication entries
-		vector <string> lines;
-		char line[200];
-		string buf;
-		while (file.getline(line, 200))
-		{
-			buf = line;
-			string::size_type pos = buf.find("server-id",0);
+		else
+		{ // disable, if needed
+			pos = buf.find("infinidb_local_query",0);
 			if ( pos != string::npos ) {
-				buf = "server-id = " + slaveID;
-			}
+				buf = "infinidb_local_query=0";
 
-			// set local query flag if on pm
-			if ( (PMwithUM == "y") && config.moduleType() == "pm" )
-			{
-				pos = buf.find("# infinidb_local_query=1",0);
-				if ( pos != string::npos ) {
-					buf = "infinidb_local_query=1";
-				}
+				string command = "SET GLOBAL " + buf + ";";
+				int ret = runMariaDBCommandLine(command);
+				if (ret != 0)
+				{
+				      log.writeLog(__LINE__, "changeMyCnf: runMariaDBCommandLine Error", LOG_TYPE_ERROR);
+				      return oam::API_FAILURE;
+				} 
 			}
-			else
-			{ // disable, if needed
-				pos = buf.find("infinidb_local_query=1",0);
-				if ( pos != string::npos ) {
-					buf = "# infinidb_local_query=1";
-				}
-			}
-
-//			pos = buf.find("binlog_format=ROW",0);
-//			if ( pos != string::npos && pos == 0 ) {
-//				buf = "# binlog_format=ROW";
-//			}
-
-			//output to temp file
-			lines.push_back(buf);
 		}
-
-		file.close();
-		unlink (mycnfFile.c_str());
-		ofstream newFile (mycnfFile.c_str());	
 		
-		//create new file
-		int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0664);
-		
-		copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-		newFile.close();
-		
-		close(fd);
-//	}
-
-/*	if ( type == "disable" )
-	{
-		// set master replication entries
-		vector <string> lines;
-		char line[200];
-		string buf;
-		while (file.getline(line, 200))
-		{
-			buf = line;
-			string::size_type pos = buf.find("server-id",0);
-			if ( pos != string::npos ) {
-				string::size_type pos1 = buf.find("1",pos);
-				if ( pos1 == string::npos ) {
-					buf = "# server-id = 1";
-				}
-			}
-
-			pos = buf.find("log-bin=mysql-bin",0);
-			if ( pos != string::npos ) {
-				buf = "# log-bin=mysql-bin";
-			}
-
-			pos = buf.find("binlog_format=ROW",0);
-			if ( pos != string::npos && pos == 0 ) {
-				buf = "# binlog_format=ROW";
-			}
-
-			pos = buf.find("infinidb_local_query=1",0);
-			if ( pos != string::npos && pos == 0) {
-				buf = "# infinidb_local_query=1";
-			}
-
-			pos = buf.find("# relay-log",0);
-			if ( pos != string::npos ) {
-				buf = buf;
-			}
-			else
-			{
-				pos = buf.find("relay-log",0);
-				if ( pos != string::npos ) {
-					buf = "# " + buf;
-				}
-			}
-
-			//output to temp file
-			lines.push_back(buf);
-		}
-
-		file.close();
-		unlink (mycnfFile.c_str());
-		ofstream newFile (mycnfFile.c_str());	
-		
-		//create new file
-		int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0664);
-		
-		copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-		newFile.close();
-		
-		close(fd);
+		//output to temp file
+		lines.push_back(buf);
 	}
-*/
+
+	file.close();
+	unlink (mycnfFile.c_str());
+	ofstream newFile (mycnfFile.c_str());	
+	
+	//create new file
+	int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0664);
+	
+	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
+	newFile.close();
+	
+	close(fd);
+
 	// set owner and permission 
 	string cmd = "chmod 664 " + mycnfFile + " >/dev/null 2>&1";
 	if ( !rootUser)
@@ -4946,17 +4843,71 @@ int ProcessMonitor::changeMyCnf(std::string type)
 	system(cmd.c_str());
 
 	// restart mysql
-	try {
+/*	try {
 		oam.actionMysqlCalpont(MYSQL_RESTART);
 		sleep(5);	// give after mysql restart
 	}
 	catch(...)
 	{}
-
+*/
 	log.writeLog(__LINE__, "changeMyCnf function successfully completed", LOG_TYPE_DEBUG);
 
 	return oam::API_SUCCESS;
 }
+
+/******************************************************************************************
+* @brief	runMariaDBCommandLine
+*
+* purpose:	run MariaDB Command Line script
+*
+******************************************************************************************/
+int ProcessMonitor::runMariaDBCommandLine(std::string command)
+{
+	Oam oam;
+
+	log.writeLog(__LINE__, "runMariaDBCommandLine function called: cmd = " + command, LOG_TYPE_DEBUG);
+
+	// mysql port number
+	string MySQLPort;
+	try {
+		oam.getSystemConfig("MySQLPort", MySQLPort);
+	}
+	catch(...) {
+		MySQLPort = "3306";
+	}
+
+	if ( MySQLPort.empty() )
+		MySQLPort = "3306";
+
+	string cmd = startup::StartUp::installDir() + "/bin/mariadb-command-line.sh --installdir=" + startup::StartUp::installDir() + " --command='" + command + "' --port=" + MySQLPort + "  > /tmp/mariadb-command-line.sh.log 2>&1";
+
+	log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
+
+	system(cmd.c_str());
+
+	string logFile = "/tmp/mariadb-command-line.sh.log";
+
+	if (oam.checkLogStatus(logFile, "ERROR 1045") ) {
+		log.writeLog(__LINE__, "mariadb-command-line.sh:  MySQL Password Error, check .my.cnf", LOG_TYPE_ERROR);
+		return oam::API_FAILURE;
+	}
+	else
+	{
+		if (oam.checkLogStatus(logFile, "OK"))
+		{
+			log.writeLog(__LINE__, "mariadb-command-line.sh: Successful return", LOG_TYPE_DEBUG);
+			return oam::API_SUCCESS;
+		}
+		else 
+		{
+			log.writeLog(__LINE__, "mariadb-command-line.sh: Error return, check log /tmp/mariadb-command-line.sh.log", LOG_TYPE_ERROR);
+			return oam::API_FAILURE;
+		}
+	}
+	
+	return oam::API_FAILURE;
+}
+
 
 /******************************************************************************************
 * @brief	runMasterRep
@@ -4984,6 +4935,18 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
 	}
 
+	// mysql port number
+	string MySQLPort;
+	try {
+		oam.getSystemConfig("MySQLPort", MySQLPort);
+	}
+	catch(...) {
+		MySQLPort = "3306";
+	}
+
+	if ( MySQLPort.empty() )
+		MySQLPort = "3306";
+
 	// create user for each module by ip address
 	for ( unsigned int i = 0 ; i < systemModuleTypeConfig.moduletypeconfig.size(); i++)
 	{
@@ -5000,46 +4963,41 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 
 			string moduleType = systemModuleTypeConfig.moduletypeconfig[i].ModuleType;
 	
-			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
+			if ( ( (PMwithUM == "n") && (moduleType == "pm") ) && 
 			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
 				continue;
 
 			HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
-			while(true)	// need in case there is a password retry
+			for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++ )
 			{
-				for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++ )
-				{
-					string ipAddr = (*pt1).IPAddr;
-	
-					string logFile = "/tmp/master-rep-columnstore-" + moduleName + ".log";
-					string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + "  > " + logFile + " 2>&1";
-					log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
-	
-					system(cmd.c_str());
-			
-					if (oam.checkLogStatus(logFile, "ERROR 1045") ) {
-						if ( passwordError ) {
-							log.writeLog(__LINE__, "master-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
-							return oam::API_FAILURE;
-						}
-	
-						log.writeLog(__LINE__, "master-rep-columnstore.sh: Missing Password error, go check for a password and retry", LOG_TYPE_DEBUG);
-						passwordError = true;
-						break;
+				string ipAddr = (*pt1).IPAddr;
+
+				string logFile = "/tmp/master-rep-columnstore-" + moduleName + ".log";
+				string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + " --port=" + MySQLPort + "  > " + logFile + " 2>&1";
+				log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
+
+				system(cmd.c_str());
+		
+				if (oam.checkLogStatus(logFile, "ERROR 1045") ) {
+					if ( passwordError ) {
+						log.writeLog(__LINE__, "master-rep-columnstore.sh:  MySQL Password Error", LOG_TYPE_ERROR);
+						return oam::API_FAILURE;
 					}
-					else
+
+					log.writeLog(__LINE__, "master-rep-columnstore.sh: Missing Password error, go check for a password and retry", LOG_TYPE_DEBUG);
+					passwordError = true;
+					break;
+				}
+				else
+				{
+					if (oam.checkLogStatus(logFile, "OK"))
+						log.writeLog(__LINE__, "master-rep-columnstore.sh: Successful return for node " + moduleName, LOG_TYPE_DEBUG);
+					else 
 					{
-						if (oam.checkLogStatus(logFile, "OK"))
-							log.writeLog(__LINE__, "master-rep-columnstore.sh: Successful return for node " + moduleName, LOG_TYPE_DEBUG);
-						else 
-						{
-							log.writeLog(__LINE__, "master-rep-columnstore.sh: Error return, check log " + logFile, LOG_TYPE_ERROR);
-							return oam::API_FAILURE;
-						}
+						log.writeLog(__LINE__, "master-rep-columnstore.sh: Error return, check log " + logFile, LOG_TYPE_ERROR);
+						return oam::API_FAILURE;
 					}
 				}
-				
-				break;
 			}
 		}
 	}
@@ -5106,7 +5064,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 * purpose:	run Slave Replication script
 *
 ******************************************************************************************/
-int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterLogPos, std::string& port)
+int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterLogPos)
 {
 	Oam oam;
 
@@ -5127,10 +5085,22 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 	catch(...)
 	{}
 
+	// mysql port number
+	string MySQLPort;
+	try {
+		oam.getSystemConfig("MySQLPort", MySQLPort);
+	}
+	catch(...) {
+		MySQLPort = "3306";
+	}
+
+	if ( MySQLPort.empty() )
+		MySQLPort = "3306";
+
 	bool passwordError = false;
 	while(true)
 	{
-		string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + + " --port=" + port + "  >   /tmp/slave-rep-columnstore.log 2>&1";
+		string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + " --port=" + MySQLPort + "  >   /tmp/slave-rep-columnstore.log 2>&1";
 	
 		log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 	
@@ -5176,6 +5146,18 @@ int ProcessMonitor::runDisableRep()
 	Oam oam;
 
 	log.writeLog(__LINE__, "runDisableRep function called", LOG_TYPE_DEBUG);
+
+	// mysql port number
+	string MySQLPort;
+	try {
+		oam.getSystemConfig("MySQLPort", MySQLPort);
+	}
+	catch(...) {
+		MySQLPort = "3306";
+	}
+
+	if ( MySQLPort.empty() )
+		MySQLPort = "3306";
 
 	string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + "  >   /tmp/disable-rep-columnstore.log 2>&1";
 
@@ -5227,6 +5209,7 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 //		log.writeLog(__LINE__, "EXCEPTION ERROR on getSystemConfig: Caught unknown exception!", LOG_TYPE_ERROR);
 	}
 
+	int slave = 0;
 	if ( slaveModule == "all" )
 	{
 		// Distrubuted MySQL Front-end DB to Slave Modules
@@ -5238,7 +5221,7 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 	
 			string moduleType = systemModuleTypeConfig.moduletypeconfig[i].ModuleType;
 	
-			if ( ( (PMwithUM == "n") && (config.moduleType() == "pm") ) && 
+			if ( ( (PMwithUM == "n") && (moduleType == "pm") ) && 
 			      ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM) )
 				continue;
 	
@@ -5251,6 +5234,8 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 				if ( moduleName == config.moduleName() )
 					continue;
 	
+				slave++;
+				
 				HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
 				for ( ; pt1 != (*pt).hostConfigList.end() ; pt1++ )
 				{
@@ -5263,7 +5248,10 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 				
 					string logFile = "/tmp/master-dist_" + moduleName + ".log";
 					if (!oam.checkLogStatus(logFile, "FAILED"))
+					{
 						log.writeLog(__LINE__, "runMasterDist: Success rsync to module: " + moduleName, LOG_TYPE_DEBUG);
+						break;
+					}
 					else
 					{
 						log.writeLog(__LINE__, "runMasterDist: Failure rsync to module: " + moduleName, LOG_TYPE_ERROR);
@@ -5275,24 +5263,37 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 	}
 	else
 	{
-		// get slave IP address
-		ModuleConfig moduleconfig;
-		oam.getSystemConfig(slaveModule, moduleconfig);
-		HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-		string ipAddr = (*pt1).IPAddr;
+		// don't do PMs unless PMwithUM flag is set
+	  
+		string moduleType = slaveModule.substr(0,MAX_MODULE_TYPE_SIZE);
 
-		string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > /tmp/master-dist_" + slaveModule + ".log";
-		system(cmd.c_str());
-	
-		string logFile = "/tmp/master-dist_" + slaveModule + ".log";
-		if (!oam.checkLogStatus(logFile, "FAILED"))
-			log.writeLog(__LINE__, "runMasterDist: Success rsync to module: " + slaveModule, LOG_TYPE_DEBUG);
-		else
+		if ( ( (PMwithUM == "y") && (moduleType == "pm") ) && 
+		      ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM) )
 		{
-			log.writeLog(__LINE__, "runMasterDist: Failure rsync to module: " + slaveModule, LOG_TYPE_ERROR);
-			return oam::API_FAILURE;
+		      slave++;
+		    
+		      // get slave IP address
+		      ModuleConfig moduleconfig;
+		      oam.getSystemConfig(slaveModule, moduleconfig);
+		      HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+		      string ipAddr = (*pt1).IPAddr;
+
+		      string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > /tmp/master-dist_" + slaveModule + ".log";
+		      system(cmd.c_str());
+	      
+		      string logFile = "/tmp/master-dist_" + slaveModule + ".log";
+		      if (!oam.checkLogStatus(logFile, "FAILED"))
+			      log.writeLog(__LINE__, "runMasterDist: Success rsync to module: " + slaveModule, LOG_TYPE_DEBUG);
+		      else
+		      {
+			      log.writeLog(__LINE__, "runMasterDist: Failure rsync to module: " + slaveModule, LOG_TYPE_ERROR);
+			      return oam::API_FAILURE;
+		      }
 		}
 	}
+	
+	if (slave == 0 ) 
+	    log.writeLog(__LINE__, "runMasterDist: No configured slave nodes", LOG_TYPE_DEBUG);
 
 	return oam::API_SUCCESS;
 }

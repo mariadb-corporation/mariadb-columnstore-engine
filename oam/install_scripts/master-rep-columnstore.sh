@@ -24,9 +24,6 @@ for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
 		prefix="`echo $arg | awk -F= '{print $2}'`"
 		installdir=$prefix/mariadb/columnstore
-	elif [ `expr -- "$arg" : '--password='` -eq 11 ]; then
-		password="`echo $arg | awk -F= '{print $2}'`"
-		pwprompt="--password=$password"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
@@ -54,7 +51,7 @@ EOD
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
 	--defaults-extra-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
+	--user=root \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
 checkForError
@@ -72,7 +69,7 @@ EOD
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
 	--defaults-extra-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
+	--user=root \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
 checkForError
@@ -88,7 +85,7 @@ EOD
 cat /tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log
 $installdir/mysql/bin/mysql \
 	--defaults-extra-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
+	--user=root \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/master-rep-status-$hostipaddr.log 2>&1
 
 checkForError
@@ -101,7 +98,7 @@ EOD
 cat /tmp/idb_master-rep.sql >/tmp/show-master-status.log
 $installdir/mysql/bin/mysql \
 	--defaults-extra-file=$installdir/mysql/my.cnf \
-	--user=root $pwprompt \
+	--user=root \
 	calpontsys </tmp/idb_master-rep.sql >>/tmp/show-master-status.log
 
 
