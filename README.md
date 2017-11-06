@@ -1,9 +1,9 @@
-#MariaDB ColumnStore Storage/Execution engine 1.1.1 RC
-MariaDB ColumnStore 1.1.1 RC is the development version of MariaDB ColumnStore. 
+#MariaDB ColumnStore Storage/Execution engine 1.1.2 GA
+MariaDB ColumnStore 1.1.2 GA is the development version of MariaDB ColumnStore. 
 It is built by porting InfiniDB 4.6.7 on MariaDB 10.2.9 and adding entirely 
 new features not found anywhere else.
 
-#MariaDB ColumnStore 1.1.1 is an RC release. 
+#MariaDB ColumnStore 1.1.2 is an GA release. 
 
 - Do not use Beta releases on production systems.
 
