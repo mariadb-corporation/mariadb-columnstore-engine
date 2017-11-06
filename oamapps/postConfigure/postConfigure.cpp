@@ -883,6 +883,11 @@ int main(int argc, char *argv[])
 				catch(...)
 				{}
 
+				if ( !writeConfig(sysConfig) ) { 
+					cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
+					exit(1);
+				}
+
 				break;
 			}
 		}
@@ -1058,6 +1063,7 @@ int main(int argc, char *argv[])
 		if ( !rootUser )
 		{
 		    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+		    system("sudo chmod 666 /etc/fstab >/dev/null 2>&1");
 		}
 
 		if ( !writeConfig(sysConfig) ) { 
