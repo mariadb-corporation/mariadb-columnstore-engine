@@ -82,9 +82,7 @@ DROP PROCEDURE IF EXISTS `compression_ratio` //
 
 CREATE PROCEDURE compression_ratio()
 BEGIN
-SELECT CONCAT(((sum(compressed_data_size) / sum(data_size)) * 100), '%') COMPRESSION_RATIO FROM INFORMATION_SCHEMA.COLUMNSTORE_EXTENTS ce
-JOIN INFORMATION_SCHEMA.COLUMNSTORE_FILES cf ON ce.object_id = cf.object_id
-WHERE compressed_data_size IS NOT NULL;
+SELECT CONCAT((SELECT SUM(file_size) FROM information_schema.columnstore_files WHERE compressed_data_size IS NOT NULL) / (SELECT SUM(data_size) FROM information_schema.columnstore_extents) * 100, '%') COMPRESSION_RATIO;
 END //
 
 DELIMITER ;
