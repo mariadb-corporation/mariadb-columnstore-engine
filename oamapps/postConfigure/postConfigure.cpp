@@ -3497,7 +3497,7 @@ int main(int argc, char *argv[])
 			cout.flush();
 
 			//send message to procmon's to run mysql replication script
-			int status = sendReplicationRequest(IserverTypeInstall, password, mysqlPort, pmwithum);
+			int status = sendReplicationRequest(IserverTypeInstall, password, pmwithum);
 
 			if ( status != 0 ) {
 				cout << endl << " MariaDB ColumnStore Install Failed" << endl << endl;
