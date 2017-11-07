@@ -2943,7 +2943,7 @@ int main(int argc, char *argv[])
 							if ( pwprompt == " " )
 								temppwprompt = "none";
               
-              //run remote installer script
+					    //run remote installer script
 					    cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + EEPackageType + " " + nodeps + " " + remote_installer_debug + " " + debug_logfile;
 
 					    if ( thread_remote_installer ) {
@@ -5345,15 +5345,31 @@ void remoteInstallThread(void *arg)
 {
   	thread_data_t *data = (thread_data_t *)arg;
 
-	int rtnCode = system((data->command).c_str());
-	if (WEXITSTATUS(rtnCode) != 0) {
-		pthread_mutex_lock(&THREAD_LOCK);
-		cout << endl << "Failure with a remote module install, check install log files in /tmp" << endl;
-		exit(1);
+	for ( int retry = 0 ; retry < 5 ; retry++ )
+	{
+	    int rtnCode = system((data->command).c_str());
+	    if (WEXITSTATUS(rtnCode) == 0) {
+		    //success
+		    pthread_exit(0);
+	    }
+	    else
+	    {
+		if (WEXITSTATUS(rtnCode) == 2) {
+		      //timeout retry
+		      continue;
+		}
+		else
+		{	//failure
+			pthread_mutex_lock(&THREAD_LOCK);
+			cout << endl << "Failure with a remote module install, check install log files in /tmp" << endl;
+			exit(1);
+		}
+	    } 
 	}
-
-	// exit thread
-	pthread_exit(0);
+	
+	pthread_mutex_lock(&THREAD_LOCK);
+	cout << endl << "Failure with a remote module install, check install log files in /tmp" << endl;
+	exit(1);
 }
 
 std::string launchInstance(ModuleIP moduleip)
