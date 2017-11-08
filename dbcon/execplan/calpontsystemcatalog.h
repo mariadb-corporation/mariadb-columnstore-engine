@@ -871,7 +871,8 @@ private:
 
 	typedef std::map<OID, OID> DctTokenMap;
 	DctTokenMap fDctTokenMap;
-	boost::mutex fDctTokenMapLock;
+	// MCOL-859: this can lock when already locked in the same thread
+	boost::recursive_mutex fDctTokenMapLock;
 
 		typedef std::map<OID, TableName> TableNameMap;
 		TableNameMap fTableNameMap;
@@ -1245,6 +1246,8 @@ std::vector<CalpontSystemCatalog::OID> getAllSysCatOIDs();
 std::ostream& operator<<(std::ostream& os, const CalpontSystemCatalog::ColType& rhs);
 
 const std::string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt);
+
+bool ctListSort(const CalpontSystemCatalog::ColType& a, const CalpontSystemCatalog::ColType& b);
 
 } //namespace execplan
 

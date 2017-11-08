@@ -1190,7 +1190,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colTypeDct(const OID& 
 	}
 
     // check map first cached column type
-    boost::mutex::scoped_lock lk3(fDctTokenMapLock);
+    boost::recursive_mutex::scoped_lock lk3(fDctTokenMapLock);
 	DctTokenMap::const_iterator iter = fDctTokenMap.find(dictOid);
 	if (iter != fDctTokenMap.end())
 		return colType(iter->second);
@@ -3093,18 +3093,35 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
                 ctList[i].nextvalue = ((*it)->GetData(i));
         }
     }
-    
+    // MCOL-895 sort ctList, we can't specify an ORDER BY to do this yet
+    std::sort(ctList, ctList + ti.numOfCols, ctListSort);
+
     // populate colinfo cache
     lk3.lock();
     for (int i = 0; i < ti.numOfCols; i++)
         fColinfomap[ctList[i].columnOID] = ctList[i];
     lk3.unlock();
-    
+
+    // Re-sort the output based on the sorted ctList
+    // Don't need to do this for the cached list as this will be already sorted
+    RIDList rlOut;
+    for (int i = 0; i < ti.numOfCols; i++)
+    {
+        OID objid = ctList[i].columnOID;
+        for (size_t j = 0; j < rl.size(); j++)
+        {
+            if (rl[j].objnum == objid)
+            {
+                rlOut.push_back(rl[j]);
+            }
+        }
+    }
+
     delete [] ctList;
    // delete col[9];    
-    if (rl.size() != 0)
+    if (rlOut.size() != 0)
     {
-        return rl;
+        return rlOut;
     }
 		
 		Message::Args args;
@@ -5320,7 +5337,7 @@ void CalpontSystemCatalog::flushCache()
 	buildSysTablemap();
 	lk3.unlock();
 
-	boost::mutex::scoped_lock lk4(fDctTokenMapLock);
+	boost::recursive_mutex::scoped_lock lk4(fDctTokenMapLock);
 	fDctTokenMap.clear();
 	buildSysDctmap();
 	lk4.unlock();
@@ -5786,6 +5803,11 @@ vector<CalpontSystemCatalog::OID> getAllSysCatOIDs()
 	for (oid = SYSCOLUMN_DICT_BASE + 1; oid < SYSCOLUMN_DICT_MAX; oid++)
 		ret.push_back(oid);
 	return ret;
+}
+
+bool ctListSort(const CalpontSystemCatalog::ColType& a, const CalpontSystemCatalog::ColType& b)
+{
+    return a.colPosition < b.colPosition;
 }
 
 } // namespace execplan
