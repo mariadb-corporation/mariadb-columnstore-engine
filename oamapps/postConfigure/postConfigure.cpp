@@ -2778,27 +2778,9 @@ int main(int argc, char *argv[])
 			//
 			cout << endl << "===== System Installation =====" << endl << endl;
 
-			cout << "System Configuration is complete, System Installation is the next step." << endl;
+			cout << "System Configuration is complete." << endl;
+			cout << "Performing System Installation." << endl;
 	
-			while(true)
-			{
-				pcommand = callReadline("Would you like to continue with the System Installation? [y,n] (y) > ");
-				if (pcommand)
-				{
-					if (strlen(pcommand) > 0) install = pcommand;
-					callFree(pcommand);
-				}
-				if ( install == "y" || install == "n" )
-					break;
-				else
-					cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-				install = "y";
-				if ( noPrompting )
-					exit(1);
-			}
-
-			if ( install == "y" )
-			{
 				SystemSoftware systemsoftware;
 
 				try
@@ -3169,15 +3151,6 @@ int main(int argc, char *argv[])
 					cout << "  DONE" << endl;
 				}
 			}
-			else
-			{
-				if (DataRedundancy && install != "y")
-				{
-					cout << endl << "Must choose to install with DataRedundancy configured." << endl;
-					exit(1);
-				}
-			}
-	    }
 	    else
 	    {
 			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
