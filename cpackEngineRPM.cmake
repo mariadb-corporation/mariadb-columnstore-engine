@@ -217,6 +217,7 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/post/test-004.sh"
 "/usr/local/mariadb/columnstore/bin/os_detect.sh"
 "/usr/local/mariadb/columnstore/bin/columnstoreClusterTester.sh"
+"/usr/local/mariadb/columnstore/bin/mariadb-command-line.sh"
 ${ignored})
 
 SET(CPACK_RPM_libs_USER_FILELIST 
