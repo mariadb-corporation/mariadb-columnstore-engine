@@ -479,61 +479,68 @@ int main(int argc, char *argv[])
 		      char *addr;
 		      bool found = false;
 
-		      getifaddrs (&ifap);
-		      for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-			      if (ifa->ifa_addr->sa_family==AF_INET) {
-				  sa = (struct sockaddr_in *) ifa->ifa_addr;
-				  addr = inet_ntoa(sa->sin_addr);
-				  //printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
-	  
-				  if ( PM1ipAdd == addr )
-				  {
-					  //match
-					  found = true;
-				  }
-			      }
-      
-			      if (found)
-			      break;		
-		      }
-      
-		      freeifaddrs(ifap);
-
-		      if (!found)
+		      if (getifaddrs (&ifap) == 0 )
 		      {
-			
-			  string answer = "y";
+			    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+				    if (ifa->ifa_addr == NULL ) {
+					found = true;
+					break;
+				    }
+				    
+				    if (ifa->ifa_addr->sa_family==AF_INET) {
+					sa = (struct sockaddr_in *) ifa->ifa_addr;
+					addr = inet_ntoa(sa->sin_addr);
+					//printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
+		
+					if ( PM1ipAdd == addr )
+					{
+						//match
+						found = true;
+					}
+				    }
+	    
+				    if (found)
+				    break;		
+			    }
+	    
+			    freeifaddrs(ifap);
 
-			  while(true) {
-				cout << endl << "The Configured PM1 IP Address of " << PM1ipAdd << " does not match any of the" << endl; 
-				cout <<         "Server Ethernet IP addresses there were detected, do you want to continue?" << endl;
-				cout <<         "This is to make sure that you arent running postConfigure from a non-PM1 node." << endl;
-				prompt = "Enter 'y' to continue using Configured IP address [y,n] (y) > ";
+			    if (!found)
+			    {
+			      
+				string answer = "y";
 
-				pcommand = callReadline(prompt.c_str());
-				if (pcommand) {
-				    if (strlen(pcommand) > 0) answer = pcommand;
-				    callFree(pcommand);
+				while(true) {
+				      cout << endl << "The Configured PM1 IP Address of " << PM1ipAdd << " does not match any of the" << endl; 
+				      cout <<         "Server Ethernet IP addresses there were detected, do you want to continue?" << endl;
+				      cout <<         "This is to make sure that you arent running postConfigure from a non-PM1 node." << endl;
+				      prompt = "Enter 'y' to continue using Configured IP address [y,n] (y) > ";
+
+				      pcommand = callReadline(prompt.c_str());
+				      if (pcommand) {
+					  if (strlen(pcommand) > 0) answer = pcommand;
+					  callFree(pcommand);
+				      }
+
+				      if ( answer == "y" || answer == "n" ) {
+					  cout << endl;
+					  break;
+				      }
+				      else
+					  cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+
+				      if ( noPrompting )
+					      exit(1);
 				}
 
-				if ( answer == "y" || answer == "n" ) {
+				if ( answer == "n" ) {
 				    cout << endl;
-				    break;
+				    cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
+				    cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
+				    cout << "IP Address. exiting..." << endl;
+				    exit(1);
 				}
-				else
-				    cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-
-				if ( noPrompting )
-					exit(1);
-			  }
-
-			  if ( answer == "n" ) {
-			      cout << endl;
-			      cout << "ERROR: postConfigure install can only be done on the PM1" << endl;
-			      cout << "designated node. The configured PM1 IP address doesn't match the local" << endl;
-			      cout << "IP Address. exiting..." << endl;
-			      exit(1);
-			  }
+			    }
 		      }	
 		  }
 	      }
