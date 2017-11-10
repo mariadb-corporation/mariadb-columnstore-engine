@@ -616,6 +616,7 @@ int main(int argc, char *argv[])
 		//setup local OS Files
 		if( !setOSFiles(parentOAMModuleName, IserverTypeInstall) ) {
 			cout << "ERROR: setOSFiles error" << endl;
+			cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
 			exit(1);
 		}
 
@@ -797,6 +798,7 @@ int main(int argc, char *argv[])
 			if ( !oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") ) {
 				cout << endl << "System Catalog Create Failure" << endl;
 				cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
+				cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
 				exit (1);
 			}
 		}
@@ -815,6 +817,9 @@ int main(int argc, char *argv[])
 	else
 	{
 		cout << " FAILED" << endl;
+
+		cout << " IMPORTANT: There was a system startup failed, once issue has been resolved, rerun postConfigure" << endl << endl;
+
 		cout << endl << "ERROR: MariaDB ColumnStore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
 		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
