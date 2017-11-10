@@ -628,6 +628,8 @@ int Dctnry::insertDctnry2(Signature& sig)
     int rc = 0;
     int write_size;
     bool lbid_in_token = false;
+    size_t origSigSize = sig.size;
+    unsigned char* origSig = sig.signature;
 
     sig.token.bc = 0;
 
@@ -718,6 +720,8 @@ int Dctnry::insertDctnry2(Signature& sig)
      
         }
     }
+    sig.size = origSigSize;
+    sig.signature = origSig;
     return NO_ERROR;
 }
 
@@ -825,8 +829,7 @@ int Dctnry::insertDctnry(const char* buf,
 
         //...Search for the string in our string cache
         //if it fits into one block (< 8KB)
-        if ((m_arraySize < MAX_STRING_CACHE_SIZE) &&
-            (curSig.size <= MAX_SIGNATURE_SIZE))
+        if (curSig.size <= MAX_SIGNATURE_SIZE)
         {
             //Stats::startParseEvent("getTokenFromArray");
             found = getTokenFromArray(curSig);
@@ -1375,8 +1378,7 @@ int  Dctnry::updateDctnry(unsigned char* sigValue, int& sigSize,
 
     // Look for string in cache
     // As long as the string <= 8000 bytes
-    if ((m_arraySize < MAX_STRING_CACHE_SIZE) &&
-        (sigSize <= MAX_SIGNATURE_SIZE))
+    if (sigSize <= MAX_SIGNATURE_SIZE)
     {
         bool found = false;
         found = getTokenFromArray(sig);
