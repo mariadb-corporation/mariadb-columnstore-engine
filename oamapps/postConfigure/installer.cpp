@@ -1018,8 +1018,6 @@ bool updateProcessConfig(int serverTypeInstall)
  */
 bool makeRClocal(string moduleName, int IserverTypeInstall)
 {
-	string cmd;
-
 	string moduleType = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
 
 	vector <string> lines;
@@ -1096,27 +1094,26 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
 
 	if ( lines.begin() == lines.end())
 		return true;
-
-	string fileName = "/etc/rc.d/rc.local";
-
-   	ofstream newFile (fileName.c_str());	
-	if (!newFile)
+	
+	string RCfileName = "/etc/rc.d/rc.local";
+	std::ofstream file;
+	
+   	file.open(RCfileName.c_str(), std::ios::out | std::ios::app);
+	if (file.fail())
 	{
-	      fileName = "/etc/rc.local";
+	      RCfileName = "/etc/rc.local";
 
-	      ofstream newFile (fileName.c_str());	
-	      if (!newFile)
+	      file.open(RCfileName.c_str(), std::ios::out | std::ios::app);
+	      if (file.fail())
 		  return true;
 	}
 
-	//create new file
-	int fd = open(fileName.c_str(), O_RDWR|O_CREAT, 0666);
+	file.exceptions(file.exceptions() | std::ios::failbit | std::ifstream::badbit);
 	
-	copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-	newFile.close();
+	copy(lines.begin(), lines.end(), ostream_iterator<string>(file, "\n"));
 	
-	close(fd);
-
+	file.close();
+	
 	return true;
 }
 

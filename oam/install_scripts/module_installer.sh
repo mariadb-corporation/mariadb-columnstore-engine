@@ -86,8 +86,6 @@ mid=`module_id`
 #if um, cloud, separate system type, external um storage, then setup mount
 if [ $module = "um" ]; then
 	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
-		$SUDO sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
-
 		systemtype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation ServerTypeInstall`
 		if [ $systemtype = "1" ]; then
 			umstoragetype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMStorageType`
@@ -181,6 +179,7 @@ else
 fi
 touch $RCFILE
 
+echo "add deadline to rc.local"
 if [ $module = "um" ]; then
 	if [ $user = "root" ]; then
 		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
@@ -211,6 +210,11 @@ else
                 sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
                 sudo echo "done" >> $RCFILE
 	fi
+fi
+
+if [ $user != "root" ]; then
+      echo "uncomment runuser in rc.local"
+      sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
 fi
 
 echo "!!!Module Installation Successfully Completed!!!"

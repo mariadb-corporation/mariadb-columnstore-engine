@@ -259,7 +259,7 @@ void mysqlSetup()
 			HOME = p;
 	}
 
-	cmd = installDir + "/bin/post-mysql-install " + pwprompt + " --installdir=" + installDir + " > /tmp/post-mysql-install.log";;
+	cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " > /tmp/post-mysql-install.log";;
 	rtnCode = system(cmd.c_str());
 	if (WEXITSTATUS(rtnCode) == 2) {
 		cout << "Error running post-mysql-install, password is needed. check " + HOME + "/.my.cnf " << endl;

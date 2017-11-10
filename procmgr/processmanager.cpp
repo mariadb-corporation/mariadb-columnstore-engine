@@ -5050,6 +5050,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
 	//distribute config file
 	distributeConfigFile("system");
+	
+	string cmd = "rm -f " + homedir + "/.ssh/known_hosts > /dev/null 2>&1";
+	system(cmd.c_str());
 
 	if ( DistributedInstall == "y" ) {
 
