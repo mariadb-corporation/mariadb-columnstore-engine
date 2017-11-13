@@ -3439,15 +3439,23 @@ void ProcessManager::recycleProcess(string module)
 
 	//restart ExeMgrs/mysql if module is a pm
 	if ( moduleType == "pm" ) {
-//		restartProcessType("DBRMWorkerNode");
-//		restartProcessType("PrimProc");
-//		restartProcessType("WriteEngineServer");
+		restartProcessType("DBRMControllerNode", module);
+		restartProcessType("DBRMWorkerNode");
+		stopProcessType("DDLProc");
+		stopProcessType("DMLProc");
+		stopProcessType("ExeMgr");
+		restartProcessType("PrimProc");
+		sleep(1);
 		restartProcessType("ExeMgr");
+		sleep(1);
 		restartProcessType("mysql");
 	}
 	else
+	{
+		restartProcessType("DBRMControllerNode", module);
+		restartProcessType("DBRMWorkerNode");
 		restartProcessType("ExeMgr");
-
+	}
 	if ( PrimaryUMModuleName == module )
 	{
 		restartProcessType("DDLProc", module);
@@ -3457,54 +3465,13 @@ void ProcessManager::recycleProcess(string module)
 
 	if( moduleType == "pm" && PrimaryUMModuleName != module)
 	{
-//		restartProcessType("DBRMControllerNode", module);
-//		sleep(1);
-		reinitProcessType("DDLProc");
+		restartProcessType("WriteEngineServer");
+		sleep(1);
+		restartProcessType("DDLProc");
 		sleep(1);
 		restartProcessType("DMLProc", module);
 	}
 	
-	//wait for DMLProc to go ACTIVE
-/*	uint16_t rtn = 0;
-	bool bfirst = true;
-	while (rtn == 0)
-	{
-		ProcessStatus DMLprocessstatus;
-		try {
-			oam.getProcessStatus("DMLProc", PrimaryUMModuleName, DMLprocessstatus);
-		}
-		catch (exception& ex)
-		{
-//			string error = ex.what();
-//			log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: " + error, LOG_TYPE_ERROR);
-		}
-		catch(...)
-		{
-//			log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
-		}
-
-		if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT) {
-			if (bfirst)
-			{
-				log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback" , LOG_TYPE_INFO);
-				bfirst = false;
-			}
-		}
-
-		if (DMLprocessstatus.ProcessOpState == oam::ACTIVE) {
-			rtn = oam::ACTIVE;
-			break;
-		}
-
-		if (DMLprocessstatus.ProcessOpState == oam::FAILED) {
-			rtn = oam::FAILED;
-			break;
-		}
-
-		// wait some more
-		sleep(2);
-	}
-*/
 	return;
 }
 
@@ -4291,6 +4258,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 	SystemProcessStatus systemprocessstatus;
 	ProcessStatus processstatus;
 	int retStatus = API_SUCCESS;
+	bool setPMProcIPs = true;
 
 	log.writeLog(__LINE__, "restartProcessType: Restart all " + processName, LOG_TYPE_DEBUG);
 
@@ -4338,8 +4306,8 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 						( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
 						continue;
 
-					if( processName.find("DDLProc") == 0 || 
-						processName.find("DMLProc") == 0 ) {
+					if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
+					{
 						string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0,MAX_MODULE_TYPE_SIZE);
 						if ( procModuleType == "pm" && PMwithUM == "y" )
 							continue;
@@ -4366,11 +4334,11 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 					// if DDL or DMLProc, change IP Address
 					if ( retStatus == oam::API_SUCCESS )
 					{
-						if( processName.find("DDLProc") == 0 || 
-							processName.find("DMLProc") == 0 ) {
-	
+						if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
+						{
 							processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module, processName);
-							return retStatus;
+							setPMProcIPs = false;
+							continue;
 						}
 					}
 				}
@@ -8220,7 +8188,7 @@ int ProcessManager::setPMProcIPs( std::string moduleName, std::string processNam
 
 	pthread_mutex_unlock(&THREAD_LOCK);
 
-	log.writeLog(__LINE__, "setPMProcIPs failed", LOG_TYPE_DEBUG);
+	//log.writeLog(__LINE__, "setPMProcIPs failed", LOG_TYPE_DEBUG);
 
 	return API_SUCCESS;
 
