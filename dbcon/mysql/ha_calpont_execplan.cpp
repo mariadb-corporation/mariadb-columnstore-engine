@@ -6488,7 +6488,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 			// re-construct the select query and redo phase 1
 			if (redo)
 			{
-                ++gwi.thd->infinidb_vtable.redo_count;
 				// select now() from region case. returnedCols should have minSc.
 				if (sel_cols_in_create.length() == 0)
 				{

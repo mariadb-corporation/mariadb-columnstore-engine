@@ -2838,10 +2838,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 	// set query state to be in_process. Sometimes mysql calls rnd_init multiple
 	// times, this makes sure plan only being generated and sent once. It will be
 	// reset when query finishes in sm::end_query
-	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-	{
-        thd->infinidb_vtable.isNewQuery = false;
-	}
+    thd->infinidb_vtable.isNewQuery = false;
 
 	// common path for both vtable select phase and table mode -- open scan handle
 	ti = ci->tableMap[table];
@@ -3077,8 +3074,8 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 		thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;	// flip back to normal state
 		return rc;
 	}
-	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1)
-		return rc;
+//	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1)
+//		return rc;
 
 	if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
 		return rc;
@@ -3095,7 +3092,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
 		// @bug 4022. error handling for select part of dml
 		if (ci->cal_conn_hndl && ci->rc)
 		{
-			// send ExeMgr a signal before cloing the connection
+			// send ExeMgr a signal before closing the connection
 			ByteStream msg;
 			ByteStream::quadbyte qb = 0;
 			msg << qb;
