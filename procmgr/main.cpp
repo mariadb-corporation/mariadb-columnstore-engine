@@ -1504,12 +1504,12 @@ void pingDeviceThread()
 								//restart module processes
 								int retry = 0;
 
-								int ModuleProcMonWaitCount = 6;
+								int ModuleProcMonWaitCount = 12;
 								try{
 									oam.getSystemConfig("ModuleProcMonWaitCount", ModuleProcMonWaitCount);
 								}
 								catch(...) {
-									ModuleProcMonWaitCount = 6;
+									ModuleProcMonWaitCount = 12;
 								}
 
 								for ( ; retry < ModuleProcMonWaitCount ; retry ++ )

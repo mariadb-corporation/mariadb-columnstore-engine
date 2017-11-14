@@ -9180,7 +9180,7 @@ int ProcessManager::OAMParentModuleChange()
 			if (amazon && AmazonPMFailover == "n")
 			{
 				log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
-				log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, wating for instance to restart  ***", LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, waiting for instance to restart  ***", LOG_TYPE_DEBUG);
 	
 				string currentIPAddr = oam.getEC2InstanceIpAddress(downOAMParentHostname);
 				if (currentIPAddr == "stopped")
