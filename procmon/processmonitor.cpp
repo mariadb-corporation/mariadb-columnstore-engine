@@ -5267,8 +5267,9 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
 	  
 		string moduleType = slaveModule.substr(0,MAX_MODULE_TYPE_SIZE);
 
-		if ( ( (PMwithUM == "y") && (moduleType == "pm") ) && 
-		      ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM) )
+		if ( (moduleType == "um") ||
+		     ( (PMwithUM == "y") && (moduleType == "pm") ) || 
+		     ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM) ) 
 		{
 		      slave++;
 		    
