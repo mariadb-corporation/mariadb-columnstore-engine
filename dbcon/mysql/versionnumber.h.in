@@ -1,0 +1,8 @@
+
+#ifndef VERSIONNUMBER_H_
+#define VERSIONNUMBER_H_
+#include <string>
+const std::string idb_version("${VERSION}");
+const std::string idb_release("${PACKAGE_RELEASE}");
+#endif
+
