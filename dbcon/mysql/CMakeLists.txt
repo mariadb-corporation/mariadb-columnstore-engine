@@ -21,6 +21,10 @@ SET ( libcalmysql_SRCS
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
+SET(TOP_SRC_DIR "../../")
+INCLUDE(../../columnstore_version.cmake)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/versionnumber.h.in ${CMAKE_CURRENT_SOURCE_DIR}/versionnumber.h)
+
 set_source_files_properties(ha_calpont.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti -fno-implicit-templates")
 
 add_library(calmysql SHARED ${libcalmysql_SRCS})

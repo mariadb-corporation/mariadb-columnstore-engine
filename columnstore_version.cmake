@@ -1,16 +1,16 @@
-
+# The CMakeLists.txt that includes this file must set ${TOP_SRC_DIR} variable beforehand. 
 
 # Generate "something" to trigger cmake rerun when VERSION changes
 CONFIGURE_FILE(
-  ${CMAKE_SOURCE_DIR}/VERSION
-  ${CMAKE_BINARY_DIR}/VERSION.dep
+  ${TOP_SRC_DIR}/VERSION
+  ${TOP_SRC_DIR}/VERSION.dep
 )
 
 # Read value for a variable from VERSION.
 
 MACRO(COLUMNSTORE_GET_CONFIG_VALUE keyword var)
  IF(NOT ${var})
-   FILE (STRINGS ${CMAKE_SOURCE_DIR}/VERSION str REGEX "^[ ]*${keyword}=")
+   FILE (STRINGS ${TOP_SRC_DIR}/VERSION str REGEX "^[ ]*${keyword}=")
    IF(str)
      STRING(REPLACE "${keyword}=" "" str ${str})
      STRING(REGEX REPLACE  "[ ].*" ""  str "${str}")
