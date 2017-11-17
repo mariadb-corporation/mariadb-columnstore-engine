@@ -4172,7 +4172,11 @@ int ProcessManager::stopProcessType( std::string processName, bool manualFlag )
 		for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
 		{
 			if ( systemprocessstatus.processstatus[i].ProcessName == processName) {
-				// found one, request restart of it
+			    //skip if in a COLD_STANDBY state
+			    if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
+				    continue;
+
+			    // found one, request restart of it
 				processManager.stopProcess(systemprocessstatus.processstatus[i].Module, 
 																processName, 
 																GRACEFUL, 
@@ -5454,8 +5458,8 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	}
 	
 	//delay to give time for ProcMon to start after the config is sent and procmon restarts
-	log.writeLog(__LINE__, "addModule - sleep 30 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
-	sleep(30);
+	log.writeLog(__LINE__, "addModule - sleep 60 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
+	sleep(60);
 
 	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
 	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
