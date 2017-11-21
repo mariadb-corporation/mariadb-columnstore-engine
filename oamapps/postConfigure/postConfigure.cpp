@@ -612,6 +612,13 @@ int main(int argc, char *argv[])
 		nonDistribute = true;
 	}
 
+	// setup to start on reboot, for non-root amazon installs
+	if ( !rootUser )
+	{
+	    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+	    system("sudo chmod 666 /etc/fstab >/dev/null 2>&1");
+	}
+
 	cout << endl;
 
 	cout << "===== Setup System Server Type Configuration =====" << endl << endl;
@@ -1067,13 +1074,6 @@ int main(int argc, char *argv[])
 			}
 		}
 			
-		// setup to start on reboot, for non-root amazon installs
-		if ( !rootUser )
-		{
-		    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-		    system("sudo chmod 666 /etc/fstab >/dev/null 2>&1");
-		}
-
 		if ( !writeConfig(sysConfig) ) { 
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
@@ -3146,8 +3146,8 @@ int main(int argc, char *argv[])
 		//
 		cout << endl << "===== MariaDB ColumnStore System Startup =====" << endl << endl;
 	
-		cout << "System Configuration is complete." << endl;
-		cout << "Performing System Installation." << endl;
+		cout << "System Installation is complete." << endl;
+		cout << "Performing System Start-up." << endl;
 
 		if (hdfs && !nonDistribute )
 		{
@@ -3178,8 +3178,8 @@ int main(int argc, char *argv[])
 	{
 		cout << endl << "===== MariaDB ColumnStore System Startup =====" << endl << endl;
 	
-		cout << "System Configuration is complete." << endl;
-		cout << "Performing System Installation." << endl;
+		cout << "System Installation is complete." << endl;
+		cout << "Performing System Start-up." << endl;
 
 		//start MariaDB ColumnStore on local server
 		cout << endl << "----- Starting MariaDB ColumnStore on local Server '" + parentOAMModuleName + "' -----" << endl << endl;
