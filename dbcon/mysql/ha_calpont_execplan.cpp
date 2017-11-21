@@ -4215,6 +4215,14 @@ void gp_walk(const Item *item, void *arg)
 			bool isOr = (ftype == Item_func::COND_OR_FUNC);
             bool isXor = (ftype == Item_func::XOR_FUNC);
 
+            // MCOL-1029 A cached COND_ITEM is something like:
+            // AND (TRUE OR FALSE)
+            // We can skip it
+            if (isCached)
+            {
+                break;
+            }
+
 			List<Item> *argumentList;
 			List<Item> xorArgumentList;
 			if (isXor)
@@ -4267,7 +4275,7 @@ void gp_walk(const Item *item, void *arg)
 						}
 					}
 				}
-			
+
 				// @bug1603. MySQL's filter tree is a multi-tree grouped by operator. So more than
 				// two filters saved on the stack so far might belong to this operator.
 				uint32_t leftInStack = gwip->ptWorkStack.size() - argumentList->elements + 1;
