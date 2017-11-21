@@ -502,7 +502,7 @@ static void startMgrProcessThread()
 	ModuleTypeConfig PMSmoduletypeconfig;
 	ALARMManager aManager;
 
-	int waitTime = 120; 
+	int waitTime = 180; 
 	
 	log.writeLog(__LINE__, "startMgrProcessThread launched", LOG_TYPE_DEBUG);
 
