@@ -9,25 +9,11 @@ checkForError() {
 	# check for password error
 	grep "ERROR 1045" /tmp/mysql_install.log > /tmp/error.check
 	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
-		if test -f $HOME/.my.cnf ; then
-			password=`cat $HOME/.my.cnf | grep password | awk '{gsub(/^[ \t]+|[ \t]+$/,"");print $3}'`
-                	if [ ! -z $password ]; then
-                        	pwprompt="-p$password"
-				return 1;
- 			else
-	                        echo "MySQL Password file missing or incorrect, check .my.cnf file"
-	                        rm -f /tmp/error.check
-	                        $installdir/mysql/mysql-Columnstore stop
-	                        sleep 2
-	                        exit 2;
-			fi
-		else
-			echo "MySQL Password file missing or incorrect, check .my.cnf file"
-			rm -f /tmp/error.check
-			$installdir/mysql/mysql-Columnstore stop
-			sleep 2
-			exit 2;
-		fi
+		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
+		  rm -f /tmp/error.check
+		  $installdir/mysql/mysql-Columnstore stop
+		  sleep 2
+		  exit 2;
 	fi
 
 	rm -f /tmp/error.check
@@ -37,7 +23,7 @@ checkForError() {
         #---------------------------------------------------------------------------
         echo "checking for engine columnstore..."
         $installdir/mysql/bin/mysql \
-                --defaults-file=$installdir/mysql/my.cnf \
+                --defaults-extra-file=$installdir/mysql/my.cnf \
                 --user=root $pwprompt \
                 --execute='show engines;' \
                 calpontsys | grep -i columnstore
@@ -66,11 +52,6 @@ for arg in "$@"; do
 		installdir=$prefix/mariadb/columnstore
 	elif [ $(expr -- "$arg" : '--rpmmode=') -eq 10 ]; then
 		rpmmode="$(echo $arg | awk -F= '{print $2}')"
-	elif [ $(expr -- "$arg" : '--password=') -eq 11 ]; then
-		password="$(echo $arg | awk -F= '{print $2}')"
-		if [ ! -z $password ]; then
-			pwprompt="-p$password"
-		fi
 	elif [ $(expr -- "$arg" : '--installdir=') -eq 13 ]; then
 		installdir="$(echo $arg | awk -F= '{print $2}')"
 		prefix=$(dirname $installdir)
@@ -119,11 +100,11 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 	sleep 5
 
 	# Install various Calpont stuff...
-	$installdir/mysql/install_calpont_mysql.sh --password=$password --installdir=$installdir
+	$installdir/mysql/install_calpont_mysql.sh  --installdir=$installdir
 	checkForError
 	if [ $? -ne 0 ]; then
 	# retry
-		$installdir/mysql/install_calpont_mysql.sh --password=$password --installdir=$installdir
+		$installdir/mysql/install_calpont_mysql.sh --installdir=$installdir
 		checkForError
 		if [ $? -ne 0 ]; then
 			echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"

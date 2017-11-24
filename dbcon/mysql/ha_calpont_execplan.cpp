@@ -2335,7 +2335,7 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
     }
 
     thd->raise_error_printf(errcode, errmsg.c_str());
-    thd->infinidb_vtable.mysql_optimizer_off = false;
+    thd->infinidb_vtable.isNewQuery = true;
     thd->infinidb_vtable.override_largeside_estimate = false;
 
     // reset expressionID
@@ -4891,6 +4891,14 @@ void gp_walk(const Item* item, void* arg)
             bool isOr = (ftype == Item_func::COND_OR_FUNC);
             bool isXor = (ftype == Item_func::XOR_FUNC);
 
+            // MCOL-1029 A cached COND_ITEM is something like:
+            // AND (TRUE OR FALSE)
+            // We can skip it
+            if (isCached)
+            {
+                break;
+            }
+
             List<Item>* argumentList;
             List<Item> xorArgumentList;
 
@@ -7209,9 +7217,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 }
             }
 
-            // populate string to be added to the select list for order by
             redo = (redo || fieldVec.size() != 0);
 
+            // populate string to be added to the select list for order by
             for (uint32_t i = 0; i < fieldVec.size(); i++)
             {
                 SimpleColumn* sc = buildSimpleColumn(fieldVec[i], gwi);

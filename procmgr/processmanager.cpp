@@ -2840,7 +2840,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                     // target = root password
                     oam::DeviceNetworkList devicenetworklist;
-                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target, false);
+                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, false, target, false);
 
                     log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
 
@@ -3784,27 +3784,38 @@ void ProcessManager::recycleProcess(string module)
     //restart ExeMgrs/mysql if module is a pm
     if ( moduleType == "pm" )
     {
+        restartProcessType("DBRMControllerNode", module);
+        restartProcessType("DBRMWorkerNode");
+        stopProcessType("DDLProc");
+        stopProcessType("DMLProc");
+        stopProcessType("ExeMgr");
+        restartProcessType("PrimProc");
+        sleep(1);
         restartProcessType("ExeMgr");
+        sleep(1);
         restartProcessType("mysql");
     }
     else
+    {
+        restartProcessType("DBRMControllerNode", module);
+        restartProcessType("DBRMWorkerNode");
         restartProcessType("ExeMgr");
+    }
 
     if ( PrimaryUMModuleName == module )
     {
         restartProcessType("DDLProc", module);
-//		restartProcessType("DDLProc", module, false);
         sleep(1);
         restartProcessType("DMLProc", module);
-//		restartProcessType("DMLProc", module, false);
     }
 
     if ( moduleType == "pm" && PrimaryUMModuleName != module)
     {
-        reinitProcessType("DDLProc");
+        restartProcessType("WriteEngineServer");
+        sleep(1);
+        restartProcessType("DDLProc");
         sleep(1);
         restartProcessType("DMLProc", module);
-//		restartProcessType("DMLProc", module, false);
     }
 
     return;
@@ -4551,6 +4562,10 @@ int ProcessManager::stopProcessType( std::string processName, bool manualFlag )
         {
             if ( systemprocessstatus.processstatus[i].ProcessName == processName)
             {
+                //skip if in a COLD_STANDBY state
+                if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
+                    continue;
+
                 // found one, request restart of it
                 processManager.stopProcess(systemprocessstatus.processstatus[i].Module,
                                            processName,
@@ -4639,6 +4654,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
     SystemProcessStatus systemprocessstatus;
     ProcessStatus processstatus;
     int retStatus = API_SUCCESS;
+    bool setPMProcIPs = true;
 
     log.writeLog(__LINE__, "restartProcessType: Restart all " + processName, LOG_TYPE_DEBUG);
 
@@ -4694,8 +4710,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
                             ( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
                         continue;
 
-                    if ( processName.find("DDLProc") == 0 ||
-                            processName.find("DMLProc") == 0 )
+                    if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
                     {
                         string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0, MAX_MODULE_TYPE_SIZE);
 
@@ -4725,12 +4740,11 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
                     // if DDL or DMLProc, change IP Address
                     if ( retStatus == oam::API_SUCCESS )
                     {
-                        if ( processName.find("DDLProc") == 0 ||
-                                processName.find("DMLProc") == 0 )
+                        if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
                         {
-
                             processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module, processName);
-                            return retStatus;
+                            setPMProcIPs = false;
+                            continue;
                         }
                     }
                 }
@@ -5481,6 +5495,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     //distribute config file
     distributeConfigFile("system");
 
+    string cmd = "rm -f " + homedir + "/.ssh/known_hosts > /dev/null 2>&1";
+    system(cmd.c_str());
+
     if ( DistributedInstall == "y" )
     {
 
@@ -5972,12 +5989,11 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     }
 
     //delay to give time for ProcMon to start after the config is sent and procmon restarts
-    log.writeLog(__LINE__, "addModule - sleep 10 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
-    sleep(10);
+    log.writeLog(__LINE__, "addModule - sleep 60 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
+    sleep(60);
 
-//	sleep(5);
-//	log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
-//	processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
+    log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
+    processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
 
     return API_SUCCESS;
 }
@@ -7713,15 +7729,6 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
         processManager.setSystemState(rtn);
     }
 
-    //run command to build system table if they don't already exist
-    sleep(5);
-    int ret = processManager.buildSystemTables("pm1");
-
-    if (ret == oam::API_SUCCESS )
-        log.writeLog(__LINE__, "System Catalog Successfully Built", LOG_TYPE_DEBUG);
-    else
-        log.writeLog(__LINE__, "System Catalog not built, already existed", LOG_TYPE_DEBUG);
-
     // exit thread
     log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
     startsystemthreadStatus = status;
@@ -8938,7 +8945,7 @@ int ProcessManager::setPMProcIPs( std::string moduleName, std::string processNam
 
     pthread_mutex_unlock(&THREAD_LOCK);
 
-    log.writeLog(__LINE__, "setPMProcIPs failed", LOG_TYPE_DEBUG);
+    //log.writeLog(__LINE__, "setPMProcIPs failed", LOG_TYPE_DEBUG);
 
     return API_SUCCESS;
 
@@ -10032,7 +10039,7 @@ int ProcessManager::OAMParentModuleChange()
             if (amazon && AmazonPMFailover == "n")
             {
                 log.writeLog(__LINE__, " ", LOG_TYPE_DEBUG);
-                log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, wating for instance to restart  ***", LOG_TYPE_DEBUG);
+                log.writeLog(__LINE__, "*** OAMParentModule outage, AmazonPMFailover not set, waiting for instance to restart  ***", LOG_TYPE_DEBUG);
 
                 string currentIPAddr = oam.getEC2InstanceIpAddress(downOAMParentHostname);
 
@@ -11218,21 +11225,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
     */
     log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
 
-    // mysql port number
-    string MySQLPort;
-
-    try
-    {
-        oam.getSystemConfig("MySQLPort", MySQLPort);
-    }
-    catch (...)
-    {
-        MySQLPort = "3306";
-    }
-
-    if ( MySQLPort.empty() )
-        MySQLPort = "3306";
-
     //get master info
     if ( masterModule == oam::UnassignedName)
     {
@@ -11288,6 +11280,15 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
                 //skip master
                 if ( remoteModuleName == masterModule )
                     continue;
+
+                // don't do PMs unless PMwithUM flag is set
+                if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM )
+                {
+                    string moduleType = remoteModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+
+                    if ( moduleType == "pm" && PMwithUM == "n" )
+                        continue;
+                }
 
                 ByteStream msg;
                 ByteStream::byte requestID = oam::MASTERDIST;
@@ -11396,7 +11397,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 
                     msg1 << masterLogFile;
                     msg1 << masterLogPos;
-                    msg1 << MySQLPort;
                 }
 
                 returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );
@@ -11450,7 +11450,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 
                 msg1 << masterLogFile;
                 msg1 << masterLogPos;
-                msg1 << MySQLPort;
             }
 
             returnStatus = sendMsgProcMon( remoteModuleName, msg1, requestID, 60 );

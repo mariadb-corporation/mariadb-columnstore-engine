@@ -226,12 +226,12 @@
 	<SystemConfig>
 		<SystemLang>C</SystemLang>
 		<SystemName>columnstore-1</SystemName>
-		<ParentOAMModuleName>unassigned</ParentOAMModuleName>
+		<ParentOAMModuleName>pm1</ParentOAMModuleName>
 		<StandbyOAMModuleName>unassigned</StandbyOAMModuleName>
 		<PrimaryUMModuleName>unassigned</PrimaryUMModuleName>
 		<ModuleHeartbeatPeriod>1</ModuleHeartbeatPeriod>
 		<ModuleHeartbeatCount>3</ModuleHeartbeatCount>
-		<ModuleProcMonWaitCount>6</ModuleProcMonWaitCount>	// 2.5 minutes
+		<ModuleProcMonWaitCount>12</ModuleProcMonWaitCount>	// 2.5 minutes
 		<!-- Disabled
 		<ProcessHeartbeatPeriod>-1</ProcessHeartbeatPeriod>
 		-->

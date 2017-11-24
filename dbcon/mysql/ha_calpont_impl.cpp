@@ -3345,8 +3345,8 @@ int ha_calpont_impl_rnd_end(TABLE* table)
         return rc;
     }
 
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1 && thd->infinidb_vtable.mysql_optimizer_off)
-        return rc;
+//	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1)
+//		return rc;
 
     if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
         return rc;
@@ -3363,7 +3363,7 @@ int ha_calpont_impl_rnd_end(TABLE* table)
         // @bug 4022. error handling for select part of dml
         if (ci->cal_conn_hndl && ci->rc)
         {
-            // send ExeMgr a signal before cloing the connection
+            // send ExeMgr a signal before closing the connection
             ByteStream msg;
             ByteStream::quadbyte qb = 0;
             msg << qb;
