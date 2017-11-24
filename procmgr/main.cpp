@@ -537,7 +537,7 @@ static void startMgrProcessThread()
     ModuleTypeConfig PMSmoduletypeconfig;
     ALARMManager aManager;
 
-    int waitTime = 60;
+    int waitTime = 180;
 
     log.writeLog(__LINE__, "startMgrProcessThread launched", LOG_TYPE_DEBUG);
 
@@ -1636,7 +1636,7 @@ void pingDeviceThread()
                                 //restart module processes
                                 int retry = 0;
 
-                                int ModuleProcMonWaitCount = 6;
+                                int ModuleProcMonWaitCount = 12;
 
                                 try
                                 {
@@ -1644,7 +1644,7 @@ void pingDeviceThread()
                                 }
                                 catch (...)
                                 {
-                                    ModuleProcMonWaitCount = 6;
+                                    ModuleProcMonWaitCount = 12;
                                 }
 
                                 for ( ; retry < ModuleProcMonWaitCount ; retry ++ )
@@ -1793,10 +1793,17 @@ void pingDeviceThread()
                                     processManager.distributeConfigFile("system");
                                     sleep(1);
 
-                                    // if a PM module was started successfully, restart ACTIVE ExeMgr(s) / mysqld
+                                    // if a PM module was started successfully, restart ACTIVE DBRM(s), ExeMgr(s) / mysqld
                                     if ( moduleName.find("pm") == 0 )
                                     {
-                                        processManager.restartProcessType("ExeMgr", moduleName);
+                                        processManager.restartProcessType("DBRMControllerNode", moduleName);
+                                        processManager.restartProcessType("DBRMWorkerNode");
+                                        processManager.stopProcessType("DDLProc");
+                                        processManager.stopProcessType("DMLProc");
+                                        processManager.stopProcessType("ExeMgr");
+                                        processManager.restartProcessType("PrimProc");
+                                        sleep(1);
+                                        processManager.restartProcessType("ExeMgr");
                                     }
 
                                     string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
@@ -1830,9 +1837,11 @@ void pingDeviceThread()
                                     // if a PM module was started successfully, DMLProc/DDLProc
                                     if ( moduleName.find("pm") == 0 )
                                     {
-                                        processManager.restartProcessType("DDLProc", moduleName);
+                                        processManager.restartProcessType("WriteEngineServer");
                                         sleep(1);
-                                        processManager.restartProcessType("DMLProc", moduleName);
+                                        processManager.restartProcessType("DDLProc");
+                                        sleep(1);
+                                        processManager.restartProcessType("DMLProc");
                                     }
 
                                     //enable query stats
@@ -1842,6 +1851,88 @@ void pingDeviceThread()
                                     processManager.setQuerySystemState(true);
 
                                     processManager.setSystemState(oam::ACTIVE);
+
+                                    //reset standby module
+                                    string newStandbyModule = processManager.getStandbyModule();
+
+                                    //send message to start new Standby Process-Manager, if needed
+                                    if ( !newStandbyModule.empty() && newStandbyModule != "NONE")
+                                    {
+                                        processManager.setStandbyModule(newStandbyModule);
+                                    }
+                                    else
+                                    {
+                                        Config* sysConfig = Config::makeConfig();
+
+                                        // clear Standby OAM Module
+                                        sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+                                        sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
+
+                                        //update Calpont Config table
+                                        try
+                                        {
+                                            sysConfig->write();
+                                        }
+                                        catch (...)
+                                        {
+                                            log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
+                                        }
+                                    }
+
+                                    if ( moduletypeconfig.RunType == SIMPLEX )
+                                    {
+                                        //start SIMPLEX runtype processes on a SIMPLEX runtype module
+                                        string moduletype = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
+                                        DeviceNetworkList::iterator pt = moduletypeconfig.ModuleNetworkList.begin();
+
+                                        for ( ; pt != moduletypeconfig.ModuleNetworkList.end() ; pt++)
+                                        {
+                                            string launchModuleName = (*pt).DeviceName;
+                                            string launchModuletype = launchModuleName.substr(0, MAX_MODULE_TYPE_SIZE);
+
+                                            if ( moduletype != launchModuletype )
+                                                continue;
+
+                                            //skip if active pm module (local module)
+                                            if ( launchModuleName == config.moduleName() )
+                                                continue;
+
+                                            //check if module is active before starting any SIMPLEX STANDBY apps
+                                            try
+                                            {
+                                                int launchopState = oam::ACTIVE;
+                                                bool degraded;
+                                                oam.getModuleStatus(launchModuleName, launchopState, degraded);
+
+                                                if (launchopState != oam::ACTIVE && launchopState != oam::STANDBY )
+                                                {
+                                                    continue;
+                                                }
+                                            }
+                                            catch (exception& ex)
+                                            {
+//												string error = ex.what();
+//												log.writeLog(__LINE__, "EXCEPTION ERROR on : " + error, LOG_TYPE_ERROR);
+                                            }
+                                            catch (...)
+                                            {
+//												log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
+                                            }
+
+                                            int status;
+                                            log.writeLog(__LINE__, "Starting up STANDBY process on module " + launchModuleName, LOG_TYPE_DEBUG);
+
+                                            for ( int j = 0 ; j < 20 ; j ++ )
+                                            {
+                                                status = processManager.startModule(launchModuleName, oam::FORCEFUL, oam::AUTO_OFFLINE);
+
+                                                if ( status == API_SUCCESS)
+                                                    break;
+                                            }
+
+                                            log.writeLog(__LINE__, "pingDeviceThread: ACK received from '" + launchModuleName + "' Process-Monitor, return status = " + oam.itoa(status), LOG_TYPE_DEBUG);
+                                        }
+                                    }
 
                                     //clear count
                                     moduleInfoList[moduleName] = 0;

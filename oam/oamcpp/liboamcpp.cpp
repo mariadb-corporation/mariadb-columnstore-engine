@@ -9033,13 +9033,13 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                 if (WEXITSTATUS(status) != 0 )
                 {
                     cout << "ERROR: peer probe command failed." << endl;
-                    command = InstallDir + "/bin/remote_command.sh " + DataRedundancyConfigs[pm].pmIpAddr + " " + password + "'stat /var/run/glusterd.pid > /dev/null 2>&1'";
+                    command = InstallDir + "/bin/remote_command.sh " + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
                     {
                         cout << "ERROR: No glusterd process detected at " << DataRedundancyConfigs[pm].pmIpAddr << "." << endl;
-                        cout << "       Start and enable glusterd and run postConfigure again." << endl;
+                        cout << "       Start and enable glusterd at " << DataRedundancyConfigs[pm].pmIpAddr << "." << endl;
                     }
 
                     exceptionControl("GLUSTER_ADD", API_FAILURE);
@@ -9199,13 +9199,13 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             if (WEXITSTATUS(status) != 0 )
             {
                 cout << "ERROR: peer probe command failed." << endl;
-                command = InstallDir + "/bin/remote_command.sh " + ipAddress + " " + password + "'stat /var/run/glusterd.pid > /dev/null 2>&1'";
+                command = InstallDir + "/bin/remote_command.sh " + ipAddress + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
                 {
                     cout << "ERROR: No glusterd process detected at " << ipAddress << "." << endl;
-                    cout << "       Start and enable glusterd and run postConfigure again." << endl;
+                    cout << "       Start and enable glusterd at " << ipAddress << "." << endl;
                 }
 
                 return 1;
@@ -9423,6 +9423,9 @@ int Oam::checkGlusterLog(std::string logFile, std::string& msg)
 ******************************************************************************************/
 std::string Oam::getMySQLPassword()
 {
+
+    return oam::UnassignedName;
+
     string mysqlUser = "root";
 
     string USER = "root";

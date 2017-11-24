@@ -19,7 +19,7 @@ fi
 
 
 if [ -z "$MYSQLCMD" ]; then
-        MYSQLCMD="$COLUMNSTORE_INSTALL_DIR/mysql/bin/mysql --defaults-file=$COLUMNSTORE_INSTALL_DIR/mysql/my.cnf -u root"
+        MYSQLCMD="$COLUMNSTORE_INSTALL_DIR/mysql/bin/mysql --defaults-extra-file=$COLUMNSTORE_INSTALL_DIR/mysql/my.cnf -u root"
         export MYSQLCMD
 fi
 

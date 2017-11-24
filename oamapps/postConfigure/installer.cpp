@@ -683,6 +683,7 @@ int main(int argc, char* argv[])
         if ( !setOSFiles(parentOAMModuleName, IserverTypeInstall) )
         {
             cout << "ERROR: setOSFiles error" << endl;
+            cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
             exit(1);
         }
 
@@ -886,6 +887,7 @@ int main(int argc, char* argv[])
             {
                 cout << endl << "System Catalog Create Failure" << endl;
                 cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
+                cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
                 exit (1);
             }
         }
@@ -904,6 +906,9 @@ int main(int argc, char* argv[])
     else
     {
         cout << " FAILED" << endl;
+
+        cout << " IMPORTANT: There was a system startup failed, once issue has been resolved, rerun postConfigure" << endl << endl;
+
         cout << endl << "ERROR: MariaDB ColumnStore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
@@ -1119,8 +1124,6 @@ bool updateProcessConfig(int serverTypeInstall)
  */
 bool makeRClocal(string moduleName, int IserverTypeInstall)
 {
-    string cmd;
-
     string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
 
     vector <string> lines;
@@ -1209,17 +1212,26 @@ bool makeRClocal(string moduleName, int IserverTypeInstall)
     if ( lines.begin() == lines.end())
         return true;
 
-    string fileName = "etc/rc.local";
+    string RCfileName = "/etc/rc.d/rc.local";
+    std::ofstream file;
 
-    ofstream newFile (fileName.c_str());
+    file.open(RCfileName.c_str(), std::ios::out | std::ios::app);
 
-    //create new file
-    int fd = open(fileName.c_str(), O_RDWR | O_CREAT, 0666);
+    if (file.fail())
+    {
+        RCfileName = "/etc/rc.local";
 
-    copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
-    newFile.close();
+        file.open(RCfileName.c_str(), std::ios::out | std::ios::app);
 
-    close(fd);
+        if (file.fail())
+            return true;
+    }
+
+    file.exceptions(file.exceptions() | std::ios::failbit | std::ifstream::badbit);
+
+    copy(lines.begin(), lines.end(), ostream_iterator<string>(file, "\n"));
+
+    file.close();
 
     return true;
 }

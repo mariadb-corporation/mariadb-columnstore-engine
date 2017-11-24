@@ -942,12 +942,12 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                         {
                             if (ci.columnTypes[colpos].colWidth < 256)
                             {
-                                dataLength = *(int8_t*) buf;
+                                dataLength = *(uint8_t*) buf;
                                 buf++;
                             }
                             else
                             {
-                                dataLength = *(int16_t*) buf;
+                                dataLength = *(uint16_t*) buf;
                                 buf = buf + 2 ;
                             }
 
@@ -959,7 +959,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                         {
                             if (ci.columnTypes[colpos].colWidth < 86)
                             {
-                                dataLength = *(int8_t*) buf;
+                                dataLength = *(uint8_t*) buf;
                                 buf++;
                             }
                             else

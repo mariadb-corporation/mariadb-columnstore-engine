@@ -177,14 +177,24 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 systemctl=`which systemctl 2>/dev/null`
 
 #check and create rc.local file if missing
-if [ ! -f /etc/rc.d/rc.local ]; then
-	printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a /etc/rc.local > /dev/null 2>&1
-    	$SUDO chmod +x /etc/rc.d/rc.local
-    
-    if [ -n "$systemctl" ]; then
-	systemctl restart rc-local >/dev/null 2>&1
-	systemctl enable rc-local >/dev/null 2>&1
-    fi
+if [ -f /etc/rc.d ]; then
+    RCFILE=/etc/rc.d/rc.local
+else
+    RCFILE=/etc/rc.local
+fi
+
+touch $RCFILE
+
+if [ $user = "root" ]; then
+    chmod +x $RCFILE
+else
+    $SUDO chmod 777 $RCFILE
+    printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a $RCFILEl > /dev/null 2>&1
+fi
+
+if [ -n "$systemctl" ]; then
+    $SUDO systemctl restart rc-local >/dev/null 2>&1
+    $SUDO systemctl enable rc-local >/dev/null 2>&1
 fi
 
 #setup the columnstore service script
@@ -218,6 +228,7 @@ if [ $user = "root" ]; then
 		fi
 	fi
 fi
+
 #setup MariaDB Columnstore system logging
 sed -i -e s/groupname/$user/g $installdir/bin/columnstoreSyslog7
 sed -i -e s/username/$user/g $installdir/bin/columnstoreSyslog7
@@ -241,7 +252,6 @@ else
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
 	$SUDO chmod 666 /etc/fstab
-	$SUDO chmod 777 /etc/rc.d/rc.local
 fi
 
 # install Columnstore Log Rotate File

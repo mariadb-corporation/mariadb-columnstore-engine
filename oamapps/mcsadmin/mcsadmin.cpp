@@ -7196,6 +7196,8 @@ int processCommand(string* arguments)
                     printModuleMemory(systemmemory.modulememory[i]);
                 }
 
+                cout << endl;
+
             }
             catch (exception& e)
             {

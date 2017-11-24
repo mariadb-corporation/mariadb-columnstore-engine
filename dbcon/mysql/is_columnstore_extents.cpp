@@ -168,14 +168,18 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
                     table->field[14]->store("Unknown", strlen("Unknown"), cs);
             }
 
-            // MCOL-454: special case, sometimes blockOffset can be > 0 and HWM can be 0
+            // MCOL-1016: on multiple segments HWM is set to 0 on the lower
+            // segments, we don't want these to show as 8KB. The down side is
+            // if the column has less than 1 block it will show as 0 bytes.
+            // We have no lookahead without it getting messy so this is the
+            // best compromise.
             if (iter->HWM == 0)
             {
-                table->field[15]->store(8192);
+                table->field[15]->store(0);
             }
             else
             {
-                table->field[15]->store((iter->HWM - iter->blockOffset + 1) * 8192);
+                table->field[15]->store((iter->HWM + 1) * 8192);
             }
 
             if (schema_table_store_record(thd, table))
