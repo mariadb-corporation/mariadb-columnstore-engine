@@ -141,7 +141,7 @@ using namespace logging;
 using namespace funcexp;
 
 #include "installdir.h"
-#include "versionnumber.h"
+#include "columnstoreversion.h"
 
 namespace cal_impl_if
 {
@@ -2275,7 +2275,7 @@ const char* calgetversion(UDF_INIT* initid, UDF_ARGS* args,
 					char* result, unsigned long* length,
 					char* is_null, char* error)
 {
-	string version(idb_version);
+	string version(columnstore_version);
 	*length = version.size();
 	memcpy(result, version.c_str(), *length);
 	return result;

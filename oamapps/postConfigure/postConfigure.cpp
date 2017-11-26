@@ -69,6 +69,7 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/tokenizer.hpp"
 
+#include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 
@@ -2716,18 +2717,6 @@ int main(int argc, char *argv[])
 		}
 	
 		if ( install == "y" ) {
-	
-			SystemSoftware systemsoftware;
-		
-			try
-			{
-				oam.getSystemSoftware(systemsoftware);
-			}
-			catch (exception& e)
-			{
-				cout << " ERROR: reading getSystemSoftware API" << endl;
-				exit (1);
-			}
 
 			cout << endl;
 
@@ -2751,7 +2740,7 @@ int main(int argc, char *argv[])
 			}
 	
 			//check if pkgs are located in $HOME directory
-			string version = systemsoftware.Version + "-" + systemsoftware.Release;
+			string version = columnstore_version + "-" + columnstore_release;
 			if ( EEPackageType == "rpm")
 				columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
 			else
