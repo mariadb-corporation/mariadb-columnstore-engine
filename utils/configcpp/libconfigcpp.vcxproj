@@ -272,7 +272,7 @@
     <ClInclude Include="configcpp.h" />
     <ClInclude Include="configstream.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="versionnumber.h" />
+    <ClInclude Include="..\..\columnstoreversion.h" />
     <ClInclude Include="writeonce.h" />
     <ClInclude Include="xmlparser.h" />
   </ItemGroup>
