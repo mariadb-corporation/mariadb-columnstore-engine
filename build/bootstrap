@@ -25,12 +25,12 @@ cp dbcon/mysql/mysql-Columnstore export/mysql/
 
 #FIXME:
 #This is not going to update the version in configure.ac
-echo Generating version header
-./build/genVersion.sh
-if [ $? -ne 0 ]; then
-  echo Could not generate version header
-  exit $?
-fi
+#echo Generating version header
+#./build/genVersion.sh
+#if [ $? -ne 0 ]; then
+#  echo Could not generate version header
+#  exit $?
+#fi
 
 echo Running GNU autotools to generate build environment
 aclocal && \

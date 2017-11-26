@@ -26,6 +26,7 @@
 #include <netdb.h>
 extern int h_errno;
 
+#include "columnstoreversion.h"
 #include "mcsadmin.h"
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
@@ -5046,21 +5047,15 @@ int processCommand(string* arguments)
                 	if (WEXITSTATUS(rtnCode) == 0) 
                         system("cat /tmp/columnstore.txt");
 					else {
-						SystemSoftware systemsoftware;
-						oam.getSystemSoftware(systemsoftware);
-	
-						cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-						cout << "SoftwareRelease = " << systemsoftware.Release << endl;
+						cout << "SoftwareVersion = " << columnstore_version << endl;
+						cout << "SoftwareRelease = " << columnstore_release << endl;
 					}
 				}
 			}
 			else
 			{
-				SystemSoftware systemsoftware;
-				oam.getSystemSoftware(systemsoftware);
-
-				cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-				cout << "SoftwareRelease = " << systemsoftware.Release << endl;
+                cout << "SoftwareVersion = " << columnstore_version << endl;
+                cout << "SoftwareRelease = " << columnstore_release << endl;
 			}
 			cout << endl;
 			break;

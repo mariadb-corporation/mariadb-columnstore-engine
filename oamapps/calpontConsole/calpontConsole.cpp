@@ -25,6 +25,7 @@
 #include <netdb.h>
 extern int h_errno;
 
+#include "columnstoreversion.h"
 #include "calpontConsole.h"
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
@@ -703,7 +704,6 @@ int processCommand(string* arguments)
 
         case 4: // getSystemConfig
         {
-            SystemSoftware systemsoftware;
             SystemConfig systemconfig;
             string returnValue;
 
@@ -714,14 +714,13 @@ int processCommand(string* arguments)
 
                 try
                 {
-					oam.getSystemSoftware(systemsoftware);
 					oam.getSystemConfig(systemconfig);
 
 					cout << endl << "System Configuration" << endl << endl;
 
 					cout << "SystemName = " << systemconfig.SystemName << endl;
-					cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-					cout << "SoftwareRelease = " << systemsoftware.Release << endl;
+					cout << "SoftwareVersion = " << columnstore_version << endl;
+					cout << "SoftwareRelease = " << columnstore_release << endl;
 
                     cout << "ParentOAMModuleName = " << systemconfig.ParentOAMModule << endl;
                     cout << "StandbyOAMModuleName = " << systemconfig.StandbyOAMModule << endl;
@@ -4836,21 +4835,15 @@ int processCommand(string* arguments)
 					if (oam.checkLogStatus("/tmp/calpont.txt", "Status: install"))
 						system("cat /tmp/calpont.txt");
 					else {
-						SystemSoftware systemsoftware;
-						oam.getSystemSoftware(systemsoftware);
-	
-						cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-						cout << "SoftwareRelease = " << systemsoftware.Release << endl;
+						cout << "SoftwareVersion = " << columnstore_version << endl;
+						cout << "SoftwareRelease = " << columnstore_release << endl;
 					}
 				}
 			}
 			else
 			{
-				SystemSoftware systemsoftware;
-				oam.getSystemSoftware(systemsoftware);
-
-				cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-				cout << "SoftwareRelease = " << systemsoftware.Release << endl;
+                cout << "SoftwareVersion = " << columnstore_version << endl;
+                cout << "SoftwareRelease = " << columnstore_release << endl;
 			}
 			cout << endl;
 			break;
