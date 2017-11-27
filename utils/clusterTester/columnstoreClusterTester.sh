@@ -14,6 +14,10 @@ OS_LIST=("centos6" "centos7" "debian8" "debian9" "suse12" "ubuntu16")
 
 NODE_IPADDRESS=""
 
+if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
+fi
+
 checkContinue() {
 
   if [ "$CHECK" = false ]; then
@@ -198,7 +202,7 @@ checkLocalOS()
   echo ""
 
   #get local OS
-  `./os_detect.sh > /tmp/os_detect 2>&1`
+  `$COLUMNSTORE_INSTALL_DIR/bin/os_detect.sh > /tmp/os_detect 2>&1`
   if [ "$?" -eq 0 ]; then
     localOS=`cat /tmp/os_detect | grep "Operating System name" | cut -f2 -d '"'`
     echo "Local Node OS System Name : $localOS"
@@ -318,7 +322,7 @@ checkSSH()
   echo ""
 
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `./remote_command.sh $ipadd $PASSWORD ls 1 > /dev/null 2>&1`;
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD ls 1 > /dev/null 2>&1`;
     rc="$?"
     if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
       if [ $PASSWORD == "ssh" ] ; then
@@ -345,7 +349,7 @@ checkRemoteDir()
   `sudo rm -f /tmp/*_check > /dev/null 2>&1`
   
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `./remote_command.sh $ipadd $PASSWORD 'sudo rm -f /tmp/*_check > /dev/null 2>&1' 1 > /tmp/remote_command_check 2>&1`
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'sudo rm -f /tmp/*_check > /dev/null 2>&1' 1 > /tmp/remote_command_check 2>&1`
   done
 
   if [ "$USER" != "root" ]; then
@@ -356,7 +360,7 @@ checkRemoteDir()
     echo ""
 
     for ipadd in "${NODE_IPADDRESS[@]}"; do
-      `./remote_command.sh $ipadd $PASSWORD 'touch /tmp/cs_check' 1 > /tmp/remote_command_check 2>&1`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'touch /tmp/cs_check' 1 > /tmp/remote_command_check 2>&1`
       rc="$?"
       if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
 	`grep "Permission denied" /tmp/remote_command_check  > /dev/null 2>&1`
@@ -372,7 +376,7 @@ checkRemoteDir()
 	  REPORTPASS=false
       fi
 
-      `./remote_command.sh $ipadd $PASSWORD 'touch /dev/shm/cs_check' 1 > /tmp/remote_command_check 2>&1`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'touch /dev/shm/cs_check' 1 > /tmp/remote_command_check 2>&1`
       rc="$?"
       if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
 	`grep "Permission denied" /tmp/remote_command_check  > /dev/null 2>&1`
@@ -409,13 +413,13 @@ checkOS()
   
   pass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `./remote_scp_put.sh $ipadd $PASSWORD os_detect.sh 1 > /tmp/remote_scp_put_check 2>&1`
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_put.sh $ipadd $PASSWORD os_detect.sh 1 > /tmp/remote_scp_put_check 2>&1`
     if [ "$?" -ne 0 ]; then
       echo "Error running remote_scp_put.sh to $ipadd Node, check /tmp/remote_scp_put_check"
     else
-      `./remote_command.sh $ipadd $PASSWORD './os_detect.sh > /tmp/os_detect 2>&1' 1 > /tmp/remote_command_check`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD '$COLUMNSTORE_INSTALL_DIR/bin/os_detect.sh > /tmp/os_detect 2>&1' 1 > /tmp/remote_command_check`
       rc="$?"
-      `./remote_scp_get.sh $ipadd $PASSWORD /tmp/os_detect > /tmp/remote_scp_get_check 2>&1`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/os_detect > /tmp/remote_scp_get_check 2>&1`
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
       else
@@ -454,10 +458,10 @@ checkLocale()
   
   pass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `./remote_command.sh $ipadd $PASSWORD 'locale | grep LANG= > /tmp/locale_check 2>&1' 1 > /tmp/remote_command_check`
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'locale | grep LANG= > /tmp/locale_check 2>&1' 1 > /tmp/remote_command_check`
     rc="$?"
      if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-      `./remote_scp_get.sh $ipadd $PASSWORD /tmp/locale_check > /tmp/remote_scp_get_check 2>&1`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/locale_check > /tmp/remote_scp_get_check 2>&1`
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
       else
@@ -506,7 +510,7 @@ checkSELINUX()
   fi
   
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `./remote_scp_get.sh $ipadd $PASSWORD /etc/selinux/config > /tmp/remote_scp_get_check 2>&1`
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /etc/selinux/config > /tmp/remote_scp_get_check 2>&1`
     if [ "$?" -ne 0 ]; then
       echo "$ipadd Node SELINUX setting is Not Enabled"
     else
@@ -572,14 +576,14 @@ checkFirewalls()
       # 'sysconfig not on remote node
       for firewall in "${FIREWALL_LIST[@]}"; do
 	pass=true
-        `./remote_command.sh $ipadd $PASSWORD "service '$firewall' status > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
+        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "service '$firewall' status > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
         if [ "$?" -eq 0 ]; then
               echo "${bold}Failed${normal}, $ipadd Node $firewall service is Active, please disable"
               pass=false
               fpass=false
               REPORTPASS=false
         else
-	  `./remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
+	  `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
 	  if [ "$?" -eq 0 ]; then
 	      echo "${bold}Failed${normal}, $ipadd Node $firewall service is Active, please disable"
 	      pass=false
@@ -619,7 +623,7 @@ checkFirewalls()
     fi
 
     for ipadd in "${NODE_IPADDRESS[@]}"; do
-      `./remote_command.sh $ipadd $PASSWORD '/sbin/rcSuSEfirewall2 status > /tmp/rcSuSEfirewall2_check 2>&1' 1 > /tmp/remote_command_check`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD '/sbin/rcSuSEfirewall2 status > /tmp/rcSuSEfirewall2_check 2>&1' 1 > /tmp/remote_command_check`
       rc="$?"
       if  [ $rc -eq 0 ] ; then
 	echo "${bold}Failed${normal}, $ipadd Node rcSuSEfirewall2 service is Enabled, please disable"
@@ -674,14 +678,14 @@ checkTime()
   #get local epoch time
   localTime=`date +%s`
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-     `./remote_command.sh $ipadd $PASSWORD 'date +%s > /tmp/time_check' > /tmp/time_check`
+     `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'date +%s > /tmp/time_check' > /tmp/time_check`
       rc="$?"
       if  [ $rc -ne 0 ] ; then
 	  echo $ipadd " Node ${bold}Failed${normal} date/time check failed, check /tmp/time_check"
 	  pass=false
 	  REPORTPASS=false
       else
-	`./remote_scp_get.sh $ipadd $PASSWORD /tmp/time_check > /tmp/remote_scp_get_check 2>&1`
+	`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/time_check > /tmp/remote_scp_get_check 2>&1`
 	if [ "$?" -ne 0 ]; then
 	  echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
 	else
@@ -714,7 +718,7 @@ checkPackages()
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
 
-  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools" "perl-DBD-MySQL")
+  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools")
 
   if [ "$OS" == "centos6" ] || [ "$OS" == "centos7" ]; then
     if [ ! `which yum 2>/dev/null` ] ; then
@@ -756,14 +760,14 @@ checkPackages()
       for ipadd in "${NODE_IPADDRESS[@]}"; do
 	for PKG in "${CENTOS_PKG[@]}"; do
 	  if [ $OS == "centos6" ] && [ $PKG == "boost" ]; then
-	    `./remote_command.sh $ipadd $PASSWORD 'ls /usr/lib/libboost_regex.so > /dev/null 2>&1' 1 > /tmp/remote_command_check 2>&1`
+	    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'ls /usr/lib/libboost_regex.so > /dev/null 2>&1' 1 > /tmp/remote_command_check 2>&1`
 	    if  [ $? -ne 0 ] ; then
 	      echo "${bold}Failed${normal}, $ipadd Node ${bold}boost libraries${normal} not installed"
 	      pass=false
 	      REPORTPASS=false
 	    fi
 	  else
-	    `./remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+	    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "yum list installed '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
 	    rc="$?"
 	    if  [ $rc -eq 2 ] ; then
               echo "${bold}Failed${normal}, $ipadd Node, 'yum' not installed"
@@ -789,7 +793,7 @@ checkPackages()
     fi
   fi
 
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-mysql")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools")
 
   if [ "$OS" == "suse12" ]; then
     if [ ! `which rpm 2>/dev/null` ] ; then
@@ -821,7 +825,7 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
       for ipadd in "${NODE_IPADDRESS[@]}"; do
 	for PKG in "${SUSE_PKG[@]}"; do
-	  `./remote_command.sh $ipadd $PASSWORD "rpm -qi '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+	  `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "rpm -qi '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
 	  rc="$?"
 	  if  [ $rc -ne 0 ] ; then
 	    echo "${bold}Failed${normal}, $ipadd Node package ${bold}${PKG}${normal} is not installed, please install"
@@ -841,7 +845,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libdbd-mysql-perl")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1v5" "net-tools")
 
   if [ "$OS" == "ubuntu16" ] ; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -873,8 +877,8 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
      for ipadd in "${NODE_IPADDRESS[@]}"; do
       for PKG in "${UBUNTU_PKG[@]}"; do
-        `./remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
-          `./remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
+        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+          `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
             if [ "$?" -ne 0 ]; then
               echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
             else
@@ -906,7 +910,7 @@ checkPackages()
    fi
   fi
 
-  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libdbd-mysql-perl")
+  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools")
 
   if [ "$OS" == "debian8" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -938,8 +942,8 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
      for ipadd in "${NODE_IPADDRESS[@]}"; do
       for PKG in "${DEBIAN_PKG[@]}"; do
-        `./remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
-          `./remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
+        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+          `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
             if [ "$?" -ne 0 ]; then
               echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
             else
@@ -971,7 +975,7 @@ checkPackages()
     fi
   fi
   
-  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools" "libioa1")
+  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1v5" "net-tools" "libaio1")
 
   if [ "$OS" == "debian9" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -1003,8 +1007,8 @@ checkPackages()
     if [ "$IPADDRESSES" != "" ]; then
      for ipadd in "${NODE_IPADDRESS[@]}"; do
       for PKG in "${DEBIAN9_PKG[@]}"; do
-        `./remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
-          `./remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
+        `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "dpkg -s '$PKG' > /tmp/pkg_check 2>&1" 1 > /tmp/remote_command_check 2>&1`
+          `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/pkg_check > /tmp/remote_scp_get_check 2>&1`
             if [ "$?" -ne 0 ]; then
               echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
             else
