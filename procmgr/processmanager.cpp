@@ -10048,8 +10048,10 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		MySQLRep = "n";
 	}
 
-	if ( MySQLRep == "n" && enable )
+	if ( MySQLRep == "n" && enable ) {
+	    log.writeLog(__LINE__, "setMySQLReplication: MySQLRep not set, exiting", LOG_TYPE_DEBUG);
 		return oam::API_SUCCESS;
+	}
 
 	log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
 
@@ -10228,7 +10230,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		for( ; listPT != devicenetworklist.end() ; listPT++)
 		{
 			string remoteModuleName = (*listPT).DeviceName;
-			log.writeLog(__LINE__, "Setup SlavMySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "Setup SlaveMySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
 	
 			//skip master
 			if ( remoteModuleName == masterModule )

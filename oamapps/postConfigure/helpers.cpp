@@ -459,7 +459,9 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, std::st
 						{ // set for slave repl request
 							// don't do PMs unless PMwithUM flag is set
 							string moduleType = (*pt).DeviceName.substr(0,MAX_MODULE_TYPE_SIZE);
-							if ( moduleType == "pm" && !pmwithum ) {
+
+							if ( ( moduleType == "pm" && !pmwithum ) &&
+							     ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) ) {
 								pt++;
 								continue;
 							}

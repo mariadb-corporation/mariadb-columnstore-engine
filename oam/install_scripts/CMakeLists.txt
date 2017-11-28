@@ -34,6 +34,7 @@ install(PROGRAMS post-install
                 myCnf-include-args.text 
                 myCnf-exclude-args.text
                 columnstore.service
+                mariadb-command-line.sh
                 DESTINATION ${ENGINE_BINDIR} COMPONENT platform)               
                 
 install(FILES  module DESTINATION ${ENGINE_LOCALDIR} COMPONENT platform)
