@@ -69,6 +69,7 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/tokenizer.hpp"
 
+#include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 
@@ -2789,21 +2790,9 @@ int main(int argc, char *argv[])
 			cout << "System Configuration is complete." << endl;
 			cout << "Performing System Installation." << endl;
 	
-			SystemSoftware systemsoftware;
-
-			try
-			{
-				oam.getSystemSoftware(systemsoftware);
-			}
-			catch (exception& e)
-			{
-				cout << " ERROR: reading getSystemSoftware API" << endl;
-				exit (1);
-			}
-
 			cout << endl;
 
-			string version = systemsoftware.Version + "-" + systemsoftware.Release;
+			string version = columstore_version + "-" + columnstore_release;
 
 			string installType = "initial";
 
