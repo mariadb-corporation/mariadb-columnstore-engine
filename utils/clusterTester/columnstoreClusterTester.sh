@@ -412,25 +412,26 @@ checkOS()
   echo ""
   
   pass=true
+  `/bin/cp -f $COLUMNSTORE_INSTALL_DIR/bin/os_detect.sh /tmp/.`
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_put.sh $ipadd $PASSWORD os_detect.sh 1 > /tmp/remote_scp_put_check 2>&1`
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_put.sh $ipadd $PASSWORD /tmp/os_detect.sh 1 > /tmp/remote_scp_put_check 2>&1`
     if [ "$?" -ne 0 ]; then
       echo "Error running remote_scp_put.sh to $ipadd Node, check /tmp/remote_scp_put_check"
+      exit 1
     else
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD '$COLUMNSTORE_INSTALL_DIR/bin/os_detect.sh > /tmp/os_detect 2>&1' 1 > /tmp/remote_command_check`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD /tmp/os_detect.sh 1 > /tmp/remote_command_check`
       rc="$?"
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/os_detect > /tmp/remote_scp_get_check 2>&1`
       if [ "$?" -ne 0 ]; then
-	echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
+	echo "Error running remote_command.sh /tmp/os_detect.sh on $ipadd Node, check /tmp/remote_command_check"
+	exit 1
       else
-	  remoteOS=`cat os_detect | grep "Operating System name" | cut -f2 -d '"'`
+	  remoteOS=`cat /tmp/remote_command_check | grep "Operating System name" | cut -f2 -d '"'`
 	  echo "$ipadd Node OS Version : $remoteOS"
 	  if [ $localOS != $remoteOS ]; then
 	    echo "${bold}Failed${normal}, $ipadd has a different OS than local node"
 	    pass=false
 	    REPORTPASS=false
 	  fi
-	  rm -f os_detect
       fi
     fi
   done
@@ -464,6 +465,7 @@ checkLocale()
       `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /tmp/locale_check > /tmp/remote_scp_get_check 2>&1`
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_scp_get.sh to $ipadd Node, check /tmp/remote_scp_get_check"
+	exit 1
       else
 	echo "$ipadd Node Locale : `cat locale_check`"
 	`diff /tmp/locale_check locale_check > /dev/null 2>&1`
@@ -476,6 +478,7 @@ checkLocale()
       fi
     else
       echo "Error running remote_command.sh to $ipadd Node, check /tmp/remote_command_check"
+      exit 1
       pass=false
       REPORTPASS=false
     fi
@@ -718,7 +721,7 @@ checkPackages()
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
 
-  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools")
+  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools" "perl-DBD-MySQL")
 
   if [ "$OS" == "centos6" ] || [ "$OS" == "centos7" ]; then
     if [ ! `which yum 2>/dev/null` ] ; then
@@ -793,7 +796,7 @@ checkPackages()
     fi
   fi
 
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-mysql")
 
   if [ "$OS" == "suse12" ]; then
     if [ ! `which rpm 2>/dev/null` ] ; then
@@ -845,7 +848,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1v5" "net-tools")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libdbd-mysql-perl")
 
   if [ "$OS" == "ubuntu16" ] ; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -910,7 +913,7 @@ checkPackages()
    fi
   fi
 
-  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools")
+  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libdbd-mysql-perl")
 
   if [ "$OS" == "debian8" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
@@ -975,7 +978,7 @@ checkPackages()
     fi
   fi
   
-  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1v5" "net-tools" "libaio1")
+  declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools" "libioa1")
 
   if [ "$OS" == "debian9" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
