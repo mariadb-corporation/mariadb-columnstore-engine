@@ -112,7 +112,7 @@ ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColu
 	else if (rc)
 	{
 		SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
-		if (sc)
+		if (sc && (sc->colPosition() > -1))
 		{
 			ReturnedColumn* tmp = derivedColList[sc->colPosition()]->clone();
 			delete sc;
