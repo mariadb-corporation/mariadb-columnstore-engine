@@ -501,8 +501,6 @@ static void startMgrProcessThread()
 	SystemModuleTypeConfig systemmoduletypeconfig;
 	ModuleTypeConfig PMSmoduletypeconfig;
 	ALARMManager aManager;
-	
-	int waitTime = 90;
 
 	int waitTime = 180; 
 	

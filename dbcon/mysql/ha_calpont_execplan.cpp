@@ -38,7 +38,6 @@
 #include <cerrno>
 #include <cstring>
 #include <time.h>
-//#define NDEBUG
 #include <cassert>
 #include <vector>
 #include <map>
@@ -2290,8 +2289,6 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
 			{
 				if (ct.colWidth < 20)
 					ct.colWidth = 20; // for infinidb date length
-				if (ct.colWidth > 65535)
-					ct.colWidth = 65535;
 			}
 			// @bug5083. MySQL gives string type for date/datetime column.
 			// need to adjust here.

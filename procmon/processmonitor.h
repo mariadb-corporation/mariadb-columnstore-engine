@@ -506,11 +506,6 @@ public:
         int runMariaDBCommandLine(std::string command);
 
     /**
-     *@brief run MariaDB Command Line script
-     */
-        int runMariaDBCommandLine(std::string command);
-
-    /**
      *@brief run Master Replication script
      */
 	int runMasterRep(std::string& masterLogFile, std::string& masterLogPos);

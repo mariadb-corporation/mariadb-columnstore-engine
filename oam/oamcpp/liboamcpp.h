@@ -1488,7 +1488,7 @@ namespace oam
              * @param DeviceNetworkConfig the Modules added
              * @param password Host Root Password
             */
-            EXPORT void addModule(DeviceNetworkList devicenetworklist, const std::string password);
+            EXPORT void addModule(DeviceNetworkList devicenetworklist, const std::string password, const std::string mysqlpw);
 
             /** @brief remove Module
              *
