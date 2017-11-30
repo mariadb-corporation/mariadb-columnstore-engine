@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
 	}
 	catch(...) {}
 
- 	//check if root-user
+	//check if root-user
 	int user;
 	user = getuid();
 	if (user != 0)

@@ -38,6 +38,7 @@
 #include <cerrno>
 #include <cstring>
 #include <time.h>
+//#define NDEBUG
 #include <cassert>
 #include <vector>
 #include <map>
@@ -2289,6 +2290,8 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
 			{
 				if (ct.colWidth < 20)
 					ct.colWidth = 20; // for infinidb date length
+				if (ct.colWidth > 65535)
+					ct.colWidth = 65535;
 			}
 			// @bug5083. MySQL gives string type for date/datetime column.
 			// need to adjust here.
@@ -6491,8 +6494,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
 		{
 			std::ostringstream vtb;
-		    vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
-		    //vtb << "$vtable_" << gwi.thd->thread_id;
+		  vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
+		  //vtb << "$vtable_" << gwi.thd->thread_id;
 			// re-construct the select query and redo phase 1
 			if (redo)
 			{
