@@ -7,7 +7,9 @@
 # Argument 2 - Remote Server root password
 # Argument 3 - Command
 set timeout 30
-set USERNAME $env(USER)"@"
+exec whoami >/tmp/whoami.tmp
+set USERNAME [exec cat /tmp/whoami.tmp]
+exec rm -f /tmp/whoami.tmp
 set SERVER [lindex $argv 0]
 set PASSWORD [lindex $argv 1]
 set FILE [lindex $argv 2]
