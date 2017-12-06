@@ -3095,6 +3095,7 @@ int main(int argc, char *argv[])
 			cout << endl;
 
 			//Ask for ssh password or certificate if not already set
+			bool passwordSetBefore =  false;
 			if ( password.empty() )
 				{
 					cout << endl;
@@ -3115,8 +3116,10 @@ int main(int argc, char *argv[])
 					}
 
 					//check for command line option password
-					if ( !password.empty() )
+					if ( !password.empty() ){
+						passwordSetBefore = true;
 						break;
+					}
 
 					pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
 					if ( strcmp(pass1, "") == 0 ) {
@@ -3139,7 +3142,7 @@ int main(int argc, char *argv[])
 				}
 
 				//add single quote for special characters
-				if ( password != "ssh" )
+				if ( password != "ssh" && !passwordSetBefore)
 				{
 					password = "'" + password + "'";
 				}
