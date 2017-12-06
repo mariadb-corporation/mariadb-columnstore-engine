@@ -612,13 +612,6 @@ int main(int argc, char *argv[])
 		nonDistribute = true;
 	}
 
-	// setup to start on reboot, for non-root amazon installs
-	if ( !rootUser )
-	{
-	    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-	    system("sudo chmod 666 /etc/fstab >/dev/null 2>&1");
-	}
-
 	cout << endl;
 
 	cout << "===== Setup System Server Type Configuration =====" << endl << endl;
@@ -1074,6 +1067,13 @@ int main(int argc, char *argv[])
 			}
 		}
 			
+		// setup to start on reboot, for non-root amazon installs
+		if ( !rootUser )
+		{
+		    system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+		    system("sudo chmod 666 /etc/fstab >/dev/null 2>&1");
+		}
+
 		if ( !writeConfig(sysConfig) ) { 
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl; 
 			exit(1);
@@ -3093,6 +3093,58 @@ int main(int argc, char *argv[])
 		if (DataRedundancy)
 		{
 			cout << endl;
+
+			//Ask for ssh password or certificate if not already set
+			if ( password.empty() )
+				{
+					cout << endl;
+					cout << "Next step is to enter the password to access the other Servers." << endl;
+					cout << "This is either your password or you can default to using a ssh key" << endl;
+					cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+				}
+
+			while(true)
+				{
+					char  *pass1, *pass2;
+
+					if ( noPrompting ) {
+						cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
+						if ( password.empty() )
+							password = "ssh";
+						break;
+					}
+
+					//check for command line option password
+					if ( !password.empty() )
+						break;
+
+					pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
+					if ( strcmp(pass1, "") == 0 ) {
+						password = "ssh";
+						break;
+					}
+
+					if ( pass1 == "exit")
+						exit(0);
+
+					string p1 = pass1;
+					pass2=getpass("Confirm password > ");
+					string p2 = pass2;
+					if ( p1 == p2 ) {
+						password = p2;
+						break;
+					}
+					else
+						cout << "Password mismatch, please re-enter" << endl;
+				}
+
+				//add single quote for special characters
+				if ( password != "ssh" )
+				{
+					password = "'" + password + "'";
+				}
+
+
 			if ( reuseConfig != "y" ) {
 				cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
 				if (!glusterSetup(password))
@@ -3146,8 +3198,8 @@ int main(int argc, char *argv[])
 		//
 		cout << endl << "===== MariaDB ColumnStore System Startup =====" << endl << endl;
 	
-		cout << "System Installation is complete." << endl;
-		cout << "Performing System Start-up." << endl;
+		cout << "System Configuration is complete." << endl;
+		cout << "Performing System Installation." << endl;
 
 		if (hdfs && !nonDistribute )
 		{
@@ -3178,8 +3230,8 @@ int main(int argc, char *argv[])
 	{
 		cout << endl << "===== MariaDB ColumnStore System Startup =====" << endl << endl;
 	
-		cout << "System Installation is complete." << endl;
-		cout << "Performing System Start-up." << endl;
+		cout << "System Configuration is complete." << endl;
+		cout << "Performing System Installation." << endl;
 
 		//start MariaDB ColumnStore on local server
 		cout << endl << "----- Starting MariaDB ColumnStore on local Server '" + parentOAMModuleName + "' -----" << endl << endl;
