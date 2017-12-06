@@ -47,7 +47,7 @@
 #include <climits>
 #include <cstring>
 #include <glob.h>
-
+#include <boost/regex.hpp>
 #include "liboamcpp.h"
 #include "installdir.h"
 
@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
 	{
 		includeArg = line;
 
+		boost::regex icludeArgRegEx("^#*\\s*" + includeArg + "\\s*=");
 		//see if in my.cnf.rpmsave
 		ifstream mycnfsavefile (mycnfsaveFile.c_str());
 		char line[200];
@@ -114,8 +115,7 @@ int main(int argc, char *argv[])
 		while (mycnfsavefile.getline(line, 200))
 		{
 			oldbuf = line;
-			string::size_type pos = oldbuf.find(includeArg,0);
-			if ( pos != string::npos ) {
+			if ( boost::regex_search(oldbuf.begin(),oldbuf.end(),icludeArgRegEx) ) {
 				//found in my.cnf.rpmsave, check if this is commented out
 				if ( line[0] != '#' ) 
 				{
@@ -129,8 +129,7 @@ int main(int argc, char *argv[])
 					while (mycnffile.getline(line1, 200))
 					{
 						newbuf = line1;
-						string::size_type pos = newbuf.find(includeArg,0);
-						if ( pos != string::npos ) {
+						if ( boost::regex_search(newbuf.begin(),newbuf.end(),icludeArgRegEx) ) {
 							newbuf = oldbuf;
 							cout << "Updated argument: " << includeArg << endl;
 							updated = true;
@@ -161,8 +160,8 @@ int main(int argc, char *argv[])
 						while (mycnffile.getline(line1, 200))
 						{
 							newbuf = line1;
-							string::size_type pos = newbuf.find("[mysqld]",0);
-							if ( pos != string::npos ) {
+							boost::regex mysqldSectionRegEx("\\[mysqld\\]");
+							if ( boost::regex_search(newbuf.begin(),newbuf.end(),mysqldSectionRegEx) ) {
 								lines.push_back(newbuf);
 								newbuf = oldbuf;
 								cout << "Added argument: " << includeArg << endl;
@@ -183,10 +182,9 @@ int main(int argc, char *argv[])
 						newFile.close();
 						
 						close(fd);
+						break;
 					}
 				}
-
-				break;
 			}
 		}
 	}
