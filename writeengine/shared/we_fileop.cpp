@@ -593,8 +593,7 @@ int FileOp::extendFile(
             return ERR_FILE_NOT_EXIST;
         }
 
-        pFile = openFile( oid, dbRoot, partition, segment,
-            segFile, "r+b" );//old file
+        pFile = openFile( oid, dbRoot, partition, segment, segFile, "r+b" );//old file
         if (pFile == 0)
         {
             ostringstream oss;
@@ -613,7 +612,7 @@ int FileOp::extendFile(
         if ( isDebug(DEBUG_1) && getLogger() )
         {
             std::ostringstream oss;
-            oss << "Opening existing column file"  <<
+            oss << "Opening existing column file (extendFile)"  <<
                    ": OID-"    << oid       <<
                    "; DBRoot-" << dbRoot    <<
                    "; part-"   << partition <<
@@ -651,19 +650,55 @@ int FileOp::extendFile(
                 ostringstream oss;
                 oss << "oid: " << oid << " with path " << segFile <<
                     "; new extent fbo " << hwm << "; number of "
-                    "compressed chunks " << ptrCount;
+                    "compressed chunks " << ptrCount <<
+					"; chunkIndex " << chunkIndex;
                 logging::Message::Args args;
                 args.add("compressed");
                 args.add(oss.str());
                 SimpleSysLog::instance()->logMsg(args,
                     logging::LOG_TYPE_ERROR,
                     logging::M0103);
-                return ERR_FILE_NEW_EXTENT_FBO;
+                // Expand the partial extent to full with emptyVal
+                // Since fillCompColumnExtentEmptyChunks() messes with the
+                // file on disk, we need to close it and reopen after or
+                // the cache isn't updated.
+				if ((pFile))
+					closeFile( pFile );
+				pFile = NULL;
+				string failedTask;  // For return error message, if any.
+				rc = FileOp::fillCompColumnExtentEmptyChunks(oid,
+															 width,
+															 emptyVal,
+															 dbRoot,
+															 partition,
+															 segment,
+															 hwm,
+															 segFile,
+															 failedTask);
+                if (rc != NO_ERROR)
+                {
+                    if (getLogger())
+                    {
+                        std::ostringstream oss;
+                        oss << "FileOp::extendFile: error padding partial compressed extent for " <<
+                               "column OID-" << oid       <<
+                               "; DBRoot-"   << dbRoot    <<
+                               "; part-"     << partition <<
+                               "; seg-"      << segment   <<
+                               "; hwm-"      << hwm       <<
+							   " " << failedTask.c_str();
+                        getLogger()->logMsg( oss.str(), rc, MSGLVL_CRITICAL );
+                    }
+                    return rc;
+                }
+				pFile = openFile( oid, dbRoot, partition, segment, segFile, "r+b" ); // modified file
             }
 
+            // Get the latest file header for the caller. If a partial extent was filled out,
+            // this will be different than when we first read the headers.
             if (hdrs)
             {
-                memcpy(hdrs, hdrsIn, sizeof(hdrsIn) );
+				RETURN_ON_ERROR( readHeaders(pFile, hdrs) );
             }
         }
         else
@@ -693,7 +728,26 @@ int FileOp::extendFile(
                 SimpleSysLog::instance()->logMsg(args,
                     logging::LOG_TYPE_ERROR,
                     logging::M0103);
-                return ERR_FILE_NEW_EXTENT_FBO;
+                // Expand the partial extent to full with emptyVal
+                // This generally won't ever happen, as uncompressed files
+                // are created with full extents.
+                rc = FileOp::expandAbbrevColumnExtent( pFile, dbRoot,
+                    emptyVal, width);
+                if (rc != NO_ERROR)
+                {
+                    if (getLogger())
+                    {
+                        std::ostringstream oss;
+                        oss << "FileOp::extendFile: error padding partial uncompressed extent for " <<
+                               "column OID-" << oid       <<
+                               "; DBRoot-"   << dbRoot    <<
+                               "; part-"     << partition <<
+                               "; seg-"      << segment   <<
+                               "; hwm-"      << hwm;
+                        getLogger()->logMsg( oss.str(), rc, MSGLVL_CRITICAL );
+                    }
+                    return rc;
+                }
             }
         }
     }
@@ -2598,7 +2652,7 @@ int FileOp::expandAbbrevColumnExtent(
     }
 
     // Add blocks to turn the abbreviated extent into a full extent.
-    int rc = initColumnExtent(pFile, dbRoot, blksToAdd, emptyVal, width,
+    int rc = FileOp::initColumnExtent(pFile, dbRoot, blksToAdd, emptyVal, width,
         false,   // existing file
         true,    // expand existing extent
         false);  // n/a since not adding new extent
