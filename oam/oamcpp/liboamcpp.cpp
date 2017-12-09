@@ -46,6 +46,7 @@
 #include <csignal>
 #include <sstream>
 
+#include "columnstoreversion.h"
 #include "ddlpkg.h"
 #include "../../dbcon/dmlpackage/dmlpkg.h"
 #define LIBOAM_DLLEXPORT
@@ -148,74 +149,13 @@ namespace oam
     /********************************************************************
      *
      * get System Software information
-     *
+     * (for backward compatibility only)
      ********************************************************************/
 
     void Oam::getSystemSoftware(SystemSoftware& systemsoftware)
     {
-        // parse releasenum file
-
-        string rn = InstallDir + "/releasenum";
-		ifstream File(rn.c_str());
-        if (!File)
-            // Open File error
-            return;
-
-        char line[400];
-        string buf;
-        while (File.getline(line, 400))
-        {
-            buf = line;
-            for ( unsigned int i = 0;; i++)
-            {
-                if ( SoftwareData[i] == "")
-                    //end of list
-                    break;
-
-                string data = "";
-                string::size_type pos = buf.find(SoftwareData[i],0);
-                if (pos != string::npos)
-                {
-                    string::size_type pos1 = buf.find("=",pos);
-                    if (pos1 != string::npos)
-                    {
-                     	data = buf.substr(pos1+1, 80);
-					}
-                    else
-                        // parse error
-                        exceptionControl("getSystemSoftware", API_FAILURE);
-
-					//strip off any leading or trailing spaces
-					for(;;)
-					{
-						string::size_type pos = data.find(' ',0);
-						if (pos == string::npos)
-							// no more found
-							break;
-						// strip leading
-						if (pos == 0) {
-							data = data.substr(pos+1,10000);
-						}
-						else 
-						{ // strip trailing
-							data = data.substr(0, pos);
-						}
-					}	
-
-                    switch(i)
-                    {
-                        case(0):                  // line up with SoftwareData[]
-                            systemsoftware.Version = data;
-                            break;
-                        case(1):
-                            systemsoftware.Release = data;
-                            break;
-                    }
-                }
-            }                                     //end of for loop
-        }                                         //end of while
-
-        File.close();
+        systemsoftware.Version = columnstore_version;
+        systemsoftware.Release = columnstore_release;
     }
     /********************************************************************
      *
@@ -502,6 +442,9 @@ namespace oam
         const string MODULE_DISABLE_STATE = "ModuleDisableState";
         const string MODULE_DBROOT_COUNT = "ModuleDBRootCount";
         const string MODULE_DBROOT_ID = "ModuleDBRootID";
+        const string MODULE_TLS_CA = "ModuleTLSCA";
+        const string MODULE_TLS_CL_CERT = "ModuleTLSClientCert";
+        const string MODULE_TLS_CL_KEY = "ModuleTLSClientKey";
 
 		string moduletype = module.substr(0,MAX_MODULE_TYPE_SIZE);
 		int moduleID = atoi(module.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
@@ -569,6 +512,13 @@ namespace oam
 				}
 
 				sort ( moduleconfig.dbrootConfigList.begin(), moduleconfig.dbrootConfigList.end() );
+
+                if ( moduletype == "um" )
+                {
+                    moduleconfig.TLSCA = sysConfig->getConfig(Section, MODULE_TLS_CA + itoa(moduleTypeID) );
+                    moduleconfig.TLSClientCert = sysConfig->getConfig(Section, MODULE_TLS_CL_CERT + itoa(moduleTypeID) );
+                    moduleconfig.TLSClientKey = sysConfig->getConfig(Section, MODULE_TLS_CL_KEY + itoa(moduleTypeID) );
+                }
 
                 return;
             }
@@ -2812,7 +2762,6 @@ namespace oam
 	
 		serverTypeInstall = atoi(sysConfig->getConfig("Installation", "ServerTypeInstall").c_str());
 		
-		sysConfig;
 	}
 	catch (...) {}
 

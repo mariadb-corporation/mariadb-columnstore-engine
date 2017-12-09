@@ -57,6 +57,8 @@ using namespace querytele;
 #include "jobstep.h"
 #include "jlf_common.h"
 
+#include "liboamcpp.h"
+
 namespace joblist
 {
 
@@ -88,6 +90,25 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
 	fCon = mysql_init(NULL);
 	if (fCon != NULL)
 	{
+        oam::Oam oam;
+        oam::oamModuleInfo_t moduleInfo;
+        moduleInfo = oam.getModuleInfo();
+        string moduleName = boost::get<0>(moduleInfo);
+        int serverTypeInstall = boost::get<5>(moduleInfo);
+
+        // This is single server installation so use um1 instead of pm1.
+        if ( serverTypeInstall == 2 )
+            moduleName.assign("um1");
+
+        oam::ModuleConfig moduleconfig;
+        oam.getSystemConfig(moduleName, moduleconfig);
+
+        if (!(moduleconfig.TLSCA.empty() || moduleconfig.TLSClientCert.empty() || moduleconfig.TLSClientKey.empty()))
+        {
+            mysql_ssl_set(fCon, moduleconfig.TLSClientKey.c_str(), moduleconfig.TLSClientCert.c_str(),
+                 moduleconfig.TLSCA.c_str(), NULL, NULL);
+        }
+
         unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
         mysql_options(fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
 
