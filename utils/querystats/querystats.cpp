@@ -37,6 +37,8 @@ using namespace joblist;
 #include "errorids.h"
 using namespace logging;
 
+#include "liboamcpp.h"
+
 #include "querystats.h"
 
 namespace querystats
@@ -210,6 +212,25 @@ void QueryStats::insert()
 	if (mysql.fCon == NULL)
 		handleMySqlError("fatal error initializing querystats lib", -1);
 
+    oam::Oam oam;
+    oam::oamModuleInfo_t moduleInfo;
+    moduleInfo = oam.getModuleInfo();
+    string moduleName = boost::get<0>(moduleInfo);
+    int serverTypeInstall = boost::get<5>(moduleInfo);
+
+    // This is single server installation so use um1 instead of pm1.
+    if ( serverTypeInstall == 2 )
+        moduleName.assign("um1");
+
+    oam::ModuleConfig moduleconfig;
+    oam.getSystemConfig(moduleName, moduleconfig);
+
+    if (!(moduleconfig.TLSCA.empty() || moduleconfig.TLSClientCert.empty() || moduleconfig.TLSClientKey.empty()))
+    {
+        mysql_ssl_set(mysql.fCon, moduleconfig.TLSClientKey.c_str(), moduleconfig.TLSClientCert.c_str(),
+             moduleconfig.TLSCA.c_str(), NULL, NULL);
+    }
+
     unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
     mysql_options(mysql.fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
 
@@ -289,6 +310,25 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
 	mysql.fCon = mysql_init(NULL);
 	if (mysql.fCon == NULL)
 		handleMySqlError("fatal error initializing querystats lib", -1);
+
+    oam::Oam oam;
+    oam::oamModuleInfo_t moduleInfo;
+    moduleInfo = oam.getModuleInfo();
+    string moduleName = boost::get<0>(moduleInfo);
+    int serverTypeInstall = boost::get<5>(moduleInfo);
+
+    // This is single server installation so use um1 instead of pm1.
+    if ( serverTypeInstall == 2 )
+        moduleName.assign("um1");
+
+    oam::ModuleConfig moduleconfig;
+    oam.getSystemConfig(moduleName, moduleconfig);
+
+    if (!(moduleconfig.TLSCA.empty() || moduleconfig.TLSClientCert.empty() || moduleconfig.TLSClientKey.empty()))
+    {
+        mysql_ssl_set(mysql.fCon, moduleconfig.TLSClientKey.c_str(), moduleconfig.TLSClientCert.c_str(),
+             moduleconfig.TLSCA.c_str(), NULL, NULL);
+    }
 
     unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
     mysql_options(mysql.fCon, MYSQL_OPT_PROTOCOL, &tcp_option);

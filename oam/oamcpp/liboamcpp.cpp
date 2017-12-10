@@ -442,6 +442,9 @@ namespace oam
         const string MODULE_DISABLE_STATE = "ModuleDisableState";
         const string MODULE_DBROOT_COUNT = "ModuleDBRootCount";
         const string MODULE_DBROOT_ID = "ModuleDBRootID";
+        const string MODULE_TLS_CA = "ModuleTLSCA";
+        const string MODULE_TLS_CL_CERT = "ModuleTLSClientCert";
+        const string MODULE_TLS_CL_KEY = "ModuleTLSClientKey";
 
 		string moduletype = module.substr(0,MAX_MODULE_TYPE_SIZE);
 		int moduleID = atoi(module.substr(MAX_MODULE_TYPE_SIZE,MAX_MODULE_ID_SIZE).c_str());
@@ -509,6 +512,13 @@ namespace oam
 				}
 
 				sort ( moduleconfig.dbrootConfigList.begin(), moduleconfig.dbrootConfigList.end() );
+
+                if ( moduletype == "um" )
+                {
+                    moduleconfig.TLSCA = sysConfig->getConfig(Section, MODULE_TLS_CA + itoa(moduleTypeID) );
+                    moduleconfig.TLSClientCert = sysConfig->getConfig(Section, MODULE_TLS_CL_CERT + itoa(moduleTypeID) );
+                    moduleconfig.TLSClientKey = sysConfig->getConfig(Section, MODULE_TLS_CL_KEY + itoa(moduleTypeID) );
+                }
 
                 return;
             }
@@ -2752,7 +2762,6 @@ namespace oam
 	
 		serverTypeInstall = atoi(sysConfig->getConfig("Installation", "ServerTypeInstall").c_str());
 		
-		sysConfig;
 	}
 	catch (...) {}
 
