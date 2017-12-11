@@ -24,6 +24,7 @@
 //#define NDEBUG
 #include <cassert>
 
+#include "columnstoreversion.h"
 #include "processmanager.h"
 #include "installdir.h"
 #include "dbrm.h"
@@ -4531,20 +4532,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	// check for RPM package
 	//
 
-	SystemSoftware systemsoftware;
-
-	try
-	{
-		oam.getSystemSoftware(systemsoftware);
-	}
-	catch (exception& e)
-	{
-		log.writeLog(__LINE__, "addModule - ERROR: getSystemSoftware", LOG_TYPE_ERROR);
-		pthread_mutex_unlock(&THREAD_LOCK);
-		return API_FAILURE;
-	}
-
-
 	//check if pkgs are located in /root directory
 	string homedir = "/root";
 	if (!rootUser) {
@@ -4554,12 +4541,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	}
 
 	if ( packageType == "rpm")
-		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
+		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.rpm.tar.gz";
 	else
 		if ( packageType == "deb") 
-        		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
+        		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.deb.tar.gz";
 		else
-			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
+			calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.bin.tar.gz";
 
 	string cmd = "ls " + calpontPackage + " > /dev/null 2>&1";
 	int rtnCode = system(cmd.c_str());
@@ -5024,7 +5011,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	if ( MySQLPort.empty() || MySQLPort == "" || MySQLPort == oam::UnassignedName )
 		MySQLPort = "3306";
 
-	string version = systemsoftware.Version + "-" + systemsoftware.Release;
+	string version = columnstore_version + "-" + columnstore_release;
 
 	//setup and push custom OS files
 	listPT = devicenetworklist.begin();
