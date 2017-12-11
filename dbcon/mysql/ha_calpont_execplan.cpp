@@ -6491,8 +6491,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
 		{
 			std::ostringstream vtb;
-		    vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
-		    //vtb << "$vtable_" << gwi.thd->thread_id;
+		  vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
+		  //vtb << "$vtable_" << gwi.thd->thread_id;
 			// re-construct the select query and redo phase 1
 			if (redo)
 			{
