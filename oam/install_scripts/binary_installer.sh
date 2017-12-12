@@ -238,11 +238,15 @@ send_user "\n"
 #
 # Start module installer to setup Customer OS files
 #
+if { $SERVERTYPE == "2" || $SERVERTYPE == "pmwithum" } { 
+    set MODULETYPE "um"
+}
+
 send_user "Run Module Installer                            "
 send " \n"
 send date\n
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/module_installer.sh --module=$MODULETYPE --port=$MYSQLPORT --installdir=$INSTALLDIR'\n"
-set timeout 60
+set timeout 120
 expect {
 	"word: " { send "$PASSWORD\n"
     exp_continue
@@ -255,54 +259,6 @@ expect {
         timeout { send_user "ERROR: Timeout\n" ; exit 2 }
 }
 send_user "\n"
-
-if { $MODULETYPE == "um" || $SERVERTYPE == "2" || $SERVERTYPE == "pmwithum" } { 
-	#
-	# run mysql setup scripts
-	#
-	send_user "Run MySQL Setup Scripts on Module               "
-	send " \n"
-	send date\n
-	send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/post-mysqld-install --installdir=$INSTALLDIR'\n"
-	set timeout 60
-	expect {
-		"word: " { send "$PASSWORD\n"
-	    exp_continue
-		}
-		"passphrase" { send "$PASSWORD\n" 
-	    exp_continue
-		}
-		"Exit status 0" { send_user "DONE" }
-		"Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
-		"ERROR" { send_user "ERROR: Daemon failed to run";
-		exit 1 }
-		"FAILED" { send_user "ERROR: Daemon failed to run";
-		exit 1 }
-		timeout { send_user "ERROR: Timeout\n" ; exit 2 }
-	}
-
-	send " \n"
-	send date\n
-	send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/post-mysql-install --installdir=$INSTALLDIR'\n"
-	set timeout 120
-	expect {
-		"word: " { send "$PASSWORD\n"
-	    exp_continue
-		}
-		"passphrase" { send "$PASSWORD\n" 
-	    exp_continue
-		}
-		"Exit status 0" { send_user "DONE" }
-		"Exit status 1" { send_user "ERROR: scp failed" ; exit 1 }
-		"ERROR" { send_user "ERROR: Daemon failed to run";
-		exit 1 }
-		"FAILED" { send_user "ERROR: Daemon failed to run";
-		exit 1 }
-		timeout { send_user "ERROR: Timeout\n" ; exit 2 }
-	}
-	send_user "\n"
-}
-
 
 send_user "\nInstallation Successfully Completed on '$MODULE'\n"
 exit 0
