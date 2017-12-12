@@ -111,7 +111,7 @@ unsigned int compactVarBinary(char* charTmpBuf, int fieldLength)
 }
 
 }
-
+
 namespace WriteEngine
 {
 
@@ -209,7 +209,7 @@ ColumnInfo::ColumnInfo(Log*             logger,
         // fAutoIncMgr = new ColumnAutoIncJob(logger);
     }
 }
-
+
 //------------------------------------------------------------------------------
 // ColumnInfo destructor
 //------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ void ColumnInfo::clearMemory( )
 
     fDictBlocks.clear();
 }
-
+
 //------------------------------------------------------------------------------
 // If at the start of the job, We have encountered a PM that has no DB file for
 // this column, or whose HWM extent is disabled; then this function is called
@@ -281,7 +281,7 @@ void ColumnInfo::setupDelayedFileCreation(
         column.compressionType,
         dbRoot, partition, segment );
 }
-
+
 //------------------------------------------------------------------------------
 // Create a DB file as part of delayed file creation.  See setupDelayedFile-
 // Creation for an explanation.
@@ -506,7 +506,7 @@ int ColumnInfo::createDelayedFileIfNeeded( const std::string& tableName )
 
     return rc;
 }
-
+
 //------------------------------------------------------------------------------
 // Add an extent for this column.  The next segment file in the DBRoot,
 // partition, segment number rotation will be selected for the extent.
@@ -613,7 +613,7 @@ int ColumnInfo::extendColumn( bool saveLBIDForCP )
 
     return rc;
 }
-
+
 //------------------------------------------------------------------------------
 // Add a new extent to this column, at the specified DBRoot.  Partition may be
 // used if DBRoot is empty.
@@ -773,7 +773,7 @@ int ColumnInfo::extendColumnNewExtent(
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // Fill out existing partial extent to extent boundary, so that we can resume
 // inserting rows on an extent boundary basis.  This use case should only take
@@ -881,7 +881,7 @@ int ColumnInfo::extendColumnOldExtent(
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 //  Either add or update the File object, so that it has the updated HWM.
 //  We will access this info to update the HWM in the ExtentMap at the end
@@ -933,7 +933,7 @@ void ColumnInfo::addToSegFileList( File& dataFile, HWM hwm )
         fSegFileUpdateList.push_back( dataFile );
     }
 }
-
+
 //------------------------------------------------------------------------------
 // Reset file offset data member attributes when we start working on the next
 // extent.
@@ -961,7 +961,7 @@ int ColumnInfo::resetFileOffsetsNewExtent(const char* /*hdr*/)
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // Set current size of file in raw (uncompressed) bytes, given the specified
 // hwm.  abbrevFlag indicates whether this is a fixed size abbreviated extent.
@@ -994,7 +994,7 @@ void ColumnInfo::setFileSize( HWM hwm, int abbrevFlag )
         }
     }
 }
-
+
 //------------------------------------------------------------------------------
 // If we are dealing with the first extent in the first segment file for this
 // column, and the segment file is still equal to 256K rows, then we set the
@@ -1026,7 +1026,7 @@ void ColumnInfo::setAbbrevExtentCheck( )
         }
     }
 }
-
+
 //------------------------------------------------------------------------------
 // If this is an abbreviated extent, we expand the extent to a full extent on
 // disk, by initializing the necessary number of remaining blocks.
@@ -1102,7 +1102,7 @@ int ColumnInfo::expandAbbrevExtent( bool bRetainFilePos )
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // Close the current Column file.
 //------------------------------------------------------------------------------
@@ -1116,7 +1116,7 @@ int ColumnInfo::closeColumnFile(bool /*bCompletingExtent*/, bool /*bAbort*/)
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // Initialize fLastInputRowInCurrentExtent used in detecting when a Read Buffer
 // is crossing an extent boundary, so that we can accurately track the min/max
@@ -1163,7 +1163,7 @@ void ColumnInfo::lastInputRowInExtentInit( bool bIsNewExtent )
                                   bIsNewExtent );
     }
 }
-
+
 //------------------------------------------------------------------------------
 // Increment fLastRIDInExtent to the end of the next extent.
 //------------------------------------------------------------------------------
@@ -1171,7 +1171,7 @@ void ColumnInfo::lastInputRowInExtentInc( )
 {
     fLastInputRowInCurrentExtent += fRowsPerExtent;
 }
-
+
 //------------------------------------------------------------------------------
 // Parsing is complete for this column.  Flush pending data.  Close the current
 // segment file, and corresponding dictionary store file (if applicable).  Also
@@ -1234,7 +1234,7 @@ int ColumnInfo::finishParsing( )
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // Store updated column information in BRMReporter for this column at EOJ;
 // so that Extent Map CP information and HWM's can be updated.
@@ -1259,7 +1259,7 @@ void ColumnInfo::getBRMUpdateInfo( BRMReporter& brmReporter )
     if (entriesAdded > 0)
         getCPInfoForBRM( brmReporter );
 }
-
+
 //------------------------------------------------------------------------------
 // Get updated Casual Partition (CP) information for BRM for this column at EOJ.
 //------------------------------------------------------------------------------
@@ -1267,7 +1267,7 @@ void ColumnInfo::getCPInfoForBRM( BRMReporter& brmReporter )
 {
     fColExtInf->getCPInfoForBRM(column, brmReporter);
 }
-
+
 //------------------------------------------------------------------------------
 // Get updated HWM information for BRM for this column at EOJ.
 // Returns count of the number of HWM entries added to the BRMReporter.
@@ -1340,7 +1340,7 @@ int ColumnInfo::getHWMInfoForBRM( BRMReporter& brmReporter )
 
     return entriesAdded;
 }
-
+
 //------------------------------------------------------------------------------
 // Setup initial extent we will begin loading at start of import.
 // DBRoot, partition, segment, etc for the starting extent are specified.
@@ -1460,7 +1460,7 @@ int ColumnInfo::setupInitialColumnExtent(
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // Prepare the initial column segment file for import.
 //------------------------------------------------------------------------------
@@ -1521,7 +1521,7 @@ int ColumnInfo::setupInitialColumnFile( HWM oldHwm, HWM hwm )
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // Update the number of bytes in the file, and the free space still remaining.
 //------------------------------------------------------------------------------
@@ -1542,7 +1542,7 @@ bool ColumnInfo::isFileComplete() const
 
     return false;
 }
-
+
 //------------------------------------------------------------------------------
 // Initialize last used auto-increment value from the current "next"
 // auto-increment value taken from the system catalog (or BRM).
@@ -1575,7 +1575,7 @@ int ColumnInfo::finishAutoInc( )
 
     return rc;
 }
-
+
 //------------------------------------------------------------------------------
 // Get current dbroot, partition, segment, and HWM for this column.
 //
@@ -1597,7 +1597,7 @@ void ColumnInfo::getSegFileInfo( DBRootExtentInfo& fileInfo )
     else
         fileInfo.fLocalHwm = 0;
 }
-
+
 //------------------------------------------------------------------------------
 // Open a new or existing Dictionary store file based on the DBRoot,
 // partition, and segment settings in curCol.dataFile.
@@ -1741,7 +1741,7 @@ int ColumnInfo::openDctnryStore( bool bMustExist )
 
     return rc;
 }
-
+
 //------------------------------------------------------------------------------
 // Close the current Dictionary store file.
 //------------------------------------------------------------------------------
@@ -1773,7 +1773,7 @@ int ColumnInfo::closeDctnryStore(bool bAbort)
 
     return rc;
 }
-
+
 //------------------------------------------------------------------------------
 // Update dictionary store file with specified strings, and return the assigned
 // tokens (tokenbuf) to be stored in the corresponding column token file.
@@ -1835,7 +1835,7 @@ int ColumnInfo::updateDctnryStore(char* buf,
 
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // No action necessary for uncompressed dictionary files
 //------------------------------------------------------------------------------
@@ -1856,7 +1856,7 @@ int ColumnInfo::truncateDctnryStore(
 {
     return NO_ERROR;
 }
-
+
 //------------------------------------------------------------------------------
 // utility to convert a Status enumeration to a string
 //------------------------------------------------------------------------------
