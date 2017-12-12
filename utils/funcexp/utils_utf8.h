@@ -202,6 +202,31 @@ std::string wstring_to_utf8 (const std::wstring& str)
     return std::string(outbuf, strmblen);
 }
 
+inline
+uint8_t utf8_truncate_point(const char* input, size_t length)
+{
+    // Find the beginning of a multibyte char to truncate at and return the
+    // number of bytes to truncate
+    if (length < 3)
+    {
+        return 0;
+    }
+
+    const unsigned char* b = (const unsigned char*)(input) + length - 3;
+
+    if (b[2] & 0x80)
+    {
+        // First byte in a new multi-byte sequence
+        if (b[2] & 0x40) return 1;
+        // 3 byte sequence
+        else if ((b[1] & 0xe0) == 0xe0) return 2;
+        // 4 byte sequence
+        else if ((b[0] & 0xf0) == 0xf0) return 3;
+    }
+
+    return 0;
+}
+
 } //namespace utf8
 } //namespace funcexp
 

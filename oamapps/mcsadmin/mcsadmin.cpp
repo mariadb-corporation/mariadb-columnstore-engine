@@ -6836,6 +6836,8 @@ int processCommand(string* arguments)
                 cout << endl << "**** disableRep Failed :  " << e.what() << endl;
             }
 
+            cout << endl;
+
             break;
         }
 
@@ -7195,8 +7197,6 @@ int processCommand(string* arguments)
                 {
                     printModuleMemory(systemmemory.modulememory[i]);
                 }
-
-                cout << endl;
 
             }
             catch (exception& e)
