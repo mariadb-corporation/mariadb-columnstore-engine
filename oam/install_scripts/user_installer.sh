@@ -255,7 +255,7 @@ send_user "\n"
 #
 send_user "Run Module Installer                            "
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/module_installer.sh --module=um --port=$MYSQLPORT'\n"
-set timeout 60
+set timeout 120
 expect {
 	"word: " { send "$PASSWORD\n"
     exp_continue
