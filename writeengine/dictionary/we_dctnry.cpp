@@ -47,6 +47,7 @@ using namespace BRM;
 #include "IDBPolicy.h"
 #include "cacheutils.h"
 using namespace idbdatafile;
+#include "utils_utf8.h"
 
 namespace
 {
@@ -858,7 +859,8 @@ int Dctnry::insertDctnry(const char* buf,
         // @Bug 2565: Truncate any strings longer than schema's column width
         if (curSig.size > m_colWidth)
         {
-            curSig.size = m_colWidth;
+            uint8_t truncate_point = funcexp::utf8::utf8_truncate_point((const char*)curSig.signature, m_colWidth);
+            curSig.size = m_colWidth - truncate_point;
             ++truncCount;
         }
 

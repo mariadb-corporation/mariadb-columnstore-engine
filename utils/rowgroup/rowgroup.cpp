@@ -701,6 +701,7 @@ void Row::initToNull()
 
             case CalpontSystemCatalog::CHAR:
             case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
             case CalpontSystemCatalog::STRINT:
             {
                 if (inStringTable(i))
@@ -744,6 +745,7 @@ void Row::initToNull()
             }
 
             case CalpontSystemCatalog::VARBINARY:
+            case CalpontSystemCatalog::BLOB:
                 *((uint16_t*) &data[offsets[i]]) = 0;
                 break;
 
@@ -794,13 +796,6 @@ void Row::initToNull()
             case CalpontSystemCatalog::LONGDOUBLE:
             {
                 // no NULL value for long double yet, this is a nan.
-                memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
-                break;
-            }
-
-            case CalpontSystemCatalog::BLOB:
-            case CalpontSystemCatalog::TEXT:
-            {
                 memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
                 break;
             }
