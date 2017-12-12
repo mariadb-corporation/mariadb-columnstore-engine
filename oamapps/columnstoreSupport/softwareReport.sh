@@ -33,14 +33,7 @@ echo "-- Columnstore Package Details --"
 echo " "
 echo "################# mcsadmin getcolumnstoresoftwareinfo #################"
 echo " "
-$INSTALLDIR/bin/mcsadmin getcolumnstoresoftwareinfo
-
-echo " "
-echo "-- Columnstore Release Number file --"
-echo " "
-echo "################# cat $INSTALLDIR/releasenum #################"
-echo " "
-cat $INSTALLDIR/releasenum
+$INSTALLDIR/bin/mcsadmin getsoftwareinfo
 
 echo " "
 echo "-- Columnstore Storage Configuration --"
