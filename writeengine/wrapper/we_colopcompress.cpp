@@ -194,7 +194,14 @@ int ColumnOpCompress1::expandAbbrevColumnExtent(
     IDBDataFile* pFile, uint16_t dbRoot, uint64_t emptyVal, int width)
 {
     // update the uncompressed initial chunk to full chunk
-    RETURN_ON_ERROR(m_chunkManager->expandAbbrevColumnExtent(pFile, emptyVal, width));
+    int rc = m_chunkManager->expandAbbrevColumnExtent(pFile, emptyVal, width);
+
+    // ERR_COMP_FILE_NOT_FOUND is acceptable here. It just means that the
+    // file hasn't been loaded into the chunk manager yet. No big deal.
+    if (rc != NO_ERROR && rc != ERR_COMP_FILE_NOT_FOUND)
+    {
+        return rc;
+    }
 
     // let the base to physically expand extent.
     return FileOp::expandAbbrevColumnExtent(pFile, dbRoot, emptyVal, width);

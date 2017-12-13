@@ -1110,7 +1110,7 @@ void WESDHandler::onNakResponse(int PmId)
 // consume too much CPU
 void WESDHandler::onEodResponse(int PmId)
 {
-    if (getDebugLvl())
+    if (getDebugLvl() > 2)
         cout << "Received a EOD from " << PmId << endl;
 
     if (fRef.fCmdArgs.getMode() == 0)

@@ -48,7 +48,7 @@ namespace WriteEngine
 const	std::string MSG_LEVEL_STR[] =
 {
     "INFO",
-    "INFO",
+    "INFO2",
     "WARN",
     "ERR ",
     "CRIT"
