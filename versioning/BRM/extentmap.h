@@ -737,8 +737,8 @@ public:
      *
      * Function should only be called for System Catalog OIDs, as it assumes
      * the OID is fully contained on a single DBRoot, returning the first
-     * DBRoot found.  This only makes since for a System Catalog OID, because
-     * all other column OIDs can span multiple DBRoots.
+     * DBRoot found.  This only makes sence for a System Catalog
+     * OID, because all other column OIDs can span multiple DBRoots.
      *
      * @param oid The system catalog OID
      * @param dbRoot (out) the DBRoot holding the system catalog OID
