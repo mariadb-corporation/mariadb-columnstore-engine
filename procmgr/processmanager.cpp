@@ -24,6 +24,7 @@
 //#define NDEBUG
 #include <cassert>
 
+#include "columnstoreversion.h"
 #include "processmanager.h"
 #include "installdir.h"
 #include "dbrm.h"
@@ -4565,12 +4566,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	}
 	  
 	if ( packageType == "rpm")
-		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
+		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.rpm.tar.gz";
 	else
 		if ( packageType == "deb") 
-        		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
+        		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.deb.tar.gz";
 		else
-			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
+			calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.bin.tar.gz";
 
 	if ( DistributedInstall == "y" )
 	{

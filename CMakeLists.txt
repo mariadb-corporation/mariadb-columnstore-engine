@@ -37,6 +37,8 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 #set( CMAKE_VERBOSE_MAKEFILE on )
 
 INCLUDE(columnstore_version.cmake)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
+
 
 SET (PACKAGE columnstore)
 SET (PACKAGE_NAME columnstore)
@@ -76,8 +78,7 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 INCLUDE (configureEngine.cmake)
 
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum @ONLY IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 INCLUDE(bison.cmake)
