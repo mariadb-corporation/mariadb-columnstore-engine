@@ -127,7 +127,6 @@ struct QueryStats
      modified accordingly.
     */
     void insert();
-    void handleMySqlError(const char*, unsigned int);
 
     /* User mysql API to query priority table and get this user's assigned priority */
     uint32_t userPriority(std::string host, const std::string user);

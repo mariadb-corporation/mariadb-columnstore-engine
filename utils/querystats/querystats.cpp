@@ -37,27 +37,14 @@ using namespace joblist;
 #include "errorids.h"
 using namespace logging;
 
+#include "libmysql_client.h"
+
 #include "querystats.h"
 
 namespace querystats
 {
 
 const string SCHEMA = "infinidb_querystats";
-
-struct IDB_MySQL
-{
-    IDB_MySQL(): fCon(NULL), fRes(NULL) {}
-    ~IDB_MySQL()
-    {
-        if (fRes)
-            mysql_free_result(fRes);
-
-        if (fCon)
-            mysql_close(fCon);
-    }
-    MYSQL* fCon;
-    MYSQL_RES* fRes;
-};
 
 QueryStats::QueryStats()
 {
@@ -197,6 +184,7 @@ void QueryStats::insert()
         return;
 
     // get configure for every query to allow only changing of connect info
+    int ret;
     string host, user, pwd;
     uint32_t port;
 
@@ -205,23 +193,17 @@ void QueryStats::insert()
                         ERR_CROSS_ENGINE_CONFIG);
 
     // insert stats to querystats table
-    IDB_MySQL mysql;
+    utils::LibMySQL mysql;
 
-    mysql.fCon = mysql_init(NULL);
+    ret = mysql.init(host.c_str(), port, user.c_str(), pwd.c_str(),
+                     SCHEMA.c_str());
 
-    if (mysql.fCon == NULL)
-        handleMySqlError("fatal error initializing querystats lib", -1);
-
-    unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
-    mysql_options(mysql.fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
-
-    if (mysql_real_connect(mysql.fCon, host.c_str(), user.c_str(), pwd.c_str(),
-                           SCHEMA.c_str(), port, NULL, 0) == NULL)
-        handleMySqlError("fatal error setting up parms in querystats lib", mysql_errno(mysql.fCon));
+    if (ret != 0) 
+        mysql.handleMySqlError(mysql.getError().c_str(), ret);
 
     // escape quote characters
     boost::scoped_array<char> query(new char[fQuery.length() * 2 + 1]);
-    mysql_real_escape_string(mysql.fCon, query.get(), fQuery.c_str(), fQuery.length());
+    mysql_real_escape_string(mysql.getMySqlCon(), query.get(), fQuery.c_str(), fQuery.length());
 
     ostringstream insert;
     insert << "insert into querystats values (0, ";
@@ -246,19 +228,10 @@ void QueryStats::insert()
     insert << fNumFiles << ", ";
     insert << fFileBytes << ")"; // the last 2 fields are not populated yet
 
-    int ret = mysql_real_query(mysql.fCon, insert.str().c_str(), insert.str().length());
+    ret = mysql.run(insert.str().c_str());
 
     if (ret != 0)
-        handleMySqlError("fatal error executing query in querystats lib", ret);
-}
-
-void QueryStats::handleMySqlError(const char* errStr, unsigned int errCode)
-{
-    ostringstream oss;
-    oss << errStr << " (" << errCode << ")";
-    Message::Args args;
-    args.add(oss.str());
-    throw IDBExcept(ERR_CROSS_ENGINE_CONNECT, args);
+        mysql.handleMySqlError(mysql.getError().c_str(), ret);
 }
 
 uint32_t QueryStats::userPriority(string _host, const string _user)
@@ -288,22 +261,18 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
                         ERR_CROSS_ENGINE_CONFIG);
 
     // get user priority
-    IDB_MySQL mysql;
-    mysql.fCon = mysql_init(NULL);
+    utils::LibMySQL mysql;
 
-    if (mysql.fCon == NULL)
-        handleMySqlError("fatal error initializing querystats lib", -1);
+    int ret;
+    ret = mysql.init(host.c_str(), port, user.c_str(), pwd.c_str(),
+                     SCHEMA.c_str());
 
-    unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
-    mysql_options(mysql.fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
-
-    if (mysql_real_connect(mysql.fCon, host.c_str(), user.c_str(), pwd.c_str(),
-                           SCHEMA.c_str(), port, NULL, 0) == NULL)
-        handleMySqlError("fatal error connecting to InfiniDB in querystats lib", mysql_errno(mysql.fCon));
+    if (ret != 0) 
+        mysql.handleMySqlError(mysql.getError().c_str(), ret);
 
     // get the part of host string befor ':' if there is.
     size_t pos = _host.find(':', 0);
-
+ 
     if (pos != string::npos)
         _host = _host.substr(0, pos);
 
@@ -318,28 +287,19 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
           << _user
           << "') and upper(a.priority) = upper(b.priority)";
 
-    int ret = mysql_real_query(mysql.fCon, query.str().c_str(), query.str().length());
+    ret = mysql.run(query.str().c_str());
+    if (ret != 0) 
+        mysql.handleMySqlError(mysql.getError().c_str(), ret);
 
-    if (ret != 0)
-        handleMySqlError("fatal error executing query in querystats lib", ret);
-
-    // Using mysql_store_result here as for mysql_use_result we would need to get every row
-    // Maybe limit 1 on the query in the future?
-    mysql.fRes = mysql_store_result(mysql.fCon);
-
-    if (mysql.fRes == NULL)
-        handleMySqlError("fatal error reading results from InfiniDB in querystats lib", mysql_errno(mysql.fCon));
-
-    // only fetch one row. if duplicate user name in the table, the first one will be got.
-    MYSQL_ROW row;
-    row = mysql_fetch_row(mysql.fRes);
-
-    if (row)
+    char** rowIn;
+    rowIn = mysql.nextRow();
+ 
+    if(rowIn)
     {
-        fPriority = row[0];
-        fPriorityLevel = atoi(row[1]);
+        fPriority = rowIn[0];
+        fPriorityLevel = atoi(rowIn[1]);
     }
-
+ 
     return fPriorityLevel;
 }
 
