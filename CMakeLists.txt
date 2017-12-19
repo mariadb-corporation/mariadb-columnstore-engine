@@ -37,8 +37,6 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 #set( CMAKE_VERBOSE_MAKEFILE on )
 
 INCLUDE(columnstore_version.cmake)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
-
 
 SET (PACKAGE columnstore)
 SET (PACKAGE_NAME columnstore)
