@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
 
-set(ProcMon_SRCS main.cpp processmonitor.cpp)
+set(ProcMon_SRCS main.cpp processmonitor.cpp ../utils/common/crashtrace.cpp)
 
 add_executable(ProcMon ${ProcMon_SRCS})
 

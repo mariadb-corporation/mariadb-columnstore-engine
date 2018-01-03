@@ -8,7 +8,8 @@ set(DMLProc_SRCS
     dmlproc.cpp
     dmlprocessor.cpp
     dmlresultbuffer.cpp
-    batchinsertprocessor.cpp)
+    batchinsertprocessor.cpp
+    ../utils/common/crashtrace.cpp)
 
 add_executable(DMLProc ${DMLProc_SRCS})
 

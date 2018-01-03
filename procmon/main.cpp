@@ -26,6 +26,8 @@ namespace bi=boost::interprocess;
 
 #include "IDBPolicy.h"
 
+#include "crashtrace.h"
+
 using namespace std;
 using namespace messageqcpp;
 using namespace processmonitor;
@@ -74,6 +76,14 @@ int main(int argc, char **argv)
 #ifndef _MSC_VER
     setuid(0); // set effective ID to root; ignore return status
 #endif
+
+    struct sigaction ign;
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 
 	if (argc > 1 && string(argv[1]) == "--daemon")
 	{

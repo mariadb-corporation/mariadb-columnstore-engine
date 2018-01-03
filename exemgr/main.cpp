@@ -97,6 +97,8 @@ using namespace querytele;
 #include "utils_utf8.h"
 #include "boost/filesystem.hpp"
 
+#include "crashtrace.h"
+
 namespace {
 
 //If any flags other than the table mode flags are set, produce output to screeen
@@ -1165,10 +1167,12 @@ public:
     }
 };
 
+#ifdef _MSC_VER
 void exit_(int)
 {
     exit(0);
 }
+#endif
 
 void added_a_pm(int)
 {
@@ -1213,7 +1217,6 @@ void printTotalUmMemory(int sig)
 void setupSignalHandlers()
 {
 #ifdef _MSC_VER
-    signal(SIGSEGV, exit_);
     signal(SIGINT, exit_);
     signal(SIGTERM, exit_);
 #else
@@ -1229,6 +1232,12 @@ void setupSignalHandlers()
     sigaction(SIGHUP, &ign, 0);
     ign.sa_handler = printTotalUmMemory;
     sigaction(SIGUSR1, &ign, 0);
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 #endif
 }
 
@@ -1301,6 +1310,9 @@ int main(int argc, char* argv[])
 	// get and set locale language
     string systemLang = "C";
 	systemLang = funcexp::utf8::idb_setlocale();
+
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("ExeMgr");
 
 	gDebug = 0;
 	bool eFlg = false;
