@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
 
-set(DDLProc_SRCS ddlproc.cpp ddlprocessor.cpp)
+set(DDLProc_SRCS ddlproc.cpp ddlprocessor.cpp ../utils/common/crashtrace.cpp)
 
 add_executable(DDLProc ${DDLProc_SRCS})
 
