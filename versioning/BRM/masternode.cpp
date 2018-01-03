@@ -35,6 +35,8 @@
 #include "brmtypes.h"
 #include "utils_utf8.h"
 
+#include "crashtrace.h"
+
 #define MAX_RETRIES 10
 
 BRM::MasterDBRMNode *m;
@@ -128,6 +130,13 @@ int main(int argc, char **argv)
 	signal(SIGUSR1, restart);
 	signal(SIGPIPE, SIG_IGN);
 #endif
+    struct sigaction ign;
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 
 	idbdatafile::IDBPolicy::configIDBPolicy();
 

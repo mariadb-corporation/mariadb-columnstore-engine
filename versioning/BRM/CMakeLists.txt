@@ -41,7 +41,7 @@ install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
 ########### next target ###############
 
-set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp)
+set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp ../../utils/common/crashtrace.cpp)
 
 add_executable(controllernode ${controllernode_SRCS})
 
@@ -52,7 +52,7 @@ install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
 ########### next target ###############
 
-set(workernode_SRCS slavenode.cpp)
+set(workernode_SRCS slavenode.cpp ../../utils/common/crashtrace.cpp)
 
 add_executable(workernode ${workernode_SRCS})
 

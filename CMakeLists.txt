@@ -98,12 +98,12 @@ endif()
 
 
 FOREACH(BUILD_TYPE RELEASE RELWITHDEBINFO MINSIZEREL)
-    SET(CMAKE_CXX_FLAGS_${BUILD_TYPE} "-g -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
-    SET(CMAKE_C_FLAGS_${BUILD_TYPE} "-g -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
+    SET(CMAKE_CXX_FLAGS_${BUILD_TYPE} "-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
+    SET(CMAKE_C_FLAGS_${BUILD_TYPE} "-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H")
 ENDFOREACH()
 
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D _DEBUG -DHAVE_CONFIG_H")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D _DEBUG -DHAVE_CONFIG_H")
 
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")  
 
