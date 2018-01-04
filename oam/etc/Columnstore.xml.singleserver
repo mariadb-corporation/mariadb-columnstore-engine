@@ -278,6 +278,9 @@
 		<ModuleType2>um</ModuleType2>
 		<ModuleDesc2>User Module</ModuleDesc2>
 		<RunType2>SIMPLEX</RunType2>
+ 	    <ModuleTLSCA2>unassigned</ModuleTLSCA2>
+ 		<ModuleTLSClientCert2>unassigned</ModuleTLSClientCert2>
+ 		<ModuleTLSClientKey2>unassigned</ModuleTLSClientKey2>
 		<ModuleCount2>0</ModuleCount2>
 		<ModuleIPAddr1-1-2>0.0.0.0</ModuleIPAddr1-1-2>
 		<ModuleHostName1-1-2>unassigned</ModuleHostName1-1-2>
