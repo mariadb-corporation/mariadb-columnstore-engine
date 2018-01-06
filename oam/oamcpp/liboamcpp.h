@@ -833,9 +833,6 @@ struct ModuleConfig_s
     std::string ModuleType;                   //!< Module Type
     std::string ModuleDesc;                   //!< Module Description
     std::string DisableState;                 //!< Disabled State
-    std::string TLSCA;                        //!< TLS CA cert or path
-    std::string TLSClientCert;                //!< TLS client cert path
-    std::string TLSClientKey;                 //!< TLS client key path
     HostConfigList hostConfigList;	          //!< IP Address and Hostname List
     DBRootConfigList dbrootConfigList;	      //!< DBRoot ID list
 };

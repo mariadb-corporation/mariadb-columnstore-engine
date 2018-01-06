@@ -22,10 +22,9 @@
 #include <iomanip>
 using namespace std;
 
-#include "idberrorinfo.h"
-using namespace logging;
-
-#include "liboamcpp.h"
+#include "errorids.h"
+#include "exceptclasses.h"
+#include "configcpp.h"
 
 #include "libmysql_client.h"
 
@@ -61,23 +60,15 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
 
     fCon = mysql_init(NULL);
 
-    oam::Oam oam;
-    oam::oamModuleInfo_t moduleInfo;
-    moduleInfo = oam.getModuleInfo();
-    string moduleName = boost::get<0>(moduleInfo);
-    int serverTypeInstall = boost::get<5>(moduleInfo);
+    config::Config* cf = config::Config::makeConfig();
+    const string TLSCA = cf->getConfig("CrossEngineSupport", "TLSCA");
+    const string TLSClientCert = cf->getConfig("CrossEngineSupport", "TLSClientCert");
+    const string TLSClientKey = cf->getConfig("CrossEngineSupport", "TLSClientKey");
 
-    // This is single server installation so use um1 instead of pm1.
-    if ( serverTypeInstall == 2 )
-        moduleName.assign("um1");
-
-    oam::ModuleConfig moduleconfig;
-    oam.getSystemConfig(moduleName, moduleconfig);
-
-    if (!(moduleconfig.TLSCA.empty() || moduleconfig.TLSClientCert.empty() || moduleconfig.TLSClientKey.empty()))
+    if (!(TLSCA.empty() || TLSClientCert.empty() || TLSClientKey.empty()))
     {
-        mysql_ssl_set(fCon, moduleconfig.TLSClientKey.c_str(), moduleconfig.TLSClientCert.c_str(),
-             moduleconfig.TLSCA.c_str(), NULL, NULL);
+        mysql_ssl_set(fCon, TLSClientKey.c_str(), TLSClientCert.c_str(),
+                         TLSCA.c_str(), NULL, NULL);
     }
 
     if (fCon != NULL)
@@ -136,7 +127,7 @@ void LibMySQL::handleMySqlError(const char* errStr, unsigned int errCode)
     else
         oss << "(" << errCode << ")";
 
-    throw IDBExcept(oss.str(), ERR_CROSS_ENGINE_CONNECT);
+    throw logging::IDBExcept(oss.str(), logging::ERR_CROSS_ENGINE_CONNECT);
 
     return;
 }
