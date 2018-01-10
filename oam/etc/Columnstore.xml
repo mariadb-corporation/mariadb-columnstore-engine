@@ -520,6 +520,9 @@
 		<Port>3306</Port>
 		<User>root</User>
 		<Password></Password>
+		<TLSCA></TLSCA>
+		<TLSClientCert></TLSClientCert>
+		<TLSClientKey></TLSClientKey>
 	</CrossEngineSupport>
 	<QueryStats>
 		<Enabled>N</Enabled>

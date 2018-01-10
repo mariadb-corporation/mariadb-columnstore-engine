@@ -57,84 +57,10 @@ using namespace querytele;
 #include "jobstep.h"
 #include "jlf_common.h"
 
+#include "libmysql_client.h"
+
 namespace joblist
 {
-
-LibMySQL::LibMySQL() : fCon(NULL), fRes(NULL)
-{
-}
-
-
-LibMySQL::~LibMySQL()
-{
-    if (fRes)
-    {
-        mysql_free_result(fRes);
-    }
-
-    fRes = NULL;
-
-    if (fCon)
-    {
-        mysql_close(fCon);
-    }
-
-    fCon = NULL;
-}
-
-
-int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, const char* d)
-{
-    int ret = 0;
-
-    fCon = mysql_init(NULL);
-
-    if (fCon != NULL)
-    {
-        unsigned int tcp_option = MYSQL_PROTOCOL_TCP;
-        mysql_options(fCon, MYSQL_OPT_PROTOCOL, &tcp_option);
-
-        if (mysql_real_connect(fCon, h, u, w, d, p, NULL, 0) == NULL)
-        {
-            fErrStr = "fatal error in mysql_real_connect()";
-            ret = mysql_errno(fCon);
-        }
-        else
-        {
-            mysql_set_character_set(fCon, "utf8");
-        }
-    }
-    else
-    {
-        fErrStr = "fatal error in mysql_init()";
-        ret = -1;
-    }
-
-    return ret;
-}
-
-
-int LibMySQL::run(const char* query)
-{
-    int ret = 0;
-
-    if (mysql_real_query(fCon, query, strlen(query)) != 0)
-    {
-        fErrStr = "fatal error reading result from crossengine client lib";
-        ret = -1;
-    }
-
-    fRes = mysql_use_result(fCon);
-
-    if (fRes == NULL)
-    {
-        fErrStr = "fatal error reading result from crossengine client lib";
-        ret = -1;
-    }
-
-    return ret;
-}
-
 
 CrossEngineStep::CrossEngineStep(
     const string& schema,
@@ -158,7 +84,7 @@ CrossEngineStep::CrossEngineStep(
     fExtendedInfo = "CES: ";
     getMysqldInfo(jobInfo);
     fQtc.stepParms().stepType = StepTeleStats::T_CES;
-    mysql = new LibMySQL();
+    mysql = new utils::LibMySQL();
 }
 
 
@@ -503,7 +429,7 @@ void CrossEngineStep::execute()
         ret = mysql->init(fHost.c_str(), fPort, fUser.c_str(), fPasswd.c_str(), fSchema.c_str());
 
         if (ret != 0)
-            handleMySqlError(mysql->getError().c_str(), ret);
+            mysql->handleMySqlError(mysql->getError().c_str(), ret);
 
         string query(makeQuery());
         fLogger->logMessage(logging::LOG_TYPE_INFO, "QUERY to foreign engine: " + query);
@@ -514,7 +440,7 @@ void CrossEngineStep::execute()
         ret = mysql->run(query.c_str());
 
         if (ret != 0)
-            handleMySqlError(mysql->getError().c_str(), ret);
+            mysql->handleMySqlError(mysql->getError().c_str(), ret);
 
         int num_fields = mysql->getFieldCount();
 
@@ -818,22 +744,6 @@ string CrossEngineStep::makeQuery()
     return oss.str();
 }
 
-void CrossEngineStep::handleMySqlError(const char* errStr, unsigned int errCode)
-{
-    ostringstream oss;
-    oss << errStr << "(" << errCode << ")";
-
-    if (errCode == (unsigned int) - 1)
-        oss << "(null pointer)";
-    else
-        oss << "(" << errCode << ")";
-
-    throw IDBExcept(oss.str(), ERR_CROSS_ENGINE_CONNECT);
-
-    return;
-}
-
-
 const RowGroup& CrossEngineStep::getOutputRowGroup() const
 {
     return fRowGroupOut;
@@ -979,5 +889,3 @@ void CrossEngineStep::formatMiniStats()
 
 }
 // vim:ts=4 sw=4:
-
-

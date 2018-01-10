@@ -32,6 +32,11 @@
 using namespace std;
 
 // forward reference
+namespace utils
+{
+class LibMySQL;
+}
+
 namespace  execplan
 {
 class ParseTree;
@@ -45,55 +50,6 @@ class FuncExp;
 
 namespace joblist
 {
-
-class LibMySQL
-{
-public:
-    LibMySQL();
-    ~LibMySQL();
-
-    // init:   host          port        username      passwd         db
-    int init(const char*, unsigned int, const char*, const char*, const char*);
-
-    // run the query
-    int run(const char* q);
-
-    int getFieldCount()
-    {
-        return mysql_num_fields(fRes);
-    }
-    int getRowCount()
-    {
-        return mysql_num_rows(fRes);
-    }
-    char** nextRow()
-    {
-        char** row = mysql_fetch_row(fRes);
-        fieldLengths = mysql_fetch_lengths(fRes);
-        fFields = mysql_fetch_fields(fRes);
-        return row;
-    }
-    long getFieldLength(int field)
-    {
-        return fieldLengths[field];
-    }
-    MYSQL_FIELD* getField(int field)
-    {
-        return &fFields[field];
-    }
-    const std::string& getError()
-    {
-        return fErrStr;
-    }
-
-private:
-    MYSQL*        fCon;
-    MYSQL_RES*    fRes;
-    MYSQL_FIELD*  fFields;
-    std::string             fErrStr;
-    unsigned long* fieldLengths;
-};
-
 /** @brief class CrossEngineStep
  *
  */
@@ -215,7 +171,6 @@ protected:
         const char*, const execplan::CalpontSystemCatalog::ColType&, int64_t);
     virtual void formatMiniStats();
     virtual void printCalTrace();
-    virtual void handleMySqlError(const char*, unsigned int);
 
     uint64_t fRowsRetrieved;
     uint64_t fRowsReturned;
@@ -274,7 +229,7 @@ protected:
     rowgroup::RowGroup fRowGroupFe3;
 
     funcexp::FuncExp* fFeInstance;
-    LibMySQL* mysql;
+    utils::LibMySQL* mysql;
 };
 
 
