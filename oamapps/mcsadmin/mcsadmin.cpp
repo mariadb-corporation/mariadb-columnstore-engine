@@ -1878,7 +1878,7 @@ int processCommand(string* arguments)
 				}
  
 				string DataRedundancyConfig;
-				string DataRedundancyCopies;
+				int DataRedundancyCopies;
 				string DataRedundancyStorageType;
 				try {
 					oam.getSystemConfig("DataRedundancyConfig", DataRedundancyConfig);
@@ -3565,7 +3565,7 @@ int processCommand(string* arguments)
 			}
 
 			string DataRedundancyConfig;
-			string DataRedundancyCopies;
+			int DataRedundancyCopies;
 			string DataRedundancyStorageType;
 			try {
 				oam.getSystemConfig("DataRedundancyConfig", DataRedundancyConfig);
@@ -5552,7 +5552,7 @@ int processCommand(string* arguments)
 								}
 							}
 							string command = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*hostConfigIter).IPAddr + " " + password + " 'mkdir -p " + startup::StartUp::installDir() + "/gluster/brick" + oam.itoa(brickID) + "'";
-							int status = system(command.c_str());
+//							int status = system(command.c_str());
 							brickID++;
 						}
 					}
@@ -5853,7 +5853,7 @@ int processCommand(string* arguments)
 				}
 			}
 
-			if ( DataRedundancyConfig == "y" && devicenetworklist.size() != DataRedundancyCopies) {
+			if ( DataRedundancyConfig == "y" && devicenetworklist.size() != (size_t)DataRedundancyCopies) {
 				cout << endl << "**** removeModule Failed : Data Redundancy requires you to remove modules in groups equal to number of copies" << endl;
 				quit = true;
 			}
@@ -6828,7 +6828,6 @@ int processCommand(string* arguments)
         {
 
 		string DataRedundancyConfig = "n";
-		int DataRedundancyCopies;
 		try {
 			oam.getSystemConfig( "DataRedundancyConfig", DataRedundancyConfig);
 		}

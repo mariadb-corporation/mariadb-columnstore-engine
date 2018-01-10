@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 	      
 	      //re-read local system info with updated Columnstore.xml
 	      sleep(1);
-	      Config* sysConfig = Config::makeConfig();
+//	      Config* sysConfig = Config::makeConfig();
 	      MonitorConfig config;
 
 	      //PMwithUM config 
