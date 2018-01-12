@@ -1485,7 +1485,7 @@ int main(int argc, char* argv[])
 
 	threadpool::ThreadPool exeMgrThreadPool;
     exeMgrThreadPool.setName("ExeMgrServer");
-    exeMgrThreadPool.setDebug(true);
+
 	for (;;)
 	{
 		IOSocket ios;
