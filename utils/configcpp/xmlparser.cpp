@@ -22,6 +22,7 @@
 #include "config.h"
 
 #include <string>
+#include <boost/algorithm/string.hpp>
 #include <stdexcept>
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
@@ -43,12 +44,14 @@ const string XMLParser::getConfig(const xmlDocPtr doc, const string& section, co
 	cur1 = cur1->xmlChildrenNode;
 	while (cur1 != NULL)
 	{
-		if ((!xmlStrcmp(cur1->name, (const xmlChar *)section.c_str())))
+		string cur1name = (const char*)cur1->name;
+		if ((boost::iequals(cur1name, section)))
 		{
 			xmlNodePtr cur2 = cur1->xmlChildrenNode;
 			while (cur2 != NULL)
 			{
-				if ((!xmlStrcmp(cur2->name, (const xmlChar*)name.c_str())))
+				string cur2name = (const char*)cur2->name;
+				if ((boost::iequals(cur2name, name)))
 				{
 						xmlNodePtr cur3 = cur2->xmlChildrenNode;
 						if (cur3)
@@ -75,12 +78,14 @@ void XMLParser::getConfig(const xmlDocPtr doc, const string& section, const stri
 	cur1 = cur1->xmlChildrenNode;
 	while (cur1 != NULL)
 	{
-		if ((!xmlStrcmp(cur1->name, (const xmlChar *)section.c_str())))
+		string cur1name = (const char*)cur1->name;
+		if ((boost::iequals(cur1name, section)))
 		{
 			xmlNodePtr cur2 = cur1->xmlChildrenNode;
 			while (cur2 != NULL)
 			{
-				if ((!xmlStrcmp(cur2->name, (const xmlChar*)name.c_str())))
+				string cur2name = (const char*)cur2->name;
+				if ((boost::iequals(cur2name, name)))
 				{
 						res.clear();
 						xmlNodePtr cur3 = cur2->xmlChildrenNode;
@@ -106,12 +111,14 @@ void XMLParser::setConfig(xmlDocPtr doc, const string& section, const string& na
 	cur1 = cur1->xmlChildrenNode;
 	while (cur1 != NULL)
 	{
-		if (xmlStrcmp(cur1->name, (const xmlChar *)section.c_str()) == 0)
+		string cur1name = (const char*)cur1->name;
+		if (boost::iequals(cur1name, section))
 		{
 			cur2 = cur1->xmlChildrenNode;
 			while (cur2 != NULL)
 			{
-				if (xmlStrcmp(cur2->name, (const xmlChar*)name.c_str()) == 0)
+				string cur2name = (const char*)cur2->name;
+				if (boost::iequals(cur2name, name))
 				{
 						xmlNodePtr cur3 = cur2->xmlChildrenNode;
 						if (cur3 == NULL)
@@ -160,14 +167,16 @@ void XMLParser::delConfig(xmlDocPtr doc, const string& section, const string& na
 	cur1 = cur1->xmlChildrenNode;
 	while (cur1 != NULL)
 	{
-		if ((!xmlStrcmp(cur1->name, (const xmlChar *)section.c_str())))
+		string cur1name = (const char*)cur1->name;
+		if ((boost::iequals(cur1name, section)))
 		{
 			xmlNodePtr cur2 = cur1->xmlChildrenNode;
 			while (cur2 != NULL)
 			{
 				xmlNodePtr tmp = cur2;
 				cur2 = cur2->next;
-				if ((!xmlStrcmp(tmp->name, (const xmlChar*)name.c_str())))
+				string tmpname = (const char*)tmp->name;
+				if ((boost::iequals(tmpname, name)))
 				{
 					xmlUnlinkNode(tmp);
 					xmlFreeNode(tmp);
