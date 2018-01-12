@@ -93,8 +93,6 @@ namespace joblist
   const uint64_t defaultNumBuckets = 128;
   const uint64_t defaultMaxElementsPerBuckert = 16 * 1024 * 1024;
 
-  const int defaultEMServerThreads = 50;
-  const int defaultEMServerQueueSize = 100;
   const int defaultEMSecondsBetweenMemChecks = 1;
   const int defaultEMMaxPct = 95;
   const int defaultEMPriority = 21; // @Bug 3385
@@ -149,13 +147,10 @@ namespace joblist
 
     typedef std::map <uint32_t, uint64_t> MemMap;
 
-
-    int  	getEmServerThreads() const { return  getUintVal(fExeMgrStr, "ServerThreads", defaultEMServerThreads); }
-    int  	getEmServerQueueSize() const { return  getUintVal(fExeMgrStr, "ServerQueueSize", defaultEMServerQueueSize); }
     int  	getEmSecondsBetweenMemChecks() const { return  getUintVal(fExeMgrStr, "SecondsBetweenMemChecks", defaultEMSecondsBetweenMemChecks); }
     int  	getEmMaxPct() const { return  getUintVal(fExeMgrStr, "MaxPct", defaultEMMaxPct); }
     EXPORT int  	getEmPriority() const;
-    int  	getEmExecQueueSize() const { return  getUintVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize); }
+    int  	getEmExecQueueSize() const { return  getIntVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize); }
 
     int	      	getHjMaxBuckets() const { return  getUintVal(fHashJoinStr, "MaxBuckets", defaultHJMaxBuckets); }
     unsigned  	getHjNumThreads() const { return  fHjNumThreads; } //getUintVal(fHashJoinStr, "NumThreads", defaultNumThreads); }

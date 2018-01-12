@@ -1436,7 +1436,7 @@ int main(int argc, char* argv[])
     // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
     // From  the pools perspective, it has no idea if it is ExeMgr doing the 
     // creation, so it has no idea which way to set the flag. So we set the max here.
-	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+//	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
     JobStep::jobstepThreadPool.setName("ExeMgrJobList");
 //	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
 //	{
@@ -1444,14 +1444,10 @@ int main(int argc, char* argv[])
 //		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
 //	}
 	
-	int serverThreads = rm->getEmServerThreads();
-	int serverQueueSize = rm->getEmServerQueueSize();
 	int maxPct = rm->getEmMaxPct();
 	int pauseSeconds = rm->getEmSecondsBetweenMemChecks();
 	int priority = rm->getEmPriority();
 
-    FEMsgHandler::threadPool.setMaxThreads(serverThreads);
-    FEMsgHandler::threadPool.setQueueSize(serverQueueSize);
     FEMsgHandler::threadPool.setName("FEMsgHandler");
     
     if (maxPct > 0)
@@ -1472,8 +1468,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	cout << "Starting ExeMgr: st = " << serverThreads << ", sq = " <<
-		serverQueueSize << ", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
+	cout << "Starting ExeMgr: qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
 		rm->getConfig()->configFile() << endl;
 
 	//set ACTIVE state
@@ -1488,8 +1483,9 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	threadpool::ThreadPool exeMgrThreadPool(serverThreads, serverQueueSize);
+	threadpool::ThreadPool exeMgrThreadPool;
     exeMgrThreadPool.setName("ExeMgrServer");
+    exeMgrThreadPool.setDebug(true);
 	for (;;)
 	{
 		IOSocket ios;
