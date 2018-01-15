@@ -565,7 +565,7 @@ int main(int argc, char* argv[])
     // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
     // From  the pools perspective, it has no idea if it is ExeMgr doing the 
     // creation, so it has no idea which way to set the flag. So we set the max here.
-    JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+//    JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
     JobStep::jobstepThreadPool.setName("DMLProcJobList");
     
 //    if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")

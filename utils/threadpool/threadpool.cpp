@@ -196,6 +196,25 @@ uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
                 bAdded = true;
             }
 
+            if (fDebug)
+            {
+                ostringstream oss;
+                oss << "invoke thread " << " on " << fName
+                << " max " << fMaxThreads
+                << " queue " << fQueueSize 
+                << " threads " << fThreadCount
+                << " running " << fIssued
+                << " waiting " << (waitingFunctorsSize - fIssued)
+                << " total " << waitingFunctorsSize;
+                logging::Message::Args args;
+                logging::Message message(0);
+                args.add(oss.str());
+                message.format( args );
+                logging::LoggingID lid(22);
+                logging::MessageLog ml(lid);
+                ml.logWarningMessage( message );
+            }
+
             // fQueueSize = 0 disables the queue and is an indicator to allow any number of threads to actually run.
             if (fThreadCount < fMaxThreads || fQueueSize == 0)
             {
@@ -203,20 +222,6 @@ uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
 
                 lock1.unlock();
                 fThreads.create_thread(beginThreadFunc(*this));
-
-                if (fDebug)
-                {
-                    ostringstream oss;
-                    oss << "invoke: Starting thread " << fThreadCount << " max " << fMaxThreads
-                    << " queue " << fQueueSize;
-                    logging::Message::Args args;
-                    logging::Message message(0);
-                    args.add(oss.str());
-                    message.format( args );
-                    logging::LoggingID lid(22);
-                    logging::MessageLog ml(lid);
-                    ml.logWarningMessage( message );
-                }
 
                 if (bAdded)
                     break;
@@ -301,6 +306,24 @@ void ThreadPool::beginThread() throw()
                 {
                     Container_T::iterator todo = fNextFunctor++;
                     ++fIssued;
+                    if (fDebug)
+                    {
+                        ostringstream oss;
+                        oss << "starting thread " << " on " << fName
+                        << " max " << fMaxThreads
+                        << " queue " << fQueueSize 
+                        << " threads " << fThreadCount
+                        << " running " << fIssued
+                        << " waiting " << (waitingFunctorsSize - fIssued)
+                        << " total " << waitingFunctorsSize;
+                        logging::Message::Args args;
+                        logging::Message message(0);
+                        args.add(oss.str());
+                        message.format( args );
+                        logging::LoggingID lid(22);
+                        logging::MessageLog ml(lid);
+                        ml.logWarningMessage( message );
+                    }
                     lock1.unlock();
                     try
                     {
