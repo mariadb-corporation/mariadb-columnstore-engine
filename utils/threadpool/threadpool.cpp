@@ -470,7 +470,7 @@ void ThreadPoolMonitor::operator()()
         << setw(4) << tv.tv_usec/100
         << " Name " << fPool->fName
         << " Active " << fPool->waitingFunctorsSize
-        << " Most " << fPool->fThreadCount
+        << " ThdCnt " << fPool->fThreadCount
         << " Max " << fPool->fMaxThreads
         << " Q " << fPool->fQueueSize
         << endl;
