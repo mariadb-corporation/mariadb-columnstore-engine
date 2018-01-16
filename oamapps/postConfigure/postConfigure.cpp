@@ -3337,7 +3337,7 @@ int main(int argc, char *argv[])
 		cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
 		
-		cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias" << endl << endl;
+		cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias.sh" << endl << endl;
 	}
 	else
 	{
