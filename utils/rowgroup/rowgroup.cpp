@@ -626,6 +626,7 @@ void Row::initToNull()
 				*((uint64_t *) &data[offsets[i]]) = joblist::DATETIMENULL; break;
 			case CalpontSystemCatalog::CHAR:
 			case CalpontSystemCatalog::VARCHAR:
+            case CalpontSystemCatalog::TEXT:
 			case CalpontSystemCatalog::STRINT: {
 				if (inStringTable(i)) {
 					setStringField(joblist::CPNULLSTRMARK, i);
@@ -652,6 +653,7 @@ void Row::initToNull()
 				break;
 			}
 			case CalpontSystemCatalog::VARBINARY:
+            case CalpontSystemCatalog::BLOB:
 				*((uint16_t *) &data[offsets[i]]) = 0; break;
 			case CalpontSystemCatalog::DECIMAL:
 			case CalpontSystemCatalog::UDECIMAL:
@@ -676,11 +678,6 @@ void Row::initToNull()
 				*((uint64_t *) &data[offsets[i]]) = joblist::UBIGINTNULL; break;
 			case CalpontSystemCatalog::LONGDOUBLE: {
 				// no NULL value for long double yet, this is a nan.
-				memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
-				break;
-			}
-			case CalpontSystemCatalog::BLOB:
-            case CalpontSystemCatalog::TEXT: {
 				memset(&data[offsets[i]], 0xFF, getColumnWidth(i));
 				break;
 			}

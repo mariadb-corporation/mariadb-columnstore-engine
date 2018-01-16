@@ -82,7 +82,7 @@ DROP PROCEDURE IF EXISTS `compression_ratio` //
 
 CREATE PROCEDURE compression_ratio()
 BEGIN
-SELECT CONCAT((SELECT SUM(file_size) FROM information_schema.columnstore_files WHERE compressed_data_size IS NOT NULL) / (SELECT SUM(data_size) FROM information_schema.columnstore_extents) * 100, '%') COMPRESSION_RATIO;
+SELECT CONCAT((SELECT SUM(data_size) FROM information_schema.columnstore_extents ce left join information_schema.columnstore_columns cc on ce.object_id = cc.object_id where compression_type='Snappy') / (SELECT SUM(compressed_data_size) FROM information_schema.columnstore_files WHERE compressed_data_size IS NOT NULL), ':1') COMPRESSION_RATIO;
 END //
 
 DELIMITER ;

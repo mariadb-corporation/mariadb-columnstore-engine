@@ -108,7 +108,7 @@
 */
 
 #include "ha_calpont.h"
-#include "versionnumber.h"
+#include "columnstoreversion.h"
 
 #define NEED_CALPONT_EXTERNS
 #include "ha_calpont_impl.h"
@@ -201,7 +201,7 @@ static int columnstore_init_func(void *p)
     tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
     tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-  fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", idb_version.c_str(), idb_release.c_str());
+  fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
 
   calpont_hton= (handlerton *)p;
 #ifndef _MSC_VER
@@ -234,7 +234,7 @@ static int infinidb_init_func(void *p)
     tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
     tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-  fprintf(stderr, "InfiniDB: Started; Version: %s-%s\n", idb_version.c_str(), idb_release.c_str());
+  fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(), columnstore_release.c_str());
 
 	calpont_hton= (handlerton *)p;
 

@@ -4317,6 +4317,14 @@ void gp_walk(const Item *item, void *arg)
 			bool isOr = (ftype == Item_func::COND_OR_FUNC);
             bool isXor = (ftype == Item_func::XOR_FUNC);
 
+            // MCOL-1029 A cached COND_ITEM is something like:
+            // AND (TRUE OR FALSE)
+            // We can skip it
+            if (isCached)
+            {
+                break;
+            }
+
 			List<Item> *argumentList;
 			List<Item> xorArgumentList;
 			if (isXor)
@@ -4369,7 +4377,7 @@ void gp_walk(const Item *item, void *arg)
 						}
 					}
 				}
-			
+
 				// @bug1603. MySQL's filter tree is a multi-tree grouped by operator. So more than
 				// two filters saved on the stack so far might belong to this operator.
 				uint32_t leftInStack = gwip->ptWorkStack.size() - argumentList->elements + 1;
@@ -6483,8 +6491,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 		if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
 		{
 			std::ostringstream vtb;
-		    vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
-		    //vtb << "$vtable_" << gwi.thd->thread_id;
+		  vtb << "infinidb_vtable.$vtable_" << gwi.thd->thread_id;
+		  //vtb << "$vtable_" << gwi.thd->thread_id;
 			// re-construct the select query and redo phase 1
 			if (redo)
 			{

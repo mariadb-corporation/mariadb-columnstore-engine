@@ -568,11 +568,11 @@ int main(int argc, char* argv[])
     JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
     JobStep::jobstepThreadPool.setName("DMLProcJobList");
     
-//    if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
-//   {
-//        JobStep::jobstepThreadPool.setDebug(true);
-//        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
-//    }
+    if (rm->getDMLJlThreadPoolDebug() == "Y" || rm->getDMLJlThreadPoolDebug() == "y")
+    {
+        JobStep::jobstepThreadPool.setDebug(true);
+        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+    }
 
     //set ACTIVE state
     try

@@ -27,6 +27,7 @@
 
 #include <boost/filesystem.hpp>
 
+#include "columnstoreversion.h"
 #include "processmanager.h"
 #include "installdir.h"
 
@@ -502,29 +503,12 @@ static void startMgrProcessThread()
 	ModuleTypeConfig PMSmoduletypeconfig;
 	ALARMManager aManager;
 
-	int waitTime = 120; 
+	int waitTime = 180; 
 	
 	log.writeLog(__LINE__, "startMgrProcessThread launched", LOG_TYPE_DEBUG);
 
 	//get calpont software version and release
-	SystemSoftware systemsoftware;
-	string softwareVersion;
-	string softwareRelease;
-
-	try
-	{
-		oam.getSystemSoftware(systemsoftware);
-
-		softwareVersion = systemsoftware.Version;
-		softwareRelease = systemsoftware.Release;
-	}
-	catch (exception& e) {
-		cout << endl << "ProcMon Construct Error reading getSystemSoftware = " << e.what() << endl;
-		exit(-1);
-	}
-
-	string localSoftwareInfo = softwareVersion + softwareRelease;
-
+    string localSoftwareInfo = columnstore_version + columnstore_release;
 	//get systemStartupOffline
 	string systemStartupOffline = "n";
 	try {

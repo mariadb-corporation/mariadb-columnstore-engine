@@ -141,7 +141,7 @@ using namespace logging;
 using namespace funcexp;
 
 #include "installdir.h"
-#include "versionnumber.h"
+#include "columnstoreversion.h"
 
 namespace cal_impl_if
 {
@@ -2286,7 +2286,7 @@ const char* calgetversion(UDF_INIT* initid, UDF_ARGS* args,
 					char* result, unsigned long* length,
 					char* is_null, char* error)
 {
-	string version(idb_version);
+	string version(columnstore_version);
 	*length = version.size();
 	memcpy(result, version.c_str(), *length);
 	return result;
@@ -3466,7 +3466,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 		if (((thd->lex)->sql_command == SQLCOM_INSERT) && (rows > 0))
 			ci->useCpimport = 0;
 			
-    		if ((ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))) //If autocommit on batch insert will use cpimport to load data
+		if ((ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))) //If autocommit on batch insert will use cpimport to load data
 		{
 			//store table info to connection info
 			CalpontSystemCatalog::TableName tableName;
@@ -3923,7 +3923,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 	if ( ( ((thd->lex)->sql_command == SQLCOM_INSERT) ||  ((thd->lex)->sql_command == SQLCOM_LOAD) || (thd->lex)->sql_command == SQLCOM_INSERT_SELECT) && !ci->singleInsert )
 	{
 
-		//@Bug 2438. Only load dta infile calls last batch process
+		//@Bug 2438. Only load data infile calls last batch process
 /*		if ( ci->isLoaddataInfile && ((thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)) || (ci->useCpimport == 0))) {
 			//@Bug 2829 Handle ctrl-C
 			if ( thd->killed > 0 )
