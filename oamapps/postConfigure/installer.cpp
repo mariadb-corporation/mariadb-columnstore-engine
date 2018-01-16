@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 					catch (...) {}
 			
 					//get memory stats
-					long long total = myinfo.totalram / 1024 / 1000;
+//					long long total = myinfo.totalram / 1024 / 1000;
 				
 					// adjust max memory, 25% of total memory
 					string percent = "25%";
