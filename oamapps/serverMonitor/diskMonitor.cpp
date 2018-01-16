@@ -23,6 +23,7 @@
  ***************************************************************************/
 
 #include "serverMonitor.h"
+#include "installdir.h"
 
 using namespace std;
 using namespace oam;
@@ -223,7 +224,7 @@ void diskMonitor()
 				string fileName;
 				// check local
 				if ( deviceName == "/") {
-					fileName = deviceName + "usr/local/mariadb/columnstore/";
+					fileName = deviceName + startup::StartUp::installDir();
 				}
 				else
 				{
