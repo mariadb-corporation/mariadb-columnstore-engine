@@ -5552,7 +5552,7 @@ int processCommand(string* arguments)
 								}
 							}
 							string command = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*hostConfigIter).IPAddr + " " + password + " 'mkdir -p " + startup::StartUp::installDir() + "/gluster/brick" + oam.itoa(brickID) + "'";
-//							int status = system(command.c_str());
+							system(command.c_str());
 							brickID++;
 						}
 					}
