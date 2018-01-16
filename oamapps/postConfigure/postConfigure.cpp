@@ -166,7 +166,7 @@ bool thread_remote_installer = true;
 
 string singleServerInstall = "1";
 string reuseConfig ="n";
-string oldFileName;
+string oldFileName = oam::UnassignedName;
 string glusterCopies;
 string glusterInstalled = "n";
 string hadoopInstalled = "n";
@@ -370,7 +370,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
+	if ( oldFileName == oam::UnassignedName )
+	    oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
 
 	cout << endl;
 	cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
