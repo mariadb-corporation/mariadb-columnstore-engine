@@ -43,7 +43,7 @@ checkContinue() {
 helpPrint () {
           ################################################################################
     echo ""
-    echo  "This is the MariaDB ColumnStore Cluster System Test tool." 
+    echo  "This is the MariaDB ColumnStore Cluster System Test Tool." 
     echo ""
     echo  "It will run a set of test to validate the setup of the MariaDB Columnstore system." 
     echo  "This can be run prior to the install of MariaDB ColumnStore to make sure the" 
@@ -1352,7 +1352,7 @@ checkPackages
 
 if [ $REPORTPASS == true ] ; then
   echo ""
-  echo "*** Finished Validation of the Cluster, all Test Passed ***"
+  echo "*** Finished Validation of the Cluster, all Tests Passed ***"
   echo ""
   exit 0
 else
