@@ -1645,7 +1645,7 @@ void pingDeviceThread()
 											DeviceNetworkConfig devicenetworkconfig;
 											devicenetworkconfig.DeviceName = moduleName;
 											devicenetworklist.push_back(devicenetworkconfig);
-											processManager.setMySQLReplication(devicenetworklist);
+											processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true);
 										}
 									}
 									else
@@ -1833,71 +1833,73 @@ void pingDeviceThread()
 								if (LANOUTAGEACTIVE)
 									break;
 	
-								//Log failure, issue alarm, set moduleOpState 
-								Configuration config;
-								log.writeLog(__LINE__, "module is down: " + moduleName, LOG_TYPE_CRITICAL);
+								// if not disabled and amazon, skip
+								if (opState != oam::AUTO_DISABLED )
+								{	
+									//Log failure, issue alarm, set moduleOpState 
+									Configuration config;
+									log.writeLog(__LINE__, "module is down: " + moduleName, LOG_TYPE_CRITICAL);
+					
+									//set query system state not ready
+									BRM::DBRM dbrm;
+									dbrm.setSystemQueryReady(false);
+
+									processManager.setQuerySystemState(false);
+
+									processManager.setSystemState(oam::BUSY_INIT);
+
+									processManager.reinitProcessType("cpimport");
+
+									// halt the dbrm
+									oam.dbrmctl("halt");
+									log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
+
+									processManager.setSystemState(oam::BUSY_INIT);
+
+									//string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
+									//system(cmd.c_str());
+
+									//send notification
+									oam.sendDeviceNotification(moduleName, MODULE_DOWN);
+
+									//Issue an alarm 				
+									aManager.sendAlarmReport(moduleName.c_str(), MODULE_DOWN_AUTO, SET);
 				
-								//set query system state not ready
-								BRM::DBRM dbrm;
-								dbrm.setSystemQueryReady(false);
+									//mark all processes running on module auto-offline
+									processManager.setProcessStates(moduleName, oam::AUTO_OFFLINE);
+		
+									//set module to disable state
+									processManager.disableModule(moduleName, false);
 
-								processManager.setQuerySystemState(false);
+									//call dbrm control
+									oam.dbrmctl("reload");
+									log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
 
-								processManager.setSystemState(oam::BUSY_INIT);
-
-								processManager.reinitProcessType("cpimport");
-
-								// halt the dbrm
-								oam.dbrmctl("halt");
-								log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
-
-								processManager.setSystemState(oam::BUSY_INIT);
-
-								//string cmd = "/etc/init.d/glusterd restart > /dev/null 2>&1";
-								//system(cmd.c_str());
-
-								//send notification
-								oam.sendDeviceNotification(moduleName, MODULE_DOWN);
-
-								//Issue an alarm 				
-								aManager.sendAlarmReport(moduleName.c_str(), MODULE_DOWN_AUTO, SET);
-			
-								//mark all processes running on module auto-offline
-								processManager.setProcessStates(moduleName, oam::AUTO_OFFLINE);
-	
-								//set module to disable state
-								processManager.disableModule(moduleName, false);
-
-								//call dbrm control
-								oam.dbrmctl("reload");
-								log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-
-								// if pm, move dbroots to other pms
-								if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
-									( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
-									( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
-									try {
-										log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
-										oam.autoMovePmDbroot(moduleName);
-										log.writeLog(__LINE__, "autoMovePmDbroot success", LOG_TYPE_DEBUG);
-										//distribute config file
-										processManager.distributeConfigFile("system");	
-									}
-									catch (exception& ex)
-									{
-										string error = ex.what();
-										log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: " + error, LOG_TYPE_DEBUG);
-									}
-									catch(...)
-									{
-										log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
+									// if pm, move dbroots to other pms
+									if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
+										( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
+										( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
+										try {
+											log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
+											oam.autoMovePmDbroot(moduleName);
+											log.writeLog(__LINE__, "autoMovePmDbroot success", LOG_TYPE_DEBUG);
+											//distribute config file
+											processManager.distributeConfigFile("system");	
+										}
+										catch (exception& ex)
+										{
+											string error = ex.what();
+											log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: " + error, LOG_TYPE_DEBUG);
+										}
+										catch(...)
+										{
+											log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
+										}
 									}
 								}
-	
+								
 								// if Cloud Instance
-								// state = running, then instance is rebooting, monitor for recovery
-								// state = stopped, then try starting, if fail, remove/addmodule to launch new instance
-								// state = terminate or nothing, remove/addmodule to launch new instance
+								// state = terminate, remove/addmodule to launch new instance
 								if ( amazon ) {
 									if ( moduleName.find("um") == 0 )
 									{
@@ -2104,7 +2106,9 @@ void pingDeviceThread()
 										}
 									}
 
-									if ( moduleName.find("pm") == 0 )
+									if ( ( moduleName.find("pm") == 0 ) &&
+									    ( opState != oam::AUTO_DISABLED ) )
+
 									{
 										// resume the dbrm
 										oam.dbrmctl("resume");
@@ -2165,6 +2169,10 @@ void pingDeviceThread()
 										}
 									}
 								}
+
+								// if disabled and amazon, break out
+								if ( (opState == oam::AUTO_DISABLED ) && amazon )
+								      break;
 	
 								//start SIMPLEX runtype processes on a SIMPLEX runtype module
 								string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
