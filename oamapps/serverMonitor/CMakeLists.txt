@@ -13,7 +13,8 @@ set(ServerMonitor_SRCS
     procmonMonitor.cpp
     msgProcessor.cpp
     dbhealthMonitor.cpp
-    UMAutoSync.cpp)
+    UMAutoSync.cpp
+    ../../utils/common/crashtrace.cpp)
 
 add_executable(ServerMonitor ${ServerMonitor_SRCS})
 

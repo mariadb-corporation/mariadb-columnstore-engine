@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
 
-set(ProcMgr_SRCS main.cpp processmanager.cpp)
+set(ProcMgr_SRCS main.cpp processmanager.cpp ../utils/common/crashtrace.cpp)
 
 add_executable(ProcMgr ${ProcMgr_SRCS})
 

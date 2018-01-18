@@ -51,6 +51,8 @@ using namespace oam;
 #include "utils_utf8.h"
 #include "dbrm.h"
 
+#include "crashtrace.h"
+
 namespace
 {
 	void added_a_pm(int)
@@ -96,6 +98,9 @@ int main(int argc, char** argv)
     string systemLang = "C";
 	systemLang = funcexp::utf8::idb_setlocale();
 
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("WriteEngineServ");
+
     printf ("Locale is : %s\n", systemLang.c_str() );
 
 	//set BUSY_INIT state
@@ -119,6 +124,12 @@ int main(int argc, char** argv)
 	sigaction(SIGHUP, &sa, 0);
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE, &sa, 0);
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &sa, 0);
+    sigaction(SIGABRT, &sa, 0);
+    sigaction(SIGFPE, &sa, 0);
 #endif
 
 	// Init WriteEngine Wrapper (including Config Columnstore.xml cache)
