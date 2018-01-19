@@ -9715,8 +9715,11 @@ std::string ProcessManager::getStandbyModule()
 
 			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
 				systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
+			{
 				// Found a ProcessManager in a COLD_STANDBY state
 				newStandbyModule = systemprocessstatus.processstatus[i].Module;
+				continue;
+			}
 
 			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
 				systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_OFFLINE &&
@@ -10346,6 +10349,18 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 				if ( remoteModuleName == masterModule )
 					continue;
 
+				// skip disabled modules
+				int opState = oam::ACTIVE;
+				bool degraded;
+				try {
+					oam.getModuleStatus(remoteModuleName, opState, degraded);
+				}
+				catch(...)
+				{}
+
+				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+					continue;
+
 				// don't do PMs unless PMwithUM flag is set
 				if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
 					string moduleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
@@ -10423,6 +10438,18 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 				if ( remoteModuleName == masterModule )
 					continue;
 
+				// skip disabled modules
+				int opState = oam::ACTIVE;
+				bool degraded;
+				try {
+					oam.getModuleStatus(remoteModuleName, opState, degraded);
+				}
+				catch(...)
+				{}
+
+				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+					continue;
+
 				// don't do PMs unless PMwithUM flag is set
 				if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
 					string moduleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
@@ -10471,7 +10498,19 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 			if ( remoteModuleName == masterModule )
 				continue;
 
-			ByteStream msg1;
+			// skip disabled modules
+			int opState = oam::ACTIVE;
+			bool degraded;
+			try {
+				oam.getModuleStatus(remoteModuleName, opState, degraded);
+			}
+			catch(...)
+			{}
+
+			if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+				continue;
+
+				ByteStream msg1;
 			ByteStream::byte requestID = oam::SLAVEREP;
 			if ( !enable ) {
 				requestID = oam::DISABLEREP;
