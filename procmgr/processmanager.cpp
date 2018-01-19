@@ -9718,7 +9718,7 @@ std::string ProcessManager::getStandbyModule()
 			{
 				// Found a ProcessManager in a COLD_STANDBY state
 				newStandbyModule = systemprocessstatus.processstatus[i].Module;
-				break;
+				continue;
 			}
 
 			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
