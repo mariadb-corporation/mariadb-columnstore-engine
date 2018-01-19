@@ -1330,7 +1330,7 @@ checkPackages()
 }
 
 echo ""  
-echo "*** This is the MariaDB Columnstore Cluster System test tool ***"
+echo "*** This is the MariaDB Columnstore Cluster System Test Tool ***"
 echo ""
 
 checkLocalOS
