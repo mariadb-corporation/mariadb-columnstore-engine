@@ -61,7 +61,7 @@ datadir=$basedir/db
 # Value here is overriden by value in my.cnf. 
 # 0 means don't wait at all
 # Negative numbers mean to wait indefinitely
-service_startup_timeout=60
+service_startup_timeout=90
 
 # Lock directory for RedHat / SuSE.
 lockdir='/var/lock/subsys'

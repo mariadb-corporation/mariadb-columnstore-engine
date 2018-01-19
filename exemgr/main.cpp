@@ -98,6 +98,7 @@ using namespace querytele;
 #include "boost/filesystem.hpp"
 
 #include "threadpool.h"
+#include "crashtrace.h"
 
 namespace {
 
@@ -515,7 +516,7 @@ public:
 		SJLP jl;
 		bool incSessionThreadCnt = true;
 
-		bool selfJoin = false; 
+		bool selfJoin = false;
 		bool tryTuples = false;
 		bool usingTuples = false;
 		bool stmtCounted = false;
