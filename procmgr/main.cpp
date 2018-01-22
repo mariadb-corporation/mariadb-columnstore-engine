@@ -1828,9 +1828,18 @@ void pingDeviceThread()
 								break;
 	
 							// if disabled and not amazon, skip
-							if (opState == oam::AUTO_DISABLED && !amazon)
+							if ( (opState == oam::AUTO_DISABLED) && !amazon)
 								break;
 	
+							// if disabled, amazon,and NOT terminated skip
+							if ( (opState == oam::AUTO_DISABLED) && amazon)
+							{
+							      // return values = 'ip address' for running or rebooting, stopped or terminated
+							      string currentIPAddr = oam.getEC2InstanceIpAddress(hostName);
+							      if ( currentIPAddr != "terminated")
+									break;
+							}
+							
 							log.writeLog(__LINE__, "module failed to respond to pings: " + moduleName, LOG_TYPE_WARNING);
 	
 							//bump module ping failure counter
