@@ -9455,7 +9455,7 @@ int ProcessManager::OAMParentModuleChange()
 
 	//restart/reinit processes to force their release of the controller node port
 	if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
-		( moduleNameList.size() <= 1 && config.moduleType() == "pm") )
+		( moduleNameList.size() <= 0 && config.moduleType() == "pm") )
 	{
 		status = 0;
 	}
@@ -9710,7 +9710,8 @@ std::string ProcessManager::getStandbyModule()
 				//already have a hot-standby
 				return "";
 
-			if ( backupStandbyModule != "NONE" )
+			if ( ( backupStandbyModule != "NONE" ) ||
+			      ( newStandbyModule != "NONE" ) )
 				continue;
 
 			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
