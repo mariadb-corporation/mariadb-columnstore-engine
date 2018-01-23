@@ -1485,6 +1485,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
    bool newExtent = false;
    RIDList ridList;
    ColumnOp* colOp = NULL;
+   std::vector<BRM::LBID_t> dictLbids;
 
    // Set tmp file suffix to modify HDFS db file
    bool           useTmpSuffix = false;
@@ -1898,6 +1899,7 @@ timer.start("tokenize");
 timer.stop("tokenize");
 #endif
                    memcpy(colValPtr, &dctTuple.token, 8);
+                   dictLbids.push_back(dctTuple.token.fbo);
                }
                dctStr_iter++;
 
@@ -1946,6 +1948,7 @@ timer.start("tokenize");
 timer.stop("tokenize");
 #endif
                     memcpy(colValPtr, &dctTuple.token, 8);
+                    dictLbids.push_back(dctTuple.token.fbo);
                  }
                  dctStr_iter++;
              }
@@ -2100,6 +2103,7 @@ timer.start("writeColumnRec");
         // Write row(s) to database file(s)
         //----------------------------------------------------------------------
         bool versioning = !(isAutoCommitOn && insertSelect);
+        AddDictToList(txnid, dictLbids);
         rc = writeColumnRecBinary(txnid, colStructList, colValueList, rowIdArray, newColStructList, tableOid, useTmpSuffix, versioning); // @bug 5572 HDFS tmp file
     }
    return rc;
@@ -5177,6 +5181,7 @@ int WriteEngineWrapper::rollbackCommon(const TxnID& txnid, int sessionId)
 
     // BUG 4312
     RemoveTxnFromLBIDMap(txnid);
+    RemoveTxnFromDictMap(txnid);
 
     config::Config *config = config::Config::makeConfig();
 	prefix = config->getConfig("SystemConfig", "DBRMRoot");
@@ -5401,6 +5406,7 @@ int WriteEngineWrapper::rollbackVersion(const TxnID& txnid, int sessionId)
 { 
     // BUG 4312
     RemoveTxnFromLBIDMap(txnid);
+    RemoveTxnFromDictMap(txnid);
 
     return BRMWrapper::getInstance()->rollBackVersion(txnid, sessionId); 
 }
@@ -5492,6 +5498,7 @@ int WriteEngineWrapper::updateNextValue(const TxnID txnId, const OID& columnoid,
 int WriteEngineWrapper::flushDataFiles(int rc, const TxnID txnId, std::map<FID,FID> & columnOids)
 {
    RemoveTxnFromLBIDMap(txnId);
+   RemoveTxnFromDictMap(txnId);
 
    for (int i = 0; i < TOTAL_COMPRESS_OP; i++)
    {
@@ -5504,6 +5511,27 @@ int WriteEngineWrapper::flushDataFiles(int rc, const TxnID txnId, std::map<FID,F
    }
 
    return rc;
+}
+
+void WriteEngineWrapper::AddDictToList(const TxnID txnid,
+                                       std::vector<BRM::LBID_t>& lbids)
+{
+    std::tr1::unordered_map<TxnID, dictLBIDRec_t>::iterator mapIter;
+
+    mapIter = m_dictLBIDMap.find(txnid);
+    if (mapIter == m_dictLBIDMap.end())
+    {
+        dictLBIDRec_t tempRecord;
+        tempRecord.insert(lbids.begin(), lbids.end());
+        m_dictLBIDMap[txnid] = tempRecord;
+        return;
+    }
+    else
+    {
+        dictLBIDRec_t &txnRecord = mapIter->second;
+        txnRecord.insert(lbids.begin(), lbids.end());
+    }
+
 }
 
 /***********************************************************
@@ -5598,6 +5626,16 @@ int WriteEngineWrapper::AddLBIDtoList(const TxnID     txnid,
     return rtn;
 }
 
+void WriteEngineWrapper::RemoveTxnFromDictMap(const TxnID txnid)
+{
+    std::tr1::unordered_map<TxnID, dictLBIDRec_t>::iterator mapIter;
+
+    mapIter = m_dictLBIDMap.find(txnid);
+    if (mapIter != m_dictLBIDMap.end())
+    {
+        m_dictLBIDMap.erase(txnid);
+    }
+}
 
 /***********************************************************
  * DESCRIPTION:
