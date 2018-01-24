@@ -1,5 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+INCLUDE_DIRECTORIES( ${ENGINE_COMMON_INCLUDES} )
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp
@@ -9,13 +9,15 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ddl.y ddl.l
 )
 
+ADD_CUSTOM_TARGET(ddl-lexer DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp)
+ADD_CUSTOM_TARGET(ddl-parser DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp)
 # Parser puts extra info to stderr.
 INCLUDE(../../check_compiler_flag.cmake)
 MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG" DEBUG)
 
 ########### next target ###############
 
-set(ddlpackage_LIB_SRCS
+SET(ddlpackage_LIB_SRCS
     serialize.cpp
     ddl-scan.cpp
     ddl-gram.cpp
@@ -34,11 +36,11 @@ set(ddlpackage_LIB_SRCS
     restorepartition.cpp
     droppartition.cpp)
 
-add_library(ddlpackage SHARED ${ddlpackage_LIB_SRCS})
+ADD_LIBRARY(ddlpackage SHARED ${ddlpackage_LIB_SRCS})
 
-add_dependencies(ddlpackage ${CMAKE_CURRENT_SOURCE_DIR}/ddl-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ddl-scan.cpp)
+ADD_DEPENDENCIES(ddlpackage ddl-lexer ddl-parser)
 
-set_target_properties(ddlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
+SET_TARGET_PROPERTIES(ddlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+INSTALL(TARGETS ddlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
