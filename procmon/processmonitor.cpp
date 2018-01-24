@@ -4950,9 +4950,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 		{
 			string moduleName =  (*pt).DeviceName;
 
-			//skip if local module or module is not ACTIVE
-//			if ( moduleName == config.moduleName() )
-//				continue;
+			//skip if module is not ACTIVE
 			  
 			int opState = oam::ACTIVE;
 			bool degraded;
