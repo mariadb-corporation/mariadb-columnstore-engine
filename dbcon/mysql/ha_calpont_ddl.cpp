@@ -2039,51 +2039,53 @@ int ha_calpont_impl_delete_table_(const char *db, const char *name, cal_connecti
 
 int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
-	THD *thd = current_thd;
-	string emsg;
+    THD* thd = current_thd;
+    string emsg;
 
-	ostringstream stmt1;
-	pair<string, string> fromPair;
-	pair<string, string> toPair;
-	string stmt;
+    pair<string, string> fromPair;
+    pair<string, string> toPair;
+    string stmt;
 
-	//this is replcated DDL, treat it just like SSO
-	if (thd->slave_thread)
-		return 0;
+    //this is replcated DDL, treat it just like SSO
+    if (thd->slave_thread)
+        return 0;
 
-	//@bug 5660. Error out REAL DDL/DML on slave node.
-	// When the statement gets here, it's NOT SSO or RESTRICT
-	if (ci.isSlaveNode)
-	{
-		string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
-		setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-		return 1;
-	}
+    //@bug 5660. Error out REAL DDL/DML on slave node.
+    // When the statement gets here, it's NOT SSO or RESTRICT
+    if (ci.isSlaveNode)
+    {
+        string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_DML_DDL_SLAVE);
+        setError(current_thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+        return 1;
+    }
 
-	fromPair = parseTableName(from);
-	toPair = parseTableName(to);
+    fromPair = parseTableName(from);
+    toPair = parseTableName(to);
 
-	if (fromPair.first != toPair.first)
-	{
-		thd->get_stmt_da()->set_overwrite_status(true);
-		thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Both tables must be in the same database to use RENAME TABLE");
-		return -1;
-	}
+    if (fromPair.first != toPair.first)
+    {
+        thd->get_stmt_da()->set_overwrite_status(true);
+        thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Both tables must be in the same database to use RENAME TABLE");
+        return -1;
+    }
 
-	stmt1 << "alter table " << fromPair.second << " rename to " << toPair.second << ";";
+    // This explicitely shields both db objects with quotes that the lexer strips down later.
+    stmt = "alter table `" + fromPair.second + "` rename to `" + toPair.second + "`;";
+    string db;
 
-	stmt = stmt1.str();
-	string db;
-	if ( fromPair.first.length() !=0 )
-		db = fromPair.first;
-	else if ( thd->db )
-		db = thd->db;
+    if ( thd->db )
+        db = thd->db;
+    else if ( fromPair.first.length() != 0 )
+        db = fromPair.first;
+    else
+        db = toPair.first;
 
-	int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
-	if (rc != 0)
-		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+    int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
 
-	return rc;
+    if (rc != 0)
+        push_warning(thd, Sql_condition::WARN_LEVEL_ERROR, 9999, emsg.c_str());
+
+    return rc;
 }
 
 
