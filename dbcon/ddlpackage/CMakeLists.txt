@@ -9,6 +9,10 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ddl.y ddl.l
 )
 
+# Parser puts extra info to stderr.
+INCLUDE(../../check_compiler_flag.cmake)
+MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG" DEBUG)
+
 ########### next target ###############
 
 set(ddlpackage_LIB_SRCS
