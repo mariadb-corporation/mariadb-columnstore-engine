@@ -2179,7 +2179,6 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     THD* thd = current_thd;
     string emsg;
 
-    ostringstream stmt1;
     pair<string, string> fromPair;
     pair<string, string> toPair;
     string stmt;
@@ -2207,9 +2206,8 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
         return -1;
     }
 
-    stmt1 << "alter table " << fromPair.second << " rename to " << toPair.second << ";";
-
-    stmt = stmt1.str();
+    // This explicitely shields both db objects with quotes that the lexer strips down later.
+    stmt = "alter table `" + fromPair.second + "` rename to `" + toPair.second + "`;";
     string db;
 
     if ( thd->db )
