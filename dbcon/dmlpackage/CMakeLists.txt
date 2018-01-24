@@ -1,5 +1,5 @@
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+INCLUDE_DIRECTORIES( ${ENGINE_COMMON_INCLUDES} )
 
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp
@@ -9,9 +9,12 @@ ADD_CUSTOM_COMMAND(
     DEPENDS dml.y dml.l
 )
 
+ADD_CUSTOM_TARGET(dml-lexer DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp)
+ADD_CUSTOM_TARGET(dml-parser DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp)
+
 ########### next target ###############
 
-set(dmlpackage_LIB_SRCS
+SET(dmlpackage_LIB_SRCS
     dml-scan.cpp
     dml-gram.cpp
     calpontdmlfactory.cpp
@@ -30,11 +33,11 @@ set(dmlpackage_LIB_SRCS
     dmlpkg.cpp
     dmlparser.cpp)
 
-add_library(dmlpackage SHARED ${dmlpackage_LIB_SRCS})
+ADD_LIBRARY(dmlpackage SHARED ${dmlpackage_LIB_SRCS})
 
-add_dependencies(dmlpackage ${CMAKE_CURRENT_SOURCE_DIR}/dml-gram.cpp ${CMAKE_CURRENT_SOURCE_DIR}/dml-scan.cpp)
+ADD_DEPENDENCIES(dmlpackage dml-lexer dml-parser)
 
-set_target_properties(dmlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
+SET_TARGET_PROPERTIES(dmlpackage PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
-install(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
+INSTALL(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT libs)
 
