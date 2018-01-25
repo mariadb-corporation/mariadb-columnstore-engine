@@ -5874,6 +5874,7 @@ int processCommand(string* arguments)
 
 					if (opState == oam::MAN_OFFLINE ||
 						opState == oam::MAN_DISABLED ||
+						opState == oam::AUTO_DISABLED ||
 						opState == oam::FAILED)
 					{
 
