@@ -1588,14 +1588,17 @@ void pingDeviceThread()
 												if ( moduleName.substr(0,MAX_MODULE_TYPE_SIZE) == "pm" )
 													processManager.setStandbyModule(moduleName);
 										}
-										DBRootConfigList::iterator pt = dbrootConfigList.begin();
-										if (( DBRootStorageType == "DataRedundancy") && (*pt == 1))
+										if ((moduleName.find("pm") == 0) && (dbrootConfigList.size() > 0))
 										{
-											log.writeLog(__LINE__, "stopModule, " + config.moduleName(), LOG_TYPE_DEBUG);
-											processManager.stopModule(config.moduleName(), oam::FORCEFUL, false);
-											processManager.switchParentOAMModule(moduleName);
-											processManager.stopProcess(config.moduleName(), "ProcessManager", oam::FORCEFUL, true);
-											break;
+											DBRootConfigList::iterator pt = dbrootConfigList.begin();
+											if (( DBRootStorageType == "DataRedundancy") && (*pt == 1))
+											{
+												log.writeLog(__LINE__, "stopModule, " + config.moduleName(), LOG_TYPE_DEBUG);
+												processManager.stopModule(config.moduleName(), oam::FORCEFUL, false);
+												processManager.switchParentOAMModule(moduleName);
+												processManager.stopProcess(config.moduleName(), "ProcessManager", oam::FORCEFUL, true);
+												break;
+											}
 										}
 									}
 									else {
@@ -1627,21 +1630,12 @@ void pingDeviceThread()
 									oam.dbrmctl("resume");
 									log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
+									//set recycle process
+									processManager.recycleProcess(moduleName);
+									
 									//distribute config file
 									processManager.distributeConfigFile("system");	
 									sleep(1);
-
-									// if a PM module was started successfully, restart ACTIVE DBRM(s), ExeMgr(s) / mysqld
-									if( moduleName.find("pm") == 0 ) {
-										processManager.restartProcessType("DBRMControllerNode", moduleName);
-										processManager.restartProcessType("DBRMWorkerNode");
-										processManager.stopProcessType("DDLProc");
-										processManager.stopProcessType("DMLProc");
-										processManager.stopProcessType("ExeMgr");
-										processManager.restartProcessType("PrimProc");
-										sleep(1);
-										processManager.restartProcessType("ExeMgr");
-									}
 
 									string moduleType = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
 
@@ -1660,22 +1654,6 @@ void pingDeviceThread()
 											processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true);
 										}
 									}
-									else
-									{
-										if( moduleName.find("pm") == 0 ) {
-											processManager.restartProcessType("mysql", moduleName);
-											sleep(1);
-										}
-									}
-
-									// if a PM module was started successfully, DMLProc/DDLProc
-									if( moduleName.find("pm") == 0 ) {
-										processManager.restartProcessType("WriteEngineServer");
-										sleep(1);
-										processManager.restartProcessType("DDLProc");
-										sleep(1);
-										processManager.restartProcessType("DMLProc");
-									}
 
 									//enable query stats
 									dbrm.setSystemQueryReady(true);
@@ -1684,79 +1662,6 @@ void pingDeviceThread()
 									processManager.setQuerySystemState(true);
 
 									processManager.setSystemState(oam::ACTIVE);
-
-									//reset standby module
-									string newStandbyModule = processManager.getStandbyModule();
-
-									//send message to start new Standby Process-Manager, if needed
-									if ( !newStandbyModule.empty() && newStandbyModule != "NONE") {
-										processManager.setStandbyModule(newStandbyModule);
-									}
-									else
-									{
-										Config* sysConfig = Config::makeConfig();
-
-										// clear Standby OAM Module
-										sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-										sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
-
-										//update Calpont Config table
-										try {
-											sysConfig->write();
-										}
-										catch(...)
-										{
-											log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-										}
-									}
-
-									if ( moduletypeconfig.RunType == SIMPLEX ) {
-										//start SIMPLEX runtype processes on a SIMPLEX runtype module
-										string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
-										DeviceNetworkList::iterator pt = moduletypeconfig.ModuleNetworkList.begin();
-										for( ; pt != moduletypeconfig.ModuleNetworkList.end() ; pt++)
-										{
-											string launchModuleName = (*pt).DeviceName;
-											string launchModuletype = launchModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
-											if ( moduletype != launchModuletype )
-												continue;
-
-											//skip if active pm module (local module)
-											if ( launchModuleName == config.moduleName() )
-												continue;
-
-											//check if module is active before starting any SIMPLEX STANDBY apps
-											try{
-												int launchopState = oam::ACTIVE;
-												bool degraded;
-												oam.getModuleStatus(launchModuleName, launchopState, degraded);
-
-												if (launchopState != oam::ACTIVE && launchopState != oam::STANDBY ) {
-													continue;
-												}
-											}
-											catch (exception& ex)
-											{
-//												string error = ex.what();
-//												log.writeLog(__LINE__, "EXCEPTION ERROR on : " + error, LOG_TYPE_ERROR);
-											}
-											catch(...)
-											{
-//												log.writeLog(__LINE__, "EXCEPTION ERROR on getModuleStatus on module " + moduleName + ": Caught unknown exception!", LOG_TYPE_ERROR);
-											}
-
-											int status;
-											log.writeLog(__LINE__, "Starting up STANDBY process on module " + launchModuleName, LOG_TYPE_DEBUG);
-											for ( int j = 0 ; j < 20 ; j ++ )
-											{
-												status = processManager.startModule(launchModuleName, oam::FORCEFUL, oam::AUTO_OFFLINE);
-												if ( status == API_SUCCESS)
-													break;
-											}
-											log.writeLog(__LINE__, "pingDeviceThread: ACK received from '" + launchModuleName + "' Process-Monitor, return status = " + oam.itoa(status), LOG_TYPE_DEBUG);
-										}
-									}
-
 									//clear count
 									moduleInfoList[moduleName] = 0;
 								}
@@ -2198,6 +2103,21 @@ void pingDeviceThread()
 								//start SIMPLEX runtype processes on a SIMPLEX runtype module
 								string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
 		
+								if ( MySQLRep == "y" ) {
+									if ( moduletype == "um" ||
+										( moduletype == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+										( moduletype == "pm" && PMwithUM == "y") ) {
+
+										//setup MySQL Replication for started modules
+										log.writeLog(__LINE__, "Setup MySQL Replication for module recovering from outage on " + moduleName, LOG_TYPE_DEBUG);
+										DeviceNetworkList devicenetworklist;
+										DeviceNetworkConfig devicenetworkconfig;
+										devicenetworkconfig.DeviceName = moduleName;
+										devicenetworklist.push_back(devicenetworkconfig);
+										processManager.setMySQLReplication(devicenetworklist);
+									}
+								}
+								
 								try{
 									oam.getSystemConfig(moduletype, moduletypeconfig);
 								}

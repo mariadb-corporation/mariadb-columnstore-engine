@@ -3438,40 +3438,27 @@ void ProcessManager::recycleProcess(string module)
 	}
 	catch(...) {}
 
+
 	//restart ExeMgrs/mysql if module is a pm
-	if ( moduleType == "pm" ) {
-		restartProcessType("DBRMControllerNode", module);
-		restartProcessType("DBRMWorkerNode");
+	restartProcessType("DBRMControllerNode", module);
+	restartProcessType("DBRMWorkerNode");
+	if( PrimaryUMModuleName == module)
+	{
 		stopProcessType("DDLProc");
 		stopProcessType("DMLProc");
-		stopProcessType("ExeMgr");
-		restartProcessType("PrimProc");
-		sleep(1);
-		restartProcessType("ExeMgr");
-		sleep(1);
-		restartProcessType("mysql");
 	}
-	else
-	{
-		restartProcessType("DBRMControllerNode", module);
-		restartProcessType("DBRMWorkerNode");
-		restartProcessType("ExeMgr");
-	}
-	if ( PrimaryUMModuleName == module )
-	{
-		restartProcessType("DDLProc", module);
-		sleep(1);
-		restartProcessType("DMLProc", module);
-	}
+	stopProcessType("ExeMgr");
+	restartProcessType("PrimProc");
+	sleep(1);
+	restartProcessType("ExeMgr");
+	sleep(1);
+	restartProcessType("mysql");
 
-	if( moduleType == "pm" && PrimaryUMModuleName != module)
-	{
-		restartProcessType("WriteEngineServer");
-		sleep(1);
-		restartProcessType("DDLProc");
-		sleep(1);
-		restartProcessType("DMLProc", module);
-	}
+	restartProcessType("WriteEngineServer");
+	sleep(1);
+	restartProcessType("DDLProc",module);
+	sleep(1);
+	restartProcessType("DMLProc",module);
 	
 	return;
 }
@@ -4263,7 +4250,6 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 	SystemProcessStatus systemprocessstatus;
 	ProcessStatus processstatus;
 	int retStatus = API_SUCCESS;
-	bool setPMProcIPs = true;
 
 	log.writeLog(__LINE__, "restartProcessType: Restart all " + processName, LOG_TYPE_DEBUG);
 
@@ -4311,7 +4297,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 						( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
 						continue;
 
-					if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
+					if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) )
 					{
 						string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0,MAX_MODULE_TYPE_SIZE);
 						if ( procModuleType == "pm" && PMwithUM == "y" )
@@ -4339,11 +4325,13 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 					// if DDL or DMLProc, change IP Address
 					if ( retStatus == oam::API_SUCCESS )
 					{
-						if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
+						sleep(5);
+						ProcessStatus procstat;
+						oam.getProcessStatus(processName, systemprocessstatus.processstatus[i].Module, procstat);
+						if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) )
 						{
 							processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module, processName);
-							setPMProcIPs = false;
-							continue;
+							break;
 						}
 					}
 				}
