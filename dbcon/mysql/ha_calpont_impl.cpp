@@ -1824,7 +1824,7 @@ __declspec(dllexport)
 #endif
 // Return 1 if system is ready for reads or 0 if not.
 long long mcssystemready(UDF_INIT* initid, UDF_ARGS* args,
-							char* is_null, char* error)
+                        					  char* is_null, char* error)
 {
     long long rtn = 0;
     Oam oam;
@@ -1853,7 +1853,7 @@ __declspec(dllexport)
 #endif
 my_bool mcssystemready_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
 {
-	return 0;
+    return 0;
 }
 
 #ifdef _MSC_VER
@@ -1868,17 +1868,17 @@ __declspec(dllexport)
 #endif
 // Return non-zero if system is read only; 0 if writeable
 long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args,
-							char* is_null, char* error)
+                                                  char* is_null, char* error)
 {
     long long rtn = 0;
     DBRM dbrm(true);
 
     try
     {
-		if (dbrm.getSystemSuspended())
-		{
-			rtn = 1;
-		}
+        if (dbrm.getSystemSuspended())
+        {
+            rtn = 1;
+        }
         if (dbrm.isReadWrite()) // Returns 0 for writable, 5 for read only
         {
             rtn = 2;
@@ -1897,7 +1897,7 @@ __declspec(dllexport)
 #endif
 my_bool mcssystemreadonly_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
 {
-	return 0;
+    return 0;
 }
 
 #ifdef _MSC_VER
