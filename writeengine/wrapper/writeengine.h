@@ -663,6 +663,7 @@ private:
     int writeColumnRecBinary(const TxnID& txnid, const ColStructList& colStructList,
                        std::vector<uint64_t>& colValueList,
                        RID* rowIdArray, const ColStructList& newColStructList,
+                       std::vector<uint64_t>& newColValueList,
                        const int32_t tableOid,
                        bool useTmpSuffix, bool versioning = true);
 
