@@ -1824,7 +1824,7 @@ __declspec(dllexport)
 #endif
 // Return 1 if system is ready for reads or 0 if not.
 long long mcssystemready(UDF_INIT* initid, UDF_ARGS* args,
-                        					  char* is_null, char* error)
+                        char* is_null, char* error)
 {
     long long rtn = 0;
     Oam oam;
@@ -1868,7 +1868,7 @@ __declspec(dllexport)
 #endif
 // Return non-zero if system is read only; 0 if writeable
 long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args,
-                                                  char* is_null, char* error)
+                            char* is_null, char* error)
 {
     long long rtn = 0;
     DBRM dbrm(true);
