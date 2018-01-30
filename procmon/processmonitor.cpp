@@ -4950,6 +4950,14 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 		{
 			string moduleName =  (*pt).DeviceName;
 
+			//skip if module is not ACTIVE
+			  
+			int opState = oam::ACTIVE;
+			bool degraded;
+			oam.getModuleStatus(moduleName, opState, degraded);
+			if (opState != oam::ACTIVE)
+				continue;
+
 			bool passwordError = false;
 
 			string moduleType = systemModuleTypeConfig.moduletypeconfig[i].ModuleType;

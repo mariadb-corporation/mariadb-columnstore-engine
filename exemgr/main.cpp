@@ -98,6 +98,7 @@ using namespace querytele;
 #include "boost/filesystem.hpp"
 
 #include "threadpool.h"
+#include "crashtrace.h"
 
 namespace {
 
@@ -515,7 +516,7 @@ public:
 		SJLP jl;
 		bool incSessionThreadCnt = true;
 
-		bool selfJoin = false; 
+		bool selfJoin = false;
 		bool tryTuples = false;
 		bool usingTuples = false;
 		bool stmtCounted = false;
@@ -1436,18 +1437,20 @@ int main(int argc, char* argv[])
     // because rm has a "isExeMgr" flag that is set upon creation (rm is a singleton). 
     // From  the pools perspective, it has no idea if it is ExeMgr doing the 
     // creation, so it has no idea which way to set the flag. So we set the max here.
-//	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
+	JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
     JobStep::jobstepThreadPool.setName("ExeMgrJobList");
-//	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
-//	{
-//		JobStep::jobstepThreadPool.setDebug(true);
-//		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
-//	}
+	if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
+	{
+		JobStep::jobstepThreadPool.setDebug(true);
+		JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+	}
 	
+	int serverThreads = rm->getEmServerThreads();
 	int maxPct = rm->getEmMaxPct();
 	int pauseSeconds = rm->getEmSecondsBetweenMemChecks();
 	int priority = rm->getEmPriority();
 
+    FEMsgHandler::threadPool.setMaxThreads(serverThreads);
     FEMsgHandler::threadPool.setName("FEMsgHandler");
     
     if (maxPct > 0)
@@ -1468,7 +1471,8 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	cout << "Starting ExeMgr: qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
+	cout << "Starting ExeMgr: st = " << serverThreads << 
+		", qs = " << rm->getEmExecQueueSize() << ", mx = " << maxPct << ", cf = " <<
 		rm->getConfig()->configFile() << endl;
 
 	//set ACTIVE state
@@ -1483,10 +1487,16 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	threadpool::ThreadPool exeMgrThreadPool;
+	threadpool::ThreadPool exeMgrThreadPool(serverThreads, 0);
     exeMgrThreadPool.setName("ExeMgrServer");
 
-	for (;;)
+	if (rm->getExeMgrThreadPoolDebug() == "Y" || rm->getExeMgrThreadPoolDebug() == "y")
+	{
+		exeMgrThreadPool.setDebug(true);
+		exeMgrThreadPool.invoke(ThreadPoolMonitor(&exeMgrThreadPool));
+	}
+
+    for (;;)
 	{
 		IOSocket ios;
 		ios = mqs->accept();
