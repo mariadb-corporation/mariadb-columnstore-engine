@@ -2061,37 +2061,36 @@ void pingDeviceThread()
 
 									//set query system state ready
 									processManager.setQuerySystemState(true);
+								}
 
-									sleep(2);
-									//check if down module was Standby OAM, if so find another one
-									if ( moduleName == config.OAMStandbyName() ) {
-		
-										//set down module ProcessManager to AOS
-										processManager.setProcessState(moduleName, "ProcessManager", oam::AUTO_OFFLINE, 0);
-		
-										//get another standby OAM module
-										string newStandbyModule = processManager.getStandbyModule();
-									
-										//send message to start new Standby Process-Manager, if needed
-										if ( !newStandbyModule.empty() && newStandbyModule != "NONE") {
-											processManager.setStandbyModule(newStandbyModule);
+								//check if down module was Standby OAM, if so find another one
+								if ( moduleName == config.OAMStandbyName() ) {
+	
+									//set down module ProcessManager to AOS
+									processManager.setProcessState(moduleName, "ProcessManager", oam::AUTO_OFFLINE, 0);
+	
+									//get another standby OAM module
+									string newStandbyModule = processManager.getStandbyModule();
+								
+									//send message to start new Standby Process-Manager, if needed
+									if ( !newStandbyModule.empty() && newStandbyModule != "NONE") {
+										processManager.setStandbyModule(newStandbyModule);
+									}
+									else
+									{
+										Config* sysConfig = Config::makeConfig();
+	
+										// clear Standby OAM Module
+										sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
+										sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
+								
+										//update Calpont Config table
+										try {
+											sysConfig->write();
 										}
-										else
+										catch(...)
 										{
-											Config* sysConfig = Config::makeConfig();
-		
-											// clear Standby OAM Module
-											sysConfig->setConfig("SystemConfig", "StandbyOAMModuleName", oam::UnassignedName);
-											sysConfig->setConfig("ProcStatusControlStandby", "IPAddr", oam::UnassignedIpAddr);
-									
-											//update Calpont Config table
-											try {
-												sysConfig->write();
-											}
-											catch(...)
-											{
-												log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
-											}
+											log.writeLog(__LINE__, "ERROR: sysConfig->write", LOG_TYPE_ERROR);
 										}
 									}
 								}
@@ -2103,21 +2102,6 @@ void pingDeviceThread()
 								//start SIMPLEX runtype processes on a SIMPLEX runtype module
 								string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
 		
-								if ( MySQLRep == "y" ) {
-									if ( moduletype == "um" ||
-										( moduletype == "pm" && config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-										( moduletype == "pm" && PMwithUM == "y") ) {
-
-										//setup MySQL Replication for started modules
-										log.writeLog(__LINE__, "Setup MySQL Replication for module recovering from outage on " + moduleName, LOG_TYPE_DEBUG);
-										DeviceNetworkList devicenetworklist;
-										DeviceNetworkConfig devicenetworkconfig;
-										devicenetworkconfig.DeviceName = moduleName;
-										devicenetworklist.push_back(devicenetworkconfig);
-										processManager.setMySQLReplication(devicenetworklist);
-									}
-								}
-								
 								try{
 									oam.getSystemConfig(moduletype, moduletypeconfig);
 								}
