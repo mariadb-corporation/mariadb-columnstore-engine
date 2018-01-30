@@ -1879,7 +1879,7 @@ long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args,
         {
             rtn = 1;
         }
-        if (dbrm.isReadWrite()) // Returns 0 for writable, 5 for read only
+        if (dbrm.isReadWrite() > 0) // Returns 0 for writable, 5 for read only
         {
             rtn = 2;
         }
