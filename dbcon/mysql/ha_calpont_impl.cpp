@@ -1866,7 +1866,7 @@ void mcssystemready_deinit(UDF_INIT* initid)
 #ifdef _MSC_VER
 __declspec(dllexport)
 #endif
-// Return 1 if system is read only; 0 if writeable
+// Return non-zero if system is read only; 0 if writeable
 long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args,
 							char* is_null, char* error)
 {
@@ -1875,9 +1875,13 @@ long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args,
 
     try
     {
+		if (dbrm.getSystemSuspended())
+		{
+			rtn = 1;
+		}
         if (dbrm.isReadWrite()) // Returns 0 for writable, 5 for read only
         {
-            rtn = 1;
+            rtn = 2;
         }
     }
     catch (...)
@@ -1900,46 +1904,6 @@ my_bool mcssystemreadonly_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
 __declspec(dllexport)
 #endif
 void mcssystemreadonly_deinit(UDF_INIT* initid)
-{
-}
-
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
-// Return 1 if system is read only; 0 if writeable
-long long mcswritessuspended(UDF_INIT* initid, UDF_ARGS* args,
-							char* is_null, char* error)
-{
-    long long rtn = 0;
-    DBRM dbrm(true);
-
-    try
-    {
-        if (dbrm.getSystemSuspended())
-        {
-            rtn = 1;
-        }
-    }
-    catch (...)
-    {
-        *error = 1;
-        rtn = 1;
-    }
-    return rtn;
-}
-
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
-my_bool mcswritessuspended_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-{
-	return 0;
-}
-
-#ifdef _MSC_VER
-__declspec(dllexport)
-#endif
-void mcswritessuspended_deinit(UDF_INIT* initid)
 {
 }
 
