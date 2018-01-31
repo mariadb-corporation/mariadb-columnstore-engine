@@ -3437,9 +3437,18 @@ void ProcessManager::recycleProcess(string module)
 	}
 	catch(...) {}
 
+	//recycle DBRM processes in all cases
 	restartProcessType("DBRMControllerNode", module);
 	restartProcessType("DBRMWorkerNode");
 
+	// only recycle dmlproc, if down/up module is non-parent UM
+	if ( ( moduleType == "um" ) &&
+	    ( PrimaryUMModuleName != module) )
+	{
+	    restartProcessType("DMLProc",module);
+	    return;
+	}
+	
 	if( PrimaryUMModuleName == module)
 	{
 		stopProcessType("DDLProc");
@@ -10498,8 +10507,7 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		for( ; listPT != devicenetworklist.end() ; listPT++)
 		{
 			string remoteModuleName = (*listPT).DeviceName;
-			log.writeLog(__LINE__, "Setup SlavMySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
-	
+
 			//skip master
 			if ( remoteModuleName == masterModule )
 				continue;
@@ -10516,7 +10524,9 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 			if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
 				continue;
 
-				ByteStream msg1;
+			log.writeLog(__LINE__, "Setup Slave MySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
+
+			ByteStream msg1;
 			ByteStream::byte requestID = oam::SLAVEREP;
 			if ( !enable ) {
 				requestID = oam::DISABLEREP;

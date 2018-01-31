@@ -1758,7 +1758,18 @@ void pingDeviceThread()
 								// if LAN OUTAGE ACTIVE,skip module checks
 								if (LANOUTAGEACTIVE)
 									break;
-	
+
+								//check if down module is PrimaryUMModuleName
+								bool downPrimaryUM = false;
+								string PrimaryUMModuleName;
+								try {
+									oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
+								}
+								catch(...) {}
+								
+								if ( PrimaryUMModuleName == moduleName )
+								    downPrimaryUM = true;
+
 								// if not disabled and amazon, skip
 								if (opState != oam::AUTO_DISABLED )
 								{	
@@ -2101,7 +2112,17 @@ void pingDeviceThread()
 	
 								//start SIMPLEX runtype processes on a SIMPLEX runtype module
 								string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
-		
+
+								// reset up mysql rep slaves is master changed
+								if ( downPrimaryUM &&
+								   ( MySQLRep == "y" ) )
+								{
+								      //setup MySQL Replication for started modules
+								      log.writeLog(__LINE__, "Setup MySQL Replication for module outage on " + moduleName, LOG_TYPE_DEBUG);
+								      DeviceNetworkList devicenetworklist;
+								      processManager.setMySQLReplication(devicenetworklist);
+								}
+								
 								try{
 									oam.getSystemConfig(moduletype, moduletypeconfig);
 								}
