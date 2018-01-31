@@ -2106,13 +2106,6 @@ void pingDeviceThread()
 									}
 								}
 
-								// if disabled and amazon, break out
-								if ( (opState == oam::AUTO_DISABLED ) && amazon )
-								      break;
-	
-								//start SIMPLEX runtype processes on a SIMPLEX runtype module
-								string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
-
 								// reset up mysql rep slaves is master changed
 								if ( downPrimaryUM &&
 								   ( MySQLRep == "y" ) )
@@ -2123,6 +2116,13 @@ void pingDeviceThread()
 								      processManager.setMySQLReplication(devicenetworklist);
 								}
 								
+								// if disabled and amazon, break out
+								if ( (opState == oam::AUTO_DISABLED ) && amazon )
+								      break;
+	
+								//start SIMPLEX runtype processes on a SIMPLEX runtype module
+								string moduletype = moduleName.substr(0,MAX_MODULE_TYPE_SIZE);
+
 								try{
 									oam.getSystemConfig(moduletype, moduletypeconfig);
 								}
