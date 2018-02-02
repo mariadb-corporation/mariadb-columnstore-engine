@@ -302,6 +302,79 @@ ProcessManager::~ProcessManager()
 }
 
 /******************************************************************************************
+* @brief	processAlarmMSG
+*
+* purpose:	Process the Alarm message
+*
+******************************************************************************************/
+//void	ProcessManager::processAlarmMSG( messageqcpp::IOSocket fIos, messageqcpp::ByteStream msg)
+void processAlarmMSG(messageqcpp::IOSocket* cfIos)
+{
+	messageqcpp::IOSocket afIos = *cfIos;
+
+	pthread_t ThreadId;
+	ThreadId = pthread_self();
+
+	ByteStream msg;
+
+	try{
+		msg = afIos.read();
+	}
+	catch(...)
+	{
+		pthread_detach (ThreadId);
+		pthread_exit(0);
+	}
+
+	if (msg.length() <= 0) {
+		afIos.close();
+		pthread_detach (ThreadId);
+		pthread_exit(0);
+	}
+
+	Oam oam;
+	ProcessLog log;
+
+	Configuration config;
+	ProcessManager processManager(config, log);
+	
+	log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
+
+	ByteStream::byte alarmID;
+	std::string componentID;
+	ByteStream::byte state;
+	std::string ModuleName;
+	std::string processName;
+	ByteStream::byte pid;
+	ByteStream::byte tid;
+
+	msg >> alarmID;
+	msg >> componentID;
+	msg >> state;
+	msg >> ModuleName;
+	msg >> processName;
+	msg >> pid;
+	msg >> tid;
+
+	Alarm calAlarm;
+
+	calAlarm.setAlarmID (alarmID);
+	calAlarm.setComponentID (componentID);
+	calAlarm.setState (state);
+	calAlarm.setSname (ModuleName);
+	calAlarm.setPname (processName);
+	calAlarm.setPid (pid);
+	calAlarm.setTid (tid);
+
+	ALARMManager aManager;
+	aManager.processAlarmReport(calAlarm);
+
+	afIos.close();
+	pthread_detach (ThreadId);
+	pthread_exit(0);
+}
+
+/******************************************************************************************
 * @brief	processMSG
 *
 * purpose:	Process the received message
@@ -2629,44 +2702,44 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					break;	
 				}
-/*
-             	case PROCESSALARM:
-                {
-                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
-    				ByteStream::byte alarmID;
-    				std::string componentID;
-    				ByteStream::byte state;
-    				std::string ModuleName;
-    				std::string processName;
-    				ByteStream::byte pid;
-    				ByteStream::byte tid;
+/*				case PROCESSALARM:
+				{
+				    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
-					msg >> alarmID;
-					msg >> componentID;
-					msg >> state;
-					msg >> ModuleName;
-					msg >> processName;
-					msg >> pid;
-					msg >> tid;
+				    ByteStream::byte alarmID;
+				    std::string componentID;
+				    ByteStream::byte state;
+				    std::string ModuleName;
+				    std::string processName;
+				    ByteStream::byte pid;
+				    ByteStream::byte tid;
 
-    				Alarm calAlarm;
+				    msg >> alarmID;
+				    msg >> componentID;
+				    msg >> state;
+				    msg >> ModuleName;
+				    msg >> processName;
+				    msg >> pid;
+				    msg >> tid;
 
-    				calAlarm.setAlarmID (alarmID);
-    				calAlarm.setComponentID (componentID);
-    				calAlarm.setState (state);
-    				calAlarm.setSname (ModuleName);
-    				calAlarm.setPname (processName);
-    				calAlarm.setPid (pid);
-    				calAlarm.setTid (tid);
+				    Alarm calAlarm;
 
-					ALARMManager aManager;
-        			aManager.processAlarmReport(calAlarm);
+				    calAlarm.setAlarmID (alarmID);
+				    calAlarm.setComponentID (componentID);
+				    calAlarm.setState (state);
+				    calAlarm.setSname (ModuleName);
+				    calAlarm.setPname (processName);
+				    calAlarm.setPid (pid);
+				    calAlarm.setTid (tid);
 
-                    break;
-                }
+				    ALARMManager aManager;
+				    aManager.processAlarmReport(calAlarm);
 
+				    break;
+				}
 */
+
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
 					break;
@@ -8720,6 +8793,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 		newActiveIPaddr = (*pt2).IPAddr;
 
 		sysConfig4->setConfig("ProcMgr", "IPAddr", newActiveIPaddr);
+		sysConfig4->setConfig("ProcMgr_Alarm", "IPAddr", newActiveIPaddr);
 		sysConfig4->setConfig("ProcStatusControl", "IPAddr", newActiveIPaddr);
 		sysConfig4->setConfig("DBRM_Controller", "IPAddr", newActiveIPaddr);
 
@@ -9296,6 +9370,7 @@ int ProcessManager::OAMParentModuleChange()
 		localIPaddr = (*pt1).IPAddr;
 
 		sysConfig4->setConfig("ProcMgr", "IPAddr", localIPaddr);
+		sysConfig4->setConfig("ProcMgr_Alarm", "IPAddr", localIPaddr);
 		sysConfig4->setConfig("ProcStatusControl", "IPAddr", localIPaddr);
 		sysConfig4->setConfig("DBRM_Controller", "IPAddr", localIPaddr);
 

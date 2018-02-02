@@ -79,6 +79,8 @@ namespace processmanager{
 	void startModuleThread(std::string moduleName);
 	void stopModuleThread(std::string moduleName);
 	void processMSG(messageqcpp::IOSocket* fIos);
+	void processAlarmMSG(messageqcpp::IOSocket* fIos);
+
 	void sendUpgradeRequest();
 
 	/** @brief Timeset for Milleseconds
@@ -89,16 +91,16 @@ namespace processmanager{
     {
         std::string ModuleName;                 //!< Module Name
         std::string ProcessName;                //!< Process Name
-		int ID;									//!< Heartbeat ID
-		bool receiveFlag;						//!< Heartbeat indication flag
-	};
+	int ID;									//!< Heartbeat ID
+	bool receiveFlag;						//!< Heartbeat indication flag
+    };
 
-	typedef   std::list<HeartBeatProc> HeartBeatProcList;
+    typedef   std::list<HeartBeatProc> HeartBeatProcList;
 
-	typedef   std::map<std::string, std::string>	srvStateList;
+    typedef   std::map<std::string, std::string>	srvStateList;
 
-	const int MAX_ARGUMENTS = 10;
-	const std::string DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/ProcessManager.log";
+    const int MAX_ARGUMENTS = 10;
+    const std::string DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/ProcessManager.log";
 
 
    /**

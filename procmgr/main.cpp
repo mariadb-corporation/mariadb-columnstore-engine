@@ -78,6 +78,7 @@ extern bool startFailOver;
 extern bool gOAMParentModuleFlag;
 
 static void messageThread(Configuration config);
+static void alarmMessageThread(Configuration config);
 static void sigUser1Handler(int sig);
 static void startMgrProcessThread();
 static void hdfsActiveAlarmsPushingThread();
@@ -265,6 +266,12 @@ int main(int argc, char **argv)
 		if ( ret != 0 )
 			log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
 
+		// create alarm message thread
+		pthread_t AlarmMessageThread;
+		ret = pthread_create (&AlarmMessageThread, NULL, (void*(*)(void*)) &alarmMessageThread, &config);
+		if ( ret != 0 )
+			log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
+
 		//monitor OAM Parent Module for failover
 		while(true)
 		{
@@ -351,6 +358,7 @@ int main(int argc, char **argv)
 			string IPaddr = (*pt1).IPAddr;
 	
 			sysConfig->setConfig("ProcMgr", "IPAddr", IPaddr);
+			sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", IPaddr);
 	
 			log.writeLog(__LINE__, "set ProcMgr IPaddr to " + IPaddr, LOG_TYPE_DEBUG);
 			//update Calpont Config table
@@ -376,6 +384,12 @@ int main(int argc, char **argv)
 		// create message thread
 		pthread_t MessageThread;
 		int ret = pthread_create (&MessageThread, NULL, (void*(*)(void*)) &messageThread, &config);
+		if ( ret != 0 )
+			log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
+		
+		// create alarm message thread
+		pthread_t AlarmMessageThread;
+		ret = pthread_create (&AlarmMessageThread, NULL, (void*(*)(void*)) &alarmMessageThread, &config);
 		if ( ret != 0 )
 			log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
 	}
@@ -463,21 +477,102 @@ static void messageThread(Configuration config)
 
 			}
 		}
-        catch (exception& ex)
-        {
-			string error = ex.what();
-			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr:" + error, LOG_TYPE_ERROR);
+		catch (exception& ex)
+		{
+				string error = ex.what();
+				log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr:" + error, LOG_TYPE_ERROR);
 
-			// takes 2 - 4 minites to free sockets, sleep and retry
-			sleep(60);
-        }
-        catch(...)
-        {
-			log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr: Caught unknown exception!", LOG_TYPE_ERROR);
+				// takes 2 - 4 minites to free sockets, sleep and retry
+				sleep(60);
+		}
+		catch(...)
+		{
+				log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr: Caught unknown exception!", LOG_TYPE_ERROR);
 
-			// takes 2 - 4 minites to free sockets, sleep and retry
-			sleep(60);
-        }
+				// takes 2 - 4 minites to free sockets, sleep and retry
+				sleep(60);
+		}
+	}
+	return;
+}
+
+/******************************************************************************************
+* @brief	alarmMesssageThread
+*
+* purpose:	Read incoming alarm messages
+*
+******************************************************************************************/
+static void alarmMessageThread(Configuration config)
+{
+	ProcessLog log;
+	ProcessManager processManager(config, log);
+	Oam oam;
+
+	//check for running active, then launch
+	while(true)
+	{
+		if ( !runStandby)
+			break;
+		sleep (1);
+	}
+
+	log.writeLog(__LINE__, "Alarm Message Thread started ..", LOG_TYPE_DEBUG);
+
+	//read and cleanup port before trying to use
+	try {
+		Config* sysConfig = Config::makeConfig();
+		string port = sysConfig->getConfig("ProcMgr_Alarm", "Port");
+		string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
+		if ( !rootUser)
+			cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
+
+
+		system(cmd.c_str());
+	}
+	catch(...)
+	{
+	}
+
+	//
+	//waiting for request 	
+	//
+	IOSocket fIos;
+
+	for (;;)
+	{
+		try
+		{
+			MessageQueueServer procmgr("ProcMgr_Alarm");
+			for (;;)
+			{
+				try
+				{
+					fIos = procmgr.accept();
+
+					pthread_t alarmMessagethread;
+					int status = pthread_create (&alarmMessagethread, NULL, (void*(*)(void*)) &processAlarmMSG, &fIos);
+
+					if ( status != 0 )
+						log.writeLog(__LINE__, "alarmmessagethread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+				}
+				catch(...)
+				{}
+
+			}
+		}
+		catch (exception& ex)
+		{
+				string error = ex.what();
+				log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr_Alarm:" + error, LOG_TYPE_ERROR);
+
+				sleep(1);
+		}
+		catch(...)
+		{
+				log.writeLog(__LINE__, "EXCEPTION ERROR on MessageQueueServer for ProcMgr_Alarm: Caught unknown exception!", LOG_TYPE_ERROR);
+
+				sleep(1);
+		}
 	}
 	return;
 }

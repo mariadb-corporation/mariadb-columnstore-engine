@@ -19,6 +19,10 @@
 		<IPAddr>0.0.0.0</IPAddr>
 		<Port>8603</Port>
 	</ProcMgr>
+	<ProcMgr_Alarm>
+		<IPAddr>127.0.0.1</IPAddr>
+		<Port>8606</Port>
+	</ProcMgr_Alarm>
 	<ProcStatusControl>
 		<IPAddr>0.0.0.0</IPAddr>
 		<Port>8604</Port>

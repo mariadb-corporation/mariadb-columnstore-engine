@@ -339,6 +339,7 @@ int main(int argc, char **argv)
 					string IPaddr = (*pt1).IPAddr;
 			
 					sysConfig->setConfig("ProcMgr", "IPAddr", IPaddr);
+					sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", IPaddr);
 			
 					log.writeLog(__LINE__, "set ProcMgr IPaddr to Old Standby Module: " + IPaddr, LOG_TYPE_DEBUG);
 					//update Calpont Config table
