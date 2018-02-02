@@ -343,6 +343,20 @@ CalpontSystemCatalog::ColType Func_simple_case::operationType(FunctionParm& fp, 
 }
 
 
+bool Func_simple_case::getBoolVal(Row& row,
+									FunctionParm& parm,
+									bool& isNull,
+									CalpontSystemCatalog::ColType& operationColType)
+{
+	uint64_t i = simple_case_cmp(row, parm, isNull, operationColType);
+
+	if (isNull)
+		return joblist::BIGINTNULL;
+
+	return parm[i+1]->data()->getBoolVal(row, isNull);
+}
+
+
 int64_t Func_simple_case::getIntVal(Row& row,
 									FunctionParm& parm,
 									bool& isNull,
@@ -446,6 +460,18 @@ CalpontSystemCatalog::ColType Func_searched_case::operationType(FunctionParm& fp
 	return caseOperationType(fp, resultType, false);
 }
 
+bool Func_searched_case::getBoolVal(Row& row,
+										FunctionParm& parm,
+										bool& isNull,
+										CalpontSystemCatalog::ColType&)
+{
+	uint64_t i = searched_case_cmp(row, parm, isNull);
+
+	if (isNull)
+		return joblist::BIGINTNULL;
+
+	return parm[i+1]->data()->getBoolVal(row, isNull);
+}
 
 int64_t Func_searched_case::getIntVal(Row& row,
 										FunctionParm& parm,
