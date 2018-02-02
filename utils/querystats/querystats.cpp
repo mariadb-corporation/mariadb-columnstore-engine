@@ -198,7 +198,7 @@ void QueryStats::insert()
     ret = mysql.init(host.c_str(), port, user.c_str(), pwd.c_str(),
                      SCHEMA.c_str());
 
-    if (ret != 0) 
+    if (ret != 0)
         mysql.handleMySqlError(mysql.getError().c_str(), ret);
 
     // escape quote characters
@@ -267,12 +267,12 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
     ret = mysql.init(host.c_str(), port, user.c_str(), pwd.c_str(),
                      SCHEMA.c_str());
 
-    if (ret != 0) 
+    if (ret != 0)
         mysql.handleMySqlError(mysql.getError().c_str(), ret);
 
     // get the part of host string befor ':' if there is.
     size_t pos = _host.find(':', 0);
- 
+
     if (pos != string::npos)
         _host = _host.substr(0, pos);
 
@@ -288,18 +288,19 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
           << "') and upper(a.priority) = upper(b.priority)";
 
     ret = mysql.run(query.str().c_str());
-    if (ret != 0) 
+
+    if (ret != 0)
         mysql.handleMySqlError(mysql.getError().c_str(), ret);
 
     char** rowIn;
     rowIn = mysql.nextRow();
- 
-    if(rowIn)
+
+    if (rowIn)
     {
         fPriority = rowIn[0];
         fPriorityLevel = atoi(rowIn[1]);
     }
- 
+
     return fPriorityLevel;
 }
 

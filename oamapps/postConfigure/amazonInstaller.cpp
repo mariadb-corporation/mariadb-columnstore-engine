@@ -46,6 +46,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 #include "alarmmanager.h"
@@ -229,10 +230,7 @@ int main(int argc, char* argv[])
         }
         else if ( string("-v") == argv[i] )
         {
-            SystemSoftware systemsoftware;
-            oam.getSystemSoftware(systemsoftware);
-
-            cout << endl << "columnstore Version: " << systemsoftware.Version << "-" << systemsoftware.Release << endl;
+            cout << "columnstore Version: " << columnstore_version << "-" << columnstore_release << endl;
             exit (0);
         }
         else if ( string("-pc") == argv[i] )
@@ -1468,10 +1466,7 @@ int main(int argc, char* argv[])
 
     cout << "===== Setting up system '" + systemName + "' based on these settings ===== " << endl << endl;
 
-    SystemSoftware systemsoftware;
-    oam.getSystemSoftware(systemsoftware);
-
-    cout << "columnstore Version = " << systemsoftware.Version << "-" << systemsoftware.Release << endl;
+    cout << "columnstore Version = " << columnstore_version << "-" << columnstore_release << endl;
     cout << "System Type = " << systemType << endl;
 
     if ( subnetID != oam::UnassignedName )

@@ -85,6 +85,7 @@ struct TxnLBIDRec
 };
 
 typedef boost::shared_ptr<TxnLBIDRec>  SP_TxnLBIDRec_t;
+typedef std::set<BRM::LBID_t> dictLBIDRec_t;
 
 /** Class WriteEngineWrapper */
 class WriteEngineWrapper : public WEObj
@@ -433,6 +434,10 @@ public:
 
         return m_txnLBIDMap;
     };
+    std::tr1::unordered_map<TxnID, dictLBIDRec_t>&  getDictMap()
+    {
+        return m_dictLBIDMap;
+    };
     /**
     * @brief Flush the ChunkManagers.
     */
@@ -689,6 +694,7 @@ private:
     int writeColumnRecBinary(const TxnID& txnid, const ColStructList& colStructList,
                              std::vector<uint64_t>& colValueList,
                              RID* rowIdArray, const ColStructList& newColStructList,
+                             std::vector<uint64_t>& newColValueList,
                              const int32_t tableOid,
                              bool useTmpSuffix, bool versioning = true);
 
@@ -712,6 +718,9 @@ private:
                            const RID filesPerColumnPartition, const RID  extentsPerSegmentFile,
                            const RID extentRows, uint16_t startDBRoot, unsigned dbrootCnt);
 
+    void AddDictToList(const TxnID txnid, std::vector<BRM::LBID_t>& lbids);
+    void RemoveTxnFromDictMap(const TxnID txnid);
+
     // Bug 4312: We use a hash set to hold the set of starting LBIDS for a given
     // txn so that we don't waste time marking the same extent as invalid. This
     // list should be trimmed if it gets too big.
@@ -731,6 +740,10 @@ private:
 
     // This is a Map of sets of LBIDS for each transaction. A Transaction's list will be removed upon commit or rollback.
     std::tr1::unordered_map<TxnID, SP_TxnLBIDRec_t> m_txnLBIDMap;
+
+    // MCOL-1160: We need to track dictionary LBIDs so we can tell PrimProc
+    // to flush the blocks after an API bulk-write.
+    std::tr1::unordered_map<TxnID, dictLBIDRec_t> m_dictLBIDMap;
 
     ColumnOp*      m_colOp[TOTAL_COMPRESS_OP];          // column operations
     Dctnry*        m_dctnry[TOTAL_COMPRESS_OP];         // dictionary operations

@@ -41,7 +41,7 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="versionnumber.h">
+    <ClInclude Include="..\..\columnstoreversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="writeonce.h">

@@ -1,5 +1,6 @@
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+
 # Avoid warnings in higher versions
 if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" GREATER 2.6)
  CMAKE_POLICY(VERSION 2.8)
@@ -76,8 +77,7 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 INCLUDE (configureEngine.cmake)
 
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum @ONLY IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 INCLUDE(bison.cmake)
@@ -108,8 +108,8 @@ endif()
 
 INCLUDE(check_compiler_flag.cmake)
 
-MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
-MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
+MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
+MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
 
 # enable security hardening features, like most distributions do
 # in our benchmarks that costs about ~1% of performance, depending on the load

@@ -239,7 +239,10 @@ public:
     THR_LOCK_DATA** store_lock(THD* thd, THR_LOCK_DATA** to,
                                enum thr_lock_type lock_type);     ///< required
     const COND* cond_push(const COND* cond);
-    uint8 table_cache_type() { return HA_CACHE_TBL_NOCACHE; }
+    uint8 table_cache_type()
+    {
+        return HA_CACHE_TBL_NOCACHE;
+    }
 
 };
 #endif //HA_CALPONT_H__

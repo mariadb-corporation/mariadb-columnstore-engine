@@ -18,7 +18,8 @@ set(PrimProc_SRCS
     primitiveserver.cpp
     pseudocc.cpp
     rtscommand.cpp
-    umsocketselector.cpp)
+    umsocketselector.cpp
+    ../../utils/common/crashtrace.cpp)
 
 #PrimProc_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
 
