@@ -18,6 +18,8 @@
 #include "IDBPolicy.h"
 #include "serverMonitor.h"
 
+#include "crashtrace.h"
+
 using namespace std;
 using namespace servermonitor;
 using namespace oam;
@@ -37,6 +39,14 @@ int main (int argc, char** argv)
 {
     ServerMonitor serverMonitor;
     Oam oam;
+
+    struct sigaction ign;
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 
     //Launch Memory Monitor Thread and check if swap is in critical condition
     pthread_t memoryMonitorThread;

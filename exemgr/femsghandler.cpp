@@ -24,7 +24,7 @@ using namespace std;
 using namespace joblist;
 using namespace messageqcpp;
 
-threadpool::ThreadPool FEMsgHandler::threadPool(50, 100);
+threadpool::ThreadPool FEMsgHandler::threadPool;
 
 namespace
 {

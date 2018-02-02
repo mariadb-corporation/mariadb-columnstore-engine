@@ -1,12 +1,12 @@
 IF(DEB)
 
+CMAKE_MINIMUM_REQUIRED(VERSION 3.4)
+
 SET(CMAKE_INSTALL_PREFIX ${INSTALL_ENGINE})
 
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_DEBUG 1)
 SET(CPACK_PACKAGING_INSTALL_PREFIX ${INSTALL_ENGINE})
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
-
 
 # Note that this variable is DEB not DEBIAN! http://public.kitware.com/pipermail/cmake/2014-July/058030.html
 SET(CPACK_DEB_COMPONENT_INSTALL ON)
@@ -14,7 +14,7 @@ SET(CPACK_DEB_COMPONENT_INSTALL ON)
 SET(CPACK_COMPONENTS_ALL platform libs storage-engine)
 
 SET(CPACK_PACKAGE_NAME "mariadb-columnstore")
-SET(ENGINE_ARCH "x86_64")
+SET(ENGINE_ARCH "amd64")
 
 IF (NOT CPACK_DEBIAN_PACKAGE_VERSION)
     SET (CPACK_DEBIAN_PACKAGE_VERSION ${PACKAGE_VERSION})
@@ -24,7 +24,7 @@ IF (NOT CPACK_DEBIAN_PACKAGE_RELEASE)
 ENDIF()
 
 SET(CPACK_DEBIAN_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
-SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_DEBIAN_PACKAGE_VERSION}-${CPACK_DEBIAN_PACKAGE_RELEASE}-${ENGINE_ARCH}-${DEB}")
+SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_DEBIAN_PACKAGE_VERSION}-${CPACK_DEBIAN_PACKAGE_RELEASE}-${ENGINE_ARCH}")
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB Columnstore: a very fast and robust SQL database server")
 SET(CPACK_PACKAGE_URL "http://mariadb.org")
@@ -65,9 +65,11 @@ if (EXISTS "/etc/debian_version")
     set(DEBIAN_VERSION_NUMBER "${CMAKE_MATCH_1}")
 endif ()
 if ("${DEBIAN_VERSION_NUMBER}" EQUAL "8")
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, libboost-all-dev, mariadb-columnstore-libs, libsnappy1")
-else ()
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, libboost-all-dev, mariadb-columnstore-libs, libsnappy1v5")
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, sudo, libdbi-perl, libreadline-dev, rsync, net-tools, libboost-all-dev, mariadb-columnstore-libs, mariadb-columnstore-server, libsnappy1")
+elseif ("${DEBIAN_VERSION_NUMBER}" EQUAL "9")
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, sudo, libdbi-perl, libreadline-dev, rsync, net-tools, libboost-all-dev, mariadb-columnstore-libs, mariadb-columnstore-server, libsnappy1v5, libreadline5")
+else()
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, sudo, libdbi-perl, libboost-all-dev, libreadline-dev, rsync, snappy, net-tools")
 endif ()
 
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DEPENDS "mariadb-columnstore-libs")

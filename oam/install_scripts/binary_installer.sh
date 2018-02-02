@@ -215,7 +215,7 @@ send_user "\n"
 send_user "Start ColumnStore service                       "
 send_user " \n"
 send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
-set timeout 60
+set timeout 120
 # check return
 expect {
 	"word: " { send "$PASSWORD\n"

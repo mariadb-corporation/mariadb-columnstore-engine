@@ -5,7 +5,6 @@ SET(CMAKE_INSTALL_PREFIX ${INSTALL_ENGINE})
 SET(CPACK_GENERATOR "RPM")
 SET(CPACK_RPM_PACKAGE_DEBUG 1)
 SET(CPACK_PACKAGING_INSTALL_PREFIX ${INSTALL_ENGINE})
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 
 SET(CPACK_RPM_COMPONENT_INSTALL ON)
 
@@ -189,7 +188,6 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/etc/MessageFile.txt"
 "/usr/local/mariadb/columnstore/etc/ErrorMessage.txt"
 "/usr/local/mariadb/columnstore/local/module"
-"/usr/local/mariadb/columnstore/releasenum"
 "/usr/local/mariadb/columnstore/bin/rollback"
 "/usr/local/mariadb/columnstore/bin/editem"
 "/usr/local/mariadb/columnstore/bin/getConfig"

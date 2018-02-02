@@ -36,15 +36,6 @@ echo "################# mcsadmin getcolumnstoresoftwareinfo #################"
 echo " "
 $INSTALLDIR/bin/mcsadmin getsoftwareinfo
 
-if [ -e $INSTALLDIR/releasenum ];then
-  echo " "
-  echo "-- Columnstore Release Number file --"
-  echo " "
-  echo "################# cat $INSTALLDIR/releasenum #################"
-  echo " "
-  cat $INSTALLDIR/releasenum
-fi
-
 echo " "
 echo "-- Columnstore Storage Configuration --"
 echo " "

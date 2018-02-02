@@ -26,6 +26,7 @@
 #include <netdb.h>
 extern int h_errno;
 
+#include "columnstoreversion.h"
 #include "mcsadmin.h"
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
@@ -2099,7 +2100,7 @@ int processCommand(string* arguments)
                 }
 
                 string DataRedundancyConfig;
-                string DataRedundancyCopies;
+                int DataRedundancyCopies;
                 string DataRedundancyStorageType;
 
                 try
@@ -3963,7 +3964,7 @@ int processCommand(string* arguments)
             }
 
             string DataRedundancyConfig;
-            string DataRedundancyCopies;
+            int DataRedundancyCopies;
             string DataRedundancyStorageType;
 
             try
@@ -5625,21 +5626,15 @@ int processCommand(string* arguments)
                         system("cat /tmp/columnstore.txt");
                     else
                     {
-                        SystemSoftware systemsoftware;
-                        oam.getSystemSoftware(systemsoftware);
-
-                        cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-                        cout << "SoftwareRelease = " << systemsoftware.Release << endl;
+                        cout << "SoftwareVersion = " << columnstore_version << endl;
+                        cout << "SoftwareRelease = " << columnstore_release << endl;
                     }
                 }
             }
             else
             {
-                SystemSoftware systemsoftware;
-                oam.getSystemSoftware(systemsoftware);
-
-                cout << "SoftwareVersion = " << systemsoftware.Version << endl;
-                cout << "SoftwareRelease = " << systemsoftware.Release << endl;
+                cout << "SoftwareVersion = " << columnstore_version << endl;
+                cout << "SoftwareRelease = " << columnstore_release << endl;
             }
 
             cout << endl;
@@ -6194,7 +6189,7 @@ int processCommand(string* arguments)
                             }
 
                             string command = startup::StartUp::installDir() + "/bin/remote_command.sh " + (*hostConfigIter).IPAddr + " " + password + " 'mkdir -p " + startup::StartUp::installDir() + "/gluster/brick" + oam.itoa(brickID) + "'";
-                            int status = system(command.c_str());
+                            system(command.c_str());
                             brickID++;
                         }
                     }
@@ -6535,7 +6530,7 @@ int processCommand(string* arguments)
                 }
             }
 
-            if ( DataRedundancyConfig == "y" && devicenetworklist.size() != DataRedundancyCopies)
+            if ( DataRedundancyConfig == "y" && devicenetworklist.size() != (size_t)DataRedundancyCopies)
             {
                 cout << endl << "**** removeModule Failed : Data Redundancy requires you to remove modules in groups equal to number of copies" << endl;
                 quit = true;
@@ -7608,7 +7603,6 @@ int processCommand(string* arguments)
         {
 
             string DataRedundancyConfig = "n";
-            int DataRedundancyCopies;
 
             try
             {

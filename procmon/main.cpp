@@ -26,6 +26,8 @@ namespace bi = boost::interprocess;
 
 #include "IDBPolicy.h"
 
+#include "crashtrace.h"
+
 using namespace std;
 using namespace messageqcpp;
 using namespace processmonitor;
@@ -55,9 +57,11 @@ void updateShareMemory(processStatusList* aPtr);
 bool runStandby = false;
 bool processInitComplete = false;
 bool rootUser = true;
+bool mainResumeFlag;
 string USER = "root";
 string PMwithUM = "n";
 bool startProcMon = false;
+
 
 //extern std::string gOAMParentModuleName;
 extern bool gOAMParentModuleFlag;
@@ -75,6 +79,14 @@ int main(int argc, char** argv)
 #ifndef _MSC_VER
     setuid(0); // set effective ID to root; ignore return status
 #endif
+
+    struct sigaction ign;
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 
     if (argc > 1 && string(argv[1]) == "--daemon")
     {
@@ -175,7 +187,7 @@ int main(int argc, char** argv)
 
         //re-read local system info with updated Columnstore.xml
         sleep(1);
-        Config* sysConfig = Config::makeConfig();
+//	      Config* sysConfig = Config::makeConfig();
         MonitorConfig config;
 
         //PMwithUM config
@@ -561,6 +573,10 @@ int main(int argc, char** argv)
             unlink ("/var/log/mariadb/columnstore/activeAlarms");
         }
 
+        //Clear mainResumeFlag
+
+        mainResumeFlag = false;
+
         //launch Status table control thread on 'pm' modules
         pthread_t statusThread;
         int ret = pthread_create (&statusThread, NULL, (void* (*)(void*)) &statusControlThread, NULL);
@@ -568,7 +584,14 @@ int main(int argc, char** argv)
         if ( ret != 0 )
             log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
 
-        sleep(6);	// give the Status thread time to fully initialize
+        //wait for flag to be set
+
+        while (!mainResumeFlag)
+        {
+            log.writeLog(__LINE__, "WATING FOR mainResumeFlag to be set", LOG_TYPE_DEBUG);
+
+            sleep(1);
+        }
     }
 
     SystemStatus systemstatus;
@@ -876,6 +899,8 @@ int main(int argc, char** argv)
             }
         }
     }
+
+    log.writeLog(__LINE__, "SYSTEM STATUS = " + oam.itoa(systemstatus.SystemOpState), LOG_TYPE_DEBUG);
 
     if ( systemstatus.SystemOpState != MAN_OFFLINE && !DISABLED)
     {
@@ -2319,6 +2344,10 @@ static void statusControlThread()
 
         log.writeLog(__LINE__, "Dbroot Status shared Memory allociated and Initialized", LOG_TYPE_DEBUG);
     }
+
+    //Set mainResumeFlag, to start up main thread
+
+    mainResumeFlag = true;
 
     string portName = "ProcStatusControl";
 

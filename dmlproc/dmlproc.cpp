@@ -82,6 +82,8 @@ using namespace joblist;
 
 #include "utils_utf8.h"
 
+#include "crashtrace.h"
+
 namespace fs = boost::filesystem;
 
 namespace
@@ -513,6 +515,9 @@ int main(int argc, char* argv[])
     //BUG 5362
     systemLang = funcexp::utf8::idb_setlocale();
 
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("DMLProc");
+
     Config* cf = Config::makeConfig();
 
     setupCwd();
@@ -616,11 +621,11 @@ int main(int argc, char* argv[])
     JobStep::jobstepThreadPool.setMaxThreads(rm->getJLThreadPoolSize());
     JobStep::jobstepThreadPool.setName("DMLProcJobList");
 
-//    if (rm->getJlThreadPoolDebug() == "Y" || rm->getJlThreadPoolDebug() == "y")
-//   {
-//        JobStep::jobstepThreadPool.setDebug(true);
-//        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
-//    }
+    if (rm->getDMLJlThreadPoolDebug() == "Y" || rm->getDMLJlThreadPoolDebug() == "y")
+    {
+        JobStep::jobstepThreadPool.setDebug(true);
+        JobStep::jobstepThreadPool.invoke(ThreadPoolMonitor(&JobStep::jobstepThreadPool));
+    }
 
     //set ACTIVE state
     try
@@ -641,6 +646,12 @@ int main(int argc, char* argv[])
     sigaction(SIGHUP, &ign, 0);
     ign.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &ign, 0);
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 #endif
 
     dmlserver.start();

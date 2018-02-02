@@ -2218,6 +2218,26 @@ uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::s
         cacheutils::purgePrimProcFdCache(files, Config::getLocalModuleID());
 
     TableMetaData::removeTableMetaData(tableOid);
+
+    // MCOL-1160 For API bulk insert flush the PrimProc cached dictionary
+    // blocks tounched
+    std::tr1::unordered_map<TxnID, dictLBIDRec_t>::iterator mapIter;
+    mapIter = fWEWrapper.getDictMap().find(txnID);
+
+    if (mapIter != fWEWrapper.getDictMap().end())
+    {
+        std::set<BRM::LBID_t>::iterator lbidIter;
+        std::vector<BRM::LBID_t> dictFlushBlks;
+
+        for (lbidIter = (*mapIter).second.begin(); lbidIter != (*mapIter).second.end(); lbidIter++)
+        {
+            dictFlushBlks.push_back((*lbidIter));
+        }
+
+        cacheutils::flushPrimProcAllverBlocks(dictFlushBlks);
+        fWEWrapper.getDictMap().erase(txnID);
+    }
+
     return rc;
 }
 

@@ -68,7 +68,7 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
     if (!(TLSCA.empty() || TLSClientCert.empty() || TLSClientKey.empty()))
     {
         mysql_ssl_set(fCon, TLSClientKey.c_str(), TLSClientCert.c_str(),
-                         TLSCA.c_str(), NULL, NULL);
+                      TLSCA.c_str(), NULL, NULL);
     }
 
     if (fCon != NULL)
@@ -117,7 +117,7 @@ int LibMySQL::run(const char* query)
     return ret;
 }
 
-void LibMySQL::handleMySqlError(const char* errStr, unsigned int errCode) 
+void LibMySQL::handleMySqlError(const char* errStr, unsigned int errCode)
 {
     ostringstream oss;
     oss << errStr << "(" << errCode << ")";

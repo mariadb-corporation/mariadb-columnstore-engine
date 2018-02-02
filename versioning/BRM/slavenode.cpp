@@ -37,6 +37,8 @@
 #include "utils_utf8.h"
 #include "IDBPolicy.h"
 
+#include "crashtrace.h"
+
 using namespace BRM;
 using namespace std;
 
@@ -124,6 +126,13 @@ int main(int argc, char** argv)
 #ifdef SIGPIPE
     signal(SIGPIPE, SIG_IGN);
 #endif
+
+    struct sigaction ign;
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 
     if (!(argc >= 3 && (arg = argv[2]) == "fg"))
         err = fork();

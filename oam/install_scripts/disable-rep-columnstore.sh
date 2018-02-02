@@ -56,7 +56,7 @@ checkForError
 #
 # Run reset slave command
 #
-echo "Run start slave command" >>/tmp/disable-rep-status.log
+echo "Run reset slave command" >>/tmp/disable-rep-status.log
 cat >/tmp/idb_disable-rep.sql <<EOD
 reset slave;
 EOD
