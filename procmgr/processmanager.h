@@ -79,7 +79,6 @@ namespace processmanager{
 	void startModuleThread(std::string moduleName);
 	void stopModuleThread(std::string moduleName);
 	void processMSG(messageqcpp::IOSocket* fIos);
-	void processAlarmMSG(messageqcpp::IOSocket* fIos);
 
 	void sendUpgradeRequest();
 

@@ -38,7 +38,7 @@ const std::string ACTIVE_ALARM_FILE = "/var/log/mariadb/columnstore/activeAlarms
 const std::string ALARM_FILE = "/var/log/mariadb/columnstore/alarm.log";
 const std::string ALARM_ARCHIVE_FILE = "/var/log/mariadb/columnstore/archive";
 
-const bool ALARM_DEBUG = true;
+const bool ALARM_DEBUG = false;
 const uint16_t INVALID_ALARM_ID = 0;
 }
 

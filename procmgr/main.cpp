@@ -493,7 +493,6 @@ static void messageThread(Configuration config)
 				sleep(60);
 		}
 	}
-	return;
 }
 
 /******************************************************************************************
@@ -507,6 +506,8 @@ static void alarmMessageThread(Configuration config)
 	ProcessLog log;
 	ProcessManager processManager(config, log);
 	Oam oam;
+
+	ByteStream msg;
 
 	//check for running active, then launch
 	while(true)
@@ -525,8 +526,7 @@ static void alarmMessageThread(Configuration config)
 		string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
 		if ( !rootUser)
 			cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-
+		
 		system(cmd.c_str());
 	}
 	catch(...)
@@ -549,15 +549,66 @@ static void alarmMessageThread(Configuration config)
 				{
 					fIos = procmgr.accept();
 
-					pthread_t alarmMessagethread;
-					int status = pthread_create (&alarmMessagethread, NULL, (void*(*)(void*)) &processAlarmMSG, &fIos);
+					try{
+						msg = fIos.read();
 
-					if ( status != 0 )
-						log.writeLog(__LINE__, "alarmmessagethread: pthread_create failed, return status = " + oam.itoa(status), LOG_TYPE_ERROR);
+						if (msg.length() <= 0)
+						    continue;
+		
+						//log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
+
+						ByteStream::byte alarmID;
+						std::string componentID;
+						ByteStream::byte state;
+						std::string ModuleName;
+						std::string processName;
+						ByteStream::byte pid;
+						ByteStream::byte tid;
+
+						msg >> alarmID;
+						msg >> componentID;
+						msg >> state;
+						msg >> ModuleName;
+						msg >> processName;
+						msg >> pid;
+						msg >> tid;
+
+						Alarm calAlarm;
+
+						calAlarm.setAlarmID (alarmID);
+						calAlarm.setComponentID (componentID);
+						calAlarm.setState (state);
+						calAlarm.setSname (ModuleName);
+						calAlarm.setPname (processName);
+						calAlarm.setPid (pid);
+						calAlarm.setTid (tid);
+
+						ALARMManager aManager;
+						aManager.processAlarmReport(calAlarm);
+					}
+					catch (exception& ex)
+					{
+						string error = ex.what();
+						log.writeLog(__LINE__, "EXCEPTION ERROR on read for ProcMgr_Alarm:" + error, LOG_TYPE_ERROR);
+						continue;
+					}
+					catch(...)
+					{
+						log.writeLog(__LINE__, "EXCEPTION ERROR on read for ProcMgr_Alarm: Caught unknown exception!", LOG_TYPE_ERROR);
+						continue;
+					}
+				}
+				catch (exception& ex)
+				{
+					string error = ex.what();
+					log.writeLog(__LINE__, "EXCEPTION ERROR on accept for ProcMgr_Alarm:" + error, LOG_TYPE_ERROR);
+					continue;
 				}
 				catch(...)
-				{}
-
+				{
+					log.writeLog(__LINE__, "EXCEPTION ERROR on accept for ProcMgr_Alarm: Caught unknown exception!", LOG_TYPE_ERROR);
+					continue;
+				}
 			}
 		}
 		catch (exception& ex)
@@ -574,7 +625,6 @@ static void alarmMessageThread(Configuration config)
 				sleep(1);
 		}
 	}
-	return;
 }
 
 /******************************************************************************************

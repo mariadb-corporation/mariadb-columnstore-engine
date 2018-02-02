@@ -302,79 +302,6 @@ ProcessManager::~ProcessManager()
 }
 
 /******************************************************************************************
-* @brief	processAlarmMSG
-*
-* purpose:	Process the Alarm message
-*
-******************************************************************************************/
-//void	ProcessManager::processAlarmMSG( messageqcpp::IOSocket fIos, messageqcpp::ByteStream msg)
-void processAlarmMSG(messageqcpp::IOSocket* cfIos)
-{
-	messageqcpp::IOSocket afIos = *cfIos;
-
-	pthread_t ThreadId;
-	ThreadId = pthread_self();
-
-	ByteStream msg;
-
-	try{
-		msg = afIos.read();
-	}
-	catch(...)
-	{
-		pthread_detach (ThreadId);
-		pthread_exit(0);
-	}
-
-	if (msg.length() <= 0) {
-		afIos.close();
-		pthread_detach (ThreadId);
-		pthread_exit(0);
-	}
-
-	Oam oam;
-	ProcessLog log;
-
-	Configuration config;
-	ProcessManager processManager(config, log);
-	
-	log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
-
-	ByteStream::byte alarmID;
-	std::string componentID;
-	ByteStream::byte state;
-	std::string ModuleName;
-	std::string processName;
-	ByteStream::byte pid;
-	ByteStream::byte tid;
-
-	msg >> alarmID;
-	msg >> componentID;
-	msg >> state;
-	msg >> ModuleName;
-	msg >> processName;
-	msg >> pid;
-	msg >> tid;
-
-	Alarm calAlarm;
-
-	calAlarm.setAlarmID (alarmID);
-	calAlarm.setComponentID (componentID);
-	calAlarm.setState (state);
-	calAlarm.setSname (ModuleName);
-	calAlarm.setPname (processName);
-	calAlarm.setPid (pid);
-	calAlarm.setTid (tid);
-
-	ALARMManager aManager;
-	aManager.processAlarmReport(calAlarm);
-
-	afIos.close();
-	pthread_detach (ThreadId);
-	pthread_exit(0);
-}
-
-/******************************************************************************************
 * @brief	processMSG
 *
 * purpose:	Process the received message
@@ -2702,43 +2629,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					break;	
 				}
-
-/*				case PROCESSALARM:
-				{
-				    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
-
-				    ByteStream::byte alarmID;
-				    std::string componentID;
-				    ByteStream::byte state;
-				    std::string ModuleName;
-				    std::string processName;
-				    ByteStream::byte pid;
-				    ByteStream::byte tid;
-
-				    msg >> alarmID;
-				    msg >> componentID;
-				    msg >> state;
-				    msg >> ModuleName;
-				    msg >> processName;
-				    msg >> pid;
-				    msg >> tid;
-
-				    Alarm calAlarm;
-
-				    calAlarm.setAlarmID (alarmID);
-				    calAlarm.setComponentID (componentID);
-				    calAlarm.setState (state);
-				    calAlarm.setSname (ModuleName);
-				    calAlarm.setPname (processName);
-				    calAlarm.setPid (pid);
-				    calAlarm.setTid (tid);
-
-				    ALARMManager aManager;
-				    aManager.processAlarmReport(calAlarm);
-
-				    break;
-				}
-*/
 
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
