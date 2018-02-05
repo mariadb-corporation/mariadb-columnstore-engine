@@ -166,17 +166,21 @@ if [ ! -z "$syslog_conf" ] ; then
 		#set the syslog for ColumnStore logging
 		# remove older version incase it was installed by previous build
 		$SUDO rm -rf /etc/rsyslog.d/columnstore.conf
+
 		if [ $rsyslog7 == 1 ]; then
+			sed -i -e s/groupname/adm/g ${columnstoreSyslogFile7}
+			sed -i -e s/username/syslog/g ${columnstoreSyslogFile7}
+			
 			$SUDO rm -f /etc/rsyslog.d/49-columnstore.conf
 			$SUDO cp  ${columnstoreSyslogFile7} ${syslog_conf}
-		else
+		else		
 			$SUDO cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
 	fi
-	
-	if [ $rsyslog7 == 1 ]; then
-	      $SUDO chown -R syslog:adm /var/log/mariadb/columnstore >/dev/null 2>&1
-	fi
+
+	# install Columnstore Log Rotate File
+	$SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+	$SUDO chmod 644 /etc/logrotate.d/columnstore
 
 	restartSyslog
 fi
