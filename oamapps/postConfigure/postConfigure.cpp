@@ -2028,8 +2028,8 @@ int main(int argc, char *argv[])
 						sysConfig->setConfig(parentProcessMonitor, "IPAddr", parentOAMModuleIPAddr);
 						sysConfig->setConfig(parentProcessMonitor, "Port", "8800");
 						sysConfig->setConfig("ProcMgr", "IPAddr", parentOAMModuleIPAddr);
-						//sysConfig->setConfig("ProcHeartbeatControl", "IPAddr", parentOAMModuleIPAddr);
-						sysConfig->setConfig("ProcStatusControl", "IPAddr", parentOAMModuleIPAddr);
+						sysConfig->setConfig("ProcHeartbeatControl", "IPAddr", parentOAMModuleIPAddr);
+						sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", parentOAMModuleIPAddr);
 						string parentServerMonitor = parentOAMModuleName + "_ServerMonitor";
 						sysConfig->setConfig(parentServerMonitor, "IPAddr", parentOAMModuleIPAddr);
 						string portName = parentOAMModuleName + "_WriteEngineServer";

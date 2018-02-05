@@ -2629,44 +2629,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					break;	
 				}
-/*
-             	case PROCESSALARM:
-                {
-                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
-    				ByteStream::byte alarmID;
-    				std::string componentID;
-    				ByteStream::byte state;
-    				std::string ModuleName;
-    				std::string processName;
-    				ByteStream::byte pid;
-    				ByteStream::byte tid;
-
-					msg >> alarmID;
-					msg >> componentID;
-					msg >> state;
-					msg >> ModuleName;
-					msg >> processName;
-					msg >> pid;
-					msg >> tid;
-
-    				Alarm calAlarm;
-
-    				calAlarm.setAlarmID (alarmID);
-    				calAlarm.setComponentID (componentID);
-    				calAlarm.setState (state);
-    				calAlarm.setSname (ModuleName);
-    				calAlarm.setPname (processName);
-    				calAlarm.setPid (pid);
-    				calAlarm.setTid (tid);
-
-					ALARMManager aManager;
-        			aManager.processAlarmReport(calAlarm);
-
-                    break;
-                }
-
-*/
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
 					break;
@@ -8720,6 +8683,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 		newActiveIPaddr = (*pt2).IPAddr;
 
 		sysConfig4->setConfig("ProcMgr", "IPAddr", newActiveIPaddr);
+		sysConfig4->setConfig("ProcMgr_Alarm", "IPAddr", newActiveIPaddr);
 		sysConfig4->setConfig("ProcStatusControl", "IPAddr", newActiveIPaddr);
 		sysConfig4->setConfig("DBRM_Controller", "IPAddr", newActiveIPaddr);
 
@@ -9296,6 +9260,7 @@ int ProcessManager::OAMParentModuleChange()
 		localIPaddr = (*pt1).IPAddr;
 
 		sysConfig4->setConfig("ProcMgr", "IPAddr", localIPaddr);
+		sysConfig4->setConfig("ProcMgr_Alarm", "IPAddr", localIPaddr);
 		sysConfig4->setConfig("ProcStatusControl", "IPAddr", localIPaddr);
 		sysConfig4->setConfig("DBRM_Controller", "IPAddr", localIPaddr);
 
