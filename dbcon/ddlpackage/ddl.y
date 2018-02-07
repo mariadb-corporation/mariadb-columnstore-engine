@@ -206,6 +206,7 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <str>                  opt_if_exists
 %type <str>                  opt_if_not_exists
 %type <sqlStmt>              trunc_table_statement
+%type <sqlStmt>              rename_table_statement
 
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
@@ -244,6 +245,7 @@ stmt:
 	| drop_table_statement
 	| create_index_statement
 	| trunc_table_statement
+	| rename_table_statement
 	| { $$ = NULL; }
 	;
 
@@ -305,6 +307,16 @@ trunc_table_statement:
 	TRUNCATE TABLE qualified_name {$$ = new TruncTableStatement($3);}
 	| TRUNCATE qualified_name { {$$ = new TruncTableStatement($2);} }
 	;
+
+rename_table_statement:
+    RENAME TABLE qualified_name TO qualified_name
+    {
+        // MCOL-876. The change reuses existing infrastructure. 
+        AtaRenameTable* renameAction = new AtaRenameTable($5);
+        AlterTableActionList* actionList = new AlterTableActionList();
+        actionList->push_back(renameAction);
+        $$ = new AlterTableStatement($3, actionList);
+    }
 
 table_element_list:
 	table_element
