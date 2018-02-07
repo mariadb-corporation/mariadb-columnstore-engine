@@ -268,8 +268,11 @@ fi
 
 #log install message
 test -f $installdir/post/functions && . $installdir/post/functions
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
-
+if [ $user = "root" ]; then
+	$installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+else
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+fi
 #setup hadoop
 hadoop=`which hadoop 2>/dev/null`
 if [ -z "$hadoop" ]; then
