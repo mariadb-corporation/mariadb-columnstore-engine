@@ -188,6 +188,7 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/etc/MessageFile.txt"
 "/usr/local/mariadb/columnstore/etc/ErrorMessage.txt"
 "/usr/local/mariadb/columnstore/local/module"
+"/usr/local/mariadb/columnstore/releasenum"
 "/usr/local/mariadb/columnstore/bin/rollback"
 "/usr/local/mariadb/columnstore/bin/editem"
 "/usr/local/mariadb/columnstore/bin/getConfig"
