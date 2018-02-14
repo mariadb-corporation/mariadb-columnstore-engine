@@ -186,8 +186,6 @@ private:
 	bool fIsMultiThread;
 	int fInputIter; // iterator
 	boost::scoped_array<uint64_t> fMemUsage;
-	std::vector<uint64_t> fFirstPhaseRunners; // thread pool handles
-	uint32_t fFirstPhaseThreadCount;
 
 	boost::shared_ptr<int64_t> fSessionMemLimit;
 };
