@@ -1810,11 +1810,6 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 							{
 								sc->derivedTable(derivedName);
 								sc->derivedRefCol(cols[j].get());
-                                if (tblList->belong_to_view)
-                                {
-                                    sc->viewName(lower(tblList->belong_to_view->alias));
-                                }
-
 							}
 							break;
 						}
