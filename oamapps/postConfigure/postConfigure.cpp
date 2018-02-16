@@ -2834,7 +2834,7 @@ int main(int argc, char *argv[])
 				columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
 			else
 				if ( EEPackageType == "deb")
-					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb";
+					columnstorePackage = HOME + "/" + "mariadb-columnstore-*" + systemsoftware.Version  + "*.deb";
 				else
 					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 
