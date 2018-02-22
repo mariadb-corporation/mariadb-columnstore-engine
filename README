@@ -1,9 +1,9 @@
-This is MariaDB ColumnStore 1.1.3 GA
-MariaDB ColumnStore 1.1.3 GA is the development version of MariaDB ColumnStore. 
+This is MariaDB ColumnStore 1.1.4 GA
+MariaDB ColumnStore 1.1.4 GA is the development version of MariaDB ColumnStore. 
 It is built by porting InfiniDB 4.6.7 on MariaDB 10.2 and adding entirely 
 new features not found anywhere else.
 
-MariaDB ColumnStore 1.1.3 is a GA release. This is the first MariaDB 
+MariaDB ColumnStore 1.1.4 is a GA release. This is the first MariaDB 
 ColumnStore release, not all features planned for the MariaDB ColumnStore 1.0 
 series are included in this release. 
 
