@@ -5,7 +5,6 @@ SET(CMAKE_INSTALL_PREFIX ${INSTALL_ENGINE})
 SET(CPACK_GENERATOR "RPM")
 SET(CPACK_RPM_PACKAGE_DEBUG 1)
 SET(CPACK_PACKAGING_INSTALL_PREFIX ${INSTALL_ENGINE})
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 
 SET(CPACK_RPM_COMPONENT_INSTALL ON)
 
@@ -88,7 +87,7 @@ IF (EXISTS "/etc/SuSE-release")
     set(SUSE_VERSION_NUMBER "${CMAKE_MATCH_1}")
 ENDIF ()
 if (${REDHAT_VERSION_NUMBER} EQUAL 6)
-    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "snappy")
+    SETA(CPACK_RPM_platform_PACKAGE_REQUIRES "expect" "mariadb-columnstore-libs" "mariadb-columnstore-shared" "snappy")
     # Disable auto require as this will also try to pull Boost via RPM
     SET(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 elseif (${SUSE_VERSION_NUMBER} EQUAL 12)

@@ -24,6 +24,7 @@
 //#define NDEBUG
 #include <cassert>
 
+#include "columnstoreversion.h"
 #include "processmanager.h"
 #include "installdir.h"
 #include "dbrm.h"
@@ -2628,44 +2629,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					break;	
 				}
-/*
-             	case PROCESSALARM:
-                {
-                    log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
-    				ByteStream::byte alarmID;
-    				std::string componentID;
-    				ByteStream::byte state;
-    				std::string ModuleName;
-    				std::string processName;
-    				ByteStream::byte pid;
-    				ByteStream::byte tid;
-
-					msg >> alarmID;
-					msg >> componentID;
-					msg >> state;
-					msg >> ModuleName;
-					msg >> processName;
-					msg >> pid;
-					msg >> tid;
-
-    				Alarm calAlarm;
-
-    				calAlarm.setAlarmID (alarmID);
-    				calAlarm.setComponentID (componentID);
-    				calAlarm.setState (state);
-    				calAlarm.setSname (ModuleName);
-    				calAlarm.setPname (processName);
-    				calAlarm.setPid (pid);
-    				calAlarm.setTid (tid);
-
-					ALARMManager aManager;
-        			aManager.processAlarmReport(calAlarm);
-
-                    break;
-                }
-
-*/
 				default:
 					log.writeLog(__LINE__,  "MSG RECEIVED: Invalid type" );
 					break;
@@ -3430,47 +3394,47 @@ void ProcessManager::recycleProcess(string module)
 
 	string moduleType = module.substr(0,MAX_MODULE_TYPE_SIZE);
 
-	// if a UM module, send a restart on DMLProc/DDLProc to get started on another UM, if needed
 	string PrimaryUMModuleName;
 	try {
 		oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
 	}
 	catch(...) {}
 
-	//restart ExeMgrs/mysql if module is a pm
-	if ( moduleType == "pm" ) {
-		restartProcessType("DBRMControllerNode", module);
-		restartProcessType("DBRMWorkerNode");
+	//recycle DBRM processes in all cases
+	restartProcessType("DBRMControllerNode", module);
+	restartProcessType("DBRMWorkerNode");
+
+	// only recycle dmlproc, if down/up module is non-parent UM
+	if ( ( moduleType == "um" ) &&
+	    ( PrimaryUMModuleName != module) )
+	{
+	    restartProcessType("DMLProc",module);
+	    return;
+	}
+	
+	if( PrimaryUMModuleName == module)
+	{
 		stopProcessType("DDLProc");
 		stopProcessType("DMLProc");
-		stopProcessType("ExeMgr");
-		restartProcessType("PrimProc");
-		sleep(1);
-		restartProcessType("ExeMgr");
-		sleep(1);
-		restartProcessType("mysql");
-	}
-	else
-	{
-		restartProcessType("DBRMControllerNode", module);
-		restartProcessType("DBRMWorkerNode");
-		restartProcessType("ExeMgr");
-	}
-	if ( PrimaryUMModuleName == module )
-	{
-		restartProcessType("DDLProc", module);
-		sleep(1);
-		restartProcessType("DMLProc", module);
 	}
 
-	if( moduleType == "pm" && PrimaryUMModuleName != module)
-	{
-		restartProcessType("WriteEngineServer");
-		sleep(1);
-		restartProcessType("DDLProc");
-		sleep(1);
-		restartProcessType("DMLProc", module);
-	}
+	stopProcessType("ExeMgr");
+
+	restartProcessType("PrimProc");
+	sleep(1);
+
+	restartProcessType("ExeMgr");
+	sleep(1);
+
+	restartProcessType("mysql");
+
+	restartProcessType("WriteEngineServer");
+	sleep(1);
+
+	restartProcessType("DDLProc",module);
+	sleep(1);
+
+	restartProcessType("DMLProc",module);
 	
 	return;
 }
@@ -4262,7 +4226,6 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 	SystemProcessStatus systemprocessstatus;
 	ProcessStatus processstatus;
 	int retStatus = API_SUCCESS;
-	bool setPMProcIPs = true;
 
 	log.writeLog(__LINE__, "restartProcessType: Restart all " + processName, LOG_TYPE_DEBUG);
 
@@ -4310,7 +4273,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 						( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
 						continue;
 
-					if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
+					if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) )
 					{
 						string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0,MAX_MODULE_TYPE_SIZE);
 						if ( procModuleType == "pm" && PMwithUM == "y" )
@@ -4338,11 +4301,13 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 					// if DDL or DMLProc, change IP Address
 					if ( retStatus == oam::API_SUCCESS )
 					{
-						if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) && setPMProcIPs )
+//						sleep(5);
+						ProcessStatus procstat;
+						oam.getProcessStatus(processName, systemprocessstatus.processstatus[i].Module, procstat);
+						if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) )
 						{
 							processManager.setPMProcIPs(systemprocessstatus.processstatus[i].Module, processName);
-							setPMProcIPs = false;
-							continue;
+							break;
 						}
 					}
 				}
@@ -4565,12 +4530,12 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	}
 	  
 	if ( packageType == "rpm")
-		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.rpm.tar.gz";
+		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.rpm.tar.gz";
 	else
 		if ( packageType == "deb") 
-        		calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.deb.tar.gz";
+        		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.deb.tar.gz";
 		else
-			calpontPackage = homedir + "/mariadb-columnstore*" + systemsoftware.Version + "-" + systemsoftware.Release + "*.bin.tar.gz";
+			calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.bin.tar.gz";
 
 	if ( DistributedInstall == "y" )
 	{
@@ -8718,6 +8683,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
 		newActiveIPaddr = (*pt2).IPAddr;
 
 		sysConfig4->setConfig("ProcMgr", "IPAddr", newActiveIPaddr);
+		sysConfig4->setConfig("ProcMgr_Alarm", "IPAddr", newActiveIPaddr);
 		sysConfig4->setConfig("ProcStatusControl", "IPAddr", newActiveIPaddr);
 		sysConfig4->setConfig("DBRM_Controller", "IPAddr", newActiveIPaddr);
 
@@ -9294,6 +9260,7 @@ int ProcessManager::OAMParentModuleChange()
 		localIPaddr = (*pt1).IPAddr;
 
 		sysConfig4->setConfig("ProcMgr", "IPAddr", localIPaddr);
+		sysConfig4->setConfig("ProcMgr_Alarm", "IPAddr", localIPaddr);
 		sysConfig4->setConfig("ProcStatusControl", "IPAddr", localIPaddr);
 		sysConfig4->setConfig("DBRM_Controller", "IPAddr", localIPaddr);
 
@@ -9399,20 +9366,6 @@ int ProcessManager::OAMParentModuleChange()
 		sleep(1);
 	}
 
-	//set status to BUSY_INIT while failover is in progress
-	processManager.setSystemState(oam::BUSY_INIT);
-
-	// graceful start snmptrap-daemon
-	string EnableSNMP = "y";
-	try {
-		oam.getSystemConfig("EnableSNMP", EnableSNMP);
-	}
-	catch(...)
-	{}
-
-	if ( EnableSNMP == "y" )
-		startProcess(config.moduleName(), "SNMPTrapDaemon", oam::GRACEFUL);
-
 	// set alarm
 	ALARMManager aManager;
 	aManager.sendAlarmReport(config.moduleName().c_str(), MODULE_SWITCH_ACTIVE, SET);
@@ -9439,7 +9392,6 @@ int ProcessManager::OAMParentModuleChange()
 	processManager.stopModule(config.moduleName(), oam::FORCEFUL, true);
 
 	string localModule = config.moduleName();
-//	processManager.setModuleState(localModule, oam::AUTO_INIT);
 	pthread_t startmodulethread;
 	int status = pthread_create (&startmodulethread, NULL, (void*(*)(void*)) &startModuleThread, &localModule);
 
@@ -9452,19 +9404,47 @@ int ProcessManager::OAMParentModuleChange()
 		status = startsystemthreadStatus;
 	}
 
+	// waiting until dml are ACTIVE
+	while (true)
+	{
+		ProcessStatus DMLprocessstatus;
+		try {
+			oam.getProcessStatus("DMLProc", config.moduleName(), DMLprocessstatus);
+		}
+		catch (exception& ex)
+		{}
+		catch(...)
+		{}
+
+		if (DMLprocessstatus.ProcessOpState == oam::BUSY_INIT) 
+		      log.writeLog(__LINE__, "Waiting for DMLProc to finish rollback" , LOG_TYPE_DEBUG);
+
+		if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
+			break;
+
+		if (DMLprocessstatus.ProcessOpState == oam::FAILED)
+			break;
+
+		// wait some more
+		sleep(2);
+	}
+
+	//set recycle process
+	processManager.recycleProcess(downOAMParentName);
+
 	//restart/reinit processes to force their release of the controller node port
 	if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
-		( moduleNameList.size() <= 1 && config.moduleType() == "pm") )
+		( moduleNameList.size() <= 0 && config.moduleType() == "pm") )
 	{
-		status = 0;
+		int status = 0;
 	}
 	else 
 	{
-		processManager.restartProcessType("mysql", localModule);
-		processManager.restartProcessType("ExeMgr", localModule);
-		processManager.restartProcessType("WriteEngineServer", localModule);
+//		processManager.restartProcessType("mysql", localModule);
+//		processManager.restartProcessType("ExeMgr", localModule);
+//		processManager.restartProcessType("WriteEngineServer", localModule);
 	
-		processManager.reinitProcessType("DBRMWorkerNode");
+//		processManager.reinitProcessType("DBRMWorkerNode");
 
 		//send message to start new Standby Process-Manager, if needed
 		newStandbyModule = getStandbyModule();
@@ -9538,12 +9518,12 @@ int ProcessManager::OAMParentModuleChange()
 
 	//restart DDLProc/DMLProc to perform any rollbacks, if needed
 	//dont rollback in amazon, wait until down pm recovers
-	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM  ) 
-		&& !amazon ) {
-		processManager.restartProcessType("DDLProc", config.moduleName());
-		sleep(1);
-		processManager.restartProcessType("DMLProc", config.moduleName());
-	}
+//	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM  ) 
+//		&& !amazon ) {
+//		processManager.restartProcessType("DDLProc", config.moduleName());
+//		sleep(1);
+//		processManager.restartProcessType("DMLProc", config.moduleName());
+//	}
 
 	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM  )
 	{
@@ -9709,13 +9689,17 @@ std::string ProcessManager::getStandbyModule()
 				//already have a hot-standby
 				return "";
 
-			if ( backupStandbyModule != "NONE" )
+			if ( ( backupStandbyModule != "NONE" ) ||
+			      ( newStandbyModule != "NONE" ) )
 				continue;
 
 			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
 				systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
+			{
 				// Found a ProcessManager in a COLD_STANDBY state
 				newStandbyModule = systemprocessstatus.processstatus[i].Module;
+				continue;
+			}
 
 			if ( systemprocessstatus.processstatus[i].ProcessName == "ProcessManager" &&
 				systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_OFFLINE &&
@@ -10345,6 +10329,18 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 				if ( remoteModuleName == masterModule )
 					continue;
 
+				// skip disabled modules
+				int opState = oam::ACTIVE;
+				bool degraded;
+				try {
+					oam.getModuleStatus(remoteModuleName, opState, degraded);
+				}
+				catch(...)
+				{}
+
+				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+					continue;
+
 				// don't do PMs unless PMwithUM flag is set
 				if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
 					string moduleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
@@ -10422,6 +10418,18 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 				if ( remoteModuleName == masterModule )
 					continue;
 
+				// skip disabled modules
+				int opState = oam::ACTIVE;
+				bool degraded;
+				try {
+					oam.getModuleStatus(remoteModuleName, opState, degraded);
+				}
+				catch(...)
+				{}
+
+				if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+					continue;
+
 				// don't do PMs unless PMwithUM flag is set
 				if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) {
 					string moduleType = remoteModuleName.substr(0,MAX_MODULE_TYPE_SIZE);
@@ -10464,11 +10472,24 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
 		for( ; listPT != devicenetworklist.end() ; listPT++)
 		{
 			string remoteModuleName = (*listPT).DeviceName;
-			log.writeLog(__LINE__, "Setup SlavMySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
-	
+
 			//skip master
 			if ( remoteModuleName == masterModule )
 				continue;
+
+			// skip disabled modules
+			int opState = oam::ACTIVE;
+			bool degraded;
+			try {
+				oam.getModuleStatus(remoteModuleName, opState, degraded);
+			}
+			catch(...)
+			{}
+
+			if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+				continue;
+
+			log.writeLog(__LINE__, "Setup Slave MySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
 
 			ByteStream msg1;
 			ByteStream::byte requestID = oam::SLAVEREP;

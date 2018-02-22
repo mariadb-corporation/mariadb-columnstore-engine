@@ -69,6 +69,7 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/tokenizer.hpp"
 
+#include "columnstoreversion.h"
 #include "liboamcpp.h"
 #include "configcpp.h"
 
@@ -165,7 +166,7 @@ bool thread_remote_installer = true;
 
 string singleServerInstall = "1";
 string reuseConfig ="n";
-string oldFileName;
+string oldFileName = oam::UnassignedName;
 string glusterCopies;
 string glusterInstalled = "n";
 string hadoopInstalled = "n";
@@ -369,7 +370,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
+	if ( oldFileName == oam::UnassignedName )
+	    oldFileName = installDir + "/etc/Columnstore.xml.rpmsave";
 
 	cout << endl;
 	cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
@@ -2026,7 +2028,8 @@ int main(int argc, char *argv[])
 						sysConfig->setConfig(parentProcessMonitor, "IPAddr", parentOAMModuleIPAddr);
 						sysConfig->setConfig(parentProcessMonitor, "Port", "8800");
 						sysConfig->setConfig("ProcMgr", "IPAddr", parentOAMModuleIPAddr);
-						//sysConfig->setConfig("ProcHeartbeatControl", "IPAddr", parentOAMModuleIPAddr);
+						sysConfig->setConfig("ProcHeartbeatControl", "IPAddr", parentOAMModuleIPAddr);
+						sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", parentOAMModuleIPAddr);
 						sysConfig->setConfig("ProcStatusControl", "IPAddr", parentOAMModuleIPAddr);
 						string parentServerMonitor = parentOAMModuleName + "_ServerMonitor";
 						sysConfig->setConfig(parentServerMonitor, "IPAddr", parentOAMModuleIPAddr);
@@ -2831,7 +2834,7 @@ int main(int argc, char *argv[])
 				columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
 			else
 				if ( EEPackageType == "deb")
-					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb";
+					columnstorePackage = HOME + "/" + "mariadb-columnstore-*" + systemsoftware.Version  + "*.deb";
 				else
 					columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 
@@ -3093,6 +3096,61 @@ int main(int argc, char *argv[])
 		if (DataRedundancy)
 		{
 			cout << endl;
+
+			//Ask for ssh password or certificate if not already set
+			bool passwordSetBefore =  false;
+			if ( password.empty() )
+				{
+					cout << endl;
+					cout << "Next step is to enter the password to access the other Servers." << endl;
+					cout << "This is either your password or you can default to using a ssh key" << endl;
+					cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+				}
+
+			while(true)
+				{
+					char  *pass1, *pass2;
+
+					if ( noPrompting ) {
+						cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
+						if ( password.empty() )
+							password = "ssh";
+						break;
+					}
+
+					//check for command line option password
+					if ( !password.empty() ){
+						passwordSetBefore = true;
+						break;
+					}
+
+					pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
+					if ( strcmp(pass1, "") == 0 ) {
+						password = "ssh";
+						break;
+					}
+
+					if ( pass1 == "exit")
+						exit(0);
+
+					string p1 = pass1;
+					pass2=getpass("Confirm password > ");
+					string p2 = pass2;
+					if ( p1 == p2 ) {
+						password = p2;
+						break;
+					}
+					else
+						cout << "Password mismatch, please re-enter" << endl;
+				}
+
+				//add single quote for special characters
+				if ( password != "ssh" && !passwordSetBefore)
+				{
+					password = "'" + password + "'";
+				}
+
+
 			if ( reuseConfig != "y" ) {
 				cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
 				if (!glusterSetup(password))
@@ -3280,7 +3338,7 @@ int main(int argc, char *argv[])
 		cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
 		
-		cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias" << endl << endl;
+		cout << "NOTE: The MariaDB ColumnStore Alias Commands are in /etc/profile.d/columnstoreAlias.sh" << endl << endl;
 	}
 	else
 	{

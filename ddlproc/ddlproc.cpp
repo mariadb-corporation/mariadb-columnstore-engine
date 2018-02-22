@@ -61,6 +61,7 @@ using namespace execplan;
 #include "IDBPolicy.h"
 #include "utils_utf8.h"
 
+#include "crashtrace.h"
 
 namespace fs = boost::filesystem;
 
@@ -97,6 +98,9 @@ int main(int argc, char* argv[])
 	string systemLang = "C";
 	systemLang = funcexp::utf8::idb_setlocale();
 
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("DDLProc");
+
     setupCwd();
 
     WriteEngine::WriteEngineWrapper::init( WriteEngine::SUBSYSTEM_ID_DDLPROC );
@@ -116,6 +120,11 @@ int main(int argc, char* argv[])
 	sigaction(SIGHUP, &ign, 0);
 	ign.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE, &ign, 0);
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 #endif
 
     ddlprocessor::DDLProcessor ddlprocessor(1, 20);

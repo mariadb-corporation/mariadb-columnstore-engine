@@ -23,6 +23,7 @@
 
 #include <boost/scoped_ptr.hpp>
 
+#include "columnstoreversion.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "processmonitor.h"
@@ -110,18 +111,8 @@ MonitorConfig::MonitorConfig()
 //	}
 
 	//get calpont software version and release
-	SystemSoftware systemsoftware;
-
-	try
-	{
-		oam.getSystemSoftware(systemsoftware);
-
-		fsoftwareVersion = systemsoftware.Version;
-		fsoftwareRelease = systemsoftware.Release;
-	}
-	catch (exception& e) {
-		cout << endl << "ProcMon Construct Error reading getSystemSoftware = " << e.what() << endl;
-	}
+    fsoftwareVersion = columnstore_version;
+    fsoftwareRelease = columnstore_release;
 
 }
 
@@ -4958,6 +4949,14 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 		for( ; pt != systemModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; pt++)
 		{
 			string moduleName =  (*pt).DeviceName;
+
+			//skip if module is not ACTIVE
+			  
+			int opState = oam::ACTIVE;
+			bool degraded;
+			oam.getModuleStatus(moduleName, opState, degraded);
+			if (opState != oam::ACTIVE)
+				continue;
 
 			bool passwordError = false;
 

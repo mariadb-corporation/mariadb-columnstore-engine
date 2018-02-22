@@ -77,6 +77,8 @@ public:
 						 std::string repProcessName = "");
 
 
+	EXPORT void processAlarmReport (Alarm& calAlarm);
+
 	/** @brief return active alarm list
 	 *
 	 * @param AlarmList the alarm map reference to store alarms

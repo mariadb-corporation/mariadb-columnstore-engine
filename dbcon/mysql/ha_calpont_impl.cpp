@@ -141,7 +141,7 @@ using namespace logging;
 using namespace funcexp;
 
 #include "installdir.h"
-#include "versionnumber.h"
+#include "columnstoreversion.h"
 
 namespace cal_impl_if
 {
@@ -1819,6 +1819,94 @@ void calsettrace_deinit(UDF_INIT* initid)
 {
 }
 
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+// Return 1 if system is ready for reads or 0 if not.
+long long mcssystemready(UDF_INIT* initid, UDF_ARGS* args,
+                        char* is_null, char* error)
+{
+    long long rtn = 0;
+    Oam oam;
+    DBRM dbrm(true);
+    SystemStatus systemstatus;
+
+    try
+    {
+        oam.getSystemStatus(systemstatus);
+        if (systemstatus.SystemOpState == ACTIVE
+            && dbrm.getSystemReady()
+            && dbrm.getSystemQueryReady())
+        {
+            return 1;
+        }
+    }
+    catch (...)
+    {
+        *error = 1;
+    }
+    return rtn;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool mcssystemready_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+    return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void mcssystemready_deinit(UDF_INIT* initid)
+{
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+// Return non-zero if system is read only; 0 if writeable
+long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args,
+                            char* is_null, char* error)
+{
+    long long rtn = 0;
+    DBRM dbrm(true);
+
+    try
+    {
+        if (dbrm.getSystemSuspended())
+        {
+            rtn = 1;
+        }
+        if (dbrm.isReadWrite() > 0) // Returns 0 for writable, 5 for read only
+        {
+            rtn = 2;
+        }
+    }
+    catch (...)
+    {
+        *error = 1;
+        rtn = 1;
+    }
+    return rtn;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+my_bool mcssystemreadonly_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+{
+    return 0;
+}
+
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+void mcssystemreadonly_deinit(UDF_INIT* initid)
+{
+}
+
 #define MAXSTRINGLENGTH 50
 
 const char* PmSmallSideMaxMemory = "pmmaxmemorysmallside";
@@ -2286,7 +2374,7 @@ const char* calgetversion(UDF_INIT* initid, UDF_ARGS* args,
 					char* result, unsigned long* length,
 					char* is_null, char* error)
 {
-	string version(idb_version);
+	string version(columnstore_version);
 	*length = version.size();
 	memcpy(result, version.c_str(), *length);
 	return result;
@@ -3466,7 +3554,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 		if (((thd->lex)->sql_command == SQLCOM_INSERT) && (rows > 0))
 			ci->useCpimport = 0;
 			
-    		if ((ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))) //If autocommit on batch insert will use cpimport to load data
+		if ((ci->useCpimport > 0) && (!(thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)))) //If autocommit on batch insert will use cpimport to load data
 		{
 			//store table info to connection info
 			CalpontSystemCatalog::TableName tableName;
@@ -3923,7 +4011,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 	if ( ( ((thd->lex)->sql_command == SQLCOM_INSERT) ||  ((thd->lex)->sql_command == SQLCOM_LOAD) || (thd->lex)->sql_command == SQLCOM_INSERT_SELECT) && !ci->singleInsert )
 	{
 
-		//@Bug 2438. Only load dta infile calls last batch process
+		//@Bug 2438. Only load data infile calls last batch process
 /*		if ( ci->isLoaddataInfile && ((thd->variables.option_bits & (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN)) || (ci->useCpimport == 0))) {
 			//@Bug 2829 Handle ctrl-C
 			if ( thd->killed > 0 )

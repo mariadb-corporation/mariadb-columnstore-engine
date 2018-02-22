@@ -71,6 +71,8 @@ using namespace idbdatafile;
 
 #include "cgroupconfigurator.h"
 
+#include "crashtrace.h"
+
 namespace primitiveprocessor
 {
 
@@ -125,6 +127,12 @@ void setupSignalHandlers()
 	memset(&ign, 0, sizeof(ign));
 	ign.sa_handler = SIG_IGN;
 	sigaction(SIGUSR2, &ign, 0);
+
+    memset(&ign, 0, sizeof(ign));
+    ign.sa_handler = fatalHandler;
+    sigaction(SIGSEGV, &ign, 0);
+    sigaction(SIGABRT, &ign, 0);
+    sigaction(SIGFPE, &ign, 0);
 
 	sigset_t sigset;
 	sigemptyset(&sigset);
@@ -287,6 +295,9 @@ int main(int argc, char* argv[])
 	if ( systemLang != "en_US.UTF-8" &&
 			systemLang.find("UTF") != string::npos )
 		utf8 = true;
+
+    // This is unset due to the way we start it
+    program_invocation_short_name = const_cast<char*>("PrimProc");
 
 	Config* cf = Config::makeConfig();
 

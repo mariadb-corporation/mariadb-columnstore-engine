@@ -9,4 +9,3 @@ prefix=/usr/local
 
 test -x /usr/local/mariadb/columnstore/bin/post-install && /usr/local/mariadb/columnstore/bin/post-install --prefix=$prefix --rpmmode=$rpmmode
 
-echo "MariaDB ColumnStore RPM install completed"

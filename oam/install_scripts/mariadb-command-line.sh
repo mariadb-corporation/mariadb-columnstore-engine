@@ -8,6 +8,13 @@
 
 # check log for error
 checkForError() {
+	grep "ERROR 1045" /tmp/mariadb-command-line.log > /tmp/error.check
+	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
+		echo "ERROR - PASSWORD: check log file: /tmp/mariadb-command-line.log"
+		rm -f /tmp/error.check
+		exit 2
+	fi
+	
 	grep ERROR /tmp/mariadb-command-line.log > /tmp/error.check
 	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
 		echo "ERROR: check log file: /tmp/mariadb-command-line.log"

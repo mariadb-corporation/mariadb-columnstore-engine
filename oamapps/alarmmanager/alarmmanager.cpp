@@ -28,10 +28,10 @@
 #include <vector>
 #include <iterator>
 
-#include "messagequeue.h"
 #include "alarmglobal.h"
 #include "liboamcpp.h"
 #include "installdir.h"
+#include "messagequeue.h"
 
 using namespace std;
 using namespace oam;
@@ -373,11 +373,11 @@ void configAlarm (Alarm& calAlarm)
 /*****************************************************************************************
 * @brief	sendAlarmReport API
 *
-* purpose:	Process Alarm Report
+* purpose:	Send Alarm Report
 *
 *****************************************************************************************/
 void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int state, 
-									std::string repModuleName, std::string repProcessName)
+				  std::string repModuleName, std::string repProcessName)
 {
 
 #ifdef SKIP_ALARM
@@ -438,16 +438,73 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
 	else
 		processName = repProcessName;
 	
-	Alarm calAlarm;
-	
-	calAlarm.setAlarmID (alarmID);
-	calAlarm.setComponentID (componentID);
-	calAlarm.setState (state);
-	calAlarm.setSname (ModuleName);
-	calAlarm.setPname (processName);
-	calAlarm.setPid (pid);
-	calAlarm.setTid (tid); 
+	int returnStatus = API_SUCCESS;           //default
+        ByteStream msg1;
 
+        // setup message
+	msg1 << (ByteStream::byte) alarmID;
+	msg1 << (std::string) componentID;
+	msg1 << (ByteStream::byte) state;
+	msg1 << (std::string) ModuleName;
+	msg1 << (std::string) processName;
+	msg1 << (ByteStream::byte) pid;
+	msg1 << (ByteStream::byte) tid;
+
+        try
+        {
+            //send the msg to Process Manager
+            MessageQueueClient procmgr("ProcMgr_Alarm");
+            procmgr.write(msg1);
+
+            // shutdown connection
+            procmgr.shutdown();
+        }
+        catch (std::runtime_error& e)
+        {
+	      LoggingID lid(11);                                
+	      MessageLog ml(lid);                                
+	      Message msg;                                
+	      Message::Args args;                                
+	      args.add("sendAlarmReport error:");                                
+	      args.add(e.what());                                
+	      msg.format(args);                                
+	      ml.logErrorMessage(msg);             
+        }
+        catch (std::exception& e)
+        {
+	      LoggingID lid(11);                                
+	      MessageLog ml(lid);                                
+	      Message msg;                                
+	      Message::Args args;                                
+	      args.add("sendAlarmReport error:");                                
+	      args.add(e.what());                                
+	      msg.format(args);                                
+	      ml.logErrorMessage(msg);                                
+        }
+        catch (...)
+        {
+	      LoggingID lid(11);                                
+	      MessageLog ml(lid);                                
+	      Message msg;                                
+	      Message::Args args;                                
+	      args.add("sendAlarmReport error:");                                
+	      args.add("general failure");                                
+	      msg.format(args);                                
+	      ml.logErrorMessage(msg);             
+        }
+
+        return;
+#endif //SKIP_ALARM
+}
+		
+/*****************************************************************************************
+* @brief	processAlarmReport API
+*
+* purpose:	Process Alarm Report
+*
+*****************************************************************************************/
+void ALARMManager::processAlarmReport (Alarm& calAlarm)
+{
 	// Get alarm configuration
 	try {
   		configAlarm (calAlarm);
@@ -464,7 +521,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
 	}
 
 	return;
-#endif //SKIP_ALARM
+
 }
 
 /*****************************************************************************************
