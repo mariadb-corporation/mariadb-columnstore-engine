@@ -58,7 +58,7 @@ const int ArgNum = 10;
 const int DescNumMax = 10;
 const int cmdNum = 68;
 
-const std::string  DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/uiCommands.log";
+const std::string  DEFAULT_LOG_FILE = "/var/log/mariadb/columnstore/mcsadmin.log";
 std::ofstream   logFile;
 
 /**

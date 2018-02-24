@@ -1870,7 +1870,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
             thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Use of the MySQL auto_increment syntax is not supported in Columnstore. If you wish to create an auto increment column in Columnstore, please consult the Columnstore SQL Syntax Guide for the correct usage.");
         }
         // MCOL-867. MariaDB RENAME TABLE statement supports WAIT|NOWAIT options since 10.3.0 but Columnstore isn't yet.
-        else if(ddlStatement.find("WAIT") != string::npos || ddlStatement.find("NOWAIT") != string::npos)
+        else if (ddlStatement.find("WAIT") != string::npos || ddlStatement.find("NOWAIT") != string::npos)
         {
             thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "WAIT and NOWAIT options are not supported in Columnstore. Please consult the Columnstore SQL Syntax Guide for the correct usage.");
         }

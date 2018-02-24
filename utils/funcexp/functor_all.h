@@ -70,6 +70,11 @@ public:
 
     execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
 
+    bool getBoolVal(rowgroup::Row& row,
+                    FunctionParm& fp,
+                    bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct);
+
     int64_t getIntVal(rowgroup::Row& row,
                       FunctionParm& fp,
                       bool& isNull,
@@ -111,6 +116,11 @@ public:
     virtual ~Func_searched_case() {}
 
     execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType);
+
+    bool getBoolVal(rowgroup::Row& row,
+                    FunctionParm& fp,
+                    bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct);
 
     int64_t getIntVal(rowgroup::Row& row,
                       FunctionParm& fp,

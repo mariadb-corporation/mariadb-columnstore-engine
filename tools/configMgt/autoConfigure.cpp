@@ -1060,6 +1060,7 @@ int main(int argc, char* argv[])
                     sysConfigNew->setConfig(parentProcessMonitor, "IPAddr", parentOAMModuleIPAddr);
                     sysConfigNew->setConfig(parentProcessMonitor, "Port", "8800");
                     sysConfigNew->setConfig("ProcMgr", "IPAddr", parentOAMModuleIPAddr);
+                    sysConfigNew->setConfig("ProcMgr_Alarm", "IPAddr", parentOAMModuleIPAddr);
                     sysConfigNew->setConfig("ProcStatusControl", "IPAddr", parentOAMModuleIPAddr);
                     string parentServerMonitor = systemParentOAMModuleName + "_ServerMonitor";
                     sysConfigNew->setConfig(parentServerMonitor, "IPAddr", parentOAMModuleIPAddr);
