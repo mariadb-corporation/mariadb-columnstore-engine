@@ -583,7 +583,7 @@ void WESDHandler::setup()
     if (rtn < 1)
     {
         ostringstream oss;
-        oss << "System is not ready (" << rtn << ").  Verify that InfiniDB is up and ready ";
+        oss << "System is not ready (" << rtn << ").  Verify that Columnstore is up and ready ";
         //fLog.logMsg( oss.str(), MSGLVL_ERROR );
         setContinue(false);
         throw runtime_error( oss.str() );
