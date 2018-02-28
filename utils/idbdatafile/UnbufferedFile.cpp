@@ -329,4 +329,21 @@ int UnbufferedFile::close()
     return ret;
 }
 
+int UnbufferedFile::fallocate(int mode, off64_t offset, off64_t length)
+{
+    int ret = 0;
+    int savedErrno = 0;
+
+    ret = ::fallocate( m_fd, mode, offset, length );
+    savedErrno = errno;
+
+    if ( ret == -1 && IDBLogger::isEnabled() )
+    {
+        IDBLogger::logNoArg(m_fname, this, "fallocate", errno);
+    }
+
+    errno = savedErrno;
+    return ret;
+}
+
 }

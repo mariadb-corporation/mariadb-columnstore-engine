@@ -834,7 +834,8 @@ int FileOp::extendFile(
                            width,
                            newFile, // new or existing file
                            false,   // don't expand; new extent
-                           false ); // add full (not abbreviated) extent
+                           false,   // add full (not abbreviated) extent
+                           true);   // try to use fallocate first
 
     return rc;
 }
@@ -1016,6 +1017,7 @@ int FileOp::addExtentExactFile(
  *                   headers will be included "if" it is a compressed file.
  *    bExpandExtent (in) - Expand existing extent, or initialize a new one
  *    bAbbrevExtent(in) - if creating new extent, is it an abbreviated extent
+ *    bOptExtension(in) - full sized segment file allocation optimization flag
  * RETURN:
  *    returns ERR_FILE_WRITE if an error occurs,
  *    else returns NO_ERROR.
@@ -1028,7 +1030,8 @@ int FileOp::initColumnExtent(
     int      width,
     bool     bNewFile,
     bool     bExpandExtent,
-    bool     bAbbrevExtent )
+    bool     bAbbrevExtent,
+    bool     bOptExtension)
 {
     if ((bNewFile) && (m_compressionType))
     {
@@ -1071,6 +1074,7 @@ int FileOp::initColumnExtent(
         int writeSize = nBlocks * BYTE_PER_BLOCK; // 1M and 8M row extent size
         int loopCount = 1;
         int remWriteSize = 0;
+        off64_t currFileSize = pFile->size();
 
         if (nBlocks > MAX_NBLOCKS)                // 64M row extent size
         {
@@ -1099,10 +1103,14 @@ int FileOp::initColumnExtent(
 
         Stats::startParseEvent(WE_STATS_INIT_COL_EXTENT);
 #endif
-
-        // Allocate buffer, and store in scoped_array to insure it's deletion.
-        // Create scope {...} to manage deletion of writeBuf.
+        int savedErrno = 0;
+        // Try to fallocate the space - fallback to write if fallocate has failed
+        if (!bOptExtension || pFile->fallocate(0, currFileSize, writeSize))
         {
+            // Allocate buffer, store it in scoped_array to insure it's deletion.
+            // Create scope {...} to manage deletion of writeBuf.
+            // Save errno of the failed fallocate() to log it later.
+            savedErrno = errno;
             unsigned char* writeBuf = new unsigned char[writeSize];
             boost::scoped_array<unsigned char> writeBufPtr( writeBuf );
 
@@ -1159,6 +1167,18 @@ int FileOp::initColumnExtent(
             Stats::stopParseEvent(WE_STATS_CREATE_COL_EXTENT);
 
 #endif
+        // Log the fallocate() call result
+        std::ostringstream oss;
+        std::string errnoMsg;
+        Convertor::mapErrnoToString(savedErrno, errnoMsg);
+        oss << "FileOp::initColumnExtent(): fallocate(" << currFileSize <<
+            ", " << writeSize << "): errno = " << savedErrno <<
+            ": " << errnoMsg;
+        logging::Message::Args args;
+        args.add(oss.str());
+        SimpleSysLog::instance()->logMsg(args, logging::LOG_TYPE_INFO,
+             logging::M0006);
+
     }
 
     return NO_ERROR;
@@ -2790,7 +2810,8 @@ int FileOp::expandAbbrevColumnExtent(
     int rc = FileOp::initColumnExtent(pFile, dbRoot, blksToAdd, emptyVal, width,
                                       false,   // existing file
                                       true,    // expand existing extent
-                                      false);  // n/a since not adding new extent
+                                      false,  // n/a since not adding new extent
+                                      true);  // optimize segment file extension
 
     return rc;
 }

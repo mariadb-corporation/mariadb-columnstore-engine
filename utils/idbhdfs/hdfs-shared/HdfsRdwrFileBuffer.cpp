@@ -317,4 +317,9 @@ int HdfsRdwrFileBuffer::close()
     return 0;
 }
 
+int HdfsRdwrFileBuffer::fallocate(int mode, off64_t offset, off64_t length)
+{
+    return 0;
+}
+
 }
