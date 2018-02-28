@@ -507,7 +507,8 @@ private:
                                           int      width,
                                           bool     bNewFile,
                                           bool     bExpandExtent,
-                                          bool     bAbbrevExtent );
+                                          bool     bAbbrevExtent,
+                                          bool     bOptExtension=false );
 
     static void         initDbRootExtentMutexes();
     static void         removeDbRootExtentMutexes();
