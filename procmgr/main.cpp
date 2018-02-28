@@ -553,8 +553,11 @@ static void alarmMessageThread(Configuration config)
 						msg = fIos.read();
 
 						if (msg.length() <= 0)
-						    continue;
-		
+						{
+							fIos.close();
+						    	continue;
+						}
+						
 						//log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
 						ByteStream::byte alarmID;
@@ -585,6 +588,8 @@ static void alarmMessageThread(Configuration config)
 
 						ALARMManager aManager;
 						aManager.processAlarmReport(calAlarm);
+						
+						fIos.close();
 					}
 					catch (exception& ex)
 					{
