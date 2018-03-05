@@ -183,11 +183,11 @@ else
     RCFILE=/etc/rc.local
 fi
 
-touch $RCFILE
-
 if [ $user = "root" ]; then
+    touch $RCFILE    
     chmod +x $RCFILE
 else
+    $SUDO touch $RCFILE
     $SUDO chmod 777 $RCFILE
     printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a $RCFILEl > /dev/null 2>&1
     
