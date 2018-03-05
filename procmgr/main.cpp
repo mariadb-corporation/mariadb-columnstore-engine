@@ -595,11 +595,13 @@ static void alarmMessageThread(Configuration config)
 					{
 						string error = ex.what();
 						log.writeLog(__LINE__, "EXCEPTION ERROR on read for ProcMgr_Alarm:" + error, LOG_TYPE_ERROR);
+						fIos.close();
 						continue;
 					}
 					catch(...)
 					{
 						log.writeLog(__LINE__, "EXCEPTION ERROR on read for ProcMgr_Alarm: Caught unknown exception!", LOG_TYPE_ERROR);
+						fIos.close();
 						continue;
 					}
 				}
