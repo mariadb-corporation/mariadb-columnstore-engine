@@ -189,7 +189,7 @@ if [ $user = "root" ]; then
 else
     $SUDO touch $RCFILE
     $SUDO chmod 777 $RCFILE
-    $SUDO printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a $RCFILEl > /dev/null 2>&1
+    $SUDO printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a $RCFILE > /dev/null 2>&1
     
     if [ -n "$systemctl" ]; then
 	$SUDO systemctl start rc-local >/dev/null 2>&1
