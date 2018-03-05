@@ -69,7 +69,7 @@ if ("${DEBIAN_VERSION_NUMBER}" EQUAL "8")
 elseif ("${DEBIAN_VERSION_NUMBER}" EQUAL "9")
     SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, sudo, libdbi-perl, libreadline-dev, rsync, net-tools, libboost-all-dev, mariadb-columnstore-libs, mariadb-columnstore-server, libsnappy1v5, libreadline5")
 else()
-    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, sudo, libdbi-perl, libboost-all-dev, libreadline-dev, rsync, snappy, net-tools")
+    SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DEPENDS "expect, perl, openssl, file, sudo, libdbi-perl, libboost-all-dev, libreadline-dev, rsync, libsnappy1v5, net-tools")
 endif ()
 
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DEPENDS "mariadb-columnstore-libs")
