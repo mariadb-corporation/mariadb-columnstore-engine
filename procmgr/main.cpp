@@ -553,8 +553,11 @@ static void alarmMessageThread(Configuration config)
 						msg = fIos.read();
 
 						if (msg.length() <= 0)
-						    continue;
-		
+						{
+							fIos.close();
+						    	continue;
+						}
+						
 						//log.writeLog(__LINE__,  "MSG RECEIVED: Process Alarm Message");
 
 						ByteStream::byte alarmID;
@@ -585,16 +588,20 @@ static void alarmMessageThread(Configuration config)
 
 						ALARMManager aManager;
 						aManager.processAlarmReport(calAlarm);
+						
+						fIos.close();
 					}
 					catch (exception& ex)
 					{
 						string error = ex.what();
 						log.writeLog(__LINE__, "EXCEPTION ERROR on read for ProcMgr_Alarm:" + error, LOG_TYPE_ERROR);
+						fIos.close();
 						continue;
 					}
 					catch(...)
 					{
 						log.writeLog(__LINE__, "EXCEPTION ERROR on read for ProcMgr_Alarm: Caught unknown exception!", LOG_TYPE_ERROR);
+						fIos.close();
 						continue;
 					}
 				}
