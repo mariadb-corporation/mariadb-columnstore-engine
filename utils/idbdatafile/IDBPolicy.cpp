@@ -18,12 +18,14 @@
 #include <unistd.h>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/algorithm/string.hpp>    // to_upper
 #include <boost/thread/thread.hpp>
 
 #include "configcpp.h"                   // for Config
+#include "oamcache.h"
 #include "IDBPolicy.h"
 #include "PosixFileSystem.h"
 //#include "HdfsFileSystem.h"
@@ -48,6 +50,7 @@ int64_t IDBPolicy::s_hdfsRdwrBufferMaxSize = 0;
 std::string IDBPolicy::s_hdfsRdwrScratch;
 bool IDBPolicy::s_configed = false;
 boost::mutex IDBPolicy::s_mutex;
+bool IDBPolicy::s_PreallocSpace = true;
 
 void IDBPolicy::init( bool bEnableLogging, bool bUseRdwrMemBuffer, const string& hdfsRdwrScratch, int64_t hdfsRdwrBufferMaxSize )
 {
@@ -223,6 +226,23 @@ void IDBPolicy::configIDBPolicy()
 
     string scratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
     string hdfsRdwrScratch = tmpDir + scratch;
+
+    // MCOL-498. Set the PMSX.PreallocSpace knob, where X is a PM number,
+    // to disable file space preallocation. The feature is used in the FileOp code
+    // and is enabled by default for a backward compatibility.
+    oam::OamCache* oamcache = oam::OamCache::makeOamCache();
+    int PMId = oamcache->getLocalPMId();
+    char configSectionPref[] = "PMS";
+    char configSection[sizeof(configSectionPref)+oam::MAX_MODULE_ID_SIZE];
+    ::memset(configSection, 0, sizeof(configSection));
+    sprintf(configSection, "%s%d", configSectionPref, PMId);
+    string PreallocSpace = cf->getConfig(configSection, "PreallocSpace");
+
+    if ( PreallocSpace.length() != 0 )
+    {
+        boost::to_upper(PreallocSpace);
+        s_PreallocSpace = ( PreallocSpace != "OFF" );
+    }
 
     IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
 
