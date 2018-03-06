@@ -337,7 +337,7 @@ int UnbufferedFile::fallocate(int mode, off64_t offset, off64_t length)
     ret = ::fallocate( m_fd, mode, offset, length );
     savedErrno = errno;
 
-    if ( ret == -1 && IDBLogger::isEnabled() )
+    if ( IDBLogger::isEnabled() )
     {
         IDBLogger::logNoArg(m_fname, this, "fallocate", errno);
     }
