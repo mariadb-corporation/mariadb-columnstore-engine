@@ -81,6 +81,11 @@ public:
     static bool useHdfs();
 
     /**
+     * Accessor method that returns whether or not HDFS is enabled
+     */
+    static bool PreallocSpace();
+
+    /**
      * Accessor method that returns whether to use HDFS memory buffers
      */
     static bool useRdwrMemBuffer();
@@ -134,6 +139,7 @@ private:
     static bool isLocalFile( const std::string& path );
 
     static bool s_usehdfs;
+    static bool s_PreallocSpace;
     static bool s_bUseRdwrMemBuffer;
     static std::string s_hdfsRdwrScratch;
     static int64_t s_hdfsRdwrBufferMaxSize;
@@ -151,6 +157,12 @@ inline
 bool IDBPolicy::useHdfs()
 {
     return s_usehdfs;
+}
+
+inline
+bool IDBPolicy::PreallocSpace()
+{
+    return s_PreallocSpace;
 }
 
 inline
