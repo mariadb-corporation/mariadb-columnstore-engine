@@ -39,6 +39,7 @@ using namespace boost;
 #include "we_type.h"
 #include "stats.h"
 #include "primproc.h"
+#include "dataconvert.h"
 using namespace logging;
 using namespace dbbc;
 using namespace primitives;
@@ -527,7 +528,13 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
             type == CalpontSystemCatalog::TEXT) && !isNull )
 	{
 		if (!regex.used && !rf)
+        {
+            // MCOL-1246 Trim trailing whitespace for matching, but not for
+            // regex
+            dataconvert::DataConvert::trimWhitespace(val1);
+            dataconvert::DataConvert::trimWhitespace(val2);
 			return colCompare_(order_swap(val1), order_swap(val2), COP);
+        }
 		else
 			return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
 	}

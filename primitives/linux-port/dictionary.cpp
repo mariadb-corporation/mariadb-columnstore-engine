@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <boost/scoped_array.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <sys/types.h>
 using namespace std;
 
@@ -164,7 +165,10 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader *h,
 		string arg_utf8;
 
 		if (eqFilter) {
-			bool gotIt = eqFilter->find(string(sig, siglen)) != eqFilter->end();
+            // MCOL-1246 Trim whitespace before match
+            string strData(sig, siglen);
+            boost::trim_right(strData);
+            bool gotIt = eqFilter->find(strData) != eqFilter->end();
 			if ((h->COP1 == COMPARE_EQ && gotIt) || (h->COP1 == COMPARE_NE &&
 					!gotIt))
 				goto store;
