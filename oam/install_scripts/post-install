@@ -104,6 +104,9 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 fi
 
 if [ $user != "root" ]; then
+	sudo rm -f $profileFileEnv
+	sudo rm -f $profileFileAlias
+	
 	sudo touch $profileFileEnv
 	sudo chmod 666 $profileFileEnv
 	egrep -qs 'MariaDB Columnstore Non-Root' ${profileFileEnv}
