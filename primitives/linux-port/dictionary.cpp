@@ -167,7 +167,7 @@ void PrimitiveProcessor::p_TokenByScan(const TokenByScanRequestHeader *h,
 		if (eqFilter) {
             // MCOL-1246 Trim whitespace before match
             string strData(sig, siglen);
-            boost::trim_right_if(strData, boost::is_any_if(" "));
+            boost::trim_right_if(strData, boost::is_any_of(" "));
             bool gotIt = eqFilter->find(strData) != eqFilter->end();
 			if ((h->COP1 == COMPARE_EQ && gotIt) || (h->COP1 == COMPARE_NE &&
 					!gotIt))
