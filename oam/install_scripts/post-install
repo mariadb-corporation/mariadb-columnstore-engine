@@ -230,10 +230,6 @@ if [ $user = "root" ]; then
 	fi
 fi
 
-#setup MariaDB Columnstore system logging
-sed -i -e s/groupname/$user/g $installdir/bin/columnstoreSyslog7
-sed -i -e s/username/$user/g $installdir/bin/columnstoreSyslog7
-
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
 	rm -f /etc/default/columnstore
@@ -255,10 +251,6 @@ else
 	$SUDO chmod 666 /etc/fstab
 fi
 
-# install Columnstore Log Rotate File
-$SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-$SUDO chmod 644 /etc/logrotate.d/columnstore
-
 #check if MariaDB Columnstore system logging was setup
 cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
 if [ $? -eq 0 ]; then
@@ -276,8 +268,11 @@ fi
 
 #log install message
 test -f $installdir/post/functions && . $installdir/post/functions
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
-
+if [ $user = "root" ]; then
+	$installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+else
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+fi
 #setup hadoop
 hadoop=`which hadoop 2>/dev/null`
 if [ -z "$hadoop" ]; then

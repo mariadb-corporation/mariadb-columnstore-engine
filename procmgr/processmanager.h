@@ -80,6 +80,7 @@ void stopSystemThread(oam::DeviceNetworkList devicenetworklist);
 void startModuleThread(std::string moduleName);
 void stopModuleThread(std::string moduleName);
 void processMSG(messageqcpp::IOSocket* fIos);
+
 void sendUpgradeRequest();
 
 /** @brief Timeset for Milleseconds

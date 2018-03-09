@@ -415,6 +415,7 @@ void SubQueryTransformer::updateCorrelateInfo()
                         sc->schemaName("");
                         sc->tableName(fVtable.name());
                         sc->tableAlias(fVtable.alias());
+                        sc->viewName(fVtable.view());
                         sc->oid(fVtable.columnOid(k->second));
                         sc->columnName(fVtable.columns()[k->second]->columnName());
                         const CalpontSystemCatalog::ColType& ct = fVtable.columnType(k->second);

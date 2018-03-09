@@ -2316,7 +2316,8 @@ int main(int argc, char* argv[])
                         sysConfig->setConfig(parentProcessMonitor, "IPAddr", parentOAMModuleIPAddr);
                         sysConfig->setConfig(parentProcessMonitor, "Port", "8800");
                         sysConfig->setConfig("ProcMgr", "IPAddr", parentOAMModuleIPAddr);
-                        //sysConfig->setConfig("ProcHeartbeatControl", "IPAddr", parentOAMModuleIPAddr);
+                        sysConfig->setConfig("ProcHeartbeatControl", "IPAddr", parentOAMModuleIPAddr);
+                        sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", parentOAMModuleIPAddr);
                         sysConfig->setConfig("ProcStatusControl", "IPAddr", parentOAMModuleIPAddr);
                         string parentServerMonitor = parentOAMModuleName + "_ServerMonitor";
                         sysConfig->setConfig(parentServerMonitor, "IPAddr", parentOAMModuleIPAddr);
@@ -3227,7 +3228,7 @@ int main(int argc, char* argv[])
             if ( EEPackageType == "rpm")
                 columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.rpm";
             else if ( EEPackageType == "deb")
-                columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.deb";
+                columnstorePackage = HOME + "/" + "mariadb-columnstore-*" + systemsoftware.Version  + "*.deb";
             else
                 columnstorePackage = HOME + "/" + "mariadb-columnstore-" + version + "*.bin.tar.gz";
 

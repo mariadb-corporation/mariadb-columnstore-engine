@@ -521,8 +521,7 @@ enum PROC_MGT_MSG_REQUEST
     ENABLEMYSQLREP,
     DISABLEMYSQLREP,
     GLUSTERASSIGN,
-    GLUSTERUNASSIGN,
-    PROCESSALARM
+    GLUSTERUNASSIGN
 };
 
 /** @brief Process Management - Mgr to Mon request options
