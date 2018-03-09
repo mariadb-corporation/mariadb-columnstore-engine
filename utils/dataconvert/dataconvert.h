@@ -559,7 +559,7 @@ inline void DataConvert::trimWhitespace(int64_t &charData)
     char *ch_data = (char*) &charData;
     for (int8_t i = 7; i > 0; i--)
     {
-        if (isspace(ch_data[i]) || ch_data[i] == '\0')
+        if (ch_data[i] == ' ' || ch_data[i] == '\0')
             ch_data[i] = '\0';
         else
             break;
