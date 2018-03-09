@@ -773,8 +773,10 @@ void PrimitiveProcessor::p_Dictionary(const DictInput *in, vector<uint8_t> *out,
 			filterOffset = sizeof(DictInput) + (in->NVALS * sizeof(PrimToken));
 
 		if (eqFilter) {
-			bool gotIt = (eqFilter->find(string((char *) sigptr.data, sigptr.len))
-					!= eqFilter->end());
+            // MCOL-1246 Trim whitespace before match
+            string strData((char*)sigptr.data, sigptr.len);
+            boost::trim_right(strData);
+            bool gotIt = eqFilter->find(strData) != eqFilter->end();
 			if ((gotIt && eqOp == COMPARE_EQ) || (!gotIt && eqOp == COMPARE_NE))
 				goto store;
 			goto no_store;
