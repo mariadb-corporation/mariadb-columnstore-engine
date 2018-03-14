@@ -104,6 +104,9 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 fi
 
 if [ $user != "root" ]; then
+	sudo rm -f $profileFileEnv
+	sudo rm -f $profileFileAlias
+	
 	sudo touch $profileFileEnv
 	sudo chmod 666 $profileFileEnv
 	egrep -qs 'MariaDB Columnstore Non-Root' ${profileFileEnv}
@@ -112,7 +115,7 @@ if [ $user != "root" ]; then
         	sudo echo " " >> ${profileFileEnv}
 		sudo echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFileEnv}
         	sudo echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFileEnv}
-        	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${profileFileEnv}
+        	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib" >> ${profileFileEnv}
         	. ${profileFileEnv}
 	fi
 	
