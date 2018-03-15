@@ -74,27 +74,20 @@ void callFree(const char* )
 }
 
 
-
 bool waitForActive() 
 {
-	Oam oam;
+    Oam oam;
+    try
+    {
+	oam.waitForActive();
+	return true;
+    }
+    catch (...)
+    {}
 
-	const string cmd = installDir + "/bin/mcsadmin getsystemstatus > /tmp/wait.log";
-	system(cmd.c_str());
-
-	for ( int i = 0 ; i < 120 ; i ++ )
-	{
-		if (oam.checkLogStatus("/tmp/wait.log", "System        ACTIVE") )
-			return true;
-		if ( oam.checkLogStatus("/tmp/wait.log", "System        FAILED") )
-			return false;
-		cout << ".";
-		cout.flush();
-		sleep (10);
-		system(cmd.c_str());
-	}
-	return false;
+    return false;
 }
+
 
 void dbrmDirCheck() 
 {
