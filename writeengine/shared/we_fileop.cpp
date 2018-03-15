@@ -1879,7 +1879,7 @@ int FileOp::initDctnryExtent(
                 std::ostringstream oss;
                 std::string errnoMsg;
                 Convertor::mapErrnoToString(savedErrno, errnoMsg);
-                oss << "FileOp::initColumnExtent(): fallocate(" << currFileSize <<
+                oss << "FileOp::initDctnryExtent(): fallocate(" << currFileSize <<
                     ", " << writeSize << "): errno = " << savedErrno <<
                     ": " << errnoMsg;
                 logging::Message::Args args;
