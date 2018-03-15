@@ -1519,6 +1519,7 @@ void ColumnOp::setColParam(Column& column,
  *    rowIdArray - the array of row id, for performance purpose, I am assuming the rowIdArray is sorted
  *    valArray - the array of row values
  *    oldValArray - the array of old value
+ *    bDelete - yet 
  * RETURN:
  *    NO_ERROR if success, other number otherwise
  ***********************************************************/
@@ -1533,6 +1534,8 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
     char     charTmpBuf[8];
     uint64_t  emptyVal;
     int rc = NO_ERROR;
+    bool fillUpWEmptyVals = false;
+    bool fistRowInBlock = false;
 
     while (!bExit)
     {
@@ -1551,7 +1554,17 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                     return rc;
 
                 bDataDirty = false;
+                // MCOL-498 We got into the next block, so the row is first in that block
+                // - fill the block up with NULLs.
+                if ( curDataFbo != -1 && !bDelete )
+                    fillUpWEmptyVals = true;
             }
+
+            // MCOL-498 CS hasn't touched any block yet,
+            // but the row fill be the first in the block.
+            fistRowInBlock = ( !(curRowId % (BYTE_PER_BLOCK / curCol.colWidth)) ) ? true : false;
+            if( fistRowInBlock && !bDelete )
+                fillUpWEmptyVals = true;
 
             curDataFbo = dataFbo;
             rc = readBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
@@ -1676,8 +1689,19 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
 
     // take care of the cleanup
     if (bDataDirty && curDataFbo >= 0)
+    {
+        if ( fillUpWEmptyVals )
+        {
+            emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
+            int writeSize = BYTE_PER_BLOCK - ( dataBio + curCol.colWidth );
+            // MCOL-498 Add the check though this is unlikely at the moment of writing.
+            if ( writeSize )
+                setEmptyBuf( dataBuf + dataBio + curCol.colWidth, writeSize, emptyVal, curCol.colWidth );
+            fillUpWEmptyVals = false;
+            fistRowInBlock = false;
+        }
         rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
-
+    }
     return rc;
 }
 
