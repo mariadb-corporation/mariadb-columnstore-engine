@@ -123,6 +123,9 @@ static int calpont_rollback(handlerton* hton, THD* thd, bool all);
 static int calpont_close_connection ( handlerton* hton, THD* thd );
 handlerton* calpont_hton;
 
+static group_by_handler *
+create_calpont_group_by_handler(THD *thd, Query *query);
+
 /* Variables for example share methods */
 
 /*
@@ -218,6 +221,7 @@ static int columnstore_init_func(void* p)
     calpont_hton->commit = calpont_commit;
     calpont_hton->rollback = calpont_rollback;
     calpont_hton->close_connection = calpont_close_connection;
+    calpont_hton->create_group_by = create_calpont_group_by_handler;
     DBUG_RETURN(0);
 }
 
@@ -1134,6 +1138,22 @@ static MYSQL_SYSVAR_ULONG(
     1000,
     0);
 #endif
+
+static group_by_handler *
+create_calpont_group_by_handler(THD *thd, Query *query)
+{
+  ha_calpont_group_by_handler *handler;
+  Item *item;
+  List_iterator_fast<Item> it(*query->select);
+  
+  handler= new ha_calpont_group_by_handler(thd, query->select, query->from);
+  return handler;
+}
+
+int ha_calpont_group_by_handler::next_row()
+{
+  return(0);
+}
 
 static struct st_mysql_sys_var* calpont_system_variables[] =
 {

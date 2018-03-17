@@ -40,6 +40,8 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 
+extern handlerton* calpont_hton;
+
 /** @brief
   EXAMPLE_SHARE is a structure that will be shared among all open handlers.
   This example implements the minimum of what you will probably need.
@@ -244,6 +246,23 @@ public:
         return HA_CACHE_TBL_NOCACHE;
     }
 
+};
+
+class ha_calpont_group_by_handler: public group_by_handler
+{
+  List<Item> *fields;
+  TABLE_LIST *table_list;
+  bool first_row;
+
+public: 
+    ha_calpont_group_by_handler(THD *thd_arg, List<Item> *fields_arg, 
+TABLE_LIST *table_list_arg)
+    : group_by_handler(thd_arg, calpont_hton), fields(fields_arg),
+ table_list(table_list_arg) {}
+  ~ha_calpont_group_by_handler() {}
+  int init_scan() { first_row= true ; return 0; }
+  int next_row();
+  int end_scan()  { return 0; }
 };
 #endif //HA_CALPONT_H__
 
