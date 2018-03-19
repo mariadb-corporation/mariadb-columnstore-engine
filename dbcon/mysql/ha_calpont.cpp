@@ -1145,14 +1145,20 @@ create_calpont_group_by_handler(THD *thd, Query *query)
   ha_calpont_group_by_handler *handler;
   Item *item;
   List_iterator_fast<Item> it(*query->select);
-  
+
   handler= new ha_calpont_group_by_handler(thd, query->select, query->from);
   return handler;
 }
 
 int ha_calpont_group_by_handler::next_row()
 {
-  return(0);
+    if (!first_row)
+        return(HA_ERR_END_OF_FILE);
+    first_row= 0;
+    Field *field = *(table->field);
+    field->store(5LL, 1);
+    field->set_notnull();
+    return(0);
 }
 
 static struct st_mysql_sys_var* calpont_system_variables[] =
