@@ -529,7 +529,7 @@ int ColumnBufferManager::writeToFile(int endOffset)
 //          internal buffer, or if an abbreviated extent is expanded.
 //------------------------------------------------------------------------------
 int ColumnBufferManager::writeToFileExtentCheck(
-    uint32_t startOffset, uint32_t writeSize)
+    uint32_t startOffset, uint32_t writeSize, bool fillUpWNulls)
 {
 
     if (fLog->isDebug( DEBUG_3 ))
@@ -571,7 +571,7 @@ int ColumnBufferManager::writeToFileExtentCheck(
 
     if (availableFileSize >= writeSize)
     {
-        int rc = fCBuf->writeToFile(startOffset, writeSize);
+        int rc = fCBuf->writeToFile(startOffset, writeSize, fillUpWNulls);
 
         if (rc != NO_ERROR)
         {
@@ -582,6 +582,10 @@ int ColumnBufferManager::writeToFileExtentCheck(
             fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
             return rc;
         }
+
+        // MCOL-498 Fill it up to the block size boundary.
+        if ( fillUpWNulls )
+            writeSize = BLOCK_SIZE;    
 
         fColInfo->updateBytesWrittenCounts( writeSize );
     }
@@ -624,7 +628,7 @@ int ColumnBufferManager::writeToFileExtentCheck(
         }
 
         int writeSize2 = writeSize - writeSize1;
-        fCBuf->writeToFile(startOffset + writeSize1, writeSize2);
+        rc = fCBuf->writeToFile(startOffset + writeSize1, writeSize2, fillUpWNulls);
 
         if (rc != NO_ERROR)
         {
@@ -635,6 +639,10 @@ int ColumnBufferManager::writeToFileExtentCheck(
             fLog->logMsg( oss.str(), rc, MSGLVL_ERROR );
             return rc;
         }
+
+        // MCOL-498 Fill it up to the block size boundary.
+        if ( fillUpWNulls )
+            writeSize2 = BLOCK_SIZE;
 
         fColInfo->updateBytesWrittenCounts( writeSize2 );
     }
@@ -668,17 +676,21 @@ int ColumnBufferManager::flush( )
 
     int bufferSize = fCBuf->getSize();
 
+    // MCOL-498 There are less the BLOCK_SIZE bytes in the buffer left, so
     // Account for circular buffer by making 2 calls to write the data,
     // if we are wrapping around at the end of the buffer.
     if (fBufFreeOffset < fBufWriteOffset)
     {
-        RETURN_ON_ERROR( writeToFileExtentCheck(
-                             fBufWriteOffset, bufferSize - fBufWriteOffset) );
+        // The check could be redundant.
+        bool fillUpWEmpty = ( static_cast<unsigned int>(bufferSize - fBufWriteOffset) >= BLOCK_SIZE )
+                            ? false : true;
+        RETURN_ON_ERROR( writeToFileExtentCheck( fBufWriteOffset, 
+                        bufferSize - fBufWriteOffset, fillUpWEmpty) );
         fBufWriteOffset = 0;
     }
-
+    // fill the buffer up with NULLs.
     RETURN_ON_ERROR( writeToFileExtentCheck(
-                         fBufWriteOffset, fBufFreeOffset - fBufWriteOffset) );
+                     fBufWriteOffset, fBufFreeOffset - fBufWriteOffset, true) );
     fBufWriteOffset = fBufFreeOffset;
 
     return NO_ERROR;

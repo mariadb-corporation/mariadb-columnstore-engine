@@ -107,8 +107,11 @@ public:
      *
      * @param startOffset The buffer offset from where the write should begin
      * @param writeSize   The number of bytes to be written to the file
+     * @param fillUpWNulls The flag to fill the buffer with NULLs up to 
+     *                      the block boundary.
      */
-    virtual int writeToFile(int startOffset, int writeSize);
+    virtual int writeToFile(int startOffset, int writeSize,
+                            bool fillUpWNulls = false);
 
 protected:
 
