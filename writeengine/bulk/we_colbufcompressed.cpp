@@ -167,7 +167,8 @@ int ColumnBufferCompressed::resetToBeCompressedColBuf(
 // file, and instead buffer up the data to be compressed in 4M chunks before
 // writing it out.
 //------------------------------------------------------------------------------
-int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize)
+int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
+                                        bool fillUpWNulls)
 {
     if (writeSize == 0) // skip unnecessary write, if 0 bytes given
         return NO_ERROR;
