@@ -29,6 +29,7 @@
 #include "we_columninfo.h"
 #include "we_log.h"
 #include "we_stats.h"
+#include "we_blockop.h"
 #include <string.h>
 #include "IDBDataFile.h"
 using namespace idbdatafile;
@@ -101,15 +102,33 @@ void ColumnBuffer::resizeAndCopy(int newSize, int startOffset, int endOffset)
 //------------------------------------------------------------------------------
 // Write data stored up in the output buffer to the segment column file.
 //------------------------------------------------------------------------------
-int ColumnBuffer::writeToFile(int startOffset, int writeSize)
+int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWNulls)
 {
     if (writeSize == 0) // skip unnecessary write, if 0 bytes given
         return NO_ERROR;
 
+    unsigned char *newBuf = NULL;
+
+    if ( fillUpWNulls )
+    {
+        BlockOp blockOp;
+        //TO DO Use scoped_ptr here
+        newBuf = new unsigned char[BYTE_PER_BLOCK];
+        uint64_t EmptyValue = blockOp.getEmptyRowValue(fColInfo->column.dataType,
+                                                      fColInfo->column.width);
+        ::memcpy(static_cast<void *>(newBuf),
+                static_cast<const void *>(fBuffer + startOffset), writeSize);
+        blockOp.setEmptyBuf(newBuf + writeSize, BYTE_PER_BLOCK - writeSize,
+                            EmptyValue, fColInfo->column.width);
+    }
 #ifdef PROFILE
     Stats::startParseEvent(WE_STATS_WRITE_COL);
 #endif
-    size_t nitems = fFile->write(fBuffer + startOffset, writeSize) / writeSize;
+    size_t nitems;
+    if ( fillUpWNulls )
+        nitems = fFile->write(newBuf, BYTE_PER_BLOCK) / BYTE_PER_BLOCK;
+    else
+        nitems = fFile->write(fBuffer + startOffset, writeSize) / writeSize;
 
     if (nitems != 1)
         return ERR_FILE_WRITE;
@@ -118,6 +137,8 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize)
     Stats::stopParseEvent(WE_STATS_WRITE_COL);
 #endif
 
+    //TO DO Use scoped_ptr here
+    delete newBuf;
     return NO_ERROR;
 }
 
