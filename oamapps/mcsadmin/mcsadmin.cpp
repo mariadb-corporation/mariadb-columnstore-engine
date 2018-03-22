@@ -77,62 +77,13 @@ bool SendToWES(Oam& oam, ByteStream bs);
 bool waitForActive() 
 {
     Oam oam;
-    SystemStatus systemstatus;
-    SystemProcessStatus systemprocessstatus;
-    bool bfirst = true;
-
-    for (int i = 0 ; i < 1200 ; i ++)
+    try
     {
-        sleep (3);
-        try
-        {
-            oam.getSystemStatus(systemstatus);
-            if (systemstatus.SystemOpState == ACTIVE)
-            {
-                return true;
-            }
-            if (systemstatus.SystemOpState == FAILED)
-            {
-                return false;
-            }
-            if (systemstatus.SystemOpState == MAN_OFFLINE)
-            {
-                return false;
-            }
-            cout << "." << flush;
-
-            // Check DMLProc for a switch to BUSY_INIT.
-            // In such a case, we need to print a message that rollbacks
-            // are occurring and will take some time.
-            if (bfirst) // Once we've printed our message, no need to waste cpu looking
-            {
-                oam.getProcessStatus(systemprocessstatus);
-                for (unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-                {
-                    if (systemprocessstatus.processstatus[i].ProcessName  == "DMLProc")
-                    {
-                        if (systemprocessstatus.processstatus[i].ProcessOpState == oam::ROLLBACK_INIT)
-                        {
-							cout << endl << endl <<"   System Not Ready, DMLProc is checking/processing rollback of abandoned transactions. Processing could take some time, please wait..." << flush;
-                            bfirst = false;
-                        }
-                        // At this point, we've found our DMLProc, so there's no need to spin the for loop
-                        // any further.
-                        break;
-                    }
-                }
-            }
-        }
-        catch (...)
-        {
-			// At some point, we need to give up, ProcMgr just isn't going to respond.
-			if (i > 60) // 3 minutes
-			{
-				cout << "ProcMgr not responding while waiting for system to start";
-				break;
-			}
-        }
+	oam.waitForActive();
+	return true;
     }
+    catch (...)
+    {}
 
     return false;
 }
