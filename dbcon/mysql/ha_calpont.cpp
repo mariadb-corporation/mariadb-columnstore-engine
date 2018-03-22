@@ -1139,27 +1139,72 @@ static MYSQL_SYSVAR_ULONG(
     0);
 #endif
 
+/*@brief ha_calpont_impl_group_by_init - Get data for MariaDB group_by 
+    pushdown handler
+*/
+/***********************************************************
+ * DESCRIPTION:
+ * Creates a group_by pushdown handler. 
+ * Details are in server/sql/group_by_handler.h
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    query - Query structure, that describes the pushdown query.
+ * RETURN:
+ *    group_by_handler if success
+ *    NULL in other case
+ ***********************************************************/
 static group_by_handler *
 create_calpont_group_by_handler(THD *thd, Query *query)
 {
-  ha_calpont_group_by_handler *handler;
-  Item *item;
-  List_iterator_fast<Item> it(*query->select);
+    ha_calpont_group_by_handler *handler = NULL;
+    Item *item;
+    List_iterator_fast<Item> it(*query->select);
 
-  handler= new ha_calpont_group_by_handler(thd, query->select, query->from);
-  return handler;
+    if ( thd->infinidb_vtable.vtable_state != THD::INFINIDB_DISABLE_VTABLE )
+    {
+        handler = new ha_calpont_group_by_handler(thd, query);
+    }
+
+    return handler;
+}
+
+int ha_calpont_group_by_handler::init_scan()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
+
+    int rc = ha_calpont_impl_group_by_init(query, table);
+
+    DBUG_RETURN(rc);
+//    return 0;
 }
 
 int ha_calpont_group_by_handler::next_row()
 {
-    if (!first_row)
-        return(HA_ERR_END_OF_FILE);
+//    if (!first_row)
+//        return(HA_ERR_END_OF_FILE);
+    DBUG_ENTER("ha_calpont_group_by_handler::next_row");
+    int rc = ha_calpont_impl_group_by_next(query, table);
+
+    DBUG_RETURN(rc);
+/*
     first_row= 0;
     Field *field = *(table->field);
     field->store(5LL, 1);
     field->set_notnull();
     return(0);
+*/
 }
+
+int ha_calpont_group_by_handler::end_scan()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
+
+    int rc = ha_calpont_impl_group_by_end(query, table);
+
+    DBUG_RETURN(rc);
+//    return 0;
+}
+
 
 static struct st_mysql_sys_var* calpont_system_variables[] =
 {
