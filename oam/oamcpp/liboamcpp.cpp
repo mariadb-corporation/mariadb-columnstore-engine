@@ -8844,10 +8844,11 @@ namespace oam
 	      SystemStatus systemstatus;
 	      SystemProcessStatus systemprocessstatus;
 	      bool bfirst = true;
-
-	      for (int i = 0 ; i < 18 ; i ++)
+	      int dot = 0;
+	      
+	      for (int i = 0 ; i < 120 ; i ++, dot ++)
 	      {
-		  sleep (10);
+		  sleep (3);
 		  try
 		  {
 		      getSystemStatus(systemstatus);
@@ -8880,7 +8881,11 @@ namespace oam
 			    exceptionControl("waitForActive", API_FAILURE);
 		      }
 
-		      cout << "." << flush;
+		      if (dot >= 3 )
+		      {
+			    cout << "." << flush;
+			    dot=0;
+		      }
 
 		      // Check DMLProc for a switch to BUSY_INIT.
 		      // In such a case, we need to print a message that rollbacks
@@ -8907,7 +8912,7 @@ namespace oam
 		  catch (...)
 		  {
 		      // At some point, we need to give up, ProcMon just isn't going to respond.
-		      if (i > 18) // 3 minutes
+		      if (i > 60) // 3 minutes
 		      {
 			      cout << endl << endl << "TIMEOUT: ProcMon not responding to getSystemStatus";
 			      break;
