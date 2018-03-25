@@ -50,6 +50,8 @@
 #define EXPORT
 #endif
 
+#define MAX_NBLOCKS 8192
+
 #include "brmtypes.h"
 
 /** Namespace WriteEngine */
@@ -324,13 +326,15 @@ public:
      * @param blockHdrInit(in) - data used to initialize each block header
      * @param blockHdrInitSize(in) - number of bytes in blockHdrInit
      * @param bExpandExtent (in) -  Expand existing extent, or initialize new one
+     * @param bOptExtension (in) - use fallocate() to extend the file if it is possible.
      */
     EXPORT int          initDctnryExtent( IDBDataFile*    pFile,
                                           uint16_t dbRoot,
                                           int      nBlocks,
                                           unsigned char* blockHdrInit,
                                           int      blockHdrInitSize,
-                                          bool     bExpandExtent );
+                                          bool     bExpandExtent,
+                                          bool     bOptExtension = false );
 
     /**
      * @brief Check whether it is an directory
@@ -500,6 +504,7 @@ private:
     // bNewFile (in)      -  Adding extent to new file
     // bExpandExtent (in) -  Expand existing extent, or initialize new one
     // bAbbrevExtent (in) -  If adding new extent, is it abbreviated
+    //  bOptExtension(in) - use fallocate() to extend the file if it is possible.
     int                 initColumnExtent( IDBDataFile*    pFile,
                                           uint16_t dbRoot,
                                           int      nBlocks,
@@ -507,7 +512,8 @@ private:
                                           int      width,
                                           bool     bNewFile,
                                           bool     bExpandExtent,
-                                          bool     bAbbrevExtent );
+                                          bool     bAbbrevExtent,
+                                          bool     bOptExtension=false );
 
     static void         initDbRootExtentMutexes();
     static void         removeDbRootExtentMutexes();

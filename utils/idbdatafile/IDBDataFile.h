@@ -186,6 +186,12 @@ public:
      */
     virtual time_t mtime() = 0;
 
+    /**
+     * The fallocate() method returns the modification time of the file in
+     * seconds.  Returns -1 on error.
+     */
+    virtual int fallocate(int mode, off64_t offset, off64_t length) = 0;
+
     int colWidth()
     {
         return m_fColWidth;

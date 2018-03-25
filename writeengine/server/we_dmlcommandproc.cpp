@@ -102,13 +102,13 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
     bs >> tmp32;
     uint32_t dbroot = tmp32;
 
-    //cout << "processSingleInsert received bytestream length " << bs.length() << endl;
+    cout << "processSingleInsert received bytestream length " << bs.length() << endl;
 
     messageqcpp::ByteStream::byte packageType;
     bs >> packageType;
     insertPkg.read( bs);
     uint32_t sessionId = insertPkg.get_SessionID();
-    //cout << " processSingleInsert for session " << sessionId << endl;
+    cout << " processSingleInsert for session " << sessionId << endl;
     DMLTable* tablePtr = insertPkg.get_Table();
     RowList rows = tablePtr->get_RowList();
 

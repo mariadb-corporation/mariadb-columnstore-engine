@@ -348,4 +348,10 @@ int HdfsFile::close()
     return ret;
 }
 
+int HdfsFile::fallocate(int mode, off64_t offset, off64_t length)
+{
+    return 0;
+}
+
+
 }
