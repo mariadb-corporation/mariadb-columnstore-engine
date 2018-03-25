@@ -50,6 +50,8 @@
 #define EXPORT
 #endif
 
+#define MAX_NBLOCKS 8192
+
 #include "brmtypes.h"
 
 /** Namespace WriteEngine */

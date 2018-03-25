@@ -63,7 +63,6 @@ namespace WriteEngine
 /*static*/ boost::mutex               FileOp::m_createDbRootMutexes;
 /*static*/ boost::mutex               FileOp::m_mkdirMutex;
 /*static*/ std::map<int, boost::mutex*> FileOp::m_DbRootAddExtentMutexes;
-const int MAX_NBLOCKS = 8192; // max number of blocks written to an extent
 // in 1 call to fwrite(), during initialization
 
 //StopWatch timer;
