@@ -470,6 +470,13 @@ bool Func_searched_case::getBoolVal(Row& row,
 	if (isNull)
 		return joblist::BIGINTNULL;
 
+    ParseTree* lop = parm[i+1]->left();
+    ParseTree* rop = parm[i+1]->right();
+    if (lop && rop)
+    {
+    	return (reinterpret_cast<Operator*>(parm[i+1]->data()))->getBoolVal(row, isNull, lop, rop);
+    }
+
 	return parm[i+1]->data()->getBoolVal(row, isNull);
 }
 

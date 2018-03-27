@@ -2553,6 +2553,10 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			break;
 		}
 
+		case Item::COND_ITEM:
+		{
+			break;
+        }
 		default:
 		{
 			gwi.fatalParseError = true;
@@ -3183,6 +3187,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 	if (((Item_func_case*)item)->get_first_expr_num() == -1)
 		funcName = "case_searched";
 
+	funcParms.reserve(item->argument_count());
 	if (gwi.clauseType == SELECT || gwi.clauseType == HAVING || gwi.clauseType == GROUP_BY) // select clause
 	{
 		// the first argument
@@ -3233,13 +3238,12 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 		gwi.clauseType = SELECT;
 		if (funcName == "case_searched")
 		{
-			for (uint32_t i = 0; i < item->argument_count(); i++)
+			for (int32_t i = item->argument_count()-1; i >=0; i--)
 			{
-				if (i % 2 == 0 && i != item->argument_count()-1)
+				if (i % 2 == 0 && uint(i) != item->argument_count()-1)
 				{
 					// build item from arguments to avoid parm sequence complexity
 					sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-					funcParms.push_back(sptp);
 					if (!gwi.ptWorkStack.empty())
 						gwi.ptWorkStack.pop();
 				}
@@ -3258,8 +3262,8 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 						if (!gwi.ptWorkStack.empty())
 							gwi.ptWorkStack.pop();
 					}
-					funcParms.push_back(sptp);
 				}
+				funcParms.insert(funcParms.begin(), sptp);
 			}
 		}
 		else // simple_case
