@@ -2555,6 +2555,8 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 
 		case Item::COND_ITEM:
 		{
+            // MCOL-1196: Allow COND_ITEM thru. They will be picked up
+            // by further logic. It may become desirable to add code here.
 			break;
         }
 		default:
