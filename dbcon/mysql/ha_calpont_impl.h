@@ -48,15 +48,16 @@ extern int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type);
 extern int ha_calpont_impl_update_row();
 extern int ha_calpont_impl_delete_row();
 extern int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos);
-extern int ha_calpont_impl_group_by_init(Query* query, TABLE* table);
-extern int ha_calpont_impl_group_by_next(Query* query, TABLE* table);
-extern int ha_calpont_impl_group_by_end(Query* query, TABLE* table);
+extern int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE* table);
+extern int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table);
+extern int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE* table);
 
 #endif
 
 #ifdef NEED_CALPONT_INTERFACE
 #include "ha_calpont_impl_if.h"
 #include "calpontsystemcatalog.h"
+#include "ha_calpont.h"
 extern int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_impl_if::cal_connection_info& ci);
 extern int ha_calpont_impl_write_row_(uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci, ha_rows& rowsInserted);
 extern int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_connection_info& ci);
@@ -73,6 +74,9 @@ extern std::string  ha_calpont_impl_droppartition_ (execplan::CalpontSystemCatal
 
 extern std::string  ha_calpont_impl_viewtablelock( cal_impl_if::cal_connection_info& ci, execplan::CalpontSystemCatalog::TableName& tablename);
 extern std::string  ha_calpont_impl_cleartablelock( cal_impl_if::cal_connection_info& ci, uint64_t tableLockID);
+extern int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE* table);
+extern int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table);
+extern int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE* table);
 #endif
 
 #endif

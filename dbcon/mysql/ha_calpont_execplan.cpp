@@ -4440,7 +4440,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     }
     else if (ac->constCol())
     {
-        gwi.count_asterisk_list.push_back(ac);
+            gwi.count_asterisk_list.push_back(ac);
     }
 
     // For UDAF, populate the context and call the UDAF init() function.
@@ -7831,6 +7831,10 @@ int cp_get_plan(THD* thd, SCSEP& csep)
     else if (status < 0)
         return status;
 
+    cerr << "---------------- cp_get_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+
     // Derived table projection and filter optimization.
     derivedTableOptimization(csep);
 
@@ -7932,4 +7936,128 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
 
     return 0;
 }
+
+int cp_get_group_plan(THD* thd, SCSEP& csep, cal_table_info& ti )
+{
+    gp_walk_info* gwi = ti.condInfo;
+    List_iterator_fast<Item> it(*ti.groupByFields);
+    Item* item;
+
+    if (!gwi)
+        gwi = new gp_walk_info();
+
+    gwi->thd = thd;
+    LEX* lex = thd->lex;
+    idbassert(lex != 0);
+    uint32_t sessionID = csep->sessionID();
+    gwi->sessionid = sessionID;
+    TABLE* table = ti.msTablePtr;
+    boost::shared_ptr<CalpontSystemCatalog> csc = 
+    CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+    csc->identity(CalpontSystemCatalog::FE);
+
+    // get all columns that mysql needs to fetch
+    MY_BITMAP* read_set = table->read_set;
+    Field** f_ptr, *field;
+    gwi->columnMap.clear();
+    
+    const CalpontSystemCatalog::TableAliasName tblAliasName= 
+    make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr());
+
+    gwi->tbList.push_back(tblAliasName);
+
+    while ((item = it++))
+    {
+        Item *arg0;
+        Field *field;
+        ReturnedColumn* rc = buildAggregateColumn(item, *gwi);
+        //string alias(table->alias.c_ptr());
+        //rc->tableAlias(lower(alias));
+        assert (rc);
+        boost::shared_ptr<ReturnedColumn> sprc(rc);
+        gwi->returnedCols.push_back(sprc);
+        arg0=((Item_sum*) item)->get_arg(0);
+        field=((Item_field*) arg0)->field;
+        gwi->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(field->field_name), sprc));
+        //arg0=((Item_sum*) item)->get_arg(0);
+        //field=((Item_field*) arg0)->field;
+    }
+    
+/*
+    for (f_ptr = table->field ; (field = *f_ptr) ; f_ptr++)
+    {
+        if (bitmap_is_set(read_set, field->field_index))
+        {
+            SimpleColumn* sc = new SimpleColumn(table->s->db.str, table->s->table_name.str, field->field_name, sessionID);
+            string alias(table->alias.c_ptr());
+            sc->tableAlias(lower(alias));
+            assert (sc);
+            boost::shared_ptr<SimpleColumn> spsc(sc);
+            gwi->returnedCols.push_back(spsc);
+            gwi->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(field->field_name), spsc));
+        }
+    }
+*/  
+    if (gwi->columnMap.empty())
+    {
+        CalpontSystemCatalog::TableName tn = make_table(table->s->db.str, table->s->table_name.str);
+        CalpontSystemCatalog::TableAliasName tan = make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr());
+        SimpleColumn* sc = getSmallestColumn(csc, tn, tan, table, *gwi);
+        SRCP srcp(sc);
+        gwi->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
+        gwi->returnedCols.push_back(srcp);
+    }
+
+
+    // get filter
+    if (ti.condInfo)
+    {
+        gp_walk_info* gwi = ti.condInfo;
+        ParseTree* filters = 0;
+        ParseTree* ptp = 0;
+        ParseTree* rhs = 0;
+
+        while (!gwi->ptWorkStack.empty())
+        {
+            filters = gwi->ptWorkStack.top();
+            gwi->ptWorkStack.pop();
+            SimpleFilter* sf = dynamic_cast<SimpleFilter*>(filters->data());
+
+            if (sf && sf->op()->data() == "noop")
+            {
+                delete filters;
+                filters = 0;
+
+                if (gwi->ptWorkStack.empty())
+                    break;
+
+                continue;
+            }
+
+            if (gwi->ptWorkStack.empty())
+                break;
+
+            ptp = new ParseTree(new LogicOperator("and"));
+            ptp->left(filters);
+            rhs = gwi->ptWorkStack.top();
+            gwi->ptWorkStack.pop();
+            ptp->right(rhs);
+            gwi->ptWorkStack.push(ptp);
+        }
+
+        csep->filters(filters);
+    }
+
+    csep->returnedCols(gwi->returnedCols);
+    csep->columnMap(gwi->columnMap);
+    CalpontSelectExecutionPlan::TableList tblist;
+    tblist.push_back(tblAliasName);
+    csep->tableList(tblist);
+
+    // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
+    csep->stringScanThreshold(gwi->thd->variables.infinidb_string_scan_threshold);
+
+    return 0;
+}
+
 }

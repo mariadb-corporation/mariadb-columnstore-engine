@@ -1160,7 +1160,7 @@ create_calpont_group_by_handler(THD *thd, Query *query)
     Item *item;
     List_iterator_fast<Item> it(*query->select);
 
-    if ( thd->infinidb_vtable.vtable_state != THD::INFINIDB_DISABLE_VTABLE )
+    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE )
     {
         handler = new ha_calpont_group_by_handler(thd, query);
     }
@@ -1172,10 +1172,9 @@ int ha_calpont_group_by_handler::init_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
 
-    int rc = ha_calpont_impl_group_by_init(query, table);
+    int rc = ha_calpont_impl_group_by_init(this, table);
 
     DBUG_RETURN(rc);
-//    return 0;
 }
 
 int ha_calpont_group_by_handler::next_row()
@@ -1183,7 +1182,7 @@ int ha_calpont_group_by_handler::next_row()
 //    if (!first_row)
 //        return(HA_ERR_END_OF_FILE);
     DBUG_ENTER("ha_calpont_group_by_handler::next_row");
-    int rc = ha_calpont_impl_group_by_next(query, table);
+    int rc = ha_calpont_impl_group_by_next(this, table);
 
     DBUG_RETURN(rc);
 /*
@@ -1199,7 +1198,7 @@ int ha_calpont_group_by_handler::end_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
 
-    int rc = ha_calpont_impl_group_by_end(query, table);
+    int rc = ha_calpont_impl_group_by_end(this, table);
 
     DBUG_RETURN(rc);
 //    return 0;

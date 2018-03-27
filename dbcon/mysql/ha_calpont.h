@@ -260,14 +260,10 @@ class ha_calpont_group_by_handler: public group_by_handler
         int init_scan();
         int next_row();
         int end_scan();
-
-    private:
         List<Item> *fields;
         TABLE_LIST *table_list;
         bool first_row;
         Query *query;
-
-
 };
 #endif //HA_CALPONT_H__
 
