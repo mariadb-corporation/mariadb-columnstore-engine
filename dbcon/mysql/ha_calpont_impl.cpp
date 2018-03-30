@@ -5532,6 +5532,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
     sm::tableid_t tableid = 0;
     cal_table_info ti;
+    cal_group_info gi;
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
 
@@ -5602,10 +5603,19 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
             ti.csep->traceFlags(ci->traceFlags);
             ti.msTablePtr = group_hand->table_list->table;
-            ti.groupByFields = group_hand->fields;
+            //ti.groupByTables = group_hand->table_list;
+            //ti.groupByFields = group_hand->fields;
 
+            gi.groupByTables = group_hand->table_list;
+            gi.groupByFields = group_hand->select;
+            gi.groupByWhere = group_hand->where;
+            gi.groupByGroup = group_hand->group_by;
+            gi.groupByOrder = group_hand->order_by;
+            gi.groupByHaving = group_hand->having;
+            gi.groupByDistinct = group_hand->distinct;
+            
             // send plan whenever group_init is called
-            cp_get_group_plan(thd, ti.csep, ti);
+            cp_get_group_plan(thd, ti.csep, ti, gi);
         }
 
         IDEBUG( cerr << tableName << " send plan:" << endl );
