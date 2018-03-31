@@ -1172,7 +1172,11 @@ int ha_calpont_group_by_handler::init_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
 
+    // MCOL-1052
+    THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
+    thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
     int rc = ha_calpont_impl_group_by_init(this, table);
+    thd->infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
@@ -1184,14 +1188,15 @@ int ha_calpont_group_by_handler::next_row()
     DBUG_ENTER("ha_calpont_group_by_handler::next_row");
     int rc = ha_calpont_impl_group_by_next(this, table);
 
+   
+
+//    first_row= 0;
+    //Field *field = *(table->field);
+    //field->store(5LL, 1);
+    //field->set_notnull();
+    //return(0);
+
     DBUG_RETURN(rc);
-/*
-    first_row= 0;
-    Field *field = *(table->field);
-    field->store(5LL, 1);
-    field->set_notnull();
-    return(0);
-*/
 }
 
 int ha_calpont_group_by_handler::end_scan()
