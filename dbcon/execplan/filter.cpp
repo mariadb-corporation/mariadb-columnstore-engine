@@ -72,7 +72,7 @@ const string Filter::toString() const
 
 bool Filter::operator==(const Filter& t) const
 {
-	if (fData == t.fData)
+	if (data() == t.data())
 		return true;
 	return false;
 }

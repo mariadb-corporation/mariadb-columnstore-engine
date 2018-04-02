@@ -106,7 +106,7 @@ void LogicOperator::unserialize(messageqcpp::ByteStream& b)
 
 bool LogicOperator::operator==(const LogicOperator& t) const
 {
-	if (fData == t.fData)
+	if (data() == t.data())
 		return true;
 	return false;
 }

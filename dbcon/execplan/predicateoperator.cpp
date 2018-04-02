@@ -152,7 +152,7 @@ void PredicateOperator::unserialize(messageqcpp::ByteStream& b)
 
 bool PredicateOperator::operator==(const PredicateOperator& t) const
 {
-	if (fData == t.fData)
+	if (data() == t.data())
 		return true;
 	return false;
 }
