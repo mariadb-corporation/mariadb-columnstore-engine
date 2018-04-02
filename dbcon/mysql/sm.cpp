@@ -145,7 +145,7 @@ status_t tpl_scan_fetch_getband(cpsm_conhdl_t* hndl, sp_cpsm_tplsch_t& ntplsch, 
                 if (ntplsch->bs.length() != 0)
                 {
                     ntplsch->deserializeTable(ntplsch->bs);
-
+                    
                     if (ntplsch->rowGroup && ntplsch->rowGroup->getRGData() == NULL)
                     {
                         ntplsch->bs.restart();

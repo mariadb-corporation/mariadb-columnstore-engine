@@ -8259,7 +8259,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.tbList.push_back(tn);
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
-                gwi.thd->infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+//                gwi.thd->infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
             }
             else if (table_ptr->view)
             {
@@ -8324,9 +8324,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     bool unionSel = false;
 
+	// MCOL-1052
+	/*
     if (!isUnion && select_lex.master_unit()->is_union())
     {
-        gwi.thd->infinidb_vtable.isUnion = true;
+//        gwi.thd->infinidb_vtable.isUnion = true;
         CalpontSelectExecutionPlan::SelectList unionVec;
         SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
         unionSel = true;
@@ -8359,7 +8361,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             union_gwi.thd = gwi.thd;
             uint32_t err = 0;
 
-            if ((err = getSelectPlan(union_gwi, *sl, plan, unionSel)) != 0)
+            if ((err = getGroupPlan(union_gwi, *sl, plan, gi, unionSel)) != 0)
                 return err;
 
             unionVec.push_back(SCEP(plan));
@@ -8368,7 +8370,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             if (sl == select_lex.master_unit()->union_distinct)
                 distUnionNum = unionVec.size();
 
-            /*#ifdef DEBUG_WALK_COND
+            *//*#ifdef DEBUG_WALK_COND
             			IDEBUG( cerr << ">>>> UNION DEBUG" << endl );
             			JOIN* join = sl->join;
             			Item_cond* icp = 0;
@@ -8379,7 +8381,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             			IDEBUG ( cerr << *plan << endl );
             			IDEBUG ( cerr << "<<<<UNION DEBUG" << endl );
             #endif*/
-        }
+/*        }
 
         csep->unionVec(unionVec);
         csep->distinctUnionNum(distUnionNum);
@@ -8387,7 +8389,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         if (unionVec.empty())
             gwi.thd->infinidb_vtable.impossibleWhereOnUnion = true;
     }
-
+	*/
     gwi.clauseType = WHERE;
 
     if (icp)
@@ -10040,7 +10042,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 //TABLE_LIST* table_ptr = select_lex.get_table_list();
                 set<string> aliasSet; // to avoid duplicate table alias
 
-                for (; table_ptr; table_ptr = table_ptr->next_global)
+                for (; table_ptr; table_ptr = table_ptr->next_local)
                 {
                     if (string(table_ptr->table_name).find("$vtable") != string::npos)
                         continue;

@@ -1148,7 +1148,7 @@ static MYSQL_SYSVAR_ULONG(
  * Details are in server/sql/group_by_handler.h
  * PARAMETERS:
  *    thd - THD pointer.
- *    query - Query structure, that describes the pushdown query.
+ *    query - Query structure, that describes the pushdowned query.
  * RETURN:
  *    group_by_handler if success
  *    NULL in other case
@@ -1157,13 +1157,13 @@ static group_by_handler *
 create_calpont_group_by_handler(THD *thd, Query *query)
 {
     ha_calpont_group_by_handler *handler = NULL;
-    Item *item;
-    List_iterator_fast<Item> it(*query->select);
-
-    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE )
-    {
-        handler = new ha_calpont_group_by_handler(thd, query);
-    }
+    
+    handler = new ha_calpont_group_by_handler(thd, query);
+    
+    // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses. 
+    query->group_by = NULL;
+    query->order_by = NULL;
+    query->having = NULL;
 
     return handler;
 }
@@ -1172,7 +1172,7 @@ int ha_calpont_group_by_handler::init_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
 
-    // MCOL-1052
+    // Save vtable_state to restore the after we inited.
     THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
     thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
     int rc = ha_calpont_impl_group_by_init(this, table);
@@ -1183,18 +1183,8 @@ int ha_calpont_group_by_handler::init_scan()
 
 int ha_calpont_group_by_handler::next_row()
 {
-//    if (!first_row)
-//        return(HA_ERR_END_OF_FILE);
     DBUG_ENTER("ha_calpont_group_by_handler::next_row");
     int rc = ha_calpont_impl_group_by_next(this, table);
-
-   
-
-//    first_row= 0;
-    //Field *field = *(table->field);
-    //field->store(5LL, 1);
-    //field->set_notnull();
-    //return(0);
 
     DBUG_RETURN(rc);
 }

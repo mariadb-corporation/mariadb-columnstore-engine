@@ -250,20 +250,17 @@ public:
 
 class ha_calpont_group_by_handler: public group_by_handler
 {
-    public: 
-//        ha_calpont_group_by_handler(THD *thd_arg, List<Item> *fields_arg, 
-//        TABLE_LIST *table_list_arg, Query *query)
+    public:
         ha_calpont_group_by_handler(THD *thd_arg, Query *query)
-                                : group_by_handler(thd_arg, calpont_hton), 
-                                select(query->select),
-                                table_list(query->from),
-                                distinct(query->distinct), 
-                                where(query->where),
-                                group_by(query->group_by),
-                                order_by(query->order_by),
-                                having(query->having),
-                                query(query)
-                                { }
+            : group_by_handler(thd_arg, calpont_hton), 
+            select(query->select),
+            table_list(query->from),
+            distinct(query->distinct), 
+            where(query->where),
+            group_by(query->group_by),
+            order_by(query->order_by),
+            having(query->having)
+            { }
         ~ha_calpont_group_by_handler() { }
         int init_scan();
         int next_row();
@@ -275,8 +272,6 @@ class ha_calpont_group_by_handler: public group_by_handler
         ORDER      *group_by;
         ORDER      *order_by;
         Item       *having;
-        bool first_row; // useless by now
-        Query *query; // useless by now
 };
 #endif //HA_CALPONT_H__
 

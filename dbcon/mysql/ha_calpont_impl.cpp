@@ -5939,10 +5939,8 @@ int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
  ***********************************************************/
 int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE* table)
 {
-    //first_row= true; 
     string tableName = group_hand->table_list->table->s->table_name.str;
-    IDEBUG( cout << "group_by_init for table " << 
-    group_hand->table_list->table->s->table_name.str << endl );
+    IDEBUG( cout << "group_by_init for table " << tableName << endl );
     THD* thd = current_thd;
 
     //check whether the system is ready to process statement.
@@ -5993,8 +5991,8 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         return ER_INTERNAL_ERROR;
 
     // by pass the extra union trips. return 0
-    //if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-    //    return 0;
+    if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
+        return 0;
 
     // @bug 2232. Basic SP support. Error out non support sp cases.
     // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
