@@ -159,7 +159,7 @@ void WESplitterApp::setupSignalHandlers()
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE, &sa, 0);
 	sa.sa_handler = WESplitterApp::onSigHup;
-	sigaction(SIGPIPE, &sa, 0);
+	sigaction(SIGHUP, &sa, 0);
 	sa.sa_handler = WESplitterApp::onSigInterrupt;
 	sigaction(SIGUSR1, &sa, 0);
 /*	
