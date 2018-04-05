@@ -494,7 +494,7 @@ checkSELINUX()
   # SELINUX check
   #
   echo ""
-  echo "** Run SELINUX check - Setting should to be disabled on all nodes"
+  echo "** Run SELINUX check"
   echo ""
   
   pass=true
@@ -502,9 +502,8 @@ checkSELINUX()
   if [ -f /etc/selinux/config ]; then
     `cat /etc/selinux/config | grep SELINUX | grep enforcing > /tmp/selinux_check 2>&1`
     if [ "$?" -eq 0 ]; then
-      echo "${bold}Failed${normal}, Local Node SELINUX setting is Enabled, please disable"
+      echo "${bold}Warning${normal}, Local Node SELINUX setting is Enabled, check port test results"
       pass=false
-      REPORTPASS=false
     else
       echo "Local Node SELINUX setting is Not Enabled"
     fi
@@ -519,19 +518,14 @@ checkSELINUX()
     else
      `cat config | grep SELINUX | grep enforcing > /tmp/selinux_check 2>&1`
     if [ "$?" -eq 0 ]; then
-      echo "${bold}Failed${normal}, $ipadd SELINUX setting is Enabled, please disable"
+      echo "${bold}Warning${normal}, $ipadd SELINUX setting is Enabled, check port test results"
       pass=false
-      REPORTPASS=false
     else
       echo "$ipadd Node SELINUX setting is Not Enabled"
     fi
       `rm -f config`
     fi
   done
-
-  if ! $pass; then
-    checkContinue
-  fi
 }
 
 checkFirewalls()
@@ -539,28 +533,23 @@ checkFirewalls()
   # FIREWALL checks
   #
   echo ""
-  echo "** Run Firewall Services check - Firewall Services should to be Inactive on all nodes"
+  echo "** Run Firewall Services check"
   echo ""
 
   declare -a FIREWALL_LIST=("iptables" "ufw" "firewalld" "firewall")
 
-  fpass=true
   #check local FIREWALLS
   for firewall in "${FIREWALL_LIST[@]}"; do
     pass=true
     `service  $firewall status > /tmp/firewall1_check 2>&1`
     if [ "$?" -eq 0 ]; then
-      echo "${bold}Failed${normal}, Local Node $firewall service is Active, please disable"
+      echo "${bold}Warning${normal}, Local Node $firewall service is Active, check port test results"
       pass=false
-      fpass=false
-      REPORTPASS=false
     else
       `systemctl status $firewall > /tmp/firewall1_check 2>&1`
       if [ "$?" -eq 0 ]; then
-        echo "${bold}Failed${normal}, Local Node $firewall service is Active, please disable"
+        echo "${bold}Warning${normal}, Local Node $firewall service is Active, check port test results"
         pass=false
-        fpass=false
-        REPORTPASS=false
       fi
     fi
 
@@ -569,10 +558,6 @@ checkFirewalls()
     fi
   done
 
-  if ! $fpass; then
-    checkContinue
-  fi
-  
   echo ""
   fpass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
@@ -581,17 +566,13 @@ checkFirewalls()
 	pass=true
         `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "service '$firewall' status > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
         if [ "$?" -eq 0 ]; then
-              echo "${bold}Failed${normal}, $ipadd Node $firewall service is Active, please disable"
+              echo "${bold}Warning${normal}, $ipadd Node $firewall service is Active, check port test results"
               pass=false
-              fpass=false
-              REPORTPASS=false
         else
 	  `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD "systemctl status '$firewall' > /tmp/firewall_check 2>&1" 1 > /tmp/remote_command_check`
 	  if [ "$?" -eq 0 ]; then
-	      echo "${bold}Failed${normal}, $ipadd Node $firewall service is Active, please disable"
+	      echo "${bold}Warning${normal}, $ipadd Node $firewall service is Active, check port test results"
 	      pass=false
-	      fpass=false
-	      REPORTPASS=false
 	  fi
         fi  
 
@@ -602,25 +583,20 @@ checkFirewalls()
 
   echo ""
   done
-
-  if ! $fpass; then
-    checkContinue
-  fi
   
   if [ $OS == "suse12" ]; then
     # rcSuSEfirewall2 check
     #
     echo ""
-    echo "** Run rcSuSEfirewall2 check - Service should to be disabled on all nodes"
+    echo "** Run rcSuSEfirewall2 check"
     echo ""
     
     pass=true
     #check local IPTABLES
     `/sbin/rcSuSEfirewall2 status > /tmp/rcSuSEfirewall2_check 2>&1`
     if [ "$?" -eq 0 ]; then
-      echo "${bold}Failed${normal}, Local Node rcSuSEfirewall2 service is Enabled, please disable"
+      echo "${bold}Failed${normal}, Local Node rcSuSEfirewall2 service is Enabled, check port test results"
       pass=false
-      REPORTPASS=false
     else
       echo "Local Node rcSuSEfirewall2 service is Not Enabled"
     fi
@@ -629,17 +605,12 @@ checkFirewalls()
       `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD '/sbin/rcSuSEfirewall2 status > /tmp/rcSuSEfirewall2_check 2>&1' 1 > /tmp/remote_command_check`
       rc="$?"
       if  [ $rc -eq 0 ] ; then
-	echo "${bold}Failed${normal}, $ipadd Node rcSuSEfirewall2 service is Enabled, please disable"
+	echo "${bold}Failed${normal}, $ipadd Node rcSuSEfirewall2 service is Enabled, check port test results"
 	pass=false
-	REPORTPASS=false
       else
        echo "$ipadd Node rcSuSEfirewall2 service is Not Enabled"
       fi
     done
-
-    if ! $pass; then
-      checkContinue
-    fi
   fi
 }
 
@@ -648,17 +619,18 @@ checkPorts()
   # port test
   #
   echo ""
-  echo "** Run MariaDB ColumnStore Port (8600-8620) availibility test"
+  echo "** Run MariaDB ColumnStore Port (8600-8630,8700,8800,3306) availibility test"
   echo ""
 
   pass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
 
-    `nmap $ipadd -p 8600-8620 | grep 'closed unknown' > /dev/null`
-    if [ "$?" -eq 0 ]; then
+    `sudo nmap $ipadd -p 8600-8630,8700,8800,3306 | grep 'filtered' > /tmp/port_test`
+    if [ "$?" -ne 0 ]; then
       echo $ipadd " Node Passed port test"
     else
-      echo $ipadd " Node ${bold}Failed${normal} port test, check and disable any firwalls that were reported enabled"
+      echo $ipadd " Node ${bold}Failed${normal} port test, check and disable any firewalls or open ports in firewall"
+      cat /tmp/port_test
       pass=false
       REPORTPASS=false
     fi
@@ -764,7 +736,7 @@ checkPackages()
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
 
-  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools" "perl-DBD-MySQL")
+  declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools")
   declare -a CENTOS_PKG_NOT=("mariadb-libs")
 
   if [ "$OS" == "centos6" ] || [ "$OS" == "centos7" ]; then
@@ -883,7 +855,7 @@ checkPackages()
     fi
   fi
 
-  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "perl-DBD-mysql")
+  declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools")
   declare -a SUSE_PKG_NOT=("mariadb" , "libmariadb18")
 
   if [ "$OS" == "suse12" ]; then
@@ -974,7 +946,7 @@ checkPackages()
     fi
   fi  
 
-  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libdbd-mysql-perl")
+  declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools")
   declare -a UBUNTU_PKG_NOT=("mariadb-server" "libmariadb18")
 
   if [ "$OS" == "ubuntu16" ] ; then
@@ -1091,7 +1063,7 @@ checkPackages()
    fi
   fi
 
-  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libdbd-mysql-perl")
+  declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools")
   declare -a DEBIAN_PKG_NOT=("libmariadb18" "mariadb-server")
 
   if [ "$OS" == "debian8" ]; then
