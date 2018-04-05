@@ -5932,7 +5932,7 @@ int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
  * Prepares data for group_by_handler::next_row() calls.
  * PARAMETERS:
  *    group_hand - group by handler, that preserves initial table and items lists. .
- *    table - TABLE pointer The table to save the result set in.
+ *    table - TABLE pointer The table to save the result set into.
  * RETURN:
  *    0 if success
  *    others if something went wrong whilst getting the result set
@@ -5967,25 +5967,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     // prevent "create table as select" from running on slave
     thd->infinidb_vtable.hasInfiniDBTable = true;
 
-    /* If this node is the slave, ignore DML to IDB tables */
-    /*if (thd->slave_thread && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
-    */
-
-    // @bug 3005. if the table is not $vtable, then this could be a UDF defined on the connector.
-    // watch this for other complications
-    //if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
-    //        string(table->s->table_name.str).find("$vtable") != 0)
-    //    return 0;
-
     // return error if error status has been already set
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
@@ -6007,14 +5988,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1 ||
             thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY)
         return 0;
-
-    if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
-        return 0;
-     
-
-    //Update and delete code
-    if ( ((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) || ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return doUpdateDelete(thd);
     */
 
     uint32_t sessionID = tid2sid(thd->thread_id);
@@ -6032,10 +6005,11 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
      MySQL sometimes calls rnd_init multiple times, plan should only be
      generated and sent once.
      TO DO Check this statement.
-    */
+    
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE &&
             !thd->infinidb_vtable.isNewQuery)
         return 0;
+    */
 
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
@@ -6068,101 +6042,9 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
 
-    // update traceFlags according to the autoswitch state. replication query
-    // on slave are in table mode (create table as...)
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-    {
-        ci->traceFlags |= CalpontSelectExecutionPlan::TRACE_TUPLE_OFF;
-    }
-
-    // MCOL-1052 TO DO Remove this
-    ci->traceFlags = CalpontSelectExecutionPlan::TRACE_LOG;
-
     bool localQuery = (thd->variables.infinidb_local_query > 0 ? true : false);
 
-    /*
-    // table mode
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-    {
-        ti = ci->tableMap[group_hand->table_list->table];
-
-        // get connection handle for this table handler
-        // re-establish table handle
-        if (ti.conn_hndl)
-        {
-            sm::sm_cleanup(ti.conn_hndl);
-            ti.conn_hndl = 0;
-        }
-
-        sm::sm_init(sessionID, &ti.conn_hndl, localQuery);
-        ti.conn_hndl->csc = csc;
-        hndl = ti.conn_hndl;
-
-        try
-        {
-            ti.conn_hndl->connect();
-        }
-        catch (...)
-        {
-            setError(thd, ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR));
-            CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-            goto error;
-        }
-
-        // get filter plan for table
-        if (ti.csep.get() == 0)
-        {
-            ti.csep.reset(new CalpontSelectExecutionPlan());
-
-            SessionManager sm;
-            BRM::TxnID txnID;
-            txnID = sm.getTxnID(sessionID);
-
-            if (!txnID.valid)
-            {
-                txnID.id = 0;
-                txnID.valid = true;
-            }
-
-            QueryContext verID;
-            verID = sm.verID();
-
-            ti.csep->txnID(txnID.id);
-            ti.csep->verID(verID);
-            ti.csep->sessionID(sessionID);
-
-            if (group_hand->table_list->db_length)
-                ti.csep->schemaName(group_hand->table_list->db);
-
-            ti.csep->traceFlags(ci->traceFlags);
-            ti.msTablePtr = group_hand->table_list->table;
-            //ti.groupByTables = group_hand->table_list;
-            //ti.groupByFields = group_hand->fields;
-
-            gi.groupByTables = group_hand->table_list;
-            gi.groupByFields = group_hand->select;
-            gi.groupByWhere = group_hand->where;
-            gi.groupByGroup = group_hand->group_by;
-            gi.groupByOrder = group_hand->order_by;
-            gi.groupByHaving = group_hand->having;
-            gi.groupByDistinct = group_hand->distinct;
-            
-            // send plan whenever group_init is called
-            cp_get_group_plan(thd, ti.csep, ti, gi);
-        }
-
-        IDEBUG( cerr << tableName << " send plan:" << endl );
-        IDEBUG( cerr << *ti.csep << endl );
-        csep = ti.csep;
-
-        // for ExeMgr logging sqltext. only log once for the query although multi plans may be sent
-        if (ci->tableMap.size() == 1)
-            ti.csep->data(idb_mysql_query_str(thd));
-    }
-    */
-    // vtable mode
-    //else
-    {
+    
         //if (!ci->cal_conn_hndl || thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
         if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
         {
@@ -6240,7 +6122,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
                 csep->schemaName(group_hand->table_list->db);
 
             csep->traceFlags(ci->traceFlags);
-            //ti.msTablePtr = group_hand->table_list->table;
 
             gi.groupByTables = group_hand->table_list;
             gi.groupByFields = group_hand->select;
@@ -6311,7 +6192,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
                 IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
             }
         }
-    }// end of execution plan generation
+    // end of execution plan generation
 
     if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_SELECT_VTABLE)
     {

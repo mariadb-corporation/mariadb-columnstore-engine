@@ -1139,9 +1139,7 @@ static MYSQL_SYSVAR_ULONG(
     0);
 #endif
 
-/*@brief ha_calpont_impl_group_by_init - Get data for MariaDB group_by 
-    pushdown handler
-*/
+/*@brief  create_calpont_group_by_handler- Creates handler*/
 /***********************************************************
  * DESCRIPTION:
  * Creates a group_by pushdown handler. 
@@ -1158,16 +1156,27 @@ create_calpont_group_by_handler(THD *thd, Query *query)
 {
     ha_calpont_group_by_handler *handler = NULL;
     
-    handler = new ha_calpont_group_by_handler(thd, query);
+    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE )
+    {
+        handler = new ha_calpont_group_by_handler(thd, query);
+        
+        // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses. 
+        query->group_by = NULL;
+        query->order_by = NULL;
+        query->having = NULL;
+    }
     
-    // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses. 
-    query->group_by = NULL;
-    query->order_by = NULL;
-    query->having = NULL;
 
+    
     return handler;
 }
 
+/***********************************************************
+ * DESCRIPTION:
+ * Makes the plan and prepares the data
+ * RETURN:
+ *    int rc
+ ***********************************************************/
 int ha_calpont_group_by_handler::init_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
@@ -1181,6 +1190,12 @@ int ha_calpont_group_by_handler::init_scan()
     DBUG_RETURN(rc);
 }
 
+/***********************************************************
+ * DESCRIPTION:
+ * Fetches a row and saves it to a temporary table.
+ * RETURN:
+ *    int rc
+ ***********************************************************/
 int ha_calpont_group_by_handler::next_row()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::next_row");
@@ -1189,6 +1204,12 @@ int ha_calpont_group_by_handler::next_row()
     DBUG_RETURN(rc);
 }
 
+/***********************************************************
+ * DESCRIPTION:
+ * Shuts the scan down.
+ * RETURN:
+ *    int rc
+ ***********************************************************/
 int ha_calpont_group_by_handler::end_scan()
 {
     DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
@@ -1196,7 +1217,6 @@ int ha_calpont_group_by_handler::end_scan()
     int rc = ha_calpont_impl_group_by_end(this, table);
 
     DBUG_RETURN(rc);
-//    return 0;
 }
 
 

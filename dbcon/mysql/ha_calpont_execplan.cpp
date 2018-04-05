@@ -2713,7 +2713,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 
     if ( gwi.thd)
     {
-        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
+        //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
         {
             if ( !item->fixed)
             {
@@ -2723,6 +2723,260 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
     }
 
     switch (item->type())
+    {
+        case Item::FIELD_ITEM:
+        {
+            Item_field* ifp = (Item_field*)item;
+            return buildSimpleColumn(ifp, gwi);
+        }
+
+        case Item::INT_ITEM:
+        case Item::VARBIN_ITEM:
+        {
+            String val, *str = item->val_str(&val);
+            string valStr;
+            valStr.assign(str->ptr(), str->length());
+
+            if (item->unsigned_flag)
+            {
+                //cc = new ConstantColumn(valStr, (uint64_t)item->val_uint(), ConstantColumn::NUM);
+                // It seems that str at this point is crap if val_uint() is > MAX_BIGINT. By using
+                // this constructor, ConstantColumn is built with the proper string. For whatever reason,
+                // ExeMgr converts the fConstval member to numeric, rather than using the existing numeric
+                // values available, so it's important to have fConstval correct.
+                rc = new ConstantColumn((uint64_t)item->val_uint(), ConstantColumn::NUM);
+            }
+            else
+            {
+                rc = new ConstantColumn(valStr, (int64_t)item->val_int(), ConstantColumn::NUM);
+            }
+
+            //return cc;
+            break;
+        }
+
+        case Item::STRING_ITEM:
+        {
+            String val, *str = item->val_str(&val);
+            string valStr;
+            valStr.assign(str->ptr(), str->length());
+            rc = new ConstantColumn(valStr);
+            break;
+        }
+
+        case Item::REAL_ITEM:
+        {
+            String val, *str = item->val_str(&val);
+            string valStr;
+            valStr.assign(str->ptr(), str->length());
+            rc = new ConstantColumn(valStr, item->val_real());
+            break;
+        }
+
+        case Item::DECIMAL_ITEM:
+        {
+            rc = buildDecimalColumn(item, gwi);
+            break;
+        }
+
+        case Item::FUNC_ITEM:
+        {
+            Item_func* ifp = (Item_func*)item;
+            string func_name = ifp->func_name();
+
+            // try to evaluate const F&E. only for select clause
+            vector <Item_field*> tmpVec;
+            //bool hasAggColumn = false;
+            uint16_t parseInfo = 0;
+            parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo);
+
+            if (parseInfo & SUB_BIT)
+            {
+                gwi.fatalParseError = true;
+                gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
+                setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+                break;
+            }
+
+            if (!gwi.fatalParseError &&
+                    !nonConstFunc(ifp) &&
+                    !(parseInfo & AF_BIT) &&
+                    (tmpVec.size() == 0))
+            {
+                String val, *str = ifp->val_str(&val);
+                string valStr;
+
+                if (str)
+                {
+                    valStr.assign(str->ptr(), str->length());
+                }
+
+                if (!str)
+                {
+                    rc = new ConstantColumn("", ConstantColumn::NULLDATA);
+                }
+                else if (ifp->result_type() == STRING_RESULT)
+                {
+                    rc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
+                    rc->resultType(colType_MysqlToIDB(item));
+                }
+                else if (ifp->result_type() == DECIMAL_RESULT)
+                    rc = buildDecimalColumn(ifp, gwi);
+                else
+                {
+                    rc = new ConstantColumn(valStr, ConstantColumn::NUM);
+                    rc->resultType(colType_MysqlToIDB(item));
+                }
+
+                break;
+            }
+
+            if (func_name == "+" || func_name == "-" || func_name == "*" || func_name == "/" )
+                return buildArithmeticColumn(ifp, gwi, nonSupport);
+            else
+                return buildFunctionColumn(ifp, gwi, nonSupport);
+        }
+
+        case Item::SUM_FUNC_ITEM:
+        {
+            return buildAggregateColumn(item, gwi);
+        }
+
+        case Item::REF_ITEM:
+        {
+            Item_ref* ref = (Item_ref*)item;
+
+            switch ((*(ref->ref))->type())
+            {
+                case Item::SUM_FUNC_ITEM:
+                    return buildAggregateColumn(*(ref->ref), gwi);
+
+                case Item::FIELD_ITEM:
+                    return buildReturnedColumn(*(ref->ref), gwi, nonSupport);
+
+                case Item::REF_ITEM:
+                    return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport);
+
+                case Item::FUNC_ITEM:
+                    return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport);
+
+                case Item::WINDOW_FUNC_ITEM:
+                    return buildWindowFunctionColumn(*(ref->ref), gwi, nonSupport);
+
+                default:
+                    gwi.fatalParseError = true;
+                    gwi.parseErrorText = "Unknown REF item";
+                    break;
+            }
+        }
+
+        case Item::NULL_ITEM:
+        {
+            if (gwi.condPush)
+                return new SimpleColumn("noop");
+
+            return new ConstantColumn("", ConstantColumn::NULLDATA);
+        }
+
+        case Item::CACHE_ITEM:
+        {
+            Item* col = ((Item_cache*)item)->get_example();
+            rc = buildReturnedColumn(col, gwi, nonSupport);
+
+            if (rc)
+            {
+                ConstantColumn* cc = dynamic_cast<ConstantColumn*>(rc);
+
+                if (!cc)
+                {
+                    rc->joinInfo(rc->joinInfo() | JOIN_CORRELATED);
+
+                    if (gwi.subQuery)
+                        gwi.subQuery->correlated(true);
+                }
+            }
+
+            break;
+        }
+
+        case Item::EXPR_CACHE_ITEM:
+        {
+            // TODO: item is a Item_cache_wrapper
+            printf("EXPR_CACHE_ITEM in buildReturnedColumn\n");
+            cerr << "EXPR_CACHE_ITEM in buildReturnedColumn" << endl;
+            break;
+        }
+
+        case Item::DATE_ITEM:
+        {
+            String val, *str = item->val_str(&val);
+            string valStr;
+            valStr.assign(str->ptr(), str->length());
+            rc = new ConstantColumn(valStr);
+            break;
+        }
+
+        case Item::WINDOW_FUNC_ITEM:
+        {
+            return buildWindowFunctionColumn(item, gwi, nonSupport);
+        }
+
+#if INTERVAL_ITEM
+
+        case Item::INTERVAL_ITEM:
+        {
+            Item_interval* interval = (Item_interval*)item;
+            SRCP srcp;
+            srcp.reset(buildReturnedColumn(interval->item, gwi, nonSupport));
+
+            if (!srcp)
+                return NULL;
+
+            rc = new IntervalColumn(srcp, (int)interval->interval);
+            rc->resultType(srcp->resultType());
+            break;
+        }
+
+#endif
+
+        case Item::SUBSELECT_ITEM:
+        {
+            gwi.hasSubSelect = true;
+            break;
+        }
+
+        default:
+        {
+            gwi.fatalParseError = true;
+            gwi.parseErrorText = "Unknown item type";
+            break;
+        }
+    }
+
+    if (rc && item->name)
+        rc->alias(item->name);
+
+    return rc;
+}
+
+ReturnedColumn* buildReturnedColumnGr(Item* item, gp_walk_info& gwi, bool& nonSupport)
+{
+    ReturnedColumn* rc = NULL;
+
+    if ( gwi.thd)
+    {
+        //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
+        {
+            if ( !item->fixed)
+            {
+                item->fix_fields(gwi.thd, (Item**)&item);
+            }
+        }
+    }
+
+    Item::Type itype = Item::SUM_FUNC_ITEM;    
+
+    switch (itype)
     {
         case Item::FIELD_ITEM:
         {
@@ -5029,7 +5283,13 @@ void gp_walk(const Item* item, void* arg)
             gwip->clauseType = SELECT;
 
             if (col->type() != Item::COND_ITEM)
-                rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
+            {
+                /*if ( col->type() == Item::FIELD_ITEM )
+                {
+                    rc = buildReturnedColumnGr(col, *gwip, gwip->fatalParseError);
+                } else*/
+                    rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
+            }
 
             SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
@@ -7937,8 +8197,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
     return 0;
 }
 
-// ti is useless
-int cp_get_group_plan(THD* thd, SCSEP& csep, cal_group_info& gi )
+int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
 {
     LEX* lex = thd->lex;
     idbassert(lex != 0);
@@ -7957,159 +8216,8 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_group_info& gi )
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 
-    // Derived table projection and filter optimization.
-    //derivedTableOptimization(csep);
-
     return 0;
 }
-
-/*
-int cp_get_group_plan(THD* thd, SCSEP& csep, cal_table_info& ti )
-{
-    gp_walk_info* gwi = ti.condInfo;
-    List_iterator_fast<Item> it(*ti.groupByFields);
-    Item* item;
-
-    if (!gwi)
-        gwi = new gp_walk_info();
-
-    gwi->thd = thd;
-    LEX* lex = thd->lex;
-    idbassert(lex != 0);
-    uint32_t sessionID = csep->sessionID();
-    gwi->sessionid = sessionID;
-    TABLE* table = ti.msTablePtr;
-    TABLE_LIST* table_list = ti.groupByTables;
-    boost::shared_ptr<CalpontSystemCatalog> csc = 
-    CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
-    csc->identity(CalpontSystemCatalog::FE);
-
-    // get all columns that mysql needs to fetch
-    MY_BITMAP* read_set = table->read_set;
-    Field** f_ptr, *field;
-    gwi->columnMap.clear();
-    
-    CalpontSystemCatalog::TableAliasName tan= 
-    make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr());
-
-    gwi->tbList.push_back(tan);
-    gwi->tableMap[tan] = make_pair(0, table_list);
-
-    while ((item = it++))
-    {
-        Item *arg0;
-        Field *field;
-        ReturnedColumn* rc = buildAggregateColumn(item, *gwi);
-        //string alias(table->alias.c_ptr());
-        //rc->tableAlias(lower(alias));
-        assert (rc);
-        boost::shared_ptr<ReturnedColumn> sprc(rc);
-        gwi->returnedCols.push_back(sprc);
-    }
-
-    // TO DO add table into tableMap
-    // TO DO add the column only if there is no any for a table.
-    TableMap::iterator tb_iter = gwi->tableMap.begin();
-    try
-    {
-        for (; tb_iter != gwi->tableMap.end(); tb_iter++)
-        {
-            if ((*tb_iter).second.first == 1) continue;
-
-            CalpontSystemCatalog::TableAliasName tan = (*tb_iter).first;
-            CalpontSystemCatalog::TableName tn = make_table((*tb_iter).first.schema, (*tb_iter).first.table);
-            SimpleColumn* sc = getSmallestColumn(csc, tn, tan, (*tb_iter).second.second->table, *gwi);
-            SRCP srcp(sc);
-            gwi->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
-            (*tb_iter).second.first = 1;
-        }
-    }
-    catch (runtime_error& e)
-    {
-        setError(gwi->thd, ER_INTERNAL_ERROR, e.what(), *gwi);
-        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-        return ER_INTERNAL_ERROR;
-    }
-    catch (...)
-    {
-        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
-        setError(gwi->thd, ER_INTERNAL_ERROR, emsg, *gwi);
-        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
-        return ER_INTERNAL_ERROR;
-    }
-    
-    //if (gwi->columnMap.empty())
-    //{
-    //    CalpontSystemCatalog::TableName tn = make_table(table->s->db.str, table->s->table_name.str);
-    //    CalpontSystemCatalog::TableAliasName tan = make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr());
-    //    SimpleColumn* sc = getSmallestColumn(csc, tn, tan, table, *gwi);
-    //    SRCP srcp(sc);
-    //    gwi->columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
-    //    gwi->returnedCols.push_back(srcp);
-    //}
-    
-    
-    CalpontSystemCatalog::TableName tn = make_table(table->s->db.str, table->s->table_name.str);
-    //SimpleColumn* minSc = getSmallestColumn(csc, tn, tan, table, *gwi);
-    SRCP minSc;
-    minSc = gwi->returnedCols[0];
-    std::vector<AggregateColumn*>::iterator coliter;
-    for (coliter = gwi->count_asterisk_list.begin(); coliter != gwi->count_asterisk_list.end(); ++coliter)
-    {
-        (*coliter)->functionParms(minSc);
-    }
-
-    // get filter
-    if (ti.condInfo)
-    {
-        gp_walk_info* gwi = ti.condInfo;
-        ParseTree* filters = 0;
-        ParseTree* ptp = 0;
-        ParseTree* rhs = 0;
-
-        while (!gwi->ptWorkStack.empty())
-        {
-            filters = gwi->ptWorkStack.top();
-            gwi->ptWorkStack.pop();
-            SimpleFilter* sf = dynamic_cast<SimpleFilter*>(filters->data());
-
-            if (sf && sf->op()->data() == "noop")
-            {
-                delete filters;
-                filters = 0;
-
-                if (gwi->ptWorkStack.empty())
-                    break;
-
-                continue;
-            }
-
-            if (gwi->ptWorkStack.empty())
-                break;
-
-            ptp = new ParseTree(new LogicOperator("and"));
-            ptp->left(filters);
-            rhs = gwi->ptWorkStack.top();
-            gwi->ptWorkStack.pop();
-            ptp->right(rhs);
-            gwi->ptWorkStack.push(ptp);
-        }
-
-        csep->filters(filters);
-    }
-
-    csep->returnedCols(gwi->returnedCols);
-    csep->columnMap(gwi->columnMap);
-    CalpontSelectExecutionPlan::TableList tblist;
-    tblist.push_back(tan);
-    csep->tableList(tblist);
-
-    // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
-    csep->stringScanThreshold(gwi->thd->variables.infinidb_string_scan_threshold);
-
-    return 0;
-}
-*/
 
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_group_info& gi, bool isUnion)
 {
@@ -8117,16 +8225,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     cerr << "getGroupPlan()" << endl;
 #endif
 
-    // by pass the derived table resolve phase of mysql
-    /*if (!(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
-            ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
-            ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
-            ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
-    {
-        gwi.thd->infinidb_vtable.isUnion = false;
-        return -1;
-    }
-    */
     // rollup is currently not supported
     if (select_lex.olap == ROLLUP_TYPE)
     {
@@ -8324,74 +8422,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     bool unionSel = false;
 
-	// MCOL-1052
-	/*
-    if (!isUnion && select_lex.master_unit()->is_union())
-    {
-//        gwi.thd->infinidb_vtable.isUnion = true;
-        CalpontSelectExecutionPlan::SelectList unionVec;
-        SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
-        unionSel = true;
-        uint8_t distUnionNum = 0;
-
-        for (SELECT_LEX* sl = select_cursor; sl; sl = sl->next_select())
-        {
-            SCSEP plan(new CalpontSelectExecutionPlan());
-            plan->txnID(csep->txnID());
-            plan->verID(csep->verID());
-            plan->sessionID(csep->sessionID());
-            plan->traceFlags(csep->traceFlags());
-            plan->data(csep->data());
-
-            // @bug 3853. When one or more sides or union queries contain derived tables,
-            // sl->join->zero_result_cause is not trustable. Since we've already handled
-            // constant filter now (0/1), we can relax the following checking.
-            // @bug 2547. ignore union unit of zero result set case
-//			if (sl->join)
-//			{
-//				sl->join->optimize();
-            // @bug 3067. not clear MySQL's behavior. when in subquery, this variable
-            // is not trustable.
-//				if (sl->join->zero_result_cause && !gwi.subQuery)
-//					continue;
-//			}
-
-            // gwi for the union unit
-            gp_walk_info union_gwi;
-            union_gwi.thd = gwi.thd;
-            uint32_t err = 0;
-
-            if ((err = getGroupPlan(union_gwi, *sl, plan, gi, unionSel)) != 0)
-                return err;
-
-            unionVec.push_back(SCEP(plan));
-
-            // distinct union num
-            if (sl == select_lex.master_unit()->union_distinct)
-                distUnionNum = unionVec.size();
-
-            *//*#ifdef DEBUG_WALK_COND
-            			IDEBUG( cerr << ">>>> UNION DEBUG" << endl );
-            			JOIN* join = sl->join;
-            			Item_cond* icp = 0;
-            			if (join != 0)
-            				icp = reinterpret_cast<Item_cond*>(join->conds);
-            			if (icp)
-            				icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-            			IDEBUG ( cerr << *plan << endl );
-            			IDEBUG ( cerr << "<<<<UNION DEBUG" << endl );
-            #endif*/
-/*        }
-
-        csep->unionVec(unionVec);
-        csep->distinctUnionNum(distUnionNum);
-
-        if (unionVec.empty())
-            gwi.thd->infinidb_vtable.impossibleWhereOnUnion = true;
-    }
-	*/
     gwi.clauseType = WHERE;
 
+    
     if (icp)
     {
     // MCOL-1052 The condition could be useless.
@@ -8434,6 +8467,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     {
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
     }
+    
 
 
     // ZZ - the followinig debug shows the structure of nested outer join. should
@@ -9148,9 +9182,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     gwi.fatalParseError = false;
     gwi.parseErrorText = "";
 
-    if (gi.groupByHaving != 0)
+    //if (gi.groupByHaving != 0)
+    if ( select_lex.having != 0 )
     {
-        Item_cond* having = reinterpret_cast<Item_cond*>(gi.groupByHaving);
+        Item_cond* having = reinterpret_cast<Item_cond*>(select_lex.having);
+        //Item_cond* having = reinterpret_cast<Item_cond*>(gi.groupByHaving);
 #ifdef DEBUG_WALK_COND
         cerr << "------------------- HAVING ---------------------" << endl;
         having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
@@ -9270,13 +9306,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     SRCP minSc;             // min width projected column. for count(*) use
 
     // Group by list. not valid for union main query
-    
-    /*
     if (gwi.thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE && !unionSel)
     {
         gwi.clauseType = GROUP_BY;
         Item* nonSupportItem = NULL;
-        ORDER* groupcol = reinterpret_cast<ORDER*>(gi.groupByGr.first);
+        ORDER* groupcol = reinterpret_cast<ORDER*>(gi.groupByGroup);
 
         // check if window functions are in order by. InfiniDB process order by list if
         // window functions are involved, either in order by or projection.
@@ -9298,7 +9332,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         }
 
         gwi.hasWindowFunc = hasWindowFunc;
-        groupcol = reinterpret_cast<ORDER*>(gi.groupByGr.first);
+        groupcol = reinterpret_cast<ORDER*>(gi.groupByGroup);
 
         for (; groupcol; groupcol = groupcol->next)
         {
@@ -9547,13 +9581,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }
-    }
-    */
+    } // GROUP processing ends here
 
 
     if (gwi.thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
     {
-        //SQL_I_List<ORDER> order_list = gi.groupByOrder;
         ORDER* ordercol = reinterpret_cast<ORDER*>(gi.groupByOrder);
         string create_query(gwi.thd->infinidb_vtable.create_vtable_query.c_ptr());
         string select_query(gwi.thd->infinidb_vtable.select_vtable_query.c_ptr());
@@ -9576,7 +9608,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
         // for subquery, order+limit by will be supported in infinidb. build order by columns
         // @todo union order by and limit support
-        if (gwi.hasWindowFunc || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
+        //if (gwi.hasWindowFunc || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
         {
             for (; ordercol; ordercol = ordercol->next)
             {
@@ -9634,6 +9666,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.orderByCols.push_back(SRCP(rc));
             }
         }
+        /*
         else if (!isUnion)
         {
             vector <Item_field*> fieldVec;
@@ -9817,12 +9850,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         Item_field* field = reinterpret_cast<Item_field*>(ord_item);
                         ReturnedColumn* rc = buildSimpleColumn(field, gwi);
                         fullname = field->full_name();
-//						if (field->db_name)
-//							fullname += string(field->db_name) + ".";
-//						if (field->table_name)
-//							fullname += string(field->table_name) + ".";
-//						if (field->field_name)
-//							fullname += string(field->field_name);
 
                         for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
                         {
@@ -9933,6 +9960,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 }
             }
         }
+        */
 
         // make sure columnmap, returnedcols and count(*) arg_list are not empty
         TableMap::iterator tb_iter = gwi.tableMap.begin();
@@ -10291,127 +10319,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 select_query += ord_cols;
             }
         }
-
-// MCOL-1052 LIMIT
-/*
-        if (unionSel || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
-        {
-            if (select_lex.master_unit()->global_parameters()->explicit_limit)
-            {
-                if (select_lex.master_unit()->global_parameters()->offset_limit)
-                {
-                    Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->offset_limit;
-                    csep->limitStart(offset->val_int());
-                }
-
-                if (select_lex.master_unit()->global_parameters()->select_limit)
-                {
-                    Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
-                    csep->limitNum(select->val_int());
-                }
-
-                if (unionSel && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
-                {
-                    ostringstream limit;
-                    limit << " limit ";
-                    limit << csep->limitStart() << ", ";
-                    limit << csep->limitNum();
-                    select_query += limit.str();
-                }
-            }
-        }
-        else if (isUnion && select_lex.explicit_limit)
-        {
-            if (select_lex.braces)
-            {
-                if (select_lex.offset_limit)
-                    csep->limitStart(((Item_int*)select_lex.offset_limit)->val_int());
-
-                if (select_lex.select_limit)
-                    csep->limitNum(((Item_int*)select_lex.select_limit)->val_int());
-            }
-        }
-        else if (select_lex.explicit_limit)
-        {
-            uint32_t limitOffset = 0;
-            uint32_t limitNum = std::numeric_limits<uint32_t>::max();
-
-            if (join)
-            {
-#if MYSQL_VERSION_ID >= 50172
-
-                // @bug5729. After upgrade, join->unit sometimes is uninitialized pointer
-                // (not null though) and will cause seg fault. Prefer checking
-                // select_lex->offset_limit if not null.
-                if (join->select_lex &&
-                        join->select_lex->offset_limit &&
-                        join->select_lex->offset_limit->fixed &&
-                        join->select_lex->select_limit &&
-                        join->select_lex->select_limit->fixed)
-                {
-                    limitOffset = join->select_lex->offset_limit->val_int();
-                    limitNum = join->select_lex->select_limit->val_int();
-                }
-
-                else if (join->unit)
-                {
-                    limitOffset = join->unit->offset_limit_cnt;
-                    limitNum = join->unit->select_limit_cnt - limitOffset;
-                }
-
-#else
-                limitOffset = (join->unit)->offset_limit_cnt;
-                limitNum = (join->unit)->select_limit_cnt - (join->unit)->offset_limit_cnt;
-#endif
-            }
-            else
-            {
-                if (select_lex.master_unit()->global_parameters()->offset_limit)
-                {
-                    Item_int* offset = (Item_int*)select_lex.master_unit()->global_parameters()->offset_limit;
-                    limitOffset = offset->val_int();
-                }
-
-                if (select_lex.master_unit()->global_parameters()->select_limit)
-                {
-                    Item_int* select = (Item_int*)select_lex.master_unit()->global_parameters()->select_limit;
-                    limitNum = select->val_int();
-                }
-            }
-
-            // relate to bug4848. let mysql drive limit when limit session variable set.
-            // do not set in csep. @bug5096. ignore session limit setting for dml
-            if ((gwi.thd->variables.select_limit == (uint64_t) - 1 ||
-                    (gwi.thd->variables.select_limit != (uint64_t) - 1 &&
-                     gwi.thd->infinidb_vtable.vtable_state != THD::INFINIDB_CREATE_VTABLE)) &&
-                    !csep->hasOrderBy())
-            {
-                csep->limitStart(limitOffset);
-                csep->limitNum(limitNum);
-            }
-            else
-            {
-                ostringstream limit;
-                limit << " limit " << limitOffset << ", " << limitNum;
-                select_query += limit.str();
-            }
-        }
-        gwi.thd->infinidb_vtable.select_vtable_query.free();
-        gwi.thd->infinidb_vtable.select_vtable_query.append(select_query.c_str(), select_query.length());
-
-        // We don't currently support limit with correlated subquery
-        if (csep->limitNum() != (uint64_t) - 1 &&
-                gwi.subQuery && !gwi.correlatedTbNameVec.empty())
-        {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);
-            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-            return ER_CHECK_NOT_IMPLEMENTED;
-        }
-    */
-    }
-
-
+    } // ORDER BY processing ends here
 
     if ( gi.groupByDistinct )
         csep->distinct(true);
