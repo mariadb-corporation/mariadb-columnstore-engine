@@ -619,7 +619,7 @@ checkPorts()
   # port test
   #
   echo ""
-  echo "** Run MariaDB ColumnStore Port (8600-8630,8700,8800,3306) availibility test"
+  echo "** Run MariaDB ColumnStore Port (8600-8630,8700,8800,3306) availability test"
   echo ""
 
   pass=true
