@@ -5289,6 +5289,8 @@ void gp_walk(const Item* item, void* arg)
                     rc = buildReturnedColumnGr(col, *gwip, gwip->fatalParseError);
                 } else*/
                     rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
+                    if ( col->type() == Item::FIELD_ITEM )
+                        gwip->fatalParseError = false;
             }
 
             SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
@@ -5360,6 +5362,19 @@ void gp_walk(const Item* item, void* arg)
             {
                 Item_func* ifp = (Item_func*)col;
                 gwip->ptWorkStack.push(buildParseTree(ifp, *gwip, gwip->fatalParseError));
+            }
+            else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
+            {
+                // Найти item в списке groupByFields
+                Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(gwip->havingAggColsItems[0]);
+                if ( isfp->type() == Item::SUM_FUNC_ITEM )
+                {
+                    ReturnedColumn* rc = buildAggregateColumn(isfp, *gwip);
+                }
+
+                if (rc)
+                    gwip->rcWorkStack.push(rc);
+                break;
             }
             else
                 cando = false;
@@ -8725,6 +8740,13 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 // add this agg col to returnedColumnList
                 boost::shared_ptr<ReturnedColumn> spac(ac);
                 gwi.returnedCols.push_back(spac);
+                // This item will be used in HAVING clause later.
+                Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(item);
+                if ( ! isfp->name_length )
+                {
+                    gwi.havingAggColsItems.push_back(item);
+                }
+                
                 gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
                 String str(256);
                 item->print(&str, QT_INFINIDB_NO_QUOTE);
