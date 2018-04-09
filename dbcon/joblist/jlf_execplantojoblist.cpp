@@ -2236,12 +2236,11 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
 							pp->right(p->left());
 						cpMap[p->left()] = pp;
 					}
-				}
-
-				p->left(nullTree);
-				p->right(nullTree);
-				delete p;
-				delete c;
+    				p->left(nullTree);
+    				p->right(nullTree);
+    				delete p;
+    				delete c;
+                }
 			}
 		}
 
