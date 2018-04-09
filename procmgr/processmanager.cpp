@@ -3385,12 +3385,12 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 * purpose:	recyle process, generally after some disable module is run
 *
 ******************************************************************************************/
-void ProcessManager::recycleProcess(string module)
+void ProcessManager::recycleProcess(string module, bool enableModule)
 {
 	Oam oam;
 	ModuleConfig moduleconfig;
 
-	log.writeLog(__LINE__, "recycleProcess request after module was disabled: " + module, LOG_TYPE_DEBUG);
+	log.writeLog(__LINE__, "recycleProcess request after module statsu update: " + module, LOG_TYPE_DEBUG);
 
 	string moduleType = module.substr(0,MAX_MODULE_TYPE_SIZE);
 
@@ -3399,11 +3399,23 @@ void ProcessManager::recycleProcess(string module)
 		oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
 	}
 	catch(...) {}
+	
+	// restart DMLProc and return if enable module is being done
+	if (enableModule)
+	{
+	    //recycle DBRM processes in all cases
+	    restartProcessType("DBRMControllerNode");
+	    restartProcessType("DBRMWorkerNode");
+
+	    restartProcessType("DMLProc");
+	    return;
+	}
 
 	//recycle DBRM processes in all cases
 	restartProcessType("DBRMControllerNode", module);
 	restartProcessType("DBRMWorkerNode");
 
+	
 	// only recycle dmlproc, if down/up module is non-parent UM
 	if ( ( moduleType == "um" ) &&
 	    ( PrimaryUMModuleName != module) )
@@ -3483,6 +3495,9 @@ int ProcessManager::enableModule(string target, int state)
 	if ( newStandbyModule == target)
 		setStandbyModule(newStandbyModule);
 
+	//set recycle process
+	recycleProcess(target);
+	
 	log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
 	return API_SUCCESS;
