@@ -223,7 +223,13 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
             break;
 
         case (CalpontSystemCatalog::BLOB):
+            if (newType.fType == DDL_BLOB && colType.colWidth == newType.fLength) return true;
+
+            break;
+
         case (CalpontSystemCatalog::TEXT):
+            if (newType.fType == DDL_TEXT && colType.colWidth == newType.fLength) return true;
+
             break;
 
         default:

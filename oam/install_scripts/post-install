@@ -104,6 +104,9 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 fi
 
 if [ $user != "root" ]; then
+	sudo rm -f $profileFileEnv
+	sudo rm -f $profileFileAlias
+	
 	sudo touch $profileFileEnv
 	sudo chmod 666 $profileFileEnv
 	egrep -qs 'MariaDB Columnstore Non-Root' ${profileFileEnv}
@@ -112,7 +115,7 @@ if [ $user != "root" ]; then
         	sudo echo " " >> ${profileFileEnv}
 		sudo echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFileEnv}
         	sudo echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFileEnv}
-        	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql" >> ${profileFileEnv}
+        	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib" >> ${profileFileEnv}
         	. ${profileFileEnv}
 	fi
 	
@@ -183,13 +186,13 @@ else
     RCFILE=/etc/rc.local
 fi
 
-touch $RCFILE
-
 if [ $user = "root" ]; then
+    touch $RCFILE    
     chmod +x $RCFILE
 else
+    $SUDO touch $RCFILE
     $SUDO chmod 777 $RCFILE
-    printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a $RCFILEl > /dev/null 2>&1
+    $SUDO printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a $RCFILE > /dev/null 2>&1
     
     if [ -n "$systemctl" ]; then
 	$SUDO systemctl start rc-local >/dev/null 2>&1

@@ -424,6 +424,7 @@ public:
     static inline std::string decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline std::string constructRegexp(const std::string& str);
+    static inline void trimWhitespace(int64_t& charData);
     static inline bool isEscapedChar(char c)
     {
         return ('%' == c || '_' == c);
@@ -578,6 +579,19 @@ inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* b
     *(ptr + l1) = '.';
 }
 
+inline void DataConvert::trimWhitespace(int64_t& charData)
+{
+    // Trims whitespace characters off non-dict character data
+    char* ch_data = (char*) &charData;
+
+    for (int8_t i = 7; i > 0; i--)
+    {
+        if (ch_data[i] == ' ' || ch_data[i] == '\0')
+            ch_data[i] = '\0';
+        else
+            break;
+    }
+}
 
 //FIXME: copy/pasted from dictionary.cpp: refactor
 inline std::string DataConvert::constructRegexp(const std::string& str)
