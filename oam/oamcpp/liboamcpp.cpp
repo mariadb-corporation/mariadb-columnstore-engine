@@ -9486,6 +9486,105 @@ std::string Oam::updateFstab(std::string device, std::string dbrootID)
     return entry;
 }
 
+/******************************************************************************************
+* @brief	waitForActive
+*
+* purpose:	wait for system to be active
+*
+******************************************************************************************/
+void Oam::waitForActive()
+{
+    SystemStatus systemstatus;
+    SystemProcessStatus systemprocessstatus;
+    bool bfirst = true;
+    int dot = 0;
+
+    for (int i = 0 ; i < 120 ; i ++, dot ++)
+    {
+        sleep (3);
+
+        try
+        {
+            getSystemStatus(systemstatus);
+
+            if (systemstatus.SystemOpState == ACTIVE)
+            {
+                BRM::DBRM dbrm;
+
+                try
+                {
+                    int rc = dbrm.getSystemQueryReady();
+
+                    if (rc == -1 )
+                    {
+                        writeLog("waitForActive: getSystemQueryReady error return: startSystem failed", LOG_TYPE_ERROR);
+                        exceptionControl("waitForActive", API_FAILURE);
+                    }
+
+                    if ( rc != 0 )
+                        return;
+
+                    writeLog("waitForActive: getSystemQueryReady not ready", LOG_TYPE_DEBUG);
+                }
+                catch (...)
+                {}
+            }
+
+            if (systemstatus.SystemOpState == FAILED)
+            {
+                exceptionControl("waitForActive", API_FAILURE);
+            }
+
+            if (systemstatus.SystemOpState == MAN_OFFLINE)
+            {
+                exceptionControl("waitForActive", API_FAILURE);
+            }
+
+            if (dot >= 3 )
+            {
+                cout << "." << flush;
+                dot = 0;
+            }
+
+            // Check DMLProc for a switch to BUSY_INIT.
+            // In such a case, we need to print a message that rollbacks
+            // are occurring and will take some time.
+            if (bfirst) // Once we've printed our message, no need to waste cpu looking
+            {
+                getProcessStatus(systemprocessstatus);
+
+                for (unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+                {
+                    if (systemprocessstatus.processstatus[i].ProcessName  == "DMLProc")
+                    {
+                        if (systemprocessstatus.processstatus[i].ProcessOpState == oam::ROLLBACK_INIT)
+                        {
+                            cout << endl << endl << "   System Not Ready, DMLProc is checking/processing rollback of abandoned transactions. Processing could take some time, please wait..." << flush;
+                            bfirst = false;
+                        }
+
+                        // At this point, we've found our DMLProc, so there's no need to spin the for loop
+                        // any further.
+                        break;
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            // At some point, we need to give up, ProcMon just isn't going to respond.
+            if (i > 60) // 3 minutes
+            {
+                cout << endl << endl << "TIMEOUT: ProcMon not responding to getSystemStatus";
+                break;
+            }
+        }
+    }
+
+    exceptionControl("waitForActive", API_FAILURE);
+}
+
+
 /***************************************************************************
  * PRIVATE FUNCTIONS
  ***************************************************************************/

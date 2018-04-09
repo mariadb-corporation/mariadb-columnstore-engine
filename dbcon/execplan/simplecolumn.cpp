@@ -388,21 +388,19 @@ bool SimpleColumn::operator==(const SimpleColumn& t) const
     if (fColumnName != t.fColumnName)
         return false;
 
-    if (fIndexName != t.fIndexName)
-        return false;
-
+//	if (fIndexName != t.fIndexName)
+//		return false;
     if (fViewName != t.fViewName)
         return false;
 
     if (fOid != t.fOid)
         return false;
 
-    if (fData != t.fData)
+    if (data() != t.data())
         return false;
 
-    if (fAlias != t.fAlias)
-        return false;
-
+//	if (fAlias != t.fAlias)
+//		return false;
     if (fTableAlias != t.fTableAlias)
         return false;
 

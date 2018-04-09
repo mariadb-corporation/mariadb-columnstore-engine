@@ -2183,6 +2183,7 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     THD* thd = current_thd;
     string emsg;
 
+    ostringstream stmt1;
     pair<string, string> fromPair;
     pair<string, string> toPair;
     string stmt;
@@ -2210,16 +2211,15 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
         return -1;
     }
 
-    stmt = thd->query();
-    stmt += ';';
+    stmt1 << "alter table " << fromPair.second << " rename to " << toPair.second << ";";
+
+    stmt = stmt1.str();
     string db;
 
-    if ( thd->db )
-        db = thd->db;
-    else if ( fromPair.first.length() != 0 )
+    if ( fromPair.first.length() != 0 )
         db = fromPair.first;
-    else
-        db = toPair.first;
+    else if ( thd->db )
+        db = thd->db;
 
     int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
 
@@ -2266,7 +2266,7 @@ extern "C"
         int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg, compressiontype);
 
         if (rc != 0)
-            push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+            push_warning(thd, Sql_condition::WARN_LEVEL_ERROR, 9999, emsg.c_str());
 
         return rc;
     }

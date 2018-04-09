@@ -82,25 +82,17 @@ bool waitForActive()
 {
     Oam oam;
 
-    const string cmd = installDir + "/bin/mcsadmin getsystemstatus > /tmp/wait.log";
-    system(cmd.c_str());
-
-    for ( int i = 0 ; i < 120 ; i ++ )
+    try
     {
-        if (oam.checkLogStatus("/tmp/wait.log", "System        ACTIVE") )
-            return true;
-
-        if ( oam.checkLogStatus("/tmp/wait.log", "System        FAILED") )
-            return false;
-
-        cout << ".";
-        cout.flush();
-        sleep (10);
-        system(cmd.c_str());
+        oam.waitForActive();
+        return true;
     }
+    catch (...)
+    {}
 
     return false;
 }
+
 
 void dbrmDirCheck()
 {

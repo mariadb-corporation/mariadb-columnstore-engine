@@ -111,7 +111,7 @@ void ArithmeticOperator::unserialize(messageqcpp::ByteStream& b)
 
 bool ArithmeticOperator::operator==(const ArithmeticOperator& t) const
 {
-    if (fData == t.fData)
+    if (data() == t.data())
         return true;
 
     return false;
