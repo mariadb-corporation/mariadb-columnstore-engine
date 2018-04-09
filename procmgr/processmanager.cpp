@@ -3390,7 +3390,7 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 	Oam oam;
 	ModuleConfig moduleconfig;
 
-	log.writeLog(__LINE__, "recycleProcess request after module statsu update: " + module, LOG_TYPE_DEBUG);
+	log.writeLog(__LINE__, "recycleProcess request after module status update: " + module, LOG_TYPE_DEBUG);
 
 	string moduleType = module.substr(0,MAX_MODULE_TYPE_SIZE);
 
@@ -3400,7 +3400,7 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 	}
 	catch(...) {}
 	
-	// restart DMLProc and return if enable module is being done
+	// restart DBRM Process and DMLProc and return if enable module is being done
 	if (enableModule)
 	{
 	    //recycle DBRM processes in all cases
