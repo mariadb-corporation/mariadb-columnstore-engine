@@ -503,10 +503,15 @@ void debug_walk(const Item* item, void* arg)
             Item_sum* isp = (Item_sum*)item;
             char* item_name = item->name;
 
-            // MCOL-1052 This is and item from extended SELECT list
-            if (!item_name && isp->get_arg_count() and isp->get_arg(0)->name)
+            // MCOL-1052 This is an extended SELECT list item
+            if (!item_name && isp->get_arg_count() && isp->get_arg(0)->name)
             {
                 item_name = isp->get_arg(0)->name;
+            }
+            else if (!item_name && isp->get_arg_count() 
+                && isp->get_arg(0)->type() == Item::INT_ITEM)
+            {
+                item_name = (char*)"INT||*";
             }
             else if (!item_name)
             {
@@ -8269,28 +8274,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
     gwi.subSelectType = csep->subType();
 
+    // MCOL-1052
     JOIN* join = select_lex.join;
     Item_cond* icp = 0;
-    /* MCOL-1052
-    if (join != 0)
-        icp = reinterpret_cast<Item_cond*>(join->conds);
-
-    // if icp is null, try to find the where clause other where
-    if (!join && gwi.thd->lex->derived_tables)
-    {
-        if (select_lex.prep_where)
-            icp = (Item_cond*)(select_lex.prep_where);
-        else if (select_lex.where)
-            icp = (Item_cond*)(select_lex.where);
-    }
-    else if (!join && ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
-                        ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI )))
-    {
-        icp = reinterpret_cast<Item_cond*>(select_lex.where);
-    }
-    */
     // MCOL-1052
     if ( gi.groupByWhere )
         icp = reinterpret_cast<Item_cond*>(gi.groupByWhere);
@@ -8460,8 +8446,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     if (icp)
     {
     // MCOL-1052 The condition could be useless.
-// MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
-//#if MYSQL_VERSION_ID < 50172
+    // MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
+    //#if MYSQL_VERSION_ID < 50172
         //@bug 3039. fix fields for constants
         if (!icp->fixed)
         {
@@ -8499,71 +8485,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     {
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
     }
-    
-
-
-    // ZZ - the followinig debug shows the structure of nested outer join. should
-    // use a recursive function.
-#ifdef OUTER_JOIN_DEBUG
-    List<TABLE_LIST>* tables = &(select_lex.top_join_list);
-    List_iterator_fast<TABLE_LIST> ti(*tables);
-    //TABLE_LIST *inner;
-    //TABLE_LIST **table= (TABLE_LIST **)gwi.thd->alloc(sizeof(TABLE_LIST*) * tables->elements);
-    //for (TABLE_LIST **t= table + (tables->elements - 1); t >= table; t--)
-    //	*t= ti++;
-
-    //DBUG_ASSERT(tables->elements >= 1);
-
-    //TABLE_LIST **end= table + tables->elements;
-    //for (TABLE_LIST **tbl= table; tbl < end; tbl++)
-    TABLE_LIST* curr;
-
-    while ((curr = ti++))
-    {
-        TABLE_LIST* curr = *tbl;
-
-        if (curr->table_name)
-            cerr << curr->table_name << " ";
-        else
-            cerr << curr->alias << endl;
-
-        if (curr->outer_join)
-            cerr << " is inner table" << endl;
-        else if (curr->straight)
-            cerr << "straight_join" << endl;
-        else
-            cerr << "join" << endl;
-
-        if (curr->nested_join)
-        {
-            List<TABLE_LIST>* inners = &(curr->nested_join->join_list);
-            List_iterator_fast<TABLE_LIST> li(*inners);
-            TABLE_LIST** inner = (TABLE_LIST**)gwi.thd->alloc(sizeof(TABLE_LIST*) * inners->elements);
-
-            for (TABLE_LIST** t = inner + (inners->elements - 1); t >= inner; t--)
-                *t = li++;
-
-            TABLE_LIST** end1 = inner + inners->elements;
-
-            for (TABLE_LIST** tb = inner; tb < end1; tb++)
-            {
-                TABLE_LIST* curr1 = *tb;
-                cerr << curr1->alias << endl;
-
-                if (curr1->sj_on_expr)
-                {
-                    curr1->sj_on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-                }
-            }
-        }
-
-        if (curr->sj_on_expr)
-        {
-            curr->sj_on_expr->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        }
-    }
-
-#endif
     // MCOL-1052
     uint32_t failed = buildOuterJoin(gwi, select_lex);
 
@@ -8757,11 +8678,12 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 // add this agg col to returnedColumnList
                 boost::shared_ptr<ReturnedColumn> spac(ac);
                 gwi.returnedCols.push_back(spac);
-                // This item will be used in HAVING clause later.
+                // This item will be used in HAVING|ORDER clause later.
                 Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(item);
                 if ( ! isfp->name_length )
                 {
                     gwi.havingAggColsItems.push_back(item);
+                    gwi.extSelectColsItems.push_back(item);
                 }
                 
                 gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
@@ -9675,20 +9597,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     else
                         rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
 
-                    // @bug5501 try item_ptr if item can not be fixed. For some
-                    // weird dml statement state, item can not be fixed but the
-                    // infomation is available in item_ptr.
-                    if (!rc || gwi.fatalParseError)
-                    {
-                        Item* item_ptr = ordercol->item_ptr;
-
-                        while (item_ptr->type() == Item::REF_ITEM)
-                            item_ptr = *(((Item_ref*)item_ptr)->ref);
-
-                        rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
-                    }
-
-                    if ( ord_item->type() == Item::FIELD_ITEM )
+                    // Looking for a match for this item in GROUP BY list.
+                    if ( rc && ord_item->type() == Item::FIELD_ITEM )
                     {
                         execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.groupByCols.begin();
                         for( ; iter != gwi.groupByCols.end(); iter++ )
@@ -9705,6 +9615,28 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                             setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
                             return ERR_NOT_GROUPBY_EXPRESSION;
                         }
+                    }
+
+                    // @bug5501 try item_ptr if item can not be fixed. For some
+                    // weird dml statement state, item can not be fixed but the
+                    // infomation is available in item_ptr.
+                    if (!rc || gwi.fatalParseError)
+                    {
+                        gwi.fatalParseError =  false;
+                        Item* item_ptr = ordercol->item_ptr;
+
+                        while (item_ptr->type() == Item::REF_ITEM)
+                            item_ptr = *(((Item_ref*)item_ptr)->ref);
+
+                        rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
+                    }
+                    
+                    
+                    // This ORDER BY item must be a agg function - try to
+                    // find corresponding item in the exteded SELECT list.
+                    if (!rc) 
+                    {
+                        rc = buildReturnedColumn(gwi.extSelectColsItems[0], gwi, gwi.fatalParseError);
                     }
 
                     if (!rc)
