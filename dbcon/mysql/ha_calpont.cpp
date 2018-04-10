@@ -1162,7 +1162,7 @@ create_calpont_group_by_handler(THD *thd, Query *query)
         
         // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses. 
         query->group_by = NULL;
-        query->order_by = NULL;
+        //query->order_by = NULL;
         query->having = NULL;
     }
     

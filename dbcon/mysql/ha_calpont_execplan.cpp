@@ -503,7 +503,12 @@ void debug_walk(const Item* item, void* arg)
             Item_sum* isp = (Item_sum*)item;
             char* item_name = item->name;
 
-            if (!item_name)
+            // MCOL-1052 This is and item from extended SELECT list
+            if (!item_name && isp->get_arg_count() and isp->get_arg(0)->name)
+            {
+                item_name = isp->get_arg(0)->name;
+            }
+            else if (!item_name)
             {
                 item_name = (char*)"<NULL>";
             }
@@ -697,8 +702,17 @@ void debug_walk(const Item* item, void* arg)
             else if (ref->real_item()->type() == Item::FIELD_ITEM)
             {
                 Item_field* ifp = (Item_field*)ref->real_item();
-                cerr << "REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) << '.' <<
-                     ifp->field_name << endl;
+                // MCOL-1052 The field referenced presumable came from
+                // extended SELECT list. 
+                if ( !ifp->field_name )
+                {
+                    cerr << "REF extra FIELD_ITEM: " << ifp->name << endl;
+                }
+                else
+                { 
+                    cerr << "REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) << '.' <<
+                        ifp->field_name << endl;
+                }
                 break;
             }
             else if (ref->real_item()->type() == Item::FUNC_ITEM)
@@ -5283,14 +5297,10 @@ void gp_walk(const Item* item, void* arg)
             gwip->clauseType = SELECT;
 
             if (col->type() != Item::COND_ITEM)
-            {
-                /*if ( col->type() == Item::FIELD_ITEM )
-                {
-                    rc = buildReturnedColumnGr(col, *gwip, gwip->fatalParseError);
-                } else*/
-                    rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
-                    if ( col->type() == Item::FIELD_ITEM )
-                        gwip->fatalParseError = false;
+            {                
+                rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
+                if ( col->type() == Item::FIELD_ITEM )
+                    gwip->fatalParseError = false;
             }
 
             SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
@@ -5365,15 +5375,22 @@ void gp_walk(const Item* item, void* arg)
             }
             else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
             {
-                // Найти item в списке groupByFields
-                Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(gwip->havingAggColsItems[0]);
-                if ( isfp->type() == Item::SUM_FUNC_ITEM )
+                Item_field* ifip = static_cast<Item_field*>(col);
+                std::vector<Item*>::iterator iter = gwip->havingAggColsItems.begin();
+                Item_func_or_sum *isfp = NULL;
+                for( ;iter != gwip->havingAggColsItems.end(); iter++ )
                 {
-                    ReturnedColumn* rc = buildAggregateColumn(isfp, *gwip);
+                    Item *temp_isfp = *iter;
+                    isfp = reinterpret_cast<Item_func_or_sum*>(temp_isfp);
+                    if ( isfp->type() == Item::SUM_FUNC_ITEM &&
+                        isfp->result_field == ifip->field )
+                    {
+                        ReturnedColumn* rc = buildAggregateColumn(isfp, *gwip);
+                        if (rc)
+                            gwip->rcWorkStack.push(rc);
+                        break;
+                    }
                 }
-
-                if (rc)
-                    gwip->rcWorkStack.push(rc);
                 break;
             }
             else
@@ -9669,6 +9686,25 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                             item_ptr = *(((Item_ref*)item_ptr)->ref);
 
                         rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
+                    }
+
+                    if ( ord_item->type() == Item::FIELD_ITEM )
+                    {
+                        execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.groupByCols.begin();
+                        for( ; iter != gwi.groupByCols.end(); iter++ )
+                        {
+                            if( rc->sameColumn((*iter).get()) )
+                                break;
+                        }
+                        // MCOL-1052 GROUP BY items list doesn't contain
+                        // this ORDER BY item.
+                        if ( iter == gwi.groupByCols.end() )
+                        {
+                            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION);
+                            gwi.parseErrorText = emsg;
+                            setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
+                            return ERR_NOT_GROUPBY_EXPRESSION;
+                        }
                     }
 
                     if (!rc)
