@@ -5165,41 +5165,37 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
 
-    bool localQuery = (thd->variables.infinidb_local_query > 0 ? true : false);
+    bool localQuery = (thd->variables.infinidb_local_query > 0 ? true : false);   
 
-    
-        //if (!ci->cal_conn_hndl || thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-        if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
+    {
+        ci->stats.reset(); // reset query stats
+        ci->stats.setStartTime();
+        ci->stats.fUser = thd->main_security_ctx.user;
+
+        if (thd->main_security_ctx.host)
+            ci->stats.fHost = thd->main_security_ctx.host;
+        else if (thd->main_security_ctx.host_or_ip)
+            ci->stats.fHost = thd->main_security_ctx.host_or_ip;
+        else
+            ci->stats.fHost = "unknown";
+
+        try
         {
-            ci->stats.reset(); // reset query stats
-            ci->stats.setStartTime();
-            ci->stats.fUser = thd->main_security_ctx.user;
-
-            if (thd->main_security_ctx.host)
-                ci->stats.fHost = thd->main_security_ctx.host;
-            else if (thd->main_security_ctx.host_or_ip)
-                ci->stats.fHost = thd->main_security_ctx.host_or_ip;
-            else
-                ci->stats.fHost = "unknown";
-
-            try
-            {
-                ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
-            }
-            catch (std::exception& e)
-            {
-                string msg = string("Columnstore User Priority - ") + e.what();
-                ci->warningMsg = msg;
-            }
-
-            // if the previous query has error, re-establish the connection
-            if (ci->queryState != 0)
-            {
-                sm::sm_cleanup(ci->cal_conn_hndl);
-                ci->cal_conn_hndl = 0;
-            }
+            ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
+        }
+        catch (std::exception& e)
+        {
+            string msg = string("Columnstore User Priority - ") + e.what();
+            ci->warningMsg = msg;
         }
 
+        // if the previous query has error, re-establish the connection
+        if (ci->queryState != 0)
+        {
+            sm::sm_cleanup(ci->cal_conn_hndl);
+            ci->cal_conn_hndl = 0;
+        }
+            
         sm::sm_init(sessionID, &ci->cal_conn_hndl, localQuery);
         idbassert(ci->cal_conn_hndl != 0);
         ci->cal_conn_hndl->csc = csc;
@@ -5218,93 +5214,90 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
         hndl = ci->cal_conn_hndl;
 
-        if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_SELECT_VTABLE)
-        {            
-            if (!csep)
-                csep.reset(new CalpontSelectExecutionPlan());
+        if (!csep)
+            csep.reset(new CalpontSelectExecutionPlan());
 
-            SessionManager sm;
-            BRM::TxnID txnID;
-            txnID = sm.getTxnID(sessionID);
+        SessionManager sm;
+        BRM::TxnID txnID;
+        txnID = sm.getTxnID(sessionID);
 
-            if (!txnID.valid)
-            {
-                txnID.id = 0;
-                txnID.valid = true;
-            }
-
-            QueryContext verID;
-            verID = sm.verID();
-
-            csep->txnID(txnID.id);
-            csep->verID(verID);
-            csep->sessionID(sessionID);
-
-            if (group_hand->table_list->db_length)
-                csep->schemaName(group_hand->table_list->db);
-
-            csep->traceFlags(ci->traceFlags);
-
-            gi.groupByTables = group_hand->table_list;
-            gi.groupByFields = group_hand->select;
-            gi.groupByWhere = group_hand->where;
-            gi.groupByGroup = group_hand->group_by;
-            gi.groupByOrder = group_hand->order_by;
-            gi.groupByHaving = group_hand->having;
-            gi.groupByDistinct = group_hand->distinct;
-            
-            // send plan whenever group_init is called
-            int status = cp_get_group_plan(thd, csep, gi);
-
-            if (status > 0)
-                goto internal_error;
-            else if (status < 0)
-                return 0;
-
-            // @bug 2547. don't need to send the plan if it's impossible where for all unions.
-            if (thd->infinidb_vtable.impossibleWhereOnUnion)
-                return 0;
-
-            string query;
-            query.assign(thd->infinidb_vtable.original_query.ptr(),
-                         thd->infinidb_vtable.original_query.length());
-            csep->data(query);
-
-            try
-            {
-                csep->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
-            }
-            catch (std::exception& e)
-            {
-                string msg = string("Columnstore User Priority - ") + e.what();
-                push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
-            }
-
-#ifdef PLAN_HEX_FILE
-            // plan serialization
-            ifstream ifs("/tmp/li1-plan.hex");
-            ByteStream bs1;
-            ifs >> bs1;
-            ifs.close();
-            csep->unserialize(bs1);
-#endif
-
-            if (ci->traceFlags & 1)
-            {
-                cerr << "---------------- EXECUTION PLAN ----------------" << endl;
-                cerr << *csep << endl ;
-                cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-            }
-            else
-            {
-                IDEBUG( cout << "---------------- EXECUTION PLAN ----------------" << endl );
-                IDEBUG( cerr << *csep << endl );
-                IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
-            }
+        if (!txnID.valid)
+        {
+            txnID.id = 0;
+            txnID.valid = true;
         }
-    // end of execution plan generation
 
-    if (thd->infinidb_vtable.vtable_state != THD::INFINIDB_SELECT_VTABLE)
+        QueryContext verID;
+        verID = sm.verID();
+
+        csep->txnID(txnID.id);
+        csep->verID(verID);
+        csep->sessionID(sessionID);
+
+        if (group_hand->table_list->db_length)
+            csep->schemaName(group_hand->table_list->db);
+
+        csep->traceFlags(ci->traceFlags);
+        
+        // MCOL-1052 Send Items lists down to the optimizer.
+        gi.groupByTables = group_hand->table_list;
+        gi.groupByFields = group_hand->select;
+        gi.groupByWhere = group_hand->where;
+        gi.groupByGroup = group_hand->group_by;
+        gi.groupByOrder = group_hand->order_by;
+        gi.groupByHaving = group_hand->having;
+        gi.groupByDistinct = group_hand->distinct;
+        
+        // send plan whenever group_init is called
+        int status = cp_get_group_plan(thd, csep, gi);
+
+        if (status > 0)
+            goto internal_error;
+        else if (status < 0)
+            return 0;
+
+        // @bug 2547. don't need to send the plan if it's impossible where for all unions.
+        if (thd->infinidb_vtable.impossibleWhereOnUnion)
+            return 0;
+
+        string query;
+        query.assign(thd->infinidb_vtable.original_query.ptr(),
+                     thd->infinidb_vtable.original_query.length());
+        csep->data(query);
+
+        try
+        {
+            csep->priority(	ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
+        }
+        catch (std::exception& e)
+        {
+            string msg = string("Columnstore User Priority - ") + e.what();
+            push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
+        }
+
+    #ifdef PLAN_HEX_FILE
+        // plan serialization
+        ifstream ifs("/tmp/li1-plan.hex");
+        ByteStream bs1;
+        ifs >> bs1;
+        ifs.close();
+        csep->unserialize(bs1);
+    #endif
+
+        if (ci->traceFlags & 1)
+        {
+            cerr << "---------------- EXECUTION PLAN ----------------" << endl;
+            cerr << *csep << endl ;
+            cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+        }
+        else
+        {
+            IDEBUG( cout << "---------------- EXECUTION PLAN ----------------" << endl );
+            IDEBUG( cerr << *csep << endl );
+            IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
+        }
+    }// end of execution plan generation
+        
     {
         ByteStream msg;
         ByteStream emsgBs;
@@ -5535,8 +5528,7 @@ internal_error:
         ci->cal_conn_hndl = 0;
     }
 
-    return ER_INTERNAL_ERROR;
-    //return(0);
+    return ER_INTERNAL_ERROR;    
 }
 
 /*@brief ha_calpont_impl_group_by_next - Return result set for MariaDB group_by 
@@ -5572,10 +5564,6 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
 
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
-
-    // @bug 3005
-    //if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE)
-    //    return HA_ERR_END_OF_FILE;
 
     if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
             ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
@@ -5668,8 +5656,7 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
             emsg = errorcodes.errorString(rc);
         }
 
-        setError(thd, ER_INTERNAL_ERROR, emsg);
-        //setError(thd, ER_INTERNAL_ERROR, "testing");
+        setError(thd, ER_INTERNAL_ERROR, emsg);        
         ci->stats.fErrorNo = rc;
         CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
         rc = ER_INTERNAL_ERROR;
@@ -5707,18 +5694,6 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
         return rc;
     }
 
-//	if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_PHASE1)
-//		return rc;
-/*
-    if ( (thd->lex)->sql_command == SQLCOM_ALTER_TABLE )
-        return rc;
-
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE)  ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) ||
-            ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return rc;
-*/
     if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
     {
@@ -5788,10 +5763,7 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     cal_table_info ti = ci->tableMap[table];
     sm::cpsm_conhdl_t* hndl;
 
-    //if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-    //    hndl = ti.conn_hndl;
-    //else
-		hndl = ci->cal_conn_hndl;
+	hndl = ci->cal_conn_hndl;
 
     if (ti.tpl_ctx)
     {
@@ -5813,11 +5785,7 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
         {
             sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats);
 
-            // set conn hndl back. could be changed in tpl_close
-            //if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
-            //    ti.conn_hndl = hndl;
-            //else
-                ci->cal_conn_hndl = hndl;
+            ci->cal_conn_hndl = hndl;
 
             ti.tpl_ctx = 0;
         }
@@ -5848,11 +5816,6 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
 
     ti.tpl_ctx = 0;
 
-	/*
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
-            thd->infinidb_vtable.has_order_by)
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ORDER_BY;
-	*/
     ci->tableMap[table] = ti;
 
     // push warnings from CREATE phase
@@ -5866,4 +5829,3 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
 }
 
 // vim:sw=4 ts=4:
-
