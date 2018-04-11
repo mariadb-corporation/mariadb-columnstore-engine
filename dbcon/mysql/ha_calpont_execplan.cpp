@@ -2978,260 +2978,6 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
     return rc;
 }
 
-ReturnedColumn* buildReturnedColumnGr(Item* item, gp_walk_info& gwi, bool& nonSupport)
-{
-    ReturnedColumn* rc = NULL;
-
-    if ( gwi.thd)
-    {
-        //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
-        {
-            if ( !item->fixed)
-            {
-                item->fix_fields(gwi.thd, (Item**)&item);
-            }
-        }
-    }
-
-    Item::Type itype = Item::SUM_FUNC_ITEM;    
-
-    switch (itype)
-    {
-        case Item::FIELD_ITEM:
-        {
-            Item_field* ifp = (Item_field*)item;
-            return buildSimpleColumn(ifp, gwi);
-        }
-
-        case Item::INT_ITEM:
-        case Item::VARBIN_ITEM:
-        {
-            String val, *str = item->val_str(&val);
-            string valStr;
-            valStr.assign(str->ptr(), str->length());
-
-            if (item->unsigned_flag)
-            {
-                //cc = new ConstantColumn(valStr, (uint64_t)item->val_uint(), ConstantColumn::NUM);
-                // It seems that str at this point is crap if val_uint() is > MAX_BIGINT. By using
-                // this constructor, ConstantColumn is built with the proper string. For whatever reason,
-                // ExeMgr converts the fConstval member to numeric, rather than using the existing numeric
-                // values available, so it's important to have fConstval correct.
-                rc = new ConstantColumn((uint64_t)item->val_uint(), ConstantColumn::NUM);
-            }
-            else
-            {
-                rc = new ConstantColumn(valStr, (int64_t)item->val_int(), ConstantColumn::NUM);
-            }
-
-            //return cc;
-            break;
-        }
-
-        case Item::STRING_ITEM:
-        {
-            String val, *str = item->val_str(&val);
-            string valStr;
-            valStr.assign(str->ptr(), str->length());
-            rc = new ConstantColumn(valStr);
-            break;
-        }
-
-        case Item::REAL_ITEM:
-        {
-            String val, *str = item->val_str(&val);
-            string valStr;
-            valStr.assign(str->ptr(), str->length());
-            rc = new ConstantColumn(valStr, item->val_real());
-            break;
-        }
-
-        case Item::DECIMAL_ITEM:
-        {
-            rc = buildDecimalColumn(item, gwi);
-            break;
-        }
-
-        case Item::FUNC_ITEM:
-        {
-            Item_func* ifp = (Item_func*)item;
-            string func_name = ifp->func_name();
-
-            // try to evaluate const F&E. only for select clause
-            vector <Item_field*> tmpVec;
-            //bool hasAggColumn = false;
-            uint16_t parseInfo = 0;
-            parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo);
-
-            if (parseInfo & SUB_BIT)
-            {
-                gwi.fatalParseError = true;
-                gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
-                setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-                break;
-            }
-
-            if (!gwi.fatalParseError &&
-                    !nonConstFunc(ifp) &&
-                    !(parseInfo & AF_BIT) &&
-                    (tmpVec.size() == 0))
-            {
-                String val, *str = ifp->val_str(&val);
-                string valStr;
-
-                if (str)
-                {
-                    valStr.assign(str->ptr(), str->length());
-                }
-
-                if (!str)
-                {
-                    rc = new ConstantColumn("", ConstantColumn::NULLDATA);
-                }
-                else if (ifp->result_type() == STRING_RESULT)
-                {
-                    rc = new ConstantColumn(valStr, ConstantColumn::LITERAL);
-                    rc->resultType(colType_MysqlToIDB(item));
-                }
-                else if (ifp->result_type() == DECIMAL_RESULT)
-                    rc = buildDecimalColumn(ifp, gwi);
-                else
-                {
-                    rc = new ConstantColumn(valStr, ConstantColumn::NUM);
-                    rc->resultType(colType_MysqlToIDB(item));
-                }
-
-                break;
-            }
-
-            if (func_name == "+" || func_name == "-" || func_name == "*" || func_name == "/" )
-                return buildArithmeticColumn(ifp, gwi, nonSupport);
-            else
-                return buildFunctionColumn(ifp, gwi, nonSupport);
-        }
-
-        case Item::SUM_FUNC_ITEM:
-        {
-            return buildAggregateColumn(item, gwi);
-        }
-
-        case Item::REF_ITEM:
-        {
-            Item_ref* ref = (Item_ref*)item;
-
-            switch ((*(ref->ref))->type())
-            {
-                case Item::SUM_FUNC_ITEM:
-                    return buildAggregateColumn(*(ref->ref), gwi);
-
-                case Item::FIELD_ITEM:
-                    return buildReturnedColumn(*(ref->ref), gwi, nonSupport);
-
-                case Item::REF_ITEM:
-                    return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport);
-
-                case Item::FUNC_ITEM:
-                    return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport);
-
-                case Item::WINDOW_FUNC_ITEM:
-                    return buildWindowFunctionColumn(*(ref->ref), gwi, nonSupport);
-
-                default:
-                    gwi.fatalParseError = true;
-                    gwi.parseErrorText = "Unknown REF item";
-                    break;
-            }
-        }
-
-        case Item::NULL_ITEM:
-        {
-            if (gwi.condPush)
-                return new SimpleColumn("noop");
-
-            return new ConstantColumn("", ConstantColumn::NULLDATA);
-        }
-
-        case Item::CACHE_ITEM:
-        {
-            Item* col = ((Item_cache*)item)->get_example();
-            rc = buildReturnedColumn(col, gwi, nonSupport);
-
-            if (rc)
-            {
-                ConstantColumn* cc = dynamic_cast<ConstantColumn*>(rc);
-
-                if (!cc)
-                {
-                    rc->joinInfo(rc->joinInfo() | JOIN_CORRELATED);
-
-                    if (gwi.subQuery)
-                        gwi.subQuery->correlated(true);
-                }
-            }
-
-            break;
-        }
-
-        case Item::EXPR_CACHE_ITEM:
-        {
-            // TODO: item is a Item_cache_wrapper
-            printf("EXPR_CACHE_ITEM in buildReturnedColumn\n");
-            cerr << "EXPR_CACHE_ITEM in buildReturnedColumn" << endl;
-            break;
-        }
-
-        case Item::DATE_ITEM:
-        {
-            String val, *str = item->val_str(&val);
-            string valStr;
-            valStr.assign(str->ptr(), str->length());
-            rc = new ConstantColumn(valStr);
-            break;
-        }
-
-        case Item::WINDOW_FUNC_ITEM:
-        {
-            return buildWindowFunctionColumn(item, gwi, nonSupport);
-        }
-
-#if INTERVAL_ITEM
-
-        case Item::INTERVAL_ITEM:
-        {
-            Item_interval* interval = (Item_interval*)item;
-            SRCP srcp;
-            srcp.reset(buildReturnedColumn(interval->item, gwi, nonSupport));
-
-            if (!srcp)
-                return NULL;
-
-            rc = new IntervalColumn(srcp, (int)interval->interval);
-            rc->resultType(srcp->resultType());
-            break;
-        }
-
-#endif
-
-        case Item::SUBSELECT_ITEM:
-        {
-            gwi.hasSubSelect = true;
-            break;
-        }
-
-        default:
-        {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = "Unknown item type";
-            break;
-        }
-    }
-
-    if (rc && item->name)
-        rc->alias(item->name);
-
-    return rc;
-}
-
 ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
     if (!(gwi.thd->infinidb_vtable.cal_conn_info))
@@ -8249,10 +7995,6 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     else if (status < 0)
         return status;
 
-    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl ;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-
     return 0;
 }
 
@@ -8273,11 +8015,10 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
     gwi.subSelectType = csep->subType();
-
-    // MCOL-1052
+    
     JOIN* join = select_lex.join;
     Item_cond* icp = 0;
-    // MCOL-1052
+    
     if ( gi.groupByWhere )
         icp = reinterpret_cast<Item_cond*>(gi.groupByWhere);
 
@@ -8485,7 +8226,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     {
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
     }
-    // MCOL-1052
+    
     uint32_t failed = buildOuterJoin(gwi, select_lex);
 
     if (failed) return failed;
@@ -8678,12 +8419,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 // add this agg col to returnedColumnList
                 boost::shared_ptr<ReturnedColumn> spac(ac);
                 gwi.returnedCols.push_back(spac);
-                // This item will be used in HAVING|ORDER clause later.
+                // This item will be used in HAVING later.
                 Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(item);
                 if ( ! isfp->name_length )
                 {
                     gwi.havingAggColsItems.push_back(item);
-                    gwi.extSelectColsItems.push_back(item);
                 }
                 
                 gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
@@ -9143,11 +8883,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     gwi.fatalParseError = false;
     gwi.parseErrorText = "";
 
-    //if (gi.groupByHaving != 0)
-    if ( select_lex.having != 0 )
+    if (gi.groupByHaving != 0)    
     {
-        Item_cond* having = reinterpret_cast<Item_cond*>(select_lex.having);
-        //Item_cond* having = reinterpret_cast<Item_cond*>(gi.groupByHaving);
+        Item_cond* having = reinterpret_cast<Item_cond*>(gi.groupByHaving);
 #ifdef DEBUG_WALK_COND
         cerr << "------------------- HAVING ---------------------" << endl;
         having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
@@ -9202,7 +8940,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     for (uint32_t i = 0; i < funcFieldVec.size(); i++)
     {
-        //SimpleColumn *sc = new SimpleColumn(funcFieldVec[i]->db_name, bestTableName(funcFieldVec[i])/*funcFieldVec[i]->table_name*/, funcFieldVec[i]->field_name, sessionID);
         SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
 
         if (!sc || gwi.fatalParseError)
@@ -9570,388 +9307,113 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         // for subquery, order+limit by will be supported in infinidb. build order by columns
         // @todo union order by and limit support
         //if (gwi.hasWindowFunc || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
+    
+        for (; ordercol; ordercol = ordercol->next)
         {
-            for (; ordercol; ordercol = ordercol->next)
+            ReturnedColumn* rc = NULL;
+
+            if (ordercol->in_field_list && ordercol->counter_used)
             {
-                ReturnedColumn* rc = NULL;
+                rc = gwi.returnedCols[ordercol->counter - 1]->clone();
+                rc->orderPos(ordercol->counter - 1);
+                // can not be optimized off if used in order by with counter.
+                // set with self derived table alias if it's derived table
+                gwi.returnedCols[ordercol->counter - 1]->incRefCount();
+            }
+            else
+            {
+                Item* ord_item = *(ordercol->item);
 
-                if (ordercol->in_field_list && ordercol->counter_used)
-                {
-                    rc = gwi.returnedCols[ordercol->counter - 1]->clone();
-                    rc->orderPos(ordercol->counter - 1);
-                    // can not be optimized off if used in order by with counter.
-                    // set with self derived table alias if it's derived table
-                    gwi.returnedCols[ordercol->counter - 1]->incRefCount();
-                }
+                // ignore not_used column on order by.
+                if (ord_item->type() == Item::INT_ITEM && ord_item->full_name() && string(ord_item->full_name()) == "Not_used")
+                    continue;
+                else if (ord_item->type() == Item::INT_ITEM)
+                    rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
+                else if (ord_item->type() == Item::SUBSELECT_ITEM)
+                    gwi.fatalParseError = true;
                 else
+                    rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
+
+                // Looking for a match for this item in GROUP BY list.
+                if ( rc && ord_item->type() == Item::FIELD_ITEM )
                 {
-                    Item* ord_item = *(ordercol->item);
-
-                    // ignore not_used column on order by.
-                    if (ord_item->type() == Item::INT_ITEM && ord_item->full_name() && string(ord_item->full_name()) == "Not_used")
-                        continue;
-                    else if (ord_item->type() == Item::INT_ITEM)
-                        rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
-                    else if (ord_item->type() == Item::SUBSELECT_ITEM)
-                        gwi.fatalParseError = true;
-                    else
-                        rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
-
-                    // Looking for a match for this item in GROUP BY list.
-                    if ( rc && ord_item->type() == Item::FIELD_ITEM )
+                    execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.groupByCols.begin();
+                    for( ; iter != gwi.groupByCols.end(); iter++ )
                     {
-                        execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.groupByCols.begin();
-                        for( ; iter != gwi.groupByCols.end(); iter++ )
-                        {
-                            if( rc->sameColumn((*iter).get()) )
-                                break;
-                        }
-                        // MCOL-1052 GROUP BY items list doesn't contain
-                        // this ORDER BY item.
-                        if ( iter == gwi.groupByCols.end() )
-                        {
-                            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION);
-                            gwi.parseErrorText = emsg;
-                            setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
-                            return ERR_NOT_GROUPBY_EXPRESSION;
-                        }
+                        if( rc->sameColumn((*iter).get()) )
+                            break;
                     }
-
-                    // @bug5501 try item_ptr if item can not be fixed. For some
-                    // weird dml statement state, item can not be fixed but the
-                    // infomation is available in item_ptr.
-                    if (!rc || gwi.fatalParseError)
+                    // MCOL-1052 GROUP BY items list doesn't contain
+                    // this ORDER BY item.
+                    if ( iter == gwi.groupByCols.end() )
                     {
-                        gwi.fatalParseError =  false;
-                        Item* item_ptr = ordercol->item_ptr;
-
-                        while (item_ptr->type() == Item::REF_ITEM)
-                            item_ptr = *(((Item_ref*)item_ptr)->ref);
-
-                        rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
-                    }
-                    
-                    
-                    // This ORDER BY item must be a agg function - try to
-                    // find corresponding item in the exteded SELECT list.
-                    if (!rc) 
-                    {
-                        rc = buildReturnedColumn(gwi.extSelectColsItems[0], gwi, gwi.fatalParseError);
-                    }
-
-                    if (!rc)
-                    {
-                        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
+                        Item_ident *iip = reinterpret_cast<Item_ident*>(ord_item);                            
+                        std::ostringstream ostream;
+                        ostream << "'";
+                        if (iip->db_name)
+                            ostream << iip->db_name << '.';
+                        else
+                            ostream << "unknown db" << '.';
+                        if (iip->table_name)
+                            ostream << iip->table_name << '.';
+                        else
+                            ostream << "unknown table" << '.';
+                        if (iip->field_name)
+                            ostream << iip->field_name;
+                        else
+                            ostream << "unknown field";
+                        ostream << "'";
+                        Message::Args args;
+                        args.add(ostream.str());
+                        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);
                         gwi.parseErrorText = emsg;
-                        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-                        return ER_CHECK_NOT_IMPLEMENTED;
+                        setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
+                        return ERR_NOT_GROUPBY_EXPRESSION;
                     }
                 }
 
-                if (ordercol->direction == ORDER::ORDER_ASC)
-                    rc->asc(true);
-                else
-                    rc->asc(false);
-
-                gwi.orderByCols.push_back(SRCP(rc));
-            }
-        }
-        /*
-        else if (!isUnion)
-        {
-            vector <Item_field*> fieldVec;
-            bool addToSel;
-
-            // the following order by is just for redo phase
-            if (!unionSel)
-            {
-                for (; ordercol; ordercol = ordercol->next)
+                // @bug5501 try item_ptr if item can not be fixed. For some
+                // weird dml statement state, item can not be fixed but the
+                // infomation is available in item_ptr.
+                if (!rc || gwi.fatalParseError)
                 {
-                    Item* ord_item = *(ordercol->item);
+                    gwi.fatalParseError =  false;
+                    Item* item_ptr = ordercol->item_ptr;
 
-                    // @bug5993. Could be nested ref.
-                    while (ord_item->type() == Item::REF_ITEM)
-                        ord_item = (*((Item_ref*)ord_item)->ref);
+                    while (item_ptr->type() == Item::REF_ITEM)
+                        item_ptr = *(((Item_ref*)item_ptr)->ref);
 
-                    // @bug 1706. re-construct the order by item one by one
-                    //Item* ord_item = *(ordercol->item);
-                    if (ord_cols.length() != 0)
-                        ord_cols += ", ";
-
-                    addToSel = true;
-                    string fullname;
-
-                    if (ordercol->in_field_list && ordercol->counter_used)
-                    {
-                        ostringstream oss;
-                        oss << ordercol->counter;
-                        ord_cols += oss.str();
-
-                        if (ordercol->direction != ORDER::ORDER_ASC)
-                            ord_cols += " desc";
-
-                        continue;
-                    }
-
-                    else if (ord_item->type() == Item::FUNC_ITEM)
-                    {
-                        // @bug 2621. order by alias
-                        if (!ord_item->is_autogenerated_name && ord_item->name)
-                        {
-                            ord_cols += ord_item->name;
-                            continue;
-                        }
-
-                        // if there's group by clause or aggregate column, check to see
-                        // if this item or the arguments is on the GB list.
-                        ReturnedColumn* rc = 0;
-                        // check if this order by column is on the select list
-                        Item_func* ifp = (Item_func*)(*(ordercol->item));
-                        rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
-
-                        if (rc)
-                        {
-                            for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
-                            {
-                                if (rc && rc->operator==(gwi.returnedCols[i].get()))
-                                {
-                                    ostringstream oss;
-                                    oss << i + 1;
-                                    ord_cols += oss.str();
-                                    addToSel = false;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (addToSel)
-                        {
-                            FunctionColumn* fc = dynamic_cast<FunctionColumn*>(rc);
-
-                            if (fc)
-                            {
-                                addToSel = false;
-                                redo = true;
-                                string ord_func = string(ifp->func_name()) + "(";
-
-                                for (uint32_t i = 0; i < fc->functionParms().size(); i++)
-                                {
-                                    if (i != 0)
-                                        ord_func += ",";
-
-                                    for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
-                                    {
-                                        if (fc->functionParms()[i]->data()->operator==(gwi.returnedCols[j].get()))
-                                        {
-                                            ord_func += "`" + escapeBackTick(gwi.returnedCols[j]->alias().c_str()) + "`";
-                                            continue;
-                                        }
-
-                                        AggregateColumn* ac = dynamic_cast<AggregateColumn*>(fc->functionParms()[i]->data());
-
-                                        if (ac)
-                                        {
-                                            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-                                            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-                                            return ER_CHECK_NOT_IMPLEMENTED;
-                                        }
-
-                                        addToSel = true;
-                                        //continue;
-
-                                    }
-                                }
-
-                                ord_func += ")";
-
-                                if (!addToSel)
-                                    ord_cols += ord_func;
-                            }
-                        }
-                    }
-                    else if (ord_item->type() == Item::SUBSELECT_ITEM)
-                    {
-                        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-                        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-                        return ER_CHECK_NOT_IMPLEMENTED;
-                    }
-
-                    else if (ord_item->type() == Item::SUM_FUNC_ITEM)
-                    {
-                        ReturnedColumn* ac = 0;
-
-                        Item_sum* ifp = (Item_sum*)(*(ordercol->item));
-                        // @bug3477. add aggregate column to the select list of the create phase.
-                        ac = buildAggregateColumn(ifp, gwi);
-
-                        if (!ac)
-                        {
-                            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED,
-                                     IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY), gwi);
-                            return ER_CHECK_NOT_IMPLEMENTED;
-                        }
-
-                        // check if this order by column is on the select list
-                        for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
-                        {
-                            AggregateColumn* ret = dynamic_cast<AggregateColumn*>(gwi.returnedCols[i].get());
-
-                            if (!ret)
-                                continue;
-
-                            if (ac->operator==(gwi.returnedCols[i].get()))
-                            {
-                                ostringstream oss;
-                                oss << i + 1;
-                                ord_cols += oss.str();
-                                addToSel = false;
-                                break;
-                            }
-                        }
-
-                        if (ac || !gwi.groupByCols.empty())
-                        {
-                            if (addToSel)
-                            {
-                                redo = true;
-                                // @bug 3076. do not add the argument of aggregate function to the SELECT list,
-                                // instead, add the whole column
-                                String str;
-                                ord_item->print(&str, QT_INFINIDB_NO_QUOTE);
-
-                                if (sel_cols_in_create.length() != 0)
-                                    sel_cols_in_create += ", ";
-
-                                sel_cols_in_create += str.c_ptr();
-                                //gwi.selectCols.push_back(" `" + string(str.c_ptr()) + "`");
-                                SRCP srcp(ac);
-                                gwi.returnedCols.push_back(srcp);
-                                ord_cols += " `" + escapeBackTick(str.c_ptr()) + "`";
-                            }
-
-                            if (ordercol->direction != ORDER::ORDER_ASC)
-                                ord_cols += " desc";
-
-                            continue;
-                        }
-                    }
-                    else if (ord_item->name && ord_item->type() == Item::FIELD_ITEM)
-                    {
-                        Item_field* field = reinterpret_cast<Item_field*>(ord_item);
-                        ReturnedColumn* rc = buildSimpleColumn(field, gwi);
-                        fullname = field->full_name();
-
-                        for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
-                        {
-                            SimpleColumn* sc = dynamic_cast<SimpleColumn*>(gwi.returnedCols[i].get());
-
-                            if (sc && ((Item_field*)ord_item)->cached_table &&
-                                    (strcasecmp(getViewName(((Item_field*)ord_item)->cached_table).c_str(), sc->viewName().c_str()) != 0))
-                            {
-                                continue;
-                            }
-
-                            if (strcasecmp(fullname.c_str(), gwi.returnedCols[i]->alias().c_str()) == 0 ||
-                                    strcasecmp(ord_item->name, gwi.returnedCols[i]->alias().c_str()) == 0)
-                            {
-                                ord_cols += string(" `") + escapeBackTick(gwi.returnedCols[i]->alias().c_str()) + '`';
-                                addToSel = false;
-                                break;
-                            }
-
-                            if (sc && sc->sameColumn(rc))
-                            {
-                                ostringstream oss;
-                                oss << i + 1;
-                                ord_cols += oss.str();
-                                addToSel = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (addToSel)
-                    {
-                        // @bug 2719. Error out order by not on the distinct select list.
-                        if ( gi.groupByDistinct )
-                        {
-                            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ORDERBY_NOT_IN_DISTINCT);
-                            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-                            return ER_CHECK_NOT_IMPLEMENTED;
-                        }
-
-                        bool hasNonSupportItem = false;
-                        uint16_t parseInfo = 0;
-                        parse_item(ord_item, fieldVec, hasNonSupportItem, parseInfo);
-
-                        if (hasNonSupportItem)
-                        {
-                            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-                            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-                            return ER_CHECK_NOT_IMPLEMENTED;
-                        }
-
-                        String str;
-                        ord_item->print(&str, QT_INFINIDB);
-                        ord_cols += str.c_ptr();
-                    }
-
-                    if (ordercol->direction != ORDER::ORDER_ASC)
-                        ord_cols += " desc";
+                    rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
+                }                    
+                
+                // This ORDER BY item must be an agg function - 
+                // the ordercol->item_ptr and exteded SELECT list
+                // must contain the corresponding item.
+                if (!rc)
+                {
+                    Item* item_ptr = ordercol->item_ptr;
+                    if (item_ptr)
+                        rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
                 }
-            }
 
-            redo = (redo || fieldVec.size() != 0);
-
-            // populate string to be added to the select list for order by
-            for (uint32_t i = 0; i < fieldVec.size(); i++)
-            {
-                SimpleColumn* sc = buildSimpleColumn(fieldVec[i], gwi);
-
-                if (!sc)
+                if (!rc)
                 {
                     string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
+                    gwi.parseErrorText = emsg;
                     setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
-
-                String str;
-                fieldVec[i]->print(&str, QT_INFINIDB_NO_QUOTE);
-                sc->alias(string(str.c_ptr()));
-                SRCP srcp(sc);
-                uint32_t j = 0;
-
-                for (; j < gwi.returnedCols.size(); j++)
-                {
-                    if (sc->sameColumn(gwi.returnedCols[j].get()))
-                    {
-                        SimpleColumn* field = dynamic_cast<SimpleColumn*>(gwi.returnedCols[j].get());
-
-                        if (field && field->alias() == sc->alias())
-                            break;
-                    }
-                }
-
-                if (j == gwi.returnedCols.size())
-                {
-                    string fullname;
-
-                    if (sel_cols_in_create.length() != 0)
-                        sel_cols_in_create += ", ";
-
-                    fullname = str.c_ptr();
-                    sel_cols_in_create += fullname + " `" + escapeBackTick(fullname.c_str()) + "`";
-
-                    gwi.returnedCols.push_back(srcp);
-                    gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(fieldVec[i]->field_name), srcp));
-                    TABLE_LIST* tmp = (fieldVec[i]->cached_table ? fieldVec[i]->cached_table : 0);
-                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] =
-                        make_pair(1, tmp);
-                }
             }
-        }
-        */
 
+            if (ordercol->direction == ORDER::ORDER_ASC)
+                rc->asc(true);
+            else
+                rc->asc(false);
+
+            gwi.orderByCols.push_back(SRCP(rc));
+        }
+    
+        
         // make sure columnmap, returnedcols and count(*) arg_list are not empty
         TableMap::iterator tb_iter = gwi.tableMap.begin();
 

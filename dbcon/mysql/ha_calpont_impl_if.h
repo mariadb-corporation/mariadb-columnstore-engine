@@ -100,7 +100,6 @@ struct gp_walk_info
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList subGroupByCols;
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
     std::vector <Item*> havingAggColsItems;
-    std::vector <Item*> extSelectColsItems;
     execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
     // This vector temporarily hold the projection columns to be added
     // to the returnedCols vector for subquery processing. It will be appended

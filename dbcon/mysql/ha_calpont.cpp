@@ -1166,8 +1166,6 @@ create_calpont_group_by_handler(THD *thd, Query *query)
         query->having = NULL;
     }
     
-
-    
     return handler;
 }
 
