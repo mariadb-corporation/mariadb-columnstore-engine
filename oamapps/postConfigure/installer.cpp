@@ -400,10 +400,6 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    //store syslog config file in Calpont Config file
-    cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
-    system(cmd.c_str());
-
     //get PPackage Type
     try
     {
@@ -951,8 +947,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
         string fileName = "/etc/" + files[i];
 
         //make a backup copy before changing
-        if ( rootUser )
-        {
             cmd = "rm -f " + fileName + ".columnstoreSave";
             system(cmd.c_str());
 
@@ -968,25 +962,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 
             cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1";
             system(cmd.c_str());
-        }
-        else
-        {
-            cmd = "sudo rm -f " + fileName + ".columnstoreSave";
-            system(cmd.c_str());
-
-            cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
-            system(cmd.c_str());
-
-            cmd = "sudo cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
-
-            if (geteuid() == 0) system(cmd.c_str());
-
-            cmd = "sudo rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
-            system(cmd.c_str());
-
-            cmd = "sudo cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1";
-            system(cmd.c_str());
-        }
     }
 
     return allfound;

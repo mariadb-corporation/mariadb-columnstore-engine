@@ -63,17 +63,10 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
 			echo "Setup fstab on Module"
-        		if [ $user = "root" ]; then
-				touch /etc/fstab
-				rm -f /etc/fstab.columnstoreSave
-				cp /etc/fstab /etc/fstab.columnstoreSave
-				cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
-			else
-                                sudo touch /etc/fstab
-				sudo chmod 666 /etc/fstab
-                                sudo rm -f /etc/fstab.columnstoreSave
-                                sudo cp /etc/fstab /etc/fstab.columnstoreSave
-                                sudo cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
+			touch /etc/fstab
+			rm -f /etc/fstab.columnstoreSave
+			cp /etc/fstab /etc/fstab.columnstoreSave
+			cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
 			fi
 		fi
 	fi
@@ -93,12 +86,8 @@ if [ $module = "um" ]; then
 				echo "Setup UM Volume Mount"
 				device=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMVolumeDeviceName$mid`
 				mkdir -p $COLUMNSTORE_INSTALL_DIR/mysql/db > /dev/null 2>&1
- 				if [ $user = "root" ]; then
- 					mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto
- 					chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
- 				else
- 					sudo mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto,user
- 					sudo chown $user:$user -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
+				mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto
+				chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
  				fi
 			fi
 		fi
@@ -181,40 +170,22 @@ touch $RCFILE
 
 echo "add deadline to rc.local"
 if [ $module = "um" ]; then
-	if [ $user = "root" ]; then
-		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-		echo "done" >> $RCFILE
-	else
-		sudo chmod 666 $RCFILE
-                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-                sudo echo "done" >> $RCFILE
-	fi
+	echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+	echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+	echo "done" >> $RCFILE
 else
-        if [ $user = "root" ]; then
-		echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-		echo "done" >> $RCFILE
+	echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+	echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+	echo "done" >> $RCFILE
 
-		echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-		echo "done" >> $RCFILE
-	else
-		sudo chmod 666 $RCFILE
-                sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-                sudo echo "done" >> $RCFILE
-
-                sudo echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-                sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-                sudo echo "done" >> $RCFILE
-	fi
+	echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
+	echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
+	echo "done" >> $RCFILE
 fi
 
 if [ $user != "root" ]; then
       echo "uncomment runuser in rc.local"
-      sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
+      sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
 fi
 
 echo "!!!Module Installation Successfully Completed!!!"

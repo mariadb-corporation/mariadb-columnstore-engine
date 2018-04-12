@@ -316,10 +316,8 @@ kill_by_pid() {
 
   if [ -n "$pid" ]; then
 	ppid=$(ps -o ppid= -p $pid)
-        $SUDO kill -9 $ppid
         kill -9 $ppid
         sleep 1
-        $SUDO kill -9 $pid
         kill -9 $pid
         echo $echo_n "Force shutting down (no/bad pid file)" 
         log_success_msg

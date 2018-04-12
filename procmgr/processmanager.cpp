@@ -4937,7 +4937,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     //clear out the known_host file, sometimes causes a failure on amazon during addModule
     if ( amazon )
     {
-        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        string cmd = "unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -6298,7 +6298,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
                 homedir = p;
         }
 
-        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        string cmd = "unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -11057,7 +11057,7 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
 
         if ( !rootUser)
         {
-            cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+            cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
             system(cmd.c_str());
         }
 

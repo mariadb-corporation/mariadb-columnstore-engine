@@ -101,9 +101,6 @@ void msgProcessor()
         int user;
         user = getuid();
 
-        if (user != 0)
-            cmd = "sudo fuser -k " + port + "/tcp";
-
         system(cmd.c_str());
     }
     catch (...)

@@ -62,7 +62,7 @@ done
 
 USER=`whoami 2>/dev/null`
 if [ $USER != "root" ]; then
-	sudo ldconfig >/dev/null 2>&1
+	ldconfig >/dev/null 2>&1
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib
 else
