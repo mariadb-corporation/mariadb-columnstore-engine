@@ -4530,10 +4530,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 	}
 	  
 	if ( packageType == "rpm")
-		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.rpm.tar.gz";
+		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.rpm";
 	else
 		if ( packageType == "deb") 
-        		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.deb.tar.gz";
+        		calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.deb";
 		else
 			calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.bin.tar.gz";
 
