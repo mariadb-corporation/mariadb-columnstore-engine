@@ -60,6 +60,7 @@ double_quote \"
 grave_accent `
 
 comment ("--"{non_newline}*)
+extended_ident_cont [A-Za-z\200-\377_0-9\$#,()\[\].;\:\+\-\*\/\%\^\<\>\=!&|@\\]
 self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=]
 whitespace ({space}+|{comment})
 
@@ -67,10 +68,11 @@ digit [0-9]
 ident_start [A-Za-z\200-\377_0-9]
 ident_cont [A-Za-z\200-\377_0-9\$]
 identifier {ident_start}{ident_cont}*
+extended_identifier {ident_start}{extended_ident_cont}*
 /* fully qualified names regexes */
 fq_identifier {identifier}\.{identifier}
-identifer_quoted {grave_accent}{identifier}{grave_accent}
-identifer_double_quoted {double_quote}{identifier}{double_quote}
+identifer_quoted {grave_accent}{extended_identifier}{grave_accent}
+identifer_double_quoted {double_quote}{extended_identifier}{double_quote}
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
