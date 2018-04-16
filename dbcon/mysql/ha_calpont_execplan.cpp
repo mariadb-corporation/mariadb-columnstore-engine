@@ -3201,6 +3201,20 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 	// and position. We can't tell which at this point, so we
 	// rebuild the item from the arguments directly and then try to 
 	// figure what to pop, if anything, in order to sync the stacks.
+    //
+    // MCOL-1341 - With MariaDB 10.2.14 onwards CASE is now in the order:
+    // [case,]when1,when2,...,then1,then2,...[,else]
+    // See server commit bf1ca14ff3f3faa9f7a018097b25aa0f66d068cd for more
+    // information.
+    int32_t arg_offset = 0;
+    if ((item->argument_count() - 1) % 2)
+    {
+        arg_offset = (item->argument_count() - 1) / 2;
+    }
+    else
+    {
+        arg_offset = item->argument_count() / 2;
+    }
 	for (int32_t i = item->argument_count()-1; i >=0; i--)
 	{
 		// For case_searched, we know the items for the WHEN clause will
@@ -3209,7 +3223,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 		// Every even numbered arg is a WHEN. In between are the THEN. 
 		// An odd number of args indicates an ELSE residing in the last spot.
 		if (funcName == "case_searched" &&
-			i % 2 == 0 && uint(i) != item->argument_count()-1)
+            (i < arg_offset))
 		{
 			sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
 			if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top()->data() == sptp->data())
