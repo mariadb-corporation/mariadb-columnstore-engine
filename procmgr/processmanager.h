@@ -302,7 +302,7 @@ public:
      /**
      *@brief recycle Processes
      */
-	void recycleProcess(std::string module);
+	void recycleProcess(std::string module, bool enableModule = false);
 
      /**
      *@brief Enable a specified module
