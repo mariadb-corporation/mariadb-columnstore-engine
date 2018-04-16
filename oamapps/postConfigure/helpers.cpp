@@ -482,7 +482,6 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
 					}
 					else
 					{
-						cout << endl << "ERROR: Module not Active, replication not done on " << (*pt).DeviceName << endl;
 						pt++;
 					}
 				}

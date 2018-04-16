@@ -545,7 +545,7 @@ public:
 
 	/** @brief Set MySQL Replication
 		*/
-	int setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule = oam::UnassignedName, bool failover = false, bool distributeDB = false, std::string password = oam::UnassignedName, bool enable = true);
+	int setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule = oam::UnassignedName, bool distributeDB = false, std::string password = oam::UnassignedName, bool enable = true, bool addModule = false);
 
 	/** @brief Gluster Assign dbroot to a module
 		*/
