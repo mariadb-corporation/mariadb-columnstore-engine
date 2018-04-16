@@ -4,6 +4,8 @@
 #
 # columnstore_startup.sh steps for columnstore single server startup after install
 
+set -o pipefail
+
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 
