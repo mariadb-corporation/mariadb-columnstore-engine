@@ -5684,15 +5684,16 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
         return 0;
 
     thd->infinidb_vtable.isNewQuery = true;
+    thd->infinidb_vtable.isUnion = false;
 
     if (thd->infinidb_vtable.cal_conn_info)
         ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
 
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY )
-    {
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;// flip back to normal state
-        return rc;
-    }
+    //if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY )
+    //{
+    //    thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;// flip back to normal state
+    //    return rc;
+    //}
 
     if (((thd->lex)->sql_command == SQLCOM_INSERT) ||
             ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) )
