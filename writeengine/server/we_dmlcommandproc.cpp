@@ -2977,7 +2977,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                         case CalpontSystemCatalog::DATETIME:
                         {
                             intColVal = row.getUintField<8>(fetchColPos);
-                            value = DataConvert::datetimeToString(intColVal);
+                            value = DataConvert::datetimeToString(intColVal, colType.precision);
                             break;
                         }
 
@@ -3305,7 +3305,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             case CalpontSystemCatalog::DATETIME:
                             {
                                 intColVal = row.getUintField<8>(fetchColPos);
-                                value = DataConvert::datetimeToString(intColVal);
+                                value = DataConvert::datetimeToString(intColVal, colType.precision);
                                 break;
                             }
 

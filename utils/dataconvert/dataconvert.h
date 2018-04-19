@@ -361,7 +361,7 @@ public:
       * @param type the columns database type
       * @param data the columns string representation of it's data
       */
-    EXPORT static std::string datetimeToString( long long  datetimevalue );
+    EXPORT static std::string datetimeToString( long long  datetimevalue, long decimals = 0 );
     static inline void datetimeToString( long long datetimevalue, char* buf, unsigned int buflen );
 
     /**
@@ -459,14 +459,29 @@ inline void DataConvert::dateToString( int datevalue, char* buf, unsigned int bu
 
 inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, unsigned int buflen )
 {
-    snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d",
-              (unsigned)((datetimevalue >> 48) & 0xffff),
-              (unsigned)((datetimevalue >> 44) & 0xf),
-              (unsigned)((datetimevalue >> 38) & 0x3f),
-              (unsigned)((datetimevalue >> 32) & 0x3f),
-              (unsigned)((datetimevalue >> 26) & 0x3f),
-              (unsigned)((datetimevalue >> 20) & 0x3f)
-            );
+    if ((datetimevalue & 0xfffff) > 0)
+    {
+        snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d.%d",
+                  (unsigned)((datetimevalue >> 48) & 0xffff),
+                  (unsigned)((datetimevalue >> 44) & 0xf),
+                  (unsigned)((datetimevalue >> 38) & 0x3f),
+                  (unsigned)((datetimevalue >> 32) & 0x3f),
+                  (unsigned)((datetimevalue >> 26) & 0x3f),
+                  (unsigned)((datetimevalue >> 20) & 0x3f),
+                  (unsigned)((datetimevalue) & 0xfffff)
+                );
+    }
+    else
+    {
+        snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d",
+                  (unsigned)((datetimevalue >> 48) & 0xffff),
+                  (unsigned)((datetimevalue >> 44) & 0xf),
+                  (unsigned)((datetimevalue >> 38) & 0x3f),
+                  (unsigned)((datetimevalue >> 32) & 0x3f),
+                  (unsigned)((datetimevalue >> 26) & 0x3f),
+                  (unsigned)((datetimevalue >> 20) & 0x3f)
+                );
+    }
 }
 
 inline void DataConvert::dateToString1( int datevalue, char* buf, unsigned int buflen)

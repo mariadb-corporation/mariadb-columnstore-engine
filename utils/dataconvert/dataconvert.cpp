@@ -1717,14 +1717,28 @@ std::string DataConvert::dateToString( int  datevalue )
     return buf;
 }
 
-std::string DataConvert::datetimeToString( long long  datetimevalue )
+std::string DataConvert::datetimeToString( long long  datetimevalue, long decimals )
 {
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
     // @bug 4703 abandon multiple ostringstream's for conversion
     DateTime dt(datetimevalue);
-    const int DATETIMETOSTRING_LEN = 21; // YYYY-MM-DD HH:MM:SS\0
+    const int DATETIMETOSTRING_LEN = 28; // YYYY-MM-DD HH:MM:SS.mmmmmm\0
     char buf[DATETIMETOSTRING_LEN];
 
     sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+    if (dt.msecond && decimals)
+    {
+        snprintf(buf + strlen(buf), 21 + decimals, ".%d", dt.msecond);
+        // Pad end with zeros
+        if (strlen(buf) < (21 + decimals))
+        {
+            sprintf(buf + strlen(buf), "%0*d", 21 + decimals - strlen(buf), 0);
+        }
+    }
     return buf;
 }
 

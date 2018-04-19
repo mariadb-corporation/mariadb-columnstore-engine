@@ -1114,10 +1114,11 @@ literal:
 	;
 
 datetime_type:
-	DATETIME
+	DATETIME opt_time_precision
 	{
 		$$ = new ColumnType(DDL_DATETIME);
 		$$->fLength = DDLDatatypeLength[DDL_DATETIME];
+        $$->fPrecision = $2;
 	}
 	|
 	DATE

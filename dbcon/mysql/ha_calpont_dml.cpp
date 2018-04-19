@@ -838,11 +838,21 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                             // mariadb 10.1 compatibility -- MYSQL_TYPE_DATETIME2 introduced in mysql 5.6
                             MYSQL_TIME ltime;
                             const uchar* pos = buf;
-                            longlong tmp = my_datetime_packed_from_binary(pos, 0);
+                            longlong tmp = my_datetime_packed_from_binary(pos, table->field[colpos]->decimals());
                             TIME_from_longlong_datetime_packed(&ltime, tmp);
-                            fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d%c",
-                                    ltime.year, ltime.month, ltime.day,
-                                    ltime.hour, ltime.minute, ltime.second, ci.delimiter);
+                            if (!ltime.second_part)
+                            {
+                                fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d%c",
+                                        ltime.year, ltime.month, ltime.day,
+                                        ltime.hour, ltime.minute, ltime.second, ci.delimiter);
+                            }
+                            else
+                            {
+                                fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d.%ld%c",
+                                        ltime.year, ltime.month, ltime.day,
+                                        ltime.hour, ltime.minute, ltime.second,
+                                        ltime.second_part, ci.delimiter);
+                            }
                             buf += table->field[colpos]->pack_length();
                         }
                         else
