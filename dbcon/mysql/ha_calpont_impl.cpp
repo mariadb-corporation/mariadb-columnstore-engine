@@ -5103,9 +5103,10 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
 
+    // MCOL-1052
     // by pass the extra union trips. return 0
-    if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-        return 0;
+    //if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
+    //    return 0;
 
     // @bug 2232. Basic SP support. Error out non support sp cases.
     // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
@@ -5689,6 +5690,7 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     if (thd->infinidb_vtable.cal_conn_info)
         ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
 
+    // MCOL-1052
     //if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ORDER_BY )
     //{
     //    thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;// flip back to normal state
