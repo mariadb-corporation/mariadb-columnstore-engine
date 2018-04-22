@@ -919,7 +919,12 @@ void debug_walk(const Item* item, void* arg)
             cerr << "Window Function Item " << ifp->window_func()->func_name() << endl;
             break;
         }
-
+        
+        case Item::NULL_ITEM:
+        {
+            cerr << "NULL item" << endl;
+            break;
+        }
         default:
         {
             cerr << "UNKNOWN_ITEM type " << item->type() << endl;
@@ -8722,7 +8727,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
             case Item::NULL_ITEM:
             {
-                if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
+                /*if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) )
                 { }
                 else
                 {
@@ -8739,7 +8744,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
                     sel_cols_in_create += name;
                     gwi.selectCols.push_back("null");
-                }
+                }*/
 
                 break;
             }
