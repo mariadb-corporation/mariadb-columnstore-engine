@@ -152,6 +152,13 @@ int64_t Func_timestampdiff::getDatetimeIntVal(rowgroup::Row& row,
     return getIntVal(row, parm, isNull, ct);
 }
 
+int64_t Func_timestampdiff::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    return getIntVal(row, parm, isNull, ct);
+}
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

@@ -75,6 +75,7 @@ bool boolVal(SPTP& parm, Row& row)
             case CalpontSystemCatalog::UINT:
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIME:
             default:
                 ret = (parm->data()->getIntVal(row, isNull) != 0);
         }
@@ -219,6 +220,19 @@ int64_t Func_if::getDatetimeIntVal(Row& row,
     }
 }
 
-
+int64_t Func_if::getTimeIntVal(Row& row,
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType&)
+{
+    if (boolVal(parm[0], row))
+    {
+        return parm[1]->data()->getTimeIntVal(row, isNull);
+    }
+    else
+    {
+        return parm[2]->data()->getTimeIntVal(row, isNull);
+    }
+}
 } // namespace funcexp
 // vim:ts=4 sw=4:

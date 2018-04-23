@@ -209,7 +209,8 @@ const string SimpleFilter::data() const
              fRhs->resultType().colDataType == CalpontSystemCatalog::TEXT ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
              fRhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
-             fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
+             fRhs->resultType().colDataType == CalpontSystemCatalog::DATETIME ||
+             fRhs->resultType().colDataType == CalpontSystemCatalog::TIME))
         rhs = "'" + SimpleFilter::escapeString(fRhs->data()) + "'";
     else
         rhs = fRhs->data();
@@ -221,6 +222,7 @@ const string SimpleFilter::data() const
              fLhs->resultType().colDataType == CalpontSystemCatalog::TEXT ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::VARBINARY ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::DATE ||
+             fLhs->resultType().colDataType == CalpontSystemCatalog::TIME ||
              fLhs->resultType().colDataType == CalpontSystemCatalog::DATETIME))
         lhs = "'" + SimpleFilter::escapeString(fLhs->data()) + "'";
     else
@@ -544,6 +546,19 @@ void SimpleFilter::convertConstant()
                 result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
             }
         }
+        else if (fRhs->resultType().colDataType == CalpontSystemCatalog::TIME)
+        {
+            if (lcc->constval().empty())
+            {
+                lcc->constval("00:00:00");
+                result.intVal = 0;
+                result.strVal = lcc->constval();
+            }
+            else
+            {
+                result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
+            }
+        }
 
         lcc->result(result);
     }
@@ -578,7 +593,19 @@ void SimpleFilter::convertConstant()
                 result.intVal = dataconvert::DataConvert::datetimeToInt(result.strVal);
             }
         }
-
+        else if (fLhs->resultType().colDataType == CalpontSystemCatalog::TIME)
+        {
+            if (rcc->constval().empty())
+            {
+                rcc->constval("00:00:00");
+                result.intVal = 0;
+                result.strVal = rcc->constval();
+            }
+            else
+            {
+                result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
+            }
+        }
         rcc->result(result);
     }
 }

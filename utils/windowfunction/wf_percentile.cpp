@@ -82,6 +82,7 @@ boost::shared_ptr<WindowFunctionType> WF_percentile<T>::makeFunction(int id, con
             case CalpontSystemCatalog::UDECIMAL:
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIME:
             {
                 func.reset(new WF_percentile<uint64_t>(id, name));
                 break;

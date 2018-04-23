@@ -125,6 +125,11 @@ inline uint64_t getUintNullValue(int colType, int colWidth = 0)
             return joblist::DATETIMENULL;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            return joblist::TIMENULL;
+        }
+
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
@@ -640,6 +645,12 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            ret = ((uint64_t)row.getUintField(col) == joblist::TIMENULL);
+            break;
+        }
+
         case execplan::CalpontSystemCatalog::VARBINARY:
         case execplan::CalpontSystemCatalog::BLOB:
         {
@@ -1117,6 +1128,7 @@ void RowAggregation::initMapData(const Row& rowIn)
 
             case execplan::CalpontSystemCatalog::DATE:
             case execplan::CalpontSystemCatalog::DATETIME:
+            case execplan::CalpontSystemCatalog::TIME:
             {
                 fRow.setUintField(rowIn.getUintField(colIn), colOut);
                 break;
@@ -1247,6 +1259,7 @@ void RowAggregation::makeAggFieldsNull(Row& row)
 
             case execplan::CalpontSystemCatalog::DATE:
             case execplan::CalpontSystemCatalog::DATETIME:
+            case execplan::CalpontSystemCatalog::TIME:
             {
                 row.setUintField(getUintNullValue(colDataType), colOut);
                 break;
@@ -1375,6 +1388,7 @@ void RowAggregation::doMinMaxSum(const Row& rowIn, int64_t colIn, int64_t colOut
 
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIME:
         {
             if (funcType == ROWAGG_SUM)
             {
@@ -1518,9 +1532,17 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             uint64_t dtm = rowIn.getUintField(colIn);
-            valIn = ((dtm >> 48) * 10000000000LL) + (((dtm >> 44) & 0xF) * 100000000) +
-                    (((dtm >> 38) & 077) * 1000000) + (((dtm >> 32) & 077) * 10000) +
-                    (((dtm >> 26) & 077) * 100) + ((dtm >> 20) & 077);
+            valIn = ((dtm >> 48) * 10000000000000000LL) + (((dtm >> 44) & 0xF) * 100000000000000) +
+                    (((dtm >> 38) & 077) * 1000000000000) + (((dtm >> 32) & 077) * 10000000000) +
+                    (((dtm >> 26) & 077) * 100000000) + (((dtm >> 20) & 077) * 1000000) + (dtm & 0xfffff);
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t dtm = rowIn.getUintField(colIn);
+            valIn = (((dtm >> 40) & 0xfff) * 10000000000) +
+                    (((dtm >> 32) & 0xff) * 100000000) + (((dtm >> 24) & 0xff) * 1000000) + (dtm & 0xffffff);
             break;
         }
 
@@ -2045,6 +2067,12 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
             {
                 datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
                 datum.columnData = rowIn.getUintField(colIn);
+                break;
+            }
+            case execplan::CalpontSystemCatalog::TIME:
+            {
+                datum.dataType = execplan::CalpontSystemCatalog::BIGINT;
+                datum.columnData = rowIn.getIntField(colIn);
                 break;
             }
 
@@ -2723,6 +2751,11 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
             fRow.setUintField<8>(uintOut, colOut);
             break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+
+            fRow.setIntField<8>(intOut, colOut);
+            break;
+
         case execplan::CalpontSystemCatalog::FLOAT:
         case execplan::CalpontSystemCatalog::UFLOAT:
             fRow.setFloatField(floatOut, colOut);
@@ -3031,6 +3064,12 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
                 }
                 break;
 
+                case execplan::CalpontSystemCatalog::TIME:
+                {
+                    fRow.setIntField(getIntNullValue(colDataType), colOut);
+                }
+                break;
+
                 case execplan::CalpontSystemCatalog::CHAR:
                 case execplan::CalpontSystemCatalog::VARCHAR:
                 case execplan::CalpontSystemCatalog::TEXT:
@@ -3207,6 +3246,12 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 }
                 break;
 
+                case execplan::CalpontSystemCatalog::TIME:
+                {
+                    fRow.setIntField(DataConvert::stringToTime(aggData.fConstValue), colOut);
+                }
+                break;
+
                 case execplan::CalpontSystemCatalog::CHAR:
                 case execplan::CalpontSystemCatalog::VARCHAR:
                 case execplan::CalpontSystemCatalog::TEXT:
@@ -3295,6 +3340,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
 
                 case execplan::CalpontSystemCatalog::DATE:
                 case execplan::CalpontSystemCatalog::DATETIME:
+                case execplan::CalpontSystemCatalog::TIME:
                 case execplan::CalpontSystemCatalog::CHAR:
                 case execplan::CalpontSystemCatalog::VARCHAR:
                 case execplan::CalpontSystemCatalog::TEXT:
@@ -3355,6 +3401,7 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 break;
 
                 case execplan::CalpontSystemCatalog::DATETIME:
+                case execplan::CalpontSystemCatalog::TIME:
                 {
                     fRow.setUintField(0, colOut);
                 }
@@ -3489,6 +3536,12 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
                 case execplan::CalpontSystemCatalog::DATETIME:
                 {
                     datum.columnData = DataConvert::stringToDatetime(aggData.fConstValue);
+                }
+                break;
+
+                case execplan::CalpontSystemCatalog::TIME:
+                {
+                    datum.columnData = DataConvert::stringToTime(aggData.fConstValue);
                 }
                 break;
 

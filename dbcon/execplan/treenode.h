@@ -388,6 +388,10 @@ public:
     {
         return fResult.intVal;
     }
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fResult.intVal;
+    }
     virtual void evaluate(rowgroup::Row& row, bool& isNull) {}
 
     inline bool getBoolVal();
@@ -399,6 +403,7 @@ public:
     inline IDB_Decimal getDecimalVal();
     inline int32_t getDateIntVal();
     inline int64_t getDatetimeIntVal();
+    inline int64_t getTimeIntVal();
 
     virtual const execplan::CalpontSystemCatalog::ColType& resultType() const
     {
@@ -490,6 +495,7 @@ inline bool TreeNode::getBoolVal()
         case CalpontSystemCatalog::INT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (fResult.intVal != 0);
 
         case CalpontSystemCatalog::UBIGINT:
@@ -665,6 +671,13 @@ inline const std::string& TreeNode::getStrVal()
             break;
         }
 
+        case CalpontSystemCatalog::TIME:
+        {
+            dataconvert::DataConvert::timeToString(fResult.intVal, tmp, 255);
+            fResult.strVal = std::string(tmp);
+            break;
+        }
+
         default:
             throw logging::InvalidConversionExcept("TreeNode::getStrVal: Invalid conversion.");
     }
@@ -727,6 +740,7 @@ inline int64_t TreeNode::getIntVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return fResult.intVal;
 
         default:
@@ -769,6 +783,7 @@ inline uint64_t TreeNode::getUintVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return fResult.intVal;
 
         default:
@@ -831,6 +846,7 @@ inline float TreeNode::getFloatVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (float)fResult.intVal;
 
         default:
@@ -895,6 +911,7 @@ inline double TreeNode::getDoubleVal()
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (double)fResult.intVal;
 
         default:
@@ -937,8 +954,13 @@ inline IDB_Decimal TreeNode::getDecimalVal()
             break;
 
         case CalpontSystemCatalog::DATE:
+            throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from date.");
+
         case CalpontSystemCatalog::DATETIME:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from datetime.");
+
+        case CalpontSystemCatalog::TIME:
+            throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from time.");
 
         case CalpontSystemCatalog::FLOAT:
             throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: non-support conversion from float");
@@ -967,8 +989,36 @@ inline int64_t TreeNode::getDatetimeIntVal()
 {
     if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATE)
         return (fResult.intVal & 0x00000000FFFFFFC0LL) << 32;
+    else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIME)
+    {
+        dataconvert::Time tt;
+
+        memcpy(&tt, &fResult.intVal, 8);
+        if (tt.hour > 23 || tt.hour < 0)
+            throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from time (out of range).");
+        dataconvert::DateTime dt(0, 0, 0, tt.hour, tt.minute, tt.second, tt.msecond);
+        memcpy(&fResult.intVal, &dt, 8);
+        return fResult.intVal;
+    }
     else if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
         //return (fResult.intVal & 0xFFFFFFFFFFF00000LL);
+        return (fResult.intVal);
+    else
+        return getIntVal();
+}
+
+inline int64_t TreeNode::getTimeIntVal()
+{
+    if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
+    {
+        dataconvert::DateTime dt;
+
+        memcpy(&dt, &fResult.intVal, 8);
+        dataconvert::Time tt(0, dt.hour, dt.minute, dt.second, dt.msecond);
+        memcpy(&fResult.intVal, &tt, 8);
+        return fResult.intVal;
+    }
+    else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIME)
         return (fResult.intVal);
     else
         return getIntVal();

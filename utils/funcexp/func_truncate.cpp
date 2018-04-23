@@ -387,6 +387,51 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int32_t s = 0;
+            int64_t x = 0;
+
+            string value =
+                DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
+
+            s = parm[1]->data()->getIntVal(row, isNull);
+
+            if (!isNull)
+            {
+                //strip off micro seconds
+                value = value.substr(0, 14);
+                int64_t x = atoll(value.c_str());
+
+                if ( s > 5 )
+                    s = 0;
+
+                if ( s > 0 )
+                {
+                    x *= helpers::powerOf10_c[s];
+                }
+                else if (s < 0)
+                {
+                    s = -s;
+
+                    if ( s >= (int32_t) value.size() )
+                    {
+                        x = 0;
+                    }
+                    else
+                    {
+                        x /= helpers::powerOf10_c[s];
+                        x *= helpers::powerOf10_c[s];
+                    }
+
+                    s = 0;
+                }
+            }
+
+            decimal.value = x;
+            decimal.scale = s;
+        }
+        break;
 
         default:
         {

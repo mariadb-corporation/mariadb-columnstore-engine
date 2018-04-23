@@ -155,6 +155,38 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            exp2 = parm[1]->data()->getTimeIntVal(row, isNull);
+
+            if (parm[0]->data()->resultType().colDataType ==
+                    execplan::CalpontSystemCatalog::DATETIME)
+            {
+                // NULLIF arg0 is DATETIME, arg1 is TIME,
+                // Upgrade arg1 to time
+                // When comparing exp1 as a Date, we can't simply promote. We have
+                // to be careful of the return value in case of not null return.
+                int64_t exp1 = parm[0]->data()->getTimeIntVal(row, isNull);
+
+                if ( exp1 == exp2 )
+                {
+                    isNull = true;
+                    return 0;
+                }
+
+                // since exp1 here is inside the block, when we leave the block, the
+                // original (Date) value is restored.
+            }
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
         default:
         {
             isNull = true;
@@ -234,6 +266,19 @@ uint64_t Func_nullif::getUintVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            exp2 = parm[1]->data()->getTimeIntVal(row, isNull);
 
             if (isNull)
             {
@@ -427,6 +472,7 @@ int64_t Func_nullif::getDatetimeIntVal(rowgroup::Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
@@ -454,6 +500,69 @@ int64_t Func_nullif::getDatetimeIntVal(rowgroup::Row& row,
 
     return exp1;
 }
+
+int64_t Func_nullif::getTimeIntVal(rowgroup::Row& row,
+                                       FunctionParm& parm,
+                                       bool& isNull,
+                                       CalpontSystemCatalog::ColType& ct)
+{
+    int64_t exp1 = parm[0]->data()->getTimeIntVal(row, isNull);
+    int64_t exp2 = 0;
+
+    switch (parm[1]->data()->resultType().colDataType)
+    {
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::DOUBLE:
+        case execplan::CalpontSystemCatalog::FLOAT:
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
+        {
+            exp2 = parm[1]->data()->getIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIME:
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            exp2 = parm[1]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = false;
+                return exp1;
+            }
+
+            break;
+        }
+
+        default:
+        {
+            isNull = true;
+        }
+    }
+
+    if ( exp1 == exp2 )
+    {
+        isNull = true;
+        return 0;
+    }
+
+    return exp1;
+}
+
 
 double Func_nullif::getDoubleVal(rowgroup::Row& row,
                                  FunctionParm& parm,
@@ -502,6 +611,7 @@ double Func_nullif::getDoubleVal(rowgroup::Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
@@ -644,6 +754,7 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             int32_t s = 0;

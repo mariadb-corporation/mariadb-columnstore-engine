@@ -443,6 +443,8 @@ void WriteEngineWrapper::convertValue(const ColType colType, void* valArray, con
             case WriteEngine::WR_LONGLONG:
                 if (data.type() == typeid(long long))
                     ((long long*)valArray)[pos] = boost::any_cast<long long>(data);
+                else if (data.type() == typeid(long))
+                    ((long long*)valArray)[pos] = (long long)boost::any_cast<long>(data);
                 else
                     ((long long*)valArray)[pos] = boost::any_cast<uint64_t>(data);
 

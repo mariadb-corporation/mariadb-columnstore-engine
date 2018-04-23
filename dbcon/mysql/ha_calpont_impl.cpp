@@ -494,6 +494,19 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci)
                     break;
                 }
 
+                case CalpontSystemCatalog::TIME:
+                {
+                    if ((*f)->null_ptr)
+                        *(*f)->null_ptr &= ~(*f)->null_bit;
+
+                    intColVal = row.getUintField<8>(s);
+                    DataConvert::timeToString(intColVal, tmp, 255);
+
+                    Field_varstring* f2 = (Field_varstring*)*f;
+                    f2->store(tmp, strlen(tmp), f2->charset());
+                    break;
+                }
+
                 case CalpontSystemCatalog::CHAR:
                 case CalpontSystemCatalog::VARCHAR:
                 {

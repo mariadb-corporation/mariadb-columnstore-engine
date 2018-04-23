@@ -351,6 +351,10 @@ int64_t CrossEngineStep::convertValueNum(
             rv = boost::any_cast<uint64_t>(anyVal);
             break;
 
+        case CalpontSystemCatalog::TIME:
+            rv = boost::any_cast<int64_t>(anyVal);
+            break;
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
             if (ct.colWidth == CalpontSystemCatalog::ONE_BYTE)

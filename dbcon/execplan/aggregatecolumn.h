@@ -411,10 +411,10 @@ public:
     /**
     * F&E
     */
-    virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
     {
         evaluate(row, isNull);
-        return TreeNode::getDatetimeIntVal();
+        return TreeNode::getTimeIntVal();
     }
 
 private:

@@ -282,6 +282,10 @@ int64_t valueNullNum(const CalpontSystemCatalog::ColType& ct)
             n = boost::any_cast<uint64_t>(anyVal);
             break;
 
+        case CalpontSystemCatalog::TIME:
+            n = boost::any_cast<int64_t>(anyVal);
+            break;
+
         case CalpontSystemCatalog::DECIMAL:
         case CalpontSystemCatalog::UDECIMAL:
             if (ct.colWidth == execplan::CalpontSystemCatalog::ONE_BYTE)
@@ -419,6 +423,10 @@ int64_t convertValueNum(const string& str, const CalpontSystemCatalog::ColType& 
 
         case CalpontSystemCatalog::DATETIME:
             v = boost::any_cast<uint64_t>(anyVal);
+            break;
+
+        case CalpontSystemCatalog::TIME:
+            v = boost::any_cast<int64_t>(anyVal);
             break;
 
         case CalpontSystemCatalog::DECIMAL:

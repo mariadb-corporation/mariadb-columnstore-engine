@@ -507,6 +507,12 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
                 break;
             }
 
+            case CalpontSystemCatalog::TIME:
+            {
+                oss << DataConvert::timeToString(row.getUintField(*i));
+                break;
+            }
+
             default:
             {
                 break;
@@ -640,6 +646,24 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
             case CalpontSystemCatalog::DATETIME:
             {
                 fieldLen = 19; // YYYY-MM-DD HH24:MI:SS
+                // Decimal point and milliseconds
+                uint64_t colPrecision = row.getPrecision(*i);
+                if (colPrecision > 0 && colPrecision < 7)
+                {
+                    fieldLen += colPrecision + 1;
+                }
+                break;
+            }
+
+            case CalpontSystemCatalog::TIME:
+            {
+                fieldLen = 10; //  -HHH:MI:SS
+                // Decimal point and milliseconds
+                uint64_t colPrecision = row.getPrecision(*i);
+                if (colPrecision > 0 && colPrecision < 7)
+                {
+                    fieldLen += colPrecision + 1;
+                }
                 break;
             }
 

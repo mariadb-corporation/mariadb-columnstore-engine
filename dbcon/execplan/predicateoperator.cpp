@@ -196,6 +196,7 @@ bool PredicateOperator::operator!=(const TreeNode* t) const
 void PredicateOperator::setOpType(Type& l, Type& r)
 {
     if ( l.colDataType == execplan::CalpontSystemCatalog::DATETIME ||
+            l.colDataType == execplan::CalpontSystemCatalog::TIME ||
             l.colDataType == execplan::CalpontSystemCatalog::DATE )
     {
         switch (r.colDataType)
@@ -210,6 +211,11 @@ void PredicateOperator::setOpType(Type& l, Type& r)
                 fOperationType.colWidth = 8;
                 break;
 
+            case execplan::CalpontSystemCatalog::TIME:
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::TIME;
+                fOperationType.colWidth = 8;
+                break;
+
             case execplan::CalpontSystemCatalog::DATE:
                 fOperationType = l;
                 break;
@@ -221,6 +227,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
         }
     }
     else if ( r.colDataType == execplan::CalpontSystemCatalog::DATETIME ||
+              r.colDataType == execplan::CalpontSystemCatalog::TIME ||
               r.colDataType == execplan::CalpontSystemCatalog::DATE )
     {
         switch (l.colDataType)
@@ -233,6 +240,11 @@ void PredicateOperator::setOpType(Type& l, Type& r)
 
             case execplan::CalpontSystemCatalog::DATETIME:
                 fOperationType.colDataType = execplan::CalpontSystemCatalog::DATETIME;
+                fOperationType.colWidth = 8;
+                break;
+
+            case execplan::CalpontSystemCatalog::TIME:
+                fOperationType.colDataType = execplan::CalpontSystemCatalog::TIME;
                 fOperationType.colWidth = 8;
                 break;
 

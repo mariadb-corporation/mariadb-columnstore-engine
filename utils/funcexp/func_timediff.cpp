@@ -116,6 +116,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             isDate1 = true;
             break;
 
+        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
             val1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
             break;
@@ -157,6 +158,7 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
             isDate2 = true;
             break;
 
+        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
             val2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
             break;
@@ -211,6 +213,14 @@ int64_t Func_timediff::getDatetimeIntVal(rowgroup::Row& row,
         CalpontSystemCatalog::ColType& ct)
 {
     return dataconvert::DataConvert::datetimeToInt(getStrVal(row, parm, isNull, ct));
+}
+
+int64_t Func_timediff::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    return dataconvert::DataConvert::timeToInt(getStrVal(row, parm, isNull, ct));
 }
 
 int64_t Func_timediff::getIntVal(rowgroup::Row& row,

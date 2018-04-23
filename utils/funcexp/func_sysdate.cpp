@@ -100,6 +100,15 @@ int64_t Func_sysdate::getDatetimeIntVal(rowgroup::Row& row,
     return getIntVal(row, parm, isNull, operationColType);
 }
 
+int64_t Func_sysdate::getTimeIntVal(rowgroup::Row& row,
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        CalpontSystemCatalog::ColType& operationColType)
+{
+    return getIntVal(row, parm, isNull, operationColType);
+}
+
+
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

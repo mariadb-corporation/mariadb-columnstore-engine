@@ -308,6 +308,7 @@ bool OidOperation::isIntegralDataType()
             DataType() == CalpontSystemCatalog::DATE ||
             DataType() == CalpontSystemCatalog::BIGINT ||
             DataType() == CalpontSystemCatalog::DATETIME ||
+            DataType() == CalpontSystemCatalog::TIME ||
             DataType() == CalpontSystemCatalog::UTINYINT ||
             DataType() == CalpontSystemCatalog::USMALLINT ||
             DataType() == CalpontSystemCatalog::UMEDINT ||

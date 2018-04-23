@@ -154,6 +154,7 @@ int64_t Func_extract::getIntVal(rowgroup::Row& row,
     {
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             time = parm[0]->data()->getDatetimeIntVal(row, isNull);
             break;
 

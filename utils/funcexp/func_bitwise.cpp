@@ -143,6 +143,15 @@ bool getUIntValFromParm(
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t time = parm->data()->getTimeIntVal(row, isNull);
+
+            Time dt(time);
+            value = dt.convertToMySQLint();
+        }
+        break;
+
         default:
         {
             return false;

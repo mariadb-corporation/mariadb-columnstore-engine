@@ -138,6 +138,50 @@ int64_t addTime(DateTime& dt1, Time& dt2)
 
     return *(reinterpret_cast<int64_t*>(&dt));
 }
+
+int64_t addTime(Time& dt1, Time& dt2)
+{
+    Time dt;
+    dt.hour = 0;
+    dt.minute = 0;
+    dt.second = 0;
+    dt.msecond = 0;
+
+    int64_t hour, min, sec, msec, tmp;
+    msec = (signed)(dt1.msecond + dt2.msecond);
+    dt.msecond = tmp = msec % 1000000;
+
+    if (tmp < 0)
+    {
+        dt.msecond = tmp + 1000000;
+        dt2.second--;
+    }
+
+    sec = (signed)(dt1.second + dt2.second + msec / 1000000);
+    dt.second = tmp = sec % 60;
+
+    if (tmp < 0)
+    {
+        dt.second = tmp + 60;
+        dt2.minute--;
+    }
+
+    min = (signed)(dt1.minute + dt2.minute + sec / 60);
+    dt.minute = tmp = min % 60;
+
+    if (tmp < 0)
+    {
+        dt.minute = tmp + 60;
+        dt2.hour--;
+    }
+
+    hour = (signed)(dt1.hour + dt2.hour + min / 60);
+    dt.hour = tmp = hour % 838;
+
+    return *(reinterpret_cast<int64_t*>(&dt));
+}
+
+
 }
 
 namespace funcexp
@@ -253,6 +297,86 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
 
     return addTime(dt1, t2);
 }
+
+int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    int64_t val1 = parm[0]->data()->getTimeIntVal(row, isNull);
+
+    if (isNull)
+        return -1;
+
+    const string& val2 = parm[1]->data()->getStrVal(row, isNull);
+    int sign = parm[2]->data()->getIntVal(row, isNull);
+    Time dt1;
+    dt1.hour = (val1 >> 40) & 0xff;
+    dt1.minute = (val1 >> 32) & 0xff;
+    dt1.second = (val1 >> 24) & 0xff;
+    dt1.msecond = val1 & 0xffffff;
+
+    int64_t	time = DataConvert::stringToTime(val2);
+
+    if (time == -1)
+    {
+        isNull = true;
+        return -1;
+    }
+
+    Time t2 = *(reinterpret_cast<Time*>(&time));
+
+    // MySQL TIME type range '-838:59:59' and '838:59:59'
+    if (t2.minute > 59 || t2.second > 59 || t2.msecond > 999999)
+    {
+        isNull = true;
+        return -1;
+    }
+
+    int val_sign = 1;
+
+    if (t2.day != 0 && t2.hour < 0)
+    {
+        isNull = true;
+        return -1;
+    }
+    else if (t2.day < 0 || t2.hour < 0)
+    {
+        val_sign = -1;
+    }
+
+    if ((abs(t2.day) * 24 + abs(t2.hour)) > 838)
+    {
+        t2.hour = 838;
+        t2.minute = 59;
+        t2.second = 59;
+        t2.msecond = 999999;
+    }
+    else
+    {
+        t2.hour = abs(t2.day) * 24 + t2.hour;
+    }
+
+    t2.day = 0;
+
+    if (val_sign * sign < 0)
+    {
+        t2.hour = -abs(t2.hour);
+        t2.minute = -abs(t2.minute);
+        t2.second = -abs(t2.second);
+        t2.msecond = -abs(t2.msecond);
+    }
+    else
+    {
+        t2.hour = abs(t2.hour);
+        t2.minute = abs(t2.minute);
+        t2.second = abs(t2.second);
+        t2.msecond = abs(t2.msecond);
+    }
+
+    return addTime(dt1, t2);
+}
+
 
 
 } // namespace funcexp

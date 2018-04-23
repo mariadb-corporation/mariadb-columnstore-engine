@@ -108,6 +108,12 @@ int64_t Func_second::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            val = parm[0]->data()->getTimeIntVal(row, isNull);
+            break;
+        }
+
         default:
         {
             isNull = true;

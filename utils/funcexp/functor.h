@@ -116,6 +116,14 @@ public:
         return intToDatetime(getIntVal(row, fp, isNull, op_ct));
     }
 
+    virtual int64_t getTimeIntVal(rowgroup::Row& row,
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        return intToTime(getIntVal(row, fp, isNull, op_ct));
+    }
+
     virtual bool getBoolVal(rowgroup::Row& row,
                             FunctionParm& fp,
                             bool& isNull,
@@ -145,9 +153,11 @@ public:
 protected:
     virtual uint32_t stringToDate(std::string);
     virtual uint64_t stringToDatetime(std::string);
+    virtual int64_t stringToTime(std::string);
 
     virtual uint32_t intToDate(int64_t);
     virtual uint64_t intToDatetime(int64_t);
+    virtual int64_t intToTime(int64_t);
 
     virtual std::string intToString(int64_t);
     virtual std::string doubleToString(double);

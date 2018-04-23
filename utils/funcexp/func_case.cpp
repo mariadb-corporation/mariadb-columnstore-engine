@@ -66,6 +66,7 @@ inline uint64_t simple_case_cmp(Row& row,
         case execplan::CalpontSystemCatalog::BIGINT:
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIME:
         {
             int64_t ev = parm[n]->data()->getIntVal(row, isNull);
 
@@ -503,6 +504,19 @@ int64_t Func_simple_case::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 
+int64_t Func_simple_case::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    uint64_t i = simple_case_cmp(row, parm, isNull, op_ct);
+
+    if (isNull)
+        return joblist::TIMENULL;
+
+    return parm[i + 1]->data()->getTimeIntVal(row, isNull);
+}
+
 
 // searched CASE:
 // SELECT CASE
@@ -628,6 +642,19 @@ int64_t Func_searched_case::getDatetimeIntVal(rowgroup::Row& row,
     return parm[i]->data()->getDatetimeIntVal(row, isNull);
 }
 
+
+int64_t Func_searched_case::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    uint64_t i = simple_case_cmp(row, parm, isNull, op_ct);
+
+    if (isNull)
+        return joblist::TIMENULL;
+
+    return parm[i + 1]->data()->getTimeIntVal(row, isNull);
+}
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

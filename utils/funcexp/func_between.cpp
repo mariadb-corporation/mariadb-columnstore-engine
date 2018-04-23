@@ -156,6 +156,24 @@ inline bool getBool(rowgroup::Row& row,
                    numericLE(val, pm[2]->data()->getDatetimeIntVal(row, isNull));
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t val = pm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (notBetween)
+            {
+                if (!numericGE(val, pm[1]->data()->getTimeIntVal(row, isNull)) && !isNull)
+                    return true;
+
+                isNull = false;
+                return (!numericLE(val, pm[2]->data()->getTimeIntVal(row, isNull)) && !isNull);
+            }
+
+            return !isNull &&
+                   numericGE(val, pm[1]->data()->getTimeIntVal(row, isNull)) &&
+                   numericLE(val, pm[2]->data()->getTimeIntVal(row, isNull));
+        }
+
         case execplan::CalpontSystemCatalog::DOUBLE:
         case execplan::CalpontSystemCatalog::UDOUBLE:
         case execplan::CalpontSystemCatalog::FLOAT:

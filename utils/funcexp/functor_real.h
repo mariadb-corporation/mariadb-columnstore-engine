@@ -654,6 +654,12 @@ public:
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
+
+
 private:
     int64_t convertAton(const std::string& ipString, bool& isNull);
 };

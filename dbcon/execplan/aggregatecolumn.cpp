@@ -353,6 +353,14 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
 
             break;
 
+        case CalpontSystemCatalog::TIME:
+            if (row.equals<8>(TIMENULL, fInputIndex))
+                isNull = true;
+            else
+                fResult.intVal = row.getIntField<8>(fInputIndex);
+
+            break;
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::STRINT:

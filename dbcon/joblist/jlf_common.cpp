@@ -792,6 +792,11 @@ bool compatibleColumnTypes(const CalpontSystemCatalog::ColDataType& dt1, uint32_
 
             break;
 
+        case CalpontSystemCatalog::TIME:
+            if (dt2 != CalpontSystemCatalog::TIME) return false;
+
+            break;
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::TEXT:

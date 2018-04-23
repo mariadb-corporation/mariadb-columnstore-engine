@@ -236,6 +236,7 @@ enum DDL_DATATYPES
     DDL_UNSIGNED_DOUBLE,
     DDL_UNSIGNED_NUMERIC,
     DDL_TEXT,
+    DDL_TIME,
     DDL_INVALID_DATATYPE
 };
 
@@ -273,6 +274,7 @@ const std::string DDLDatatypeString[] =
     "unsigned-double",
     "unsigned-numeric",
     "text",
+    "time"
     ""
 };
 
@@ -328,6 +330,7 @@ const int  DDLDatatypeLength[] =
     8,      // UNSIGNED_DOUBLE,
     2,      // UNSIGNED_NUMERIC,
     8,      // TEXT
+    8,      // TIME
     -1		// INVALID LENGTH
 };
 

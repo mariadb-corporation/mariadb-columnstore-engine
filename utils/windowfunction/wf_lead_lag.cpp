@@ -77,6 +77,7 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
         case CalpontSystemCatalog::UDECIMAL:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
         {
             func.reset(new WF_lead_lag<uint64_t>(id, name));
             break;

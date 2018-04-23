@@ -89,6 +89,14 @@ public:
         return (isNull ? 0 : stringToDatetime(str));
     }
 
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct)
+    {
+        std::string str = getStrVal(row, fp, isNull, op_ct);
+        return (isNull ? 0 : stringToTime(str));
+    }
 
 protected:
     const std::string& stringValue(execplan::SPTP& fp, rowgroup::Row& row, bool& isNull)
@@ -676,6 +684,10 @@ public:
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
 
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                              FunctionParm& fp,
+                              bool& isNull,
+                              execplan::CalpontSystemCatalog::ColType& op_ct);
 private:
     void convertNtoa(int64_t ipNum, std::string& ipString);
 };

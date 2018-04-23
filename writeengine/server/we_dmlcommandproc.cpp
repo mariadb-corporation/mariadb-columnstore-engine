@@ -1781,6 +1781,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
 
                             case execplan::CalpontSystemCatalog::BIGINT:
                             case execplan::CalpontSystemCatalog::DATETIME:
+                            case execplan::CalpontSystemCatalog::TIME:
                             case execplan::CalpontSystemCatalog::UBIGINT:
                                 bs >> val64;
 
@@ -2981,6 +2982,13 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             break;
                         }
 
+                        case CalpontSystemCatalog::TIME:
+                        {
+                            intColVal = row.getIntField<8>(fetchColPos);
+                            value = DataConvert::timeToString(intColVal, colType.precision);
+                            break;
+                        }
+
                         case CalpontSystemCatalog::CHAR:
                         case CalpontSystemCatalog::VARCHAR:
                         {
@@ -3306,6 +3314,13 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
                             {
                                 intColVal = row.getUintField<8>(fetchColPos);
                                 value = DataConvert::datetimeToString(intColVal, colType.precision);
+                                break;
+                            }
+
+                            case CalpontSystemCatalog::TIME:
+                            {
+                                intColVal = row.getIntField<8>(fetchColPos);
+                                value = DataConvert::timeToString(intColVal, colType.precision);
                                 break;
                             }
 
