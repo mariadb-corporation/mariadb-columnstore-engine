@@ -2481,6 +2481,10 @@ namespace oam
 
 		bool checkSystemRunning();
 
+		/** @brief wait for system to be active
+		*/
+		EXPORT void waitForActive();
+
     private:
 
 	    int sendMsgToProcMgr3(messageqcpp::ByteStream::byte requestType, alarmmanager::AlarmList& alarmlist, const std::string date);

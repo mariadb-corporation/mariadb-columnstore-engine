@@ -2553,6 +2553,12 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 			break;
 		}
 
+		case Item::COND_ITEM:
+		{
+            // MCOL-1196: Allow COND_ITEM thru. They will be picked up
+            // by further logic. It may become desirable to add code here.
+			break;
+        }
 		default:
 		{
 			gwi.fatalParseError = true;
@@ -3183,108 +3189,100 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 	if (((Item_func_case*)item)->get_first_expr_num() == -1)
 		funcName = "case_searched";
 
-	if (gwi.clauseType == SELECT || gwi.clauseType == HAVING || gwi.clauseType == GROUP_BY) // select clause
+	funcParms.reserve(item->argument_count());
+	// so buildXXXcolumn function will not pop stack.
+    ClauseType realClauseType = gwi.clauseType;
+	gwi.clauseType = SELECT;
+
+	// We ought to be able to just build from the stack, and would 
+	// be able to if there were any way to know which stack had the 
+	// next case item. Unfortunately, parameters may have been pushed
+	// onto the ptWorkStack or rcWorkStack or neither, depending on type
+	// and position. We can't tell which at this point, so we
+	// rebuild the item from the arguments directly and then try to 
+	// figure what to pop, if anything, in order to sync the stacks.
+    //
+    // MCOL-1341 - With MariaDB 10.2.14 onwards CASE is now in the order:
+    // [case,]when1,when2,...,then1,then2,...[,else]
+    // See server commit bf1ca14ff3f3faa9f7a018097b25aa0f66d068cd for more
+    // information.
+    int32_t arg_offset = 0;
+    if ((item->argument_count() - 1) % 2)
+    {
+        arg_offset = (item->argument_count() - 1) / 2;
+    }
+    else
+    {
+        arg_offset = item->argument_count() / 2;
+    }
+	for (int32_t i = item->argument_count()-1; i >=0; i--)
 	{
-		// the first argument
-		if (funcName == "case_searched")
+		// For case_searched, we know the items for the WHEN clause will
+		// not be ReturnedColumns. We do this separately just to save 
+		// some cpu cycles trying to build a ReturnedColumn as below.
+		// Every even numbered arg is a WHEN. In between are the THEN. 
+		// An odd number of args indicates an ELSE residing in the last spot.
+		if (funcName == "case_searched" &&
+            (i < arg_offset))
 		{
-			for (uint32_t i = 0; i < item->argument_count(); i++)
+			sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
+			if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top()->data() == sptp->data())
 			{
-				if (i % 2 == 0 && i != 1 && i != item->argument_count()-1)
-				{
-					sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-					funcParms.push_back(sptp);
-				}
-				else
-				{
-					ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport);
-					if (parm)
-					{
-						sptp.reset(new ParseTree(parm));
-					}
-					else
-					{
-						sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-					}
-					funcParms.push_back(sptp);
-				}
+				gwi.ptWorkStack.pop();
 			}
 		}
 		else
 		{
-			for (uint32_t i = 0; i < item->argument_count(); i++)
+			// First try building a ReturnedColumn. It may or may not succeed
+			// depending on the types involved. There's also little correlation 
+			// between buildReturnedColumn and the existance of the item on
+			// rwWorkStack or ptWorkStack.
+			// For example, simple predicates, such as 1=1 or 1=0, land in the
+			// ptWorkStack but other stuff might land in the rwWorkStack
+			ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport);
+			if (parm)
 			{
-				ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport);
-				if (parm)
+				sptp.reset(new ParseTree(parm));
+				// We need to pop whichever stack is holding it, if any.
+				if ((!gwi.rcWorkStack.empty()) && 
+					*gwi.rcWorkStack.top() == parm)
 				{
-					sptp.reset(new ParseTree(parm));
+					gwi.rcWorkStack.pop();
 				}
 				else
+				if (!gwi.ptWorkStack.empty())
 				{
-					sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-				}
-				funcParms.push_back(sptp);
-			}
-		}
-	}
-	else // where clause
-	{
-		// so buildXXXcolumn function will not pop stack.
-		gwi.clauseType = SELECT;
-		if (funcName == "case_searched")
-		{
-			for (uint32_t i = 0; i < item->argument_count(); i++)
-			{
-				if (i % 2 == 0 && i != item->argument_count()-1)
-				{
-					// build item from arguments to avoid parm sequence complexity
-					sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-					funcParms.push_back(sptp);
-					if (!gwi.ptWorkStack.empty())
+					ReturnedColumn* ptrc = dynamic_cast<ReturnedColumn*>(gwi.ptWorkStack.top()->data());
+					if (ptrc && *ptrc == *parm)
 						gwi.ptWorkStack.pop();
 				}
-				else
-				{
-					ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport);
-					if (parm)
-					{
-						sptp.reset(new ParseTree(parm));
-						if (!gwi.rcWorkStack.empty())
-							gwi.rcWorkStack.pop();
-					}
-					else
-					{
-						sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-						if (!gwi.ptWorkStack.empty())
-							gwi.ptWorkStack.pop();
-					}
-					funcParms.push_back(sptp);
-				}
 			}
-		}
-		else // simple_case
-		{
-			for (uint32_t i = 0; i < item->argument_count(); i++)
+			else
 			{
-				ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport);
-				if (parm)
+				sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
+				// We need to pop whichever stack is holding it, if any.
+				if ((!gwi.ptWorkStack.empty()) &&
+					*gwi.ptWorkStack.top()->data() == sptp->data())
 				{
-					sptp.reset(new ParseTree(parm));
-					if (!gwi.rcWorkStack.empty())
+					gwi.ptWorkStack.pop();
+				}
+				else
+				if (!gwi.rcWorkStack.empty())
+				{
+					// Probably won't happen, but it might have been on the
+					// rcWorkStack all along.
+					ReturnedColumn* ptrc = dynamic_cast<ReturnedColumn*>(sptp->data());
+					if (ptrc && *ptrc == *gwi.rcWorkStack.top())
+					{
 						gwi.rcWorkStack.pop();
+					}
 				}
-				else
-				{
-					sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-					if (!gwi.ptWorkStack.empty())
-						gwi.ptWorkStack.pop();
-				}
-				funcParms.push_back(sptp);
 			}
 		}
-		// recover clause type
-		gwi.clauseType = WHERE;
+		funcParms.insert(funcParms.begin(), sptp);
 	}
+	// recover clause type
+	gwi.clauseType = realClauseType;
 
 	if (gwi.fatalParseError)
 	{
@@ -4253,9 +4251,9 @@ void gp_walk(const Item *item, void *arg)
 				}
 				// bug 3137. If filter constant like 1=0, put it to ptWorkStack
 				// MariaDB bug 750. Breaks if compare is an argument to a function.
-				if ((int32_t)gwip->rcWorkStack.size() <=  (gwip->rcBookMarkStack.empty() ? 0 : gwip->rcBookMarkStack.top())
-				&& isPredicateFunction(ifp, gwip))
-//				if (isPredicateFunction(ifp, gwip))
+//				if ((int32_t)gwip->rcWorkStack.size() <=  (gwip->rcBookMarkStack.empty() ? 0 : gwip->rcBookMarkStack.top())
+//				&& isPredicateFunction(ifp, gwip))
+				if (isPredicateFunction(ifp, gwip))
 					gwip->ptWorkStack.push(new ParseTree(cc));
 				else
 					gwip->rcWorkStack.push(cc);
@@ -5499,7 +5497,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 						// @bug 1706
 						String funcStr;
 						ifp->print(&funcStr, QT_INFINIDB);
-						gwi.selectCols.push_back(string(funcStr.c_ptr()) + " `" + escapeBackTick(ifp->name) + "`");
+   					    string valStr;
+					    valStr.assign(funcStr.ptr(), funcStr.length());
+						gwi.selectCols.push_back(valStr + " `" + escapeBackTick(ifp->name) + "`");
 						// clear the error set by buildFunctionColumn
 						gwi.fatalParseError = false;
 						gwi.parseErrorText = "";

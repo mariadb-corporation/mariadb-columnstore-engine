@@ -18,7 +18,7 @@ InstallDir=$COLUMNSTORE_INSTALL_DIR
 
 if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
 	export PATH=$InstallDir/bin:$InstallDir/mysql/bin:/bin:/usr/bin
-	export LD_LIBRARY_PATH=$InstallDir/lib:$InstallDir/mysql/lib/mysql
+	export LD_LIBRARY_PATH=$InstallDir/lib:$InstallDir/mysql/lib
 fi
 
 case "$1" in
