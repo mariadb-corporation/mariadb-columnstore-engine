@@ -457,6 +457,24 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					log.writeLog(__LINE__,  "MSG RECEIVED: Stop process request on " + processName);
 					int requestStatus = API_SUCCESS;
 		
+					// check for mysql
+					if ( processName == "mysqld" ) {
+						try {
+							oam.actionMysqlCalpont(MYSQL_STOP);
+						}
+						catch(...)
+						{}
+
+						ackMsg << (ByteStream::byte) ACK;
+						ackMsg << (ByteStream::byte) STOP;
+						ackMsg << (ByteStream::byte) API_SUCCESS;
+						mq.write(ackMsg);
+	
+						log.writeLog(__LINE__, "STOP: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
+	
+						break;
+					}
+
 					processList::iterator listPtr;
 					processList* aPtr = config.monitoredListPtr();
 					listPtr = aPtr->begin();
@@ -502,6 +520,24 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					msg >> manualFlag;
 					log.writeLog(__LINE__, "MSG RECEIVED: Start process request on: " + processName);
 		
+					// check for mysql
+					if ( processName == "mysqld" ) {
+						try {
+							oam.actionMysqlCalpont(MYSQL_START);
+						}
+						catch(...)
+						{}
+
+						ackMsg << (ByteStream::byte) ACK;
+						ackMsg << (ByteStream::byte) START;
+						ackMsg << (ByteStream::byte) API_SUCCESS;
+						mq.write(ackMsg);
+	
+						log.writeLog(__LINE__, "START: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
+	
+						break;
+					}
+
 					ProcessConfig processconfig;
 					ProcessStatus processstatus;
 					try {
@@ -605,7 +641,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					int requestStatus = API_SUCCESS;
 
 					// check for mysql restart
-					if ( processName == "mysql" ) {
+					if ( processName == "mysqld" ) {
 						try {
 							oam.actionMysqlCalpont(MYSQL_RESTART);
 						}
@@ -4952,11 +4988,11 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 
 			//skip if module is not ACTIVE
 			  
-			int opState = oam::ACTIVE;
-			bool degraded;
-			oam.getModuleStatus(moduleName, opState, degraded);
-			if (opState != oam::ACTIVE)
-				continue;
+//			int opState = oam::ACTIVE;
+//			bool degraded;
+//			oam.getModuleStatus(moduleName, opState, degraded);
+//			if (opState != oam::ACTIVE)
+//				continue;
 
 			bool passwordError = false;
 

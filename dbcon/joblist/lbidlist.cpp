@@ -27,6 +27,7 @@
 #include "calpontsystemcatalog.h"
 #include "brm.h"
 #include "brmtypes.h"
+#include "dataconvert.h"
 
 #define IS_VERBOSE (fDebug >= 4)
 #define IS_DETAIL  (fDebug >= 3)
@@ -653,7 +654,14 @@ bool LBIDList::CasualPartitionPredicate(const int64_t Min,
 
 		if (bIsChar && 1 < ct.colWidth)
         {
-			scan = compareVal(order_swap(Min), order_swap(Max), order_swap(value),
+            // MCOL-1246 Trim trailing whitespace for matching so that we have
+            // the same as InnoDB behaviour
+            int64_t tMin = Min;
+            int64_t tMax = Max;
+            dataconvert::DataConvert::trimWhitespace(tMin);
+            dataconvert::DataConvert::trimWhitespace(tMax);
+
+            scan = compareVal(order_swap(tMin), order_swap(tMax), order_swap(value),
 			  op, lcf);
 // 			cout << "scan=" << (uint32_t) scan << endl;
 		}

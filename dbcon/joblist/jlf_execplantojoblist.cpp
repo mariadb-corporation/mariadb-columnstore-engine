@@ -1954,6 +1954,7 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
 	set<ParseTree*> doneNodes;          // solved joins and simple filters
 	map<ParseTree*, ParseTree*> cpMap;  // <child, parent> link for node removal
 	JobStepVector join;                 // join step with its projection steps
+    bool keepFilters = false;           // keep filters for cross engine step
 
 	// To compromise the front end difficulty on setting outer attributes.
 	set<uint64_t> tablesInOuter;
@@ -2162,6 +2163,14 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
 
 					jsv.insert(jsv.end(), sfv.begin(), sfv.end());
 
+                    // MCOL-1182 if we are doing a join between a cross engine
+                    // step and a constant then keep the filter for the cross
+                    // engine step instead of deleting it further down.
+                    if (!sc->isInfiniDB())
+                    {
+                        keepFilters = true;
+                    }
+
 					doneNodes.insert(cn);
 				}
 			}
@@ -2198,7 +2207,10 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
 			if (p == NULL)
 			{
 				filters = NULL;
-				delete c;
+                if (!keepFilters)
+                {
+				    delete c;
+                }
 			}
 			else
 			{
@@ -2240,8 +2252,11 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
 
 				p->left(nullTree);
 				p->right(nullTree);
-				delete p;
-				delete c;
+                if (!keepFilters)
+                {
+				    delete p;
+    				delete c;
+                }
 			}
 		}
 
