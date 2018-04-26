@@ -1541,7 +1541,15 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
         case execplan::CalpontSystemCatalog::TIME:
         {
             int64_t dtm = rowIn.getUintField(colIn);
-            valIn = (((dtm >> 40) & 0xfff) * 10000000000) +
+            // Handle negative correctly
+            int hour = 0;
+            if ((dtm >> 40) & 0xf00)
+            {
+                hour = 0xfffff000;
+            }
+
+            hour |= ((dtm >> 40) & 0xfff);
+            valIn = (hour * 10000000000) +
                     (((dtm >> 32) & 0xff) * 100000000) + (((dtm >> 24) & 0xff) * 1000000) + (dtm & 0xffffff);
             break;
         }

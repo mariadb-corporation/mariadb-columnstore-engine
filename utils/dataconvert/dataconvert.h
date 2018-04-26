@@ -566,10 +566,19 @@ inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, u
 
 inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned int buflen )
 {
+    // Handle negative correctly
+    int hour = 0;
+    if ((timevalue >> 40) & 0xf00)
+    {
+        hour = 0xfffff000;
+    }
+
+    hour |= ((timevalue >> 40) & 0xfff);
+
     if ((timevalue & 0xffffff) > 0)
     {
         snprintf( buf, buflen, "%02d:%02d:%02d.%d",
-                  (unsigned)((timevalue >> 40) & 0xfff),
+                  hour,
                   (unsigned)((timevalue >> 32) & 0xff),
                   (unsigned)((timevalue >> 24) & 0xff),
                   (unsigned)((timevalue) & 0xffffff)
@@ -578,7 +587,7 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
     else
     {
         snprintf( buf, buflen, "%02d:%02d:%02d",
-                  (unsigned)((timevalue >> 40) & 0xfff),
+                  hour,
                   (unsigned)((timevalue >> 32) & 0xff),
                   (unsigned)((timevalue >> 24) & 0xff)
                 );
@@ -608,8 +617,17 @@ inline void DataConvert::datetimeToString1( long long datetimevalue, char* buf, 
 
 inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned int buflen )
 {
+    // Handle negative correctly
+    int hour = 0;
+    if ((timevalue >> 40) & 0xf00)
+    {
+        hour = 0xfffff000;
+    }
+
+    hour |= ((timevalue >> 40) & 0xfff);
+
     snprintf( buf, buflen, "%02d%02d%02d",
-              (unsigned)((timevalue >> 40) & 0xfff),
+              hour,
               (unsigned)((timevalue >> 32) & 0xff),
               (unsigned)((timevalue >> 14) & 0xff)
             );

@@ -863,12 +863,11 @@ bool mysql_str_to_time( const string& input, Time& output )
 {
     int32_t datesepct = 0;
     uint32_t dtend = 0;
+    bool isNeg = false;
 
     /**
      *  We need to deal with the time portion.
      *  The rules are:
-     *      - Time portion may be empty
-     *      - Time portion may start with 'T'
      *      - Time portion always ends with '\0'
      *      - Time portion always starts with hour
      *      - Without time separators (':'):
@@ -890,7 +889,7 @@ bool mysql_str_to_time( const string& input, Time& output )
     uint32_t timesep_ct = 0;
     bool has_usec = false;
     uint32_t len_before_msec = 0;
-    uint32_t tmstart = ( input[dtend] == ' ' || input[dtend] == 'T' ) ? dtend + 1 : dtend;
+    uint32_t tmstart = dtend;
     uint32_t tmend = tmstart;
 
     for ( ; tmend < input.length(); ++tmend )
@@ -917,6 +916,11 @@ bool mysql_str_to_time( const string& input, Time& output )
             {
                 len_before_msec = ( tmend - tmstart );
                 has_usec = true;
+            }
+            else if (c == '-' && (tmend == tmstart))
+            {
+                isNeg = true;
+                ++tmstart;
             }
             else
             {
@@ -998,7 +1002,7 @@ bool mysql_str_to_time( const string& input, Time& output )
         return false;
     }
 
-    output.hour = hour;
+    output.hour = isNeg ? 0-hour : hour;
     output.minute = min;
     output.second = sec;
     output.msecond = usec;

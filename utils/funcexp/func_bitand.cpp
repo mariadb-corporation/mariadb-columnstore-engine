@@ -165,8 +165,13 @@ int64_t Func_bitand::getIntVal(Row& row,
                         min = 0,
                         sec = 0,
                         msec = 0;
+                // Handle negative correctly
+                if ((time >> 40) & 0xf00)
+                {
+                    hour = 0xfffff000;
+                }
 
-                hour = (uint32_t)((time >> 40) & 0xfff);
+                hour |= ((time >> 40) & 0xfff);
                 min = (uint32_t)((time >> 32) & 0xff);
                 sec = (uint32_t)((time >> 24) & 0xff);
                 msec = (uint32_t)(time & 0xffffff);
