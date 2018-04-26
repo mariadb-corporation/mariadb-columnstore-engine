@@ -998,7 +998,26 @@ bool mysql_str_to_time( const string& input, Time& output )
 
     if ( !isTimeValid( hour, min, sec, usec ) )
     {
-        output.reset();
+        // Emulate MariaDB's time saturation
+        if (hour > 838)
+        {
+            output.hour = 838;
+            output.minute = 59;
+            output.second = 59;
+            output.msecond = 999999;
+        }
+        else if (hour < -838)
+        {
+            output.hour = -838;
+            output.minute = 59;
+            output.second = 59;
+            output.msecond = 999999;
+        }
+        // If neither of the above match then we return a 0 time
+        else
+        {
+            output.reset();
+        }
         return false;
     }
 
@@ -1967,6 +1986,27 @@ int64_t DataConvert::convertColumnTime(
     }
     else
     {
+        // Emulate MariaDB's time saturation
+        if (inHour > 838)
+        {
+            Time atime;
+            atime.hour = 838;
+            atime.minute = 59;
+            atime.second = 59;
+            atime.msecond = 999999;
+            memcpy( &value, &atime, 8);
+        }
+        else if (inHour < -838)
+        {
+            Time atime;
+            atime.hour = -838;
+            atime.minute = 59;
+            atime.second = 59;
+            atime.msecond = 999999;
+            memcpy( &value, &atime, 8);
+        }
+        // If neither of the above match then we return a 0 time
+
         status = -1;
     }
 

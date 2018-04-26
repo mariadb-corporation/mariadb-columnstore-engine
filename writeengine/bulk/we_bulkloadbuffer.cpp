@@ -1024,7 +1024,6 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 }
                 else
                 {
-                    llDate = 0;
                     bufStats.satCount++;
                 }
 
