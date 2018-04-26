@@ -568,7 +568,7 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
 {
     // Handle negative correctly
     int hour = 0;
-    if ((timevalue >> 40) & 0xf00)
+    if ((timevalue >> 40) & 0x800)
     {
         hour = 0xfffff000;
     }

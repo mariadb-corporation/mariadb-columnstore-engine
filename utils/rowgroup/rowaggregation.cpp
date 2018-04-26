@@ -1543,7 +1543,7 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
             int64_t dtm = rowIn.getUintField(colIn);
             // Handle negative correctly
             int hour = 0;
-            if ((dtm >> 40) & 0xf00)
+            if ((dtm >> 40) & 0x800)
             {
                 hour = 0xfffff000;
             }

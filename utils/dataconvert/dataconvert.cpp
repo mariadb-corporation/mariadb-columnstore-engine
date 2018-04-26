@@ -1886,11 +1886,11 @@ int64_t DataConvert::convertColumnTime(
     unsigned int dataOrgLen )
 {
     status = 0;
-    const char* p;
-    p = dataOrg;
-    char fld[10];
-    int16_t value = 0;
-    int inYear, inMonth, inDay, inHour, inMinute, inSecond, inMicrosecond;
+    char* p;
+    char* savePoint = NULL;
+    p = const_cast<char*>(dataOrg);
+    int64_t value = 0;
+    int inHour, inMinute, inSecond, inMicrosecond;
     inHour        = 0;
     inMinute      = 0;
     inSecond      = 0;
@@ -1901,44 +1901,59 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
-        memcpy( fld, p, 2);
-        fld[2] = '\0';
+    errno = 0;
 
-        inHour = strtol(fld, 0, 10);
+    p = strtok_r(p, ":.", &savePoint);
+    inHour = strtol(p, 0, 10);
 
-            if (!isdigit(p[2]) || !isdigit(p[3]))
-            {
-                status = -1;
-                return value;
-            }
+    if (errno)
+    {
+        status = -1;
+        return value;
+    }
 
-            memcpy( fld, p + 2, 2);
-            fld[2] = '\0';
+    p = strtok_r(NULL, ":.", &savePoint);
+    if (p == NULL)
+    {
+        status = -1;
+        return value;
+    }
 
-            inMinute = strtol(fld, 0, 10);
+    inMinute = strtol(p, 0, 10);
 
-                if (!isdigit(p[4]) || !isdigit(p[5]))
-                {
-                    status = -1;
-                    return value;
-                }
+    if (errno)
+    {
+        status = -1;
+        return value;
+    }
 
-                memcpy( fld, p + 4, 2);
-                fld[2] = '\0';
+    p = strtok_r(NULL, ":.", &savePoint);
 
-                inSecond = strtol(fld, 0, 10);
+    if (p == NULL)
+    {
+        status = -1;
+        return value;
+    }
 
-                if (dataOrgLen > 9)
-                {
-                    unsigned int microFldLen = dataOrgLen - 9;
+    inSecond = strtol(p, 0, 10);
 
-                    if (microFldLen > (sizeof(fld) - 1))
-                        microFldLen = sizeof(fld) - 1;
+    if (errno)
+    {
+        status = -1;
+        return value;
+    }
 
-                    memcpy( fld, p + 9, microFldLen);
-                    fld[microFldLen] = '\0';
-                    inMicrosecond = strtol(fld, 0, 10);
-                }
+    p = strtok_r(NULL, ":.", &savePoint);
+
+    if (p != NULL)
+    {
+        inMicrosecond = strtol(p, 0, 10);
+        if (errno)
+        {
+            status = -1;
+            return value;
+        }
+    }
 
     if ( isTimeValid (inHour, inMinute, inSecond, inMicrosecond) )
     {
