@@ -173,7 +173,7 @@ struct DateTime
 inline
 int64_t DateTime::convertToMySQLint() const
 {
-    return (int64_t) (year * 10000000000000000LL) + (month * 100000000000000) + (day * 1000000000000) + (hour * 10000000000) + (minute * 100000000) + (second * 1000000) + msecond;
+    return (int64_t) (year * 10000000000LL) + (month * 100000000) + (day * 1000000) + (hour * 10000) + (minute * 100) + second;
 }
 
 inline
@@ -235,15 +235,10 @@ void    Time::reset()
 inline
 int64_t Time::convertToMySQLint() const
 {
-    return (int64_t) (hour * 10000000000) + (minute * 100000000) + (second * 1000000) + msecond;
+    return (int64_t) (hour * 10000) + (minute * 100) + second;
 }
 
 static uint32_t daysInMonth[13] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
-
-inline uint32_t getDaysInMonth(uint32_t month)
-{
-    return ( (month < 1 || month > 12) ? 0 : daysInMonth[month - 1]);
-}
 
 inline bool isLeapYear ( int year)
 {
@@ -256,6 +251,18 @@ inline bool isLeapYear ( int year)
     return false;
 }
 
+inline uint32_t getDaysInMonth(uint32_t month, int year)
+{
+    if (month < 1 || month > 12)
+        return 0;
+
+    uint32_t days = daysInMonth[month - 1];
+    if ((month == 2) && isLeapYear(year))
+        days++;
+
+    return days;
+}
+
 inline
 bool isDateValid ( int day, int month, int year)
 {
@@ -266,11 +273,7 @@ bool isDateValid ( int day, int month, int year)
         return true;
     }
 
-    int daycheck = getDaysInMonth( month );
-
-    if ( month == 2 && isLeapYear( year ) )
-        //  29 days in February in a leap year
-        daycheck = 29;
+    int daycheck = getDaysInMonth( month, year );
 
     if ( ( year < 1000 ) || ( year > 9999 ) )
         valid = false;
@@ -407,7 +410,7 @@ public:
       * @param data the columns string representation of it's data
       */
     EXPORT static std::string datetimeToString( long long  datetimevalue, long decimals = 0 );
-    static inline void datetimeToString( long long datetimevalue, char* buf, unsigned int buflen );
+    static inline void datetimeToString( long long datetimevalue, char* buf, unsigned int buflen, long decimals = 0 );
 
     /**
       * @brief convert a columns data from native format to a string
@@ -416,7 +419,7 @@ public:
       * @param data the columns string representation of it's data
       */
     EXPORT static std::string timeToString( long long  timevalue, long decimals = 0 );
-    static inline void timeToString( long long timevalue, char* buf, unsigned int buflen );
+    static inline void timeToString( long long timevalue, char* buf, unsigned int buflen, long decimals = 0);
 
     /**
       * @brief convert a columns data from native format to a string
@@ -537,37 +540,48 @@ inline void DataConvert::dateToString( int datevalue, char* buf, unsigned int bu
             );
 }
 
-inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, unsigned int buflen )
+inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, unsigned int buflen, long decimals )
 {
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+    int msec = 0;
     if ((datetimevalue & 0xfffff) > 0)
     {
-        snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d.%d",
-                  (unsigned)((datetimevalue >> 48) & 0xffff),
-                  (unsigned)((datetimevalue >> 44) & 0xf),
-                  (unsigned)((datetimevalue >> 38) & 0x3f),
-                  (unsigned)((datetimevalue >> 32) & 0x3f),
-                  (unsigned)((datetimevalue >> 26) & 0x3f),
-                  (unsigned)((datetimevalue >> 20) & 0x3f),
-                  (unsigned)((datetimevalue) & 0xfffff)
-                );
+        msec = (unsigned)((datetimevalue) & 0xfffff);
     }
-    else
+    snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d",
+              (unsigned)((datetimevalue >> 48) & 0xffff),
+              (unsigned)((datetimevalue >> 44) & 0xf),
+              (unsigned)((datetimevalue >> 38) & 0x3f),
+              (unsigned)((datetimevalue >> 32) & 0x3f),
+              (unsigned)((datetimevalue >> 26) & 0x3f),
+              (unsigned)((datetimevalue >> 20) & 0x3f)
+            );
+
+    if (msec || decimals)
     {
-        snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d",
-                  (unsigned)((datetimevalue >> 48) & 0xffff),
-                  (unsigned)((datetimevalue >> 44) & 0xf),
-                  (unsigned)((datetimevalue >> 38) & 0x3f),
-                  (unsigned)((datetimevalue >> 32) & 0x3f),
-                  (unsigned)((datetimevalue >> 26) & 0x3f),
-                  (unsigned)((datetimevalue >> 20) & 0x3f)
-                );
+        size_t start = strlen(buf);
+        snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
+        // Pad end with zeros
+        if (strlen(buf) - start < (size_t)decimals)
+        {
+            snprintf(buf + strlen(buf), buflen - strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
+        }
     }
 }
 
-inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned int buflen )
+inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned int buflen, long decimals )
 {
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
     // Handle negative correctly
-    int hour = 0;
+    int hour = 0, msec = 0;
     if ((timevalue >> 40) & 0x800)
     {
         hour = 0xfffff000;
@@ -577,20 +591,23 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
 
     if ((timevalue & 0xffffff) > 0)
     {
-        snprintf( buf, buflen, "%02d:%02d:%02d.%d",
-                  hour,
-                  (unsigned)((timevalue >> 32) & 0xff),
-                  (unsigned)((timevalue >> 24) & 0xff),
-                  (unsigned)((timevalue) & 0xffffff)
-                );
+        msec = (unsigned)((timevalue) & 0xffffff);
     }
-    else
+    snprintf( buf, buflen, "%02d:%02d:%02d",
+              hour,
+              (unsigned)((timevalue >> 32) & 0xff),
+              (unsigned)((timevalue >> 24) & 0xff)
+            );
+
+    if (msec || decimals)
     {
-        snprintf( buf, buflen, "%02d:%02d:%02d",
-                  hour,
-                  (unsigned)((timevalue >> 32) & 0xff),
-                  (unsigned)((timevalue >> 24) & 0xff)
-                );
+        size_t start = strlen(buf);
+        snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
+        // Pad end with zeros
+        if (strlen(buf) - start < (size_t)decimals)
+        {
+            snprintf(buf + strlen(buf), buflen - strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
+        }
     }
 }
 

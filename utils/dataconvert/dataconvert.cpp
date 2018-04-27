@@ -2065,9 +2065,9 @@ std::string DataConvert::datetimeToString( long long  datetimevalue, long decima
     {
         snprintf(buf + strlen(buf), 21 + decimals, ".%d", dt.msecond);
         // Pad end with zeros
-        if (strlen(buf) < (21 + decimals))
+        if (strlen(buf) < (size_t)(21 + decimals))
         {
-            sprintf(buf + strlen(buf), "%0*d", 21 + decimals - strlen(buf), 0);
+            sprintf(buf + strlen(buf), "%0*d", (int)(21 + decimals - strlen(buf)), 0);
         }
     }
     return buf;
@@ -2091,9 +2091,9 @@ std::string DataConvert::timeToString( long long  timevalue, long decimals )
         size_t start = strlen(buf);
         snprintf(buf + strlen(buf), 12 + decimals, ".%d", dt.msecond);
         // Pad end with zeros
-        if (strlen(buf) - start < decimals)
+        if (strlen(buf) - start < (size_t)decimals)
         {
-            sprintf(buf + strlen(buf), "%0*d", decimals - (strlen(buf) - start), 0);
+            sprintf(buf + strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
         }
     }
     return buf;
@@ -2642,7 +2642,7 @@ int64_t DataConvert::intToTime(int64_t data)
         atime.second = 0;
         atime.msecond = 0;
 
-        return *(reinterpret_cast<uint64_t*>(&atime));
+        return *(reinterpret_cast<int64_t*>(&atime));
     }
 
     snprintf( buf, 15, "%llu", (long long unsigned int)data);
@@ -2696,7 +2696,7 @@ int64_t DataConvert::stringToTime(const string& data)
     // -34 <= D <= 34
     // -838 <= H <= 838
     uint64_t min = 0, sec = 0, msec = 0;
-    int64_t day = 0, hour = 0;
+    int64_t day = -1, hour = 0;
     string time, hms, ms;
     char* end = NULL;
 

@@ -158,20 +158,21 @@ inline bool getBool(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::TIME:
         {
-            int64_t val = pm[0]->data()->getTimeIntVal(row, isNull);
+            // Shift out unused day for compare
+            int64_t val = pm[0]->data()->getTimeIntVal(row, isNull) << 12;
 
             if (notBetween)
             {
-                if (!numericGE(val, pm[1]->data()->getTimeIntVal(row, isNull)) && !isNull)
+                if (!numericGE(val, pm[1]->data()->getTimeIntVal(row, isNull) << 12) && !isNull)
                     return true;
 
                 isNull = false;
-                return (!numericLE(val, pm[2]->data()->getTimeIntVal(row, isNull)) && !isNull);
+                return (!numericLE(val, pm[2]->data()->getTimeIntVal(row, isNull) << 12) && !isNull);
             }
 
             return !isNull &&
-                   numericGE(val, pm[1]->data()->getTimeIntVal(row, isNull)) &&
-                   numericLE(val, pm[2]->data()->getTimeIntVal(row, isNull));
+                   numericGE(val, pm[1]->data()->getTimeIntVal(row, isNull) << 12) &&
+                   numericLE(val, pm[2]->data()->getTimeIntVal(row, isNull) << 12);
         }
 
         case execplan::CalpontSystemCatalog::DOUBLE:
@@ -265,7 +266,8 @@ CalpontSystemCatalog::ColType Func_between::operationType( FunctionParm& fp, Cal
                 fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
                 fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR) ||
                 ct.colDataType == CalpontSystemCatalog::DATE ||
-                ct.colDataType == CalpontSystemCatalog::DATETIME)
+                ct.colDataType == CalpontSystemCatalog::DATETIME ||
+                ct.colDataType == CalpontSystemCatalog::TIME)
         {
             allString = false;
         }
@@ -293,6 +295,23 @@ CalpontSystemCatalog::ColType Func_between::operationType( FunctionParm& fp, Cal
             }
         }
     }
+    else if (op.operationType().colDataType == CalpontSystemCatalog::TIME)
+    {
+        ConstantColumn* cc = NULL;
+
+        for (uint32_t i = 1; i < fp.size(); i++)
+        {
+            cc = dynamic_cast<ConstantColumn*>(fp[i]->data());
+
+            if (cc)
+            {
+                Result result = cc->result();
+                result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
+                cc->result(result);
+            }
+        }
+    }
+
 
     return ct;
 }

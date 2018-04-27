@@ -3518,8 +3518,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         if (ifp->field_type() == MYSQL_TYPE_DATETIME ||
                 ifp->field_type() == MYSQL_TYPE_DATETIME2 ||
                 ifp->field_type() == MYSQL_TYPE_TIMESTAMP ||
-                ifp->field_type() == MYSQL_TYPE_TIMESTAMP2 ||
-                funcName == "add_time")
+                ifp->field_type() == MYSQL_TYPE_TIMESTAMP2)
         {
             CalpontSystemCatalog::ColType ct;
             ct.colDataType = CalpontSystemCatalog::DATETIME;

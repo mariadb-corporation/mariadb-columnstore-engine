@@ -666,14 +666,14 @@ inline const std::string& TreeNode::getStrVal()
 
         case CalpontSystemCatalog::DATETIME:
         {
-            dataconvert::DataConvert::datetimeToString(fResult.intVal, tmp, 255);
+            dataconvert::DataConvert::datetimeToString(fResult.intVal, tmp, 255, fResultType.precision);
             fResult.strVal = std::string(tmp);
             break;
         }
 
         case CalpontSystemCatalog::TIME:
         {
-            dataconvert::DataConvert::timeToString(fResult.intVal, tmp, 255);
+            dataconvert::DataConvert::timeToString(fResult.intVal, tmp, 255, fResultType.precision);
             fResult.strVal = std::string(tmp);
             break;
         }
@@ -992,11 +992,20 @@ inline int64_t TreeNode::getDatetimeIntVal()
     else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIME)
     {
         dataconvert::Time tt;
+        int day = 0;
 
         memcpy(&tt, &fResult.intVal, 8);
-        if (tt.hour > 23 || tt.hour < 0)
-            throw logging::InvalidConversionExcept("TreeNode::getDecimalVal: Invalid conversion from time (out of range).");
-        dataconvert::DateTime dt(0, 0, 0, tt.hour, tt.minute, tt.second, tt.msecond);
+        // Note, this should probably be current date +/- time
+        if (tt.hour > 23)
+        {
+            day = tt.hour / 24;
+            tt.hour = tt.hour % 24;
+        }
+        else if (tt.hour < 0)
+        {
+            tt.hour = 0;
+        }
+        dataconvert::DateTime dt(0, 0, day, tt.hour, tt.minute, tt.second, tt.msecond);
         memcpy(&fResult.intVal, &dt, 8);
         return fResult.intVal;
     }

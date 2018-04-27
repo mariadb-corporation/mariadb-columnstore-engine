@@ -59,7 +59,7 @@ string Func_time::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::TINYINT:
         case execplan::CalpontSystemCatalog::SMALLINT:
         {
-            val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+            val = dataconvert::DataConvert::intToTime(parm[0]->data()->getIntVal(row, isNull));
 
             if (val == -1)
                 isNull = true;
@@ -73,7 +73,7 @@ string Func_time::getStrVal(rowgroup::Row& row,
         {
             if (parm[0]->data()->resultType().scale)
             {
-                val = dataconvert::DataConvert::intToDatetime(parm[0]->data()->getIntVal(row, isNull));
+                val = dataconvert::DataConvert::intToTime(parm[0]->data()->getIntVal(row, isNull));
 
                 if (val == -1)
                     isNull = true;
@@ -96,7 +96,7 @@ string Func_time::getStrVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
         {
-            val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+            val = dataconvert::DataConvert::stringToTime(parm[0]->data()->getStrVal(row, isNull));
 
             if (val == -1)
                 isNull = true;
@@ -106,16 +106,14 @@ string Func_time::getStrVal(rowgroup::Row& row,
             break;
         }
 
-        case execplan::CalpontSystemCatalog::DATE:
+        case execplan::CalpontSystemCatalog::TIME:
         {
-            val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+            val = parm[0]->data()->getTimeIntVal(row, isNull);
             break;
         }
-
-        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
         {
-            val = parm[0]->data()->getDatetimeIntVal(row, isNull);
+            val = parm[0]->data()->getTimeIntVal(row, isNull);
             break;
         }
 
@@ -129,9 +127,9 @@ string Func_time::getStrVal(rowgroup::Row& row,
         return "";
 
     char buf[30] = {'\0'};
-    dataconvert::DataConvert::datetimeToString(val, buf, sizeof(buf));
+    dataconvert::DataConvert::timeToString(val, buf, sizeof(buf));
     string time(buf);
-    return time.substr(11, 80);
+    return time;
 }
 
 int64_t Func_time::getIntVal(rowgroup::Row& row,
@@ -139,7 +137,7 @@ int64_t Func_time::getIntVal(rowgroup::Row& row,
                              bool& isNull,
                              execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-    return dataconvert::DataConvert::datetimeToInt(getStrVal(row, fp, isNull, op_ct));
+    return dataconvert::DataConvert::timeToInt(getStrVal(row, fp, isNull, op_ct));
 }
 
 double Func_time::getDoubleVal(rowgroup::Row& row,

@@ -131,6 +131,90 @@ long long dateGet( uint64_t time, IntervalColumn::interval_type unit, bool dateT
             throw runtime_error("unit type is not supported: " + unit);
     };
 }
+
+long long timeGet( uint64_t time, IntervalColumn::interval_type unit )
+{
+    int32_t hour = 0,
+             min = 0,
+             sec = 0,
+             msec = 0,
+             day = 0;
+
+        min = (int32_t)((time >> 32) & 0xff);
+        sec = (int32_t)((time >> 24) & 0xff);
+        msec = (int32_t)((time & 0xfffff));
+
+        // If negative, mask so it doesn't turn positive
+        int64_t mask = 0;
+        if ((time >> 40) & 0x800)
+            mask = 0xfffffffffffff000;
+        hour = mask | ((time >> 40) & 0xfff);
+
+        // Always positive!
+        day = abs(hour / 24);
+
+    switch ( unit )
+    {
+        case IntervalColumn::INTERVAL_YEAR:
+        case IntervalColumn::INTERVAL_MONTH:
+            return 0;
+
+        case IntervalColumn::INTERVAL_DAY:
+            return day;
+
+        case IntervalColumn::INTERVAL_HOUR:
+            return hour;
+
+        case IntervalColumn::INTERVAL_MINUTE:
+            return min;
+
+        case IntervalColumn::INTERVAL_SECOND:
+            return sec;
+
+        case IntervalColumn::INTERVAL_MICROSECOND:
+            return msec;
+
+        case IntervalColumn::INTERVAL_QUARTER:
+        case IntervalColumn::INTERVAL_WEEK:
+        case IntervalColumn::INTERVAL_YEAR_MONTH:
+            return 0;
+
+        case IntervalColumn::INTERVAL_DAY_HOUR:
+            return (day * 100) + hour;
+
+        case IntervalColumn::INTERVAL_DAY_MINUTE:
+            return (day * 10000) + (hour * 100) + min;
+
+        case IntervalColumn::INTERVAL_DAY_SECOND:
+            return (day * 1000000) + (hour * 10000) + (min * 100) + sec;
+
+        case IntervalColumn::INTERVAL_HOUR_MINUTE:
+            return (hour * 100) + min;
+
+        case IntervalColumn::INTERVAL_HOUR_SECOND:
+            return (hour * 10000) + (min * 100) + sec;
+
+        case IntervalColumn::INTERVAL_MINUTE_SECOND:
+            return (min * 100) + sec;
+
+        case IntervalColumn::INTERVAL_DAY_MICROSECOND:
+            return (((day * 1000000) + (hour * 10000) + (min * 100) + sec) * 1000000) + msec;
+
+        case IntervalColumn::INTERVAL_HOUR_MICROSECOND:
+            return (((hour * 10000) + (min * 100) + sec) * 1000000) + msec;
+
+        case IntervalColumn::INTERVAL_MINUTE_MICROSECOND:
+            return (((min * 100) + sec) * 1000000) + msec;
+
+        case IntervalColumn::INTERVAL_SECOND_MICROSECOND:
+            return (sec * 1000000) + msec;
+
+        default:
+            throw runtime_error("unit type is not supported: " + unit);
+    };
+}
+
+
 }
 
 namespace funcexp
@@ -148,14 +232,19 @@ int64_t Func_extract::getIntVal(rowgroup::Row& row,
 {
     IntervalColumn::interval_type unit = static_cast<IntervalColumn::interval_type>(parm[1]->data()->getIntVal(row, isNull));
     uint64_t time;
+    bool isTime = false;
 
     //@bug4678 handle conversion from non date/datetime datatype
     switch (parm[0]->data()->resultType().colDataType)
     {
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
-        case CalpontSystemCatalog::TIME:
             time = parm[0]->data()->getDatetimeIntVal(row, isNull);
+            break;
+
+        case CalpontSystemCatalog::TIME:
+            time = parm[0]->data()->getTimeIntVal(row, isNull);
+            isTime = true;
             break;
 
         case CalpontSystemCatalog::VARCHAR:
@@ -182,7 +271,11 @@ int64_t Func_extract::getIntVal(rowgroup::Row& row,
             time = parm[0]->data()->getIntVal(row, isNull);
     }
 
-    long long value = dateGet( time, unit, false );
+    long long value;
+    if (isTime)
+        value = timeGet( time, unit );
+    else
+        value = dateGet( time, unit, false );
 
     return value;
 }
