@@ -27,6 +27,8 @@
 #include <boost/shared_ptr.hpp>
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
+#include "exceptclasses.h"
+using namespace logging;
 
 
 // Required declaration as it isn't in a MairaDB include
@@ -70,7 +72,22 @@ static int is_columnstore_columns_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >::const_iterator it = catalog_tables.begin();
          it != catalog_tables.end(); ++it)
     {
-        execplan::CalpontSystemCatalog::RIDList column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true);
+        execplan::CalpontSystemCatalog::RIDList column_rid_list;
+        // Note a table may get dropped as you iterate over the list of tables.
+        // So simply ignore the dropped table.
+        try {
+            column_rid_list = systemCatalogPtr->columnRIDs((*it).second, true);
+        }
+        catch (IDBExcept& ex)
+        {
+            if (ex.errorCode() == ERR_TABLE_NOT_IN_CATALOG) {
+                continue;
+            }
+            else {
+                throw;
+            }
+        }
+
         for (size_t col_num = 0; col_num < column_rid_list.size(); col_num++)
         {
             execplan::CalpontSystemCatalog::TableColName tcn = systemCatalogPtr->colName(column_rid_list[col_num].objnum);
