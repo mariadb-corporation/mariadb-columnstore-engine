@@ -211,6 +211,7 @@ struct cal_group_info
     ORDER*      groupByOrder; // MCOL-1052 ORDER BY
     Item*       groupByHaving;  // MCOL-1052 HAVING
     bool        groupByDistinct; //MCOL-1052 DISTINCT
+    std::vector<execplan::ParseTree*> pushedPts;
 };
 
 typedef std::tr1::unordered_map<TABLE*, cal_table_info> CalTableMap;

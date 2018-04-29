@@ -5249,6 +5249,29 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         gi.groupByHaving = group_hand->having;
         gi.groupByDistinct = group_hand->distinct;
         
+        // MCOL-1052 Send pushed conditions here, since server could omit GROUP BY
+        // items in case of = or IN functions used on GROUP BY columns.
+        {
+            CalTableMap::iterator mapiter;
+            execplan::CalpontSelectExecutionPlan::ColumnMap::iterator colMapIter;
+            execplan::CalpontSelectExecutionPlan::ColumnMap::iterator condColMapIter;
+            execplan::ParseTree* ptIt;
+            execplan::ReturnedColumn* rcIt;
+            for(TABLE_LIST* tl = gi.groupByTables; tl; tl=tl->next_local)
+            {
+                mapiter = ci->tableMap.find(tl->table);
+                if(mapiter != ci->tableMap.end() && mapiter->second.condInfo != NULL 
+                    && mapiter->second.condInfo->condPush)
+                {
+                    while(!mapiter->second.condInfo->ptWorkStack.empty())
+                    {
+                        ptIt=mapiter->second.condInfo->ptWorkStack.top();
+                        mapiter->second.condInfo->ptWorkStack.pop();
+                        gi.pushedPts.push_back(ptIt);
+                    }
+                }
+            }
+        }
         // send plan whenever group_init is called
         int status = cp_get_group_plan(thd, csep, gi);
 

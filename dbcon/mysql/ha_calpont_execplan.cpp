@@ -8003,6 +8003,55 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     return 0;
 }
 
+/*@brief  buildConstColFromFilter- change SimpleColumn into ConstColumn*/
+/***********************************************************
+ * DESCRIPTION:
+ * Server could optimize out fields from GROUP BY list, when certain 
+ * filter predicate is used, e.g. 
+ * field = 'AIR', field IN ('AIR'). This utility function tries to 
+ * replace such fields with ConstantColumns using cond_pushed filters.
+ * PARAMETERS:
+ *    originalSC    SimpleColumn* removed field
+ *    gwi           main strucutre
+ *    gi            auxilary group_by handler structure
+ * RETURNS
+ *  ConstantColumn* if originalSC equals with cond_pushed columns.
+ *  NULL otherwise
+ ***********************************************************/
+ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC, 
+gp_walk_info& gwi, cal_group_info& gi)
+{
+    execplan::SimpleColumn* simpleCol;
+    execplan::ConstantColumn* constCol;
+    execplan::SOP op;
+    execplan::SimpleFilter* simpFilter;
+    execplan::ConstantColumn* result = NULL;
+    std::vector<ParseTree*>::iterator ptIt = gi.pushedPts.begin();
+    for(; ptIt != gi.pushedPts.end(); ptIt++)
+    {
+        simpFilter = dynamic_cast<execplan::SimpleFilter*>((*ptIt)->data());
+        if (simpFilter == NULL)
+            continue;
+        simpleCol = dynamic_cast<execplan::SimpleColumn*>(simpFilter->lhs());
+        constCol = dynamic_cast<execplan::ConstantColumn*>(simpFilter->rhs());
+        if(simpleCol == NULL || constCol == NULL)
+            continue;
+        op = simpFilter->op();
+        if ( originalSC->sameColumn(dynamic_cast<execplan::ReturnedColumn*>(simpleCol)) 
+            && op.get()->op() == OP_EQ && constCol)
+        {
+#ifdef DEBUG_WALK_COND
+            cerr << "buildConstColFromFilter() replaced " << endl;
+            cerr << simpleCol->toString() << endl;
+            cerr << " with " << endl;
+            cerr << constCol << endl;
+#endif
+            result = constCol;
+        }
+    }
+    return result;
+}
+
 int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_group_info& gi, bool isUnion)
 {
 #ifdef DEBUG_WALK_COND
@@ -8284,7 +8333,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     if (filters)
     {
         csep->filters(filters);
+#ifdef DEBUG_WALK_COND
         filters->drawTree("/tmp/filter1.dot");
+#endif
     }
 
     gwi.clauseType = SELECT;
@@ -8346,6 +8397,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             {
                 Item_field* ifp = (Item_field*)item;
                 SimpleColumn* sc = NULL;
+                ConstantColumn* constCol = NULL;
 
                 if (ifp->field_name && string(ifp->field_name) == "*")
                 {
@@ -8357,6 +8409,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
                 if (sc)
                 {
+                    constCol = buildConstColFromFilter(sc, gwi, gi);
+                    boost::shared_ptr<ConstantColumn> spcc(constCol);
                     boost::shared_ptr<SimpleColumn> spsc(sc);
 
                     if (sel_cols_in_create.length() != 0)
@@ -8386,10 +8440,19 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                                                  escapeBackTick(itemAlias.empty() ? ifp->name : itemAlias.c_str()) + "`");
                     else
                         gwi.selectCols.push_back("`" + escapeBackTick((itemAlias.empty() ? ifp->name : itemAlias.c_str())) + "`");
-
-                    gwi.returnedCols.push_back(spsc);
-
-                    gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name), spsc));
+                    
+                    // MCOL-1052 Replace SimpleColumn with ConstantColumn,
+                    // since it must have a single value only.
+                    if(constCol)
+                    {
+                        gwi.returnedCols.push_back(spcc);
+                        gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name), spcc));
+                    }
+                    else
+                    {
+                        gwi.returnedCols.push_back(spsc);
+                        gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name), spsc));
+                    }
                     TABLE_LIST* tmp = 0;
 
                     if (ifp->cached_table)
@@ -9348,11 +9411,19 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         if( rc->sameColumn((*iter).get()) )
                             break;
                     }
+                    
+                    // MCOL-1052 Find and remove the optimized field
+                    // from ORDER using cond_pushed filters.
+                    if(buildConstColFromFilter(
+                        dynamic_cast<SimpleColumn*>(rc),gwi, gi))
+                    {
+                        break;
+                    }
                     // MCOL-1052 GROUP BY items list doesn't contain
                     // this ORDER BY item.
                     if ( iter == gwi.groupByCols.end() )
                     {
-                        Item_ident *iip = reinterpret_cast<Item_ident*>(ord_item);                            
+                        Item_ident *iip = reinterpret_cast<Item_ident*>(ord_item);
                         std::ostringstream ostream;
                         ostream << "'";
                         if (iip->db_name)
