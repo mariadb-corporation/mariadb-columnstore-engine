@@ -146,7 +146,7 @@ int64_t addTime(Time& dt1, Time& dt2)
     dt.second = 0;
     dt.msecond = 0;
 
-    int64_t hour, min, sec, msec, tmp;
+    int64_t min, sec, msec, tmp;
     msec = (signed)(dt1.msecond + dt2.msecond);
     dt.msecond = tmp = msec % 1000000;
 

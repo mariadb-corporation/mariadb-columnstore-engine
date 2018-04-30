@@ -65,8 +65,6 @@ inline uint64_t simple_case_cmp(Row& row,
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
         case execplan::CalpontSystemCatalog::DATE:
-        case execplan::CalpontSystemCatalog::DATETIME:
-        case execplan::CalpontSystemCatalog::TIME:
         {
             int64_t ev = parm[n]->data()->getIntVal(row, isNull);
 
@@ -86,6 +84,49 @@ inline uint64_t simple_case_cmp(Row& row,
 
             break;
         }
+
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            int64_t ev = parm[n]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            for (i = 1; i <= whereCount; i++)
+            {
+                if (ev == parm[i]->data()->getDatetimeIntVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
+                    break;
+                }
+                else
+                    isNull = false;
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t ev = parm[n]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            for (i = 1; i <= whereCount; i++)
+            {
+                if (ev == parm[i]->data()->getTimeIntVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
+                    break;
+                }
+                else
+                    isNull = false;
+            }
+
+            break;
+        }
+
 
         case execplan::CalpontSystemCatalog::UBIGINT:
         case execplan::CalpontSystemCatalog::UINT:
@@ -514,7 +555,7 @@ int64_t Func_simple_case::getTimeIntVal(rowgroup::Row& row,
     if (isNull)
         return joblist::TIMENULL;
 
-    return parm[i + 1]->data()->getTimeIntVal(row, isNull);
+    return parm[i]->data()->getTimeIntVal(row, isNull);
 }
 
 
@@ -653,7 +694,7 @@ int64_t Func_searched_case::getTimeIntVal(rowgroup::Row& row,
     if (isNull)
         return joblist::TIMENULL;
 
-    return parm[i + 1]->data()->getTimeIntVal(row, isNull);
+    return parm[i]->data()->getTimeIntVal(row, isNull);
 }
 
 } // namespace funcexp
