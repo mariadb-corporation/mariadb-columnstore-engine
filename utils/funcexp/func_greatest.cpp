@@ -212,16 +212,20 @@ int64_t Func_greatest::getTimeIntVal(rowgroup::Row& row,
         execplan::CalpontSystemCatalog::ColType& ct)
 {
     // Strip off unused day
-    int64_t str = fp[0]->data()->getTimeIntVal(row, isNull) << 12;
+    int64_t greatestStr = fp[0]->data()->getTimeIntVal(row, isNull);
 
-    int64_t greatestStr = str;
+    int64_t str = greatestStr << 12;
 
     for (uint32_t i = 1; i < fp.size(); i++)
     {
-        int64_t str1 = fp[i]->data()->getTimeIntVal(row, isNull) << 12;
+        int64_t str1 = fp[i]->data()->getTimeIntVal(row, isNull);
+        int64_t str2 = str1 << 12;
 
-        if ( greatestStr < str1 )
+        if ( str < str1 )
+        {
             greatestStr = str1;
+            str = str2;
+        }
     }
 
     return greatestStr;
