@@ -84,7 +84,7 @@ static int is_columnstore_columns_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 continue;
             }
             else {
-                throw;
+                return 1;
             }
         }
 
