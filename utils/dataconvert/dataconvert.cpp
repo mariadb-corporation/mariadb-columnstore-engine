@@ -1005,6 +1005,7 @@ bool mysql_str_to_time( const string& input, Time& output )
             output.minute = 59;
             output.second = 59;
             output.msecond = 999999;
+            output.is_neg = 0;
         }
         else if (hour < -838)
         {
@@ -1012,6 +1013,7 @@ bool mysql_str_to_time( const string& input, Time& output )
             output.minute = 59;
             output.second = 59;
             output.msecond = 999999;
+            output.is_neg = 1;
         }
         // If neither of the above match then we return a 0 time
         else
@@ -1025,6 +1027,7 @@ bool mysql_str_to_time( const string& input, Time& output )
     output.minute = min;
     output.second = sec;
     output.msecond = usec;
+    output.is_neg = isNeg;
     return true;
 }
 
@@ -1914,10 +1917,16 @@ int64_t DataConvert::convertColumnTime(
     inMinute      = 0;
     inSecond      = 0;
     inMicrosecond = 0;
+    bool isNeg = false;
     if ( datetimeFormat != CALPONTTIME_ENUM )
     {
         status = -1;
         return value;
+    }
+
+    if (p[0] == '-')
+    {
+        isNeg = true;
     }
 
     errno = 0;
@@ -1981,6 +1990,7 @@ int64_t DataConvert::convertColumnTime(
         atime.minute = inMinute;
         atime.second = inSecond;
         atime.msecond = inMicrosecond;
+        atime.is_neg = isNeg;
 
         memcpy( &value, &atime, 8);
     }
@@ -1994,6 +2004,7 @@ int64_t DataConvert::convertColumnTime(
             atime.minute = 59;
             atime.second = 59;
             atime.msecond = 999999;
+            atime.is_neg = false;
             memcpy( &value, &atime, 8);
         }
         else if (inHour < -838)
@@ -2003,6 +2014,7 @@ int64_t DataConvert::convertColumnTime(
             atime.minute = 59;
             atime.second = 59;
             atime.msecond = 999999;
+            atime.is_neg = false;
             memcpy( &value, &atime, 8);
         }
         // If neither of the above match then we return a 0 time
@@ -2084,8 +2096,15 @@ std::string DataConvert::timeToString( long long  timevalue, long decimals )
     Time dt(timevalue);
     const int TIMETOSTRING_LEN = 19; // (-H)HH:MM:SS.mmmmmm\0
     char buf[TIMETOSTRING_LEN];
+    char* outbuf = buf;
 
-    sprintf(buf, "%02d:%02d:%02d", dt.hour, dt.minute, dt.second);
+    if ((dt.hour >= 0) && dt.is_neg)
+    {
+        outbuf[0] = '-';
+        outbuf++;
+    }
+
+    sprintf(outbuf, "%02d:%02d:%02d", dt.hour, dt.minute, dt.second);
     if (dt.msecond && decimals)
     {
         size_t start = strlen(buf);
@@ -2128,7 +2147,9 @@ std::string DataConvert::timeToString1( long long  datetimevalue )
     const int TIMETOSTRING1_LEN = 14; // HHMMSSmmmmmm\0
     char buf[TIMETOSTRING1_LEN];
 
-    sprintf(buf, "%02d%02d%02d%06d", dt.hour, dt.minute, dt.second, dt.msecond);
+    char* outbuf = buf;
+
+    sprintf(outbuf, "%02d%02d%02d%06d", dt.hour, dt.minute, dt.second, dt.msecond);
     return buf;
 }
 
@@ -2633,7 +2654,9 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
 int64_t DataConvert::intToTime(int64_t data)
 {
     char buf[21] = {0};
+    char* bufread = buf;
     Time atime;
+    bool isNeg = false;
 
     if (data == 0)
     {
@@ -2641,6 +2664,7 @@ int64_t DataConvert::intToTime(int64_t data)
         atime.minute = 0;
         atime.second = 0;
         atime.msecond = 0;
+        atime.is_neg = 0;
 
         return *(reinterpret_cast<int64_t*>(&atime));
     }
@@ -2650,24 +2674,37 @@ int64_t DataConvert::intToTime(int64_t data)
     string hour, min, sec, msec;
     int64_t h = 0, minute = 0, s = 0, ms = 0;
 
-    switch (strlen(buf))
+    if (bufread[0] == '-')
     {
+        isNeg = true;
+        bufread++;
+    }
+
+    switch (strlen(bufread))
+    {
+        case 7:
+            hour = string(bufread, 3);
+            min = string(bufread + 2, 2);
+            sec = string(bufread + 4, 2);
+            msec = string(bufread + 6, 6);
+            break;
+
         case 6:
-            hour = string(buf, 2);
-            min = string(buf + 2, 2);
-            sec = string(buf + 4, 2);
-            msec = string(buf + 6, 6);
+            hour = string(bufread, 2);
+            min = string(bufread + 2, 2);
+            sec = string(bufread + 4, 2);
+            msec = string(bufread + 6, 6);
             break;
 
         case 4:
-            min = string(buf, 2);
-            sec = string(buf + 2, 2);
-            msec = string(buf + 4, 6);
+            min = string(bufread, 2);
+            sec = string(bufread + 2, 2);
+            msec = string(bufread + 4, 6);
             break;
 
         case 2:
-            sec = string(buf, 2);
-            msec = string(buf + 2, 6);
+            sec = string(bufread, 2);
+            msec = string(bufread + 2, 6);
             break;
 
         default:
@@ -2686,6 +2723,7 @@ int64_t DataConvert::intToTime(int64_t data)
     atime.minute = minute;
     atime.second = s;
     atime.msecond = ms;
+    atime.is_neg = isNeg;
 
     return *(reinterpret_cast<uint64_t*>(&atime));
 }
@@ -2697,11 +2735,20 @@ int64_t DataConvert::stringToTime(const string& data)
     // -838 <= H <= 838
     uint64_t min = 0, sec = 0, msec = 0;
     int64_t day = -1, hour = 0;
+    bool isNeg = false;
     string time, hms, ms;
     char* end = NULL;
 
+
+    size_t pos = data.find("-");
+
+    if (pos != string::npos)
+    {
+        isNeg = true;
+    }
+
     // Day
-    size_t pos = data.find(" ");
+    pos = data.find(" ");
 
     if (pos != string::npos)
     {
@@ -2762,6 +2809,7 @@ int64_t DataConvert::stringToTime(const string& data)
     atime.minute = min;
     atime.second = sec;
     atime.msecond = msec;
+    atime.is_neg = isNeg;
     return *(reinterpret_cast<int64_t*>(&atime));
 }
 

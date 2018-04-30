@@ -197,14 +197,17 @@ struct Time
     signed second  : 8;
     signed minute  : 8;
     signed hour    : 12;
-    signed day     : 12;
+    signed day     : 11;
+    signed is_neg  : 1;
 
     // NULL column value = 0xFFFFFFFFFFFFFFFE
     Time() : msecond (0xFFFFFE),
         second (0xFF),
         minute (0xFF),
         hour (0xFFF),
-        day (0xFFF) {}
+        day (0x7FF),
+        is_neg (0b1)
+    {}
 
     // Construct a Time from a 64 bit integer InfiniDB time.
     Time(int64_t val) :
@@ -212,11 +215,16 @@ struct Time
         second((val >> 24) & 0xff),
         minute((val >> 32) & 0xff),
         hour((val >> 40) & 0xfff),
-        day((val >> 52) & 0xfff)
+        day((val >> 52) & 0x7ff),
+        is_neg(val >> 63)
     {}
 
-    Time(signed d, signed h, signed min, signed sec, signed msec) :
-        msecond(msec), second(sec), minute(min), hour(h), day(d) {}
+    Time(signed d, signed h, signed min, signed sec, signed msec, bool neg) :
+        msecond(msec), second(sec), minute(min), hour(h), day(d), is_neg(neg)
+    {
+        if (h < 0)
+            is_neg = 0b1;
+    }
 
     int64_t convertToMySQLint() const;
     void reset();
@@ -229,13 +237,25 @@ void    Time::reset()
     second  = 0xFF;
     minute  = 0xFF;
     hour    = 0xFFF;
-    day     = 0xFFF;
+    is_neg  = 0b1;
+    day     = 0x7FF;
 }
 
 inline
 int64_t Time::convertToMySQLint() const
 {
-    return (int64_t) (hour * 10000) + (minute * 100) + second;
+    if ((hour >= 0) && is_neg)
+    {
+        return (int64_t) ((hour * 10000) + (minute * 100) + second) * -1;
+    }
+    else if (hour >= 0)
+    {
+        return (int64_t) (hour * 10000) + (minute * 100) + second;
+    }
+    else
+    {
+        return (int64_t) (hour * 10000) - (minute * 100) - second;
+    }
 }
 
 static uint32_t daysInMonth[13] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
@@ -593,6 +613,12 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
     {
         msec = (unsigned)((timevalue) & 0xffffff);
     }
+    if ((hour >= 0) && (timevalue >> 63))
+    {
+        buf[0] = '-';
+        buf++;
+        buflen--;
+    }
     snprintf( buf, buflen, "%02d:%02d:%02d",
               hour,
               (unsigned)((timevalue >> 32) & 0xff),
@@ -636,12 +662,19 @@ inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned
 {
     // Handle negative correctly
     int hour = 0;
-    if ((timevalue >> 40) & 0xf00)
+    if ((timevalue >> 40) & 0x800)
     {
         hour = 0xfffff000;
     }
 
     hour |= ((timevalue >> 40) & 0xfff);
+
+    if ((hour >= 0) && (timevalue >> 63))
+    {
+        buf[0] = '-';
+        buf++;
+        buflen--;
+    }
 
     snprintf( buf, buflen, "%02d%02d%02d",
               hour,

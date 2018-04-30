@@ -996,12 +996,12 @@ inline int64_t TreeNode::getDatetimeIntVal()
 
         memcpy(&tt, &fResult.intVal, 8);
         // Note, this should probably be current date +/- time
-        if (tt.hour > 23)
+        if ((tt.hour > 23) && (!tt.is_neg))
         {
             day = tt.hour / 24;
             tt.hour = tt.hour % 24;
         }
-        else if (tt.hour < 0)
+        else if ((tt.hour < 0) || (tt.is_neg))
         {
             tt.hour = 0;
         }
@@ -1023,7 +1023,7 @@ inline int64_t TreeNode::getTimeIntVal()
         dataconvert::DateTime dt;
 
         memcpy(&dt, &fResult.intVal, 8);
-        dataconvert::Time tt(0, dt.hour, dt.minute, dt.second, dt.msecond);
+        dataconvert::Time tt(0, dt.hour, dt.minute, dt.second, dt.msecond, false);
         memcpy(&fResult.intVal, &tt, 8);
         return fResult.intVal;
     }

@@ -150,6 +150,9 @@ long long timeGet( uint64_t time, IntervalColumn::interval_type unit )
             mask = 0xfffffffffffff000;
         hour = mask | ((time >> 40) & 0xfff);
 
+        if ((hour >= 0) && (time >> 63))
+            hour*= -1;
+
         // Always positive!
         day = abs(hour / 24);
 

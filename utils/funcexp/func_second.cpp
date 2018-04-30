@@ -111,6 +111,7 @@ int64_t Func_second::getIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::TIME:
         {
             val = parm[0]->data()->getTimeIntVal(row, isNull);
+            return (uint32_t)((val >> 24) & 0xff);
             break;
         }
 

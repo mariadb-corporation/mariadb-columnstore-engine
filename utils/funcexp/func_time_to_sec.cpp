@@ -49,12 +49,13 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
                                     CalpontSystemCatalog::ColType& op_ct)
 {
     // assume 256 is enough. assume not allowing incomplete date
-    uint32_t hour = 0,
+    int32_t hour = 0,
              min = 0,
              sec = 0;
     bool bIsNegative = false;   // Only set to true if CHAR or VARCHAR with a '-'
 
     int64_t val = 0;
+    int64_t mask = 0;
     dataconvert::Time tval;
 
     switch (parm[0]->data()->resultType().colDataType)
@@ -64,9 +65,25 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
 
         case CalpontSystemCatalog::DATETIME:
             val = parm[0]->data()->getIntVal(row, isNull);
-            hour = (uint32_t)((val >> 32) & 0x3f);
-            min = (uint32_t)((val >> 26) & 0x3f);
-            sec = (uint32_t)((val >> 20) & 0x3f);
+            hour = (int32_t)((val >> 32) & 0x3f);
+            min = (int32_t)((val >> 26) & 0x3f);
+            sec = (int32_t)((val >> 20) & 0x3f);
+            break;
+
+        case CalpontSystemCatalog::TIME:
+            val = parm[0]->data()->getTimeIntVal(row, isNull);
+            // If negative, mask so it doesn't turn positive
+            if ((val >> 40) & 0x800)
+                mask = 0xfffffffffffff000;
+
+            bIsNegative = val >> 63;
+            hour = (int32_t)(mask | ((val >> 40) & 0xfff));
+            if ((hour >= 0) && bIsNegative)
+                hour*= -1;
+            else
+                bIsNegative = false;
+            min = (int32_t)((val >> 32) & 0xff);
+            sec = (int32_t)((val >> 24) & 0xff);
             break;
 
         case CalpontSystemCatalog::CHAR:
@@ -112,9 +129,9 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
             }
             else
             {
-                hour = (uint32_t)((val >> 32) & 0x3f);
-                min = (uint32_t)((val >> 26) & 0x3f);
-                sec = (uint32_t)((val >> 20) & 0x3f);
+                hour = (int32_t)((val >> 32) & 0x3f);
+                min = (int32_t)((val >> 26) & 0x3f);
+                sec = (int32_t)((val >> 20) & 0x3f);
             }
 
             break;
@@ -131,9 +148,9 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
                 }
                 else
                 {
-                    hour = (uint32_t)((val >> 32) & 0x3f);
-                    min = (uint32_t)((val >> 26) & 0x3f);
-                    sec = (uint32_t)((val >> 20) & 0x3f);
+                    hour = (int32_t)((val >> 32) & 0x3f);
+                    min = (int32_t)((val >> 26) & 0x3f);
+                    sec = (int32_t)((val >> 20) & 0x3f);
                 }
             }
 

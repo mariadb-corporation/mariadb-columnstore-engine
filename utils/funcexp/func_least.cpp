@@ -197,7 +197,7 @@ int64_t Func_least::getTimeIntVal(rowgroup::Row& row,
         int64_t str1 = fp[i]->data()->getTimeIntVal(row, isNull);
         int64_t str2 = str1 << 12;
 
-        if ( str > str1 )
+        if ( str > str2 )
         {
             leastStr = str1;
             str = str2;
