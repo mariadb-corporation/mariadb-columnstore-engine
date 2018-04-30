@@ -127,8 +127,11 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
         {
             exp2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
 
-            if (parm[0]->data()->resultType().colDataType ==
-                    execplan::CalpontSystemCatalog::DATE)
+            if ((parm[0]->data()->resultType().colDataType ==
+                    execplan::CalpontSystemCatalog::DATE) ||
+                (parm[0]->data()->resultType().colDataType ==
+                    execplan::CalpontSystemCatalog::DATETIME))
+
             {
                 // NULLIF arg0 is DATE, arg1 is DATETIME,
                 // Upgrade arg1 to datetime
@@ -159,8 +162,10 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
         {
             exp2 = parm[1]->data()->getTimeIntVal(row, isNull);
 
-            if (parm[0]->data()->resultType().colDataType ==
-                    execplan::CalpontSystemCatalog::DATETIME)
+            if ((parm[0]->data()->resultType().colDataType ==
+                    execplan::CalpontSystemCatalog::DATETIME) ||
+                (parm[0]->data()->resultType().colDataType ==
+                    execplan::CalpontSystemCatalog::TIME))
             {
                 // NULLIF arg0 is DATETIME, arg1 is TIME,
                 // Upgrade arg1 to time
@@ -445,18 +450,6 @@ int64_t Func_nullif::getDatetimeIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
-        {
-            exp2 = parm[1]->data()->getIntVal(row, isNull);
-
-            if (isNull)
-            {
-                isNull = false;
-                return exp1;
-            }
-
-            break;
-        }
-
         case execplan::CalpontSystemCatalog::DATE:
         {
             // Upgrade to datetime for proper comparison
@@ -522,18 +515,6 @@ int64_t Func_nullif::getTimeIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
-        {
-            exp2 = parm[1]->data()->getIntVal(row, isNull);
-
-            if (isNull)
-            {
-                isNull = false;
-                return exp1;
-            }
-
-            break;
-        }
-
         case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
         {
