@@ -216,7 +216,7 @@ struct Time
     {}
 
     Time(signed d, signed h, signed min, signed sec, signed msec) :
-        msecond(sec), second(sec), minute(min), hour(h), day(d) {}
+        msecond(msec), second(sec), minute(min), hour(h), day(d) {}
 
     int64_t convertToMySQLint() const;
     void reset();
