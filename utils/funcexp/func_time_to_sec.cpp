@@ -161,7 +161,15 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
             return -1;
     }
 
-    int64_t rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
+    int64_t rtn;
+    if (hour < 0)
+    {
+        rtn = (int64_t)(hour * 60 * 60) - (min * 60) - sec;
+    }
+    else
+    {
+        rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
+    }
 
     if (bIsNegative)
     {
