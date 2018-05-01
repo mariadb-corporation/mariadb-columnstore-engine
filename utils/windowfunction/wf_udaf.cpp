@@ -392,6 +392,7 @@ void WF_udaf<T>::SetUDAFValue(static_any::any& valOut, int64_t colOut,
         case execplan::CalpontSystemCatalog::UBIGINT:
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIME:
             setValue(colDataType, b, e, c, &uintOut);
             break;
 

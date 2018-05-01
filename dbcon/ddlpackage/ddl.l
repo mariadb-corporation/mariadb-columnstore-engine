@@ -118,6 +118,7 @@ CREATE {return CREATE;}
 CURRENT_USER {return CURRENT_USER;}
 DATE {ddlget_lval(yyscanner)->str=strdup("date"); return DATE;}
 DATETIME {return DATETIME;}
+TIME {return TIME;}
 DECIMAL {return DECIMAL;}
 DEC {return DECIMAL;}
 DEFAULT {return DEFAULT;}

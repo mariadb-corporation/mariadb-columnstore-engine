@@ -256,6 +256,20 @@ int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row,
     return iValue;
 }
 
+int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& row,
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+//	std::cout << "In Func_inet_ntoa::getTimeVal" << std::endl;
+
+//	int64t iValue = fp[0]->data()->getTimeIntVal(row, isNull);
+    int64_t iValue = joblist::TIMENULL;
+    isNull = true;
+
+    return iValue;
+}
+
 //------------------------------------------------------------------------------
 // Convert an integer IP address to its equivalent IP address string.
 // Source code based on MySQL source (Item_func_inet_ntoa() in item_strfunc.cc).

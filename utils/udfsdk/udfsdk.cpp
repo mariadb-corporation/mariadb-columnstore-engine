@@ -101,7 +101,9 @@ CalpontSystemCatalog::ColType MCS_add::operationType (FunctionParm& fp,
     else if (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::DATE ||
              fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::DATE ||
              fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::DATETIME ||
-             fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::DATETIME)
+             fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::DATETIME ||
+             fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::TIME ||
+             fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::TIME)
     {
         rt.colDataType = CalpontSystemCatalog::BIGINT;
         rt.colWidth = 8;

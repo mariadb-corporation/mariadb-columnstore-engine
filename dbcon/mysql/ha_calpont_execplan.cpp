@@ -2657,6 +2657,11 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
                     ct.colDataType = CalpontSystemCatalog::DATETIME;
                     ct.colWidth = 8;
                 }
+                else if (item->field_type() == MYSQL_TYPE_TIME)
+                {
+                    ct.colDataType = CalpontSystemCatalog::TIME;
+                    ct.colWidth = 8;
+                }
 
                 if (item->field_type() == MYSQL_TYPE_BLOB)
                 {
@@ -3513,8 +3518,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         if (ifp->field_type() == MYSQL_TYPE_DATETIME ||
                 ifp->field_type() == MYSQL_TYPE_DATETIME2 ||
                 ifp->field_type() == MYSQL_TYPE_TIMESTAMP ||
-                ifp->field_type() == MYSQL_TYPE_TIMESTAMP2 ||
-                funcName == "add_time")
+                ifp->field_type() == MYSQL_TYPE_TIMESTAMP2)
         {
             CalpontSystemCatalog::ColType ct;
             ct.colDataType = CalpontSystemCatalog::DATETIME;
@@ -3526,6 +3530,13 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
             CalpontSystemCatalog::ColType ct;
             ct.colDataType = CalpontSystemCatalog::DATE;
             ct.colWidth = 4;
+            fc->resultType(ct);
+        }
+        else if (ifp->field_type() == MYSQL_TYPE_TIME)
+        {
+            CalpontSystemCatalog::ColType ct;
+            ct.colDataType = CalpontSystemCatalog::TIME;
+            ct.colWidth = 8;
             fc->resultType(ct);
         }
 

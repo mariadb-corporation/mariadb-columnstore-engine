@@ -135,6 +135,11 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row)
             *cc = new ConstantColumn(oss.str());
             break;
 
+        case CalpontSystemCatalog::TIME:
+            oss << dataconvert::DataConvert::timeToString(row.getUintField<8>(i));
+            *cc = new ConstantColumn(oss.str());
+            break;
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::TEXT:

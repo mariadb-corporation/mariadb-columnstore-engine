@@ -411,6 +411,14 @@ public:
     /**
     * F&E
     */
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getTimeIntVal();
+    }
+    /**
+    * F&E
+    */
     virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
     {
         evaluate(row, isNull);

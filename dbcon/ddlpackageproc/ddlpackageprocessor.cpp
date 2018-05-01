@@ -232,6 +232,10 @@ execplan::CalpontSystemCatalog::ColDataType DDLPackageProcessor::convertDataType
             colDataType = CalpontSystemCatalog::DATETIME;
             break;
 
+        case ddlpackage::DDL_TIME:
+            colDataType = CalpontSystemCatalog::TIME;
+            break;
+
         case ddlpackage::DDL_CLOB:
             colDataType = CalpontSystemCatalog::CLOB;
             break;
@@ -472,6 +476,13 @@ DDLPackageProcessor::getNullValueForType(const execplan::CalpontSystemCatalog::C
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             long long d = joblist::DATETIMENULL;
+            value = d;
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            long long d = joblist::TIMENULL;
             value = d;
         }
         break;

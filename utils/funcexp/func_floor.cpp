@@ -151,6 +151,19 @@ int64_t Func_floor::getIntVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            string str =
+                DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
+
+            // strip off micro seconds
+            str = str.substr(0, 14);
+
+            if (!isNull)
+                ret = atoll(str.c_str());
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -227,6 +240,19 @@ uint64_t Func_floor::getUintVal(Row& row,
         {
             string str =
                 DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
+
+            // strip off micro seconds
+            str = str.substr(0, 14);
+
+            if (!isNull)
+                ret = strtoull(str.c_str(), NULL, 10);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            string str =
+                DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
 
             // strip off micro seconds
             str = str.substr(0, 14);

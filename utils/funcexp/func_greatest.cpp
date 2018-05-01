@@ -206,6 +206,31 @@ int64_t Func_greatest::getDatetimeIntVal(rowgroup::Row& row,
     return greatestStr;
 }
 
+int64_t Func_greatest::getTimeIntVal(rowgroup::Row& row,
+                                     FunctionParm& fp,
+                                     bool& isNull,
+                                     execplan::CalpontSystemCatalog::ColType& ct)
+{
+    // Strip off unused day
+    int64_t greatestStr = fp[0]->data()->getTimeIntVal(row, isNull);
+
+    int64_t str = greatestStr << 12;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
+    {
+        int64_t str1 = fp[i]->data()->getTimeIntVal(row, isNull);
+        int64_t str2 = str1 << 12;
+
+        if ( str < str2 )
+        {
+            greatestStr = str1;
+            str = str2;
+        }
+    }
+
+    return greatestStr;
+}
+
 } // namespace funcexp
 // vim:ts=4 sw=4:
 

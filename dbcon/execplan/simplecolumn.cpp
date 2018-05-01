@@ -502,6 +502,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
         }
 
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
         {
             fResult.intVal = row.getUintField<8>(fInputIndex);
             break;

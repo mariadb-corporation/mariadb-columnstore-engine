@@ -978,6 +978,11 @@ void TableInfo::reportTotals(double elapsedTime)
                 ossSatCnt <<
                           "invalid date/times replaced with zero value : ";
             }
+            else if (fColumns[i].column.dataType == CalpontSystemCatalog::TIME)
+            {
+                ossSatCnt <<
+                          "invalid times replaced with zero value : ";
+            }
             else if (fColumns[i].column.dataType == CalpontSystemCatalog::CHAR)
                 ossSatCnt <<
                           "character strings truncated: ";

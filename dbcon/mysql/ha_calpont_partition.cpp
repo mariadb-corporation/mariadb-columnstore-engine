@@ -125,6 +125,9 @@ string name(CalpontSystemCatalog::ColType& ct)
         case CalpontSystemCatalog::DATETIME:
             return "DATETIME";
 
+        case CalpontSystemCatalog::TIME:
+            return "TIME";
+
         case CalpontSystemCatalog::DECIMAL:
             return "DECIMAL";
 
@@ -201,6 +204,7 @@ bool CP_type(CalpontSystemCatalog::ColType& ct)
             ct.colDataType == CalpontSystemCatalog::BIGINT ||
             ct.colDataType == CalpontSystemCatalog::DATE ||
             ct.colDataType == CalpontSystemCatalog::DATETIME ||
+            ct.colDataType == CalpontSystemCatalog::TIME ||
             ct.colDataType == CalpontSystemCatalog::DECIMAL ||
             ct.colDataType == CalpontSystemCatalog::UTINYINT ||
             ct.colDataType == CalpontSystemCatalog::USMALLINT ||
@@ -260,6 +264,9 @@ const string format(int64_t v, CalpontSystemCatalog::ColType& ct)
         case CalpontSystemCatalog::DATETIME:
             oss << DataConvert::datetimeToString(v);
             break;
+
+        case CalpontSystemCatalog::TIME:
+            oss << DataConvert::timeToString(v);
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
@@ -385,6 +392,10 @@ const int64_t IDB_format(char* str, CalpontSystemCatalog::ColType& ct, uint8_t& 
 
         case CalpontSystemCatalog::DATETIME:
             v = boost::any_cast<uint64_t>(anyVal);
+            break;
+
+        case CalpontSystemCatalog::TIME:
+            v = boost::any_cast<int64_t>(anyVal);
             break;
 
         case CalpontSystemCatalog::DECIMAL:

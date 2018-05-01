@@ -152,6 +152,15 @@ int64_t Func_ceil::getIntVal(Row& row,
         }
         break;
 
+        case CalpontSystemCatalog::TIME:
+        {
+            Time dt(parm[0]->data()->getTimeIntVal(row, isNull));
+
+            if (!isNull)
+                ret = dt.convertToMySQLint();
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -227,6 +236,15 @@ uint64_t Func_ceil::getUintVal(Row& row,
         case CalpontSystemCatalog::DATETIME:
         {
             DateTime dt(parm[0]->data()->getDatetimeIntVal(row, isNull));
+
+            if (!isNull)
+                ret = dt.convertToMySQLint();
+        }
+        break;
+
+        case CalpontSystemCatalog::TIME:
+        {
+            Time dt(parm[0]->data()->getTimeIntVal(row, isNull));
 
             if (!isNull)
                 ret = dt.convertToMySQLint();

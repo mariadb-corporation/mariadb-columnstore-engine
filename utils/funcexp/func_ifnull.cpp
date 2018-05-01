@@ -168,6 +168,25 @@ int64_t Func_ifnull::getDatetimeIntVal(Row& row,
     return r;
 }
 
+int64_t Func_ifnull::getTimeIntVal(Row& row,
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType&)
+{
+    if (isNull)
+        return 0;
+
+    int64_t r = parm[0]->data()->getTimeIntVal(row, isNull);
+
+    if (isNull)
+    {
+        isNull = false;
+        return parm[1]->data()->getTimeIntVal(row, isNull);
+    }
+
+    return r;
+}
+
 bool Func_ifnull::getBoolVal(Row& row,
                              FunctionParm& parm,
                              bool& isNull,

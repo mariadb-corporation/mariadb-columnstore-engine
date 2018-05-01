@@ -191,6 +191,15 @@ int64_t Func_cast_signed::getIntVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t time = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            Time dt(time);
+            return dt.convertToMySQLint();
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -309,6 +318,15 @@ uint64_t Func_cast_unsigned::getUintVal(Row& row,
 
             // @bug 4703 need to include year
             DateTime dt(time);
+            return dt.convertToMySQLint();
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t time = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            Time dt(time);
             return dt.convertToMySQLint();
         }
         break;
@@ -805,6 +823,85 @@ int64_t Func_cast_datetime::getDatetimeIntVal(rowgroup::Row& row,
     return -1;
 }
 
+
+int64_t Func_cast_datetime::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& operationColType)
+{
+    int64_t val;
+
+    switch (parm[0]->data()->resultType().colDataType)
+    {
+        case execplan::CalpontSystemCatalog::BIGINT:
+        case execplan::CalpontSystemCatalog::INT:
+        case execplan::CalpontSystemCatalog::MEDINT:
+        case execplan::CalpontSystemCatalog::TINYINT:
+        case execplan::CalpontSystemCatalog::SMALLINT:
+        case execplan::CalpontSystemCatalog::UBIGINT:
+        case execplan::CalpontSystemCatalog::UINT:
+        case execplan::CalpontSystemCatalog::UMEDINT:
+        case execplan::CalpontSystemCatalog::UTINYINT:
+        case execplan::CalpontSystemCatalog::USMALLINT:
+        {
+            val = dataconvert::DataConvert::intToTime(parm[0]->data()->getIntVal(row, isNull));
+
+            if (val == -1)
+                isNull = true;
+            else
+                return val;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DECIMAL:
+        case execplan::CalpontSystemCatalog::UDECIMAL:
+        {
+            val = dataconvert::DataConvert::intToTime(parm[0]->data()->getIntVal(row, isNull));
+
+            if (val == -1)
+                isNull = true;
+            else
+                return val;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::VARCHAR:
+        case execplan::CalpontSystemCatalog::CHAR:
+        case execplan::CalpontSystemCatalog::TEXT:
+        {
+            val = dataconvert::DataConvert::stringToTime(parm[0]->data()->getStrVal(row, isNull));
+
+            if (val == -1)
+                isNull = true;
+            else
+                return val;
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::DATE:
+        {
+            return parm[0]->data()->getTimeIntVal(row, isNull);
+        }
+
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            return parm[0]->data()->getTimeIntVal(row, isNull);
+        }
+
+        default:
+        {
+            isNull = true;
+        }
+    }
+
+    return -1;
+}
+
+
+
 //
 //	Func_cast_decimal
 //
@@ -1124,6 +1221,25 @@ IDB_Decimal Func_cast_decimal::getDecimalVal(Row& row,
             int32_t s = 0;
 
             string value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
+
+            //strip off micro seconds
+            string date = value.substr(0, 14);
+
+            int64_t x = atoll(date.c_str());
+
+            if (!isNull)
+            {
+                decimal.value = x;
+                decimal.scale = s;
+            }
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int32_t s = 0;
+
+            string value = dataconvert::DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
 
             //strip off micro seconds
             string date = value.substr(0, 14);

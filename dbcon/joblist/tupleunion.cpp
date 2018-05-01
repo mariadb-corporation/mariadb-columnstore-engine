@@ -473,7 +473,8 @@ void TupleUnion::normalize(const Row& in, Row* out)
 
                     case CalpontSystemCatalog::DATE:
                     case CalpontSystemCatalog::DATETIME:
-                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a date or datetime");
+                    case CalpontSystemCatalog::TIME:
+                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a time, date or datetime");
 
                     case CalpontSystemCatalog::FLOAT:
                     case CalpontSystemCatalog::UFLOAT:
@@ -582,7 +583,8 @@ dec1:
 
                     case CalpontSystemCatalog::DATE:
                     case CalpontSystemCatalog::DATETIME:
-                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a date or datetime");
+                    case CalpontSystemCatalog::TIME:
+                        throw logic_error("TupleUnion::normalize(): tried to normalize an int to a time, date or datetime");
 
                     case CalpontSystemCatalog::FLOAT:
                     case CalpontSystemCatalog::UFLOAT:
@@ -729,6 +731,33 @@ dec2:
                     {
                         ostringstream os;
                         os << "TupleUnion::normalize(): tried an illegal conversion: datetime to "
+                           << out->getColTypes()[i];
+                        throw logic_error(os.str());
+                    }
+                }
+
+                break;
+
+            case CalpontSystemCatalog::TIME:
+                switch (out->getColTypes()[i])
+                {
+                    case CalpontSystemCatalog::TIME:
+                        out->setIntField(in.getIntField(i), i);
+                        break;
+
+                    case CalpontSystemCatalog::CHAR:
+                    case CalpontSystemCatalog::TEXT:
+                    case CalpontSystemCatalog::VARCHAR:
+                    {
+                        string d = DataConvert::timeToString(in.getIntField(i));
+                        out->setStringField(d, i);
+                        break;
+                    }
+
+                    default:
+                    {
+                        ostringstream os;
+                        os << "TupleUnion::normalize(): tried an illegal conversion: time to "
                            << out->getColTypes()[i];
                         throw logic_error(os.str());
                     }
@@ -1067,6 +1096,10 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
 
         case CalpontSystemCatalog::DATETIME:
             out->setUintField<8>(joblist::DATETIMENULL, col);
+            break;
+
+        case CalpontSystemCatalog::TIME:
+            out->setUintField<8>(joblist::TIMENULL, col);
             break;
 
         case CalpontSystemCatalog::CHAR:

@@ -590,6 +590,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 
                         case CalpontSystemCatalog::DATE:
                         case CalpontSystemCatalog::DATETIME:
+                        case CalpontSystemCatalog::TIME:
                             if (!frm.fIsRange)
                                 boundTypeErr = true;
                             else if (dynamic_cast<IntervalColumn*>(frm.fStart.fVal.get()) == NULL)
@@ -641,6 +642,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 
                         case CalpontSystemCatalog::DATE:
                         case CalpontSystemCatalog::DATETIME:
+                        case CalpontSystemCatalog::TIME:
                             if (!frm.fIsRange)
                                 boundTypeErr = true;
                             else if (dynamic_cast<IntervalColumn*>(frm.fEnd.fVal.get()) == NULL)

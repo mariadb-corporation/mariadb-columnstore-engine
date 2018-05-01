@@ -74,6 +74,8 @@ The provided values are:
      - A floating point number. Represented as a C++ double type.
    * - DATETIME
      - A Columnstore date-time stored as an eight byte unsigned integer.
+   * - TIME
+     - A Columnstore time stored as an eight byte unsigned integer.
    * - VARCHAR
      - A mariadb variable length string. Represented a std::string
    * - VARBINARY
