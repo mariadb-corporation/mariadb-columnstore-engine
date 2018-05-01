@@ -183,9 +183,9 @@ int64_t Func_least::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_least::getTimeIntVal(rowgroup::Row& row,
-                                      FunctionParm& fp,
-                                      bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     // Strip off unused day
     int64_t leastStr = fp[0]->data()->getTimeIntVal(row, isNull);

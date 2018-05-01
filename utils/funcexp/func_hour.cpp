@@ -130,6 +130,7 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
         // If negative, mask so it doesn't turn positive
         bool isNeg = false;
         int64_t mask = 0;
+
         if ((val >> 40) & 0x800)
             mask = 0xfffffffffffff000;
 
@@ -137,9 +138,11 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
         {
             isNeg = true;
         }
+
         val = mask | ((val >> 40) & 0xfff);
+
         if (isNeg)
-            val*= -1;
+            val *= -1;
     }
     else
     {

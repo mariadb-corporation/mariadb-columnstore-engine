@@ -169,9 +169,9 @@ int64_t Func_ifnull::getDatetimeIntVal(Row& row,
 }
 
 int64_t Func_ifnull::getTimeIntVal(Row& row,
-                                       FunctionParm& parm,
-                                       bool& isNull,
-                                       CalpontSystemCatalog::ColType&)
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType&)
 {
     if (isNull)
         return 0;

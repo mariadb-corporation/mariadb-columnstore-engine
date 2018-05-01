@@ -216,9 +216,9 @@ int64_t Func_timediff::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_timediff::getTimeIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        CalpontSystemCatalog::ColType& ct)
+                                     FunctionParm& parm,
+                                     bool& isNull,
+                                     CalpontSystemCatalog::ColType& ct)
 {
     return dataconvert::DataConvert::timeToInt(getStrVal(row, parm, isNull, ct));
 }

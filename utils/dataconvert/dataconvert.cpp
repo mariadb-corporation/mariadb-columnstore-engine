@@ -1020,10 +1020,11 @@ bool mysql_str_to_time( const string& input, Time& output )
         {
             output.reset();
         }
+
         return false;
     }
 
-    output.hour = isNeg ? 0-hour : hour;
+    output.hour = isNeg ? 0 - hour : hour;
     output.minute = min;
     output.second = sec;
     output.msecond = usec;
@@ -1416,7 +1417,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
 
                 if (stringToTimeStruct(data, aTime))
                 {
-                    value = (int64_t) *(reinterpret_cast<int64_t*>(&aTime));
+                    value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
                 }
                 else
                 {
@@ -1918,6 +1919,7 @@ int64_t DataConvert::convertColumnTime(
     inSecond      = 0;
     inMicrosecond = 0;
     bool isNeg = false;
+
     if ( datetimeFormat != CALPONTTIME_ENUM )
     {
         status = -1;
@@ -1941,6 +1943,7 @@ int64_t DataConvert::convertColumnTime(
     }
 
     p = strtok_r(NULL, ":.", &savePoint);
+
     if (p == NULL)
     {
         status = -1;
@@ -1976,6 +1979,7 @@ int64_t DataConvert::convertColumnTime(
     if (p != NULL)
     {
         inMicrosecond = strtol(p, 0, 10);
+
         if (errno)
         {
             status = -1;
@@ -2017,6 +2021,7 @@ int64_t DataConvert::convertColumnTime(
             atime.is_neg = false;
             memcpy( &value, &atime, 8);
         }
+
         // If neither of the above match then we return a 0 time
 
         status = -1;
@@ -2067,21 +2072,25 @@ std::string DataConvert::datetimeToString( long long  datetimevalue, long decima
     {
         decimals = 0;
     }
+
     // @bug 4703 abandon multiple ostringstream's for conversion
     DateTime dt(datetimevalue);
     const int DATETIMETOSTRING_LEN = 28; // YYYY-MM-DD HH:MM:SS.mmmmmm\0
     char buf[DATETIMETOSTRING_LEN];
 
     sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+
     if (dt.msecond && decimals)
     {
         snprintf(buf + strlen(buf), 21 + decimals, ".%d", dt.msecond);
+
         // Pad end with zeros
         if (strlen(buf) < (size_t)(21 + decimals))
         {
             sprintf(buf + strlen(buf), "%0*d", (int)(21 + decimals - strlen(buf)), 0);
         }
     }
+
     return buf;
 }
 
@@ -2092,6 +2101,7 @@ std::string DataConvert::timeToString( long long  timevalue, long decimals )
     {
         decimals = 0;
     }
+
     // @bug 4703 abandon multiple ostringstream's for conversion
     Time dt(timevalue);
     const int TIMETOSTRING_LEN = 19; // (-H)HH:MM:SS.mmmmmm\0
@@ -2105,16 +2115,19 @@ std::string DataConvert::timeToString( long long  timevalue, long decimals )
     }
 
     sprintf(outbuf, "%02d:%02d:%02d", dt.hour, dt.minute, dt.second);
+
     if (dt.msecond && decimals)
     {
         size_t start = strlen(buf);
         snprintf(buf + strlen(buf), 12 + decimals, ".%d", dt.msecond);
+
         // Pad end with zeros
         if (strlen(buf) - start < (size_t)decimals)
         {
             sprintf(buf + strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
         }
     }
+
     return buf;
 }
 

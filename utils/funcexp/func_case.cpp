@@ -546,9 +546,9 @@ int64_t Func_simple_case::getDatetimeIntVal(rowgroup::Row& row,
 
 
 int64_t Func_simple_case::getTimeIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& op_ct)
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     uint64_t i = simple_case_cmp(row, parm, isNull, op_ct);
 

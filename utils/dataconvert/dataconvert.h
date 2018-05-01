@@ -277,6 +277,7 @@ inline uint32_t getDaysInMonth(uint32_t month, int year)
         return 0;
 
     uint32_t days = daysInMonth[month - 1];
+
     if ((month == 2) && isLeapYear(year))
         days++;
 
@@ -567,11 +568,14 @@ inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, u
     {
         decimals = 0;
     }
+
     int msec = 0;
+
     if ((datetimevalue & 0xfffff) > 0)
     {
         msec = (unsigned)((datetimevalue) & 0xfffff);
     }
+
     snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d",
               (unsigned)((datetimevalue >> 48) & 0xffff),
               (unsigned)((datetimevalue >> 44) & 0xf),
@@ -585,6 +589,7 @@ inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, u
     {
         size_t start = strlen(buf);
         snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
+
         // Pad end with zeros
         if (strlen(buf) - start < (size_t)decimals)
         {
@@ -600,8 +605,10 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
     {
         decimals = 0;
     }
+
     // Handle negative correctly
     int hour = 0, msec = 0;
+
     if ((timevalue >> 40) & 0x800)
     {
         hour = 0xfffff000;
@@ -613,12 +620,14 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
     {
         msec = (unsigned)((timevalue) & 0xffffff);
     }
+
     if ((hour >= 0) && (timevalue >> 63))
     {
         buf[0] = '-';
         buf++;
         buflen--;
     }
+
     snprintf( buf, buflen, "%02d:%02d:%02d",
               hour,
               (unsigned)((timevalue >> 32) & 0xff),
@@ -629,6 +638,7 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
     {
         size_t start = strlen(buf);
         snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
+
         // Pad end with zeros
         if (strlen(buf) - start < (size_t)decimals)
         {
@@ -662,6 +672,7 @@ inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned
 {
     // Handle negative correctly
     int hour = 0;
+
     if ((timevalue >> 40) & 0x800)
     {
         hour = 0xfffff000;

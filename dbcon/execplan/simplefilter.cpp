@@ -606,6 +606,7 @@ void SimpleFilter::convertConstant()
                 result.intVal = dataconvert::DataConvert::timeToInt(result.strVal);
             }
         }
+
         rcc->result(result);
     }
 }

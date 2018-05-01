@@ -140,9 +140,9 @@ int64_t Func_coalesce::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_coalesce::getTimeIntVal(rowgroup::Row& row,
-        FunctionParm& parm,
-        bool& isNull,
-        CalpontSystemCatalog::ColType& ct)
+                                     FunctionParm& parm,
+                                     bool& isNull,
+                                     CalpontSystemCatalog::ColType& ct)
 {
     int64_t val = 0;
 

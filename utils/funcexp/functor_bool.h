@@ -99,9 +99,9 @@ public:
     }
 
     int64_t getTimeIntVal(rowgroup::Row& row,
-                              FunctionParm& fp,
-                              bool& isNull,
-                              execplan::CalpontSystemCatalog::ColType& op_ct)
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct)
     {
         isNull = true;
         return 0;

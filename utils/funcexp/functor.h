@@ -117,9 +117,9 @@ public:
     }
 
     virtual int64_t getTimeIntVal(rowgroup::Row& row,
-                                      FunctionParm& fp,
-                                      bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
     {
         return intToTime(getIntVal(row, fp, isNull, op_ct));
     }

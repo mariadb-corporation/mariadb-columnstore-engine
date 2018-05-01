@@ -257,9 +257,9 @@ int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& row,
-        FunctionParm& fp,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
 //	std::cout << "In Func_inet_ntoa::getTimeVal" << std::endl;
 

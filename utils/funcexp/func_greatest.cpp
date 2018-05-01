@@ -207,9 +207,9 @@ int64_t Func_greatest::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_greatest::getTimeIntVal(rowgroup::Row& row,
-        FunctionParm& fp,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& ct)
+                                     FunctionParm& fp,
+                                     bool& isNull,
+                                     execplan::CalpontSystemCatalog::ColType& ct)
 {
     // Strip off unused day
     int64_t greatestStr = fp[0]->data()->getTimeIntVal(row, isNull);

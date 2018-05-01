@@ -135,26 +135,28 @@ long long dateGet( uint64_t time, IntervalColumn::interval_type unit, bool dateT
 long long timeGet( uint64_t time, IntervalColumn::interval_type unit )
 {
     int32_t hour = 0,
-             min = 0,
-             sec = 0,
-             msec = 0,
-             day = 0;
+            min = 0,
+            sec = 0,
+            msec = 0,
+            day = 0;
 
-        min = (int32_t)((time >> 32) & 0xff);
-        sec = (int32_t)((time >> 24) & 0xff);
-        msec = (int32_t)((time & 0xfffff));
+    min = (int32_t)((time >> 32) & 0xff);
+    sec = (int32_t)((time >> 24) & 0xff);
+    msec = (int32_t)((time & 0xfffff));
 
-        // If negative, mask so it doesn't turn positive
-        int64_t mask = 0;
-        if ((time >> 40) & 0x800)
-            mask = 0xfffffffffffff000;
-        hour = mask | ((time >> 40) & 0xfff);
+    // If negative, mask so it doesn't turn positive
+    int64_t mask = 0;
 
-        if ((hour >= 0) && (time >> 63))
-            hour*= -1;
+    if ((time >> 40) & 0x800)
+        mask = 0xfffffffffffff000;
 
-        // Always positive!
-        day = abs(hour / 24);
+    hour = mask | ((time >> 40) & 0xfff);
+
+    if ((hour >= 0) && (time >> 63))
+        hour *= -1;
+
+    // Always positive!
+    day = abs(hour / 24);
 
     switch ( unit )
     {
@@ -275,6 +277,7 @@ int64_t Func_extract::getIntVal(rowgroup::Row& row,
     }
 
     long long value;
+
     if (isTime)
         value = timeGet( time, unit );
     else

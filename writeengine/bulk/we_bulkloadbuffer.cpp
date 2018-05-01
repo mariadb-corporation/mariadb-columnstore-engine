@@ -902,8 +902,8 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
         {
             bool bSatVal = false;
 
-            if ( column.dataType != CalpontSystemCatalog::DATETIME && 
-                 column.dataType != CalpontSystemCatalog::TIME )
+            if ( column.dataType != CalpontSystemCatalog::DATETIME &&
+                    column.dataType != CalpontSystemCatalog::TIME )
             {
                 if (nullFlag)
                 {

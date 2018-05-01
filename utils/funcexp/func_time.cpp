@@ -111,6 +111,7 @@ string Func_time::getStrVal(rowgroup::Row& row,
             val = parm[0]->data()->getTimeIntVal(row, isNull);
             break;
         }
+
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             val = parm[0]->data()->getTimeIntVal(row, isNull);

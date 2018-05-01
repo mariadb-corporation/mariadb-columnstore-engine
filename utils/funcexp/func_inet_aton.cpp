@@ -223,9 +223,9 @@ int64_t Func_inet_aton::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_inet_aton::getTimeIntVal(rowgroup::Row& row,
-        FunctionParm& fp,
-        bool& isNull,
-        execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      FunctionParm& fp,
+                                      bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct)
 {
     int64_t iValue = joblist::TIMENULL;
 

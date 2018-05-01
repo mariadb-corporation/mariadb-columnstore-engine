@@ -101,9 +101,9 @@ int64_t Func_sysdate::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_sysdate::getTimeIntVal(rowgroup::Row& row,
-                                        FunctionParm& parm,
-                                        bool& isNull,
-                                        CalpontSystemCatalog::ColType& operationColType)
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& operationColType)
 {
     return getIntVal(row, parm, isNull, operationColType);
 }

@@ -129,8 +129,8 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
 
             if ((parm[0]->data()->resultType().colDataType ==
                     execplan::CalpontSystemCatalog::DATE) ||
-                (parm[0]->data()->resultType().colDataType ==
-                    execplan::CalpontSystemCatalog::DATETIME))
+                    (parm[0]->data()->resultType().colDataType ==
+                     execplan::CalpontSystemCatalog::DATETIME))
 
             {
                 // NULLIF arg0 is DATE, arg1 is DATETIME,
@@ -164,8 +164,8 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row,
 
             if ((parm[0]->data()->resultType().colDataType ==
                     execplan::CalpontSystemCatalog::DATETIME) ||
-                (parm[0]->data()->resultType().colDataType ==
-                    execplan::CalpontSystemCatalog::TIME))
+                    (parm[0]->data()->resultType().colDataType ==
+                     execplan::CalpontSystemCatalog::TIME))
             {
                 // NULLIF arg0 is DATETIME, arg1 is TIME,
                 // Upgrade arg1 to time
@@ -495,9 +495,9 @@ int64_t Func_nullif::getDatetimeIntVal(rowgroup::Row& row,
 }
 
 int64_t Func_nullif::getTimeIntVal(rowgroup::Row& row,
-                                       FunctionParm& parm,
-                                       bool& isNull,
-                                       CalpontSystemCatalog::ColType& ct)
+                                   FunctionParm& parm,
+                                   bool& isNull,
+                                   CalpontSystemCatalog::ColType& ct)
 {
     int64_t exp1 = parm[0]->data()->getTimeIntVal(row, isNull);
     int64_t exp2 = 0;

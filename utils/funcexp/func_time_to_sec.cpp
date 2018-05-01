@@ -50,8 +50,8 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
 {
     // assume 256 is enough. assume not allowing incomplete date
     int32_t hour = 0,
-             min = 0,
-             sec = 0;
+            min = 0,
+            sec = 0;
     bool bIsNegative = false;   // Only set to true if CHAR or VARCHAR with a '-'
 
     int64_t val = 0;
@@ -72,16 +72,19 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
 
         case CalpontSystemCatalog::TIME:
             val = parm[0]->data()->getTimeIntVal(row, isNull);
+
             // If negative, mask so it doesn't turn positive
             if ((val >> 40) & 0x800)
                 mask = 0xfffffffffffff000;
 
             bIsNegative = val >> 63;
             hour = (int32_t)(mask | ((val >> 40) & 0xfff));
+
             if ((hour >= 0) && bIsNegative)
-                hour*= -1;
+                hour *= -1;
             else
                 bIsNegative = false;
+
             min = (int32_t)((val >> 32) & 0xff);
             sec = (int32_t)((val >> 24) & 0xff);
             break;
@@ -162,6 +165,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row,
     }
 
     int64_t rtn;
+
     if (hour < 0)
     {
         rtn = (int64_t)(hour * 60 * 60) - (min * 60) - sec;
