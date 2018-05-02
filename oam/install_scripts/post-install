@@ -239,8 +239,6 @@ else
         sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
 	chown $user:$user $installdir/etc/Columnstore.xml
-	mkdir /var/lock/subsys > /dev/null 2>&1
-	chmod 777 /var/lock/subsys > /dev/null 2>&1
 	rm -f /var/lock/subsys/mysql-Columnstore
 fi
 

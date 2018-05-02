@@ -59,16 +59,9 @@ rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
 # remove Mariab Columnstore Log Rotate File abd Transaction Log File
  rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
- rm -f /etc/cron.d/transactionLog > /dev/null 2>&1
 
 # delete Mariab Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
-
-# delete prat files
- rm -f /etc/cron.d/ps > /dev/null 2>&1
- rm -f /etc/pscollect > /dev/null 2>&1
- /etc/init.d/crond reload  > /dev/null 2>&1
- systemctl reload crond.service > /dev/null 2>&1
 
 # delete tmp files
 rm -f $installdir/local/*.columnstore
@@ -77,20 +70,13 @@ rm -rf /tmp/bucketreuse
 rm -f /tmp/columnstore.txt
 rm -f /tmp/dbbuilder.*
 rm -f /tmp/dbrmfiles
- rm -f /var/lock/subsys/columnstore
+rm -f /var/lock/subsys/columnstore
 rm -f /tmp/pkgcheck
 rm -f /tmp/upgrade-status.log.*
 rm -f /tmp/mount.log
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 rm -rf /tmp/columnstore_tmp_files
 rm -f $installdir/local/moveDbrootTransactionLog
-
-#delete any old setenv files under home directory
-if [ $user = "root" ]; then
-	rm -f /root/setenv-hdfs*
-else
-	rm -f /home/$user/setenv-hdfs*
-fi
 
 # delete core files
 #rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1
@@ -99,6 +85,7 @@ fi
 if [ -x $installdir/bin/syslogSetup.sh ]; then
 	if [ $user = "root" ]; then
 		$installdir/bin/syslogSetup.sh uninstall >/dev/null 2>&1
+	fi
 fi
 
 #remove the start service command
@@ -135,11 +122,7 @@ if [ $quiet != 1 ]; then
 fi
 
 #umount file systems
-if [ $user = "root" ]; then
-	rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
-else
-	 rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
-fi
+rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
 
 #remove library paths
 if [ $user = "root" ]; then
@@ -147,13 +130,6 @@ if [ $user = "root" ]; then
         ldconfig
 else
 	 rm -f /etc/defaults/columnstore
-fi
-
-#cleanup profile file
-if [ $user = "root" ]; then
-	rm -f /etc/profile.d/columnstore*
-else
-	 rm -f /etc/profile.d/columnstore*
 fi
 
 #tell user to run post configure script

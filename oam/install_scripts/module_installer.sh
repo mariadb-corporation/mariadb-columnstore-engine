@@ -67,7 +67,6 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 			rm -f /etc/fstab.columnstoreSave
 			cp /etc/fstab /etc/fstab.columnstoreSave
 			cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
-			fi
 		fi
 	fi
 fi
@@ -88,7 +87,6 @@ if [ $module = "um" ]; then
 				mkdir -p $COLUMNSTORE_INSTALL_DIR/mysql/db > /dev/null 2>&1
 				mount $device $COLUMNSTORE_INSTALL_DIR/mysql/db -t ext2 -o noatime,nodiratime,noauto
 				chown mysql:mysql -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
- 				fi
 			fi
 		fi
 	fi
@@ -150,16 +148,18 @@ if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $Ser
 	fi
 fi
 
-$COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh check > /tmp/syslogSetup-check.log 2>&1
-if [ $? -ne 0 ]; then
-	# try setup again
-	$COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh install > /tmp/syslogSetup-install.log 2>&1
-	if [ $? -ne 0 ]; then
-		echo "WARNING: syslogSetup.sh check failed: check /tmp/syslogSetup-check.log"
-       		exit 2
-	fi
+if [ $user == "root" ]; then
+    $COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh check > /tmp/syslogSetup-check.log 2>&1
+    if [ $? -ne 0 ]; then
+	    # try setup again
+	    $COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh install > /tmp/syslogSetup-install.log 2>&1
+	    if [ $? -ne 0 ]; then
+		    echo "WARNING: syslogSetup.sh check failed: check /tmp/syslogSetup-check.log"
+		    exit 2
+	    fi
+    fi
 fi
- 
+
 #setup rc.local
 if [ -f /etc/rc.d ]; then
     RCFILE=/etc/rc.d/rc.local
@@ -168,24 +168,9 @@ else
 fi
 touch $RCFILE
 
-echo "add deadline to rc.local"
-if [ $module = "um" ]; then
-	echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-	echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-	echo "done" >> $RCFILE
-else
-	echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-	echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-	echo "done" >> $RCFILE
-
-	echo "for scsi_dev in \`mount | awk '/columnstore\\/data/ {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
-	echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
-	echo "done" >> $RCFILE
-fi
-
 if [ $user != "root" ]; then
       echo "uncomment runuser in rc.local"
-      sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
+      sed -i -e 's/#MCS//g' /etc/rc.d/rc.local >/dev/null 2>&1
 fi
 
 echo "!!!Module Installation Successfully Completed!!!"

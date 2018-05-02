@@ -76,7 +76,7 @@ start() {
 		exit 0
 	fi
 
-	(mkdir -p /var/lock/subsys && chmod 777 /var/lock/subsys && touch /var/lock/subsys/columnstore) >/dev/null 2>&1
+	(mkdir -p /var/lock/subsys && touch /var/lock/subsys/columnstore) >/dev/null 2>&1
 
 	if [ -x $InstallDir/bin/columnstore.pre-start ]; then
 		$InstallDir/bin/columnstore.pre-start
