@@ -801,8 +801,8 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 		// View is already processed in view::transform
 		// @bug5319. view is sometimes treated as derived table and
 		// fromSub::transform does not build outer join filters.
-		//if (!table_ptr->derived && table_ptr->view)
-		//	continue;
+		if (!table_ptr->derived && table_ptr->view)
+			continue;
 
 		CalpontSystemCatalog:: TableAliasName tan = make_aliasview(
 			(table_ptr->db ? table_ptr->db : ""),
