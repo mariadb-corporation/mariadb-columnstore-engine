@@ -472,6 +472,10 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
         //set all fields to null in null col bitmap
         if (!handler_flag)
             memset(buf, -1, ti.msTablePtr->s->null_bytes);
+        else
+        {
+            memset(ti.msTablePtr->null_flags, -1, ti.msTablePtr->s->null_bytes);
+        }
         std::vector<CalpontSystemCatalog::ColType>& colTypes = ti.tpl_scan_ctx->ctp;
         int64_t intColVal = 0;
         uint64_t uintColVal = 0;
