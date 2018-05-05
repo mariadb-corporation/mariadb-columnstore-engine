@@ -151,6 +151,11 @@ public:
         evaluate(row, isNull, lop, rop);
         return TreeNode::getDatetimeIntVal();
     }
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+    {
+        evaluate(row, isNull, lop, rop);
+        return TreeNode::getTimeIntVal();
+    }
     virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
     {
         evaluate(row, isNull, lop, rop);

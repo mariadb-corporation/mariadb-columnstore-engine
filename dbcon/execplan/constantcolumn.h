@@ -311,6 +311,21 @@ public:
     /**
      * F&E
      */
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        isNull = isNull || (fType == NULLDATA);
+
+        if (!fResult.valueConverted)
+        {
+            fResult.intVal = dataconvert::DataConvert::stringToTime(fResult.strVal);
+            fResult.valueConverted = true;
+        }
+
+        return fResult.intVal;
+    }
+    /**
+     * F&E
+     */
     inline float getFloatVal() const
     {
         return fResult.floatVal;

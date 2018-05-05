@@ -91,6 +91,7 @@ map<int, string> colType2String = assign::map_list_of
                                   (CalpontSystemCatalog::LONGDOUBLE, "INTERNAL LONG DOUBLE")
                                   (CalpontSystemCatalog::STRINT, "INTERNAL SHORT STRING")
                                   (CalpontSystemCatalog::TEXT, "TEXT")
+                                  (CalpontSystemCatalog::TIME, "TIME")
                                   ;
 
 
@@ -490,6 +491,7 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
     static uint64_t doubleNull    = joblist::DOUBLENULL;
     static uint64_t dateNull      = joblist::DATENULL;
     static uint64_t datetimeNull  = joblist::DATETIMENULL;
+    static uint64_t timeNull      = joblist::TIMENULL;
     static uint64_t char1Null     = joblist::CHAR1NULL;
     static uint64_t char2Null     = joblist::CHAR2NULL;
     static uint64_t char4Null     = joblist::CHAR4NULL;
@@ -523,6 +525,10 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
 
         case CalpontSystemCatalog::DATETIME:
             v = &datetimeNull;
+            break;
+
+        case CalpontSystemCatalog::TIME:
+            v = &timeNull;
             break;
 
         case CalpontSystemCatalog::FLOAT:

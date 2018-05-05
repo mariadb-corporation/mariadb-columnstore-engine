@@ -104,6 +104,11 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -151,6 +156,12 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
 };
 
 
@@ -193,6 +204,11 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -235,6 +251,11 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
     bool getBoolVal(rowgroup::Row& row,
                     FunctionParm& fp,
@@ -287,6 +308,12 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
+
 };
 
 
@@ -329,6 +356,11 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -371,6 +403,11 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 
@@ -398,6 +435,11 @@ public:
                               FunctionParm& fp,
                               bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& op_ct);
+
+    int64_t getTimeIntVal(rowgroup::Row& row,
+                          FunctionParm& fp,
+                          bool& isNull,
+                          execplan::CalpontSystemCatalog::ColType& op_ct);
 
     int64_t getIntVal(rowgroup::Row& row,
                       FunctionParm& fp,

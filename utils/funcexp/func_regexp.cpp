@@ -94,6 +94,14 @@ inline bool getBool(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            expr = dataconvert::DataConvert::timeToString(pm[0]->data()->getTimeIntVal(row, isNull));
+            //strip off micro seconds
+            expr = expr.substr(0, 19);
+            break;
+        }
+
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
         {
@@ -148,6 +156,14 @@ inline bool getBool(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             pattern = dataconvert::DataConvert::datetimeToString(pm[1]->data()->getDatetimeIntVal(row, isNull));
+            //strip off micro seconds
+            pattern = pattern.substr(0, 19);
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            pattern = dataconvert::DataConvert::timeToString(pm[1]->data()->getTimeIntVal(row, isNull));
             //strip off micro seconds
             pattern = pattern.substr(0, 19);
             break;

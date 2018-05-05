@@ -112,7 +112,8 @@ namespace dataconvert
 enum CalpontDateTimeFormat
 {
     CALPONTDATE_ENUM     = 1, // date format is: "YYYY-MM-DD"
-    CALPONTDATETIME_ENUM = 2  // date format is: "YYYY-MM-DD HH:MI:SS"
+    CALPONTDATETIME_ENUM = 2, // date format is: "YYYY-MM-DD HH:MI:SS"
+    CALPONTTIME_ENUM     = 3
 };
 
 
@@ -196,14 +197,17 @@ struct Time
     signed second  : 8;
     signed minute  : 8;
     signed hour    : 12;
-    signed day     : 12;
+    signed day     : 11;
+    signed is_neg  : 1;
 
     // NULL column value = 0xFFFFFFFFFFFFFFFE
     Time() : msecond (0xFFFFFE),
         second (0xFF),
         minute (0xFF),
         hour (0xFFF),
-        day (0xFFF) {}
+        day (0x7FF),
+        is_neg (0b1)
+    {}
 
     // Construct a Time from a 64 bit integer InfiniDB time.
     Time(int64_t val) :
@@ -211,16 +215,50 @@ struct Time
         second((val >> 24) & 0xff),
         minute((val >> 32) & 0xff),
         hour((val >> 40) & 0xfff),
-        day((val >> 52) & 0xfff)
+        day((val >> 52) & 0x7ff),
+        is_neg(val >> 63)
     {}
+
+    Time(signed d, signed h, signed min, signed sec, signed msec, bool neg) :
+        msecond(msec), second(sec), minute(min), hour(h), day(d), is_neg(neg)
+    {
+        if (h < 0)
+            is_neg = 0b1;
+    }
+
+    int64_t convertToMySQLint() const;
+    void reset();
 };
 
-static uint32_t daysInMonth[13] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
-
-inline uint32_t getDaysInMonth(uint32_t month)
+inline
+void    Time::reset()
 {
-    return ( (month < 1 || month > 12) ? 0 : daysInMonth[month - 1]);
+    msecond = 0xFFFFFE;
+    second  = 0xFF;
+    minute  = 0xFF;
+    hour    = 0xFFF;
+    is_neg  = 0b1;
+    day     = 0x7FF;
 }
+
+inline
+int64_t Time::convertToMySQLint() const
+{
+    if ((hour >= 0) && is_neg)
+    {
+        return (int64_t) ((hour * 10000) + (minute * 100) + second) * -1;
+    }
+    else if (hour >= 0)
+    {
+        return (int64_t) (hour * 10000) + (minute * 100) + second;
+    }
+    else
+    {
+        return (int64_t) (hour * 10000) - (minute * 100) - second;
+    }
+}
+
+static uint32_t daysInMonth[13] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
 
 inline bool isLeapYear ( int year)
 {
@@ -233,6 +271,19 @@ inline bool isLeapYear ( int year)
     return false;
 }
 
+inline uint32_t getDaysInMonth(uint32_t month, int year)
+{
+    if (month < 1 || month > 12)
+        return 0;
+
+    uint32_t days = daysInMonth[month - 1];
+
+    if ((month == 2) && isLeapYear(year))
+        days++;
+
+    return days;
+}
+
 inline
 bool isDateValid ( int day, int month, int year)
 {
@@ -243,11 +294,7 @@ bool isDateValid ( int day, int month, int year)
         return true;
     }
 
-    int daycheck = getDaysInMonth( month );
-
-    if ( month == 2 && isLeapYear( year ) )
-        //  29 days in February in a leap year
-        daycheck = 29;
+    int daycheck = getDaysInMonth( month, year );
 
     if ( ( year < 1000 ) || ( year > 9999 ) )
         valid = false;
@@ -265,6 +312,28 @@ bool isDateTimeValid ( int hour, int minute, int second, int microSecond)
     bool valid = false;
 
     if ( hour >= 0 && hour <= 24 )
+    {
+        if ( minute >= 0 && minute < 60 )
+        {
+            if ( second >= 0 && second < 60 )
+            {
+                if ( microSecond >= 0 && microSecond <= 999999 )
+                {
+                    valid = true;
+                }
+            }
+        }
+    }
+
+    return valid;
+}
+
+inline
+bool isTimeValid ( int hour, int minute, int second, int microSecond)
+{
+    bool valid = false;
+
+    if ( hour >= -838 && hour <= 838 )
     {
         if ( minute >= 0 && minute < 60 )
         {
@@ -361,8 +430,17 @@ public:
       * @param type the columns database type
       * @param data the columns string representation of it's data
       */
-    EXPORT static std::string datetimeToString( long long  datetimevalue );
-    static inline void datetimeToString( long long datetimevalue, char* buf, unsigned int buflen );
+    EXPORT static std::string datetimeToString( long long  datetimevalue, long decimals = 0 );
+    static inline void datetimeToString( long long datetimevalue, char* buf, unsigned int buflen, long decimals = 0 );
+
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string timeToString( long long  timevalue, long decimals = 0 );
+    static inline void timeToString( long long timevalue, char* buf, unsigned int buflen, long decimals = 0);
 
     /**
       * @brief convert a columns data from native format to a string
@@ -381,6 +459,15 @@ public:
       */
     EXPORT static std::string datetimeToString1( long long  datetimevalue );
     static inline void datetimeToString1( long long datetimevalue, char* buf, unsigned int buflen );
+
+    /**
+      * @brief convert a columns data from native format to a string
+      *
+      * @param type the columns database type
+      * @param data the columns string representation of it's data
+      */
+    EXPORT static std::string timeToString1( long long  timevalue );
+    static inline void timeToString1( long long timevalue, char* buf, unsigned int buflen );
 
     /**
      * @brief convert a date column data, represnted as a string, to it's native
@@ -416,14 +503,30 @@ public:
             int& status, unsigned int dataOrgLen );
 
     /**
+     * @brief convert a time column data, represented as a string,
+     * to it's native format. This function is for bulkload to use.
+     *
+     * @param type the columns data type
+     * @param dataOrig the columns string representation of it's data
+     * @param timeFormat the format the time value in
+     * @param status 0 - success, -1 - fail
+     * @param dataOrgLen length specification of dataOrg
+     */
+    EXPORT static int64_t convertColumnTime( const char* dataOrg,
+            CalpontDateTimeFormat datetimeFormat,
+            int& status, unsigned int dataOrgLen );
+
+    /**
      * @brief Is specified datetime valid; used by binary bulk load
      */
     EXPORT static bool      isColumnDateTimeValid( int64_t dateTime );
+    EXPORT static bool      isColumnTimeValid( int64_t time );
 
     EXPORT static bool isNullData(execplan::ColumnResult* cr, int rownum, execplan::CalpontSystemCatalog::ColType colType);
     static inline std::string decimalToString(int64_t value, uint8_t scale, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline void decimalToString(int64_t value, uint8_t scale, char* buf, unsigned int buflen, execplan::CalpontSystemCatalog::ColDataType colDataType);
     static inline std::string constructRegexp(const std::string& str);
+    static inline void trimWhitespace(int64_t& charData);
     static inline bool isEscapedChar(char c)
     {
         return ('%' == c || '_' == c);
@@ -437,11 +540,13 @@ public:
     EXPORT static int64_t intToDate(int64_t data);
     // convert integer to datetime
     EXPORT static int64_t intToDatetime(int64_t data, bool* isDate = NULL);
-
+    // convert integer to date
+    EXPORT static int64_t intToTime(int64_t data);
     // convert string to date. alias to stringToDate
     EXPORT static int64_t dateToInt(const std::string& date);
     // convert string to datetime. alias to datetimeToInt
     EXPORT static int64_t datetimeToInt(const std::string& datetime);
+    EXPORT static int64_t timeToInt(const std::string& time);
     EXPORT static int64_t stringToTime (const std::string& data);
     // bug4388, union type conversion
     EXPORT static execplan::CalpontSystemCatalog::ColType convertUnionColType(std::vector<execplan::CalpontSystemCatalog::ColType>&);
@@ -456,8 +561,21 @@ inline void DataConvert::dateToString( int datevalue, char* buf, unsigned int bu
             );
 }
 
-inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, unsigned int buflen )
+inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, unsigned int buflen, long decimals )
 {
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+
+    int msec = 0;
+
+    if ((datetimevalue & 0xfffff) > 0)
+    {
+        msec = (unsigned)((datetimevalue) & 0xfffff);
+    }
+
     snprintf( buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d",
               (unsigned)((datetimevalue >> 48) & 0xffff),
               (unsigned)((datetimevalue >> 44) & 0xf),
@@ -466,6 +584,67 @@ inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, u
               (unsigned)((datetimevalue >> 26) & 0x3f),
               (unsigned)((datetimevalue >> 20) & 0x3f)
             );
+
+    if (msec || decimals)
+    {
+        size_t start = strlen(buf);
+        snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
+
+        // Pad end with zeros
+        if (strlen(buf) - start < (size_t)decimals)
+        {
+            snprintf(buf + strlen(buf), buflen - strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
+        }
+    }
+}
+
+inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned int buflen, long decimals )
+{
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+
+    // Handle negative correctly
+    int hour = 0, msec = 0;
+
+    if ((timevalue >> 40) & 0x800)
+    {
+        hour = 0xfffff000;
+    }
+
+    hour |= ((timevalue >> 40) & 0xfff);
+
+    if ((timevalue & 0xffffff) > 0)
+    {
+        msec = (unsigned)((timevalue) & 0xffffff);
+    }
+
+    if ((hour >= 0) && (timevalue >> 63))
+    {
+        buf[0] = '-';
+        buf++;
+        buflen--;
+    }
+
+    snprintf( buf, buflen, "%02d:%02d:%02d",
+              hour,
+              (unsigned)((timevalue >> 32) & 0xff),
+              (unsigned)((timevalue >> 24) & 0xff)
+            );
+
+    if (msec || decimals)
+    {
+        size_t start = strlen(buf);
+        snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
+
+        // Pad end with zeros
+        if (strlen(buf) - start < (size_t)decimals)
+        {
+            snprintf(buf + strlen(buf), buflen - strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
+        }
+    }
 }
 
 inline void DataConvert::dateToString1( int datevalue, char* buf, unsigned int buflen)
@@ -486,6 +665,32 @@ inline void DataConvert::datetimeToString1( long long datetimevalue, char* buf, 
               (unsigned)((datetimevalue >> 32) & 0x3f),
               (unsigned)((datetimevalue >> 26) & 0x3f),
               (unsigned)((datetimevalue >> 20) & 0x3f)
+            );
+}
+
+inline void DataConvert::timeToString1( long long timevalue, char* buf, unsigned int buflen )
+{
+    // Handle negative correctly
+    int hour = 0;
+
+    if ((timevalue >> 40) & 0x800)
+    {
+        hour = 0xfffff000;
+    }
+
+    hour |= ((timevalue >> 40) & 0xfff);
+
+    if ((hour >= 0) && (timevalue >> 63))
+    {
+        buf[0] = '-';
+        buf++;
+        buflen--;
+    }
+
+    snprintf( buf, buflen, "%02d%02d%02d",
+              hour,
+              (unsigned)((timevalue >> 32) & 0xff),
+              (unsigned)((timevalue >> 14) & 0xff)
             );
 }
 
@@ -578,6 +783,19 @@ inline void DataConvert::decimalToString(int64_t int_val, uint8_t scale, char* b
     *(ptr + l1) = '.';
 }
 
+inline void DataConvert::trimWhitespace(int64_t& charData)
+{
+    // Trims whitespace characters off non-dict character data
+    char* ch_data = (char*) &charData;
+
+    for (int8_t i = 7; i > 0; i--)
+    {
+        if (ch_data[i] == ' ' || ch_data[i] == '\0')
+            ch_data[i] = '\0';
+        else
+            break;
+    }
+}
 
 //FIXME: copy/pasted from dictionary.cpp: refactor
 inline std::string DataConvert::constructRegexp(const std::string& str)

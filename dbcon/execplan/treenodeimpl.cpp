@@ -64,7 +64,7 @@ const string TreeNodeImpl::toString() const
 
 bool TreeNodeImpl::operator==(const TreeNodeImpl& t) const
 {
-    if (fData == t.fData)
+    if (data() == t.data())
         return true;
 
     return false;

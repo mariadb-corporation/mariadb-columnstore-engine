@@ -232,6 +232,9 @@ inline string colTypeIdString(CalpontSystemCatalog::ColDataType type)
         case CalpontSystemCatalog::DATETIME:
             return string("DATETIME");
 
+        case CalpontSystemCatalog::TIME:
+            return string("TIME");
+
         case CalpontSystemCatalog::VARCHAR:
             return string("VARCHAR");
 
@@ -1281,10 +1284,12 @@ void TupleAggregateStep::prep1PhaseAggregate(
         if (aggOp == ROWAGG_UDAF)
         {
             std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+
             for (; it != jobInfo.projectionCols.end(); it++)
             {
                 UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
                 projColsUDAFIndex++;
+
                 if (udafc)
                 {
                     pUDAFFunc =  udafc->getContext().getFunction();
@@ -1292,9 +1297,9 @@ void TupleAggregateStep::prep1PhaseAggregate(
                     funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, i));
                     break;
                 }
-                
+
             }
-            
+
             if (it == jobInfo.projectionCols.end())
             {
                 throw logic_error("prep1PhaseAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
@@ -1331,7 +1336,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
                         typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                         typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                         typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                        typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                        typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                        typeProj[colProj] == CalpontSystemCatalog::TIME)
                 {
                     Message::Args args;
                     args.add("sum/average");
@@ -1413,7 +1419,8 @@ void TupleAggregateStep::prep1PhaseAggregate(
                         typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                         typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                         typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                        typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                        typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                        typeProj[colProj] == CalpontSystemCatalog::TIME)
                 {
                     Message::Args args;
                     args.add("variance/standard deviation");
@@ -1823,10 +1830,12 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             if (aggOp == ROWAGG_UDAF)
             {
                 std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+
                 for (; it != jobInfo.projectionCols.end(); it++)
                 {
                     UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
                     projColsUDAFIndex++;
+
                     if (udafc)
                     {
                         pUDAFFunc =  udafc->getContext().getFunction();
@@ -1834,9 +1843,9 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                         funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAgg));
                         break;
                     }
-                    
+
                 }
-                
+
                 if (it == jobInfo.projectionCols.end())
                 {
                     throw logic_error("prep1PhaseDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
@@ -1877,7 +1886,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                             typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                             typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                             typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                            typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                            typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                            typeProj[colProj] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("sum/average");
@@ -1962,7 +1972,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                             typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                             typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                             typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                            typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                            typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                            typeProj[colProj] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("variance/standard deviation");
@@ -2145,7 +2156,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                             typeAgg[colAgg] == CalpontSystemCatalog::BLOB ||
                             typeAgg[colAgg] == CalpontSystemCatalog::TEXT ||
                             typeAgg[colAgg] == CalpontSystemCatalog::DATE ||
-                            typeAgg[colAgg] == CalpontSystemCatalog::DATETIME)
+                            typeAgg[colAgg] == CalpontSystemCatalog::DATETIME ||
+                            typeAgg[colAgg] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("sum/average");
@@ -3011,10 +3023,12 @@ void TupleAggregateStep::prep2PhasesAggregate(
             if (aggOp == ROWAGG_UDAF)
             {
                 std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+
                 for (; it != jobInfo.projectionCols.end(); it++)
                 {
                     UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
                     projColsUDAFIndex++;
+
                     if (udafc)
                     {
                         pUDAFFunc =  udafc->getContext().getFunction();
@@ -3022,9 +3036,9 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAggPm));
                         break;
                     }
-                    
+
                 }
-                
+
                 if (it == jobInfo.projectionCols.end())
                 {
                     throw logic_error("prep2PhasesAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
@@ -3065,7 +3079,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
                             typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                             typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                             typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                            typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                            typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                            typeProj[colProj] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("sum/average");
@@ -3154,7 +3169,8 @@ void TupleAggregateStep::prep2PhasesAggregate(
                             typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                             typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                             typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                            typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                            typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                            typeProj[colProj] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("variance/standard deviation");
@@ -3823,19 +3839,21 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             if (aggOp == ROWAGG_UDAF)
             {
                 std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+
                 for (; it != jobInfo.projectionCols.end(); it++)
                 {
                     UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
                     projColsUDAFIndex++;
+
                     if (udafc)
                     {
                         pUDAFFunc =  udafc->getContext().getFunction();
                         // Create a RowAggFunctionCol (UDAF subtype) with the context.
                         funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAggPm));
                         break;
-                    }                    
+                    }
                 }
-                
+
                 if (it == jobInfo.projectionCols.end())
                 {
                     throw logic_error("prep2PhasesDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
@@ -3876,7 +3894,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                             typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                             typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                             typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                            typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                            typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                            typeProj[colProj] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("sum/average");
@@ -3961,7 +3980,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                             typeProj[colProj] == CalpontSystemCatalog::BLOB ||
                             typeProj[colProj] == CalpontSystemCatalog::TEXT ||
                             typeProj[colProj] == CalpontSystemCatalog::DATE ||
-                            typeProj[colProj] == CalpontSystemCatalog::DATETIME)
+                            typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
+                            typeProj[colProj] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("variance/standard deviation");
@@ -4176,7 +4196,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                             typeAggUm[colUm] == CalpontSystemCatalog::BLOB ||
                             typeAggUm[colUm] == CalpontSystemCatalog::TEXT ||
                             typeAggUm[colUm] == CalpontSystemCatalog::DATE ||
-                            typeAggUm[colUm] == CalpontSystemCatalog::DATETIME)
+                            typeAggUm[colUm] == CalpontSystemCatalog::DATETIME ||
+                            typeAggUm[colUm] == CalpontSystemCatalog::TIME)
                     {
                         Message::Args args;
                         args.add("sum/average");

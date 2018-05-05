@@ -177,7 +177,6 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <columnType>           opt_precision_scale
 %type <refAction>            opt_referential_triggered_action
 %type <ival>                 opt_time_precision
-%type <flag>                 opt_with_time_zone
 %type <qualifiedName>        qualified_name
 %type <refActionCode>        referential_action
 %type <refAction>            referential_triggered_action
@@ -1114,10 +1113,11 @@ literal:
 	;
 
 datetime_type:
-	DATETIME
+	DATETIME opt_time_precision
 	{
 		$$ = new ColumnType(DDL_DATETIME);
 		$$->fLength = DDLDatatypeLength[DDL_DATETIME];
+        $$->fPrecision = $2;
 	}
 	|
 	DATE
@@ -1126,22 +1126,16 @@ datetime_type:
 		$$->fLength = DDLDatatypeLength[DDL_DATE];
 	}
 	|
-	TIME opt_time_precision opt_with_time_zone
+	TIME opt_time_precision
 	{
-		$$ = new ColumnType(DDL_DATETIME);
-		$$->fLength = DDLDatatypeLength[DDL_DATETIME];
+		$$ = new ColumnType(DDL_TIME);
+		$$->fLength = DDLDatatypeLength[DDL_TIME];
 		$$->fPrecision = $2;
-		$$->fWithTimezone = $3;
 	}
 
 opt_time_precision:
 	'(' ICONST ')' {$$ = atoi($2);}
 	| {$$ = -1;}
-	;
-
-opt_with_time_zone:
-	WITH TIME ZONE {$$ = true;}
-	| {$$ = false;}
 	;
 
 drop_column_def:

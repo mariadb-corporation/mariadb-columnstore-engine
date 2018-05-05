@@ -390,6 +390,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             int32_t s = 0;

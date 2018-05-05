@@ -161,7 +161,8 @@ const char  ColDataTypeStr[execplan::CalpontSystemCatalog::NUM_OF_COL_DATA_TYPE]
     "unsigned-float",
     "unsigned-bigint",
     "unsigned-double",
-    "text"
+    "text",
+    "time"
 };
 
 enum FuncType { FUNC_WRITE_ENGINE, FUNC_INDEX, FUNC_DICTIONARY };

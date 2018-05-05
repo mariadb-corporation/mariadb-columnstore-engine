@@ -47,7 +47,7 @@ shift $shiftcnt
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 	export PATH=$COLUMNSTORE_INSTALL_DIR/bin:$COLUMNSTORE_INSTALL_DIR/mysql/bin:/bin:/usr/bin
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib/mysql
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib
 else
 	export COLUMNSTORE_INSTALL_DIR=$installdir
 fi

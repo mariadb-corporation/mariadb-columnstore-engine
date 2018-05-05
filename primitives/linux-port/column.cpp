@@ -39,6 +39,7 @@ using namespace boost;
 #include "we_type.h"
 #include "stats.h"
 #include "primproc.h"
+#include "dataconvert.h"
 using namespace logging;
 using namespace dbbc;
 using namespace primitives;
@@ -289,6 +290,7 @@ inline bool isEmptyVal<8>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
@@ -321,6 +323,7 @@ inline bool isEmptyVal<4>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (joblist::CHAR4EMPTYROW == *val);
 
         case CalpontSystemCatalog::UINT:
@@ -346,6 +349,7 @@ inline bool isEmptyVal<2>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (joblist::CHAR2EMPTYROW == *val);
 
         case CalpontSystemCatalog::USMALLINT:
@@ -371,6 +375,7 @@ inline bool isEmptyVal<1>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (*val == joblist::CHAR1EMPTYROW);
 
         case CalpontSystemCatalog::UTINYINT:
@@ -401,6 +406,7 @@ inline bool isNullVal<8>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
         case CalpontSystemCatalog::VARBINARY:
         case CalpontSystemCatalog::BLOB:
         case CalpontSystemCatalog::TEXT:
@@ -437,6 +443,7 @@ inline bool isNullVal<4>(uint8_t type, const uint8_t* ival)
 
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (joblist::DATENULL == *val);
 
         case CalpontSystemCatalog::UINT:
@@ -462,6 +469,7 @@ inline bool isNullVal<2>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (joblist::CHAR2NULL == *val);
 
         case CalpontSystemCatalog::USMALLINT:
@@ -487,6 +495,7 @@ inline bool isNullVal<1>(uint8_t type, const uint8_t* ival)
         case CalpontSystemCatalog::TEXT:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
             return (*val == joblist::CHAR1NULL);
 
         case CalpontSystemCatalog::UTINYINT:
@@ -547,6 +556,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::BIGINT:
             case CalpontSystemCatalog::DATETIME:
+            case CalpontSystemCatalog::TIME:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UINT:
@@ -603,7 +613,13 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
                type == CalpontSystemCatalog::TEXT) && !isNull )
     {
         if (!regex.used && !rf)
+        {
+            // MCOL-1246 Trim trailing whitespace for matching, but not for
+            // regex
+            dataconvert::DataConvert::trimWhitespace(val1);
+            dataconvert::DataConvert::trimWhitespace(val2);
             return colCompare_(order_swap(val1), order_swap(val2), COP);
+        }
         else
             return colStrCompare_(order_swap(val1), order_swap(val2), COP, rf, &regex);
     }

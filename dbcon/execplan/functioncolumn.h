@@ -255,7 +255,10 @@ public:
     {
         return fFunctor->getDatetimeIntVal(row, fFunctionParms, isNull, fOperationType);
     }
-
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fFunctor->getTimeIntVal(row, fFunctionParms, isNull, fOperationType);
+    }
 
 private:
     funcexp::FunctionParm fFunctionParms;

@@ -590,8 +590,21 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                      * based on the result set.
                      */
                     /* MCOL-683: UTF-8 datetime no msecs is 57, this sometimes happens! */
-                    if (((*f)->field_length > 19) && ((*f)->field_length != 57))
-                        (*f)->field_length = strlen(tmp);
+//                    if (((*f)->field_length > 19) && ((*f)->field_length != 57))
+//                        (*f)->field_length = strlen(tmp);
+
+                    Field_varstring* f2 = (Field_varstring*)*f;
+                    f2->store(tmp, strlen(tmp), f2->charset());
+                    break;
+                }
+
+                case CalpontSystemCatalog::TIME:
+                {
+                    if ((*f)->null_ptr)
+                        *(*f)->null_ptr &= ~(*f)->null_bit;
+
+                    intColVal = row.getUintField<8>(s);
+                    DataConvert::timeToString(intColVal, tmp, 255);
 
                     Field_varstring* f2 = (Field_varstring*)*f;
                     f2->store(tmp, strlen(tmp), f2->charset());

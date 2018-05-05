@@ -859,6 +859,180 @@ bool mysql_str_to_datetime( const string& input, DateTime& output, bool& isDate 
     return true;
 }
 
+bool mysql_str_to_time( const string& input, Time& output )
+{
+    int32_t datesepct = 0;
+    uint32_t dtend = 0;
+    bool isNeg = false;
+
+    /**
+     *  We need to deal with the time portion.
+     *  The rules are:
+     *      - Time portion always ends with '\0'
+     *      - Time portion always starts with hour
+     *      - Without time separators (':'):
+     *            HHMMSS
+     *      - All Times can end with option .[microseconds]
+     *      - With time separators there are no specific field length
+     *        requirements
+     */
+    while ( input[dtend] == ' ' && dtend < input.length() )
+    {
+        ++dtend;
+    }
+
+    if ( dtend == input.length() )
+    {
+        return false;
+    }
+
+    uint32_t timesep_ct = 0;
+    bool has_usec = false;
+    uint32_t len_before_msec = 0;
+    uint32_t tmstart = dtend;
+    uint32_t tmend = tmstart;
+
+    for ( ; tmend < input.length(); ++tmend )
+    {
+        char c = input[tmend];
+
+        if ( isdigit( c ) )
+        {
+            // digits always ok
+            continue;
+        }
+//		else if( c == ':' )
+//		{
+//			timesep_ct++;
+//		}
+//		else if( c == '.' )
+//		{
+//			len_before_msec = ( tmend - tmstart );
+//			has_usec = true;
+//		}
+        else if ( ispunct(c) )
+        {
+            if ( c == '.' && timesep_ct == 2 )
+            {
+                len_before_msec = ( tmend - tmstart );
+                has_usec = true;
+            }
+            else if (c == '-' && (tmend == tmstart))
+            {
+                isNeg = true;
+                ++tmstart;
+            }
+            else
+            {
+                timesep_ct++;
+            }
+        }
+        else
+        {
+            // some other character showed up
+            output.reset();
+            return false;
+        }
+    }
+
+    if ( !len_before_msec )
+        len_before_msec = ( tmend - tmstart );
+
+    int32_t hour = -1;
+    int32_t min = 0;
+    int32_t sec = 0;
+    int32_t usec = 0;
+    const char* tstart = input.c_str() + tmstart;
+
+    if ( timesep_ct == 2 )
+    {
+        readDecimal(tstart, hour);
+        ++tstart; // skip one separator
+        readDecimal(tstart, min);
+        ++tstart; // skip one separator
+        readDecimal(tstart, sec);
+    }
+    else if ( timesep_ct == 1 )
+    {
+        readDecimal(tstart, hour);
+        ++tstart; // skip one separator
+        readDecimal(tstart, min);
+    }
+    else if ( timesep_ct == 0 && len_before_msec == 6 )
+    {
+        readDecimal(tstart, hour, 2);
+        readDecimal(tstart, min, 2);
+        readDecimal(tstart, sec, 2);
+    }
+    else if ( timesep_ct == 0 && len_before_msec == 4 )
+    {
+        readDecimal(tstart, hour, 2);
+        readDecimal(tstart, min, 2);
+    }
+    else if ( timesep_ct == 0 && len_before_msec == 2 )
+    {
+        readDecimal(tstart, hour, 2);
+    }
+    else
+    {
+        output.reset();
+        return false;
+    }
+
+    if ( has_usec )
+    {
+        ++tstart; // skip '.' character.  We could error check if we wanted to
+        uint32_t numread = readDecimal(tstart, usec);
+
+        if ( numread > 6 || numread < 1 )
+        {
+            // don't allow more than 6 digits when specifying microseconds
+            output.reset();
+            return false;
+        }
+
+        // usec have to be scaled up so that it always represents microseconds
+        for ( int i = numread; i < 6; i++ )
+            usec *= 10;
+    }
+
+    if ( !isTimeValid( hour, min, sec, usec ) )
+    {
+        // Emulate MariaDB's time saturation
+        if (hour > 838)
+        {
+            output.hour = 838;
+            output.minute = 59;
+            output.second = 59;
+            output.msecond = 999999;
+            output.is_neg = 0;
+        }
+        else if (hour < -838)
+        {
+            output.hour = -838;
+            output.minute = 59;
+            output.second = 59;
+            output.msecond = 999999;
+            output.is_neg = 1;
+        }
+        // If neither of the above match then we return a 0 time
+        else
+        {
+            output.reset();
+        }
+
+        return false;
+    }
+
+    output.hour = isNeg ? 0 - hour : hour;
+    output.minute = min;
+    output.second = sec;
+    output.msecond = usec;
+    output.is_neg = isNeg;
+    return true;
+}
+
+
 bool stringToDateStruct( const string& data, Date& date )
 {
     bool isDate;
@@ -890,6 +1064,14 @@ bool stringToDatetimeStruct(const string& data, DateTime& dtime, bool* date)
         dtime.second = 0;
         dtime.msecond = 0;
     }
+
+    return true;
+}
+
+bool stringToTimeStruct(const string& data, Time& dtime)
+{
+    if ( !mysql_str_to_time( data, dtime ) )
+        return false;
 
     return true;
 }
@@ -1229,6 +1411,23 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             }
             break;
 
+            case CalpontSystemCatalog::TIME:
+            {
+                Time aTime;
+
+                if (stringToTimeStruct(data, aTime))
+                {
+                    value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
+                }
+                else
+                {
+                    value = (int64_t) 0;
+                    pushWarning = true;
+                }
+            }
+            break;
+
+
             case CalpontSystemCatalog::BLOB:
             case CalpontSystemCatalog::CLOB:
                 value = data;
@@ -1341,6 +1540,13 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             case CalpontSystemCatalog::DATETIME:
             {
                 uint64_t d = joblist::DATETIMENULL;
+                value = d;
+            }
+            break;
+
+            case CalpontSystemCatalog::TIME:
+            {
+                uint64_t d = joblist::TIMENULL;
                 value = d;
             }
             break;
@@ -1693,6 +1899,140 @@ int64_t DataConvert::convertColumnDatetime(
 }
 
 //------------------------------------------------------------------------------
+// Convert time string to binary time.  Used by BulkLoad.
+// Most of this is taken from str_to_time in sql-common/my_time.c
+//------------------------------------------------------------------------------
+int64_t DataConvert::convertColumnTime(
+    const char* dataOrg,
+    CalpontDateTimeFormat datetimeFormat,
+    int& status,
+    unsigned int dataOrgLen )
+{
+    status = 0;
+    char* p;
+    char* savePoint = NULL;
+    p = const_cast<char*>(dataOrg);
+    int64_t value = 0;
+    int inHour, inMinute, inSecond, inMicrosecond;
+    inHour        = 0;
+    inMinute      = 0;
+    inSecond      = 0;
+    inMicrosecond = 0;
+    bool isNeg = false;
+
+    if ( datetimeFormat != CALPONTTIME_ENUM )
+    {
+        status = -1;
+        return value;
+    }
+
+    if (p[0] == '-')
+    {
+        isNeg = true;
+    }
+
+    errno = 0;
+
+    p = strtok_r(p, ":.", &savePoint);
+    inHour = strtol(p, 0, 10);
+
+    if (errno)
+    {
+        status = -1;
+        return value;
+    }
+
+    p = strtok_r(NULL, ":.", &savePoint);
+
+    if (p == NULL)
+    {
+        status = -1;
+        return value;
+    }
+
+    inMinute = strtol(p, 0, 10);
+
+    if (errno)
+    {
+        status = -1;
+        return value;
+    }
+
+    p = strtok_r(NULL, ":.", &savePoint);
+
+    if (p == NULL)
+    {
+        status = -1;
+        return value;
+    }
+
+    inSecond = strtol(p, 0, 10);
+
+    if (errno)
+    {
+        status = -1;
+        return value;
+    }
+
+    p = strtok_r(NULL, ":.", &savePoint);
+
+    if (p != NULL)
+    {
+        inMicrosecond = strtol(p, 0, 10);
+
+        if (errno)
+        {
+            status = -1;
+            return value;
+        }
+    }
+
+    if ( isTimeValid (inHour, inMinute, inSecond, inMicrosecond) )
+    {
+        Time atime;
+        atime.hour = inHour;
+        atime.minute = inMinute;
+        atime.second = inSecond;
+        atime.msecond = inMicrosecond;
+        atime.is_neg = isNeg;
+
+        memcpy( &value, &atime, 8);
+    }
+    else
+    {
+        // Emulate MariaDB's time saturation
+        if (inHour > 838)
+        {
+            Time atime;
+            atime.hour = 838;
+            atime.minute = 59;
+            atime.second = 59;
+            atime.msecond = 999999;
+            atime.is_neg = false;
+            memcpy( &value, &atime, 8);
+        }
+        else if (inHour < -838)
+        {
+            Time atime;
+            atime.hour = -838;
+            atime.minute = 59;
+            atime.second = 59;
+            atime.msecond = 999999;
+            atime.is_neg = false;
+            memcpy( &value, &atime, 8);
+        }
+
+        // If neither of the above match then we return a 0 time
+
+        status = -1;
+    }
+
+    return value;
+
+}
+
+
+//------------------------------------------------------------------------------
 // Verify that specified datetime is valid
 //------------------------------------------------------------------------------
 bool DataConvert::isColumnDateTimeValid( int64_t dateTime )
@@ -1706,6 +2046,14 @@ bool DataConvert::isColumnDateTimeValid( int64_t dateTime )
     return false;
 }
 
+bool DataConvert::isColumnTimeValid( int64_t time )
+{
+    Time dt;
+    memcpy(&dt, &time, sizeof(uint64_t));
+
+    return isTimeValid(dt.hour, dt.minute, dt.second, dt.msecond);
+}
+
 std::string DataConvert::dateToString( int  datevalue )
 {
     // @bug 4703 abandon multiple ostringstream's for conversion
@@ -1717,14 +2065,69 @@ std::string DataConvert::dateToString( int  datevalue )
     return buf;
 }
 
-std::string DataConvert::datetimeToString( long long  datetimevalue )
+std::string DataConvert::datetimeToString( long long  datetimevalue, long decimals )
 {
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+
     // @bug 4703 abandon multiple ostringstream's for conversion
     DateTime dt(datetimevalue);
-    const int DATETIMETOSTRING_LEN = 21; // YYYY-MM-DD HH:MM:SS\0
+    const int DATETIMETOSTRING_LEN = 28; // YYYY-MM-DD HH:MM:SS.mmmmmm\0
     char buf[DATETIMETOSTRING_LEN];
 
     sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+
+    if (dt.msecond && decimals)
+    {
+        snprintf(buf + strlen(buf), 21 + decimals, ".%d", dt.msecond);
+
+        // Pad end with zeros
+        if (strlen(buf) < (size_t)(21 + decimals))
+        {
+            sprintf(buf + strlen(buf), "%0*d", (int)(21 + decimals - strlen(buf)), 0);
+        }
+    }
+
+    return buf;
+}
+
+std::string DataConvert::timeToString( long long  timevalue, long decimals )
+{
+    // 10 is default which means we don't need microseconds
+    if (decimals > 6 || decimals < 0)
+    {
+        decimals = 0;
+    }
+
+    // @bug 4703 abandon multiple ostringstream's for conversion
+    Time dt(timevalue);
+    const int TIMETOSTRING_LEN = 19; // (-H)HH:MM:SS.mmmmmm\0
+    char buf[TIMETOSTRING_LEN];
+    char* outbuf = buf;
+
+    if ((dt.hour >= 0) && dt.is_neg)
+    {
+        outbuf[0] = '-';
+        outbuf++;
+    }
+
+    sprintf(outbuf, "%02d:%02d:%02d", dt.hour, dt.minute, dt.second);
+
+    if (dt.msecond && decimals)
+    {
+        size_t start = strlen(buf);
+        snprintf(buf + strlen(buf), 12 + decimals, ".%d", dt.msecond);
+
+        // Pad end with zeros
+        if (strlen(buf) - start < (size_t)decimals)
+        {
+            sprintf(buf + strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
+        }
+    }
+
     return buf;
 }
 
@@ -1749,6 +2152,20 @@ std::string DataConvert::datetimeToString1( long long  datetimevalue )
     sprintf(buf, "%04d%02d%02d%02d%02d%02d%06d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.msecond);
     return buf;
 }
+
+std::string DataConvert::timeToString1( long long  datetimevalue )
+{
+    // @bug 4703 abandon multiple ostringstream's for conversion
+    DateTime dt(datetimevalue);
+    const int TIMETOSTRING1_LEN = 14; // HHMMSSmmmmmm\0
+    char buf[TIMETOSTRING1_LEN];
+
+    char* outbuf = buf;
+
+    sprintf(outbuf, "%02d%02d%02d%06d", dt.hour, dt.minute, dt.second, dt.msecond);
+    return buf;
+}
+
 #if 0
 bool DataConvert::isNullData(ColumnResult* cr, int rownum, CalpontSystemCatalog::ColType colType)
 {
@@ -1967,6 +2384,11 @@ int64_t DataConvert::dateToInt(const string& date)
 int64_t DataConvert::datetimeToInt(const string& datetime)
 {
     return stringToDatetime(datetime);
+}
+
+int64_t DataConvert::timeToInt(const string& time)
+{
+    return stringToTime(time);
 }
 
 int64_t DataConvert::stringToDate(const string& data)
@@ -2242,18 +2664,104 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
     return *(reinterpret_cast<uint64_t*>(&adaytime));
 }
 
+int64_t DataConvert::intToTime(int64_t data)
+{
+    char buf[21] = {0};
+    char* bufread = buf;
+    Time atime;
+    bool isNeg = false;
+
+    if (data == 0)
+    {
+        atime.hour = 0;
+        atime.minute = 0;
+        atime.second = 0;
+        atime.msecond = 0;
+        atime.is_neg = 0;
+
+        return *(reinterpret_cast<int64_t*>(&atime));
+    }
+
+    snprintf( buf, 15, "%llu", (long long unsigned int)data);
+    //string date = buf;
+    string hour, min, sec, msec;
+    int64_t h = 0, minute = 0, s = 0, ms = 0;
+
+    if (bufread[0] == '-')
+    {
+        isNeg = true;
+        bufread++;
+    }
+
+    switch (strlen(bufread))
+    {
+        case 7:
+            hour = string(bufread, 3);
+            min = string(bufread + 2, 2);
+            sec = string(bufread + 4, 2);
+            msec = string(bufread + 6, 6);
+            break;
+
+        case 6:
+            hour = string(bufread, 2);
+            min = string(bufread + 2, 2);
+            sec = string(bufread + 4, 2);
+            msec = string(bufread + 6, 6);
+            break;
+
+        case 4:
+            min = string(bufread, 2);
+            sec = string(bufread + 2, 2);
+            msec = string(bufread + 4, 6);
+            break;
+
+        case 2:
+            sec = string(bufread, 2);
+            msec = string(bufread + 2, 6);
+            break;
+
+        default:
+            return -1;
+    }
+
+    h = atoi(hour.c_str());
+    minute = atoi(min.c_str());
+    s = atoi(sec.c_str());
+    ms = atoi(msec.c_str());
+
+    if (!isTimeValid(h, minute, s, ms))
+        return -1;
+
+    atime.hour = h;
+    atime.minute = minute;
+    atime.second = s;
+    atime.msecond = ms;
+    atime.is_neg = isNeg;
+
+    return *(reinterpret_cast<uint64_t*>(&atime));
+}
+
 int64_t DataConvert::stringToTime(const string& data)
 {
     // MySQL supported time value format 'D HHH:MM:SS.fraction'
     // -34 <= D <= 34
     // -838 <= H <= 838
     uint64_t min = 0, sec = 0, msec = 0;
-    int64_t day = 0, hour = 0;
+    int64_t day = -1, hour = 0;
+    bool isNeg = false;
     string time, hms, ms;
     char* end = NULL;
 
+
+    size_t pos = data.find("-");
+
+    if (pos != string::npos)
+    {
+        isNeg = true;
+    }
+
     // Day
-    size_t pos = data.find(" ");
+    pos = data.find(" ");
 
     if (pos != string::npos)
     {
@@ -2314,6 +2822,7 @@ int64_t DataConvert::stringToTime(const string& data)
     atime.minute = min;
     atime.second = sec;
     atime.msecond = msec;
+    atime.is_neg = isNeg;
     return *(reinterpret_cast<int64_t*>(&atime));
 }
 
@@ -2388,6 +2897,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                         unionedType.colWidth = 20;
                         break;
 
+                    case CalpontSystemCatalog::TIME:
                     case CalpontSystemCatalog::DATETIME:
                         unionedType.colDataType = CalpontSystemCatalog::CHAR;
                         unionedType.colWidth = 26;
@@ -2455,6 +2965,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
 
                     case CalpontSystemCatalog::DATE:
                     case CalpontSystemCatalog::DATETIME:
+                    case CalpontSystemCatalog::TIME:
                     default:
                         break;
                 }
@@ -2482,6 +2993,7 @@ CalpontSystemCatalog::ColType DataConvert::convertUnionColType(vector<CalpontSys
                     case CalpontSystemCatalog::UDECIMAL:
                     case CalpontSystemCatalog::UFLOAT:
                     case CalpontSystemCatalog::UDOUBLE:
+                    case CalpontSystemCatalog::TIME:
                         unionedType.colDataType = CalpontSystemCatalog::CHAR;
                         unionedType.scale = 0;
                         unionedType.colWidth = 26;

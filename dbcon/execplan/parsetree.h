@@ -282,6 +282,14 @@ public:
             return fData->getDatetimeIntVal(row, isNull);
     }
 
+    inline int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        if (fLeft && fRight)
+            return (reinterpret_cast<Operator*>(fData))->getTimeIntVal(row, isNull, fLeft, fRight);
+        else
+            return fData->getTimeIntVal(row, isNull);
+    }
+
 private:
     /** draw the tree
      *

@@ -209,6 +209,11 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
 
             break;
 
+        case (CalpontSystemCatalog::TIME):
+            if (newType.fType == DDL_TIME) return true;
+
+            break;
+
         case (CalpontSystemCatalog::VARCHAR):
             if (newType.fType == DDL_VARCHAR && colType.colWidth == newType.fLength) return true;
 
@@ -223,7 +228,13 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
             break;
 
         case (CalpontSystemCatalog::BLOB):
+            if (newType.fType == DDL_BLOB && colType.colWidth == newType.fLength) return true;
+
+            break;
+
         case (CalpontSystemCatalog::TEXT):
+            if (newType.fType == DDL_TEXT && colType.colWidth == newType.fLength) return true;
+
             break;
 
         default:
