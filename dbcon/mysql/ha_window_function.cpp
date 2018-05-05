@@ -512,6 +512,18 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
             {
                 Item* orderItem = *(orderCol->item);
                 srcp.reset(buildReturnedColumn(orderItem, gwi, nonSupport));
+                
+                // MCOL-1052 GROUP BY handler has all of query's agg Items
+                // as field and correlates them with its extended SELECT Items. 
+                if (!srcp)
+                {
+                    orderItem = orderCol->item_ptr;                    
+                    if (orderItem)
+                    {
+                        gwi.fatalParseError = false;
+                        srcp.reset(buildReturnedColumn(orderItem, gwi, nonSupport));
+                    }
+                }
 
                 if (!srcp)
                     return nullOnError(gwi);

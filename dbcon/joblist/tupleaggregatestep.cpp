@@ -1304,7 +1304,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
             {
                 throw logic_error("prep1PhaseAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
             }
-        }
+        } 
         else
         {
             funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, i));

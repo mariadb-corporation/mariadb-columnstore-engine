@@ -123,6 +123,9 @@ static int calpont_rollback(handlerton* hton, THD* thd, bool all);
 static int calpont_close_connection ( handlerton* hton, THD* thd );
 handlerton* calpont_hton;
 
+static group_by_handler *
+create_calpont_group_by_handler(THD *thd, Query *query);
+
 /* Variables for example share methods */
 
 /*
@@ -218,6 +221,7 @@ static int columnstore_init_func(void* p)
     calpont_hton->commit = calpont_commit;
     calpont_hton->rollback = calpont_rollback;
     calpont_hton->close_connection = calpont_close_connection;
+    calpont_hton->create_group_by = create_calpont_group_by_handler;
     DBUG_RETURN(0);
 }
 
@@ -1134,6 +1138,86 @@ static MYSQL_SYSVAR_ULONG(
     1000,
     0);
 #endif
+
+/*@brief  create_calpont_group_by_handler- Creates handler*/
+/***********************************************************
+ * DESCRIPTION:
+ * Creates a group_by pushdown handler. 
+ * Details are in server/sql/group_by_handler.h
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    query - Query structure, that describes the pushdowned query.
+ * RETURN:
+ *    group_by_handler if success
+ *    NULL in other case
+ ***********************************************************/
+static group_by_handler *
+create_calpont_group_by_handler(THD *thd, Query *query)
+{
+    ha_calpont_group_by_handler *handler = NULL;
+    
+    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE )
+    {
+        handler = new ha_calpont_group_by_handler(thd, query);
+        
+        // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses. 
+        query->group_by = NULL;
+        query->order_by = NULL;
+        query->having = NULL;
+    }
+    
+    return handler;
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * Makes the plan and prepares the data
+ * RETURN:
+ *    int rc
+ ***********************************************************/
+int ha_calpont_group_by_handler::init_scan()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::init_scan");
+
+    // Save vtable_state to restore the after we inited.
+    THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
+    // MCOL-1052 Should be removed after cleaning the code up.
+    thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
+    int rc = ha_calpont_impl_group_by_init(this, table);
+    thd->infinidb_vtable.vtable_state = oldState;
+
+    DBUG_RETURN(rc);
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * Fetches a row and saves it to a temporary table.
+ * RETURN:
+ *    int rc
+ ***********************************************************/
+int ha_calpont_group_by_handler::next_row()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::next_row");
+    int rc = ha_calpont_impl_group_by_next(this, table);
+
+    DBUG_RETURN(rc);
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * Shuts the scan down.
+ * RETURN:
+ *    int rc
+ ***********************************************************/
+int ha_calpont_group_by_handler::end_scan()
+{
+    DBUG_ENTER("ha_calpont_group_by_handler::end_scan");
+
+    int rc = ha_calpont_impl_group_by_end(this, table);
+
+    DBUG_RETURN(rc);
+}
+
 
 static struct st_mysql_sys_var* calpont_system_variables[] =
 {

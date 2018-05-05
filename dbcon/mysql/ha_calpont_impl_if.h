@@ -99,6 +99,7 @@ struct gp_walk_info
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList groupByCols;
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList subGroupByCols;
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
+    std::vector <Item*> havingAggColsItems;
     execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
     // This vector temporarily hold the projection columns to be added
     // to the returnedCols vector for subquery processing. It will be appended
@@ -189,6 +190,28 @@ struct cal_table_info
     gp_walk_info* condInfo;
     execplan::SCSEP csep;
     bool moreRows; //are there more rows to consume (b/c of limit)
+};
+
+struct cal_group_info
+{
+    cal_group_info() : groupByFields(0), 
+        groupByTables(0),
+        groupByWhere(0),
+        groupByGroup(0),
+        groupByOrder(0),
+        groupByHaving(0),
+        groupByDistinct(false)
+        { }
+    ~cal_group_info() { }
+
+    List<Item>* groupByFields; // MCOL-1052 SELECT
+    TABLE_LIST* groupByTables; // MCOL-1052 FROM
+    Item*       groupByWhere; // MCOL-1052 WHERE
+    ORDER*      groupByGroup; // MCOL-1052 GROUP BY
+    ORDER*      groupByOrder; // MCOL-1052 ORDER BY
+    Item*       groupByHaving;  // MCOL-1052 HAVING
+    bool        groupByDistinct; //MCOL-1052 DISTINCT
+    std::vector<execplan::ParseTree*> pushedPts;
 };
 
 typedef std::tr1::unordered_map<TABLE*, cal_table_info> CalTableMap;
@@ -297,7 +320,9 @@ const std::string infinidb_err_msg = "\nThe query includes syntax that is not su
 
 int cp_get_plan(THD* thd, execplan::SCSEP& csep);
 int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_info& ti);
+int cp_get_group_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_group_info& gi);
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false);
+int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, cal_group_info& gi, bool isUnion = false);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
