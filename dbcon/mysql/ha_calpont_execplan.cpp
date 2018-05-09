@@ -5044,7 +5044,13 @@ void gp_walk(const Item* item, void* arg)
             gwip->clauseType = SELECT;
 
             if (col->type() != Item::COND_ITEM)
+            {
                 rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
+
+                if ( col->type() == Item::FIELD_ITEM )
+                    gwip->fatalParseError = false;
+            }
+
 
             SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
@@ -5115,6 +5121,31 @@ void gp_walk(const Item* item, void* arg)
             {
                 Item_func* ifp = (Item_func*)col;
                 gwip->ptWorkStack.push(buildParseTree(ifp, *gwip, gwip->fatalParseError));
+            }
+            else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
+            {
+                Item_field* ifip = static_cast<Item_field*>(col);
+                std::vector<Item*>::iterator iter = gwip->havingAggColsItems.begin();
+                Item_func_or_sum* isfp = NULL;
+
+                for ( ; iter != gwip->havingAggColsItems.end(); iter++ )
+                {
+                    Item* temp_isfp = *iter;
+                    isfp = reinterpret_cast<Item_func_or_sum*>(temp_isfp);
+
+                    if ( isfp->type() == Item::SUM_FUNC_ITEM &&
+                            isfp->result_field == ifip->field )
+                    {
+                        ReturnedColumn* rc = buildAggregateColumn(isfp, *gwip);
+
+                        if (rc)
+                            gwip->rcWorkStack.push(rc);
+
+                        break;
+                    }
+                }
+
+                break;
             }
             else
                 cando = false;
