@@ -221,7 +221,7 @@ void debug_walk(const Item* item, void* arg)
         case Item::FIELD_ITEM:
         {
             Item_field* ifp = (Item_field*)item;
-            cout << "FIELD_ITEM: " << (ifp->db_name ? ifp->db_name : "") << '.' << bestTableName(ifp) <<
+            cerr << "FIELD_ITEM: " << (ifp->db_name ? ifp->db_name : "") << '.' << bestTableName(ifp) <<
                  '.' << ifp->field_name << endl;
             break;
         }
@@ -229,10 +229,10 @@ void debug_walk(const Item* item, void* arg)
         case Item::INT_ITEM:
         {
             Item_int* iip = (Item_int*)item;
-            cout << "INT_ITEM: ";
+            cerr << "INT_ITEM: ";
 
-            if (iip->name) cout << iip->name << " (from name string)" << endl;
-            else cout << iip->val_int() << endl;
+            if (iip->name) cerr << iip->name << " (from name string)" << endl;
+            else cerr << iip->val_int() << endl;
 
             break;
         }
@@ -243,19 +243,19 @@ void debug_walk(const Item* item, void* arg)
             String val, *str = isp->val_str(&val);
             string valStr;
             valStr.assign(str->ptr(), str->length());
-            cout << "STRING_ITEM: >" << valStr << '<' << endl;
+            cerr << "STRING_ITEM: >" << valStr << '<' << endl;
             break;
         }
 
         case Item::REAL_ITEM:
         {
-            cout << "REAL_ITEM" << endl;
+            cerr << "REAL_ITEM" << endl;
             break;
         }
 
         case Item::DECIMAL_ITEM:
         {
-            cout << "DECIMAL_ITEM" << endl;
+            cerr << "DECIMAL_ITEM" << endl;
             break;
         }
 
@@ -263,85 +263,85 @@ void debug_walk(const Item* item, void* arg)
         {
             Item_func* ifp = (Item_func*)item;
             Item_func_opt_neg* inp;
-            cout << "FUNC_ITEM: ";
+            cerr << "FUNC_ITEM: ";
 
             switch (ifp->functype())
             {
                 case Item_func::UNKNOWN_FUNC: // 0
-                    cout << ifp->func_name() << " (" << ifp->functype() << ")" << endl;
+                    cerr << ifp->func_name() << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::GT_FUNC: // 7
-                    cout << '>' << " (" << ifp->functype() << ")" << endl;
+                    cerr << '>' << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::EQ_FUNC: // 1
-                    cout << '=' << " (" << ifp->functype() << ")" << endl;
+                    cerr << '=' << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::GE_FUNC:
-                    cout << ">=" << " (" << ifp->functype() << ")" << endl;
+                    cerr << ">=" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::LE_FUNC:
-                    cout << "<=" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "<=" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::LT_FUNC:
-                    cout << '<' << " (" << ifp->functype() << ")" << endl;
+                    cerr << '<' << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::NE_FUNC:
-                    cout << "<>" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "<>" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::NEG_FUNC: // 45
-                    cout << "unary minus" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "unary minus" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::IN_FUNC: // 16
                     inp = (Item_func_opt_neg*)ifp;
 
-                    if (inp->negated) cout << "not ";
+                    if (inp->negated) cerr << "not ";
 
-                    cout << "in" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "in" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::BETWEEN:
                     inp = (Item_func_opt_neg*)ifp;
 
-                    if (inp->negated) cout << "not ";
+                    if (inp->negated) cerr << "not ";
 
-                    cout << "between" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "between" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::ISNULL_FUNC: // 10
-                    cout << "is null" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "is null" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::ISNOTNULL_FUNC: // 11
-                    cout << "is not null" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "is not null" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::NOT_ALL_FUNC:
-                    cout << "not_all" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "not_all" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::NOT_FUNC:
-                    cout << "not_func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "not_func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::TRIG_COND_FUNC:
-                    cout << "trig_cond_func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "trig_cond_func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::ISNOTNULLTEST_FUNC:
-                    cout << "isnotnulltest_func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "isnotnulltest_func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::MULT_EQUAL_FUNC:
                 {
-                    cout << "mult_equal_func:" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "mult_equal_func:" << " (" << ifp->functype() << ")" << endl;
                     Item_equal* item_eq = (Item_equal*)ifp;
                     Item_equal_fields_iterator it(*item_eq);
                     Item* item;
@@ -349,142 +349,142 @@ void debug_walk(const Item* item, void* arg)
                     while ((item = it++))
                     {
                         Field* equal_field = it.get_curr_field();
-                        cout << equal_field->field_name << endl;
+                        cerr << equal_field->field_name << endl;
                     }
 
                     break;
                 }
 
                 case Item_func::EQUAL_FUNC:
-                    cout << "equal func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "equal func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::FT_FUNC:
-                    cout << "ft func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "ft func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::LIKE_FUNC:
-                    cout << "like func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "like func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::COND_AND_FUNC:
-                    cout << "cond and func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "cond and func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::COND_OR_FUNC:
-                    cout << "cond or func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "cond or func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::XOR_FUNC:
-                    cout << "xor func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "xor func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::INTERVAL_FUNC:
-                    cout << "interval func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "interval func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_EQUALS_FUNC:
-                    cout << "sp equals func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp equals func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_DISJOINT_FUNC:
-                    cout << "sp disjoint func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp disjoint func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_INTERSECTS_FUNC:
-                    cout << "sp intersects func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp intersects func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_TOUCHES_FUNC:
-                    cout << "sp touches func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp touches func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_CROSSES_FUNC:
-                    cout << "sp crosses func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp crosses func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_WITHIN_FUNC:
-                    cout << "sp within func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp within func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_CONTAINS_FUNC:
-                    cout << "sp contains func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp contains func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_OVERLAPS_FUNC:
-                    cout << "sp overlaps func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp overlaps func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_STARTPOINT:
-                    cout << "sp startpoint func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp startpoint func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_ENDPOINT:
-                    cout << "sp endpoint func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp endpoint func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_EXTERIORRING:
-                    cout << "sp exteriorring func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp exteriorring func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_POINTN:
-                    cout << "sp pointn func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp pointn func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_GEOMETRYN:
-                    cout << "sp geometryn func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp geometryn func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_INTERIORRINGN:
-                    cout << "sp exteriorringn func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp exteriorringn func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SP_RELATE_FUNC:
-                    cout << "sp relate func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "sp relate func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::NOW_FUNC:
-                    cout << "now func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "now func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::SUSERVAR_FUNC:
-                    cout << "suservar func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "suservar func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::GUSERVAR_FUNC:
-                    cout << "guservar func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "guservar func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::COLLATE_FUNC:
-                    cout << "collate func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "collate func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::EXTRACT_FUNC:
-                    cout << "extract func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "extract func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::CHAR_TYPECAST_FUNC:
-                    cout << "char typecast func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "char typecast func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::FUNC_SP:
-                    cout << "func sp func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "func sp func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::UDF_FUNC:
-                    cout << "udf func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "udf func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::GSYSVAR_FUNC:
-                    cout << "gsysvar func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "gsysvar func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 case Item_func::DYNCOL_FUNC:
-                    cout << "dyncol func" << " (" << ifp->functype() << ")" << endl;
+                    cerr << "dyncol func" << " (" << ifp->functype() << ")" << endl;
                     break;
 
                 default:
-                    cout << "type=" << ifp->functype() << endl;
+                    cerr << "type=" << ifp->functype() << endl;
                     break;
             }
 
@@ -494,7 +494,7 @@ void debug_walk(const Item* item, void* arg)
         case Item::COND_ITEM:
         {
             Item_cond* icp = (Item_cond*)item;
-            cout << "COND_ITEM: " << icp->func_name() << endl;
+            cerr << "COND_ITEM: " << icp->func_name() << endl;
             break;
         }
 
@@ -503,7 +503,17 @@ void debug_walk(const Item* item, void* arg)
             Item_sum* isp = (Item_sum*)item;
             char* item_name = item->name;
 
-            if (!item_name)
+            // MCOL-1052 This is an extended SELECT list item
+            if (!item_name && isp->get_arg_count() && isp->get_arg(0)->name)
+            {
+                item_name = isp->get_arg(0)->name;
+            }
+            else if (!item_name && isp->get_arg_count()
+                     && isp->get_arg(0)->type() == Item::INT_ITEM)
+            {
+                item_name = (char*)"INT||*";
+            }
+            else if (!item_name)
             {
                 item_name = (char*)"<NULL>";
             }
@@ -511,39 +521,39 @@ void debug_walk(const Item* item, void* arg)
             switch (isp->sum_func())
             {
                 case Item_sum::SUM_FUNC:
-                    cout << "SUM_FUNC: " << item_name << endl;
+                    cerr << "SUM_FUNC: " << item_name << endl;
                     break;
 
                 case Item_sum::SUM_DISTINCT_FUNC:
-                    cout << "SUM_DISTINCT_FUNC: " << item_name << endl;
+                    cerr << "SUM_DISTINCT_FUNC: " << item_name << endl;
                     break;
 
                 case Item_sum::AVG_FUNC:
-                    cout << "AVG_FUNC: " << item_name << endl;
+                    cerr << "AVG_FUNC: " << item_name << endl;
                     break;
 
                 case Item_sum::COUNT_FUNC:
-                    cout << "COUNT_FUNC: " << item_name << endl;
+                    cerr << "COUNT_FUNC: " << item_name << endl;
                     break;
 
                 case Item_sum::COUNT_DISTINCT_FUNC:
-                    cout << "COUNT_DISTINCT_FUNC: " << item_name << endl;
+                    cerr << "COUNT_DISTINCT_FUNC: " << item_name << endl;
                     break;
 
                 case Item_sum::MIN_FUNC:
-                    cout << "MIN_FUNC: " << item_name << endl;
+                    cerr << "MIN_FUNC: " << item_name << endl;
                     break;
 
                 case Item_sum::MAX_FUNC:
-                    cout << "MAX_FUNC: " << item_name << endl;
+                    cerr << "MAX_FUNC: " << item_name << endl;
                     break;
 
                 case Item_sum::UDF_SUM_FUNC:
-                    cout << "UDAF_FUNC: " << item_name << endl;
+                    cerr << "UDAF_FUNC: " << item_name << endl;
                     break;
 
                 default:
-                    cout << "SUM_FUNC_ITEM type=" << isp->sum_func() << endl;
+                    cerr << "SUM_FUNC_ITEM type=" << isp->sum_func() << endl;
                     break;
             }
 
@@ -553,24 +563,24 @@ void debug_walk(const Item* item, void* arg)
         case Item::SUBSELECT_ITEM:
         {
             Item_subselect* sub = (Item_subselect*)item;
-            cout << "SUBSELECT Item: ";
+            cerr << "SUBSELECT Item: ";
 
             switch (sub->substype())
             {
                 case Item_subselect::EXISTS_SUBS:
-                    cout << "EXISTS";
+                    cerr << "EXISTS";
                     break;
 
                 case Item_subselect::IN_SUBS:
-                    cout << "IN";
+                    cerr << "IN";
                     break;
 
                 default:
-                    cout << sub->substype();
+                    cerr << sub->substype();
                     break;
             }
 
-            cout << endl;
+            cerr << endl;
             JOIN* join = sub->get_select_lex()->join;
 
             if (join)
@@ -581,7 +591,7 @@ void debug_walk(const Item* item, void* arg)
                     cond->traverse_cond(debug_walk, arg, Item::POSTFIX);
             }
 
-            cout << "Finish subselect item traversing" << endl;
+            cerr << "Finish subselect item traversing" << endl;
             break;
         }
 
@@ -599,14 +609,14 @@ void debug_walk(const Item* item, void* arg)
                     //ifp->cached_table->select_lex->select_number gives the select level.
                     // could be used on alias.
                     // could also be used to tell correlated join (equal level).
-                    cout << "CACHED REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+                    cerr << "CACHED REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
                          '.' << ifp->field_name << endl;
                     break;
                 }
                 else if (field->type() == Item::FUNC_ITEM)
                 {
                     Item_func* ifp = (Item_func*)field;
-                    cout << "CACHED REF FUNC_ITEM " << ifp->func_name() << endl;
+                    cerr << "CACHED REF FUNC_ITEM " << ifp->func_name() << endl;
                 }
                 else if (field->type() == Item::REF_ITEM)
                 {
@@ -686,34 +696,45 @@ void debug_walk(const Item* item, void* arg)
                         }
                     }
 
-                    cout << "CACHED REF_ITEM: ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
+                    cerr << "CACHED REF_ITEM: ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
                     break;
                 }
                 else
                 {
-                    cout << "REF_ITEM with CACHE_ITEM type unknown " << field->type() << endl;
+                    cerr << "REF_ITEM with CACHE_ITEM type unknown " << field->type() << endl;
                 }
             }
             else if (ref->real_item()->type() == Item::FIELD_ITEM)
             {
                 Item_field* ifp = (Item_field*)ref->real_item();
-                cout << "REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) << '.' <<
-                     ifp->field_name << endl;
+
+                // MCOL-1052 The field referenced presumable came from
+                // extended SELECT list.
+                if ( !ifp->field_name )
+                {
+                    cerr << "REF extra FIELD_ITEM: " << ifp->name << endl;
+                }
+                else
+                {
+                    cerr << "REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) << '.' <<
+                         ifp->field_name << endl;
+                }
+
                 break;
             }
             else if (ref->real_item()->type() == Item::FUNC_ITEM)
             {
                 Item_func* ifp = (Item_func*)ref->real_item();
-                cout << "REF FUNC_ITEM " << ifp->func_name() << endl;
+                cerr << "REF FUNC_ITEM " << ifp->func_name() << endl;
             }
             else if (ref->real_item()->type() == Item::WINDOW_FUNC_ITEM)
             {
                 Item_window_func* ifp = (Item_window_func*)ref->real_item();
-                cout << "REF WINDOW_FUNC_ITEM " << ifp->window_func()->func_name() << endl;
+                cerr << "REF WINDOW_FUNC_ITEM " << ifp->window_func()->func_name() << endl;
             }
             else
             {
-                cout << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
+                cerr << "UNKNOWN REF ITEM type " << ref->real_item()->type() << endl;
             }
 
             break;
@@ -722,7 +743,7 @@ void debug_walk(const Item* item, void* arg)
         case Item::ROW_ITEM:
         {
             Item_row* row = (Item_row*)item;
-            cout << "ROW_ITEM: " << endl;
+            cerr << "ROW_ITEM: " << endl;
 
             for (uint32_t i = 0; i < row->cols(); i++)
                 debug_walk(row->element_index(i), 0);
@@ -732,7 +753,7 @@ void debug_walk(const Item* item, void* arg)
 
         case Item::EXPR_CACHE_ITEM:
         {
-            cout << "Expr Cache Item" << endl;
+            cerr << "Expr Cache Item" << endl;
             ((Item_cache_wrapper*)item)->get_orig_item()->traverse_cond(debug_walk, arg, Item::POSTFIX);
             break;
         }
@@ -747,27 +768,27 @@ void debug_walk(const Item* item, void* arg)
             switch (item->result_type())
             {
                 case STRING_RESULT:
-                    cout << "CACHE_STRING_ITEM" << endl;
+                    cerr << "CACHE_STRING_ITEM" << endl;
                     break;
 
                 case REAL_RESULT:
-                    cout << "CACHE_REAL_ITEM " << isp->val_real() << endl;
+                    cerr << "CACHE_REAL_ITEM " << isp->val_real() << endl;
                     break;
 
                 case INT_RESULT:
-                    cout << "CACHE_INT_ITEM " << isp->val_int() << endl;
+                    cerr << "CACHE_INT_ITEM " << isp->val_int() << endl;
                     break;
 
                 case ROW_RESULT:
-                    cout << "CACHE_ROW_ITEM" << endl;
+                    cerr << "CACHE_ROW_ITEM" << endl;
                     break;
 
                 case DECIMAL_RESULT:
-                    cout << "CACHE_DECIMAL_ITEM " << isp->val_decimal() << endl;
+                    cerr << "CACHE_DECIMAL_ITEM " << isp->val_decimal() << endl;
                     break;
 
                 default:
-                    cout << "CACHE_UNKNOWN_ITEM" << endl;
+                    cerr << "CACHE_UNKNOWN_ITEM" << endl;
                     break;
             }
 
@@ -780,7 +801,7 @@ void debug_walk(const Item* item, void* arg)
                 //ifp->cached_table->select_lex->select_number gives the select level.
                 // could be used on alias.
                 // could also be used to tell correlated join (equal level).
-                cout << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
+                cerr << "CACHED FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) <<
                      '.' << ifp->field_name << endl;
                 break;
             }
@@ -862,18 +883,18 @@ void debug_walk(const Item* item, void* arg)
                     }
                 }
 
-                cout << "CACHE_ITEM ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
+                cerr << "CACHE_ITEM ref type " << refType.c_str() << " real type " << realType.c_str() << endl;
                 break;
             }
             else if (field->type() == Item::FUNC_ITEM)
             {
                 Item_func* ifp = (Item_func*)field;
-                cout << "CACHE_ITEM FUNC_ITEM " << ifp->func_name() << endl;
+                cerr << "CACHE_ITEM FUNC_ITEM " << ifp->func_name() << endl;
                 break;
             }
             else
             {
-                cout << "CACHE_ITEM type unknown " << field->type() << endl;
+                cerr << "CACHE_ITEM type unknown " << field->type() << endl;
             }
 
             break;
@@ -884,12 +905,12 @@ void debug_walk(const Item* item, void* arg)
             String val, *str = NULL;
             Item_temporal_literal* itp = (Item_temporal_literal*)item;
             str = itp->val_str(&val);
-            cout << "DATE ITEM: ";
+            cerr << "DATE ITEM: ";
 
             if (str)
-                cout << ": (" << str->ptr() << ')' << endl;
+                cerr << ": (" << str->ptr() << ')' << endl;
             else
-                cout << ": <NULL>" << endl;
+                cerr << ": <NULL>" << endl;
 
             break;
         }
@@ -897,13 +918,19 @@ void debug_walk(const Item* item, void* arg)
         case Item::WINDOW_FUNC_ITEM:
         {
             Item_window_func* ifp = (Item_window_func*)item;
-            cout << "Window Function Item " << ifp->window_func()->func_name() << endl;
+            cerr << "Window Function Item " << ifp->window_func()->func_name() << endl;
+            break;
+        }
+
+        case Item::NULL_ITEM:
+        {
+            cerr << "NULL item" << endl;
             break;
         }
 
         default:
         {
-            cout << "UNKNOWN_ITEM type " << item->type() << endl;
+            cerr << "UNKNOWN_ITEM type " << item->type() << endl;
             break;
         }
     }
@@ -1015,11 +1042,11 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 #ifdef DEBUG_WALK_COND
 
             if (table_ptr->alias)
-                cout << table_ptr->alias ;
+                cerr << table_ptr->alias ;
             else if (table_ptr->alias)
-                cout << table_ptr->alias;
+                cerr << table_ptr->alias;
 
-            cout << " outer table expression: " << endl;
+            cerr << " outer table expression: " << endl;
             expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
 #endif
             expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
@@ -1053,13 +1080,13 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
             Item_cond* expr = reinterpret_cast<Item_cond*>(table_ptr->embedding->on_expr);
 
 #ifdef DEBUG_WALK_COND
-            cout << "inner tables: " << endl;
+            cerr << "inner tables: " << endl;
             set<CalpontSystemCatalog::TableAliasName>::const_iterator it;
 
             for (it = gwi_outer.innerTables.begin(); it != gwi_outer.innerTables.end(); ++it)
-                cout << (*it) << " ";
+                cerr << (*it) << " ";
 
-            cout << endl;
+            cerr << endl;
             expr->traverse_cond(debug_walk, &gwi_outer, Item::POSTFIX);
 #endif
             expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
@@ -1485,7 +1512,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         // @bug5811. This filter string is for cross engine to use.
         // Use real table name.
         ifp->print(&str, QT_INFINIDB_DERIVED);
-        IDEBUG(cout << str.ptr() << endl);
+        IDEBUG(cerr << str.ptr() << endl);
 
         if (str.ptr())
             cf->data(str.c_ptr());
@@ -1811,7 +1838,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                  (current_thd->lex->sql_command == SQLCOM_DELETE) ||
                  (current_thd->lex->sql_command == SQLCOM_DELETE_MULTI)))
         {
-            IDEBUG( cout << "deleted func with 2 const columns" << endl );
+            IDEBUG( cerr << "deleted func with 2 const columns" << endl );
             delete rhs;
             delete lhs;
             return false;
@@ -1865,7 +1892,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                         if (notInner)
                         {
                             lhs->returnAll(true);
-                            IDEBUG( cout << "setting returnAll on " << tan_lhs << endl);
+                            IDEBUG( cerr << "setting returnAll on " << tan_lhs << endl);
                         }
                     }
 
@@ -1882,7 +1909,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                         if (notInner)
                         {
                             rhs->returnAll(true);
-                            IDEBUG( cout << "setting returnAll on " << tan_rhs << endl );
+                            IDEBUG( cerr << "setting returnAll on " << tan_rhs << endl );
                         }
                     }
 
@@ -2591,7 +2618,7 @@ CalpontSystemCatalog::ColType fieldType_MysqlToIDB (const Field* field)
             break;
 
         default:
-            IDEBUG( cout << "fieldType_MysqlToIDB:: Unknown result type of MySQL "
+            IDEBUG( cerr << "fieldType_MysqlToIDB:: Unknown result type of MySQL "
                     << field->result_type() << endl );
             break;
     }
@@ -2718,7 +2745,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 
     if ( gwi.thd)
     {
-        if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
+        //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ))
         {
             if ( !item->fixed)
             {
@@ -2908,7 +2935,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
         {
             // TODO: item is a Item_cache_wrapper
             printf("EXPR_CACHE_ITEM in buildReturnedColumn\n");
-            cout << "EXPR_CACHE_ITEM in buildReturnedColumn" << endl;
+            cerr << "EXPR_CACHE_ITEM in buildReturnedColumn" << endl;
             break;
         }
 
@@ -3513,18 +3540,6 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         fc->functionParms(funcParms);
         fc->resultType(colType_MysqlToIDB(ifp));
 
-        // add the sign for addtime function
-        if (funcName == "add_time")
-        {
-            Item_func_add_time* addtime = (Item_func_add_time*)ifp;
-            sptp.reset(new ParseTree(new ConstantColumn((int64_t)addtime->get_sign())));
-            funcParms.push_back(sptp);
-        }
-
-        fc->functionName(funcName);
-        fc->functionParms(funcParms);
-        fc->resultType(colType_MysqlToIDB(ifp));
-
         // MySQL give string result type for date function, but has the flag set.
         // we should set the result type to be datetime for comparision.
         if (ifp->field_type() == MYSQL_TYPE_DATETIME ||
@@ -3994,7 +4009,7 @@ ParseTree* buildParseTree(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
     Item_cond* icp = (Item_cond*)item;
 #ifdef DEBUG_WALK_COND
     // debug
-    cout << "Build Parsetree: " << endl;
+    cerr << "Build Parsetree: " << endl;
     icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
 #endif
     //@bug5044. PPSTFIX walking should always be treated as WHERE clause filter
@@ -4841,7 +4856,7 @@ void gp_walk(const Item* item, void* arg)
                     gwip->rcWorkStack.push(cc);
 
                 if (str)
-                    IDEBUG( cout << "Const F&E " << item->full_name() << " evaluate: " << valStr << endl );
+                    IDEBUG( cerr << "Const F&E " << item->full_name() << " evaluate: " << valStr << endl );
 
                 break;
             }
@@ -5050,7 +5065,6 @@ void gp_walk(const Item* item, void* arg)
                 if ( col->type() == Item::FIELD_ITEM )
                     gwip->fatalParseError = false;
             }
-
 
             SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
@@ -5432,7 +5446,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec, bool& hasNonSupport
                 }
                 else
                 {
-                    cout << "UNKNOWN REF Item" << endl;
+                    cerr << "UNKNOWN REF Item" << endl;
                     break;
                 }
             }
@@ -5504,7 +5518,7 @@ bool isInfiniDB(TABLE* table_ptr)
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion)
 {
 #ifdef DEBUG_WALK_COND
-    cout << "getSelectPlan()" << endl;
+    cerr << "getSelectPlan()" << endl;
 #endif
 
     // by pass the derived table resolve phase of mysql
@@ -5591,7 +5605,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     while ((sj_nest = sj_list_it++))
     {
-        cout << sj_nest->db << "." << sj_nest->table_name << endl;
+        cerr << sj_nest->db << "." << sj_nest->table_name << endl;
     }
 
 #endif
@@ -5675,7 +5689,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 CalpontSystemCatalog::TableAliasName tan = make_aliastable(table_ptr->db, table_name, table_ptr->alias, infiniDB);
                 gwi.tableMap[tan] = make_pair(0, table_ptr);
 #ifdef DEBUG_WALK_COND
-                cout << tn << endl;
+                cerr << tn << endl;
 #endif
             }
         }
@@ -5755,15 +5769,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 distUnionNum = unionVec.size();
 
             /*#ifdef DEBUG_WALK_COND
-            			IDEBUG( cout << ">>>> UNION DEBUG" << endl );
+            			IDEBUG( cerr << ">>>> UNION DEBUG" << endl );
             			JOIN* join = sl->join;
             			Item_cond* icp = 0;
             			if (join != 0)
             				icp = reinterpret_cast<Item_cond*>(join->conds);
             			if (icp)
             				icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-            			IDEBUG ( cout << *plan << endl );
-            			IDEBUG ( cout << "<<<<UNION DEBUG" << endl );
+            			IDEBUG ( cerr << *plan << endl );
+            			IDEBUG ( cerr << "<<<<UNION DEBUG" << endl );
             #endif*/
         }
 
@@ -5789,9 +5803,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 //#endif
         gwi.fatalParseError = false;
 #ifdef DEBUG_WALK_COND
-        cout << "------------------ WHERE -----------------------" << endl;
+        cerr << "------------------ WHERE -----------------------" << endl;
         icp->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        cout << "------------------------------------------------\n" << endl;
+        cerr << "------------------------------------------------\n" << endl;
 #endif
 
         icp->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
@@ -5840,16 +5854,16 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         TABLE_LIST* curr = *tbl;
 
         if (curr->table_name)
-            cout << curr->table_name << " ";
+            cerr << curr->table_name << " ";
         else
-            cout << curr->alias << endl;
+            cerr << curr->alias << endl;
 
         if (curr->outer_join)
-            cout << " is inner table" << endl;
+            cerr << " is inner table" << endl;
         else if (curr->straight)
-            cout << "straight_join" << endl;
+            cerr << "straight_join" << endl;
         else
-            cout << "join" << endl;
+            cerr << "join" << endl;
 
         if (curr->nested_join)
         {
@@ -5865,7 +5879,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             for (TABLE_LIST** tb = inner; tb < end1; tb++)
             {
                 TABLE_LIST* curr1 = *tb;
-                cout << curr1->alias << endl;
+                cerr << curr1->alias << endl;
 
                 if (curr1->sj_on_expr)
                 {
@@ -5940,7 +5954,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     gwi.clauseType = SELECT;
 #ifdef DEBUG_WALK_COND
     {
-        cout << "------------------- SELECT --------------------" << endl;
+        cerr << "------------------- SELECT --------------------" << endl;
         List_iterator_fast<Item> it(select_lex.item_list);
         Item* item;
 
@@ -5949,7 +5963,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             debug_walk(item, 0);
         }
 
-        cout << "-----------------------------------------------\n" << endl;
+        cerr << "-----------------------------------------------\n" << endl;
     }
 #endif
 
@@ -6407,7 +6421,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 }
 
 #ifdef DEBUG_WALK_COND
-                cout << "SELECT clause SUBSELECT Item: " << sub->substype() << endl;
+                cerr << "SELECT clause SUBSELECT Item: " << sub->substype() << endl;
                 JOIN* join = sub->get_select_lex()->join;
 
                 if (join)
@@ -6418,7 +6432,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                         cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
                 }
 
-                cout << "Finish SELECT clause subselect item traversing" << endl;
+                cerr << "Finish SELECT clause subselect item traversing" << endl;
 #endif
                 SelectSubQuery* selectSub = new SelectSubQuery(gwi, sub);
                 //selectSub->gwip(&gwi);
@@ -6537,9 +6551,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     {
         Item_cond* having = reinterpret_cast<Item_cond*>(select_lex.having);
 #ifdef DEBUG_WALK_COND
-        cout << "------------------- HAVING ---------------------" << endl;
+        cerr << "------------------- HAVING ---------------------" << endl;
         having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        cout << "------------------------------------------------\n" << endl;
+        cerr << "------------------------------------------------\n" << endl;
 #endif
         having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
 
@@ -6942,6 +6956,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         string lower_select_query(gwi.thd->infinidb_vtable.select_vtable_query.c_ptr());
         algorithm::to_lower(lower_create_query);
         algorithm::to_lower(lower_select_query);
+
 
         // check if window functions are in order by. InfiniDB process order by list if
         // window functions are involved, either in order by or projection.
@@ -7754,8 +7769,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
             // relate to bug4848. let mysql drive limit when limit session variable set.
             // do not set in csep. @bug5096. ignore session limit setting for dml
-            if ((gwi.thd->variables.select_limit == (uint64_t) -1 ||
-                    (gwi.thd->variables.select_limit != (uint64_t) -1 &&
+            if ((gwi.thd->variables.select_limit == (uint64_t) - 1 ||
+                    (gwi.thd->variables.select_limit != (uint64_t) - 1 &&
                      gwi.thd->infinidb_vtable.vtable_state != THD::INFINIDB_CREATE_VTABLE)) &&
                     !csep->hasOrderBy())
             {
@@ -7774,7 +7789,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.thd->infinidb_vtable.select_vtable_query.append(select_query.c_str(), select_query.length());
 
         // We don't currently support limit with correlated subquery
-        if (csep->limitNum() != (uint64_t) -1 &&
+        if (csep->limitNum() != (uint64_t) - 1 &&
                 gwi.subQuery && !gwi.correlatedTbNameVec.empty())
         {
             gwi.fatalParseError = true;
@@ -7877,6 +7892,10 @@ int cp_get_plan(THD* thd, SCSEP& csep)
         return ER_INTERNAL_ERROR;
     else if (status < 0)
         return status;
+
+    cerr << "---------------- cp_get_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 
     // Derived table projection and filter optimization.
     derivedTableOptimization(csep);

@@ -174,6 +174,10 @@ uint32_t convertDataType(int dataType)
             calpontDataType = CalpontSystemCatalog::DATETIME;
             break;
 
+        case ddlpackage::DDL_TIME:
+            calpontDataType = CalpontSystemCatalog::TIME;
+            break;
+
         case ddlpackage::DDL_CLOB:
             calpontDataType = CalpontSystemCatalog::CLOB;
             break;
