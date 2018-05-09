@@ -194,14 +194,14 @@ struct cal_table_info
 
 struct cal_group_info
 {
-    cal_group_info() : groupByFields(0), 
+    cal_group_info() : groupByFields(0),
         groupByTables(0),
         groupByWhere(0),
         groupByGroup(0),
         groupByOrder(0),
         groupByHaving(0),
         groupByDistinct(false)
-        { }
+    { }
     ~cal_group_info() { }
 
     List<Item>* groupByFields; // MCOL-1052 SELECT

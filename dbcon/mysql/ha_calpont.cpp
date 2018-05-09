@@ -123,8 +123,8 @@ static int calpont_rollback(handlerton* hton, THD* thd, bool all);
 static int calpont_close_connection ( handlerton* hton, THD* thd );
 handlerton* calpont_hton;
 
-static group_by_handler *
-create_calpont_group_by_handler(THD *thd, Query *query);
+static group_by_handler*
+create_calpont_group_by_handler(THD* thd, Query* query);
 
 /* Variables for example share methods */
 
@@ -1142,7 +1142,7 @@ static MYSQL_SYSVAR_ULONG(
 /*@brief  create_calpont_group_by_handler- Creates handler*/
 /***********************************************************
  * DESCRIPTION:
- * Creates a group_by pushdown handler. 
+ * Creates a group_by pushdown handler.
  * Details are in server/sql/group_by_handler.h
  * PARAMETERS:
  *    thd - THD pointer.
@@ -1151,21 +1151,21 @@ static MYSQL_SYSVAR_ULONG(
  *    group_by_handler if success
  *    NULL in other case
  ***********************************************************/
-static group_by_handler *
-create_calpont_group_by_handler(THD *thd, Query *query)
+static group_by_handler*
+create_calpont_group_by_handler(THD* thd, Query* query)
 {
-    ha_calpont_group_by_handler *handler = NULL;
-    
+    ha_calpont_group_by_handler* handler = NULL;
+
     if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE )
     {
         handler = new ha_calpont_group_by_handler(thd, query);
-        
-        // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses. 
+
+        // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses.
         query->group_by = NULL;
         query->order_by = NULL;
         query->having = NULL;
     }
-    
+
     return handler;
 }
 

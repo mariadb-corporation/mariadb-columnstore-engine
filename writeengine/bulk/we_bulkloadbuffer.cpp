@@ -1490,8 +1490,8 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
         }
 
         // create a buffer for the size of the rows being written.
-        unsigned char* buf = new unsigned char[fTotalReadRowsParser *
-                                                                    columnInfo.column.width];
+        unsigned char* buf = new unsigned char[fTotalReadRowsParser*
+                                               columnInfo.column.width];
         char*  field = new char[MAX_FIELD_SIZE + 1];
 
         // Initialize min/max buffer values.  We initialize to a sufficient
