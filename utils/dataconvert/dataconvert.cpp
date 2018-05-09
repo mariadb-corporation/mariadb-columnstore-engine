@@ -2769,7 +2769,8 @@ int64_t DataConvert::stringToTime(const string& data)
 
         if (*end != '\0')
             return -1;
-
+        hour = day * 24;
+        day = -1;
         time = data.substr(pos + 1, data.length() - pos - 1);
     }
     else
@@ -2795,11 +2796,11 @@ int64_t DataConvert::stringToTime(const string& data)
 
     if (pos == string::npos)
     {
-        hour = atoi(hms.c_str());
+        hour += atoi(hms.c_str());
     }
     else
     {
-        hour = atoi(hms.substr(0, pos).c_str());
+        hour += atoi(hms.substr(0, pos).c_str());
         ms = hms.substr(pos + 1, hms.length() - pos - 1);
     }
 

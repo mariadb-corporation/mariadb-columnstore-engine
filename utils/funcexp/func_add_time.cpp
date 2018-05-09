@@ -83,8 +83,17 @@ int64_t addTime(DateTime& dt1, Time& dt2)
 
     if ((hour < 0) || (hour > 23))
     {
-        dt.hour = hour % 24;
         dt2.day = hour / 24;
+        hour = hour % 24;
+    }
+    if (hour < 0)
+    {
+        dt.hour = hour + 24;
+        dt2.day--;
+    }
+    else
+    {
+        dt.hour = hour;
     }
 
     day = (signed)(dt1.day + dt2.day);
@@ -141,6 +150,7 @@ int64_t addTime(DateTime& dt1, Time& dt2)
 int64_t addTime(Time& dt1, Time& dt2)
 {
     Time dt;
+    dt.is_neg = false;
     dt.hour = 0;
     dt.minute = 0;
     dt.second = 0;
@@ -174,18 +184,19 @@ int64_t addTime(Time& dt1, Time& dt2)
         dt2.hour--;
     }
 
-    dt.hour = (signed)(dt1.hour + dt2.hour + min / 60);
+    dt.hour = tmp = (signed)(dt1.hour + dt2.hour + min / 60);
 
     // Saturation
-    if (dt.hour > 838)
+    if (tmp > 838)
     {
         dt.hour = 838;
         dt.minute = 59;
         dt.second = 59;
         dt.msecond = 999999;
     }
-    else if (dt.hour < -838)
+    else if (tmp < -838)
     {
+        dt.is_neg = true;
         dt.hour = -838;
         dt.minute = 59;
         dt.second = 59;
@@ -277,29 +288,18 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
 
     int val_sign = 1;
 
-    if (t2.day != 0 && t2.hour < 0)
-    {
-        isNull = true;
-        return -1;
-    }
-    else if (t2.day < 0 || t2.hour < 0)
+    if (t2.hour < 0)
     {
         val_sign = -1;
     }
 
-    if ((abs(t2.day) * 24 + abs(t2.hour)) > 838)
+    if (abs(t2.hour) > 838)
     {
         t2.hour = 838;
         t2.minute = 59;
         t2.second = 59;
         t2.msecond = 999999;
     }
-    else
-    {
-        t2.hour = abs(t2.day) * 24 + t2.hour;
-    }
-
-    t2.day = 0;
 
     if (val_sign * sign < 0)
     {
@@ -315,6 +315,8 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
         t2.second = abs(t2.second);
         t2.msecond = abs(t2.msecond);
     }
+
+    t2.day = 0;
 
     return addTime(dt1, t2);
 }
@@ -332,6 +334,8 @@ int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row,
     const string& val2 = parm[1]->data()->getStrVal(row, isNull);
     int sign = parm[2]->data()->getIntVal(row, isNull);
     Time dt1;
+    dt1.day = 0;
+    dt1.is_neg = val1 >> 63;
     dt1.hour = (val1 >> 40) & 0xfff;
     dt1.minute = (val1 >> 32) & 0xff;
     dt1.second = (val1 >> 24) & 0xff;
@@ -356,26 +360,17 @@ int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row,
 
     int val_sign = 1;
 
-    if (t2.day != 0 && t2.hour < 0)
-    {
-        isNull = true;
-        return -1;
-    }
-    else if (t2.day < 0 || t2.hour < 0)
+    if (t2.hour < 0)
     {
         val_sign = -1;
     }
 
-    if ((abs(t2.day) * 24 + abs(t2.hour)) > 838)
+    if (abs(t2.hour) > 838)
     {
         t2.hour = 838;
         t2.minute = 59;
         t2.second = 59;
         t2.msecond = 999999;
-    }
-    else
-    {
-        t2.hour = abs(t2.day) * 24 + t2.hour;
     }
 
     t2.day = 0;
