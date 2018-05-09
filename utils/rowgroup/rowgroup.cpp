@@ -79,10 +79,10 @@ StringStore::~StringStore()
 #endif
 }
 
-uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
+uint64_t StringStore::storeString(const uint8_t *data, uint32_t len)
 {
     MemChunk *lastMC = NULL;
-	uint32_t ret = 0;
+	uint64_t ret = 0;
 
 	empty = false;   // At least a NULL is being stored.
 
@@ -92,7 +92,7 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
 
 	if ((len == 8 || len == 9) &&
 	  *((uint64_t *) data) == *((uint64_t *) joblist::CPNULLSTRMARK.c_str()))
-		return numeric_limits<uint32_t>::max();
+		return numeric_limits<uint64_t>::max();
 
 	//@bug6065, make StringStore::storeString() thread safe
 	boost::mutex::scoped_lock lk(fMutex, defer_lock);
@@ -102,20 +102,21 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
     if (mem.size() > 0)
         lastMC = (MemChunk *) mem.back().get();
 
-    if (len >= CHUNK_SIZE)
+    if ((len+4) >= CHUNK_SIZE)
     {
-        shared_array<uint8_t> newOne(new uint8_t[len + sizeof(MemChunk)]);
+        shared_array<uint8_t> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
         longStrings.push_back(newOne);
         lastMC = (MemChunk*) longStrings.back().get();
-        lastMC->capacity = lastMC->currentSize = len;
-        memcpy(lastMC->data, data, len);
+        lastMC->capacity = lastMC->currentSize = len + 4;
+        memcpy(lastMC->data, &len, 4);
+        memcpy(lastMC->data + 4, data, len);
         // High bit to mark a long string
-        ret = 0x80000000;
+        ret = 0x8000000000000000;
         ret += longStrings.size() - 1;
     }
     else
     {
-        if ((lastMC == NULL) || (lastMC->capacity - lastMC->currentSize < len))
+        if ((lastMC == NULL) || (lastMC->capacity - lastMC->currentSize < (len + 4)))
         {
             // mem usage debugging
             //if (lastMC)
@@ -130,7 +131,11 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
 
 
         ret = ((mem.size()-1) * CHUNK_SIZE) + lastMC->currentSize;
-        memcpy(&(lastMC->data[lastMC->currentSize]), data, len);
+        // If this ever happens then we have big problems
+        if (ret & 0x8000000000000000)
+            throw logic_error("StringStore memory exceeded.");
+        memcpy(&(lastMC->data[lastMC->currentSize]), &len, 4);
+        memcpy(&(lastMC->data[lastMC->currentSize]) + 4, data, len);
         /*
         cout << "stored: '" << hex;
         for (uint32_t i = 0; i < len ; i++) {
@@ -138,7 +143,7 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
         }
         cout << "' at position " << lastMC->currentSize << " len " << len << dec << endl;
         */
-        lastMC->currentSize += len;
+        lastMC->currentSize += len + 4;
     }
 
 	return ret;
@@ -146,31 +151,31 @@ uint32_t StringStore::storeString(const uint8_t *data, uint32_t len)
 
 void StringStore::serialize(ByteStream &bs) const
 {
-	uint32_t i;
+	uint64_t i;
     MemChunk *mc;
     
-	bs << (uint32_t) mem.size();
+	bs << (uint64_t) mem.size();
 	bs << (uint8_t) empty;
 	for (i = 0; i < mem.size(); i++) {
         mc = (MemChunk *) mem[i].get();
-        bs << (uint32_t) mc->currentSize;
+        bs << (uint64_t) mc->currentSize;
 		//cout << "serialized " << mc->currentSize << " bytes\n";
         bs.append(mc->data, mc->currentSize);
     }
-    bs << (uint32_t) longStrings.size();
+    bs << (uint64_t) longStrings.size();
     for (i = 0; i < longStrings.size(); i++)
     {
         mc = (MemChunk *) longStrings[i].get();
-        bs << (uint32_t) mc->currentSize;
+        bs << (uint64_t) mc->currentSize;
         bs.append(mc->data, mc->currentSize);
     }
 }
 
 void StringStore::deserialize(ByteStream &bs)
 {
-	uint32_t i;
-	uint32_t count;
-    uint32_t size;
+	uint64_t i;
+	uint64_t count;
+    uint64_t size;
     uint8_t *buf;
     MemChunk *mc;
 	uint8_t tmp8;
@@ -718,10 +723,9 @@ bool Row::isNullValue(uint32_t colIndex) const
 		case CalpontSystemCatalog::STRINT: {
 			uint32_t len = getColumnWidth(colIndex);
 			if (inStringTable(colIndex)) {
-				uint32_t offset, length;
-				offset = *((uint32_t *) &data[offsets[colIndex]]);
-				length = *((uint32_t *) &data[offsets[colIndex] + 4]);
-				return strings->isNullValue(offset, length);
+				uint64_t offset;
+				offset = *((uint64_t *) &data[offsets[colIndex]]);
+				return strings->isNullValue(offset);
 			}
 			if (data[offsets[colIndex]] == 0)   // empty string
 				return true;
@@ -757,10 +761,9 @@ bool Row::isNullValue(uint32_t colIndex) const
 		case CalpontSystemCatalog::VARBINARY: {
 			uint32_t pos = offsets[colIndex];
 			if (inStringTable(colIndex)) {
-				uint32_t offset, length;
-				offset = *((uint32_t *) &data[pos]);
-				length = *((uint32_t *) &data[pos+4]);
-				return strings->isNullValue(offset, length);
+				uint64_t offset;
+				offset = *((uint64_t *) &data[pos]);
+				return strings->isNullValue(offset);
 			}
 			if (*((uint16_t*) &data[pos]) == 0)
 				return true;
@@ -1416,8 +1419,8 @@ RGData RowGroup::duplicate()
 
 void Row::setStringField(const std::string &val, uint32_t colIndex)
 {
-	uint32_t length;
-	uint32_t offset;
+	uint64_t offset;
+    uint64_t length;
 
 	//length = strlen(val.c_str()) + 1;
 	length = val.length();
@@ -1426,8 +1429,7 @@ void Row::setStringField(const std::string &val, uint32_t colIndex)
 
 	if (inStringTable(colIndex)) {
 		offset = strings->storeString((const uint8_t *) val.data(), length);
-		*((uint32_t *) &data[offsets[colIndex]]) = offset;
-		*((uint32_t *) &data[offsets[colIndex] + 4]) = length;
+		*((uint64_t *) &data[offsets[colIndex]]) = offset;
 //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
 //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
 //				<< endl;
