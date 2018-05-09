@@ -2301,6 +2301,13 @@ char WESDHandler::getEscChar()
 
 //------------------------------------------------------------------------------
 
+int WESDHandler::getReadBufSize()
+{
+    return fRef.fCmdArgs.getReadBufSize();
+}
+
+//------------------------------------------------------------------------------
+
 char WESDHandler::getDelimChar()
 {
 	return fRef.fCmdArgs.getDelimChar();

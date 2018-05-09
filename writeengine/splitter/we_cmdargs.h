@@ -77,6 +77,7 @@ class WECmdArgs
 		char getDelimChar() { return fColDelim; }
 		ImportDataMode getImportDataMode() const { return fImportDataMode; }
 		bool getConsoleLog() { return fConsoleLog; }
+        int getReadBufSize() { return fReadBufSize; }
 
 		bool isCpimportInvokeMode(){return (fBlockMode3)? false : fCpiInvoke;}
 		bool isQuiteMode() const {	return fQuiteMode;	}
