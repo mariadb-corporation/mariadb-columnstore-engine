@@ -1280,7 +1280,7 @@ int WriteEngineWrapper::insertColumnRecs(const TxnID& txnid,
             ((totalRow - rowsLeft) > 0) &&
             (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-        for (unsigned k = 1; k < colStructList.size(); k++)
+        for (size_t k = 1; k < colStructList.size(); k++)
         {
             Column expandCol;
             colOp = m_colOp[op(colStructList[k].fCompressionType)];
@@ -2025,10 +2025,10 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
             ((totalRow - rowsLeft) > 0) &&
             (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-        for (unsigned k = 0; k < colStructList.size(); k++)
+        for (size_t k = 0; k < colStructList.size(); k++)
         {
             // Skip the selected column
-            if (k == colId)
+            if (k == (size_t)colId)
                 continue;
 
             Column expandCol;
@@ -2583,7 +2583,7 @@ int WriteEngineWrapper::insertColumnRec_SYS(const TxnID& txnid,
             ((totalRow - rowsLeft) > 0) &&
             (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-        for (unsigned k = 1; k < colStructList.size(); k++)
+        for (size_t k = 1; k < colStructList.size(); k++)
         {
             Column expandCol;
             colOp = m_colOp[op(colStructList[k].fCompressionType)];
@@ -3278,7 +3278,7 @@ int WriteEngineWrapper::insertColumnRec_Single(const TxnID& txnid,
             ((totalRow - rowsLeft) > 0) &&
             (rowIdArray[totalRow - rowsLeft - 1] >= (RID)INITIAL_EXTENT_ROWS_TO_DISK))
     {
-        for (unsigned k = 1; k < colStructList.size(); k++)
+        for (size_t k = 1; k < colStructList.size(); k++)
         {
             Column expandCol;
             colOp = m_colOp[op(colStructList[k].fCompressionType)];

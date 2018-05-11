@@ -103,7 +103,7 @@ public:
      * colTypes or wrong number of arguments. Else return
      * mcsv1_UDAF::SUCCESS.
      */
-    virtual ReturnCode init(mcsv1Context* context, COL_TYPES& colTypes);
+    virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
     /**
      * reset()
@@ -138,7 +138,7 @@ public:
      *
      * valsIn (in) - a vector of the parameters from the row.
      */
-    virtual ReturnCode nextValue(mcsv1Context* context, std::vector<ColumnDatum>& valsIn);
+    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
     /**
      * subEvaluate()
