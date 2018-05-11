@@ -164,6 +164,9 @@ inline RowAggFunctionType functionIdMap(int planFuncId)
         case AggregateColumn::UDAF:
             return ROWAGG_UDAF;
 
+        case AggregateColumn::MULTI_PARM:
+            return ROWAGG_MULTI_PARM;
+
         default:
             return ROWAGG_FUNCT_UNDEFINE;
     }
@@ -1302,7 +1305,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
 
             if (it == jobInfo.projectionCols.end())
             {
-                throw logic_error("prep1PhaseAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                throw logic_error("(1)prep1PhaseAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
             }
         } 
         else
@@ -1468,7 +1471,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
 
                 if (!udafFuncCol)
                 {
-                    throw logic_error("prep1PhaseAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
+                    throw logic_error("(2)prep1PhaseAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
                 }
 
                 pUDAFFunc = udafFuncCol->fUDAFContext.getFunction();
@@ -1482,6 +1485,17 @@ void TupleAggregateStep::prep1PhaseAggregate(
                 widthAgg.push_back(udafFuncCol->fUDAFContext.getColWidth());
                 break;
             }
+
+            case ROWAGG_MULTI_PARM:
+            {
+                oidsAgg.push_back(oidsProj[colProj]);
+                keysAgg.push_back(key);
+                scaleAgg.push_back(scaleProj[colProj]);
+                precisionAgg.push_back(precisionProj[colProj]);
+                typeAgg.push_back(typeProj[colProj]);
+                widthAgg.push_back(width[colProj]);
+            }
+            break;
 
             default:
             {
@@ -1560,7 +1574,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
 
             if (!udafFuncCol)
             {
-                throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
+                throw logic_error("(3)prep1PhaseAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
             }
 
             functionVec[i]->fAuxColumnIndex = lastCol++;
@@ -1675,7 +1689,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
     //     the groupby columns are put in front, even not a returned column
     //     sum and count(column name) are omitted, if avg present
     {
-        // project only uniq oids, but they may be repeated in aggregation
+        // project only unique oids, but they may be repeated in aggregation
         // collect the projected column info, prepare for aggregation
         map<uint32_t, int> projColPosMap;
 
@@ -1848,7 +1862,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
                 if (it == jobInfo.projectionCols.end())
                 {
-                    throw logic_error("prep1PhaseDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                    throw logic_error("(1)prep1PhaseDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
                 }
             }
             else
@@ -2043,7 +2057,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
                     if (!udafFuncCol)
                     {
-                        throw logic_error("prep1PhaseDistinctAggregate A UDAF function is called but there's no RowUDAFFunctionCol");
+                        throw logic_error("(2)prep1PhaseDistinctAggregate A UDAF function is called but there's no RowUDAFFunctionCol");
                     }
 
                     // Return column
@@ -2064,6 +2078,18 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     funct->fAuxColumnIndex = colAgg++;
                     break;
                 }
+
+                case ROWAGG_MULTI_PARM:
+                {
+                    oidsAgg.push_back(oidsProj[colProj]);
+                    keysAgg.push_back(aggKey);
+                    scaleAgg.push_back(scaleProj[colProj]);
+                    precisionAgg.push_back(precisionProj[colProj]);
+                    typeAgg.push_back(typeProj[colProj]);
+                    widthAgg.push_back(widthProj[colProj]);
+                    ++colAgg;
+                }
+                break;
 
                 default:
                 {
@@ -2111,7 +2137,8 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             groupByNoDist.push_back(groupby);
             aggFuncMap.insert(make_pair(boost::make_tuple(keysAgg[i], 0, pUDAFFunc), i));
         }
-
+        
+        projColsUDAFIndex = 0;
         // locate the return column position in aggregated rowgroup
         for (uint64_t i = 0; i < returnedColVec.size(); i++)
         {
@@ -2120,6 +2147,14 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
             RowAggFunctionType aggOp = functionIdMap(returnedColVec[i].second);
             RowAggFunctionType stats = statsFuncIdMap(returnedColVec[i].second);
             int colAgg = -1;
+
+            if (aggOp == ROWAGG_UDAF)
+            {
+                UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
+
+                if (udafc)
+                    pUDAFFunc = udafc->getContext().getFunction();
+            }
 
             if  (find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), retKey) !=
                     jobInfo.distinctColVec.end() )
@@ -2432,11 +2467,37 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                                                new RowAggFunctionCol(
                                                    ROWAGG_DUP_FUNCT, ROWAGG_FUNCT_UNDEFINE, -1, i, dupGroupbyIndex)));
             }
-
-            // update the aggregate function vector
             else
             {
-                SP_ROWAGG_FUNC_t funct(new RowAggFunctionCol(aggOp, stats, colAgg, i));
+                // update the aggregate function vector
+                SP_ROWAGG_FUNC_t funct;
+                if (aggOp == ROWAGG_UDAF)
+                {
+                    std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+
+                    for (; it != jobInfo.projectionCols.end(); it++)
+                    {
+                        UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
+                        projColsUDAFIndex++;
+
+                        if (udafc)
+                        {
+                            pUDAFFunc =  udafc->getContext().getFunction();
+                            // Create a RowAggFunctionCol (UDAF subtype) with the context.
+                            funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colAgg, i));
+                            break;
+                        }
+                    }
+
+                    if (it == jobInfo.projectionCols.end())
+                    {
+                        throw logic_error("(3)prep1PhaseDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                    }
+                }
+                else
+                {
+                    funct.reset(new RowAggFunctionCol(aggOp, stats, colAgg, i));
+                }
 
                 if (aggOp == ROWAGG_COUNT_NO_OP)
                     funct->fAuxColumnIndex = colAgg;
@@ -2549,7 +2610,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
                 if (!udafFuncCol)
                 {
-                    throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
+                    throw logic_error("(4)prep1PhaseDistinctAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
                 }
 
                 functionVec2[i]->fAuxColumnIndex = lastCol++;
@@ -2893,7 +2954,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
     //     the groupby columns are put in front, even not a returned column
     //     sum and count(column name) are omitted, if avg present
     {
-        // project only uniq oids, but they may be repeated in aggregation
+        // project only unique oids, but they may be repeated in aggregation
         // collect the projected column info, prepare for aggregation
         vector<uint32_t> width;
         map<uint32_t, int> projColPosMap;
@@ -3036,12 +3097,11 @@ void TupleAggregateStep::prep2PhasesAggregate(
                         funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAggPm));
                         break;
                     }
-
                 }
 
                 if (it == jobInfo.projectionCols.end())
                 {
-                    throw logic_error("prep2PhasesAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                    throw logic_error("(1)prep2PhasesAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
                 }
             }
             else
@@ -3240,7 +3300,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 
                     if (!udafFuncCol)
                     {
-                        throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
+                        throw logic_error("(2)prep2PhasesAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
                     }
 
                     oidsAggPm.push_back(oidsProj[colProj]);
@@ -3261,6 +3321,18 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     break;
                 }
 
+                case ROWAGG_MULTI_PARM:
+                {
+                    oidsAggPm.push_back(oidsProj[colProj]);
+                    keysAggPm.push_back(aggKey);
+                    scaleAggPm.push_back(scaleProj[colProj]);
+                    precisionAggPm.push_back(precisionProj[colProj]);
+                    typeAggPm.push_back(typeProj[colProj]);
+                    widthAggPm.push_back(width[colProj]);
+                    colAggPm++;
+                }
+                break;
+
                 default:
                 {
                     ostringstream emsg;
@@ -3278,11 +3350,16 @@ void TupleAggregateStep::prep2PhasesAggregate(
     //     add back sum or count(column name) if omitted due to avg column
     //     put count(column name) column to the end, if it is for avg only
     {
+        // Keep a count of the parms after the first for any aggregate.
+        // These will be skipped and the count needs to be subtracted
+        // from where the aux column will be.
+        int64_t multiParms = 0;
         // check if the count column for AVG is also a returned column,
         // if so, replace the "-1" to actual position in returned vec.
         map<uint32_t, SP_ROWAGG_FUNC_t> avgFuncMap;
         AGG_MAP aggDupFuncMap;
 
+        projColsUDAFIndex = 0;
         // copy over the groupby vector
         // update the outputColumnIndex if returned
         for (uint64_t i = 0; i < groupByPm.size(); i++)
@@ -3299,7 +3376,14 @@ void TupleAggregateStep::prep2PhasesAggregate(
             RowAggFunctionType stats = statsFuncIdMap(returnedColVec[i].second);
             int colPm = -1;
 
+            if (aggOp == ROWAGG_MULTI_PARM)
+            {
+                // Skip on UM: Extra parms for an aggregate have no work on the UM
+                ++multiParms;
+                continue;
+            }
             // Is this a UDAF? use the function as part of the key.
+
             mcsv1sdk::mcsv1_UDAF* pUDAFFunc = NULL;
 
             if (aggOp == ROWAGG_UDAF)
@@ -3452,20 +3536,36 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     functionVecUm.push_back(SP_ROWAGG_FUNC_t(new RowAggFunctionCol(
                                                 ROWAGG_DUP_FUNCT, ROWAGG_FUNCT_UNDEFINE, -1, i, dupGroupbyIndex)));
             }
-
-            // update the aggregate function vector
             else
             {
+                // update the aggregate function vector
                 SP_ROWAGG_FUNC_t funct;
-
                 if (aggOp == ROWAGG_UDAF)
                 {
-                    UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
-                    funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colPm, i));
+                    std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+
+                    for (; it != jobInfo.projectionCols.end(); it++)
+                    {
+                        UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
+                        projColsUDAFIndex++;
+
+                        if (udafc)
+                        {
+                            pUDAFFunc =  udafc->getContext().getFunction();
+                            // Create a RowAggFunctionCol (UDAF subtype) with the context.
+                            funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colPm, i-multiParms));
+                            break;
+                        }
+                    }
+
+                    if (it == jobInfo.projectionCols.end())
+                    {
+                        throw logic_error("(3)prep2PhasesAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                    }
                 }
                 else
                 {
-                    funct.reset(new RowAggFunctionCol(aggOp, stats, colPm, i));
+                    funct.reset(new RowAggFunctionCol(aggOp, stats, colPm, i-multiParms));
                 }
 
                 if (aggOp == ROWAGG_COUNT_NO_OP)
@@ -3517,7 +3617,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
         }
 
         // there is avg(k), but no count(k) in the select list
-        uint64_t lastCol = returnedColVec.size();
+        uint64_t lastCol = returnedColVec.size() - multiParms;
 
         for (map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k = avgFuncMap.begin(); k != avgFuncMap.end(); k++)
         {
@@ -3545,7 +3645,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 
                 if (!udafFuncCol)
                 {
-                    throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
+                    throw logic_error("(4)prep2PhasesAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
                 }
 
                 functionVecUm[i]->fAuxColumnIndex = lastCol++;
@@ -3691,6 +3791,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
     vector<SP_ROWAGG_GRPBY_t> groupByPm, groupByUm, groupByNoDist;
     vector<SP_ROWAGG_FUNC_t> functionVecPm, functionNoDistVec, functionVecUm;
+    list<uint32_t> multiParmIndexes;
 
     uint32_t bigIntWidth = sizeof(int64_t);
     map<pair<uint32_t, int>, uint64_t> avgFuncDistMap;
@@ -3702,7 +3803,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
     //     the groupby columns are put in front, even not a returned column
     //     sum and count(column name) are omitted, if avg present
     {
-        // project only uniq oids, but they may be repeated in aggregation
+        // project only unique oids, but they may be repeated in aggregation
         // collect the projected column info, prepare for aggregation
         vector<uint32_t> width;
         map<uint32_t, int> projColPosMap;
@@ -3856,7 +3957,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                 if (it == jobInfo.projectionCols.end())
                 {
-                    throw logic_error("prep2PhasesDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                    throw logic_error("(1)prep2PhasesDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
                 }
             }
             else
@@ -4050,7 +4151,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                     if (!udafFuncCol)
                     {
-                        throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
+                        throw logic_error("(2)prep2PhasesDistinctAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
                     }
 
                     // Return column
@@ -4071,6 +4172,19 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     funct->fAuxColumnIndex = colAggPm++;
                     break;
                 }
+
+                case ROWAGG_MULTI_PARM:
+                {
+                    oidsAggPm.push_back(oidsProj[colProj]);
+                    keysAggPm.push_back(aggKey);
+                    scaleAggPm.push_back(scaleProj[colProj]);
+                    precisionAggPm.push_back(precisionProj[colProj]);
+                    typeAggPm.push_back(typeProj[colProj]);
+                    widthAggPm.push_back(width[colProj]);
+                    multiParmIndexes.push_back(colAggPm);
+                    colAggPm++;
+                }
+                break;
 
                 default:
                 {
@@ -4093,12 +4207,23 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             groupByUm.push_back(groupby);
         }
 
+        // Keep a count of the parms after the first for any aggregate.
+        // These will be skipped and the count needs to be subtracted
+        // from where the aux column will be.
+        int64_t multiParms = 0;
         for (uint32_t idx = 0; idx < functionVecPm.size(); idx++)
+
         {
             SP_ROWAGG_FUNC_t funct;
             SP_ROWAGG_FUNC_t funcPm = functionVecPm[idx];
 
             // UDAF support
+            if (funcPm->fAggFunction == ROWAGG_MULTI_PARM)
+            {
+                // Multi-Parm is not used on the UM
+                ++multiParms;
+                continue;
+            }
             if (funcPm->fAggFunction == ROWAGG_UDAF)
             {
                 RowUDAFFunctionCol* udafFuncCol = dynamic_cast<RowUDAFFunctionCol*>(funcPm.get());
@@ -4106,7 +4231,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                                 udafFuncCol->fUDAFContext,
                                 udafFuncCol->fOutputColumnIndex,
                                 udafFuncCol->fOutputColumnIndex,
-                                udafFuncCol->fAuxColumnIndex));
+                                udafFuncCol->fAuxColumnIndex-multiParms));
                 functionNoDistVec.push_back(funct);
             }
             else
@@ -4116,18 +4241,25 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                                 funcPm->fStatsFunction,
                                 funcPm->fOutputColumnIndex,
                                 funcPm->fOutputColumnIndex,
-                                funcPm->fAuxColumnIndex));
+                                funcPm->fAuxColumnIndex-multiParms));
                 functionNoDistVec.push_back(funct);
             }
         }
 
-        posAggUm = posAggPm;
-        oidsAggUm = oidsAggPm;
-        keysAggUm = keysAggPm;
-        scaleAggUm = scaleAggPm;
-        precisionAggUm = precisionAggPm;
-        widthAggUm = widthAggPm;
-        typeAggUm = typeAggPm;
+        // Copy over the PM arrays to the UM. Skip any that are a multi-parm entry.
+        for (uint32_t idx = 0; idx < oidsAggPm.size(); ++idx)
+        {
+            if (find (multiParmIndexes.begin(), multiParmIndexes.end(), idx ) != multiParmIndexes.end())
+            {
+                continue;
+            }
+            oidsAggUm.push_back(oidsAggPm[idx]);
+            keysAggUm.push_back(keysAggPm[idx]);
+            scaleAggUm.push_back(scaleAggPm[idx]);
+            precisionAggUm.push_back(precisionAggPm[idx]);
+            widthAggUm.push_back(widthAggPm[idx]);
+            typeAggUm.push_back(typeAggPm[idx]);
+        }
     }
 
 
@@ -4137,6 +4269,10 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
     //     add back sum or count(column name) if omitted due to avg column
     //     put count(column name) column to the end, if it is for avg only
     {
+        // Keep a count of the parms after the first for any aggregate.
+        // These will be skipped and the count needs to be subtracted
+        // from where the aux column will be.
+        int64_t multiParms = 0;
         // check if the count column for AVG is also a returned column,
         // if so, replace the "-1" to actual position in returned vec.
         map<uint32_t, SP_ROWAGG_FUNC_t> avgFuncMap, avgDistFuncMap;
@@ -4158,6 +4294,21 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             RowAggFunctionType aggOp = functionIdMap(returnedColVec[i].second);
             RowAggFunctionType stats = statsFuncIdMap(returnedColVec[i].second);
             int colUm = -1;
+
+            if (aggOp == ROWAGG_MULTI_PARM)
+            {
+                // Skip on UM: Extra parms for an aggregate have no work on the UM
+                ++multiParms;
+                continue;
+            }
+
+            if (aggOp == ROWAGG_UDAF)
+            {
+                UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
+
+                if (udafc)
+                    pUDAFFunc = udafc->getContext().getFunction();
+            }
 
             if  (find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), retKey) !=
                     jobInfo.distinctColVec.end() )
@@ -4285,7 +4436,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                     if (it != aggFuncMap.end())
                     {
-                        colUm = it->second;
+                        colUm = it->second - multiParms;
                         oidsAggDist.push_back(oidsAggUm[colUm]);
                         keysAggDist.push_back(keysAggUm[colUm]);
                         scaleAggDist.push_back(scaleAggUm[colUm]);
@@ -4309,7 +4460,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                                 // false alarm
                                 returnColMissing = false;
 
-                                colUm = it->second;
+                                colUm = it->second - multiParms;
 
                                 if (aggOp == ROWAGG_SUM)
                                 {
@@ -4412,21 +4563,36 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     functionVecUm.push_back(SP_ROWAGG_FUNC_t(new RowAggFunctionCol(
                                                 ROWAGG_DUP_FUNCT, ROWAGG_FUNCT_UNDEFINE, -1, i, dupGroupbyIndex)));
             }
-
-            // update the aggregate function vector
             else
             {
+                // update the aggregate function vector
                 SP_ROWAGG_FUNC_t funct;
-
                 if (aggOp == ROWAGG_UDAF)
                 {
-                    UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
-                    pUDAFFunc = udafc->getContext().getFunction();
-                    funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colUm, i));
+                    std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+
+                    for (; it != jobInfo.projectionCols.end(); it++)
+                    {
+                        UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
+                        projColsUDAFIndex++;
+
+                        if (udafc)
+                        {
+                            pUDAFFunc =  udafc->getContext().getFunction();
+                            // Create a RowAggFunctionCol (UDAF subtype) with the context.
+                            funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colUm, i-multiParms));
+                            break;
+                        }
+                    }
+
+                    if (it == jobInfo.projectionCols.end())
+                    {
+                        throw logic_error("(3)prep2PhasesDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                    }
                 }
                 else
                 {
-                    funct.reset(new RowAggFunctionCol(aggOp, stats, colUm, i));
+                    funct.reset(new RowAggFunctionCol(aggOp, stats, colUm, i-multiParms));
                 }
 
                 if (aggOp == ROWAGG_COUNT_NO_OP)
@@ -4480,7 +4646,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         }
 
         // there is avg(k), but no count(k) in the select list
-        uint64_t lastCol = returnedColVec.size();
+        uint64_t lastCol = returnedColVec.size() - multiParms;
 
         for (map<uint32_t, SP_ROWAGG_FUNC_t>::iterator k = avgFuncMap.begin(); k != avgFuncMap.end(); k++)
         {
@@ -4540,7 +4706,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                 if (!udafFuncCol)
                 {
-                    throw logic_error("(9)A UDAF function is called but there's no RowUDAFFunctionCol");
+                    throw logic_error("(4)prep2PhasesDistinctAggregate: A UDAF function is called but there's no RowUDAFFunctionCol");
                 }
 
                 functionVecUm[i]->fAuxColumnIndex = lastCol++;
@@ -4687,6 +4853,11 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
             SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(j, k));
             groupBySub.push_back(groupby);
 
+            // Keep a count of the parms after the first for any aggregate.
+            // These will be skipped and the count needs to be subtracted
+            // from where the aux column will be.
+            int64_t multiParms = 0;
+
             // tricky part : 2 function vectors
             //   -- dummy function vector for sub-aggregator, which does distinct only
             //   -- aggregate function on this distinct column for rowAggDist
@@ -4694,6 +4865,11 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
             for (uint64_t k = 0; k < returnedColVec.size(); k++)
             {
+                if (functionIdMap(returnedColVec[i].second) == ROWAGG_MULTI_PARM)
+                {
+                    ++multiParms;
+                    continue;
+                }
                 if (returnedColVec[k].first != distinctColKey)
                     continue;
 
@@ -4715,7 +4891,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                                 f->fStatsFunction,
                                 groupBySub.size() - 1,
                                 f->fOutputColumnIndex,
-                                f->fAuxColumnIndex));
+                                f->fAuxColumnIndex-multiParms));
                         functionSub2.push_back(funct);
                     }
                 }
@@ -4732,9 +4908,15 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
         {
             vector<SP_ROWAGG_FUNC_t> functionSub1 = functionNoDistVec;
             vector<SP_ROWAGG_FUNC_t> functionSub2;
+            int64_t multiParms = 0;
 
             for (uint64_t k = 0; k < returnedColVec.size(); k++)
             {
+                if (functionIdMap(returnedColVec[k].second) == ROWAGG_MULTI_PARM)
+                {
+                    ++multiParms;
+                    continue;
+                }
                 // search non-distinct functions in functionVec
                 vector<SP_ROWAGG_FUNC_t>::iterator it = functionVecUm.begin();
 
@@ -4752,7 +4934,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                                             udafFuncCol->fUDAFContext,
                                             udafFuncCol->fInputColumnIndex,
                                             udafFuncCol->fOutputColumnIndex,
-                                            udafFuncCol->fAuxColumnIndex));
+                                            udafFuncCol->fAuxColumnIndex-multiParms));
                             functionSub2.push_back(funct);
                         }
                         else if (f->fAggFunction == ROWAGG_COUNT_ASTERISK ||
@@ -4773,7 +4955,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                                     f->fStatsFunction,
                                     f->fInputColumnIndex,
                                     f->fOutputColumnIndex,
-                                    f->fAuxColumnIndex));
+	                            f->fAuxColumnIndex-multiParms));
                             functionSub2.push_back(funct);
                         }
                     }

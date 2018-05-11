@@ -18,7 +18,7 @@
 /***********************************************************************
 *   $Id$
 *
-*   mcsv1_UDAF.h
+*   avg_mode.h
 ***********************************************************************/
 
 /**
@@ -50,8 +50,8 @@
  * is also used to describe the interface that is used for
  * either.
  */
-#ifndef HEADER_mode
-#define HEADER_mode
+#ifndef HEADER_avg_mode
+#define HEADER_avg_mode
 
 #include <cstdlib>
 #include <string>
@@ -134,7 +134,7 @@ public:
      * mcsv1_UDAF::SUCCESS.
      */
     virtual ReturnCode init(mcsv1Context* context,
-                            COL_TYPES& colTypes);
+                            ColumnDatum* colTypes);
 
     /**
      * reset()
@@ -169,8 +169,7 @@ public:
      *
      * valsIn (in) - a vector of the parameters from the row.
      */
-    virtual ReturnCode nextValue(mcsv1Context* context,
-                                 std::vector<ColumnDatum>& valsIn);
+    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
     /**
      * subEvaluate()
@@ -246,8 +245,7 @@ public:
      * dropValue() will not be called for unbounded/current row type
      * frames, as those are already optimized.
      */
-    virtual ReturnCode dropValue(mcsv1Context* context,
-                                 std::vector<ColumnDatum>& valsDropped);
+    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
     /**
      * createUserData()

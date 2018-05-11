@@ -492,10 +492,10 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
     static uint64_t dateNull      = joblist::DATENULL;
     static uint64_t datetimeNull  = joblist::DATETIMENULL;
     static uint64_t timeNull      = joblist::TIMENULL;
-    static uint64_t char1Null     = joblist::CHAR1NULL;
-    static uint64_t char2Null     = joblist::CHAR2NULL;
-    static uint64_t char4Null     = joblist::CHAR4NULL;
-    static uint64_t char8Null     = joblist::CHAR8NULL;
+//    static uint64_t char1Null     = joblist::CHAR1NULL;
+//    static uint64_t char2Null     = joblist::CHAR2NULL;
+//    static uint64_t char4Null     = joblist::CHAR4NULL;
+//    static uint64_t char8Null     = joblist::CHAR8NULL;
     static string stringNull("");
 
     void* v = NULL;
