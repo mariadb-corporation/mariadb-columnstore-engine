@@ -4097,426 +4097,429 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     try
     {
 
-        // special parsing for group_concat
-        if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
-        {
-            Item_func_group_concat* gc = (Item_func_group_concat*)isp;
+    // special parsing for group_concat
+    if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+    {
+        Item_func_group_concat* gc = (Item_func_group_concat*)isp;
         vector<SRCP> orderCols;
-            RowColumn* rowCol = new RowColumn();
+        RowColumn* rowCol = new RowColumn();
         vector<SRCP> selCols;
 
-            uint32_t select_ctn = gc->count_field();
-            ReturnedColumn* rc = NULL;
+        uint32_t select_ctn = gc->count_field();
+        ReturnedColumn* rc = NULL;
 
-            for (uint32_t i = 0; i < select_ctn; i++)
+        for (uint32_t i = 0; i < select_ctn; i++)
+        {
+            rc = buildReturnedColumn(sfitempp[i], gwi, gwi.fatalParseError);
+
+            if (!rc || gwi.fatalParseError)
+                {
+                    if (ac)
+                        delete ac;
+                return NULL;
+                }
+
+            selCols.push_back(SRCP(rc));
+        }
+
+        ORDER** order_item, **end;
+
+        for (order_item = gc->get_order(),
+                end = order_item + gc->order_field(); order_item < end;
+                order_item++)
+        {
+            Item* ord_col = *(*order_item)->item;
+
+            if (ord_col->type() == Item::INT_ITEM)
             {
-                rc = buildReturnedColumn(sfitempp[i], gwi, gwi.fatalParseError);
+                Item_int* id = (Item_int*)ord_col;
+
+                if (id->val_int() > (int)selCols.size())
+                {
+                    gwi.fatalParseError = true;
+                        if (ac)
+                            delete ac;
+                    return NULL;
+                }
+
+                rc = selCols[id->val_int() - 1]->clone();
+                rc->orderPos(id->val_int() - 1);
+            }
+            else
+            {
+                rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
 
                 if (!rc || gwi.fatalParseError)
                 {
-                    if (ac)
-                        delete ac;
+                        if (ac)
+                            delete ac;
                     return NULL;
                 }
-
-                selCols.push_back(SRCP(rc));
             }
 
-            ORDER** order_item, **end;
+            // 10.2 TODO: direction is now a tri-state flag
+            rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);
+            orderCols.push_back(SRCP(rc));
+        }
 
-            for (order_item = gc->get_order(),
-                    end = order_item + gc->order_field(); order_item < end;
-                    order_item++)
-            {
-                Item* ord_col = *(*order_item)->item;
-
-                if (ord_col->type() == Item::INT_ITEM)
-                {
-                    Item_int* id = (Item_int*)ord_col;
-
-                    if (id->val_int() > (int)selCols.size())
-                    {
-                        gwi.fatalParseError = true;
-                        if (ac)
-                            delete ac;
-                        return NULL;
-                    }
-
-                    rc = selCols[id->val_int() - 1]->clone();
-                    rc->orderPos(id->val_int() - 1);
-                }
-                else
-                {
-                    rc = buildReturnedColumn(ord_col, gwi, gwi.fatalParseError);
-
-                    if (!rc || gwi.fatalParseError)
-                    {
-                        if (ac)
-                            delete ac;
-                        return NULL;
-                    }
-                }
-
-                // 10.2 TODO: direction is now a tri-state flag
-                rc->asc((*order_item)->direction == ORDER::ORDER_ASC ? true : false);
-                orderCols.push_back(SRCP(rc));
-            }
-
-            rowCol->columnVec(selCols);
-            (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
-            parm.reset(rowCol);
+        rowCol->columnVec(selCols);
+        (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
+        parm.reset(rowCol);
             ac->aggParms().push_back(parm);
 
-            if (gc->str_separator())
-            {
-                string separator;
-                separator.assign(gc->str_separator()->ptr(), gc->str_separator()->length());
-                (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
-            }
-        }
-        else
+        if (gc->str_separator())
         {
-            for (uint32_t i = 0; i < isp->argument_count(); i++)
+            string separator;
+            separator.assign(gc->str_separator()->ptr(), gc->str_separator()->length());
+            (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
+        }
+    }
+    else
+    {
+        for (uint32_t i = 0; i < isp->argument_count(); i++)
+        {
+            Item* sfitemp = sfitempp[i];
+            Item::Type sfitype = sfitemp->type();
+
+            switch (sfitype)
             {
-                Item* sfitemp = sfitempp[i];
-                Item::Type sfitype = sfitemp->type();
-
-                switch (sfitype)
+                case Item::FIELD_ITEM:
                 {
-                    case Item::FIELD_ITEM:
-                    {
-                        Item_field* ifp = reinterpret_cast<Item_field*>(sfitemp);
-                        SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
+                    Item_field* ifp = reinterpret_cast<Item_field*>(sfitemp);
+                    SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
 
-                        if (!sc)
-                        {
-                            gwi.fatalParseError = true;
-                            break;
-                        }
-
-                        parm.reset(sc);
-                        gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name), parm));
-                        TABLE_LIST* tmp = (ifp->cached_table ? ifp->cached_table : 0);
-                        gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] = make_pair(1, tmp);
-                        break;
-                    }
-
-                    case Item::INT_ITEM:
-                    case Item::STRING_ITEM:
-                    case Item::REAL_ITEM:
-                    case Item::DECIMAL_ITEM:
-                    {
-                        // treat as count(*)
-                        if (ac->aggOp() == AggregateColumn::COUNT)
-                            ac->aggOp(AggregateColumn::COUNT_ASTERISK);
-
-                        ac->constCol(SRCP(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError)));
-                        break;
-                    }
-
-                    case Item::NULL_ITEM:
-                    {
-                        parm.reset(new ConstantColumn("", ConstantColumn::NULLDATA));
-                        ac->constCol(SRCP(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError)));
-                        break;
-                    }
-
-                    case Item::FUNC_ITEM:
-                    {
-                        Item_func* ifp = (Item_func*)sfitemp;
-                        ReturnedColumn* rc = 0;
-
-                        // check count(1+1) case
-                        vector <Item_field*> tmpVec;
-                        uint16_t parseInfo = 0;
-                        parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo);
-
-                        if (parseInfo & SUB_BIT)
-                        {
-                            gwi.fatalParseError = true;
-                            break;
-                        }
-                        else if (!gwi.fatalParseError &&
-                                 !(parseInfo & AGG_BIT) &&
-                                 !(parseInfo & AF_BIT) &&
-                                 tmpVec.size() == 0)
-                        {
-                            rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
-                            FunctionColumn* fc = dynamic_cast<FunctionColumn*>(rc);
-
-                            if ((fc && fc->functionParms().empty()) || !fc)
-                            {
-                                //ac->aggOp(AggregateColumn::COUNT_ASTERISK);
-                                ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
-
-                                if (dynamic_cast<ConstantColumn*>(rc))
-                                {
-                                    //@bug5229. handle constant function on aggregate argument
-                                    ac->constCol(SRCP(rc));
-                                    break;
-                                }
-                            }
-                        }
-
-                        // MySQL carelessly allows correlated aggregate function on the WHERE clause.
-                        // Here is the work around to deal with that inconsistence.
-                        // e.g., SELECT (SELECT t.c FROM t1 AS t WHERE t.b=MAX(t1.b + 0)) FROM t1;
-                        ClauseType clauseType = gwi.clauseType;
-
-                        if (gwi.clauseType == WHERE)
-                            gwi.clauseType = HAVING;
-
-                        // @bug 3603. for cases like max(rand()). try to build function first.
-                        if (!rc)
-                            rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
-
-                        parm.reset(rc);
-                        gwi.clauseType = clauseType;
-
-                        if (gwi.fatalParseError)
-                            break;
-
-                        break;
-                    }
-
-                    case Item::REF_ITEM:
-                    {
-                        ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
-
-                        if (rc)
-                        {
-                            parm.reset(rc);
-                            break;
-                        }
-                    }
-
-                    default:
+                    if (!sc)
                     {
                         gwi.fatalParseError = true;
-                        //gwi.parseErrorText = "Non-supported Item in Aggregate function";
+                        break;
+                    }
+
+                    parm.reset(sc);
+                    gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name), parm));
+                    TABLE_LIST* tmp = (ifp->cached_table ? ifp->cached_table : 0);
+                    gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isInfiniDB())] = make_pair(1, tmp);
+                    break;
+                }
+
+                case Item::INT_ITEM:
+                case Item::STRING_ITEM:
+                case Item::REAL_ITEM:
+                case Item::DECIMAL_ITEM:
+                {
+                    // treat as count(*)
+                    if (ac->aggOp() == AggregateColumn::COUNT)
+                        ac->aggOp(AggregateColumn::COUNT_ASTERISK);
+                        parm.reset(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError));
+                        ac->constCol(parm);
+                    break;
+                }
+
+                case Item::NULL_ITEM:
+                {
+                    parm.reset(new ConstantColumn("", ConstantColumn::NULLDATA));
+                    ac->constCol(SRCP(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError)));
+                    break;
+                }
+
+                case Item::FUNC_ITEM:
+                {
+                    Item_func* ifp = (Item_func*)sfitemp;
+                    ReturnedColumn* rc = 0;
+
+                    // check count(1+1) case
+                    vector <Item_field*> tmpVec;
+                    uint16_t parseInfo = 0;
+                    parse_item(ifp, tmpVec, gwi.fatalParseError, parseInfo);
+
+                    if (parseInfo & SUB_BIT)
+                    {
+                        gwi.fatalParseError = true;
+                        break;
+                    }
+                    else if (!gwi.fatalParseError &&
+                             !(parseInfo & AGG_BIT) &&
+                             !(parseInfo & AF_BIT) &&
+                             tmpVec.size() == 0)
+                    {
+                        rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
+                        FunctionColumn* fc = dynamic_cast<FunctionColumn*>(rc);
+
+                        if ((fc && fc->functionParms().empty()) || !fc)
+                        {
+                            //ac->aggOp(AggregateColumn::COUNT_ASTERISK);
+                            ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
+
+                            if (dynamic_cast<ConstantColumn*>(rc))
+                            {
+                                //@bug5229. handle constant function on aggregate argument
+                                ac->constCol(SRCP(rc));
+                                break;
+                            }
+                        }
+                    }
+
+                    // MySQL carelessly allows correlated aggregate function on the WHERE clause.
+                    // Here is the work around to deal with that inconsistence.
+                    // e.g., SELECT (SELECT t.c FROM t1 AS t WHERE t.b=MAX(t1.b + 0)) FROM t1;
+                    ClauseType clauseType = gwi.clauseType;
+
+                    if (gwi.clauseType == WHERE)
+                        gwi.clauseType = HAVING;
+
+                    // @bug 3603. for cases like max(rand()). try to build function first.
+                    if (!rc)
+                        rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
+
+                    parm.reset(rc);
+                    gwi.clauseType = clauseType;
+
+                    if (gwi.fatalParseError)
+                        break;
+
+                    break;
+                }
+
+                case Item::REF_ITEM:
+                {
+                    ReturnedColumn* rc = buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError);
+
+                    if (rc)
+                    {
+                        parm.reset(rc);
+                        break;
                     }
                 }
 
-                if (gwi.fatalParseError)
+                default:
                 {
-                    if (gwi.parseErrorText.empty())
-                    {
-                        Message::Args args;
+                    gwi.fatalParseError = true;
+                    //gwi.parseErrorText = "Non-supported Item in Aggregate function";
+                }
+            }
 
-                        if (item->name)
-                            args.add(item->name);
-                        else
-                            args.add("");
+            if (gwi.fatalParseError)
+            {
+                if (gwi.parseErrorText.empty())
+                {
+                    Message::Args args;
 
-                        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_AGG_ARGS, args);
-                    }
+                    if (item->name)
+                        args.add(item->name);
+                    else
+                        args.add("");
+
+                    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_AGG_ARGS, args);
+                }
 
                     if (ac)
                         delete ac;
-                    return NULL;
-                }
+                return NULL;
+            }
                 if (parm)
                 {
                     // MCOL-1201 multi-argument aggregate
                     ac->aggParms().push_back(parm);
                 }
-            }
         }
+    }
 
         // Get result type
         // Modified for MCOL-1201 multi-argument aggregate
         if (ac->aggParms().size() > 0)
-        {
+    {
             // These are all one parm functions, so we can safely
             // use the first parm for result type.
             parm = ac->aggParms()[0];
-            if (isp->sum_func() == Item_sum::AVG_FUNC ||
-                    isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC)
+        if (isp->sum_func() == Item_sum::AVG_FUNC ||
+                isp->sum_func() == Item_sum::AVG_DISTINCT_FUNC)
+        {
+            CalpontSystemCatalog::ColType ct = parm->resultType();
+
+            switch (ct.colDataType)
             {
-                CalpontSystemCatalog::ColType ct = parm->resultType();
+                case CalpontSystemCatalog::TINYINT:
+                case CalpontSystemCatalog::SMALLINT:
+                case CalpontSystemCatalog::MEDINT:
+                case CalpontSystemCatalog::INT:
+                case CalpontSystemCatalog::BIGINT:
+                case CalpontSystemCatalog::DECIMAL:
+                case CalpontSystemCatalog::UDECIMAL:
+                case CalpontSystemCatalog::UTINYINT:
+                case CalpontSystemCatalog::USMALLINT:
+                case CalpontSystemCatalog::UMEDINT:
+                case CalpontSystemCatalog::UINT:
+                case CalpontSystemCatalog::UBIGINT:
+                    ct.colDataType = CalpontSystemCatalog::DECIMAL;
+                    ct.colWidth = 8;
+                    ct.scale += 4;
+                    break;
 
-                switch (ct.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::UDECIMAL:
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                        ct.colDataType = CalpontSystemCatalog::DECIMAL;
-                        ct.colWidth = 8;
-                        ct.scale += 4;
-                        break;
+#if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
 
-    #if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
+                case CalpontSystemCatalog::FLOAT:
+                case CalpontSystemCatalog::UFLOAT:
+                case CalpontSystemCatalog::DOUBLE:
+                case CalpontSystemCatalog::UDOUBLE:
+                    ct.colDataType = CalpontSystemCatalog::DOUBLE;
+                    ct.colWidth = 8;
+                    break;
+#endif
 
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UDOUBLE:
-                        ct.colDataType = CalpontSystemCatalog::DOUBLE;
-                        ct.colWidth = 8;
-                        break;
-    #endif
-
-                    default:
-                        break;
-                }
-
-                ac->resultType(ct);
+                default:
+                    break;
             }
-            else if (isp->sum_func() == Item_sum::COUNT_FUNC ||
-                     isp->sum_func() == Item_sum::COUNT_DISTINCT_FUNC)
+
+            ac->resultType(ct);
+        }
+        else if (isp->sum_func() == Item_sum::COUNT_FUNC ||
+                 isp->sum_func() == Item_sum::COUNT_DISTINCT_FUNC)
+        {
+            CalpontSystemCatalog::ColType ct;
+            ct.colDataType = CalpontSystemCatalog::BIGINT;
+            ct.colWidth = 8;
+            ct.scale = parm->resultType().scale;
+            ac->resultType(ct);
+        }
+        else if (isp->sum_func() == Item_sum::SUM_FUNC ||
+                 isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
+        {
+            CalpontSystemCatalog::ColType ct = parm->resultType();
+
+            switch (ct.colDataType)
             {
-                CalpontSystemCatalog::ColType ct;
-                ct.colDataType = CalpontSystemCatalog::BIGINT;
-                ct.colWidth = 8;
-                ct.scale = parm->resultType().scale;
-                ac->resultType(ct);
+                case CalpontSystemCatalog::TINYINT:
+                case CalpontSystemCatalog::SMALLINT:
+                case CalpontSystemCatalog::MEDINT:
+                case CalpontSystemCatalog::INT:
+                case CalpontSystemCatalog::BIGINT:
+                    ct.colDataType = CalpontSystemCatalog::BIGINT;
+
+                // no break, let fall through
+
+                case CalpontSystemCatalog::DECIMAL:
+                case CalpontSystemCatalog::UDECIMAL:
+                    ct.colWidth = 8;
+                    break;
+
+                case CalpontSystemCatalog::UTINYINT:
+                case CalpontSystemCatalog::USMALLINT:
+                case CalpontSystemCatalog::UMEDINT:
+                case CalpontSystemCatalog::UINT:
+                case CalpontSystemCatalog::UBIGINT:
+                    ct.colDataType = CalpontSystemCatalog::UBIGINT;
+                    ct.colWidth = 8;
+                    break;
+
+#if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
+
+                case CalpontSystemCatalog::FLOAT:
+                case CalpontSystemCatalog::UFLOAT:
+                case CalpontSystemCatalog::DOUBLE:
+                case CalpontSystemCatalog::UDOUBLE:
+                    ct.colDataType = CalpontSystemCatalog::DOUBLE;
+                    ct.colWidth = 8;
+                    break;
+#endif
+
+                default:
+                    break;
             }
-            else if (isp->sum_func() == Item_sum::SUM_FUNC ||
-                     isp->sum_func() == Item_sum::SUM_DISTINCT_FUNC)
-            {
-                CalpontSystemCatalog::ColType ct = parm->resultType();
 
-                switch (ct.colDataType)
-                {
-                    case CalpontSystemCatalog::TINYINT:
-                    case CalpontSystemCatalog::SMALLINT:
-                    case CalpontSystemCatalog::MEDINT:
-                    case CalpontSystemCatalog::INT:
-                    case CalpontSystemCatalog::BIGINT:
-                        ct.colDataType = CalpontSystemCatalog::BIGINT;
-
-                    // no break, let fall through
-
-                    case CalpontSystemCatalog::DECIMAL:
-                    case CalpontSystemCatalog::UDECIMAL:
-                        ct.colWidth = 8;
-                        break;
-
-                    case CalpontSystemCatalog::UTINYINT:
-                    case CalpontSystemCatalog::USMALLINT:
-                    case CalpontSystemCatalog::UMEDINT:
-                    case CalpontSystemCatalog::UINT:
-                    case CalpontSystemCatalog::UBIGINT:
-                        ct.colDataType = CalpontSystemCatalog::UBIGINT;
-                        ct.colWidth = 8;
-                        break;
-
-    #if PROMOTE_FLOAT_TO_DOUBLE_ON_SUM
-
-                    case CalpontSystemCatalog::FLOAT:
-                    case CalpontSystemCatalog::UFLOAT:
-                    case CalpontSystemCatalog::DOUBLE:
-                    case CalpontSystemCatalog::UDOUBLE:
-                        ct.colDataType = CalpontSystemCatalog::DOUBLE;
-                        ct.colWidth = 8;
-                        break;
-    #endif
-
-                    default:
-                        break;
-                }
-
-                ac->resultType(ct);
-            }
-            else if (isp->sum_func() == Item_sum::STD_FUNC ||
-                     isp->sum_func() == Item_sum::VARIANCE_FUNC)
-            {
-                CalpontSystemCatalog::ColType ct;
-                ct.colDataType = CalpontSystemCatalog::DOUBLE;
-                ct.colWidth = 8;
-                ct.scale = 0;
-                ac->resultType(ct);
-            }
-            else if (isp->sum_func() == Item_sum::SUM_BIT_FUNC)
-            {
-                CalpontSystemCatalog::ColType ct;
-                ct.colDataType = CalpontSystemCatalog::BIGINT;
-                ct.colWidth = 8;
-                ct.scale = 0;
-                ct.precision = -16; // borrowed to indicate skip null value check on connector
-                ac->resultType(ct);
-            }
-            else if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
-            {
-                //Item_func_group_concat* gc = (Item_func_group_concat*)isp;
-                CalpontSystemCatalog::ColType ct;
-                ct.colDataType = CalpontSystemCatalog::VARCHAR;
-                ct.colWidth = isp->max_length;
-                ct.precision = 0;
-                ac->resultType(ct);
-            }
-            else
-            {
-                // UDAF result type will be set below.
-                ac->resultType(parm->resultType());
-            }
+            ac->resultType(ct);
+        }
+        else if (isp->sum_func() == Item_sum::STD_FUNC ||
+                 isp->sum_func() == Item_sum::VARIANCE_FUNC)
+        {
+            CalpontSystemCatalog::ColType ct;
+            ct.colDataType = CalpontSystemCatalog::DOUBLE;
+            ct.colWidth = 8;
+            ct.scale = 0;
+            ac->resultType(ct);
+        }
+        else if (isp->sum_func() == Item_sum::SUM_BIT_FUNC)
+        {
+            CalpontSystemCatalog::ColType ct;
+            ct.colDataType = CalpontSystemCatalog::BIGINT;
+            ct.colWidth = 8;
+            ct.scale = 0;
+            ct.precision = -16; // borrowed to indicate skip null value check on connector
+            ac->resultType(ct);
+        }
+        else if (isp->sum_func() == Item_sum::GROUP_CONCAT_FUNC)
+        {
+            //Item_func_group_concat* gc = (Item_func_group_concat*)isp;
+            CalpontSystemCatalog::ColType ct;
+            ct.colDataType = CalpontSystemCatalog::VARCHAR;
+            ct.colWidth = isp->max_length;
+            ct.precision = 0;
+            ac->resultType(ct);
         }
         else
         {
-            ac->resultType(colType_MysqlToIDB(isp));
+                // UDAF result type will be set below.
+            ac->resultType(parm->resultType());
         }
+    }
+    else
+    {
+        ac->resultType(colType_MysqlToIDB(isp));
+    }
 
-        // adjust decimal result type according to internalDecimalScale
-        if (gwi.internalDecimalScale >= 0 && ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+    // adjust decimal result type according to internalDecimalScale
+    if (gwi.internalDecimalScale >= 0 && ac->resultType().colDataType == CalpontSystemCatalog::DECIMAL)
+    {
+        CalpontSystemCatalog::ColType ct = ac->resultType();
+        ct.scale = gwi.internalDecimalScale;
+        ac->resultType(ct);
+    }
+
+    // check for same aggregate on the select list
+    ac->expressionId(ci->expressionId++);
+
+    if (gwi.clauseType != SELECT)
+    {
+        for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
         {
-            CalpontSystemCatalog::ColType ct = ac->resultType();
-            ct.scale = gwi.internalDecimalScale;
-            ac->resultType(ct);
+            if (*ac == gwi.returnedCols[i].get())
+                ac->expressionId(gwi.returnedCols[i]->expressionId());
         }
+    }
 
-        // check for same aggregate on the select list
-        ac->expressionId(ci->expressionId++);
-
-        if (gwi.clauseType != SELECT)
+    // @bug5977 @note Temporary fix to avoid mysqld crash. The permanent fix will
+    // be applied in ExeMgr. When the ExeMgr fix is available, this checking
+    // will be taken out.
+        if (isp->sum_func() != Item_sum::UDF_SUM_FUNC)
         {
-            for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
-            {
-                if (*ac == gwi.returnedCols[i].get())
-                    ac->expressionId(gwi.returnedCols[i]->expressionId());
-            }
+    if (ac->constCol() && gwi.tbList.empty() && gwi.derivedTbList.empty())
+    {
+        gwi.fatalParseError = true;
+        gwi.parseErrorText = "No project column found for aggregate function";
+                if (ac)
+                    delete ac;
+        return NULL;
+    }
+    else if (ac->constCol())
+    {
+        gwi.count_asterisk_list.push_back(ac);
+    }
         }
 
-        // @bug5977 @note Temporary fix to avoid mysqld crash. The permanent fix will
-        // be applied in ExeMgr. When the ExeMgr fix is available, this checking
-        // will be taken out.
-        if (ac->constCol() && gwi.tbList.empty() && gwi.derivedTbList.empty())
-        {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = "No project column found for aggregate function";
-            if (ac)
-                delete ac;
-            return NULL;
-        }
-        else if (ac->constCol())
-        {
-            gwi.count_asterisk_list.push_back(ac);
-        }
-
-        // For UDAF, populate the context and call the UDAF init() function.
+    // For UDAF, populate the context and call the UDAF init() function.
         // The return type is (should be) set in context by init().
-        if (isp->sum_func() == Item_sum::UDF_SUM_FUNC)
+    if (isp->sum_func() == Item_sum::UDF_SUM_FUNC)
+    {
+        UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(ac);
+
+        if (udafc)
         {
-            UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(ac);
+            mcsv1Context& context = udafc->getContext();
+            context.setName(isp->func_name());
 
-            if (udafc)
-            {
-                mcsv1Context& context = udafc->getContext();
-                context.setName(isp->func_name());
-
-                // Set up the return type defaults for the call to init()
-                context.setResultType(udafc->resultType().colDataType);
-                context.setColWidth(udafc->resultType().colWidth);
-                context.setScale(udafc->resultType().scale);
-                context.setPrecision(udafc->resultType().precision);
+            // Set up the return type defaults for the call to init()
+            context.setResultType(udafc->resultType().colDataType);
+            context.setColWidth(udafc->resultType().colWidth);
+            context.setScale(udafc->resultType().scale);
+            context.setPrecision(udafc->resultType().precision);
 
                 context.setParamCount(udafc->aggParms().size());
                 ColumnDatum colType;
@@ -4533,7 +4536,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     colTypes[i] = colType;
                 }
 
-                // Call the user supplied init()
+            // Call the user supplied init()
                 mcsv1sdk::mcsv1_UDAF* udaf = context.getFunction();
                 if (!udaf)
                 {
@@ -4544,36 +4547,36 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     return NULL;
                 }
     			if (udaf->init(&context, colTypes) == mcsv1_UDAF::ERROR)
-                {
-                    gwi.fatalParseError = true;
-                    gwi.parseErrorText = udafc->getContext().getErrorMessage();
+            {
+                gwi.fatalParseError = true;
+                gwi.parseErrorText = udafc->getContext().getErrorMessage();
                     if (ac)
                         delete ac;
-                    return NULL;
-                }
+                return NULL;
+            }
 
                 // UDAF_OVER_REQUIRED means that this function is for Window
                 // Function only. Reject it here in aggregate land.
-                if (udafc->getContext().getRunFlag(UDAF_OVER_REQUIRED))
-                {
-                    gwi.fatalParseError = true;
-                    gwi.parseErrorText =
-                        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WINDOW_FUNC_ONLY,
-                                context.getName());
+            if (udafc->getContext().getRunFlag(UDAF_OVER_REQUIRED))
+            {
+                gwi.fatalParseError = true;
+                gwi.parseErrorText =
+                    logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_WINDOW_FUNC_ONLY,
+                            context.getName());
                     if (ac)
                         delete ac;
-                    return NULL;
-                }
-
-                // Set the return type as set in init()
-                CalpontSystemCatalog::ColType ct;
-                ct.colDataType = context.getResultType();
-                ct.colWidth = context.getColWidth();
-                ct.scale = context.getScale();
-                ct.precision = context.getPrecision();
-                udafc->resultType(ct);
+                return NULL;
             }
+
+            // Set the return type as set in init()
+            CalpontSystemCatalog::ColType ct;
+            ct.colDataType = context.getResultType();
+            ct.colWidth = context.getColWidth();
+            ct.scale = context.getScale();
+            ct.precision = context.getPrecision();
+            udafc->resultType(ct);
         }
+    }
     }
     catch (std::logic_error e)
     {
@@ -4744,6 +4747,7 @@ void gp_walk(const Item* item, void* arg)
 
             if (isp)
             {
+                // @bug 3669. trim trailing spaces for the compare value
                 if (isp->result_type() == STRING_RESULT)
                 {
                     String val, *str = isp->val_str(&val);
@@ -4754,7 +4758,10 @@ void gp_walk(const Item* item, void* arg)
                         cval.assign(str->ptr(), str->length());
                     }
 
+                    size_t spos = cval.find_last_not_of(" ");
 
+                    if (spos != string::npos)
+                        cval = cval.substr(0, spos + 1);
 
                     gwip->rcWorkStack.push(new ConstantColumn(cval));
                     break;
@@ -7908,8 +7915,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }
-
-        (*coliter)->aggParms().push_back(minSc);
+        // Replace the last (presumably constant) object with minSc
+        if ((*coliter)->aggParms().empty())
+        {
+            (*coliter)->aggParms().push_back(minSc);
+        }
+        else
+        {
+            (*coliter)->aggParms()[0] = minSc;
+        }
     }
 
     std::vector<FunctionColumn*>::iterator funciter;
@@ -8075,9 +8089,9 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     gwi.thd = thd;
     int status = getGroupPlan(gwi, select_lex, csep, gi);
 
-    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl ;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+//    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
+//    cerr << *csep << endl ;
+//    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 
     if (status > 0)
         return ER_INTERNAL_ERROR;
