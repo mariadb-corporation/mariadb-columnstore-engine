@@ -110,6 +110,9 @@ enum RowAggFunctionType
     // User Defined Aggregate Function
     ROWAGG_UDAF,
 
+    // If an Aggregate has more than one parameter, this will be used for parameters after the first
+    ROWAGG_MULTI_PARM,
+
     // internal function type to avoid duplicate the work
     // handling ROWAGG_COUNT_NO_OP, ROWAGG_DUP_FUNCT and ROWAGG_DUP_AVG is a little different
     // ROWAGG_COUNT_NO_OP  :  count done by AVG, no need to copy
@@ -583,7 +586,7 @@ protected:
     virtual void doAvg(const Row&, int64_t, int64_t, int64_t);
     virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
     virtual void doBitOp(const Row&, int64_t, int64_t, int);
-    virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF);
+    virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF, uint64_t& funcColsIdx);
     virtual bool countSpecial(const RowGroup* pRG)
     {
         fRow.setIntField<8>(fRow.getIntField<8>(0) + pRG->getRowCount(), 0);
@@ -660,6 +663,25 @@ protected:
     //need access to rowgroup storage holding the rows to hash & ==.
     friend class AggHasher;
     friend class AggComparator;
+
+    // We need a separate copy for each thread.
+    mcsv1sdk::mcsv1Context fRGContext;
+
+    // These are handy for testing the actual type of static_any for UDAF
+    static const static_any::any& charTypeId;
+    static const static_any::any& scharTypeId;
+    static const static_any::any& shortTypeId;
+    static const static_any::any& intTypeId;
+    static const static_any::any& longTypeId;
+    static const static_any::any& llTypeId;
+    static const static_any::any& ucharTypeId;
+    static const static_any::any& ushortTypeId;
+    static const static_any::any& uintTypeId;
+    static const static_any::any& ulongTypeId;
+    static const static_any::any& ullTypeId;
+    static const static_any::any& floatTypeId;
+    static const static_any::any& doubleTypeId;
+    static const static_any::any& strTypeId;
 };
 
 //------------------------------------------------------------------------------
@@ -783,6 +805,9 @@ protected:
     // Sets the value from valOut into column colOut, performing any conversions.
     void SetUDAFValue(static_any::any& valOut, int64_t colOut);
 
+    // If the datatype returned by evaluate isn't what we expect, convert.
+    void SetUDAFAnyValue(static_any::any& valOut, int64_t colOut);
+
     // calculate the UDAF function all rows received. UM only function.
     void calculateUDAFColumns();
 
@@ -877,7 +902,7 @@ protected:
     void doStatistics(const Row&, int64_t, int64_t, int64_t);
     void doGroupConcat(const Row&, int64_t, int64_t);
     void doBitOp(const Row&, int64_t, int64_t, int);
-    void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF);
+    void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF, uint64_t& funcColsIdx);
     bool countSpecial(const RowGroup* pRG)
     {
         return false;

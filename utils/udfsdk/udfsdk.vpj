@@ -204,8 +204,10 @@
             Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
             <F N="allnull.cpp"/>
             <F N="avg_mode.cpp"/>
+            <F N="avgx.cpp"/>
             <F N="mcsv1_udaf.cpp"/>
             <F N="median.cpp"/>
+            <F N="regr_avgx.cpp"/>
             <F N="ssq.cpp"/>
             <F N="udfmysql.cpp"/>
             <F N="udfsdk.cpp"/>
@@ -215,8 +217,10 @@
             Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
             <F N="allnull.h"/>
             <F N="avg_mode.h"/>
+            <F N="avgx.h"/>
             <F N="mcsv1_udaf.h"/>
             <F N="median.h"/>
+            <F N="regr_avgx.h"/>
             <F N="ssq.h"/>
             <F N="udfsdk.h"/>
         </Folder>
