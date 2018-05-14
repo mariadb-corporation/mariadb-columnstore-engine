@@ -2015,13 +2015,13 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
 void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
                             RowUDAFFunctionCol* rowUDAF, uint64_t& funcColsIdx)
 {
-    int32_t paramCount = fRGContext.getParameterCount();
+    uint32_t paramCount = fRGContext.getParameterCount();
     // The vector of parameters to be sent to the UDAF
     mcsv1sdk::ColumnDatum valsIn[paramCount];
     uint32_t dataFlags[paramCount];
 
     execplan::CalpontSystemCatalog::ColDataType colDataType;
-    for (uint32_t i = 0; i < fRGContext.getParameterCount(); ++i)
+    for (uint32_t i = 0; i < paramCount; ++i)
     {
         mcsv1sdk::ColumnDatum& datum = valsIn[i];
         // Turn on NULL flags
