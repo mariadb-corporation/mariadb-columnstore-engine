@@ -4573,7 +4573,6 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                 udafc->resultType(ct);
             }
         }
-
     }
     catch (std::logic_error e)
     {
