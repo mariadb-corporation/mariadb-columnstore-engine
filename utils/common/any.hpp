@@ -54,15 +54,25 @@ namespace anyimpl
 	template<typename T>
 	struct big_any_policy : typed_base_any_policy<T>
 	{
-		virtual void static_delete(void** x) { if (*x) 
-			delete(*reinterpret_cast<T**>(x)); *x = NULL; }
-		virtual void copy_from_value(void const* src, void** dest) { 
-		   *dest = new T(*reinterpret_cast<T const*>(src)); }
-		virtual void clone(void* const* src, void** dest) { 
-		   *dest = new T(**reinterpret_cast<T* const*>(src)); }
-		virtual void move(void* const* src, void** dest) { 
-		  (*reinterpret_cast<T**>(dest))->~T(); 
-		  **reinterpret_cast<T**>(dest) = **reinterpret_cast<T* const*>(src); }
+		virtual void static_delete(void** x)
+        {
+            if (*x)
+    			delete(*reinterpret_cast<T**>(x));
+            *x = NULL;
+        }
+		virtual void copy_from_value(void const* src, void** dest)
+        {
+		   *dest = new T(*reinterpret_cast<T const*>(src));
+        }
+		virtual void clone(void* const* src, void** dest)
+        {
+		   *dest = new T(**reinterpret_cast<T* const*>(src));
+        }
+		virtual void move(void* const* src, void** dest)
+        {
+		  (*reinterpret_cast<T**>(dest))->~T();
+		  **reinterpret_cast<T**>(dest) = **reinterpret_cast<T* const*>(src);
+        }
 		virtual void* get_value(void** src) { return *src; }
 	};
 
