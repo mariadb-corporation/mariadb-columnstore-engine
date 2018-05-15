@@ -50,6 +50,7 @@ static char* scanner_copy(char *str, yyscan_t yyscanner, copy_action_t action = 
 %x check2
 %x inquote
 %x endquote
+%x c_comment
 
 space [ \t\n\r\f]
 horiz_space [ \t\f]
@@ -82,6 +83,7 @@ decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
 real			({integer}|{decimal})[Ee][-+]?{digit}+
 realfail1		({integer}|{decimal})[Ee]
 realfail2		({integer}|{decimal})[Ee][-+]
+
 
 
 %%
@@ -201,6 +203,10 @@ LONGTEXT {return LONGTEXT;}
     /* ignore */
 }
 
+"/*"            { BEGIN(c_comment); }
+<c_comment>"*/" { BEGIN(0); }
+<c_comment>\n   { }
+<c_comment>.    { }
 %%
 
 void ddlerror(struct pass_to_bison* x, char const *s)
