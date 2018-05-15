@@ -251,13 +251,13 @@ public:
 /*@brief  group_by_handler class*/
 /***********************************************************
  * DESCRIPTION:
- * Provides server with group_by_handler API methods. 
+ * Provides server with group_by_handler API methods.
  * One should read comments in server/sql/group_by_handler.h
  * Attributes:
- * select - attribute contains all GROUP BY, HAVING, ORDER items and calls it 
- * an extended SELECT list accordin to comments in 
- * server/sql/group_handler.cc. 
- * So the temporary table for 
+ * select - attribute contains all GROUP BY, HAVING, ORDER items and calls it
+ * an extended SELECT list accordin to comments in
+ * server/sql/group_handler.cc.
+ * So the temporary table for
  * select count(*) from b group by a having a > 3 order by a
  * will have 4 columns not 1.
  * However server ignores all NULLs used in GROUP BY, HAVING, ORDER.
@@ -274,29 +274,29 @@ public:
  ***********************************************************/
 class ha_calpont_group_by_handler: public group_by_handler
 {
-    public:
-        ha_calpont_group_by_handler(THD *thd_arg, Query *query)
-            : group_by_handler(thd_arg, calpont_hton), 
-            select(query->select),
-            table_list(query->from),
-            distinct(query->distinct), 
-            where(query->where),
-            group_by(query->group_by),
-            order_by(query->order_by),
-            having(query->having)
-            { }
-        ~ha_calpont_group_by_handler() { }
-        int init_scan();
-        int next_row();
-        int end_scan();
+public:
+    ha_calpont_group_by_handler(THD* thd_arg, Query* query)
+        : group_by_handler(thd_arg, calpont_hton),
+          select(query->select),
+          table_list(query->from),
+          distinct(query->distinct),
+          where(query->where),
+          group_by(query->group_by),
+          order_by(query->order_by),
+          having(query->having)
+    { }
+    ~ha_calpont_group_by_handler() { }
+    int init_scan();
+    int next_row();
+    int end_scan();
 
-        List<Item> *select;
-        TABLE_LIST *table_list;
-        bool        distinct;
-        Item       *where;
-        ORDER      *group_by;
-        ORDER      *order_by;
-        Item       *having;
+    List<Item>* select;
+    TABLE_LIST* table_list;
+    bool        distinct;
+    Item*       where;
+    ORDER*      group_by;
+    ORDER*      order_by;
+    Item*       having;
 };
 #endif //HA_CALPONT_H__
 

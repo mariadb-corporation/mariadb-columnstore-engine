@@ -1872,20 +1872,16 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
         if (ddlStatement.find("AUTO_INCREMENT") != string::npos)
         {
             thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "Use of the MySQL auto_increment syntax is not supported in Columnstore. If you wish to create an auto increment column in Columnstore, please consult the Columnstore SQL Syntax Guide for the correct usage.");
-        }
-        // MCOL-867. MariaDB RENAME TABLE statement supports WAIT|NOWAIT options since 10.3.0 but Columnstore isn't yet.
-        else if (ddlStatement.find("WAIT") != string::npos || ddlStatement.find("NOWAIT") != string::npos)
-        {
-            thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "WAIT and NOWAIT options are not supported in Columnstore. Please consult the Columnstore SQL Syntax Guide for the correct usage.");
+            ci->alterTableState = cal_connection_info::NOT_ALTER;
+            ci->isAlter = false;
         }
         else
         {
             //@Bug 1888,1885. update error message
             thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
+            ci->alterTableState = cal_connection_info::NOT_ALTER;
+            ci->isAlter = false;
         }
-
-        ci->alterTableState = cal_connection_info::NOT_ALTER;
-        ci->isAlter = false;
     }
 
     return rc;
@@ -2187,7 +2183,6 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     THD* thd = current_thd;
     string emsg;
 
-    ostringstream stmt1;
     pair<string, string> fromPair;
     pair<string, string> toPair;
     string stmt;
@@ -2215,20 +2210,21 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
         return -1;
     }
 
-    stmt1 << "alter table " << fromPair.second << " rename to " << toPair.second << ";";
-
-    stmt = stmt1.str();
+    // This explicitely shields both db objects with quotes that the lexer strips down later.
+    stmt = "alter table `" + fromPair.second + "` rename to `" + toPair.second + "`;";
     string db;
 
-    if ( fromPair.first.length() != 0 )
-        db = fromPair.first;
-    else if ( thd->db )
+    if ( thd->db )
         db = thd->db;
+    else if ( fromPair.first.length() != 0 )
+        db = fromPair.first;
+    else
+        db = toPair.first;
 
     int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
 
     if (rc != 0)
-        push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+        push_warning(thd, Sql_condition::WARN_LEVEL_ERROR, 9999, emsg.c_str());
 
     return rc;
 }
