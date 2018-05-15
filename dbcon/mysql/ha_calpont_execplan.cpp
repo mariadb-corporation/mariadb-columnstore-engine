@@ -4165,6 +4165,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             rowCol->columnVec(selCols);
             (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
             parm.reset(rowCol);
+            ac->aggParms().push_back(parm);
 
             if (gc->str_separator())
             {

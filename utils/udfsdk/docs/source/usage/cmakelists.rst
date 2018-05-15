@@ -3,7 +3,7 @@
 CMakeLists.txt
 ==============
 
-For Columnstore 1.1, you compile your function by including it in the CMakeLists.txt file for the udfsdk.
+For Columnstore 1.2, you compile your function by including it in the CMakeLists.txt file for the udfsdk.
 
 You need only add the new .cpp files to the udfsdk_LIB_SRCS target list::
 
