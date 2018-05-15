@@ -13,7 +13,7 @@ The library placed in mysql/lib is the name you use in the SQL CREATE AGGREGATE 
 
     CREATE AGGREGATE FUNCTION ssq returns REAL soname 'libudf_mysql.so';
 
-Unlike the code you write for the Columnstore UDAF, MariaDB does not handle allocation and de-allocation of your memory structures. If writing your function for other engines, you must handle allocation and de-alloaction in :ref:`function_init <func_init>` and :ref:`function_deinit <func_deinit>`
+Unlike the code you write for the Columnstore UDAF, MariaDB does not handle allocation and de-allocation of your memory structures in other engines. If writing your function for other engines, you must handle allocation and de-alloaction in :ref:`function_init <func_init>` and :ref:`function_deinit <func_deinit>`
 
 All of the MariaDB UDF and UDAF example functions are in a single source file named udfmysql.cpp and linked into libudf_mysql.so.
 
