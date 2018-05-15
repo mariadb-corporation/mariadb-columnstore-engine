@@ -39,7 +39,6 @@ dbcon/ddlpackage/ddl-scan.h
 dbcon/dmlpackage/dml-scan.cpp
 dbcon/dmlpackage/dml-scan.h
 ddlproc/DDLProc
-decomsvr/DecomSvr
 dmlproc/DMLProc
 exemgr/ExeMgr
 oamapps/calpontDB/calpontDBWrite

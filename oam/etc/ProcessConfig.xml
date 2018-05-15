@@ -58,16 +58,6 @@
 		<RunType>LOADSHARE</RunType>
 		<LogFile>off</LogFile>
 	</PROCESSCONFIG5>
-	<PROCESSCONFIG6>
-		<ProcessName>DecomSvr</ProcessName>
-		<ModuleType>pm</ModuleType>
-		<ProcessLocation>/$INSTALLDIR/bin/DecomSvr</ProcessLocation>
-		<BootLaunch>2</BootLaunch>
-		<LaunchID>15</LaunchID>
-		<DepProcessName/>
-		<RunType>LOADSHARE</RunType>
-		<LogFile>off</LogFile>
-	</PROCESSCONFIG6>
 	<PROCESSCONFIG7>
 		<ProcessName>PrimProc</ProcessName>
 		<ModuleType>pm</ModuleType>

@@ -2730,20 +2730,6 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             return oam::API_MINOR_FAILURE;
         }
 
-        if (processLocation.find("DecomSvr") != string::npos)
-        {
-            // DecomSvr app is special
-
-            sleep(1);
-            //record the process information into processList
-            config.buildList(processModuleType, processName, processLocation, arg_list,
-                             launchID, newProcessID, oam::ACTIVE, BootLaunch, RunType,
-                             DepProcessName, DepModuleName, LogFile);
-
-            //Update Process Status: Mark Process oam::ACTIVE state
-            updateProcessInfo(processName, oam::ACTIVE, newProcessID);
-        }
-
         //FYI - NEEDS TO STAY HERE TO HAVE newProcessID
 
         //record the process information into processList
@@ -2797,14 +2783,6 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             close(i);
         }
 
-        // open STDIN, STDOUT & STDERR for trapDaemon and DecomSvr
-        if (processName == "DecomSvr" )
-        {
-            open("/dev/null", O_RDONLY); //Should be fd 0
-            open("/dev/null", O_WRONLY); //Should be fd 1
-            open("/dev/null", O_WRONLY); //Should be fd 2
-        }
-        else
         {
             int fd;
             fd = open("/dev/null", O_RDONLY);

@@ -132,7 +132,6 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/post-mysqld-install"
 "/usr/local/mariadb/columnstore/bin/pre-uninstall"
 "/usr/local/mariadb/columnstore/bin/PrimProc"
-"/usr/local/mariadb/columnstore/bin/DecomSvr"
 "/usr/local/mariadb/columnstore/bin/upgrade-columnstore.sh"
 "/usr/local/mariadb/columnstore/bin/run.sh"
 "/usr/local/mariadb/columnstore/bin/columnstore"
