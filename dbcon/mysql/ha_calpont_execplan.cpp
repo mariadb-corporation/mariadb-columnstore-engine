@@ -508,8 +508,8 @@ void debug_walk(const Item* item, void* arg)
             {
                 item_name = isp->get_arg(0)->name;
             }
-            else if (!item_name && isp->get_arg_count()
-                     && isp->get_arg(0)->type() == Item::INT_ITEM)
+            else if (!item_name && isp->get_arg_count() 
+                && isp->get_arg(0)->type() == Item::INT_ITEM)
             {
                 item_name = (char*)"INT||*";
             }
@@ -707,19 +707,17 @@ void debug_walk(const Item* item, void* arg)
             else if (ref->real_item()->type() == Item::FIELD_ITEM)
             {
                 Item_field* ifp = (Item_field*)ref->real_item();
-
                 // MCOL-1052 The field referenced presumable came from
-                // extended SELECT list.
+                // extended SELECT list. 
                 if ( !ifp->field_name )
                 {
                     cerr << "REF extra FIELD_ITEM: " << ifp->name << endl;
                 }
                 else
-                {
+                { 
                     cerr << "REF FIELD_ITEM: " << ifp->db_name << '.' << bestTableName(ifp) << '.' <<
-                         ifp->field_name << endl;
+                        ifp->field_name << endl;
                 }
-
                 break;
             }
             else if (ref->real_item()->type() == Item::FUNC_ITEM)
@@ -921,13 +919,12 @@ void debug_walk(const Item* item, void* arg)
             cerr << "Window Function Item " << ifp->window_func()->func_name() << endl;
             break;
         }
-
+        
         case Item::NULL_ITEM:
         {
             cerr << "NULL item" << endl;
             break;
         }
-
         default:
         {
             cerr << "UNKNOWN_ITEM type " << item->type() << endl;
@@ -1009,8 +1006,8 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
         // View is already processed in view::transform
         // @bug5319. view is sometimes treated as derived table and
         // fromSub::transform does not build outer join filters.
-        if (!table_ptr->derived && table_ptr->view)
-            continue;
+        //if (!table_ptr->derived && table_ptr->view)
+        //	continue;
 
         CalpontSystemCatalog:: TableAliasName tan = make_aliasview(
                     (table_ptr->db ? table_ptr->db : ""),
@@ -5129,9 +5126,8 @@ void gp_walk(const Item* item, void* arg)
             gwip->clauseType = SELECT;
 
             if (col->type() != Item::COND_ITEM)
-            {
+            {                
                 rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError);
-
                 if ( col->type() == Item::FIELD_ITEM )
                     gwip->fatalParseError = false;
             }
@@ -5210,25 +5206,20 @@ void gp_walk(const Item* item, void* arg)
             {
                 Item_field* ifip = static_cast<Item_field*>(col);
                 std::vector<Item*>::iterator iter = gwip->havingAggColsItems.begin();
-                Item_func_or_sum* isfp = NULL;
-
-                for ( ; iter != gwip->havingAggColsItems.end(); iter++ )
+                Item_func_or_sum *isfp = NULL;
+                for( ;iter != gwip->havingAggColsItems.end(); iter++ )
                 {
-                    Item* temp_isfp = *iter;
+                    Item *temp_isfp = *iter;
                     isfp = reinterpret_cast<Item_func_or_sum*>(temp_isfp);
-
                     if ( isfp->type() == Item::SUM_FUNC_ITEM &&
-                            isfp->result_field == ifip->field )
+                        isfp->result_field == ifip->field )
                     {
                         ReturnedColumn* rc = buildAggregateColumn(isfp, *gwip);
-
                         if (rc)
                             gwip->rcWorkStack.push(rc);
-
                         break;
                     }
                 }
-
                 break;
             }
             else
@@ -8090,9 +8081,9 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
 /*@brief  buildConstColFromFilter- change SimpleColumn into ConstColumn*/
 /***********************************************************
  * DESCRIPTION:
- * Server could optimize out fields from GROUP BY list, when certain
- * filter predicate is used, e.g.
- * field = 'AIR', field IN ('AIR'). This utility function tries to
+ * Server could optimize out fields from GROUP BY list, when certain 
+ * filter predicate is used, e.g. 
+ * field = 'AIR', field IN ('AIR'). This utility function tries to 
  * replace such fields with ConstantColumns using cond_pushed filters.
  * PARAMETERS:
  *    originalSC    SimpleColumn* removed field
@@ -8102,8 +8093,8 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
  *  ConstantColumn* if originalSC equals with cond_pushed columns.
  *  NULL otherwise
  ***********************************************************/
-ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC,
-                                        gp_walk_info& gwi, cal_group_info& gi)
+ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC, 
+gp_walk_info& gwi, cal_group_info& gi)
 {
     execplan::SimpleColumn* simpleCol;
     execplan::ConstantColumn* constCol;
@@ -8111,24 +8102,18 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC,
     execplan::SimpleFilter* simpFilter;
     execplan::ConstantColumn* result = NULL;
     std::vector<ParseTree*>::iterator ptIt = gi.pushedPts.begin();
-
-    for (; ptIt != gi.pushedPts.end(); ptIt++)
+    for(; ptIt != gi.pushedPts.end(); ptIt++)
     {
         simpFilter = dynamic_cast<execplan::SimpleFilter*>((*ptIt)->data());
-
         if (simpFilter == NULL)
             continue;
-
         simpleCol = dynamic_cast<execplan::SimpleColumn*>(simpFilter->lhs());
         constCol = dynamic_cast<execplan::ConstantColumn*>(simpFilter->rhs());
-
-        if (simpleCol == NULL || constCol == NULL)
+        if(simpleCol == NULL || constCol == NULL)
             continue;
-
         op = simpFilter->op();
-
-        if ( originalSC->sameColumn(dynamic_cast<execplan::ReturnedColumn*>(simpleCol))
-                && op.get()->op() == OP_EQ && constCol)
+        if ( originalSC->sameColumn(dynamic_cast<execplan::ReturnedColumn*>(simpleCol)) 
+            && op.get()->op() == OP_EQ && constCol)
         {
 #ifdef DEBUG_WALK_COND
             cerr << "buildConstColFromFilter() replaced " << endl;
@@ -8139,7 +8124,6 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC,
             result = constCol;
         }
     }
-
     return result;
 }
 
@@ -8160,10 +8144,10 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     gwi.internalDecimalScale = (gwi.thd->variables.infinidb_use_decimal_scale ? gwi.thd->variables.infinidb_decimal_scale : -1);
     gwi.subSelectType = csep->subType();
-
+    
     JOIN* join = select_lex.join;
     Item_cond* icp = 0;
-
+    
     if ( gi.groupByWhere )
         icp = reinterpret_cast<Item_cond*>(gi.groupByWhere);
 
@@ -8328,12 +8312,12 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     gwi.clauseType = WHERE;
 
-
+    
     if (icp)
     {
-        // MCOL-1052 The condition could be useless.
-        // MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
-        //#if MYSQL_VERSION_ID < 50172
+    // MCOL-1052 The condition could be useless.
+    // MariaDB bug 624 - without the fix_fields call, delete with join may error with "No query step".
+    //#if MYSQL_VERSION_ID < 50172
         //@bug 3039. fix fields for constants
         if (!icp->fixed)
         {
@@ -8371,7 +8355,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     {
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
     }
-
+    
     uint32_t failed = buildOuterJoin(gwi, select_lex);
 
     if (failed) return failed;
@@ -8433,7 +8417,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 #ifdef DEBUG_WALK_COND
     {
         cerr << "------------------- SELECT --------------------" << endl;
-        List_iterator_fast<Item> it(*gi.groupByFields);
+            List_iterator_fast<Item> it(*gi.groupByFields);
         Item* item;
 
         while ((item = it++))
@@ -8531,10 +8515,10 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                                                  escapeBackTick(itemAlias.empty() ? ifp->name : itemAlias.c_str()) + "`");
                     else
                         gwi.selectCols.push_back("`" + escapeBackTick((itemAlias.empty() ? ifp->name : itemAlias.c_str())) + "`");
-
+                    
                     // MCOL-1052 Replace SimpleColumn with ConstantColumn,
                     // since it must have a single value only.
-                    if (constCol)
+                    if(constCol)
                     {
                         gwi.returnedCols.push_back(spcc);
                         gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name), spcc));
@@ -8544,7 +8528,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         gwi.returnedCols.push_back(spsc);
                         gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name), spsc));
                     }
-
                     TABLE_LIST* tmp = 0;
 
                     if (ifp->cached_table)
@@ -8581,12 +8564,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 gwi.returnedCols.push_back(spac);
                 // This item will be used in HAVING later.
                 Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(item);
-
                 if ( ! isfp->name_length )
                 {
                     gwi.havingAggColsItems.push_back(item);
                 }
-
+                
                 gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
                 String str(256);
                 item->print(&str, QT_INFINIDB_NO_QUOTE);
@@ -8653,7 +8635,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
                             continue;
                         }
-
+                        
                         if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
                                 ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
                                 ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
@@ -8771,7 +8753,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                             return -1;
                         }
                     }
-
+                    
                     //@Bug 3021. Bypass postprocess for update and delete.
                     //if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) || ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) || ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ))
                     //{}
@@ -9044,7 +9026,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     gwi.fatalParseError = false;
     gwi.parseErrorText = "";
 
-    if (gi.groupByHaving != 0)
+    if (gi.groupByHaving != 0)    
     {
         Item_cond* having = reinterpret_cast<Item_cond*>(gi.groupByHaving);
 #ifdef DEBUG_WALK_COND
@@ -9468,7 +9450,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         // for subquery, order+limit by will be supported in infinidb. build order by columns
         // @todo union order by and limit support
         //if (gwi.hasWindowFunc || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
-
+    
         for (; ordercol; ordercol = ordercol->next)
         {
             ReturnedColumn* rc = NULL;
@@ -9499,44 +9481,38 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 if ( rc && ord_item->type() == Item::FIELD_ITEM )
                 {
                     execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.groupByCols.begin();
-
-                    for ( ; iter != gwi.groupByCols.end(); iter++ )
+                    for( ; iter != gwi.groupByCols.end(); iter++ )
                     {
-                        if ( rc->sameColumn((*iter).get()) )
+                        if( rc->sameColumn((*iter).get()) )
                             break;
                     }
-
+                    
                     // MCOL-1052 Find and remove the optimized field
                     // from ORDER using cond_pushed filters.
-                    if (buildConstColFromFilter(
-                                dynamic_cast<SimpleColumn*>(rc), gwi, gi))
+                    if(buildConstColFromFilter(
+                        dynamic_cast<SimpleColumn*>(rc),gwi, gi))
                     {
                         break;
                     }
-
                     // MCOL-1052 GROUP BY items list doesn't contain
                     // this ORDER BY item.
                     if ( iter == gwi.groupByCols.end() )
                     {
-                        Item_ident* iip = reinterpret_cast<Item_ident*>(ord_item);
+                        Item_ident *iip = reinterpret_cast<Item_ident*>(ord_item);
                         std::ostringstream ostream;
                         ostream << "'";
-
                         if (iip->db_name)
                             ostream << iip->db_name << '.';
                         else
                             ostream << "unknown db" << '.';
-
                         if (iip->table_name)
                             ostream << iip->table_name << '.';
                         else
                             ostream << "unknown table" << '.';
-
                         if (iip->field_name)
                             ostream << iip->field_name;
                         else
                             ostream << "unknown field";
-
                         ostream << "'";
                         Message::Args args;
                         args.add(ostream.str());
@@ -9559,15 +9535,14 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         item_ptr = *(((Item_ref*)item_ptr)->ref);
 
                     rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
-                }
-
-                // This ORDER BY item must be an agg function -
+                }                    
+                
+                // This ORDER BY item must be an agg function - 
                 // the ordercol->item_ptr and exteded SELECT list
                 // must contain the corresponding item.
                 if (!rc)
                 {
                     Item* item_ptr = ordercol->item_ptr;
-
                     if (item_ptr)
                         rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
                 }
@@ -9588,8 +9563,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
             gwi.orderByCols.push_back(SRCP(rc));
         }
-
-
+    
+        
         // make sure columnmap, returnedcols and count(*) arg_list are not empty
         TableMap::iterator tb_iter = gwi.tableMap.begin();
 
@@ -9814,7 +9789,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 }
                 else
                     ordercol = 0;
-
+                
                 ord_cols = "";
 
                 for (; ordercol; ordercol = ordercol->next)

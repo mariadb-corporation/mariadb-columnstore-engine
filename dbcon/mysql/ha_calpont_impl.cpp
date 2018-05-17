@@ -427,7 +427,7 @@ int vbin2hex(const uint8_t* p, const unsigned l, char* o)
     return 0;
 }
 
-int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool handler_flag = false)
+int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool handler_flag=false)
 {
     int rc = HA_ERR_END_OF_FILE;
     int num_attr = ti.msTablePtr->s->fields;
@@ -469,7 +469,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
     {
         Field** f;
         f = ti.msTablePtr->field;
-
         //set all fields to null in null col bitmap
         if (!handler_flag)
             memset(buf, -1, ti.msTablePtr->s->null_bytes);
@@ -477,7 +476,6 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
         {
             memset(ti.msTablePtr->null_flags, -1, ti.msTablePtr->s->null_bytes);
         }
-
         std::vector<CalpontSystemCatalog::ColType>& colTypes = ti.tpl_scan_ctx->ctp;
         int64_t intColVal = 0;
         uint64_t uintColVal = 0;
@@ -5079,7 +5077,7 @@ int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos)
     return ER_INTERNAL_ERROR;
 }
 
-/*@brief ha_calpont_impl_group_by_init - Get data for MariaDB group_by
+/*@brief ha_calpont_impl_group_by_init - Get data for MariaDB group_by 
     pushdown handler */
 /***********************************************************
  * DESCRIPTION:
@@ -5137,8 +5135,8 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
         thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
         return ER_INTERNAL_ERROR;
-    }
-
+    } 
+    
     uint32_t sessionID = tid2sid(thd->thread_id);
     boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(CalpontSystemCatalog::FE);
@@ -5150,9 +5148,9 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
     idbassert(ci != 0);
 
-
+    
     // MySQL sometimes calls rnd_init multiple times, plan should only be
-    // generated and sent once.
+    // generated and sent once.        
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE &&
             !thd->infinidb_vtable.isNewQuery)
         return 0;
@@ -5188,7 +5186,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     sm::cpsm_conhdl_t* hndl;
     SCSEP csep;
 
-    bool localQuery = (thd->variables.infinidb_local_query > 0 ? true : false);
+    bool localQuery = (thd->variables.infinidb_local_query > 0 ? true : false);   
 
     {
         ci->stats.reset(); // reset query stats
@@ -5218,7 +5216,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             sm::sm_cleanup(ci->cal_conn_hndl);
             ci->cal_conn_hndl = 0;
         }
-
+            
         sm::sm_init(sessionID, &ci->cal_conn_hndl, localQuery);
         idbassert(ci->cal_conn_hndl != 0);
         ci->cal_conn_hndl->csc = csc;
@@ -5261,7 +5259,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             csep->schemaName(group_hand->table_list->db);
 
         csep->traceFlags(ci->traceFlags);
-
+        
         // MCOL-1052 Send Items lists down to the optimizer.
         gi.groupByTables = group_hand->table_list;
         gi.groupByFields = group_hand->select;
@@ -5270,7 +5268,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         gi.groupByOrder = group_hand->order_by;
         gi.groupByHaving = group_hand->having;
         gi.groupByDistinct = group_hand->distinct;
-
+        
         // MCOL-1052 Send pushed conditions here, since server could omit GROUP BY
         // items in case of = or IN functions used on GROUP BY columns.
         {
@@ -5278,16 +5276,15 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator colMapIter;
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator condColMapIter;
             execplan::ParseTree* ptIt;
-            for (TABLE_LIST* tl = gi.groupByTables; tl; tl = tl->next_local)
+            for(TABLE_LIST* tl = gi.groupByTables; tl; tl=tl->next_local)
             {
                 mapiter = ci->tableMap.find(tl->table);
-
-                if (mapiter != ci->tableMap.end() && mapiter->second.condInfo != NULL
-                        && mapiter->second.condInfo->condPush)
+                if(mapiter != ci->tableMap.end() && mapiter->second.condInfo != NULL 
+                    && mapiter->second.condInfo->condPush)
                 {
-                    while (!mapiter->second.condInfo->ptWorkStack.empty())
+                    while(!mapiter->second.condInfo->ptWorkStack.empty())
                     {
-                        ptIt = mapiter->second.condInfo->ptWorkStack.top();
+                        ptIt=mapiter->second.condInfo->ptWorkStack.top();
                         mapiter->second.condInfo->ptWorkStack.pop();
                         gi.pushedPts.push_back(ptIt);
                     }
@@ -5321,14 +5318,14 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, msg.c_str());
         }
 
-#ifdef PLAN_HEX_FILE
+    #ifdef PLAN_HEX_FILE
         // plan serialization
         ifstream ifs("/tmp/li1-plan.hex");
         ByteStream bs1;
         ifs >> bs1;
         ifs.close();
         csep->unserialize(bs1);
-#endif
+    #endif
 
         if (ci->traceFlags & 1)
         {
@@ -5343,7 +5340,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             IDEBUG( cout << "-------------- EXECUTION PLAN END --------------\n" << endl );
         }
     }// end of execution plan generation
-
+        
     {
         ByteStream msg;
         ByteStream emsgBs;
@@ -5574,10 +5571,10 @@ internal_error:
         ci->cal_conn_hndl = 0;
     }
 
-    return ER_INTERNAL_ERROR;
+    return ER_INTERNAL_ERROR;    
 }
 
-/*@brief ha_calpont_impl_group_by_next - Return result set for MariaDB group_by
+/*@brief ha_calpont_impl_group_by_next - Return result set for MariaDB group_by 
     pushdown handler
 */
 /***********************************************************
@@ -5593,7 +5590,7 @@ internal_error:
  ***********************************************************/
 int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table)
 {
-    THD* thd = current_thd;
+   THD* thd = current_thd;
 
     /* If this node is the slave, ignore DML to IDB tables */
     if (thd->slave_thread && (
@@ -5702,7 +5699,7 @@ int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE
             emsg = errorcodes.errorString(rc);
         }
 
-        setError(thd, ER_INTERNAL_ERROR, emsg);
+        setError(thd, ER_INTERNAL_ERROR, emsg);        
         ci->stats.fErrorNo = rc;
         CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
         rc = ER_INTERNAL_ERROR;
@@ -5811,7 +5808,7 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     cal_table_info ti = ci->tableMap[table];
     sm::cpsm_conhdl_t* hndl;
 
-    hndl = ci->cal_conn_hndl;
+	hndl = ci->cal_conn_hndl;
 
     if (ti.tpl_ctx)
     {
