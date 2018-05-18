@@ -631,6 +631,10 @@ qualified_name:
 				else
 				    $$ = new QualifiedName($1);   
 			}
+    | IDENT '.' IDENT
+        {
+            $$ = new QualifiedName($1, $3);
+        }
 	;
 
 ata_add_column:
