@@ -58,12 +58,22 @@ fi
 
 user=`whoami 2>/dev/null`
 
+# Lock directory for root user
+lockdir='/var/lock/subsys'
+# Lock directory for non-root user
+if $user != "root"
+then
+  lockdir='$HOME/.lock'
+fi
+
+mkdir $lockdir
+
 checkInstallSetup() {
 	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
-		rm -f /var/lock/subsys/columnstore
+		rm -f $lockdir/columnstore
 		exit 1
 	fi
 }
@@ -71,18 +81,18 @@ checkInstallSetup() {
 [ -f $InstallDir/bin/ProcMon ] || exit 0
 
 start() {
-	if [ -f /var/lock/subsys/columnstore ]; then
+	if [ -f $lockdir/columnstore ]; then
 		echo "MariaDB Columnstore Database Platform already running"
 		exit 0
 	fi
 
-	(mkdir -p /var/lock/subsys && touch /var/lock/subsys/columnstore) >/dev/null 2>&1
+	(mkdir -p $lockdir//subsys && touch $lockdir/columnstore) >/dev/null 2>&1
 
 	if [ -x $InstallDir/bin/columnstore.pre-start ]; then
 		$InstallDir/bin/columnstore.pre-start
 		if [ $? -ne 0 ]; then
 			echo "Error running MariaDB Columnstore pre-start script, not starting MariaDB Columnstore"
-			rm -f /var/lock/subsys/columnstore
+			rm -f $lockdir/columnstore
 			exit 1
 		fi
 	fi
@@ -111,7 +121,7 @@ stop() {
 	sleep 1
 	$InstallDir/bin/clearShm
 	RETVAL=$?
-	rm -f /var/lock/subsys/columnstore
+	rm -f $lockdir/columnstore
 	fuser -k 8604/tcp > /dev/null 2>&1
 	test -f $InstallDir/mysql/mysql-Columnstore || return $RETVAL
 	$InstallDir/mysql/mysql-Columnstore stop > /dev/null 2>&1
@@ -127,7 +137,7 @@ restart() {
 status() {
 	isrunning=0
 	if [ $EUID -eq 0 ]; then
-		if [ -f /var/lock/subsys/columnstore ]; then
+		if [ -f $lockdir/columnstore ]; then
 			isrunning=1
 		fi
 	else
@@ -155,7 +165,7 @@ restart)
 	restart
 	;;
 condrestart)
-	[ -f /var/lock/subsys/columnstore ] && restart || :
+	[ -f $lockdir/columnstore ] && restart || :
 	;;
 status)
 	status

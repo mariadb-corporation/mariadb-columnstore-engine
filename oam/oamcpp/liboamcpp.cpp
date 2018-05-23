@@ -147,6 +147,19 @@ Oam::Oam()
         }
         catch (...) {} // defaulted to false
     }
+    
+    //get user
+    string USER = "root";
+    char* p = getenv("USER");
+
+    if (p && *p)
+	USER = p;
+
+    userDir = USER;
+
+    if ( USER != "root")
+	userDir = "home/" + USER;
+
 }
 
 Oam::~Oam()
@@ -10669,10 +10682,12 @@ bool Oam::checkSystemRunning()
     // string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
     // system(cmd.c_str());
     struct stat st;
-
-    if (stat("/var/lock/subsys/columnstore", &st) == 0)
+    
+    string lockFile = userDir + "/columnstore";
+    
+    if (stat(lockFile.c_str(), &st) == 0)
     {
-        return true;
+	return true;
     }
 
     if (geteuid() != 0)

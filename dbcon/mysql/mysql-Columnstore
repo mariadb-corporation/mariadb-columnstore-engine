@@ -62,9 +62,18 @@ datadir=$basedir/db
 # 0 means don't wait at all
 # Negative numbers mean to wait indefinitely
 service_startup_timeout=90
+user=`whoami 2>/dev/null`
 
-# Lock directory for RedHat / SuSE.
+# Lock directory for root user
 lockdir='/var/lock/subsys'
+# Lock directory for non-root user
+if $user != "root"
+then
+  lockdir='$HOME/.lock'
+fi
+
+mkdir $lockdir
+
 lock_file_path="$lockdir/mysql-Columnstore"
 
 # The following variables are only set for letting mysql.server find things.
