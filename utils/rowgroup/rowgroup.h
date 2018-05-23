@@ -355,7 +355,8 @@ public:
     */
     template<int len> void setUintField_offset(uint64_t val, uint32_t offset);
     inline void nextRow(uint32_t size);
-
+    inline void prevRow(uint32_t size, uint64_t number);
+    
     inline void setUintField(uint64_t val, uint32_t colIndex);
     template<int len> void setIntField(int64_t, uint32_t colIndex);
     inline void setIntField(int64_t, uint32_t colIndex);
@@ -894,6 +895,12 @@ inline void Row::setUintField_offset(uint64_t val, uint32_t offset)
 inline void Row::nextRow(uint32_t size)
 {
     data += size;
+}
+
+
+inline void Row::prevRow(uint32_t size, uint64_t number = 1)
+{
+    data -= size * number;
 }
 
 template<int len>
