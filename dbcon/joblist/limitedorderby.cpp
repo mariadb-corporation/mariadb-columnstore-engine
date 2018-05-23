@@ -77,14 +77,9 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo)
         map<uint32_t, uint32_t>::iterator j = keyToIndexMap.find(i->first);
         idbassert(j != keyToIndexMap.end());
 
-        // MCOL-1052 Ordering direction in CSEP differs from
-        // internal direction representation.
-        if (i->second)
-            fOrderByCond.push_back(IdbSortSpec(j->second, false));
-        else
-            fOrderByCond.push_back(IdbSortSpec(j->second, true));
-
-        //fOrderByCond.push_back(IdbSortSpec(j->second, i->second));
+        // TODO Ordering direction in CSEP differs from
+        // internal direction representation. This behavior should be fixed
+        fOrderByCond.push_back(IdbSortSpec(j->second, i->second));
     }
 
     // limit row count info
@@ -182,8 +177,8 @@ void LimitedOrderBy::finalize()
     if (fRowGroup.getRowCount() > 0)
         fDataQueue.push(fData);
 
-    // MCOL-1052 The removed check effectivly disables sorting to happen,
-    // since fStart = 0;
+    // MCOL-1052 The removed check effectively disables sorting,
+    // since fStart = 0 if there is no OFFSET;
     if (true)
     {
         uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();

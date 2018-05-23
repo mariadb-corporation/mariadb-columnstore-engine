@@ -8009,6 +8009,10 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     gwi.thd = thd;
     int status = getGroupPlan(gwi, select_lex, csep, gi);
 
+    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+
     if (status > 0)
         return ER_INTERNAL_ERROR;
     else if (status < 0)
@@ -9877,6 +9881,31 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 select_query += ord_cols;
             }
         }
+        // LIMIT and OFFSET are extracted from TABLE_LIST elements. 
+        // All of JOIN-ed tables contain relevant limit and offset. 
+        if (gi.groupByTables->select_lex->select_limit)
+        {
+            csep->limitNum(((Item_int*)gi.groupByTables->select_lex->select_limit)->val_int());
+        }
+
+        if (gi.groupByTables->select_lex->offset_limit)
+        {
+            csep->limitStart(((Item_int*)gi.groupByTables->select_lex->offset_limit)->val_int());
+        }
+
+        //gwi.thd->infinidb_vtable.select_vtable_query.free();
+        //gwi.thd->infinidb_vtable.select_vtable_query.append(select_query.c_str(), select_query.length());
+
+        // We don't currently support limit with correlated subquery
+        if (csep->limitNum() != (uint64_t) - 1 &&
+                gwi.subQuery && !gwi.correlatedTbNameVec.empty())
+        {
+            gwi.fatalParseError = true;
+            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_LIMIT_SUB);
+            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
+        }
+        
     } // ORDER BY processing ends here
 
     if ( gi.groupByDistinct )
