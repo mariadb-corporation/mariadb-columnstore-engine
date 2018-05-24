@@ -70,13 +70,16 @@ rm -rf /tmp/bucketreuse
 rm -f /tmp/columnstore.txt
 rm -f /tmp/dbbuilder.*
 rm -f /tmp/dbrmfiles
-rm -f /var/lock/subsys/columnstore
 rm -f /tmp/pkgcheck
 rm -f /tmp/upgrade-status.log.*
 rm -f /tmp/mount.log
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 rm -rf /tmp/columnstore_tmp_files
 rm -f $installdir/local/moveDbrootTransactionLog
+
+lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`
+rm -f $lockdir/subsys/columnstore
+rm -f $lockdir/mysql-Columnstore
 
 # delete core files
 #rm -f /var/log/mariadb/columnstore/corefiles/* > /dev/null 2>&1

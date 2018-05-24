@@ -64,15 +64,8 @@ datadir=$basedir/db
 service_startup_timeout=90
 user=`whoami 2>/dev/null`
 
-# Lock directory for root user
-lockdir='/var/lock/subsys'
-# Lock directory for non-root user
-if $user != "root"
-then
-  lockdir='$HOME/.lock'
-fi
-
-mkdir $lockdir
+# Lock directory
+lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`
 
 lock_file_path="$lockdir/mysql-Columnstore"
 

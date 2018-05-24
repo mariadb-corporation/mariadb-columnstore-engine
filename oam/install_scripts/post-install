@@ -242,6 +242,20 @@ else
 	rm -f /var/lock/subsys/mysql-Columnstore
 fi
 
+#determine lock file directory
+# Lock directory for root user
+lockdir='/var/lock/subsys'
+if [ $user != "root" ];then
+  # Lock directory for non-root user
+  lockdir=$prefix/.lock
+fi
+
+$installdir/bin/setConfig -d Installation LockFileDirectory $lockdir
+
+mkdir $lockdir >/dev/null 2>&1
+
+rm -f $lockdir/mysql-Columnstore
+
 #backup copy of Alarm Config File
 /bin/cp -f $installdir/etc/AlarmConfig.xml $installdir/etc/AlarmConfig.xml.installSave > /dev/null 2>&1
 

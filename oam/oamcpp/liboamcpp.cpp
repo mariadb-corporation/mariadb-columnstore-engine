@@ -10682,8 +10682,18 @@ bool Oam::checkSystemRunning()
     // string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
     // system(cmd.c_str());
     struct stat st;
+
+    string lockFileDir = "/var/subsys/lock";
     
-    string lockFile = userDir + "/columnstore";
+    try
+    {
+            Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
+            lockFileDir = sysConfig->getConfig("Installation", "LockFileDirectory");
+    }
+    catch (...) 
+    {} // defaulted to false
+
+    string lockFile = lockFileDir + "/columnstore";
     
     if (stat(lockFile.c_str(), &st) == 0)
     {

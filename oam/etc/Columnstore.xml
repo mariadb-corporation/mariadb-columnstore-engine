@@ -469,6 +469,7 @@
 		<MySQLPort>3306</MySQLPort>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 		<DistributedInstall>y</DistributedInstall>
+		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
 	</Installation>
 	<ExtentMap>
 		<!--
