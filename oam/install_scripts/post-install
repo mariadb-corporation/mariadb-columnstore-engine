@@ -239,7 +239,6 @@ else
         sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
 	chown $user:$user $installdir/etc/Columnstore.xml
-	rm -f /var/lock/subsys/mysql-Columnstore
 fi
 
 #determine lock file directory

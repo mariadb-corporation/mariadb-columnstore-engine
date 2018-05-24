@@ -97,7 +97,7 @@ void msgProcessor()
     {
         Config* sysConfig = Config::makeConfig();
         string port = sysConfig->getConfig(msgPort, "Port");
-        string cmd = "fuser -k " + port + "/tcp";
+        string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
         int user;
         user = getuid();
 
