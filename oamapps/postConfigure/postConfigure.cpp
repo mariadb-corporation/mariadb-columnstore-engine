@@ -719,22 +719,70 @@ int main(int argc, char* argv[])
 
                 if ( reuseConfig == "n" )
                 {
-                    //setup to use the single server Columnstore.xml file
+                    //setup to Columnstore.xml file for single server
 
-                    // we know that our Config instance just timestamped itself in the getConfig
-                    // call above.  if postConfigure is running non-interactively we may get here
-                    // within the same second which means the changes that are about to happen
-                    // when Columnstore.xml gets overwritten will be ignored because of the Config
-                    // instance won't know to reload
-                    sleep(2);
+		    try
+		    {
+			sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("ExeMgr1", "Module", "pm1");
+			sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
+			sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
+			sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
+			sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
+			sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
+			sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
+			sysConfig->setConfig("Installation", "SingleServerInstall", "y");
+			sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
+		    }
 
-                    cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                    system(cmd.c_str());
-                    cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                    system(cmd.c_str());
-                    cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
-                    system(cmd.c_str());
-                }
+		    catch (...)
+		    {
+			cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		    }
+		}
 
                 setSystemName();
                 cout << endl;
@@ -3919,19 +3967,7 @@ bool checkSaveConfigFile()
         string cmd;
 
         if ( reuseConfig == "y" )
-        {
-            if ( singleServerInstall == "1")
-            {
-                cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                system(cmd.c_str());
-                cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                system(cmd.c_str());
-                cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
-                system(cmd.c_str());
-            }
-
             break;
-        }
 
         if ( reuseConfig == "n" )
         {

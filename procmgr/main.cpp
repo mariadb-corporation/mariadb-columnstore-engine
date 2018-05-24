@@ -2263,18 +2263,7 @@ void pingDeviceThread()
                                             }
 
                                             // add module
-                                            string password = oam::UnassignedName;
-
-                                            try
-                                            {
-                                                oam.getSystemConfig("rpw", password);
-                                            }
-                                            catch (...)
-                                            {
-                                                password = oam::UnassignedName;
-                                            }
-
-                                            ret = processManager.addModule(devicenetworklist, password, false);
+					    ret = processManager.addModule(devicenetworklist, "ssh", false);
 
                                             if ( ret != oam::API_SUCCESS )
                                             {

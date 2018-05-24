@@ -445,7 +445,6 @@
 		<UMStorageType>internal</UMStorageType>
 		<EEPackageType>rpm</EEPackageType>
 		<SystemLogConfigFile>unassigned</SystemLogConfigFile>
-		<rpw>mariadb1</rpw>
 		<Cloud>unassigned</Cloud>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
 		<UMInstanceType>unassigned</UMInstanceType>

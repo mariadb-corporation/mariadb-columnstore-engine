@@ -4967,24 +4967,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
         // Verify Host IP and Password
         //
 
-        if ( password == "ssh" && amazon )
-        {
-            // check if there is a root password stored
-            string rpw = oam::UnassignedName;
-
-            try
-            {
-                oam.getSystemConfig("rpw", rpw);
-            }
-            catch (...)
-            {
-                rpw = "mariadb1";
-            }
-
-            if (rpw != oam::UnassignedName)
-                password = rpw;
-        }
-
         listPT = devicenetworklist.begin();
 
         for ( ; listPT != devicenetworklist.end() ; listPT++)
