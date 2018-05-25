@@ -2083,7 +2083,7 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
 
     if (rc != 0)
-        push_warning(thd, Sql_condition::WARN_LEVEL_ERROR, 9999, emsg.c_str());
+        push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
 
     return rc;
 }
@@ -2123,7 +2123,7 @@ long long calonlinealter(UDF_INIT* initid, UDF_ARGS* args,
 	
 	int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg, compressiontype);
 	if (rc != 0)
-		push_warning(thd, Sql_condition::WARN_LEVEL_ERROR, 9999, emsg.c_str());
+		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
 
 	return rc;
 }

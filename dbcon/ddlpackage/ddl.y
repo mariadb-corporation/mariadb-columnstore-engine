@@ -612,7 +612,10 @@ table_name:
 	;
 
 qualified_name:
-	FQ_IDENT {
+    IDENT '.' IDENT { 
+        $$ = new QualifiedName($1, $3);
+    }
+	| FQ_IDENT {
                 char* delimeterPosition = strchr(const_cast<char*>($1), '.');
                 if( delimeterPosition )
                 {
