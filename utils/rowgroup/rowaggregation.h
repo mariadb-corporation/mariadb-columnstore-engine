@@ -50,6 +50,7 @@
 #include "stlpoolallocator.h"
 #include "returnedcolumn.h"
 #include "mcsv1_udaf.h"
+#include "constantcolumn.h"
 
 // To do: move code that depends on joblist to a proper subsystem.
 namespace joblist
@@ -200,6 +201,13 @@ struct RowAggFunctionCol
     // 4. for duplicate - point to the real aggretate column to be copied from
     // Set only on UM, the fAuxColumnIndex is defaulted to fOutputColumnIndex+1 on PM.
     uint32_t            fAuxColumnIndex;
+
+    // For UDAF that have more than one parameter and some parameters are constant.
+    // There will be a series of RowAggFunctionCol created, one for each parameter.
+    // The first will be a RowUDAFFunctionCol. Subsequent ones will be RowAggFunctionCol
+    // with fAggFunction == ROWAGG_MULTI_PARM. Order is important.
+    // If this parameter is constant, that value is here.
+    SRCP fpConstCol;
 };
 
 
@@ -220,8 +228,11 @@ struct RowUDAFFunctionCol : public RowAggFunctionCol
                           inputColIndex, outputColIndex, auxColIndex),
         bInterrupted(false)
     {}
-    RowUDAFFunctionCol(const RowUDAFFunctionCol& rhs) : RowAggFunctionCol(ROWAGG_UDAF, ROWAGG_FUNCT_UNDEFINE,
-                rhs.fInputColumnIndex, rhs.fOutputColumnIndex, rhs.fAuxColumnIndex), fUDAFContext(rhs.fUDAFContext)
+    RowUDAFFunctionCol(const RowUDAFFunctionCol& rhs) : 
+        RowAggFunctionCol(ROWAGG_UDAF, ROWAGG_FUNCT_UNDEFINE, rhs.fInputColumnIndex, 
+                          rhs.fOutputColumnIndex, rhs.fAuxColumnIndex), 
+        fUDAFContext(rhs.fUDAFContext),
+        bInterrupted(false)
     {}
 
     virtual ~RowUDAFFunctionCol() {}
@@ -238,6 +249,16 @@ inline void RowAggFunctionCol::serialize(messageqcpp::ByteStream& bs) const
     bs << (uint8_t)fAggFunction;
     bs << fInputColumnIndex;
     bs << fOutputColumnIndex;
+    if (fpConstCol)
+    {
+        bs << (uint8_t)1;
+        fpConstCol.get()->serialize(bs);
+    }
+    else
+    {
+        bs << (uint8_t)0;
+    }
+    
 }
 
 inline void RowAggFunctionCol::deserialize(messageqcpp::ByteStream& bs)
@@ -245,6 +266,13 @@ inline void RowAggFunctionCol::deserialize(messageqcpp::ByteStream& bs)
     bs >> (uint8_t&)fAggFunction;
     bs >> fInputColumnIndex;
     bs >> fOutputColumnIndex;
+    uint8_t t;
+    bs >> t;
+    if (t)
+    {
+        fpConstCol.reset(new ConstantColumn);
+        fpConstCol.get()->unserialize(bs);
+    }
 }
 
 inline void RowUDAFFunctionCol::serialize(messageqcpp::ByteStream& bs) const
@@ -586,7 +614,7 @@ protected:
     virtual void doAvg(const Row&, int64_t, int64_t, int64_t);
     virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
     virtual void doBitOp(const Row&, int64_t, int64_t, int);
-    virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF, uint64_t& funcColsIdx);
+    virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx);
     virtual bool countSpecial(const RowGroup* pRG)
     {
         fRow.setIntField<8>(fRow.getIntField<8>(0) + pRG->getRowCount(), 0);
@@ -902,7 +930,7 @@ protected:
     void doStatistics(const Row&, int64_t, int64_t, int64_t);
     void doGroupConcat(const Row&, int64_t, int64_t);
     void doBitOp(const Row&, int64_t, int64_t, int);
-    void doUDAF(const Row&, int64_t, int64_t, int64_t, RowUDAFFunctionCol* rowUDAF, uint64_t& funcColsIdx);
+    void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx);
     bool countSpecial(const RowGroup* pRG)
     {
         return false;

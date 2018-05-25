@@ -238,38 +238,5 @@
                 N="Makefile"
                 Type="Makefile"/>
         </Folder>
-        <Folder
-            Name="doc"
-            Filters="*.rst">
-            <Folder
-                Name="reference"
-                Filters="">
-                <F N="docs/source/reference/api.rst"/>
-                <F N="docs/source/reference/ByteStream.rst"/>
-                <F N="docs/source/reference/ColumnDatum.rst"/>
-                <F N="docs/source/reference/index.rst"/>
-                <F N="docs/source/reference/MariaDBUDAF.rst"/>
-                <F N="docs/source/reference/mcsv1_UDAF.rst"/>
-                <F N="docs/source/reference/mcsv1Context.rst"/>
-                <F N="docs/source/reference/UDAFMap.rst"/>
-                <F N="docs/source/reference/UserData.rst"/>
-            </Folder>
-            <Folder
-                Name="usage"
-                Filters="">
-                <F N="docs/source/usage/cmakelists.rst"/>
-                <F N="docs/source/usage/compile.rst"/>
-                <F N="docs/source/usage/copylibs.rst"/>
-                <F N="docs/source/usage/headerfile.rst"/>
-                <F N="docs/source/usage/index.rst"/>
-                <F N="docs/source/usage/introduction.rst"/>
-                <F N="docs/source/usage/memoryallocation.rst"/>
-                <F N="docs/source/usage/sourcefile.rst"/>
-            </Folder>
-            <F N="docs/source/changelog.rst"/>
-            <F N="docs/source/conf.py"/>
-            <F N="docs/source/index.rst"/>
-            <F N="docs/source/license.rst"/>
-        </Folder>
     </Files>
 </Project>

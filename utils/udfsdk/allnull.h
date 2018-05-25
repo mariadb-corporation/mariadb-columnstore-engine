@@ -48,7 +48,6 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <boost/any.hpp>
 #ifdef _MSC_VER
 #include <unordered_map>
 #else

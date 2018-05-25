@@ -4206,8 +4206,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                         // treat as count(*)
                         if (ac->aggOp() == AggregateColumn::COUNT)
                             ac->aggOp(AggregateColumn::COUNT_ASTERISK);
-
-                        ac->constCol(SRCP(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError)));
+                        parm.reset(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError));
+                        ac->constCol(parm);
                         break;
                     }
 
@@ -4485,17 +4485,20 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         // @bug5977 @note Temporary fix to avoid mysqld crash. The permanent fix will
         // be applied in ExeMgr. When the ExeMgr fix is available, this checking
         // will be taken out.
-        if (ac->constCol() && gwi.tbList.empty() && gwi.derivedTbList.empty())
+        if (isp->sum_func() != Item_sum::UDF_SUM_FUNC)
         {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = "No project column found for aggregate function";
-            if (ac)
-                delete ac;
-            return NULL;
-        }
-        else if (ac->constCol())
-        {
-            gwi.count_asterisk_list.push_back(ac);
+            if (ac->constCol() && gwi.tbList.empty() && gwi.derivedTbList.empty())
+            {
+                gwi.fatalParseError = true;
+                gwi.parseErrorText = "No project column found for aggregate function";
+                if (ac)
+                    delete ac;
+                return NULL;
+            }
+            else if (ac->constCol())
+            {
+                gwi.count_asterisk_list.push_back(ac);
+            }
         }
 
         // For UDAF, populate the context and call the UDAF init() function.
@@ -7903,8 +7906,15 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }
-
-        (*coliter)->aggParms().push_back(minSc);
+        // Replace the last (presumably constant) object with minSc
+        if ((*coliter)->aggParms().empty())
+        {
+            (*coliter)->aggParms().push_back(minSc);
+        }
+        else
+        {
+            (*coliter)->aggParms()[0] = minSc;
+        }
     }
 
     std::vector<FunctionColumn*>::iterator funciter;

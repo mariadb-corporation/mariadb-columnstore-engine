@@ -11,15 +11,12 @@
 
 #include  <stdint.h>
 #include <stdexcept>
+#include <cstring>
 
 namespace static_any
 {
 namespace anyimpl
 {
-    struct bad_any_cast 
-    {
-    };
-
     struct empty_any 
     {
     };
@@ -266,7 +263,7 @@ public:
     T& cast()
     {
         if (policy != anyimpl::get_policy<T>())
-            throw anyimpl::bad_any_cast();
+            throw std::runtime_error("static_any: type mismatch in cast");
         T* r = reinterpret_cast<T*>(policy->get_value(&object)); 
         return *r;
     }

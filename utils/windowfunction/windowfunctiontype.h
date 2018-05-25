@@ -31,7 +31,7 @@
 #include "returnedcolumn.h"
 #include "rowgroup.h"
 #include "windowframe.h"
-
+#include "constantcolumn.h"
 
 namespace ordering
 {
@@ -198,6 +198,8 @@ public:
         fStep = step;
     }
 
+    void constParms(const std::vector<SRCP>& functionParms);
+    
     static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct, WindowFunctionColumn* wc);
 
 protected:
@@ -243,6 +245,9 @@ protected:
 
     // output and input field indices: [0] - output
     std::vector<int64_t>                        fFieldIndex;
+
+    // constant function parameters -- needed for udaf with constant
+    std::vector<SRCP>                           fConstantParms;
 
     // row meta data
     rowgroup::RowGroup	                        fRowGroup;
