@@ -53,8 +53,6 @@ public:
 
 // A class to control the execution of User Define Analytic Functions (UDAnF)
 // as defined by a specialization of mcsv1sdk::mcsv1_UDAF
-// The template parameter is currently only used to support DISTINCT, as
-// as that is done via a set<T>
 template<typename T>
 class WF_udaf : public WindowFunctionType
 {

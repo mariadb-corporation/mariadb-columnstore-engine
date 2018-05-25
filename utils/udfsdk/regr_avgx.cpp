@@ -82,7 +82,7 @@ mcsv1_UDAF::ReturnCode regr_avgx::nextValue(mcsv1Context* context, ColumnDatum* 
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
-    if (valIn_x.empty() || valIn_y.empty())
+    if (valIn_x.empty() || valIn_y.empty()) // Usually empty if NULL. Probably redundant
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
@@ -106,10 +106,6 @@ mcsv1_UDAF::ReturnCode regr_avgx::nextValue(mcsv1Context* context, ColumnDatum* 
     else if (valIn_x.compatible(intTypeId))
     {
         val = valIn_x.cast<int>();
-    }
-    else if (valIn_x.compatible(longTypeId))
-    {
-        val = valIn_x.cast<long>();
     }
     else if (valIn_x.compatible(llTypeId))
     {

@@ -68,7 +68,6 @@
 #include <vector>
 #include <map>
 #include <boost/shared_ptr.hpp>
-#include <boost/any.hpp>
 #ifdef _MSC_VER
 #include <unordered_map>
 #else

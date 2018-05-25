@@ -300,6 +300,7 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
         {
             const ArithmeticColumn* ac = NULL;
             const FunctionColumn* fc = NULL;
+            const ConstantColumn* cc = NULL;
             uint64_t eid = -1;
             CalpontSystemCatalog::ColType ct;
             ExpressionStep* es = new ExpressionStep(jobInfo);
@@ -315,6 +316,11 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
             {
                 eid = fc->expressionId();
                 ct = fc->resultType();
+            }
+            else if ((cc = dynamic_cast<const ConstantColumn*>(retCols[i].get())) != NULL)
+            {
+                eid = cc->expressionId();
+                ct = cc->resultType();
             }
             else
             {
@@ -1004,7 +1010,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
                 for (uint32_t parm = 0; parm < aggParms.size(); ++parm)
                 {
-                    if (aggc->constCol().get() != NULL)
+                    // Only do the optimization of converting to count(*) if
+                    // there is only one parameter.
+                    if (aggParms.size() == 1 && aggc->constCol().get() != NULL)
                     {
                         // replace the aggregate on constant with a count(*)
                         SRCP clone;
