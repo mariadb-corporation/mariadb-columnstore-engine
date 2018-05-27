@@ -70,7 +70,6 @@ ident_cont [A-Za-z\200-\377_0-9\$]
 identifier {ident_start}{ident_cont}*
 identifer_quoted {grave_accent}{identifier}{grave_accent}
 identifer_double_quoted {double_quote}{identifier}{double_quote}
-/* fully qualified names regexes */
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
