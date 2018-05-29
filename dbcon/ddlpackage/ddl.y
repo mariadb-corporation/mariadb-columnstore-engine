@@ -29,20 +29,13 @@
    Understanding the New Sql book
    The postgress and mysql sources.  find x -name \*.y -o -name \*.yy.
 
-   We don't support delimited identifiers.
+   We support quoted identifiers.
 
    All literals are stored as unconverted strings.
 
    You can't say "NOT DEFERRABLE".  See the comment below.
 
-   This is not a reentrant parser.  It uses the original global
-   variable style method of communication between the parser and
-   scanner.  If we ever needed more than one parser thread per
-   processes, we would use the pure/reentrant options of bison and
-   flex.  In that model, things that are traditionally global live
-   inside a struct that is passed around.  We would need to upgrade to
-   a more recent version of flex.  At the time of this writing, our
-   development systems have: flex version 2.5.4
+   This is a reentrant parser.
 
    MCOL-66 Modify to be a reentrant parser
    */
@@ -122,7 +115,7 @@ REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TIME TINYBLOB TINYTEXT
 TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
 VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 
-%token <str> FQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE
+%token <str> DQ_IDENT FQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE
 
 /* Notes:
  * 1. "ata" stands for alter_table_action
@@ -206,6 +199,7 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <str>                  opt_if_exists
 %type <str>                  opt_if_not_exists
 %type <sqlStmt>              trunc_table_statement
+%type <str>                  ident
 
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
@@ -465,7 +459,7 @@ opt_equal:
 	;
 
 table_option:
- 	ENGINE opt_equal IDENT {$$ = new pair<string,string>("engine", $3);}
+ 	ENGINE opt_equal ident {$$ = new pair<string,string>("engine", $3);}
 	|
  	MAX_ROWS opt_equal ICONST {$$ = new pair<string,string>("max_rows", $3);}
  	|
@@ -480,9 +474,9 @@ table_option:
        $$ = new pair<string,string>("auto_increment", $3);
     }
  	|
- 	DEFAULT CHARSET opt_equal IDENT {$$ = new pair<string,string>("default charset", $4);}
+ 	DEFAULT CHARSET opt_equal ident {$$ = new pair<string,string>("default charset", $4);}
  	|
- 	DEFAULT IDB_CHAR SET opt_equal IDENT {$$ = new pair<string,string>("default charset", $5);}
+ 	DEFAULT IDB_CHAR SET opt_equal ident {$$ = new pair<string,string>("default charset", $5);}
 	;
 
 alter_table_statement:
@@ -625,7 +619,7 @@ qualified_name:
                 else
                     $$ = new QualifiedName($1);
              }
-	| IDENT {
+	| ident {
 				if (x->fDBSchema.size())
 					$$ = new QualifiedName((char*)x->fDBSchema.c_str(), $1);
 				else
@@ -636,6 +630,11 @@ qualified_name:
             $$ = new QualifiedName($1, $3);
         }
 	;
+
+ident:
+    DQ_IDENT
+    | IDENT
+    ;
 
 ata_add_column:
     /* See the documentation for SchemaObject for an explanation of why we are using
@@ -649,11 +648,11 @@ ata_add_column:
 
 column_name:
 	DATE
-	|IDENT
+	|ident
 	;
 
 constraint_name:
-	IDENT
+	ident
 	;
 
 column_option:
@@ -710,6 +709,10 @@ opt_null_tok:
 
 default_clause:
 	DEFAULT literal
+	{
+		$$ = new ColumnDefaultValue($2);
+	}
+	| DEFAULT DQ_IDENT /* MCOL-1406 */
 	{
 		$$ = new ColumnDefaultValue($2);
 	}
