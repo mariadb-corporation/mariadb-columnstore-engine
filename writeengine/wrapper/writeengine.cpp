@@ -1505,6 +1505,19 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
    for (i = 0; i < colStructList.size(); i++)
       Convertor::convertColType(&colStructList[i]);
 
+   // MCOL-984: find the smallest column width to calculate the RowID from so
+   // that all HWMs will be incremented by this operation
+   int32_t lowColLen = 8192;
+   int32_t colId = 0;
+   for (uint32_t colIt = 0; colIt < colStructList.size(); colIt++)
+   {
+        if (colStructList[colIt].colWidth < lowColLen)
+        {
+            colId = colIt;
+            lowColLen = colStructList[colId].colWidth;
+        }
+   }
+
   // rc = checkValid(txnid, colStructList, colValueList, ridList);
   // if (rc != NO_ERROR)
    //   return rc;
@@ -1531,8 +1544,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     //--------------------------------------------------------------------------
     if (isFirstBatchPm)
     {
-        currentDBrootIdx = dbRootExtentTrackers[0]->getCurrentDBRootIdx();
-        extentInfo = dbRootExtentTrackers[0]->getDBRootExtentList();
+        currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
+        extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
         dbRoot = extentInfo[currentDBrootIdx].fDbRoot;
         partitionNum = extentInfo[currentDBrootIdx].fPartition;
 
@@ -1698,7 +1711,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     } // if (isFirstBatchPm)
     else //get the extent info from tableMetaData
     {
-        ColExtsInfo aColExtsInfo = tableMetaData->getColExtsInfo(colStructList[0].dataOid);
+        ColExtsInfo aColExtsInfo = tableMetaData->getColExtsInfo(colStructList[colId].dataOid);
         ColExtsInfo::iterator it = aColExtsInfo.begin();
         while (it != aColExtsInfo.end())
         {
@@ -1730,20 +1743,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     //--------------------------------------------------------------------------
     // allocate row id(s)
     //--------------------------------------------------------------------------
-
-   // MCOL-984: find the smallest column width to calculate the RowID from so
-   // that all HWMs will be incremented by this operation
-   int32_t lowColLen = 8192;
-   int32_t colId = 0;
-   for (uint32_t colIt = 0; colIt < colStructList.size(); colIt++)
-   {
-        if (colStructList[colIt].colWidth < lowColLen)
-        {
-            colId = colIt;
-            lowColLen = colStructList[colId].colWidth;
-            curColStruct = colStructList[colId];
-        }
-   }
+   curColStruct = colStructList[colId];
    colOp = m_colOp[op(curColStruct.fCompressionType)];
 
    colOp->initColumn(curCol);
@@ -1765,7 +1765,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     if (it != aColExtsInfo.end())
     {
         hwm = it->hwm;
-        //cout << "Got from colextinfo hwm for oid " << colStructList[0].dataOid << " is " << hwm << " and seg is " << colStructList[0].fColSegment << endl;
+        //cout << "Got from colextinfo hwm for oid " << colStructList[colId].dataOid << " is " << hwm << " and seg is " << colStructList[colId].fColSegment << endl;
     }
 
    oldHwm = hwm; //Save this info for rollback
