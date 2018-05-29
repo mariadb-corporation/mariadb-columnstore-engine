@@ -1239,7 +1239,6 @@ int main(int argc, char* argv[])
         if ( !rootUser )
         {
             system("sed -i -e 's/#MCS//g' /etc/rc.d/rc.local >/dev/null 2>&1");
-            system("chmod 666 /etc/fstab >/dev/null 2>&1");
         }
 
         if ( !writeConfig(sysConfig) )

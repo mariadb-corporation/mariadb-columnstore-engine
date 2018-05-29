@@ -20,6 +20,7 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+		prefix=`dirname $prefix`
 	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
 		user="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
@@ -33,32 +34,33 @@ done
 $installdir/bin/columnstore stop > /dev/null 2>&1
 $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
-# uninstall OS scripts updated by postConfigure
-if test -f /etc/exports.columnstoreSave ; then
-	 mv -f /etc/exports.columnstoreSave /etc/exports > /dev/null 2>&1
-else
-	 rm -f /etc/exports > /dev/null 2>&1
-fi
-
 export COLUMNSTORE_INSTALL_DIR=$installdir
 
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if test -f /etc/fstab ; then
-		 sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
+	    sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
 	fi
 fi
+
+#remove profile file
+if [ $user != "root" ]; then
+	profileFile=$prefix/.bash_profile
+
+	if test -f ${profileFile}_backup ; then
+	    mv -f ${profileFile}_backup $profileFile
+	fi
+else
+	rm -f /etc/profile.d/columnstoreAlias.sh
+fi
+
  
 #remove log file directories
 #rm -rf /var/log/mariadb/columnstore > /dev/null 2>&1
 #rm -f $installdir/mysql/db/*.err > /dev/null 2>&1
- rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
- rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
+rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
- rm -f /etc/default/columnstore
-
-# remove Mariab Columnstore Log Rotate File abd Transaction Log File
- rm -f /etc/logrotate.d/columnstore > /dev/null 2>&1
 
 # delete Mariab Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
@@ -78,7 +80,7 @@ rm -rf /tmp/columnstore_tmp_files
 rm -f $installdir/local/moveDbrootTransactionLog
 
 lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`
-rm -f $lockdir/subsys/columnstore
+rm -f $lockdir/columnstore
 rm -f $lockdir/mysql-Columnstore
 
 # delete core files
@@ -124,7 +126,7 @@ if [ $quiet != 1 ]; then
 	rm -f $installdir/etc/AlarmConfig.xml.installSave
 fi
 
-#umount file systems
+#remove OAMdbrootCheck file
 rm -f $installdir/data*/OAMdbrootCheck > /dev/null 2>&1
 
 #remove library paths
@@ -132,7 +134,15 @@ if [ $user = "root" ]; then
         rm -f /etc/ld.so.conf.d/columnstore.conf
         ldconfig
 else
-	 rm -f /etc/defaults/columnstore
+	rm -f /etc/default/columnstore
+	 
+	echo ""
+	echo "NOTE: For non-root install, you will need to run the following command as root user to"
+	echo "      uninstall the MariaDB ColumnStore System Logging"
+	echo ""
+	echo "      $installdir/bin/syslogSetup.sh --installdir=$installdir --user=$user uninstall"
+	echo ""
+
 fi
 
 #tell user to run post configure script

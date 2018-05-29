@@ -13,6 +13,8 @@ syslog_conf=nofile
 rsyslog7=0
 
 user=`whoami 2>/dev/null`
+groupname=adm
+username=syslog
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
@@ -21,6 +23,10 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
+		user="`echo $arg | awk -F= '{print $2}'`"
+		groupname=$user
+		username=$user
 	elif [ `expr -- "$arg" : '--..*'` -ge 3 ]; then
 		echo "ignoring unknown argument: $arg" 1>&2
 	elif [ `expr -- "$arg" : '--'` -eq 2 ]; then
@@ -150,6 +156,10 @@ install() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
+	if [ $user != "root" ]; then
+		 chown $user:$user /home/$user/mariadb/columnstore/etc/*
+	fi 
+	
 	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
 		 rm -f ${syslog_conf}.columnstoreSave
 		 cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
@@ -163,11 +173,11 @@ if [ ! -z "$syslog_conf" ] ; then
 		 rm -rf /etc/rsyslog.d/columnstore.conf
 
 		if [ $rsyslog7 == 1 ]; then
-			sed -i -e s/groupname/adm/g ${columnstoreSyslogFile7}
-			sed -i -e s/username/syslog/g ${columnstoreSyslogFile7}
-			
 			 rm -f /etc/rsyslog.d/49-columnstore.conf
 			 cp  ${columnstoreSyslogFile7} ${syslog_conf}
+
+			 sed -i -e s/groupname/$groupname/g ${syslog_conf}
+			 sed -i -e s/username/$username/g ${syslog_conf}
 		else		
 			 cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
@@ -205,6 +215,9 @@ if [ ! -z "$syslog_conf" ] ; then
 	else
 		 rm -f "$syslog_conf"
 	fi
+	
+	# uninstall Columnstore Log Rotate File
+	rm -f /etc/logrotate.d/columnstore
 
 	restartSyslog
 

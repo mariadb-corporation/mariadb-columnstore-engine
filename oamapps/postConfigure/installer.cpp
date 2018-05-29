@@ -1099,6 +1099,9 @@ bool updateProcessConfig(int serverTypeInstall)
  */
 bool makeRClocal(string moduleName, int IserverTypeInstall)
 {
+  
+      return true;
+
     string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
 
     vector <string> lines;
