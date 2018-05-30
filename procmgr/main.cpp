@@ -1986,7 +1986,7 @@ void pingDeviceThread()
 											log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
 										}
 										
-										if ( error == OAM::API_DETACH_FAILURE )
+										if ( error == oam.itoa(oam::API_DETACH_FAILURE) )
 										{
 										      processManager.setModuleState(moduleName, oam::AUTO_DISABLED);
 
