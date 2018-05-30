@@ -5478,18 +5478,24 @@ namespace oam
 		}
 
 		//detach first to make sure DBS can be detach before trying to move to another pm
-		try
+		DBRootConfigList::iterator pt3 = residedbrootConfigList.begin();
+		for( ; pt3 != residedbrootConfigList.end() ; )
 		{
-			typedef std::vector<string> dbrootList;
-			dbrootList dbrootlist;
-			dbrootlist.push_back(itoa(dbrootID));
+			int dbrootID = *pt3;
 
-			amazonDetach(dbrootlist);
-		}
-		catch (exception& )
-		{
-			writeLog("ERROR: amazonDetach failure", LOG_TYPE_ERROR );
-			exceptionControl("autoMovePmDbroot", API_DETACH_FAILURE);
+			try
+			{
+				typedef std::vector<string> dbrootList;
+				dbrootList dbrootlist;
+				dbrootlist.push_back(itoa(dbrootID));
+
+				amazonDetach(dbrootlist);
+			}
+			catch (exception& )
+			{
+				writeLog("ERROR: amazonDetach failure", LOG_TYPE_ERROR );
+				exceptionControl("autoMovePmDbroot", API_DETACH_FAILURE);
+			}
 		}
 
 		//get dbroot id for other PMs
