@@ -56,6 +56,9 @@ uint64_t getNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidth)
         case CalpontSystemCatalog::DATETIME:
             return joblist::DATETIMENULL;
 
+        case CalpontSystemCatalog::TIME:
+            return joblist::TIMENULL;
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::STRINT:
@@ -162,6 +165,9 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
 
         case CalpontSystemCatalog::DATETIME:
             return joblist::DATETIMENULL;
+
+        case CalpontSystemCatalog::TIME:
+            return joblist::TIMENULL;
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:

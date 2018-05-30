@@ -141,7 +141,8 @@ int64_t Func_bitand::getIntVal(Row& row,
                         day = 0,
                         hour = 0,
                         min = 0,
-                        sec = 0;
+                        sec = 0,
+                        msec = 0;
 
                 year = (uint32_t)((time >> 48) & 0xffff);
                 month = (uint32_t)((time >> 44) & 0xf);
@@ -149,9 +150,39 @@ int64_t Func_bitand::getIntVal(Row& row,
                 hour = (uint32_t)((time >> 32) & 0x3f);
                 min = (uint32_t)((time >> 26) & 0x3f);
                 sec = (uint32_t)((time >> 20) & 0x3f);
+                msec = (uint32_t)(time & 0xfffff);
 
                 //			return (int64_t) (year*1000000000000)+(month*100000000)+(day*1000000)+(hour*10000)+(min*100)+sec;
-                values.push_back((month * 100000000) + (day * 1000000) + (hour * 10000) + (min * 100) + sec);
+                values.push_back((month * 100000000000000) + (day * 1000000000000) + (hour * 10000000000) + (min * 100000000) + (sec * 1000000) + msec);
+            }
+            break;
+
+            case execplan::CalpontSystemCatalog::TIME:
+            {
+                int64_t time = parm[i]->data()->getTimeIntVal(row, isNull);
+
+                int32_t hour = 0,
+                        min = 0,
+                        sec = 0,
+                        msec = 0;
+
+                // Handle negative correctly
+                if ((time >> 40) & 0x800)
+                {
+                    hour = 0xfffff000;
+                }
+
+                hour |= ((time >> 40) & 0xfff);
+
+                if ((hour >= 0) && (time >> 63))
+                    hour *= -1;
+
+                min = (uint32_t)((time >> 32) & 0xff);
+                sec = (uint32_t)((time >> 24) & 0xff);
+                msec = (uint32_t)(time & 0xffffff);
+
+                //			return (int64_t) (year*1000000000000)+(month*100000000)+(day*1000000)+(hour*10000)+(min*100)+sec;
+                values.push_back((hour * 10000000000) + (min * 100000000) + (sec * 1000000) + msec);
             }
             break;
 

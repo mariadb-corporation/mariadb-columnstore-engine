@@ -102,6 +102,7 @@ int64_t Func_minute::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             val = parm[0]->data()->getDatetimeIntVal(row, isNull);

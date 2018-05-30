@@ -213,7 +213,11 @@ public:
         evaluate(row, isNull);
         return TreeNode::getDatetimeIntVal();
     }
-
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getTimeIntVal();
+    }
 private:
     void evaluate(rowgroup::Row& row, bool& isNull);
 };

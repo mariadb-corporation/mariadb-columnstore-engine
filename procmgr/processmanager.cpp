@@ -2817,7 +2817,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                     // target = root password
                     oam::DeviceNetworkList devicenetworklist;
-                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, target);
+                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, true, target);
 
                     log.writeLog(__LINE__, "Enable MySQL Replication status: " + oam.itoa(status) );
 
@@ -2841,7 +2841,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                     // target = root password
                     oam::DeviceNetworkList devicenetworklist;
-                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, false, target, false);
+                    status = processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, target, false);
 
                     log.writeLog(__LINE__, "Disable MySQL Replication status: " + oam.itoa(status) );
 
@@ -3726,12 +3726,12 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 * purpose:	recyle process, generally after some disable module is run
 *
 ******************************************************************************************/
-void ProcessManager::recycleProcess(string module)
+void ProcessManager::recycleProcess(string module, bool enableModule)
 {
     Oam oam;
     ModuleConfig moduleconfig;
 
-    log.writeLog(__LINE__, "recycleProcess request after module was disabled: " + module, LOG_TYPE_DEBUG);
+    log.writeLog(__LINE__, "recycleProcess request after module status update: " + module, LOG_TYPE_DEBUG);
 
     string moduleType = module.substr(0, MAX_MODULE_TYPE_SIZE);
 
@@ -3742,6 +3742,17 @@ void ProcessManager::recycleProcess(string module)
         oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
     }
     catch (...) {}
+
+    // restart DBRM Process and DMLProc and return if enable module is being done
+    if (enableModule)
+    {
+        //recycle DBRM processes in all cases
+        restartProcessType("DBRMControllerNode");
+        restartProcessType("DBRMWorkerNode");
+
+        restartProcessType("DMLProc");
+        return;
+    }
 
     //recycle DBRM processes in all cases
     restartProcessType("DBRMControllerNode", module);
@@ -3826,6 +3837,9 @@ int ProcessManager::enableModule(string target, int state)
 
     if ( newStandbyModule == target)
         setStandbyModule(newStandbyModule);
+
+    //set recycle process
+    recycleProcess(target);
 
     log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
@@ -3971,20 +3985,23 @@ int ProcessManager::startProcess(string moduleName, string processName,
 {
     Oam oam;
 
-    //skip if module is DISABLED
-    int opState;
-    bool degraded;
-
-    try
+    if ( actionIndicator != oam::STATUS_UPDATE )
     {
-        oam.getModuleStatus(moduleName, opState, degraded);
-    }
-    catch (...)
-    {}
+        //skip if module is DISABLED
+        int opState;
+        bool degraded;
 
-    //check if disabled
-    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-        return API_SUCCESS;
+        try
+        {
+            oam.getModuleStatus(moduleName, opState, degraded);
+        }
+        catch (...)
+        {}
+
+        //check if disabled
+        if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+            return API_SUCCESS;
+    }
 
     ByteStream msg;
     ByteStream::byte requestID = START;
@@ -4942,9 +4959,9 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     }
 
     if ( packageType == "rpm")
-        calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.rpm.tar.gz";
+        calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.rpm";
     else if ( packageType == "deb")
-        calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.deb.tar.gz";
+        calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.deb";
     else
         calpontPackage = homedir + "/mariadb-columnstore*" + columnstore_version + "-" + columnstore_release + "*.bin.tar.gz";
 
@@ -5937,8 +5954,24 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     log.writeLog(__LINE__, "addModule - sleep 60 - give ProcMon time to CONFIGURE and restart", LOG_TYPE_DEBUG);
     sleep(60);
 
+    //start mysqld on the new modules so mysql replication can be setup
+    listPT = devicenetworklist.begin();
+
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        processManager.startProcess((*listPT).DeviceName, "mysqld", oam::STATUS_UPDATE);
+    }
+
     log.writeLog(__LINE__, "Setup MySQL Replication for new Modules being Added", LOG_TYPE_DEBUG);
-    processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true, password );
+    processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, true, password, true, true );
+
+    //stop mysqld
+    listPT = devicenetworklist.begin();
+
+    for ( ; listPT != devicenetworklist.end() ; listPT++)
+    {
+        processManager.stopProcess((*listPT).DeviceName, "mysqld", oam::FORCEFUL, true );
+    }
 
     return API_SUCCESS;
 }
@@ -9515,7 +9548,7 @@ int ProcessManager::switchParentOAMModule(std::string newActiveModuleName)
         //change master MySQL Replication setup
         log.writeLog(__LINE__, "Setup MySQL Replication for new Parent Module during switch-over", LOG_TYPE_DEBUG);
         oam::DeviceNetworkList devicenetworklist;
-        processManager.setMySQLReplication(devicenetworklist, newActiveModuleName, false, false,  oam::UnassignedName);
+        processManager.setMySQLReplication(devicenetworklist, newActiveModuleName, false,  oam::UnassignedName);
 
     }
     catch (exception& ex)
@@ -10396,7 +10429,7 @@ int ProcessManager::OAMParentModuleChange()
         //change master MySQL Replication setup
         log.writeLog(__LINE__, "Setup this node as MySQL Replication Master", LOG_TYPE_DEBUG);
         oam::DeviceNetworkList devicenetworklist;
-        processManager.setMySQLReplication(devicenetworklist, config.moduleName(), true);
+        processManager.setMySQLReplication(devicenetworklist, config.moduleName());
     }
 
     //set query system state not ready
@@ -11112,7 +11145,7 @@ void ProcessManager::flushInodeCache()
 *
 *
 ******************************************************************************************/
-int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule, bool failover, bool distributeDB, std::string password, bool enable)
+int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist, std::string masterModule, bool distributeDB, std::string password, bool enable, bool addModule)
 {
     Oam oam;
 
@@ -11135,57 +11168,6 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
         return oam::API_SUCCESS;
     }
 
-    //also skip if single-server, multi-node seperate with 1 UM, multi-node combo with 1 PM
-
-    /*	string SingleServerInstall = "n";
-    	try {
-    		oam.getSystemConfig("SingleServerInstall", SingleServerInstall);
-    	}
-    	catch(...) {
-    		SingleServerInstall = "n";
-    	}
-
-    	//single server check
-    	if ( SingleServerInstall == "y" )
-    	{
-    	    log.writeLog(__LINE__, "setMySQLReplication: Single-Server, exiting", LOG_TYPE_DEBUG);
-    	    return oam::API_SUCCESS;
-    	}
-
-    	//combined system check
-    	if ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM && !failover ) {
-    		try {
-    			Config* sysConfig = Config::makeConfig();
-    			if ( sysConfig->getConfig("DBRM_Controller", "NumWorkers") == "1" ) {
-    				log.writeLog(__LINE__, "setMySQLReplication: 1 configured module, exiting", LOG_TYPE_DEBUG);
-    				return oam::API_SUCCESS;
-    			}
-    		}
-    		catch(...)
-    		{
-    			log.writeLog(__LINE__, "setMySQLReplication: makeConfig exception, exiting", LOG_TYPE_DEBUG);
-    			return oam::API_SUCCESS;
-    		}
-    	}
-
-    	//seperate system check
-    	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) &&
-    	    (PMwithUM == "n" ) )
-    	{
-    		ModuleTypeConfig moduletypeconfig;
-    		try{
-    			oam.getSystemConfig("um", moduletypeconfig);
-    		}
-    		catch(...)
-    		{}
-
-    		if ( moduletypeconfig.ModuleCount < 2 )
-    		{
-    			log.writeLog(__LINE__, "setMySQLReplication: moduleCount = 1, exiting", LOG_TYPE_DEBUG);
-    			return oam::API_SUCCESS;
-    		}
-    	}
-    */
     log.writeLog(__LINE__, "Setup MySQL Replication", LOG_TYPE_DEBUG);
 
     //get master info
@@ -11244,19 +11226,22 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
                 if ( remoteModuleName == masterModule )
                     continue;
 
-                // skip disabled modules
-                int opState = oam::ACTIVE;
-                bool degraded;
-
-                try
+                if ( !addModule )
                 {
-                    oam.getModuleStatus(remoteModuleName, opState, degraded);
-                }
-                catch (...)
-                {}
+                    // skip disabled modules
+                    int opState = oam::ACTIVE;
+                    bool degraded;
 
-                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-                    continue;
+                    try
+                    {
+                        oam.getModuleStatus(remoteModuleName, opState, degraded);
+                    }
+                    catch (...)
+                    {}
+
+                    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                        continue;
+                }
 
                 // don't do PMs unless PMwithUM flag is set
                 if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM )
@@ -11344,19 +11329,22 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
                 if ( remoteModuleName == masterModule )
                     continue;
 
-                // skip disabled modules
-                int opState = oam::ACTIVE;
-                bool degraded;
-
-                try
+                if ( !addModule )
                 {
-                    oam.getModuleStatus(remoteModuleName, opState, degraded);
-                }
-                catch (...)
-                {}
+                    // skip disabled modules
+                    int opState = oam::ACTIVE;
+                    bool degraded;
 
-                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-                    continue;
+                    try
+                    {
+                        oam.getModuleStatus(remoteModuleName, opState, degraded);
+                    }
+                    catch (...)
+                    {}
+
+                    if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                        continue;
+                }
 
                 // don't do PMs unless PMwithUM flag is set
                 if ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM )
@@ -11412,19 +11400,22 @@ int ProcessManager::setMySQLReplication(oam::DeviceNetworkList devicenetworklist
             if ( remoteModuleName == masterModule )
                 continue;
 
-            // skip disabled modules
-            int opState = oam::ACTIVE;
-            bool degraded;
-
-            try
+            if ( !addModule )
             {
-                oam.getModuleStatus(remoteModuleName, opState, degraded);
-            }
-            catch (...)
-            {}
+                // skip disabled modules
+                int opState = oam::ACTIVE;
+                bool degraded;
 
-            if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
-                continue;
+                try
+                {
+                    oam.getModuleStatus(remoteModuleName, opState, degraded);
+                }
+                catch (...)
+                {}
+
+                if (opState == oam::MAN_DISABLED || opState == oam::AUTO_DISABLED)
+                    continue;
+            }
 
             log.writeLog(__LINE__, "Setup Slave MySQL Replication on " + remoteModuleName, LOG_TYPE_DEBUG);
 

@@ -95,6 +95,7 @@ int32_t mcsv1Context::getColWidth()
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
         case CalpontSystemCatalog::STRINT:
             fColWidth = 8;
             break;

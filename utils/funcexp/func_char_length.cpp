@@ -101,6 +101,12 @@ int64_t Func_char_length::getIntVal(rowgroup::Row& row,
             return (int64_t)date.size();
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            string date = dataconvert::DataConvert::timeToString(parm[0]->data()->getTimeIntVal(row, isNull));
+            return (int64_t)date.size();
+        }
+
         default:
         {
             std::ostringstream oss;

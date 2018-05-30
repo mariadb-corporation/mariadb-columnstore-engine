@@ -483,28 +483,30 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
         deliverySteps[CNX_VTABLE_ID] = ws;
     }
 
-    if ((jobInfo.limitCount != (uint64_t) - 1) ||
-            (jobInfo.constantCol == CONST_COL_EXIST) ||
-            (jobInfo.hasDistinct))
-    {
-        if (jobInfo.annexStep.get() == NULL)
-            jobInfo.annexStep.reset(new TupleAnnexStep(jobInfo));
+//    if ((jobInfo.limitCount != (uint64_t) - 1) ||
+//            (jobInfo.constantCol == CONST_COL_EXIST) ||
+//            (jobInfo.hasDistinct))
+//    {
+    if (jobInfo.annexStep.get() == NULL)
+        jobInfo.annexStep.reset(new TupleAnnexStep(jobInfo));
 
-        TupleAnnexStep* tas = dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get());
-        tas->setLimit(jobInfo.limitStart, jobInfo.limitCount);
+    TupleAnnexStep* tas = dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get());
+    tas->setLimit(jobInfo.limitStart, jobInfo.limitCount);
 
-        if (jobInfo.limitCount != (uint64_t) - 1)
-        {
-            if (jobInfo.orderByColVec.size() > 0)
-                tas->addOrderBy(new LimitedOrderBy());
-        }
+//       if (jobInfo.limitCount != (uint64_t) - 1)
+//        {
+    if (jobInfo.orderByColVec.size() > 0)
+        tas->addOrderBy(new LimitedOrderBy());
 
-        if (jobInfo.constantCol == CONST_COL_EXIST)
-            tas->addConstant(new TupleConstantStep(jobInfo));
+//        }
 
-        if (jobInfo.hasDistinct)
-            tas->setDistinct();
-    }
+    if (jobInfo.constantCol == CONST_COL_EXIST)
+        tas->addConstant(new TupleConstantStep(jobInfo));
+
+    if (jobInfo.hasDistinct)
+        tas->setDistinct();
+
+//    }
 
     if (jobInfo.annexStep)
     {

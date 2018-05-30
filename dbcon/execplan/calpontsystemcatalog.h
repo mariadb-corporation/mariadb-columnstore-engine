@@ -154,6 +154,7 @@ public:
         UBIGINT,		/*!< Unsigned BIGINT type */
         UDOUBLE,		/*!< Unsigned DOUBLE type */
         TEXT,           /*!< TEXT type */
+        TIME,           /*!< TIME type */
         NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
         LONGDOUBLE,		/* @bug3241, dev and variance calculation only */
         STRINT,			/* @bug3532, string as int for fast comparison */

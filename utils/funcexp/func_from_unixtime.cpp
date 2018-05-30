@@ -148,6 +148,22 @@ int64_t Func_from_unixtime::getDatetimeIntVal(rowgroup::Row& row,
     return *reinterpret_cast<int64_t*>(&dt);
 }
 
+int64_t Func_from_unixtime::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        CalpontSystemCatalog::ColType& ct)
+{
+    DateTime dt = getDateTime(row, parm, isNull);
+
+    if (*reinterpret_cast<int64_t*>(&dt) == 0)
+    {
+        isNull = true;
+        return 0;
+    }
+
+    return *reinterpret_cast<int64_t*>(&dt);
+}
+
 int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row,
                                       FunctionParm& parm,
                                       bool& isNull,

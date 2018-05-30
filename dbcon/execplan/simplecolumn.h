@@ -331,6 +331,12 @@ public:
         return TreeNode::getDatetimeIntVal();
     }
 
+    inline int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        evaluate(row, isNull);
+        return TreeNode::getTimeIntVal();
+    }
+
 };
 
 typedef boost::shared_ptr<SimpleColumn> SSC;

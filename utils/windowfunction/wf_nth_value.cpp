@@ -77,6 +77,7 @@ boost::shared_ptr<WindowFunctionType> WF_nth_value<T>::makeFunction(int id, cons
         case CalpontSystemCatalog::UDECIMAL:
         case CalpontSystemCatalog::DATE:
         case CalpontSystemCatalog::DATETIME:
+        case CalpontSystemCatalog::TIME:
         {
             func.reset(new WF_nth_value<uint64_t>(id, name));
             break;

@@ -182,6 +182,30 @@ int64_t Func_least::getDatetimeIntVal(rowgroup::Row& row,
     return leastStr;
 }
 
+int64_t Func_least::getTimeIntVal(rowgroup::Row& row,
+                                  FunctionParm& fp,
+                                  bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    // Strip off unused day
+    int64_t leastStr = fp[0]->data()->getTimeIntVal(row, isNull);
+
+    int64_t str = leastStr << 12;
+
+    for (uint32_t i = 1; i < fp.size(); i++)
+    {
+        int64_t str1 = fp[i]->data()->getTimeIntVal(row, isNull);
+        int64_t str2 = str1 << 12;
+
+        if ( str > str2 )
+        {
+            leastStr = str1;
+            str = str2;
+        }
+    }
+
+    return leastStr;
+}
 
 
 } // namespace funcexp

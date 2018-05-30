@@ -154,6 +154,20 @@ double Func_acos::getDoubleVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull || (value < -1.0 || value > 1.0))
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return acos((double)value);
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -233,6 +247,20 @@ double Func_asin::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             int64_t value = parm[0]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull || (value < -1.0 || value > 1.0))
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return asin((double)value);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
 
             if (isNull || (value < -1.0 || value > 1.0))
             {
@@ -373,6 +401,34 @@ double Func_atan::getDoubleVal(Row& row,
         }
         break;
 
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            if (parm.size() > 1 )
+            {
+                double value2 = parm[1]->data()->getDoubleVal(row, isNull);
+
+                if (isNull)
+                {
+                    isNull = true;
+                    return doubleNullVal();
+                }
+
+                return atan2(value, value2);
+            }
+
+            return atan((double)value);
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -451,6 +507,20 @@ double Func_cos::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             int64_t value = parm[0]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return cos((double)value);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
 
             if (isNull)
             {
@@ -578,6 +648,30 @@ double Func_cot::getDoubleVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (value == 0)
+            {
+                Message::Args args;
+                args.add("cot");
+                args.add((uint64_t)value);
+                unsigned errcode = ERR_FUNC_OUT_OF_RANGE_RESULT;
+                throw IDBExcept(IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+            }
+
+            if (isNull)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return 1.0 / tan((double)value);
+        }
+        break;
+
+
         default:
         {
             std::ostringstream oss;
@@ -703,6 +797,33 @@ double Func_log::getDoubleVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull || value <= 0.0)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            if (parm.size() > 1 )
+            {
+                double value2 = parm[1]->data()->getDoubleVal(row, isNull);
+
+                if (isNull || (value2 <= 0.0 || value == 1.0) )
+                {
+                    isNull = true;
+                    return doubleNullVal();
+                }
+
+                return log(value2) / log((double)value);
+            }
+
+            return log((double)value);
+        }
+        break;
+
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
@@ -797,6 +918,20 @@ double Func_log2::getDoubleVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull || value <= 0.0)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return log2(value);
+        }
+        break;
+
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:
@@ -880,6 +1015,20 @@ double Func_log10::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             int64_t value = parm[0]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull || value <= 0.0)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return log10((double)value);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
 
             if (isNull || value <= 0.0)
             {
@@ -988,6 +1137,20 @@ double Func_sin::getDoubleVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return sin((double)value);
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -1066,6 +1229,20 @@ double Func_sqrt::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             int64_t value = parm[0]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull || value < 0)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return sqrt((double)value);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
 
             if (isNull || value < 0)
             {
@@ -1166,6 +1343,20 @@ double Func_tan::getDoubleVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return tan((double)value);
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -1250,6 +1441,12 @@ string Func_format::getStrVal(Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             value = dataconvert::DataConvert::datetimeToString1(parm[0]->data()->getDatetimeIntVal(row, isNull));
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            value = dataconvert::DataConvert::timeToString1(parm[0]->data()->getTimeIntVal(row, isNull));
         }
         break;
 
@@ -1474,6 +1671,20 @@ double Func_radians::getDoubleVal(Row& row,
         }
         break;
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return radians((double)value);
+        }
+        break;
+
         default:
         {
             std::ostringstream oss;
@@ -1552,6 +1763,20 @@ double Func_degrees::getDoubleVal(Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             int64_t value = parm[0]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull)
+            {
+                isNull = true;
+                return doubleNullVal();
+            }
+
+            return degrees((double)value);
+        }
+        break;
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t value = parm[0]->data()->getTimeIntVal(row, isNull);
 
             if (isNull)
             {

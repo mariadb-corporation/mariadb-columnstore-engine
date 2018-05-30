@@ -513,6 +513,19 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
                 Item* orderItem = *(orderCol->item);
                 srcp.reset(buildReturnedColumn(orderItem, gwi, nonSupport));
 
+                // MCOL-1052 GROUP BY handler has all of query's agg Items
+                // as field and correlates them with its extended SELECT Items.
+                if (!srcp)
+                {
+                    orderItem = orderCol->item_ptr;
+
+                    if (orderItem)
+                    {
+                        gwi.fatalParseError = false;
+                        srcp.reset(buildReturnedColumn(orderItem, gwi, nonSupport));
+                    }
+                }
+
                 if (!srcp)
                     return nullOnError(gwi);
 
@@ -590,6 +603,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 
                         case CalpontSystemCatalog::DATE:
                         case CalpontSystemCatalog::DATETIME:
+                        case CalpontSystemCatalog::TIME:
                             if (!frm.fIsRange)
                                 boundTypeErr = true;
                             else if (dynamic_cast<IntervalColumn*>(frm.fStart.fVal.get()) == NULL)
@@ -641,6 +655,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 
                         case CalpontSystemCatalog::DATE:
                         case CalpontSystemCatalog::DATETIME:
+                        case CalpontSystemCatalog::TIME:
                             if (!frm.fIsRange)
                                 boundTypeErr = true;
                             else if (dynamic_cast<IntervalColumn*>(frm.fEnd.fVal.get()) == NULL)

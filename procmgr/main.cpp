@@ -1961,7 +1961,7 @@ void pingDeviceThread()
                                             DeviceNetworkConfig devicenetworkconfig;
                                             devicenetworkconfig.DeviceName = moduleName;
                                             devicenetworklist.push_back(devicenetworkconfig);
-                                            processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, false, true);
+                                            processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, true);
                                         }
                                     }
 

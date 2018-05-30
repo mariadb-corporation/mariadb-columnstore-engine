@@ -13,6 +13,7 @@ syslog_conf=nofile
 rsyslog7=0
 
 user=`whoami 2>/dev/null`
+
 groupname=adm
 username=syslog
 
@@ -172,6 +173,21 @@ if [ ! -z "$syslog_conf" ] ; then
 		# remove older version incase it was installed by previous build
 		 rm -rf /etc/rsyslog.d/columnstore.conf
 
+		// determine username/groupname
+		
+		if [ -f /var/log/messages ]; then
+		      user=`stat -c "%U %G" /var/log/messages | awk '{print $1}'`
+		      group=`stat -c "%U %G" /var/log/messages | awk '{print $2}'`
+		fi
+		
+		if [ -f /var/log/syslog ]; then
+		      user=`stat -c "%U %G" /var/log/syslog | awk '{print $1}'`
+		      group=`stat -c "%U %G" /var/log/syslog | awk '{print $2}'`
+		fi
+		
+		//set permissions
+		$SUDO chown $user:$group -R /var/log/mariadb > /dev/null 2>&1
+		
 		if [ $rsyslog7 == 1 ]; then
 			 rm -f /etc/rsyslog.d/49-columnstore.conf
 			 cp  ${columnstoreSyslogFile7} ${syslog_conf}

@@ -52,9 +52,10 @@ inline uint64_t simple_case_cmp(Row& row,
                                 CalpontSystemCatalog::ColType& operationColType)
 {
     uint64_t i = 0;                // index to the parm list
-    uint64_t n = parm.size() - 1;  // remove expression from count of expression_i + result_i
-    uint64_t hasElse = n % 2;      // if 1, then ELSE exist
-    n -= hasElse;                  // index to expression
+    uint64_t n = 0;                // remove expression from count of expression_i + result_i
+    uint64_t hasElse = (parm.size() - 1) % 2; // if 1, then ELSE exist
+    uint64_t whereCount = hasElse ? (parm.size() - 2) / 2 : (parm.size() - 1) / 2;
+    bool foundIt = false;
 
     switch (operationColType.colDataType)
     {
@@ -64,23 +65,68 @@ inline uint64_t simple_case_cmp(Row& row,
         case execplan::CalpontSystemCatalog::INT:
         case execplan::CalpontSystemCatalog::BIGINT:
         case execplan::CalpontSystemCatalog::DATE:
-        case execplan::CalpontSystemCatalog::DATETIME:
         {
             int64_t ev = parm[n]->data()->getIntVal(row, isNull);
 
             if (isNull)
                 break;
 
-            for (; i < n; i += 2)
+            for (i = 1; i <= whereCount; i++)
             {
                 if (ev == parm[i]->data()->getIntVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
                     break;
+                }
                 else
                     isNull = false;
             }
 
             break;
         }
+
+        case execplan::CalpontSystemCatalog::DATETIME:
+        {
+            int64_t ev = parm[n]->data()->getDatetimeIntVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            for (i = 1; i <= whereCount; i++)
+            {
+                if (ev == parm[i]->data()->getDatetimeIntVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
+                    break;
+                }
+                else
+                    isNull = false;
+            }
+
+            break;
+        }
+
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t ev = parm[n]->data()->getTimeIntVal(row, isNull);
+
+            if (isNull)
+                break;
+
+            for (i = 1; i <= whereCount; i++)
+            {
+                if (ev == parm[i]->data()->getTimeIntVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
+                    break;
+                }
+                else
+                    isNull = false;
+            }
+
+            break;
+        }
+
 
         case execplan::CalpontSystemCatalog::UBIGINT:
         case execplan::CalpontSystemCatalog::UINT:
@@ -93,10 +139,13 @@ inline uint64_t simple_case_cmp(Row& row,
             if (isNull)
                 break;
 
-            for (; i < n; i += 2)
+            for (i = 1; i <= whereCount; i++)
             {
                 if (ev == parm[i]->data()->getUintVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
                     break;
+                }
                 else
                     isNull = false;
             }
@@ -113,11 +162,14 @@ inline uint64_t simple_case_cmp(Row& row,
             if (isNull)
                 break;
 
-            for (; i < n; i += 2)
+            for (i = 1; i <= whereCount; i++)
             {
                 //BUG 5362
                 if (utf8::idb_strcoll(ev.c_str(), parm[i]->data()->getStrVal(row, isNull).c_str()) == 0 && !isNull)
+                {
+                    foundIt = true;
                     break;
+                }
                 else
                     isNull = false;
             }
@@ -133,10 +185,13 @@ inline uint64_t simple_case_cmp(Row& row,
             if (isNull)
                 break;
 
-            for (; i < n; i += 2)
+            for (i = 1; i <= whereCount; i++)
             {
                 if (ev == parm[i]->data()->getDecimalVal(row, isNull)	&& !isNull)
+                {
+                    foundIt = true;
                     break;
+                }
                 else
                     isNull = false;
             }
@@ -152,10 +207,13 @@ inline uint64_t simple_case_cmp(Row& row,
             if (isNull)
                 break;
 
-            for (; i < n; i += 2)
+            for (i = 1; i <= whereCount; i++)
             {
                 if (ev == parm[i]->data()->getDoubleVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
                     break;
+                }
                 else
                     isNull = false;
             }
@@ -171,10 +229,13 @@ inline uint64_t simple_case_cmp(Row& row,
             if (isNull)
                 break;
 
-            for (; i < n; i += 2)
+            for (i = 1; i <= whereCount; i++)
             {
                 if (ev == parm[i]->data()->getFloatVal(row, isNull) && !isNull)
+                {
+                    foundIt = true;
                     break;
+                }
                 else
                     isNull = false;
             }
@@ -190,16 +251,24 @@ inline uint64_t simple_case_cmp(Row& row,
         }
     }
 
-    if (i == n && !hasElse)
+    if (!foundIt && !hasElse)
         isNull = true;
+    else if (!foundIt && hasElse && !isNull)
+    {
+        i = parm.size() - 1;
+    }
     else if (isNull && hasElse)
         // BUG 5110. Only way we can exit above with isNull == true is when ev is NULL
-        // if so and we have else condition we need to use it by setting i = n
+        // if so and we have else condition we need to use it by setting i = else
     {
-        i = n;
+        i = parm.size() - 1;
         isNull = false;
     }
 
+    if (foundIt)
+    {
+        i += whereCount;
+    }
 
     return i;
 }
@@ -210,22 +279,35 @@ inline uint64_t searched_case_cmp(Row& row,
                                   bool& isNull)
 {
     uint64_t i = 0;                // index to the parm list
-    uint64_t n = parm.size();      // count of boolean_expression_i + result_i
-    uint64_t hasElse = n % 2;      // if 1, then ELSE exist
-    n -= hasElse;                  // index to expression
+    uint64_t hasElse = parm.size() % 2; // if 1, then ELSE exist
+    uint64_t whereCount = hasElse ? (parm.size() - 1) / 2 : parm.size() / 2;
+    bool foundIt = false;
 
-    for (; i < n; i += 2)
+
+    for (i = 0; i < whereCount; i++)
     {
         if (parm[i]->getBoolVal(row, isNull))
+        {
+            foundIt = true;
             break;
+        }
     }
 
     isNull = false;
 
-    if (i == n && !hasElse)
+    if (!foundIt && !hasElse)
         isNull = true;
+    else if (!foundIt && hasElse)
+    {
+        i = parm.size() - 1;
+    }
 
-    return (i == n ? i - 1 : i);
+    if (foundIt)
+    {
+        i += whereCount;
+    }
+
+    return i;
 }
 
 
@@ -233,7 +315,6 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
         CalpontSystemCatalog::ColType& resultType,
         bool simpleCase)
 {
-    // ... expression_i + result_i + ... [[expression] + result_N]
     FunctionParm::size_type n = fp.size();
 
     if (simpleCase)                   // simple case has an expression
@@ -243,6 +324,9 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
 
     if (hasElse)
         --n;                          // n now is an even number
+
+    uint64_t parmCount = hasElse ? (fp.size() - 2) : (fp.size() - 1);
+    uint64_t whereCount = hasElse ? (fp.size() - 2 + simpleCase) / 2 : (fp.size() - 1) / 2 + simpleCase;
 
     idbassert((n % 2) == 0);
 
@@ -255,10 +339,10 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
     CalpontSystemCatalog::ColType rct = resultType;
     bool operation = true;
 
-    for (uint64_t i = 0; i <= n; i++)
+    for (uint64_t i = 0; i <= parmCount; i++)
     {
         // operation or result type
-        operation = ((i % 2) == 0);
+        operation = ((i > 0) && (i <= whereCount));
 
         // the result type of ELSE, if exists.
         if (i == n)
@@ -353,8 +437,9 @@ namespace funcexp
 // END
 //
 // simple CASE parm order:
-//   expression1 result1 expression2 result2 ... expression [resultN]
+//   expression condition1 condition2 ... result1 result2 ... [resultN]
 //
+// Note that this order changed in 10.2.14, see MCOL-1341
 
 CalpontSystemCatalog::ColType Func_simple_case::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
@@ -372,7 +457,7 @@ bool Func_simple_case::getBoolVal(Row& row,
     if (isNull)
         return joblist::BIGINTNULL;
 
-    return parm[i + 1]->data()->getBoolVal(row, isNull);
+    return parm[i]->data()->getBoolVal(row, isNull);
 }
 
 
@@ -386,7 +471,7 @@ int64_t Func_simple_case::getIntVal(Row& row,
     if (isNull)
         return joblist::BIGINTNULL;
 
-    return parm[i + 1]->data()->getIntVal(row, isNull);
+    return parm[i]->data()->getIntVal(row, isNull);
 }
 
 
@@ -400,7 +485,7 @@ string Func_simple_case::getStrVal(Row& row,
     if (isNull)
         return string("");
 
-    return parm[i + 1]->data()->getStrVal(row, isNull);
+    return parm[i]->data()->getStrVal(row, isNull);
 }
 
 
@@ -414,7 +499,7 @@ IDB_Decimal Func_simple_case::getDecimalVal(Row& row,
     if (isNull)
         return IDB_Decimal();  // need a null value for IDB_Decimal??
 
-    return parm[i + 1]->data()->getDecimalVal(row, isNull);
+    return parm[i]->data()->getDecimalVal(row, isNull);
 }
 
 
@@ -428,7 +513,7 @@ double Func_simple_case::getDoubleVal(Row& row,
     if (isNull)
         return doubleNullVal();
 
-    return parm[i + 1]->data()->getDoubleVal(row, isNull);
+    return parm[i]->data()->getDoubleVal(row, isNull);
 }
 
 
@@ -442,7 +527,7 @@ int32_t Func_simple_case::getDateIntVal(rowgroup::Row& row,
     if (isNull)
         return joblist::DATENULL;
 
-    return parm[i + 1]->data()->getDateIntVal(row, isNull);
+    return parm[i]->data()->getDateIntVal(row, isNull);
 }
 
 
@@ -456,9 +541,22 @@ int64_t Func_simple_case::getDatetimeIntVal(rowgroup::Row& row,
     if (isNull)
         return joblist::DATETIMENULL;
 
-    return parm[i + 1]->data()->getDatetimeIntVal(row, isNull);
+    return parm[i]->data()->getDatetimeIntVal(row, isNull);
 }
 
+
+int64_t Func_simple_case::getTimeIntVal(rowgroup::Row& row,
+                                        FunctionParm& parm,
+                                        bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    uint64_t i = simple_case_cmp(row, parm, isNull, op_ct);
+
+    if (isNull)
+        return joblist::TIMENULL;
+
+    return parm[i]->data()->getTimeIntVal(row, isNull);
+}
 
 
 // searched CASE:
@@ -470,8 +568,10 @@ int64_t Func_simple_case::getDatetimeIntVal(rowgroup::Row& row,
 // END
 //
 // searched CASE parm order:
-//   boolean_expression1 result1 boolean_expression2 result2 ... [resultN]
+//   boolean_expression1 boolean_expression2 ... result1 result2 ... [resultN]
 //
+// Note that this order changed in 10.2.14, see MCOL-1341
+
 CalpontSystemCatalog::ColType Func_searched_case::operationType(FunctionParm& fp, CalpontSystemCatalog::ColType& resultType)
 {
     // operation type not used by this functor.
@@ -489,15 +589,15 @@ bool Func_searched_case::getBoolVal(Row& row,
     if (isNull)
         return joblist::BIGINTNULL;
 
-    ParseTree* lop = parm[i + 1]->left();
-    ParseTree* rop = parm[i + 1]->right();
+    ParseTree* lop = parm[i]->left();
+    ParseTree* rop = parm[i]->right();
 
     if (lop && rop)
     {
-        return (reinterpret_cast<Operator*>(parm[i + 1]->data()))->getBoolVal(row, isNull, lop, rop);
+        return (reinterpret_cast<Operator*>(parm[i]->data()))->getBoolVal(row, isNull, lop, rop);
     }
 
-    return parm[i + 1]->data()->getBoolVal(row, isNull);
+    return parm[i]->data()->getBoolVal(row, isNull);
 }
 
 int64_t Func_searched_case::getIntVal(Row& row,
@@ -510,7 +610,7 @@ int64_t Func_searched_case::getIntVal(Row& row,
     if (isNull)
         return joblist::BIGINTNULL;
 
-    return parm[i + 1]->data()->getIntVal(row, isNull);
+    return parm[i]->data()->getIntVal(row, isNull);
 }
 
 
@@ -524,7 +624,7 @@ string Func_searched_case::getStrVal(Row& row,
     if (isNull)
         return string("");
 
-    return parm[i + 1]->data()->getStrVal(row, isNull);
+    return parm[i]->data()->getStrVal(row, isNull);
 }
 
 
@@ -538,7 +638,7 @@ IDB_Decimal Func_searched_case::getDecimalVal(Row& row,
     if (isNull)
         return IDB_Decimal();  // need a null value for IDB_Decimal??
 
-    return parm[i + 1]->data()->getDecimalVal(row, isNull);
+    return parm[i]->data()->getDecimalVal(row, isNull);
 }
 
 
@@ -552,7 +652,7 @@ double Func_searched_case::getDoubleVal(Row& row,
     if (isNull)
         return doubleNullVal();
 
-    return parm[i + 1]->data()->getDoubleVal(row, isNull);
+    return parm[i]->data()->getDoubleVal(row, isNull);
 }
 
 
@@ -566,7 +666,7 @@ int32_t Func_searched_case::getDateIntVal(rowgroup::Row& row,
     if (isNull)
         return joblist::DATENULL;
 
-    return parm[i + 1]->data()->getDateIntVal(row, isNull);
+    return parm[i]->data()->getDateIntVal(row, isNull);
 }
 
 
@@ -580,9 +680,22 @@ int64_t Func_searched_case::getDatetimeIntVal(rowgroup::Row& row,
     if (isNull)
         return joblist::DATETIMENULL;
 
-    return parm[i + 1]->data()->getDatetimeIntVal(row, isNull);
+    return parm[i]->data()->getDatetimeIntVal(row, isNull);
 }
 
+
+int64_t Func_searched_case::getTimeIntVal(rowgroup::Row& row,
+        FunctionParm& parm,
+        bool& isNull,
+        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+    uint64_t i = simple_case_cmp(row, parm, isNull, op_ct);
+
+    if (isNull)
+        return joblist::TIMENULL;
+
+    return parm[i]->data()->getTimeIntVal(row, isNull);
+}
 
 } // namespace funcexp
 // vim:ts=4 sw=4:

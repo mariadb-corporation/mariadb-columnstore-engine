@@ -48,6 +48,7 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
                              CalpontSystemCatalog::ColType& op_ct)
 {
     int64_t val = 0;
+    bool isTime = false;
 
     switch (parm[0]->data()->resultType().colDataType)
     {
@@ -108,6 +109,13 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
             break;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            isTime = true;
+            val = parm[0]->data()->getTimeIntVal(row, isNull);
+            break;
+        }
+
         default:
         {
             isNull = true;
@@ -117,10 +125,31 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
     if (isNull)
         return -1;
 
-    if ( val < 1000000000 )
-        return 0;
+    if (isTime)
+    {
+        // If negative, mask so it doesn't turn positive
+        bool isNeg = false;
+        int64_t mask = 0;
 
-    return (uint32_t)((val >> 32) & 0x3f);
+        if ((val >> 40) & 0x800)
+            mask = 0xfffffffffffff000;
+
+        if (!mask && (val >> 63))
+        {
+            isNeg = true;
+        }
+
+        val = mask | ((val >> 40) & 0xfff);
+
+        if (isNeg)
+            val *= -1;
+    }
+    else
+    {
+        val = (val >> 32) & 0x3f;
+    }
+
+    return val;
 }
 
 

@@ -484,6 +484,26 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     log.writeLog(__LINE__,  "MSG RECEIVED: Stop process request on " + processName);
                     int requestStatus = API_SUCCESS;
 
+                    // check for mysql
+                    if ( processName == "mysqld" )
+                    {
+                        try
+                        {
+                            oam.actionMysqlCalpont(MYSQL_STOP);
+                        }
+                        catch (...)
+                        {}
+
+                        ackMsg << (ByteStream::byte) ACK;
+                        ackMsg << (ByteStream::byte) STOP;
+                        ackMsg << (ByteStream::byte) API_SUCCESS;
+                        mq.write(ackMsg);
+
+                        log.writeLog(__LINE__, "STOP: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
+
+                        break;
+                    }
+
                     processList::iterator listPtr;
                     processList* aPtr = config.monitoredListPtr();
                     listPtr = aPtr->begin();
@@ -532,6 +552,26 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     msg >> processName;
                     msg >> manualFlag;
                     log.writeLog(__LINE__, "MSG RECEIVED: Start process request on: " + processName);
+
+                    // check for mysql
+                    if ( processName == "mysqld" )
+                    {
+                        try
+                        {
+                            oam.actionMysqlCalpont(MYSQL_START);
+                        }
+                        catch (...)
+                        {}
+
+                        ackMsg << (ByteStream::byte) ACK;
+                        ackMsg << (ByteStream::byte) START;
+                        ackMsg << (ByteStream::byte) API_SUCCESS;
+                        mq.write(ackMsg);
+
+                        log.writeLog(__LINE__, "START: ACK back to ProcMgr, return status = " + oam.itoa((int) API_SUCCESS));
+
+                        break;
+                    }
 
                     ProcessConfig processconfig;
                     ProcessStatus processstatus;
@@ -645,7 +685,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     int requestStatus = API_SUCCESS;
 
                     // check for mysql restart
-                    if ( processName == "mysql" )
+                    if ( processName == "mysqld" )
                     {
                         try
                         {
@@ -2658,20 +2698,6 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             return oam::API_MINOR_FAILURE;
         }
 
-        if (processLocation.find("DecomSvr") != string::npos)
-        {
-            // DecomSvr app is special
-
-            sleep(1);
-            //record the process information into processList
-            config.buildList(processModuleType, processName, processLocation, arg_list,
-                             launchID, newProcessID, oam::ACTIVE, BootLaunch, RunType,
-                             DepProcessName, DepModuleName, LogFile);
-
-            //Update Process Status: Mark Process oam::ACTIVE state
-            updateProcessInfo(processName, oam::ACTIVE, newProcessID);
-        }
-
         //FYI - NEEDS TO STAY HERE TO HAVE newProcessID
 
         //record the process information into processList
@@ -2725,14 +2751,6 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
             close(i);
         }
 
-        // open STDIN, STDOUT & STDERR for trapDaemon and DecomSvr
-        if (processName == "DecomSvr" )
-        {
-            open("/dev/null", O_RDONLY); //Should be fd 0
-            open("/dev/null", O_WRONLY); //Should be fd 1
-            open("/dev/null", O_WRONLY); //Should be fd 2
-        }
-        else
         {
             int fd;
             fd = open("/dev/null", O_RDONLY);
@@ -5312,12 +5330,11 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
 
             //skip if module is not ACTIVE
 
-            int opState = oam::ACTIVE;
-            bool degraded;
-            oam.getModuleStatus(moduleName, opState, degraded);
-
-            if (opState != oam::ACTIVE)
-                continue;
+//			int opState = oam::ACTIVE;
+//			bool degraded;
+//			oam.getModuleStatus(moduleName, opState, degraded);
+//			if (opState != oam::ACTIVE)
+//				continue;
 
             bool passwordError = false;
 

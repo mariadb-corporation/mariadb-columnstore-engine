@@ -80,16 +80,24 @@ int64_t addTime(DateTime& dt1, Time& dt2)
     }
 
     hour = (signed)(dt1.hour + dt2.hour + min / 60);
-    dt.hour = tmp = hour % 24;
 
-//	if (tmp < -1)
-    if (tmp < 0)			// fix for subtime dlh
+    if ((hour < 0) || (hour > 23))
     {
-        dt.hour = tmp + 24;
+        dt2.day = hour / 24;
+        hour = hour % 24;
+    }
+    if (hour < 0)
+    {
+        dt.hour = hour + 24;
         dt2.day--;
     }
+    else
+    {
+        dt.hour = hour;
+    }
 
-    day = (signed)(dt1.day + dt2.day + hour / 24);
+    day = (signed)(dt1.day + dt2.day);
+
 
     if (isLeapYear(dt1.year) && dt1.month == 2)
         day--;
@@ -97,7 +105,7 @@ int64_t addTime(DateTime& dt1, Time& dt2)
     month = dt1.month;
     int addyear = 0;
 
-    if (dt2.day < 0 || dt2.hour < 0)
+    if (day < 0)
     {
         int monthSave = month;
 
@@ -106,7 +114,7 @@ int64_t addTime(DateTime& dt1, Time& dt2)
             month = (month == 1 ? 12 : month - 1);
 
             for (; day <= 0 && month > 0; month--)
-                day += getDaysInMonth(month);
+                day += getDaysInMonth(month, dt1.year);
 
             month++;
 //			month=12;
@@ -119,10 +127,10 @@ int64_t addTime(DateTime& dt1, Time& dt2)
     {
         int monthSave = month;
 
-        while (day > getDaysInMonth(month))
+        while (day > getDaysInMonth(month, dt1.year))
         {
-            for (; day > getDaysInMonth(month) && month <= 12; month++)
-                day -= getDaysInMonth(month);
+            for (; day > getDaysInMonth(month, dt1.year) && month <= 12; month++)
+                day -= getDaysInMonth(month, dt1.year);
 
             if (month > 12)
                 month = 1;
@@ -138,6 +146,67 @@ int64_t addTime(DateTime& dt1, Time& dt2)
 
     return *(reinterpret_cast<int64_t*>(&dt));
 }
+
+int64_t addTime(Time& dt1, Time& dt2)
+{
+    Time dt;
+    dt.is_neg = false;
+    dt.hour = 0;
+    dt.minute = 0;
+    dt.second = 0;
+    dt.msecond = 0;
+
+    int64_t min, sec, msec, tmp;
+    msec = (signed)(dt1.msecond + dt2.msecond);
+    dt.msecond = tmp = msec % 1000000;
+
+    if (tmp < 0)
+    {
+        dt.msecond = tmp + 1000000;
+        dt2.second--;
+    }
+
+    sec = (signed)(dt1.second + dt2.second + msec / 1000000);
+    dt.second = tmp = sec % 60;
+
+    if (tmp < 0)
+    {
+        dt.second = tmp + 60;
+        dt2.minute--;
+    }
+
+    min = (signed)(dt1.minute + dt2.minute + sec / 60);
+    dt.minute = tmp = min % 60;
+
+    if (tmp < 0)
+    {
+        dt.minute = tmp + 60;
+        dt2.hour--;
+    }
+
+    dt.hour = tmp = (signed)(dt1.hour + dt2.hour + min / 60);
+
+    // Saturation
+    if (tmp > 838)
+    {
+        dt.hour = 838;
+        dt.minute = 59;
+        dt.second = 59;
+        dt.msecond = 999999;
+    }
+    else if (tmp < -838)
+    {
+        dt.is_neg = true;
+        dt.hour = -838;
+        dt.minute = 59;
+        dt.second = 59;
+        dt.msecond = 999999;
+    }
+
+    return *(reinterpret_cast<int64_t*>(&dt));
+}
+
+
 }
 
 namespace funcexp
@@ -182,6 +251,13 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
     if (isNull)
         return -1;
 
+    // Adding a zero date to a time is always NULL
+    if (val1 == 0)
+    {
+        isNull = true;
+        return -1;
+    }
+
     const string& val2 = parm[1]->data()->getStrVal(row, isNull);
     int sign = parm[2]->data()->getIntVal(row, isNull);
     DateTime dt1;
@@ -212,26 +288,89 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
 
     int val_sign = 1;
 
-    if (t2.day != 0 && t2.hour < 0)
-    {
-        isNull = true;
-        return -1;
-    }
-    else if (t2.day < 0 || t2.hour < 0)
+    if (t2.hour < 0)
     {
         val_sign = -1;
     }
 
-    if ((abs(t2.day) * 24 + abs(t2.hour)) > 838)
+    if (abs(t2.hour) > 838)
     {
         t2.hour = 838;
         t2.minute = 59;
         t2.second = 59;
         t2.msecond = 999999;
     }
+
+    if (val_sign * sign < 0)
+    {
+        t2.hour = -abs(t2.hour);
+        t2.minute = -abs(t2.minute);
+        t2.second = -abs(t2.second);
+        t2.msecond = -abs(t2.msecond);
+    }
     else
     {
-        t2.hour = abs(t2.day) * 24 + t2.hour;
+        t2.hour = abs(t2.hour);
+        t2.minute = abs(t2.minute);
+        t2.second = abs(t2.second);
+        t2.msecond = abs(t2.msecond);
+    }
+
+    t2.day = 0;
+
+    return addTime(dt1, t2);
+}
+
+int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row,
+                                     FunctionParm& parm,
+                                     bool& isNull,
+                                     CalpontSystemCatalog::ColType& ct)
+{
+    int64_t val1 = parm[0]->data()->getTimeIntVal(row, isNull);
+
+    if (isNull)
+        return -1;
+
+    const string& val2 = parm[1]->data()->getStrVal(row, isNull);
+    int sign = parm[2]->data()->getIntVal(row, isNull);
+    Time dt1;
+    dt1.day = 0;
+    dt1.is_neg = val1 >> 63;
+    dt1.hour = (val1 >> 40) & 0xfff;
+    dt1.minute = (val1 >> 32) & 0xff;
+    dt1.second = (val1 >> 24) & 0xff;
+    dt1.msecond = val1 & 0xffffff;
+
+    int64_t	time = DataConvert::stringToTime(val2);
+
+    if (time == -1)
+    {
+        isNull = true;
+        return -1;
+    }
+
+    Time t2 = *(reinterpret_cast<Time*>(&time));
+
+    // MySQL TIME type range '-838:59:59' and '838:59:59'
+    if (t2.minute > 59 || t2.second > 59 || t2.msecond > 999999)
+    {
+        isNull = true;
+        return -1;
+    }
+
+    int val_sign = 1;
+
+    if (t2.hour < 0)
+    {
+        val_sign = -1;
+    }
+
+    if (abs(t2.hour) > 838)
+    {
+        t2.hour = 838;
+        t2.minute = 59;
+        t2.second = 59;
+        t2.msecond = 999999;
     }
 
     t2.day = 0;
@@ -253,6 +392,7 @@ int64_t Func_add_time::getDatetimeIntVal(rowgroup::Row& row,
 
     return addTime(dt1, t2);
 }
+
 
 
 } // namespace funcexp

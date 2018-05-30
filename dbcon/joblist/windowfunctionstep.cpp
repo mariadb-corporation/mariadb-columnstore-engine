@@ -1201,6 +1201,7 @@ boost::shared_ptr<FrameBound> WindowFunctionStep::parseFrameBoundRows(
             case execplan::CalpontSystemCatalog::UDECIMAL:
             case execplan::CalpontSystemCatalog::DATE:
             case execplan::CalpontSystemCatalog::DATETIME:
+            case execplan::CalpontSystemCatalog::TIME:
             {
                 fb.reset(new FrameBoundExpressionRow<uint64_t>(type, id, idx));
                 break;
@@ -1351,6 +1352,7 @@ boost::shared_ptr<FrameBound> WindowFunctionStep::parseFrameBoundRange(const exe
         case execplan::CalpontSystemCatalog::UDECIMAL:
         case execplan::CalpontSystemCatalog::DATE:
         case execplan::CalpontSystemCatalog::DATETIME:
+        case execplan::CalpontSystemCatalog::TIME:
         {
             if (isConstant)
             {

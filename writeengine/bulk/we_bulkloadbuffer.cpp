@@ -902,7 +902,8 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
         {
             bool bSatVal = false;
 
-            if ( column.dataType != CalpontSystemCatalog::DATETIME )
+            if ( column.dataType != CalpontSystemCatalog::DATETIME &&
+                    column.dataType != CalpontSystemCatalog::TIME )
             {
                 if (nullFlag)
                 {
@@ -975,6 +976,58 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                     bufStats.maxBufferVal = llVal;
 
                 pVal = &llVal;
+            }
+            else if (column.dataType == CalpontSystemCatalog::TIME)
+            {
+                // time conversion
+                int rc = 0;
+
+                if (nullFlag)
+                {
+                    if (column.fWithDefault)
+                    {
+                        llDate = column.fDefaultInt;
+                        // fall through to update saturation and min/max
+                    }
+                    else
+                    {
+                        llDate = joblist::TIMENULL;
+                        pVal = &llDate;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (fImportDataMode != IMPORT_DATA_TEXT)
+                    {
+                        memcpy(&llDate, field, sizeof(llDate));
+
+                        if (!dataconvert::DataConvert::isColumnTimeValid(
+                                    llDate))
+                            rc = -1;
+                    }
+                    else
+                    {
+                        llDate = dataconvert::DataConvert::convertColumnTime(
+                                     field, dataconvert::CALPONTTIME_ENUM,
+                                     rc, fieldLength );
+                    }
+                }
+
+                if (rc == 0)
+                {
+                    if (llDate < bufStats.minBufferVal)
+                        bufStats.minBufferVal = llDate;
+
+                    if (llDate > bufStats.maxBufferVal)
+                        bufStats.maxBufferVal = llDate;
+                }
+                else
+                {
+                    bufStats.satCount++;
+                }
+
+                pVal = &llDate;
             }
             else
             {
@@ -1437,8 +1490,8 @@ int  BulkLoadBuffer::parseCol(ColumnInfo& columnInfo)
         }
 
         // create a buffer for the size of the rows being written.
-        unsigned char* buf = new unsigned char[fTotalReadRowsParser *
-                                                                    columnInfo.column.width];
+        unsigned char* buf = new unsigned char[fTotalReadRowsParser*
+                                               columnInfo.column.width];
         char*  field = new char[MAX_FIELD_SIZE + 1];
 
         // Initialize min/max buffer values.  We initialize to a sufficient
@@ -2971,6 +3024,11 @@ bool BulkLoadBuffer::isBinaryFieldNull(void* val,
             if (dt == execplan::CalpontSystemCatalog::DATETIME)
             {
                 if ((*(uint64_t*)val) == joblist::DATETIMENULL)
+                    isNullFlag = true;
+            }
+            else if (dt == execplan::CalpontSystemCatalog::TIME)
+            {
+                if ((*(uint64_t*)val) == joblist::TIMENULL)
                     isNullFlag = true;
             }
             else

@@ -136,7 +136,8 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
                     (*field)->type() == MYSQL_TYPE_STRING ||
                     (*field)->type() == MYSQL_TYPE_DATE ||
                     (*field)->type() == MYSQL_TYPE_DATETIME ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME2 )
+                    (*field)->type() == MYSQL_TYPE_DATETIME2 ||
+                    (*field)->type() == MYSQL_TYPE_TIME )
                 vals.append("'");
 
             while (ptr < end_ptr)
@@ -166,7 +167,8 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
                     (*field)->type() == MYSQL_TYPE_STRING ||
                     (*field)->type() == MYSQL_TYPE_DATE ||
                     (*field)->type() == MYSQL_TYPE_DATETIME ||
-                    (*field)->type() == MYSQL_TYPE_DATETIME2 )
+                    (*field)->type() == MYSQL_TYPE_DATETIME2 ||
+                    (*field)->type() == MYSQL_TYPE_TIME )
                 vals.append("'");
         }
     }
@@ -838,11 +840,23 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                             // mariadb 10.1 compatibility -- MYSQL_TYPE_DATETIME2 introduced in mysql 5.6
                             MYSQL_TIME ltime;
                             const uchar* pos = buf;
-                            longlong tmp = my_datetime_packed_from_binary(pos, 0);
+                            longlong tmp = my_datetime_packed_from_binary(pos, table->field[colpos]->decimals());
                             TIME_from_longlong_datetime_packed(&ltime, tmp);
-                            fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d%c",
-                                    ltime.year, ltime.month, ltime.day,
-                                    ltime.hour, ltime.minute, ltime.second, ci.delimiter);
+
+                            if (!ltime.second_part)
+                            {
+                                fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d%c",
+                                        ltime.year, ltime.month, ltime.day,
+                                        ltime.hour, ltime.minute, ltime.second, ci.delimiter);
+                            }
+                            else
+                            {
+                                fprintf(ci.filePtr, "%04d-%02d-%02d %02d:%02d:%02d.%ld%c",
+                                        ltime.year, ltime.month, ltime.day,
+                                        ltime.hour, ltime.minute, ltime.second,
+                                        ltime.second_part, ci.delimiter);
+                            }
+
                             buf += table->field[colpos]->pack_length();
                         }
                         else
@@ -861,6 +875,39 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                             fprintf(ci.filePtr, "%02d:%02d:%02d%c", hour, min, second, ci.delimiter);
                             buf += 8;
                         }
+                    }
+
+                    break;
+                }
+
+                case CalpontSystemCatalog::TIME:
+                {
+                    if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
+                    {
+                        fprintf(ci.filePtr, "%c", ci.delimiter);
+
+                        buf += table->field[colpos]->pack_length();
+                    }
+                    else
+                    {
+                        MYSQL_TIME ltime;
+                        const uchar* pos = buf;
+                        longlong tmp = my_time_packed_from_binary(pos, table->field[colpos]->decimals());
+                        TIME_from_longlong_time_packed(&ltime, tmp);
+
+                        if (!ltime.second_part)
+                        {
+                            fprintf(ci.filePtr, "%02d:%02d:%02d%c",
+                                    ltime.hour, ltime.minute, ltime.second, ci.delimiter);
+                        }
+                        else
+                        {
+                            fprintf(ci.filePtr, "%02d:%02d:%02d.%ld%c",
+                                    ltime.hour, ltime.minute, ltime.second,
+                                    ltime.second_part, ci.delimiter);
+                        }
+
+                        buf += table->field[colpos]->pack_length();
                     }
 
                     break;

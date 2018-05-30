@@ -554,9 +554,9 @@ static const yytype_uint8 yydefact[] =
 static const yytype_int8 yydefgoto[] =
 {
     -1,     2,     6,     7,     8,     9,    18,    19,    23,    24,
-    25,    33,    36,    10,    11,    52,    39,    45,    46,    48,
-    61,    56
-};
+        25,    33,    36,    10,    11,    52,    39,    45,    46,    48,
+        61,    56
+    };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
@@ -576,9 +576,9 @@ static const yytype_int8 yypact[] =
 static const yytype_int8 yypgoto[] =
 {
     -20,   -20,   -20,    37,   -20,    32,    36,   -20,   -20,   -20,
-    -20,   -20,   -20,   -15,   -19,   -10,   -20,     6,    -1,   -20,
-    -20,   -20
-};
+        -20,   -20,   -20,   -15,   -19,   -10,   -20,     6,    -1,   -20,
+        -20,   -20
+    };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule which

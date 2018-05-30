@@ -248,6 +248,11 @@ public:
         return fExpression->getDatetimeIntVal(row, isNull);
     }
 
+    virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+    {
+        return fExpression->getTimeIntVal(row, isNull);
+    }
+
     virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
     {
         return fExpression->getBoolVal(row, isNull);

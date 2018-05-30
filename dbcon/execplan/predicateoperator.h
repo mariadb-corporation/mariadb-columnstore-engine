@@ -344,6 +344,37 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
             return numericCompare(val1, rop->getDatetimeIntVal(row, isNull)) && !isNull;
         }
 
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            if (fOp == OP_ISNULL)
+            {
+                lop->getTimeIntVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return ret;
+            }
+
+            if (fOp == OP_ISNOTNULL)
+            {
+                lop->getTimeIntVal(row, isNull);
+                bool ret = isNull;
+                isNull = false;
+                return !ret;
+            }
+
+            if (isNull)
+                return false;
+
+            int64_t val1 = lop->getTimeIntVal(row, isNull);
+
+            if (isNull)
+                return false;
+
+            return numericCompare(val1, rop->getTimeIntVal(row, isNull)) && !isNull;
+        }
+
+
+
         case execplan::CalpontSystemCatalog::VARCHAR:
         case execplan::CalpontSystemCatalog::CHAR:
         case execplan::CalpontSystemCatalog::TEXT:

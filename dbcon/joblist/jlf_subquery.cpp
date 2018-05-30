@@ -135,6 +135,11 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row)
             *cc = new ConstantColumn(oss.str());
             break;
 
+        case CalpontSystemCatalog::TIME:
+            oss << dataconvert::DataConvert::timeToString(row.getUintField<8>(i));
+            *cc = new ConstantColumn(oss.str());
+            break;
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::TEXT:
@@ -751,8 +756,8 @@ int doFromSubquery(CalpontExecutionPlan* ep, const string& alias, const string& 
 void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
     // make sure there is a LIMIT
-    if (csep->orderByCols().size() > 0 && csep->limitNum() == (uint64_t) - 1)
-        return;
+//    if (csep->orderByCols().size() > 0  csep->limitNum() == (uint64_t) - 1)
+//        return;
 
     jobInfo.limitStart = csep->limitStart();
     jobInfo.limitCount = csep->limitNum();

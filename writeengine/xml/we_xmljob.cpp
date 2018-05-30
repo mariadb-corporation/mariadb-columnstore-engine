@@ -1116,6 +1116,22 @@ void XMLJob::fillInXMLDataNotNullDefault(
                 break;
             }
 
+            case execplan::CalpontSystemCatalog::TIME:
+            {
+                int convertStatus;
+                int64_t dt =
+                    dataconvert::DataConvert::convertColumnTime(
+                        col_defaultValue.c_str(),
+                        dataconvert::CALPONTTIME_ENUM, convertStatus,
+                        col_defaultValue.length() );
+
+                if (convertStatus != 0)
+                    bDefaultConvertError = true;
+
+                col.fDefaultInt = dt;
+                break;
+            }
+
             case execplan::CalpontSystemCatalog::FLOAT:
             case execplan::CalpontSystemCatalog::DOUBLE:
             case execplan::CalpontSystemCatalog::UFLOAT:
