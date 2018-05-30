@@ -5477,6 +5477,21 @@ namespace oam
 			exceptionControl("autoMovePmDbroot", API_INVALID_PARAMETER);
 		}
 
+		//detach first to make sure DBS can be detach before trying to move to another pm
+		try
+		{
+			typedef std::vector<string> dbrootList;
+			dbrootList dbrootlist;
+			dbrootlist.push_back(itoa(dbrootID));
+
+			amazonDetach(dbrootlist);
+		}
+		catch (exception& )
+		{
+			writeLog("ERROR: amazonDetach failure", LOG_TYPE_ERROR );
+			exceptionControl("autoMovePmDbroot", API_DETACH_FAILURE);
+		}
+
 		//get dbroot id for other PMs
 		systemStorageInfo_t t;
 		DeviceDBRootList moduledbrootlist;
@@ -9645,6 +9660,69 @@ namespace oam
 
     /***************************************************************************
      *
+     * Function:  amazonDetach
+     *
+     * Purpose:   Amazon EC2 volume deattach needed
+     *
+     ****************************************************************************/
+
+    void Oam::amazonDetach(dbrootList dbrootConfigList)
+    {
+		//if amazon cloud with external volumes, do the detach/attach moves
+		string cloud;
+		string DBRootStorageType;
+		try {
+			getSystemConfig("Cloud", cloud);
+			getSystemConfig("DBRootStorageType", DBRootStorageType);
+		}
+		catch(...) {}
+
+		if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") && 
+			DBRootStorageType == "external" )
+		{
+			writeLog("amazonDetach function started ", LOG_TYPE_DEBUG );
+
+			dbrootList::iterator pt3 = dbrootConfigList.begin();
+			for( ; pt3 != dbrootConfigList.end() ; pt3++)
+			{
+				string dbrootid = *pt3;
+				string volumeNameID = "PMVolumeName" + dbrootid;
+				string volumeName = oam::UnassignedName;
+				string deviceNameID = "PMVolumeDeviceName" + dbrootid;
+				string deviceName = oam::UnassignedName;
+				try {
+					getSystemConfig( volumeNameID, volumeName);
+					getSystemConfig( deviceNameID, deviceName);
+				}
+				catch(...)
+				{}
+
+				if ( volumeName == oam::UnassignedName || deviceName == oam::UnassignedName )
+				{
+					cout << "   ERROR: amazonDetach, invalid configure " + volumeName + ":" + deviceName << endl;
+					writeLog("ERROR: amazonDetach, invalid configure " + volumeName + ":" + deviceName, LOG_TYPE_ERROR );
+					exceptionControl("amazonDetach", API_INVALID_PARAMETER);
+				}
+
+				//send msg to to-pm to umount volume
+				int returnStatus = sendMsgToProcMgr(UNMOUNT, dbrootid, FORCEFUL, ACK_YES);
+				if (returnStatus != API_SUCCESS) {
+					writeLog("ERROR: amazonDetach, umount failed on " + dbrootid, LOG_TYPE_ERROR );
+				}
+
+				if (!detachEC2Volume(volumeName)) {
+					cout << "   ERROR: amazonDetach, detachEC2Volume failed on " + volumeName << endl;
+					writeLog("ERROR: amazonDetach, detachEC2Volume failed on " + volumeName , LOG_TYPE_ERROR );
+					exceptionControl("amazonDetach", API_FAILURE);
+				}
+
+				writeLog("amazonDetach, detachEC2Volume passed on " + volumeName , LOG_TYPE_DEBUG );
+			}
+		}
+	}
+
+     /***************************************************************************
+     *
      * Function:  amazonReattach
      *
      * Purpose:   Amazon EC2 volume reattach needed
@@ -9735,6 +9813,7 @@ namespace oam
 			}
 		}
 	}
+
 
     /***************************************************************************
      *

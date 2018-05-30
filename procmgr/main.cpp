@@ -1922,7 +1922,7 @@ void pingDeviceThread()
 								if ( PrimaryUMModuleName == moduleName )
 								    downPrimaryUM = true;
 
-								// if not disabled and amazon, skip
+								// if disabled, skip
 								if (opState != oam::AUTO_DISABLED )
 								{	
 									//Log failure, issue alarm, set moduleOpState 
@@ -1968,6 +1968,7 @@ void pingDeviceThread()
 									if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
 										( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
 										( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") ) {
+										string error;
 										try {
 											log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
 											oam.autoMovePmDbroot(moduleName);
@@ -1983,6 +1984,23 @@ void pingDeviceThread()
 										catch(...)
 										{
 											log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
+										}
+										
+										if ( error == OAM::API_DETACH_FAILURE )
+										{
+										      processManager.setModuleState(moduleName, oam::AUTO_DISABLED);
+
+										      // resume the dbrm
+										      oam.dbrmctl("resume");
+										      log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+
+										      //enable query stats
+										      dbrm.setSystemQueryReady(true);
+
+										      //set query system state ready
+										      processManager.setQuerySystemState(true);
+										      
+										      break;
 										}
 									}
 								}
