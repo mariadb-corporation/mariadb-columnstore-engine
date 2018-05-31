@@ -86,6 +86,7 @@ int64_t addTime(DateTime& dt1, Time& dt2)
         dt2.day = hour / 24;
         hour = hour % 24;
     }
+
     if (hour < 0)
     {
         dt.hour = hour + 24;

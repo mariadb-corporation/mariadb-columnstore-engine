@@ -2769,6 +2769,7 @@ int64_t DataConvert::stringToTime(const string& data)
 
         if (*end != '\0')
             return -1;
+
         hour = day * 24;
         day = -1;
         time = data.substr(pos + 1, data.length() - pos - 1);

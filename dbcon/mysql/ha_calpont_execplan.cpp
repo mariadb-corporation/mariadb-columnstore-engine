@@ -4674,7 +4674,6 @@ void gp_walk(const Item* item, void* arg)
 
             if (isp)
             {
-                // @bug 3669. trim trailing spaces for the compare value
                 if (isp->result_type() == STRING_RESULT)
                 {
                     String val, *str = isp->val_str(&val);
@@ -4685,10 +4684,7 @@ void gp_walk(const Item* item, void* arg)
                         cval.assign(str->ptr(), str->length());
                     }
 
-                    size_t spos = cval.find_last_not_of(" ");
 
-                    if (spos != string::npos)
-                        cval = cval.substr(0, spos + 1);
 
                     gwip->rcWorkStack.push(new ConstantColumn(cval));
                     break;
@@ -9881,8 +9877,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 select_query += ord_cols;
             }
         }
-        // LIMIT and OFFSET are extracted from TABLE_LIST elements. 
-        // All of JOIN-ed tables contain relevant limit and offset. 
+
+        // LIMIT and OFFSET are extracted from TABLE_LIST elements.
+        // All of JOIN-ed tables contain relevant limit and offset.
         if (gi.groupByTables->select_lex->select_limit)
         {
             csep->limitNum(((Item_int*)gi.groupByTables->select_lex->select_limit)->val_int());
@@ -9905,7 +9902,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }
-        
+
     } // ORDER BY processing ends here
 
     if ( gi.groupByDistinct )
