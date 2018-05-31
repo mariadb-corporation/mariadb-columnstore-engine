@@ -32,7 +32,7 @@
 #endif
 
 using namespace ddlpackage;
-typedef enum { NOOP, STRIP_QUOTES, STRIP_QUOTES_FQ } copy_action_t;
+typedef enum { NOOP, STRIP_QUOTES } copy_action_t;
 int lineno = 1;
 void ddlerror(struct pass_to_bison* x, char const *s);
 
@@ -72,8 +72,6 @@ identifier {ident_start}{ident_cont}*
 fq_identifier {identifier}\.{identifier}
 identifier_quoted {grave_accent}{identifier}{grave_accent}
 identifier_double_quoted {double_quote}{identifier}{double_quote}
-fq_quoted ({identifier_quoted}|{identifier})\.({identifier_quoted}|{identifier})
-fq_double_quoted ({identifier_double_quoted}|{identifier})\.({identifier_double_quoted}|{identifier})
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
@@ -87,9 +85,6 @@ realfail2		({integer}|{decimal})[Ee][-+]
 
 {identifier_quoted} { ddlget_lval(yyscanner)->str = scanner_copy( ddlget_text(yyscanner), yyscanner, STRIP_QUOTES ); return IDENT; }
 {identifier_double_quoted} { ddlget_lval(yyscanner)->str = scanner_copy( ddlget_text(yyscanner), yyscanner, STRIP_QUOTES ); return DQ_IDENT; }
-{fq_identifier} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner); return FQ_IDENT; }
-{fq_quoted} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner, STRIP_QUOTES_FQ); return FQ_IDENT; }
-{fq_double_quoted} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner, STRIP_QUOTES_FQ); return FQ_IDENT; }
 
 ACTION {return ACTION;}
 ADD {return ADD;}
@@ -195,7 +190,7 @@ LONGTEXT {return LONGTEXT;}
 }
 
 {grave_accent} {
-    /* ignore */
+    return ddlget_text(yyscanner)[0];
 }
 
 %%
@@ -273,7 +268,6 @@ char* scanner_copy (char *str, yyscan_t yyscanner, copy_action_t action)
     char* result;
     char* nv = strdup(str);
     result = nv;
-
     // free strduped memory later to prevent possible memory leak
     if(nv)
         ((scan_data*)ddlget_extra(yyscanner))->valbuf.push_back(nv);
@@ -282,57 +276,6 @@ char* scanner_copy (char *str, yyscan_t yyscanner, copy_action_t action)
     {
         nv[strlen(str) - 1] = '\0';
         result = nv + 1;
-    }
-    else if (action == STRIP_QUOTES_FQ)
-    {
-        bool move_left = false;
-        bool move_right = false;
-        char* left = nv;
-        char* tmp_first = nv;
-        // MCOL-1384 Loop through all comas in this quoted fq id
-        // looking for $quote_sign.$quote_sign sequence.
-        char* fq_delimiter;
-        int tmp_pos = 0;
-        while((fq_delimiter = strchr(tmp_first, '.')) != NULL)
-        {
-            if( (*(fq_delimiter -1) == '`' && *(fq_delimiter + 1) == '`') ||
-              (*(fq_delimiter -1) == '"' && *(fq_delimiter + 1) == '"') )
-            {
-                tmp_pos += fq_delimiter - tmp_first;
-                break;
-            }
-            tmp_first = fq_delimiter;
-        }
-
-        char* fq_delimiter_orig = str + tmp_pos;
-        char* right = fq_delimiter + 1;
-        char* right_orig = fq_delimiter_orig + 1;
-        // MCOL-1384 Strip quotes from the left part.
-        if(*left == '"' || *left == '`')
-        {
-            result = left + 1;
-            *(fq_delimiter - 1) = '.';
-            move_left = true;
-        }
-        else
-        {
-            fq_delimiter += 1;
-        }
-
-        int right_length = strlen(right);
-        // MCOL-1384 Strip quotes from the right part.
-        if(*right == '`' || *right == '"')
-        {
-            right += 1; right_orig += 1;
-            right_length -= 2;
-            move_right = true;
-            *(fq_delimiter + right_length) = '\0';
-        }
-
-        if(move_left || move_right)
-        {
-            strncpy(fq_delimiter, right_orig, right_length);
-        }
     }
 
     return result;

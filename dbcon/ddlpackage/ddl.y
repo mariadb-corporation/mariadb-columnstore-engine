@@ -41,7 +41,6 @@
    */
 
 %{
-#include "string.h"
 #include "sqlparser.h"
 
 #ifdef _MSC_VER
@@ -115,7 +114,7 @@ REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TIME TINYBLOB TINYTEXT
 TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
 VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 
-%token <str> DQ_IDENT FQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE
+%token <str> DQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE
 
 /* Notes:
  * 1. "ata" stands for alter_table_action
@@ -606,26 +605,13 @@ table_name:
 	;
 
 qualified_name:
-	FQ_IDENT {
-                char* delimeterPosition = strchr(const_cast<char*>($1), '.');
-                if( delimeterPosition )
-                {
-                    *delimeterPosition = '\0';
-                    char* schemaName = const_cast<char*>($1);
-                    char* tableName = delimeterPosition + 1;
-                    $$ = new QualifiedName(schemaName, tableName);
-                    *delimeterPosition = '.';
-                }
-                else
-                    $$ = new QualifiedName($1);
-             }
 	| ident {
 				if (x->fDBSchema.size())
 					$$ = new QualifiedName((char*)x->fDBSchema.c_str(), $1);
 				else
 				    $$ = new QualifiedName($1);   
 			}
-    | IDENT '.' IDENT
+    | ident '.' ident
         {
             $$ = new QualifiedName($1, $3);
         }
