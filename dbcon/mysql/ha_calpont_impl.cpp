@@ -5581,18 +5581,18 @@ internal_error:
 */
 /***********************************************************
  * DESCRIPTION:
- * Return a result record for each 
+ * Return a result record for each
  * group_by_handler::next_row() call.
  * PARAMETERS:
  *    group_hand - group by handler, that preserves initial
  *  table and items lists. .
- *    table - TABLE pointer The table to save the result 
+ *    table - TABLE pointer The table to save the result
  * set in.
  * RETURN:
  *    0 if success
- *    HA_ERR_END_OF_FILE if the record set has come to 
+ *    HA_ERR_END_OF_FILE if the record set has come to
  *      an end
- *    others if something went wrong whilst getting the 
+ *    others if something went wrong whilst getting the
  *      result set
  ***********************************************************/
 int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table)

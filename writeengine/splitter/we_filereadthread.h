@@ -126,7 +126,7 @@ public:
     void add2InputDataFileList(std::string& FileName);
 
 private:
-    enum { DEFAULTBUFFSIZE=1024*1024 };
+    enum { DEFAULTBUFFSIZE = 1024 * 1024 };
 
     // don't allow anyone else to set
     void setTgtPmId(unsigned int fTgtPmId)

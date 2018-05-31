@@ -9877,8 +9877,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 select_query += ord_cols;
             }
         }
-        // LIMIT and OFFSET are extracted from TABLE_LIST elements. 
-        // All of JOIN-ed tables contain relevant limit and offset. 
+
+        // LIMIT and OFFSET are extracted from TABLE_LIST elements.
+        // All of JOIN-ed tables contain relevant limit and offset.
         if (gi.groupByTables->select_lex->select_limit)
         {
             csep->limitNum(((Item_int*)gi.groupByTables->select_lex->select_limit)->val_int());
@@ -9901,7 +9902,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
             return ER_CHECK_NOT_IMPLEMENTED;
         }
-        
+
     } // ORDER BY processing ends here
 
     if ( gi.groupByDistinct )

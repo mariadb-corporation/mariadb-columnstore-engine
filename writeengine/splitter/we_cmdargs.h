@@ -77,7 +77,10 @@ public:
     {
         return fLocFile;
     }
-        int getReadBufSize() { return fReadBufSize; }
+    int getReadBufSize()
+    {
+        return fReadBufSize;
+    }
     {
         return fMode;
     }

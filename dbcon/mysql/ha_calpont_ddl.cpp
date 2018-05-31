@@ -2266,7 +2266,7 @@ extern "C"
         int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg, compressiontype);
 
         if (rc != 0)
-		push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+            push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
 
         return rc;
     }

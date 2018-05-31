@@ -87,6 +87,7 @@ WEFileReadThread::WEFileReadThread(WESDHandler& aSdh): fSdh(aSdh),
 {
     //TODO batch qty to get from config
     fBatchQty = 10000;
+
     if (fSdh.getReadBufSize() < DEFAULTBUFFSIZE)
     {
         fBuffSize = DEFAULTBUFFSIZE;
@@ -95,6 +96,7 @@ WEFileReadThread::WEFileReadThread(WESDHandler& aSdh): fSdh(aSdh),
     {
         fBuffSize = fSdh.getReadBufSize();
     }
+
     fBuff = new char [fBuffSize];
 
 }
@@ -362,17 +364,17 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
             if (fEnclEsc)
             {
                 //pStart = aBuff;
-				aLen = getNextRow(fInFile, fBuff, fBuffSize-1);
+                aLen = getNextRow(fInFile, fBuff, fBuffSize - 1);
             }
             else
             {
-				fInFile.getline(fBuff, fBuffSize-1);
+                fInFile.getline(fBuff, fBuffSize - 1);
                 aLen = fInFile.gcount();
             }
 
             ////aLen chars incl \n, Therefore aLen-1; '<<' oper won't go past it
             //cout << "Data Length " << aLen <<endl;
-			if((aLen < (fBuffSize-2)) && (aLen>0))
+            if ((aLen < (fBuffSize - 2)) && (aLen > 0))
             {
                 fBuff[aLen - 1] = '\n';
                 fBuff[aLen] = 0;
@@ -384,7 +386,7 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 
                 if (fSdh.getDebugLvl() > 2) cout << "File data line = " << aIdx << endl;
             }
-			else if(aLen>=fBuffSize-2)	//Didn't hit delim; BIG ROW
+            else if (aLen >= fBuffSize - 2)	//Didn't hit delim; BIG ROW
             {
                 cout << "Bad Row data " << endl;
                 cout << fBuff << endl;

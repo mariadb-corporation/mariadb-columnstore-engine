@@ -60,7 +60,7 @@ struct IdbSortSpec
 {
     int fIndex;
     // TODO There are three ordering specs since 10.2
-    int fAsc;   // <ordering specification> ::= ASC | DESC 
+    int fAsc;   // <ordering specification> ::= ASC | DESC
     int fNf;    // <null ordering> ::= NULLS FIRST | NULLS LAST
 
     IdbSortSpec() : fIndex(-1), fAsc(1), fNf(1) {}
