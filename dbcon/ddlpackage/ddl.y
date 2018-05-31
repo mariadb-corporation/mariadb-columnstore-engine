@@ -198,6 +198,7 @@ VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
 %type <str>                  opt_if_not_exists
 %type <sqlStmt>              trunc_table_statement
 %type <sqlStmt>              rename_table_statement
+%type <str>                  ident
 
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
@@ -615,7 +616,7 @@ table_name:
 	;
 
 qualified_name:
-	| ident {
+	ident {
 				if (x->fDBSchema.size())
 					$$ = new QualifiedName((char*)x->fDBSchema.c_str(), $1);
 				else

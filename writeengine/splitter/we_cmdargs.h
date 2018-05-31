@@ -81,6 +81,7 @@ public:
     {
         return fReadBufSize;
     }
+    int getMode()
     {
         return fMode;
     }
