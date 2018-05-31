@@ -460,7 +460,7 @@ void TupleUnion::normalize(const Row& in, Row* out)
                         if (in.getScale(i))
                         {
                             double d = in.getIntField(i);
-                            d /= exp10(in.getScale(i));
+							d /= exp10(in.getScale(i));
                             os.precision(15);
                             os << d;
                         }
