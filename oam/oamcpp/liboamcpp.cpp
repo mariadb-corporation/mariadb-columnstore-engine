@@ -5479,7 +5479,7 @@ namespace oam
 
 		//detach first to make sure DBS can be detach before trying to move to another pm
 		DBRootConfigList::iterator pt3 = residedbrootConfigList.begin();
-		for( ; pt3 != residedbrootConfigList.end() ; )
+		for( ; pt3 != residedbrootConfigList.end() ; pt3++ )
 		{
 			int dbrootID = *pt3;
 
@@ -5494,6 +5494,14 @@ namespace oam
 			catch (exception& )
 			{
 				writeLog("ERROR: amazonDetach failure", LOG_TYPE_ERROR );
+				
+				//reattach
+				typedef std::vector<string> dbrootList;
+				dbrootList dbrootlist;
+				dbrootlist.push_back(itoa(dbrootID));
+
+				amazonAttach(residePM, dbrootlist);
+
 				exceptionControl("autoMovePmDbroot", API_DETACH_FAILURE);
 			}
 		}
@@ -5972,9 +5980,8 @@ namespace oam
 		}
 
 		if (!found) {
-			writeLog("ERROR: no dbroots found in ../Calpont/local/moveDbrootTransactionLog", LOG_TYPE_ERROR );
-			cout << "ERROR: no dbroots found in " << fileName << endl;
-			exceptionControl("autoUnMovePmDbroot", API_FAILURE);
+			writeLog("No dbroots found in ../Calpont/local/moveDbrootTransactionLog", LOG_TYPE_DEBUG );
+			cout << "No dbroots found in " << fileName << endl;
 		}
 
 		oldFile.close();
@@ -7269,7 +7276,7 @@ namespace oam
 		else
 			return;
 
-		// check if mysql-Capont is installed
+		// check if mysql-Columnstore is installed
 		string mysqlscript = InstallDir + "/mysql/mysql-Columnstore";
 		if (access(mysqlscript.c_str(), X_OK) != 0)
 			return;
@@ -9726,6 +9733,83 @@ namespace oam
 			}
 		}
 	}
+
+    /***************************************************************************
+     *
+     * Function:  amazonAttach
+     *
+     * Purpose:   Amazon EC2 volume Attach needed
+     *
+     ****************************************************************************/
+
+    void Oam::amazonAttach(std::string toPM, dbrootList dbrootConfigList)
+    {
+		//if amazon cloud with external volumes, do the detach/attach moves
+		string cloud;
+		string DBRootStorageType;
+		try {
+			getSystemConfig("Cloud", cloud);
+			getSystemConfig("DBRootStorageType", DBRootStorageType);
+		}
+		catch(...) {}
+
+		if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") && 
+			DBRootStorageType == "external" )
+		{
+			writeLog("amazonAttach function started ", LOG_TYPE_DEBUG );
+
+			//get Instance Name for to-pm
+			string toInstanceName = oam::UnassignedName;
+			try
+			{
+				ModuleConfig moduleconfig;
+				getSystemConfig(toPM, moduleconfig);
+				HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+				toInstanceName = (*pt1).HostName;
+			}
+			catch(...)
+			{}
+
+			if ( toInstanceName == oam::UnassignedName || toInstanceName.empty() )
+			{
+				cout << "   ERROR: amazonAttach, invalid Instance Name for " << toPM << endl;
+				writeLog("ERROR: amazonAttach, invalid Instance Name " + toPM, LOG_TYPE_ERROR );
+				exceptionControl("amazonAttach", API_INVALID_PARAMETER);
+			}
+
+			dbrootList::iterator pt3 = dbrootConfigList.begin();
+			for( ; pt3 != dbrootConfigList.end() ; pt3++)
+			{
+				string dbrootid = *pt3;
+				string volumeNameID = "PMVolumeName" + dbrootid;
+				string volumeName = oam::UnassignedName;
+				string deviceNameID = "PMVolumeDeviceName" + dbrootid;
+				string deviceName = oam::UnassignedName;
+				try {
+					getSystemConfig( volumeNameID, volumeName);
+					getSystemConfig( deviceNameID, deviceName);
+				}
+				catch(...)
+				{}
+
+				if ( volumeName == oam::UnassignedName || deviceName == oam::UnassignedName )
+				{
+					cout << "   ERROR: amazonAttach, invalid configure " + volumeName + ":" + deviceName << endl;
+					writeLog("ERROR: amazonAttach, invalid configure " + volumeName + ":" + deviceName, LOG_TYPE_ERROR );
+					exceptionControl("amazonAttach", API_INVALID_PARAMETER);
+				}
+
+				if (!attachEC2Volume(volumeName, deviceName, toInstanceName)) {
+					cout << "   ERROR: amazonAttach, attachEC2Volume failed on " + volumeName + ":" + deviceName + ":" + toInstanceName << endl;
+					writeLog("ERROR: amazonAttach, attachEC2Volume failed on " + volumeName + ":" + deviceName + ":" + toInstanceName, LOG_TYPE_ERROR );
+					exceptionControl("amazonAttach", API_FAILURE);
+				}
+
+				writeLog("amazonAttach, attachEC2Volume passed on " + volumeName + ":" + toPM, LOG_TYPE_DEBUG );
+			}
+		}
+	}
+
 
      /***************************************************************************
      *

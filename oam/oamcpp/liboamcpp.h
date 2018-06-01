@@ -2434,6 +2434,7 @@ namespace oam
 		void amazonReattach(std::string toPM, dbrootList dbrootConfigList, bool attach = false);
 		void mountDBRoot(dbrootList dbrootConfigList, bool mount = true);
 		void amazonDetach(dbrootList dbrootConfigList);
+		void amazonAttach(std::string toPM, dbrootList dbrootConfigList);
 
 		/**
 		*@brief  gluster control

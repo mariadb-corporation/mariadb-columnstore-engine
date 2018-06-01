@@ -1553,7 +1553,7 @@ void pingDeviceThread()
 									processManager.restartProcessType("WriteEngineServer", moduleName);
 
 									//set module to enable state
-									processManager.enableModule(moduleName, oam::AUTO_OFFLINE);
+									processManager.enableModule(moduleName, oam::AUTO_OFFLINE, true);
 
 									downActiveOAMModule = false;
 									int retry;
@@ -1647,7 +1647,7 @@ void pingDeviceThread()
 								}
 								else
 								    //set module to enable state
-								    processManager.enableModule(moduleName, oam::AUTO_OFFLINE);
+								    processManager.enableModule(moduleName, oam::AUTO_OFFLINE, true);
 
 								//restart module processes
 								int retry = 0;
