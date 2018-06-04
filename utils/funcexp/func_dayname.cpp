@@ -145,7 +145,9 @@ string Func_dayname::getStrVal(rowgroup::Row& row,
                                bool& isNull,
                                CalpontSystemCatalog::ColType& op_ct)
 {
-    uint32_t weekday = getIntVal(row, parm, isNull, op_ct);
+    int32_t weekday = getIntVal(row, parm, isNull, op_ct);
+    if (weekday == -1)
+        return "";
     return helpers::weekdayFullNames[weekday];
 }
 
