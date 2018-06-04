@@ -695,8 +695,8 @@ int main(int argc, char **argv)
 	if ( ret != 0 )
 		log.writeLog(__LINE__, "pthread_create failed, return code = " + oam.itoa(ret), LOG_TYPE_ERROR);
 
-	//mysql status monitor thread
-	if ( ( config.ServerInstallType() != oam::INSTALL_COMBINE_DM_UM_PM ) ||
+	//mysqld status monitor thread
+	if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM ) ||
 		(PMwithUM == "y") )
 	{
 
@@ -1127,7 +1127,7 @@ static void mysqlMonitorThread(MonitorConfig config)
 		catch(...)
 		{}
 
-		sleep(10);
+		sleep(5);
 	}
 
 }

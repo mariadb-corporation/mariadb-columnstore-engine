@@ -307,7 +307,7 @@ public:
      /**
      *@brief Enable a specified module
      */
-    int enableModule(std::string target, int state);
+    int enableModule(std::string target, int state, bool failover = false);
 
      /**
      *@brief Enable a specified module
