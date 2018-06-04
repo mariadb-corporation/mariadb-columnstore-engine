@@ -582,7 +582,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     intColVal = row.getUintField<8>(s);
-                    DataConvert::datetimeToString(intColVal, tmp, 255);
+                    DataConvert::datetimeToString(intColVal, tmp, 255, colType.precision);
 
                     /* setting the field_length is a sort-of hack. The length
                      * at this point can be long enough to include mseconds.
@@ -606,7 +606,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     intColVal = row.getUintField<8>(s);
-                    DataConvert::timeToString(intColVal, tmp, 255);
+                    DataConvert::timeToString(intColVal, tmp, 255, colType.precision);
 
                     Field_varstring* f2 = (Field_varstring*)*f;
                     f2->store(tmp, strlen(tmp), f2->charset());

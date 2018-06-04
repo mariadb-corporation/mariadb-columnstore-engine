@@ -2082,13 +2082,8 @@ std::string DataConvert::datetimeToString( long long  datetimevalue, long decima
 
     if (dt.msecond && decimals)
     {
-        snprintf(buf + strlen(buf), 21 + decimals, ".%d", dt.msecond);
-
-        // Pad end with zeros
-        if (strlen(buf) < (size_t)(21 + decimals))
-        {
-            sprintf(buf + strlen(buf), "%0*d", (int)(21 + decimals - strlen(buf)), 0);
-        }
+        // Pad start with zeros
+        sprintf(buf + strlen(buf), ".%0*d", (int)decimals, dt.msecond);
     }
 
     return buf;
@@ -2118,14 +2113,8 @@ std::string DataConvert::timeToString( long long  timevalue, long decimals )
 
     if (dt.msecond && decimals)
     {
-        size_t start = strlen(buf);
-        snprintf(buf + strlen(buf), 12 + decimals, ".%d", dt.msecond);
-
-        // Pad end with zeros
-        if (strlen(buf) - start < (size_t)decimals)
-        {
-            sprintf(buf + strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
-        }
+        // Pad start with zeros
+        sprintf(buf + strlen(buf), ".%0*d", (int)decimals, dt.msecond);
     }
 
     return buf;
