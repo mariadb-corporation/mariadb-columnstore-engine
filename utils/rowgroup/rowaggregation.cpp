@@ -4284,14 +4284,14 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
     static_any::any valOut;
 
     // Get the user data
-    boost::shared_ptr<mcsv1sdk::UserData> userData = rowIn.getUserData(colIn + 1);
+    boost::shared_ptr<mcsv1sdk::UserData> userDataIn = rowIn.getUserData(colIn+1);
 
     // Unlike other aggregates, the data isn't in colIn, so testing it for NULL
     // there won't help. In case of NULL, userData will be NULL.
     uint32_t flags[1];
 
     flags[0] = 0;
-    if (!userData)
+    if (!userDataIn)
     {
         if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
         {
@@ -4309,7 +4309,7 @@ void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
     // Call the UDAF subEvaluate method
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
-    rc = fRGContext.getFunction()->subEvaluate(&fRGContext, userData.get());
+    rc = fRGContext.getFunction()->subEvaluate(&fRGContext, userDataIn.get());
     fRGContext.setUserData(NULL);
 
     if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)
