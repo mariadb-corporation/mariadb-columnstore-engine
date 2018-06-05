@@ -859,7 +859,7 @@ bool mysql_str_to_datetime( const string& input, DateTime& output, bool& isDate 
     return true;
 }
 
-bool mysql_str_to_time( const string& input, Time& output )
+bool mysql_str_to_time( const string& input, Time& output, long decimals )
 {
     int32_t datesepct = 0;
     uint32_t dtend = 0;
@@ -999,20 +999,21 @@ bool mysql_str_to_time( const string& input, Time& output )
     if ( !isTimeValid( hour, min, sec, usec ) )
     {
         // Emulate MariaDB's time saturation
-        if (hour > 838)
+        // TODO: msec saturation
+        if ((hour > 838) && !isNeg)
         {
             output.hour = 838;
             output.minute = 59;
             output.second = 59;
-            output.msecond = 999999;
+            output.msecond = exp10(decimals) - 1;
             output.is_neg = 0;
         }
-        else if (hour < -838)
+        else if ((hour < -838) || ((hour > 838) && isNeg))
         {
             output.hour = -838;
             output.minute = 59;
             output.second = 59;
-            output.msecond = 999999;
+            output.msecond = exp10(decimals) - 1;
             output.is_neg = 1;
         }
         // If neither of the above match then we return a 0 time
@@ -1068,9 +1069,9 @@ bool stringToDatetimeStruct(const string& data, DateTime& dtime, bool* date)
     return true;
 }
 
-bool stringToTimeStruct(const string& data, Time& dtime)
+bool stringToTimeStruct(const string& data, Time& dtime, long decimals)
 {
-    if ( !mysql_str_to_time( data, dtime ) )
+    if ( !mysql_str_to_time( data, dtime, decimals ) )
         return false;
 
     return true;
@@ -1415,15 +1416,11 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             {
                 Time aTime;
 
-                if (stringToTimeStruct(data, aTime))
+                if (!stringToTimeStruct(data, aTime, colType.precision))
                 {
-                    value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
-                }
-                else
-                {
-                    value = (int64_t) 0;
                     pushWarning = true;
                 }
+                value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
             }
             break;
 
