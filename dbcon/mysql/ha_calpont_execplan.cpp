@@ -4165,7 +4165,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         rowCol->columnVec(selCols);
         (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
         parm.reset(rowCol);
-            ac->aggParms().push_back(parm);
+        ac->aggParms().push_back(parm);
 
         if (gc->str_separator())
         {
@@ -4311,15 +4311,15 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                     gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_AGG_ARGS, args);
                 }
 
-                    if (ac)
-                        delete ac;
+                if (ac)
+                    delete ac;
                 return NULL;
             }
-                if (parm)
-                {
-                    // MCOL-1201 multi-argument aggregate
-                    ac->aggParms().push_back(parm);
-                }
+            if (parm)
+            {
+                // MCOL-1201 multi-argument aggregate
+                ac->aggParms().push_back(parm);
+            }
         }
     }
 
@@ -10033,7 +10033,15 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             return ER_CHECK_NOT_IMPLEMENTED;
         }
 
-        (*coliter)->aggParms().push_back(minSc);
+        // Replace the last (presumably constant) object with minSc
+        if ((*coliter)->aggParms().empty())
+        {
+            (*coliter)->aggParms().push_back(minSc);
+        }
+        else
+        {
+            (*coliter)->aggParms()[0] = minSc;
+        }
     }
 
     std::vector<FunctionColumn*>::iterator funciter;

@@ -1505,10 +1505,17 @@ void TupleAggregateStep::prep1PhaseAggregate(
                 typeAgg.push_back(typeProj[colProj]);
                 widthAgg.push_back(width[colProj]);
                 // If the param is const
-                ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
-                if (cc)
+                if (udafc)
                 {
-                    funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
+                    if (cc)
+                    {
+                        funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                    }
+                }
+                else
+                {
+                    throw QueryDataExcept("prep1PhaseAggregate: UDAF multi function with no parms", aggregateFuncErr);
                 }
                 ++udafcParamIdx;
             }
@@ -2123,10 +2130,17 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
                     multiParmIndexes.push_back(colAgg);
                     ++colAgg;
                     // If the param is const
-                    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
-                    if (cc)
+                    if (udafc)
                     {
-                        funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                        ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
+                        if (cc)
+                        {
+                            funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                        }
+                    }
+                    else
+                    {
+                        throw QueryDataExcept("prep1PhaseDistinctAggregate: UDAF multi function with no parms", aggregateFuncErr);
                     }
                     ++udafcParamIdx;
                 }
@@ -3398,10 +3412,17 @@ void TupleAggregateStep::prep2PhasesAggregate(
                     widthAggPm.push_back(width[colProj]);
                     colAggPm++;
                     // If the param is const
-                    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
-                    if (cc)
+                    if (udafc)
                     {
-                        funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                        ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
+                        if (cc)
+                        {
+                            funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                        }
+                    }
+                    else
+                    {
+                        throw QueryDataExcept("prep2PhasesAggregate: UDAF multi function with no parms", aggregateFuncErr);
                     }
                     ++udafcParamIdx;
                 }
@@ -4257,10 +4278,17 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     multiParmIndexes.push_back(colAggPm);
                     colAggPm++;
                     // If the param is const
-                    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
-                    if (cc)
+                    if (udafc)
                     {
-                        funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                        ConstantColumn* cc = dynamic_cast<ConstantColumn*>(udafc->aggParms()[udafcParamIdx].get());
+                        if (cc)
+                        {
+                            funct->fpConstCol = udafc->aggParms()[udafcParamIdx];
+                        }
+                    }
+                    else
+                    {
+                        throw QueryDataExcept("prep2PhasesDistinctAggregate: UDAF multi function with no parms", aggregateFuncErr);
                     }
                     ++udafcParamIdx;
                 }
