@@ -503,6 +503,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
 
             // NULL flags
             uint32_t flags[getContext().getParameterCount()];
+            bHasNull = false;
             for (uint32_t k = 0; k < getContext().getParameterCount(); ++k)
             {
                 cc = static_cast<ConstantColumn*>(fConstantParms[k].get());
@@ -715,11 +716,11 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                         }
                     }
                 }
-                // Skip if any value is NULL and respect nulls is off.
-                if (bHasNull)
-                {
-                    continue;
-                }
+            }
+            // Skip if any value is NULL and respect nulls is off.
+            if (bHasNull)
+            {
+                continue;
             }
             getContext().setDataFlags(flags);
             
