@@ -78,7 +78,7 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
     while (i != jobInfo.groupConcatCols.end())
     {
         GroupConcatColumn* gcc = dynamic_cast<GroupConcatColumn*>(i->get());
-        const RowColumn* rcp = dynamic_cast<const RowColumn*>(gcc->functionParms().get());
+        const RowColumn* rcp = dynamic_cast<const RowColumn*>(gcc->aggParms()[0].get());
 
         SP_GroupConcat groupConcat(new GroupConcat);
         groupConcat->fSeparator = gcc->separator();

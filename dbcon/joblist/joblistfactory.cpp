@@ -18,7 +18,6 @@
 
 //   $Id: joblistfactory.cpp 9632 2013-06-18 22:18:20Z xlou $
 
-
 #include <iostream>
 #include <stack>
 #include <iterator>
@@ -301,6 +300,7 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
         {
             const ArithmeticColumn* ac = NULL;
             const FunctionColumn* fc = NULL;
+            const ConstantColumn* cc = NULL;
             uint64_t eid = -1;
             CalpontSystemCatalog::ColType ct;
             ExpressionStep* es = new ExpressionStep(jobInfo);
@@ -316,6 +316,11 @@ const JobStepVector doProject(const RetColsVector& retCols, JobInfo& jobInfo)
             {
                 eid = fc->expressionId();
                 ct = fc->resultType();
+            }
+            else if ((cc = dynamic_cast<const ConstantColumn*>(retCols[i].get())) != NULL)
+            {
+                eid = cc->expressionId();
+                ct = cc->resultType();
             }
             else
             {
@@ -870,7 +875,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
         if (gcc != NULL)
         {
-            srcp = gcc->functionParms();
+            srcp = gcc->aggParms()[0];
             const RowColumn* rcp = dynamic_cast<const RowColumn*>(srcp.get());
 
             const vector<SRCP>& cols = rcp->columnVec();
@@ -891,21 +896,55 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
             continue;
         }
+#if 0
+        // MCOL-1201 Add support for multi-parameter UDAnF
+		UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(retCols[i].get());
+		if (udafc != NULL)
+		{
+			srcp = udafc->aggParms()[0];
+			const RowColumn* rcp = dynamic_cast<const RowColumn*>(srcp.get());
 
+			const vector<SRCP>& cols = rcp->columnVec();
+			for (vector<SRCP>::const_iterator j = cols.begin(); j != cols.end(); j++)
+			{
+                srcp = *j;
+				if (dynamic_cast<const ConstantColumn*>(srcp.get()) == NULL)
+					retCols.push_back(srcp);
+
+                // Do we need this?
+        		const ArithmeticColumn* ac = dynamic_cast<const ArithmeticColumn*>(srcp.get());
+        		const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(srcp.get());
+        		if (ac != NULL || fc != NULL)
+        		{
+        			// bug 3728, make a dummy expression step for each expression.
+        			scoped_ptr<ExpressionStep> es(new ExpressionStep(jobInfo));
+        			es->expression(srcp, jobInfo);
+        		}
+			}
+			continue;
+		}
+#endif
         srcp = retCols[i];
         const AggregateColumn* ag = dynamic_cast<const AggregateColumn*>(retCols[i].get());
-
-        if (ag != NULL)
-            srcp = ag->functionParms();
-
-        const ArithmeticColumn* ac = dynamic_cast<const ArithmeticColumn*>(srcp.get());
-        const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(srcp.get());
-
-        if (ac != NULL || fc != NULL)
+        // bug 3728 Make a dummy expression for srcp if it is an
+        // expression. This is needed to fill in some stuff.
+        // Note that es.expression does nothing if the item is not an expression.
+        if (ag == NULL)
         {
-            // bug 3728, make a dummy expression step for each expression.
-            scoped_ptr<ExpressionStep> es(new ExpressionStep(jobInfo));
-            es->expression(srcp, jobInfo);
+            // Not an aggregate. Make a dummy expression for the item
+            ExpressionStep es;
+            es.expression(srcp, jobInfo);
+        }
+        else
+        {
+            // MCOL-1201 multi-argument aggregate. make a dummy expression 
+            // step for each argument that is an expression.
+            for (uint32_t i = 0; i < ag->aggParms().size(); ++i)
+            {
+                srcp = ag->aggParms()[i];
+                ExpressionStep es;
+                es.expression(srcp, jobInfo);
+            }
         }
     }
 
@@ -915,17 +954,18 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
     {
         srcp = retCols[i];
         const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
+        AggregateColumn* aggc = dynamic_cast<AggregateColumn*>(srcp.get());
         bool doDistinct = (csep->distinct() && csep->groupByCols().empty());
         uint32_t tupleKey = -1;
         string alias;
         string view;
 
-        // returned column could be groupby column, a simplecoulumn not a agregatecolumn
+        // returned column could be groupby column, a simplecoulumn not an aggregatecolumn
         int op = 0;
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct, aggCt;
 
-        if (sc == NULL)
+        if (aggc)
         {
             GroupConcatColumn* gcc = dynamic_cast<GroupConcatColumn*>(retCols[i].get());
 
@@ -939,7 +979,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                 tupleKey = ti.key;
                 jobInfo.returnedColVec.push_back(make_pair(tupleKey, gcc->aggOp()));
                 // not a tokenOnly column. Mark all the columns involved
-                srcp = gcc->functionParms();
+                srcp = gcc->aggParms()[0];
                 const RowColumn* rowCol = dynamic_cast<const RowColumn*>(srcp.get());
 
                 if (rowCol)
@@ -963,186 +1003,355 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
                 continue;
             }
-
-            AggregateColumn* ac = dynamic_cast<AggregateColumn*>(retCols[i].get());
-
-            if (ac != NULL)
+            else
             {
-                srcp = ac->functionParms();
-                sc = dynamic_cast<const SimpleColumn*>(srcp.get());
+                // Aggregate column not group concat
+                AggParms& aggParms = aggc->aggParms();
 
-                if (ac->constCol().get() != NULL)
+                for (uint32_t parm = 0; parm < aggParms.size(); ++parm)
                 {
-                    // replace the aggregate on constant with a count(*)
-                    SRCP clone;
-                    UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(ac);
-
-                    if (udafc)
+                    // Only do the optimization of converting to count(*) if
+                    // there is only one parameter.
+                    if (aggParms.size() == 1 && aggc->constCol().get() != NULL)
                     {
-                        clone.reset(new UDAFColumn(*udafc, ac->sessionID()));
+                        // replace the aggregate on constant with a count(*)
+                        SRCP clone;
+                        UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(aggc);
+                        
+                        if (udafc)
+                        {
+                            clone.reset(new UDAFColumn(*udafc, aggc->sessionID()));
+                        }
+                        else
+                        {
+                            clone.reset(new AggregateColumn(*aggc, aggc->sessionID()));
+                        }
+                        
+                        jobInfo.constAggregate.insert(make_pair(i, clone));
+                        aggc->aggOp(AggregateColumn::COUNT_ASTERISK);
+                        aggc->distinct(false);
+                    }
+                
+                    srcp = aggParms[parm];
+                    sc = dynamic_cast<const SimpleColumn*>(srcp.get());
+                    if (parm == 0)
+                    {
+                        op = aggc->aggOp();
                     }
                     else
                     {
-                        clone.reset(new AggregateColumn(*ac, ac->sessionID()));
+                        op = AggregateColumn::MULTI_PARM;
+                    }
+                    doDistinct = aggc->distinct();
+                    if (aggParms.size() == 1)
+                    {
+                        // Set the col type based on the single parm.
+                        // Changing col type based on a parm if multiple parms
+                        // doesn't really make sense.
+                        updateAggregateColType(aggc, srcp, op, jobInfo);
+                    }
+                    aggCt = aggc->resultType();
+
+                    // As of bug3695, make sure varbinary is not used in aggregation.
+                    // TODO: allow for UDAF
+                    if (sc != NULL && sc->resultType().colDataType == CalpontSystemCatalog::VARBINARY)
+                        throw runtime_error ("VARBINARY in aggregate function is not supported.");
+
+                    // Project the parm columns or expressions
+                    if (sc != NULL)
+                    {
+                        CalpontSystemCatalog::OID retOid = sc->oid();
+                        CalpontSystemCatalog::OID tblOid = tableOid(sc, jobInfo.csc);
+                        alias = extractTableAlias(sc);
+                        view = sc->viewName();
+
+                        if (!sc->schemaName().empty())
+                        {
+                            ct = sc->colType();
+
+                            //XXX use this before connector sets colType in sc correctly.
+                            if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                                ct = jobInfo.csc->colType(sc->oid());
+
+                            //X
+                            dictOid = isDictCol(ct);
+                        }
+                        else
+                        {
+                            retOid = (tblOid + 1) + sc->colPosition();
+                            ct = jobInfo.vtableColTypes[UniqId(retOid, alias, "", "")];
+                        }
+
+                        TupleInfo ti(setTupleInfo(ct, retOid, jobInfo, tblOid, sc, alias));
+                        tupleKey = ti.key;
+
+                        // this is a string column
+                        if (dictOid > 0)
+                        {
+                            map<uint32_t, bool>::iterator findit = jobInfo.tokenOnly.find(tupleKey);
+
+                            // if the column has never seen, and the op is count: possible need count only.
+                            if (AggregateColumn::COUNT == op || AggregateColumn::COUNT_ASTERISK == op)
+                            {
+                                if (findit == jobInfo.tokenOnly.end())
+                                    jobInfo.tokenOnly[tupleKey] = true;
+                            }
+                            // if aggregate other than count, token is not enough.
+                            else if (op != 0 || doDistinct)
+                            {
+                                jobInfo.tokenOnly[tupleKey] = false;
+                            }
+
+                            findit = jobInfo.tokenOnly.find(tupleKey);
+
+                            if (!(findit != jobInfo.tokenOnly.end() && findit->second == true))
+                            {
+                                dictMap[tupleKey] = dictOid;
+                                jobInfo.keyInfo->dictOidToColOid[dictOid] = retOid;
+                                ti = setTupleInfo(ct, dictOid, jobInfo, tblOid, sc, alias);
+                                jobInfo.keyInfo->dictKeyMap[tupleKey] = ti.key;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        const ArithmeticColumn* ac = NULL;
+                        const FunctionColumn* fc = NULL;
+                        const WindowFunctionColumn* wc = NULL;
+                        bool hasAggCols = false;
+
+                        if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
+                        {
+                            if (ac->aggColumnList().size() > 0)
+                                hasAggCols = true;
+                        }
+                        else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
+                        {
+                            if (fc->aggColumnList().size() > 0)
+                                hasAggCols = true;
+                        }
+                        else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
+                        {
+                            std::ostringstream errmsg;
+                            errmsg << "Invalid aggregate function nesting.";
+                            cerr << boldStart << errmsg.str() << boldStop << endl;
+                            throw logic_error(errmsg.str());
+                        }
+                        else if (dynamic_cast<const ConstantColumn*>(srcp.get()) != NULL)
+                        {
+                        }
+                        else if ((wc = dynamic_cast<const WindowFunctionColumn*>(srcp.get())) == NULL)
+                        {
+                            std::ostringstream errmsg;
+                            errmsg << "doAggProject: unsupported column: " << typeid(*(srcp.get())).name();
+                            cerr << boldStart << errmsg.str() << boldStop << endl;
+                            throw logic_error(errmsg.str());
+                        }
+
+                        uint64_t eid = srcp.get()->expressionId();
+                        ct = srcp.get()->resultType();
+                        TupleInfo ti(setExpTupleInfo(ct, eid, srcp.get()->alias(), jobInfo));
+                        tupleKey = ti.key;
+
+                        if (hasAggCols)
+                            jobInfo.expressionVec.push_back(tupleKey);
                     }
 
-                    jobInfo.constAggregate.insert(make_pair(i, clone));
-                    ac->aggOp(AggregateColumn::COUNT_ASTERISK);
-                    ac->distinct(false);
-                }
+                    // add to project list
+                    vector<uint32_t>::iterator keyIt = find(projectKeys.begin(), projectKeys.end(), tupleKey);
 
-                op = ac->aggOp();
-                doDistinct = ac->distinct();
-                updateAggregateColType(ac, srcp, op, jobInfo);
-                aggCt = ac->resultType();
+                    if (keyIt == projectKeys.end())
+                    {
+                        RetColsVector::iterator it = pcv.end();
 
-                // As of bug3695, make sure varbinary is not used in aggregation.
-                if (sc != NULL && sc->resultType().colDataType == CalpontSystemCatalog::VARBINARY)
-                    throw runtime_error ("VARBINARY in aggregate function is not supported.");
-            }
-        }
+                        if (doDistinct)
+                            it = pcv.insert(pcv.begin() + lastGroupByPos++, srcp);
+                        else
+                            it = pcv.insert(pcv.end(), srcp);
 
-        // simple column selected or aggregated
-        if (sc != NULL)
-        {
-            // one column only need project once
-            CalpontSystemCatalog::OID retOid = sc->oid();
-            CalpontSystemCatalog::OID tblOid = tableOid(sc, jobInfo.csc);
-            alias = extractTableAlias(sc);
-            view = sc->viewName();
+                        projectKeys.insert(projectKeys.begin() + distance(pcv.begin(), it), tupleKey);
+                    }
+                    else if (doDistinct) // @bug4250, move forward distinct column if necessary.
+                    {
+                        uint32_t pos = distance(projectKeys.begin(), keyIt);
 
-            if (!sc->schemaName().empty())
-            {
-                ct = sc->colType();
+                        if (pos >= lastGroupByPos)
+                        {
+                            pcv[pos] = pcv[lastGroupByPos];
+                            pcv[lastGroupByPos] = srcp;
+                            projectKeys[pos] = projectKeys[lastGroupByPos];
+                            projectKeys[lastGroupByPos] = tupleKey;
+                            lastGroupByPos++;
+                        }
+                    }
 
-//XXX use this before connector sets colType in sc correctly.
-                if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
-                    ct = jobInfo.csc->colType(sc->oid());
+                    if (doDistinct && dictOid > 0)
+                        tupleKey = jobInfo.keyInfo->dictKeyMap[tupleKey];
 
-//X
-                dictOid = isDictCol(ct);
-            }
-            else
-            {
-                retOid = (tblOid + 1) + sc->colPosition();
-                ct = jobInfo.vtableColTypes[UniqId(retOid, alias, "", "")];
-            }
+                    // remember the columns to be returned
+                    jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
 
-            TupleInfo ti(setTupleInfo(ct, retOid, jobInfo, tblOid, sc, alias));
-            tupleKey = ti.key;
+                    if (op == AggregateColumn::AVG || op == AggregateColumn::DISTINCT_AVG)
+                        jobInfo.scaleOfAvg[tupleKey] = (ct.scale << 8) + aggCt.scale;
 
-            // this is a string column
-            if (dictOid > 0)
-            {
-                map<uint32_t, bool>::iterator findit = jobInfo.tokenOnly.find(tupleKey);
-
-                // if the column has never seen, and the op is count: possible need count only.
-                if (AggregateColumn::COUNT == op || AggregateColumn::COUNT_ASTERISK == op)
-                {
-                    if (findit == jobInfo.tokenOnly.end())
-                        jobInfo.tokenOnly[tupleKey] = true;
-                }
-                // if aggregate other than count, token is not enough.
-                else if (op != 0 || doDistinct)
-                {
-                    jobInfo.tokenOnly[tupleKey] = false;
-                }
-
-                findit = jobInfo.tokenOnly.find(tupleKey);
-
-                if (!(findit != jobInfo.tokenOnly.end() && findit->second == true))
-                {
-                    dictMap[tupleKey] = dictOid;
-                    jobInfo.keyInfo->dictOidToColOid[dictOid] = retOid;
-                    ti = setTupleInfo(ct, dictOid, jobInfo, tblOid, sc, alias);
-                    jobInfo.keyInfo->dictKeyMap[tupleKey] = ti.key;
+                    // bug 1499 distinct processing, save unique distinct columns
+                    if (doDistinct &&
+                            (jobInfo.distinctColVec.end() ==
+                             find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
+                    {
+                        jobInfo.distinctColVec.push_back(tupleKey);
+                    }
                 }
             }
         }
         else
         {
-            const ArithmeticColumn* ac = NULL;
-            const FunctionColumn* fc = NULL;
-            const WindowFunctionColumn* wc = NULL;
-            bool hasAggCols = false;
-
-            if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
+            // Not an Aggregate
+            // simple column selected
+            if (sc != NULL)
             {
-                if (ac->aggColumnList().size() > 0)
-                    hasAggCols = true;
+                // one column only need project once
+                CalpontSystemCatalog::OID retOid = sc->oid();
+                CalpontSystemCatalog::OID tblOid = tableOid(sc, jobInfo.csc);
+                alias = extractTableAlias(sc);
+                view = sc->viewName();
+
+                if (!sc->schemaName().empty())
+                {
+                    ct = sc->colType();
+
+                    //XXX use this before connector sets colType in sc correctly.
+                    if (sc->isInfiniDB() && dynamic_cast<const PseudoColumn*>(sc) == NULL)
+                        ct = jobInfo.csc->colType(sc->oid());
+
+                    //X
+                    dictOid = isDictCol(ct);
+                }
+                else
+                {
+                    retOid = (tblOid + 1) + sc->colPosition();
+                    ct = jobInfo.vtableColTypes[UniqId(retOid, alias, "", "")];
+                }
+
+                TupleInfo ti(setTupleInfo(ct, retOid, jobInfo, tblOid, sc, alias));
+                tupleKey = ti.key;
+
+                // this is a string column
+                if (dictOid > 0)
+                {
+                    map<uint32_t, bool>::iterator findit = jobInfo.tokenOnly.find(tupleKey);
+
+                    // if the column has never seen, and the op is count: possible need count only.
+                    if (AggregateColumn::COUNT == op || AggregateColumn::COUNT_ASTERISK == op)
+                    {
+                        if (findit == jobInfo.tokenOnly.end())
+                            jobInfo.tokenOnly[tupleKey] = true;
+                    }
+                    // if aggregate other than count, token is not enough.
+                    else if (op != 0 || doDistinct)
+                    {
+                        jobInfo.tokenOnly[tupleKey] = false;
+                    }
+
+                    findit = jobInfo.tokenOnly.find(tupleKey);
+
+                    if (!(findit != jobInfo.tokenOnly.end() && findit->second == true))
+                    {
+                        dictMap[tupleKey] = dictOid;
+                        jobInfo.keyInfo->dictOidToColOid[dictOid] = retOid;
+                        ti = setTupleInfo(ct, dictOid, jobInfo, tblOid, sc, alias);
+                        jobInfo.keyInfo->dictKeyMap[tupleKey] = ti.key;
+                    }
+                }
             }
-            else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
-            {
-                if (fc->aggColumnList().size() > 0)
-                    hasAggCols = true;
-            }
-            else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
-            {
-                std::ostringstream errmsg;
-                errmsg << "Invalid aggregate function nesting.";
-                cerr << boldStart << errmsg.str() << boldStop << endl;
-                throw logic_error(errmsg.str());
-            }
-            else if ((wc = dynamic_cast<const WindowFunctionColumn*>(srcp.get())) == NULL)
-            {
-                std::ostringstream errmsg;
-                errmsg << "doAggProject: unsupported column: " << typeid(*(srcp.get())).name();
-                cerr << boldStart << errmsg.str() << boldStop << endl;
-                throw logic_error(errmsg.str());
-            }
-
-            uint64_t eid = srcp.get()->expressionId();
-            ct = srcp.get()->resultType();
-            TupleInfo ti(setExpTupleInfo(ct, eid, srcp.get()->alias(), jobInfo));
-            tupleKey = ti.key;
-
-            if (hasAggCols)
-                jobInfo.expressionVec.push_back(tupleKey);
-        }
-
-        // add to project list
-        vector<uint32_t>::iterator keyIt = find(projectKeys.begin(), projectKeys.end(), tupleKey);
-
-        if (keyIt == projectKeys.end())
-        {
-            RetColsVector::iterator it = pcv.end();
-
-            if (doDistinct)
-                it = pcv.insert(pcv.begin() + lastGroupByPos++, srcp);
             else
-                it = pcv.insert(pcv.end(), srcp);
-
-            projectKeys.insert(projectKeys.begin() + distance(pcv.begin(), it), tupleKey);
-        }
-        else if (doDistinct) // @bug4250, move forward distinct column if necessary.
-        {
-            uint32_t pos = distance(projectKeys.begin(), keyIt);
-
-            if (pos >= lastGroupByPos)
             {
-                pcv[pos] = pcv[lastGroupByPos];
-                pcv[lastGroupByPos] = srcp;
-                projectKeys[pos] = projectKeys[lastGroupByPos];
-                projectKeys[lastGroupByPos] = tupleKey;
-                lastGroupByPos++;
+                const ArithmeticColumn* ac = NULL;
+                const FunctionColumn* fc = NULL;
+                const WindowFunctionColumn* wc = NULL;
+                bool hasAggCols = false;
+
+                if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
+                {
+                    if (ac->aggColumnList().size() > 0)
+                        hasAggCols = true;
+                }
+                else if ((fc = dynamic_cast<const FunctionColumn*>(srcp.get())) != NULL)
+                {
+                    if (fc->aggColumnList().size() > 0)
+                        hasAggCols = true;
+                }
+                else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
+                {
+                    std::ostringstream errmsg;
+                    errmsg << "Invalid aggregate function nesting.";
+                    cerr << boldStart << errmsg.str() << boldStop << endl;
+                    throw logic_error(errmsg.str());
+                }
+                else if (dynamic_cast<const ConstantColumn*>(srcp.get()) != NULL)
+                {
+                }
+                else if ((wc = dynamic_cast<const WindowFunctionColumn*>(srcp.get())) == NULL)
+                {
+                    std::ostringstream errmsg;
+                    errmsg << "doAggProject: unsupported column: " << typeid(*(srcp.get())).name();
+                    cerr << boldStart << errmsg.str() << boldStop << endl;
+                    throw logic_error(errmsg.str());
+                }
+
+                uint64_t eid = srcp.get()->expressionId();
+                ct = srcp.get()->resultType();
+                TupleInfo ti(setExpTupleInfo(ct, eid, srcp.get()->alias(), jobInfo));
+                tupleKey = ti.key;
+
+                if (hasAggCols)
+                    jobInfo.expressionVec.push_back(tupleKey);
             }
-        }
 
-        if (doDistinct && dictOid > 0)
-            tupleKey = jobInfo.keyInfo->dictKeyMap[tupleKey];
+            // add to project list
+            vector<uint32_t>::iterator keyIt = find(projectKeys.begin(), projectKeys.end(), tupleKey);
 
-        // remember the columns to be returned
-        jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
+            if (keyIt == projectKeys.end())
+            {
+                RetColsVector::iterator it = pcv.end();
 
-        if (op == AggregateColumn::AVG || op == AggregateColumn::DISTINCT_AVG)
-            jobInfo.scaleOfAvg[tupleKey] = (ct.scale << 8) + aggCt.scale;
+                if (doDistinct)
+                    it = pcv.insert(pcv.begin() + lastGroupByPos++, srcp);
+                else
+                    it = pcv.insert(pcv.end(), srcp);
 
-        // bug 1499 distinct processing, save unique distinct columns
-        if (doDistinct &&
-                (jobInfo.distinctColVec.end() ==
-                 find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
-        {
-            jobInfo.distinctColVec.push_back(tupleKey);
+                projectKeys.insert(projectKeys.begin() + distance(pcv.begin(), it), tupleKey);
+            }
+            else if (doDistinct) // @bug4250, move forward distinct column if necessary.
+            {
+                uint32_t pos = distance(projectKeys.begin(), keyIt);
+
+                if (pos >= lastGroupByPos)
+                {
+                    pcv[pos] = pcv[lastGroupByPos];
+                    pcv[lastGroupByPos] = srcp;
+                    projectKeys[pos] = projectKeys[lastGroupByPos];
+                    projectKeys[lastGroupByPos] = tupleKey;
+                    lastGroupByPos++;
+                }
+            }
+
+            if (doDistinct && dictOid > 0)
+                tupleKey = jobInfo.keyInfo->dictKeyMap[tupleKey];
+
+            // remember the columns to be returned
+            jobInfo.returnedColVec.push_back(make_pair(tupleKey, op));
+
+            if (op == AggregateColumn::AVG || op == AggregateColumn::DISTINCT_AVG)
+                jobInfo.scaleOfAvg[tupleKey] = (ct.scale << 8) + aggCt.scale;
+
+            // bug 1499 distinct processing, save unique distinct columns
+            if (doDistinct &&
+                    (jobInfo.distinctColVec.end() ==
+                     find(jobInfo.distinctColVec.begin(), jobInfo.distinctColVec.end(), tupleKey)))
+            {
+                jobInfo.distinctColVec.push_back(tupleKey);
+            }
         }
     }
 

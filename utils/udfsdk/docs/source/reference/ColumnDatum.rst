@@ -1,3 +1,5 @@
+.. _ColumnDatum:
+
 ColumnDatum
 ===========
 
@@ -13,7 +15,7 @@ Example for int data:
      int myint = valIn.cast<int>();
 
 
-For multi-paramter aggregations (not available in Columnstore 1.1), the colsIn vector of next_value() contains the ordered set of row parameters.
+For multi-paramter aggregations (not available in Columnstore 1.1), the colsIn array of next_value() contains the ordered set of row parameters.
 
 For char, varchar, text, varbinary and blob types, columnData will be std::string.
 
@@ -59,7 +61,7 @@ The provided values are:
    * - SMALLINT
      - A signed two byte integer
    * - DECIMAL
-     - A Columnstore Decimal value. For Columnstore 1.1, this is stored in the smallest integer type field that will hold the required precision.
+     - A Columnstore Decimal value. This is stored in the smallest integer type field that will hold the required precision.
    * - MEDINT
      - A signed four byte integer
    * - INT

@@ -781,8 +781,11 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
 
                     //double double_val = *(double*)(&value);
                     //f2->store(double_val);
-                    if (f2->decimals() < (uint32_t)row.getScale(s))
-                        f2->dec = (uint32_t)row.getScale(s);
+                    if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
+                     || f2->decimals() < row.getScale(s))
+                    {
+                        f2->dec = row.getScale(s);
+                    }
 
                     f2->store(dl);
 
@@ -5275,8 +5278,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator colMapIter;
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator condColMapIter;
             execplan::ParseTree* ptIt;
-            execplan::ReturnedColumn* rcIt;
-
             for (TABLE_LIST* tl = gi.groupByTables; tl; tl = tl->next_local)
             {
                 mapiter = ci->tableMap.find(tl->table);
@@ -5581,19 +5582,14 @@ internal_error:
 */
 /***********************************************************
  * DESCRIPTION:
- * Return a result record for each
- * group_by_handler::next_row() call.
+ * Return a result record for each group_by_handler::next_row() call.
  * PARAMETERS:
- *    group_hand - group by handler, that preserves initial
- *  table and items lists. .
- *    table - TABLE pointer The table to save the result
- * set in.
+ *    group_hand - group by handler, that preserves initial table and items lists. .
+ *    table - TABLE pointer The table to save the result set in.
  * RETURN:
  *    0 if success
- *    HA_ERR_END_OF_FILE if the record set has come to
- *      an end
- *    others if something went wrong whilst getting the
- *      result set
+ *    HA_ERR_END_OF_FILE if the record set has come to an end
+ *    others if something went wrong whilst getting the result set
  ***********************************************************/
 int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table)
 {

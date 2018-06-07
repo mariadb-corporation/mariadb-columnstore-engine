@@ -35,6 +35,7 @@
 
 #include "exceptclasses.h"
 #include "serializeable.h"
+#include "any.hpp"
 
 class ByteStreamTestSuite;
 

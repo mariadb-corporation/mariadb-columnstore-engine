@@ -1,4 +1,4 @@
-.. _ mcsv1_udaf:
+.. _mcsv1_udaf:
 
 mcsv1_UDAF
 ==========
@@ -11,11 +11,13 @@ The base class has no data members. It is designed to be only a container for yo
 
 However, adding static const members makes sense.
 
-For UDAF (not Wndow Functions) Aggregation takes place in three stages:
+For UDAF (not Window Functions) Aggregation takes place in three stages:
 
 * Subaggregation on the PM. nextValue()
 * Consolodation on the UM. subevaluate()
 * Evaluation of the function on the UM. evaluate()
+
+There are situations where the system makes a choice to perform all UDAF calculations on the UM. The presence of group_concat() in the query and certain joins can cause the optimizer to make this choice.
 
 For Window Functions, all aggregation occurs on the UM, and thus the subevaluate step is skipped. There is an optional dropValue() function that may be added.
 
@@ -80,17 +82,11 @@ Callback Methods
 
 .. _init:
 
-.. c:function:: ReturnCode init(mcsv1Context* context, COL_TYPES& colTypes);
+.. c:function:: ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
 :param context: The context object for this call.
 
-:param colTypes: A list of the column types of the parameters.
-
- COL_TYPES is defined as::
-
-  typedef std::vector<std::pair<std::string, CalpontSystemCatalog::ColDataType> >COL_TYPES;
-
- In Columnstore 1.1, only one column is supported, so colTyoes will be of length one.
+:param colTypes: A list of ColumnDatum structures. Use this to access the column types of the parameters. colTypes.columnData will be invalid.
 
 :returns: ReturnCode::ERROR or ReturnCode::SUCCESS
  
@@ -116,25 +112,23 @@ Callback Methods
 
 .. _nextvalue:
 
-.. c:function:: ReturnCode nextValue(mcsv1Context* context, 				 std::vector<ColumnDatum>& valsIn);
+.. c:function:: ReturnCode nextValue(mcsv1Context* context, 				 ColumnDatum* valsIn);
 
 :param context: The context object for this call
 
-:param valsIn: a vector representing the values to be added for each parameter for this row.
-
- In Columnstore 1.1, this will be a vector of length one.
-
+:param valsIn: an array representing the values to be added for each parameter for this row.
+ 
 :returns: ReturnCode::ERROR or ReturnCode::SUCCESS
 
  Use context->getUserData() and type cast it to your UserData type or Simple Data Model stuct. 
 
  nextValue() is called for each Window movement that passes the WHERE and HAVING clauses. The context's UserData will contain values that have been sub-aggregated to this point for the group, partition or Window Frame. nextValue is called on the PM for aggregation and on the UM for Window Functions.
 
- When used in an aggregate, the function may not rely on order or completeness since the sub-aggregation is going on at the PM, it only has access to the data stored on the PM's dbroots.
+ When used in an aggregate, the function should not rely on order or completeness since the sub-aggregation is going on at the PM, it only has access to the data stored on the PM's dbroots.
 
- When used as a analytic function (Window Function), nextValue is call for each Window movement in the Window. If dropValue is defined, then it may be called for every value leaving the Window, and nextValue called for each new value entering the Window.
+ When used as a analytic function (Window Function), nextValue is called for each Window movement in the Window. If dropValue is defined, then it may be called for every value leaving the Window, and nextValue called for each new value entering the Window.
 
- Since this is called for every row, it is important that this method be efficient.
+ Since this may called for every row, it is important that this method be efficient.
 
 .. _subevaluate:
 
@@ -172,13 +166,11 @@ Callback Methods
 
 .. _dropvalue:
 
-.. c:function:: ReturnCode dropValue(mcsv1Context* context, 				 std::vector<ColumnDatum>& valsDropped);
+.. c:function:: ReturnCode dropValue(mcsv1Context* context, 				 ColumnDatum* valsDropped);
 
 :param context: The context object for this call
 
-:param valsDropped: a vector representing the values to be dropped for each parameter for this row.
-
- In Columnstore 1.1, this will be a vector of length one.
+:param valsDropped: an array representing the values to be dropped for each parameter for this row.
 
 :returns: ReturnCode::ERROR or ReturnCode::SUCCESS
 

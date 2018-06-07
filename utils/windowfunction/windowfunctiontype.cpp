@@ -39,7 +39,6 @@ using namespace logging;
 using namespace ordering;
 
 #include "calpontsystemcatalog.h"
-#include "constantcolumn.h"
 #include "dataconvert.h"                            // int64_t IDB_pow[19]
 using namespace execplan;
 
@@ -227,6 +226,9 @@ WindowFunctionType::makeWindowFunction(const string& name, int ct, WindowFunctio
                             ERR_WF_NOT_SUPPORT);
             break;
     }
+
+    // Copy the only the constant parameter pointers
+    af->constParms(wc->functionParms());
 
     return af;
 }
@@ -492,10 +494,10 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
     static uint64_t dateNull      = joblist::DATENULL;
     static uint64_t datetimeNull  = joblist::DATETIMENULL;
     static uint64_t timeNull      = joblist::TIMENULL;
-    static uint64_t char1Null     = joblist::CHAR1NULL;
-    static uint64_t char2Null     = joblist::CHAR2NULL;
-    static uint64_t char4Null     = joblist::CHAR4NULL;
-    static uint64_t char8Null     = joblist::CHAR8NULL;
+//    static uint64_t char1Null     = joblist::CHAR1NULL;
+//    static uint64_t char2Null     = joblist::CHAR2NULL;
+//    static uint64_t char4Null     = joblist::CHAR4NULL;
+//    static uint64_t char8Null     = joblist::CHAR8NULL;
     static string stringNull("");
 
     void* v = NULL;
@@ -632,6 +634,26 @@ void* WindowFunctionType::getNullValueByType(int ct, int pos)
     }
 
     return v;
+}
+
+void WindowFunctionType::constParms(const std::vector<SRCP>& functionParms)
+{
+    // fConstantParms will end up with a copy of functionParms, but only
+    // the constant types will be copied. Other types will take up space but
+    // be NULL. This allows us to acces the constants without the overhead
+    // of dynamic_cast for every row.
+    for (size_t i = 0; i < functionParms.size(); ++i)
+    {
+        ConstantColumn* cc = dynamic_cast<ConstantColumn*>(functionParms[i].get());
+        if (cc)
+        {
+            fConstantParms.push_back(functionParms[i]);
+        }
+        else
+        {
+            fConstantParms.push_back(SRCP(cc));
+        }
+    }
 }
 
 }   //namespace
