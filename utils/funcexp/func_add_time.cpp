@@ -223,7 +223,14 @@ int64_t Func_add_time::getIntVal(rowgroup::Row& row,
                                  bool& isNull,
                                  CalpontSystemCatalog::ColType& op_ct)
 {
-    return getDatetimeIntVal(row, parm, isNull, op_ct);
+    if (parm[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::TIME)
+    {
+        return getTimeIntVal(row, parm, isNull, op_ct);
+    }
+    else
+    {
+        return getDatetimeIntVal(row, parm, isNull, op_ct);
+    }
 }
 
 string Func_add_time::getStrVal(rowgroup::Row& row,

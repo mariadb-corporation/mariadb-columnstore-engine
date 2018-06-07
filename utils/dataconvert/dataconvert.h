@@ -587,14 +587,7 @@ inline void DataConvert::datetimeToString( long long datetimevalue, char* buf, u
 
     if (msec || decimals)
     {
-        size_t start = strlen(buf);
-        snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
-
-        // Pad end with zeros
-        if (strlen(buf) - start < (size_t)decimals)
-        {
-            snprintf(buf + strlen(buf), buflen - strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
-        }
+        snprintf(buf + strlen(buf), buflen - strlen(buf), ".%0*d", (int)decimals, msec);
     }
 }
 
@@ -636,14 +629,8 @@ inline void DataConvert::timeToString( long long timevalue, char* buf, unsigned 
 
     if (msec || decimals)
     {
-        size_t start = strlen(buf);
-        snprintf(buf + strlen(buf), buflen - start, ".%d", msec);
-
-        // Pad end with zeros
-        if (strlen(buf) - start < (size_t)decimals)
-        {
-            snprintf(buf + strlen(buf), buflen - strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
-        }
+        // Pad start with zeros
+        snprintf(buf + strlen(buf), buflen - strlen(buf), ".%0*d", (int)decimals, msec);
     }
 }
 

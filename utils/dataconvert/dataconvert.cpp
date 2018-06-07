@@ -859,7 +859,7 @@ bool mysql_str_to_datetime( const string& input, DateTime& output, bool& isDate 
     return true;
 }
 
-bool mysql_str_to_time( const string& input, Time& output )
+bool mysql_str_to_time( const string& input, Time& output, long decimals )
 {
     int32_t datesepct = 0;
     uint32_t dtend = 0;
@@ -999,20 +999,21 @@ bool mysql_str_to_time( const string& input, Time& output )
     if ( !isTimeValid( hour, min, sec, usec ) )
     {
         // Emulate MariaDB's time saturation
-        if (hour > 838)
+        // TODO: msec saturation
+        if ((hour > 838) && !isNeg)
         {
             output.hour = 838;
             output.minute = 59;
             output.second = 59;
-            output.msecond = 999999;
+            output.msecond = exp10(decimals) - 1;
             output.is_neg = 0;
         }
-        else if (hour < -838)
+        else if ((hour < -838) || ((hour > 838) && isNeg))
         {
             output.hour = -838;
             output.minute = 59;
             output.second = 59;
-            output.msecond = 999999;
+            output.msecond = exp10(decimals) - 1;
             output.is_neg = 1;
         }
         // If neither of the above match then we return a 0 time
@@ -1068,9 +1069,9 @@ bool stringToDatetimeStruct(const string& data, DateTime& dtime, bool* date)
     return true;
 }
 
-bool stringToTimeStruct(const string& data, Time& dtime)
+bool stringToTimeStruct(const string& data, Time& dtime, long decimals)
 {
-    if ( !mysql_str_to_time( data, dtime ) )
+    if ( !mysql_str_to_time( data, dtime, decimals ) )
         return false;
 
     return true;
@@ -1415,15 +1416,11 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             {
                 Time aTime;
 
-                if (stringToTimeStruct(data, aTime))
+                if (!stringToTimeStruct(data, aTime, colType.precision))
                 {
-                    value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
-                }
-                else
-                {
-                    value = (int64_t) 0;
                     pushWarning = true;
                 }
+                value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
             }
             break;
 
@@ -1910,6 +1907,7 @@ int64_t DataConvert::convertColumnTime(
 {
     status = 0;
     char* p;
+    char* retp = NULL;
     char* savePoint = NULL;
     p = const_cast<char*>(dataOrg);
     int64_t value = 0;
@@ -1926,6 +1924,17 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
+    if (dataOrgLen == 0)
+    {
+        return value;
+    }
+    if (dataOrgLen < 3)
+    {
+        // Not enough chars to be a time
+        status = -1;
+        return value;
+    }
+
     if (p[0] == '-')
     {
         isNeg = true;
@@ -1934,9 +1943,9 @@ int64_t DataConvert::convertColumnTime(
     errno = 0;
 
     p = strtok_r(p, ":.", &savePoint);
-    inHour = strtol(p, 0, 10);
+    inHour = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1950,9 +1959,9 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
-    inMinute = strtol(p, 0, 10);
+    inMinute = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1966,9 +1975,9 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
-    inSecond = strtol(p, 0, 10);
+    inSecond = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1978,9 +1987,9 @@ int64_t DataConvert::convertColumnTime(
 
     if (p != NULL)
     {
-        inMicrosecond = strtol(p, 0, 10);
+        inMicrosecond = strtol(p, &retp, 10);
 
-        if (errno)
+        if (errno || !retp)
         {
             status = -1;
             return value;
@@ -2082,13 +2091,8 @@ std::string DataConvert::datetimeToString( long long  datetimevalue, long decima
 
     if (dt.msecond && decimals)
     {
-        snprintf(buf + strlen(buf), 21 + decimals, ".%d", dt.msecond);
-
-        // Pad end with zeros
-        if (strlen(buf) < (size_t)(21 + decimals))
-        {
-            sprintf(buf + strlen(buf), "%0*d", (int)(21 + decimals - strlen(buf)), 0);
-        }
+        // Pad start with zeros
+        sprintf(buf + strlen(buf), ".%0*d", (int)decimals, dt.msecond);
     }
 
     return buf;
@@ -2118,14 +2122,8 @@ std::string DataConvert::timeToString( long long  timevalue, long decimals )
 
     if (dt.msecond && decimals)
     {
-        size_t start = strlen(buf);
-        snprintf(buf + strlen(buf), 12 + decimals, ".%d", dt.msecond);
-
-        // Pad end with zeros
-        if (strlen(buf) - start < (size_t)decimals)
-        {
-            sprintf(buf + strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
-        }
+        // Pad start with zeros
+        sprintf(buf + strlen(buf), ".%0*d", (int)decimals, dt.msecond);
     }
 
     return buf;

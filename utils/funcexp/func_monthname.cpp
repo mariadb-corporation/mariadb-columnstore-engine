@@ -47,7 +47,9 @@ string Func_monthname::getStrVal(rowgroup::Row& row,
                                  bool& isNull,
                                  CalpontSystemCatalog::ColType& op_ct)
 {
-    uint32_t month = getIntVal(row, parm, isNull, op_ct);
+    int32_t month = getIntVal(row, parm, isNull, op_ct);
+    if (month == -1)
+        return "";
     return helpers::monthFullNames[month];
 }
 

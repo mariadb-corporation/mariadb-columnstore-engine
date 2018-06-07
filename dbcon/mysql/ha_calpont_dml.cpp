@@ -895,6 +895,10 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                         longlong tmp = my_time_packed_from_binary(pos, table->field[colpos]->decimals());
                         TIME_from_longlong_time_packed(&ltime, tmp);
 
+                        if (ltime.neg)
+                        {
+                            fprintf(ci.filePtr, "-");
+                        }
                         if (!ltime.second_part)
                         {
                             fprintf(ci.filePtr, "%02d:%02d:%02d%c",
