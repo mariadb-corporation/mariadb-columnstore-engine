@@ -1907,6 +1907,7 @@ int64_t DataConvert::convertColumnTime(
 {
     status = 0;
     char* p;
+    char* retp = NULL;
     char* savePoint = NULL;
     p = const_cast<char*>(dataOrg);
     int64_t value = 0;
@@ -1923,6 +1924,17 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
+    if (dataOrgLen == 0)
+    {
+        return value;
+    }
+    if (dataOrgLen < 3)
+    {
+        // Not enough chars to be a time
+        status = -1;
+        return value;
+    }
+
     if (p[0] == '-')
     {
         isNeg = true;
@@ -1931,9 +1943,9 @@ int64_t DataConvert::convertColumnTime(
     errno = 0;
 
     p = strtok_r(p, ":.", &savePoint);
-    inHour = strtol(p, 0, 10);
+    inHour = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1947,9 +1959,9 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
-    inMinute = strtol(p, 0, 10);
+    inMinute = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1963,9 +1975,9 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
-    inSecond = strtol(p, 0, 10);
+    inSecond = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1975,9 +1987,9 @@ int64_t DataConvert::convertColumnTime(
 
     if (p != NULL)
     {
-        inMicrosecond = strtol(p, 0, 10);
+        inMicrosecond = strtol(p, &retp, 10);
 
-        if (errno)
+        if (errno || !retp)
         {
             status = -1;
             return value;
