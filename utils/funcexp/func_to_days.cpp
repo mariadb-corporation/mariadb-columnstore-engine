@@ -59,6 +59,9 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
              month = 0,
              day = 0;
 
+    DateTime aDateTime;
+    Time     aTime;
+
     switch (type)
     {
         case execplan::CalpontSystemCatalog::DATE:
@@ -78,6 +81,21 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
             month = (uint32_t)((val >> 44) & 0xf);
             day = (uint32_t)((val >> 38) & 0x3f);
 
+            return helpers::calc_mysql_daynr(year, month, day);
+            break;
+        }
+
+            // Time adds to now() and then gets value
+        case CalpontSystemCatalog::TIME:
+        {
+            int64_t val;
+            aDateTime = static_cast<DateTime>(nowDatetime());
+            aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            val = addTime(aDateTime, aTime);
+            year = (uint32_t)((val >> 48) & 0xffff);
+            month = (uint32_t)((val >> 44) & 0xf);
+            day = (uint32_t)((val >> 38) & 0x3f);
             return helpers::calc_mysql_daynr(year, month, day);
             break;
         }
