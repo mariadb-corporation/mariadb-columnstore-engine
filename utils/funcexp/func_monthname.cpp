@@ -77,6 +77,8 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row,
                                   CalpontSystemCatalog::ColType& op_ct)
 {
     int64_t val = 0;
+    DateTime aDateTime;
+    Time     aTime;
 
     switch (parm[0]->data()->resultType().colDataType)
     {
@@ -87,6 +89,16 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DATETIME:
             val = parm[0]->data()->getIntVal(row, isNull);
             return (unsigned)((val >> 44) & 0xf);
+
+            // Time adds to now() and then gets value
+        case CalpontSystemCatalog::TIME:
+            aDateTime = static_cast<DateTime>(nowDatetime());
+            aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            val = addTime(aDateTime, aTime);
+            return (unsigned)((val >> 44) & 0xf);
+            break;
+
 
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::TEXT:

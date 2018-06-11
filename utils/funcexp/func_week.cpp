@@ -53,6 +53,8 @@ int64_t Func_week::getIntVal(rowgroup::Row& row,
 
     int64_t val = 0;
     int16_t mode = 0;
+    DateTime aDateTime;
+    Time     aTime;
 
     if (parm.size() > 1)  // mode value
         mode = parm[1]->data()->getIntVal(row, isNull);
@@ -68,6 +70,17 @@ int64_t Func_week::getIntVal(rowgroup::Row& row,
 
         case CalpontSystemCatalog::DATETIME:
             val = parm[0]->data()->getIntVal(row, isNull);
+            year = (uint32_t)((val >> 48) & 0xffff);
+            month = (uint32_t)((val >> 44) & 0xf);
+            day = (uint32_t)((val >> 38) & 0x3f);
+            break;
+
+            // Time adds to now() and then gets value
+        case CalpontSystemCatalog::TIME:
+            aDateTime = static_cast<DateTime>(nowDatetime());
+            aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            val = addTime(aDateTime, aTime);
             year = (uint32_t)((val >> 48) & 0xffff);
             month = (uint32_t)((val >> 44) & 0xf);
             day = (uint32_t)((val >> 38) & 0x3f);

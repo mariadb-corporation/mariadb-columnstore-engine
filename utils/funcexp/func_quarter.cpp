@@ -50,6 +50,8 @@ int64_t Func_quarter::getIntVal(rowgroup::Row& row,
 {
     // try to cast to date/datetime
     int64_t val = 0, month = 0;
+    DateTime aDateTime;
+    Time     aTime;
 
     switch (parm[0]->data()->resultType().colDataType)
     {
@@ -61,6 +63,15 @@ int64_t Func_quarter::getIntVal(rowgroup::Row& row,
         case CalpontSystemCatalog::DATETIME:
             val = parm[0]->data()->getIntVal(row, isNull);
             month = (val >> 44) & 0xf;
+            break;
+
+            // Time adds to now() and then gets value
+        case CalpontSystemCatalog::TIME:
+            aDateTime = static_cast<DateTime>(nowDatetime());
+            aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            val = addTime(aDateTime, aTime);
+            month = (uint32_t)((val >> 44) & 0xf);
             break;
 
         case CalpontSystemCatalog::CHAR:

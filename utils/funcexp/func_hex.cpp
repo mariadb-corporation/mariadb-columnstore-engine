@@ -78,6 +78,7 @@ string Func_hex::getStrVal(rowgroup::Row& row,
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::DATETIME:
         case CalpontSystemCatalog::DATE:
+        case CalpontSystemCatalog::TIME:
         {
             const string& arg = parm[0]->data()->getStrVal(row, isNull);
             scoped_array<char> hexPtr(new char[strlen(arg.c_str()) * 2 + 1]);

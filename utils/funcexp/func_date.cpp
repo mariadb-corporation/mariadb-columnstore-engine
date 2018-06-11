@@ -56,6 +56,9 @@ int64_t Func_date::getIntVal(rowgroup::Row& row,
 
     string value = "";
 
+    DateTime aDateTime;
+    Time     aTime;
+
     switch (type)
     {
         case execplan::CalpontSystemCatalog::DATE:
@@ -71,6 +74,20 @@ int64_t Func_date::getIntVal(rowgroup::Row& row,
             value = value.substr(0, 10);
             break;
         }
+
+            // Time adds to now() and then gets value
+        case CalpontSystemCatalog::TIME:
+        {
+            int64_t val;
+            aDateTime = static_cast<DateTime>(nowDatetime());
+            aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            val = addTime(aDateTime, aTime);
+            value = dataconvert::DataConvert::datetimeToString(val);
+            value = value.substr(0, 10);
+            break;
+        }
+
 
         case execplan::CalpontSystemCatalog::BIGINT:
         case execplan::CalpontSystemCatalog::INT:
