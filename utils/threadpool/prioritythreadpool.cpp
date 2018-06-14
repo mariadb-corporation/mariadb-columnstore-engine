@@ -33,6 +33,8 @@ using namespace logging;
 #include "prioritythreadpool.h"
 using namespace boost;
 
+#include "dbcon/joblist/primitivemsg.h"
+
 namespace threadpool
 {
 
@@ -48,9 +50,9 @@ PriorityThreadPool::PriorityThreadPool(uint targetWeightPerRun, uint highThreads
 		threads.create_thread(ThreadHelper(this, LOW));
 	cout << "started " << highThreads << " high, " << midThreads << " med, " << lowThreads
 			<< " low.\n";
-	threadCounts[HIGH] = highThreads;
-	threadCounts[MEDIUM] = midThreads;
-	threadCounts[LOW] = lowThreads;
+	defaultThreadCounts[HIGH] = threadCounts[HIGH] = highThreads;
+	defaultThreadCounts[MEDIUM] = threadCounts[MEDIUM] = midThreads;
+	defaultThreadCounts[LOW] = threadCounts[LOW] = lowThreads;
 }
 
 PriorityThreadPool::~PriorityThreadPool()
@@ -64,6 +66,23 @@ void PriorityThreadPool::addJob(const Job &job, bool useLock)
 
 	if (useLock)
 		lk.lock();
+
+    // Create any missing threads
+    if (defaultThreadCounts[HIGH] != threadCounts[HIGH])
+    {
+        threads.create_thread(ThreadHelper(this, HIGH));
+        threadCounts[HIGH]++;
+    }
+    if (defaultThreadCounts[MEDIUM] != threadCounts[MEDIUM])
+    {
+        threads.create_thread(ThreadHelper(this, MEDIUM));
+        threadCounts[MEDIUM]++;
+    }
+    if (defaultThreadCounts[LOW] != threadCounts[LOW])
+    {
+        threads.create_thread(ThreadHelper(this, LOW));
+        threadCounts[LOW]++;
+    }
 
 	if (job.priority > 66)
 		jobQueues[HIGH].push_back(job);
@@ -110,6 +129,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 	vector<bool> reschedule;
 	uint32_t rescheduleCount;
 	uint32_t queueSize;
+    bool running = false;
 
     try
     {
@@ -143,15 +163,12 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
             reschedule.resize(runList.size());
             rescheduleCount = 0;
             for (i = 0; i < runList.size() && !_stop; i++) {
-                try {
                     reschedule[i] = false;
+                    running = true;
                     reschedule[i] = (*(runList[i].functor))();
+                    running = false;
                     if (reschedule[i])
                         rescheduleCount++;
-                }
-                catch (std::exception &e) {
-                    cerr << e.what() << endl;
-                }
             }
 
             // no real work was done, prevent intensive busy waiting
@@ -177,6 +194,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
         // Log the exception and exit this thread
         try
         {
+            threadCounts[queue]--;
 #ifndef NOLOGGING
             logging::Message::Args args;
             logging::Message message(5);
@@ -190,6 +208,8 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
             ml.logErrorMessage( message );
 #endif
+            if (running)
+                sendErrorMsg(runList[i].uniqueID, runList[i].stepID, runList[i].sock);
         }
         catch (...)
         {
@@ -201,6 +221,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
         // Log the exception and exit this thread
         try
         {
+            threadCounts[queue]--;
 #ifndef NOLOGGING
             logging::Message::Args args;
             logging::Message message(6);
@@ -213,11 +234,28 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
             ml.logErrorMessage( message );
 #endif
+            if (running)
+                sendErrorMsg(runList[i].uniqueID, runList[i].stepID, runList[i].sock);
         }
         catch (...)
         {
         }
     }
+}
+
+void PriorityThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock)
+{
+	ISMPacketHeader ism;
+	PrimitiveHeader ph = {0};
+
+	ism.Status =  logging::primitiveServerErr;
+	ph.UniqueID = id;
+	ph.StepID = step;
+	ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+	msg.append((uint8_t *) &ism, sizeof(ism));
+	msg.append((uint8_t *) &ph, sizeof(ph));
+
+	sock->write(msg);
 }
 
 void PriorityThreadPool::stop()
