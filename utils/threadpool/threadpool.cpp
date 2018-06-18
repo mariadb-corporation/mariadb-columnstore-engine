@@ -21,6 +21,7 @@
 *
 ***********************************************************************/
 #include <stdexcept>
+#include <iostream>
 using namespace std;
 
 #include "messageobj.h"

@@ -149,6 +149,7 @@ public:
     char getEscChar();
     char getDelimChar();
 	bool getConsoleLog();
+    int getReadBufSize();
     ImportDataMode getImportDataMode() const;
     void sysLog(const logging::Message::Args& msgArgs,
     		logging::LOG_TYPE logType, logging::Message::MessageID msgId);

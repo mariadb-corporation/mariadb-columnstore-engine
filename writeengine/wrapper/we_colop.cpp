@@ -208,7 +208,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 				//Find out where the rest rows go
 				BRM::LBID_t startLbid;
 				//need to put in a loop until newExtent is true
-				newExtent = dbRootExtentTrackers[0]->nextSegFile(dbRoot, partition, segment, newHwm, startLbid);
+				newExtent = dbRootExtentTrackers[column.colNo]->nextSegFile(dbRoot, partition, segment, newHwm, startLbid);
 				TableMetaData* tableMetaData= TableMetaData::makeTableMetaData(tableOid);
 				while (!newExtent)
 				{
@@ -223,7 +223,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 					
 					for (i=0; i < dbRootExtentTrackers.size(); i++)
 					{
-						if (i != 0)
+						if (i != column.colNo)
 							dbRootExtentTrackers[i]->nextSegFile(dbRoot, partition, segment, newHwm, startLbid);
 						
 						// Round up HWM to the end of the current extent
@@ -278,7 +278,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 						}
 						tableMetaData->setColExtsInfo(newColStructList[i].dataOid, aColExtsInfo);
 					}
-					newExtent = dbRootExtentTrackers[0]->nextSegFile(dbRoot, partition, segment, newHwm, startLbid);	
+					newExtent = dbRootExtentTrackers[column.colNo]->nextSegFile(dbRoot, partition, segment, newHwm, startLbid);	
 				}
 			 }
 			 
@@ -297,7 +297,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 				}
 				
 				rc = BRMWrapper::getInstance()->allocateStripeColExtents(cols, dbRoot, partition, segment, extents);
-				newHwm = extents[0].startBlkOffset;
+				newHwm = extents[column.colNo].startBlkOffset;
 				if (rc != NO_ERROR)
 					return rc;
 					

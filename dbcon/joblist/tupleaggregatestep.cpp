@@ -958,6 +958,7 @@ void TupleAggregateStep::prep1PhaseAggregate(
 	vector<SP_ROWAGG_FUNC_t> functionVec;
 	uint32_t bigIntWidth = sizeof(int64_t);
 	uint32_t bigUintWidth = sizeof(uint64_t);
+    uint32_t projColsUDAFIndex = 0;
 
 	mcsv1sdk::mcsv1_UDAF* pUDAFFunc = NULL;
 	// for count column of average function
@@ -1135,18 +1136,27 @@ void TupleAggregateStep::prep1PhaseAggregate(
 
 		SP_ROWAGG_FUNC_t funct;
 		if (aggOp == ROWAGG_UDAF)
-		{
-			UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
-			if (udafc)
-			{
-				// Create a RowAggFunctionCol (UDAF subtype) with the context.
-				funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, i));
-			}
-			else
-			{
-				throw logic_error("prep1PhasesAggregate: A UDAF function is called but there's no UDAFColumn");
-			}
-		}
+        {
+            std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+            for (; it != jobInfo.projectionCols.end(); it++)
+            {
+                UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
+                projColsUDAFIndex++;
+                if (udafc)
+                {
+                    pUDAFFunc =  udafc->getContext().getFunction();
+                    // Create a RowAggFunctionCol (UDAF subtype) with the context.
+                    funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, i));
+                    break;
+                }
+                
+            }
+            
+            if (it == jobInfo.projectionCols.end())
+            {
+                throw logic_error("prep1PhaseAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+            }
+        }
 		else
 		{
 			funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, i));
@@ -1484,6 +1494,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 	AGG_MAP aggFuncMap;
 	mcsv1sdk::mcsv1_UDAF* pUDAFFunc = NULL;
 	set<uint32_t> avgSet;
+    uint32_t projColsUDAFIndex = 0;
 
 	// for count column of average function
 	map<uint32_t, SP_ROWAGG_FUNC_t> avgFuncMap, avgDistFuncMap;
@@ -1636,19 +1647,27 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(
 
 			SP_ROWAGG_FUNC_t funct;
 			if (aggOp == ROWAGG_UDAF)
-			{
-				UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
-				if (udafc)
-				{
-					pUDAFFunc =  udafc->getContext().getFunction();
-					// Create a RowAggFunctionCol (UDAF subtype) with the context.
-					funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAgg));
-				}
-				else
-				{
-					throw logic_error("prep1PhaseDistinctAggregate: A UDAF function is called but there's no UDAFColumn");
-				}
-			}
+            {
+                std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+                for (; it != jobInfo.projectionCols.end(); it++)
+                {
+                    UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
+                    projColsUDAFIndex++;
+                    if (udafc)
+                    {
+                        pUDAFFunc =  udafc->getContext().getFunction();
+                        // Create a RowAggFunctionCol (UDAF subtype) with the context.
+                        funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAgg));
+                        break;
+                    }
+                    
+                }
+                
+                if (it == jobInfo.projectionCols.end())
+                {
+                    throw logic_error("prep1PhaseDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                }
+            }
 			else
 			{
 				funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, colAgg));
@@ -2579,6 +2598,7 @@ void TupleAggregateStep::prep2PhasesAggregate(
 	vector<pair<uint32_t, int> > aggColVec;
 	set<uint32_t> avgSet;
 	vector<std::pair<uint32_t, int> >& returnedColVec = jobInfo.returnedColVec;
+    uint32_t projColsUDAFIndex = 0;
 	for (uint64_t i = 0; i < returnedColVec.size(); i++)
 	{
 		// skip if not an aggregation column
@@ -2746,18 +2766,26 @@ void TupleAggregateStep::prep2PhasesAggregate(
 			SP_ROWAGG_FUNC_t funct;
 			if (aggOp == ROWAGG_UDAF)
 			{
-				UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
-				if (udafc)
-				{
-					pUDAFFunc =  udafc->getContext().getFunction();
-					// Create a RowAggFunctionCol (UDAF subtype) with the context.
-					funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAggPm));
-				}
-				else
-				{
-					throw logic_error("prep2PhasesAggregate: A UDAF function is called but there's no UDAFColumn");
-				}
-			}
+                std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+                for (; it != jobInfo.projectionCols.end(); it++)
+                {
+                    UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
+                    projColsUDAFIndex++;
+                    if (udafc)
+                    {
+                        pUDAFFunc =  udafc->getContext().getFunction();
+                        // Create a RowAggFunctionCol (UDAF subtype) with the context.
+                        funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAggPm));
+                        break;
+                    }
+                    
+                }
+                
+                if (it == jobInfo.projectionCols.end())
+                {
+                    throw logic_error("prep2PhasesAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                }
+            }
 			else
 			{
 				funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, colAggPm));
@@ -3301,6 +3329,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 	vector<pair<uint32_t, int> > aggColVec, aggNoDistColVec;
 	set<uint32_t> avgSet, avgDistSet;
 	vector<std::pair<uint32_t, int> >& returnedColVec = jobInfo.returnedColVec;
+    uint32_t projColsUDAFIndex = 0;
 	for (uint64_t i = 0; i < returnedColVec.size(); i++)
 	{
 		// col should be an aggregate or groupBy or window function
@@ -3498,18 +3527,25 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 			SP_ROWAGG_FUNC_t funct;
 			if (aggOp == ROWAGG_UDAF)
 			{
-				UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(jobInfo.projectionCols[i].get());
-				if (udafc)
-				{
-					pUDAFFunc =  udafc->getContext().getFunction();
-					// Create a RowAggFunctionCol (UDAF subtype) with the context.
-					funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAggPm));
-				}
-				else
-				{
-					throw logic_error("prep2PhasesDistinctAggregate: A UDAF function is called but there's no UDAFColumn");
-				}
-			}
+                std::vector<SRCP>::iterator it = jobInfo.projectionCols.begin() + projColsUDAFIndex;
+                for (; it != jobInfo.projectionCols.end(); it++)
+                {
+                    UDAFColumn* udafc = dynamic_cast<UDAFColumn*>((*it).get());
+                    projColsUDAFIndex++;
+                    if (udafc)
+                    {
+                        pUDAFFunc =  udafc->getContext().getFunction();
+                        // Create a RowAggFunctionCol (UDAF subtype) with the context.
+                        funct.reset(new RowUDAFFunctionCol(udafc->getContext(), colProj, colAggPm));
+                        break;
+                    }                    
+                }
+                
+                if (it == jobInfo.projectionCols.end())
+                {
+                    throw logic_error("prep2PhasesDistinctAggregate: A UDAF function is called but there's no/not enough UDAFColumn/-s");
+                }
+            }
 			else
 			{
 				funct.reset(new RowAggFunctionCol(aggOp, stats, colProj, colAggPm));

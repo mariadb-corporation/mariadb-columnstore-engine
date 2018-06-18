@@ -98,7 +98,7 @@ public:
     void add2InputDataFileList(std::string& FileName);
 
 private:
-    enum { MAXBUFFSIZE=1024*1024 };
+    enum { DEFAULTBUFFSIZE=1024*1024 };
 
     // don't allow anyone else to set
     void setTgtPmId(unsigned int fTgtPmId) { this->fTgtPmId = fTgtPmId; }
@@ -120,7 +120,8 @@ private:
     char fEncl;							// Encl char
     char fEsc;							// Esc char
     char fDelim;						// Column Delimit char
-    char fBuff[MAXBUFFSIZE];			// main data buffer
+    char* fBuff;			// main data buffer
+    int fBuffSize;
 };
 
 } /* namespace WriteEngine */

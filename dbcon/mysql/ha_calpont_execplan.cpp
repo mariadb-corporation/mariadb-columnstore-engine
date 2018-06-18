@@ -801,8 +801,8 @@ uint32_t buildOuterJoin(gp_walk_info& gwi, SELECT_LEX& select_lex)
 		// View is already processed in view::transform
 		// @bug5319. view is sometimes treated as derived table and
 		// fromSub::transform does not build outer join filters.
-		//if (!table_ptr->derived && table_ptr->view)
-		//	continue;
+		if (!table_ptr->derived && table_ptr->view)
+			continue;
 
 		CalpontSystemCatalog:: TableAliasName tan = make_aliasview(
 			(table_ptr->db ? table_ptr->db : ""),
@@ -4099,7 +4099,6 @@ void gp_walk(const Item *item, void *arg)
 			Item_string* isp = (Item_string*)item;
 			if (isp)
 			{
-				// @bug 3669. trim trailing spaces for the compare value
 				if (isp->result_type() == STRING_RESULT)
 				{
 					String val, *str = isp->val_str(&val);
@@ -4108,9 +4107,6 @@ void gp_walk(const Item *item, void *arg)
 					{
 						cval.assign(str->ptr(), str->length());
 					}
-					size_t spos = cval.find_last_not_of(" ");
-					if (spos != string::npos)
-						cval = cval.substr(0, spos+1);
 					gwip->rcWorkStack.push(new ConstantColumn(cval));
 					break;
 				}

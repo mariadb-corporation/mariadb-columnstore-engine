@@ -457,7 +457,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					log.writeLog(__LINE__,  "MSG RECEIVED: Stop process request on " + processName);
 					int requestStatus = API_SUCCESS;
 		
-					// check for mysql
+					// check for mysqld
 					if ( processName == "mysqld" ) {
 						try {
 							oam.actionMysqlCalpont(MYSQL_STOP);
@@ -520,7 +520,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					msg >> manualFlag;
 					log.writeLog(__LINE__, "MSG RECEIVED: Start process request on: " + processName);
 		
-					// check for mysql
+					// check for mysqld
 					if ( processName == "mysqld" ) {
 						try {
 							oam.actionMysqlCalpont(MYSQL_START);
@@ -640,7 +640,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					log.writeLog(__LINE__,  "MSG RECEIVED: Restart process request on " + processName);
 					int requestStatus = API_SUCCESS;
 
-					// check for mysql restart
+					// check for mysqld restart
 					if ( processName == "mysqld" ) {
 						try {
 							oam.actionMysqlCalpont(MYSQL_RESTART);
@@ -869,7 +869,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 								log.writeLog(__LINE__, "Error running DBRM clearShm", LOG_TYPE_ERROR);
 						}
 
-						//stop the mysql daemon
+						//stop the mysqld daemon
 						try {
 							oam.actionMysqlCalpont(MYSQL_STOP);
 							log.writeLog(__LINE__, "Stop MySQL Process", LOG_TYPE_DEBUG);
@@ -995,12 +995,12 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				
 					system(cmd.c_str());
 
-					//start the mysql daemon 
+					//start the mysqld daemon 
 					try {
 						oam.actionMysqlCalpont(MYSQL_START);
 					}
 					catch(...)
-					{	// mysql didn't start, return with error
+					{	// mysqld didn't start, return with error
 						log.writeLog(__LINE__, "STARTALL: MySQL failed to start, start-module failure", LOG_TYPE_CRITICAL);
 						
 						ackMsg << (ByteStream::byte) ACK;
@@ -1265,7 +1265,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					//send down notification
 					oam.sendDeviceNotification(config.moduleName(), MODULE_DOWN);
 
-					//stop the mysql daemon and then columnstore
+					//stop the mysqld daemon and then columnstore
 					try {
 						oam.actionMysqlCalpont(MYSQL_STOP);
 					}
@@ -1444,7 +1444,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				}
 			}
 
-			// install mysql rpms if being reconfigured as a um
+			// install mysqld rpms if being reconfigured as a um
 			if ( reconfigureModuleName.find("um") != string::npos ) {
 				string cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install >> /tmp/rpminstall";
 				system(cmd.c_str());

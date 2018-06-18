@@ -1505,6 +1505,19 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
    for (i = 0; i < colStructList.size(); i++)
       Convertor::convertColType(&colStructList[i]);
 
+   // MCOL-984: find the smallest column width to calculate the RowID from so
+   // that all HWMs will be incremented by this operation
+   int32_t lowColLen = 8192;
+   int32_t colId = 0;
+   for (uint32_t colIt = 0; colIt < colStructList.size(); colIt++)
+   {
+        if (colStructList[colIt].colWidth < lowColLen)
+        {
+            colId = colIt;
+            lowColLen = colStructList[colId].colWidth;
+        }
+   }
+
   // rc = checkValid(txnid, colStructList, colValueList, ridList);
   // if (rc != NO_ERROR)
    //   return rc;
@@ -1531,8 +1544,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     //--------------------------------------------------------------------------
     if (isFirstBatchPm)
     {
-        currentDBrootIdx = dbRootExtentTrackers[0]->getCurrentDBRootIdx();
-        extentInfo = dbRootExtentTrackers[0]->getDBRootExtentList();
+        currentDBrootIdx = dbRootExtentTrackers[colId]->getCurrentDBRootIdx();
+        extentInfo = dbRootExtentTrackers[colId]->getDBRootExtentList();
         dbRoot = extentInfo[currentDBrootIdx].fDbRoot;
         partitionNum = extentInfo[currentDBrootIdx].fPartition;
 
@@ -1698,7 +1711,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     } // if (isFirstBatchPm)
     else //get the extent info from tableMetaData
     {
-        ColExtsInfo aColExtsInfo = tableMetaData->getColExtsInfo(colStructList[0].dataOid);
+        ColExtsInfo aColExtsInfo = tableMetaData->getColExtsInfo(colStructList[colId].dataOid);
         ColExtsInfo::iterator it = aColExtsInfo.begin();
         while (it != aColExtsInfo.end())
         {
@@ -1730,20 +1743,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     //--------------------------------------------------------------------------
     // allocate row id(s)
     //--------------------------------------------------------------------------
-
-   // MCOL-984: find the smallest column width to calculate the RowID from so
-   // that all HWMs will be incremented by this operation
-   int32_t lowColLen = 8192;
-   int32_t colId = 0;
-   for (uint32_t colIt = 0; colIt < colStructList.size(); colIt++)
-   {
-        if (colStructList[colIt].colWidth < lowColLen)
-        {
-            colId = colIt;
-            lowColLen = colStructList[colId].colWidth;
-            curColStruct = colStructList[colId];
-        }
-   }
+   curColStruct = colStructList[colId];
    colOp = m_colOp[op(curColStruct.fCompressionType)];
 
    colOp->initColumn(curCol);
@@ -1765,7 +1765,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
     if (it != aColExtsInfo.end())
     {
         hwm = it->hwm;
-        //cout << "Got from colextinfo hwm for oid " << colStructList[0].dataOid << " is " << hwm << " and seg is " << colStructList[0].fColSegment << endl;
+        //cout << "Got from colextinfo hwm for oid " << colStructList[colId].dataOid << " is " << hwm << " and seg is " << colStructList[colId].fColSegment << endl;
     }
 
    oldHwm = hwm; //Save this info for rollback
@@ -2008,7 +2008,6 @@ timer.stop("tokenize");
         if (it != aColExtsInfo.end()) //update hwm info
         {
             oldHwm = it->hwm;
-        }
 
          // save hwm for the old extent
          colWidth = colStructList[i].colWidth;
@@ -2032,6 +2031,7 @@ timer.stop("tokenize");
          else
             return ERR_INVALID_PARAM;
 
+        }
         //update hwm for the new extent
       if (newExtent)
       {
@@ -2043,6 +2043,7 @@ timer.stop("tokenize");
                 break;
             it++;
         }
+        colWidth = newColStructList[i].colWidth;
         succFlag = colOp->calculateRowId(lastRidNew, BYTE_PER_BLOCK/colWidth, colWidth, curFbo, curBio);
          if (succFlag)
          {
@@ -2107,6 +2108,9 @@ timer.start("writeColumnRec");
                                                   curFbo));
                 }
             }
+            else
+                return ERR_INVALID_PARAM;
+        }
         }
         // If we create a new extent for this batch
         for (unsigned i = 0; i < newColStructList.size(); i++)
@@ -2123,7 +2127,8 @@ timer.start("writeColumnRec");
                                                   curFbo));
                 }
             }
-        }
+            else
+                return ERR_INVALID_PARAM;
         }
 
         if (lbids.size() > 0)
@@ -4604,7 +4609,7 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
                                        bool versioning)
 {
    int            rc = 0;
-   void*          valArray;
+   void*          valArray = NULL;
    string         segFile;
    Column         curCol;
    ColStructList::size_type  totalColumn;
@@ -4629,132 +4634,135 @@ StopWatch timer;
         totalRow2 = 0;
     }
 
-   valArray = malloc(sizeof(uint64_t) * totalRow1);
-
-   if (totalRow1 == 0)
+    // It is possible totalRow1 is zero but totalRow2 has values
+    if ((totalRow1 == 0) && (totalRow2 == 0))
        return rc;
 
     TableMetaData* aTbaleMetaData = TableMetaData::makeTableMetaData(tableOid);
-    for (i = 0; i < totalColumn; i++)
+    if (totalRow1)
     {
-         //@Bug 2205 Check if all rows go to the new extent
-        //Write the first batch
-        RID * firstPart = rowIdArray;
-        ColumnOp* colOp = m_colOp[op(colStructList[i].fCompressionType)];
-
-        // set params
-        colOp->initColumn(curCol);
-        // need to pass real dbRoot, partition, and segment to setColParam
-        colOp->setColParam(curCol, 0, colStructList[i].colWidth,
-        colStructList[i].colDataType, colStructList[i].colType, colStructList[i].dataOid,
-        colStructList[i].fCompressionType, colStructList[i].fColDbRoot,
-        colStructList[i].fColPartition, colStructList[i].fColSegment);
-
-        ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(colStructList[i].dataOid);
-        ColExtsInfo::iterator it = aColExtsInfo.begin();
-        while (it != aColExtsInfo.end())
+        valArray = malloc(sizeof(uint64_t) * totalRow1);
+        for (i = 0; i < totalColumn; i++)
         {
-            if ((it->dbRoot == colStructList[i].fColDbRoot) && (it->partNum == colStructList[i].fColPartition) && (it->segNum == colStructList[i].fColSegment))
-                break;
-            it++;
-        }
+             //@Bug 2205 Check if all rows go to the new extent
+            //Write the first batch
+            RID * firstPart = rowIdArray;
+            ColumnOp* colOp = m_colOp[op(colStructList[i].fCompressionType)];
 
-        if (it == aColExtsInfo.end()) //add this one to the list
-        {
-            ColExtInfo aExt;
-            aExt.dbRoot =colStructList[i].fColDbRoot;
-            aExt.partNum = colStructList[i].fColPartition;
-            aExt.segNum = colStructList[i].fColSegment;
-            aExt.compType = colStructList[i].fCompressionType;
-            aColExtsInfo.push_back(aExt);
-            aTbaleMetaData->setColExtsInfo(colStructList[i].dataOid, aColExtsInfo);
-        }
+            // set params
+            colOp->initColumn(curCol);
+            // need to pass real dbRoot, partition, and segment to setColParam
+            colOp->setColParam(curCol, 0, colStructList[i].colWidth,
+            colStructList[i].colDataType, colStructList[i].colType, colStructList[i].dataOid,
+            colStructList[i].fCompressionType, colStructList[i].fColDbRoot,
+            colStructList[i].fColPartition, colStructList[i].fColSegment);
 
-        rc = colOp->openColumnFile(curCol, segFile, useTmpSuffix, IO_BUFF_SIZE); // @bug 5572 HDFS tmp file
-        if (rc != NO_ERROR)
-           break;
-
-        // handling versioning
-        vector<LBIDRange>   rangeList;
-        if (versioning)
-        {
-                rc = processVersionBuffer(curCol.dataFile.pFile, txnid, colStructList[i],
-                                  colStructList[i].colWidth, totalRow1, firstPart, rangeList);
-            if (rc != NO_ERROR) {
-                if (colStructList[i].fCompressionType == 0)
-                {
-                    curCol.dataFile.pFile->flush();
-                }
-
-                BRMWrapper::getInstance()->writeVBEnd(txnid, rangeList);
-                break;
-            }
-        }
-
-        //totalRow1 -= totalRow2;
-        // have to init the size here
-        // nullArray = (bool*) malloc(sizeof(bool) * totalRow);
-        uint8_t tmp8;
-        uint16_t tmp16;
-        uint32_t tmp32;
-        for (size_t j = 0; j < totalRow1; j++)
-        {
-            uint64_t curValue = colValueList[((totalRow1 + totalRow2)*i) + j];
-            switch (colStructList[i].colType)
+            ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(colStructList[i].dataOid);
+            ColExtsInfo::iterator it = aColExtsInfo.begin();
+            while (it != aColExtsInfo.end())
             {
-               case WriteEngine::WR_VARBINARY : // treat same as char for now
-               case WriteEngine::WR_CHAR:
-               case WriteEngine::WR_BLOB:
-               case WriteEngine::WR_TEXT:
-                    ((uint64_t*)valArray)[j] = curValue;
+                if ((it->dbRoot == colStructList[i].fColDbRoot) && (it->partNum == colStructList[i].fColPartition) && (it->segNum == colStructList[i].fColSegment))
                     break;
-               case WriteEngine::WR_INT:
-               case WriteEngine::WR_UINT:
-               case WriteEngine::WR_FLOAT:
-                    tmp32 = curValue;
-                    ((uint32_t*)valArray)[j] = tmp32;
-                    break;
-               case WriteEngine::WR_ULONGLONG:
-               case WriteEngine::WR_LONGLONG:
-               case WriteEngine::WR_DOUBLE:
-               case WriteEngine::WR_TOKEN:
-                    ((uint64_t*)valArray)[j] = curValue;
-                    break;
-               case WriteEngine::WR_BYTE:
-               case WriteEngine::WR_UBYTE:
-                    tmp8 = curValue;
-                    ((uint8_t*)valArray)[j] = tmp8;
-                    break;
-               case WriteEngine::WR_SHORT:
-               case WriteEngine::WR_USHORT:
-                    tmp16 = curValue;
-                    ((uint16_t*)valArray)[j] = tmp16;
-                    break;
+                it++;
             }
+
+            if (it == aColExtsInfo.end()) //add this one to the list
+            {
+                ColExtInfo aExt;
+                aExt.dbRoot =colStructList[i].fColDbRoot;
+                aExt.partNum = colStructList[i].fColPartition;
+                aExt.segNum = colStructList[i].fColSegment;
+                aExt.compType = colStructList[i].fCompressionType;
+                aColExtsInfo.push_back(aExt);
+                aTbaleMetaData->setColExtsInfo(colStructList[i].dataOid, aColExtsInfo);
+            }
+
+            rc = colOp->openColumnFile(curCol, segFile, useTmpSuffix, IO_BUFF_SIZE); // @bug 5572 HDFS tmp file
+            if (rc != NO_ERROR)
+               break;
+
+            // handling versioning
+            vector<LBIDRange>   rangeList;
+            if (versioning)
+            {
+                    rc = processVersionBuffer(curCol.dataFile.pFile, txnid, colStructList[i],
+                                      colStructList[i].colWidth, totalRow1, firstPart, rangeList);
+                if (rc != NO_ERROR) {
+                    if (colStructList[i].fCompressionType == 0)
+                    {
+                        curCol.dataFile.pFile->flush();
+                    }
+
+                    BRMWrapper::getInstance()->writeVBEnd(txnid, rangeList);
+                    break;
+                }
+            }
+
+            //totalRow1 -= totalRow2;
+            // have to init the size here
+            // nullArray = (bool*) malloc(sizeof(bool) * totalRow);
+            uint8_t tmp8;
+            uint16_t tmp16;
+            uint32_t tmp32;
+            for (size_t j = 0; j < totalRow1; j++)
+            {
+                uint64_t curValue = colValueList[((totalRow1 + totalRow2)*i) + j];
+                switch (colStructList[i].colType)
+                {
+                   case WriteEngine::WR_VARBINARY : // treat same as char for now
+                   case WriteEngine::WR_CHAR:
+                   case WriteEngine::WR_BLOB:
+                   case WriteEngine::WR_TEXT:
+                        ((uint64_t*)valArray)[j] = curValue;
+                        break;
+                   case WriteEngine::WR_INT:
+                   case WriteEngine::WR_UINT:
+                   case WriteEngine::WR_FLOAT:
+                        tmp32 = curValue;
+                        ((uint32_t*)valArray)[j] = tmp32;
+                        break;
+                   case WriteEngine::WR_ULONGLONG:
+                   case WriteEngine::WR_LONGLONG:
+                   case WriteEngine::WR_DOUBLE:
+                   case WriteEngine::WR_TOKEN:
+                        ((uint64_t*)valArray)[j] = curValue;
+                        break;
+                   case WriteEngine::WR_BYTE:
+                   case WriteEngine::WR_UBYTE:
+                        tmp8 = curValue;
+                        ((uint8_t*)valArray)[j] = tmp8;
+                        break;
+                   case WriteEngine::WR_SHORT:
+                   case WriteEngine::WR_USHORT:
+                        tmp16 = curValue;
+                        ((uint16_t*)valArray)[j] = tmp16;
+                        break;
+                }
+            }
+
+
+#ifdef PROFILE
+    timer.start("writeRow ");
+#endif
+            rc = colOp->writeRow(curCol, totalRow1, firstPart, valArray);
+#ifdef PROFILE
+    timer.stop("writeRow ");
+#endif
+            colOp->closeColumnFile(curCol);
+
+            if (versioning)
+                BRMWrapper::getInstance()->writeVBEnd(txnid, rangeList);
+
+            // check error
+            if (rc != NO_ERROR)
+               break;
+
+        } // end of for (i = 0
+        if (valArray != NULL)
+        {
+            free(valArray);
+            valArray = NULL;
         }
-
-
-#ifdef PROFILE
-timer.start("writeRow ");
-#endif
-        rc = colOp->writeRow(curCol, totalRow1, firstPart, valArray);
-#ifdef PROFILE
-timer.stop("writeRow ");
-#endif
-        colOp->closeColumnFile(curCol);
-
-        if (versioning)
-            BRMWrapper::getInstance()->writeVBEnd(txnid, rangeList);
-
-        // check error
-        if (rc != NO_ERROR)
-           break;
-
-    } // end of for (i = 0
-    if (valArray != NULL)
-    {
-        free(valArray);
-        valArray = NULL;
     }
 
     // MCOL-1176 - Write second extent

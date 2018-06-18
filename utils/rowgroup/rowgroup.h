@@ -92,13 +92,14 @@ public:
 	StringStore();
 	virtual ~StringStore();
 
-	inline std::string getString(uint32_t offset, uint32_t length) const;
-	uint32_t storeString(const uint8_t *data, uint32_t length);  //returns the offset
-	inline const uint8_t * getPointer(uint32_t offset) const;
+	inline std::string getString(uint64_t offset) const;
+	uint64_t storeString(const uint8_t *data, uint32_t length);  //returns the offset
+	inline const uint8_t * getPointer(uint64_t offset) const;
+    inline uint32_t getStringLength(uint64_t offset);
 	inline bool isEmpty() const;
 	inline uint64_t getSize() const;
-	inline bool isNullValue(uint32_t offset, uint32_t length) const;
-	inline bool equals(const std::string &str, uint32_t offset, uint32_t length) const;
+	inline bool isNullValue(uint64_t offset) const;
+	inline bool equals(const std::string &str, uint64_t offset) const;
 
 	void clear();
 
@@ -541,9 +542,8 @@ inline bool Row::equals(uint64_t val, uint32_t colIndex) const
 inline bool Row::equals(const std::string &val, uint32_t colIndex) const
 {
 	if (inStringTable(colIndex)) {
-		uint32_t offset = *((uint32_t *) &data[offsets[colIndex]]);
-		uint32_t length = *((uint32_t *) &data[offsets[colIndex] + 4]);
-		return strings->equals(val, offset, length);
+		uint64_t offset = *((uint64_t *) &data[offsets[colIndex]]);
+		return strings->equals(val, offset);
 	}
 	else
 		return (strncmp(val.c_str(), (char *) &data[offsets[colIndex]], getColumnWidth(colIndex)) == 0);
@@ -609,28 +609,27 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
 inline const uint8_t * Row::getStringPointer(uint32_t colIndex) const
 {
 	if (inStringTable(colIndex))
-		return strings->getPointer(*((uint32_t *) &data[offsets[colIndex]]));
+		return strings->getPointer(*((uint64_t *) &data[offsets[colIndex]]));
 	return &data[offsets[colIndex]];
 }
 
 inline uint32_t Row::getStringLength(uint32_t colIndex) const
 {
 	if (inStringTable(colIndex))
-		return *((uint32_t *) &data[offsets[colIndex] + 4]);
+        return strings->getStringLength(*((uint64_t *) &data[offsets[colIndex]]));
 	return strnlen((char *) &data[offsets[colIndex]], getColumnWidth(colIndex));
 }
 
 inline void Row::setStringField(const uint8_t *strdata, uint32_t length, uint32_t colIndex)
 {
-	uint32_t offset;
+	uint64_t offset;
 
 	if (length > getColumnWidth(colIndex))
 		length = getColumnWidth(colIndex);
 
 	if (inStringTable(colIndex)) {
 		offset = strings->storeString(strdata, length);
-		*((uint32_t *) &data[offsets[colIndex]]) = offset;
-		*((uint32_t *) &data[offsets[colIndex] + 4]) = length;
+		*((uint64_t *) &data[offsets[colIndex]]) = offset;
 //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
 //				<< " length " << *((uint32_t *) &data[offsets[colIndex] + 4])
 //				<< endl;
@@ -645,8 +644,7 @@ inline void Row::setStringField(const uint8_t *strdata, uint32_t length, uint32_
 inline std::string Row::getStringField(uint32_t colIndex) const
 {
 	if (inStringTable(colIndex))
-		return strings->getString(*((uint32_t *) &data[offsets[colIndex]]),
-				*((uint32_t *) &data[offsets[colIndex] + 4]));
+		return strings->getString(*((uint64_t *) &data[offsets[colIndex]]));
 	// Not all CHAR/VARCHAR are NUL terminated so use length
 	return std::string((char *) &data[offsets[colIndex]],
 		    strnlen((char *) &data[offsets[colIndex]], getColumnWidth(colIndex)));
@@ -662,21 +660,21 @@ inline std::string Row::getVarBinaryStringField(uint32_t colIndex) const
 inline uint32_t Row::getVarBinaryLength(uint32_t colIndex) const
 {
 	if (inStringTable(colIndex))
-		return *((uint32_t *) &data[offsets[colIndex] + 4]);
+		return strings->getStringLength(*((uint64_t *) &data[offsets[colIndex]]));;
 	return *((uint16_t*) &data[offsets[colIndex]]);
 }
 
 inline const uint8_t* Row::getVarBinaryField(uint32_t colIndex) const
 {
 	if (inStringTable(colIndex))
-		return strings->getPointer(*((uint32_t *) &data[offsets[colIndex]]));
+		return strings->getPointer(*((uint64_t *) &data[offsets[colIndex]]));
 	return &data[offsets[colIndex] + 2];
 }
 
 inline const uint8_t* Row::getVarBinaryField(uint32_t& len, uint32_t colIndex) const
 {
 	if (inStringTable(colIndex)) {
-		len = *((uint32_t *) &data[offsets[colIndex] + 4]);
+		len = strings->getStringLength(*((uint64_t *) &data[offsets[colIndex]]));
 		return getVarBinaryField(colIndex);
 	}
 	else {
@@ -854,9 +852,8 @@ inline void Row::setVarBinaryField(const uint8_t *val, uint32_t len, uint32_t co
 	if (len > getColumnWidth(colIndex))
 		len = getColumnWidth(colIndex);
 	if (inStringTable(colIndex)) {
-		uint32_t offset = strings->storeString(val, len);
-		*((uint32_t *) &data[offsets[colIndex]]) = offset;
-		*((uint32_t *) &data[offsets[colIndex] + 4]) = len;
+		uint64_t offset = strings->storeString(val, len);
+		*((uint64_t *) &data[offsets[colIndex]]) = offset;
 	}
 	else {
 		*((uint16_t*) &data[offsets[colIndex]]) = len;
@@ -1535,49 +1532,53 @@ inline void copyRow(const Row &in, Row *out)
 	copyRow(in, out, std::min(in.getColumnCount(), out->getColumnCount()));
 }
 
-inline std::string StringStore::getString(uint32_t off, uint32_t len) const
+inline std::string StringStore::getString(uint64_t off) const
 {
-	if (off == std::numeric_limits<uint32_t>::max())
+    uint32_t length;
+	if (off == std::numeric_limits<uint64_t>::max())
 		return joblist::CPNULLSTRMARK;
 
     MemChunk *mc;
-    if (off & 0x80000000)
+    if (off & 0x8000000000000000)
     {
-        off = off - 0x80000000;
+        off = off - 0x8000000000000000;
         if (longStrings.size() <= off)
             return joblist::CPNULLSTRMARK;
         mc = (MemChunk*) longStrings[off].get();
-        return std::string((char *) mc->data, len);
+        memcpy(&length, mc->data, 4);
+        return std::string((char *) mc->data+4, length);
     }
 
-    uint32_t chunk = off / CHUNK_SIZE;
-    uint32_t offset = off % CHUNK_SIZE;
+    uint64_t chunk = off / CHUNK_SIZE;
+    uint64_t offset = off % CHUNK_SIZE;
     // this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
     // what gets returned, it just can't go out of bounds.
     if (mem.size() <= chunk)
         return joblist::CPNULLSTRMARK;
     mc = (MemChunk *) mem[chunk].get();
-    if ((offset + len) > mc->currentSize)
+
+    memcpy(&length, &mc->data[offset], 4);
+    if ((offset + length) > mc->currentSize)
 		return joblist::CPNULLSTRMARK;
-    
-    return std::string((char *) &(mc->data[offset]), len);
+
+    return std::string((char *) &(mc->data[offset])+4, length);
 }
 
-inline const uint8_t * StringStore::getPointer(uint32_t off) const
+inline const uint8_t * StringStore::getPointer(uint64_t off) const
 {
-	if (off == std::numeric_limits<uint32_t>::max())
+	if (off == std::numeric_limits<uint64_t>::max())
 		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
 
-    uint32_t chunk = off / CHUNK_SIZE;
-    uint32_t offset = off % CHUNK_SIZE;
+    uint64_t chunk = off / CHUNK_SIZE;
+    uint64_t offset = off % CHUNK_SIZE;
     MemChunk *mc;
-    if (off & 0x80000000)
+    if (off & 0x8000000000000000)
     {
-        off = off - 0x80000000;
+        off = off - 0x8000000000000000;
         if (longStrings.size() <= off)
             return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
         mc = (MemChunk*) longStrings[off].get();
-        return mc->data;
+        return mc->data+4;
     }
 	// this has to handle uninitialized data as well.  If it's uninitialized it doesn't matter
 	// what gets returned, it just can't go out of bounds.
@@ -1587,19 +1588,17 @@ inline const uint8_t * StringStore::getPointer(uint32_t off) const
     if (offset > mc->currentSize)
 		return (const uint8_t *) joblist::CPNULLSTRMARK.c_str();
 
-    return &(mc->data[offset]);
+    return &(mc->data[offset]) + 4;
 }
 
-inline bool StringStore::isNullValue(uint32_t off, uint32_t len) const
+inline bool StringStore::isNullValue(uint64_t off) const
 {
-	if (off == std::numeric_limits<uint32_t>::max() || len == 0)
+    uint32_t length;
+	if (off == std::numeric_limits<uint64_t>::max())
 		return true;
 
-	if (len < 8)
-		return false;
-
     // Long strings won't be NULL
-    if (off & 0x80000000)
+    if (off & 0x8000000000000000)
         return false;
 
     uint32_t chunk = off / CHUNK_SIZE;
@@ -1609,31 +1608,38 @@ inline bool StringStore::isNullValue(uint32_t off, uint32_t len) const
 		return true;
 
     mc = (MemChunk *) mem[chunk].get();
-    if ((offset + len) > mc->currentSize)
+    memcpy(&length, &mc->data[offset], 4);
+    if (length == 0)
         return true;
-    if (mc->data[offset] == 0)    // "" = NULL string for some reason...
+    if (length < 8)
+        return false;
+    if ((offset + length) > mc->currentSize)
         return true;
-    return (*((uint64_t *) &mc->data[offset]) == *((uint64_t *) joblist::CPNULLSTRMARK.c_str()));
+    if (mc->data[offset+4] == 0)    // "" = NULL string for some reason...
+        return true;
+    return (*((uint64_t *) &mc->data[offset]+4) == *((uint64_t *) joblist::CPNULLSTRMARK.c_str()));
 }
 
-inline bool StringStore::equals(const std::string &str, uint32_t off, uint32_t len) const
+inline bool StringStore::equals(const std::string &str, uint64_t off) const
 {
-	if (off == std::numeric_limits<uint32_t>::max() || len == 0)
+    uint32_t length;
+	if (off == std::numeric_limits<uint64_t>::max())
 		return str == joblist::CPNULLSTRMARK;
 
     MemChunk *mc;
-    if (off & 0x80000000)
+    if (off & 0x8000000000000000)
     {
-        if (longStrings.size() <= (off - 0x80000000))
+        if (longStrings.size() <= (off - 0x8000000000000000))
             return false;
 
-        mc = (MemChunk *) longStrings[off - 0x80000000].get();
+        mc = (MemChunk *) longStrings[off - 0x8000000000000000].get();
 
+        memcpy(&length, mc->data, 4);
         // Not sure if this check it needed, but adds safety
-        if (len > mc->currentSize)
+        if (length > mc->currentSize)
             return false;
 
-        return (strncmp(str.c_str(), (const char*) mc->data, len) == 0);
+        return (strncmp(str.c_str(), (const char*) mc->data+4, length) == 0);
     }
     uint32_t chunk = off / CHUNK_SIZE;
     uint32_t offset = off % CHUNK_SIZE;
@@ -1641,10 +1647,37 @@ inline bool StringStore::equals(const std::string &str, uint32_t off, uint32_t l
 		return false;
 
     mc = (MemChunk *) mem[chunk].get();
-    if ((offset + len) > mc->currentSize)
+    memcpy(&length, &mc->data[offset], 4);
+    if ((offset + length) > mc->currentSize)
 		return false;
 
-    return (strncmp(str.c_str(), (const char *) &mc->data[offset], len) == 0);
+    return (strncmp(str.c_str(), (const char *) &mc->data[offset]+4, length) == 0);
+}
+inline uint32_t StringStore::getStringLength(uint64_t off)
+{
+    uint32_t length;
+    MemChunk *mc;
+    if (off == std::numeric_limits<uint64_t>::max())
+        return 0;
+    if (off & 0x8000000000000000)
+    {
+        off = off - 0x8000000000000000;
+        if (longStrings.size() <= off)
+            return 0;
+        mc = (MemChunk*) longStrings[off].get();
+        memcpy(&length, mc->data, 4);
+    }
+    else
+    {
+        uint64_t chunk = off / CHUNK_SIZE;
+        uint64_t offset = off % CHUNK_SIZE;
+        if (mem.size() <= chunk)
+            return 0;
+        mc = (MemChunk *) mem[chunk].get();
+        memcpy(&length, &mc->data[offset], 4);
+    }
+
+    return length;
 }
 
 inline bool StringStore::isEmpty() const

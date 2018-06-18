@@ -229,6 +229,7 @@ namespace oam
 		API_CONN_REFUSED,
         API_CANCELLED,
         API_STILL_WORKING,
+	API_DETACH_FAILURE,
         API_MAX
     };
 
@@ -2432,6 +2433,8 @@ namespace oam
 
 		void amazonReattach(std::string toPM, dbrootList dbrootConfigList, bool attach = false);
 		void mountDBRoot(dbrootList dbrootConfigList, bool mount = true);
+		void amazonDetach(dbrootList dbrootConfigList);
+		void amazonAttach(std::string toPM, dbrootList dbrootConfigList);
 
 		/**
 		*@brief  gluster control

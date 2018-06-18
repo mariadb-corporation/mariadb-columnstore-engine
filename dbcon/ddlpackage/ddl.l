@@ -18,6 +18,7 @@
 
 /* $Id: ddl.l 9341 2013-03-27 14:10:35Z chao $ */
 %{
+#include <string.h>
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -31,10 +32,11 @@
 #endif
 
 using namespace ddlpackage;
+typedef enum { NOOP, STRIP_QUOTES } copy_action_t;
 int lineno = 1;
 void ddlerror(struct pass_to_bison* x, char const *s);
 
-static char* scanner_copy(char *str, yyscan_t yyscanner);
+static char* scanner_copy(char *str, yyscan_t yyscanner, copy_action_t action = NOOP );
 
 %}
 
@@ -54,6 +56,10 @@ horiz_space [ \t\f]
 newline [\n\r]
 non_newline [^\n\r]
 
+quote '
+double_quote \"
+grave_accent `
+
 comment ("--"{non_newline}*)
 self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=]
 whitespace ({space}+|{comment})
@@ -62,6 +68,10 @@ digit [0-9]
 ident_start [A-Za-z\200-\377_]
 ident_cont [A-Za-z\200-\377_0-9\$]
 identifier {ident_start}{ident_cont}*
+/* fully qualified names regexes */
+fq_identifier {identifier}\.{identifier}
+identifier_quoted {grave_accent}{identifier}{grave_accent}
+identifier_double_quoted {double_quote}{identifier}{double_quote}
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
@@ -69,10 +79,12 @@ real			({integer}|{decimal})[Ee][-+]?{digit}+
 realfail1		({integer}|{decimal})[Ee]
 realfail2		({integer}|{decimal})[Ee][-+]
 
-quote '
-grave_accent `
 
 %%
+
+
+{identifier_quoted} { ddlget_lval(yyscanner)->str = scanner_copy( ddlget_text(yyscanner), yyscanner, STRIP_QUOTES ); return IDENT; }
+{identifier_double_quoted} { ddlget_lval(yyscanner)->str = scanner_copy( ddlget_text(yyscanner), yyscanner, STRIP_QUOTES ); return DQ_IDENT; }
 
 ACTION {return ACTION;}
 ADD {return ADD;}
@@ -171,14 +183,14 @@ LONGTEXT {return LONGTEXT;}
     /* ignore */
 }
 
-{identifier} {ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner); return IDENT;}
+{identifier} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner); return DQ_IDENT;}
 
 {self} {
     return ddlget_text(yyscanner)[0];
 }
 
 {grave_accent} {
-    /* ignore */
+    return ddlget_text(yyscanner)[0];
 }
 
 %%
@@ -198,6 +210,11 @@ using namespace ddlpackage;
  */
 void scanner_init(const char* str, yyscan_t yyscanner)
 {
+#ifdef YYDEBUG
+    extern int ddldebug;
+    ddldebug = 1;
+#endif
+
 	size_t slen = strlen(str);
    scan_data* pScanData = (scan_data*)ddlget_extra(yyscanner);
 
@@ -246,10 +263,20 @@ void scanner_finish(yyscan_t yyscanner)
    pScanData->valbuf.clear();
 }
 
-char* scanner_copy (char *str, yyscan_t yyscanner)
+char* scanner_copy (char *str, yyscan_t yyscanner, copy_action_t action)
 {
-   char* nv = strdup(str);
-   if(nv)
-      ((scan_data*)ddlget_extra(yyscanner))->valbuf.push_back(nv);
-   return nv;
+    char* result;
+    char* nv = strdup(str);
+    result = nv;
+    // free strduped memory later to prevent possible memory leak
+    if(nv)
+        ((scan_data*)ddlget_extra(yyscanner))->valbuf.push_back(nv);
+
+    if(action == STRIP_QUOTES)
+    {
+        nv[strlen(str) - 1] = '\0';
+        result = nv + 1;
+    }
+
+    return result;
 }

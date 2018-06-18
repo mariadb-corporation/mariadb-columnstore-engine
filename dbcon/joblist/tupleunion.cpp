@@ -47,7 +47,7 @@ using namespace dataconvert;
 #endif
 namespace {
 //returns the value of 10 raised to the power x.
-inline double pow10(double x)
+inline double exp10(double x)
 {
 	return exp(x * M_LN10);
 }
@@ -406,7 +406,7 @@ void TupleUnion::normalize(const Row &in, Row *out)
 						ostringstream os;
 						if (in.getScale(i)) {
 							double d = in.getIntField(i);
-							d /= pow10(in.getScale(i));
+							d /= exp10(in.getScale(i));
 							os.precision(15);
 							os << d;
 						}
@@ -488,7 +488,7 @@ dec1:					uint64_t val = in.getIntField(i);
                         ostringstream os;
                         if (in.getScale(i)) {
                             double d = in.getUintField(i);
-                            d /= pow10(in.getScale(i));
+                            d /= exp10(in.getScale(i));
                             os.precision(15);
                             os << d;
                         }
