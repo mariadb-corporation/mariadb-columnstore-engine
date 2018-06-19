@@ -1818,12 +1818,22 @@ struct ReadThread
 					switch(ismHdr->Command) {
 					case DICT_CREATE_EQUALITY_FILTER: {
 						PriorityThreadPool::Job job;
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new CreateEqualityFilter(bs));
 						OOBPool->addJob(job);
 						break;
 					}
 					case DICT_DESTROY_EQUALITY_FILTER: {
 						PriorityThreadPool::Job job;
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new DestroyEqualityFilter(bs));
 						OOBPool->addJob(job);
 						break;
@@ -1851,6 +1861,11 @@ struct ReadThread
 						job.id = hdr->Hdr.UniqueID;
 						job.weight = LOGICAL_BLOCK_RIDS;
 						job.priority = hdr->Hdr.Priority;
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						if (hdr->flags & IS_SYSCAT) {
 							//boost::thread t(DictScanJob(outIos, bs, writeLock));
 							// using already-existing threads may cut latency
@@ -1889,6 +1904,12 @@ struct ReadThread
 						job.id = bpps->getID();
 						job.weight = ismHdr->Size;
 						job.priority = bpps->priority();
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
+
 						if (bpps->isSysCat()) {
 							//boost::thread t(*bpps);
 							// using already-existing threads may cut latency
@@ -1904,6 +1925,11 @@ struct ReadThread
 					case BATCH_PRIMITIVE_CREATE: {
 						PriorityThreadPool::Job job;
 						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Create(fBPPHandler, bs));
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						OOBPool->addJob(job);
 						//fBPPHandler->createBPP(*bs);
 						break;
@@ -1912,6 +1938,11 @@ struct ReadThread
 						PriorityThreadPool::Job job;
 						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::AddJoiner(fBPPHandler, bs));
 						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						OOBPool->addJob(job);
 						//fBPPHandler->addJoinerToBPP(*bs);
 						break;
@@ -1923,6 +1954,11 @@ struct ReadThread
 						PriorityThreadPool::Job job;
 						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::LastJoiner(fBPPHandler, bs));
 						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						OOBPool->addJob(job);
 						break;
 					}
@@ -1932,6 +1968,11 @@ struct ReadThread
 						PriorityThreadPool::Job job;
 						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Destroy(fBPPHandler, bs));
 						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						OOBPool->addJob(job);
 						//fBPPHandler->destroyBPP(*bs);
 						break;
@@ -1946,6 +1987,11 @@ struct ReadThread
 						PriorityThreadPool::Job job;
 						job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Abort(fBPPHandler, bs));
 						job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
+                        const uint8_t *buf = bs->buf();
+                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                        job.stepID = *((uint32_t *) &buf[pos+6]);
+                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
+                        job.sock = outIos;
 						OOBPool->addJob(job);
 						break;
 					}
