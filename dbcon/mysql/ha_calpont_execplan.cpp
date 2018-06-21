@@ -8089,9 +8089,9 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     gwi.thd = thd;
     int status = getGroupPlan(gwi, select_lex, csep, gi);
 
-//    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
-//    cerr << *csep << endl ;
-//    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 
     if (status > 0)
         return ER_INTERNAL_ERROR;
@@ -9498,6 +9498,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             else
             {
                 Item* ord_item = *(ordercol->item);
+                bool nonAggField = true;
 
                 // ignore not_used column on order by.
                 if (ord_item->type() == Item::INT_ITEM && ord_item->full_name() && string(ord_item->full_name()) == "Not_used")
@@ -9506,11 +9507,36 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
                 else if (ord_item->type() == Item::SUBSELECT_ITEM)
                     gwi.fatalParseError = true;
+                else if (ordercol->in_field_list && ord_item->type() == Item::FIELD_ITEM)
+                {
+                    rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
+                    Item_field* ifp = static_cast<Item_field*>(ord_item);
+
+                    // The item must be an alias for a projected column
+                    // and extended SELECT list must contain a proper rc
+                    // either aggregation or a field.
+                    if (!rc && ifp->name_length)
+                    {
+                        gwi.fatalParseError = false;
+                        execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.returnedCols.begin();
+                        AggregateColumn* ac = NULL;
+
+                        for ( ; iter != gwi.returnedCols.end(); iter++ )
+                        {
+                            if ( (*iter).get()->alias() == ord_item->name )
+                            {
+                                rc = (*iter).get()->clone();
+                                nonAggField = rc->hasAggregate() ? false : true;
+                                break;
+                            }
+                        }
+                    }
+                }
                 else
                     rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
 
                 // Looking for a match for this item in GROUP BY list.
-                if ( rc && ord_item->type() == Item::FIELD_ITEM )
+                if ( rc && ord_item->type() == Item::FIELD_ITEM && nonAggField)
                 {
                     execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.groupByCols.begin();
 
