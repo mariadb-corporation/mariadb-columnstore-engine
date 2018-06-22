@@ -3780,7 +3780,7 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
     restartProcessType("ExeMgr");
     sleep(1);
 
-	restartProcessType("mysqld");
+    restartProcessType("mysqld");
 
     restartProcessType("WriteEngineServer");
     sleep(1);
@@ -3839,8 +3839,8 @@ int ProcessManager::enableModule(string target, int state, bool failover)
         setStandbyModule(newStandbyModule);
 
     //set recycle process
-	if (!failover)
-	      recycleProcess(target);
+    if (!failover)
+        recycleProcess(target);
 
     log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
@@ -4648,7 +4648,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
         PMwithUM = "n";
     }
 
-	// If mysqld is the processName, then send to modules were ExeMgr is running
+    // If mysqld is the processName, then send to modules were ExeMgr is running
     try
     {
         oam.getProcessStatus(systemprocessstatus);
@@ -4659,7 +4659,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
             if ( systemprocessstatus.processstatus[i].Module == skipModule )
                 continue;
 
-			if ( processName == "mysqld" ) {
+            if ( processName == "mysqld" )
             {
                 if ( systemprocessstatus.processstatus[i].ProcessName == "ExeMgr")
                 {
@@ -9814,7 +9814,7 @@ int ProcessManager::OAMParentModuleChange()
                         {
                             log.writeLog(__LINE__, "System Active, restart needed processes", LOG_TYPE_DEBUG);
 
-							processManager.restartProcessType("mysqld");
+                            processManager.restartProcessType("mysqld");
                             processManager.restartProcessType("ExeMgr");
                             processManager.restartProcessType("WriteEngineServer");
                             processManager.reinitProcessType("DBRMWorkerNode");
@@ -11014,7 +11014,7 @@ void ProcessManager::stopProcessTypes(bool manualFlag)
     log.writeLog(__LINE__, "stopProcessTypes Called");
 
     //front-end first
-	processManager.stopProcessType("mysqld", manualFlag);
+    processManager.stopProcessType("mysqld", manualFlag);
     processManager.stopProcessType("DMLProc", manualFlag);
     processManager.stopProcessType("DDLProc", manualFlag);
     processManager.stopProcessType("ExeMgr", manualFlag);

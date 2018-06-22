@@ -5811,34 +5811,35 @@ bool Oam::autoMovePmDbroot(std::string residePM)
         exceptionControl("autoMovePmDbroot", API_INVALID_PARAMETER);
     }
 
-		//detach first to make sure DBS can be detach before trying to move to another pm
-		DBRootConfigList::iterator pt3 = residedbrootConfigList.begin();
-		for( ; pt3 != residedbrootConfigList.end() ; pt3++ )
-		{
-			int dbrootID = *pt3;
+    //detach first to make sure DBS can be detach before trying to move to another pm
+    DBRootConfigList::iterator pt3 = residedbrootConfigList.begin();
 
-			try
-			{
-				typedef std::vector<string> dbrootList;
-				dbrootList dbrootlist;
-				dbrootlist.push_back(itoa(dbrootID));
+    for ( ; pt3 != residedbrootConfigList.end() ; pt3++ )
+    {
+        int dbrootID = *pt3;
 
-				amazonDetach(dbrootlist);
-			}
-			catch (exception& )
-			{
-				writeLog("ERROR: amazonDetach failure", LOG_TYPE_ERROR );
-				
-				//reattach
-				typedef std::vector<string> dbrootList;
-				dbrootList dbrootlist;
-				dbrootlist.push_back(itoa(dbrootID));
+        try
+        {
+            typedef std::vector<string> dbrootList;
+            dbrootList dbrootlist;
+            dbrootlist.push_back(itoa(dbrootID));
 
-				amazonAttach(residePM, dbrootlist);
+            amazonDetach(dbrootlist);
+        }
+        catch (exception& )
+        {
+            writeLog("ERROR: amazonDetach failure", LOG_TYPE_ERROR );
 
-				exceptionControl("autoMovePmDbroot", API_DETACH_FAILURE);
-			}
-		}
+            //reattach
+            typedef std::vector<string> dbrootList;
+            dbrootList dbrootlist;
+            dbrootlist.push_back(itoa(dbrootID));
+
+            amazonAttach(residePM, dbrootlist);
+
+            exceptionControl("autoMovePmDbroot", API_DETACH_FAILURE);
+        }
+    }
 
     //get dbroot id for other PMs
     systemStorageInfo_t t;
@@ -6359,15 +6360,17 @@ bool Oam::autoUnMovePmDbroot(std::string toPM)
     }
 
     if (!found)
-			writeLog("No dbroots found in ../Calpont/local/moveDbrootTransactionLog", LOG_TYPE_DEBUG );
-			cout << "No dbroots found in " << fileName << endl;
+    {
+        writeLog("No dbroots found in ../Calpont/local/moveDbrootTransactionLog", LOG_TYPE_DEBUG );
+
+        cout << "No dbroots found in " << fileName << endl;
     }
 
     oldFile.close();
     unlink (fileName.c_str());
     ofstream newFile (fileName.c_str());
 
-    //create new file
+//create new file
     int fd = open(fileName.c_str(), O_RDWR | O_CREAT, 0664);
 
     copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
@@ -7773,7 +7776,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     else
         return;
 
-		// check if mysql-Columnstore is installed
+    // check if mysql-Columnstore is installed
     string mysqlscript = InstallDir + "/mysql/mysql-Columnstore";
 
     if (access(mysqlscript.c_str(), X_OK) != 0)
@@ -10377,145 +10380,160 @@ void Oam::sendStatusUpdate(ByteStream obs, ByteStream::byte returnRequestType)
      *
      ****************************************************************************/
 
-    void Oam::amazonDetach(dbrootList dbrootConfigList)
+void Oam::amazonDetach(dbrootList dbrootConfigList)
+{
+    //if amazon cloud with external volumes, do the detach/attach moves
+    string cloud;
+    string DBRootStorageType;
+
+    try
     {
-		//if amazon cloud with external volumes, do the detach/attach moves
-		string cloud;
-		string DBRootStorageType;
-		try {
-			getSystemConfig("Cloud", cloud);
-			getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
+        getSystemConfig("Cloud", cloud);
+        getSystemConfig("DBRootStorageType", DBRootStorageType);
+    }
+    catch (...) {}
 
-		if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") && 
-			DBRootStorageType == "external" )
-		{
-			writeLog("amazonDetach function started ", LOG_TYPE_DEBUG );
-
-			dbrootList::iterator pt3 = dbrootConfigList.begin();
-			for( ; pt3 != dbrootConfigList.end() ; pt3++)
-			{
-				string dbrootid = *pt3;
-				string volumeNameID = "PMVolumeName" + dbrootid;
-				string volumeName = oam::UnassignedName;
-				string deviceNameID = "PMVolumeDeviceName" + dbrootid;
-				string deviceName = oam::UnassignedName;
-				try {
-					getSystemConfig( volumeNameID, volumeName);
-					getSystemConfig( deviceNameID, deviceName);
-				}
-				catch(...)
-				{}
-
-				if ( volumeName == oam::UnassignedName || deviceName == oam::UnassignedName )
-				{
-					cout << "   ERROR: amazonDetach, invalid configure " + volumeName + ":" + deviceName << endl;
-					writeLog("ERROR: amazonDetach, invalid configure " + volumeName + ":" + deviceName, LOG_TYPE_ERROR );
-					exceptionControl("amazonDetach", API_INVALID_PARAMETER);
-				}
-
-				//send msg to to-pm to umount volume
-				int returnStatus = sendMsgToProcMgr(UNMOUNT, dbrootid, FORCEFUL, ACK_YES);
-				if (returnStatus != API_SUCCESS) {
-					writeLog("ERROR: amazonDetach, umount failed on " + dbrootid, LOG_TYPE_ERROR );
-				}
-
-				if (!detachEC2Volume(volumeName)) {
-					cout << "   ERROR: amazonDetach, detachEC2Volume failed on " + volumeName << endl;
-					writeLog("ERROR: amazonDetach, detachEC2Volume failed on " + volumeName , LOG_TYPE_ERROR );
-					exceptionControl("amazonDetach", API_FAILURE);
-				}
-
-				writeLog("amazonDetach, detachEC2Volume passed on " + volumeName , LOG_TYPE_DEBUG );
-			}
-		}
-	}
-
-    /***************************************************************************
-     *
-     * Function:  amazonAttach
-     *
-     * Purpose:   Amazon EC2 volume Attach needed
-     *
-     ****************************************************************************/
-
-    void Oam::amazonAttach(std::string toPM, dbrootList dbrootConfigList)
+    if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") &&
+            DBRootStorageType == "external" )
     {
-		//if amazon cloud with external volumes, do the detach/attach moves
-		string cloud;
-		string DBRootStorageType;
-		try {
-			getSystemConfig("Cloud", cloud);
-			getSystemConfig("DBRootStorageType", DBRootStorageType);
-		}
-		catch(...) {}
+        writeLog("amazonDetach function started ", LOG_TYPE_DEBUG );
 
-		if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") && 
-			DBRootStorageType == "external" )
-		{
-			writeLog("amazonAttach function started ", LOG_TYPE_DEBUG );
+        dbrootList::iterator pt3 = dbrootConfigList.begin();
 
-			//get Instance Name for to-pm
-			string toInstanceName = oam::UnassignedName;
-			try
-			{
-				ModuleConfig moduleconfig;
-				getSystemConfig(toPM, moduleconfig);
-				HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
-				toInstanceName = (*pt1).HostName;
-			}
-			catch(...)
-			{}
+        for ( ; pt3 != dbrootConfigList.end() ; pt3++)
+        {
+            string dbrootid = *pt3;
+            string volumeNameID = "PMVolumeName" + dbrootid;
+            string volumeName = oam::UnassignedName;
+            string deviceNameID = "PMVolumeDeviceName" + dbrootid;
+            string deviceName = oam::UnassignedName;
 
-			if ( toInstanceName == oam::UnassignedName || toInstanceName.empty() )
-			{
-				cout << "   ERROR: amazonAttach, invalid Instance Name for " << toPM << endl;
-				writeLog("ERROR: amazonAttach, invalid Instance Name " + toPM, LOG_TYPE_ERROR );
-				exceptionControl("amazonAttach", API_INVALID_PARAMETER);
-			}
+            try
+            {
+                getSystemConfig( volumeNameID, volumeName);
+                getSystemConfig( deviceNameID, deviceName);
+            }
+            catch (...)
+            {}
 
-			dbrootList::iterator pt3 = dbrootConfigList.begin();
-			for( ; pt3 != dbrootConfigList.end() ; pt3++)
-			{
-				string dbrootid = *pt3;
-				string volumeNameID = "PMVolumeName" + dbrootid;
-				string volumeName = oam::UnassignedName;
-				string deviceNameID = "PMVolumeDeviceName" + dbrootid;
-				string deviceName = oam::UnassignedName;
-				try {
-					getSystemConfig( volumeNameID, volumeName);
-					getSystemConfig( deviceNameID, deviceName);
-				}
-				catch(...)
-				{}
+            if ( volumeName == oam::UnassignedName || deviceName == oam::UnassignedName )
+            {
+                cout << "   ERROR: amazonDetach, invalid configure " + volumeName + ":" + deviceName << endl;
+                writeLog("ERROR: amazonDetach, invalid configure " + volumeName + ":" + deviceName, LOG_TYPE_ERROR );
+                exceptionControl("amazonDetach", API_INVALID_PARAMETER);
+            }
 
-				if ( volumeName == oam::UnassignedName || deviceName == oam::UnassignedName )
-				{
-					cout << "   ERROR: amazonAttach, invalid configure " + volumeName + ":" + deviceName << endl;
-					writeLog("ERROR: amazonAttach, invalid configure " + volumeName + ":" + deviceName, LOG_TYPE_ERROR );
-					exceptionControl("amazonAttach", API_INVALID_PARAMETER);
-				}
+            //send msg to to-pm to umount volume
+            int returnStatus = sendMsgToProcMgr(UNMOUNT, dbrootid, FORCEFUL, ACK_YES);
 
-				if (!attachEC2Volume(volumeName, deviceName, toInstanceName)) {
-					cout << "   ERROR: amazonAttach, attachEC2Volume failed on " + volumeName + ":" + deviceName + ":" + toInstanceName << endl;
-					writeLog("ERROR: amazonAttach, attachEC2Volume failed on " + volumeName + ":" + deviceName + ":" + toInstanceName, LOG_TYPE_ERROR );
-					exceptionControl("amazonAttach", API_FAILURE);
-				}
+            if (returnStatus != API_SUCCESS)
+            {
+                writeLog("ERROR: amazonDetach, umount failed on " + dbrootid, LOG_TYPE_ERROR );
+            }
 
-				writeLog("amazonAttach, attachEC2Volume passed on " + volumeName + ":" + toPM, LOG_TYPE_DEBUG );
-			}
-		}
-	}
+            if (!detachEC2Volume(volumeName))
+            {
+                cout << "   ERROR: amazonDetach, detachEC2Volume failed on " + volumeName << endl;
+                writeLog("ERROR: amazonDetach, detachEC2Volume failed on " + volumeName, LOG_TYPE_ERROR );
+                exceptionControl("amazonDetach", API_FAILURE);
+            }
 
+            writeLog("amazonDetach, detachEC2Volume passed on " + volumeName, LOG_TYPE_DEBUG );
+        }
+    }
+}
 
-     /***************************************************************************
-     *
- * Function:  amazonReattach
+/***************************************************************************
  *
- * Purpose:   Amazon EC2 volume reattach needed
+ * Function:  amazonAttach
+ *
+ * Purpose:   Amazon EC2 volume Attach needed
  *
  ****************************************************************************/
+
+void Oam::amazonAttach(std::string toPM, dbrootList dbrootConfigList)
+{
+    //if amazon cloud with external volumes, do the detach/attach moves
+    string cloud;
+    string DBRootStorageType;
+
+    try
+    {
+        getSystemConfig("Cloud", cloud);
+        getSystemConfig("DBRootStorageType", DBRootStorageType);
+    }
+    catch (...) {}
+
+    if ( (cloud == "amazon-ec2" || cloud == "amazon-vpc") &&
+            DBRootStorageType == "external" )
+    {
+        writeLog("amazonAttach function started ", LOG_TYPE_DEBUG );
+
+        //get Instance Name for to-pm
+        string toInstanceName = oam::UnassignedName;
+
+        try
+        {
+            ModuleConfig moduleconfig;
+            getSystemConfig(toPM, moduleconfig);
+            HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
+            toInstanceName = (*pt1).HostName;
+        }
+        catch (...)
+        {}
+
+        if ( toInstanceName == oam::UnassignedName || toInstanceName.empty() )
+        {
+            cout << "   ERROR: amazonAttach, invalid Instance Name for " << toPM << endl;
+            writeLog("ERROR: amazonAttach, invalid Instance Name " + toPM, LOG_TYPE_ERROR );
+            exceptionControl("amazonAttach", API_INVALID_PARAMETER);
+        }
+
+        dbrootList::iterator pt3 = dbrootConfigList.begin();
+
+        for ( ; pt3 != dbrootConfigList.end() ; pt3++)
+        {
+            string dbrootid = *pt3;
+            string volumeNameID = "PMVolumeName" + dbrootid;
+            string volumeName = oam::UnassignedName;
+            string deviceNameID = "PMVolumeDeviceName" + dbrootid;
+            string deviceName = oam::UnassignedName;
+
+            try
+            {
+                getSystemConfig( volumeNameID, volumeName);
+                getSystemConfig( deviceNameID, deviceName);
+            }
+            catch (...)
+            {}
+
+            if ( volumeName == oam::UnassignedName || deviceName == oam::UnassignedName )
+            {
+                cout << "   ERROR: amazonAttach, invalid configure " + volumeName + ":" + deviceName << endl;
+                writeLog("ERROR: amazonAttach, invalid configure " + volumeName + ":" + deviceName, LOG_TYPE_ERROR );
+                exceptionControl("amazonAttach", API_INVALID_PARAMETER);
+            }
+
+            if (!attachEC2Volume(volumeName, deviceName, toInstanceName))
+            {
+                cout << "   ERROR: amazonAttach, attachEC2Volume failed on " + volumeName + ":" + deviceName + ":" + toInstanceName << endl;
+                writeLog("ERROR: amazonAttach, attachEC2Volume failed on " + volumeName + ":" + deviceName + ":" + toInstanceName, LOG_TYPE_ERROR );
+                exceptionControl("amazonAttach", API_FAILURE);
+            }
+
+            writeLog("amazonAttach, attachEC2Volume passed on " + volumeName + ":" + toPM, LOG_TYPE_DEBUG );
+        }
+    }
+}
+
+
+/***************************************************************************
+*
+* Function:  amazonReattach
+*
+* Purpose:   Amazon EC2 volume reattach needed
+*
+****************************************************************************/
 
 void Oam::amazonReattach(std::string toPM, dbrootList dbrootConfigList, bool attach)
 {

@@ -2247,31 +2247,32 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
         {
             oldHwm = it->hwm;
 
-        // save hwm for the old extent
-        colWidth = colStructList[i].colWidth;
-        succFlag = colOp->calculateRowId(lastRid, BYTE_PER_BLOCK / colWidth, colWidth, curFbo, curBio);
+            // save hwm for the old extent
+            colWidth = colStructList[i].colWidth;
+            succFlag = colOp->calculateRowId(lastRid, BYTE_PER_BLOCK / colWidth, colWidth, curFbo, curBio);
 
-        //cout << "insertcolumnrec   oid:rid:fbo:oldhwm = " << colStructList[i].dataOid << ":" << lastRid << ":" << curFbo << ":" << oldHwm << endl;
-        if (succFlag)
-        {
-            if ((HWM)curFbo >= oldHwm)
+            //cout << "insertcolumnrec   oid:rid:fbo:oldhwm = " << colStructList[i].dataOid << ":" << lastRid << ":" << curFbo << ":" << oldHwm << endl;
+            if (succFlag)
             {
-                it->hwm = (HWM)curFbo;
+                if ((HWM)curFbo >= oldHwm)
+                {
+                    it->hwm = (HWM)curFbo;
+                }
+
+                //@Bug 4947. set current to false for old extent.
+                if (newExtent)
+                {
+                    it->current = false;
+                }
+
+                //cout << "updated old ext info for oid " << colStructList[i].dataOid << " dbroot:part:seg:hwm:current = "
+                //<< it->dbRoot<<":"<<it->partNum<<":"<<it->segNum<<":"<<it->hwm<<":"<< it->current<< " and newExtent is " << newExtent << endl;
             }
-
-            //@Bug 4947. set current to false for old extent.
-            if (newExtent)
-            {
-                it->current = false;
-            }
-
-            //cout << "updated old ext info for oid " << colStructList[i].dataOid << " dbroot:part:seg:hwm:current = "
-            //<< it->dbRoot<<":"<<it->partNum<<":"<<it->segNum<<":"<<it->hwm<<":"<< it->current<< " and newExtent is " << newExtent << endl;
-        }
-        else
-            return ERR_INVALID_PARAM;
+            else
+                return ERR_INVALID_PARAM;
 
         }
+
         //update hwm for the new extent
         if (newExtent)
         {
@@ -2285,7 +2286,8 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
 
                 it++;
             }
-        colWidth = newColStructList[i].colWidth;
+
+            colWidth = newColStructList[i].colWidth;
             succFlag = colOp->calculateRowId(lastRidNew, BYTE_PER_BLOCK / colWidth, colWidth, curFbo, curBio);
 
             if (succFlag)
@@ -2356,29 +2358,29 @@ int WriteEngineWrapper::insertColumnRecsBinary(const TxnID& txnid,
                                                       curFbo));
                     }
                 }
-            else
-                return ERR_INVALID_PARAM;
-        }
+                else
+                    return ERR_INVALID_PARAM;
             }
+        }
 
-            // If we create a new extent for this batch
-            for (unsigned i = 0; i < newColStructList.size(); i++)
+        // If we create a new extent for this batch
+        for (unsigned i = 0; i < newColStructList.size(); i++)
+        {
+            colOp = m_colOp[op(newColStructList[i].fCompressionType)];
+            width = newColStructList[i].colWidth;
+            successFlag = colOp->calculateRowId(lastRidNew, BYTE_PER_BLOCK / width, width, curFbo, curBio);
+
+            if (successFlag)
             {
-                colOp = m_colOp[op(newColStructList[i].fCompressionType)];
-                width = newColStructList[i].colWidth;
-                successFlag = colOp->calculateRowId(lastRidNew, BYTE_PER_BLOCK / width, width, curFbo, curBio);
-
-                if (successFlag)
+                if (curFbo != lastFbo)
                 {
-                    if (curFbo != lastFbo)
-                    {
-                        RETURN_ON_ERROR(AddLBIDtoList(txnid,
-                                                      lbids,
-                                                      colDataTypes,
-                                                      newColStructList[i],
-                                                      curFbo));
-                    }
+                    RETURN_ON_ERROR(AddLBIDtoList(txnid,
+                                                  lbids,
+                                                  colDataTypes,
+                                                  newColStructList[i],
+                                                  curFbo));
                 }
+            }
             else
                 return ERR_INVALID_PARAM;
         }
@@ -5136,7 +5138,7 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
         bool versioning)
 {
     int            rc = 0;
-   void*          valArray = NULL;
+    void*          valArray = NULL;
     string         segFile;
     Column         curCol;
     ColStructList::size_type  totalColumn;
@@ -5167,23 +5169,25 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
         return rc;
 
     TableMetaData* aTbaleMetaData = TableMetaData::makeTableMetaData(tableOid);
+
     if (totalRow1)
     {
         valArray = malloc(sizeof(uint64_t) * totalRow1);
+
         for (i = 0; i < totalColumn; i++)
         {
-             //@Bug 2205 Check if all rows go to the new extent
+            //@Bug 2205 Check if all rows go to the new extent
             //Write the first batch
-            RID * firstPart = rowIdArray;
+            RID* firstPart = rowIdArray;
             ColumnOp* colOp = m_colOp[op(colStructList[i].fCompressionType)];
 
             // set params
             colOp->initColumn(curCol);
             // need to pass real dbRoot, partition, and segment to setColParam
             colOp->setColParam(curCol, 0, colStructList[i].colWidth,
-            colStructList[i].colDataType, colStructList[i].colType, colStructList[i].dataOid,
-            colStructList[i].fCompressionType, colStructList[i].fColDbRoot,
-            colStructList[i].fColPartition, colStructList[i].fColSegment);
+                               colStructList[i].colDataType, colStructList[i].colType, colStructList[i].dataOid,
+                               colStructList[i].fCompressionType, colStructList[i].fColDbRoot,
+                               colStructList[i].fColPartition, colStructList[i].fColSegment);
 
             ColExtsInfo aColExtsInfo = aTbaleMetaData->getColExtsInfo(colStructList[i].dataOid);
             ColExtsInfo::iterator it = aColExtsInfo.begin();
@@ -5199,7 +5203,7 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
             if (it == aColExtsInfo.end()) //add this one to the list
             {
                 ColExtInfo aExt;
-                aExt.dbRoot =colStructList[i].fColDbRoot;
+                aExt.dbRoot = colStructList[i].fColDbRoot;
                 aExt.partNum = colStructList[i].fColPartition;
                 aExt.segNum = colStructList[i].fColSegment;
                 aExt.compType = colStructList[i].fCompressionType;
@@ -5210,18 +5214,18 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
             rc = colOp->openColumnFile(curCol, segFile, useTmpSuffix, IO_BUFF_SIZE); // @bug 5572 HDFS tmp file
 
             if (rc != NO_ERROR)
-               break;
+                break;
 
             // handling versioning
             vector<LBIDRange>   rangeList;
 
             if (versioning)
             {
-                    rc = processVersionBuffer(curCol.dataFile.pFile, txnid, colStructList[i],
-                                      colStructList[i].colWidth, totalRow1, firstPart, rangeList);
-                if (rc != NO_ERROR) {
-            if (rc != NO_ERROR)
-            {
+                rc = processVersionBuffer(curCol.dataFile.pFile, txnid, colStructList[i],
+                                          colStructList[i].colWidth, totalRow1, firstPart, rangeList);
+
+                if (rc != NO_ERROR)
+                {
                     if (colStructList[i].fCompressionType == 0)
                     {
                         curCol.dataFile.pFile->flush();
@@ -5241,39 +5245,39 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
 
             for (size_t j = 0; j < totalRow1; j++)
             {
-                uint64_t curValue = colValueList[((totalRow1 + totalRow2)*i) + j];
+                uint64_t curValue = colValueList[((totalRow1 + totalRow2) * i) + j];
 
                 switch (colStructList[i].colType)
                 {
-                   case WriteEngine::WR_VARBINARY : // treat same as char for now
-                   case WriteEngine::WR_CHAR:
-                   case WriteEngine::WR_BLOB:
-                   case WriteEngine::WR_TEXT:
+                    case WriteEngine::WR_VARBINARY : // treat same as char for now
+                    case WriteEngine::WR_CHAR:
+                    case WriteEngine::WR_BLOB:
+                    case WriteEngine::WR_TEXT:
                         ((uint64_t*)valArray)[j] = curValue;
                         break;
 
-                   case WriteEngine::WR_INT:
-                   case WriteEngine::WR_UINT:
-                   case WriteEngine::WR_FLOAT:
+                    case WriteEngine::WR_INT:
+                    case WriteEngine::WR_UINT:
+                    case WriteEngine::WR_FLOAT:
                         tmp32 = curValue;
                         ((uint32_t*)valArray)[j] = tmp32;
                         break;
 
-                   case WriteEngine::WR_ULONGLONG:
-                   case WriteEngine::WR_LONGLONG:
-                   case WriteEngine::WR_DOUBLE:
-                   case WriteEngine::WR_TOKEN:
+                    case WriteEngine::WR_ULONGLONG:
+                    case WriteEngine::WR_LONGLONG:
+                    case WriteEngine::WR_DOUBLE:
+                    case WriteEngine::WR_TOKEN:
                         ((uint64_t*)valArray)[j] = curValue;
                         break;
 
-                   case WriteEngine::WR_BYTE:
-                   case WriteEngine::WR_UBYTE:
+                    case WriteEngine::WR_BYTE:
+                    case WriteEngine::WR_UBYTE:
                         tmp8 = curValue;
                         ((uint8_t*)valArray)[j] = tmp8;
                         break;
 
-                   case WriteEngine::WR_SHORT:
-                   case WriteEngine::WR_USHORT:
+                    case WriteEngine::WR_SHORT:
+                    case WriteEngine::WR_USHORT:
                         tmp16 = curValue;
                         ((uint16_t*)valArray)[j] = tmp16;
                         break;
@@ -5282,11 +5286,11 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
 
 
 #ifdef PROFILE
-    timer.start("writeRow ");
+            timer.start("writeRow ");
 #endif
             rc = colOp->writeRow(curCol, totalRow1, firstPart, valArray);
 #ifdef PROFILE
-    timer.stop("writeRow ");
+            timer.stop("writeRow ");
 #endif
             colOp->closeColumnFile(curCol);
 
@@ -5295,7 +5299,7 @@ int WriteEngineWrapper::writeColumnRecBinary(const TxnID& txnid,
 
             // check error
             if (rc != NO_ERROR)
-               break;
+                break;
 
         } // end of for (i = 0
 

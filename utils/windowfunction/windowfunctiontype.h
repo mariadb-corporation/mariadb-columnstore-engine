@@ -199,7 +199,7 @@ public:
     }
 
     void constParms(const std::vector<SRCP>& functionParms);
-    
+
     static boost::shared_ptr<WindowFunctionType> makeWindowFunction(const std::string&, int ct, WindowFunctionColumn* wc);
 
 protected:

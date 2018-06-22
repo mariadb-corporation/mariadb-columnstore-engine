@@ -82,6 +82,7 @@ mcsv1_UDAF::ReturnCode regr_avgx::nextValue(mcsv1Context* context, ColumnDatum* 
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
+
     if (valIn_x.empty() || valIn_y.empty()) // Usually empty if NULL. Probably redundant
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
@@ -162,9 +163,11 @@ mcsv1_UDAF::ReturnCode regr_avgx::subEvaluate(mcsv1Context* context, const UserD
     }
 
     struct regr_avgx_data* outData = (struct regr_avgx_data*)context->getUserData()->data;
+
     struct regr_avgx_data* inData = (struct regr_avgx_data*)userDataIn->data;
 
     outData->sum += inData->sum;
+
     outData->cnt += inData->cnt;
 
     return mcsv1_UDAF::SUCCESS;
@@ -182,6 +185,7 @@ mcsv1_UDAF::ReturnCode regr_avgx::evaluate(mcsv1Context* context, static_any::an
     {
         valOut = data->sum / (double)data->cnt;
     }
+
     return mcsv1_UDAF::SUCCESS;
 }
 

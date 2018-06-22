@@ -120,7 +120,7 @@ bool mcsv1Context::operator==(const mcsv1Context& c) const
     // We don't test the per row data fields. They don't determine
     // if it's the same Context.
     if (getName() != c.getName()
-            ||fRunFlags        != c.fRunFlags
+            || fRunFlags        != c.fRunFlags
             || fContextFlags    != c.fContextFlags
             || fUserDataSize    != c.fUserDataSize
             || fResultType      != c.fResultType

@@ -84,7 +84,7 @@ static bool get_file_sizes(messageqcpp::MessageQueueClient* msgQueueClient, cons
     }
 }
 
-static int generate_result(BRM::OID_t oid, BRM::DBRM *emp, TABLE *table, THD *thd)
+static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* thd)
 {
     std::vector<struct BRM::EMEntry> entries;
     CHARSET_INFO* cs = system_charset_info;
@@ -185,14 +185,15 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM *emp, TABLE *table, THD *th
         messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
         msgQueueClient = NULL;
     }
+
     return 0;
 }
 
-static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
+static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
-    BRM::DBRM *emp = new BRM::DBRM();
+    BRM::DBRM* emp = new BRM::DBRM();
     BRM::OID_t cond_oid = 0;
-    TABLE *table = tables->table;
+    TABLE* table = tables->table;
 
     if (!emp || !emp->isDBRMReady())
     {
@@ -202,13 +203,15 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
     if (cond && cond->type() == Item::FUNC_ITEM)
     {
         Item_func* fitem = (Item_func*) cond;
+
         if ((fitem->functype() == Item_func::EQ_FUNC) && (fitem->argument_count() == 2))
         {
-            if(fitem->arguments()[0]->real_item()->type() == Item::FIELD_ITEM &&
-               fitem->arguments()[1]->const_item())
+            if (fitem->arguments()[0]->real_item()->type() == Item::FIELD_ITEM &&
+                    fitem->arguments()[1]->const_item())
             {
                 // WHERE object_id = value
-                Item_field *item_field = (Item_field*) fitem->arguments()[0]->real_item();
+                Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
+
                 if (strcasecmp(item_field->field_name, "object_id") == 0)
                 {
                     cond_oid = fitem->arguments()[1]->val_int();
@@ -216,10 +219,11 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                 }
             }
             else if (fitem->arguments()[1]->real_item()->type() == Item::FIELD_ITEM &&
-                fitem->arguments()[0]->const_item())
+                     fitem->arguments()[0]->const_item())
             {
                 // WHERE value = object_id
-                Item_field *item_field = (Item_field*) fitem->arguments()[1]->real_item();
+                Item_field* item_field = (Item_field*) fitem->arguments()[1]->real_item();
+
                 if (strcasecmp(item_field->field_name, "object_id") == 0)
                 {
                     cond_oid = fitem->arguments()[0]->val_int();
@@ -230,15 +234,17 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
         else if (fitem->functype() == Item_func::IN_FUNC)
         {
             // WHERE object_id in (value1, value2)
-            Item_field *item_field = (Item_field*) fitem->arguments()[0]->real_item();
+            Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
+
             if (strcasecmp(item_field->field_name, "object_id") == 0)
             {
-                for (unsigned int i=1; i < fitem->argument_count(); i++)
+                for (unsigned int i = 1; i < fitem->argument_count(); i++)
                 {
                     cond_oid = fitem->arguments()[i]->val_int();
                     int result = generate_result(cond_oid, emp, table, thd);
+
                     if (result)
-                       return 1;
+                        return 1;
                 }
             }
         }
@@ -246,13 +252,16 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
                  strcasecmp(fitem->func_name(), "find_in_set") == 0)
         {
             // WHERE FIND_IN_SET(object_id, values)
-            String *tmp_var = fitem->arguments()[1]->val_str();
+            String* tmp_var = fitem->arguments()[1]->val_str();
             std::stringstream ss(tmp_var->ptr());
+
             while (ss >> cond_oid)
             {
                 int ret = generate_result(cond_oid, emp, table, thd);
+
                 if (ret)
                     return 1;
+
                 if (ss.peek() == ',')
                     ss.ignore();
             }
@@ -264,9 +273,10 @@ static int is_columnstore_files_fill(THD *thd, TABLE_LIST *tables, COND *cond)
 
     if (!cond_oid)
     {
-        for(BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
+        for (BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
         {
             int result = generate_result(oid, emp, table, thd);
+
             if (result)
                 return 1;
         }

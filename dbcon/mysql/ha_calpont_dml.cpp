@@ -899,6 +899,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                         {
                             fprintf(ci.filePtr, "-");
                         }
+
                         if (!ltime.second_part)
                         {
                             fprintf(ci.filePtr, "%02d:%02d:%02d%c",

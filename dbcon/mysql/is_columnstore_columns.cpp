@@ -56,10 +56,11 @@ ST_FIELD_INFO is_columnstore_columns_fields[] =
 
 };
 
-static void get_cond_item(Item_func *item, String **table, String **db)
+static void get_cond_item(Item_func* item, String** table, String** db)
 {
     char tmp_char[MAX_FIELD_WIDTH];
-    Item_field *item_field = (Item_field*) item->arguments()[0]->real_item();
+    Item_field* item_field = (Item_field*) item->arguments()[0]->real_item();
+
     if (strcasecmp(item_field->field_name, "table_name") == 0)
     {
         String str_buf(tmp_char, sizeof(tmp_char), system_charset_info);
@@ -74,13 +75,14 @@ static void get_cond_item(Item_func *item, String **table, String **db)
     }
 }
 
-static void get_cond_items(COND *cond, String **table, String **db)
+static void get_cond_items(COND* cond, String** table, String** db)
 {
     if (cond->type() == Item::FUNC_ITEM)
     {
         Item_func* fitem = (Item_func*) cond;
+
         if (fitem->arguments()[0]->real_item()->type() == Item::FIELD_ITEM &&
-            fitem->arguments()[1]->const_item())
+                fitem->arguments()[1]->const_item())
         {
             get_cond_item(fitem, table, db);
         }
@@ -88,8 +90,9 @@ static void get_cond_items(COND *cond, String **table, String **db)
     else if ((cond->type() == Item::COND_ITEM) && (((Item_cond*) cond)->functype() == Item_func::COND_AND_FUNC))
     {
         List_iterator<Item> li(*((Item_cond*) cond)->argument_list());
-        Item *item;
-        while ((item= li++))
+        Item* item;
+
+        while ((item = li++))
         {
             if (item->type() == Item::FUNC_ITEM)
             {
@@ -107,8 +110,8 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
     CHARSET_INFO* cs = system_charset_info;
     TABLE* table = tables->table;
-    String *table_name = NULL;
-    String *db_name = NULL;
+    String* table_name = NULL;
+    String* db_name = NULL;
 
     boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
         execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(execplan::CalpontSystemCatalog::idb_tid2sid(thd->thread_id));
@@ -133,6 +136,7 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
                 continue;
             }
         }
+
         if (table_name)
         {
             if ((*it).second.table.compare(table_name->ptr()) != 0)

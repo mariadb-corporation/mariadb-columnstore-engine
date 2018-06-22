@@ -2067,11 +2067,11 @@ struct ReadThread
                         case DICT_CREATE_EQUALITY_FILTER:
                         {
                             PriorityThreadPool::Job job;
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
                             job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new CreateEqualityFilter(bs));
                             OOBPool->addJob(job);
                             break;
@@ -2080,11 +2080,11 @@ struct ReadThread
                         case DICT_DESTROY_EQUALITY_FILTER:
                         {
                             PriorityThreadPool::Job job;
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
                             job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new DestroyEqualityFilter(bs));
                             OOBPool->addJob(job);
                             break;
@@ -2118,11 +2118,14 @@ struct ReadThread
                             job.id = hdr->Hdr.UniqueID;
                             job.weight = LOGICAL_BLOCK_RIDS;
                             job.priority = hdr->Hdr.Priority;
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
+
+                            if (hdr->flags & IS_SYSCAT)
+                            {
                                 //boost::thread t(DictScanJob(outIos, bs, writeLock));
                                 // using already-existing threads may cut latency
                                 // if it's changed back to running in an independent thread
@@ -2167,11 +2170,14 @@ struct ReadThread
                             job.id = bpps->getID();
                             job.weight = ismHdr->Size;
                             job.priority = bpps->priority();
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
+
+                            if (bpps->isSysCat())
+                            {
 
                                 //boost::thread t(*bpps);
                                 // using already-existing threads may cut latency
@@ -2191,11 +2197,11 @@ struct ReadThread
                         {
                             PriorityThreadPool::Job job;
                             job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Create(fBPPHandler, bs));
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
                             OOBPool->addJob(job);
                             //fBPPHandler->createBPP(*bs);
                             break;
@@ -2206,11 +2212,11 @@ struct ReadThread
                             PriorityThreadPool::Job job;
                             job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::AddJoiner(fBPPHandler, bs));
                             job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
                             OOBPool->addJob(job);
                             //fBPPHandler->addJoinerToBPP(*bs);
                             break;
@@ -2224,11 +2230,11 @@ struct ReadThread
                             PriorityThreadPool::Job job;
                             job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::LastJoiner(fBPPHandler, bs));
                             job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
                             OOBPool->addJob(job);
                             break;
                         }
@@ -2240,11 +2246,11 @@ struct ReadThread
                             PriorityThreadPool::Job job;
                             job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Destroy(fBPPHandler, bs));
                             job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
                             OOBPool->addJob(job);
                             //fBPPHandler->destroyBPP(*bs);
                             break;
@@ -2263,11 +2269,11 @@ struct ReadThread
                             PriorityThreadPool::Job job;
                             job.functor = boost::shared_ptr<PriorityThreadPool::Functor>(new BPPHandler::Abort(fBPPHandler, bs));
                             job.id = fBPPHandler->getUniqueID(bs, ismHdr->Command);
-                        const uint8_t *buf = bs->buf();
-                        uint32_t pos = sizeof(ISMPacketHeader) - 2;
-                        job.stepID = *((uint32_t *) &buf[pos+6]);
-                        job.uniqueID = *((uint32_t *) &buf[pos+10]);
-                        job.sock = outIos;
+                            const uint8_t* buf = bs->buf();
+                            uint32_t pos = sizeof(ISMPacketHeader) - 2;
+                            job.stepID = *((uint32_t*) &buf[pos + 6]);
+                            job.uniqueID = *((uint32_t*) &buf[pos + 10]);
+                            job.sock = outIos;
                             OOBPool->addJob(job);
                             break;
                         }
@@ -2299,12 +2305,12 @@ struct ReadThread
         }
     }
 
-    // If this function is called, we have a "bug" of some sort.  We added
-    // the "fIos" connection to UmSocketSelector earlier, so at the very
-    // least, UmSocketSelector should have been able to return that con-
-    // nection/port.  We will try to recover by using the original fIos to
-    // send the response msg; but as stated, if this ever happens we have
-    // a bug we need to resolve.
+// If this function is called, we have a "bug" of some sort.  We added
+// the "fIos" connection to UmSocketSelector earlier, so at the very
+// least, UmSocketSelector should have been able to return that con-
+// nection/port.  We will try to recover by using the original fIos to
+// send the response msg; but as stated, if this ever happens we have
+// a bug we need to resolve.
     void handleUmSockSelErr(const string& cmd)
     {
         ostringstream oss;

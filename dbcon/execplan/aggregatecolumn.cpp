@@ -107,8 +107,8 @@ AggregateColumn::AggregateColumn(const string& functionName, const string& conte
     fData(functionName + "(" + content + ")")
 {
     // TODO: need to handle distinct
-     SRCP srcp(new ArithmeticColumn(content));
-     fAggParms.push_back(srcp);
+    SRCP srcp(new ArithmeticColumn(content));
+    fAggParms.push_back(srcp);
 }
 
 AggregateColumn::AggregateColumn( const AggregateColumn& rhs, const uint32_t sessionID ):
@@ -144,6 +144,7 @@ const string AggregateColumn::toString() const
         {
             output << *(fAggParms[i]) << " ";
         }
+
     output << endl;
 
     if (fConstCol)
@@ -167,6 +168,7 @@ void AggregateColumn::serialize(messageqcpp::ByteStream& b) const
     b << static_cast<uint8_t>(fAggOp);
 
     b << static_cast<uint32_t>(fAggParms.size());
+
     for (uint32_t i = 0; i < fAggParms.size(); ++i)
     {
         fAggParms[i]->serialize(b);
@@ -208,6 +210,7 @@ void AggregateColumn::unserialize(messageqcpp::ByteStream& b)
     b >> fAggOp;
 
     b >> size;
+
     for (i = 0; i < size; i++)
     {
         rc = dynamic_cast<ReturnedColumn*>(ObjectReader::createTreeNode(b));
@@ -264,9 +267,10 @@ bool AggregateColumn::operator==(const AggregateColumn& t) const
     {
         return false;
     }
-    for (it = fAggParms.begin(), it2 = t.fAggParms.begin(); 
-         it != fAggParms.end();
-         ++it, ++it2)
+
+    for (it = fAggParms.begin(), it2 = t.fAggParms.begin();
+            it != fAggParms.end();
+            ++it, ++it2)
     {
         if (**it != **it2)
             return false;

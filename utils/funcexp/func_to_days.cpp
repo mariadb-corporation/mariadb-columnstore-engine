@@ -85,7 +85,7 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
             break;
         }
 
-            // Time adds to now() and then gets value
+        // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
         {
             int64_t val;

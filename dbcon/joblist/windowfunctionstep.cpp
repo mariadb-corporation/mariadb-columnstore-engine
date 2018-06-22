@@ -655,6 +655,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
         // make sure index is in range
         else if (fields.size() > 1 && fields[1] >= 0 && static_cast<uint64_t>(fields[1]) < types.size())
             ct = types[fields[1]];
+
         // workaround for functions using "within group (order by)" syntax
         string fn = boost::to_upper_copy(wc->functionName());
 

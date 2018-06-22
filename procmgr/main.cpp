@@ -1688,7 +1688,7 @@ void pingDeviceThread()
                                     processManager.restartProcessType("WriteEngineServer", moduleName);
 
                                     //set module to enable state
-									processManager.enableModule(moduleName, oam::AUTO_OFFLINE, true);
+                                    processManager.enableModule(moduleName, oam::AUTO_OFFLINE, true);
 
                                     downActiveOAMModule = false;
                                     int retry;
@@ -1784,7 +1784,7 @@ void pingDeviceThread()
                                 }
                                 else
                                     //set module to enable state
-								    processManager.enableModule(moduleName, oam::AUTO_OFFLINE, true);
+                                    processManager.enableModule(moduleName, oam::AUTO_OFFLINE, true);
 
                                 //restart module processes
                                 int retry = 0;
@@ -2094,7 +2094,7 @@ void pingDeviceThread()
                                 if ( PrimaryUMModuleName == moduleName )
                                     downPrimaryUM = true;
 
-								// if disabled, skip
+                                // if disabled, skip
                                 if (opState != oam::AUTO_DISABLED )
                                 {
                                     //Log failure, issue alarm, set moduleOpState
@@ -2140,7 +2140,9 @@ void pingDeviceThread()
                                     if ( ( moduleName.find("pm") == 0 && !amazon && ( DBRootStorageType != "internal") ) ||
                                             ( moduleName.find("pm") == 0 && amazon && downActiveOAMModule ) ||
                                             ( moduleName.find("pm") == 0 && amazon && AmazonPMFailover == "y") )
-										string error;
+                                    {
+                                        string error;
+
                                         try
                                         {
                                             log.writeLog(__LINE__, "Call autoMovePmDbroot", LOG_TYPE_DEBUG);
@@ -2157,23 +2159,23 @@ void pingDeviceThread()
                                         catch (...)
                                         {
                                             log.writeLog(__LINE__, "EXCEPTION ERROR on autoMovePmDbroot: Caught unknown exception!", LOG_TYPE_ERROR);
-										}
-										
-										if ( error == oam.itoa(oam::API_DETACH_FAILURE) )
-										{
-										      processManager.setModuleState(moduleName, oam::AUTO_DISABLED);
+                                        }
 
-										      // resume the dbrm
-										      oam.dbrmctl("resume");
-										      log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+                                        if ( error == oam.itoa(oam::API_DETACH_FAILURE) )
+                                        {
+                                            processManager.setModuleState(moduleName, oam::AUTO_DISABLED);
 
-										      //enable query stats
-										      dbrm.setSystemQueryReady(true);
+                                            // resume the dbrm
+                                            oam.dbrmctl("resume");
+                                            log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
-										      //set query system state ready
-										      processManager.setQuerySystemState(true);
-										      
-										      break;
+                                            //enable query stats
+                                            dbrm.setSystemQueryReady(true);
+
+                                            //set query system state ready
+                                            processManager.setQuerySystemState(true);
+
+                                            break;
                                         }
                                     }
                                 }

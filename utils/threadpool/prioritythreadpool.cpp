@@ -53,9 +53,9 @@ PriorityThreadPool::PriorityThreadPool(uint targetWeightPerRun, uint highThreads
 
     cout << "started " << highThreads << " high, " << midThreads << " med, " << lowThreads
          << " low.\n";
-	defaultThreadCounts[HIGH] = threadCounts[HIGH] = highThreads;
-	defaultThreadCounts[MEDIUM] = threadCounts[MEDIUM] = midThreads;
-	defaultThreadCounts[LOW] = threadCounts[LOW] = lowThreads;
+    defaultThreadCounts[HIGH] = threadCounts[HIGH] = highThreads;
+    defaultThreadCounts[MEDIUM] = threadCounts[MEDIUM] = midThreads;
+    defaultThreadCounts[LOW] = threadCounts[LOW] = lowThreads;
 }
 
 PriorityThreadPool::~PriorityThreadPool()
@@ -76,11 +76,13 @@ void PriorityThreadPool::addJob(const Job& job, bool useLock)
         threads.create_thread(ThreadHelper(this, HIGH));
         threadCounts[HIGH]++;
     }
+
     if (defaultThreadCounts[MEDIUM] != threadCounts[MEDIUM])
     {
         threads.create_thread(ThreadHelper(this, MEDIUM));
         threadCounts[MEDIUM]++;
     }
+
     if (defaultThreadCounts[LOW] != threadCounts[LOW])
     {
         threads.create_thread(ThreadHelper(this, LOW));
@@ -136,14 +138,15 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
     try
     {
-        while (!_stop) {
+        while (!_stop)
+        {
 
             mutex::scoped_lock lk(mutex);
 
             queue = pickAQueue(preferredQueue);
-            if (jobQueues[queue].empty()) {
-        if (jobQueues[queue].empty())
-        {
+
+            if (jobQueues[queue].empty())
+            {
                 newJob.wait(lk);
                 continue;
             }
@@ -158,8 +161,8 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
             //     should leave some to the other threads
 
             while ((weight < weightPerRun) && (!jobQueues[queue].empty())
-              && (runList.size() <= queueSize/2)) {
-        {
+                    && (runList.size() <= queueSize / 2))
+            {
                 runList.push_back(jobQueues[queue].front());
                 jobQueues[queue].pop_front();
                 weight += runList.back().weight;
@@ -169,25 +172,24 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
             reschedule.resize(runList.size());
             rescheduleCount = 0;
-            for (i = 0; i < runList.size() && !_stop; i++) {
-        {
-            try
+
+            for (i = 0; i < runList.size() && !_stop; i++)
             {
-                    reschedule[i] = false;
-                    running = true;
-                    reschedule[i] = (*(runList[i].functor))();
-                    running = false;
-                    if (reschedule[i])
-                        rescheduleCount++;
+                reschedule[i] = false;
+                running = true;
+                reschedule[i] = (*(runList[i].functor))();
+                running = false;
+
+                if (reschedule[i])
+                    rescheduleCount++;
             }
-            {
 
             // no real work was done, prevent intensive busy waiting
             if (rescheduleCount == runList.size())
                 usleep(1000);
 
-            if (rescheduleCount > 0) {
-        {
+            if (rescheduleCount > 0)
+            {
                 lk.lock();
 
                 for (i = 0; i < runList.size(); i++)
@@ -205,7 +207,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
             runList.clear();
         }
     }
-    catch (std::exception &ex)
+    catch (std::exception& ex)
     {
         // Log the exception and exit this thread
         try
@@ -224,6 +226,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
             ml.logErrorMessage( message );
 #endif
+
             if (running)
                 sendErrorMsg(runList[i].uniqueID, runList[i].stepID, runList[i].sock);
         }
@@ -250,6 +253,7 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
             ml.logErrorMessage( message );
 #endif
+
             if (running)
                 sendErrorMsg(runList[i].uniqueID, runList[i].stepID, runList[i].sock);
         }
@@ -261,17 +265,17 @@ void PriorityThreadPool::threadFcn(const Priority preferredQueue) throw()
 
 void PriorityThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock)
 {
-	ISMPacketHeader ism;
-	PrimitiveHeader ph = {0};
+    ISMPacketHeader ism;
+    PrimitiveHeader ph = {0};
 
-	ism.Status =  logging::primitiveServerErr;
-	ph.UniqueID = id;
-	ph.StepID = step;
-	ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
-	msg.append((uint8_t *) &ism, sizeof(ism));
-	msg.append((uint8_t *) &ph, sizeof(ph));
+    ism.Status =  logging::primitiveServerErr;
+    ph.UniqueID = id;
+    ph.StepID = step;
+    ByteStream msg(sizeof(ISMPacketHeader) + sizeof(PrimitiveHeader));
+    msg.append((uint8_t*) &ism, sizeof(ism));
+    msg.append((uint8_t*) &ph, sizeof(ph));
 
-	sock->write(msg);
+    sock->write(msg);
 }
 
 void PriorityThreadPool::stop()
