@@ -1156,7 +1156,8 @@ create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
 
-    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE )
+    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE
+            && thd->variables.infinidb_vtable_mode == 0)
     {
         handler = new ha_calpont_group_by_handler(thd, query);
 
