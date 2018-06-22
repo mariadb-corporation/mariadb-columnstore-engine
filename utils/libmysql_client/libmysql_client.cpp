@@ -119,13 +119,17 @@ int LibMySQL::run(const char* query)
 
 void LibMySQL::handleMySqlError(const char* errStr, unsigned int errCode)
 {
-    ostringstream oss;
-    oss << errStr << "(" << errCode << ")";
-
-    if (errCode == (unsigned int) - 1)
-        oss << "(null pointer)";
+	ostringstream oss;
+    if (mysql->getErrno())
+    {
+        oss << errStr << " (" << mysql->getErrno() << ")";
+        oss << " (" << mysql->getErrorMsg() << ")";
+    }
     else
-        oss << "(" << errCode << ")";
+    {
+	    oss << errStr << " (" << errCode << ")";
+		oss << " (unknown)";
+    }
 
     throw logging::IDBExcept(oss.str(), logging::ERR_CROSS_ENGINE_CONNECT);
 
