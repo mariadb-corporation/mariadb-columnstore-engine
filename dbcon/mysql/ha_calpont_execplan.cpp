@@ -8089,9 +8089,9 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     gwi.thd = thd;
     int status = getGroupPlan(gwi, select_lex, csep, gi);
 
-//    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
-//    cerr << *csep << endl ;
-//    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+    cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 
     if (status > 0)
         return ER_INTERNAL_ERROR;
@@ -8386,7 +8386,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
     }
 
-    uint32_t failed = buildOuterJoin(gwi, select_lex);
+    SELECT_LEX tmp_select_lex;
+    tmp_select_lex.table_list.first = gi.groupByTables;
+    uint32_t failed = buildOuterJoin(gwi, tmp_select_lex);
 
     if (failed) return failed;
 
