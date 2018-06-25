@@ -9469,7 +9469,7 @@ int ProcessManager::OAMParentModuleChange()
 	if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
 		( moduleNameList.size() <= 0 && config.moduleType() == "pm") )
 	{
-		int status = 0;
+		status = 0;
 	}
 	else 
 	{

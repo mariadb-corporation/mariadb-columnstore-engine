@@ -1358,7 +1358,49 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
 		idbassert(ifp->argument_count() == 1);
 		ParseTree *ptp = 0;
-		if (isPredicateFunction(ifp->arguments()[0], gwip) || ifp->arguments()[0]->type() == Item::COND_ITEM)
+		if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
+        {
+			// negate it in place
+            // Note that an EQUAL_FUNC ( a <=> b) was converted to
+            // ( a = b OR ( a is null AND b is null) )
+            // NOT of the above expression is: ( a != b AND (a is not null OR b is not null )
+
+			if (!gwip->ptWorkStack.empty())
+                ptp = gwip->ptWorkStack.top();
+
+			if (ptp)
+			{
+				ParseTree* or_ptp = ptp;
+				ParseTree* and_ptp = or_ptp->right();
+				ParseTree* equal_ptp = or_ptp->left();
+				ParseTree* nullck_left_ptp = and_ptp->left();
+				ParseTree* nullck_right_ptp = and_ptp->right();
+				SimpleFilter *sf = dynamic_cast<SimpleFilter*>(nullck_left_ptp->data());
+				try
+				{
+					sf->op()->reverseOp();
+					sf = dynamic_cast<SimpleFilter*>(nullck_right_ptp->data());
+					sf->op()->reverseOp();
+					sf = dynamic_cast<SimpleFilter*>(equal_ptp->data());
+					sf->op()->reverseOp();
+					// Rehook the trees
+					ptp = and_ptp;
+					ptp->left(equal_ptp);
+					ptp->right(or_ptp);
+					or_ptp->left(nullck_left_ptp);
+					or_ptp->right(nullck_right_ptp);
+					gwip->ptWorkStack.pop();
+					gwip->ptWorkStack.push(ptp);
+				}
+				catch (std::exception& ex )
+				{
+					gwip->fatalParseError = true;
+					gwip->parseErrorText = ex.what();
+					return false;
+				}
+			}
+		}
+		else if (isPredicateFunction(ifp->arguments()[0], gwip) || ifp->arguments()[0]->type() == Item::COND_ITEM)
 		{
 			// negate it in place
 			if (!gwip->ptWorkStack.empty())
@@ -1425,7 +1467,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 	}
     else if (ifp->functype() == Item_func::EQUAL_FUNC)
     {
-        // a = b OR (a IS NULL AND b IS NULL)
+        // Convert "a <=> b" to (a = b OR (a IS NULL AND b IS NULL))"
         idbassert (gwip->rcWorkStack.size() >= 2);
 		ReturnedColumn* rhs = gwip->rcWorkStack.top();
 		gwip->rcWorkStack.pop();
@@ -1437,7 +1479,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         // b IS NULL
         ConstantColumn *nlhs1 = new ConstantColumn("", ConstantColumn::NULLDATA);
         sop.reset(new PredicateOperator("isnull"));
-        sop->setOpType(lhs->resultType(), rhs->resultType());
+        sop->setOpType(lhs->resultType(), rhs->resultType()); 
         sfn1 = new SimpleFilter(sop, rhs, nlhs1);
         ParseTree* ptpl = new ParseTree(sfn1);
         // a IS NULL
@@ -1452,7 +1494,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         ptpn->right(ptpr);
         // a = b
         sop.reset(new PredicateOperator("="));
-        sop->setOpType(lhs->resultType(), lhs->resultType());
+        sop->setOpType(lhs->resultType(), rhs->resultType()); 
         sfo = new SimpleFilter(sop, lhs->clone(), rhs->clone());
         // OR with the NULL comparison tree
         ParseTree* ptp = new ParseTree(new LogicOperator("or"));
@@ -7017,3 +7059,4 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
 	return 0;
 }
 }
+// vim:ts=4 sw=4:
