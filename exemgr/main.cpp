@@ -1354,7 +1354,9 @@ int main(int argc, char* argv[])
 		setenv("CALPONT_CSC_IDENT", "um", 1);
 #endif
 	setupSignalHandlers();
-    int err = setupResources();
+    int err = 0;
+    if (!gDebug)
+        err = setupResources();
     string errMsg;
     switch (err)
     {
