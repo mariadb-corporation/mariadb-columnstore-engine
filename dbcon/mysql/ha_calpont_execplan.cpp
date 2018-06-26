@@ -1375,15 +1375,16 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 				ParseTree* equal_ptp = or_ptp->left();
 				ParseTree* nullck_left_ptp = and_ptp->left();
 				ParseTree* nullck_right_ptp = and_ptp->right();
-				SimpleFilter *sf = dynamic_cast<SimpleFilter*>(nullck_left_ptp->data());
-				try
-				{
-					sf->op()->reverseOp();
-					sf = dynamic_cast<SimpleFilter*>(nullck_right_ptp->data());
-					sf->op()->reverseOp();
-					sf = dynamic_cast<SimpleFilter*>(equal_ptp->data());
-					sf->op()->reverseOp();
-					// Rehook the trees
+				SimpleFilter *sf_left_nullck = dynamic_cast<SimpleFilter*>(nullck_left_ptp->data());
+				SimpleFilter *sf_right_nullck = dynamic_cast<SimpleFilter*>(nullck_right_ptp->data());
+				SimpleFilter *sf_equal = dynamic_cast<SimpleFilter*>(equal_ptp->data());
+
+				if (sf_left_nullck && sf_right_nullck && sf_equal) {
+					// Negate the null checks
+					sf_left_nullck->op()->reverseOp();
+					sf_right_nullck->op()->reverseOp();
+					sf_equal->op()->reverseOp();
+					// Rehook the nodes
 					ptp = and_ptp;
 					ptp->left(equal_ptp);
 					ptp->right(or_ptp);
@@ -1392,10 +1393,9 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 					gwip->ptWorkStack.pop();
 					gwip->ptWorkStack.push(ptp);
 				}
-				catch (std::exception& ex )
-				{
+				else {
 					gwip->fatalParseError = true;
-					gwip->parseErrorText = ex.what();
+					gwip->parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ASSERTION_FAILURE);
 					return false;
 				}
 			}
