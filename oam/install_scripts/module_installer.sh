@@ -186,7 +186,6 @@ if [ $module = "um" ]; then
 		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
 		echo "done" >> $RCFILE
 	else
-		sudo chmod 666 $RCFILE
                 sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
                 sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
                 sudo echo "done" >> $RCFILE
@@ -201,7 +200,6 @@ else
 		echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
 		echo "done" >> $RCFILE
 	else
-		sudo chmod 666 $RCFILE
                 sudo echo "for scsi_dev in \`mount | awk '/mnt\\/tmp/  {print $1}' | awk -F/ '{print $3}' | sed 's/[0-9]*$//'\`; do" >> $RCFILE
                 sudo echo "echo deadline > /sys/block/$scsi_dev/queue/scheduler" >> $RCFILE
                 sudo echo "done" >> $RCFILE
@@ -214,7 +212,7 @@ fi
 
 if [ $user != "root" ]; then
       echo "uncomment runuser in rc.local"
-      sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
+      sudo sed -i -e 's/#sudo runuser/sudo runuser/g' $RCFILE >/dev/null 2>&1
 fi
 
 echo "!!!Module Installation Successfully Completed!!!"

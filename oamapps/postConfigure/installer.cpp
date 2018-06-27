@@ -165,6 +165,12 @@ int main(int argc, char *argv[])
 	if (p && *p)
    		USER = p;
 
+    // setup to start on reboot, for non-root amazon installs
+    if ( !rootUser )
+    {
+    	system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+    }   
+
 	//copy Columnstore.xml.rpmsave if upgrade option is selected
 	if ( installType == "upgrade" ) {
 		cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.new 2>&1";
