@@ -72,7 +72,7 @@ int64_t Func_last_day::getIntVal(rowgroup::Row& row,
             day = (uint32_t)((val >> 38) & 0x3f);
             break;
 
-            // Time adds to now() and then gets value
+        // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
             aDateTime = static_cast<DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);

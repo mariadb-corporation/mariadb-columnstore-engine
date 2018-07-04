@@ -73,7 +73,7 @@ int64_t Func_dayname::getIntVal(rowgroup::Row& row,
             day = (uint32_t)((val >> 38) & 0x3f);
             break;
 
-            // Time adds to now() and then gets value
+        // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
             aDateTime = static_cast<DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);
@@ -160,8 +160,10 @@ string Func_dayname::getStrVal(rowgroup::Row& row,
                                CalpontSystemCatalog::ColType& op_ct)
 {
     int32_t weekday = getIntVal(row, parm, isNull, op_ct);
+
     if (weekday == -1)
         return "";
+
     return helpers::weekdayFullNames[weekday];
 }
 

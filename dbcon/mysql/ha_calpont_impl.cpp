@@ -782,7 +782,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                     //double double_val = *(double*)(&value);
                     //f2->store(double_val);
                     if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
-                     || f2->decimals() < row.getScale(s))
+                            || f2->decimals() < row.getScale(s))
                     {
                         f2->dec = row.getScale(s);
                     }
@@ -5278,6 +5278,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator colMapIter;
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator condColMapIter;
             execplan::ParseTree* ptIt;
+
             for (TABLE_LIST* tl = gi.groupByTables; tl; tl = tl->next_local)
             {
                 mapiter = ci->tableMap.find(tl->table);

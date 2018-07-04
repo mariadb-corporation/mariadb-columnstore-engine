@@ -71,6 +71,14 @@ public:
     {
         return fErrStr;
     }
+    unsigned int getErrno()
+    {
+        return mysql_errno(fCon);
+    }
+    const char* getErrorMsg()
+    {
+        return mysql_error(fCon);
+    }
 
 private:
     MYSQL*          fCon;

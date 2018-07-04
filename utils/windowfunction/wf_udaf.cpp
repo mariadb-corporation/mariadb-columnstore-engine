@@ -152,7 +152,7 @@ void WF_udaf<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 {
     bRespectNulls = true;
     // The last parms: respect null | ignore null
-    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[parms.size()-1].get());
+    ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[parms.size() - 1].get());
     idbassert(cc != NULL);
     bool isNull = false;  // dummy, harded coded
     bRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
@@ -175,9 +175,10 @@ bool WF_udaf<T>::dropValues(int64_t b, int64_t e)
 
     // Put the parameter metadata (type, scale, precision) into valsIn
     mcsv1sdk::ColumnDatum valsIn[getContext().getParameterCount()];
+
     for (uint32_t i = 0; i < getContext().getParameterCount(); ++i)
     {
-        uint64_t colIn = fFieldIndex[i+1];
+        uint64_t colIn = fFieldIndex[i + 1];
         mcsv1sdk::ColumnDatum& datum = valsIn[i];
         datum.dataType = fRow.getColType(colIn);
         datum.scale = fRow.getScale(colIn);
@@ -196,9 +197,10 @@ bool WF_udaf<T>::dropValues(int64_t b, int64_t e)
 
         for (uint32_t k = 0; k < getContext().getParameterCount(); ++k)
         {
-            uint64_t colIn = fFieldIndex[k+1];
+            uint64_t colIn = fFieldIndex[k + 1];
             mcsv1sdk::ColumnDatum& datum = valsIn[k];
             flags[k] = 0;
+
             if (fRow.isNullValue(colIn) == true)
             {
                 if (!bRespectNulls)
@@ -228,6 +230,7 @@ bool WF_udaf<T>::dropValues(int64_t b, int64_t e)
 
             datum.columnData = valIn;
         }
+
         if (bHasNull)
         {
             continue;
@@ -452,6 +455,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
     uint64_t colOut = fFieldIndex[0];
     bool isNull = false;
+
     if ((fFrameUnit == WF__FRAME_ROWS) ||
             (fPrev == -1) ||
             (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
@@ -469,10 +473,12 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
         // Put the parameter metadata (type, scale, precision) into valsIn
         mcsv1sdk::ColumnDatum valsIn[getContext().getParameterCount()];
         ConstantColumn* cc = NULL;
+
         for (uint32_t i = 0; i < getContext().getParameterCount(); ++i)
         {
             mcsv1sdk::ColumnDatum& datum = valsIn[i];
             cc = static_cast<ConstantColumn*>(fConstantParms[i].get());
+
             if (cc)
             {
                 datum.dataType = cc->resultType().colDataType;
@@ -481,7 +487,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
             }
             else
             {
-                uint64_t colIn = fFieldIndex[i+1];
+                uint64_t colIn = fFieldIndex[i + 1];
                 datum.dataType = fRow.getColType(colIn);
                 datum.scale = fRow.getScale(colIn);
                 datum.precision = fRow.getPrecision(colIn);
@@ -494,6 +500,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
             getContext().clearContextFlag(mcsv1sdk::CONTEXT_HAS_CURRENT_ROW);
 
         bool bHasNull = false;
+
         for (int64_t i = b; i <= e; i++)
         {
             if (i % 1000 == 0 && fStep->cancelled())
@@ -504,16 +511,18 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
             // NULL flags
             uint32_t flags[getContext().getParameterCount()];
             bHasNull = false;
+
             for (uint32_t k = 0; k < getContext().getParameterCount(); ++k)
             {
                 cc = static_cast<ConstantColumn*>(fConstantParms[k].get());
-                uint64_t colIn = fFieldIndex[k+1];
+                uint64_t colIn = fFieldIndex[k + 1];
                 mcsv1sdk::ColumnDatum& datum = valsIn[k];
 
                 // Turn on Null flags or skip based on respect nulls
                 flags[k] = 0;
+
                 if ((!cc && fRow.isNullValue(colIn) == true)
-                ||  (cc && cc->type() == ConstantColumn::NULLDATA))
+                        ||  (cc && cc->type() == ConstantColumn::NULLDATA))
                 {
                     if (!bRespectNulls)
                     {
@@ -535,6 +544,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::BIGINT:
                         {
                             int64_t valIn;
+
                             if (cc)
                             {
                                 valIn = cc->getIntVal(fRow, isNull);
@@ -543,6 +553,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                             {
                                 getValue(colIn, valIn);
                             }
+
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
                             if (k == 0)
@@ -555,6 +566,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                                 if (fDistinct)
                                     fDistinctSet.insert(valIn);
                             }
+
                             datum.columnData = valIn;
                             break;
                         }
@@ -563,6 +575,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::UDECIMAL:
                         {
                             int64_t valIn;
+
                             if (cc)
                             {
                                 valIn = cc->getDecimalVal(fRow, isNull).value;
@@ -571,6 +584,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                             {
                                 getValue(colIn, valIn);
                             }
+
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
                             if (k == 0)
@@ -583,6 +597,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                                 if (fDistinct)
                                     fDistinctSet.insert(valIn);
                             }
+
                             datum.columnData = valIn;
                             break;
                         }
@@ -594,6 +609,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::UBIGINT:
                         {
                             uint64_t valIn;
+
                             if (cc)
                             {
                                 valIn = cc->getUintVal(fRow, isNull);
@@ -602,6 +618,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                             {
                                 getValue(colIn, valIn);
                             }
+
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
                             if (k == 0)
@@ -614,6 +631,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                                 if (fDistinct)
                                     fDistinctSet.insert(valIn);
                             }
+
                             datum.columnData = valIn;
                             break;
                         }
@@ -622,6 +640,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::UDOUBLE:
                         {
                             double valIn;
+
                             if (cc)
                             {
                                 valIn = cc->getDoubleVal(fRow, isNull);
@@ -630,6 +649,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                             {
                                 getValue(colIn, valIn);
                             }
+
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
                             if (k == 0)
@@ -642,6 +662,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                                 if (fDistinct)
                                     fDistinctSet.insert(valIn);
                             }
+
                             datum.columnData = valIn;
                             break;
                         }
@@ -650,6 +671,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::UFLOAT:
                         {
                             float valIn;
+
                             if (cc)
                             {
                                 valIn = cc->getFloatVal(fRow, isNull);
@@ -658,6 +680,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                             {
                                 getValue(colIn, valIn);
                             }
+
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
                             if (k == 0)
@@ -670,6 +693,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                                 if (fDistinct)
                                     fDistinctSet.insert(valIn);
                             }
+
                             datum.columnData = valIn;
                             break;
                         }
@@ -681,6 +705,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::BLOB:
                         {
                             string valIn;
+
                             if (cc)
                             {
                                 valIn = cc->getStrVal(fRow, isNull);
@@ -689,6 +714,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                             {
                                 getValue(colIn, valIn);
                             }
+
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
                             if (k == 0)
@@ -701,6 +727,7 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                                 if (fDistinct)
                                     fDistinctSet.insert(valIn);
                             }
+
                             datum.columnData = valIn;
                             break;
                         }
@@ -717,13 +744,15 @@ void WF_udaf<T>::operator()(int64_t b, int64_t e, int64_t c)
                     }
                 }
             }
+
             // Skip if any value is NULL and respect nulls is off.
             if (bHasNull)
             {
                 continue;
             }
+
             getContext().setDataFlags(flags);
-            
+
             rc = getContext().getFunction()->nextValue(&getContext(), valsIn);
 
             if (rc == mcsv1sdk::mcsv1_UDAF::ERROR)

@@ -896,36 +896,44 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
 
             continue;
         }
+
 #if 0
         // MCOL-1201 Add support for multi-parameter UDAnF
-		UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(retCols[i].get());
-		if (udafc != NULL)
-		{
-			srcp = udafc->aggParms()[0];
-			const RowColumn* rcp = dynamic_cast<const RowColumn*>(srcp.get());
+        UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(retCols[i].get());
 
-			const vector<SRCP>& cols = rcp->columnVec();
-			for (vector<SRCP>::const_iterator j = cols.begin(); j != cols.end(); j++)
-			{
+        if (udafc != NULL)
+        {
+            srcp = udafc->aggParms()[0];
+            const RowColumn* rcp = dynamic_cast<const RowColumn*>(srcp.get());
+
+            const vector<SRCP>& cols = rcp->columnVec();
+
+            for (vector<SRCP>::const_iterator j = cols.begin(); j != cols.end(); j++)
+            {
                 srcp = *j;
-				if (dynamic_cast<const ConstantColumn*>(srcp.get()) == NULL)
-					retCols.push_back(srcp);
+
+                if (dynamic_cast<const ConstantColumn*>(srcp.get()) == NULL)
+                    retCols.push_back(srcp);
 
                 // Do we need this?
-        		const ArithmeticColumn* ac = dynamic_cast<const ArithmeticColumn*>(srcp.get());
-        		const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(srcp.get());
-        		if (ac != NULL || fc != NULL)
-        		{
-        			// bug 3728, make a dummy expression step for each expression.
-        			scoped_ptr<ExpressionStep> es(new ExpressionStep(jobInfo));
-        			es->expression(srcp, jobInfo);
-        		}
-			}
-			continue;
-		}
+                const ArithmeticColumn* ac = dynamic_cast<const ArithmeticColumn*>(srcp.get());
+                const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(srcp.get());
+
+                if (ac != NULL || fc != NULL)
+                {
+                    // bug 3728, make a dummy expression step for each expression.
+                    scoped_ptr<ExpressionStep> es(new ExpressionStep(jobInfo));
+                    es->expression(srcp, jobInfo);
+                }
+            }
+
+            continue;
+        }
+
 #endif
         srcp = retCols[i];
         const AggregateColumn* ag = dynamic_cast<const AggregateColumn*>(retCols[i].get());
+
         // bug 3728 Make a dummy expression for srcp if it is an
         // expression. This is needed to fill in some stuff.
         // Note that es.expression does nothing if the item is not an expression.
@@ -937,7 +945,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         }
         else
         {
-            // MCOL-1201 multi-argument aggregate. make a dummy expression 
+            // MCOL-1201 multi-argument aggregate. make a dummy expression
             // step for each argument that is an expression.
             for (uint32_t i = 0; i < ag->aggParms().size(); ++i)
             {
@@ -1017,7 +1025,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         // replace the aggregate on constant with a count(*)
                         SRCP clone;
                         UDAFColumn* udafc = dynamic_cast<UDAFColumn*>(aggc);
-                        
+
                         if (udafc)
                         {
                             clone.reset(new UDAFColumn(*udafc, aggc->sessionID()));
@@ -1026,14 +1034,15 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         {
                             clone.reset(new AggregateColumn(*aggc, aggc->sessionID()));
                         }
-                        
+
                         jobInfo.constAggregate.insert(make_pair(i, clone));
                         aggc->aggOp(AggregateColumn::COUNT_ASTERISK);
                         aggc->distinct(false);
                     }
-                
+
                     srcp = aggParms[parm];
                     sc = dynamic_cast<const SimpleColumn*>(srcp.get());
+
                     if (parm == 0)
                     {
                         op = aggc->aggOp();
@@ -1042,7 +1051,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                     {
                         op = AggregateColumn::MULTI_PARM;
                     }
+
                     doDistinct = aggc->distinct();
+
                     if (aggParms.size() == 1)
                     {
                         // Set the col type based on the single parm.
@@ -1050,6 +1061,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
                         // doesn't really make sense.
                         updateAggregateColType(aggc, srcp, op, jobInfo);
                     }
+
                     aggCt = aggc->resultType();
 
                     // As of bug3695, make sure varbinary is not used in aggregation.

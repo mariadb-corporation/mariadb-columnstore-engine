@@ -2002,7 +2002,7 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
     fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + valIn * valIn, colAux + 1);
 }
 
-void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, 
+void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                             int64_t colAux, uint64_t& funcColsIdx)
 {
     uint32_t paramCount = fRGContext.getParameterCount();
@@ -2012,6 +2012,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
     ConstantColumn* cc;
     bool bIsNull = false;
     execplan::CalpontSystemCatalog::ColDataType colDataType;
+
     for (uint32_t i = 0; i < paramCount; ++i)
     {
         // If UDAF_IGNORE_NULLS is on, bIsNull gets set the first time
@@ -2022,6 +2023,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
             ++funcColsIdx;
             continue;
         }
+
         SP_ROWAGG_FUNC_t pFunctionCol = fFunctionCols[funcColsIdx];
         mcsv1sdk::ColumnDatum& datum = valsIn[i];
         // Turn on NULL flags
@@ -2030,13 +2032,14 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         // If this particular parameter is a constant, then we need
         // to acces the constant value rather than a row value.
         cc = NULL;
+
         if (pFunctionCol->fpConstCol)
         {
             cc = dynamic_cast<ConstantColumn*>(pFunctionCol->fpConstCol.get());
         }
 
         if ((cc && cc->type() == ConstantColumn::NULLDATA)
-        ||  (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
+                ||  (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
         {
             if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
             {
@@ -2044,6 +2047,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 ++funcColsIdx;
                 continue;
             }
+
             dataFlags[i] |= mcsv1sdk::PARAM_IS_NULL;
         }
 
@@ -2055,6 +2059,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         {
             colDataType = fRowGroupIn.getColTypes()[colIn];
         }
+
         if (!(dataFlags[i] & mcsv1sdk::PARAM_IS_NULL))
         {
             switch (colDataType)
@@ -2066,6 +2071,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 case execplan::CalpontSystemCatalog::BIGINT:
                 {
                     datum.dataType = execplan::CalpontSystemCatalog::BIGINT;
+
                     if (cc)
                     {
                         datum.columnData = cc->getIntVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2078,12 +2084,15 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                         datum.scale = fRowGroupIn.getScale()[colIn];
                         datum.precision = fRowGroupIn.getPrecision()[colIn];
                     }
+
                     break;
                 }
+
                 case execplan::CalpontSystemCatalog::DECIMAL:
                 case execplan::CalpontSystemCatalog::UDECIMAL:
                 {
                     datum.dataType = colDataType;
+
                     if (cc)
                     {
                         datum.columnData = cc->getDecimalVal(const_cast<Row&>(rowIn), bIsNull).value;
@@ -2096,6 +2105,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                         datum.scale = fRowGroupIn.getScale()[colIn];
                         datum.precision = fRowGroupIn.getPrecision()[colIn];
                     }
+
                     break;
                 }
 
@@ -2106,6 +2116,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 case execplan::CalpontSystemCatalog::UBIGINT:
                 {
                     datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
+
                     if (cc)
                     {
                         datum.columnData = cc->getUintVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2114,6 +2125,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     {
                         datum.columnData = rowIn.getUintField(colIn);
                     }
+
                     break;
                 }
 
@@ -2121,6 +2133,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 case execplan::CalpontSystemCatalog::UDOUBLE:
                 {
                     datum.dataType = execplan::CalpontSystemCatalog::DOUBLE;
+
                     if (cc)
                     {
                         datum.columnData = cc->getDoubleVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2129,6 +2142,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     {
                         datum.columnData = rowIn.getDoubleField(colIn);
                     }
+
                     break;
                 }
 
@@ -2136,6 +2150,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 case execplan::CalpontSystemCatalog::UFLOAT:
                 {
                     datum.dataType = execplan::CalpontSystemCatalog::FLOAT;
+
                     if (cc)
                     {
                         datum.columnData = cc->getFloatVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2144,12 +2159,14 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     {
                         datum.columnData = rowIn.getFloatField(colIn);
                     }
+
                     break;
                 }
 
                 case execplan::CalpontSystemCatalog::DATE:
                 {
                     datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
+
                     if (cc)
                     {
                         datum.columnData = cc->getDateIntVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2158,11 +2175,14 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     {
                         datum.columnData = rowIn.getUintField(colIn);
                     }
+
                     break;
                 }
+
                 case execplan::CalpontSystemCatalog::DATETIME:
                 {
                     datum.dataType = execplan::CalpontSystemCatalog::UBIGINT;
+
                     if (cc)
                     {
                         datum.columnData = cc->getDatetimeIntVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2171,12 +2191,14 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     {
                         datum.columnData = rowIn.getUintField(colIn);
                     }
+
                     break;
                 }
 
                 case execplan::CalpontSystemCatalog::TIME:
                 {
                     datum.dataType = execplan::CalpontSystemCatalog::BIGINT;
+
                     if (cc)
                     {
                         datum.columnData = cc->getTimeIntVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2185,6 +2207,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     {
                         datum.columnData = rowIn.getIntField(colIn);
                     }
+
                     break;
                 }
 
@@ -2196,6 +2219,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 case execplan::CalpontSystemCatalog::BLOB:
                 {
                     datum.dataType = colDataType;
+
                     if (cc)
                     {
                         datum.columnData = cc->getStrVal(const_cast<Row&>(rowIn), bIsNull);
@@ -2204,6 +2228,7 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                     {
                         datum.columnData = rowIn.getStringField(colIn);
                     }
+
                     break;
                 }
 
@@ -2221,8 +2246,8 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         // MCOL-1201: If there are multiple parameters, the next fFunctionCols
         // will have the column used. By incrementing the funcColsIdx (passed by
         // ref, we also increment the caller's index.
-        if (fFunctionCols.size() > funcColsIdx + 1 
-        &&  fFunctionCols[funcColsIdx+1]->fAggFunction == ROWAGG_MULTI_PARM)
+        if (fFunctionCols.size() > funcColsIdx + 1
+                &&  fFunctionCols[funcColsIdx + 1]->fAggFunction == ROWAGG_MULTI_PARM)
         {
             ++funcColsIdx;
             SP_ROWAGG_FUNC_t pFunctionCol = fFunctionCols[funcColsIdx];
@@ -2718,6 +2743,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
     std::string strOut;
 
     bool bSetSuccess = false;
+
     switch (colDataType)
     {
         case execplan::CalpontSystemCatalog::BIT:
@@ -2732,10 +2758,12 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 intOut = valOut.cast<signed char>();
                 bSetSuccess = true;
             }
+
             if (bSetSuccess)
             {
                 fRow.setIntField<1>(intOut, colOut);
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::SMALLINT:
@@ -2746,6 +2774,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setIntField<2>(intOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::INT:
@@ -2759,10 +2788,12 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 intOut = valOut.cast<long>();
                 bSetSuccess = true;
             }
+
             if (bSetSuccess)
             {
                 fRow.setIntField<4>(intOut, colOut);
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::BIGINT:
@@ -2774,6 +2805,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setIntField<8>(intOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::UTINYINT:
@@ -2783,6 +2815,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setUintField<1>(uintOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::USMALLINT:
@@ -2793,6 +2826,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setUintField<2>(uintOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::UINT:
@@ -2802,6 +2836,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setUintField<4>(uintOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::UBIGINT:
@@ -2811,6 +2846,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setUintField<8>(uintOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::DATE:
@@ -2821,6 +2857,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setUintField<8>(uintOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::FLOAT:
@@ -2831,6 +2868,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setFloatField(floatOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::DOUBLE:
@@ -2841,6 +2879,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setDoubleField(doubleOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::CHAR:
@@ -2852,6 +2891,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setStringField(strOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         case execplan::CalpontSystemCatalog::VARBINARY:
@@ -2863,6 +2903,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
                 fRow.setVarBinaryField(strOut, colOut);
                 bSetSuccess = true;
             }
+
             break;
 
         default:
@@ -2873,6 +2914,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
             break;
         }
     }
+
     if (!bSetSuccess)
     {
         SetUDAFAnyValue(valOut, colOut);
@@ -3404,14 +3446,17 @@ void RowAggregationUM::doNullConstantAggregate(const ConstantAggData& aggData, u
                 fRGContext.setInterrupted(true);
                 throw logging::QueryDataExcept(fRGContext.getErrorMessage(), logging::aggregateFuncErr);
             }
+
 #if 0
             uint32_t dataFlags[fRGContext.getParameterCount()];
+
             for (uint32_t i = 0; i < fRGContext.getParameterCount(); ++i)
             {
                 mcsv1sdk::ColumnDatum& datum = valsIn[i];
                 // Turn on NULL flags
                 dataFlags[i] = 0;
             }
+
 #endif
             // Turn the NULL and CONSTANT flags on.
             uint32_t flags[1];
@@ -4278,19 +4323,20 @@ void RowAggregationUMP2::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut
 // colAux(in)   - Where the UDAF userdata resides
 // rowUDAF(in)  - pointer to the RowUDAFFunctionCol for this UDAF instance
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, 
+void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                                 int64_t colAux, uint64_t& funcColsIdx)
 {
     static_any::any valOut;
 
     // Get the user data
-    boost::shared_ptr<mcsv1sdk::UserData> userDataIn = rowIn.getUserData(colIn+1);
+    boost::shared_ptr<mcsv1sdk::UserData> userDataIn = rowIn.getUserData(colIn + 1);
 
     // Unlike other aggregates, the data isn't in colIn, so testing it for NULL
     // there won't help. In case of NULL, userData will be NULL.
     uint32_t flags[1];
 
     flags[0] = 0;
+
     if (!userDataIn)
     {
         if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))

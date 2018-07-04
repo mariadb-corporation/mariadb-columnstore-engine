@@ -161,9 +161,11 @@ mcsv1_UDAF::ReturnCode avgx::subEvaluate(mcsv1Context* context, const UserData* 
     }
 
     struct avgx_data* outData = (struct avgx_data*)context->getUserData()->data;
+
     struct avgx_data* inData = (struct avgx_data*)userDataIn->data;
 
     outData->sum += inData->sum;
+
     outData->cnt += inData->cnt;
 
     return mcsv1_UDAF::SUCCESS;

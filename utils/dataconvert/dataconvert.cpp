@@ -1420,6 +1420,7 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
                 {
                     pushWarning = true;
                 }
+
                 value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
             }
             break;
@@ -1928,6 +1929,7 @@ int64_t DataConvert::convertColumnTime(
     {
         return value;
     }
+
     if (dataOrgLen < 3)
     {
         // Not enough chars to be a time

@@ -163,7 +163,7 @@ public:
         fAggParms = parms;
     }
 
- 
+
     /** return a copy of this pointer
      *
      * deep copy of this pointer and return the copy
@@ -316,8 +316,8 @@ protected:
     uint8_t fAggOp;
 
     /**
-     * ReturnedColumn objects that are the arguments to this 
-     * function 
+     * ReturnedColumn objects that are the arguments to this
+     * function
      */
     AggParms fAggParms;
 

@@ -61,7 +61,7 @@ int64_t Func_month::getIntVal(rowgroup::Row& row,
             val = parm[0]->data()->getIntVal(row, isNull);
             return (unsigned)((val >> 44) & 0xf);
 
-            // Time adds to now() and then gets value
+        // Time adds to now() and then gets value
         case CalpontSystemCatalog::TIME:
             aDateTime = static_cast<DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);

@@ -384,7 +384,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         // Modified for MCOL-1201 multi-argument aggregate
         for (size_t i = 0; i < funcParms.size(); ++i)
         {
-            const execplan::CalpontSystemCatalog::ColType& resultType 
+            const execplan::CalpontSystemCatalog::ColType& resultType
                 = funcParms[i]->resultType();
             colType.dataType = resultType.colDataType;
             colType.precision = resultType.precision;

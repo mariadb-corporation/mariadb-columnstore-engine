@@ -645,6 +645,7 @@ void WindowFunctionType::constParms(const std::vector<SRCP>& functionParms)
     for (size_t i = 0; i < functionParms.size(); ++i)
     {
         ConstantColumn* cc = dynamic_cast<ConstantColumn*>(functionParms[i].get());
+
         if (cc)
         {
             fConstantParms.push_back(functionParms[i]);

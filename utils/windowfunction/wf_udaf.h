@@ -93,7 +93,7 @@ protected:
     bool bRespectNulls;                   // respect null | ignore null
     bool bHasDropValue;                   // Set to false when we discover the UDAnF doesn't implement dropValue.
     // To hold distinct values
-    std::tr1::unordered_set<static_any::any, DistinctHasher, DistinctEqual> fDistinctSet; 
+    std::tr1::unordered_set<static_any::any, DistinctHasher, DistinctEqual> fDistinctSet;
     static_any::any fValOut;              // The return value
 
 public:

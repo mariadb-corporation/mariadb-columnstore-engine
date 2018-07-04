@@ -228,9 +228,9 @@ struct RowUDAFFunctionCol : public RowAggFunctionCol
                           inputColIndex, outputColIndex, auxColIndex),
         bInterrupted(false)
     {}
-    RowUDAFFunctionCol(const RowUDAFFunctionCol& rhs) : 
-        RowAggFunctionCol(ROWAGG_UDAF, ROWAGG_FUNCT_UNDEFINE, rhs.fInputColumnIndex, 
-                          rhs.fOutputColumnIndex, rhs.fAuxColumnIndex), 
+    RowUDAFFunctionCol(const RowUDAFFunctionCol& rhs) :
+        RowAggFunctionCol(ROWAGG_UDAF, ROWAGG_FUNCT_UNDEFINE, rhs.fInputColumnIndex,
+                          rhs.fOutputColumnIndex, rhs.fAuxColumnIndex),
         fUDAFContext(rhs.fUDAFContext),
         bInterrupted(false)
     {}
@@ -249,6 +249,7 @@ inline void RowAggFunctionCol::serialize(messageqcpp::ByteStream& bs) const
     bs << (uint8_t)fAggFunction;
     bs << fInputColumnIndex;
     bs << fOutputColumnIndex;
+
     if (fpConstCol)
     {
         bs << (uint8_t)1;
@@ -258,7 +259,7 @@ inline void RowAggFunctionCol::serialize(messageqcpp::ByteStream& bs) const
     {
         bs << (uint8_t)0;
     }
-    
+
 }
 
 inline void RowAggFunctionCol::deserialize(messageqcpp::ByteStream& bs)
@@ -268,6 +269,7 @@ inline void RowAggFunctionCol::deserialize(messageqcpp::ByteStream& bs)
     bs >> fOutputColumnIndex;
     uint8_t t;
     bs >> t;
+
     if (t)
     {
         fpConstCol.reset(new ConstantColumn);

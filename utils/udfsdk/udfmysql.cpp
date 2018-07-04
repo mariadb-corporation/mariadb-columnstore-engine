@@ -498,159 +498,163 @@ extern "C"
      */
     struct regr_avgx_data
     {
-      double	sumx;
-      int64_t   cnt;
+        double	sumx;
+        int64_t   cnt;
     };
-     
-    #ifdef _MSC_VER
+
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     my_bool regr_avgx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
     {
-    	struct regr_avgx_data* data;
-    	if (args->arg_count != 2)
-    	{
-    		strcpy(message,"regr_avgx() requires two arguments");
-    		return 1;
-    	}
+        struct regr_avgx_data* data;
 
-    	if (!(data = (struct regr_avgx_data*) malloc(sizeof(struct regr_avgx_data))))
-    	{
-    		strmov(message,"Couldn't allocate memory");
-    		return 1;
-    	}
-    	data->sumx	= 0;
+        if (args->arg_count != 2)
+        {
+            strcpy(message, "regr_avgx() requires two arguments");
+            return 1;
+        }
+
+        if (!(data = (struct regr_avgx_data*) malloc(sizeof(struct regr_avgx_data))))
+        {
+            strmov(message, "Couldn't allocate memory");
+            return 1;
+        }
+
+        data->sumx	= 0;
         data->cnt = 0;
 
-    	initid->ptr = (char*)data;
-    	return 0;
+        initid->ptr = (char*)data;
+        return 0;
     }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     void regr_avgx_deinit(UDF_INIT* initid)
     {
-    	free(initid->ptr);
-    }	
+        free(initid->ptr);
+    }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     void
     regr_avgx_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                  char* message __attribute__((unused)))
+                    char* message __attribute__((unused)))
     {
-    	struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
-    	data->sumx = 0;
+        struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
+        data->sumx = 0;
         data->cnt = 0;
     }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     void
     regr_avgx_add(UDF_INIT* initid, UDF_ARGS* args,
-                char* is_null,
-                char* message __attribute__((unused)))
+                  char* is_null,
+                  char* message __attribute__((unused)))
     {
         // TODO test for NULL in x and y
-    	struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
-    	double xval = cvtArgToDouble(args->arg_type[1], args->args[0]);
+        struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
+        double xval = cvtArgToDouble(args->arg_type[1], args->args[0]);
         ++data->cnt;
-    	data->sumx += xval;
+        data->sumx += xval;
     }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     long long regr_avgx(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
-    				  char* is_null, char* error __attribute__((unused)))
+                        char* is_null, char* error __attribute__((unused)))
     {
-    	struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
-    	return data->sumx / data->cnt;
+        struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
+        return data->sumx / data->cnt;
     }
 
 //=======================================================================
 
     /**
-     * avgx connector stub. Exactly the same functionality as the 
-     * built in avg() function. Use to test the performance of the 
-     * API 
+     * avgx connector stub. Exactly the same functionality as the
+     * built in avg() function. Use to test the performance of the
+     * API
      */
     struct avgx_data
     {
-      double	sumx;
-      int64_t   cnt;
+        double	sumx;
+        int64_t   cnt;
     };
-     
-    #ifdef _MSC_VER
+
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     my_bool avgx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
     {
-    	struct avgx_data* data;
-    	if (args->arg_count != 1)
-    	{
-    		strcpy(message,"avgx() requires one argument");
-    		return 1;
-    	}
+        struct avgx_data* data;
 
-    	if (!(data = (struct avgx_data*) malloc(sizeof(struct avgx_data))))
-    	{
-    		strmov(message,"Couldn't allocate memory");
-    		return 1;
-    	}
-    	data->sumx	= 0;
+        if (args->arg_count != 1)
+        {
+            strcpy(message, "avgx() requires one argument");
+            return 1;
+        }
+
+        if (!(data = (struct avgx_data*) malloc(sizeof(struct avgx_data))))
+        {
+            strmov(message, "Couldn't allocate memory");
+            return 1;
+        }
+
+        data->sumx	= 0;
         data->cnt = 0;
 
-    	initid->ptr = (char*)data;
-    	return 0;
+        initid->ptr = (char*)data;
+        return 0;
     }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     void avgx_deinit(UDF_INIT* initid)
     {
-    	free(initid->ptr);
-    }	
+        free(initid->ptr);
+    }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     void
     avgx_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                  char* message __attribute__((unused)))
+               char* message __attribute__((unused)))
     {
-    	struct avgx_data* data = (struct avgx_data*)initid->ptr;
-    	data->sumx = 0;
+        struct avgx_data* data = (struct avgx_data*)initid->ptr;
+        data->sumx = 0;
         data->cnt = 0;
     }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     void
     avgx_add(UDF_INIT* initid, UDF_ARGS* args,
-                char* is_null,
-                char* message __attribute__((unused)))
+             char* is_null,
+             char* message __attribute__((unused)))
     {
         // TODO test for NULL in x and y
-    	struct avgx_data* data = (struct avgx_data*)initid->ptr;
-    	double xval = cvtArgToDouble(args->arg_type[1], args->args[0]);
+        struct avgx_data* data = (struct avgx_data*)initid->ptr;
+        double xval = cvtArgToDouble(args->arg_type[1], args->args[0]);
         ++data->cnt;
-    	data->sumx += xval;
+        data->sumx += xval;
     }
 
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
     __declspec(dllexport)
-    #endif
+#endif
     long long avgx(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
-    				  char* is_null, char* error __attribute__((unused)))
+                   char* is_null, char* error __attribute__((unused)))
     {
-    	struct avgx_data* data = (struct avgx_data*)initid->ptr;
-    	return data->sumx / data->cnt;
+        struct avgx_data* data = (struct avgx_data*)initid->ptr;
+        return data->sumx / data->cnt;
     }
 }
 // vim:ts=4 sw=4:
