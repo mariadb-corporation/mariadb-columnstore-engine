@@ -56,3 +56,8 @@ target_link_libraries(mycnfUpgrade ${ENGINE_LDFLAGS} readline ncurses ${MARIADB_
 
 install(TARGETS mycnfUpgrade DESTINATION ${ENGINE_BINDIR} COMPONENT platform)
 
+
+########### next target ###############
+
+install(PROGRAMS quick_installer_single_server.sh 
+        DESTINATION ${ENGINE_BINDIR} COMPONENT platform)               
