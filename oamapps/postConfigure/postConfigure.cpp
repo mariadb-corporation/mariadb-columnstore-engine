@@ -14,7 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
+   MA 02110-1301, USA. */  
 
 /******************************************************************************************
 * $Id: postConfigure.cpp 64 2006-10-12 22:21:51Z dhill $
@@ -112,7 +112,7 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
 bool createDbrootDirs(string DBRootStorageType);
 bool pkgCheck(std::string columnstorePackage);
 bool storageSetup(bool amazonInstall);
-void setSystemName();
+void setSystemName(bool single_server_quick_install = false);
 bool singleServerDBrootSetup();
 bool copyFstab(string moduleName);
 bool attachVolume(string instanceName, string volumeName, string deviceName, string dbrootPath);
@@ -219,6 +219,8 @@ int main(int argc, char *argv[])
 	noPrompting = false;
 	string password;
 	string cmd;
+	bool single_server_quick_install = false;
+	
 //  	struct sysinfo myinfo; 
 
 	// hidden options
@@ -280,33 +282,36 @@ int main(int argc, char *argv[])
 			cout << "will perform a Package Installation of all of the Modules within the" << endl;
 			cout << "System that is being configured." << endl;
 			cout << endl;
-			cout << "IMPORTANT: This tool should only be run on a Performance Module Server," << endl;
-			cout << "           preferably Module #1" << endl;
+			cout << "IMPORTANT: This tool is required to run on a Performance Module #1 (pm1) Server." << endl;
 			cout << endl;
 			cout << "Instructions:" << endl << endl;
 			cout << "	Press 'enter' to accept a value in (), if available or" << endl;
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-s][-port][-i][-n]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-sq][-port][-i][-n][-sn]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
 			cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
-			cout << "   -s  Single Threaded Remote Install" << endl;
+			cout << "   -sq  Single Server Quick Install" << endl;
 			cout << "   -port MariaDB ColumnStore Port Address" << endl;
 			cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
 			cout << "   -n Non-distributed install, meaning it will not install the remote nodes" << endl;
+			cout << "   -sn System Name" << endl;
 			exit (0);
 		}
-      		else if( string("-s") == argv[i] )
-			thread_remote_installer = false;
-		else if( string("-f") == argv[i] )
-			nodeps = "--nodeps";
-		else if( string("-o") == argv[i] )
-			startOfflinePrompt = true;
-		else if( string("-c") == argv[i] ) {
+      		else if( string("-sq") == argv[i] )
+      		{
+				single_server_quick_install = true;
+				noPrompting = true;
+			}
+			else if( string("-f") == argv[i] )
+				nodeps = "--nodeps";
+			else if( string("-o") == argv[i] )
+				startOfflinePrompt = true;
+			else if( string("-c") == argv[i] ) {
 			i++;
 			if (i >= argc ) {
 				cout << "   ERROR: Config File not provided" << endl;
@@ -356,6 +361,14 @@ int main(int argc, char *argv[])
             }
             installDir = argv[i];
         }
+        else if( string("-sn") == argv[i] ) {
+            i++;
+            if (i >= argc ) {
+                cout << "   ERROR: System-name not provided" << endl;
+                exit (1);
+            }
+            systemName = argv[i];
+        }
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
@@ -379,41 +392,43 @@ int main(int argc, char *argv[])
 	cout << "Installation of all of the Servers within the System that is being configured." << endl;
 	cout << endl;
 
-	cout << "IMPORTANT: This tool should only be run on the Parent OAM Module" << endl;
-	cout << "           which is a Performance Module, preferred Module #1" << endl;
+	cout << "IMPORTANT: This tool requires to run on the Performance Module #1" << endl;
 	cout << endl;
 
-	if (!noPrompting) {
-		cout << "Prompting instructions:" << endl << endl;
-		cout << "	Press 'enter' to accept a value in (), if available or" << endl;
-		cout << "	Enter one of the options within [], if available, or" << endl;
-		cout << "	Enter a new value" << endl << endl;
-	}
-	else
+	if (!single_server_quick_install)
 	{
-		//get current time and date
-		time_t now;
-		now = time(NULL);
-		struct tm tm;
-		localtime_r(&now, &tm);
-		char timestamp[200];
-		strftime (timestamp, 200, "%m:%d:%y-%H:%M:%S", &tm);
-		string currentDate = timestamp;
+			if (!noPrompting) {
+				cout << "Prompting instructions:" << endl << endl;
+				cout << "	Press 'enter' to accept a value in (), if available or" << endl;
+				cout << "	Enter one of the options within [], if available, or" << endl;
+				cout << "	Enter a new value" << endl << endl;
+			}
+			else
+			{
+				//get current time and date
+				time_t now;
+				now = time(NULL);
+				struct tm tm;
+				localtime_r(&now, &tm);
+				char timestamp[200];
+				strftime (timestamp, 200, "%m:%d:%y-%H:%M:%S", &tm);
+				string currentDate = timestamp;
 
-		string postConfigureLog = "/var/log/columnstore-postconfigure-" + currentDate;
+				string postConfigureLog = "/var/log/columnstore-postconfigure-" + currentDate;
 
-		cout << "With the no-Prompting Option being specified, you will be required to have the following:" << endl;
-		cout << endl;
-		cout << " 1. Root user ssh keys setup between all nodes in the system or" << endl;
-		cout << "    use the password command line option." << endl;
-		cout << " 2. A Configure File to use to retrieve configure data, default to Columnstore.xml.rpmsave" << endl;
-		cout << "    or use the '-c' option to point to a configuration file." << endl;
-		cout << endl;
-//		cout << " Output if being redirected to " << postConfigureLog << endl;
+				cout << "With the no-Prompting Option being specified, you will be required to have the following:" << endl;
+				cout << endl;
+				cout << " 1. Root user ssh keys setup between all nodes in the system or" << endl;
+				cout << "    use the password command line option." << endl;
+				cout << " 2. A Configure File to use to retrieve configure data, default to Columnstore.xml.rpmsave" << endl;
+				cout << "    or use the '-c' option to point to a configuration file." << endl;
+				cout << endl;
+		//		cout << " Output if being redirected to " << postConfigureLog << endl;
 
-//		redirectStandardOutputToFile(postConfigureLog, false );
+		//		redirectStandardOutputToFile(postConfigureLog, false );
+			}
 	}
-
+	
 	//check if MariaDB ColumnStore is up and running
 	if (oam.checkSystemRunning()) {
 		cout << "MariaDB ColumnStore is running, can't run postConfigure while MariaDB ColumnStore is running. Exiting.." << endl;
@@ -421,45 +436,51 @@ int main(int argc, char *argv[])
 	}
 
 	//check Config saved files
-	if ( !checkSaveConfigFile())
+	if (!single_server_quick_install)
 	{
-		cout << "ERROR: Configuration File not setup" << endl;
-		exit(1);
+		if ( !checkSaveConfigFile())
+		{
+			cout << "ERROR: Configuration File not setup" << endl;
+			exit(1);
+		}
 	}
-
+	
 	//determine package type
 	string EEPackageType;
 
-        if (!rootUser)
-                EEPackageType = "binary";
-        else
-        {
-                int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-                if (WEXITSTATUS(rtnCode) == 0)
-                        EEPackageType = "rpm";
-                else {
-                        rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-                    if (WEXITSTATUS(rtnCode) == 0)
-                                EEPackageType = "deb";
-                        else
-                                EEPackageType = "binary";
-                }
-        }
+	if (single_server_quick_install)
+	{
+			if (!rootUser)
+					EEPackageType = "binary";
+			else
+			{
+					int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+					if (WEXITSTATUS(rtnCode) == 0)
+							EEPackageType = "rpm";
+					else {
+							rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+						if (WEXITSTATUS(rtnCode) == 0)
+									EEPackageType = "deb";
+							else
+									EEPackageType = "binary";
+					}
+			}
 
-        try {
-                sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
-        }
-        catch(...)
-        {
-                cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-                exit(1);
-        }
+			try {
+					sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
+			}
+			catch(...)
+			{
+					cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
+					exit(1);
+			}
 
-	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-		exit(1);
+			if ( !writeConfig(sysConfig) ) {
+				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+				exit(1);
+			}
 	}
-
+	
 	//check for local ip address as pm1
 	ModuleConfig moduleconfig;
 
@@ -551,7 +572,6 @@ int main(int argc, char *argv[])
     catch(...)
     {}
 
-
 	// run my.cnf upgrade script
 	if ( reuseConfig == "y" )
 	{
@@ -615,127 +635,148 @@ int main(int argc, char *argv[])
 	}
 
 	cout << endl;
+	
+	if (single_server_quick_install)
+	{
+		cout << "===== Quick Single-Server Install Configuration =====" << endl << endl;
 
-	cout << "===== Setup System Server Type Configuration =====" << endl << endl;
-
-	cout << "There are 2 options when configuring the System Server Type: single and multi" << endl << endl;
-	cout << "  'single'  - Single-Server install is used when there will only be 1 server configured" << endl;
-	cout << "              on the system. It can also be used for production systems, if the plan is" << endl;
-	cout << "              to stay single-server." << endl << endl;
-	cout << "  'multi'   - Multi-Server install is used when you want to configure multiple servers now or" << endl;
-	cout << "              in the future. With Multi-Server install, you can still configure just 1 server" << endl;
-	cout << "              now and add on addition servers/modules in the future." << endl << endl;
-
-	string temp;
-	try {
-		temp = sysConfig->getConfig(InstallSection, "SingleServerInstall");
-	}
-	catch(...)
-	{}
-
-	if ( temp == "y" )
+		cout << "Single-Server install is used when there will only be 1 server configured" << endl;
+		cout << "on the system. It can also be used for production systems, if the plan is" << endl;
+		cout << "to stay single-server." << endl;
+		
 		singleServerInstall = "1";
+	}
 	else
-		singleServerInstall = "2";
+	{
+		cout << "===== Setup System Server Type Configuration =====" << endl << endl;
 
-	while(true) {
-		prompt = "Select the type of System Server install [1=single, 2=multi] (" + singleServerInstall + ") > ";
-		pcommand = callReadline(prompt.c_str());
+		cout << "There are 2 options when configuring the System Server Type: single and multi" << endl << endl;
+		cout << "  'single'  - Single-Server install is used when there will only be 1 server configured" << endl;
+		cout << "              on the system. It can also be used for production systems, if the plan is" << endl;
+		cout << "              to stay single-server." << endl << endl;
+		cout << "  'multi'   - Multi-Server install is used when you want to configure multiple servers now or" << endl;
+		cout << "              in the future. With Multi-Server install, you can still configure just 1 server" << endl;
+		cout << "              now and add on addition servers/modules in the future." << endl << endl;
+
 		string temp;
-		if (pcommand) {
-			if (strlen(pcommand) > 0) 
-				temp = pcommand;
-			else
-				temp = singleServerInstall;
-			callFree(pcommand);
-			if (temp == "1") {
-				singleServerInstall = temp;
-				cout << endl << "Performing the Single Server Install." << endl; 
+		try {
+			temp = sysConfig->getConfig(InstallSection, "SingleServerInstall");
+		}
+		catch(...)
+		{}
 
-				if ( reuseConfig == "n" ) {
-					//setup to use the single server Columnstore.xml file
+		if ( temp == "y" )
+			singleServerInstall = "1";
+		else
+			singleServerInstall = "2";
 
-					// we know that our Config instance just timestamped itself in the getConfig
-					// call above.  if postConfigure is running non-interactively we may get here
-					// within the same second which means the changes that are about to happen
-					// when Columnstore.xml gets overwritten will be ignored because of the Config
-					// instance won't know to reload
-                    			sleep(2);
+		while(true) {
+			string temp = singleServerInstall;
+			prompt = "Select the type of System Server install [1=single, 2=multi] (" + singleServerInstall + ") > ";
+			pcommand = callReadline(prompt.c_str());
+			if (pcommand) {
+				if (strlen(pcommand) > 0) 
+					temp = pcommand;
+				else
+					temp = singleServerInstall;
+					
+				callFree(pcommand);
 
-					cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-					system(cmd.c_str());
-					cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-					system(cmd.c_str());
-					cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
-					system(cmd.c_str());
-				}
-
-				setSystemName();
-				cout << endl;
-
-				system(cmd.c_str());
-
-				// setup storage
-				if (!storageSetup(false))
-				{
-					cout << "ERROR: Problem setting up storage" << endl;
-					exit(1);
-				}
-
-				if (hdfs || !rootUser)
-                			if( !updateBash() )
-	                    		cout << "updateBash error" << endl;
-
-				// setup storage
-				if (!singleServerDBrootSetup())
-				{
-					cout << "ERROR: Problem setting up DBRoot IDs" << endl;
-					exit(1);
-				}
-
-				//set system DBRoot count and check 'files per parition' with number of dbroots
-				try {
-					sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
-				}
-				catch(...)
-				{
-					cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
-					exit(1);
-				}
-
-				//check if dbrm data resides in older directory path and inform user if it does
-				dbrmDirCheck();
-
-				if (startOfflinePrompt)
-					offLineAppCheck();
-
-				checkMysqlPort(mysqlPort, sysConfig);
-
-				if ( !writeConfig(sysConfig) ) {
-					cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-					exit(1);
-				}
-
-				cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
-
-				cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
-				system(cmd.c_str());
-				exit(0);
-			}
-			else
-			{
-				if (temp == "2") {
+				if (temp == "1") {
 					singleServerInstall = temp;
+					
+					cout << endl << "Performing the Single Server Install." << endl; 
+
 					break;
 				}
-			}
-			cout << "Invalid Entry, please re-enter" << endl;
-			if ( noPrompting )
-				exit(1);
+				else
+				{
+					if (temp == "2") {
+						singleServerInstall = temp;
+						break;
+					}
+				}
 
-			continue;
+				cout << "Invalid Entry, please re-enter (1 or 2)" << endl;
+				if ( noPrompting )
+					exit(1);
+			}
 		}
-		break;
+	}			
+	
+	if (singleServerInstall == "1")
+	{
+		if ( reuseConfig == "n" ) {
+			//setup to use the single server Columnstore.xml file
+
+			// we know that our Config instance just timestamped itself in the getConfig
+			// call above.  if postConfigure is running non-interactively we may get here
+			// within the same second which means the changes that are about to happen
+			// when Columnstore.xml gets overwritten will be ignored because of the Config
+			// instance won't know to reload
+			sleep(1);
+
+			cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
+			system(cmd.c_str());
+			cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
+			system(cmd.c_str());
+			cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
+			system(cmd.c_str());
+		}
+
+		setSystemName(single_server_quick_install);
+
+		if (!single_server_quick_install)
+		{
+			cout << endl;
+
+			// setup storage
+			if (!storageSetup(false))
+			{
+				cout << "ERROR: Problem setting up storage" << endl;
+				exit(1);
+			}
+
+			// setup storage
+			if (!singleServerDBrootSetup())
+			{
+				cout << "ERROR: Problem setting up DBRoot IDs" << endl;
+				exit(1);
+			}
+
+			//set system DBRoot count and check 'files per parition' with number of dbroots
+			try {
+				sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
+			}
+			catch(...)
+			{
+				cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
+				exit(1);
+			}
+
+			//check if dbrm data resides in older directory path and inform user if it does
+			dbrmDirCheck();
+
+			if (startOfflinePrompt)
+				offLineAppCheck();
+		}
+
+		checkMysqlPort(mysqlPort, sysConfig);
+
+		if (hdfs || !rootUser)
+			if( !updateBash() )
+				cout << "updateBash error" << endl;
+
+		if ( !writeConfig(sysConfig) ) {
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+
+		cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
+
+		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+		system(cmd.c_str());
+		exit(0);
 	}
 
 	try {
@@ -4796,29 +4837,36 @@ bool storageSetup(bool amazonInstall)
 }
 
 
-void setSystemName()
+void setSystemName(bool single_server_quick_install)
 {
 	Oam oam;
 	//setup System Name
-	try {
-		systemName = sysConfig->getConfig(SystemSection, "SystemName");
-	}
-	catch(...)
-	{
-		systemName = oam::UnassignedName;
-	}
-
+	
 	if ( systemName.empty() )
-		systemName = oam::UnassignedName;
-
-	prompt = "Enter System Name (" + systemName + ") > ";
-	pcommand = callReadline(prompt.c_str());
-	if (pcommand)
 	{
-		if (strlen(pcommand) > 0) systemName = pcommand;
-		callFree(pcommand);
+		try {
+			systemName = sysConfig->getConfig(SystemSection, "SystemName");
+		}
+		catch(...)
+		{
+			systemName = oam::UnassignedName;
+		}
 	}
+	
+	if ( systemName.empty() )
+		systemName = "columnstore-1";
 
+	if (!single_server_quick_install)
+	{
+		prompt = "Enter System Name (" + systemName + ") > ";
+		pcommand = callReadline(prompt.c_str());
+		if (pcommand)
+		{
+			if (strlen(pcommand) > 0) systemName = pcommand;
+			callFree(pcommand);
+		}
+	}
+	
 	try {
 		 sysConfig->setConfig(SystemSection, "SystemName", systemName);
 		 oam.changeMyCnf( "server_audit_syslog_info", systemName );
