@@ -289,20 +289,20 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-sq][-port][-i][-n][-sn]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-port][-i][-n][-sn]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
 			cout << "	    If ssh-keys aren't setup, you should provide passwords as command line arguments" << endl;
 			cout << "   -p  Unix Password, used with no-prompting option" << endl;
-			cout << "   -sq  Single Server Quick Install" << endl;
+			cout << "   -qs  Single Server Quick Install" << endl;
 			cout << "   -port MariaDB ColumnStore Port Address" << endl;
 			cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
 			cout << "   -n Non-distributed install, meaning it will not install the remote nodes" << endl;
 			cout << "   -sn System Name" << endl;
 			exit (0);
 		}
-      		else if( string("-sq") == argv[i] )
+      		else if( string("-qs") == argv[i] )
       		{
 				single_server_quick_install = true;
 				noPrompting = true;
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-s][-port][-i]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-port][-i][-n][-sn]" << endl;
 			exit (1);
 		}
 	}
