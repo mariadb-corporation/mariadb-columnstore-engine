@@ -5,7 +5,7 @@
 # Poddst- Quick Installer for Single Server MariaDB Columnstore
 
 
-if [ $HOME == "root" ]; then
+if [ $HOME == "/root" ]; then
         echo "Run post-install script"
         echo ""
         /usr/local/mariadb/columnstore/bin/post-install
