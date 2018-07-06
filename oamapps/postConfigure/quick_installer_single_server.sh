@@ -4,6 +4,17 @@
 #
 # Poddst- Quick Installer for Single Server MariaDB Columnstore
 
+for arg in "$@"; do
+	if [ `expr -- "$arg" : '--help'` -eq 6 ]; then
+		echo "Usage ./quick_installer_multi_server.sh"
+		echo ""
+		echo "Quick Installer for a Single Server MariaDB ColumnStore Install"
+		echo ""
+	else
+		echo "quick_installer_multi_server.sh: ignoring unknown argument: $arg" 1>&2
+	fi
+done
+
 
 if [ $HOME == "/root" ]; then
         echo "Run post-install script"
@@ -18,5 +29,5 @@ else
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
         echo "Run postConfigure script"
         echo ""
-        $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -sq
+        $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qs
 fi
