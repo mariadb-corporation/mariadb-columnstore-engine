@@ -3412,6 +3412,13 @@ ReturnedColumn* buildFunctionColumn(
 
                 ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
 
+                // MCOL-1510 It must be a temp table field, so find the corresponding column.
+                if (pushdownHand 
+                    && ifp->arguments()[i]->type() == Item::REF_ITEM)
+                {
+                    rc = findCorrespTempField(static_cast<Item_ref*>(ifp->arguments()[i]), gwi);
+                }
+
                 if (!rc || nonSupport)
                 {
                     nonSupport = true;
