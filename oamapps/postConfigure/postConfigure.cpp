@@ -493,13 +493,10 @@ int main(int argc, char *argv[])
 	}
 
 	//check Config saved files
-	if (!single_server_quick_install || !multi_server_quick_install)
+	if ( !checkSaveConfigFile())
 	{
-		if ( !checkSaveConfigFile())
-		{
-			cout << "ERROR: Configuration File not setup" << endl;
-			exit(1);
-		}
+		cout << "ERROR: Configuration File not setup" << endl;
+		exit(1);
 	}
 	
 	//determine package type
@@ -2471,28 +2468,35 @@ int main(int argc, char *argv[])
 
 					string dbrootList;
 
-					for ( unsigned int id = 1 ; id < count+1 ;  )
+					if (multi_server_quick_install)
 					{
-						string moduledbrootid = "ModuleDBRootID" + oam.itoa(moduleID) + "-" + oam.itoa(id) + "-" + oam.itoa(i+1);
-						try {
-							string dbrootid = sysConfig->getConfig(ModuleSection, moduledbrootid);
+						dbrootList = oam.itoa(moduleID);
+					}
+					else
+					{
+						for ( unsigned int id = 1 ; id < count+1 ;  )
+						{
+							string moduledbrootid = "ModuleDBRootID" + oam.itoa(moduleID) + "-" + oam.itoa(id) + "-" + oam.itoa(i+1);
+							try {
+								string dbrootid = sysConfig->getConfig(ModuleSection, moduledbrootid);
 
-							if ( dbrootid != oam::UnassignedName) {
-								sysConfig->setConfig(ModuleSection, moduledbrootid, oam::UnassignedName);
+								if ( dbrootid != oam::UnassignedName) {
+									sysConfig->setConfig(ModuleSection, moduledbrootid, oam::UnassignedName);
 
-								dbrootList = dbrootList + dbrootid;
-								id ++;
-								if ( id < count+1 )
-									dbrootList = dbrootList + ",";
+									dbrootList = dbrootList + dbrootid;
+									id ++;
+									if ( id < count+1 )
+										dbrootList = dbrootList + ",";
+								}
+							}
+							catch(...)
+							{
+								cout << "ERROR: Problem setting DBRoot ID in the MariaDB ColumnStore System Configuration file" << endl;
+								exit(1);
 							}
 						}
-						catch(...)
-						{
-							cout << "ERROR: Problem setting DBRoot ID in the MariaDB ColumnStore System Configuration file" << endl;
-							exit(1);
-						}
 					}
-
+					
 					vector <string> dbroots;
 					string tempdbrootList;
 
@@ -3581,6 +3585,15 @@ bool checkSaveConfigFile()
 		}
 		return true;
 	}
+	else
+	{
+		if (single_server_quick_install || multi_server_quick_install)
+		{
+			cout << endl << "Quick Install is for fresh installs only, '" +  oldFileName + "' exist, exiting" << endl;
+			exit(1);
+		}
+	}
+
 	File.close();
 
 	// If 'oldFileName' isn't configured, exit
