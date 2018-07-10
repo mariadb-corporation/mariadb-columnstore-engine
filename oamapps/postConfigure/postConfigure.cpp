@@ -186,6 +186,7 @@ string MySQLRep = "y";
 string PMwithUM = "n";
 bool amazonInstall = false;
 bool nonDistribute = false;
+bool nonDistributeFlag = false;
 bool single_server_quick_install = false;
 bool multi_server_quick_install = false;
 
@@ -295,7 +296,7 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-n][-sn][-pm-ip-addrs][-um-ip-addrs]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -305,7 +306,8 @@ int main(int argc, char *argv[])
 			cout << "   -qm Quick Install - Multi Server" << endl;
 			cout << "   -port MariaDB ColumnStore Port Address" << endl;
 			cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
-			cout << "   -n Non-distributed install, meaning it will not install the remote nodes" << endl;
+			cout << "   -n Non-distributed install, meaning postConfigure will not install packages on remote nodes" << endl;
+			cout << "   -d Distributed install, meaning postConfigure will install packages on remote nodes" << endl;
 			cout << "   -sn System Name" << endl;
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
@@ -359,7 +361,15 @@ int main(int argc, char *argv[])
 			noPrompting = true;
 		// for backward compatibility
 		else if( string("-n") == argv[i] )
+		{
 			nonDistribute = true;
+			nonDistributeFlag = true;
+		}
+		else if( string("-d") == argv[i] )
+		{
+			nonDistribute = false;
+			nonDistributeFlag = true;
+		}
 		else if( string("-port") == argv[i] ) 
 		{
 			i++;
@@ -502,37 +512,34 @@ int main(int argc, char *argv[])
 	//determine package type
 	string EEPackageType;
 
-	if (single_server_quick_install || multi_server_quick_install)
+	if (!rootUser)
+			EEPackageType = "binary";
+	else
 	{
-			if (!rootUser)
-					EEPackageType = "binary";
-			else
-			{
-					int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-					if (WEXITSTATUS(rtnCode) == 0)
-							EEPackageType = "rpm";
-					else {
-							rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-						if (WEXITSTATUS(rtnCode) == 0)
-									EEPackageType = "deb";
-							else
-									EEPackageType = "binary";
-					}
+			int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+			if (WEXITSTATUS(rtnCode) == 0)
+					EEPackageType = "rpm";
+			else {
+					rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+				if (WEXITSTATUS(rtnCode) == 0)
+							EEPackageType = "deb";
+					else
+							EEPackageType = "binary";
 			}
+	}
 
-			try {
-					sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
-			}
-			catch(...)
-			{
-					cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
-					exit(1);
-			}
+	try {
+			sysConfig->setConfig(InstallSection, "EEPackageType", EEPackageType);
+	}
+	catch(...)
+	{
+			cout << "ERROR: Problem setting EEPackageType from the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+	}
 
-			if ( !writeConfig(sysConfig) ) {
-				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-				exit(1);
-			}
+	if ( !writeConfig(sysConfig) ) {
+		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+		exit(1);
 	}
 	
 	//check for local ip address as pm1
@@ -668,12 +675,22 @@ int main(int argc, char *argv[])
 	}
 
 	//check for non-Distributed Install
-	if ( nonDistribute )
+	if ( nonDistributeFlag )
 	{
-	    try {
-		oam.setSystemConfig("DistributedInstall", "n");
-	    }
-	    catch(...) {}
+		if ( nonDistribute )
+		{
+			try {
+				oam.setSystemConfig("DistributedInstall", "n");
+			}
+			catch(...) {}
+		}
+		else
+		{
+			try {
+				oam.setSystemConfig("DistributedInstall", "y");
+			}
+			catch(...) {}
+		}
 	}
 	else
 	{
@@ -896,7 +913,7 @@ int main(int argc, char *argv[])
 				InputModuleIPList.push_back(InputModuleIP);
 			}
 			
-			umNumber = id;
+			umNumber = id-1;
 		}
 		
 		if (pmIpAddrs != "" )
@@ -915,7 +932,7 @@ int main(int argc, char *argv[])
 				InputModuleIPList.push_back(InputModuleIP);
 			}
 			
-			pmNumber = id;
+			pmNumber = id-1;
 		}
 
 		if ( !writeConfig(sysConfig) ) 
@@ -1733,52 +1750,64 @@ int main(int argc, char *argv[])
 	
 				//setup HostName/IPAddress for each NIC
 				
-				for( unsigned int nicID=1 ; nicID < MaxNicID +1 ; nicID++ )
+				string moduleHostName = oam::UnassignedName;
+				string moduleIPAddr = oam::UnassignedIpAddr;
+
+				bool found = false;
+				if (multi_server_quick_install)
 				{
-					string moduleHostName = oam::UnassignedName;
-					string moduleIPAddr = oam::UnassignedIpAddr;
-		
-					DeviceNetworkList::iterator listPT = sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();
-					for( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
+					ModuleIpList::iterator pt2 = InputModuleIPList.begin();
+					for( ; pt2 != InputModuleIPList.end() ; pt2++)
 					{
-						if (newModuleName == (*listPT).DeviceName) {
-							if ( nicID == 1 ) {
-								moduleDisableState = (*listPT).DisableState;
-								if ( moduleDisableState.empty() ||
-									moduleDisableState == oam::UnassignedName ||
-									moduleDisableState == oam::AUTODISABLEDSTATE )
-									moduleDisableState = oam::ENABLEDSTATE;
-							}
-	
-							HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
-							for( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
+						if ( (*pt2).moduleName == newModuleName )
+						{
+							moduleHostName = (*pt2).IPaddress;
+							moduleIPAddr = (*pt2).IPaddress;
+							found = true;
+							break;
+						}
+					}
+				}
+				
+				unsigned int nicID=1;
+				for(  ; nicID < MaxNicID +1 ; nicID++ )
+				{
+					if ( !found )
+					{
+						moduleHostName = oam::UnassignedName;
+						moduleIPAddr = oam::UnassignedIpAddr;
+
+						DeviceNetworkList::iterator listPT = sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.begin();
+						for( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
+						{
+							if (newModuleName == (*listPT).DeviceName) 
 							{
-								if ((*pt1).NicID == nicID) {
-									bool found = false;
-									ModuleIpList::iterator pt2 = InputModuleIPList.begin();
-									for( ; pt2 != InputModuleIPList.end() ; pt2++)
+								if ( nicID == 1 ) 
+								{
+									moduleDisableState = (*listPT).DisableState;
+									if ( moduleDisableState.empty() ||
+										moduleDisableState == oam::UnassignedName ||
+										moduleDisableState == oam::AUTODISABLEDSTATE )
+										moduleDisableState = oam::ENABLEDSTATE;
 									{
-										if ( (*pt2).moduleName == newModuleName )
+										HostConfigList::iterator pt1 = (*listPT).hostConfigList.begin();
+										for( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
 										{
-											moduleHostName = (*pt2).IPaddress;
-											moduleIPAddr = (*pt2).IPaddress;
-											found = true;
+											if ((*pt1).NicID == nicID) 
+											{
+												moduleHostName = (*pt1).HostName;
+												moduleIPAddr = (*pt1).IPAddr;
+												break;
+											}
 										}
 									}
-					
-									if ( !found )
-									{
-										moduleHostName = (*pt1).HostName;
-										moduleIPAddr = (*pt1).IPAddr;
-									}
-									break;
 								}
 							}
 						}
 					}
-
- 	
-					if ( nicID == 1 ) {
+					
+					if ( nicID == 1 ) 
+					{
 						if ( moduleDisableState != oam::ENABLEDSTATE ) {
 							string disabled = "y";
 							while (true)
@@ -1859,6 +1888,7 @@ int main(int argc, char *argv[])
 						if ( moduleDisableState != oam::ENABLEDSTATE)
 							break;
 					}
+
 
 					bool moduleHostNameFound = true;
 					if (moduleHostName.empty()) {
@@ -3579,6 +3609,10 @@ bool checkSaveConfigFile()
 	//check if Columnstore.xml.rpmsave exist
 	ifstream File (oldFileName.c_str());
 	if (!File) {
+		if (single_server_quick_install || multi_server_quick_install)
+		{
+			return true;
+		}
 		if ( noPrompting ) {
 			cout << endl << "Old Config File not found '" +  oldFileName + "', exiting" << endl;
 			exit(1);

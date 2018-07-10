@@ -6,16 +6,21 @@
 
 pmIpAddrs=""
 umIpAddrs=""
+nonDistrubutedInstall="-n"
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--pm-ip-addresses='` -eq 18 ]; then
 		pmIpAddrs="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--pm-ip-addresses='` -eq 18 ]; then
+	elif [ `expr -- "$arg" : '--um-ip-addresses='` -eq 18 ]; then
 		umIpAddrs="`echo $arg | awk -F= '{print $2}'`"
+	elif [ `expr -- "$arg" : '--dist-install'` -eq 14 ]; then
+		nonDistrubutedInstall=" "
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		echo "Usage ./quick_installer_multi_server.sh [OPTION]"
 		echo ""
 		echo "Quick Installer for a Multi Server MariaDB ColumnStore Install"
+		echo "Defaults to non-distrubuted install, meaning MariaDB Columnstore"
+		echo "needs to be preinstalled on all nodes in the system"
 		echo ""
 		echo "Performace Module (pm) IP addresses required"
 		echo "User Module (um) IP addresses option"
@@ -24,40 +29,50 @@ for arg in "$@"; do
 		echo
 		echo "--pm-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx"
 		echo "--um-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx"
+		echo "--dist-install Use Distributed Install Option"
 		echo ""
 	else
-		echo "quick_installer_multi_server.sh: ignoring unknown argument: $arg" 1>&2
+		echo "quick_installer_multi_server.sh: unknown argument: $arg, use --help for help" 1>&2
+		exit 1
 	fi
 done
 
-if [ $pmIpAddrs == "" ] ; then
+if [[ $pmIpAddrs = "" ]]; then
 	echo ""
 	echo "Performace Module (pm) IP addresses required, exiting"
 	exit 1
 else
-	if [ $umIpAddrs == "" ] ; then
+	if [[ $umIpAddrs = "" ]]; then
 		echo ""
-		echo "Performing a Multi-Server Combined install with um/pm running on some server"
+		echo "NOTE: Performing a Multi-Server Combined install with um/pm running on some server"
 		echo""
 	else
 		echo ""
-		echo "Performing a Multi-Server Seperate install with um and pm running on seperate servers"
+		echo "NOTE: Performing a Multi-Server Seperate install with um and pm running on seperate servers"
 		echo""
 	fi
 fi
 
-if [ $HOME == "/root" ]; then
-        echo "Run post-install script"
+if [[ $HOME = "/root" ]]; then
+        echo "${bold}Run post-install script${normal}"
         echo ""
         /usr/local/mariadb/columnstore/bin/post-install
-        echo "Run postConfigure script"
+        echo "${bold}Run postConfigure script${normal}"
         echo ""
-        /usr/local/mariadb/columnstore/bin/postConfigure -qm -pm-ip-addrs=$pmIpAddrs -um-ip-addrs=$umIpAddrs
+        if [[ $umIpAddrs = "" ]]; then
+			/usr/local/mariadb/columnstore/bin/postConfigure -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall
+		else
+			/usr/local/mariadb/columnstore/bin/postConfigure -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall
+		fi
 else
-        echo "Run post-install script"
+        echo "${bold}Run post-install script${normal}"
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
-        echo "Run postConfigure script"
+        echo "${bold}Run postConfigure script${normal}"
         echo ""
-        $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs=$pmIpAddrs -um-ip-addrs=$umIpAddrs
+        if [[ $umIpAddrs = "" ]]; then
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall
+		else
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall
+		fi
 fi
