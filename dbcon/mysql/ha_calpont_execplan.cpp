@@ -8415,7 +8415,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         gwi.rcWorkStack.push(new ConstantColumn((int64_t)0, ConstantColumn::NUM));
     }
 
-    uint32_t failed = buildOuterJoin(gwi, select_lex);
+    SELECT_LEX tmp_select_lex;
+    tmp_select_lex.table_list.first = gi.groupByTables;
+    uint32_t failed = buildOuterJoin(gwi, tmp_select_lex);
 
     if (failed) return failed;
 
