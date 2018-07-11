@@ -2887,7 +2887,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
             if (func_name == "+" || func_name == "-" || func_name == "*" || func_name == "/" )
                 return buildArithmeticColumn(ifp, gwi, nonSupport, pushdownHand);
             else
-                return buildFunctionColumn(ifp, gwi, nonSupport);
+                return buildFunctionColumn(ifp, gwi, nonSupport, pushdownHand);
         }
 
         case Item::SUM_FUNC_ITEM:
@@ -3410,7 +3410,7 @@ ReturnedColumn* buildFunctionColumn(
                     return NULL;
                 }
 
-                ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
+                ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport, pushdownHand);
 
                 // MCOL-1510 It must be a temp table field, so find the corresponding column.
                 if (pushdownHand 
@@ -8861,7 +8861,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         redo = true;
                         // @bug 1706
                         String funcStr;
-                        ifp->print(&funcStr, QT_INFINIDB);
+                        //ifp->print(&funcStr, QT_INFINIDB);
                         gwi.selectCols.push_back(string(funcStr.c_ptr()) + " `" + escapeBackTick(ifp->name) + "`");
                         // clear the error set by buildFunctionColumn
                         gwi.fatalParseError = false;
@@ -9900,7 +9900,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         sel_query += ", ";
                 }
 
-                select_query.replace(lower_select_query.find("select *"), string("select *").length(), sel_query);
+                //select_query.replace(lower_select_query.find("select *"), string("select *").length(), sel_query);
             }
             else
             {
