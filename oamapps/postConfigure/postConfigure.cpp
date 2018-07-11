@@ -189,6 +189,7 @@ bool nonDistribute = false;
 bool nonDistributeFlag = false;
 bool single_server_quick_install = false;
 bool multi_server_quick_install = false;
+bool amazon_quick_install = false;
 
 string DataFileEnvFile;
 
@@ -296,7 +297,7 @@ int main(int argc, char *argv[])
 			cout << "	Enter one of the options within [], if available, or" << endl;
 			cout << "	Enter a new value" << endl << endl;
 			cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count]" << endl;
 			cout << "   -h  Help" << endl;
 			cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
 			cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -321,6 +322,11 @@ int main(int argc, char *argv[])
 		else if( string("-qm") == argv[i] )
 		{
 			multi_server_quick_install = true;
+			noPrompting = true;
+		}
+		else if( string("-qa") == argv[i] )
+		{
+			amazon_quick_install = true;
 			noPrompting = true;
 		}
 		else if( string("-f") == argv[i] )
@@ -425,10 +431,30 @@ int main(int argc, char *argv[])
             }
             umIpAddrs = argv[i];
         }
+        else if( string("-pm-count") == argv[i] ) 
+        {
+            i++;
+            if (i >= argc ) 
+            {
+                cout << "   ERROR: PM-COUNT not provided" << endl;
+                exit (1);
+            }
+            pmNumber = atoi(argv[i]);
+        }
+        else if( string("-um-count") == argv[i] ) 
+        {
+            i++;
+            if (i >= argc ) 
+            {
+                cout << "   ERROR: UM-COUNT not provided" << endl;
+                exit (1);
+            }
+            umNumber = atoi(argv[i]);
+        }
 		else
 		{
 			cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-port][-i][-n][-sn][-pm-ip-addrs][-um-ip-addrs]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count]" << endl;
 			exit (1);
 		}
 	}
@@ -436,10 +462,21 @@ int main(int argc, char *argv[])
 	//check if quick install multi-server has been given ip address
 	if (multi_server_quick_install)
 	{
-		if ( umIpAddrs.empty() && pmIpAddrs.empty() ||
-				!umIpAddrs.empty() && pmIpAddrs.empty() )
+		if ( ( umIpAddrs.empty() && pmIpAddrs.empty() ) ||
+				( !umIpAddrs.empty() && pmIpAddrs.empty() ))
 		{
 			cout << "   ERROR: Multi-Server option entered, but invalid UM/PM IP addresses were provided, exiting" << endl;
+			exit(1);
+		}
+	}
+
+	//check if quick install multi-server has been given ip address
+	if (amazon_quick_install)
+	{
+		if ( ( umNumber == 0 && pmNumber == 0 ) ||
+				( umNumber != 0 && pmNumber == 0 ) )
+		{
+			cout << "   ERROR: Amazon option entered, but invalid UM/PM Counts were provided, exiting" << endl;
 			exit(1);
 		}
 	}
@@ -462,7 +499,7 @@ int main(int argc, char *argv[])
 	cout << "IMPORTANT: This tool requires to run on the Performance Module #1" << endl;
 	cout << endl;
 
-	if (!single_server_quick_install || !multi_server_quick_install)
+	if (!single_server_quick_install || !multi_server_quick_install || !amazon_quick_install)
 	{
 			if (!noPrompting) {
 				cout << "Prompting instructions:" << endl << endl;
@@ -723,6 +760,12 @@ int main(int argc, char *argv[])
 		
 		singleServerInstall = "2";
 	}
+	else if (amazon_quick_install)
+	{
+		cout << "===== Quick Install Amazon Configuration =====" << endl << endl;
+		
+		singleServerInstall = "2";
+	}
 	else
 	{
 		cout << "===== Setup System Server Type Configuration =====" << endl << endl;
@@ -942,6 +985,42 @@ int main(int argc, char *argv[])
 		}
 		
 		MaxNicID = 1;
+	}
+	else
+	{
+		if (amazon_quick_install)
+		{
+			//set configuarion settings for default setup
+			try {
+				sysConfig->setConfig(InstallSection, "MySQLRep", "y");
+			}
+			catch(...)
+			{}
+			
+			try {
+				sysConfig->setConfig(InstallSection, "Cloud", "amazon-vpc");
+        	}
+        	catch(...)
+        	{}
+			
+			if (umNumber == 0 )
+			{
+				// set Server Type Installation to combined
+				try {
+					sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
+				}
+				catch(...)
+				{}
+			}
+
+			if ( !writeConfig(sysConfig) ) 
+			{
+				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+				exit(1);
+			}
+			
+			MaxNicID = 1;
+		}
 	}
 
 	cout << endl;
@@ -1174,13 +1253,30 @@ int main(int argc, char *argv[])
 
 	in.seekg(0, std::ios::end);
 	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found")) 
-	// not running on amazon with ec2-api-tools
+	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found"))
+	{
+		// not running on amazon with ec2-api-tools
+		if (amazon_quick_install)
+		{
+			cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
+			exit(1);
+		}
+
 		amazonInstall = false;
+	}
 	else
 	{
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed")) 
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed"))
+		{
+			// not running on amazon with ec2-api-tools
+			if (amazon_quick_install)
+			{
+				cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
+				exit(1);
+			}
+
 			amazonInstall = false;
+		}
 		else
 			amazonInstall = true;
 	}
@@ -1216,7 +1312,7 @@ int main(int argc, char *argv[])
 					    amazonInstall = false;
 
 					    try {
-						sysConfig->setConfig(InstallSection, "Cloud", "disable");
+							sysConfig->setConfig(InstallSection, "Cloud", "disable");
 					    }
 					    catch(...)
 					    {};
@@ -1674,6 +1770,7 @@ int main(int argc, char *argv[])
 					exit(1);
 				continue;
 			}
+
 			//update count
 			try {
 				string ModuleCountParm = "ModuleCount" + oam.itoa(i+1);
@@ -1929,23 +2026,25 @@ int main(int argc, char *argv[])
 									//check if need to create instance or user enter ID
 									string create = "y";
 			
-									while(true)
+									if ( !amazon_quick_install )
 									{
-										pcommand = callReadline("Create Instance for " + newModuleName + " [y,n] (y) > ");
-										if (pcommand)
+										while(true)
 										{
-											if (strlen(pcommand) > 0) create = pcommand;
-											callFree(pcommand);
+											pcommand = callReadline("Create Instance for " + newModuleName + " [y,n] (y) > ");
+											if (pcommand)
+											{
+												if (strlen(pcommand) > 0) create = pcommand;
+												callFree(pcommand);
+											}
+											if ( create == "y" || create == "n" )
+												break;
+											else
+												cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
+											create = "y";
+											if ( noPrompting )
+												exit(1);
 										}
-										if ( create == "y" || create == "n" )
-											break;
-										else
-											cout << "Invalid Entry, please enter 'y' for yes or 'n' for no" << endl;
-										create = "y";
-										if ( noPrompting )
-											exit(1);
 									}
-								
 			
 									if ( create == "y" ) {
 										ModuleIP moduleip;
@@ -2498,7 +2597,7 @@ int main(int argc, char *argv[])
 
 					string dbrootList;
 
-					if (multi_server_quick_install)
+					if (multi_server_quick_install || amazon_quick_install)
 					{
 						dbrootList = oam.itoa(moduleID);
 					}
@@ -3609,7 +3708,7 @@ bool checkSaveConfigFile()
 	//check if Columnstore.xml.rpmsave exist
 	ifstream File (oldFileName.c_str());
 	if (!File) {
-		if (single_server_quick_install || multi_server_quick_install)
+		if (single_server_quick_install || multi_server_quick_install || amazon_quick_install)
 		{
 			return true;
 		}
@@ -3621,7 +3720,7 @@ bool checkSaveConfigFile()
 	}
 	else
 	{
-		if (single_server_quick_install || multi_server_quick_install)
+		if (single_server_quick_install || multi_server_quick_install || amazon_quick_install)
 		{
 			cout << endl << "Quick Install is for fresh installs only, '" +  oldFileName + "' exist, exiting" << endl;
 			exit(1);
