@@ -33,6 +33,7 @@ for arg in "$@"; do
 		echo "--um-count=x Number of um instances to create, optional"
 		echo "--system-name=nnnn System Name, optional"
 		echo ""
+		exit 1
 	else
 		echo "./quick_installer_amazon.sh: unknown argument: $arg, enter --help for help" 1>&2
 		exit 1

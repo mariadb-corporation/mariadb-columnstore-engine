@@ -10,6 +10,7 @@ for arg in "$@"; do
 		echo ""
 		echo "Quick Installer for a Single Server MariaDB ColumnStore Install"
 		echo ""
+		exit 1
 	else
 		echo "quick_installer_multi_server.sh: ignoring unknown argument: $arg" 1>&2
 	fi

@@ -37,6 +37,7 @@ for arg in "$@"; do
 		echo "--dist-install Use Distributed Install, optional"
 		echo "--system-name=nnnn System Name, optional"
 		echo ""
+		exit 1
 	else
 		echo "quick_installer_multi_server.sh: unknown argument: $arg, enter --help for help" 1>&2
 		exit 1
