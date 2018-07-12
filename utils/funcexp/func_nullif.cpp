@@ -531,7 +531,8 @@ int64_t Func_nullif::getTimeIntVal(rowgroup::Row& row,
 
         default:
         {
-            isNull = true;
+            isNull = false;
+            return exp1;
         }
     }
 

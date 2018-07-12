@@ -91,6 +91,10 @@ int64_t Func_to_days::getIntVal(rowgroup::Row& row,
             int64_t val;
             aDateTime = static_cast<DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aDateTime.hour = 0;
+            aDateTime.minute = 0;
+            aDateTime.second = 0;
+            aDateTime.msecond = 0;
             aTime.day = 0;
             val = addTime(aDateTime, aTime);
             year = (uint32_t)((val >> 48) & 0xffff);

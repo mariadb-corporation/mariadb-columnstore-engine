@@ -82,6 +82,17 @@ int64_t Func_date::getIntVal(rowgroup::Row& row,
             aDateTime = static_cast<DateTime>(nowDatetime());
             aTime = parm[0]->data()->getTimeIntVal(row, isNull);
             aTime.day = 0;
+            aDateTime.hour = 0;
+            aDateTime.minute = 0;
+            aDateTime.second = 0;
+            aDateTime.msecond = 0;
+            if ((aTime.hour < 0) || (aTime.is_neg))
+            {
+                aTime.hour = -abs(aTime.hour);
+                aTime.minute = -abs(aTime.minute);
+                aTime.second = -abs(aTime.second);
+                aTime.msecond = -abs(aTime.msecond);
+            }
             val = addTime(aDateTime, aTime);
             value = dataconvert::DataConvert::datetimeToString(val);
             value = value.substr(0, 10);
