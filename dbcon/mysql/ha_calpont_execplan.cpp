@@ -191,7 +191,7 @@ bool nonConstFunc(Item_func* ifp)
     return false;
 }
 
-ReturnedColumn* findCorrespTempField(Item_ref* item, gp_walk_info& gwi)
+ReturnedColumn* findCorrespTempField(Item_ref* item, gp_walk_info& gwi, bool clone = true)
 {
     ReturnedColumn* result = NULL;
     uint32_t i;
@@ -201,7 +201,10 @@ ReturnedColumn* findCorrespTempField(Item_ref* item, gp_walk_info& gwi)
         gwi.returnedCols[i]->alias().c_str() &&
         !strcasecmp(item->ref[0]->name, gwi.returnedCols[i]->alias().c_str()))
         {
-            result = gwi.returnedCols[i]->clone();
+            if (clone)
+                result = gwi.returnedCols[i]->clone();
+            else
+                result = gwi.returnedCols[i].get();
             break;
         }
     }
@@ -5455,7 +5458,10 @@ void gp_walk(const Item* item, void* arg)
  *  the involved item_fields to the passed in vector. It's used in parsing
  *  functions or arithmetic expressions for vtable post process.
  */
-void parse_item (Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16_t& parseInfo)
+void parse_item (Item* item, vector<Item_field*>& field_vec,
+    bool& hasNonSupportItem, 
+    uint16_t& parseInfo, 
+    gp_walk_info* gwi)
 {
     Item::Type itype = item->type();
 
@@ -5493,7 +5499,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec, bool& hasNonSupport
             }
 
             for (uint32_t i = 0; i < isp->argument_count(); i++)
-                parse_item(isp->arguments()[i], field_vec, hasNonSupportItem, parseInfo);
+                parse_item(isp->arguments()[i], field_vec, hasNonSupportItem, parseInfo, gwi);
 
 //				parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo);
             break;
@@ -5538,8 +5544,20 @@ void parse_item (Item* item, vector<Item_field*>& field_vec, bool& hasNonSupport
                 }
                 else if ((*(ref->ref))->type() == Item::FIELD_ITEM)
                 {
-                    Item_field* ifp = reinterpret_cast<Item_field*>(*(ref->ref));
-                    field_vec.push_back(ifp);
+                    // MCOL-1510. This could be a non-supported function
+                    // argument in form of a temp_table_field, so check
+                    // and set hasNonSupportItem if it is so.
+                    ReturnedColumn* rc = NULL;
+                    if (gwi)
+                        rc = findCorrespTempField(ref, *gwi, false);
+                    
+                    if (!rc)
+                    {
+                        Item_field* ifp = reinterpret_cast<Item_field*>(*(ref->ref));
+                        field_vec.push_back(ifp);
+                    }
+                    else
+                        hasNonSupportItem = true;
                     break;
                 }
                 else if ((*(ref->ref))->type() == Item::FUNC_ITEM)
@@ -8771,7 +8789,10 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 {
                     hasNonSupportItem = false;
                     uint32_t before_size = funcFieldVec.size();
-                    parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo);
+                    // MCOL-1510 Use gwi pointer here to catch funcs with
+                    // not supported aggregate args in projections,
+                    // e.g. NOT(SUM(i)).
+                    parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo, &gwi);
                     uint32_t after_size = funcFieldVec.size();
 
                     // group by func and func in subquery can not be post processed
@@ -8861,7 +8882,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         redo = true;
                         // @bug 1706
                         String funcStr;
-                        //ifp->print(&funcStr, QT_INFINIDB);
+                        ifp->print(&funcStr, QT_INFINIDB);
                         gwi.selectCols.push_back(string(funcStr.c_ptr()) + " `" + escapeBackTick(ifp->name) + "`");
                         // clear the error set by buildFunctionColumn
                         gwi.fatalParseError = false;
