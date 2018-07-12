@@ -13,7 +13,7 @@ for arg in "$@"; do
 		pmCount="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--um-count='` -eq 11 ]; then
 		umCount="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--systemName='` -eq 13 ]; then
+	elif [ `expr -- "$arg" : '--system-name='` -eq 14 ]; then
 		systemName="`echo $arg | awk -F= '{print $2}'`"
 		systemName="-sn "$systemName
 	elif [ `expr -- "$arg" : '--dist-install'` -eq 14 ]; then

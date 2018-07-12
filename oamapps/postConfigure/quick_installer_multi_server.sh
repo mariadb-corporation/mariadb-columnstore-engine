@@ -14,7 +14,7 @@ for arg in "$@"; do
 		pmIpAddrs="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--um-ip-addresses='` -eq 18 ]; then
 		umIpAddrs="`echo $arg | awk -F= '{print $2}'`"
-	elif [ `expr -- "$arg" : '--systemName='` -eq 13 ]; then
+	elif [ `expr -- "$arg" : '--system-name='` -eq 14 ]; then
 		systemName="`echo $arg | awk -F= '{print $2}'`"
 		systemName="-sn "$systemName
 	elif [ `expr -- "$arg" : '--dist-install'` -eq 14 ]; then
@@ -34,7 +34,7 @@ for arg in "$@"; do
 		echo
 		echo "--pm-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx"
 		echo "--um-ip-addresses=xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx, optional"
-		echo "--dist-install Use Distributed Install Option"
+		echo "--dist-install Use Distributed Install, optional"
 		echo "--system-name=nnnn System Name, optional"
 		echo ""
 	else
