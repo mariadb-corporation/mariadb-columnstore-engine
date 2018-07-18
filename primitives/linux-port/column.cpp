@@ -65,8 +65,6 @@ inline uint64_t order_swap(uint64_t x)
 template <int W>
 inline string fixChar(int64_t intval);
 
-idb_regex_t placeholderRegex;
-
 template <class T>
 inline int  compareBlock(  const void * a, const void * b )
 {
@@ -954,6 +952,7 @@ inline void p_Col_ridArray(NewColRequestHeader *in,
 	uint16_t *ridArray=0;
 	uint8_t *in8 = reinterpret_cast<uint8_t *>(in);
 	const uint8_t filterSize = sizeof(uint8_t) + sizeof(uint8_t) + W;
+    idb_regex_t placeholderRegex;
 
 	placeholderRegex.used = false;
 
