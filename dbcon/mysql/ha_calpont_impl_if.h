@@ -142,6 +142,7 @@ struct gp_walk_info
     std::map<std::string, execplan::ParseTree*> derivedTbFilterMap;
     uint32_t derivedTbCnt;
     std::vector<execplan::SCSEP> subselectList;
+    List<char>* groupByAuxDescr;
 
     // Kludge for Bug 750
     int32_t recursionLevel;
@@ -195,6 +196,7 @@ struct cal_table_info
 struct cal_group_info
 {
     cal_group_info() : groupByFields(0),
+        groupByAuxDescr(0),
         groupByTables(0),
         groupByWhere(0),
         groupByGroup(0),
@@ -205,6 +207,7 @@ struct cal_group_info
     ~cal_group_info() { }
 
     List<Item>* groupByFields; // MCOL-1052 SELECT
+    List<char>* groupByAuxDescr; //MCOL-1052 Auxilary column descriptions
     TABLE_LIST* groupByTables; // MCOL-1052 FROM
     Item*       groupByWhere; // MCOL-1052 WHERE
     ORDER*      groupByGroup; // MCOL-1052 GROUP BY
@@ -326,15 +329,14 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& cse
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
-void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo);
-execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport);
+void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo, gp_walk_info* gwip = NULL);
 const std::string bestTableName(const Item_field* ifp);
 bool isInfiniDB(TABLE* table_ptr);
 
 // execution plan util functions prototypes
-execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport);
-execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
-execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
+execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
+execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
+execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
 execplan::ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi);
 execplan::SimpleColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi);
 execplan::FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
@@ -346,7 +348,7 @@ void addIntervalArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castCharArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castDecimalArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castTypeArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
-void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo);
+//void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo);
 bool isPredicateFunction(Item* item, gp_walk_info* gwip);
 execplan::ParseTree* buildRowPredicate(execplan::RowColumn* lhs, execplan::RowColumn* rhs, std::string predicateOp);
 bool buildRowColumnFilter(gp_walk_info* gwip, execplan::RowColumn* rhs, execplan::RowColumn* lhs, Item_func* ifp);

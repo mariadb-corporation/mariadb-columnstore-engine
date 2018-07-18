@@ -42,6 +42,9 @@
 #include <vector>
 #include <map>
 #include <limits>
+
+#include <string.h>
+
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -186,6 +189,27 @@ bool nonConstFunc(Item_func* ifp)
     }
 
     return false;
+}
+
+ReturnedColumn* findCorrespTempField(Item_ref* item, gp_walk_info& gwi, bool clone = true)
+{
+    ReturnedColumn* result = NULL;
+    uint32_t i;
+    for (i = 0; i < gwi.returnedCols.size(); i++)
+    {
+        if (item->ref[0] && item->ref[0]->name &&
+        gwi.returnedCols[i]->alias().c_str() &&
+        !strcasecmp(item->ref[0]->name, gwi.returnedCols[i]->alias().c_str()))
+        {
+            if (clone)
+                result = gwi.returnedCols[i]->clone();
+            else
+                result = gwi.returnedCols[i].get();
+            break;
+        }
+    }
+
+    return result;
 }
 
 string getViewName(TABLE_LIST* table_ptr)
@@ -2739,7 +2763,7 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB (const Item* item)
     return ct;
 }
 
-ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport)
+ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand)
 {
     ReturnedColumn* rc = NULL;
 
@@ -2864,9 +2888,9 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
             }
 
             if (func_name == "+" || func_name == "-" || func_name == "*" || func_name == "/" )
-                return buildArithmeticColumn(ifp, gwi, nonSupport);
+                return buildArithmeticColumn(ifp, gwi, nonSupport, pushdownHand);
             else
-                return buildFunctionColumn(ifp, gwi, nonSupport);
+                return buildFunctionColumn(ifp, gwi, nonSupport, pushdownHand);
         }
 
         case Item::SUM_FUNC_ITEM:
@@ -2998,7 +3022,11 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
     return rc;
 }
 
-ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+ArithmeticColumn* buildArithmeticColumn(
+    Item_func* item,
+    gp_walk_info& gwi,
+    bool& nonSupport,
+    bool pushdownHand)
 {
     if (!(gwi.thd->infinidb_vtable.cal_conn_info))
         gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
@@ -3021,7 +3049,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
     {
         if (gwi.clauseType == SELECT || /*gwi.clauseType == HAVING || */gwi.clauseType == GROUP_BY || gwi.clauseType == FROM) // select list
         {
-            lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+            lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, pushdownHand));
 
             if (!lhs->data() && (sfitempp[0]->type() == Item::FUNC_ITEM))
             {
@@ -3029,14 +3057,29 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
                 Item_func* ifp = (Item_func*)sfitempp[0];
                 lhs = buildParseTree(ifp, gwi, nonSupport);
             }
-
-            rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
+            else if(pushdownHand && !lhs->data() && (sfitempp[0]->type() == Item::REF_ITEM))
+            {
+                // There must be an aggregation column in extended SELECT
+                // list so find the corresponding column.
+                ReturnedColumn* rc = findCorrespTempField(static_cast<Item_ref*>(sfitempp[0]), gwi);
+                if(rc)
+                    lhs = new ParseTree(rc);
+            }
+            rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, pushdownHand));
 
             if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
             {
                 delete rhs;
                 Item_func* ifp = (Item_func*)sfitempp[1];
                 rhs = buildParseTree(ifp, gwi, nonSupport);
+            }
+            else if(pushdownHand && !rhs->data() && (sfitempp[1]->type() == Item::REF_ITEM))
+            {
+                // There must be an aggregation column in extended SELECT
+                // list so find the corresponding column.
+                ReturnedColumn* rc = findCorrespTempField(static_cast<Item_ref*>(sfitempp[1]), gwi);
+                if(rc)
+                    rhs = new ParseTree(rc);
             }
         }
         else // where clause
@@ -3198,7 +3241,11 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
     return ac;
 }
 
-ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport)
+ReturnedColumn* buildFunctionColumn(
+    Item_func* ifp,
+    gp_walk_info& gwi,
+    bool& nonSupport,
+    bool pushdownHand)
 {
     if (!(gwi.thd->infinidb_vtable.cal_conn_info))
         gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
@@ -3239,7 +3286,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     // Arithmetic exp
     if (funcName == "+" || funcName == "-" || funcName == "*" || funcName == "/" )
     {
-        ArithmeticColumn* ac = buildArithmeticColumn(ifp, gwi, nonSupport);
+        ArithmeticColumn* ac = buildArithmeticColumn(ifp, gwi, nonSupport, pushdownHand);
         return ac;
     }
 
@@ -3366,7 +3413,14 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
                     return NULL;
                 }
 
-                ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
+                ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport, pushdownHand);
+
+                // MCOL-1510 It must be a temp table field, so find the corresponding column.
+                if (pushdownHand 
+                    && ifp->arguments()[i]->type() == Item::REF_ITEM)
+                {
+                    rc = findCorrespTempField(static_cast<Item_ref*>(ifp->arguments()[i]), gwi);
+                }
 
                 if (!rc || nonSupport)
                 {
@@ -5432,7 +5486,10 @@ void gp_walk(const Item* item, void* arg)
  *  the involved item_fields to the passed in vector. It's used in parsing
  *  functions or arithmetic expressions for vtable post process.
  */
-void parse_item (Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16_t& parseInfo)
+void parse_item (Item* item, vector<Item_field*>& field_vec,
+    bool& hasNonSupportItem, 
+    uint16_t& parseInfo, 
+    gp_walk_info* gwi)
 {
     Item::Type itype = item->type();
 
@@ -5470,7 +5527,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec, bool& hasNonSupport
             }
 
             for (uint32_t i = 0; i < isp->argument_count(); i++)
-                parse_item(isp->arguments()[i], field_vec, hasNonSupportItem, parseInfo);
+                parse_item(isp->arguments()[i], field_vec, hasNonSupportItem, parseInfo, gwi);
 
 //				parse_item(sfitempp[i], field_vec, hasNonSupportItem, parseInfo);
             break;
@@ -5515,8 +5572,20 @@ void parse_item (Item* item, vector<Item_field*>& field_vec, bool& hasNonSupport
                 }
                 else if ((*(ref->ref))->type() == Item::FIELD_ITEM)
                 {
-                    Item_field* ifp = reinterpret_cast<Item_field*>(*(ref->ref));
-                    field_vec.push_back(ifp);
+                    // MCOL-1510. This could be a non-supported function
+                    // argument in form of a temp_table_field, so check
+                    // and set hasNonSupportItem if it is so.
+                    ReturnedColumn* rc = NULL;
+                    if (gwi)
+                        rc = findCorrespTempField(ref, *gwi, false);
+                    
+                    if (!rc)
+                    {
+                        Item_field* ifp = reinterpret_cast<Item_field*>(*(ref->ref));
+                        field_vec.push_back(ifp);
+                    }
+                    else
+                        hasNonSupportItem = true;
                     break;
                 }
                 else if ((*(ref->ref))->type() == Item::FUNC_ITEM)
@@ -8116,6 +8185,7 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     SELECT_LEX select_lex = lex->select_lex;
     gp_walk_info gwi;
     gwi.thd = thd;
+    gwi.groupByAuxDescr = gi.groupByAuxDescr;
     int status = getGroupPlan(gwi, select_lex, csep, gi);
 
     cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
@@ -8497,6 +8567,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     string sel_cols_in_create;
     string sel_cols_in_select;
     bool redo = false;
+    List_iterator_fast<char> itDescr(*gi.groupByAuxDescr);
+    char* fieldDescr;
 
     // empty rcWorkStack and ptWorkStack. They should all be empty by now.
     clearStacks(gwi);
@@ -8515,7 +8587,15 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     while ((item = it++))
     {
-        string itemAlias = (item->name ? item->name : "<NULL>");
+        // Given the size of gi.groupByAuxDescr is equal to gi.groupByFields
+        fieldDescr = itDescr++;
+        string itemAlias;
+        if(item->name)
+            itemAlias = (item->name);
+        else
+        {
+            itemAlias = (fieldDescr ? fieldDescr: "<NULL>");
+        }
 
         // @bug 5916. Need to keep checking until getting concret item in case
         // of nested view.
@@ -8621,6 +8701,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
 
+                if(!ac->alias().length())
+                    ac->alias(fieldDescr);
                 // add this agg col to returnedColumnList
                 boost::shared_ptr<ReturnedColumn> spac(ac);
                 gwi.returnedCols.push_back(spac);
@@ -8680,7 +8762,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
 
-                ReturnedColumn* rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
+                ReturnedColumn* rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem, true);
                 SRCP srcp(rc);
 
                 if (rc)
@@ -8736,7 +8818,10 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 {
                     hasNonSupportItem = false;
                     uint32_t before_size = funcFieldVec.size();
-                    parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo);
+                    // MCOL-1510 Use gwi pointer here to catch funcs with
+                    // not supported aggregate args in projections,
+                    // e.g. NOT(SUM(i)).
+                    parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo, &gwi);
                     uint32_t after_size = funcFieldVec.size();
 
                     // group by func and func in subquery can not be post processed
@@ -9865,7 +9950,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                         sel_query += ", ";
                 }
 
-                select_query.replace(lower_select_query.find("select *"), string("select *").length(), sel_query);
+                //select_query.replace(lower_select_query.find("select *"), string("select *").length(), sel_query);
             }
             else
             {

@@ -1172,6 +1172,46 @@ create_calpont_group_by_handler(THD* thd, Query* query)
 
 /***********************************************************
  * DESCRIPTION:
+ * GROUP BY handler constructor
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    query - Query describing structure
+ ***********************************************************/
+ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* query)
+        : group_by_handler(thd_arg, calpont_hton),
+          select(query->select),
+          table_list(query->from),
+          distinct(query->distinct),
+          where(query->where),
+          group_by(query->group_by),
+          order_by(query->order_by),
+          having(query->having)
+{
+    List_iterator_fast<Item> item_iter(*select);
+    Item* item;
+    char* str = NULL;
+    while((item = item_iter++))
+    {
+        String descr;
+        item->print(&descr, QT_ORDINARY);
+        str = new char[descr.length()+1];
+        strncpy(str, descr.ptr(), descr.length());
+        str[descr.length()] = '\0';
+        select_list_descr.push_back(str);
+    }
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * GROUP BY destructor
+ ***********************************************************/
+ha_calpont_group_by_handler::~ha_calpont_group_by_handler()
+{
+    select_list_descr.delete_elements();
+}
+
+/***********************************************************
+ * DESCRIPTION:
  * Makes the plan and prepares the data
  * RETURN:
  *    int rc
