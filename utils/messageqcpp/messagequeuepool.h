@@ -42,7 +42,7 @@ class MessageQueueClientPool
 {
 public:
     static MessageQueueClient* getInstance(const std::string& module);
-    static MessageQueueClient* getInstance(const std::string& ip, uint64_t port);
+    static MessageQueueClient* getInstance(const std::string& dnOrIp, uint64_t port);
     static void releaseInstance(MessageQueueClient* client);
     static void deleteInstance(MessageQueueClient* client);
     static MessageQueueClient* findInPool(const std::string& search);

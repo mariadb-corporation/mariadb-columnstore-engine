@@ -33,6 +33,7 @@
 #include <stdio.h>
 #else
 #include <netinet/in.h>
+#include <netdb.h>
 #endif
 
 #include "serversocket.h"
@@ -183,7 +184,7 @@ public:
      *
      * construct a queue from this process to otherEnd on the given IP and Port.
      */
-    EXPORT explicit MessageQueueClient(const std::string& ip, uint16_t port, bool syncProto = true);
+    EXPORT explicit MessageQueueClient(const std::string& dnOrIp, uint16_t port, bool syncProto = true);
 
 
     /**
