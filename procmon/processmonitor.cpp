@@ -988,13 +988,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					int requestStatus = oam::API_SUCCESS;
 					log.writeLog(__LINE__,  "MSG RECEIVED: Start All process request...");
 
-					// change permissions on /dev/shm
-					string cmd = "chmod 755 /dev/shm >/dev/null 2>&1";
-					if ( !rootUser)
-						cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
-				
-					system(cmd.c_str());
-
 					//start the mysqld daemon 
 					try {
 						oam.actionMysqlCalpont(MYSQL_START);
