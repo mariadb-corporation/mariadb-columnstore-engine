@@ -37,12 +37,12 @@ static uint64_t TimeSpecToSeconds(struct timespec* ts)
     return (uint64_t)ts->tv_sec + (uint64_t)ts->tv_nsec / 1000000000;
 }
 
-MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& ip, uint64_t port)
+MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& dnOrIp, uint64_t port)
 {
     boost::mutex::scoped_lock lock(queueMutex);
 
     std::ostringstream oss;
-    oss << ip << "_" << port;
+    oss << dnOrIp << "_" << port;
     std::string searchString = oss.str();
 
     MessageQueueClient* returnClient = MessageQueueClientPool::findInPool(searchString);
@@ -59,7 +59,7 @@ MessageQueueClient* MessageQueueClientPool::getInstance(const std::string& ip, u
     clock_gettime(CLOCK_MONOTONIC, &now);
     uint64_t nowSeconds = TimeSpecToSeconds(&now);
 
-    newClientObject->client = new MessageQueueClient(ip, port);
+    newClientObject->client = new MessageQueueClient(dnOrIp, port);
     newClientObject->inUse = true;
     newClientObject->lastUsed = nowSeconds;
     clientMap.insert(std::pair<std::string, ClientObject*>(searchString, newClientObject));
