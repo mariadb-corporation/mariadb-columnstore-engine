@@ -147,6 +147,9 @@ struct gp_walk_info
 	int32_t recursionHWM;
 	std::stack<int32_t> rcBookMarkStack;
 
+    // Kludge for MCOL-1472
+    bool inCaseStmt;
+
 	gp_walk_info() : sessionid(0),
 				   fatalParseError(false),
 				   condPush(false),
@@ -162,7 +165,8 @@ struct gp_walk_info
 				   lastSub(0),
 				   derivedTbCnt(0),
 				   recursionLevel(-1),
-				   recursionHWM(0)
+				   recursionHWM(0),
+                   inCaseStmt(false)
 	{}
 
 	~gp_walk_info() {}
