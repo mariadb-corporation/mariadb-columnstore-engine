@@ -345,10 +345,6 @@ bool ArithmeticColumn::operator==(const ArithmeticColumn& t) const
 	}
 	else if (fExpression != NULL || t.fExpression != NULL)
 		return false;
-	if (fAlias != t.fAlias)
-		return false;
-	if (fTableAlias != t.fTableAlias)
-	    return false;
 	if (fData != t.fData)
 		return false;
 	return true;
