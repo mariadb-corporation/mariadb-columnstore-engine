@@ -1395,7 +1395,7 @@ static void chldHandleThread(MonitorConfig config)
 					{}
 
 					// check if process failover is needed due to process outage
-					aMonitor.checkProcessFailover((*listPtr).ProcessName);
+					aMonitor.checkModuleFailover((*listPtr).ProcessName);
 
 					//check the db health
 					if (DBFunctionalMonitorFlag == "y" ) {
@@ -1470,7 +1470,7 @@ static void chldHandleThread(MonitorConfig config)
 							(*listPtr).processID = 0;
 
 							// check if process failover is needed due to process outage
-							aMonitor.checkProcessFailover((*listPtr).ProcessName);
+							aMonitor.checkModuleFailover((*listPtr).ProcessName);
 							break;
 						}
 						else

@@ -827,7 +827,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							}
 
 							if (opState == oam::MAN_OFFLINE || opState == oam::MAN_DISABLED
-									|| opState == oam::AUTO_DISABLED ) {
+									|| opState == oam::AUTO_DISABLED || opState == oam::AUTO_OFFLINE) {
 
 								oam.dbrmctl("halt");
 								log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
@@ -848,7 +848,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							}
 							else
 							{
-								log.writeLog(__LINE__,  "ERROR: module not stopped", LOG_TYPE_ERROR);
+								log.writeLog(__LINE__,  "ERROR: module not stopped, state = " + oam.itoa(opState), LOG_TYPE_ERROR);
 								status = API_FAILURE;
 								break;
 							}
