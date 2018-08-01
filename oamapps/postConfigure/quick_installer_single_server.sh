@@ -30,5 +30,5 @@ else
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
         echo "Run postConfigure script"
         echo ""
-        $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qs
+        . /etc/profile.d/columnstoreEnv.sh; $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qs
 fi

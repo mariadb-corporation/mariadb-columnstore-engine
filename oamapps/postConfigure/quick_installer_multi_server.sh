@@ -78,8 +78,8 @@ else
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umIpAddrs = "" ]]; then
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall $systemName
+			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall $systemName
 		else
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall $systemName
+			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall $systemName
 		fi
 fi

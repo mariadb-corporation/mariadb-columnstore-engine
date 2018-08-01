@@ -74,8 +74,8 @@ else
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umCount = "" ]]; then
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName
+			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName
 		else
-			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName
+			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName
 		fi
 fi
