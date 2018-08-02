@@ -582,7 +582,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
     PseudoColumn* pc = new PseudoColumn(*sc, pseudoType);
 
     // @bug5892. set alias for derived table column matching.
-    pc->alias(ifp->name ? ifp->name : "");
+    pc->alias(ifp->name.length ? ifp->name.str : "");
     return pc;
 }
 

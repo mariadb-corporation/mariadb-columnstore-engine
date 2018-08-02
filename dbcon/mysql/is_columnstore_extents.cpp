@@ -207,7 +207,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
                 // WHERE object_id = value
                 Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
 
-                if (strcasecmp(item_field->field_name, "object_id") == 0)
+                if (strcasecmp(item_field->field_name.str, "object_id") == 0)
                 {
                     cond_oid = fitem->arguments()[1]->val_int();
                     return generate_result(cond_oid, emp, table, thd);
@@ -219,7 +219,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
                 // WHERE value = object_id
                 Item_field* item_field = (Item_field*) fitem->arguments()[1]->real_item();
 
-                if (strcasecmp(item_field->field_name, "object_id") == 0)
+                if (strcasecmp(item_field->field_name.str, "object_id") == 0)
                 {
                     cond_oid = fitem->arguments()[0]->val_int();
                     return generate_result(cond_oid, emp, table, thd);
@@ -231,7 +231,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
             // WHERE object_id in (value1, value2)
             Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
 
-            if (strcasecmp(item_field->field_name, "object_id") == 0)
+            if (strcasecmp(item_field->field_name.str, "object_id") == 0)
             {
                 for (unsigned int i = 1; i < fitem->argument_count(); i++)
                 {

@@ -121,7 +121,7 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
 
         columns++;
 
-        cols.append((*field)->field_name);
+        cols.append((*field)->field_name.str);
 
         if (ptr == end_ptr)
         {
@@ -236,7 +236,7 @@ uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
             }
         }
 
-        ci.colNameList.push_back((*field)->field_name);
+        ci.colNameList.push_back((*field)->field_name.str);
 
         columnPos++;
     }

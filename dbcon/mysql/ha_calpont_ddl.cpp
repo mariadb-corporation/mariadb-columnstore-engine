@@ -2045,7 +2045,7 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
     }
 
     // @bug 3908. error out primary key for now.
-    if (table_arg->key_info && table_arg->key_info->name && string(table_arg->key_info->name) == "PRIMARY")
+    if (table_arg->key_info && table_arg->key_info->name.length && string(table_arg->key_info->name.str) == "PRIMARY")
     {
         string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS);
         setError(thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
@@ -2214,8 +2214,8 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
     stmt = "alter table `" + fromPair.second + "` rename to `" + toPair.second + "`;";
     string db;
 
-    if ( thd->db )
-        db = thd->db;
+    if ( thd->db.length )
+        db = thd->db.str;
     else if ( fromPair.first.length() != 0 )
         db = fromPair.first;
     else
@@ -2245,8 +2245,8 @@ extern "C"
         THD* thd = current_thd;
         string db("");
 
-        if ( thd->db )
-            db = thd->db;
+        if ( thd->db.length )
+            db = thd->db.str;
 
         int compressiontype = thd->variables.infinidb_compression_type;
 

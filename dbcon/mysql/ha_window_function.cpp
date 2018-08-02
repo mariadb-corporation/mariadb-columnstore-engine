@@ -203,7 +203,7 @@ string ConvertFuncName(Item_sum* item)
     switch (item->sum_func())
     {
         case Item_sum::COUNT_FUNC:
-            if (!item->arguments()[0]->name)
+            if (!item->arguments()[0]->name.str)
                 return "COUNT(*)";
 
             return "COUNT";
