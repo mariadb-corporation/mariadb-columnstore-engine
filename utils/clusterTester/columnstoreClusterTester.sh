@@ -268,7 +268,7 @@ checkLocalDir()
       echo ""
       
       #remove any check tmp files from previous runs
-      `sudo rm -f /tmp/*_check > /dev/null 2>&1`
+      `rm -f /tmp/*_check > /dev/null 2>&1`
       
       #check /tmp and /dev/shm
       pass=true
@@ -346,10 +346,10 @@ checkRemoteDir()
   #
   # remove old _check tmp files from remote servers
   
-  `sudo rm -f /tmp/*_check > /dev/null 2>&1`
+  `rm -f /tmp/*_check > /dev/null 2>&1`
   
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'sudo rm -f /tmp/*_check > /dev/null 2>&1' 1 > /tmp/remote_command_check 2>&1`
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'rm -f /tmp/*_check > /dev/null 2>&1' 1 > /tmp/remote_command_check 2>&1`
   done
 
   if [ "$USER" != "root" ]; then
@@ -625,7 +625,7 @@ checkPorts()
   pass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
 
-    `sudo nmap $ipadd -p 8600-8630,8700,8800,3306 | grep 'filtered' > /tmp/port_test`
+    `nmap $ipadd -p 8600-8630,8700,8800,3306 | grep 'filtered' > /tmp/port_test`
     if [ "$?" -ne 0 ]; then
       echo $ipadd " Node Passed port test"
     else
@@ -735,6 +735,7 @@ checkPackages()
   echo ""
   echo "** Run MariaDB ColumnStore Dependent Package Check"
   echo ""
+
 
   declare -a CENTOS_PKG=("expect" "perl" "perl-DBI" "openssl" "zlib" "file" "sudo" "libaio" "rsync" "snappy" "net-tools" "numactl-libs")
   declare -a CENTOS_PKG_NOT=("mariadb-libs")
@@ -854,6 +855,7 @@ checkPackages()
       done
     fi
   fi
+
 
   declare -a SUSE_PKG=("boost-devel" "expect" "perl" "perl-DBI" "openssl" "file" "sudo" "libaio1" "rsync" "libsnappy1" "net-tools" "libnuma1")
   declare -a SUSE_PKG_NOT=("mariadb" , "libmariadb18")
@@ -1063,6 +1065,7 @@ checkPackages()
    fi
   fi
 
+
   declare -a DEBIAN_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1" "net-tools" "libnuma1")
   declare -a DEBIAN_PKG_NOT=("libmariadb18" "mariadb-server")
 
@@ -1180,6 +1183,7 @@ checkPackages()
     fi
   fi
   
+
   declare -a DEBIAN9_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline5" "rsync" "libsnappy1V5" "net-tools" "libaio1" "libnuma1")
   declare -a DEBIAN9_PKG_NOT=("libmariadb18" "mariadb-server")
 

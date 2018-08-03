@@ -8,10 +8,6 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=`whoami 2>/dev/null`
-SUDO=" "
-if [ $user != "root" ]; then
-        SUDO="sudo "
-fi
 
 quiet=0
 
@@ -93,53 +89,53 @@ if [ -f libstdc++.so.6.0.14 ]; then
 fi
 
 # softlink for libperl.sp, used by cplogger
-$SUDO ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
-
-#setup profile files
-profileFileAlias=/etc/profile.d/columnstoreAlias.sh
-profileFileEnv=/etc/profile.d/columnstoreEnv.sh
+ln -s /usr/lib64/perl5/CORE/libperl.so /usr/lib64/libperl.so >/dev/null 2>&1
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
         sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreAlias
 fi
 
 if [ $user != "root" ]; then
-	sudo rm -f $profileFileEnv
-	sudo rm -f $profileFileAlias
-	
-	sudo touch $profileFileEnv
-	sudo chmod 666 $profileFileEnv
-	egrep -qs 'MariaDB Columnstore Non-Root' ${profileFileEnv}
+	profileFile=$prefix/.bash_profile
+
+	if [ ! -f ${profileFile}_backup ]; then
+	    cp $profileFile ${profileFile}_backup
+	fi
+
+	egrep -qs 'MariaDB Columnstore Non-Root Environment Variables' ${profileFile}
 	rc1=$?
 	if [ $rc1 -ne 0 ]; then
-        	sudo echo " " >> ${profileFileEnv}
-		sudo echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFileEnv}
-        	sudo echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFileEnv}
-        	sudo echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib" >> ${profileFileEnv}
-        	. ${profileFileEnv}
+        	echo " " >> ${profileFile}
+		echo "# MariaDB Columnstore Non-Root Environment Variables" >> ${profileFile}
+        	echo "export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR" >> ${profileFile}
+        	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COLUMNSTORE_INSTALL_DIR/lib:$COLUMNSTORE_INSTALL_DIR/mysql/lib" >> ${profileFile}
 	fi
 	
-	sudo /bin/cp -f $installdir/bin/columnstoreAlias $profileFileAlias
-	sudo chmod 666 $profileFileAlias
+	egrep -qs 'MariaDB Columnstore Non-Root Alias Variables' ${profileFile}
+	rc1=$?
+	if [ $rc1 -ne 0 ]; then
+        	echo " " >> ${profileFile}
+		echo "# MariaDB Columnstore Non-Root Alias Variables" >> ${profileFile}
+		cat $installdir/bin/columnstoreAlias >> ${profileFile}
+	fi
+
+	#source the file
+	. ${profileFile}
 else
-	/bin/cp -f $installdir/bin/columnstoreAlias $profileFileAlias
-	chmod 644 $profileFileAlias
+	/bin/cp -f $installdir/bin/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
+	chmod 644 /etc/profile.d/columnstoreAlias.sh >/dev/null 2>&1
 fi
 
 cd /
 
-test -d /var/log/mariadb || $SUDO mkdir /var/log/mariadb >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore || $SUDO mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-
-if [ $user != "root" ]; then
-	$SUDO chmod -R 777 /var/log/mariadb >/dev/null 2>&1
-	$SUDO chown -R $user:$user /var/log/mariadb >/dev/null 2>&1
-fi
-
+test -d /var/log/mariadb || mkdir /var/log/mariadb >/dev/null 2>&1
+test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
 test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
+chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
+
 # make sure trace dir is world-writable and sticky
 test -d $installdir/data || mkdir $installdir/data
 test -d $installdir/data1 || mkdir $installdir/data1
@@ -162,13 +158,8 @@ rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 #create columnstore temp file directory
 mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
-#setup core file directory and link
-mkdir /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
-chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
-
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
-mkdir /var/log/mariadb/columnstore/data/archive > /dev/null 2>&1
 
 # remove mysql archive log
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
@@ -177,7 +168,6 @@ rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 # delete Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
 
-systemctl=`which systemctl 2>/dev/null`
 
 #check and create rc.local file if missing
 if [ -f /etc/rc.d ]; then
@@ -190,22 +180,16 @@ if [ $user = "root" ]; then
     touch $RCFILE    
     chmod +x $RCFILE
 else
-    $SUDO touch $RCFILE
-    $SUDO chmod 777 $RCFILE
-    $SUDO printf '%s\n' '#!/bin/bash' "#" | $SUDO tee -a $RCFILE > /dev/null 2>&1
-    
-    if [ -n "$systemctl" ]; then
-	$SUDO systemctl start rc-local >/dev/null 2>&1
-	$SUDO systemctl enable rc-local >/dev/null 2>&1
-    fi
+    printf '%s\n' '#!/bin/bash' "#" | tee -a $RCFILE > /dev/null 2>&1
 fi
 
-
-#setup the columnstore service script
-rm -f /etc/init.d/columnstore >/dev/null 2>&1
-rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
-
 if [ $user = "root" ]; then
+	#setup the columnstore service script
+	rm -f /etc/init.d/columnstore >/dev/null 2>&1
+	rm -f /etc/init.d/mysql-Columnstore >/dev/null 2>&1
+	rm -f /etc/default/columnstore
+
+	systemctl=`which systemctl 2>/dev/null`
 	if [ -n "$systemctl" ]; then
 
 		chmod 644 $installdir/bin/columnstore.service
@@ -235,30 +219,45 @@ fi
 
 if [ $user = "root" ]; then
 	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
-	rm -f /etc/default/columnstore
+
+	#check if MariaDB Columnstore system logging was setup
+	cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+	    cat /tmp/syslog_install.log
+	fi
 else
         sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
         sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
 
-        $SUDO cp $installdir/bin/columnstore.def /etc/default/columnstore
+        cp $installdir/bin/columnstore.def /etc/default/columnstore
 
         sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
-	$SUDO chmod 777 /tmp
-	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
-	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
-	$SUDO chmod -R 777 /dev/shm
-	$SUDO mkdir /var/lock/subsys > /dev/null 2>&1
-	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
-	$SUDO rm -f /var/lock/subsys/mysql-Columnstore
-	$SUDO chmod 666 /etc/fstab
+	chown $user:$user $installdir/etc/Columnstore.xml
+	
+	echo ""
+	echo "NOTE: For non-root install, you will need to run the following command as root user to"
+	echo "      setup the MariaDB ColumnStore System Logging"
+	echo ""
+	echo "      $installdir/bin/syslogSetup.sh --installdir=$installdir --user=$user install"
+	echo ""
 fi
 
-#check if MariaDB Columnstore system logging was setup
-cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
-if [ $? -eq 0 ]; then
-	cat /tmp/syslog_install.log
+#determine lock file directory
+
+# Lock directory for root user
+lockdir='/var/lock/subsys'
+if [ $user != "root" ];then
+    # Lock directory for non-root user
+    lockdir=$prefix/.lock
 fi
+
+$installdir/bin/setConfig -d Installation LockFileDirectory $lockdir
+
+mkdir $lockdir >/dev/null 2>&1
+
+rm -f $lockdir/mysql-Columnstore
+rm -f $lockdir/columnstore
 
 #backup copy of Alarm Config File
 /bin/cp -f $installdir/etc/AlarmConfig.xml $installdir/etc/AlarmConfig.xml.installSave > /dev/null 2>&1
@@ -276,6 +275,7 @@ if [ $user = "root" ]; then
 else
 	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
 fi
+
 #setup hadoop
 hadoop=`which hadoop 2>/dev/null`
 if [ -z "$hadoop" ]; then

@@ -147,6 +147,19 @@ Oam::Oam()
         }
         catch (...) {} // defaulted to false
     }
+    
+    //get user
+    string USER = "root";
+    char* p = getenv("USER");
+
+    if (p && *p)
+	USER = p;
+
+    userDir = USER;
+
+    if ( USER != "root")
+	userDir = "home/" + USER;
+
 }
 
 Oam::~Oam()
@@ -6453,10 +6466,7 @@ void Oam::addUMdisk(const int moduleID, std::string& volumeName, std::string& de
     int user;
     user = getuid();
 
-    if (user == 0)
-        cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
-    else
-        cmd = "sudo mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+    cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
 
     system(cmd.c_str());
 
@@ -6703,10 +6713,7 @@ void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string
             int user;
             user = getuid();
 
-            if (user == 0)
-                cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
-            else
-                cmd = "sudo mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
+            cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
 
             writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
 
@@ -8690,21 +8697,11 @@ void Oam::syslogAction( std::string action)
     }
     else
     {
-        int user;
-        user = getuid();
+         cmd = "systemctl " + action + " " + systemlog + ".service > /dev/null 2>&1";
+         system(cmd.c_str());
 
-        if (user == 0)
-            cmd = "systemctl " + action + " " + systemlog + ".service > /dev/null 2>&1";
-        else
-            cmd = "sudo systemctl " + action + " " + systemlog + ".service > /dev/null 2>&1";
-
-        system(cmd.c_str());
-
-        if (user == 0)
-            cmd = "/service " + systemlog + " " + action + " > /dev/null 2>&1";
-        else
-            cmd = "sudo service" + systemlog + " " + action + " > /dev/null 2>&1";
-    }
+         cmd = "service " + systemlog + " " + action + " > /dev/null 2>&1";
+     }
 
     // take action on syslog service
     writeLog("syslogAction cmd: " + cmd, LOG_TYPE_DEBUG );
@@ -8790,11 +8787,6 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
     group = getgid();
 
     string glustercmd = "gluster ";
-
-    if (user != 0)
-    {
-        glustercmd = "sudo " + glustercmd;
-    }
 
     errmsg = "";
 
@@ -9052,7 +9044,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
 
                 if (user != 0)
                 {
-                    command = "sudo gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-uid " + itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
+                    command = "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-uid " + itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -9061,7 +9053,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                         exceptionControl("GLUSTER_ADD", API_FAILURE);
                     }
 
-                    command = "sudo gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-gid " + itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+                    command = "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-gid " + itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -9479,10 +9471,7 @@ std::string Oam::updateFstab(std::string device, std::string dbrootID)
 
     string cmd;
 
-    if (user == 0)
-        cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
-    else
-        cmd = "sudo grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
+    cmd = "grep /data" + dbrootID + " /etc/fstab > /dev/null 2>&1";
 
     int status = system(cmd.c_str());
 
@@ -9491,18 +9480,12 @@ std::string Oam::updateFstab(std::string device, std::string dbrootID)
         //update /etc/fstab with mount
 
         //update local fstab
-        if (user == 0)
-            cmd = "echo " + entry + " >> /etc/fstab";
-        else
-            cmd = "sudo echo " + entry + " >> /etc/fstab";
+        cmd = "echo " + entry + " >> /etc/fstab";
 
         system(cmd.c_str());
     }
 
-    if (user == 0)
-        cmd = "grep /data" + dbrootID + " " + InstallDir + "/local/etc/pm1/fstab > /dev/null 2>&1";
-    else
-        cmd = "sudo grep /data" + dbrootID + " " + InstallDir + "/local/etc/pm1/fstab > /dev/null 2>&1";
+    cmd = "grep /data" + dbrootID + " " + InstallDir + "/local/etc/pm1/fstab > /dev/null 2>&1";
 
     status = system(cmd.c_str());
 
@@ -10886,9 +10869,21 @@ bool Oam::checkSystemRunning()
     // system(cmd.c_str());
     struct stat st;
 
-    if (stat("/var/lock/subsys/columnstore", &st) == 0)
+    string lockFileDir = "/var/subsys/lock";
+    
+    try
     {
-        return true;
+            Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
+            lockFileDir = sysConfig->getConfig("Installation", "LockFileDirectory");
+    }
+    catch (...) 
+    {} // defaulted to false
+
+    string lockFile = lockFileDir + "/columnstore";
+    
+    if (stat(lockFile.c_str(), &st) == 0)
+    {
+	return true;
     }
 
     if (geteuid() != 0)

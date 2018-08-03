@@ -2526,6 +2526,7 @@ private:
     std::string ProcessConfigFile;
     std::string InstallDir;
     static int  UseHdfs;
+    std::string userDir;
 
 };	// end of class
 

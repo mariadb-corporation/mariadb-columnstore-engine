@@ -475,10 +475,6 @@ static void messageThread(Configuration config)
         string port = sysConfig->getConfig("ProcMgr", "Port");
         string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
 
-        if ( !rootUser)
-            cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-
         system(cmd.c_str());
     }
     catch (...)
@@ -562,9 +558,6 @@ static void alarmMessageThread(Configuration config)
         Config* sysConfig = Config::makeConfig();
         string port = sysConfig->getConfig("ProcMgr_Alarm", "Port");
         string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-        if ( !rootUser)
-            cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
 
         system(cmd.c_str());
     }
@@ -2289,18 +2282,7 @@ void pingDeviceThread()
                                             }
 
                                             // add module
-                                            string password = oam::UnassignedName;
-
-                                            try
-                                            {
-                                                oam.getSystemConfig("rpw", password);
-                                            }
-                                            catch (...)
-                                            {
-                                                password = oam::UnassignedName;
-                                            }
-
-                                            ret = processManager.addModule(devicenetworklist, password, false);
+					    ret = processManager.addModule(devicenetworklist, "ssh", false);
 
                                             if ( ret != oam::API_SUCCESS )
                                             {

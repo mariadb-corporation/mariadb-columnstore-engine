@@ -134,13 +134,6 @@ int main(int argc, char** argv)
     if (p && *p)
         USER = p;
 
-    // change permissions on /dev/shm
-    if ( !rootUser)
-    {
-        string cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
-        system(cmd.c_str());
-    }
-
     // get and set locale language
     string systemLang = "C";
 
@@ -345,11 +338,11 @@ int main(int argc, char** argv)
             // check if standby never replied, if so, shutdown
             if ( count >= 120 )
             {
-                log.writeLog(__LINE__, "Standby PM not responding, infinidb shutting down", LOG_TYPE_CRITICAL);
-                //Set the alarm
-                aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+                log.writeLog(__LINE__, "Standby PM not responding, columnstore shutting down", LOG_TYPE_CRITICAL);
+                //Set the alarm, commented out. alarm require ProcMgr
+                //aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
                 sleep (1);
-                string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+                string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
                 system(cmd.c_str());
             }
 
@@ -444,7 +437,7 @@ int main(int argc, char** argv)
                     }
                     catch (...)
                     {
-                        log.writeLog(__LINE__, "wating for good return from getModuleStatus", LOG_TYPE_DEBUG);
+                        log.writeLog(__LINE__, "waiting for good return from getModuleStatus", LOG_TYPE_DEBUG);
                         sleep (1);
                     }
                 }
@@ -560,8 +553,8 @@ int main(int argc, char** argv)
         if ( retry == 20 )
         {
             log.writeLog(__LINE__, "Check DB mounts failed, shutting down", LOG_TYPE_CRITICAL);
-            //Set the alarm
-            aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+            //Set the alarm, commented out. alarm require ProcMgr
+            //aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
             sleep (1);
             string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
             system(cmd.c_str());
@@ -589,7 +582,7 @@ int main(int argc, char** argv)
 
         while (!mainResumeFlag)
         {
-            log.writeLog(__LINE__, "WATING FOR mainResumeFlag to be set", LOG_TYPE_DEBUG);
+            log.writeLog(__LINE__, "WAITING FOR mainResumeFlag to be set", LOG_TYPE_DEBUG);
 
             sleep(1);
         }
@@ -1137,9 +1130,6 @@ static void messageThread(MonitorConfig config)
     log.writeLog(__LINE__, "PORTS: " + msgPort + "/" + port, LOG_TYPE_DEBUG);
 
     string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-    if ( !rootUser)
-        cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
 
     system(cmd.c_str());
 
@@ -2370,10 +2360,7 @@ static void statusControlThread()
         string port = sysConfig->getConfig(portName, "Port");
         string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
 
-        if ( !rootUser)
-            cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-        system(cmd.c_str());
+	system(cmd.c_str());
     }
     catch (...)
     {

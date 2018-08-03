@@ -1067,7 +1067,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     string cmd = "chmod 755 /dev/shm >/dev/null 2>&1";
 
                     if ( !rootUser)
-                        cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
+                        cmd = "chmod 777 /dev/shm >/dev/null 2>&1";
 
                     system(cmd.c_str());
 
@@ -1770,20 +1770,10 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     if (!oam.checkLogStatus("/tmp/umount.txt", "busy"))
                         break;
 
-                    if ( rootUser)
-                    {
-                        cmd = "lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-                        system(cmd.c_str());
-                        cmd = "fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-                        system(cmd.c_str());
-                    }
-                    else
-                    {
-                        cmd = "sudo lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-                        system(cmd.c_str());
-                        cmd = "sudo fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-                        system(cmd.c_str());
-                    }
+		    cmd = "lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
+		    system(cmd.c_str());
+		    cmd = "fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
+		    system(cmd.c_str());
 
                     sleep(2);
                     //Flush the cache
@@ -1842,7 +1832,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                 if ( !rootUser)
                 {
-                    cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+                    cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
                     system(cmd.c_str());
                 }
 
@@ -1884,15 +1874,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
             if (WEXITSTATUS(status) != 0 )
             {
-                if ( rootUser)
-                {
-                    cmd = "echo " + entry + " >> /etc/fstab";
-                }
-                else
-                {
-                    cmd = "sudo echo " + entry + " >> /etc/fstab";
-                }
-
+                cmd = "echo " + entry + " >> /etc/fstab";
                 system(cmd.c_str());
 
                 log.writeLog(__LINE__, "Add line entry to /etc/fstab : " + entry);
@@ -1904,14 +1886,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
             if (WEXITSTATUS(status) != 0 )
             {
-                if ( rootUser)
-                {
-                    cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
-                }
-                else
-                {
-                    cmd = "sudo echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
-                }
+                cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
 
                 system(cmd.c_str());
 
@@ -1923,14 +1898,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             string::size_type pos1 = entry.find(" ", pos + 1);
             string directory = entry.substr(pos + 1, pos1 - pos);
 
-            if ( rootUser)
-            {
-                cmd = "mkdir " + directory;
-            }
-            else
-            {
-                cmd = "sudo mkdir " + directory;
-            }
+            cmd = "mkdir " + directory;
 
             system(cmd.c_str());
             log.writeLog(__LINE__, "create directory: " + directory);
@@ -3142,7 +3110,7 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
     //if non-root, change file permissions so we can update it
     if ( !rootUser)
     {
-        string cmd = "sudo chmod 666 " + fileName + " > /dev/null";
+        string cmd = "chmod 666 " + fileName + " > /dev/null";
         system(cmd.c_str());
     }
 
@@ -5227,15 +5195,9 @@ int ProcessMonitor::changeMyCnf(std::string type)
     // set owner and permission
     string cmd = "chmod 664 " + mycnfFile + " >/dev/null 2>&1";
 
-    if ( !rootUser)
-        cmd = "sudo chmod 644 " + mycnfFile + " >/dev/null 2>&1";
-
     system(cmd.c_str());
 
     cmd = "chown mysql:mysql " + mycnfFile + " >/dev/null 2>&1";
-
-    if ( !rootUser)
-        cmd = "sudo chown mysql:mysql " + mycnfFile + " >/dev/null 2>&1";
 
     system(cmd.c_str());
 
@@ -5990,10 +5952,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
         {
             string cmd;
 
-            if ( rootUser)
-                cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
-            else
-                cmd = "sudo mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
+            cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
 
             system(cmd.c_str());
             log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
@@ -6402,7 +6361,7 @@ int ProcessMonitor::checkDataMount()
 
             if ( !rootUser)
             {
-                cmd = "sudo chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null";
+                cmd = "chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null";
                 system(cmd.c_str());
             }
 
@@ -6576,16 +6535,8 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
         moduleIPAddr = sysConfig->getConfig("SystemModuleConfig", dataDupIPaddr);
     }
 
-    if ( rootUser)
-    {
-        command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
+    command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
                   dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
-    }
-    else
-    {
-        command = "sudo mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
-                  dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
-    }
 
     int ret = system(command.c_str());
 
@@ -6625,14 +6576,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
     log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
 
-    if ( rootUser)
-    {
-        command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
-    }
-    else
-    {
-        command = "sudo umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
-    }
+    command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
 
     int ret = system(command.c_str());
 

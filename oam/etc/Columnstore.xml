@@ -445,7 +445,6 @@
 		<UMStorageType>internal</UMStorageType>
 		<EEPackageType>rpm</EEPackageType>
 		<SystemLogConfigFile>unassigned</SystemLogConfigFile>
-		<rpw>mariadb1</rpw>
 		<Cloud>unassigned</Cloud>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
 		<UMInstanceType>unassigned</UMInstanceType>
@@ -469,6 +468,7 @@
 		<MySQLPort>3306</MySQLPort>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 		<DistributedInstall>y</DistributedInstall>
+		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
 	</Installation>
 	<ExtentMap>
 		<!--
