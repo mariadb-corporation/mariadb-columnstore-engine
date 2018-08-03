@@ -289,6 +289,13 @@ string ConvertFuncName(Item_sum* item)
             return "PERCENT_RANK";
             break;
 
+        case Item_sum::PERCENTILE_CONT_FUNC:
+            return "PERCENTILE_CONT";
+            break;
+
+        case Item_sum::PERCENTILE_DISC_FUNC:
+            return "PERCENTILE_DISC";
+
         case Item_sum::CUME_DIST_FUNC:
             return "CUME_DIST";
             break;
