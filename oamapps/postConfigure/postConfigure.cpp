@@ -3094,7 +3094,9 @@ int main(int argc, char *argv[])
 	//check if dbrm data resides in older directory path and inform user if it does
 	dbrmDirCheck();
 
-	if ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM && pmNumber == 1) {
+	if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
+       ( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
+	{
 		//run the mysql / mysqld setup scripts
 		cout << endl << "===== Running the MariaDB ColumnStore MariaDB Server setup scripts =====" << endl << endl;
 
@@ -3102,7 +3104,57 @@ int main(int argc, char *argv[])
 
 		// call the mysql setup scripts
 		mysqlSetup();
-		sleep(5);
+		sleep(3);
+	}
+
+    if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
+            pmNumber > 1 ) 
+	{
+            if ( password.empty() )
+            {
+                cout << endl;
+                cout << "Next step is to enter the password to access the other Servers." << endl;
+                cout << "This is either your password or you can default to using a ssh key" << endl;
+                cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+
+                if ( noPrompting ) {
+                    cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
+                    password = "ssh";
+                }
+				else
+				{
+		            while(true)
+        		    {
+                		char  *pass1, *pass2;
+
+                		pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
+                		if ( strcmp(pass1, "") == 0 ) {
+                    		password = "ssh";
+                    		break;
+                		}
+
+                		string p1 = pass1;
+                		if ( p1 == "exit")
+                    		exit(0);
+
+                		pass2=getpass("Confirm password > ");
+                		string p2 = pass2;
+                		if ( p1 == p2 ) {
+                    		password = p2;
+                    		break;
+                		}	
+                		else
+                    		cout << "Password mismatch, please re-enter" << endl;
+            		}	
+
+            		//add single quote for special characters
+            		if ( password != "ssh" )
+            		{
+                		password = "'" + password + "'";
+            		}
+
+				}
+			}		
 	}
 
 	int thread_id = 0;
@@ -3177,66 +3229,7 @@ int main(int argc, char *argv[])
 			if( !pkgCheck(columnstorePackage) )
 			exit(1);
 
-			if ( password.empty() )
-			{
-				cout << endl;
-				cout << "Next step is to enter the password to access the other Servers." << endl;
-				cout << "This is either your password or you can default to using a ssh key" << endl;
-				cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
-			}
-
-			while(true)
-			{
-				char  *pass1, *pass2;
-
-				if ( noPrompting ) {
-					cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
-					if ( password.empty() )
-						password = "ssh";
-					break;
-				}
-
-				//check for command line option password
-				if ( !password.empty() )
-					break;
-
-				pass1=getpass("Enter password, hit 'enter' to default to using a ssh key, or 'exit' > ");
-				if ( strcmp(pass1, "") == 0 ) {
-					password = "ssh";
-					break;
-				}
-
-				if ( pass1 == "exit")
-					exit(0);
-
-				string p1 = pass1;
-				pass2=getpass("Confirm password > ");
-				string p2 = pass2;
-				if ( p1 == p2 ) {
-					password = p2;
-					break;
-				}
-				else
-					cout << "Password mismatch, please re-enter" << endl;
-			}
-
-			//add single quote for special characters
-			if ( password != "ssh" )
-			{
-				password = "'" + password + "'";
-			}
-
 			checkSystemMySQLPort(mysqlPort, sysConfig, USER, password, childmodulelist, IserverTypeInstall, pmwithum);
-
-			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
-			{
-				cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
-
-				// call the mysql setup scripts
-				mysqlSetup();
-				sleep(5);
-			}
 
 			string AmazonInstall = "0";
 			if ( amazonInstall )
@@ -3415,19 +3408,7 @@ int main(int argc, char *argv[])
 				cout << "  DONE" << endl;
 			}
 		}
-	    else
-	    {
-			if ( ( IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM ) ||
-				( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
-			{
-				cout << endl << "===== Running the MariaDB ColumnStore MariaDB ColumnStore setup scripts =====" << endl << endl;
-
-				// call the mysql setup scripts
-				mysqlSetup();
-				sleep(5);
-			}
-	    }
-
+		
 		//configure data redundancy
 		if (DataRedundancy)
 		{
