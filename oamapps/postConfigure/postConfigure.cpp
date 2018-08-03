@@ -1247,26 +1247,16 @@ int main(int argc, char *argv[])
 	//amazon install setup check
 	bool amazonInstall = false;
 	string cloud = oam::UnassignedName;
-	system("aws --version > /tmp/amazon.log 2>&1");
-
-	ifstream in("/tmp/amazon.log");
-
-	in.seekg(0, std::ios::end);
-	int size = in.tellg();
-	if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found"))
+	
+	if (!multi_server_quick_install)
 	{
-		// not running on amazon with ec2-api-tools
-		if (amazon_quick_install)
-		{
-			cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
-			exit(1);
-		}
+		system("aws --version > /tmp/amazon.log 2>&1");
 
-		amazonInstall = false;
-	}
-	else
-	{
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed"))
+		ifstream in("/tmp/amazon.log");
+
+		in.seekg(0, std::ios::end);
+		int size = in.tellg();
+		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found"))
 		{
 			// not running on amazon with ec2-api-tools
 			if (amazon_quick_install)
@@ -1278,9 +1268,23 @@ int main(int argc, char *argv[])
 			amazonInstall = false;
 		}
 		else
-			amazonInstall = true;
-	}
+		{
+			if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed"))
+			{
+				// not running on amazon with ec2-api-tools
+				if (amazon_quick_install)
+				{
+					cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
+					exit(1);
+				}
 
+				amazonInstall = false;
+			}
+			else
+				amazonInstall = true;
+		}
+	}
+	
    	try {
     	cloud = sysConfig->getConfig(InstallSection, "Cloud");
   	}
@@ -3641,9 +3645,6 @@ int main(int argc, char *argv[])
 		}
 
 		//set mysql replication, if wasn't setup before on system
-//		if ( ( mysqlRep && pmwithum ) || 
-//			( mysqlRep && (umNumber > 1) ) ||
-//			( mysqlRep && (pmNumber > 1) && (IserverTypeInstall == oam::INSTALL_COMBINE_DM_UM_PM) ) ) 
 		if ( mysqlRep )
 		{
 			cout << endl << "Run MariaDB ColumnStore Replication Setup.. ";
@@ -3665,7 +3666,10 @@ int main(int argc, char *argv[])
 
 		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
+		if ( !rootUser )
+			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
+
+		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
 
 		cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -3682,7 +3686,10 @@ int main(int argc, char *argv[])
 
 		cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
+		if ( !rootUser )
+			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
+
+		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
 
 		cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
 		cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
