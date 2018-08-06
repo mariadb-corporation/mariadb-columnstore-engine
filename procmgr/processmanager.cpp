@@ -6244,7 +6244,7 @@ int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requ
 		string IPAddr = sysConfig->getConfig(msgPort, "IPAddr");
 	
 		if ( IPAddr == oam::UnassignedIpAddr ) {
-			log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "sendMsgProcMon ping failure " + module + " " + IPAddr, LOG_TYPE_ERROR);
 			return oam::API_SUCCESS;
 		}
 	
@@ -6253,7 +6253,7 @@ int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requ
 		string cmd = cmdLine + IPAddr + cmdOption;
 		if ( system(cmd.c_str()) != 0) {
 			//ping failure
-			log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "sendMsgProcMon ping failure " + module + " " + IPAddr, LOG_TYPE_ERROR);
 			return oam::API_SUCCESS;
 		}
 	}
