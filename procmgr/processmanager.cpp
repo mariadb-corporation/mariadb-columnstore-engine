@@ -6488,7 +6488,7 @@ void ProcessManager::setQuerySystemState(bool set)
 	log.writeLog(__LINE__, "setQuerySystemState = " + oam.itoa(set), LOG_TYPE_DEBUG);
 
 	try {
-		dbrm.setSystemQueryReady(true);
+		dbrm.setSystemQueryReady(set);
 		log.writeLog(__LINE__, "setQuerySystemState successful", LOG_TYPE_DEBUG);
 	}
 	catch(...)
