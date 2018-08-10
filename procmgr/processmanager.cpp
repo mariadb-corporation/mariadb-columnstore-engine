@@ -829,8 +829,10 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							if (opState == oam::MAN_OFFLINE || opState == oam::MAN_DISABLED
 									|| opState == oam::AUTO_DISABLED || opState == oam::AUTO_OFFLINE) {
 
-								oam.dbrmctl("halt");
-								log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
+								processManager.setSystemState(oam::BUSY_INIT);
+
+								//set query system state not ready
+								processManager.setQuerySystemState(false);
 
 								status = processManager.disableModule(moduleName, true);
 								log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
@@ -839,14 +841,12 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 								//check for SIMPLEX Processes on mate might need to be started
 								processManager.checkSimplexModule(moduleName);
+								
+								processManager.setSystemState(oam::ACTIVE);
 
-								//call dbrm control
-//								oam.dbrmctl("reload");
-//								log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-							
-								// resume the dbrm
-								oam.dbrmctl("resume");
-								log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+								//set query system state ready
+								processManager.setQuerySystemState(true);
+
 							}
 							else
 							{
@@ -910,7 +910,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 	
 						DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-						//stopModules being removed with the REMOVE option, which will stop process
+						// do stopmodule then enable
 						for( ; listPT != devicenetworklist.end() ; listPT++)
 						{
 							string moduleName = (*listPT).DeviceName;
@@ -933,6 +933,9 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							}
 		
 							if (opState == oam::MAN_DISABLED) {
+								processManager.stopModule(moduleName, graceful, manualFlag);
+								log.writeLog(__LINE__, "stop Module Completed on " + moduleName, LOG_TYPE_INFO);
+								
 								status = processManager.enableModule(moduleName, oam::MAN_OFFLINE);
 								log.writeLog(__LINE__, "Enable Module Completed on " + moduleName, LOG_TYPE_INFO);
 							}
@@ -2758,9 +2761,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 				log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted on " + moduleName + "/" + processName);
 
 				//set query system states not ready
-				BRM::DBRM dbrm;
-				dbrm.setSystemQueryReady(false);
-
 				processManager.setQuerySystemState(false);
 
 				processManager.setSystemState(oam::BUSY_INIT);
@@ -2841,7 +2841,8 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 										break;
 									sleep(1);
 								}
-								dbrm.setSystemQueryReady(true);
+								processManager.setQuerySystemState(true);
+
 							}
 
 							// if a DDLProc was restarted, reinit DMLProc
@@ -2894,8 +2895,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 				}
 
 				//enable query stats
-				dbrm.setSystemQueryReady(true);
-
 				processManager.setQuerySystemState(true);
 
 				processManager.setSystemState(oam::ACTIVE);
@@ -6489,7 +6488,7 @@ void ProcessManager::setQuerySystemState(bool set)
 	log.writeLog(__LINE__, "setQuerySystemState = " + oam.itoa(set), LOG_TYPE_DEBUG);
 
 	try {
-		dbrm.setSystemQueryReady(set);
+		dbrm.setSystemQueryReady(true);
 		log.writeLog(__LINE__, "setQuerySystemState successful", LOG_TYPE_DEBUG);
 	}
 	catch(...)
