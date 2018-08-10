@@ -1249,6 +1249,9 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender");
 					}
 
+					//set query system state ready
+					processManager.setQuerySystemState(true);
+
 					startsystemthreadStop = false;
 
 					break;
@@ -2848,6 +2851,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							// if a DDLProc was restarted, reinit DMLProc
 							if( processName == "DDLProc") {
 								processManager.reinitProcessType("DMLProc");
+								processManager.setQuerySystemState(true);
 							}
 
 							//only run on auto process restart
@@ -2894,7 +2898,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 					}
 				}
 
-				//enable query stats
+				//set query system states ready
 				processManager.setQuerySystemState(true);
 
 				processManager.setSystemState(oam::ACTIVE);
@@ -3773,6 +3777,7 @@ void ProcessManager::setSystemState(uint16_t state)
 	Oam oam;
 	ALARMManager aManager;
 	Configuration config;
+	ProcessManager processManager(config, log);
 
 	log.writeLog(__LINE__, "Set System State = " + oamState[state], LOG_TYPE_DEBUG);
 
@@ -3793,6 +3798,9 @@ void ProcessManager::setSystemState(uint16_t state)
 	// Process Alarms
 	string system = "System";
 	if( state == oam::ACTIVE ) {
+		//set query system states ready
+		processManager.setQuerySystemState(true);
+		
 		//clear alarms if set
 		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
 		aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
@@ -6992,7 +7000,7 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	}
 
 	//set query system state not ready
-	processManager.setQuerySystemState(true);
+	processManager.setQuerySystemState(false);
 
 	// Bug 4554: Wait until DMLProc is finished with rollback
 	if (status == oam::API_SUCCESS)
@@ -7061,6 +7069,9 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	        processManager.setSystemState(rtn);
 	}
     
+	//set query system state ready
+	processManager.setQuerySystemState(true);
+
 	// exit thread
 	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
 	startsystemthreadStatus = status;
