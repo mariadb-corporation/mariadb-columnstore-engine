@@ -1299,4 +1299,36 @@ mysql_declare_plugin(columnstore)
     0                                             /* config flags */
 }
 mysql_declare_plugin_end;
+maria_declare_plugin(columnstore)
+{
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &columnstore_storage_engine,
+  "Columnstore",
+  "MariaDB",
+  "Columnstore storage engine",
+  PLUGIN_LICENSE_GPL,
+  columnstore_init_func,
+  columnstore_done_func,
+  0x0100, /* 1.0 */
+  NULL,                       /* status variables                */
+  calpont_system_variables,   /* system variables                */
+  "1.0",                      /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+},
+{
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &infinidb_storage_engine,
+  "InfiniDB",
+  "MariaDB",
+  "Columnstore storage engine (deprecated: use columnstore)",
+  PLUGIN_LICENSE_GPL,
+  infinidb_init_func,
+  infinidb_done_func,
+  0x0100, /* 1.0 */
+  NULL,                       /* status variables                */
+  calpont_system_variables,   /* system variables                */
+  "1.0",                      /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+}
+maria_declare_plugin_end;
 

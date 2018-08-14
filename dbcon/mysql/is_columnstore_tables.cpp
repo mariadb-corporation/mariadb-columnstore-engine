@@ -47,13 +47,13 @@ static void get_cond_item(Item_func* item, String** table, String** db)
     char tmp_char[MAX_FIELD_WIDTH];
     Item_field* item_field = (Item_field*) item->arguments()[0]->real_item();
 
-    if (strcasecmp(item_field->field_name, "table_name") == 0)
+    if (strcasecmp(item_field->field_name.str, "table_name") == 0)
     {
         String str_buf(tmp_char, sizeof(tmp_char), system_charset_info);
         *table = item->arguments()[1]->val_str(&str_buf);
         return;
     }
-    else if (strcasecmp(item_field->field_name, "table_schema") == 0)
+    else if (strcasecmp(item_field->field_name.str, "table_schema") == 0)
     {
         String str_buf(tmp_char, sizeof(tmp_char), system_charset_info);
         *db = item->arguments()[1]->val_str(&str_buf);

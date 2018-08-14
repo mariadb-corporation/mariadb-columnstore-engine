@@ -84,7 +84,7 @@ void View::transform()
         for (; table_ptr; table_ptr = table_ptr->next_local)
         {
             // mysql put vtable here for from sub. we ignore it
-            if (string(table_ptr->table_name).find("$vtable") != string::npos)
+            if (string(table_ptr->table_name.str).find("$vtable") != string::npos)
                 continue;
 
             string viewName = getViewName(table_ptr);
@@ -93,8 +93,8 @@ void View::transform()
             {
                 SELECT_LEX* select_cursor = table_ptr->derived->first_select();
                 FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
-                string alias(table_ptr->alias);
-                gwi.viewName = make_aliasview("", alias, table_ptr->belong_to_view->alias, "");
+                string alias(table_ptr->alias.str);
+                gwi.viewName = make_aliasview("", alias, table_ptr->belong_to_view->alias.str, "");
                 algorithm::to_lower(alias);
                 fromSub->alias(alias);
                 gwi.derivedTbList.push_back(SCSEP(fromSub->transform()));
@@ -107,8 +107,8 @@ void View::transform()
             else if (table_ptr->view)
             {
                 // for nested view, the view name is vout.vin... format
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db, table_ptr->table_name, table_ptr->alias, viewName);
-                gwi.viewName = make_aliastable(table_ptr->db, table_ptr->table_name, viewName);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName);
+                gwi.viewName = make_aliastable(table_ptr->db.str, table_ptr->table_name.str, viewName);
                 View* view = new View(table_ptr->view->select_lex, &gwi);
                 view->viewName(gwi.viewName);
                 gwi.viewList.push_back(view);
@@ -121,9 +121,9 @@ void View::transform()
 
                 // trigger system catalog cache
                 if (infiniDB)
-                    csc->columnRIDs(make_table(table_ptr->db, table_ptr->table_name), true);
+                    csc->columnRIDs(make_table(table_ptr->db.str, table_ptr->table_name.str), true);
 
-                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db, table_ptr->table_name, table_ptr->alias, viewName, infiniDB);
+                CalpontSystemCatalog::TableAliasName tn = make_aliasview(table_ptr->db.str, table_ptr->table_name.str, table_ptr->alias.str, viewName, infiniDB);
                 gwi.tbList.push_back(tn);
                 gwi.tableMap[tn] = make_pair(0, table_ptr);
                 fParentGwip->tableMap[tn] = make_pair(0, table_ptr);

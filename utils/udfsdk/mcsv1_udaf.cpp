@@ -34,7 +34,6 @@ using namespace mcsv1sdk;
 UDAF_MAP UDAFMap::fm;
 #include "allnull.h"
 #include "ssq.h"
-#include "median.h"
 #include "avg_mode.h"
 #include "regr_avgx.h"
 #include "avgx.h"
@@ -52,7 +51,6 @@ UDAF_MAP& UDAFMap::getMap()
     // the function names passed to the interface is always in lower case.
     fm["allnull"] = new allnull();
     fm["ssq"] = new ssq();
-    fm["median"] = new median();
     fm["avg_mode"] = new avg_mode();
     fm["regr_avgx"] = new regr_avgx();
     fm["avgx"] = new avgx();

@@ -63,6 +63,7 @@ template <class T> bool isnan(T);
 #endif
 #endif
 
+#include "sql_plugin.h"
 #include "sql_table.h"
 #include "sql_select.h"
 #include "mysqld_error.h"

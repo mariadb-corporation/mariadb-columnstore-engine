@@ -203,7 +203,7 @@ string ConvertFuncName(Item_sum* item)
     switch (item->sum_func())
     {
         case Item_sum::COUNT_FUNC:
-            if (!item->arguments()[0]->name)
+            if (!item->arguments()[0]->name.str)
                 return "COUNT(*)";
 
             return "COUNT";
@@ -288,6 +288,13 @@ string ConvertFuncName(Item_sum* item)
         case Item_sum::PERCENT_RANK_FUNC:
             return "PERCENT_RANK";
             break;
+
+        case Item_sum::PERCENTILE_CONT_FUNC:
+            return "PERCENTILE_CONT";
+            break;
+
+        case Item_sum::PERCENTILE_DISC_FUNC:
+            return "PERCENTILE_DISC";
 
         case Item_sum::CUME_DIST_FUNC:
             return "CUME_DIST";
