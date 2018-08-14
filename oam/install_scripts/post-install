@@ -164,7 +164,7 @@ mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
 
 #setup core file directory and link
 mkdir /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
-chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
+chmod 777 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
@@ -247,7 +247,6 @@ else
 	$SUDO chmod 777 /tmp
 	$installdir/bin/syslogSetup.sh --installdir=$installdir install > /tmp/syslog_install.log 2>&1
 	$SUDO chown $user:$user $installdir/etc/Columnstore.xml
-	$SUDO chmod -R 777 /dev/shm
 	$SUDO mkdir /var/lock/subsys > /dev/null 2>&1
 	$SUDO chmod 777 /var/lock/subsys > /dev/null 2>&1
 	$SUDO rm -f /var/lock/subsys/mysql-Columnstore

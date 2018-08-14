@@ -260,8 +260,6 @@ bool AggregateColumn::operator==(const AggregateColumn& t) const
 	}
 	else if (fFunctionParms.get() != NULL || t.fFunctionParms.get() != NULL)
 		return false;
-	//if (fAlias != t.fAlias)
-	//	return false;
 	if (fTableAlias != t.fTableAlias)
 		return false;
 	if (fData != t.fData)

@@ -131,13 +131,6 @@ int main(int argc, char **argv)
 	if (p && *p)
    		USER = p;
 
-	// change permissions on /dev/shm
-	if ( !rootUser)
-	{
-		string cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
-		system(cmd.c_str());
-	}
-
   	// get and set locale language    
 	string systemLang = "C";
 
@@ -315,8 +308,9 @@ int main(int argc, char **argv)
 			if ( count >= 120 ) {
 				log.writeLog(__LINE__, "Standby PM not responding, infinidb shutting down", LOG_TYPE_CRITICAL);
 				//Set the alarm
-				aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-				sleep (1);
+		//		aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+		//		sleep (1);
+				
 				string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
 				system(cmd.c_str());
 			}
@@ -500,8 +494,8 @@ int main(int argc, char **argv)
 		{
 			log.writeLog(__LINE__, "Check DB mounts failed, shutting down", LOG_TYPE_CRITICAL);
 			//Set the alarm
-			aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-			sleep (1);
+		//	aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+		//	sleep (1);
 			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
 			system(cmd.c_str());
 		}
@@ -1395,7 +1389,7 @@ static void chldHandleThread(MonitorConfig config)
 					{}
 
 					// check if process failover is needed due to process outage
-					aMonitor.checkProcessFailover((*listPtr).ProcessName);
+					aMonitor.checkModuleFailover((*listPtr).ProcessName);
 
 					//check the db health
 					if (DBFunctionalMonitorFlag == "y" ) {
@@ -1470,7 +1464,7 @@ static void chldHandleThread(MonitorConfig config)
 							(*listPtr).processID = 0;
 
 							// check if process failover is needed due to process outage
-							aMonitor.checkProcessFailover((*listPtr).ProcessName);
+							aMonitor.checkModuleFailover((*listPtr).ProcessName);
 							break;
 						}
 						else

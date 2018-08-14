@@ -49,6 +49,15 @@ using namespace logging;
 
 #include "clientrotator.h"
 
+//#include "idb_mysql.h"
+
+/** Debug macro */
+#ifdef INFINIDB_DEBUG
+#define IDEBUG(x) {x;}
+#else
+#define IDEBUG(x) {}
+#endif
+
 #define LOG_TO_CERR
 
 namespace execplan
@@ -60,13 +69,36 @@ const uint64_t LOCAL_EXEMGR_PORT = 8601;
 string ClientRotator::getModule()
 {
 	string installDir = startup::StartUp::installDir();
+	
+	//Log to debug.log
+	LoggingID logid( 24, 0, 0);
+
 	string fileName = installDir + "/local/module";
+
 	string module;
 	ifstream moduleFile (fileName.c_str());
 
 	if (moduleFile.is_open())
+	{
 		getline (moduleFile, module);
+	}
+	else
+	{
+        {
+            logging::Message::Args args1;
+            logging::Message msg(1);
+            std::ostringstream oss;
+            oss << "ClientRotator::getModule open status2 =" << strerror(errno);
+            args1.add(oss.str());
+            args1.add(fileName);
+            msg.format( args1 );
+            Logger logger(logid.fSubsysID);
+            logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+        }
+	}
+
 	moduleFile.close();
+
 	return module;
 }
 

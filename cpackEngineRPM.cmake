@@ -181,7 +181,6 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/resourceReport.sh"
 "/usr/local/mariadb/columnstore/bin/hadoopReport.sh"
 "/usr/local/mariadb/columnstore/bin/alarmReport.sh"
-"/usr/local/mariadb/columnstore/bin/amazonInstaller"
 "/usr/local/mariadb/columnstore/bin/remote_command_verify.sh"
 "/usr/local/mariadb/columnstore/bin/disable-rep-columnstore.sh"
 "/usr/local/mariadb/columnstore/bin/columnstore.service"
@@ -217,6 +216,9 @@ SET(CPACK_RPM_platform_USER_FILELIST
 "/usr/local/mariadb/columnstore/bin/os_detect.sh"
 "/usr/local/mariadb/columnstore/bin/columnstoreClusterTester.sh"
 "/usr/local/mariadb/columnstore/bin/mariadb-command-line.sh"
+"/usr/local/mariadb/columnstore/bin/quick_installer_single_server.sh"
+"/usr/local/mariadb/columnstore/bin/quick_installer_multi_server.sh"
+"/usr/local/mariadb/columnstore/bin/quick_installer_amazon.sh"
 ${ignored})
 
 SET(CPACK_RPM_libs_USER_FILELIST 

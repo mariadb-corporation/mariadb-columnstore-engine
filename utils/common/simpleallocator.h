@@ -119,7 +119,6 @@ class SimpleAllocator
 	void construct(pointer ptr, const T& val) { new ((void *)ptr) T(val); }
 	void destroy(pointer ptr) { ptr->T::~T(); }
 
-	SimplePool* getPool() { return fPool; }
 	void setPool(SimplePool* pool) { fPool = pool; }
 
 	boost::shared_ptr<SimplePool> fPool;

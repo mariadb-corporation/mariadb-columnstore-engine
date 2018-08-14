@@ -70,6 +70,8 @@ public:
 	long getFieldLength(int field) { return fieldLengths[field]; }
 	MYSQL_FIELD* getField(int field) { return &fFields[field]; }
 	const std::string& getError() { return fErrStr; }
+    unsigned int getErrno() { return mysql_errno(fCon); }
+    const char* getErrorMsg() { return mysql_error(fCon); }
 
 private:
 	MYSQL*        fCon;

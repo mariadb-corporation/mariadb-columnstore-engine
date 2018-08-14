@@ -773,11 +773,16 @@ string CrossEngineStep::makeQuery()
 void CrossEngineStep::handleMySqlError(const char* errStr, unsigned int errCode)
 {
 	ostringstream oss;
-	oss << errStr << "(" << errCode << ")";
-	if (errCode == (unsigned int) -1)
-		oss << "(null pointer)";
-	else
-		oss << "(" << errCode << ")";
+    if (mysql->getErrno())
+    {
+        oss << errStr << " (" << mysql->getErrno() << ")";
+        oss << " (" << mysql->getErrorMsg() << ")";
+    }
+    else
+    {
+	    oss << errStr << " (" << errCode << ")";
+		oss << " (unknown)";
+    }
 
 	throw IDBExcept(oss.str(), ERR_CROSS_ENGINE_CONNECT);
 

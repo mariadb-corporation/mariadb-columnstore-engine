@@ -988,13 +988,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					int requestStatus = oam::API_SUCCESS;
 					log.writeLog(__LINE__,  "MSG RECEIVED: Start All process request...");
 
-					// change permissions on /dev/shm
-					string cmd = "chmod 755 /dev/shm >/dev/null 2>&1";
-					if ( !rootUser)
-						cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
-				
-					system(cmd.c_str());
-
 					//start the mysqld daemon 
 					try {
 						oam.actionMysqlCalpont(MYSQL_START);
@@ -1174,7 +1167,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 									// error in launching a process
 									if ( requestStatus == oam::API_FAILURE &&
 										(*listPtr).RunType == SIMPLEX)
-										checkProcessFailover((*listPtr).ProcessName);
+										checkModuleFailover((*listPtr).ProcessName);
 									else
 										break;
 								}
@@ -4625,19 +4618,19 @@ std::string ProcessMonitor::sendMsgProcMon1( std::string module, ByteStream msg,
 }
 
 /******************************************************************************************
-* @brief	checkProcessFailover
+* @brief	checkModuleFailover
 *
-* purpose:	check if process failover is needed due to a process outage
+* purpose:	check if module failover is needed due to a process outage
 *
 ******************************************************************************************/
-void ProcessMonitor::checkProcessFailover( std::string processName)
+void ProcessMonitor::checkModuleFailover( std::string processName)
 {
 	Oam oam;
 
 	//force failover on certain processes
 	if ( processName == "DDLProc" ||
 		processName == "DMLProc" ) {
-			log.writeLog(__LINE__, "checkProcessFailover: process failover, process outage of " + processName, LOG_TYPE_CRITICAL);
+			log.writeLog(__LINE__, "checkModuleFailover: process failover, process outage of " + processName, LOG_TYPE_CRITICAL);
 
 		try
 		{
@@ -4656,26 +4649,37 @@ void ProcessMonitor::checkProcessFailover( std::string processName)
 						systemprocessstatus.processstatus[i].ProcessOpState == oam::AUTO_OFFLINE ||
 						systemprocessstatus.processstatus[i].ProcessOpState == oam::FAILED ) {
 						// found a AVAILABLE mate, start it
-						log.writeLog(__LINE__, "start process on module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Change UM Master to module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Disable local UM module " + config.moduleName(), LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Stop local UM module " + config.moduleName(), LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Disable Local will Enable UM module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
 
-						try {
-							oam.setSystemConfig("PrimaryUMModuleName", systemprocessstatus.processstatus[i].Module);
-
-							//distribute config file
-							oam.distributeConfigFile("system");
-							sleep(1);
-						}
-						catch(...) {}
+						oam::DeviceNetworkConfig devicenetworkconfig;
+						oam::DeviceNetworkList devicenetworklist;
+	
+						devicenetworkconfig.DeviceName = config.moduleName();
+						devicenetworklist.push_back(devicenetworkconfig);
 
 						try
 						{
-							oam.startProcess(systemprocessstatus.processstatus[i].Module, processName, FORCEFUL, ACK_YES);
-							log.writeLog(__LINE__, "success start process on module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
+							oam.stopModule(devicenetworklist, oam::FORCEFUL, oam::ACK_YES);
+							log.writeLog(__LINE__, "success stopModule on module " + config.moduleName(), LOG_TYPE_DEBUG);
+
+							try
+							{
+								oam.disableModule(devicenetworklist);
+								log.writeLog(__LINE__, "success disableModule on module " + config.moduleName(), LOG_TYPE_DEBUG);
+							}
+							catch (exception& e)
+							{
+								log.writeLog(__LINE__, "failed disableModule on module " + config.moduleName(), LOG_TYPE_ERROR);
+							}
 						}
 						catch (exception& e)
 						{
-							log.writeLog(__LINE__, "failed start process on module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_ERROR);
+							log.writeLog(__LINE__, "failed stopModule on module " + config.moduleName(), LOG_TYPE_ERROR);
 						}
+
 						break;
 					}
 				}
@@ -6096,10 +6100,13 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 		command = "sudo mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
 				dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
 	}
+
 	int ret = system(command.c_str());
 
 	if ( WEXITSTATUS(ret) != 0 )
 	{
+		log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+
 		ifstream in("/tmp/glusterAssign.txt");
 		in.seekg(0, std::ios::end);
 		int size = in.tellg();
@@ -6140,9 +6147,13 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 	{
 		command = "sudo umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
 	}
+
 	int ret = system(command.c_str());
+
 	if ( WEXITSTATUS(ret) != 0 )
 	{
+		log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+
 		ifstream in("/tmp/glusterUnassign.txt");
 		in.seekg(0, std::ios::end);
 		int size = in.tellg();
