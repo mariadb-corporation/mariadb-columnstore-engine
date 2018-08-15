@@ -4109,7 +4109,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 #ifdef _MSC_VER
                     aCmdLine = aCmdLine + "/bin/cpimport.exe -N -P " + to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
 #else
-                    aCmdLine = aCmdLine + "/bin/cpimport -m 1 -N -P " + to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
+                    aCmdLine = aCmdLine + "/bin/cpimport -m 1 -N -P " + boost::to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
 #endif
                 }
             }
