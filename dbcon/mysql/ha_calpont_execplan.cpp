@@ -10110,6 +10110,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
         {
             csep->limitNum(((Item_int*)gi.groupByTables->select_lex->select_limit)->val_int());
         }
+        else
+        {
+            if (csep->hasOrderBy())
+                csep->limitNum((uint64_t) - 2);
+        }
 
         if (gi.groupByTables->select_lex->offset_limit)
         {
