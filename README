@@ -1,9 +1,9 @@
-This is MariaDB ColumnStore 1.0.14
-MariaDB ColumnStore 1.0.14 is the development version of MariaDB ColumnStore. 
-It is built by porting InfiniDB 4.6.7 on MariaDB 10.1.26 and adding entirely 
+This is MariaDB ColumnStore 1.0.15
+MariaDB ColumnStore 1.0.15 is the development version of MariaDB ColumnStore. 
+It is built by porting InfiniDB 4.6.7 on MariaDB 10.1.35 and adding entirely 
 new features not found anywhere else.
 
-MariaDB ColumnStore 1.0.14 is an GA release. This is the first MariaDB 
+MariaDB ColumnStore 1.0.15 is an GA release. This is the first MariaDB 
 ColumnStore release, not all features planned for the MariaDB ColumnStore 1.0 
 series are included in this release. 
 
