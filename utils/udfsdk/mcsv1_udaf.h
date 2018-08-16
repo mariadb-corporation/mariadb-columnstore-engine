@@ -108,7 +108,7 @@ public:
 
     static EXPORT UDAF_MAP& getMap();
 private:
-    static UDAF_MAP fm;
+    static UDAF_MAP& fm();
 };
 
 /**
