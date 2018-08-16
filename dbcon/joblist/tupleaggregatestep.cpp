@@ -3876,6 +3876,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
         // column index for PM aggregate rowgroup
         uint64_t colAggPm = 0;
+        uint64_t multiParm = 0;
 
         // for groupby column
         for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
@@ -4027,7 +4028,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                 continue;
 
             functionVecPm.push_back(funct);
-            aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc), colAggPm));
+            aggFuncMap.insert(make_pair(boost::make_tuple(aggKey, aggOp, pUDAFFunc), colAggPm-multiParm));
 
             switch (aggOp)
             {
@@ -4247,7 +4248,8 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                     typeAggPm.push_back(typeProj[colProj]);
                     widthAggPm.push_back(width[colProj]);
                     multiParmIndexes.push_back(colAggPm);
-                    colAggPm++;
+                    ++colAggPm;
+                    ++multiParm;
                     // If the param is const
                     if (udafc)
                     {
@@ -4414,7 +4416,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                 if (it != aggFuncMap.end())
                 {
-                    colUm = it->second - multiParms;
+                    colUm = it->second;
                 }
             }
 
@@ -4517,14 +4519,13 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
 
                 if (it != aggFuncMap.end())
                 {
-                    colUm = it->second - multiParms;
+                    colUm = it->second;
                     oidsAggDist.push_back(oidsAggUm[colUm]);
                     keysAggDist.push_back(keysAggUm[colUm]);
                     scaleAggDist.push_back(scaleAggUm[colUm]);
                     precisionAggDist.push_back(precisionAggUm[colUm]);
                     typeAggDist.push_back(typeAggUm[colUm]);
                     widthAggDist.push_back(widthAggUm[colUm]);
-                    colUm -= multiParms;
                 }
 
                 // not a direct hit -- a returned column is not already in the RG from PMs
@@ -4542,7 +4543,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(
                             // false alarm
                             returnColMissing = false;
 
-                            colUm = it->second - multiParms;
+                            colUm = it->second;
 
                             if (aggOp == ROWAGG_SUM)
                             {
