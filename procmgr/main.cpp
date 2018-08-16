@@ -1523,9 +1523,6 @@ void pingDeviceThread()
 									break;
 
 								//set query system state not ready
-								BRM::DBRM dbrm;
-								dbrm.setSystemQueryReady(false);
-
 								processManager.setQuerySystemState(false);
 
 								processManager.setSystemState(oam::BUSY_INIT);
@@ -1806,9 +1803,6 @@ void pingDeviceThread()
 										}
 									}
 
-									//enable query stats
-									dbrm.setSystemQueryReady(true);
-
 									//set query system state ready
 									processManager.setQuerySystemState(true);
 
@@ -1864,9 +1858,6 @@ void pingDeviceThread()
 										processManager.setSystemState(oam::FAILED);
 									else
 										processManager.setSystemState(oam::ACTIVE);
-
-									//enable query stats
-									dbrm.setSystemQueryReady(true);
 
 									//set query system state ready
 									processManager.setQuerySystemState(true);
@@ -1929,9 +1920,6 @@ void pingDeviceThread()
 									log.writeLog(__LINE__, "module is down: " + moduleName, LOG_TYPE_CRITICAL);
 					
 									//set query system state not ready
-									BRM::DBRM dbrm;
-									dbrm.setSystemQueryReady(false);
-
 									processManager.setQuerySystemState(false);
 
 									processManager.setSystemState(oam::BUSY_INIT);
@@ -1992,9 +1980,6 @@ void pingDeviceThread()
 										      // resume the dbrm
 										      oam.dbrmctl("resume");
 										      log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
-										      //enable query stats
-										      dbrm.setSystemQueryReady(true);
 
 										      //set query system state ready
 										      processManager.setQuerySystemState(true);
@@ -2201,9 +2186,6 @@ void pingDeviceThread()
 											//set recycle process
 											processManager.recycleProcess(moduleName);
 
-											//enable query stats
-											dbrm.setSystemQueryReady(true);
-
 											//set query system state ready
 											processManager.setQuerySystemState(true);
 
@@ -2220,9 +2202,6 @@ void pingDeviceThread()
 										oam.dbrmctl("resume");
 										log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
-										//enable query stats
-										dbrm.setSystemQueryReady(true);
-
 										//set query system state ready
 										processManager.setQuerySystemState(true);
 									}
@@ -2235,9 +2214,6 @@ void pingDeviceThread()
 	
 									//set recycle process
 									processManager.recycleProcess(moduleName);
-
-									//enable query stats
-									dbrm.setSystemQueryReady(true);
 
 									//set query system state ready
 									processManager.setQuerySystemState(true);

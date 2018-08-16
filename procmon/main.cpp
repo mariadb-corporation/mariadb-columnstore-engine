@@ -336,7 +336,7 @@ int main(int argc, char **argv)
 					sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", IPaddr);
 			
 					log.writeLog(__LINE__, "set ProcMgr IPaddr to Old Standby Module: " + IPaddr, LOG_TYPE_DEBUG);
-					//update Calpont Config table
+					//update MariaDB ColumnStore Config table
 					try {
 						sysConfig->write();
 						sleep(1);
@@ -1333,7 +1333,7 @@ static void chldHandleThread(MonitorConfig config)
 						(*listPtr).processID != 0 ) ||
 				 ( (*listPtr).state == oam::ACTIVE && (*listPtr).processID == 0 ) )
 			{
-				log.writeLog(__LINE__, "*****Calpont Process Restarting: " + (*listPtr).ProcessName + ", old PID = " + oam.itoa((*listPtr).processID), LOG_TYPE_CRITICAL);
+				log.writeLog(__LINE__, "*****MariaDB ColumnStore Process Restarting: " + (*listPtr).ProcessName + ", old PID = " + oam.itoa((*listPtr).processID), LOG_TYPE_CRITICAL);
 
 				if ( (*listPtr).dieCounter >= processRestartCount ||
 					processRestartCount == 0) {
@@ -1530,7 +1530,7 @@ static void chldHandleThread(MonitorConfig config)
 					}
 				
 					//Log this event 
-					log.writeLog(__LINE__, "Calpont Process " + (*listPtr).ProcessName + restartStatus, LOG_TYPE_INFO);
+					log.writeLog(__LINE__, "MariaDB ColumnStore Process " + (*listPtr).ProcessName + restartStatus, LOG_TYPE_INFO);
 				}
 			}
 		}
@@ -2455,6 +2455,9 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 					memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
 					log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
 				}
+				
+				BRM::DBRM dbrm;
+				dbrm.setSystemQueryReady(true);
 			}
 		}
 		break;
