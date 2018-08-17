@@ -33,6 +33,9 @@
 
 using namespace ddlpackage;
 typedef enum { NOOP, STRIP_QUOTES } copy_action_t;
+#if YYDEBUG == 0
+int ddldebug = 0;
+#endif
 int lineno = 1;
 void ddlerror(struct pass_to_bison* x, char const *s);
 
