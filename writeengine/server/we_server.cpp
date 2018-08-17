@@ -110,6 +110,21 @@ int main(int argc, char** argv)
 
     printf ("Locale is : %s\n", systemLang.c_str() );
 
+    int gDebug = 0;
+    int c;
+    while ((c = getopt(argc, argv, "d")) != EOF)
+    {
+        switch (c)
+        {
+            case 'd':
+                gDebug++;
+                break;
+            case '?':
+            default:
+                break;
+        }
+    }
+
     //set BUSY_INIT state
     {
         // Is there a reason to have a seperate Oam instance for this?
@@ -210,7 +225,9 @@ int main(int argc, char** argv)
         }
     }
 
-    int err = setupResources();
+    int err = 0;
+    if (!gDebug)
+        err = setupResources();
     string errMsg;
 
     switch (err)

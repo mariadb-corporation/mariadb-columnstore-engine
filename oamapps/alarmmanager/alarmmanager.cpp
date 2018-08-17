@@ -463,7 +463,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
     int pid = getpid();
     int tid = gettid();
 
-    // get reporting Pprocess Name
+	// get reporting Process Name
     string processName;
 
     if ( repProcessName.empty())
@@ -514,7 +514,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
         args.add("sendAlarmReport error:");
         args.add(e.what());
         msg.format(args);
-        ml.logErrorMessage(msg);
+	      ml.logDebugMessage(msg);             
     }
     catch (std::exception& e)
     {
@@ -525,7 +525,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
         args.add("sendAlarmReport error:");
         args.add(e.what());
         msg.format(args);
-        ml.logErrorMessage(msg);
+	      ml.logDebugMessage(msg);                                
     }
     catch (...)
     {
@@ -536,7 +536,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
         args.add("sendAlarmReport error:");
         args.add("general failure");
         msg.format(args);
-        ml.logErrorMessage(msg);
+	      ml.logDebugMessage(msg);             
     }
 
     return;

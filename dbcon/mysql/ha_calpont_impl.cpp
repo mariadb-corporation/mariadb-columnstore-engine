@@ -1964,7 +1964,7 @@ uint32_t doUpdateDelete(THD* thd)
         }
         else
         {
-            thd->set_row_count_func(dmlRowCount);
+            thd->set_row_count_func(dmlRowCount+thd->get_row_count_func());
         }
 
         push_warning(thd, Sql_condition::WARN_LEVEL_WARN, ER_WARN_DATA_OUT_OF_RANGE, errorMsg.c_str());
@@ -1972,7 +1972,7 @@ uint32_t doUpdateDelete(THD* thd)
     else
     {
 //		if (dmlRowCount != 0) //Bug 5117. Handling self join.
-        thd->set_row_count_func(dmlRowCount);
+			thd->set_row_count_func(dmlRowCount+thd->get_row_count_func());
 
 
         //cout << " error status " << ci->rc << " and rowcount = " << dmlRowCount << endl;
