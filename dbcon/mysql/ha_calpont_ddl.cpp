@@ -1912,6 +1912,79 @@ pair<string, string> parseTableName(const string& tn)
 
 }
 
+//
+// get_field_default_value: Returns the default value as a string value
+// NOTE: This is duplicated code copied from show.cc and a MDEV-17006 has
+//       been created.
+//
+
+static bool get_field_default_value(THD *thd, Field *field, String *def_value,
+                                    bool quoted)
+{
+  bool has_default;
+  enum enum_field_types field_type= field->type();
+
+  has_default= (field->default_value ||
+                (!(field->flags & NO_DEFAULT_VALUE_FLAG) &&
+                 field->unireg_check != Field::NEXT_NUMBER));
+
+  def_value->length(0);
+  if (has_default)
+  {
+    StringBuffer<MAX_FIELD_WIDTH> str(field->charset());
+    if (field->default_value)
+    {
+      field->default_value->print(&str);
+      if (field->default_value->expr->need_parentheses_in_default())
+      {
+        def_value->set_charset(&my_charset_utf8mb4_general_ci);
+        def_value->append('(');
+        def_value->append(str);
+        def_value->append(')');
+      }
+      else
+        def_value->append(str);
+    }
+    else if (!field->is_null())
+    {                                             // Not null by default
+      if (field_type == MYSQL_TYPE_BIT)
+      {
+        str.qs_append('b');
+        str.qs_append('\'');
+        str.qs_append(field->val_int(), 2);
+        str.qs_append('\'');
+        quoted= 0;
+      }
+      else
+      {
+        field->val_str(&str);
+        if (!field->str_needs_quotes())
+          quoted= 0;
+      }
+      if (str.length())
+      {
+        StringBuffer<MAX_FIELD_WIDTH> def_val;
+        uint dummy_errors;
+        /* convert to system_charset_info == utf8 */
+        def_val.copy(str.ptr(), str.length(), field->charset(),
+                     system_charset_info, &dummy_errors);
+        if (quoted)
+          append_unescaped(def_value, def_val.ptr(), def_val.length());
+        else
+          def_value->append(def_val);
+      }
+      else if (quoted)
+        def_value->set(STRING_WITH_LEN("''"), system_charset_info);
+    }
+    else if (field->maybe_null() && quoted)
+      def_value->set(STRING_WITH_LEN("NULL"), system_charset_info);    // Null as default
+    else
+      return 0;
+
+  }
+  return has_default;
+}
+
 int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* create_info, cal_connection_info& ci)
 {
 #ifdef INFINIDB_DEBUG
@@ -2095,6 +2168,97 @@ int ha_calpont_impl_create_(const char* name, TABLE* table_arg, HA_CREATE_INFO* 
         ci.isAlter = false;
         return 1;
     }
+
+	//
+	// Check if this is a "CREATE TABLE ... LIKE " statement.
+	// If so generate a full create table statement using the properties of
+	// the source table. Note that source table has to be a columnstore table and
+	// we only check for currently supported options.
+	//
+
+	if (thd->lex->create_info.like())
+	{
+		TABLE_SHARE *share = table_arg->s;
+		my_bitmap_map *old_map;			// To save the read_set
+		char datatype_buf[MAX_FIELD_WIDTH], def_value_buf[MAX_FIELD_WIDTH];
+		String datatype, def_value;
+		ostringstream  oss;
+		string tbl_name (name+2);
+		std::replace(tbl_name.begin(), tbl_name.end(), '/', '.');
+
+		// Save the current read_set map and mark it for read
+		old_map= tmp_use_all_columns(table_arg, table_arg->read_set);
+
+		oss << "CREATE TABLE " << tbl_name  << " (";
+
+		restore_record(table_arg, s->default_values);
+		for (Field **field= table_arg->field; *field; field++)
+		{
+			uint flags = (*field)->flags;
+			datatype.set(datatype_buf, sizeof(datatype_buf), system_charset_info);
+			(*field)->sql_type(datatype);
+			if (field != table_arg->field)
+				oss << ", ";
+			oss << (*field)->field_name.str << " " << datatype.ptr();
+
+			if (flags & NOT_NULL_FLAG)
+				oss << " NOT NULL";
+
+			def_value.set(def_value_buf, sizeof(def_value_buf), system_charset_info);
+			if (get_field_default_value(thd, *field, &def_value, true)) {
+				oss << " DEFAULT " << def_value.c_ptr();
+			}
+			if ((*field)->comment.length)
+			{
+				String comment;
+				append_unescaped(&comment, (*field)->comment.str, (*field)->comment.length);
+				oss << " COMMENT ";
+				oss << comment.c_ptr();
+			}
+
+		}
+		// End the list of columns
+		oss<< ") ENGINE=columnstore ";
+
+		// Process table level options
+
+		if (create_info->auto_increment_value > 1)
+		{
+			oss << " AUTO_INCREMENT=" << create_info->auto_increment_value;
+		}
+
+		if (share->table_charset)
+		{
+			oss << " DEFAULT CHARSET=" << share->table_charset->csname;
+		}
+
+		// Process table level options such as MIN_ROWS, MAX_ROWS, COMMENT
+
+		if (share->min_rows)
+		{
+			char buff[80];
+			longlong10_to_str(share->min_rows, buff, 10);
+			oss << " MIN_ROWS=" << buff;
+		}
+
+		if (share->max_rows) {
+			char buff[80];
+			longlong10_to_str(share->max_rows, buff, 10);
+			oss << " MAX_ROWS=" << buff;
+		}
+
+		if (share->comment.length) {
+			String comment;
+			append_unescaped(&comment, share->comment.str, share->comment.length);
+			oss << " COMMENT ";
+			oss << comment.c_ptr();
+		}
+
+		oss << ";";
+		stmt = oss.str();
+ 
+		tmp_restore_column_map(table_arg->read_set, old_map);
+	}
 
     rc = ProcessDDLStatement(stmt, db, tbl, tid2sid(thd->thread_id), emsg, compressiontype, isAnyAutoincreCol, startValue, columnName);
 

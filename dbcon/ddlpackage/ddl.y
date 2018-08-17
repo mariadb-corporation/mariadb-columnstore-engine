@@ -716,9 +716,14 @@ default_clause:
 	}
 	| DEFAULT NULL_TOK {$$ = new ColumnDefaultValue(NULL);}
 	| DEFAULT USER {$$ = new ColumnDefaultValue("$USER");}
-	| DEFAULT CURRENT_USER {$$ = new ColumnDefaultValue("$CURRENT_USER");}
+	| DEFAULT CURRENT_USER optional_braces {$$ = new ColumnDefaultValue("$CURRENT_USER");}
 	| DEFAULT SESSION_USER {$$ = new ColumnDefaultValue("$SESSION_USER");}
 	| DEFAULT SYSTEM_USER {$$ = new ColumnDefaultValue("$SYSTEM_USER");}
+	;
+
+optional_braces:
+	/* empty */ {}
+	| '(' ')' {}
 	;
 
 data_type:
