@@ -109,12 +109,6 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
     int64_t val1 = -1, val2 = -1;
     bool isDate1 = false, isDate2 = false;
 
-    if (type1 != type2)
-    {
-        isNull = true;
-        return "";
-    }
-
     switch (type1)
     {
         case execplan::CalpontSystemCatalog::DATE:

@@ -541,7 +541,7 @@ public:
     // convert integer to datetime
     EXPORT static int64_t intToDatetime(int64_t data, bool* isDate = NULL);
     // convert integer to date
-    EXPORT static int64_t intToTime(int64_t data);
+    EXPORT static int64_t intToTime(int64_t data, bool fromString = false);
     // convert string to date. alias to stringToDate
     EXPORT static int64_t dateToInt(const std::string& date);
     // convert string to datetime. alias to datetimeToInt
