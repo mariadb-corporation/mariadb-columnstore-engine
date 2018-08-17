@@ -75,6 +75,8 @@ identifier {ident_start}{ident_cont}*
 fq_identifier {identifier}\.{identifier}
 identifier_quoted {grave_accent}{identifier}{grave_accent}
 identifier_double_quoted {double_quote}{identifier}{double_quote}
+ident_w_spaces {identifier}\x20*
+column_ident_quoted {grave_accent}{ident_w_spaces}+{grave_accent}
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))
@@ -181,6 +183,8 @@ MEDIUMTEXT {return MEDIUMTEXT;}
 LONGTEXT {return LONGTEXT;}
 
 \n { lineno++;}
+
+{column_ident_quoted} { ddlget_lval(yyscanner)->str = scanner_copy(ddlget_text(yyscanner), yyscanner, STRIP_QUOTES); return IDENT;}
 
 {whitespace} {
     /* ignore */
