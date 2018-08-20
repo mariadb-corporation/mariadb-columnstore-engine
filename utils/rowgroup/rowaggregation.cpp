@@ -1547,9 +1547,9 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             uint64_t dtm = rowIn.getUintField(colIn);
-            valIn = ((dtm >> 48) * 10000000000000000LL) + (((dtm >> 44) & 0xF) * 100000000000000) +
-                    (((dtm >> 38) & 077) * 1000000000000) + (((dtm >> 32) & 077) * 10000000000) +
-                    (((dtm >> 26) & 077) * 100000000) + (((dtm >> 20) & 077) * 1000000) + (dtm & 0xfffff);
+            valIn = ((dtm >> 48) * 10000000000LL) + (((dtm >> 44) & 0xF) * 100000000) +
+                    (((dtm >> 38) & 077) * 1000000) + (((dtm >> 32) & 077) * 10000) +
+                    (((dtm >> 26) & 077) * 100) + ((dtm >> 20) & 077);
             break;
         }
 
@@ -1565,8 +1565,8 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
             }
 
             hour |= ((dtm >> 40) & 0xfff);
-            valIn = (hour * 10000000000) +
-                    (((dtm >> 32) & 0xff) * 100000000) + (((dtm >> 24) & 0xff) * 1000000) + (dtm & 0xffffff);
+            valIn = (hour * 10000) +
+                    (((dtm >> 32) & 0xff) * 100) + ((dtm >> 24) & 0xff);
             break;
         }
 
