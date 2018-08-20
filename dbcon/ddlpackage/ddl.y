@@ -604,7 +604,7 @@ table_name:
 	;
 
 qualified_name:
-	| ident {
+	ident {
 				if (x->fDBSchema.size())
 					$$ = new QualifiedName((char*)x->fDBSchema.c_str(), $1);
 				else
