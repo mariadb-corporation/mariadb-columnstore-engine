@@ -173,6 +173,10 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
     if (writeSize == 0) // skip unnecessary write, if 0 bytes given
         return NO_ERROR;
 
+    int fillUpWNullsWriteSize = 0;
+    if (fillUpWNulls)
+        fillUpWNullsWriteSize = BYTE_PER_BLOCK - writeSize % BYTE_PER_BLOCK;
+
     // If we are starting a new file, we need to reinit the buffer and
     // find out what our file offset should be set to.
     if (!fToBeCompressedCapacity)
@@ -220,7 +224,7 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
     // Expand the compression buffer size if working with an abbrev extent, and
     // the bytes we are about to add will overflow the abbreviated extent.
     if ((fToBeCompressedCapacity < IDBCompressInterface::UNCOMPRESSED_INBUF_LEN) &&
-            ((fNumBytes + writeSize) > fToBeCompressedCapacity) )
+            ((fNumBytes + writeSize + fillUpWNullsWriteSize) > fToBeCompressedCapacity) )
     {
         std::ostringstream oss;
         oss << "Expanding abbrev to-be-compressed buffer for: OID-" <<
@@ -232,7 +236,7 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
         fToBeCompressedCapacity = IDBCompressInterface::UNCOMPRESSED_INBUF_LEN;
     }
 
-    if ((fNumBytes + writeSize) <= fToBeCompressedCapacity)
+    if ((fNumBytes + writeSize + fillUpWNullsWriteSize) <= fToBeCompressedCapacity)
     {
         if (fLog->isDebug( DEBUG_2 ))
         {
@@ -243,12 +247,14 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
                 "; part-"     << fColInfo->curCol.dataFile.fPartition <<
                 "; seg-"      << fColInfo->curCol.dataFile.fSegment   <<
                 "; addBytes-" << writeSize <<
+                "; extraBytes-" << fillUpWNullsWriteSize <<
                 "; totBytes-" << (fNumBytes + writeSize);
             fLog->logMsg( oss.str(), MSGLVL_INFO2 );
         }
 
         memcpy(bufOffset, (fBuffer + startOffset), writeSize);
         fNumBytes += writeSize;
+        fNumBytes += fillUpWNullsWriteSize;
     }
     else // Not enough room to add all the data to the to-be-compressed buffer
     {
@@ -339,6 +345,7 @@ int ColumnBufferCompressed::writeToFile(int startOffset, int writeSize,
 
                 memcpy(bufOffset, (fBuffer + startOffsetX), writeSizeOut);
                 fNumBytes += writeSizeOut;
+                fNumBytes += fillUpWNullsWriteSize;
             }
 
             startOffsetX += writeSizeOut;
