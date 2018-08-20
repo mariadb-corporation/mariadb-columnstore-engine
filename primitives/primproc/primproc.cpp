@@ -321,6 +321,22 @@ int main(int argc, char* argv[])
     // This is unset due to the way we start it
     program_invocation_short_name = const_cast<char*>("PrimProc");
 
+    int gDebug = 0;
+    int c;
+
+    while ((c = getopt(argc, argv, "d")) != EOF)
+    {
+        switch(c)
+        {
+            case 'd':
+                gDebug++;
+                break;
+            case '?':
+            default:
+                break;
+        }
+    }
+
     Config* cf = Config::makeConfig();
 
     setupSignalHandlers();
@@ -329,7 +345,9 @@ int main(int argc, char* argv[])
 
     mlp = new primitiveprocessor::Logger();
 
-    int err = setupResources();
+    int err = 0;
+    if (!gDebug)
+        err = setupResources();
     string errMsg;
 
     switch (err)

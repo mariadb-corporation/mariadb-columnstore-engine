@@ -94,13 +94,9 @@ start() {
 
 	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
-		SUDO=
-		if [ "$user" != "root" ]; then 
-			SUDO="$SUDO"
-		fi
 
 		#columnstore core files
-		$SUDO ulimit -c unlimited  > /dev/null 2>&1
+		ulimit -c unlimited  > /dev/null 2>&1
 		$SUDO sysctl -q -w kernel.core_uses_pid=1  > /dev/null 2>&1
 		$SUDO sysctl -q -w kernel.core_pattern=/var/log/mariadb/columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
 	fi

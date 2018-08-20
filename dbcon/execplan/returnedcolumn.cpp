@@ -173,14 +173,13 @@ void ReturnedColumn::unserialize(messageqcpp::ByteStream& b)
 
 bool ReturnedColumn::operator==(const ReturnedColumn& t) const
 {
+    // Not all fields are considered for a positive equality.
     if (fData != t.fData)
         return false;
 
     if (fCardinality != t.fCardinality)
         return false;
 
-    //if (fAlias != t.fAlias)
-    //	return false;
     if (fDistinct != t.fDistinct)
         return false;
 
@@ -193,24 +192,18 @@ bool ReturnedColumn::operator==(const ReturnedColumn& t) const
     if (fNullsFirst != t.fNullsFirst)
         return false;
 
-    //if (fOrderPos != t.fOrderPos)
-    //	return false;
     if (fInputIndex != t.fInputIndex)
         return false;
 
     if (fOutputIndex != t.fOutputIndex)
         return false;
 
-    //if (fSequence != t.fSequence)
-    //	return false;
     if (fResultType != t.fResultType)
         return false;
 
     if (fOperationType != t.fOperationType)
         return false;
 
-    //if (fExpressionId != t.fExpressionId)
-    //	return false;
     return true;
 }
 

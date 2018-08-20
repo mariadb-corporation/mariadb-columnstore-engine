@@ -398,20 +398,29 @@ void FIFO<element_t>::signalPs()
 template<typename element_t>
 inline bool FIFO<element_t>::next(uint64_t id, element_t* out)
 {
+    base::mutex.lock();
     fConsumptionStarted = true;
 
     if (cpos[id] >= fMaxElements)
+    {
+        base::mutex.unlock();
         if (!waitForSwap(id))
             return false;
+        base::mutex.lock();
+    }
 
     *out = cBuffer[cpos[id]++];
 
 #ifndef ONE_CS
 
     if (cpos[id] == fMaxElements)
+    {
+        base::mutex.unlock();
         signalPs();
-
+        return true;
+    }
 #endif
+    base::mutex.unlock();
     return true;
 }
 
