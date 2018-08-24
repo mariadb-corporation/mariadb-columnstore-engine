@@ -4145,7 +4145,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     // MCOL-1201 For UDAnF multiple parameters
     vector<SRCP> selCols;
     vector<SRCP> orderCols;
-
+    bool bIsConst = false;
     if (!(gwi.thd->infinidb_vtable.cal_conn_info))
         gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
 
@@ -4324,6 +4324,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
                         parm.reset(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError));
                         ac->constCol(parm);
+                        bIsConst = true;
                         break;
                     }
 
@@ -4440,7 +4441,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
         // Get result type
         // Modified for MCOL-1201 multi-argument aggregate
-        if (ac->aggParms().size() > 0)
+        if (!bIsConst && ac->aggParms().size() > 0)
         {
             // These are all one parm functions, so we can safely
             // use the first parm for result type.
