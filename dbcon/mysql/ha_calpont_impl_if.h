@@ -99,7 +99,7 @@ struct gp_walk_info
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList groupByCols;
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList subGroupByCols;
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
-    std::vector <Item*> havingAggColsItems;
+    std::vector <Item*> extSelAggColsItems;
     execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
     // This vector temporarily hold the projection columns to be added
     // to the returnedCols vector for subquery processing. It will be appended
@@ -142,7 +142,6 @@ struct gp_walk_info
     std::map<std::string, execplan::ParseTree*> derivedTbFilterMap;
     uint32_t derivedTbCnt;
     std::vector<execplan::SCSEP> subselectList;
-    List<char>* groupByAuxDescr;
 
     // Kludge for Bug 750
     int32_t recursionLevel;
@@ -200,7 +199,6 @@ struct cal_table_info
 struct cal_group_info
 {
     cal_group_info() : groupByFields(0),
-        groupByAuxDescr(0),
         groupByTables(0),
         groupByWhere(0),
         groupByGroup(0),
@@ -211,7 +209,6 @@ struct cal_group_info
     ~cal_group_info() { }
 
     List<Item>* groupByFields; // MCOL-1052 SELECT
-    List<char>* groupByAuxDescr; //MCOL-1052 Auxilary column descriptions
     TABLE_LIST* groupByTables; // MCOL-1052 FROM
     Item*       groupByWhere; // MCOL-1052 WHERE
     ORDER*      groupByGroup; // MCOL-1052 GROUP BY

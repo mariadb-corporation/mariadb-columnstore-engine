@@ -190,21 +190,57 @@ bool nonConstFunc(Item_func* ifp)
     return false;
 }
 
-ReturnedColumn* findCorrespTempField(Item_ref* item, gp_walk_info& gwi, bool clone = true)
+/*@brief  buildAggFrmTempField- build aggr func from extSELECT list item*/
+/***********************************************************
+ * DESCRIPTION:
+ * Server adds additional aggregation items to extended SELECT list and 
+ * references them in projection and HAVING. This f() finds 
+ * corresponding item in extSelAggColsItems and builds 
+ * ReturnedColumn using the item.
+ * PARAMETERS:
+ *    item          Item* used to build aggregation
+ *    gwi           main structure
+ * RETURNS
+ *  ReturnedColumn* if corresponding Item has been found
+ *  NULL otherwise
+ ***********************************************************/
+ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
 {
     ReturnedColumn* result = NULL;
-    uint32_t i;
-    for (i = 0; i < gwi.returnedCols.size(); i++)
+    Item_field* ifip = NULL;
+    Item_ref* irip;
+    Item_func_or_sum* isfp;
+
+    switch ( item->type() )
     {
-        if (item->ref[0] && item->ref[0]->name.length &&
-        gwi.returnedCols[i]->alias().c_str() &&
-        !strcasecmp(item->ref[0]->name.str, gwi.returnedCols[i]->alias().c_str()))
-        {
-            if (clone)
-                result = gwi.returnedCols[i]->clone();
-            else
-                result = gwi.returnedCols[i].get();
+        case Item::FIELD_ITEM:
+            ifip = reinterpret_cast<Item_field*>(item);
             break;
+        default:
+            irip = reinterpret_cast<Item_ref*>(item);
+            if ( irip )
+                ifip = reinterpret_cast<Item_field*>(irip->ref[0]);
+            break;
+    }
+
+    if (ifip && ifip->field)
+    {
+        std::vector<Item*>::iterator iter = gwi.extSelAggColsItems.begin();
+        for ( ; iter != gwi.extSelAggColsItems.end(); iter++ )
+        {
+            //Item* temp_isfp = *iter;
+            isfp = reinterpret_cast<Item_func_or_sum*>(*iter);
+
+            if ( isfp->type() == Item::SUM_FUNC_ITEM &&
+                    isfp->result_field == ifip->field )
+            {
+                ReturnedColumn* rc = buildAggregateColumn(isfp, gwi);
+
+                if (rc)
+                    result = rc;
+
+                break;
+            }
         }
     }
 
@@ -3101,7 +3137,10 @@ ArithmeticColumn* buildArithmeticColumn(
             {
                 // There must be an aggregation column in extended SELECT
                 // list so find the corresponding column.
-                ReturnedColumn* rc = findCorrespTempField(static_cast<Item_ref*>(sfitempp[0]), gwi);
+                // Could have it set if there are aggregation funcs as this function arguments.
+                gwi.fatalParseError = false;
+
+                ReturnedColumn* rc = buildAggFrmTempField(sfitempp[0], gwi);
                 if(rc)
                     lhs = new ParseTree(rc);
             }
@@ -3117,7 +3156,10 @@ ArithmeticColumn* buildArithmeticColumn(
             {
                 // There must be an aggregation column in extended SELECT
                 // list so find the corresponding column.
-                ReturnedColumn* rc = findCorrespTempField(static_cast<Item_ref*>(sfitempp[1]), gwi);
+                // Could have it set if there are aggregation funcs as this function arguments.
+                gwi.fatalParseError = false;
+
+                ReturnedColumn* rc = buildAggFrmTempField(sfitempp[1], gwi);
                 if(rc)
                     rhs = new ParseTree(rc);
             }
@@ -3456,10 +3498,11 @@ ReturnedColumn* buildFunctionColumn(
                 ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport, pushdownHand);
 
                 // MCOL-1510 It must be a temp table field, so find the corresponding column.
-                if (pushdownHand 
+                if (!rc && pushdownHand 
                     && ifp->arguments()[i]->type() == Item::REF_ITEM)
                 {
-                    rc = findCorrespTempField(static_cast<Item_ref*>(ifp->arguments()[i]), gwi);
+                    gwi.fatalParseError = false;
+                    rc = buildAggFrmTempField(ifp->arguments()[i], gwi);
                 }
 
                 if (!rc || nonSupport)
@@ -5344,26 +5387,9 @@ void gp_walk(const Item* item, void* arg)
             }
             else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
             {
-                Item_field* ifip = static_cast<Item_field*>(col);
-                std::vector<Item*>::iterator iter = gwip->havingAggColsItems.begin();
-                Item_func_or_sum* isfp = NULL;
-
-                for ( ; iter != gwip->havingAggColsItems.end(); iter++ )
-                {
-                    Item* temp_isfp = *iter;
-                    isfp = reinterpret_cast<Item_func_or_sum*>(temp_isfp);
-
-                    if ( isfp->type() == Item::SUM_FUNC_ITEM &&
-                            isfp->result_field == ifip->field )
-                    {
-                        ReturnedColumn* rc = buildAggregateColumn(isfp, *gwip);
-
-                        if (rc)
-                            gwip->rcWorkStack.push(rc);
-
-                        break;
-                    }
-                }
+                ReturnedColumn* rc = buildAggFrmTempField(const_cast<Item*>(item), *gwip);
+                if (rc)
+                    gwip->rcWorkStack.push(rc);
 
                 break;
             }
@@ -5628,7 +5654,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
                     // and set hasNonSupportItem if it is so.
                     ReturnedColumn* rc = NULL;
                     if (gwi)
-                        rc = findCorrespTempField(ref, *gwi, false);
+                        rc = buildAggFrmTempField(ref, *gwi);
                     
                     if (!rc)
                     {
@@ -8238,12 +8264,13 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     SELECT_LEX select_lex = lex->select_lex;
     gp_walk_info gwi;
     gwi.thd = thd;
-    gwi.groupByAuxDescr = gi.groupByAuxDescr;
     int status = getGroupPlan(gwi, select_lex, csep, gi);
 
+#ifdef DEBUG_WALK_COND
     cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+#endif
 
     if (status > 0)
         return ER_INTERNAL_ERROR;
@@ -8620,8 +8647,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     string sel_cols_in_create;
     string sel_cols_in_select;
     bool redo = false;
-    List_iterator_fast<char> itDescr(*gi.groupByAuxDescr);
-    char* fieldDescr;
 
     // empty rcWorkStack and ptWorkStack. They should all be empty by now.
     clearStacks(gwi);
@@ -8640,14 +8665,12 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     while ((item = it++))
     {
-        // Given the size of gi.groupByAuxDescr is equal to gi.groupByFields
-        fieldDescr = itDescr++;
         string itemAlias;
         if(item->name.length)
             itemAlias = (item->name.str);
         else
         {
-            itemAlias = (fieldDescr ? fieldDescr: "<NULL>");
+            itemAlias = "<NULL>";
         }
 
         // @bug 5916. Need to keep checking until getting concret item in case
@@ -8754,18 +8777,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
 
-                if(!ac->alias().length())
-                    ac->alias(fieldDescr);
                 // add this agg col to returnedColumnList
                 boost::shared_ptr<ReturnedColumn> spac(ac);
                 gwi.returnedCols.push_back(spac);
-                // This item will be used in HAVING later.
-                Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(item);
-
-                if ( ! isfp->name.length )
-                {
-                    gwi.havingAggColsItems.push_back(item);
-                }
+                // This item could be used in projection or HAVING later.
+                gwi.extSelAggColsItems.push_back(item);                
 
                 gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
                 String str(256);
@@ -10148,25 +10164,28 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 }
             }
 
-            if (ord_cols.length() > 0)	// has order by
+            if ( gwi.orderByCols.size() )	// has order by
             {
                 gwi.thd->infinidb_vtable.has_order_by = true;
                 csep->hasOrderBy(true);
-                ord_cols = " order by " + ord_cols;
-                select_query += ord_cols;
+                csep->specHandlerProcessed(true);
             }
         }
 
         // LIMIT and OFFSET are extracted from TABLE_LIST elements.
         // All of JOIN-ed tables contain relevant limit and offset.
-        if (gi.groupByTables->select_lex->select_limit)
+        uint64_t limit = (uint64_t)-1;
+        if (gi.groupByTables->select_lex->select_limit && 
+            ( limit = static_cast<Item_int*>(gi.groupByTables->select_lex->select_limit)->val_int() ) &&
+            limit != (uint64_t)-1 )
         {
-            csep->limitNum(((Item_int*)gi.groupByTables->select_lex->select_limit)->val_int());
+            csep->limitNum(limit);
         }
-        else
+        else if (csep->hasOrderBy()) 
         {
-            if (csep->hasOrderBy())
-                csep->limitNum((uint64_t) - 2);
+            // We use LimitedOrderBy so set the limit to
+            // go through the check in addOrderByAndLimit
+            csep->limitNum((uint64_t) - 2);
         }
 
         if (gi.groupByTables->select_lex->offset_limit)

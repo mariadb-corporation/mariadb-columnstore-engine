@@ -5265,7 +5265,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         // MCOL-1052 Send Items lists down to the optimizer.
         gi.groupByTables = group_hand->table_list;
         gi.groupByFields = group_hand->select;
-        gi.groupByAuxDescr = &group_hand->select_list_descr;
         gi.groupByWhere = group_hand->where;
         gi.groupByGroup = group_hand->group_by;
         gi.groupByOrder = group_hand->order_by;
