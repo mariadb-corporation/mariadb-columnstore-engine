@@ -10164,25 +10164,28 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 }
             }
 
-            if (ord_cols.length() > 0)	// has order by
+            if ( gwi.orderByCols.size() )	// has order by
             {
                 gwi.thd->infinidb_vtable.has_order_by = true;
                 csep->hasOrderBy(true);
-                ord_cols = " order by " + ord_cols;
-                select_query += ord_cols;
+                csep->specHandlerProcessed(true);
             }
         }
 
         // LIMIT and OFFSET are extracted from TABLE_LIST elements.
         // All of JOIN-ed tables contain relevant limit and offset.
-        if (gi.groupByTables->select_lex->select_limit)
+        uint64_t limit = (uint64_t)-1;
+        if (gi.groupByTables->select_lex->select_limit && 
+            ( limit = static_cast<Item_int*>(gi.groupByTables->select_lex->select_limit)->val_int() ) &&
+            limit != (uint64_t)-1 )
         {
-            csep->limitNum(((Item_int*)gi.groupByTables->select_lex->select_limit)->val_int());
+            csep->limitNum(limit);
         }
-        else
+        else if (csep->hasOrderBy()) 
         {
-            if (csep->hasOrderBy())
-                csep->limitNum((uint64_t) - 2);
+            // We use LimitedOrderBy so set the limit to
+            // go through the check in addOrderByAndLimit
+            csep->limitNum((uint64_t) - 2);
         }
 
         if (gi.groupByTables->select_lex->offset_limit)
