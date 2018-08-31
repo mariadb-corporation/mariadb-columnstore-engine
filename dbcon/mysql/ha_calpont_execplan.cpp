@@ -4096,15 +4096,17 @@ void gp_walk(const Item *item, void *arg)
 	if (itype == Item::FUNC_ITEM && ((Item_func*)item)->functype() == Item_func::XOR_FUNC )
 	    itype = Item::COND_ITEM;
 
-	if(item->type() == Item::CACHE_ITEM)
-	{
-		item = ((Item_cache*)item)->get_example();
-		itype = item->type();
-		isCached = true;
-	}
-
 	switch (itype)
 	{
+		case Item::CACHE_ITEM:
+		{
+			// The item or condition is cached as per MariaDB server view but
+			// for InfiniDB it need to be executed.
+			// MCOL-1188 and 
+			Item* orig_item = ((Item_cache*)item)->get_example();
+			orig_item->traverse_cond(gp_walk, gwip, Item::POSTFIX);
+			break;
+		}
 		case Item::FIELD_ITEM:
 		{
 			Item_field* ifp = (Item_field*)item;
