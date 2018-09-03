@@ -478,6 +478,7 @@ void CalpontSelectExecutionPlan::serialize(messageqcpp::ByteStream& b) const
     b << (uint64_t)fLimitStart;
     b << (uint64_t)fLimitNum;
     b << static_cast<const ByteStream::byte>(fHasOrderBy);
+    b << static_cast<const ByteStream::byte>(fSpecHandlerProcessed);
 
     b << static_cast<uint32_t>(fSelectSubList.size());
 
@@ -645,6 +646,7 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
     b >> (uint64_t&)fLimitStart;
     b >> (uint64_t&)fLimitNum;
     b >> reinterpret_cast< ByteStream::byte&>(fHasOrderBy);
+    b >> reinterpret_cast< ByteStream::byte&>(fSpecHandlerProcessed);
 
     // for SELECT subquery
     b >> size;
