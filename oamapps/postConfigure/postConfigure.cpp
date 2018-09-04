@@ -3166,19 +3166,13 @@ int main(int argc, char *argv[])
 
 	string install = "y";
 
-cout << IserverTypeInstall << " " << pmNumber << endl;
-
 	if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM || 
 			pmNumber > 1 ) {
 	
-cout << nonDistribute << endl;
-
 	    //skip interface with remote servers and perform install
 	    if ( !nonDistribute )
 	    {
-			
-cout << "non-distrubuted run" <<  endl;
-			//
+						//
 			// perform remote install of other servers in the system
 			//
 			cout << endl << "===== System Installation =====" << endl << endl;
