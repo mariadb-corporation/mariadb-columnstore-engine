@@ -4084,7 +4084,6 @@ void gp_walk(const Item *item, void *arg)
 {
 	gp_walk_info* gwip = reinterpret_cast<gp_walk_info*>(arg);
 	idbassert(gwip);
-	bool isCached = false;
 	//Bailout...
 	if (gwip->fatalParseError) return;
 
@@ -4101,8 +4100,8 @@ void gp_walk(const Item *item, void *arg)
 		case Item::CACHE_ITEM:
 		{
 			// The item or condition is cached as per MariaDB server view but
-			// for InfiniDB it need to be executed.
-			// MCOL-1188 and 
+			// for InfiniDB it need to be parsed and executed.
+			// MCOL-1188 and MCOL-1029
 			Item* orig_item = ((Item_cache*)item)->get_example();
 			orig_item->traverse_cond(gp_walk, gwip, Item::POSTFIX);
 			break;
@@ -4286,13 +4285,9 @@ void gp_walk(const Item *item, void *arg)
 					cc->resultType(colType_MysqlToIDB(item));
 				}
 
-				// cached item comes in one piece
-				if (!isCached)
+				for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
 				{
-					for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
-					{
-						gwip->rcWorkStack.pop();
-					}
+					gwip->rcWorkStack.pop();
 				}
 				// bug 3137. If filter constant like 1=0, put it to ptWorkStack
 				// MariaDB bug 750. Breaks if compare is an argument to a function.
@@ -4359,14 +4354,6 @@ void gp_walk(const Item *item, void *arg)
 			enum Item_func::Functype ftype = func->functype();
 			bool isOr = (ftype == Item_func::COND_OR_FUNC);
             bool isXor = (ftype == Item_func::XOR_FUNC);
-
-            // MCOL-1029 A cached COND_ITEM is something like:
-            // AND (TRUE OR FALSE)
-            // We can skip it
-            if (isCached)
-            {
-                break;
-            }
 
 			List<Item> *argumentList;
 			List<Item> xorArgumentList;
