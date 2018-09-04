@@ -575,10 +575,12 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 					if ( count > 0 ) {
 
+						string module = oam::UnassignedName;
 						for (int i = 0; i < count; i++)
 						{
 							msg >> value;	
 							devicenetworkconfig.DeviceName = value;
+							module = value;
 							msg >> value;	
 							devicenetworkconfig.UserTempDeviceName = value;
 							msg >> value;	
@@ -606,11 +608,24 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						}
 
 						if( status == API_SUCCESS) {
+							processManager.setSystemState(oam::BUSY_INIT);
+
+							//set query system state not ready
+							processManager.setQuerySystemState(false);
+
+							//set recycle process
+							processManager.recycleProcess(target, true);
+
 							//distribute config file
 							processManager.distributeConfigFile("system");	
 		
+							processManager.setSystemState(oam::ACTIVE);
+
+							//set query system state ready
+							processManager.setQuerySystemState(true);
+
 							//call dbrm control
-							oam.dbrmctl("halt");
+/*							oam.dbrmctl("halt");
 							log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
 
 							oam.dbrmctl("reload");
@@ -618,13 +633,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						
 							oam.dbrmctl("resume");
 							log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
-//							processManager.restartProcessType("ExeMgr");
-
-							//setup MySQL Replication for started modules
-//							log.writeLog(__LINE__, "Setup MySQL Replication for module being started", LOG_TYPE_DEBUG);
-//							processManager.setMySQLReplication(startdevicenetworklist);
-						}
+*/						}
 					}
 					else
 					{
@@ -846,7 +855,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 								//set query system state ready
 								processManager.setQuerySystemState(true);
-
 							}
 							else
 							{
@@ -3389,7 +3397,7 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 /******************************************************************************************
 * @brief	recycleProcess
 *
-* purpose:	recyle process, generally after some disable module is run
+* purpose:	recyle process, done after disable/enable module
 *
 ******************************************************************************************/
 void ProcessManager::recycleProcess(string module, bool enableModule)
@@ -3413,48 +3421,65 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 	    //recycle DBRM processes in all cases
 	    restartProcessType("DBRMControllerNode");
 	    restartProcessType("DBRMWorkerNode");
+	    sleep(5);
 
 	    restartProcessType("DMLProc");
 	    return;
 	}
 
 	//recycle DBRM processes in all cases
-	restartProcessType("DBRMControllerNode", module);
-	restartProcessType("DBRMWorkerNode");
+//	restartProcessType("DBRMControllerNode", module);
+//	restartProcessType("DBRMWorkerNode");
 
-	
-	// only recycle dmlproc, if down/up module is non-parent UM
-	if ( ( moduleType == "um" ) &&
-	    ( PrimaryUMModuleName != module) )
+	// only recycle ddl/dmlproc, if down/up module is non-parent UM
+/*	if ( ( moduleType == "um" ) &&
+	if    ( PrimaryUMModuleName != module)
 	{
+	    restartProcessType("DDLProc",module);
 	    restartProcessType("DMLProc",module);
 	    return;
 	}
-	
-	if( PrimaryUMModuleName == module)
-	{
-		stopProcessType("DDLProc");
-		stopProcessType("DMLProc");
-	}
+*/	
+//	if( PrimaryUMModuleName == module)
+//	{
+//		stopProcessType("DDLProc");
+//		stopProcessType("DMLProc");
+//	}
+
+	stopProcessType("WriteEngineServer");
 
 	stopProcessType("ExeMgr");
+	
+	stopProcessType("PrimProc");
 
-	restartProcessType("PrimProc");
-	sleep(1);
+	stopProcessType("DBRMControllerNode");
+	stopProcessType("DBRMWorkerNode");
+	
+	stopProcessType("DDLProc");
+	stopProcessType("DMLProc");
 
-	restartProcessType("mysqld");
+	stopProcessType("mysqld");
 
-	restartProcessType("WriteEngineServer");
-	sleep(1);
+//	restartProcessType("mysqld");
+	
+	startProcessType("DBRMControllerNode");
+	startProcessType("DBRMWorkerNode");
+
+	startProcessType("PrimProc");
+	sleep(5);
+	
+	startProcessType("WriteEngineServer");
+	sleep(3);
 
 	startProcessType("ExeMgr");
-	sleep(1);
 
 	startProcessType("DDLProc");
 	sleep(1);
 
 	startProcessType("DMLProc");
 	
+	startProcessType("mysqld");
+
 	return;
 }
 
@@ -3503,8 +3528,8 @@ int ProcessManager::enableModule(string target, int state, bool failover)
 		setStandbyModule(newStandbyModule);
 
 	//set recycle process
-	if (!failover)
-	      recycleProcess(target);
+//	if (!failover)
+//	      recycleProcess(target);
 	
 	log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
@@ -6497,12 +6522,22 @@ void ProcessManager::setQuerySystemState(bool set)
 
 	try {
 		dbrm.setSystemQueryReady(set);
-		log.writeLog(__LINE__, "setQuerySystemState successful", LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "setSystemQueryReady successful", LOG_TYPE_DEBUG);
+
+		try {
+			dbrm.setSystemReady(set);
+			log.writeLog(__LINE__, "setSystemReady successful", LOG_TYPE_DEBUG);
+		}
+		catch(...)
+		{
+			log.writeLog(__LINE__, "setSystemReady failed", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "setSystemReady failed", LOG_TYPE_ERROR);
+		}
 	}
 	catch(...)
 	{
-		log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_DEBUG);
-		log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "setSystemQueryReady failed", LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "setSystemQueryReady failed", LOG_TYPE_ERROR);
 	}
 }
 
