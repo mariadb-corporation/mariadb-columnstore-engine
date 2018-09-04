@@ -7036,15 +7036,33 @@ int processCommand(string* arguments)
 					if (systemstatus.SystemOpState == oam::ACTIVE ) {
 						try
 						{
-							cout << endl << "   Starting Modules" << endl;
-							oam.startModule(devicenetworklist, ackTemp);
+//							cout << endl << "   Starting Modules" << endl;
+//							oam.startModule(devicenetworklist, ackTemp);
 			
 							//reload DBRM with new configuration, needs to be done here after startModule
-							cmd = startup::StartUp::installDir() + "/bin/dbrmctl reload > /dev/null 2>&1";
-							system(cmd.c_str());
-							sleep(15);
+//							cmd = startup::StartUp::installDir() + "/bin/dbrmctl reload > /dev/null 2>&1";
+//							system(cmd.c_str());
+//							sleep(15);
 			
-							cout << "   Successful start of Modules " << endl;
+//							cout << "   Successful start of Modules " << endl;
+
+							cout << endl << "   Restarting System ";
+							int returnStatus = oam.restartSystem(gracefulTemp, ackTemp);
+							switch (returnStatus)
+							{ 
+								case API_SUCCESS:
+									if ( waitForActive() )
+										cout << endl << "   Successful restart of System " << endl << endl;
+									else
+										cout << endl << "**** restartSystem Failed : check log files" << endl;
+									break;
+								case API_CANCELLED:
+									cout << endl << "   Restart of System canceled" << endl << endl;
+									break;
+								default:
+									cout << endl << "**** restartSystem Failed : Check system logs" << endl;
+									break;
+							}
 						}
 						catch (exception& e)
 						{
