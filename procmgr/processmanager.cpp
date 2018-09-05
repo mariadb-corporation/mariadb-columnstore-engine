@@ -619,21 +619,11 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							//distribute config file
 							processManager.distributeConfigFile("system");	
 		
-							processManager.setSystemState(oam::ACTIVE);
-
 							//set query system state ready
 							processManager.setQuerySystemState(true);
 
-							//call dbrm control
-/*							oam.dbrmctl("halt");
-							log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
-
-							oam.dbrmctl("reload");
-							log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-						
-							oam.dbrmctl("resume");
-							log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-*/						}
+							processManager.setSystemState(oam::ACTIVE);
+						}
 					}
 					else
 					{
@@ -846,15 +836,10 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								status = processManager.disableModule(moduleName, true);
 								log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
 
-								processManager.recycleProcess(moduleName);
-
-								//check for SIMPLEX Processes on mate might need to be started
-								processManager.checkSimplexModule(moduleName);
-								
-								processManager.setSystemState(oam::ACTIVE);
-
 								//set query system state ready
 								processManager.setQuerySystemState(true);
+
+								processManager.setSystemState(oam::ACTIVE);
 							}
 							else
 							{
@@ -1611,6 +1596,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								status = retStatus;
 						}
 					}
+
 					//now stop local module
 					processManager.stopModule(config.moduleName(), graceful, manualFlag );
 
@@ -1627,7 +1613,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 						oam::DeviceNetworkList devicenetworklist;
 						pthread_t startsystemthread;
-						pthread_create (&startsystemthread, NULL, (void*(*)(void*)) &startSystemThread, &devicenetworklist);
+						status = pthread_create (&startsystemthread, NULL, (void*(*)(void*)) &startSystemThread, &devicenetworklist);
 
 						if ( status != 0 ) {
 							log.writeLog(__LINE__, "STARTMODULE: pthread_create failed, return status = " + oam.itoa(status));
@@ -1636,20 +1622,19 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 						if (status == 0 && ackIndicator)
 						{
-                            // BUG 4554 We don't need the join because calpont console is now looking for "Active"
-                            // We need to return the ack right away to let console know we got the message.
-//							pthread_join(startsystemthread, NULL);
-//							status = startsystemthreadStatus;
+							pthread_join(startsystemthread, NULL);
+							status = startsystemthreadStatus;
 						}
-
-						// setup MySQL Replication after switchover command
-/*						if (graceful == FORCEFUL)
+						
+						// setup MySQL Replication after FORCE restart command
+						if ( (status == API_SUCCESS) &&
+							 (graceful == oam::FORCEFUL) )
 						{
-							log.writeLog(__LINE__, "Setup MySQL Replication for restartSystem FORCE, used by switch-parent command", LOG_TYPE_DEBUG);
+							log.writeLog(__LINE__, "Setup MySQL Replication for restartSystem FORCE", LOG_TYPE_DEBUG);
 							oam::DeviceNetworkList devicenetworklist;
 							processManager.setMySQLReplication(devicenetworklist);
 						}
-*/
+
 						log.writeLog(__LINE__, "RESTARTSYSTEM: Start System Request Completed", LOG_TYPE_INFO);
 					}
 	
@@ -3277,6 +3262,7 @@ int ProcessManager::shutdownModule(string target, ByteStream::byte actionIndicat
 int ProcessManager::disableModule(string target, bool manualFlag)
 {
 	Oam oam;
+	ProcessManager processManager(config, log);
 	ModuleConfig moduleconfig;
 
 	log.writeLog(__LINE__, "disableModule request for " + target, LOG_TYPE_DEBUG);
@@ -3386,6 +3372,11 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 	if ( updateWorkerNodeconfig() != API_SUCCESS )
 		return API_FAILURE;
 
+	processManager.recycleProcess(target);
+
+	//check for SIMPLEX Processes on mate might need to be started
+	processManager.checkSimplexModule(target);
+
 	//distribute config file
 	distributeConfigFile("system");
 
@@ -3414,37 +3405,6 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 		oam.getSystemConfig("PrimaryUMModuleName", PrimaryUMModuleName);
 	}
 	catch(...) {}
-	
-	// restart DBRM Process and DMLProc and return if enable module is being done
-	if (enableModule)
-	{
-	    //recycle DBRM processes in all cases
-	    restartProcessType("DBRMControllerNode");
-	    restartProcessType("DBRMWorkerNode");
-	    sleep(5);
-
-	    restartProcessType("DMLProc");
-	    return;
-	}
-
-	//recycle DBRM processes in all cases
-//	restartProcessType("DBRMControllerNode", module);
-//	restartProcessType("DBRMWorkerNode");
-
-	// only recycle ddl/dmlproc, if down/up module is non-parent UM
-/*	if ( ( moduleType == "um" ) &&
-	if    ( PrimaryUMModuleName != module)
-	{
-	    restartProcessType("DDLProc",module);
-	    restartProcessType("DMLProc",module);
-	    return;
-	}
-*/	
-//	if( PrimaryUMModuleName == module)
-//	{
-//		stopProcessType("DDLProc");
-//		stopProcessType("DMLProc");
-//	}
 
 	stopProcessType("WriteEngineServer");
 
@@ -3526,10 +3486,6 @@ int ProcessManager::enableModule(string target, int state, bool failover)
 
 	if ( newStandbyModule == target)
 		setStandbyModule(newStandbyModule);
-
-	//set recycle process
-//	if (!failover)
-//	      recycleProcess(target);
 	
 	log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
@@ -6518,15 +6474,15 @@ void ProcessManager::setQuerySystemState(bool set)
 	Oam oam;
 	BRM::DBRM dbrm;
 
-	log.writeLog(__LINE__, "setQuerySystemState = " + oam.itoa(set), LOG_TYPE_DEBUG);
+	log.writeLog(__LINE__, "setQuerySystemState called = " + oam.itoa(set), LOG_TYPE_DEBUG);
 
 	try {
 		dbrm.setSystemQueryReady(set);
-		log.writeLog(__LINE__, "setSystemQueryReady successful", LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "setSystemQueryReady = " + oam.itoa(set), LOG_TYPE_DEBUG);
 
 		try {
 			dbrm.setSystemReady(set);
-			log.writeLog(__LINE__, "setSystemReady successful", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "setSystemReady = " + oam.itoa(set), LOG_TYPE_DEBUG);
 		}
 		catch(...)
 		{
@@ -7089,23 +7045,28 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 			}
 
 			if (DMLprocessstatus.ProcessOpState == oam::ACTIVE) {
- 		               rtn = oam::ACTIVE;
+ 		        rtn = oam::ACTIVE;
 				break;
 			}
 
 			if (DMLprocessstatus.ProcessOpState == oam::FAILED) {
-		                rtn = oam::FAILED;
+		        rtn = oam::FAILED;
+		        status = oam::API_FAILURE;
 				break;
 			}
 
-			// wait some more
-            		sleep(2);
-        	}
-	        processManager.setSystemState(rtn);
+		// wait some more
+				sleep(2);
+		}
+        
+        if ( rtn = oam::ACTIVE )
+			//set query system state not ready
+			processManager.setQuerySystemState(true);
+
+		processManager.setSystemState(rtn);
 	}
-    
-	//set query system state ready
-	processManager.setQuerySystemState(true);
+	else
+		processManager.setSystemState(oam::FAILED);
 
 	// exit thread
 	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);

@@ -7036,17 +7036,8 @@ int processCommand(string* arguments)
 					if (systemstatus.SystemOpState == oam::ACTIVE ) {
 						try
 						{
-//							cout << endl << "   Starting Modules" << endl;
-//							oam.startModule(devicenetworklist, ackTemp);
-			
-							//reload DBRM with new configuration, needs to be done here after startModule
-//							cmd = startup::StartUp::installDir() + "/bin/dbrmctl reload > /dev/null 2>&1";
-//							system(cmd.c_str());
-//							sleep(15);
-			
-//							cout << "   Successful start of Modules " << endl;
-
 							cout << endl << "   Restarting System ";
+							gracefulTemp = oam::FORCEFUL;
 							int returnStatus = oam.restartSystem(gracefulTemp, ackTemp);
 							switch (returnStatus)
 							{ 
