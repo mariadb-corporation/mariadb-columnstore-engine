@@ -1155,8 +1155,28 @@ void DMLServer::start()
 		}
 		cancelThread.join();
 	}
+    catch (std::exception& ex)
+    {
+        cerr << ex.what() << endl;
+        logging::LoggingID lid(21);
+        Message::Args args;
+        Message message(8);
+        args.add("DMLProc init caught exception: ");
+        args.add(ex.what());
+        message.format(args);
+        logging::Logger logger(lid.fSubsysID);
+        logger.logMessage(logging::LOG_TYPE_CRITICAL, message, lid);
+    }
 	catch (...)
 	{
+        cerr << "Caught unknown exception!" << endl;
+        logging::LoggingID lid(21);
+        Message::Args args;
+        Message message(8);
+        args.add("DMLProc init caught unknown exception");
+        message.format(args);
+        logging::Logger logger(lid.fSubsysID);
+        logger.logMessage(logging::LOG_TYPE_CRITICAL, message, lid);
 	}
 }
 
