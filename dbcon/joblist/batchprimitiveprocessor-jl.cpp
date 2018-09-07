@@ -49,6 +49,7 @@ using namespace messageqcpp;
 using namespace rowgroup;
 using namespace joiner;
 
+extern void mcs_spin ( const char* filename );
 namespace joblist
 {
 
@@ -715,6 +716,9 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
             offset += 9;  // skip only the "valid CP data" & LBID bytes
     }
 
+    if (in.length() <= offset) {
+	  mcs_spin("spin_assert");
+	}
     idbassert(in.length() > offset);
 
     return (data[offset] != 0);
@@ -1066,7 +1070,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
                 {
                     bs << (uint64_t) tJoiners[i]->smallNullValue();
                     bs << (messageqcpp::ByteStream::quadbyte)tJoiners[i]->getLargeKeyColumn();
-                    //cout << "large key column is " << (uint32_t) tJoiners[i]->getLargeKeyColumn() << endl;
+                    cout << "large key column is " << (uint32_t) tJoiners[i]->getLargeKeyColumn() << endl;
                 }
                 else
                 {
@@ -1339,7 +1343,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     if (joinerNum == PMJoinerCount - 1 && pos == size)
     {
         /* last message */
-// 		cout << "sending last joiner msg\n";
+ 		cout << "sending last joiner msg\n";
         ism.Command = BATCH_PRIMITIVE_END_JOINER;
         bs.load((uint8_t*) &ism, sizeof(ism));
         bs << (messageqcpp::ByteStream::quadbyte)sessionID;
@@ -1420,6 +1424,15 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
                 tlData.serialize(bs);
                 bs << i;
             }
+			else  if (tJoiners[joinerNum]->getJoinType() & MATCHNULLSAFE)
+            {
+    			TypelessData ret;
+    			ret.data = (uint8_t*) fa.allocate(1);
+				*ret.data =  0;
+    			ret.len = 1;
+                ret.serialize(bs);
+                bs << i;
+            }
         }
     }
     else
@@ -1454,7 +1467,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
             arr[j].key = (int64_t)smallkey;
             arr[j].value = i;
-// 			cout << "sending " << arr[j].key << ", " << arr[j].value << endl;
+ 			cout << "sending " << arr[j].key << ", " << arr[j].value << endl;
         }
 
         bs.advanceInputPtr(toSend * sizeof(JoinerElements));

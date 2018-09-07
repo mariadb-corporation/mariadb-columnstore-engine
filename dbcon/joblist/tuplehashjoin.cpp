@@ -1,5 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
-
+/* Copyright (C) 2014 InfiniDB, Inc.  
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
    as published by the Free Software Foundation; version 2 of
@@ -54,6 +53,7 @@ using namespace funcexp;
 using namespace querytele;
 
 #include "atomicops.h"
+
 
 namespace joblist
 {
@@ -288,7 +288,8 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
 
             for (i = 0; i < smallRG.getRowCount(); i++, r.nextRow())
             {
-                //cout << "inserting " << r.toString() << endl;
+                cout << "inserting " << r.toString() << endl;
+				cout << flush;
                 joiner->insert(r);
             }
 
@@ -331,8 +332,9 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
             }
 
 next:
-//  		cout << "inserted one rg into the joiner, rowcount = " <<
-//  			smallRG.getRowCount() << endl;
+  		cout << "inserted one rg into the joiner, rowcount = " <<
+  			smallRG.getRowCount() << endl;
+		cout << flush;
             more = smallDL->next(smallIt, &oneRG);
         }
     }

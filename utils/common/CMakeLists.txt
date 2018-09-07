@@ -8,6 +8,7 @@ set(common_LIB_SRCS
     poolallocator.cpp
     cgroupconfigurator.cpp
     MonitorProcMem.cpp
+    spinfile.cpp
     nullvaluemanip.cpp)
 
 add_library(common SHARED ${common_LIB_SRCS})

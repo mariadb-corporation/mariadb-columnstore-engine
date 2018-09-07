@@ -53,6 +53,7 @@ int toInt(const string& val)
 }
 }
 
+extern void mcs_spin ( const char* filename );
 namespace joblist
 {
 boost::mutex JobStep::fLogMutex; //=PTHREAD_MUTEX_INITIALIZER;
@@ -90,6 +91,7 @@ JobStep::JobStep(const JobInfo& j) :
     fProgress(0),
     fStartTime(-1)
 {
+	::mcs_spin("spin_jobstep");
     QueryTeleServerParms tsp;
     string teleServerHost(Config::makeConfig()->getConfig("QueryTele", "Host"));
 

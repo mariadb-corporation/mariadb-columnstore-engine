@@ -43,6 +43,8 @@ const uint32_t DCDC = (ds << 24) | (cc << 16) | (ds << 8) | cc;
 };
 
 
+extern void mcs_spin ( const char* filename );
+
 namespace primitiveprocessor
 {
 
@@ -252,6 +254,7 @@ void FilterCommand::setColTypes(const execplan::CalpontSystemCatalog::ColType& l
 
 void FilterCommand::doFilter()
 {
+::mcs_spin("spin_filter");
     bpp->ridMap = 0;
     bpp->ridCount = 0;
 
@@ -285,8 +288,11 @@ void FilterCommand::doFilter()
 
 bool FilterCommand::compare(uint64_t i, uint64_t j)
 {
-    if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
-            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+//    if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
+//            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+    if (fBOP != COMPARE_EQ_NS && (
+        execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
+	execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType)))
         return false;
 
     switch (fBOP)
@@ -300,6 +306,7 @@ bool FilterCommand::compare(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return bpp->fFiltCmdValues[0][i] == bpp->fFiltCmdValues[1][j];
             break;
 
@@ -361,8 +368,11 @@ SCommand ScaledFilterCmd::duplicate()
 
 bool ScaledFilterCmd::compare(uint64_t i, uint64_t j)
 {
-    if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
-            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+//    if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
+//            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+    if (fBOP != COMPARE_EQ_NS && (
+        execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
+            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType)))
         return false;
 
     switch (fBOP)
@@ -376,6 +386,7 @@ bool ScaledFilterCmd::compare(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return bpp->fFiltCmdValues[0][i] * fFactor == bpp->fFiltCmdValues[1][j];
             break;
 
@@ -489,8 +500,11 @@ void StrFilterCmd::setCompareFunc(uint32_t columns)
 
 bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
 {
-    if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
-            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+//    if (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
+//            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType))
+    if (fBOP != COMPARE_EQ_NS && 
+        (execplan::isNull(bpp->fFiltCmdValues[0][i], leftColType) ||
+            execplan::isNull(bpp->fFiltCmdValues[1][j], rightColType)))
         return false;
 
     switch (fBOP)
@@ -504,6 +518,7 @@ bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return uint64ToStr(bpp->fFiltCmdValues[0][i]) == uint64ToStr(bpp->fFiltCmdValues[1][j]);
             break;
 
@@ -528,8 +543,11 @@ bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
 
 bool StrFilterCmd::compare_ss(uint64_t i, uint64_t j)
 {
-    if (bpp->fFiltStrValues[0][i] == "" || bpp->fFiltStrValues[1][j] == "" ||
-            bpp->fFiltStrValues[0][i] == joblist::CPNULLSTRMARK || bpp->fFiltStrValues[1][j] == joblist::CPNULLSTRMARK)
+//    if (bpp->fFiltStrValues[0][i] == "" || bpp->fFiltStrValues[1][j] == "" ||
+//            bpp->fFiltStrValues[0][i] == joblist::CPNULLSTRMARK || bpp->fFiltStrValues[1][j] == joblist::CPNULLSTRMARK)
+    if (fBOP != COMPARE_EQ_NS && 
+        (bpp->fFiltStrValues[0][i] == "" || bpp->fFiltStrValues[1][j] == "" ||
+            bpp->fFiltStrValues[0][i] == joblist::CPNULLSTRMARK || bpp->fFiltStrValues[1][j] == joblist::CPNULLSTRMARK))
         return false;
 
     switch (fBOP)
@@ -543,6 +561,7 @@ bool StrFilterCmd::compare_ss(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return bpp->fFiltStrValues[0][i] == bpp->fFiltStrValues[1][j];
             break;
 
@@ -585,6 +604,7 @@ bool StrFilterCmd::compare_cs(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return (cmp == 0 && fCharLength >= bpp->fFiltStrValues[1][j].length());
             break;
 
@@ -627,6 +647,7 @@ bool StrFilterCmd::compare_sc(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return (cmp == 0 && bpp->fFiltStrValues[0][i].length() <= fCharLength);
             break;
 

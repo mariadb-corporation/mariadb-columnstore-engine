@@ -113,6 +113,10 @@ void Operator::data(const string data)
     {
         fOp = OP_EQ;
     }
+    else if (fData == "<=>")
+    {
+        fOp = OP_EQNS;
+    }
     else if (fData == "!=" || fData == "<>")
     {
         fOp = OP_NE;

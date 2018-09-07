@@ -1217,13 +1217,13 @@ void TupleBPS::run()
         fe2Output.initRow(&fe2OutRow);
     }
 
-    /*
+    /**/
     	if (doJoin) {
     		for (uint32_t z = 0; z < smallSideCount; z++)
     			cout << "join #" << z << " " << "0x" << hex << tjoiners[z]->getJoinType()
     			  << std::dec << " typeless: " << (uint32_t) tjoiners[z]->isTypelessJoin() << endl;
     	}
-    */
+   /**/
 
     try
     {
@@ -1428,20 +1428,22 @@ void TupleBPS::interleaveJobs(vector<Job>* jobs) const
 #endif
 
     jobs->swap(newJobs);
-//	cout << "-------------\n";
-//	for (i = 0; i < jobs->size(); i++)
-//		cout << "job " << i+1 << ": dbroot " << (*jobs)[i].dbroot << ", PM "
-//				<< (*jobs)[i].connectionNum + 1 << endl;
+	cout << "pid:" << getpid() << "  -------------\n";
+	for (i = 0; i < jobs->size(); i++)
+		cout << "job " << i+1 << ": dbroot " << (*jobs)[i].dbroot << ", PM "
+				<< (*jobs)[i].connectionNum + 1 << endl;
 }
 
 void TupleBPS::sendJobs(const vector<Job>& jobs)
 {
     uint32_t i;
     boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
+cout << "Entering " <<__FUNCTION__ << ", line:" <<  __LINE__ << " pid:" << getpid() << "\n";
 
     for (i = 0; i < jobs.size() && !cancelled(); i++)
     {
-        //cout << "sending a job for dbroot " << jobs[i].dbroot << ", PM " << jobs[i].connectionNum << endl;
+        cout << "pid:" << getpid() << " sending a job for dbroot " << jobs[i].dbroot << ", PM " << jobs[i].connectionNum << endl;
+		cout << flush;
         fDec->write(uniqueID, *(jobs[i].msg));
         tplLock.lock();
         msgsSent += jobs[i].expectedResponses;
@@ -1840,8 +1842,8 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
             }
         }
 
-//		cout << "   session " << fSessionId << " idx = " << i << " HWM = " << scannedExtents[i].HWM
-//				<< " ... will scan " << lbidsToScan << " lbids\n";
+		cout << "   session " << fSessionId << " idx = " << i << " HWM = " << scannedExtents[i].HWM
+				<< " ... will scan " << lbidsToScan << " lbids\n";
 
         // the # of logical blocks in this extent
         if (lbidsToScan % fColType.colWidth)
@@ -1857,8 +1859,8 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
 #else
         blocksPerJob = max(blocksToScan / fProcessorThreadsPerScan, 16U);
 #endif
-        //cout << "blocks to scan = " << blocksToScan << " blocks per job = " << blocksPerJob <<
-        //	" HWM == " << scannedExtents[i].HWM << endl;
+        cout << "blocks to scan = " << blocksToScan << " blocks per job = " << blocksPerJob <<
+        	" HWM == " << scannedExtents[i].HWM << endl;
 
         startingLBID = scannedExtents[i].range.start;
 
@@ -1881,7 +1883,8 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
         }
     }
 
-//	cout << "session " << fSessionId << " sees " << extentCounter << " extents" << endl;
+	cout << "session " << fSessionId << " sees " << scannedExtents.size() << " extents" << endl;
+	cout << flush;
 }
 
 void TupleBPS::sendPrimitiveMessages()

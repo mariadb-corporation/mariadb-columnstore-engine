@@ -95,7 +95,8 @@ const JoinType INIT = 0,
                SCALAR = 0x20,
                MATCHNULLS = 0x40,
                WITHFCNEXP = 0x80,
-               CORRELATED = 0x100;
+               CORRELATED = 0x100,
+               MATCHNULLSAFE = 0x200;
 }
 
 #endif

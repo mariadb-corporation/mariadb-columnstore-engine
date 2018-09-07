@@ -62,6 +62,8 @@ double cotangent(double in)
 
 }
 
+extern void mcs_spin ( const char* filename );
+
 namespace primitiveprocessor
 {
 
@@ -80,6 +82,7 @@ ColumnCommand::~ColumnCommand() { }
 void ColumnCommand::_execute()
 {
 // 	cout << "CC: executing" << endl;
+ 	cout << "CC: executing" << __FUNCTION__ << endl;
     if (_isScan)
         makeScanMsg();
     else if (bpp->ridCount == 0)     // this would cause a scan
@@ -100,6 +103,7 @@ void ColumnCommand::_execute()
 
 void ColumnCommand::execute()
 {
+::mcs_spin("spin_cexec");
     if (fFilterFeeder == LEFT_FEEDER)
         values = bpp->fFiltCmdValues[0].get();
     else if (fFilterFeeder == RIGHT_FEEDER)
@@ -129,10 +133,12 @@ void ColumnCommand::makeScanMsg()
     primMsg->LBID = lbid;
     primMsg->RidFlags = 0xFF;
 
-// 	cout << "scanning lbid " << lbid << " colwidth = " << primMsg->DataSize <<
-// 		" filterCount = " << filterCount << " outputType = " <<
-// 		(int) primMsg->OutputType << endl;
+ 	cout << "scanning lbid " << lbid << " colwidth = " << primMsg->DataSize <<
+ 		" filterCount = " << filterCount << " outputType = " <<
+ 		(int) primMsg->OutputType << endl;
+	cout << flush;
 }
+
 
 void ColumnCommand::makeStepMsg()
 {
@@ -142,6 +148,8 @@ void ColumnCommand::makeStepMsg()
     primMsg->NVALS = bpp->ridCount;
     primMsg->LBID = lbid;
 // 	cout << "lbid is " << lbid << endl;
+ 	cout << "makeStepMsg " << lbid << " NVALS  = " << primMsg->NVALS <<
+ 		" filterCount = " << filterCount << endl;
 }
 
 void ColumnCommand::loadData()
@@ -251,7 +259,7 @@ void ColumnCommand::issuePrimitive()
 
     loadData();
 
-// 	cout << "issuing primitive for LBID " << primMsg->LBID << endl;
+ 	cout << "issuing primitive for LBID " << primMsg->LBID << endl;
     if (!suppressFilter)
         bpp->pp.setParsedColumnFilter(parsedColumnFilter);
     else
@@ -273,13 +281,16 @@ void ColumnCommand::issuePrimitive()
 
 } // issuePrimitive()
 
+#include <sys/syscall.h>    /* SYS_gettid */
 void ColumnCommand::process_OT_BOTH()
 {
     uint64_t i, pos;
 
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
-// 	cout << "rid Count is " << bpp->ridCount << endl;
+ 	cout << "rid Count is " << bpp->ridCount << endl;
+    cout << "pid:" << getpid() << ", tid:" << syscall(SYS_gettid)  << endl;
+    cout << flush;
 
     /* this is verbose and repetative to minimize the work per row */
     switch (colType.colWidth)
@@ -439,7 +450,8 @@ void ColumnCommand::processResult()
             bpp->fFiltCmdRids[1][i] = bpp->relRids[i];
     }
 
-// 	cout << "processed " << outMsg->NVALS << " rows" << endl;
+ 	cout << "processed " << outMsg->NVALS << " rows" << endl;
+	cout << flush;
 }
 
 void ColumnCommand::createCommand(ByteStream& bs)

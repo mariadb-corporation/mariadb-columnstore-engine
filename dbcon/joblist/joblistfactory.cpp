@@ -1889,6 +1889,8 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
 {
     // v-table mode, switch to tuple methods and return the tuple joblist.
     //@Bug 1958 Build table list only for tryTuples.
+std::cout << "Entering " <<__FUNCTION__ << ", line:" <<  __LINE__ <<  " to create jobsteps for the query" << std::endl;
+std::cout.flush();
     const CalpontSelectExecutionPlan::SelectList& fromSubquery = csep->derivedTableList();
     int i = 0;
 
@@ -1986,7 +1988,9 @@ SJLP makeJobList_(
     jobInfo.queryType = csep->queryType();
     jobInfo.csc = csc;
     //TODO: clean up the vestiges of the bool trace
-    jobInfo.trace = csep->traceOn();
+//    jobInfo.trace = csep->traceOn();
+	jobInfo.trace = true;
+	jobInfo.traceFlags = 1; //csep->traceFlags();
     jobInfo.traceFlags = csep->traceFlags();
     jobInfo.isExeMgr = isExeMgr;
 //	jobInfo.tryTuples = tryTuples; // always tuples after release 3.0

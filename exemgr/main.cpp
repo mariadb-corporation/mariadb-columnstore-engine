@@ -622,6 +622,8 @@ public:
                 }
 
 new_plan:
+				std::cout << "Got a new query. will de-serialize it now\n";
+				std::cout.flush();
                 csep.unserialize(bs);
 
                 QueryTeleStats qts;
@@ -640,6 +642,8 @@ new_plan:
                     qts.local_query = csep.localQuery();
                     qts.schema_name = csep.schemaName();
                     fTeleClient.postQueryTele(qts);
+				std::cout << "Got a SELECT query, " << qts.schema_name << "\n";
+				std::cout.flush();
                 }
 
                 if (gDebug > 1 || (gDebug && !csep.isInternal()))
@@ -669,6 +673,7 @@ new_plan:
                 Message::Args args;
                 string sqlText = csep.data();
                 LoggingID li(16, csep.sessionID(), csep.txnID());
+std::cout << "sqlText:" << sqlText << "\n";
 
                 // Initialize stats for this query, including
                 // init sessionMemMap entry for this session to 0 memory %.
@@ -1388,6 +1393,7 @@ void cleanTempDir()
     boost::filesystem::create_directories(tmpPrefix);
 }
 
+extern void mcs_spin(const char* filename);
 
 int main(int argc, char* argv[])
 {
@@ -1599,7 +1605,7 @@ int main(int argc, char* argv[])
         {
         }
     }
-
+    ::mcs_spin("spin_exemgr_pool");
     threadpool::ThreadPool exeMgrThreadPool(serverThreads, 0);
     exeMgrThreadPool.setName("ExeMgrServer");
 

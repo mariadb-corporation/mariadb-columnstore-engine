@@ -90,6 +90,8 @@ using namespace logging;
 #include "jlf_tuplejoblist.h"
 
 
+extern bool mcs_would_spin ( const char* filename );
+
 namespace
 {
 using namespace joblist;
@@ -123,6 +125,7 @@ const Operator opnotlike("not like");
 const Operator opNOTLIKE("NOT LIKE");
 const Operator opisnotnull("isnotnull");
 const Operator opisnull("isnull");
+const Operator opeqNS("<=>");
 
 
 const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo);
@@ -504,6 +507,8 @@ int8_t op2num(const SOP& sop)
         return COMPARE_NE;
     else if (*sop == opnotlike || *sop == opNOTLIKE)
         return COMPARE_NLIKE;
+	else if (*sop == opeqNS)
+		return COMPARE_EQ_NS;
     else
         cerr << boldStart << "op2num: Unhandled operator >" << *sop << '<' << boldStop << endl;
 
@@ -1091,7 +1096,8 @@ const JobStepVector doJoin(
     //Bug 590
     if (tableOid1 == tableOid2 && alias1 == alias2 && view1 == view2 && joinInfo == 0)
     {
-        if (sc1->schemaName().empty() || !compatibleColumnTypes(ct1, ct2, false))
+        if (sc1->schemaName().empty() || !compatibleColumnTypes(ct1, ct2, false) ||
+           sop->op() == OP_EQNS)
         {
             return doFilterExpression(sc1, sc2, jobInfo, sop);
         }
@@ -1260,6 +1266,9 @@ const JobStepVector doJoin(
         else if (sc2->joinInfo() & JOIN_CORRELATED)
             thj->correlatedSide(2);
     }
+
+	if (sop->op() == OP_EQNS) 
+    	jt |= MATCHNULLSAFE;
 
     thj->setJoinType(jt);
 
@@ -1980,12 +1989,23 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         //This is a join (different table) or filter step (same table)
         SimpleColumn* sc1 = static_cast<SimpleColumn*>(lhs);
         SimpleColumn* sc2 = static_cast<SimpleColumn*>(rhs);
+		bool is_equal = (sop->op() == OP_EQ || sop->op() == OP_EQNS);
 
         // @bug 1496. handle non equal operator as expression in v-table mode
+        bool genExpression = (sc1->tableName() != sc2->tableName() ||
+                sc1->tableAlias() != sc2->tableAlias() ||
+                sc1->viewName() != sc2->viewName());
+#if 0
         if ((sc1->tableName() != sc2->tableName() ||
                 sc1->tableAlias() != sc2->tableAlias() ||
-                sc1->viewName() != sc2->viewName())
-                && (sop->data() != "="))
+                sc1->viewName() != sc2->viewName()) &&
+             !is_equal)
+#endif
+if (::mcs_would_spin("spin_null_safe")) {
+	genExpression = true;
+	is_equal = (sop->op() != OP_EQNS);
+}
+		if (genExpression && !is_equal)
         {
             return doExpressionFilter(sf, jobInfo);
         }

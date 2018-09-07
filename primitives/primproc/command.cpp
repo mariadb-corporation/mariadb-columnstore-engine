@@ -23,10 +23,23 @@
 using namespace std;
 using namespace messageqcpp;
 
+extern void mcs_spin ( const char* filename );
+extern bool mcs_would_spin ( const char* filename );
+
 namespace primitiveprocessor
 {
 
-Command::Command(CommandType c) : cmdType(c), fFilterFeeder(NOT_FEEDER) { }
+static const char *cmdtypestr[] = {"none", "column_command", "dict_step", "dict_scan", "pass_thru", "rid_to_string",
+									"filter_command", "pseudocolumn" };
+
+Command::Command(CommandType c) : cmdType(c), fFilterFeeder(NOT_FEEDER) {
+	if (::mcs_would_spin ( "spin_cmd_deb" )) 
+    {
+ 		cout << __FUNCTION__  <<  ", CommandType: " << cmdtypestr[c] << ", pid: " << getpid() << endl;
+	 	cout.flush();
+	  	::mcs_spin("spin_cmd");
+	}
+ }
 
 Command::~Command() { };
 
@@ -53,26 +66,32 @@ Command* Command::makeCommand(ByteStream& bs, CommandType* type, vector<SCommand
     switch (*type)
     {
         case COLUMN_COMMAND:
+			cout << " COLUMN_COMMAND ";
             ret = new ColumnCommand();
             break;
 
         case DICT_STEP:
+			cout << " DICT_STEP ";
             ret = new DictStep();
             break;
 
         case PASS_THRU:
+			cout << " PASS_THRU ";
             ret = new PassThruCommand();
             break;
 
         case RID_TO_STRING:
+			cout << " RID_TO_STRING ";
             ret = new RTSCommand();
             break;
 
         case FILTER_COMMAND:
+			cout << " FILTER_COMMAND ";
             ret = FilterCommand::makeFilterCommand(bs, cmds);
             break;
 
         case PSEUDOCOLUMN:
+			cout << " PSEUDOCOLUMN ";
             ret = new PseudoCC();
             break;
 

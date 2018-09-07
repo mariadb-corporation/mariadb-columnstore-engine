@@ -306,6 +306,7 @@ private:
 
 #include "operator.h"
 
+extern void mcs_spin(const char* filename);
 namespace execplan
 {
 /**
@@ -314,6 +315,7 @@ namespace execplan
 inline ParseTree::ParseTree() :
     fData(0), fLeft(0), fRight(0), fDerivedTable("")
 {
+  ::mcs_spin("spin_parsetree");
 }
 
 inline ParseTree::ParseTree(TreeNode* data) :

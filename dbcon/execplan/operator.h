@@ -63,6 +63,8 @@ enum OpType
     OP_IN,
     OP_NOTIN,
     OP_XOR,
+    OP_EQNS,  // Equal Null Safe
+    OP_NENS,  // Not Equal Null Safe
     OP_UNKNOWN,
 };
 

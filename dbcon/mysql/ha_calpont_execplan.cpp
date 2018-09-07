@@ -1723,6 +1723,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         gwip->ptWorkStack.push(pt);
 #endif
     }
+#if 0
+// Do not do any special processing
     else if (ifp->functype() == Item_func::EQUAL_FUNC)
     {
         // a = b OR (a IS NULL AND b IS NULL)
@@ -1761,6 +1763,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         gwip->ptWorkStack.push(ptp);
         return true;
     }
+#endif
     else //std rel ops (incl "like")
     {
         if (gwip->rcWorkStack.size() < 2)
@@ -2355,6 +2358,7 @@ bool isPredicateFunction(Item* item, gp_walk_info* gwip)
     Item_func* ifp = (Item_func*)item;
     return ( ifp->functype() == Item_func::EQ_FUNC ||
              ifp->functype() == Item_func::NE_FUNC ||
+             ifp->functype() == Item_func::EQUAL_FUNC ||
              ifp->functype() == Item_func::LT_FUNC ||
              ifp->functype() == Item_func::LE_FUNC ||
              ifp->functype() == Item_func::GE_FUNC ||

@@ -394,16 +394,26 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 isNull = false;
                 return !ret;
             }
+            
 
             if (isNull)
                 return false;
 
             const std::string& val1 = lop->getStrVal(row, isNull);
-
-            if (isNull)
+			
+			if (fOp == OP_EQNS) {
+			bool isNull2 = false;
+            const std::string& val2 = rop->getStrVal(row, isNull2);
+            if (isNull2 && isNull) 
+                return true;
+            return strCompare(val1, val2) && !isNull;
+			}
+			else {
+            if (isNull) 
                 return false;
 
             return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+			}
         }
 
         //FIXME: ???
@@ -430,6 +440,7 @@ inline bool PredicateOperator::numericCompare(result_t op1, result_t op2)
     switch (fOp)
     {
         case OP_EQ:
+        case OP_EQNS:
             return op1 == op2;
 
         case OP_NE:
@@ -461,6 +472,7 @@ inline bool PredicateOperator::strCompare(const std::string& op1, const std::str
     switch (fOp)
     {
         case OP_EQ:
+        case OP_EQNS:
             return funcexp::utf8::idb_strcoll(op1.c_str(), op2.c_str()) == 0;
 
         case OP_NE:
