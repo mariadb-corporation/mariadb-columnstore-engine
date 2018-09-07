@@ -63,7 +63,6 @@ char* copy_string(const char *str);
 %pure-parser
 %lex-param {void * scanner}
 %parse-param {struct ddlpackage::pass_to_bison * x}
-%debug
 
  /* Bison uses this to generate a C union definition.  This is used to
 	store the application created values associated with syntactic

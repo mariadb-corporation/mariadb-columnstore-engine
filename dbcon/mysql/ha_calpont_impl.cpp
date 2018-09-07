@@ -1964,7 +1964,7 @@ uint32_t doUpdateDelete(THD* thd)
         }
         else
         {
-            thd->set_row_count_func(dmlRowCount);
+            thd->set_row_count_func(dmlRowCount+thd->get_row_count_func());
         }
 
         push_warning(thd, Sql_condition::WARN_LEVEL_WARN, ER_WARN_DATA_OUT_OF_RANGE, errorMsg.c_str());
@@ -1972,7 +1972,7 @@ uint32_t doUpdateDelete(THD* thd)
     else
     {
 //		if (dmlRowCount != 0) //Bug 5117. Handling self join.
-        thd->set_row_count_func(dmlRowCount);
+			thd->set_row_count_func(dmlRowCount+thd->get_row_count_func());
 
 
         //cout << " error status " << ci->rc << " and rowcount = " << dmlRowCount << endl;
@@ -5265,7 +5265,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         // MCOL-1052 Send Items lists down to the optimizer.
         gi.groupByTables = group_hand->table_list;
         gi.groupByFields = group_hand->select;
-        gi.groupByAuxDescr = &group_hand->select_list_descr;
         gi.groupByWhere = group_hand->where;
         gi.groupByGroup = group_hand->group_by;
         gi.groupByOrder = group_hand->order_by;

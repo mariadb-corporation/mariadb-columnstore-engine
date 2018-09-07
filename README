@@ -9,3 +9,4 @@ Additional features will be pushed in future releases.
 A few things to notice:
 - Do not use pre-releases on production systems.
 - The building of the ColumnStore engine needs a special build environment. We're working on making it available for everyone to build.
+
