@@ -228,7 +228,7 @@ int64_t Func::addTime(DateTime& dt1, Time& dt2)
     month = dt1.month;
     int addyear = 0;
 
-    if (day < 0)
+    if (day <= 0)
     {
         int monthSave = month;
 

@@ -190,21 +190,57 @@ bool nonConstFunc(Item_func* ifp)
     return false;
 }
 
-ReturnedColumn* findCorrespTempField(Item_ref* item, gp_walk_info& gwi, bool clone = true)
+/*@brief  buildAggFrmTempField- build aggr func from extSELECT list item*/
+/***********************************************************
+ * DESCRIPTION:
+ * Server adds additional aggregation items to extended SELECT list and 
+ * references them in projection and HAVING. This f() finds 
+ * corresponding item in extSelAggColsItems and builds 
+ * ReturnedColumn using the item.
+ * PARAMETERS:
+ *    item          Item* used to build aggregation
+ *    gwi           main structure
+ * RETURNS
+ *  ReturnedColumn* if corresponding Item has been found
+ *  NULL otherwise
+ ***********************************************************/
+ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
 {
     ReturnedColumn* result = NULL;
-    uint32_t i;
-    for (i = 0; i < gwi.returnedCols.size(); i++)
+    Item_field* ifip = NULL;
+    Item_ref* irip;
+    Item_func_or_sum* isfp;
+
+    switch ( item->type() )
     {
-        if (item->ref[0] && item->ref[0]->name.length &&
-        gwi.returnedCols[i]->alias().c_str() &&
-        !strcasecmp(item->ref[0]->name.str, gwi.returnedCols[i]->alias().c_str()))
-        {
-            if (clone)
-                result = gwi.returnedCols[i]->clone();
-            else
-                result = gwi.returnedCols[i].get();
+        case Item::FIELD_ITEM:
+            ifip = reinterpret_cast<Item_field*>(item);
             break;
+        default:
+            irip = reinterpret_cast<Item_ref*>(item);
+            if ( irip )
+                ifip = reinterpret_cast<Item_field*>(irip->ref[0]);
+            break;
+    }
+
+    if (ifip && ifip->field)
+    {
+        std::vector<Item*>::iterator iter = gwi.extSelAggColsItems.begin();
+        for ( ; iter != gwi.extSelAggColsItems.end(); iter++ )
+        {
+            //Item* temp_isfp = *iter;
+            isfp = reinterpret_cast<Item_func_or_sum*>(*iter);
+
+            if ( isfp->type() == Item::SUM_FUNC_ITEM &&
+                    isfp->result_field == ifip->field )
+            {
+                ReturnedColumn* rc = buildAggregateColumn(isfp, gwi);
+
+                if (rc)
+                    result = rc;
+
+                break;
+            }
         }
     }
 
@@ -1548,8 +1584,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
              ifp->functype() == Item_func::ISNOTNULL_FUNC)
     {
         ReturnedColumn* rhs = NULL;
-
-        if (!gwip->rcWorkStack.empty())
+		if (!gwip->rcWorkStack.empty() && !gwip->inCaseStmt)
         {
             rhs = gwip->rcWorkStack.top();
             gwip->rcWorkStack.pop();
@@ -1650,8 +1685,49 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
         idbassert(ifp->argument_count() == 1);
         ParseTree* ptp = 0;
+		if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
+        {
+			// negate it in place
+            // Note that an EQUAL_FUNC ( a <=> b) was converted to
+            // ( a = b OR ( a is null AND b is null) )
+            // NOT of the above expression is: ( a != b AND (a is not null OR b is not null )
 
-        if (isPredicateFunction(ifp->arguments()[0], gwip) || ifp->arguments()[0]->type() == Item::COND_ITEM)
+			if (!gwip->ptWorkStack.empty())
+                ptp = gwip->ptWorkStack.top();
+
+			if (ptp)
+			{
+				ParseTree* or_ptp = ptp;
+				ParseTree* and_ptp = or_ptp->right();
+				ParseTree* equal_ptp = or_ptp->left();
+				ParseTree* nullck_left_ptp = and_ptp->left();
+				ParseTree* nullck_right_ptp = and_ptp->right();
+				SimpleFilter *sf_left_nullck = dynamic_cast<SimpleFilter*>(nullck_left_ptp->data());
+				SimpleFilter *sf_right_nullck = dynamic_cast<SimpleFilter*>(nullck_right_ptp->data());
+				SimpleFilter *sf_equal = dynamic_cast<SimpleFilter*>(equal_ptp->data());
+
+				if (sf_left_nullck && sf_right_nullck && sf_equal) {
+					// Negate the null checks
+					sf_left_nullck->op()->reverseOp();
+					sf_right_nullck->op()->reverseOp();
+					sf_equal->op()->reverseOp();
+					// Rehook the nodes
+					ptp = and_ptp;
+					ptp->left(equal_ptp);
+					ptp->right(or_ptp);
+					or_ptp->left(nullck_left_ptp);
+					or_ptp->right(nullck_right_ptp);
+					gwip->ptWorkStack.pop();
+					gwip->ptWorkStack.push(ptp);
+				}
+				else {
+					gwip->fatalParseError = true;
+					gwip->parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_ASSERTION_FAILURE);
+					return false;
+				}
+			}
+		}
+		else if (isPredicateFunction(ifp->arguments()[0], gwip) || ifp->arguments()[0]->type() == Item::COND_ITEM)
         {
             // negate it in place
             if (!gwip->ptWorkStack.empty())
@@ -1725,7 +1801,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
     else if (ifp->functype() == Item_func::EQUAL_FUNC)
     {
-        // a = b OR (a IS NULL AND b IS NULL)
+        // Convert "a <=> b" to (a = b OR (a IS NULL AND b IS NULL))"
         idbassert (gwip->rcWorkStack.size() >= 2);
         ReturnedColumn* rhs = gwip->rcWorkStack.top();
         gwip->rcWorkStack.pop();
@@ -1737,7 +1813,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         // b IS NULL
         ConstantColumn* nlhs1 = new ConstantColumn("", ConstantColumn::NULLDATA);
         sop.reset(new PredicateOperator("isnull"));
-        sop->setOpType(lhs->resultType(), rhs->resultType());
+        sop->setOpType(lhs->resultType(), rhs->resultType()); 
         sfn1 = new SimpleFilter(sop, rhs, nlhs1);
         ParseTree* ptpl = new ParseTree(sfn1);
         // a IS NULL
@@ -1752,7 +1828,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         ptpn->right(ptpr);
         // a = b
         sop.reset(new PredicateOperator("="));
-        sop->setOpType(lhs->resultType(), lhs->resultType());
+        sop->setOpType(lhs->resultType(), rhs->resultType()); 
         sfo = new SimpleFilter(sop, lhs->clone(), rhs->clone());
         // OR with the NULL comparison tree
         ParseTree* ptp = new ParseTree(new LogicOperator("or"));
@@ -3061,7 +3137,10 @@ ArithmeticColumn* buildArithmeticColumn(
             {
                 // There must be an aggregation column in extended SELECT
                 // list so find the corresponding column.
-                ReturnedColumn* rc = findCorrespTempField(static_cast<Item_ref*>(sfitempp[0]), gwi);
+                // Could have it set if there are aggregation funcs as this function arguments.
+                gwi.fatalParseError = false;
+
+                ReturnedColumn* rc = buildAggFrmTempField(sfitempp[0], gwi);
                 if(rc)
                     lhs = new ParseTree(rc);
             }
@@ -3077,7 +3156,10 @@ ArithmeticColumn* buildArithmeticColumn(
             {
                 // There must be an aggregation column in extended SELECT
                 // list so find the corresponding column.
-                ReturnedColumn* rc = findCorrespTempField(static_cast<Item_ref*>(sfitempp[1]), gwi);
+                // Could have it set if there are aggregation funcs as this function arguments.
+                gwi.fatalParseError = false;
+
+                ReturnedColumn* rc = buildAggFrmTempField(sfitempp[1], gwi);
                 if(rc)
                     rhs = new ParseTree(rc);
             }
@@ -3416,10 +3498,11 @@ ReturnedColumn* buildFunctionColumn(
                 ReturnedColumn* rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport, pushdownHand);
 
                 // MCOL-1510 It must be a temp table field, so find the corresponding column.
-                if (pushdownHand 
+                if (!rc && pushdownHand 
                     && ifp->arguments()[i]->type() == Item::REF_ITEM)
                 {
-                    rc = findCorrespTempField(static_cast<Item_ref*>(ifp->arguments()[i]), gwi);
+                    gwi.fatalParseError = false;
+                    rc = buildAggFrmTempField(ifp->arguments()[i], gwi);
                 }
 
                 if (!rc || nonSupport)
@@ -3772,8 +3855,12 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         if (funcName == "case_searched" &&
                 (i < arg_offset))
         {
+            // MCOL-1472 Nested CASE with an ISNULL predicate. We don't want the predicate 
+            // to pull off of rcWorkStack, so we set this inCaseStmt flag to tell it
+            // not to.
+            gwi.inCaseStmt = true;
             sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
-
+            gwi.inCaseStmt = false;
             if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top()->data() == sptp->data())
             {
                 gwi.ptWorkStack.pop();
@@ -4101,7 +4188,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     // MCOL-1201 For UDAnF multiple parameters
     vector<SRCP> selCols;
     vector<SRCP> orderCols;
-
+    bool bIsConst = false;
     if (!(gwi.thd->infinidb_vtable.cal_conn_info))
         gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
 
@@ -4280,6 +4367,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
                         parm.reset(buildReturnedColumn(sfitemp, gwi, gwi.fatalParseError));
                         ac->constCol(parm);
+                        bIsConst = true;
                         break;
                     }
 
@@ -4396,7 +4484,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 
         // Get result type
         // Modified for MCOL-1201 multi-argument aggregate
-        if (ac->aggParms().size() > 0)
+        if (!bIsConst && ac->aggParms().size() > 0)
         {
             // These are all one parm functions, so we can safely
             // use the first parm for result type.
@@ -5299,26 +5387,9 @@ void gp_walk(const Item* item, void* arg)
             }
             else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
             {
-                Item_field* ifip = static_cast<Item_field*>(col);
-                std::vector<Item*>::iterator iter = gwip->havingAggColsItems.begin();
-                Item_func_or_sum* isfp = NULL;
-
-                for ( ; iter != gwip->havingAggColsItems.end(); iter++ )
-                {
-                    Item* temp_isfp = *iter;
-                    isfp = reinterpret_cast<Item_func_or_sum*>(temp_isfp);
-
-                    if ( isfp->type() == Item::SUM_FUNC_ITEM &&
-                            isfp->result_field == ifip->field )
-                    {
-                        ReturnedColumn* rc = buildAggregateColumn(isfp, *gwip);
-
-                        if (rc)
-                            gwip->rcWorkStack.push(rc);
-
-                        break;
-                    }
-                }
+                ReturnedColumn* rc = buildAggFrmTempField(const_cast<Item*>(item), *gwip);
+                if (rc)
+                    gwip->rcWorkStack.push(rc);
 
                 break;
             }
@@ -5583,7 +5654,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
                     // and set hasNonSupportItem if it is so.
                     ReturnedColumn* rc = NULL;
                     if (gwi)
-                        rc = findCorrespTempField(ref, *gwi, false);
+                        rc = buildAggFrmTempField(ref, *gwi);
                     
                     if (!rc)
                     {
@@ -8193,12 +8264,13 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     SELECT_LEX select_lex = lex->select_lex;
     gp_walk_info gwi;
     gwi.thd = thd;
-    gwi.groupByAuxDescr = gi.groupByAuxDescr;
     int status = getGroupPlan(gwi, select_lex, csep, gi);
 
+#ifdef DEBUG_WALK_COND
     cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+#endif
 
     if (status > 0)
         return ER_INTERNAL_ERROR;
@@ -8575,8 +8647,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     string sel_cols_in_create;
     string sel_cols_in_select;
     bool redo = false;
-    List_iterator_fast<char> itDescr(*gi.groupByAuxDescr);
-    char* fieldDescr;
 
     // empty rcWorkStack and ptWorkStack. They should all be empty by now.
     clearStacks(gwi);
@@ -8595,14 +8665,12 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
     while ((item = it++))
     {
-        // Given the size of gi.groupByAuxDescr is equal to gi.groupByFields
-        fieldDescr = itDescr++;
         string itemAlias;
         if(item->name.length)
             itemAlias = (item->name.str);
         else
         {
-            itemAlias = (fieldDescr ? fieldDescr: "<NULL>");
+            itemAlias = "<NULL>";
         }
 
         // @bug 5916. Need to keep checking until getting concret item in case
@@ -8709,18 +8777,11 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     return ER_CHECK_NOT_IMPLEMENTED;
                 }
 
-                if(!ac->alias().length())
-                    ac->alias(fieldDescr);
                 // add this agg col to returnedColumnList
                 boost::shared_ptr<ReturnedColumn> spac(ac);
                 gwi.returnedCols.push_back(spac);
-                // This item will be used in HAVING later.
-                Item_func_or_sum* isfp = reinterpret_cast<Item_func_or_sum*>(item);
-
-                if ( ! isfp->name.length )
-                {
-                    gwi.havingAggColsItems.push_back(item);
-                }
+                // This item could be used in projection or HAVING later.
+                gwi.extSelAggColsItems.push_back(item);                
 
                 gwi.selectCols.push_back('`' + escapeBackTick(spac->alias().c_str()) + '`');
                 String str(256);
@@ -10103,20 +10164,28 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                 }
             }
 
-            if (ord_cols.length() > 0)	// has order by
+            if ( gwi.orderByCols.size() )	// has order by
             {
                 gwi.thd->infinidb_vtable.has_order_by = true;
                 csep->hasOrderBy(true);
-                ord_cols = " order by " + ord_cols;
-                select_query += ord_cols;
+                csep->specHandlerProcessed(true);
             }
         }
 
         // LIMIT and OFFSET are extracted from TABLE_LIST elements.
         // All of JOIN-ed tables contain relevant limit and offset.
-        if (gi.groupByTables->select_lex->select_limit)
+        uint64_t limit = (uint64_t)-1;
+        if (gi.groupByTables->select_lex->select_limit && 
+            ( limit = static_cast<Item_int*>(gi.groupByTables->select_lex->select_limit)->val_int() ) &&
+            limit != (uint64_t)-1 )
         {
-            csep->limitNum(((Item_int*)gi.groupByTables->select_lex->select_limit)->val_int());
+            csep->limitNum(limit);
+        }
+        else if (csep->hasOrderBy()) 
+        {
+            // We use LimitedOrderBy so set the limit to
+            // go through the check in addOrderByAndLimit
+            csep->limitNum((uint64_t) - 2);
         }
 
         if (gi.groupByTables->select_lex->offset_limit)
@@ -10228,3 +10297,4 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
 
 }
+// vim:ts=4 sw=4:

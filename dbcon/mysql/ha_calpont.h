@@ -286,7 +286,6 @@ public:
     int end_scan();
 
     List<Item>* select;
-    List<char> select_list_descr;
     TABLE_LIST* table_list;
     bool        distinct;
     Item*       where;

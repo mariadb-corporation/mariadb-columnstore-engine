@@ -198,6 +198,24 @@ int64_t Func_str_to_date::getDatetimeIntVal(rowgroup::Row& row,
     return time;
 }
 
+int64_t Func_str_to_date::getTimeIntVal(rowgroup::Row& row,
+                                    FunctionParm& parm,
+                                    bool& isNull,
+                                    CalpontSystemCatalog::ColType& ct)
+{
+    dataconvert::DateTime dateTime;
+    dataconvert::Time retTime;
+    dateTime = getDateTime(row, parm, isNull, ct);
+    retTime.day = 0;
+    retTime.is_neg = false;
+    retTime.hour = dateTime.hour;
+    retTime.minute = dateTime.minute;
+    retTime.second = dateTime.second;
+    retTime.msecond = dateTime.msecond;
+    int64_t time = *(reinterpret_cast<int64_t*>(&retTime));
+    return time;
+}
+
 int64_t Func_str_to_date::getIntVal(rowgroup::Row& row,
                                     FunctionParm& parm,
                                     bool& isNull,

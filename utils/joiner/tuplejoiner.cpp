@@ -149,8 +149,7 @@ TupleJoiner::TupleJoiner(
     for (uint32_t i = 0; i < smallKeyColumns.size(); i++)
     {
         discreteValues[i] = false;
-
-        if (isUnsigned(smallRG.getColType(i)))
+        if (isUnsigned(smallRG.getColTypes()[smallKeyColumns[i]]))
         {
             cpValues[i].push_back(static_cast<int64_t>(numeric_limits<uint64_t>::max()));
             cpValues[i].push_back(0);
@@ -1033,8 +1032,7 @@ boost::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
     for (uint32_t i = 0; i < smallKeyColumns.size(); i++)
     {
         ret->discreteValues[i] = false;
-
-        if (isUnsigned(smallRG.getColType(i)))
+        if (isUnsigned(smallRG.getColTypes()[smallKeyColumns[i]]))
         {
             ret->cpValues[i].push_back(static_cast<int64_t>(numeric_limits<uint64_t>::max()));
             ret->cpValues[i].push_back(0);

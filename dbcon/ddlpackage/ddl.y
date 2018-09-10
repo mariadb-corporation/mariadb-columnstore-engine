@@ -63,7 +63,6 @@ char* copy_string(const char *str);
 %pure-parser
 %lex-param {void * scanner}
 %parse-param {struct ddlpackage::pass_to_bison * x}
-%debug
 
  /* Bison uses this to generate a C union definition.  This is used to
 	store the application created values associated with syntactic
@@ -716,9 +715,14 @@ default_clause:
 	}
 	| DEFAULT NULL_TOK {$$ = new ColumnDefaultValue(NULL);}
 	| DEFAULT USER {$$ = new ColumnDefaultValue("$USER");}
-	| DEFAULT CURRENT_USER {$$ = new ColumnDefaultValue("$CURRENT_USER");}
+	| DEFAULT CURRENT_USER optional_braces {$$ = new ColumnDefaultValue("$CURRENT_USER");}
 	| DEFAULT SESSION_USER {$$ = new ColumnDefaultValue("$SESSION_USER");}
 	| DEFAULT SYSTEM_USER {$$ = new ColumnDefaultValue("$SYSTEM_USER");}
+	;
+
+optional_braces:
+	/* empty */ {}
+	| '(' ')' {}
 	;
 
 data_type:

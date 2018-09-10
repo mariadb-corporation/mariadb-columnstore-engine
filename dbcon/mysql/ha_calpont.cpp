@@ -1187,18 +1187,6 @@ ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* qu
           order_by(query->order_by),
           having(query->having)
 {
-    List_iterator_fast<Item> item_iter(*select);
-    Item* item;
-    char* str = NULL;
-    while((item = item_iter++))
-    {
-        String descr;
-        item->print(&descr, QT_ORDINARY);
-        str = new char[descr.length()+1];
-        strncpy(str, descr.ptr(), descr.length());
-        str[descr.length()] = '\0';
-        select_list_descr.push_back(str);
-    }
 }
 
 /***********************************************************
@@ -1207,7 +1195,6 @@ ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* qu
  ***********************************************************/
 ha_calpont_group_by_handler::~ha_calpont_group_by_handler()
 {
-    select_list_descr.delete_elements();
 }
 
 /***********************************************************

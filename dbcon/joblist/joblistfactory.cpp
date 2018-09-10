@@ -1843,15 +1843,16 @@ void makeVtableModeSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
                          JobStepVector& querySteps, JobStepVector& projectSteps, DeliveredTableMap& deliverySteps)
 {
     // @bug4848, enhance and unify limit handling.
-//    if (csep->limitNum() != (uint64_t) - 1)
+    if (csep->limitNum() != (uint64_t) - 1)
     {
         // special case for outer query order by limit -- return all
-        if (jobInfo.subId == 0 && csep->hasOrderBy())
+        if (jobInfo.subId == 0 && csep->hasOrderBy() && !csep->specHandlerProcessed())
         {
             jobInfo.limitCount = (uint64_t) - 1;
         }
 
-        // support order by and limit in sub-query/union
+        // support order by and limit in sub-query/union or 
+        // GROUP BY handler processed outer query order
         else if (csep->orderByCols().size() > 0)
         {
             addOrderByAndLimit(csep, jobInfo);

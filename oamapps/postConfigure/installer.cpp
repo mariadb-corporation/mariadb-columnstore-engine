@@ -170,6 +170,12 @@ int main(int argc, char* argv[])
     if (p && *p)
         USER = p;
 
+    // setup to start on reboot, for non-root amazon installs
+    if ( !rootUser )
+    {
+    	system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+    }   
+
     //copy Columnstore.xml.rpmsave if upgrade option is selected
     if ( installType == "upgrade" )
     {
@@ -896,7 +902,10 @@ int main(int argc, char* argv[])
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-        cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
+		if ( !rootUser )
+			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
+
+		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -912,7 +921,10 @@ int main(int argc, char* argv[])
         cout << endl << "ERROR: MariaDB ColumnStore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-        cout << ". " + installDir + "/bin/columnstoreAlias" << endl << endl;
+		if ( !rootUser )
+			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
+
+		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
