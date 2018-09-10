@@ -45,7 +45,7 @@ public:
 class DistinctEqual
 {
 public:
-    inline bool operator()(const static_any::any& lhs, static_any::any& rhs) const
+    inline bool operator()(const static_any::any lhs, static_any::any rhs) const
     {
         return lhs == rhs;
     }
@@ -53,7 +53,6 @@ public:
 
 // A class to control the execution of User Define Analytic Functions (UDAnF)
 // as defined by a specialization of mcsv1sdk::mcsv1_UDAF
-template<typename T>
 class WF_udaf : public WindowFunctionType
 {
 public:
@@ -92,8 +91,10 @@ protected:
     bool fDistinct;
     bool bRespectNulls;                   // respect null | ignore null
     bool bHasDropValue;                   // Set to false when we discover the UDAnF doesn't implement dropValue.
-    // To hold distinct values
-    std::tr1::unordered_set<static_any::any, DistinctHasher, DistinctEqual> fDistinctSet;
+    // To hold distinct values and their counts
+	typedef std::tr1::unordered_map<static_any::any, uint64_t, DistinctHasher, DistinctEqual> DistinctMap;
+	DistinctMap fDistinctMap;             
+
     static_any::any fValOut;              // The return value
 
 public:
