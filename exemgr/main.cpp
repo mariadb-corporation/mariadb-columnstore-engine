@@ -1300,8 +1300,34 @@ void cleanTempDir()
 	assert(tmpPrefix != "/");
 
 	/* This is quite scary as ExeMgr usually runs as root */
-	boost::filesystem::remove_all(tmpPrefix);
-	boost::filesystem::create_directories(tmpPrefix);
+    try
+    {
+    	boost::filesystem::remove_all(tmpPrefix);
+    	boost::filesystem::create_directories(tmpPrefix);
+    }
+    catch (std::exception& ex)
+    {
+        cerr << ex.what() << endl;
+        LoggingID logid(16, 0, 0);
+        Message::Args args;
+        Message message(8);
+        args.add("Execption whilst cleaning tmpdir: ");
+        args.add(ex.what());
+        message.format( args );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_WARNING, message, logid);
+    }
+    catch (...)
+    {
+        cerr << "Caught unknown exception during tmpdir cleanup" << endl;
+        LoggingID logid(16, 0, 0);
+        Message::Args args;
+        Message message(8);
+        args.add("Unknown execption whilst cleaning tmpdir");
+        message.format( args );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_WARNING, message, logid);
+    }
 }
 
 
