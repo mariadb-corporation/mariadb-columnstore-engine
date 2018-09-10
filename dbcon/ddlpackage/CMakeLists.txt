@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ADD_CUSTOM_COMMAND(
@@ -9,9 +8,10 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ddl.y ddl.l
 )
 
+
 # Parser puts extra info to stderr.
 INCLUDE(../../check_compiler_flag.cmake)
-MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG" DEBUG)
+MY_CHECK_AND_SET_COMPILER_FLAG("-DYYDEBUG=1" DEBUG)
 
 ########### next target ###############
 

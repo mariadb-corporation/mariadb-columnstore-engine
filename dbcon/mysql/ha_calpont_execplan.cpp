@@ -1268,7 +1268,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 			 ifp->functype() == Item_func::ISNOTNULL_FUNC)
 	{
 		ReturnedColumn* rhs = NULL;
-		if (!gwip->rcWorkStack.empty())
+		if (!gwip->rcWorkStack.empty() && !gwip->inCaseStmt)
 		{
 			rhs = gwip->rcWorkStack.top();
 			gwip->rcWorkStack.pop();
@@ -3267,7 +3267,12 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 		if (funcName == "case_searched" &&
             (i < arg_offset))
 		{
+            // MCOL-1472 Nested CASE with an ISNULL predicate. We don't want the predicate 
+            // to pull off of rcWorkStack, so we set this inCaseStmt flag to tell it
+            // not to.
+            gwi.inCaseStmt = true;
 			sptp.reset(buildParseTree((Item_func*)(item->arguments()[i]), gwi, nonSupport));
+            gwi.inCaseStmt = false;
 			if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top()->data() == sptp->data())
 			{
 				gwi.ptWorkStack.pop();

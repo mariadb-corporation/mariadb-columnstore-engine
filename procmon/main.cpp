@@ -131,13 +131,6 @@ int main(int argc, char **argv)
 	if (p && *p)
    		USER = p;
 
-	// change permissions on /dev/shm
-	if ( !rootUser)
-	{
-		string cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
-		system(cmd.c_str());
-	}
-
   	// get and set locale language    
 	string systemLang = "C";
 
@@ -315,8 +308,9 @@ int main(int argc, char **argv)
 			if ( count >= 120 ) {
 				log.writeLog(__LINE__, "Standby PM not responding, infinidb shutting down", LOG_TYPE_CRITICAL);
 				//Set the alarm
-				aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-				sleep (1);
+		//		aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+		//		sleep (1);
+				
 				string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
 				system(cmd.c_str());
 			}
@@ -342,7 +336,7 @@ int main(int argc, char **argv)
 					sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", IPaddr);
 			
 					log.writeLog(__LINE__, "set ProcMgr IPaddr to Old Standby Module: " + IPaddr, LOG_TYPE_DEBUG);
-					//update Calpont Config table
+					//update MariaDB ColumnStore Config table
 					try {
 						sysConfig->write();
 						sleep(1);
@@ -500,8 +494,8 @@ int main(int argc, char **argv)
 		{
 			log.writeLog(__LINE__, "Check DB mounts failed, shutting down", LOG_TYPE_CRITICAL);
 			//Set the alarm
-			aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
-			sleep (1);
+		//	aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
+		//	sleep (1);
 			string cmd = startup::StartUp::installDir() + "/bin/columnstore stop > /dev/null 2>&1";
 			system(cmd.c_str());
 		}
@@ -1339,7 +1333,7 @@ static void chldHandleThread(MonitorConfig config)
 						(*listPtr).processID != 0 ) ||
 				 ( (*listPtr).state == oam::ACTIVE && (*listPtr).processID == 0 ) )
 			{
-				log.writeLog(__LINE__, "*****Calpont Process Restarting: " + (*listPtr).ProcessName + ", old PID = " + oam.itoa((*listPtr).processID), LOG_TYPE_CRITICAL);
+				log.writeLog(__LINE__, "*****MariaDB ColumnStore Process Restarting: " + (*listPtr).ProcessName + ", old PID = " + oam.itoa((*listPtr).processID), LOG_TYPE_CRITICAL);
 
 				if ( (*listPtr).dieCounter >= processRestartCount ||
 					processRestartCount == 0) {
@@ -1536,7 +1530,7 @@ static void chldHandleThread(MonitorConfig config)
 					}
 				
 					//Log this event 
-					log.writeLog(__LINE__, "Calpont Process " + (*listPtr).ProcessName + restartStatus, LOG_TYPE_INFO);
+					log.writeLog(__LINE__, "MariaDB ColumnStore Process " + (*listPtr).ProcessName + restartStatus, LOG_TYPE_INFO);
 				}
 			}
 		}
@@ -2449,19 +2443,10 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 				memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
 				log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
 			}
-
-			//if DMLProc set to ACTIVE, set system state to ACTIVE if in an INIT state
-//			if ( processName == "DMLProc" && state == oam::ACTIVE )
-//			{
-//				if ( fShmSystemStatus[0].OpState == oam::BUSY_INIT ||
-//					fShmSystemStatus[0].OpState == oam::MAN_INIT ||
-//					fShmSystemStatus[0].OpState == oam::AUTO_INIT )
-//				{
-//					fShmSystemStatus[0].OpState = state;
-//					memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
-//					log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
-//				}
-//			}
+				
+				BRM::DBRM dbrm;
+				dbrm.setSystemQueryReady(true);
+			}
 		}
 		break;
 

@@ -836,10 +836,15 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 								status = processManager.disableModule(moduleName, true);
 								log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
 
+								processManager.recycleProcess(moduleName);
+
+								//check for SIMPLEX Processes on mate might need to be started
+								processManager.checkSimplexModule(moduleName);
+								
+								processManager.setSystemState(oam::ACTIVE);
+
 								//set query system state ready
 								processManager.setQuerySystemState(true);
-
-								processManager.setSystemState(oam::ACTIVE);
 							}
 							else
 							{
@@ -7067,6 +7072,7 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 	}
 	else
 		processManager.setSystemState(oam::FAILED);
+
 
 	// exit thread
 	log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);

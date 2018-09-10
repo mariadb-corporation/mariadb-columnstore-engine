@@ -988,13 +988,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					int requestStatus = oam::API_SUCCESS;
 					log.writeLog(__LINE__,  "MSG RECEIVED: Start All process request...");
 
-					// change permissions on /dev/shm
-					string cmd = "chmod 755 /dev/shm >/dev/null 2>&1";
-					if ( !rootUser)
-						cmd = "sudo chmod 777 /dev/shm >/dev/null 2>&1";
-				
-					system(cmd.c_str());
-
 					//start the mysqld daemon 
 					try {
 						oam.actionMysqlCalpont(MYSQL_START);
@@ -6107,10 +6100,13 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
 		command = "sudo mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
 				dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
 	}
+
 	int ret = system(command.c_str());
 
 	if ( WEXITSTATUS(ret) != 0 )
 	{
+		log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+
 		ifstream in("/tmp/glusterAssign.txt");
 		in.seekg(0, std::ios::end);
 		int size = in.tellg();
@@ -6151,9 +6147,13 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 	{
 		command = "sudo umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
 	}
+
 	int ret = system(command.c_str());
+
 	if ( WEXITSTATUS(ret) != 0 )
 	{
+		log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+
 		ifstream in("/tmp/glusterUnassign.txt");
 		in.seekg(0, std::ios::end);
 		int size = in.tellg();

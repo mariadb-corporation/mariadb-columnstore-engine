@@ -33,6 +33,9 @@
 
 using namespace ddlpackage;
 typedef enum { NOOP, STRIP_QUOTES } copy_action_t;
+#if YYDEBUG == 0
+int ddldebug = 0;
+#endif
 int lineno = 1;
 void ddlerror(struct pass_to_bison* x, char const *s);
 
@@ -69,9 +72,9 @@ ident_start [A-Za-z\200-\377_]
 ident_cont [A-Za-z\200-\377_0-9\$]
 identifier {ident_start}{ident_cont}*
 /* fully qualified names regexes */
-fq_identifier {identifier}\.{identifier}
-identifier_quoted {grave_accent}{identifier}{grave_accent}
-identifier_double_quoted {double_quote}{identifier}{double_quote}
+ident_w_spaces {identifier}\x20*
+identifier_quoted {grave_accent}{ident_w_spaces}+{grave_accent}
+identifier_double_quoted {double_quote}{ident_w_spaces}+{double_quote}
 
 integer			[-+]?{digit}+
 decimal			([-+]?({digit}*\.{digit}+)|({digit}+\.{digit}*))

@@ -107,7 +107,7 @@
 		<DepProcessName1>WriteEngineServer</DepProcessName1>
 		<DepModuleName1>pm*</DepModuleName1>
 		<DepProcessName2>DBRMWorkerNode</DepProcessName2>
-		<DepModuleName2>*</DepModuleName2>
+		<DepModuleName2>@</DepModuleName2>
 		<DepProcessName3>ExeMgr</DepProcessName3>
 		<DepModuleName3>*</DepModuleName3>
 		<RunType>SIMPLEX</RunType>
@@ -122,7 +122,7 @@
 		<DepProcessName1>WriteEngineServer</DepProcessName1>
 		<DepModuleName1>pm*</DepModuleName1>
 		<DepProcessName2>DBRMWorkerNode</DepProcessName2>
-		<DepModuleName2>*</DepModuleName2>
+		<DepModuleName2>@</DepModuleName2>
 		<DepProcessName3>DDLProc</DepProcessName3>
 		<DepModuleName3>@</DepModuleName3>
 		<RunType>SIMPLEX</RunType>

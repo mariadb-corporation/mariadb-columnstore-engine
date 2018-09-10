@@ -1523,9 +1523,6 @@ void pingDeviceThread()
 									break;
 
 								//set query system state not ready
-								BRM::DBRM dbrm;
-								dbrm.setSystemQueryReady(false);
-
 								processManager.setQuerySystemState(false);
 
 								processManager.setSystemState(oam::BUSY_INIT);
@@ -1574,7 +1571,7 @@ void pingDeviceThread()
 												{
 													// no dbroots, fail module
 													log.writeLog(__LINE__, "autoUnMovePmDbroot left no dbroots mounted, failing module restart: " + moduleName, LOG_TYPE_WARNING);
-			
+
 													//Issue an alarm 				
 													aManager.sendAlarmReport(moduleName.c_str(), MODULE_DOWN_AUTO, SET);
 							
@@ -1597,7 +1594,7 @@ void pingDeviceThread()
 													//set query system state ready
 													processManager.setQuerySystemState(true);
 
-													break;
+													goto break_case;
 												}
 											}
 											catch(...)
@@ -1619,25 +1616,24 @@ void pingDeviceThread()
 									if ( retry == 5 )
 									{
 										log.writeLog(__LINE__, "autoUnMovePmDbroot: Failed. Fail Module", LOG_TYPE_WARNING);
-	
+										log.writeLog(__LINE__, "System DBRM READ ONLY - Verify dbroot mounts.", LOG_TYPE_WARNING);
 										//Issue an alarm 				
 										aManager.sendAlarmReport(moduleName.c_str(), MODULE_DOWN_AUTO, SET);
 				
 										//set module to disable state
 										processManager.disableModule(moduleName, true);
 	
+										// Need to do something here to verify data mounts before resuming
+										// Best to assume if we reach this you need to put into readonly and verify all dbroots are mounted
+
 										//call dbrm control
-										oam.dbrmctl("reload");
-										log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-	
-										// resume the dbrm
-										oam.dbrmctl("resume");
-										log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+										oam.dbrmctl("readonly");
+										log.writeLog(__LINE__, "'dbrmctl readonly' done", LOG_TYPE_DEBUG);
 	
 										//clear count
 										moduleInfoList[moduleName] = 0;
 	
-										processManager.setSystemState(oam::ACTIVE);
+										processManager.setSystemState(oam::DEGRADED);
 
 										//set query system state ready
 										processManager.setQuerySystemState(true);
@@ -1807,9 +1803,6 @@ void pingDeviceThread()
 										}
 									}
 
-									//enable query stats
-									dbrm.setSystemQueryReady(true);
-
 									//set query system state ready
 									processManager.setQuerySystemState(true);
 
@@ -1865,9 +1858,6 @@ void pingDeviceThread()
 										processManager.setSystemState(oam::FAILED);
 									else
 										processManager.setSystemState(oam::ACTIVE);
-
-									//enable query stats
-									dbrm.setSystemQueryReady(true);
 
 									//set query system state ready
 									processManager.setQuerySystemState(true);
@@ -1930,9 +1920,6 @@ void pingDeviceThread()
 									log.writeLog(__LINE__, "*** module is down: " + moduleName, LOG_TYPE_CRITICAL);
 					
 									//set query system state not ready
-									BRM::DBRM dbrm;
-									dbrm.setSystemQueryReady(false);
-
 									processManager.setQuerySystemState(false);
 
 									processManager.setSystemState(oam::BUSY_INIT);
@@ -1993,9 +1980,6 @@ void pingDeviceThread()
 										      // resume the dbrm
 										      oam.dbrmctl("resume");
 										      log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
-										      //enable query stats
-										      dbrm.setSystemQueryReady(true);
 
 										      //set query system state ready
 										      processManager.setQuerySystemState(true);
@@ -2199,9 +2183,6 @@ void pingDeviceThread()
 											//set recycle process
 											processManager.recycleProcess(moduleName);
 
-											//enable query stats
-											dbrm.setSystemQueryReady(true);
-
 											//set query system state ready
 											processManager.setQuerySystemState(true);
 
@@ -2218,9 +2199,6 @@ void pingDeviceThread()
 										oam.dbrmctl("resume");
 										log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 
-										//enable query stats
-										dbrm.setSystemQueryReady(true);
-
 										//set query system state ready
 										processManager.setQuerySystemState(true);
 									}
@@ -2231,8 +2209,8 @@ void pingDeviceThread()
 									oam.dbrmctl("resume");
 									log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
 	
-									//enable query stats
-									dbrm.setSystemQueryReady(true);
+									//set recycle process
+									processManager.recycleProcess(moduleName);
 
 									//set query system state ready
 									processManager.setQuerySystemState(true);
@@ -2352,6 +2330,7 @@ void pingDeviceThread()
 				}
 			} //end of for loop
 		}
+		break_case:
 
 		// check and take action if LAN outage is flagged
 		if (LANOUTAGESUPPORT && !LANOUTAGEACTIVE && LOCALNICDOWN)

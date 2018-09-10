@@ -494,8 +494,30 @@ int main(int argc, char* argv[])
 		// At first we set to BUSY_INIT
 		oam.processInitComplete("DMLProc", oam::BUSY_INIT);
     }
+    catch (std::exception& ex)
+    {
+        cerr << ex.what() << endl;
+        LoggingID logid(21, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(1);
+        args1.add("DMLProc init caught exception: ");
+        args1.add(ex.what());
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        return 1;
+    }
     catch (...)
     {
+        cerr << "Caught unknown exception in init!" << endl;
+        LoggingID logid(21, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(1);
+        args1.add("DMLProc init caught unknown exception");
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        return 1;
     }
 	
 	//@Bug 1627
@@ -584,8 +606,30 @@ int main(int argc, char* argv[])
     {
         oam.processInitComplete("DMLProc", ACTIVE);
     }
+    catch (std::exception& ex)
+    {
+        cerr << ex.what() << endl;
+        LoggingID logid(21, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(1);
+        args1.add("DMLProc init caught exception: ");
+        args1.add(ex.what());
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        return 1;
+    }
     catch (...)
     {
+        cerr << "Caught unknown exception in init!" << endl;
+        LoggingID logid(21, 0, 0);
+        logging::Message::Args args1;
+        logging::Message msg(1);
+        args1.add("DMLProc init caught unknown exception");
+        msg.format( args1 );
+        logging::Logger logger(logid.fSubsysID);
+        logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
+        return 1;
     }
 	Dec = DistributedEngineComm::instance(rm);
 

@@ -5295,6 +5295,7 @@ namespace oam
 
 					dbrootList dbroot1;
 					dbroot1.push_back(*pt1);
+					bool returnDbRoot = false;
 
 					//send msg to unmount dbroot if module is not offline
 					int opState;
@@ -5306,7 +5307,6 @@ namespace oam
 					{}
 		
 					if (opState != oam::AUTO_OFFLINE || opState != oam::AUTO_DISABLED) {
-//						bool unmountPass = true;
 						try
 						{
 							mountDBRoot(dbroot1, false);
@@ -5316,13 +5316,8 @@ namespace oam
 							writeLog("ERROR: dbroot failed to unmount", LOG_TYPE_ERROR );
 							cout << endl << "ERROR: umountDBRoot api failure" << endl;
 							exceptionControl("manualMovePmDbroot", API_FAILURE);
-//							unmountPass = false;
 						}
 	
-//						if ( !unmountPass) {
-//							dbrootlist.erase(pt1);
-//							break;
-//						}
 					}
 
 					//check for amazon moving required
@@ -5340,37 +5335,78 @@ namespace oam
 					//if Gluster, do the assign command
 					if ( DataRedundancyConfig == "y")
 					{
-						try {
+						try
+						{
 							string errmsg;
 							int ret = glusterctl(oam::GLUSTER_ASSIGN, *pt1, toPM, errmsg);
-							if ( ret != 0 )
+							if ( ret == 0 )
+							{
+								todbrootConfigList.push_back(*pt2);
+								residedbrootConfigList.erase(pt2);
+							}
+							else
 							{
 								cerr << "FAILURE: Error assigning gluster dbroot# " + *pt1 + " to pm" + toPMID + ", error: " + errmsg << endl;
-								exceptionControl("manualMovePmDbroot", API_FAILURE);
+								writeLog("FAILURE: Error assigning gluster dbroot# " + *pt1 + " to pm" + toPMID + ", error: " + errmsg, LOG_TYPE_ERROR );
+								returnDbRoot = true;
 							}
 						}
 						catch (exception& e)
 						{
 							cout << endl << "**** glusterctl API exception:  " << e.what() << endl;
 							cerr << "FAILURE: Error assigning gluster dbroot# " + *pt1 + " to pm" + toPMID << endl;
-							exceptionControl("manualMovePmDbroot", API_FAILURE);
+							writeLog("FAILURE: Error assigning gluster dbroot# " + *pt1 + " to pm" + toPMID, LOG_TYPE_ERROR );
+							returnDbRoot = true;
 						}
 						catch (...)
 						{
 							cout << endl << "**** glusterctl API exception: UNKNOWN"  << endl;
 							cerr << "FAILURE: Error assigning gluster dbroot# " + *pt1 + " to pm" + toPMID << endl;
-							exceptionControl("manualMovePmDbroot", API_FAILURE);
+							writeLog("FAILURE: Error assigning gluster dbroot# " + *pt1 + " to pm" + toPMID, LOG_TYPE_ERROR );
+							returnDbRoot = true;
 						}
 					}
 
-					todbrootConfigList.push_back(*pt2);
-
-					residedbrootConfigList.erase(pt2);
-
+					if (returnDbRoot)
+					{
+						// something went wrong return it back to original owner
+						try
+						{
+							string errmsg;
+							writeLog("reassigning gluster dbroot# " + *pt1 + " to pm" + residePMID, LOG_TYPE_ERROR );
+							int ret = glusterctl(oam::GLUSTER_ASSIGN, *pt1, residePM, errmsg);
+							if ( ret != 0 )
+							{
+								cerr << "FAILURE: Error reassigning gluster dbroot# " + *pt1 + " to pm" + residePMID + ", error: " + errmsg << endl;
+								writeLog("FAILURE: Error reassigning gluster dbroot# " + *pt1 + " to pm" + residePMID + ", error: " + errmsg, LOG_TYPE_ERROR );
+								exceptionControl("manualMovePmDbroot", API_INVALID_STATE);
+							}
+							mountDBRoot(dbroot1);
+							//get updated Columnstore.xml distributed
+							distributeConfigFile("system");
+							return;
+						}
+						catch (exception& e)
+						{
+							cout << endl << "**** glusterctl API exception:  " << e.what() << endl;
+							cerr << "FAILURE: Error reassigning gluster dbroot# " + *pt1 + " to pm" + residePMID << endl;
+							writeLog("FAILURE: Error reassigning gluster dbroot# " + *pt1 + " to pm" + residePMID, LOG_TYPE_ERROR );
+							exceptionControl("manualMovePmDbroot", API_INVALID_STATE);
+						}
+						catch (...)
+						{
+							cout << endl << "**** glusterctl API exception: UNKNOWN"  << endl;
+							cerr << "FAILURE: Error reassigning gluster dbroot# " + *pt1 + " to pm" + residePMID << endl;
+							writeLog("FAILURE: Error reassigning gluster dbroot# " + *pt1 + " to pm" + residePMID, LOG_TYPE_ERROR );
+							exceptionControl("manualMovePmDbroot", API_INVALID_STATE);
+						}
+					}
 					break;
 				}
 			}
 		}
+
+
 
 		//set the 2 pms dbroot config
 		try
@@ -5381,7 +5417,7 @@ namespace oam
 		{
 			writeLog("ERROR: setPmDbrootConfig api failure for pm" + residePMID , LOG_TYPE_ERROR );
 			cout << endl << "ERROR: setPmDbrootConfig api failure for pm" + residePMID << endl;
-			exceptionControl("manualMovePmDbroot", API_FAILURE);
+			exceptionControl("manualMovePmDbroot", API_INVALID_STATE);
 		}
 
 		try
@@ -5392,7 +5428,7 @@ namespace oam
 		{
 			writeLog("ERROR: setPmDbrootConfig api failure for pm" + toPMID , LOG_TYPE_ERROR );
 			cout << endl << "ERROR: setPmDbrootConfig api failure for pm" + toPMID << endl;
-			exceptionControl("manualMovePmDbroot", API_FAILURE);
+			exceptionControl("manualMovePmDbroot", API_INVALID_STATE);
 		}
 
 		//send msg to mount dbroot
@@ -5980,7 +6016,7 @@ namespace oam
 		}
 
 		if (!found) {
-			writeLog("No dbroots found in ../Calpont/local/moveDbrootTransactionLog", LOG_TYPE_DEBUG );
+			writeLog("No dbroots found in " + InstallDir + "/moveDbrootTransactionLog", LOG_TYPE_DEBUG );
 			cout << "No dbroots found in " << fileName << endl;
 		}
 
@@ -6518,32 +6554,7 @@ namespace oam
 		for( ; pt3 != dbrootlist.end() ; pt3++)
 		{
 			todbrootConfigList.push_back(*pt3);
-
-/*			if ( DataRedundancyConfig == "y")
-			{
-				try {
-					string errmsg;
-					int ret = glusterctl(oam::GLUSTER_ASSIGN, itoa(*pt3), toPM, errmsg);
-					if ( ret != 0 )
-					{
-						cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(*pt3) + " to pm" + toPMID + ", error: " + errmsg << endl;
-						exceptionControl("assignPmDbrootConfig", API_FAILURE);
-					}
-				}
-				catch (exception& e)
-				{
-					cout << endl << "**** glusterctl API exception:  " << e.what() << endl;
-					cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(*pt3) + " to pm" + toPMID << endl;
-					exceptionControl("assignPmDbrootConfig", API_FAILURE);
-				}
-				catch (...)
-				{
-					cout << endl << "**** glusterctl API exception: UNKNOWN"  << endl;
-					cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(*pt3) + " to pm" + toPMID << endl;
-					exceptionControl("assignPmDbrootConfig", API_FAILURE);
-				}
-			}
-*/		}
+		}
 
 		try
 		{
@@ -6961,12 +6972,14 @@ namespace oam
 				{
 					cout << endl << "**** glusterctl API exception:  " << e.what() << endl;
 					cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) << endl;
+					writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
 					exceptionControl("removeDbroot", API_FAILURE);
 				}
 				catch (...)
 				{
 					cout << endl << "**** glusterctl API exception: UNKNOWN"  << endl;
 					cerr << "FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID) << endl;
+					writeLog("FAILURE: Error assigning gluster dbroot# " + itoa(dbrootID), LOG_TYPE_ERROR );
 					exceptionControl("removeDbroot", API_FAILURE);
 				}
 			}
