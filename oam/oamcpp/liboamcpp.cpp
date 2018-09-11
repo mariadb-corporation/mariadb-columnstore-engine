@@ -7713,7 +7713,7 @@ namespace oam
 		// run script to get Instance status and IP Address
 		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getInstance  > /tmp/getInstanceInfo_" + name;
 		int status = system(cmd.c_str());
-		if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
 			return "failed";
 
 		// get Instance Name
@@ -7744,7 +7744,7 @@ namespace oam
 		// run script to get Instance status and IP Address
 		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getType  > /tmp/getInstanceType_" + name;
 		int status = system(cmd.c_str());
-		if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
 			return "failed";
 
 		// get Instance Name
@@ -7775,7 +7775,7 @@ namespace oam
 		// run script to get Instance Subnet
 		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getSubnet  > /tmp/getInstanceSubnet_" + name;
 		int status = system(cmd.c_str());
-		if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
 			return "failed";
 
 		// get Instance Name
@@ -7807,7 +7807,7 @@ namespace oam
 		// run script to get Instance status and IP Address
 		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > /tmp/getInstance_" + name;
 		int status = system(cmd.c_str());
-		if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
 			return "failed";
 
 		if (checkLogStatus("/tmp/getInstance", "Required") )
@@ -7883,7 +7883,7 @@ namespace oam
 		// run script to get Instance status and IP Address
 		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh startInstance " + instanceName + " > /tmp/startEC2Instance_" + instanceName;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
 			return false;
 
 		return true;
@@ -7902,7 +7902,7 @@ namespace oam
 		// run script to get Instance status and IP Address
 		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > /tmp/assignElasticIP_" + instanceName;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
             exceptionControl("assignElasticIP", oam::API_FAILURE);
 
 		return true;
@@ -7921,7 +7921,7 @@ namespace oam
 		// run script to get Instance status and IP Address
 		string cmd = InstallDir + "/bin/MCSInstanceCmds.sh deassignElasticIP " + IpAddress + " > /tmp/deassignElasticIP_" + IpAddress;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
             exceptionControl("deassignElasticIP", oam::API_FAILURE);
 
 		return true;
@@ -7940,8 +7940,9 @@ namespace oam
 		// run script to get Volume Status
 		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > /tmp/getVolumeStatus_" + volumeName;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 ){
 			return "failed";
+		}
 
 		// get status
 		string status;
@@ -7971,7 +7972,7 @@ namespace oam
 		// run script to get Volume Status
 		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh create " + size + " " + name + " > /tmp/createVolumeStatus_" + name;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
 			return "failed";
 
 		// get status
@@ -8016,11 +8017,15 @@ namespace oam
 			string cmd = InstallDir + "/bin/MCSVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > /tmp/attachVolumeStatus_" + volumeName;
 			ret = system(cmd.c_str());
 
-			if (WEXITSTATUS(ret) == 0 )
+			if (WEXITSTATUS(ret) == 1 )
+			{
+				//failing to attach, dettach and retry
+            	writeLog("attachEC2Volume: Attach failed, call detach:" + volumeName + " " + instanceName + " " + deviceName, LOG_TYPE_ERROR );
+
+				detachEC2Volume(volumeName);
+			}	
+			else
 				return true;
-			
-			//failing to attach, dettach and retry
-			detachEC2Volume(volumeName);
 		}
 
 		if (ret == 0 )
@@ -8042,7 +8047,7 @@ namespace oam
 		// run script to attach Volume
 		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh detach " + volumeName + " > /tmp/detachVolumeStatus_" + volumeName;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
 			return false;
 
 		return true;
@@ -8061,7 +8066,7 @@ namespace oam
 		// run script to delete Volume
 		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh delete " + volumeName + " > /tmp/deleteVolumeStatus_" + volumeName;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
 			return false;
 
 		return true;
@@ -8080,7 +8085,7 @@ namespace oam
 		// run script to create a tag
 		string cmd = InstallDir + "/bin/MCSVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > /tmp/createTagStatus_" + resourceName;
 		int ret = system(cmd.c_str());
-		if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
 			return false;
 
 		return true;

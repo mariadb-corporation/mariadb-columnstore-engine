@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 	}
 	catch(...) {}
 
-	if ( cloud == "amazon-ec2" ) {
+	if ( cloud == "amazon-ec2" || cloud == "amazon-vpc" ) {
 		if(!aMonitor.amazonIPCheck()) {
 			log.writeLog(__LINE__, "ERROR: amazonIPCheck failed, exiting", LOG_TYPE_CRITICAL);
 			sleep(2);
