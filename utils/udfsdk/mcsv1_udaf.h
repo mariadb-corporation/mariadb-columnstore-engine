@@ -189,6 +189,7 @@ static uint64_t	UDAF_WINDOWFRAME_REQUIRED __attribute__ ((unused)) = 1 << 4; // 
 static uint64_t	UDAF_WINDOWFRAME_ALLOWED __attribute__ ((unused))  = 1 << 5; // If used as UDAnF, a WINDOW FRAME is optional
 static uint64_t	UDAF_MAYBE_NULL     __attribute__ ((unused))       = 1 << 6; // If UDA(n)F might return NULL.
 static uint64_t	UDAF_IGNORE_NULLS  __attribute__ ((unused))        = 1 << 7; // If UDA(n)F wants NULL rows suppressed.
+static uint64_t	UDAF_DISTINCT  __attribute__ ((unused))            = 1 << 8; // Force UDA(n)F to be distinct on first param.
 
 // Flags set by the framework to define the context of the call.
 // User code shouldn't use these directly

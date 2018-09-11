@@ -82,7 +82,7 @@ WindowFunctionType* WF_udaf::clone() const
 void WF_udaf::resetData()
 {
     getContext().getFunction()->reset(&getContext());
-    fDistinctSet.clear();
+    fDistinctMap.clear();
     WindowFunctionType::resetData();
 }
 
@@ -179,8 +179,6 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
                     case CalpontSystemCatalog::MEDINT:
                     case CalpontSystemCatalog::INT:
                     case CalpontSystemCatalog::BIGINT:
-                    case CalpontSystemCatalog::DATE:
-                    case CalpontSystemCatalog::DATETIME:
                     {
                         int64_t valIn;
 
@@ -270,6 +268,9 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
                     case CalpontSystemCatalog::UMEDINT:
                     case CalpontSystemCatalog::UINT:
                     case CalpontSystemCatalog::UBIGINT:
+                    case CalpontSystemCatalog::TIME:
+                    case CalpontSystemCatalog::DATE:
+                    case CalpontSystemCatalog::DATETIME:
                     {
                         uint64_t valIn;
 
@@ -622,8 +623,6 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut,
         case execplan::CalpontSystemCatalog::BIGINT:
         case execplan::CalpontSystemCatalog::DECIMAL:
         case execplan::CalpontSystemCatalog::UDECIMAL:
-        case execplan::CalpontSystemCatalog::DATE:
-        case execplan::CalpontSystemCatalog::DATETIME:
             if (valOut.empty())
             {
                 setValue(colDataType, b, e, c, (int64_t*)NULL);
@@ -795,8 +794,6 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::MEDINT:
                         case CalpontSystemCatalog::INT:
                         case CalpontSystemCatalog::BIGINT:
-                        case CalpontSystemCatalog::DATE:
-                        case CalpontSystemCatalog::DATETIME:
                         {
                             int64_t valIn;
 
@@ -811,29 +808,23 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
-                            if (k == 0)
+                            if (k == 0 && fDistinct)
                             {
-                                if ((fDistinct) || (fDistinctSet.find(valIn) != fDistinctSet.end()))
+                                // MCOL-1698
+                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                // Unordered_map will not insert a duplicate key (valIn).
+                                // If it doesn't insert, the original pair will be returned
+                                // in distinct.first and distinct.second will be a bool --
+                                // true if newly inserted, false if a duplicate.
+                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                distinct = fDistinctMap.insert(val);
+                                if (distinct.second == false)
                                 {
-                                    // MCOL-1698
-                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                    // Unordered_map will not insert a duplicate key (valIn).
-                                    // If it doesn't insert, the original pair will be returned
-                                    // in distinct.first and distinct.second will be a bool --
-                                    // true if newly inserted, false if a duplicate.
-                                    std::pair<typename DistinctMap::iterator, bool> distinct;
-                                    distinct = fDistinctMap.insert(val);
-                                    if (distinct.second == false)
-                                    {
-                                        // This is a duplicate: increment the count
-                                        ++(*distinct.first).second;
-                                        bSkipIt = true;
-                                        continue;
-                                    }
+                                    // This is a duplicate: increment the count
+                                    ++(*distinct.first).second;
+                                    bSkipIt = true;
+                                    continue;
                                 }
-
-                                if (fDistinct)
-                                    fDistinctSet.insert(valIn);
                             }
 
                             datum.columnData = valIn;
@@ -856,23 +847,17 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
-                            if (k == 0)
+                            if (k == 0 && fDistinct)
                             {
-                                if ((fDistinct) || (fDistinctSet.find(valIn) != fDistinctSet.end()))
+                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                distinct = fDistinctMap.insert(val);
+                                if (distinct.second == false)
                                 {
-                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                    std::pair<typename DistinctMap::iterator, bool> distinct;
-                                    distinct = fDistinctMap.insert(val);
-                                    if (distinct.second == false)
-                                    {
-                                        ++(*distinct.first).second;
-                                        bSkipIt = true;
-                                        continue;
-                                    }
+                                    ++(*distinct.first).second;
+                                    bSkipIt = true;
+                                    continue;
                                 }
-
-                                if (fDistinct)
-                                    fDistinctSet.insert(valIn);
                             }
 
                             datum.columnData = valIn;
@@ -884,6 +869,9 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                         case CalpontSystemCatalog::UMEDINT:
                         case CalpontSystemCatalog::UINT:
                         case CalpontSystemCatalog::UBIGINT:
+                        case CalpontSystemCatalog::TIME:
+                        case CalpontSystemCatalog::DATE:
+                        case CalpontSystemCatalog::DATETIME:
                         {
                             uint64_t valIn;
 
@@ -898,23 +886,17 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
-                            if (k == 0)
+                            if (k == 0 && fDistinct)
                             {
-                                if ((fDistinct) || (fDistinctSet.find(valIn) != fDistinctSet.end()))
+                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                distinct = fDistinctMap.insert(val);
+                                if (distinct.second == false)
                                 {
-                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                    std::pair<typename DistinctMap::iterator, bool> distinct;
-                                    distinct = fDistinctMap.insert(val);
-                                    if (distinct.second == false)
-                                    {
-                                        ++(*distinct.first).second;
-                                        bSkipIt = true;
-                                        continue;
-                                    }
+                                    ++(*distinct.first).second;
+                                    bSkipIt = true;
+                                    continue;
                                 }
-
-                                if (fDistinct)
-                                    fDistinctSet.insert(valIn);
                             }
 
                             datum.columnData = valIn;
@@ -937,23 +919,17 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
-                            if (k == 0)
+                            if (k == 0 && fDistinct)
                             {
-                                if ((fDistinct) || (fDistinctSet.find(valIn) != fDistinctSet.end()))
+                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                distinct = fDistinctMap.insert(val);
+                                if (distinct.second == false)
                                 {
-                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                    std::pair<typename DistinctMap::iterator, bool> distinct;
-                                    distinct = fDistinctMap.insert(val);
-                                    if (distinct.second == false)
-                                    {
-                                        ++(*distinct.first).second;
-                                        bSkipIt = true;
-                                        continue;
-                                    }
+                                    ++(*distinct.first).second;
+                                    bSkipIt = true;
+                                    continue;
                                 }
-
-                                if (fDistinct)
-                                    fDistinctSet.insert(valIn);
                             }
 
                             datum.columnData = valIn;
@@ -976,23 +952,17 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
-                            if (k == 0)
+                            if (k == 0 && fDistinct)
                             {
-                                if ((fDistinct) || (fDistinctSet.find(valIn) != fDistinctSet.end()))
+                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                distinct = fDistinctMap.insert(val);
+                                if (distinct.second == false)
                                 {
-                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                    std::pair<typename DistinctMap::iterator, bool> distinct;
-                                    distinct = fDistinctMap.insert(val);
-                                    if (distinct.second == false)
-                                    {
-                                        ++(*distinct.first).second;
-                                        bSkipIt = true;
-                                        continue;
-                                    }
+                                    ++(*distinct.first).second;
+                                    bSkipIt = true;
+                                    continue;
                                 }
-
-                                if (fDistinct)
-                                    fDistinctSet.insert(valIn);
                             }
 
                             datum.columnData = valIn;
@@ -1018,23 +988,17 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
                             // Check for distinct, if turned on.
                             // Currently, distinct only works on the first parameter.
-                            if (k == 0)
+                            if (k == 0 && fDistinct)
                             {
-                                if ((fDistinct) || (fDistinctSet.find(valIn) != fDistinctSet.end()))
+                                std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
+                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                distinct = fDistinctMap.insert(val);
+                                if (distinct.second == false)
                                 {
-                                    std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                    std::pair<typename DistinctMap::iterator, bool> distinct;
-                                    distinct = fDistinctMap.insert(val);
-                                    if (distinct.second == false)
-                                    {
-                                        ++(*distinct.first).second;
-                                        bSkipIt = true;
-                                        continue;
-                                    }
+                                    ++(*distinct.first).second;
+                                    bSkipIt = true;
+                                    continue;
                                 }
-
-                                if (fDistinct)
-                                    fDistinctSet.insert(valIn);
                             }
 
                             datum.columnData = valIn;
