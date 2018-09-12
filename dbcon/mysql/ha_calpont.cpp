@@ -1156,8 +1156,11 @@ create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
 
+    // Create a handler if there is an agregate or a GROUP BY
+    // and if vtable was explicitly disabled.
     if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE
-            && thd->variables.infinidb_vtable_mode == 0)
+            && thd->variables.infinidb_vtable_mode == 0
+            && ( query->group_by || thd->lex->select_lex.with_sum_func) )
     {
         handler = new ha_calpont_group_by_handler(thd, query);
 
