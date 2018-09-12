@@ -2443,10 +2443,6 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 				memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
 				log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
 			}
-				
-				BRM::DBRM dbrm;
-				dbrm.setSystemQueryReady(true);
-			}
 		}
 		break;
 
