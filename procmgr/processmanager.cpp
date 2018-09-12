@@ -2846,10 +2846,13 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 							}
 
-							// if a DDLProc was restarted, reinit DMLProc
+							// if a DDLProc was restarted, restart DMLProc
 							if( processName == "DDLProc") {
 								processManager.reinitProcessType("DMLProc");
+								//set query system states ready
 								processManager.setQuerySystemState(true);
+
+								processManager.setSystemState(oam::ACTIVE);
 							}
 
 							//only run on auto process restart
@@ -2900,6 +2903,8 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 				processManager.setQuerySystemState(true);
 
 				processManager.setSystemState(oam::ACTIVE);
+
+				log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted Completed");
 			}
 			break;
 
