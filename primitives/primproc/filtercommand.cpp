@@ -319,6 +319,7 @@ bool FilterCommand::compare(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return bpp->fFiltCmdValues[0][i] != bpp->fFiltCmdValues[1][j];
             break;
 
@@ -399,6 +400,7 @@ bool ScaledFilterCmd::compare(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return bpp->fFiltCmdValues[0][i] * fFactor != bpp->fFiltCmdValues[1][j];
             break;
 
@@ -531,6 +533,7 @@ bool StrFilterCmd::compare_cc(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return uint64ToStr(bpp->fFiltCmdValues[0][i]) != uint64ToStr(bpp->fFiltCmdValues[1][j]);
             break;
 
@@ -574,6 +577,7 @@ bool StrFilterCmd::compare_ss(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return bpp->fFiltStrValues[0][i] != bpp->fFiltStrValues[1][j];
             break;
 
@@ -617,6 +621,7 @@ bool StrFilterCmd::compare_cs(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return (cmp != 0 || fCharLength < bpp->fFiltStrValues[1][j].length());
             break;
 
@@ -660,6 +665,7 @@ bool StrFilterCmd::compare_sc(uint64_t i, uint64_t j)
             break;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return (cmp != 0 || bpp->fFiltStrValues[0][i].length() > fCharLength);
             break;
 

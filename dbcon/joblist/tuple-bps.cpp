@@ -1484,9 +1484,11 @@ bool TupleBPS::compareSingleValue(uint8_t COP, int64_t val1, int64_t val2) const
             return (val1 >= val2);
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return (val1 == val2);
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return (val1 != val2);
     }
 

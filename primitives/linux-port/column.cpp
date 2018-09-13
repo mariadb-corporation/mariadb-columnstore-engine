@@ -117,6 +117,7 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
             return val1 < val2;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return val1 == val2;
 
         case COMPARE_LE:
@@ -126,6 +127,7 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
             return val1 > val2;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return val1 != val2;
 
         case COMPARE_GE:
@@ -152,9 +154,11 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
             return val1 < val2 || (val1 == val2 && rf ^ 0x80);
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return val1 == val2 && rf == 0;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return val1 != val2 || rf != 0;
 
         case COMPARE_GE:
@@ -196,9 +200,11 @@ inline bool colStrCompare_(uint64_t val1, uint64_t val2, uint8_t COP, uint8_t rf
             return val1 <= val2;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return val1 == val2 && rf == 0;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return val1 != val2 || rf != 0;
 
         case COMPARE_GE:
@@ -627,7 +633,7 @@ inline bool colCompare(int64_t val1, int64_t val2, uint8_t COP, uint8_t rf, int 
     {
         bool val2Null = isNullVal(width, type, (uint8_t*) &val2);
 
-        if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
+        if (isNull == val2Null || (val2Null && (COP == COMPARE_NE || COP == COMPARE_NE_NS)))
             return colCompare_(val1, val2, COP, rf);
         else
             return false;
@@ -643,7 +649,7 @@ inline bool colCompareUnsigned(uint64_t val1, uint64_t val2, uint8_t COP, uint8_
     /* isNullVal should work on the normalized value on little endian machines */
     bool val2Null = isNullVal(width, type, (uint8_t*) &val2);
 
-    if (isNull == val2Null || (val2Null && COP == COMPARE_NE))
+    if (isNull == val2Null || (val2Null && (COP == COMPARE_NE || COP == COMPARE_NE_NS)))
         return colCompare_(val1, val2, COP, rf);
     else
         return false;

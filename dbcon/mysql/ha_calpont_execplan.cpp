@@ -1684,6 +1684,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         }
 
         idbassert(ifp->argument_count() == 1);
+#if 0
         ParseTree* ptp = 0;
 		if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
         {
@@ -1728,17 +1729,17 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 			}
 		}
 		else if (isPredicateFunction(ifp->arguments()[0], gwip) || ifp->arguments()[0]->type() == Item::COND_ITEM)
+#endif
+		if (isPredicateFunction(ifp->arguments()[0], gwip) || ifp->arguments()[0]->type() == Item::COND_ITEM)
         {
             // negate it in place
+            ParseTree* ptp = 0;
             if (!gwip->ptWorkStack.empty())
                 ptp = gwip->ptWorkStack.top();
 
-            SimpleFilter* sf = 0;
-
             if (ptp)
             {
-                sf = dynamic_cast<SimpleFilter*>(ptp->data());
-
+                SimpleFilter* sf = dynamic_cast<SimpleFilter*>(ptp->data());
                 if (sf)
                     sf->op()->reverseOp();
             }

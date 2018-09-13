@@ -247,10 +247,12 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
             break;
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             factor = 1.0 / distinctValues;
             break;
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             factor = 1.0 - (1.0 / distinctValues);
             break;
     }

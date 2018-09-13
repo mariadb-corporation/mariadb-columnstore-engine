@@ -126,6 +126,7 @@ const Operator opNOTLIKE("NOT LIKE");
 const Operator opisnotnull("isnotnull");
 const Operator opisnull("isnull");
 const Operator opeqNS("<=>");
+const Operator opneNS("not <=>");
 
 
 const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo);
@@ -509,6 +510,8 @@ int8_t op2num(const SOP& sop)
         return COMPARE_NLIKE;
 	else if (*sop == opeqNS)
 		return COMPARE_EQ_NS;
+	else if (*sop == opneNS)
+		return COMPARE_NE_NS;
     else
         cerr << boldStart << "op2num: Unhandled operator >" << *sop << '<' << boldStop << endl;
 
@@ -1097,7 +1100,7 @@ const JobStepVector doJoin(
     if (tableOid1 == tableOid2 && alias1 == alias2 && view1 == view2 && joinInfo == 0)
     {
         if (sc1->schemaName().empty() || !compatibleColumnTypes(ct1, ct2, false) ||
-           sop->op() == OP_EQNS)
+           sop->op() == OP_EQNS || sop->op() == OP_NENS)
         {
             return doFilterExpression(sc1, sc2, jobInfo, sop);
         }
@@ -1657,6 +1660,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
 //X
         //@bug 339 nulls are not stored in dictionary
+		// Ravi: For a null-safe (<=>) do not use a dictionary scan.
         if ((dictOid = isDictCol(ct)) > 0  && ConstantColumn::NULLDATA != cc->type())
         {
             if (jobInfo.trace)

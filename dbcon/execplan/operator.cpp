@@ -113,10 +113,6 @@ void Operator::data(const string data)
     {
         fOp = OP_EQ;
     }
-    else if (fData == "<=>")
-    {
-        fOp = OP_EQNS;
-    }
     else if (fData == "!=" || fData == "<>")
     {
         fOp = OP_NE;
@@ -167,6 +163,14 @@ void Operator::data(const string data)
     else if (fData == "xor")
     {
         fOp = OP_XOR;
+    }
+    else if (fData == "<=>")
+    {
+        fOp = OP_EQNS;
+    }
+    else if (fData == "not <=>")
+    {
+        fOp = OP_NENS;
     }
     else
     {
@@ -337,6 +341,16 @@ void Operator::reverseOp()
         case OP_NOTIN:
             fOp = OP_IN;
             fData = "in";
+            break;
+
+        case OP_EQNS:
+            fOp = OP_NENS;
+            fData = "not <=>";
+            break;
+
+        case OP_NENS:
+            fOp = OP_EQNS;
+            fData = "<=>";
             break;
 
         default:

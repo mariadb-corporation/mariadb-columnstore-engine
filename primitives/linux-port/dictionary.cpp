@@ -59,6 +59,7 @@ inline bool PrimitiveProcessor::compare(int cmp, uint8_t COP, int len1, int len2
             return (cmp < 0 || (cmp == 0 && len1 < len2));
 
         case COMPARE_EQ:
+        case COMPARE_EQ_NS:
             return (cmp == 0 && len1 == len2 ? true : false);
 
         case COMPARE_LE:
@@ -68,6 +69,7 @@ inline bool PrimitiveProcessor::compare(int cmp, uint8_t COP, int len1, int len2
             return (cmp > 0 || (cmp == 0 && len1 > len2));
 
         case COMPARE_NE:
+        case COMPARE_NE_NS:
             return (cmp != 0 || len1 != len2 ? true : false);
 
         case COMPARE_GE:

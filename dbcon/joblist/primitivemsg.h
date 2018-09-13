@@ -63,7 +63,7 @@ const int8_t COMPARE_LIKE = 0x10;
 const int8_t COMPARE_NLIKE = (COMPARE_LIKE | COMPARE_NOT); //0x18
 
 const int8_t COMPARE_EQ_NS=0x20;       // EQ Null Safe
-const int8_t COMPARE_NENS=(COMPARE_EQ_NS|COMPARE_NOT); //0x28 NE Null Safe
+const int8_t COMPARE_NE_NS=(COMPARE_EQ_NS|COMPARE_NOT); //0x28 NE Null Safe
 
 //      BOP (Binary Operation) values
 //          used to tell if the operations are all be true or

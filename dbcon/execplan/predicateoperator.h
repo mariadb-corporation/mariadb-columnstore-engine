@@ -112,6 +112,30 @@ private:
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
     inline bool strCompare(const std::string& op1, const std::string& op2);
+
+#if 0
+//Ravi
+	template <typename value_t, typename get_value_fn, typename compare_fn> 
+	bool predicateCompare(get_value_fn get_value, compare_fn compare)
+    {
+		bool isNull = false;
+        value_t val1 = lop->get_value(row, isNull);
+        if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
+           return false;
+
+		bool isNull2 = false;
+        value_t val2 = rop->get_value(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2))
+				return true;
+
+            if (isNull || isNull2)
+				return false;
+
+            return compare(val1, val2);
+    };
+#endif
 };
 
 inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop)
@@ -185,10 +209,27 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             int64_t val1 = lop->getIntVal(row, isNull);
 
-            if (isNull)
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return numericCompare(val1,  rop->getIntVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            int64_t val2 = rop->getIntVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; // Ravi: is this right?
+				return true;
+			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return numericCompare(val1, val2);
         }
 
         case execplan::CalpontSystemCatalog::UBIGINT:
@@ -212,6 +253,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 isNull = false;
                 return !ret;
             }
+// Ravi Fixme
 
             if (isNull)
                 return false;
@@ -250,10 +292,27 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             double val1 = lop->getDoubleVal(row, isNull);
 
-            if (isNull)
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return numericCompare(val1, rop->getDoubleVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            double val2 = rop->getDoubleVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; // Ravi: is this right?
+				return true;
+			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return numericCompare(val1, val2);
         }
 
         case execplan::CalpontSystemCatalog::DECIMAL:
@@ -277,6 +336,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             if (isNull)
                 return false;
+// Ravi Fixme
 
             IDB_Decimal val1 = lop->getDecimalVal(row, isNull);
 
@@ -335,6 +395,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             if (isNull)
                 return false;
+// Ravi Fixme
 
             int64_t val1 = lop->getDatetimeIntVal(row, isNull);
 
@@ -364,6 +425,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             if (isNull)
                 return false;
+// Ravi Fixme
 
             int64_t val1 = lop->getTimeIntVal(row, isNull);
 
@@ -401,19 +463,28 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             const std::string& val1 = lop->getStrVal(row, isNull);
 			
-			if (fOp == OP_EQNS) {
-			bool isNull2 = false;
-            const std::string& val2 = rop->getStrVal(row, isNull2);
-            if (isNull2 && isNull) 
-                return true;
-            return strCompare(val1, val2) && !isNull;
-			}
-			else {
-            if (isNull) 
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return strCompare(val1, rop->getStrVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            const std::string& val2 = rop->getStrVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; // Ravi: is this right?
+				return true;
 			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return strCompare(val1, val2);
+
         }
 
         //FIXME: ???
@@ -444,6 +515,7 @@ inline bool PredicateOperator::numericCompare(result_t op1, result_t op2)
             return op1 == op2;
 
         case OP_NE:
+        case OP_NENS:
             return op1 != op2;
 
         case OP_GT:
@@ -476,6 +548,7 @@ inline bool PredicateOperator::strCompare(const std::string& op1, const std::str
             return funcexp::utf8::idb_strcoll(op1.c_str(), op2.c_str()) == 0;
 
         case OP_NE:
+        case OP_NENS:
             return funcexp::utf8::idb_strcoll(op1.c_str(), op2.c_str()) != 0;
 
         case OP_GT:
