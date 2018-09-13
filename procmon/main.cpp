@@ -2443,22 +2443,6 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 				memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
 				log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
 			}
-
-			//if DMLProc set to ACTIVE, set system state to ACTIVE if in an INIT state
-			if ( processName == "DMLProc" && state == oam::ACTIVE )
-			{
-				if ( fShmSystemStatus[0].OpState == oam::BUSY_INIT ||
-					fShmSystemStatus[0].OpState == oam::MAN_INIT ||
-					fShmSystemStatus[0].OpState == oam::AUTO_INIT )
-				{
-					fShmSystemStatus[0].OpState = state;
-					memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
-					log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
-				}
-				
-				BRM::DBRM dbrm;
-				dbrm.setSystemQueryReady(true);
-			}
 		}
 		break;
 
