@@ -5491,7 +5491,6 @@ bool ProcessMonitor::amazonIPCheck()
 									log.writeLog(__LINE__, "Assign Elastic IP Address failed : '" + moduleName + "' / '" + ELIPaddress, LOG_TYPE_ERROR);
 									break;
 								}
-
 								break;
 							}
 
@@ -5653,8 +5652,11 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 			{}
 	
 			if (oam.attachEC2Volume(volumeName, deviceName, instanceName)) {
+				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to attached: " + volumeName, LOG_TYPE_DEBUG);
+
 				string cmd = "mount " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID) + " > /dev/null";
 				system(cmd.c_str());
+				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to mounted: " + volumeName, LOG_TYPE_DEBUG);
 				return true;
 			}
 			else
