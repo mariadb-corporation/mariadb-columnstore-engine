@@ -7036,7 +7036,7 @@ int processCommand(string* arguments)
 					if (systemstatus.SystemOpState == oam::ACTIVE ) {
 						try
 						{
-							cout << endl << "   Restarting System ";
+							cout << endl << "   Restarting System " << endl;
 							gracefulTemp = oam::FORCEFUL;
 							int returnStatus = oam.restartSystem(gracefulTemp, ackTemp);
 							switch (returnStatus)

@@ -621,9 +621,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 					else
 						log.writeLog(__LINE__, "START: process already active " + processName);
 
-					//Inform Process Manager that Process restart
-					//processRestarted(processName);
-
 					ackMsg << (ByteStream::byte) ACK;
 					ackMsg << (ByteStream::byte) START;
 					ackMsg << (ByteStream::byte) requestStatus;
@@ -719,9 +716,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 						log.writeLog(__LINE__,  "ERROR: No such process: " + processName, LOG_TYPE_ERROR );
 						requestStatus = API_FAILURE;
 					}
-
-					//Inform Process Manager that Process restart
-					//processRestarted(processName);
 
 					ackMsg << (ByteStream::byte) ACK;
 					ackMsg << (ByteStream::byte) RESTART;
@@ -4650,7 +4644,6 @@ void ProcessMonitor::checkModuleFailover( std::string processName)
 						systemprocessstatus.processstatus[i].ProcessOpState == oam::FAILED ) {
 						// found a AVAILABLE mate, start it
 						log.writeLog(__LINE__, "Change UM Master to module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
-						log.writeLog(__LINE__, "Disable local UM module " + config.moduleName(), LOG_TYPE_DEBUG);
 						log.writeLog(__LINE__, "Stop local UM module " + config.moduleName(), LOG_TYPE_DEBUG);
 						log.writeLog(__LINE__, "Disable Local will Enable UM module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
 
