@@ -5045,6 +5045,7 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
             {
                 push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, infinidb_autoswitch_warning.c_str());
             }
+            ci->queryState = 0;
         }
         else // vtable mode
         {
@@ -5212,10 +5213,13 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             ci->warningMsg = msg;
         }
 
-        // if the previous query has error, re-establish the connection
+        // If the previous query has error and 
+        // this is not a subquery run by the server(MCOL-1601)
+        // re-establish the connection
         if (ci->queryState != 0)
         {
-            sm::sm_cleanup(ci->cal_conn_hndl);
+            if( ci->cal_conn_hndl_st.size() == 0 )
+                sm::sm_cleanup(ci->cal_conn_hndl);
             ci->cal_conn_hndl = 0;
         }
 
@@ -5237,6 +5241,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
         hndl = ci->cal_conn_hndl;
 
+        ci->cal_conn_hndl_st.push(ci->cal_conn_hndl);
         if (!csep)
             csep.reset(new CalpontSelectExecutionPlan());
 
@@ -5439,11 +5444,15 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
                 idbassert(hndl != 0);
                 hndl->csc = csc;
 
+                // The next section is useless
                 if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
                     ti.conn_hndl = hndl;
                 else
+                {
                     ci->cal_conn_hndl = hndl;
-
+                    ci->cal_conn_hndl_st.pop();
+                    ci->cal_conn_hndl_st.push(ci->cal_conn_hndl);
+                }
                 try
                 {
                     hndl->connect();
@@ -5476,11 +5485,11 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE) ||
             (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_QUERY))
     {
-        if (ti.tpl_ctx == 0)
-        {
-            ti.tpl_ctx = new sm::cpsm_tplh_t();
-            ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
-        }
+        // MCOL-1601 Using stacks of ExeMgr conn hndls, table and scan contexts.
+        ti.tpl_ctx = new sm::cpsm_tplh_t();
+        ti.tpl_ctx_st.push(ti.tpl_ctx);
+        ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
+        ti.tpl_scan_ctx_st.push(ti.tpl_scan_ctx);
 
         // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
         // call rnd_init for a table more than once.
@@ -5560,6 +5569,7 @@ error:
 
     if (ci->cal_conn_hndl)
     {
+        // end_query() should be called here.
         sm::sm_cleanup(ci->cal_conn_hndl);
         ci->cal_conn_hndl = 0;
     }
@@ -5571,6 +5581,7 @@ internal_error:
 
     if (ci->cal_conn_hndl)
     {
+        // end_query() should be called here.
         sm::sm_cleanup(ci->cal_conn_hndl);
         ci->cal_conn_hndl = 0;
     }
@@ -5802,6 +5813,12 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
             ci->cal_conn_hndl = 0;
             // clear querystats because no query stats available for cancelled query
             ci->queryStats = "";
+            if ( ci->cal_conn_hndl_st.size() )
+            {
+                ci->cal_conn_hndl_st.pop();
+                if ( ci->cal_conn_hndl_st.size() )
+                    ci->cal_conn_hndl = ci->cal_conn_hndl_st.top();
+            }
         }
 
         return 0;
@@ -5811,6 +5828,7 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
 
     cal_table_info ti = ci->tableMap[table];
     sm::cpsm_conhdl_t* hndl;
+    bool clearScanCtx = false;
 
     hndl = ci->cal_conn_hndl;
 
@@ -5818,6 +5836,8 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     {
         if (ti.tpl_scan_ctx.get())
         {
+            clearScanCtx = ( (ti.tpl_scan_ctx.get()->rowsreturned) &&
+                ti.tpl_scan_ctx.get()->rowsreturned == ti.tpl_scan_ctx.get()->getRowCount() );
             try
             {
                 sm::tpl_scan_close(ti.tpl_scan_ctx);
@@ -5829,11 +5849,31 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
         }
 
         ti.tpl_scan_ctx.reset();
-
+        if ( ti.tpl_scan_ctx_st.size() )
+        {
+            ti.tpl_scan_ctx_st.pop();
+            if ( ti.tpl_scan_ctx_st.size() )
+                ti.tpl_scan_ctx =  ti.tpl_scan_ctx_st.top();
+        }
         try
         {
             if(hndl)
-                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats);
+            {
+                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, clearScanCtx);
+// Normaly stats variables are set in external_lock method but we set it here
+// since they we pretend we are in vtable_disabled mode and the stats vars won't be set.
+// We sum the stats up here since server could run a number of
+// queries e.g. each for a subquery in a filter.
+                if(hndl)
+                {
+                    if (hndl->queryStats.length())
+                        ci->queryStats += hndl->queryStats;
+                    if (hndl->extendedStats.length())
+                        ci->extendedStats += hndl->extendedStats;
+                    if (hndl->miniStats.length())
+                        ci->miniStats += hndl->miniStats;
+                }
+            }
 
             ci->cal_conn_hndl = hndl;
 
@@ -5865,6 +5905,20 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     }
 
     ti.tpl_ctx = 0;
+
+    if ( ti.tpl_ctx_st.size() )
+    {
+        ti.tpl_ctx_st.pop();
+        if ( ti.tpl_ctx_st.size() )
+            ti.tpl_ctx = ti.tpl_ctx_st.top();
+    }
+
+    if ( ci->cal_conn_hndl_st.size() )
+    {
+        ci->cal_conn_hndl_st.pop();
+        if ( ci->cal_conn_hndl_st.size() )
+            ci->cal_conn_hndl = ci->cal_conn_hndl_st.top();
+    }
 
     ci->tableMap[table] = ti;
 

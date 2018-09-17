@@ -280,7 +280,7 @@ tpl_open ( tableid_t tableid,
            cpsm_tplh_t*	ntplh,
            cpsm_conhdl_t*	conn_hdl)
 {
-    SMDEBUGLOG << "tpl_open: " << conn_hdl << " tableid: " << tableid << endl;
+    SMDEBUGLOG << "tpl_open: ntplh: " << ntplh << " conn_hdl: " << conn_hdl << " tableid: " << tableid << endl;
 
     // if first time enter this function for a statement, set
     // queryState to QUERY_IN_PRCOESS and get execution plan.
@@ -319,7 +319,9 @@ tpl_scan_open ( tableid_t	tableid,
                 sp_cpsm_tplsch_t& ntplsch,
                 cpsm_conhdl_t* conn_hdl )
 {
+#if IDB_SM_DEBUG
     SMDEBUGLOG << "tpl_scan_open: " << conn_hdl << " tableid: " << tableid << endl;
+#endif
 
     // @bug 649. No initialization here. take passed in reference
     ntplsch->tableid = tableid;
@@ -354,8 +356,8 @@ tpl_scan_close ( sp_cpsm_tplsch_t& ntplsch )
     SMDEBUGLOG << "tpl_scan_close: ";
 
     if (ntplsch)
-        SMDEBUGLOG << " tableid: " << ntplsch->tableid << endl;
-
+        SMDEBUGLOG << "tpl_scan_close: ntplsch " << ntplsch;
+        SMDEBUGLOG << "tpl_scan_close: tableid: " << ntplsch->tableid << endl;
 #endif
     ntplsch.reset();
 
@@ -365,11 +367,12 @@ tpl_scan_close ( sp_cpsm_tplsch_t& ntplsch )
 status_t
 tpl_close ( cpsm_tplh_t* ntplh,
             cpsm_conhdl_t** conn_hdl,
-            QueryStats& stats )
+            QueryStats& stats,
+            bool clear_scan_ctx)
 {
     cpsm_conhdl_t* hndl = *conn_hdl;
 #if IDB_SM_DEBUG
-    SMDEBUGLOG << "tpl_close: " << hndl;
+    SMDEBUGLOG << "tpl_close: hndl" << hndl << " ntplh " << ntplh;
 
     if (ntplh)
         SMDEBUGLOG << " tableid: " << ntplh->tableid;
@@ -384,9 +387,21 @@ tpl_close ( cpsm_tplh_t* ntplh,
         // Get the query stats
         ByteStream bs;
         ByteStream::quadbyte qb = 3;
+        //string tmpQueryStats;
+        //string tmpExtendedStats;
+        //string tmpMiniStats;
         bs << qb;
         hndl->write(bs);
+        
+        // MCOL-1601 Dispose of unused empty RowGroup
+        if (clear_scan_ctx)
+        {
+            bs = hndl->exeMgr->read();
+        }
 
+#if IDB_SM_DEBUG
+        SMDEBUGLOG << "tpl_close hndl->exeMgr: " << hndl->exeMgr << endl;
+#endif
         //keep reading until we get a string
         //TODO: really need to fix this! Why is ExeMgr sending other stuff?
         for (int tries = 0; tries < 10; tries++)
@@ -397,9 +412,20 @@ tpl_close ( cpsm_tplh_t* ntplh,
 
             try
             {
-                bs >> hndl->queryStats;
-                bs >> hndl->extendedStats;
-                bs >> hndl->miniStats;
+                // MCOL-1601 Server could run a number of subqueries separetely.
+                // If so there will be a number of statistics returned.
+                /*if(hndl->queryStats.size())
+                {
+                    bs >> tmpQueryStats, hndl->queryStats += tmpQueryStats;
+                    bs >> tmpExtendedStats, hndl->extendedStats += tmpExtendedStats;
+                    bs >> hndl->miniStats, hndl->miniStats += tmpMiniStats;
+                }
+                else*/
+                {
+                    bs >> hndl->queryStats;
+                    bs >> hndl->extendedStats;
+                    bs >> hndl->miniStats;
+                }
                 stats.unserialize(bs);
                 stats.setEndTime();
                 stats.insert();
@@ -415,6 +441,9 @@ tpl_close ( cpsm_tplh_t* ntplh,
             {
                 // querystats messed up. close connection.
                 // no need to throw for querystats protocol error, like for tablemode.
+#if IDB_SM_DEBUG
+                SMDEBUGLOG << "tpl_close() exception whilst getting stats" << endl;
+#endif
                 end_query(hndl);
                 sm_cleanup(hndl);
                 *conn_hdl = 0;
@@ -436,9 +465,9 @@ sm_init ( uint32_t sid,
 {
     // clear file content
 #if IDB_SM_DEBUG
-    smlog.close();
-    smlog.open("/tmp/sm.log");
-    SMDEBUGLOG << "sm_init: " << dboptions << endl;
+    //smlog.close();
+    //smlog.open("/tmp/sm.log");
+    SMDEBUGLOG << "sm_init: " << endl;
 #endif
 
     // @bug5660 Connection changes related to the local pm setting
@@ -474,7 +503,6 @@ sm_cleanup ( cpsm_conhdl_t* conn_hdl )
 {
 #if IDB_SM_DEBUG
     SMDEBUGLOG << "sm_cleanup: " << conn_hdl << endl;
-    SMDEBUGLOG.close();
 #endif
 
     delete conn_hdl;
