@@ -836,6 +836,178 @@ int main(int argc, char* argv[])
 
         if (pcommand)
         {
+            if (strlen(pcommand) > 0)
+                temp = pcommand;
+            else
+                temp = singleServerInstall;
+
+            callFree(pcommand);
+
+            if (temp == "1")
+            {
+                singleServerInstall = temp;
+                cout << endl << "Performing the Single Server Install." << endl;
+
+                if ( reuseConfig == "n" )
+                {
+                    //setup to Columnstore.xml file for single server
+
+		    try
+		    {
+			sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("ExeMgr1", "Module", "pm1");
+			sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
+			sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
+			sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
+			sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
+			sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
+			sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
+			sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
+			sysConfig->setConfig("Installation", "SingleServerInstall", "y");
+			sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
+		    }
+
+		    catch (...)
+		    {
+			cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		    }
+		}
+
+                setSystemName();
+                cout << endl;
+
+                system(cmd.c_str());
+
+                // setup storage
+                if (!storageSetup(false))
+                {
+                    cout << "ERROR: Problem setting up storage" << endl;
+                    exit(1);
+                }
+
+                if (hdfs || !rootUser)
+                    if ( !updateBash() )
+                        cout << "updateBash error" << endl;
+
+                // setup storage
+                if (!singleServerDBrootSetup())
+                {
+                    cout << "ERROR: Problem setting up DBRoot IDs" << endl;
+                    exit(1);
+                }
+
+                //set system DBRoot count and check 'files per parition' with number of dbroots
+                try
+                {
+                    sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
+                }
+                catch (...)
+                {
+                    cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
+                    exit(1);
+                }
+
+                //check if dbrm data resides in older directory path and inform user if it does
+                dbrmDirCheck();
+
+                if (startOfflinePrompt)
+                    offLineAppCheck();
+
+                checkMysqlPort(mysqlPort, sysConfig);
+
+                if ( !writeConfig(sysConfig) )
+                {
+                    cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+                    exit(1);
+                }
+
+                cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
+
+                cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+                system(cmd.c_str());
+                exit(0);
+            }
+            else
+            {
+                if (temp == "2")
+                {
+                    singleServerInstall = temp;
+                    break;
+                }
+            }
+
+            cout << "Invalid Entry, please re-enter" << endl;
+
+            if ( noPrompting )
+                exit(1);
+
+            continue;
+        }
+
+        break;
+    }
+
+    try
+    {
+        sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
+    }
+    catch (...)
+    {
+        cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
+        exit(1);
+    }
+
+    if ( !writeConfig(sysConfig) )
+    {
+        cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+        exit(1);
+    }
+
+    //
+    // Multi-server install
+    //
 				if (strlen(pcommand) > 0) 
 					temp = pcommand;
 				else
@@ -1444,8 +1616,7 @@ int main(int argc, char* argv[])
         // setup to start on reboot, for non-root amazon installs
         if ( !rootUser )
         {
-            system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-            system("sudo chmod 666 /etc/fstab >/dev/null 2>&1");
+            system("sed -i -e 's/#MCS//g' /etc/rc.d/rc.local >/dev/null 2>&1");
         }
 
         if ( !writeConfig(sysConfig) )
@@ -3880,17 +4051,7 @@ int main(int argc, char* argv[])
     //check if local MariaDB ColumnStore system logging is working
     cout << endl << "===== Checking MariaDB ColumnStore System Logging Functionality =====" << endl << endl;
 
-    if ( rootUser)
-        cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
-    else
-        cmd = "sudo " + installDir + "/bin/syslogSetup.sh --installdir=" + installDir + " install  > /dev/null 2>&1";
-
-    system(cmd.c_str());
-
-    if ( rootUser)
-        cmd = installDir + "/bin/syslogSetup.sh status  > /dev/null 2>&1";
-    else
-        cmd = "sudo " + installDir + "/bin/syslogSetup.sh --installdir=" + installDir + " status  > /dev/null 2>&1";
+    cmd = installDir + "/bin/syslogSetup.sh status  > /dev/null 2>&1";
 
     int ret = system(cmd.c_str());
 
@@ -4209,19 +4370,7 @@ bool checkSaveConfigFile()
         string cmd;
 
         if ( reuseConfig == "y" )
-        {
-            if ( singleServerInstall == "1")
-            {
-                cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                system(cmd.c_str());
-                cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                system(cmd.c_str());
-                cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
-                system(cmd.c_str());
-            }
-
             break;
-        }
 
         if ( reuseConfig == "n" )
         {
@@ -4348,22 +4497,13 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
         //make a backup copy before changing
         string cmd = "rm -f " + fileName + ".columnstoreSave";
 
-        if ( !rootUser )
-            cmd = "sudo rm -f " + fileName + ".columnstoreSave";
-
         system(cmd.c_str());
 
         cmd = "cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 
-        if ( !rootUser )
-            cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
-
         system(cmd.c_str());
 
-        if ( rootUser )
-            cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
-        else
-            cmd = "sudo bash -c 'sudo cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName + "'";
+        cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
 
         int rtnCode = system(cmd.c_str());
 
@@ -4564,6 +4704,9 @@ bool uncommentCalpontXml( string entry)
  */
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 {
+  
+    return true;
+    
     vector <string> lines;
 
     string mount1;
@@ -4665,7 +4808,7 @@ bool createDbrootDirs(string DBRootStorageType)
 
         if ( !rootUser)
         {
-            cmd = "sudo chown -R " + USER + ":" + USER + " " + installDir + "/data1 > /dev/null";
+            cmd = "chown -R " + USER + ":" + USER + " " + installDir + "/data1 > /dev/null";
             system(cmd.c_str());
         }
 
@@ -5125,10 +5268,7 @@ bool storageSetup(bool amazonInstall)
     //check if gluster is installed
     int rtnCode = 1;
 
-    if (rootUser)
-        rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
-    else
-        rtnCode = system("sudo gluster --version > /tmp/gluster.log 2>&1");
+    rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
 
     if (rtnCode == 0)
     {
@@ -5820,10 +5960,7 @@ bool updateBash()
         string cmd = "echo . " + installDir + "/bin/" + DataFileEnvFile + " >> " + fileName;
         system(cmd.c_str());
 
-        if ( rootUser)
-            cmd = "su - hdfs -c 'hadoop fs -mkdir -p " + installDir + ";hadoop fs -chown root:root " + installDir + "' >/dev/null 2>&1";
-        else
-            cmd = "sudo su - hdfs -c 'hadoop fs -mkdir -p " + installDir + ";hadoop fs -chown " + USER + ":" + USER + " " + installDir + "' >/dev/null 2>&1";
+        cmd = "su - hdfs -c 'hadoop fs -mkdir -p " + installDir + ";hadoop fs -chown root:root " + installDir + "' >/dev/null 2>&1";
 
         system(cmd.c_str());
     }
@@ -6711,67 +6848,7 @@ bool glusterSetup(string password)
                 cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): '" << command << "'" << endl;
                 exit(1);
             }
-
-            /*
-            			if (dataRedundancyStorage == 2)
-            			{
-            				//walk data storage locations and modify fstab to reflect the storage locations entered by user
-            				vector<DataRedundancyStorageSetup>::iterator storageSetupIter=DataRedundancyConfigs[pm].storageLocations.begin();
-            				for (; storageSetupIter < DataRedundancyConfigs[pm].storageLocations.end(); storageSetupIter++ )
-            				{
-            					if (rootUser)
-            					{
-            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
-            								" 'echo " + (*storageSetupIter).storageLocation + " " +
-            								installDir + "/gluster/brick" + oam.itoa(brick) + " " +
-            								(*storageSetupIter).storageFilesytemType + " defaults 1 2 >> /etc/fstab'";
-            					}
-            					else
-            					{
-            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
-            								" 'sudo bash -c `sudo echo " + (*storageSetupIter).storageLocation + " " +
-            								installDir + "/gluster/brick" + oam.itoa(brick) + " " +
-            								(*storageSetupIter).storageFilesytemType + " defaults 1 2 >> /etc/fstab`'";
-            					}
-            					status = system(command.c_str());
-            					if (WEXITSTATUS(status) != 0 )
-            					{
-            						cout << "ERROR: command failed: " << command << endl;
-            						exit(1);
-            					}
-            					if (rootUser)
-            					{
-            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
-            								" 'mount " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
-            					}
-            					else
-            					{
-            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
-            								" 'sudo bash -c `sudo mount " + installDir + "/gluster/brick" + oam.itoa(brick) + "`'";
-            					}
-            					status = system(command.c_str());
-            					if (WEXITSTATUS(status) != 0 )
-            					{
-            						cout << "ERROR: command failed: " << command << endl;
-            						exit(1);
-            					}
-            					if (!rootUser)
-            					{
-            						int user;
-            						user = getuid();
-            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
-            								"'sudo bash -c `sudo chown -R " + oam.itoa(user) + ":" + oam.itoa(user) + " " + installDir + "/gluster/brick" + oam.itoa(brick) + "`'";
-            						status = system(command.c_str());
-            						if (WEXITSTATUS(status) != 0 )
-            						{
-            							cout << "ERROR(" << status <<"): command failed: " << command << endl;
-            						}
-            					}
-
-            				}
-            			}
-            */
-        }
+       }
 
         string errmsg1;
         string errmsg2;
@@ -6785,14 +6862,7 @@ bool glusterSetup(string password)
 
     sleep(5);
 
-    if (rootUser)
-    {
-        command = "gluster peer status >> /tmp/glusterCommands.txt 2>&1";
-    }
-    else
-    {
-        command = "sudo gluster peer status >> /tmp/glusterCommands.txt 2>&1";
-    }
+    command = "gluster peer status >> /tmp/glusterCommands.txt 2>&1";
 
     status = system(command.c_str());
 
@@ -6817,14 +6887,7 @@ bool glusterSetup(string password)
     {
         int dbrootID = db + 1;
 
-        if (rootUser)
-        {
-            command = "gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
-        }
-        else
-        {
-            command = "sudo gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
-        }
+        command = "gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
 
         vector<int>::iterator dbrootPmIter = dbrootPms[db].begin();
 
@@ -6883,7 +6946,7 @@ bool glusterSetup(string password)
         {
             int user = getuid();
             int group = getgid();
-            command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
+            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6892,7 +6955,7 @@ bool glusterSetup(string password)
                 exit(1);
             }
 
-            command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6901,7 +6964,7 @@ bool glusterSetup(string password)
                 exit(1);
             }
 
-            command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )

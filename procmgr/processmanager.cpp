@@ -4969,7 +4969,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     //clear out the known_host file, sometimes causes a failure on amazon during addModule
     if ( amazon )
     {
-        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        string cmd = "unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -4998,24 +4998,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
         //
         // Verify Host IP and Password
         //
-
-        if ( password == "ssh" && amazon )
-        {
-            // check if there is a root password stored
-            string rpw = oam::UnassignedName;
-
-            try
-            {
-                oam.getSystemConfig("rpw", rpw);
-            }
-            catch (...)
-            {
-                rpw = "mariadb1";
-            }
-
-            if (rpw != oam::UnassignedName)
-                password = rpw;
-        }
 
         listPT = devicenetworklist.begin();
 
@@ -6346,7 +6328,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
                 homedir = p;
         }
 
-        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        string cmd = "unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -11119,7 +11101,7 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
 
         if ( !rootUser)
         {
-            cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+            cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
             system(cmd.c_str());
         }
 

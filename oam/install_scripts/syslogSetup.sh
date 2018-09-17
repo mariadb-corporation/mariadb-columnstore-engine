@@ -13,12 +13,9 @@ syslog_conf=nofile
 rsyslog7=0
 
 user=`whoami 2>/dev/null`
-group=user
 
-SUDO=" "
-if [ "$user" != "root" ]; then
-        SUDO="sudo "
-fi
+groupname=adm
+username=syslog
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
@@ -27,6 +24,10 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
+		user="`echo $arg | awk -F= '{print $2}'`"
+		groupname=$user
+		username=$user
 	elif [ `expr -- "$arg" : '--..*'` -ge 3 ]; then
 		echo "ignoring unknown argument: $arg" 1>&2
 	elif [ `expr -- "$arg" : '--'` -eq 2 ]; then
@@ -70,13 +71,13 @@ if [ "$daemon" = "nodaemon" ]; then
 
 	if [ -f /etc/syslog.conf ]; then
 		daemon="syslog"
-		$SUDO /etc/init.d/syslog start > /dev/null 2>&1
+		 /etc/init.d/syslog start > /dev/null 2>&1
 	elif [ -f /etc/rsyslog.conf ]; then
 		daemon="rsyslog"
-		$SUDO /etc/init.d/rsyslog start > /dev/null 2>&1
+		 /etc/init.d/rsyslog start > /dev/null 2>&1
 	elif [ -f /etc/init.d/syslog-ng ]; then
 		daemon="syslog-ng"
-		$SUDO /etc/init.d/syslog-ng start > /dev/null 2>&1
+		 /etc/init.d/syslog-ng start > /dev/null 2>&1
 	fi
 fi
 
@@ -100,7 +101,7 @@ if [ "$daemon" = "syslog-ng" ]; then
 	fi
 elif [ "$daemon" = "rsyslog" ]; then
 	#check if rsyslog version 7 or greater
-	$SUDO rsyslogd -v > /tmp/rsyslog.ver
+	 rsyslogd -v > /tmp/rsyslog.ver
 	cnt=`grep "rsyslogd 7" /tmp/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
@@ -156,17 +157,21 @@ install() {
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
+	if [ $user != "root" ]; then
+		 chown $user:$user /home/$user/mariadb/columnstore/etc/*
+	fi 
+	
 	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
-		$SUDO rm -f ${syslog_conf}.columnstoreSave
-		$SUDO cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
-		$SUDO sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
+		 rm -f ${syslog_conf}.columnstoreSave
+		 cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
+		 sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
 
 	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
 		#set the syslog for ColumnStore logging
 		# remove older version incase it was installed by previous build
-		$SUDO rm -rf /etc/rsyslog.d/columnstore.conf
+		 rm -rf /etc/rsyslog.d/columnstore.conf
 
 		// determine username/groupname
 		
@@ -184,19 +189,19 @@ if [ ! -z "$syslog_conf" ] ; then
 		$SUDO chown $user:$group -R /var/log/mariadb > /dev/null 2>&1
 		
 		if [ $rsyslog7 == 1 ]; then
-			sed -i -e s/groupname/$group/g ${columnstoreSyslogFile7}
-			sed -i -e s/username/$user/g ${columnstoreSyslogFile7}
-			
-			$SUDO rm -f /etc/rsyslog.d/49-columnstore.conf
-			$SUDO cp  ${columnstoreSyslogFile7} ${syslog_conf}
+			 rm -f /etc/rsyslog.d/49-columnstore.conf
+			 cp  ${columnstoreSyslogFile7} ${syslog_conf}
+
+			 sed -i -e s/groupname/$groupname/g ${syslog_conf}
+			 sed -i -e s/username/$username/g ${syslog_conf}
 		else		
-			$SUDO cp  ${columnstoreSyslogFile} ${syslog_conf}
+			 cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
 	fi
 
 	# install Columnstore Log Rotate File
-	$SUDO cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-	$SUDO chmod 644 /etc/logrotate.d/columnstore
+	 cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+	 chmod 644 /etc/logrotate.d/columnstore
 
 	restartSyslog
 fi
@@ -212,20 +217,23 @@ if [ ! -z "$syslog_conf" ] ; then
 			if [ $? -eq 0 ]; then
 				if [ -f ${syslog_conf}.columnstoreSave ] ; then
 					#uninstall the syslog for ColumnStore logging
-					$SUDO v -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
-					$SUDO mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
+					 v -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
+					 mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
 					if [ ! -f ${syslog_conf} ] ; then
-						$SUDO cp ${syslog_conf}.ColumnStoreBackup ${syslog_conf}
+						 cp ${syslog_conf}.ColumnStoreBackup ${syslog_conf}
 					fi
 				fi
 			fi
-			$SUDO sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
+			 sed -i '/# MariaDB/,$d' ${syslog_conf} > /dev/null 2>&1
 		else
-			$SUDO rm -f "$syslog_conf"
+			 rm -f "$syslog_conf"
 		fi
 	else
-		$SUDO rm -f "$syslog_conf"
+		 rm -f "$syslog_conf"
 	fi
+	
+	# uninstall Columnstore Log Rotate File
+	rm -f /etc/logrotate.d/columnstore
 
 	restartSyslog
 
@@ -264,21 +272,21 @@ restartSyslog() {
 
 	if [ "$daemon" = "syslog-ng" ]; then
 		if [ -f /etc/init.d/syslog-ng ]; then
-			$SUDO /etc/init.d/syslog-ng restart  > /dev/null 2>&1
+			 /etc/init.d/syslog-ng restart  > /dev/null 2>&1
 		else
-		        $SUDO systemctl restart syslog-ng.service > /dev/null 2>&1
+		         systemctl restart syslog-ng.service > /dev/null 2>&1
 		fi
 	elif [ "$daemon" = "rsyslog" ]; then
                 if [ -f /etc/init.d/rsyslog ]; then
-                        $SUDO /etc/init.d/rsyslog restart  > /dev/null 2>&1
+                         /etc/init.d/rsyslog restart  > /dev/null 2>&1
                 else
-                        $SUDO systemctl restart rsyslog.service > /dev/null 2>&1
+                         systemctl restart rsyslog.service > /dev/null 2>&1
                 fi
 	elif [ "$daemon" = "syslog" ]; then	
                 if [ -f /etc/init.d/syslog ]; then
-                        $SUDO /etc/init.d/syslog restart  > /dev/null 2>&1
+                         /etc/init.d/syslog restart  > /dev/null 2>&1
                 else
-                        $SUDO systemctl restart syslog.service > /dev/null 2>&1
+                         systemctl restart syslog.service > /dev/null 2>&1
                 fi
 	fi
 }

@@ -56,18 +56,14 @@ if [ "x$has_um" = x ]; then
 	has_um=0
 fi
 
-user=`whoami 2>/dev/null`
-SUDO=" "
-if [ $user != "root" ]; then
-        SUDO="sudo "
-fi
+lockdir=`$InstallDir/bin/getConfig Installation LockFileDirectory`
 
 checkInstallSetup() {
 	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`
 	if [ $InitialInstallFlag != "y" ]; then
 		echo "Please run the postConfigure install script, check the Installation Guide"
 		echo "for additional details"
-		$SUDO rm -f /var/lock/subsys/columnstore
+		rm -f $lockdir/columnstore
 		exit 1
 	fi
 }
@@ -75,18 +71,18 @@ checkInstallSetup() {
 [ -f $InstallDir/bin/ProcMon ] || exit 0
 
 start() {
-	if [ -f /var/lock/subsys/columnstore ]; then
+	if [ -f $lockdir/columnstore ]; then
 		echo "MariaDB Columnstore Database Platform already running"
 		exit 0
 	fi
 
-	($SUDO mkdir -p /var/lock/subsys && $SUDO chmod 777 /var/lock/subsys && $SUDO touch /var/lock/subsys/columnstore) >/dev/null 2>&1
+	(mkdir -p $lockdir && touch $lockdir/columnstore) >/dev/null 2>&1
 
 	if [ -x $InstallDir/bin/columnstore.pre-start ]; then
 		$InstallDir/bin/columnstore.pre-start
 		if [ $? -ne 0 ]; then
 			echo "Error running MariaDB Columnstore pre-start script, not starting MariaDB Columnstore"
-			$SUDO rm -f /var/lock/subsys/columnstore
+			rm -f $lockdir/columnstore
 			exit 1
 		fi
 	fi
@@ -94,30 +90,30 @@ start() {
 
 	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
-
-		#columnstore core files
+    #columnstore core files
 		ulimit -c unlimited  > /dev/null 2>&1
-		$SUDO sysctl -q -w kernel.core_uses_pid=1  > /dev/null 2>&1
-		$SUDO sysctl -q -w kernel.core_pattern=/var/log/mariadb/columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
+		sysctl -q -w kernel.core_uses_pid=1  > /dev/null 2>&1
+		sysctl -q -w kernel.core_pattern=/var/log/mariadb/columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
+
 	fi
 
 	RETVAL=0
 	echo "Starting MariaDB Columnstore Database Platform"
-	$SUDO rm -f /tmp/StopColumnstore
+	rm -f /tmp/StopColumnstore
 	exec $InstallDir/bin/run.sh $InstallDir/bin/ProcMon  > /dev/null 2>&1 &
 
 	return $RETVAL
 }	
 stop() {
 	echo "Shutting down MariaDB Columnstore Database Platform"
-	$SUDO touch /tmp/StopColumnstore
-	$SUDO pkill ProcMon
-	$SUDO pkill ProcMgr
+	touch /tmp/StopColumnstore
+	pkill ProcMon
+	pkill ProcMgr
 	sleep 1
 	$InstallDir/bin/clearShm
 	RETVAL=$?
-	$SUDO rm -f /var/lock/subsys/columnstore
-	$SUDO fuser -k 8604/tcp > /dev/null 2>&1
+	rm -f $lockdir/columnstore
+	fuser -k 8604/tcp > /dev/null 2>&1
 	test -f $InstallDir/mysql/mysql-Columnstore || return $RETVAL
 	$InstallDir/mysql/mysql-Columnstore stop > /dev/null 2>&1
 	if [ -x $InstallDir/bin/columnstore.post-stop ]; then
@@ -132,7 +128,7 @@ restart() {
 status() {
 	isrunning=0
 	if [ $EUID -eq 0 ]; then
-		if [ -f /var/lock/subsys/columnstore ]; then
+		if [ -f $lockdir/columnstore ]; then
 			isrunning=1
 		fi
 	else
@@ -160,7 +156,7 @@ restart)
 	restart
 	;;
 condrestart)
-	[ -f /var/lock/subsys/columnstore ] && restart || :
+	[ -f $lockdir/columnstore ] && restart || :
 	;;
 status)
 	status

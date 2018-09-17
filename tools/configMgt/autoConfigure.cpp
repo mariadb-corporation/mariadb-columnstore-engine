@@ -2093,6 +2093,26 @@ int main(int argc, char* argv[])
 
     try
     {
+        string LockFileDirectory = sysConfigOld->getConfig("Installation", "LockFileDirectory");
+
+        if ( !LockFileDirectory.empty() )
+        {
+            try
+            {
+                sysConfigNew->setConfig("Installation", "LockFileDirectory", LockFileDirectory);
+            }
+            catch (...)
+            {
+                cout << "ERROR: Problem setting LockFileDirectory in the Calpont System Configuration file" << endl;
+                exit(-1);
+            }
+        }
+    }
+    catch (...)
+    {}
+    
+    try
+    {
         string DistributedInstall = sysConfigOld->getConfig("Installation", "DistributedInstall");
 
         if ( !DistributedInstall.empty() )
@@ -2110,6 +2130,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
+
 
     // add entries from tuning guide
 
