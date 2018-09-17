@@ -346,7 +346,6 @@ void SimpleColumn::serialize(messageqcpp::ByteStream& b) const
     b << fViewName;
     b << (uint32_t) fOid;
     b << fData;
-    //b << fAlias;
     b << fTableAlias;
     b << (uint32_t) fSequence;
     b << static_cast<const ByteStream::doublebyte>(fIsInfiniDB);
@@ -363,7 +362,6 @@ void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
     b >> fViewName;
     b >> (uint32_t&) fOid;
     b >> fData;
-    //b >> fAlias;
     b >> fTableAlias;
     b >> (uint32_t&) fSequence;
     b >> reinterpret_cast< ByteStream::doublebyte&>(fIsInfiniDB);
@@ -388,8 +386,6 @@ bool SimpleColumn::operator==(const SimpleColumn& t) const
     if (fColumnName != t.fColumnName)
         return false;
 
-//	if (fIndexName != t.fIndexName)
-//		return false;
     if (fViewName != t.fViewName)
         return false;
 
@@ -399,8 +395,6 @@ bool SimpleColumn::operator==(const SimpleColumn& t) const
     if (data() != t.data())
         return false;
 
-//	if (fAlias != t.fAlias)
-//		return false;
     if (fTableAlias != t.fTableAlias)
         return false;
 

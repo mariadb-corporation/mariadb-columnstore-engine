@@ -589,6 +589,33 @@ int32_t Func_cast_date::getDateIntVal(rowgroup::Row& row,
         {
             return parm[0]->data()->getDateIntVal(row, isNull);
         }
+        case execplan::CalpontSystemCatalog::TIME:
+        {
+            int64_t val1;
+            string value = "";
+            DateTime aDateTime = static_cast<DateTime>(nowDatetime());
+            Time aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            if ((aTime.hour < 0) || (aTime.is_neg))
+            {
+                aTime.hour = -abs(aTime.hour);
+                aTime.minute = -abs(aTime.minute);
+                aTime.second = -abs(aTime.second);
+                aTime.msecond = -abs(aTime.msecond);
+            }
+
+            aDateTime.hour = 0;
+            aDateTime.minute = 0;
+            aDateTime.second = 0;
+            aDateTime.msecond = 0;
+            val1 = addTime(aDateTime, aTime);
+            value = dataconvert::DataConvert::datetimeToString(val1);
+            value = value.substr(0, 10);
+            return dataconvert::DataConvert::stringToDate(value);
+            break;
+        }
+
+
 
         default:
         {
@@ -680,6 +707,27 @@ int64_t Func_cast_date::getDatetimeIntVal(rowgroup::Row& row,
             val1.msecond = 0;
             return *(reinterpret_cast<uint64_t*>(&val1));
         }
+        case CalpontSystemCatalog::TIME:
+        {
+            DateTime aDateTime = static_cast<DateTime>(nowDatetime());
+            Time aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            if ((aTime.hour < 0) || (aTime.is_neg))
+            {
+                aTime.hour = -abs(aTime.hour);
+                aTime.minute = -abs(aTime.minute);
+                aTime.second = -abs(aTime.second);
+                aTime.msecond = -abs(aTime.msecond);
+            }
+
+            aDateTime.hour = 0;
+            aDateTime.minute = 0;
+            aDateTime.second = 0;
+            aDateTime.msecond = 0;
+            val = addTime(aDateTime, aTime);
+            return val;
+        }
+
 
         default:
         {
@@ -812,6 +860,26 @@ int64_t Func_cast_datetime::getDatetimeIntVal(rowgroup::Row& row,
         case execplan::CalpontSystemCatalog::DATETIME:
         {
             return parm[0]->data()->getDatetimeIntVal(row, isNull);
+        }
+
+        case CalpontSystemCatalog::TIME:
+        {
+            DateTime aDateTime = static_cast<DateTime>(nowDatetime());
+            Time aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aDateTime.hour = 0;
+            aDateTime.minute = 0;
+            aDateTime.second = 0;
+            aDateTime.msecond = 0;
+            if ((aTime.hour < 0) || (aTime.is_neg))
+            {
+                aTime.hour = -abs(aTime.hour);
+                aTime.minute = -abs(aTime.minute);
+                aTime.second = -abs(aTime.second);
+                aTime.msecond = -abs(aTime.msecond);
+            }
+            aTime.day = 0;
+            return addTime(aDateTime, aTime);
+            break;
         }
 
         default:

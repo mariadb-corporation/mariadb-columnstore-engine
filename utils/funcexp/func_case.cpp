@@ -315,20 +315,13 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
         CalpontSystemCatalog::ColType& resultType,
         bool simpleCase)
 {
-    FunctionParm::size_type n = fp.size();
+    uint64_t simple = simpleCase ? 1 : 0;
+	bool hasElse = (((fp.size()-simple) % 2) != 0);    // if 1, then ELSE exist
 
-    if (simpleCase)                   // simple case has an expression
-        n -= 1;                       // remove expression from count of expression_i + result_i
 
-    bool hasElse = ((n % 2) != 0);    // if 1, then ELSE exist
-
-    if (hasElse)
-        --n;                          // n now is an even number
 
     uint64_t parmCount = hasElse ? (fp.size() - 2) : (fp.size() - 1);
-    uint64_t whereCount = hasElse ? (fp.size() - 2 + simpleCase) / 2 : (fp.size() - 1) / 2 + simpleCase;
-
-    idbassert((n % 2) == 0);
+    uint64_t whereCount = hasElse ? (fp.size() - 2 + simple) / 2 : (fp.size() - 1) / 2 + simple;
 
     bool allStringO = true;
     bool allStringR = true;
@@ -341,33 +334,24 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
 
     for (uint64_t i = 0; i <= parmCount; i++)
     {
-        // operation or result type
-        operation = ((i > 0) && (i <= whereCount));
-
-        // the result type of ELSE, if exists.
-        if (i == n)
-        {
-            if (!hasElse)
-                break;
-
-            if (simpleCase)
+        // for SimpleCase, we return the type of the case expression,
+        // which will always be in position 0.
+		if (i == 0 && simpleCase)
+		{
+            if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
+                fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
+                fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
             {
-                // the case expression
-                if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
-                        fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
-                        fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::VARCHAR)
-                {
-                    PredicateOperator op;
-                    op.setOpType(oct, fp[i]->data()->resultType());
-                    allStringO = false;
-                    oct = op.operationType();
-                }
-
-                i += 1;
+                PredicateOperator op;
+                op.setOpType(oct, fp[i]->data()->resultType());
+                allStringO = false;
+                oct = op.operationType();
             }
+            i += 1;
+		}
 
-            operation = false;
-        }
+		// operation or result type
+		operation = ((i > 0+simple) && (i <= whereCount));
 
         if (fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::CHAR &&
                 fp[i]->data()->resultType().colDataType != CalpontSystemCatalog::TEXT &&
@@ -378,10 +362,13 @@ CalpontSystemCatalog::ColType caseOperationType(FunctionParm& fp,
 
             if (operation)
             {
-                op.setOpType(oct, fp[i]->data()->resultType());
-                allStringO = false;
-                oct = op.operationType();
-            }
+                if (!simpleCase)
+                {
+                    op.setOpType(oct, fp[i]->data()->resultType());
+                    allStringO = false;
+                    oct = op.operationType();
+                }
+			}
 
             // If any parm is of string type, the result type should be string. (same as if)
             else if (rct.colDataType != CalpontSystemCatalog::CHAR &&
@@ -456,6 +443,13 @@ bool Func_simple_case::getBoolVal(Row& row,
 
     if (isNull)
         return joblist::BIGINTNULL;
+
+    ParseTree* lop = parm[i]->left();
+    ParseTree* rop = parm[i]->right();
+    if (lop && rop)
+    {
+    	return (reinterpret_cast<Operator*>(parm[i]->data()))->getBoolVal(row, isNull, lop, rop);
+    }
 
     return parm[i]->data()->getBoolVal(row, isNull);
 }

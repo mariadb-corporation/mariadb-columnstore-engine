@@ -202,7 +202,7 @@ detachvolume() {
 	checkInfostatus
 	if [ $STATUS == "detaching" ]; then
 		retries=1
-		while [ $retries -ne 60 ]; do
+		while [ $retries -ne 10 ]; do
 			#retry until it's attached
 			$AWSCLI detach-volume --volume-id  $volumeName --region $Region > /tmp/volumeInfo_$volumeName 2>&1
 		
@@ -239,7 +239,7 @@ attachvolume() {
 	checkInfostatus
 	if [ $STATUS == "attaching" -o $STATUS == "already-attached" ]; then
 		retries=1
-		while [ $retries -ne 60 ]; do
+		while [ $retries -ne 10 ]; do
 			#check status until it's attached
 			describevolume
 			if [ $STATUS == "attached" ]; then

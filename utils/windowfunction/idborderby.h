@@ -59,6 +59,7 @@ class  IdbCompare;
 struct IdbSortSpec
 {
     int fIndex;
+    // TODO There are three ordering specs since 10.2
     int fAsc;   // <ordering specification> ::= ASC | DESC
     int fNf;    // <null ordering> ::= NULLS FIRST | NULLS LAST
 

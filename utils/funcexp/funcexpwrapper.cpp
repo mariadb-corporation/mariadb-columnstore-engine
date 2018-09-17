@@ -33,7 +33,6 @@
 #include "objectreader.h"
 
 using namespace messageqcpp;
-using namespace boost;
 using namespace rowgroup;
 using namespace execplan;
 
@@ -103,12 +102,12 @@ void FuncExpWrapper::deserialize(ByteStream& bs)
     bs >> rcsCount;
 
     for (i = 0; i < fCount; i++)
-        filters.push_back(shared_ptr<ParseTree>(ObjectReader::createParseTree(bs)));
+        filters.push_back(boost::shared_ptr<ParseTree>(ObjectReader::createParseTree(bs)));
 
     for (i = 0; i < rcsCount; i++)
     {
         ReturnedColumn* rc = (ReturnedColumn*) ObjectReader::createTreeNode(bs);
-        rcs.push_back(shared_ptr<ReturnedColumn>(rc));
+        rcs.push_back(boost::shared_ptr<ReturnedColumn>(rc));
     }
 }
 
@@ -125,12 +124,12 @@ bool FuncExpWrapper::evaluate(Row* r)
     return true;
 }
 
-void FuncExpWrapper::addFilter(const shared_ptr<ParseTree>& f)
+void FuncExpWrapper::addFilter(const boost::shared_ptr<ParseTree>& f)
 {
     filters.push_back(f);
 }
 
-void FuncExpWrapper::addReturnedColumn(const shared_ptr<ReturnedColumn>& rc)
+void FuncExpWrapper::addReturnedColumn(const boost::shared_ptr<ReturnedColumn>& rc)
 {
     rcs.push_back(rc);
 }

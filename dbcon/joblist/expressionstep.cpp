@@ -56,6 +56,17 @@ using namespace rowgroup;
 
 namespace joblist
 {
+ExpressionStep::ExpressionStep() :
+    fExpressionFilter(NULL),
+    fExpressionId(-1),
+    fVarBinOK(false),
+    fSelectFilter(false),
+    fAssociatedJoinId(0),
+    fDoJoin(false),
+    fVirtual(false)
+{
+}
+
 ExpressionStep::ExpressionStep(const JobInfo& jobInfo) :
     JobStep(jobInfo),
     fExpressionFilter(NULL),
@@ -67,7 +78,6 @@ ExpressionStep::ExpressionStep(const JobInfo& jobInfo) :
     fVirtual(false)
 {
 }
-
 
 ExpressionStep::ExpressionStep(const ExpressionStep& rhs) :
     JobStep(rhs),

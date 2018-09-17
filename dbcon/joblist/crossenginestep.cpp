@@ -744,7 +744,6 @@ string CrossEngineStep::makeQuery()
 
     // the string must consist of a single SQL statement without a terminating semicolon ; or \g.
     // oss << ";";
-
     return oss.str();
 }
 

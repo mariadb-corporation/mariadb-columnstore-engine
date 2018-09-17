@@ -61,7 +61,7 @@ using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
-using namespace boost;
+//using namespace boost;
 
 #include "idb_mysql.h"
 
@@ -582,7 +582,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     intColVal = row.getUintField<8>(s);
-                    DataConvert::datetimeToString(intColVal, tmp, 255);
+                    DataConvert::datetimeToString(intColVal, tmp, 255, colType.precision);
 
                     /* setting the field_length is a sort-of hack. The length
                      * at this point can be long enough to include mseconds.
@@ -606,7 +606,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                         *(*f)->null_ptr &= ~(*f)->null_bit;
 
                     intColVal = row.getUintField<8>(s);
-                    DataConvert::timeToString(intColVal, tmp, 255);
+                    DataConvert::timeToString(intColVal, tmp, 255, colType.precision);
 
                     Field_varstring* f2 = (Field_varstring*)*f;
                     f2->store(tmp, strlen(tmp), f2->charset());
@@ -781,8 +781,11 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
 
                     //double double_val = *(double*)(&value);
                     //f2->store(double_val);
-                    if (f2->decimals() < (uint32_t)row.getScale(s))
-                        f2->dec = (uint32_t)row.getScale(s);
+                    if ((f2->decimals() == DECIMAL_NOT_SPECIFIED && row.getScale(s) > 0)
+                            || f2->decimals() < row.getScale(s))
+                    {
+                        f2->dec = row.getScale(s);
+                    }
 
                     f2->store(dl);
 
@@ -974,7 +977,7 @@ uint32_t doUpdateDelete(THD* thd)
     }
 
     //@Bug 4387. Check BRM status before start statement.
-    scoped_ptr<DBRM> dbrmp(new DBRM());
+    boost::scoped_ptr<DBRM> dbrmp(new DBRM());
     int rc = dbrmp->isReadWrite();
     thd->infinidb_vtable.isInfiniDBDML = true;
 
@@ -1130,7 +1133,7 @@ uint32_t doUpdateDelete(THD* thd)
                 schemaName = string(item->db_name);
 
             columnAssignmentPtr = new ColumnAssignment();
-            columnAssignmentPtr->fColumn = string(item->name);
+            columnAssignmentPtr->fColumn = string(item->name.str);
             columnAssignmentPtr->fOperator = "=";
             columnAssignmentPtr->fFuncScale = 0;
             Item* value = value_it++;
@@ -1276,7 +1279,7 @@ uint32_t doUpdateDelete(THD* thd)
             {
                 Item_field* tmp = (Item_field*)value;
 
-                if (!tmp->field_name) //null
+                if (!tmp->field_name.length) //null
                 {
                     columnAssignmentPtr->fScalarExpression = "NULL";
                     columnAssignmentPtr->fFromCol = false;
@@ -1397,9 +1400,9 @@ uint32_t doUpdateDelete(THD* thd)
 
             if (deleteTable->get_num_of_tables() == 1)
             {
-                schemaName = first_table->db;
-                tableName = first_table->table_name;
-                aliasName = first_table->alias;
+                schemaName = first_table->db.str;
+                tableName = first_table->table_name.str;
+                aliasName = first_table->alias.str;
                 qualifiedTablName->fName = tableName;
                 qualifiedTablName->fSchema = schemaName;
                 pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
@@ -1418,7 +1421,7 @@ uint32_t doUpdateDelete(THD* thd)
             first_table = (TABLE_LIST*) thd->lex->select_lex.table_list.first;
             schemaName = first_table->table->s->db.str;
             tableName = first_table->table->s->table_name.str;
-            aliasName = first_table->alias;
+            aliasName = first_table->alias.str;
             qualifiedTablName->fName = tableName;
             qualifiedTablName->fSchema = schemaName;
             pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
@@ -1429,7 +1432,7 @@ uint32_t doUpdateDelete(THD* thd)
         first_table = (TABLE_LIST*) thd->lex->select_lex.table_list.first;
         schemaName = first_table->table->s->db.str;
         tableName = first_table->table->s->table_name.str;
-        aliasName = first_table->alias;
+        aliasName = first_table->alias.str;
         qualifiedTablName->fName = tableName;
         qualifiedTablName->fSchema = schemaName;
         pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
@@ -1961,7 +1964,7 @@ uint32_t doUpdateDelete(THD* thd)
         }
         else
         {
-            thd->set_row_count_func(dmlRowCount);
+            thd->set_row_count_func(dmlRowCount+thd->get_row_count_func());
         }
 
         push_warning(thd, Sql_condition::WARN_LEVEL_WARN, ER_WARN_DATA_OUT_OF_RANGE, errorMsg.c_str());
@@ -1969,7 +1972,7 @@ uint32_t doUpdateDelete(THD* thd)
     else
     {
 //		if (dmlRowCount != 0) //Bug 5117. Handling self join.
-        thd->set_row_count_func(dmlRowCount);
+			thd->set_row_count_func(dmlRowCount+thd->get_row_count_func());
 
 
         //cout << " error status " << ci->rc << " and rowcount = " << dmlRowCount << endl;
@@ -2240,7 +2243,7 @@ extern "C"
         bool includeInput = true;
 
         string pstr(parameter);
-        algorithm::to_lower(pstr);
+        boost::algorithm::to_lower(pstr);
 
         if (pstr == PmSmallSideMaxMemory)
         {
@@ -2386,8 +2389,8 @@ extern "C"
         {
             tableName.table = args->args[0];
 
-            if (thd->db)
-                tableName.schema = thd->db;
+            if (thd->db.length)
+                tableName.schema = thd->db.str;
             else
             {
                 string msg("No schema information provided");
@@ -2524,8 +2527,8 @@ extern "C"
         {
             tableName.table = args->args[0];
 
-            if (thd->db)
-                tableName.schema = thd->db;
+            if (thd->db.length)
+                tableName.schema = thd->db.str;
             else
             {
                 return -1;
@@ -3019,8 +3022,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
             ti.csep->verID(verID);
             ti.csep->sessionID(sessionID);
 
-            if (thd->db)
-                ti.csep->schemaName(thd->db);
+            if (thd->db.length)
+                ti.csep->schemaName(thd->db.str);
 
             ti.csep->traceFlags(ci->traceFlags);
             ti.msTablePtr = table;
@@ -3113,8 +3116,8 @@ int ha_calpont_impl_rnd_init(TABLE* table)
             csep->verID(verID);
             csep->sessionID(sessionID);
 
-            if (thd->db)
-                csep->schemaName(thd->db);
+            if (thd->db.length)
+                csep->schemaName(thd->db.str);
 
             csep->traceFlags(ci->traceFlags);
 
@@ -3779,12 +3782,12 @@ int ha_calpont_impl_delete_table(const char* name)
 
     if (thd->lex->sql_command == SQLCOM_DROP_DB)
     {
-        dbName = thd->lex->name.str;
+        dbName = const_cast<char*>(thd->lex->name.str);
     }
     else
     {
         TABLE_LIST* first_table = (TABLE_LIST*) thd->lex->select_lex.table_list.first;
-        dbName = first_table->db;
+        dbName = const_cast<char*>(first_table->db.str);
     }
 
     if (!dbName)
@@ -3806,7 +3809,7 @@ int ha_calpont_impl_delete_table(const char* name)
     if (strcmp(dbName, "calpontsys") == 0 && string(name).find("@0024vtable") == string::npos)
     {
         std::string stmt(idb_mysql_query_str(thd));
-        algorithm::to_upper(stmt);
+        boost::algorithm::to_upper(stmt);
 
         //@Bug 2432. systables can be dropped with restrict
         if (stmt.find(" RESTRICT") != string::npos)
@@ -3958,7 +3961,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
     if ((thd->lex)->sql_command == SQLCOM_INSERT)
     {
         string insertStmt = idb_mysql_query_str(thd);
-        algorithm::to_lower(insertStmt);
+        boost::algorithm::to_lower(insertStmt);
         string intoStr("into");
         size_t found = insertStmt.find(intoStr);
 
@@ -4106,7 +4109,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
 #ifdef _MSC_VER
                     aCmdLine = aCmdLine + "/bin/cpimport.exe -N -P " + to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
 #else
-                    aCmdLine = aCmdLine + "/bin/cpimport -m 1 -N -P " + to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
+                    aCmdLine = aCmdLine + "/bin/cpimport -m 1 -N -P " + boost::to_string(localModuleId) + " -s " + ci->delimiter + " -e 0" + " -E " + escapechar + ci->enclosed_by + " ";
 #endif
                 }
             }
@@ -4434,7 +4437,7 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             ci->stats.fQueryType = CalpontSelectExecutionPlan::queryTypeToString(CalpontSelectExecutionPlan::LOAD_DATA_INFILE);
 
         //@Bug 4387. Check BRM status before start statement.
-        scoped_ptr<DBRM> dbrmp(new DBRM());
+        boost::scoped_ptr<DBRM> dbrmp(new DBRM());
         int rc = dbrmp->isReadWrite();
 
         if (rc != 0 )
@@ -4752,7 +4755,7 @@ int ha_calpont_impl_commit (handlerton* hton, THD* thd, bool all)
         return 0;
 
     //@Bug 5823 check if any active transaction for this session
-    scoped_ptr<DBRM> dbrmp(new DBRM());
+    boost::scoped_ptr<DBRM> dbrmp(new DBRM());
     BRM::TxnID txnId = dbrmp->getTxnID(tid2sid(thd->thread_id));
 
     if (!txnId.valid)
@@ -5254,8 +5257,8 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
         csep->verID(verID);
         csep->sessionID(sessionID);
 
-        if (group_hand->table_list->db_length)
-            csep->schemaName(group_hand->table_list->db);
+        if (group_hand->table_list->db.length)
+            csep->schemaName(group_hand->table_list->db.str);
 
         csep->traceFlags(ci->traceFlags);
 
@@ -5275,7 +5278,6 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator colMapIter;
             execplan::CalpontSelectExecutionPlan::ColumnMap::iterator condColMapIter;
             execplan::ParseTree* ptIt;
-            execplan::ReturnedColumn* rcIt;
 
             for (TABLE_LIST* tl = gi.groupByTables; tl; tl = tl->next_local)
             {
@@ -5830,7 +5832,8 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
 
         try
         {
-            sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats);
+            if(hndl)
+                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats);
 
             ci->cal_conn_hndl = hndl;
 

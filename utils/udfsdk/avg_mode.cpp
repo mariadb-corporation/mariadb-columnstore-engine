@@ -25,9 +25,9 @@
 using namespace mcsv1sdk;
 
 mcsv1_UDAF::ReturnCode avg_mode::init(mcsv1Context* context,
-                                      COL_TYPES& colTypes)
+                                      ColumnDatum* colTypes)
 {
-    if (colTypes.size() < 1)
+    if (context->getParameterCount() < 1)
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
@@ -35,13 +35,13 @@ mcsv1_UDAF::ReturnCode avg_mode::init(mcsv1Context* context,
         return mcsv1_UDAF::ERROR;
     }
 
-    if (colTypes.size() > 1)
+    if (context->getParameterCount() > 1)
     {
         context->setErrorMessage("avg_mode() with more than 1 argument");
         return mcsv1_UDAF::ERROR;
     }
 
-    if (!(isNumeric(colTypes[0].second)))
+    if (!(isNumeric(colTypes[0].dataType)))
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
@@ -65,8 +65,7 @@ mcsv1_UDAF::ReturnCode avg_mode::reset(mcsv1Context* context)
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode avg_mode::nextValue(mcsv1Context* context,
-        std::vector<ColumnDatum>& valsIn)
+mcsv1_UDAF::ReturnCode avg_mode::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
     static_any::any& valIn = valsIn[0].columnData;
     MODE_DATA& data = static_cast<ModeData*>(context->getUserData())->mData;
@@ -187,8 +186,7 @@ mcsv1_UDAF::ReturnCode avg_mode::evaluate(mcsv1Context* context, static_any::any
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode avg_mode::dropValue(mcsv1Context* context,
-        std::vector<ColumnDatum>& valsDropped)
+mcsv1_UDAF::ReturnCode avg_mode::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
     static_any::any& valIn = valsDropped[0].columnData;
     MODE_DATA& data = static_cast<ModeData*>(context->getUserData())->mData;

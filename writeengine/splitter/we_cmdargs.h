@@ -77,7 +77,11 @@ public:
     {
         return fLocFile;
     }
-    int getMode() const
+    int getReadBufSize()
+    {
+        return fReadBufSize;
+    }
+    int getMode()
     {
         return fMode;
     }

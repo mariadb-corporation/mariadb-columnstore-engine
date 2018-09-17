@@ -27,10 +27,12 @@ add_library(calmysql SHARED ${libcalmysql_SRCS})
 
 target_link_libraries(calmysql ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} ${SERVER_BUILD_INCLUDE_DIR}/../libservices/libmysqlservices.a threadpool)
 
+SET_TARGET_PROPERTIES(calmysql PROPERTIES LINK_FLAGS "${calmysql_link_flags} -Wl,-E")
 set_target_properties(calmysql PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 SET ( is_columnstore_tables_SRCS
     is_columnstore_tables.cpp
+    sm.cpp
     )
 add_library(is_columnstore_tables SHARED ${is_columnstore_tables_SRCS})
 
@@ -42,6 +44,7 @@ set_target_properties(is_columnstore_tables PROPERTIES VERSION 1.0.0 SOVERSION 1
 
 SET ( is_columnstore_columns_SRCS
     is_columnstore_columns.cpp
+    sm.cpp
     )
 add_library(is_columnstore_columns SHARED ${is_columnstore_columns_SRCS})
 
@@ -53,6 +56,7 @@ set_target_properties(is_columnstore_columns PROPERTIES VERSION 1.0.0 SOVERSION 
 
 SET ( is_columnstore_extents_SRCS
     is_columnstore_extents.cpp
+    sm.cpp
     )
 add_library(is_columnstore_extents SHARED ${is_columnstore_extents_SRCS})
 
@@ -64,6 +68,7 @@ set_target_properties(is_columnstore_extents PROPERTIES VERSION 1.0.0 SOVERSION 
 
 SET ( is_columnstore_files_SRCS
     is_columnstore_files.cpp
+    sm.cpp
     )
 add_library(is_columnstore_files SHARED ${is_columnstore_files_SRCS})
 

@@ -99,7 +99,7 @@ struct gp_walk_info
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList groupByCols;
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList subGroupByCols;
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
-    std::vector <Item*> havingAggColsItems;
+    std::vector <Item*> extSelAggColsItems;
     execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
     // This vector temporarily hold the projection columns to be added
     // to the returnedCols vector for subquery processing. It will be appended
@@ -148,6 +148,9 @@ struct gp_walk_info
     int32_t recursionHWM;
     std::stack<int32_t> rcBookMarkStack;
 
+    // Kludge for MCOL-1472
+    bool inCaseStmt;
+
     gp_walk_info() : sessionid(0),
         fatalParseError(false),
         condPush(false),
@@ -163,7 +166,8 @@ struct gp_walk_info
         lastSub(0),
         derivedTbCnt(0),
         recursionLevel(-1),
-        recursionHWM(0)
+				   recursionHWM(0),
+                   inCaseStmt(false)
     {}
 
     ~gp_walk_info() {}
@@ -326,15 +330,14 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& cse
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
-void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo);
-execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport);
+void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo, gp_walk_info* gwip = NULL);
 const std::string bestTableName(const Item_field* ifp);
 bool isInfiniDB(TABLE* table_ptr);
 
 // execution plan util functions prototypes
-execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport);
-execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
-execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
+execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
+execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
+execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool pushdownHand = false);
 execplan::ConstantColumn* buildDecimalColumn(Item* item, gp_walk_info& gwi);
 execplan::SimpleColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi);
 execplan::FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
@@ -346,7 +349,7 @@ void addIntervalArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castCharArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castDecimalArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castTypeArgs(Item_func* ifp, funcexp::FunctionParm& functionParms);
-void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo);
+//void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo);
 bool isPredicateFunction(Item* item, gp_walk_info* gwip);
 execplan::ParseTree* buildRowPredicate(execplan::RowColumn* lhs, execplan::RowColumn* rhs, std::string predicateOp);
 bool buildRowColumnFilter(gp_walk_info* gwip, execplan::RowColumn* rhs, execplan::RowColumn* lhs, Item_func* ifp);
