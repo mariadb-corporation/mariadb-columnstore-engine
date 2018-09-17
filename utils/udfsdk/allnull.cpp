@@ -27,11 +27,11 @@ struct allnull_data
 
 #define OUT_TYPE int64_t
 mcsv1_UDAF::ReturnCode allnull::init(mcsv1Context* context,
-                                     COL_TYPES& colTypes)
+                                     ColumnDatum* colTypes)
 {
     context->setUserDataSize(sizeof(allnull_data));
 
-    if (colTypes.size() < 1)
+    if (context->getParameterCount() < 1)
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
@@ -52,8 +52,7 @@ mcsv1_UDAF::ReturnCode allnull::reset(mcsv1Context* context)
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode allnull::nextValue(mcsv1Context* context,
-        std::vector<ColumnDatum>& valsIn)
+mcsv1_UDAF::ReturnCode allnull::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
     struct allnull_data* data = (struct allnull_data*)context->getUserData()->data;
 

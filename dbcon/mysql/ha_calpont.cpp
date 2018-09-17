@@ -1156,7 +1156,11 @@ create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
 
-    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE )
+    // Create a handler if there is an agregate or a GROUP BY
+    // and if vtable was explicitly disabled.
+    if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE
+            && thd->variables.infinidb_vtable_mode == 0
+            && ( query->group_by || thd->lex->select_lex.with_sum_func) )
     {
         handler = new ha_calpont_group_by_handler(thd, query);
 
@@ -1167,6 +1171,33 @@ create_calpont_group_by_handler(THD* thd, Query* query)
     }
 
     return handler;
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * GROUP BY handler constructor
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    query - Query describing structure
+ ***********************************************************/
+ha_calpont_group_by_handler::ha_calpont_group_by_handler(THD* thd_arg, Query* query)
+        : group_by_handler(thd_arg, calpont_hton),
+          select(query->select),
+          table_list(query->from),
+          distinct(query->distinct),
+          where(query->where),
+          group_by(query->group_by),
+          order_by(query->order_by),
+          having(query->having)
+{
+}
+
+/***********************************************************
+ * DESCRIPTION:
+ * GROUP BY destructor
+ ***********************************************************/
+ha_calpont_group_by_handler::~ha_calpont_group_by_handler()
+{
 }
 
 /***********************************************************
@@ -1258,4 +1289,36 @@ mysql_declare_plugin(columnstore)
     0                                             /* config flags */
 }
 mysql_declare_plugin_end;
+maria_declare_plugin(columnstore)
+{
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &columnstore_storage_engine,
+  "Columnstore",
+  "MariaDB",
+  "Columnstore storage engine",
+  PLUGIN_LICENSE_GPL,
+  columnstore_init_func,
+  columnstore_done_func,
+  0x0100, /* 1.0 */
+  NULL,                       /* status variables                */
+  calpont_system_variables,   /* system variables                */
+  "1.0",                      /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+},
+{
+  MYSQL_STORAGE_ENGINE_PLUGIN,
+  &infinidb_storage_engine,
+  "InfiniDB",
+  "MariaDB",
+  "Columnstore storage engine (deprecated: use columnstore)",
+  PLUGIN_LICENSE_GPL,
+  infinidb_init_func,
+  infinidb_done_func,
+  0x0100, /* 1.0 */
+  NULL,                       /* status variables                */
+  calpont_system_variables,   /* system variables                */
+  "1.0",                      /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+}
+maria_declare_plugin_end;
 

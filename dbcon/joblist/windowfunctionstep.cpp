@@ -569,6 +569,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 
     for (RetColsVector::iterator i = jobInfo.windowCols.begin(); i < jobInfo.windowCols.end(); i++)
     {
+        bool isUDAF = false;
         // window function type
         WindowFunctionColumn* wc = dynamic_cast<WindowFunctionColumn*>(i->get());
         uint64_t ridx = getColumnIndex(*i, colIndexMap, jobInfo);    // result index
@@ -590,6 +591,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 //		if (boost::iequals(wc->functionName(),"UDAF_FUNC")
         if (wc->functionName() == "UDAF_FUNC")
         {
+            isUDAF = true;
             ++wfsUserFunctionCount;
         }
 
@@ -646,8 +648,12 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
         // column type for functor templates
         int ct = 0;
 
+        if (isUDAF)
+        {
+            ct = wc->getUDAFContext().getResultType();
+        }
         // make sure index is in range
-        if (fields.size() > 1 && fields[1] >= 0 && static_cast<uint64_t>(fields[1]) < types.size())
+        else if (fields.size() > 1 && fields[1] >= 0 && static_cast<uint64_t>(fields[1]) < types.size())
             ct = types[fields[1]];
 
         // workaround for functions using "within group (order by)" syntax

@@ -127,22 +127,13 @@ int64_t Func_hour::getIntVal(rowgroup::Row& row,
 
     if (isTime)
     {
-        // If negative, mask so it doesn't turn positive
-        bool isNeg = false;
+        // HOUR() is always positive in MariaDB, even for negative time
         int64_t mask = 0;
 
         if ((val >> 40) & 0x800)
             mask = 0xfffffffffffff000;
 
-        if (!mask && (val >> 63))
-        {
-            isNeg = true;
-        }
-
-        val = mask | ((val >> 40) & 0xfff);
-
-        if (isNeg)
-            val *= -1;
+        val = abs(mask | ((val >> 40) & 0xfff));
     }
     else
     {

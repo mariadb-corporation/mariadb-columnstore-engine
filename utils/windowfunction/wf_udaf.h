@@ -21,18 +21,38 @@
 #ifndef UTILS_WF_UDAF_H
 #define UTILS_WF_UDAF_H
 
-#include <set>
+#ifndef _MSC_VER
+#include <tr1/unordered_set>
+#else
+#include <unordered_set>
+#endif
 #include "windowfunctiontype.h"
 #include "mcsv1_udaf.h"
 
 
 namespace windowfunction
 {
+// Hash classes for the distinct hashmap
+class DistinctHasher
+{
+public:
+    inline size_t operator()(const static_any::any& a) const
+    {
+        return a.getHash();
+    }
+};
+
+class DistinctEqual
+{
+public:
+    inline bool operator()(const static_any::any& lhs, static_any::any& rhs) const
+    {
+        return lhs == rhs;
+    }
+};
 
 // A class to control the execution of User Define Analytic Functions (UDAnF)
 // as defined by a specialization of mcsv1sdk::mcsv1_UDAF
-// The template parameter is currently only used to support DISTINCT, as
-// as that is done via a set<T>
 template<typename T>
 class WF_udaf : public WindowFunctionType
 {
@@ -72,7 +92,8 @@ protected:
     bool fDistinct;
     bool bRespectNulls;                   // respect null | ignore null
     bool bHasDropValue;                   // Set to false when we discover the UDAnF doesn't implement dropValue.
-    std::set<T> fSet;                     // To hold distinct values
+    // To hold distinct values
+    std::tr1::unordered_set<static_any::any, DistinctHasher, DistinctEqual> fDistinctSet;
     static_any::any fValOut;              // The return value
 
 public:

@@ -84,12 +84,10 @@ static bool get_file_sizes(messageqcpp::MessageQueueClient* msgQueueClient, cons
     }
 }
 
-static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
+static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* thd)
 {
-    BRM::DBRM* emp = new BRM::DBRM();
     std::vector<struct BRM::EMEntry> entries;
     CHARSET_INFO* cs = system_charset_info;
-    TABLE* table = tables->table;
 
     char oidDirName[WriteEngine::FILE_NAME_SIZE];
     char fullFileName[WriteEngine::FILE_NAME_SIZE];
@@ -103,99 +101,184 @@ static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     oam::Oam oam_instance;
     int pmId = 0;
 
+    emp->getExtents(oid, entries, false, false, true);
+
+    if (entries.size() == 0)
+        return 0;
+
+    std::vector<struct BRM::EMEntry>::const_iterator iter = entries.begin();
+
+    while ( iter != entries.end() ) //organize extents into files
+    {
+        // Don't include files more than once at different block offsets
+        if (iter->blockOffset > 0)
+        {
+            iter++;
+            return 0;
+        }
+
+        try
+        {
+            oam_instance.getDbrootPmConfig(iter->dbRoot, pmId);
+        }
+        catch (std::runtime_error)
+        {
+            // MCOL-1116: If we are here a DBRoot is offline/missing
+            iter++;
+            return 0;
+        }
+
+        table->field[0]->store(oid);
+        table->field[1]->store(iter->segmentNum);
+        table->field[2]->store(iter->partitionNum);
+
+        WriteEngine::Convertor::oid2FileName(oid, oidDirName, dbDir, iter->partitionNum, iter->segmentNum);
+        std::stringstream DbRootName;
+        DbRootName << "DBRoot" << iter->dbRoot;
+        std::string DbRootPath = config->getConfig("SystemConfig", DbRootName.str());
+        fileSize = compressedFileSize = 0;
+        snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", DbRootPath.c_str(), oidDirName);
+
+        std::ostringstream oss;
+        oss << "pm" << pmId << "_WriteEngineServer";
+        std::string client = oss.str();
+        msgQueueClient = messageqcpp::MessageQueueClientPool::getInstance(oss.str());
+
+        if (!get_file_sizes(msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
+        {
+            messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
+            delete emp;
+            return 1;
+        }
+
+        table->field[3]->store(fullFileName, strlen(fullFileName), cs);
+
+        if (fileSize > 0)
+        {
+            table->field[4]->set_notnull();
+            table->field[4]->store(fileSize);
+
+            if (compressedFileSize > 0)
+            {
+                table->field[5]->set_notnull();
+                table->field[5]->store(compressedFileSize);
+            }
+            else
+            {
+                table->field[5]->set_null();
+            }
+        }
+        else
+        {
+            table->field[4]->set_null();
+            table->field[5]->set_null();
+        }
+
+        if (schema_table_store_record(thd, table))
+        {
+            messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
+            delete emp;
+            return 1;
+        }
+
+        iter++;
+        messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
+        msgQueueClient = NULL;
+    }
+
+    return 0;
+}
+
+static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
+{
+    BRM::DBRM* emp = new BRM::DBRM();
+    BRM::OID_t cond_oid = 0;
+    TABLE* table = tables->table;
+
     if (!emp || !emp->isDBRMReady())
     {
         return 1;
     }
 
+    if (cond && cond->type() == Item::FUNC_ITEM)
+    {
+        Item_func* fitem = (Item_func*) cond;
+
+        if ((fitem->functype() == Item_func::EQ_FUNC) && (fitem->argument_count() == 2))
+        {
+            if (fitem->arguments()[0]->real_item()->type() == Item::FIELD_ITEM &&
+                    fitem->arguments()[1]->const_item())
+            {
+                // WHERE object_id = value
+                Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
+
+                if (strcasecmp(item_field->field_name.str, "object_id") == 0)
+                {
+                    cond_oid = fitem->arguments()[1]->val_int();
+                    return generate_result(cond_oid, emp, table, thd);
+                }
+            }
+            else if (fitem->arguments()[1]->real_item()->type() == Item::FIELD_ITEM &&
+                     fitem->arguments()[0]->const_item())
+            {
+                // WHERE value = object_id
+                Item_field* item_field = (Item_field*) fitem->arguments()[1]->real_item();
+
+                if (strcasecmp(item_field->field_name.str, "object_id") == 0)
+                {
+                    cond_oid = fitem->arguments()[0]->val_int();
+                    return generate_result(cond_oid, emp, table, thd);
+                }
+            }
+        }
+        else if (fitem->functype() == Item_func::IN_FUNC)
+        {
+            // WHERE object_id in (value1, value2)
+            Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
+
+            if (strcasecmp(item_field->field_name.str, "object_id") == 0)
+            {
+                for (unsigned int i = 1; i < fitem->argument_count(); i++)
+                {
+                    cond_oid = fitem->arguments()[i]->val_int();
+                    int result = generate_result(cond_oid, emp, table, thd);
+
+                    if (result)
+                        return 1;
+                }
+            }
+        }
+        else if (fitem->functype() == Item_func::UNKNOWN_FUNC &&
+                 strcasecmp(fitem->func_name(), "find_in_set") == 0)
+        {
+            // WHERE FIND_IN_SET(object_id, values)
+            String* tmp_var = fitem->arguments()[1]->val_str();
+            std::stringstream ss(tmp_var->ptr());
+
+            while (ss >> cond_oid)
+            {
+                int ret = generate_result(cond_oid, emp, table, thd);
+
+                if (ret)
+                    return 1;
+
+                if (ss.peek() == ',')
+                    ss.ignore();
+            }
+        }
+    }
+
     execplan::ObjectIDManager oidm;
     BRM::OID_t MaxOID = oidm.size();
 
-    for (BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
+    if (!cond_oid)
     {
-        emp->getExtents(oid, entries, false, false, true);
-
-        if (entries.size() == 0)
-            continue;
-
-        std::vector<struct BRM::EMEntry>::const_iterator iter = entries.begin();
-
-        while ( iter != entries.end() ) //organize extents into files
+        for (BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
         {
-            // Don't include files more than once at different block offsets
-            if (iter->blockOffset > 0)
-            {
-                iter++;
-                continue;
-            }
+            int result = generate_result(oid, emp, table, thd);
 
-            try
-            {
-                oam_instance.getDbrootPmConfig(iter->dbRoot, pmId);
-            }
-            catch (std::runtime_error)
-            {
-                // MCOL-1116: If we are here a DBRoot is offline/missing
-                iter++;
-                continue;
-            }
-
-            table->field[0]->store(oid);
-            table->field[1]->store(iter->segmentNum);
-            table->field[2]->store(iter->partitionNum);
-
-            WriteEngine::Convertor::oid2FileName(oid, oidDirName, dbDir, iter->partitionNum, iter->segmentNum);
-            std::stringstream DbRootName;
-            DbRootName << "DBRoot" << iter->dbRoot;
-            std::string DbRootPath = config->getConfig("SystemConfig", DbRootName.str());
-            fileSize = compressedFileSize = 0;
-            snprintf(fullFileName, WriteEngine::FILE_NAME_SIZE, "%s/%s", DbRootPath.c_str(), oidDirName);
-
-            std::ostringstream oss;
-            oss << "pm" << pmId << "_WriteEngineServer";
-            std::string client = oss.str();
-            msgQueueClient = messageqcpp::MessageQueueClientPool::getInstance(oss.str());
-
-            if (!get_file_sizes(msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
-            {
-                messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
-                delete emp;
+            if (result)
                 return 1;
-            }
-
-            table->field[3]->store(fullFileName, strlen(fullFileName), cs);
-
-            if (fileSize > 0)
-            {
-                table->field[4]->set_notnull();
-                table->field[4]->store(fileSize);
-
-                if (compressedFileSize > 0)
-                {
-                    table->field[5]->set_notnull();
-                    table->field[5]->store(compressedFileSize);
-                }
-                else
-                {
-                    table->field[5]->set_null();
-                }
-            }
-            else
-            {
-                table->field[4]->set_null();
-                table->field[5]->set_null();
-            }
-
-            if (schema_table_store_record(thd, table))
-            {
-                messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
-                delete emp;
-                return 1;
-            }
-
-            iter++;
-            messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
-            msgQueueClient = NULL;
         }
     }
 

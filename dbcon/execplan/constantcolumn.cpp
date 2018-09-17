@@ -328,8 +328,6 @@ bool ConstantColumn::operator==(const ConstantColumn& t) const
     if (fType != t.fType)
         return false;
 
-    if (fAlias != t.fAlias)
-        return false;
 
     if (fData != t.fData)
         return false;

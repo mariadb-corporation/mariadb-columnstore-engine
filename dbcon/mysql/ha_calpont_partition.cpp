@@ -642,9 +642,9 @@ void partitionByValue_common(UDF_ARGS* args,								// input
     }
     else
     {
-        if (current_thd->db)
+        if (current_thd->db.length)
         {
-            schema = current_thd->db;
+            schema = current_thd->db.str;
         }
         else
         {
@@ -1019,9 +1019,9 @@ extern "C"
             }
             else
             {
-                if (current_thd->db)
+                if (current_thd->db.length)
                 {
-                    schema = current_thd->db;
+                    schema = current_thd->db.str;
                 }
                 else
                 {
@@ -1228,7 +1228,7 @@ extern "C"
         {
             tableName.table = args->args[0];
 
-            if (!current_thd->db)
+            if (!current_thd->db.length)
             {
                 errMsg = "No schema name indicated.";
                 memcpy(result, errMsg.c_str(), errMsg.length());
@@ -1236,7 +1236,7 @@ extern "C"
                 return result;
             }
 
-            tableName.schema = current_thd->db;
+            tableName.schema = current_thd->db.str;
             parsePartitionString(args, 1, partitionNums, errMsg, tableName);
         }
 
@@ -1316,14 +1316,14 @@ extern "C"
         {
             tableName.table = args->args[0];
 
-            if (!current_thd->db)
+            if (!current_thd->db.length)
             {
                 current_thd->get_stmt_da()->set_overwrite_status(true);
                 current_thd->raise_error_printf(ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_PARTITION_NO_SCHEMA).c_str());
                 return result;
             }
 
-            tableName.schema = current_thd->db;
+            tableName.schema = current_thd->db.str;
             parsePartitionString(args, 1, partitionNums, errMsg, tableName);
         }
 
@@ -1403,14 +1403,14 @@ extern "C"
         {
             tableName.table = args->args[0];
 
-            if (!current_thd->db)
+            if (!current_thd->db.length)
             {
                 current_thd->get_stmt_da()->set_overwrite_status(true);
                 current_thd->raise_error_printf(ER_INTERNAL_ERROR, IDBErrorInfo::instance()->errorMsg(ERR_PARTITION_NO_SCHEMA).c_str());
                 return result;
             }
 
-            tableName.schema = current_thd->db;
+            tableName.schema = current_thd->db.str;
             parsePartitionString(args, 1, partSet, errMsg, tableName);
         }
 
@@ -1724,9 +1724,9 @@ extern "C"
             }
             else
             {
-                if (current_thd->db)
+                if (current_thd->db.length)
                 {
-                    schema = current_thd->db;
+                    schema = current_thd->db.str;
                 }
                 else
                 {

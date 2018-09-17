@@ -146,9 +146,24 @@ uint64_t makedate(rowgroup::Row& row,
             break;
         }
 
+        case CalpontSystemCatalog::TIME:
+        {
+            std::ostringstream ss;
+            Time aTime = parm[1]->data()->getTimeIntVal(row, isNull);
+            ss << aTime.hour << aTime.minute << aTime.second;
+            dayofyear = ss.str();
+            break;
+        }
+
         default:
             isNull = true;
             return 0;
+    }
+
+    if (atoi(dayofyear.c_str()) == 0)
+    {
+        isNull = true;
+        return 0;
     }
 
     // convert the year to a date in our internal format, then subtract

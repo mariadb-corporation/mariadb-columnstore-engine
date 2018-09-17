@@ -34,21 +34,17 @@ Or, if using the :ref:`complexdatamodel`, type cast the UserData to your UserDat
 init()
 ------
 
-.. c:function:: ReturnCode init(mcsv1Context* context, COL_TYPES& colTypes);
+.. c:function:: ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
 
 :param context: The context object for this call.
 
-:param colTypes: A list of the column types of the parameters.
+:param colTypes: A list of the ColumnDatum used to access column types of the parameters. In init(), the columnData member is invalid.
 
- COL_TYPES is defined as::
-
-  typedef std::vector<std::pair<std::string, CalpontSystemCatalog::ColDataType> >COL_TYPES;
-
- see :ref:`ColDataTypes <coldatatype>`. In Columnstore 1.1, only one column is supported, so colTyoes will be of length one.
+ see :ref:`ColumnDatum`. In Columnstore 1.2, An arbitrary number of parameters is supported.
 
 :returns: ReturnCode::ERROR or ReturnCode::SUCCESS
 
-The init() method is where you sanity check the input, set the output type and set any run flags for this instance. init() is called one time from the mysqld process. All settings you do here are propagated through the system.
+The init() method is where you sanity check the input datatypes, set the output type and set any run flags for this instance. init() is called one time from the mysqld process. All settings you do here are propagated through the system.
 
 init() is the exception to type casting the UserData member of context. UserData has not been created when init() is called, so you shouldn't use it here. 
 
@@ -60,13 +56,14 @@ If you're using :ref:`simpledatamodel`, you need to set the size of the structur
 
 .. rubric:: Check parameter count and type
 
-Each function expects a certain number of columns to entered as parameters in the SQL query. For columnstore 1.1, the number of parameters is limited to one.
+Each function expects a certain number of columns to be entered as parameters in the SQL query. It is possible to create a UDAF that accepts a variable number of parameters. You can discover which ones were actually used in init(), and modify your function's behavior accordingly.
 
-colTypes is a vector of each parameter name and type. The name is the colum name from the SQL query. You can use this information to sanity check for compatible type(s) and also to modify your functions behavior based on type. To do this, add members to your data struct to be tested in the other Methods. Set these members based on colDataTypes (:ref:`ColDataTypes <coldatatype>`).
+colTypes is an array of ColumnData from which can be gleaned the type and name. The name is the column name from the SQL query. You can use this information to sanity check for compatible type(s) and also to modify your functions behavior based on type. To do this, add members to your data struct to be tested in the other Methods. Set these members based on colDataTypes (:ref:`ColDataTypes <coldatatype>`).
 
+The actual number of paramters passed can be gotten from context->getParameterCount().
 ::
 
-	if (colTypes.size() < 1)
+	if (context->getParameterCount() < 1)
 	{
 		// The error message will be prepended with
 		// "The storage engine for the table doesn't support "
@@ -84,7 +81,7 @@ When you create your function using the SQL CREATE FUNCTION command, you must in
 
 .. rubric:: Set width and scale
 
-If you have secial requirements, especially if you might be dealing with decimal types::
+If you have special requirements, especially if you might be dealing with decimal types::
 
 	context->setColWidth(8);
 	context->setScale(context->getScale()*2);
@@ -117,13 +114,11 @@ This function may be called multiple times from both the UM and the PM. Make no 
 nextValue()
 -----------
 
-.. c:function:: ReturnCode nextValue(mcsv1Context* context, 				 std::vector<ColumnDatum>& valsIn);
+.. c:function:: ReturnCode nextValue(mcsv1Context* context, 				 ColumnDatum* valsIn);
 
 :param context: The context object for this call
 
-:param valsIn: a vector representing the values to be added for each parameter for this row.
-
- In Columnstore 1.1, this will be a vector of length one.
+:param valsIn: an array representing the values to be added for each parameter for this row.
 
 :returns: ReturnCode::ERROR or ReturnCode::SUCCESS
 
@@ -208,7 +203,7 @@ For AVG, you might see::
 dropValue
 ---------
 
-.. c:function:: ReturnCode dropValue(mcsv1Context* context, 				 std::vector<ColumnDatum>& valsDropped);
+.. c:function:: ReturnCode dropValue(mcsv1Context* context, 				 ColumnDatum* valsDropped);
 
 :param context: The context object for this call
 

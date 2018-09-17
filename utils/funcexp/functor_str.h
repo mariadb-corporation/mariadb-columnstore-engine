@@ -24,6 +24,7 @@
 
 #include "functor.h"
 
+using namespace std;
 
 namespace funcexp
 {
@@ -126,7 +127,7 @@ protected:
         exponent = (int)floor(log10( fabs(floatVal)));
         base = floatVal * pow(10, -1.0 * exponent);
 
-        if (std::isnan(exponent) || std::isnan(base))
+        if (isnan(exponent) || isnan(base))
         {
             snprintf(buf, 20, "%f", floatVal);
             fFloatStr = execplan::removeTrailing0(buf, 20);

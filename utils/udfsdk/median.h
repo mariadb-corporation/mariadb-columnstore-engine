@@ -56,7 +56,6 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <boost/any.hpp>
 #ifdef _MSC_VER
 #include <unordered_map>
 #else
@@ -134,7 +133,7 @@ public:
      * mcsv1_UDAF::SUCCESS.
      */
     virtual ReturnCode init(mcsv1Context* context,
-                            COL_TYPES& colTypes);
+                            ColumnDatum* colTypes);
 
     /**
      * reset()
@@ -169,8 +168,7 @@ public:
      *
      * valsIn (in) - a vector of the parameters from the row.
      */
-    virtual ReturnCode nextValue(mcsv1Context* context,
-                                 std::vector<ColumnDatum>& valsIn);
+    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
 
     /**
      * subEvaluate()
@@ -246,8 +244,7 @@ public:
      * dropValue() will not be called for unbounded/current row type
      * frames, as those are already optimized.
      */
-    virtual ReturnCode dropValue(mcsv1Context* context,
-                                 std::vector<ColumnDatum>& valsDropped);
+    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
     /**
      * createUserData()

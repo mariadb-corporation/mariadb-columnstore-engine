@@ -488,7 +488,7 @@ public:
     /**
      *@brief check if module failover is needed due to a process outage
      */
-    void checkProcessFailover( std::string processName);
+	void checkModuleFailover(std::string processName);
 
     /**
      *@brief run upgrade script
