@@ -1637,7 +1637,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 						{
 							log.writeLog(__LINE__, "Setup MySQL Replication for restartSystem FORCE", LOG_TYPE_DEBUG);
 							oam::DeviceNetworkList devicenetworklist;
-							processManager.setMySQLReplication(devicenetworklist);
+							processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, true);
 						}
 
 						log.writeLog(__LINE__, "RESTARTSYSTEM: Start System Request Completed", LOG_TYPE_INFO);
@@ -2769,12 +2769,16 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 				processManager.reinitProcessType("cpimport");
 
 				//request reinit after Process is active
-				for ( int i = 0; i < 600 ; i++ ) {
+				for ( int i = 0; i < 10 ; i++ ) {
 					try {
 						ProcessStatus procstat;
 						oam.getProcessStatus(processName, moduleName, procstat);
 
-						if (procstat.ProcessOpState == oam::ACTIVE) {
+						if (procstat.ProcessOpState == oam::COLD_STANDBY)
+							break;
+
+						if ( (procstat.ProcessOpState == oam::ACTIVE) ||
+								(procstat.ProcessOpState == oam::STANDBY) ) {
 							// if a PrimProc was restarted, reinit ACTIVE ExeMgr(s) and DDL/DMLProc
 							if( processName == "PrimProc") {
 			

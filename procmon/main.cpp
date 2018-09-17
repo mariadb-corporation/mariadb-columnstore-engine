@@ -1388,7 +1388,7 @@ static void chldHandleThread(MonitorConfig config)
 					catch(...)
 					{}
 
-					// check if process failover is needed due to process outage
+					// check if Mdoule failover is needed due to process outage
 					aMonitor.checkModuleFailover((*listPtr).ProcessName);
 
 					//check the db health
@@ -1463,15 +1463,19 @@ static void chldHandleThread(MonitorConfig config)
 							restartStatus = " restart failed with hard failure, don't retry!!";
 							(*listPtr).processID = 0;
 
-							// check if process failover is needed due to process outage
+							// check if Module failover is needed due to process outage
 							aMonitor.checkModuleFailover((*listPtr).ProcessName);
 							break;
 						}
 						else
 						{
 							if ( (*listPtr).processID != oam::API_MINOR_FAILURE )
+							{
 								//restarted successful
+                        		//Inform Process Manager that Process restart
+                        		aMonitor.processRestarted( (*listPtr).ProcessName, false);
 								break;
+							}
 						}
 						// restart failed with minor error, sleep and try
 						sleep(5);
