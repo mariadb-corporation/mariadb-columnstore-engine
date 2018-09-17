@@ -505,39 +505,9 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
         // shutdown connection
         procmgr.shutdown();
     }
-    catch (std::runtime_error& e)
-    {
-        LoggingID lid(11);
-        MessageLog ml(lid);
-        Message msg;
-        Message::Args args;
-        args.add("sendAlarmReport error:");
-        args.add(e.what());
-        msg.format(args);
-	      ml.logDebugMessage(msg);             
-    }
-    catch (std::exception& e)
-    {
-        LoggingID lid(11);
-        MessageLog ml(lid);
-        Message msg;
-        Message::Args args;
-        args.add("sendAlarmReport error:");
-        args.add(e.what());
-        msg.format(args);
-	      ml.logDebugMessage(msg);                                
-    }
+
     catch (...)
-    {
-        LoggingID lid(11);
-        MessageLog ml(lid);
-        Message msg;
-        Message::Args args;
-        args.add("sendAlarmReport error:");
-        args.add("general failure");
-        msg.format(args);
-	      ml.logDebugMessage(msg);             
-    }
+    {}
 
     return;
 #endif //SKIP_ALARM
