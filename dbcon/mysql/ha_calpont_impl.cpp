@@ -5313,8 +5313,12 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             return 0;
 
         string query;
-        query.assign(thd->infinidb_vtable.original_query.ptr(),
-                     thd->infinidb_vtable.original_query.length());
+        // Set the query text only once if the server executes 
+        // subqueries separately.
+        if(ci->queryState)
+            query.assign("<subquery of the previous>");
+        else
+            query.assign(thd->query_string.str(), thd->query_string.length());
         csep->data(query);
 
         try
