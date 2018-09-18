@@ -276,104 +276,6 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
     }
 }
 
-void storeNumericFieldGroupBy(Field** f, int64_t value, CalpontSystemCatalog::ColType& ct)
-{
-    // unset null bit first
-    if ((*f)->null_ptr)
-        *(*f)->null_ptr &= ~(*f)->null_bit;
-
-    // For unsigned, use the ColType returned in the row rather than the
-    // unsigned_flag set by mysql. This is because mysql gets it wrong for SUM()
-    // Hopefully, in all other cases we get it right.
-    switch ((*f)->type())
-    {
-        case MYSQL_TYPE_NEWDECIMAL:
-        {
-            Field_new_decimal* f2 = (Field_new_decimal*)*f;
-
-            // @bug4388 stick to InfiniDB's scale in case mysql gives wrong scale due
-            // to create vtable limitation.
-            if (f2->dec < ct.scale)
-                f2->dec = ct.scale;
-
-            char buf[256];
-            dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, buf, 256, ct.colDataType);
-            f2->store(buf, strlen(buf), f2->charset());
-            break;
-        }
-
-        case MYSQL_TYPE_TINY: //TINYINT type
-        {
-            Field_tiny* f2 = (Field_tiny*)*f;
-            longlong int_val = (longlong)value;
-            f2->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_SHORT: //SMALLINT type
-        {
-            Field_short* f2 = (Field_short*)*f;
-            longlong int_val = (longlong)value;
-            f2->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_LONG: //INT type
-        {
-            Field_long* f2 = (Field_long*)*f;
-            longlong int_val = (longlong)value;
-            f2->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_LONGLONG: //BIGINT type
-        {
-            Field_longlong* f2 = (Field_longlong*)*f;
-            longlong int_val = (longlong)value;
-            f2->store(int_val, f2->unsigned_flag);
-            break;
-        }
-
-        case MYSQL_TYPE_FLOAT: // FLOAT type
-        {
-            Field_float* f2 = (Field_float*)*f;
-            float float_val = *(float*)(&value);
-            f2->store(float_val);
-            break;
-        }
-
-        case MYSQL_TYPE_DOUBLE: // DOUBLE type
-        {
-            Field_double* f2 = (Field_double*)*f;
-            double double_val = *(double*)(&value);
-            f2->store(double_val);
-            break;
-        }
-
-        case MYSQL_TYPE_VARCHAR:
-        {
-            Field_varstring* f2 = (Field_varstring*)*f;
-            char tmp[25];
-
-            if (ct.colDataType == CalpontSystemCatalog::DECIMAL)
-                dataconvert::DataConvert::decimalToString(value, (unsigned)ct.scale, tmp, 25, ct.colDataType);
-            else
-                snprintf(tmp, 25, "%ld", value);
-
-            f2->store(tmp, strlen(tmp), f2->charset());
-            break;
-        }
-
-        default:
-        {
-            Field_longlong* f2 = (Field_longlong*)*f;
-            longlong int_val = (longlong)value;
-            f2->store(int_val, f2->unsigned_flag);
-            break;
-        }
-    }
-}
-
 //
 // @bug 2244. Log exception related to lost connection to ExeMgr.
 // Log exception error from calls to sm::tpl_scan_fetch in fetchNextRow()
@@ -5045,6 +4947,7 @@ int ha_calpont_impl_external_lock(THD* thd, TABLE* table, int lock_type)
             {
                 push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, infinidb_autoswitch_warning.c_str());
             }
+            ci->queryState = 0;
         }
         else // vtable mode
         {
@@ -5212,10 +5115,13 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             ci->warningMsg = msg;
         }
 
-        // if the previous query has error, re-establish the connection
+        // If the previous query has error and 
+        // this is not a subquery run by the server(MCOL-1601)
+        // re-establish the connection
         if (ci->queryState != 0)
         {
-            sm::sm_cleanup(ci->cal_conn_hndl);
+            if( ci->cal_conn_hndl_st.size() == 0 )
+                sm::sm_cleanup(ci->cal_conn_hndl);
             ci->cal_conn_hndl = 0;
         }
 
@@ -5237,6 +5143,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
         hndl = ci->cal_conn_hndl;
 
+        ci->cal_conn_hndl_st.push(ci->cal_conn_hndl);
         if (!csep)
             csep.reset(new CalpontSelectExecutionPlan());
 
@@ -5308,8 +5215,12 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             return 0;
 
         string query;
-        query.assign(thd->infinidb_vtable.original_query.ptr(),
-                     thd->infinidb_vtable.original_query.length());
+        // Set the query text only once if the server executes 
+        // subqueries separately.
+        if(ci->queryState)
+            query.assign("<subquery of the previous>");
+        else
+            query.assign(thd->query_string.str(), thd->query_string.length());
         csep->data(query);
 
         try
@@ -5439,11 +5350,15 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
                 idbassert(hndl != 0);
                 hndl->csc = csc;
 
+                // The next section is useless
                 if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE)
                     ti.conn_hndl = hndl;
                 else
+                {
                     ci->cal_conn_hndl = hndl;
-
+                    ci->cal_conn_hndl_st.pop();
+                    ci->cal_conn_hndl_st.push(ci->cal_conn_hndl);
+                }
                 try
                 {
                     hndl->connect();
@@ -5476,11 +5391,11 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             (thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE) ||
             (thd->infinidb_vtable.vtable_state == THD::INFINIDB_REDO_QUERY))
     {
-        if (ti.tpl_ctx == 0)
-        {
-            ti.tpl_ctx = new sm::cpsm_tplh_t();
-            ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
-        }
+        // MCOL-1601 Using stacks of ExeMgr conn hndls, table and scan contexts.
+        ti.tpl_ctx = new sm::cpsm_tplh_t();
+        ti.tpl_ctx_st.push(ti.tpl_ctx);
+        ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
+        ti.tpl_scan_ctx_st.push(ti.tpl_scan_ctx);
 
         // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
         // call rnd_init for a table more than once.
@@ -5560,6 +5475,7 @@ error:
 
     if (ci->cal_conn_hndl)
     {
+        // end_query() should be called here.
         sm::sm_cleanup(ci->cal_conn_hndl);
         ci->cal_conn_hndl = 0;
     }
@@ -5571,6 +5487,7 @@ internal_error:
 
     if (ci->cal_conn_hndl)
     {
+        // end_query() should be called here.
         sm::sm_cleanup(ci->cal_conn_hndl);
         ci->cal_conn_hndl = 0;
     }
@@ -5802,6 +5719,12 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
             ci->cal_conn_hndl = 0;
             // clear querystats because no query stats available for cancelled query
             ci->queryStats = "";
+            if ( ci->cal_conn_hndl_st.size() )
+            {
+                ci->cal_conn_hndl_st.pop();
+                if ( ci->cal_conn_hndl_st.size() )
+                    ci->cal_conn_hndl = ci->cal_conn_hndl_st.top();
+            }
         }
 
         return 0;
@@ -5811,6 +5734,7 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
 
     cal_table_info ti = ci->tableMap[table];
     sm::cpsm_conhdl_t* hndl;
+    bool clearScanCtx = false;
 
     hndl = ci->cal_conn_hndl;
 
@@ -5818,6 +5742,8 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     {
         if (ti.tpl_scan_ctx.get())
         {
+            clearScanCtx = ( (ti.tpl_scan_ctx.get()->rowsreturned) &&
+                ti.tpl_scan_ctx.get()->rowsreturned == ti.tpl_scan_ctx.get()->getRowCount() );
             try
             {
                 sm::tpl_scan_close(ti.tpl_scan_ctx);
@@ -5829,11 +5755,31 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
         }
 
         ti.tpl_scan_ctx.reset();
-
+        if ( ti.tpl_scan_ctx_st.size() )
+        {
+            ti.tpl_scan_ctx_st.pop();
+            if ( ti.tpl_scan_ctx_st.size() )
+                ti.tpl_scan_ctx =  ti.tpl_scan_ctx_st.top();
+        }
         try
         {
             if(hndl)
-                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats);
+            {
+                sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, clearScanCtx);
+// Normaly stats variables are set in external_lock method but we set it here
+// since they we pretend we are in vtable_disabled mode and the stats vars won't be set.
+// We sum the stats up here since server could run a number of
+// queries e.g. each for a subquery in a filter.
+                if(hndl)
+                {
+                    if (hndl->queryStats.length())
+                        ci->queryStats += hndl->queryStats;
+                    if (hndl->extendedStats.length())
+                        ci->extendedStats += hndl->extendedStats;
+                    if (hndl->miniStats.length())
+                        ci->miniStats += hndl->miniStats;
+                }
+            }
 
             ci->cal_conn_hndl = hndl;
 
@@ -5865,6 +5811,20 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     }
 
     ti.tpl_ctx = 0;
+
+    if ( ti.tpl_ctx_st.size() )
+    {
+        ti.tpl_ctx_st.pop();
+        if ( ti.tpl_ctx_st.size() )
+            ti.tpl_ctx = ti.tpl_ctx_st.top();
+    }
+
+    if ( ci->cal_conn_hndl_st.size() )
+    {
+        ci->cal_conn_hndl_st.pop();
+        if ( ci->cal_conn_hndl_st.size() )
+            ci->cal_conn_hndl = ci->cal_conn_hndl_st.top();
+    }
 
     ci->tableMap[table] = ti;
 
