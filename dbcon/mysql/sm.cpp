@@ -387,9 +387,6 @@ tpl_close ( cpsm_tplh_t* ntplh,
         // Get the query stats
         ByteStream bs;
         ByteStream::quadbyte qb = 3;
-        //string tmpQueryStats;
-        //string tmpExtendedStats;
-        //string tmpMiniStats;
         bs << qb;
         hndl->write(bs);
         
@@ -412,20 +409,9 @@ tpl_close ( cpsm_tplh_t* ntplh,
 
             try
             {
-                // MCOL-1601 Server could run a number of subqueries separetely.
-                // If so there will be a number of statistics returned.
-                /*if(hndl->queryStats.size())
-                {
-                    bs >> tmpQueryStats, hndl->queryStats += tmpQueryStats;
-                    bs >> tmpExtendedStats, hndl->extendedStats += tmpExtendedStats;
-                    bs >> hndl->miniStats, hndl->miniStats += tmpMiniStats;
-                }
-                else*/
-                {
-                    bs >> hndl->queryStats;
-                    bs >> hndl->extendedStats;
-                    bs >> hndl->miniStats;
-                }
+                bs >> hndl->queryStats;
+                bs >> hndl->extendedStats;
+                bs >> hndl->miniStats;
                 stats.unserialize(bs);
                 stats.setEndTime();
                 stats.insert();
