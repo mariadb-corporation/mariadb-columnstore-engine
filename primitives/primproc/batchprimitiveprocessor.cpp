@@ -1677,15 +1677,11 @@ void BatchPrimitiveProcessor::execute()
     }
     catch (logging::QueryDataExcept& qex)
     {
-        ostringstream os;
-        os << qex.what() << endl;
-        writeErrorMsg(os.str(), qex.errorCode());
+        writeErrorMsg(qex.what(), qex.errorCode());
     }
     catch (logging::DictionaryBufferOverflow& db)
     {
-        ostringstream os;
-        os << db.what() << endl;
-        writeErrorMsg(os.str(), db.errorCode());
+        writeErrorMsg(db.what(), db.errorCode());
     }
     catch (scalar_exception& se)
     {
@@ -1758,15 +1754,11 @@ void BatchPrimitiveProcessor::execute()
     }
     catch (IDBExcept& iex)
     {
-        ostringstream os;
-        os << iex.what() << endl;
-        writeErrorMsg(os.str(), iex.errorCode(), true, false);
+        writeErrorMsg(iex.what(), iex.errorCode(), true, false);
     }
     catch (const std::exception& ex)
     {
-        ostringstream os;
-        os <<  ex.what() << endl;
-        writeErrorMsg(os.str(), logging::batchPrimitiveProcessorErr);
+        writeErrorMsg(ex.what(), logging::batchPrimitiveProcessorErr);
     }
     catch (...)
     {

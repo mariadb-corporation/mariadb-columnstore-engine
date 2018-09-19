@@ -29,7 +29,7 @@ detectOS () {
    echo Operating System name: $osPrettyName
    echo Operating System tag:  $osTag
    case "$osTag" in
-      centos6|centos7|ubuntu16|debian8|suse12|debian9)
+      centos6|centos7|ubuntu16|debian8|suse12|debian9|ubuntu18)
          ;;
       *)
          echo OS not supported

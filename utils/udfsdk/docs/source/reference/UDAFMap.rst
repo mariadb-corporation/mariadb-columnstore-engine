@@ -3,7 +3,7 @@
 UDAFMap
 =======
 
-The UDAFMap is where we tell the system about our function. For Columnstore 1.1, you must manually place your function into this map.
+The UDAFMap is where we tell the system about our function. For Columnstore 1.2, you must manually place your function into this map.
 
 * open mcsv1_udaf.cpp
 * add your header to the #include list

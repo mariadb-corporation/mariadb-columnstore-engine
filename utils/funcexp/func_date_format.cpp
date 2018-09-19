@@ -269,6 +269,34 @@ string Func_date_format::getStrVal(rowgroup::Row& row,
             dt.msecond = (uint32_t)((val & 0xfffff));
             break;
 
+        case CalpontSystemCatalog::TIME:
+        {
+            DateTime aDateTime = static_cast<DateTime>(nowDatetime());
+            Time aTime = parm[0]->data()->getTimeIntVal(row, isNull);
+            aTime.day = 0;
+            aDateTime.hour = 0;
+            aDateTime.minute = 0;
+            aDateTime.second = 0;
+            aDateTime.msecond = 0;
+            if ((aTime.hour < 0) || (aTime.is_neg))
+            {
+                aTime.hour = -abs(aTime.hour);
+                aTime.minute = -abs(aTime.minute);
+                aTime.second = -abs(aTime.second);
+                aTime.msecond = -abs(aTime.msecond);
+            }
+            val = addTime(aDateTime, aTime);
+            dt.year = (uint32_t)((val >> 48) & 0xffff);
+            dt.month = (uint32_t)((val >> 44) & 0xf);
+            dt.day = (uint32_t)((val >> 38) & 0x3f);
+            dt.hour = (uint32_t)((val >> 32) & 0x3f);
+            dt.minute = (uint32_t)((val >> 26) & 0x3f);
+            dt.second = (uint32_t)((val >> 20) & 0x3f);
+            dt.msecond = (uint32_t)((val & 0xfffff));
+            break;
+        }
+
+
         case CalpontSystemCatalog::CHAR:
         case CalpontSystemCatalog::VARCHAR:
         case CalpontSystemCatalog::TEXT:

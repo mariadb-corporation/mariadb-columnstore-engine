@@ -34,9 +34,9 @@ struct ssq_data
 
 #define OUT_TYPE int64_t
 mcsv1_UDAF::ReturnCode ssq::init(mcsv1Context* context,
-                                 COL_TYPES& colTypes)
+                                 ColumnDatum* colTypes)
 {
-    if (colTypes.size() < 1)
+    if (context->getParameterCount() < 1)
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
@@ -44,13 +44,13 @@ mcsv1_UDAF::ReturnCode ssq::init(mcsv1Context* context,
         return mcsv1_UDAF::ERROR;
     }
 
-    if (colTypes.size() > 1)
+    if (context->getParameterCount() > 1)
     {
         context->setErrorMessage("ssq() with more than 1 argument");
         return mcsv1_UDAF::ERROR;
     }
 
-    if (!(isNumeric(colTypes[0].second)))
+    if (!(isNumeric(colTypes[0].dataType)))
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
@@ -81,8 +81,7 @@ mcsv1_UDAF::ReturnCode ssq::reset(mcsv1Context* context)
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode ssq::nextValue(mcsv1Context* context,
-                                      std::vector<ColumnDatum>& valsIn)
+mcsv1_UDAF::ReturnCode ssq::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
     static_any::any& valIn = valsIn[0].columnData;
     struct ssq_data* data = (struct ssq_data*)context->getUserData()->data;
@@ -183,8 +182,7 @@ mcsv1_UDAF::ReturnCode ssq::evaluate(mcsv1Context* context, static_any::any& val
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode ssq::dropValue(mcsv1Context* context,
-                                      std::vector<ColumnDatum>& valsDropped)
+mcsv1_UDAF::ReturnCode ssq::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
     static_any::any& valIn = valsDropped[0].columnData;
     struct ssq_data* data = (struct ssq_data*)context->getUserData()->data;

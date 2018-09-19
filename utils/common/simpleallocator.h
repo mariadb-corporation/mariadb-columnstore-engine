@@ -156,10 +156,6 @@ public:
         ptr->T::~T();
     }
 
-    SimplePool* getPool()
-    {
-        return fPool;
-    }
     void setPool(SimplePool* pool)
     {
         fPool = pool;

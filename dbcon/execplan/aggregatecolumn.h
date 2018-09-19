@@ -40,6 +40,8 @@ class ByteStream;
 namespace execplan
 {
 
+typedef std::vector<execplan::SRCP> AggParms;
+
 /**
  * @brief A class to represent a aggregate return column
  *
@@ -74,7 +76,8 @@ public:
         BIT_OR,
         BIT_XOR,
         GROUP_CONCAT,
-        UDAF
+        UDAF,
+        MULTI_PARM
     };
 
     /**
@@ -93,21 +96,6 @@ public:
      * ctor
      */
     AggregateColumn(const uint32_t sessionID);
-
-    /**
-     * ctor
-     */
-    AggregateColumn(const AggOp aggop, ReturnedColumn* parm, const uint32_t sessionID = 0);
-
-    /**
-     * ctor
-     */
-    AggregateColumn(const AggOp aggop, const std::string& content, const uint32_t sessionID = 0);
-
-    /**
-     * ctor
-     */
-    AggregateColumn(const std::string& functionName, ReturnedColumn* parm, const uint32_t sessionID = 0);
 
     /**
      * ctor
@@ -155,23 +143,26 @@ public:
         fAggOp = aggOp;
     }
 
+
     /** get function parms
-     *
-     * set the function parms from this object
      */
-    virtual const SRCP functionParms() const
+    virtual AggParms& aggParms()
     {
-        return fFunctionParms;
+        return fAggParms;
+    }
+
+    virtual const AggParms& aggParms() const
+    {
+        return fAggParms;
     }
 
     /** set function parms
-     *
-     * set the function parms for this object
      */
-    virtual void functionParms(const SRCP& functionParms)
+    virtual void aggParms(const AggParms& parms)
     {
-        fFunctionParms = functionParms;
+        fAggParms = parms;
     }
+
 
     /** return a copy of this pointer
      *
@@ -325,9 +316,10 @@ protected:
     uint8_t fAggOp;
 
     /**
-     * A ReturnedColumn objects that are the arguments to this function
+     * ReturnedColumn objects that are the arguments to this
+     * function
      */
-    SRCP fFunctionParms;
+    AggParms fAggParms;
 
     /** table alias
      * A string to represent table alias name which contains this column

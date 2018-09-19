@@ -405,7 +405,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
             msg >> target;
             msg >> graceful;
             msg >> ackIndicator;
-            msg >> manualFlag;
+        	msg >> manualFlag;
 
             switch (actionType)
             {
@@ -902,29 +902,31 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                             }
 
                             if (opState == oam::MAN_OFFLINE || opState == oam::MAN_DISABLED
-                                    || opState == oam::AUTO_DISABLED )
+									|| opState == oam::AUTO_DISABLED || opState == oam::AUTO_OFFLINE)
                             {
 
-                                oam.dbrmctl("halt");
-                                log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
+								processManager.setSystemState(oam::BUSY_INIT);
+
+								//set query system state not ready
+								processManager.setQuerySystemState(false);
 
                                 status = processManager.disableModule(moduleName, true);
                                 log.writeLog(__LINE__, "Disable Module Completed on " + moduleName, LOG_TYPE_INFO);
 
-                                //call dbrm control
-                                oam.dbrmctl("reload");
-                                log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
-
-                                // resume the dbrm
-                                oam.dbrmctl("resume");
-                                log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+								processManager.recycleProcess(moduleName);
 
                                 //check for SIMPLEX Processes on mate might need to be started
                                 processManager.checkSimplexModule(moduleName);
+								
+								processManager.setSystemState(oam::ACTIVE);
+
+								//set query system state ready
+								processManager.setQuerySystemState(true);
+
                             }
                             else
                             {
-                                log.writeLog(__LINE__,  "ERROR: module not stopped", LOG_TYPE_ERROR);
+								log.writeLog(__LINE__,  "ERROR: module not stopped, state = " + oam.itoa(opState), LOG_TYPE_ERROR);
                                 status = API_FAILURE;
                                 break;
                             }
@@ -987,7 +989,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                         DeviceNetworkList::iterator listPT = devicenetworklist.begin();
 
-                        //stopModules being removed with the REMOVE option, which will stop process
+						// do stopmodule then enable
                         for ( ; listPT != devicenetworklist.end() ; listPT++)
                         {
                             string moduleName = (*listPT).DeviceName;
@@ -1013,6 +1015,9 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                             if (opState == oam::MAN_DISABLED)
                             {
+								processManager.stopModule(moduleName, graceful, manualFlag);
+								log.writeLog(__LINE__, "stop Module Completed on " + moduleName, LOG_TYPE_INFO);
+								
                                 status = processManager.enableModule(moduleName, oam::MAN_OFFLINE);
                                 log.writeLog(__LINE__, "Enable Module Completed on " + moduleName, LOG_TYPE_INFO);
                             }
@@ -1356,6 +1361,9 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                         log.writeLog(__LINE__, "STOPSYSTEM: ACK back to sender");
                     }
+
+					//set query system state ready
+					processManager.setQuerySystemState(true);
 
                     startsystemthreadStop = false;
 
@@ -3049,9 +3057,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
             log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted on " + moduleName + "/" + processName);
 
             //set query system states not ready
-            BRM::DBRM dbrm;
-            dbrm.setSystemQueryReady(false);
-
             processManager.setQuerySystemState(false);
 
             processManager.setSystemState(oam::BUSY_INIT);
@@ -3150,14 +3155,15 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                                 sleep(1);
                             }
+								processManager.setQuerySystemState(true);
 
-                            dbrm.setSystemQueryReady(true);
                         }
 
                         // if a DDLProc was restarted, reinit DMLProc
                         if ( processName == "DDLProc")
                         {
                             processManager.reinitProcessType("DMLProc");
+								processManager.setQuerySystemState(true);
                         }
 
                         //only run on auto process restart
@@ -3211,9 +3217,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                 }
             }
 
-            //enable query stats
-            dbrm.setSystemQueryReady(true);
-
+				//set query system states ready
             processManager.setQuerySystemState(true);
 
             processManager.setSystemState(oam::ACTIVE);
@@ -3639,6 +3643,8 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 
         if (opState == oam::AUTO_DISABLED && newState == oam::MAN_DISABLED)
         {
+			//removemodule to get proess in MAN_OFFLINE
+			stopModule(target, REMOVE, true);
 
             try
             {
@@ -3691,7 +3697,7 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 
     setModuleState(target, newState);
 
-    //set Columnstore.xml enbale state
+	//set Columnstore.xml enable state
     setEnableState( target, SnewState);
 
     log.writeLog(__LINE__, "disableModule - setEnableState", LOG_TYPE_DEBUG);
@@ -3777,18 +3783,18 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
     restartProcessType("PrimProc");
     sleep(1);
 
-    restartProcessType("ExeMgr");
-    sleep(1);
-
-    restartProcessType("mysql");
+    restartProcessType("mysqld");
 
     restartProcessType("WriteEngineServer");
     sleep(1);
 
-    restartProcessType("DDLProc", module);
+	startProcessType("ExeMgr");
     sleep(1);
 
-    restartProcessType("DMLProc", module);
+	startProcessType("DDLProc");
+	sleep(1);
+
+	startProcessType("DMLProc");
 
     return;
 }
@@ -3799,7 +3805,7 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 * purpose:	Clear the Disable State on a specified module
 *
 ******************************************************************************************/
-int ProcessManager::enableModule(string target, int state)
+int ProcessManager::enableModule(string target, int state, bool failover)
 {
     Oam oam;
     ModuleConfig moduleconfig;
@@ -3839,7 +3845,8 @@ int ProcessManager::enableModule(string target, int state)
         setStandbyModule(newStandbyModule);
 
     //set recycle process
-    recycleProcess(target);
+    if (!failover)
+        recycleProcess(target);
 
     log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
@@ -4127,6 +4134,7 @@ void ProcessManager::setSystemState(uint16_t state)
     Oam oam;
     ALARMManager aManager;
     Configuration config;
+	ProcessManager processManager(config, log);
 
     log.writeLog(__LINE__, "Set System State = " + oamState[state], LOG_TYPE_DEBUG);
 
@@ -4148,9 +4156,10 @@ void ProcessManager::setSystemState(uint16_t state)
 
     // Process Alarms
     string system = "System";
-
-    if ( state == oam::ACTIVE )
-    {
+    if( state == oam::ACTIVE ) {
+		//set query system states ready
+		processManager.setQuerySystemState(true);
+		
         //clear alarms if set
         aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
         aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
@@ -4541,7 +4550,8 @@ int ProcessManager::stopProcessType( std::string processName, bool manualFlag )
             if ( systemprocessstatus.processstatus[i].ProcessName == processName)
             {
                 //skip if in a COLD_STANDBY state
-                if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
+//			    if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY )
+			    if ( systemprocessstatus.processstatus[i].ProcessOpState != oam::ACTIVE )
                     continue;
 
                 // found one, request restart of it
@@ -4647,7 +4657,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
         PMwithUM = "n";
     }
 
-    // If mysql is the processName, then send to modules were ExeMgr is running
+    // If mysqld is the processName, then send to modules were ExeMgr is running
     try
     {
         oam.getProcessStatus(systemprocessstatus);
@@ -4658,7 +4668,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
             if ( systemprocessstatus.processstatus[i].Module == skipModule )
                 continue;
 
-            if ( processName == "mysql" )
+            if ( processName == "mysqld" )
             {
                 if ( systemprocessstatus.processstatus[i].ProcessName == "ExeMgr")
                 {
@@ -4681,12 +4691,17 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
                 if ( systemprocessstatus.processstatus[i].ProcessName == processName )
                 {
                     //skip if in a BUSY_INIT state
-                    if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::BUSY_INIT ||
-                            systemprocessstatus.processstatus[i].ProcessOpState == oam::AUTO_INIT ||
-                            systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_INIT ||
-                            ( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
-                        continue;
+//					if ( systemprocessstatus.processstatus[i].ProcessOpState == oam::BUSY_INIT ||
+//						 systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_OFFLINE ||
+//						 systemprocessstatus.processstatus[i].ProcessOpState == oam::AUTO_OFFLINE ||
+//						systemprocessstatus.processstatus[i].ProcessOpState == oam::AUTO_INIT ||
+//						systemprocessstatus.processstatus[i].ProcessOpState == oam::MAN_INIT ||
+//						( systemprocessstatus.processstatus[i].ProcessOpState == oam::COLD_STANDBY && !manualFlag ) )
+//						continue;
 
+					if ( systemprocessstatus.processstatus[i].ProcessOpState != oam::ACTIVE )
+                        continue;
+						
                     if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) )
                     {
                         string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0, MAX_MODULE_TYPE_SIZE);
@@ -6806,7 +6821,7 @@ int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requ
 
         if ( IPAddr == oam::UnassignedIpAddr )
         {
-            log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "sendMsgProcMon ping failure " + module + " " + IPAddr, LOG_TYPE_ERROR);
             return oam::API_SUCCESS;
         }
 
@@ -6817,7 +6832,7 @@ int ProcessManager::sendMsgProcMon( std::string module, ByteStream msg, int requ
         if ( system(cmd.c_str()) != 0)
         {
             //ping failure
-            log.writeLog(__LINE__, "sendMsgProcMon ping failure", LOG_TYPE_ERROR);
+			log.writeLog(__LINE__, "sendMsgProcMon ping failure " + module + " " + IPAddr, LOG_TYPE_ERROR);
             return oam::API_SUCCESS;
         }
     }
@@ -7630,7 +7645,7 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
     }
 
     //set query system state not ready
-    processManager.setQuerySystemState(true);
+	processManager.setQuerySystemState(false);
 
     // Bug 4554: Wait until DMLProc is finished with rollback
     if (status == oam::API_SUCCESS)
@@ -7706,6 +7721,9 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 
         processManager.setSystemState(rtn);
     }
+
+	//set query system state ready
+	processManager.setQuerySystemState(true);
 
     // exit thread
     log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);
@@ -8235,19 +8253,18 @@ void ProcessManager::checkSimplexModule(std::string moduleName)
 
                                             if ( state == oam::COLD_STANDBY )
                                             {
-                                                //set Primary UM Module
-                                                if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc" )
-                                                {
+												//process DDL/DMLProc
+												if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc")
+												{
+													setPMProcIPs((*pt).DeviceName);
+													
+													log.writeLog(__LINE__, "Set Primary UM Module = " + (*pt).DeviceName, LOG_TYPE_DEBUG);
+
                                                     oam.setSystemConfig("PrimaryUMModuleName", (*pt).DeviceName);
 
                                                     //distribute config file
                                                     distributeConfigFile("system");
                                                     sleep(2);
-
-                                                    //add MySQL Replication setup, if needed
-                                                    log.writeLog(__LINE__, "Setup MySQL Replication for COLD_STANDBY DMLProc going ACTIVE", LOG_TYPE_DEBUG);
-                                                    oam::DeviceNetworkList devicenetworklist;
-                                                    processManager.setMySQLReplication(devicenetworklist, (*pt).DeviceName);
                                                 }
 
                                                 int status = processManager.startProcess((*pt).DeviceName,
@@ -8258,12 +8275,24 @@ void ProcessManager::checkSimplexModule(std::string moduleName)
                                                 {
                                                     log.writeLog(__LINE__, "checkSimplexModule: mate process started: " + (*pt).DeviceName + "/" + systemprocessconfig.processconfig[j].ProcessName, LOG_TYPE_DEBUG);
 
-                                                    //check to see if DDL/DML IPs need to be updated
-                                                    if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc" )
-                                                        setPMProcIPs((*pt).DeviceName);
+													status = processManager.startProcess((*pt).DeviceName,
+																		"DMLProc", 
+																		FORCEFUL);
+													if ( status == API_SUCCESS ) {
+														log.writeLog(__LINE__, "checkSimplexModule: mate process started: " + (*pt).DeviceName + "/DMLProc", LOG_TYPE_DEBUG);
+													}
+													else
+														log.writeLog(__LINE__, "checkSimplexModule: mate process failed to start: " + (*pt).DeviceName + "/DMLProc", LOG_TYPE_DEBUG);
                                                 }
                                                 else
                                                     log.writeLog(__LINE__, "checkSimplexModule: mate process failed to start: " + (*pt).DeviceName + "/" + systemprocessconfig.processconfig[j].ProcessName, LOG_TYPE_DEBUG);
+
+												//setup new MariaDB Replication Master
+												if ( systemprocessconfig.processconfig[j].ProcessName == "DMLProc" ) {
+													log.writeLog(__LINE__, "Setup MySQL Replication for COLD_STANDBY DMLProc going ACTIVE", LOG_TYPE_DEBUG);
+													oam::DeviceNetworkList devicenetworklist;
+													processManager.setMySQLReplication(devicenetworklist, (*pt).DeviceName);
+												}
                                             }
                                             else
                                             {
@@ -9795,7 +9824,7 @@ int ProcessManager::OAMParentModuleChange()
                         {
                             log.writeLog(__LINE__, "System Active, restart needed processes", LOG_TYPE_DEBUG);
 
-                            processManager.restartProcessType("mysql");
+                            processManager.restartProcessType("mysqld");
                             processManager.restartProcessType("ExeMgr");
                             processManager.restartProcessType("WriteEngineServer");
                             processManager.reinitProcessType("DBRMWorkerNode");
@@ -10325,7 +10354,7 @@ int ProcessManager::OAMParentModuleChange()
     if ( ( config.ServerInstallType() == oam::INSTALL_COMBINE_DM_UM_PM)  &&
             ( moduleNameList.size() <= 0 && config.moduleType() == "pm") )
     {
-        int status = 0;
+		status = 0;
     }
     else
     {
@@ -10995,7 +11024,7 @@ void ProcessManager::stopProcessTypes(bool manualFlag)
     log.writeLog(__LINE__, "stopProcessTypes Called");
 
     //front-end first
-    processManager.stopProcessType("mysql", manualFlag);
+    processManager.stopProcessType("mysqld", manualFlag);
     processManager.stopProcessType("DMLProc", manualFlag);
     processManager.stopProcessType("DDLProc", manualFlag);
     processManager.stopProcessType("ExeMgr", manualFlag);

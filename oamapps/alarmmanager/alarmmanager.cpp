@@ -463,7 +463,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
     int pid = getpid();
     int tid = gettid();
 
-    // get reporting Pprocess Name
+	// get reporting Process Name
     string processName;
 
     if ( repProcessName.empty())
@@ -505,6 +505,7 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
         // shutdown connection
         procmgr.shutdown();
     }
+
     catch (...)
     {}
 

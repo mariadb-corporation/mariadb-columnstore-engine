@@ -90,10 +90,12 @@ start() {
 
 	CoreFileFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation CoreFileFlag`
 	if [ $CoreFileFlag = "y" ]; then
+
 		#columnstore core files
 		ulimit -c unlimited  > /dev/null 2>&1
 		sysctl -q -w kernel.core_uses_pid=1  > /dev/null 2>&1
 		sysctl -q -w kernel.core_pattern=/var/log/mariadb/columnstore/corefiles/core.%e.%p  > /dev/null 2>&1
+
 	fi
 
 	RETVAL=0

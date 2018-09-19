@@ -3,7 +3,7 @@
 Compile
 =======
 
-To compile your function for Columnstore 1.1, simple recompile the udfsdk directory::
+To compile your function for Columnstore 1.2, simply recompile the udfsdk directory::
 
  cd utils/usdsdk
  cmake .
