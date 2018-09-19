@@ -186,7 +186,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		fi
 		
 		//set permissions
-		$SUDO chown $user:$group -R /var/log/mariadb > /dev/null 2>&1
+		chown $user:$group -R /var/log/mariadb > /dev/null 2>&1
 		
 		if [ $rsyslog7 == 1 ]; then
 			 rm -f /etc/rsyslog.d/49-columnstore.conf

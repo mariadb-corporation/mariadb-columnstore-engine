@@ -14,14 +14,7 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-USER=`whoami 2>/dev/null`
-if [ $USER = "root" ]; then
-	SUDO=" "
-else
-	SUDO="sudo"
-fi
-
-$SUDO rm -f /tmp/${MODULE}_hardwareReport.txt
+rm -f /tmp/${MODULE}_hardwareReport.txt
 
 {
 echo " "
@@ -32,7 +25,7 @@ echo "-- Server OS Version --"
 echo " "
 echo "################# cat /proc/version #################"
 echo " "
-$SUDO cat /proc/version 2>/dev/null
+cat /proc/version 2>/dev/null
 echo " "
 echo "################# uname -a #################"
 echo " "
@@ -60,21 +53,21 @@ echo "-- Server cpu-info --"
 echo " "
 echo "################# cat /proc/cpuinfo #################"
 echo " "
-$SUDO cat /proc/cpuinfo 2>/dev/null
+cat /proc/cpuinfo 2>/dev/null
 
 echo " "
 echo "-- Server memory-info --"
 echo " "
 echo "################# cat /proc/meminfo #################"
 echo " "
-$SUDO cat /proc/meminfo 2>/dev/null
+cat /proc/meminfo 2>/dev/null
 
 echo " "
 echo "-- Server mounts --"
 echo " "
 echo "################# cat /proc/mounts #################"
 echo " "
-$SUDO cat /proc/mounts 2>/dev/null
+cat /proc/mounts 2>/dev/null
 
 echo " "
 echo "-- Server Disk Scheduler for Columnstore Mounts --"

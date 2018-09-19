@@ -14,14 +14,7 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-USER=`whoami 2>/dev/null`
-if [ $USER = "root" ]; then
-	SUDO=" "
-else
-	SUDO="sudo"
-fi
-
-$SUDO rm -f /tmp/${MODULE}_resourceReport.txt
+rm -f /tmp/${MODULE}_resourceReport.txt
 
 {
 echo " "
@@ -33,7 +26,7 @@ echo "-- Shared Memory --"
 echo " "
 echo "################# ipcs -l #################"
 echo " "
-$SUDO ipcs -l
+ipcs -l
 
 echo "################# $INSTALLDIR/bin/clearShm -n #################"
 echo " "
@@ -44,7 +37,7 @@ echo "-- Disk Usage --"
 echo " "
 echo "################# df -k #################"
 echo " "
-$SUDO df -k
+df -k
 
 echo " "
 echo "-- Disk BRM Data files --"
