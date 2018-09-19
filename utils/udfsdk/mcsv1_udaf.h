@@ -68,7 +68,6 @@
 #include <vector>
 #include <map>
 #include <boost/shared_ptr.hpp>
-#include <boost/any.hpp>
 #ifdef _MSC_VER
 #include <unordered_map>
 #else
@@ -77,6 +76,7 @@
 #include "any.hpp"
 #include "calpontsystemcatalog.h"
 #include "wf_frame.h"
+#include "my_decimal_limits.h"
 
 using namespace execplan;
 
@@ -200,12 +200,8 @@ static uint64_t	CONTEXT_IS_PM __attribute__ ((unused))                = 1 << 2; 
 // Flags that describe the contents of a specific input parameter
 // These will be set in context->dataFlags for each method call by the framework.
 // User code shouldn't use these directly
-static uint64_t	PARAM_IS_NULL     __attribute__ ((unused)) = 1;
-static uint64_t	PARAM_IS_CONSTANT __attribute__ ((unused)) = 1 << 1;
-
-// shorthand for the list of columns in the call sent to init()
-// first is the actual column name and second is the data type in Columnstore.
-typedef std::vector<std::pair<std::string, CalpontSystemCatalog::ColDataType> >COL_TYPES;
+static uint32_t	PARAM_IS_NULL     __attribute__ ((unused)) = 1;
+static uint32_t	PARAM_IS_CONSTANT __attribute__ ((unused)) = 1 << 1;
 
 // This is the context class that is passed to all API callbacks
 // The framework potentially sets data here for each invocation of
@@ -269,7 +265,9 @@ public:
     EXPORT bool isPM();
 
     // Parameter refinement description accessors
-    // valid in nextValue and dropValue
+
+    // How many actual parameters were entered.
+    // valid in all calls
     size_t getParameterCount() const;
 
     // Determine if an input parameter is NULL
@@ -298,6 +296,7 @@ public:
     // This only makes sense if the return type is decimal, but should be set
     // to (0, -1) for other types if the inout is decimal.
     // valid in init()
+    // Set the scale to DECIMAL_NOT_SPECIFIED if you want a floating decimal.
     EXPORT bool setScale(int32_t scale);
     EXPORT bool setPrecision(int32_t precision);
 
@@ -372,7 +371,7 @@ private:
     int32_t  fResultscale;    // For scale, the number of digits to the right of the decimal
     int32_t  fResultPrecision; // The max number of digits allowed in the decimal value
     std::string errorMsg;
-    std::vector<uint32_t>* dataFlags; // one entry for each parameter
+    uint32_t* dataFlags;      // an integer array wirh one entry for each parameter
     bool*    bInterrupted;    // Gets set to true by the Framework if something happens
     WF_FRAME fStartFrame;     // Is set to default to start, then modified by the actual frame in the call
     WF_FRAME fEndFrame;       // Is set to default to start, then modified by the actual frame in the call
@@ -380,6 +379,7 @@ private:
     int32_t  fEndConstant;    // for end frame WF_PRECEEDIMG or WF_FOLLOWING
     std::string functionName;
     mcsv1sdk::mcsv1_UDAF* func;
+    int32_t  fParamCount;
 
 public:
     // For use by the framework
@@ -394,13 +394,14 @@ public:
     EXPORT void clearContextFlag(uint64_t flag);
     EXPORT uint64_t getContextFlags() const;
     EXPORT uint32_t getUserDataSize() const;
-    EXPORT std::vector<uint32_t>& getDataFlags();
-    EXPORT void setDataFlags(std::vector<uint32_t>* flags);
+    EXPORT uint32_t* getDataFlags();
+    EXPORT void setDataFlags(uint32_t* flags);
     EXPORT void setInterrupted(bool interrupted);
     EXPORT void setInterrupted(bool* interrupted);
     EXPORT mcsv1sdk::mcsv1_UDAF* getFunction();
     EXPORT mcsv1sdk::mcsv1_UDAF* getFunction() const;
     EXPORT boost::shared_ptr<UserData> getUserDataSP();
+    EXPORT void setParamCount(int32_t paramCount);
 };
 
 // Since aggregate functions can operate on any data type, we use the following structure
@@ -419,9 +420,10 @@ public:
 struct ColumnDatum
 {
     CalpontSystemCatalog::ColDataType dataType;   // defined in calpontsystemcatalog.h
-    static_any::any  columnData;
+    static_any::any  columnData;  // Not valid in init()
     uint32_t    scale;     // If dataType is a DECIMAL type
     uint32_t    precision; // If dataType is a DECIMAL type
+    std::string alias;     // Only filled in for init()
     ColumnDatum() : dataType(CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1) {};
 };
 
@@ -466,7 +468,7 @@ public:
      * mcsv1_UDAF::SUCCESS.
      */
     virtual ReturnCode init(mcsv1Context* context,
-                            COL_TYPES& colTypes) = 0;
+                            ColumnDatum* colTypes) = 0;
 
     /**
      * reset()
@@ -501,8 +503,7 @@ public:
      *
      * valsIn (in) - a vector of the parameters from the row.
      */
-    virtual ReturnCode nextValue(mcsv1Context* context,
-                                 std::vector<ColumnDatum>& valsIn) = 0;
+    virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) = 0;
 
     /**
      * subEvaluate()
@@ -579,8 +580,7 @@ public:
      * dropValue() will not be called for unbounded/current row type
      * frames, as those are already optimized.
      */
-    virtual ReturnCode dropValue(mcsv1Context* context,
-                                 std::vector<ColumnDatum>& valsDropped);
+    virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
 
     /**
      * createUserData()
@@ -640,32 +640,32 @@ inline mcsv1Context::mcsv1Context() :
     fEndFrame(WF_CURRENT_ROW),
     fStartConstant(0),
     fEndConstant(0),
-    func(NULL)
+    func(NULL),
+    fParamCount(0)
 {
 }
 
 inline mcsv1Context::mcsv1Context(const mcsv1Context& rhs) :
-    fContextFlags(0),
-    fColWidth(0),
-    dataFlags(NULL),
-    bInterrupted(NULL),
-    func(NULL)
+    dataFlags(NULL)
 {
     copy(rhs);
 }
 
 inline mcsv1Context& mcsv1Context::copy(const mcsv1Context& rhs)
 {
-    fRunFlags        = rhs.getRunFlags();
-    fResultType      = rhs.getResultType();
-    fUserDataSize    = rhs.getUserDataSize();
-    fResultscale     = rhs.getScale();
-    fResultPrecision = rhs.getPrecision();
+    fRunFlags        = rhs.fRunFlags;
+    fContextFlags    = rhs.fContextFlags;
+    fResultType      = rhs.fResultType;
+    fUserDataSize    = rhs.fUserDataSize;
+    fColWidth        = rhs.fColWidth;
+    fResultscale     = rhs.fResultscale;
+    fResultPrecision = rhs.fResultPrecision;
     rhs.getStartFrame(fStartFrame, fStartConstant);
     rhs.getEndFrame(fEndFrame, fEndConstant);
-    functionName = rhs.getName();
-    bInterrupted = rhs.bInterrupted;  // Multiple threads will use the same reference
-    func = rhs.func;
+    functionName     = rhs.functionName;
+    bInterrupted     = rhs.bInterrupted;  // Multiple threads will use the same reference
+    func             = rhs.func;
+    fParamCount      = rhs.fParamCount;
     return *this;
 }
 
@@ -675,11 +675,7 @@ inline mcsv1Context::~mcsv1Context()
 
 inline mcsv1Context& mcsv1Context::operator=(const mcsv1Context& rhs)
 {
-    fContextFlags = 0;
-    fColWidth = 0;
     dataFlags = NULL;
-    bInterrupted = NULL;
-    func = NULL;
     return copy(rhs);
 }
 
@@ -753,16 +749,13 @@ inline bool mcsv1Context::isPM()
 
 inline size_t mcsv1Context::getParameterCount() const
 {
-    if (dataFlags)
-        return dataFlags->size();
-
-    return 0;
+    return fParamCount;
 }
 
 inline bool mcsv1Context::isParamNull(int paramIdx)
 {
     if (dataFlags)
-        return (*dataFlags)[paramIdx] & PARAM_IS_NULL;
+        return dataFlags[paramIdx] & PARAM_IS_NULL;
 
     return false;
 }
@@ -770,7 +763,7 @@ inline bool mcsv1Context::isParamNull(int paramIdx)
 inline bool mcsv1Context::isParamConstant(int paramIdx)
 {
     if (dataFlags)
-        return (*dataFlags)[paramIdx] & PARAM_IS_CONSTANT;
+        return dataFlags[paramIdx] & PARAM_IS_CONSTANT;
 
     return false;
 }
@@ -939,18 +932,22 @@ inline uint32_t mcsv1Context::getUserDataSize() const
     return fUserDataSize;
 }
 
-inline std::vector<uint32_t>& mcsv1Context::getDataFlags()
+inline uint32_t* mcsv1Context::getDataFlags()
 {
-    return *dataFlags;
+    return dataFlags;
 }
 
-inline void mcsv1Context::setDataFlags(std::vector<uint32_t>* flags)
+inline void mcsv1Context::setDataFlags(uint32_t* flags)
 {
     dataFlags = flags;
 }
 
-inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context,
-        std::vector<ColumnDatum>& valsDropped)
+inline void mcsv1Context::setParamCount(int32_t paramCount)
+{
+    fParamCount = paramCount;
+}
+
+inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
     return NOT_IMPLEMENTED;
 }

@@ -332,8 +332,6 @@ bool FunctionColumn::operator==(const FunctionColumn& t) const
         if (**it != **it2)
             return false;
 
-//	if (fAlias != t.fAlias)
-//		return false;
     if (fTableAlias != t.fTableAlias)
         return false;
 

@@ -38,6 +38,8 @@ class ByteStream;
  */
 namespace execplan
 {
+class ConstantColumn;
+
 /**
  * @brief A class to represent a constant return column
  *

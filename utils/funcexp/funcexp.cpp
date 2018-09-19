@@ -139,6 +139,7 @@ FuncExp::FuncExp()
     fFuncMap["least"] = new Func_least();	//dlh
     fFuncMap["left"] = new Func_left();		//dlh
     fFuncMap["length"] = new Func_length();
+    fFuncMap["octet_length"] = new Func_length(); // MariaDB 10.3
     fFuncMap["ln"] = new Func_log();
     fFuncMap["locate"] = new Func_instr();
     fFuncMap["log"] = new Func_log();
@@ -152,6 +153,7 @@ FuncExp::FuncExp()
     fFuncMap["microsecond"] = new Func_microsecond();
     fFuncMap["minute"] = new Func_minute();	//dlh
     fFuncMap["mod"] = new Func_mod();	//dlh
+    fFuncMap["MOD"] = new Func_mod(); // MariaDB 10.3
     fFuncMap["%"] = new Func_mod();	//dlh
     fFuncMap["md5"] = new Func_md5();
     fFuncMap["mid"] = new Func_substr();

@@ -200,6 +200,7 @@
         <Folder
             Name="Source Files"
             Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+            <F N="crashtrace.cpp"/>
             <F N="fixedallocator.cpp"/>
             <F N="MonitorProcMem.cpp"/>
             <F N="poolallocator.cpp"/>
@@ -208,6 +209,7 @@
             Name="Header Files"
             Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
             <F N="any.hpp"/>
+            <F N="crashtrace.h"/>
             <F N="fixedallocator.h"/>
             <F N="hasher.h"/>
             <F N="MonitorProcMem.h"/>

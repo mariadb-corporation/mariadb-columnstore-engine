@@ -1443,7 +1443,9 @@ int main(int argc, char* argv[])
 
 #endif
     setupSignalHandlers();
-    int err = setupResources();
+    int err = 0;
+    if (!gDebug)
+        err = setupResources();
     string errMsg;
 
     switch (err)

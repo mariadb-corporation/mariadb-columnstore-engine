@@ -405,7 +405,7 @@ uint32_t getTupleKey(JobInfo& jobInfo, const SRCP& srcp, bool add)
 
     if (add)
     {
-        // setTupleInfo first if add is ture, ok if already set.
+        // setTupleInfo first if add is true, ok if already set.
         const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
 
         if (sc != NULL)

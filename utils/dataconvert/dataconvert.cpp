@@ -859,7 +859,7 @@ bool mysql_str_to_datetime( const string& input, DateTime& output, bool& isDate 
     return true;
 }
 
-bool mysql_str_to_time( const string& input, Time& output )
+bool mysql_str_to_time( const string& input, Time& output, long decimals )
 {
     int32_t datesepct = 0;
     uint32_t dtend = 0;
@@ -999,20 +999,21 @@ bool mysql_str_to_time( const string& input, Time& output )
     if ( !isTimeValid( hour, min, sec, usec ) )
     {
         // Emulate MariaDB's time saturation
-        if (hour > 838)
+        // TODO: msec saturation
+        if ((hour > 838) && !isNeg)
         {
             output.hour = 838;
             output.minute = 59;
             output.second = 59;
-            output.msecond = 999999;
+            output.msecond = exp10(decimals) - 1;
             output.is_neg = 0;
         }
-        else if (hour < -838)
+        else if ((hour < -838) || ((hour > 838) && isNeg))
         {
             output.hour = -838;
             output.minute = 59;
             output.second = 59;
-            output.msecond = 999999;
+            output.msecond = exp10(decimals) - 1;
             output.is_neg = 1;
         }
         // If neither of the above match then we return a 0 time
@@ -1068,9 +1069,9 @@ bool stringToDatetimeStruct(const string& data, DateTime& dtime, bool* date)
     return true;
 }
 
-bool stringToTimeStruct(const string& data, Time& dtime)
+bool stringToTimeStruct(const string& data, Time& dtime, long decimals)
 {
-    if ( !mysql_str_to_time( data, dtime ) )
+    if ( !mysql_str_to_time( data, dtime, decimals ) )
         return false;
 
     return true;
@@ -1415,15 +1416,12 @@ DataConvert::convertColumnData(const CalpontSystemCatalog::ColType& colType,
             {
                 Time aTime;
 
-                if (stringToTimeStruct(data, aTime))
+                if (!stringToTimeStruct(data, aTime, colType.precision))
                 {
-                    value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
-                }
-                else
-                {
-                    value = (int64_t) 0;
                     pushWarning = true;
                 }
+
+                value = (int64_t) * (reinterpret_cast<int64_t*>(&aTime));
             }
             break;
 
@@ -1910,6 +1908,7 @@ int64_t DataConvert::convertColumnTime(
 {
     status = 0;
     char* p;
+    char* retp = NULL;
     char* savePoint = NULL;
     p = const_cast<char*>(dataOrg);
     int64_t value = 0;
@@ -1926,6 +1925,18 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
+    if (dataOrgLen == 0)
+    {
+        return value;
+    }
+
+    if (dataOrgLen < 3)
+    {
+        // Not enough chars to be a time
+        status = -1;
+        return value;
+    }
+
     if (p[0] == '-')
     {
         isNeg = true;
@@ -1934,9 +1945,9 @@ int64_t DataConvert::convertColumnTime(
     errno = 0;
 
     p = strtok_r(p, ":.", &savePoint);
-    inHour = strtol(p, 0, 10);
+    inHour = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1950,9 +1961,9 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
-    inMinute = strtol(p, 0, 10);
+    inMinute = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1966,9 +1977,9 @@ int64_t DataConvert::convertColumnTime(
         return value;
     }
 
-    inSecond = strtol(p, 0, 10);
+    inSecond = strtol(p, &retp, 10);
 
-    if (errno)
+    if (errno || !retp)
     {
         status = -1;
         return value;
@@ -1978,9 +1989,9 @@ int64_t DataConvert::convertColumnTime(
 
     if (p != NULL)
     {
-        inMicrosecond = strtol(p, 0, 10);
+        inMicrosecond = strtol(p, &retp, 10);
 
-        if (errno)
+        if (errno || !retp)
         {
             status = -1;
             return value;
@@ -2082,13 +2093,8 @@ std::string DataConvert::datetimeToString( long long  datetimevalue, long decima
 
     if (dt.msecond && decimals)
     {
-        snprintf(buf + strlen(buf), 21 + decimals, ".%d", dt.msecond);
-
-        // Pad end with zeros
-        if (strlen(buf) < (size_t)(21 + decimals))
-        {
-            sprintf(buf + strlen(buf), "%0*d", (int)(21 + decimals - strlen(buf)), 0);
-        }
+        // Pad start with zeros
+        sprintf(buf + strlen(buf), ".%0*d", (int)decimals, dt.msecond);
     }
 
     return buf;
@@ -2118,14 +2124,8 @@ std::string DataConvert::timeToString( long long  timevalue, long decimals )
 
     if (dt.msecond && decimals)
     {
-        size_t start = strlen(buf);
-        snprintf(buf + strlen(buf), 12 + decimals, ".%d", dt.msecond);
-
-        // Pad end with zeros
-        if (strlen(buf) - start < (size_t)decimals)
-        {
-            sprintf(buf + strlen(buf), "%0*d", (int)(decimals - (strlen(buf) - start) + 1), 0);
-        }
+        // Pad start with zeros
+        sprintf(buf + strlen(buf), ".%0*d", (int)decimals, dt.msecond);
     }
 
     return buf;
@@ -2566,7 +2566,6 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
             hour = string(buf + 8, 2);
             min = string(buf + 10, 2);
             sec = string(buf + 12, 2);
-            msec = string(buf + 14, 6);
             break;
 
         case 12:
@@ -2576,7 +2575,6 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
             hour = string(buf + 6, 2);
             min = string(buf + 8, 2);
             sec = string(buf + 10, 2);
-            msec = string(buf + 12, 6);
             break;
 
         case 10:
@@ -2585,7 +2583,6 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
             hour = string(buf + 4, 2);
             min = string(buf + 6, 2);
             sec = string(buf + 8, 2);
-            msec = string(buf + 10, 6);
             break;
 
         case 9:
@@ -2594,7 +2591,6 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
             hour = string(buf + 3, 2);
             min = string(buf + 5, 2);
             sec = string(buf + 7, 2);
-            msec = string(buf + 9, 6);
             break;
 
         case 8:
@@ -2645,7 +2641,7 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
     h = atoi(hour.c_str());
     minute = atoi(min.c_str());
     s = atoi(sec.c_str());
-    ms = atoi(msec.c_str());
+    ms = 0;
 
     if (!isDateValid(d, m, y) || !isDateTimeValid(h, minute, s, ms))
         return -1;
@@ -2664,7 +2660,7 @@ int64_t DataConvert::intToDatetime(int64_t data, bool* date)
     return *(reinterpret_cast<uint64_t*>(&adaytime));
 }
 
-int64_t DataConvert::intToTime(int64_t data)
+int64_t DataConvert::intToTime(int64_t data, bool fromString)
 {
     char buf[21] = {0};
     char* bufread = buf;
@@ -2693,43 +2689,78 @@ int64_t DataConvert::intToTime(int64_t data)
         bufread++;
     }
 
+    bool zero = false;
+
     switch (strlen(bufread))
     {
+        // A full datetime
+        case 14:
+            hour = string(buf + 8, 2);
+            min = string(buf + 10, 2);
+            sec = string(buf + 12, 2);
+            break;
+
+        // Date so this is all 0
+        case 8:
+            zero = true;
+            break;
+
         case 7:
             hour = string(bufread, 3);
             min = string(bufread + 2, 2);
             sec = string(bufread + 4, 2);
-            msec = string(bufread + 6, 6);
             break;
 
         case 6:
             hour = string(bufread, 2);
             min = string(bufread + 2, 2);
             sec = string(bufread + 4, 2);
-            msec = string(bufread + 6, 6);
+            break;
+
+        case 5:
+            hour = string(bufread, 1);
+            min = string(bufread + 1, 2);
+            sec = string(bufread + 3, 2);
             break;
 
         case 4:
             min = string(bufread, 2);
             sec = string(bufread + 2, 2);
-            msec = string(bufread + 4, 6);
+            break;
+
+        case 3:
+            min = string(bufread, 1);
+            sec = string(bufread + 1, 2);
             break;
 
         case 2:
             sec = string(bufread, 2);
-            msec = string(bufread + 2, 6);
+            break;
+
+        case 1:
+            sec = string(bufread, 1);
             break;
 
         default:
             return -1;
     }
 
-    h = atoi(hour.c_str());
-    minute = atoi(min.c_str());
-    s = atoi(sec.c_str());
-    ms = atoi(msec.c_str());
+    if (!zero)
+    {
+        h = atoi(hour.c_str());
+        minute = atoi(min.c_str());
+        s = atoi(sec.c_str());
+    }
+    else if (fromString)
+    {
+        // Saturate fromString
+        h = 838;
+        minute = 59;
+        s = 59;
+        ms = 999999;
+    }
 
-    if (!isTimeValid(h, minute, s, ms))
+    if (!isTimeValid(h, minute, s, 0))
         return -1;
 
     atime.hour = h;
@@ -2749,6 +2780,7 @@ int64_t DataConvert::stringToTime(const string& data)
     uint64_t min = 0, sec = 0, msec = 0;
     int64_t day = -1, hour = 0;
     bool isNeg = false;
+    bool hasDate = false;
     string time, hms, ms;
     char* end = NULL;
 
@@ -2760,23 +2792,49 @@ int64_t DataConvert::stringToTime(const string& data)
         isNeg = true;
     }
 
+    if (data.substr(pos+1, data.length()-pos-1).find("-") != string::npos)
+    {
+        // A second dash, this has a date
+        hasDate = true;
+        isNeg = false;
+    }
     // Day
     pos = data.find(" ");
 
     if (pos != string::npos)
     {
-        day = strtol(data.substr(0, pos).c_str(), &end, 10);
+        if (!hasDate)
+        {
+            day = strtol(data.substr(0, pos).c_str(), &end, 10);
 
-        if (*end != '\0')
-            return -1;
-        hour = day * 24;
-        day = -1;
+            if (*end != '\0')
+                return -1;
+
+            hour = day * 24;
+            day = -1;
+        }
         time = data.substr(pos + 1, data.length() - pos - 1);
     }
     else
     {
         time = data;
     }
+
+    if (time.find(":") == string::npos)
+    {
+        if (hasDate)
+        {
+            // Has dashes, no colons. This is just a date!
+            // Or the length < 6 (MariaDB returns NULL)
+            return -1;
+        }
+        else
+        {
+            // This is an int time
+            return intToTime(atoll(time.c_str()), true);
+        }
+    }
+
 
     // Fraction
     pos = time.find(".");
@@ -2796,11 +2854,18 @@ int64_t DataConvert::stringToTime(const string& data)
 
     if (pos == string::npos)
     {
-        hour += atoi(hms.c_str());
+        if (hour >= 0)
+            hour += atoi(hms.c_str());
+        else
+            hour -= atoi(hms.c_str());
     }
     else
     {
-        hour += atoi(hms.substr(0, pos).c_str());
+        if (hour >= 0)
+            hour += atoi(hms.substr(0, pos).c_str());
+        else
+            hour -= atoi(hms.substr(0, pos).c_str());
+
         ms = hms.substr(pos + 1, hms.length() - pos - 1);
     }
 

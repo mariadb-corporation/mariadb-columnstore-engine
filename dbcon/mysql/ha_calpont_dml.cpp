@@ -121,7 +121,7 @@ int buildBuffer(uchar* buf, string& buffer, int& columns, TABLE* table)
 
         columns++;
 
-        cols.append((*field)->field_name);
+        cols.append((*field)->field_name.str);
 
         if (ptr == end_ptr)
         {
@@ -236,7 +236,7 @@ uint32_t buildValueList (TABLE* table, cal_connection_info& ci )
             }
         }
 
-        ci.colNameList.push_back((*field)->field_name);
+        ci.colNameList.push_back((*field)->field_name.str);
 
         columnPos++;
     }
@@ -894,6 +894,11 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                         const uchar* pos = buf;
                         longlong tmp = my_time_packed_from_binary(pos, table->field[colpos]->decimals());
                         TIME_from_longlong_time_packed(&ltime, tmp);
+
+                        if (ltime.neg)
+                        {
+                            fprintf(ci.filePtr, "-");
+                        }
 
                         if (!ltime.second_part)
                         {
@@ -1815,8 +1820,11 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                     }
                     else if (ci.columnTypes[colpos].colWidth < 16777216)
                     {
-                        dataLength = *(uint32_t*) buf;
-                        buf = buf + 3 ;
+                    dataLength = *(uint16_t*) buf;
+                    buf = buf + 2 ;
+					if (*(uint8_t*)buf) 
+						dataLength += 256*256*(*(uint8_t*)buf) ;
+					buf++;
                     }
                     else
                     {

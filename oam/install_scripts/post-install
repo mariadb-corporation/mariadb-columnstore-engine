@@ -241,6 +241,7 @@ else
 	echo ""
 	echo "      $installdir/bin/syslogSetup.sh --installdir=$installdir --user=$user install"
 	echo ""
+
 fi
 
 #determine lock file directory

@@ -50,6 +50,7 @@ class ExpressionStep : public JobStep
 {
 public:
     // constructors
+    ExpressionStep();
     ExpressionStep(const JobInfo&);
     // destructor constructors
     virtual ~ExpressionStep();

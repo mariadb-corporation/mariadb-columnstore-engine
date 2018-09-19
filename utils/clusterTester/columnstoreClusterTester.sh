@@ -10,7 +10,7 @@ CHECK=true
 REPORTPASS=true
 LOGFILE=""
 
-OS_LIST=("centos6" "centos7" "debian8" "debian9" "suse12" "ubuntu16")
+OS_LIST=("centos6" "centos7" "debian8" "debian9" "suse12" "ubuntu16" "ubuntu18")
 
 NODE_IPADDRESS=""
 
@@ -37,7 +37,7 @@ checkContinue() {
 }
 
 ###
-# Print Fucntions
+# Print Functions
 ###
 
 helpPrint () {
@@ -57,7 +57,7 @@ helpPrint () {
     echo ""
     echo "Additional information on Tool is documented at:"
     echo ""
-    echo "https://mariadb.com/kb/en/mariadb/*****/"
+    echo "https://mariadb.com/kb/en/library/mariadb-columnstore-cluster-test-tool/"
     echo ""
     echo  "Items that are checked:" 
     echo  "	Node Ping test" 
@@ -65,6 +65,7 @@ helpPrint () {
     echo  "	ColumnStore Port test"
     echo  "	OS version" 
     echo  "	Locale settings" 
+    echo  " Umask settings"
     echo  "	Firewall settings"
     echo  "     Date/time settings"
     echo  "	Dependent packages installed"
@@ -326,16 +327,18 @@ checkSSH()
     rc="$?"
     if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
       if [ $PASSWORD == "ssh" ] ; then
-	echo $ipadd " Node Passed SSH login test using ssh-keys"
+		echo $ipadd " Node Passed SSH login test using ssh-keys"
       else
-	echo $ipadd " Node Passed SSH login test using user password"
+		echo $ipadd " Node Passed SSH login test using user password"
       fi
     else
       if [ $PASSWORD == "ssh" ] ; then
-	echo $ipadd " Node ${bold}Failed${normal} SSH login test using ssh-keys"
+		echo $ipadd " Node ${bold}Failed${normal} SSH login test using ssh-keys"
       else
-	echo $ipadd " Node ${bold}Failed${normal} SSH login test using user password"
+		echo $ipadd " Node ${bold}Failed${normal} SSH login test using user password"
       fi
+      
+      echo "Error - Fix the SSH login issue and rerun test"
       exit 1
     fi
   done
@@ -489,12 +492,47 @@ checkLocale()
   fi
 }
 
-checkSELINUX()
+checkLocalUMASK()
+{
+  # UMASK check
+  #
+  echo ""
+  echo "** Run Local UMASK check"
+  echo ""
+  
+  pass=true
+  filename=UMASKtest 
+
+  rm -f $filename
+  touch $filename
+  permission=$(stat -c "%A" "$filename")
+  result=${permission:4:1}
+  if [ ${result} == "r" ] ; then
+	  result=${permission:7:1}
+	  if [ ${result} == "r" ] ; then
+		  echo "UMASK local setting test passed"
+	  else 
+		  echo "${bold}Warning${normal}, UMASK test failed, check local UMASK setting. Requirement is set to 0022"
+		  pass=false
+	  fi
+  else 
+      echo "${bold}Warning${normal}, UMASK test failed, check local UMASK setting. Requirement is set to 0022"
+      pass=false
+  fi
+  
+  if ! $pass; then
+    checkContinue
+  fi
+  
+  rm -f $filename
+}
+
+checkLocalSELINUX()
 {
   # SELINUX check
   #
   echo ""
-  echo "** Run SELINUX check"
+  echo "** Run Local SELINUX check"
   echo ""
   
   pass=true
@@ -511,21 +549,86 @@ checkSELINUX()
       echo "Local Node SELINUX setting is Not Enabled"
   fi
   
-  for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /etc/selinux/config > /tmp/remote_scp_get_check 2>&1`
-    if [ "$?" -ne 0 ]; then
-      echo "$ipadd Node SELINUX setting is Not Enabled"
-    else
-     `cat config | grep SELINUX | grep enforcing > /tmp/selinux_check 2>&1`
-    if [ "$?" -eq 0 ]; then
-      echo "${bold}Warning${normal}, $ipadd SELINUX setting is Enabled, check port test results"
-      pass=false
-    else
-      echo "$ipadd Node SELINUX setting is Not Enabled"
-    fi
-      `rm -f config`
-    fi
-  done
+  if ! $pass; then
+    checkContinue
+  fi
+}
+
+checkUMASK()
+{
+  # UMASK check
+  #
+  echo ""
+  echo "** Run UMASK check"
+  echo ""
+  
+  pass=true
+  
+	  for ipadd in "${NODE_IPADDRESS[@]}"; do
+		`$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'rm -f UMASKtest;touch UMASKtest;echo $(stat -c "%A" "UMASKtest") > test.log' > /tmp/remote_command_check 2>&1`
+		if [ "$?" -eq 0 ]; then
+		  `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd Calpont1 test.log >> /tmp/remote_scp_get 2>&1`
+			if [ "$?" -eq 0 ]; then
+				permission=`cat test.log`
+			    result=${permission:4:1}
+			    if [ ${result} == "r" ] ; then
+				  result=${permission:7:1}
+				  if [ ${result} == "r" ] ; then
+					  echo "$ipadd Node UMASK setting test passed"
+				  else 
+					  echo "${bold}Warning${normal}, $ipadd Node UMASK test failed, check UMASK setting. Requirement is set to 0022"
+					  pass=false
+				  fi
+				else
+					echo "${bold}Warning${normal}, $ipadd Node UMASK test failed, check UMASK setting. Requirement is set to 0022"
+					pass=false
+				fi
+			else
+				echo "${bold}Warning${normal}, $ipadd UMASK test failed, remote_scp_get.sh error, check /tmp/remote_scp_get"
+				pass=false
+			fi
+		else
+			echo "${bold}Warning${normal}, $ipadd UMASK test failed, remote_command.sh error, check /tmp/remote_command_check"
+			pass=false
+		fi
+		`rm -f test.log`
+	  done
+  
+  if ! $pass; then
+    checkContinue
+  fi
+  
+  rm -f $filename
+}
+
+checkSELINUX()
+{
+  # SELINUX check
+  #
+  echo ""
+  echo "** Run SELINUX check"
+  echo ""
+  
+  pass=true
+	  for ipadd in "${NODE_IPADDRESS[@]}"; do
+		`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD /etc/selinux/config > /tmp/remote_scp_get_check 2>&1`
+		if [ "$?" -ne 0 ]; then
+		  echo "$ipadd Node SELINUX setting is Not Enabled"
+		else
+		 `cat config | grep SELINUX | grep enforcing > /tmp/selinux_check 2>&1`
+		if [ "$?" -eq 0 ]; then
+		  echo "${bold}Warning${normal}, $ipadd SELINUX setting is Enabled, check port test results"
+		  pass=false
+		else
+		  echo "$ipadd Node SELINUX setting is Not Enabled"
+		fi
+		  `rm -f config`
+		fi
+	  done
+  
+  if ! $pass; then
+    checkContinue
+  fi
 }
 
 checkFirewalls()
@@ -951,7 +1054,7 @@ checkPackages()
   declare -a UBUNTU_PKG=("libboost-all-dev" "expect" "libdbi-perl" "perl" "openssl" "file" "sudo" "libreadline-dev" "rsync" "libsnappy1V5" "net-tools" "libnuma1" )
   declare -a UBUNTU_PKG_NOT=("mariadb-server" "libmariadb18")
 
-  if [ "$OS" == "ubuntu16" ] ; then
+  if [ "$OS" == "ubuntu16" ] || [ "$OS" == "ubuntu18" ]; then
     if [ ! `which dpkg 2>/dev/null` ] ; then
       echo "${bold}Failed${normal}, Local Node ${bold}rpm${normal} package not installed"
       pass=false
@@ -1311,12 +1414,15 @@ echo ""
 
 checkLocalOS
 checkLocalDir
+checkLocalUMASK
+checkLocalSELINUX
 if [ "$IPADDRESSES" != "" ]; then
   checkPing
   checkSSH
   checkRemoteDir
   checkOS
   checkLocale
+  checkUMASK
   checkSELINUX
   checkFirewalls
   checkPorts

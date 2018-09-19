@@ -34,8 +34,9 @@ using namespace mcsv1sdk;
 UDAF_MAP UDAFMap::fm;
 #include "allnull.h"
 #include "ssq.h"
-#include "median.h"
 #include "avg_mode.h"
+#include "regr_avgx.h"
+#include "avgx.h"
 UDAF_MAP& UDAFMap::getMap()
 {
     if (fm.size() > 0)
@@ -50,8 +51,9 @@ UDAF_MAP& UDAFMap::getMap()
     // the function names passed to the interface is always in lower case.
     fm["allnull"] = new allnull();
     fm["ssq"] = new ssq();
-    fm["median"] = new median();
     fm["avg_mode"] = new avg_mode();
+    fm["regr_avgx"] = new regr_avgx();
+    fm["avgx"] = new avgx();
 
     return fm;
 }
@@ -115,8 +117,8 @@ bool mcsv1Context::operator==(const mcsv1Context& c) const
 {
     // We don't test the per row data fields. They don't determine
     // if it's the same Context.
-    if (getName()        != c.getName()
-            ||	fRunFlags        != c.fRunFlags
+    if (getName() != c.getName()
+            || fRunFlags        != c.fRunFlags
             || fContextFlags    != c.fContextFlags
             || fUserDataSize    != c.fUserDataSize
             || fResultType      != c.fResultType
@@ -125,7 +127,8 @@ bool mcsv1Context::operator==(const mcsv1Context& c) const
             || fStartFrame      != c.fStartFrame
             || fEndFrame        != c.fEndFrame
             || fStartConstant   != c.fStartConstant
-            || fEndConstant     != c.fEndConstant)
+            || fEndConstant     != c.fEndConstant
+            || fParamCount      != c.fParamCount)
         return false;
 
     return true;
@@ -217,6 +220,7 @@ void mcsv1Context::serialize(messageqcpp::ByteStream& b) const
     b << (uint32_t)fEndFrame;
     b << fStartConstant;
     b << fEndConstant;
+    b << fParamCount;
 }
 
 void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
@@ -238,6 +242,7 @@ void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
     fEndFrame = (WF_FRAME)frame;
     b >> fStartConstant;
     b >> fEndConstant;
+    b >> fParamCount;
 }
 
 void UserData::serialize(messageqcpp::ByteStream& bs) const

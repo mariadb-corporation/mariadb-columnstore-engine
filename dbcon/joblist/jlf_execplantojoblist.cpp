@@ -1634,11 +1634,8 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             return doExpressionFilter(sf, jobInfo);
         }
 
-        // trim trailing space char in the predicate
         string constval(cc->constval());
-        size_t spos = constval.find_last_not_of(" ");
 
-        if (spos != string::npos) constval = constval.substr(0, spos + 1);
 
         CalpontSystemCatalog::OID dictOid = 0;
         CalpontSystemCatalog::ColType ct = sc->colType();
@@ -2772,11 +2769,8 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
                         cop = COMPARE_NIL;
 
-                    // trim trailing space char
                     string value = cc->constval();
-                    size_t spos = value.find_last_not_of(" ");
 
-                    if (spos != string::npos) value = value.substr(0, spos + 1);
 
                     pds->addFilter(cop, value);
                 }
@@ -2858,11 +2852,8 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     if (ConstantColumn::NULLDATA == cc->type() && (opeq == *sop || opne == *sop))
                         cop = COMPARE_NIL;
 
-                    // trim trailing space char
                     string value = cc->constval();
-                    size_t spos = value.find_last_not_of(" ");
 
-                    if (spos != string::npos) value = value.substr(0, spos + 1);
 
                     pds->addFilter(cop, value);
                 }
@@ -2968,10 +2959,7 @@ const JobStepVector doConstantFilter(const ConstantFilter* cf, JobInfo& jobInfo)
                     int8_t cop = op2num(sop);
                     int64_t value = 0;
                     string constval = cc->constval();
-                    // trim trailing space char
-                    size_t spos = constval.find_last_not_of(" ");
 
-                    if (spos != string::npos) constval = constval.substr(0, spos + 1);
 
                     // @bug 1151 string longer than colwidth of char/varchar.
                     uint8_t rf = 0;

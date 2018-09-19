@@ -34,6 +34,9 @@
 
 #include "calpontsystemcatalog.h"
 
+#include "dataconvert.h"
+using namespace dataconvert;
+
 namespace rowgroup
 {
 class Row;
@@ -161,6 +164,10 @@ protected:
 
     virtual std::string intToString(int64_t);
     virtual std::string doubleToString(double);
+
+    virtual int64_t nowDatetime();
+    virtual int64_t addTime(DateTime& dt1, dataconvert::Time& dt2);
+    virtual int64_t addTime(dataconvert::Time& dt1, dataconvert::Time& dt2);
 
     std::string fFuncName;
 

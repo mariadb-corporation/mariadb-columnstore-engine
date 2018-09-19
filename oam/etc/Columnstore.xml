@@ -438,7 +438,7 @@
 		<SystemStartupOffline>n</SystemStartupOffline>
 		<InitialInstallFlag>n</InitialInstallFlag>
 		<SingleServerInstall>n</SingleServerInstall>
-		<ServerTypeInstall>2</ServerTypeInstall>
+		<ServerTypeInstall>1</ServerTypeInstall>
 		<PMwithUM>n</PMwithUM>
 		<MySQLRep>n</MySQLRep>
 		<DBRootStorageType>internal</DBRootStorageType>
