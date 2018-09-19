@@ -71,6 +71,49 @@ const string StartUp::installDir()
     return *fInstallDirp;
 }
 
+/* static */
+mutex StartUp::fTmpDirLock;
+/* static */
+string* StartUp::fTmpDirp = 0;
+
+/* static */
+const string StartUp::tmpDir()
+{
+    mutex::scoped_lock lk(fTmpDirLock);
+
+    if (fTmpDirp)
+        return *fTmpDirp;
+
+#ifdef _MSC_VER
+    fTmpDirp = new string("C:\\Calpont\Tmp");
+    string cfStr = IDBreadRegistry("");
+
+    if (!cfStr.empty())
+        *fTmpDirp = cfStr;
+
+#else
+    fTmpDirp = new string("/tmp");
+    //See if we can figure out the tmp dir in Linux...
+    //1. env var COLUMNSTORE_INSTALL_DIR
+    const char* p = 0;
+    p = getenv("COLUMNSTORE_INSTALL_DIR");
+
+    if (p && *p)
+    {
+		string homedir = "/";
+        char* p = getenv("HOME");
+
+        if (p && *p)
+            homedir = p;
+
+        *fTmpDirp = homedir + "/tmp";
+	}
+
+#endif
+
+    return *fTmpDirp;
+}
+
 }
 // vim:ts=4 sw=4:
 

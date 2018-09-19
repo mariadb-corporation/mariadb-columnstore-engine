@@ -188,6 +188,9 @@ int main(int argc, char* argv[])
 
     string ccHistoryFile = HOME + "/.cc_history";
 
+	cout << startup::StartUp::installDir();
+	cout << startup::StartUp::tmpDir();
+
     string cf = startup::StartUp::installDir() + "/etc/" + ConsoleCmdsFile;
     fConfig = Config::makeConfig(cf);
 
