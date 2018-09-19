@@ -484,7 +484,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     log.writeLog(__LINE__,  "MSG RECEIVED: Stop process request on " + processName);
                     int requestStatus = API_SUCCESS;
 
-                    // check for mysql
+                    // check for mysqld
                     if ( processName == "mysqld" )
                     {
                         try
@@ -553,7 +553,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     msg >> manualFlag;
                     log.writeLog(__LINE__, "MSG RECEIVED: Start process request on: " + processName);
 
-                    // check for mysql
+                    // check for mysqld
                     if ( processName == "mysqld" )
                     {
                         try
@@ -684,7 +684,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     log.writeLog(__LINE__,  "MSG RECEIVED: Restart process request on " + processName);
                     int requestStatus = API_SUCCESS;
 
-                    // check for mysql restart
+                    // check for mysqld restart
                     if ( processName == "mysqld" )
                     {
                         try
@@ -933,7 +933,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                 log.writeLog(__LINE__, "Error running DBRM clearShm", LOG_TYPE_ERROR);
                         }
 
-                        //stop the mysql daemon
+                        //stop the mysqld daemon
                         try
                         {
                             oam.actionMysqlCalpont(MYSQL_STOP);
@@ -1063,21 +1063,14 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     int requestStatus = oam::API_SUCCESS;
                     log.writeLog(__LINE__,  "MSG RECEIVED: Start All process request...");
 
-                    // change permissions on /dev/shm
-                    string cmd = "chmod 755 /dev/shm >/dev/null 2>&1";
-
-                    if ( !rootUser)
-                        cmd = "chmod 777 /dev/shm >/dev/null 2>&1";
-
-                    system(cmd.c_str());
-
-                    //start the mysql daemon
+                    //start the mysqld daemon
                     try
                     {
                         oam.actionMysqlCalpont(MYSQL_START);
                     }
                     catch (...)
                     {
+                        // mysqld didn't start, return with error
                         // mysql didn't start, return with error
                         log.writeLog(__LINE__, "STARTALL: MySQL failed to start, start-module failure", LOG_TYPE_CRITICAL);
 
@@ -1268,7 +1261,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                                     // error in launching a process
                                     if ( requestStatus == oam::API_FAILURE &&
                                             (*listPtr).RunType == SIMPLEX)
-                                        checkProcessFailover((*listPtr).ProcessName);
+										checkModuleFailover((*listPtr).ProcessName);
                                     else
                                         break;
                                 }
@@ -1366,7 +1359,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     					//send down notification
                     					oam.sendDeviceNotification(config.moduleName(), MODULE_DOWN);
 
-                    					//stop the mysql daemon and then columnstore
+                    //stop the mysqld daemon and then columnstore
                     					try {
                     						oam.actionMysqlCalpont(MYSQL_STOP);
                     					}
@@ -1548,7 +1541,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 }
             }
 
-            // install mysql rpms if being reconfigured as a um
+            // install mysqld rpms if being reconfigured as a um
             if ( reconfigureModuleName.find("um") != string::npos )
             {
                 string cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install >> /tmp/rpminstall";
@@ -1769,10 +1762,20 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     if (!oam.checkLogStatus("/tmp/umount.txt", "busy"))
                         break;
 
-		    cmd = "lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-		    system(cmd.c_str());
-		    cmd = "fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-		    system(cmd.c_str());
+                    if ( rootUser)
+                    {
+                        cmd = "lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
+                        system(cmd.c_str());
+                        cmd = "fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
+                        system(cmd.c_str());
+                    }
+                    else
+                    {
+                        cmd = "sudo lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
+                        system(cmd.c_str());
+                        cmd = "sudo fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
+                        system(cmd.c_str());
+                    }
 
                     sleep(2);
                     //Flush the cache
@@ -1831,7 +1834,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                 if ( !rootUser)
                 {
-                    cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+                    cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
                     system(cmd.c_str());
                 }
 
@@ -1873,7 +1876,15 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
             if (WEXITSTATUS(status) != 0 )
             {
-                cmd = "echo " + entry + " >> /etc/fstab";
+                if ( rootUser)
+                {
+                    cmd = "echo " + entry + " >> /etc/fstab";
+                }
+                else
+                {
+                    cmd = "sudo echo " + entry + " >> /etc/fstab";
+                }
+
                 system(cmd.c_str());
 
                 log.writeLog(__LINE__, "Add line entry to /etc/fstab : " + entry);
@@ -1885,7 +1896,14 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
             if (WEXITSTATUS(status) != 0 )
             {
-                cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+                if ( rootUser)
+                {
+                    cmd = "echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+                }
+                else
+                {
+                    cmd = "sudo echo " + entry + " >> " + startup::StartUp::installDir() + "/local/etc/pm1/fstab";
+                }
 
                 system(cmd.c_str());
 
@@ -1897,7 +1915,14 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             string::size_type pos1 = entry.find(" ", pos + 1);
             string directory = entry.substr(pos + 1, pos1 - pos);
 
-            cmd = "mkdir " + directory;
+            if ( rootUser)
+            {
+                cmd = "mkdir " + directory;
+            }
+            else
+            {
+                cmd = "sudo mkdir " + directory;
+            }
 
             system(cmd.c_str());
             log.writeLog(__LINE__, "create directory: " + directory);
@@ -3109,7 +3134,7 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
     //if non-root, change file permissions so we can update it
     if ( !rootUser)
     {
-        string cmd = "chmod 666 " + fileName + " > /dev/null";
+        string cmd = "sudo chmod 666 " + fileName + " > /dev/null";
         system(cmd.c_str());
     }
 
@@ -4938,20 +4963,19 @@ std::string ProcessMonitor::sendMsgProcMon1( std::string module, ByteStream msg,
 }
 
 /******************************************************************************************
-* @brief	checkProcessFailover
+* @brief	checkModuleFailover
 *
-* purpose:	check if process failover is needed due to a process outage
+* purpose:	check if module failover is needed due to a process outage
 *
 ******************************************************************************************/
-void ProcessMonitor::checkProcessFailover( std::string processName)
+void ProcessMonitor::checkModuleFailover( std::string processName)
 {
     Oam oam;
 
     //force failover on certain processes
     if ( processName == "DDLProc" ||
-            processName == "DMLProc" )
-    {
-        log.writeLog(__LINE__, "checkProcessFailover: process failover, process outage of " + processName, LOG_TYPE_CRITICAL);
+            processName == "DMLProc" ) {
+			log.writeLog(__LINE__, "checkModuleFailover: process failover, process outage of " + processName, LOG_TYPE_CRITICAL);
 
         try
         {
@@ -4974,27 +4998,36 @@ void ProcessMonitor::checkProcessFailover( std::string processName)
                             systemprocessstatus.processstatus[i].ProcessOpState == oam::FAILED )
                     {
                         // found a AVAILABLE mate, start it
-                        log.writeLog(__LINE__, "start process on module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Change UM Master to module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Disable local UM module " + config.moduleName(), LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Stop local UM module " + config.moduleName(), LOG_TYPE_DEBUG);
+						log.writeLog(__LINE__, "Disable Local will Enable UM module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
+
+						oam::DeviceNetworkConfig devicenetworkconfig;
+						oam::DeviceNetworkList devicenetworklist;
+	
+						devicenetworkconfig.DeviceName = config.moduleName();
+						devicenetworklist.push_back(devicenetworkconfig);
 
                         try
                         {
-                            oam.setSystemConfig("PrimaryUMModuleName", systemprocessstatus.processstatus[i].Module);
+							oam.stopModule(devicenetworklist, oam::FORCEFUL, oam::ACK_YES);
+							log.writeLog(__LINE__, "success stopModule on module " + config.moduleName(), LOG_TYPE_DEBUG);
 
-                            //distribute config file
-                            oam.distributeConfigFile("system");
-                            sleep(1);
+							try
+							{
+								oam.disableModule(devicenetworklist);
+								log.writeLog(__LINE__, "success disableModule on module " + config.moduleName(), LOG_TYPE_DEBUG);
+							}
+							catch (exception& e)
+							{
+								log.writeLog(__LINE__, "failed disableModule on module " + config.moduleName(), LOG_TYPE_ERROR);
+							}
                         }
-                        catch (...) {}
-
-                        try
-                        {
-                            oam.startProcess(systemprocessstatus.processstatus[i].Module, processName, FORCEFUL, ACK_YES);
-                            log.writeLog(__LINE__, "success start process on module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_DEBUG);
-                        }
-                        catch (exception& e)
-                        {
-                            log.writeLog(__LINE__, "failed start process on module " + systemprocessstatus.processstatus[i].Module, LOG_TYPE_ERROR);
-                        }
+						catch (exception& e)
+						{
+							log.writeLog(__LINE__, "failed stopModule on module " + config.moduleName(), LOG_TYPE_ERROR);
+						}
 
                         break;
                     }
@@ -5011,9 +5044,6 @@ void ProcessMonitor::checkProcessFailover( std::string processName)
 //			log.writeLog(__LINE__, "EXCEPTION ERROR on getProcessStatus: Caught unknown exception!", LOG_TYPE_ERROR);
         }
     }
-
-    return;
-
 }
 
 /******************************************************************************************
@@ -5194,9 +5224,15 @@ int ProcessMonitor::changeMyCnf(std::string type)
     // set owner and permission
     string cmd = "chmod 664 " + mycnfFile + " >/dev/null 2>&1";
 
+    if ( !rootUser)
+        cmd = "sudo chmod 644 " + mycnfFile + " >/dev/null 2>&1";
+
     system(cmd.c_str());
 
     cmd = "chown mysql:mysql " + mycnfFile + " >/dev/null 2>&1";
+
+    if ( !rootUser)
+        cmd = "sudo chown mysql:mysql " + mycnfFile + " >/dev/null 2>&1";
 
     system(cmd.c_str());
 
@@ -5951,7 +5987,10 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
         {
             string cmd;
 
-            cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
+            if ( rootUser)
+                cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
+            else
+                cmd = "sudo mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
 
             system(cmd.c_str());
             log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
@@ -6360,7 +6399,7 @@ int ProcessMonitor::checkDataMount()
 
             if ( !rootUser)
             {
-                cmd = "chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null";
+                cmd = "sudo chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null";
                 system(cmd.c_str());
             }
 
@@ -6534,13 +6573,23 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
         moduleIPAddr = sysConfig->getConfig("SystemModuleConfig", dataDupIPaddr);
     }
 
-    command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
+    if ( rootUser)
+    {
+        command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
                   dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
+    }
+    else
+    {
+        command = "sudo mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
+                  dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
+    }
 
     int ret = system(command.c_str());
 
     if ( WEXITSTATUS(ret) != 0 )
     {
+		log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+
         ifstream in("/tmp/glusterAssign.txt");
         in.seekg(0, std::ios::end);
         int size = in.tellg();
@@ -6575,12 +6624,21 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
     log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
 
-    command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
+    if ( rootUser)
+    {
+        command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
+    }
+    else
+    {
+        command = "sudo umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
+    }
 
     int ret = system(command.c_str());
 
     if ( WEXITSTATUS(ret) != 0 )
     {
+		log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
+
         ifstream in("/tmp/glusterUnassign.txt");
         in.seekg(0, std::ios::end);
         int size = in.tellg();
