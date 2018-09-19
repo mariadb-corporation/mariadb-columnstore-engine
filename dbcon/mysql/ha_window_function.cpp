@@ -203,7 +203,7 @@ string ConvertFuncName(Item_sum* item)
     switch (item->sum_func())
     {
         case Item_sum::COUNT_FUNC:
-            if (!item->arguments()[0]->name)
+            if (!item->arguments()[0]->name.str)
                 return "COUNT(*)";
 
             return "COUNT";
@@ -289,6 +289,13 @@ string ConvertFuncName(Item_sum* item)
             return "PERCENT_RANK";
             break;
 
+        case Item_sum::PERCENTILE_CONT_FUNC:
+            return "PERCENTILE_CONT";
+            break;
+
+        case Item_sum::PERCENTILE_DISC_FUNC:
+            return "PERCENTILE_DISC";
+
         case Item_sum::CUME_DIST_FUNC:
             return "CUME_DIST";
             break;
@@ -340,6 +347,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     ac->distinct(item_sum->has_with_distinct());
     Window_spec* win_spec = wf->window_spec;
     SRCP srcp;
+    CalpontSystemCatalog::ColType ct;  // For return type
     // arguments
     vector<SRCP> funcParms;
 
@@ -370,18 +378,25 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         context.setColWidth(rt.colWidth);
         context.setScale(rt.scale);
         context.setPrecision(rt.precision);
+        context.setParamCount(funcParms.size());
+
+        mcsv1sdk::ColumnDatum colType;
+        mcsv1sdk::ColumnDatum colTypes[funcParms.size()];
 
         // Turn on the Analytic flag so the function is aware it is being called
         // as a Window Function.
         context.setContextFlag(CONTEXT_IS_ANALYTIC);
 
-        COL_TYPES colTypes;
-        execplan::CalpontSelectExecutionPlan::ColumnMap::iterator cmIter;
-
         // Build the column type vector.
+        // Modified for MCOL-1201 multi-argument aggregate
         for (size_t i = 0; i < funcParms.size(); ++i)
         {
-            colTypes.push_back(make_pair(funcParms[i]->alias(), funcParms[i]->resultType().colDataType));
+            const execplan::CalpontSystemCatalog::ColType& resultType
+                = funcParms[i]->resultType();
+            colType.dataType = resultType.colDataType;
+            colType.precision = resultType.precision;
+            colType.scale = resultType.scale;
+            colTypes[i] = colType;
         }
 
         // Call the user supplied init()
@@ -401,7 +416,6 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         }
 
         // Set the return type as set in init()
-        CalpontSystemCatalog::ColType ct;
         ct.colDataType = context.getResultType();
         ct.colWidth = context.getColWidth();
         ct.scale = context.getScale();
@@ -419,10 +433,10 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     {
         case Item_sum::UDF_SUM_FUNC:
         {
-            uint64_t bIgnoreNulls = (ac->getUDAFContext().getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS));
-            char sIgnoreNulls[18];
-            sprintf(sIgnoreNulls, "%lu", bIgnoreNulls);
-            srcp.reset(new ConstantColumn(sIgnoreNulls, (uint64_t)bIgnoreNulls, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
+            uint64_t bRespectNulls = (ac->getUDAFContext().getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS)) ? 0 : 1;
+            char sRespectNulls[18];
+            sprintf(sRespectNulls, "%lu", bRespectNulls);
+            srcp.reset(new ConstantColumn(sRespectNulls, (uint64_t)bRespectNulls, ConstantColumn::NUM)); // IGNORE/RESPECT NULLS. 1 => RESPECT
             funcParms.push_back(srcp);
             break;
         }
@@ -881,11 +895,13 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
         return NULL;
     }
 
-    ac->resultType(colType_MysqlToIDB(item_sum));
-
-    // bug5736. Make the result type double for some window functions when
-    // infinidb_double_for_decimal_math is set.
-    ac->adjustResultType();
+    if (item_sum->sum_func() != Item_sum::UDF_SUM_FUNC)
+    {
+        ac->resultType(colType_MysqlToIDB(item_sum));
+        // bug5736. Make the result type double for some window functions when
+        // infinidb_double_for_decimal_math is set.
+        ac->adjustResultType();
+    }
 
     ac->expressionId(ci->expressionId++);
 

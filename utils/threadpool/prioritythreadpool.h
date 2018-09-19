@@ -36,6 +36,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include "../winport/winport.h"
+#include "primitives/primproc/umsocketselector.h"
 
 namespace threadpool
 {
@@ -62,6 +63,9 @@ public:
         uint32_t weight;
         uint32_t priority;
         uint32_t id;
+        uint32_t uniqueID;
+        uint32_t stepID;
+        primitiveprocessor::SP_UM_IOSOCK sock;
     };
 
     enum Priority
@@ -112,9 +116,11 @@ private:
 
     Priority pickAQueue(Priority preference);
     void threadFcn(const Priority preferredQueue) throw();
+    void sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock);
 
     std::list<Job> jobQueues[3];  // higher indexes = higher priority
     uint32_t threadCounts[3];
+    uint32_t defaultThreadCounts[3];
     boost::mutex mutex;
     boost::condition newJob;
     boost::thread_group threads;

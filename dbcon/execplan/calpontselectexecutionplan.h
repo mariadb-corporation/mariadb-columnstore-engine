@@ -575,6 +575,15 @@ public:
         return fHasOrderBy;
     }
 
+    void specHandlerProcessed(const bool hand)
+    {
+        fSpecHandlerProcessed = hand;
+    }
+    const bool specHandlerProcessed() const
+    {
+        return fSpecHandlerProcessed;
+    } 
+
     void selectSubList(const SelectList& selectSubList)
     {
         fSelectSubList = selectSubList;
@@ -871,6 +880,9 @@ private:
 
     uint32_t fPriority;
     uint32_t fStringTableThreshold;
+    
+    // for specific handlers processing, e.g. GROUP BY
+    bool fSpecHandlerProcessed;
 
     // Derived table involved in the query. For derived table optimization
     std::vector<SCSEP> fSubSelectList;

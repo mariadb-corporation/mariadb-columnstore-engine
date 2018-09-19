@@ -150,7 +150,7 @@ Use these to determine the way your UDA(n)F was called
 
 .. c:function:: size_t getParameterCount() const;
 
-:returns: the number of parameters to the function in the SQL query. Columnstore 1.1 only supports one parameter.
+:returns: the number of parameters to the function in the SQL query. 
 
 .. c:function:: bool isParamNull(int paramIdx);
 

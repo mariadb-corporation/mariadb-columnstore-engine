@@ -52,13 +52,141 @@ ST_FIELD_INFO is_columnstore_extents_fields[] =
     {0, 0, MYSQL_TYPE_NULL, 0, 0, 0, 0}
 };
 
-static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
+static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* thd)
 {
     CHARSET_INFO* cs = system_charset_info;
-    TABLE* table = tables->table;
     std::vector<struct BRM::EMEntry> entries;
     std::vector<struct BRM::EMEntry>::iterator iter;
     std::vector<struct BRM::EMEntry>::iterator end;
+
+
+    emp->getExtents(oid, entries, false, false, true);
+
+    if (entries.size() == 0)
+        return 0;
+
+    iter = entries.begin();
+    end = entries.end();
+
+    while (iter != end)
+    {
+        table->field[0]->store(oid);
+
+        if (iter->colWid > 0)
+        {
+            table->field[1]->store("Column", strlen("Column"), cs);
+
+            if (iter->partition.cprange.lo_val == std::numeric_limits<int64_t>::max() ||
+                    iter->partition.cprange.lo_val <= (std::numeric_limits<int64_t>::min() + 2))
+            {
+                table->field[4]->set_null();
+            }
+            else
+            {
+                table->field[4]->set_notnull();
+                table->field[4]->store(iter->partition.cprange.lo_val);
+            }
+
+            if (iter->partition.cprange.hi_val == std::numeric_limits<int64_t>::max() ||
+                    iter->partition.cprange.hi_val <= (std::numeric_limits<int64_t>::min() + 2))
+            {
+                table->field[5]->set_null();
+            }
+            else
+            {
+                table->field[5]->set_notnull();
+                table->field[5]->store(iter->partition.cprange.hi_val);
+            }
+
+            table->field[6]->store(iter->colWid);
+
+        }
+        else
+        {
+            table->field[1]->store("Dictionary", strlen("Dictionary"), cs);
+            table->field[4]->set_null();
+            table->field[5]->set_null();
+            table->field[6]->store(8192);
+        }
+
+        table->field[2]->store(iter->range.start);
+        table->field[3]->store(iter->range.start + (iter->range.size * 1024) - 1);
+
+        table->field[7]->store(iter->dbRoot);
+        table->field[8]->store(iter->partitionNum);
+        table->field[9]->store(iter->segmentNum);
+        table->field[10]->store(iter->blockOffset);
+        table->field[11]->store(iter->range.size * 1024);
+        table->field[12]->store(iter->HWM);
+
+        switch (iter->partition.cprange.isValid)
+        {
+            case 0:
+                table->field[13]->store("Invalid", strlen("Invalid"), cs);
+                break;
+
+            case 1:
+                table->field[13]->store("Updating", strlen("Updating"), cs);
+                break;
+
+            case 2:
+                table->field[13]->store("Valid", strlen("Valid"), cs);
+                break;
+
+            default:
+                table->field[13]->store("Unknown", strlen("Unknown"), cs);
+                break;
+        }
+
+        switch (iter->status)
+        {
+            case BRM::EXTENTAVAILABLE:
+                table->field[14]->store("Available", strlen("Available"), cs);
+                break;
+
+            case BRM::EXTENTUNAVAILABLE:
+                table->field[14]->store("Unavailable", strlen("Unavailable"), cs);
+                break;
+
+            case BRM::EXTENTOUTOFSERVICE:
+                table->field[14]->store("Out of service", strlen("Out of service"), cs);
+                break;
+
+            default:
+                table->field[14]->store("Unknown", strlen("Unknown"), cs);
+        }
+
+        // MCOL-1016: on multiple segments HWM is set to 0 on the lower
+        // segments, we don't want these to show as 8KB. The down side is
+        // if the column has less than 1 block it will show as 0 bytes.
+        // We have no lookahead without it getting messy so this is the
+        // best compromise.
+        if (iter->HWM == 0)
+        {
+            table->field[15]->store(0);
+        }
+        else
+        {
+            table->field[15]->store((iter->HWM + 1) * 8192);
+        }
+
+        if (schema_table_store_record(thd, table))
+        {
+            delete emp;
+            return 1;
+        }
+
+        iter++;
+
+    }
+
+    return 0;
+}
+
+static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
+{
+    BRM::OID_t cond_oid = 0;
+    TABLE* table = tables->table;
 
     BRM::DBRM* emp = new BRM::DBRM();
 
@@ -67,130 +195,83 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
         return 1;
     }
 
+    if (cond && cond->type() == Item::FUNC_ITEM)
+    {
+        Item_func* fitem = (Item_func*) cond;
+
+        if ((fitem->functype() == Item_func::EQ_FUNC) && (fitem->argument_count() == 2))
+        {
+            if (fitem->arguments()[0]->real_item()->type() == Item::FIELD_ITEM &&
+                    fitem->arguments()[1]->const_item())
+            {
+                // WHERE object_id = value
+                Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
+
+                if (strcasecmp(item_field->field_name.str, "object_id") == 0)
+                {
+                    cond_oid = fitem->arguments()[1]->val_int();
+                    return generate_result(cond_oid, emp, table, thd);
+                }
+            }
+            else if (fitem->arguments()[1]->real_item()->type() == Item::FIELD_ITEM &&
+                     fitem->arguments()[0]->const_item())
+            {
+                // WHERE value = object_id
+                Item_field* item_field = (Item_field*) fitem->arguments()[1]->real_item();
+
+                if (strcasecmp(item_field->field_name.str, "object_id") == 0)
+                {
+                    cond_oid = fitem->arguments()[0]->val_int();
+                    return generate_result(cond_oid, emp, table, thd);
+                }
+            }
+        }
+        else if (fitem->functype() == Item_func::IN_FUNC)
+        {
+            // WHERE object_id in (value1, value2)
+            Item_field* item_field = (Item_field*) fitem->arguments()[0]->real_item();
+
+            if (strcasecmp(item_field->field_name.str, "object_id") == 0)
+            {
+                for (unsigned int i = 1; i < fitem->argument_count(); i++)
+                {
+                    cond_oid = fitem->arguments()[i]->val_int();
+                    int result = generate_result(cond_oid, emp, table, thd);
+
+                    if (result)
+                        return 1;
+                }
+            }
+        }
+        else if (fitem->functype() == Item_func::UNKNOWN_FUNC &&
+                 strcasecmp(fitem->func_name(), "find_in_set") == 0)
+        {
+            // WHERE FIND_IN_SET(object_id, values)
+            String* tmp_var = fitem->arguments()[1]->val_str();
+            std::stringstream ss(tmp_var->ptr());
+
+            while (ss >> cond_oid)
+            {
+                int ret = generate_result(cond_oid, emp, table, thd);
+
+                if (ret)
+                    return 1;
+
+                if (ss.peek() == ',')
+                    ss.ignore();
+            }
+        }
+    }
+
     execplan::ObjectIDManager oidm;
     BRM::OID_t MaxOID = oidm.size();
 
     for (BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
     {
-        emp->getExtents(oid, entries, false, false, true);
+        int result = generate_result(oid, emp, table, thd);
 
-        if (entries.size() == 0)
-            continue;
-
-        iter = entries.begin();
-        end = entries.end();
-
-        while (iter != end)
-        {
-            table->field[0]->store(oid);
-
-            if (iter->colWid > 0)
-            {
-                table->field[1]->store("Column", strlen("Column"), cs);
-
-                if (iter->partition.cprange.lo_val == std::numeric_limits<int64_t>::max() ||
-                        iter->partition.cprange.lo_val <= (std::numeric_limits<int64_t>::min() + 2))
-                {
-                    table->field[4]->set_null();
-                }
-                else
-                {
-                    table->field[4]->set_notnull();
-                    table->field[4]->store(iter->partition.cprange.lo_val);
-                }
-
-                if (iter->partition.cprange.hi_val == std::numeric_limits<int64_t>::max() ||
-                        iter->partition.cprange.hi_val <= (std::numeric_limits<int64_t>::min() + 2))
-                {
-                    table->field[5]->set_null();
-                }
-                else
-                {
-                    table->field[5]->set_notnull();
-                    table->field[5]->store(iter->partition.cprange.hi_val);
-                }
-
-                table->field[6]->store(iter->colWid);
-
-            }
-            else
-            {
-                table->field[1]->store("Dictionary", strlen("Dictionary"), cs);
-                table->field[4]->set_null();
-                table->field[5]->set_null();
-                table->field[6]->store(8192);
-            }
-
-            table->field[2]->store(iter->range.start);
-            table->field[3]->store(iter->range.start + (iter->range.size * 1024) - 1);
-
-            table->field[7]->store(iter->dbRoot);
-            table->field[8]->store(iter->partitionNum);
-            table->field[9]->store(iter->segmentNum);
-            table->field[10]->store(iter->blockOffset);
-            table->field[11]->store(iter->range.size * 1024);
-            table->field[12]->store(iter->HWM);
-
-            switch (iter->partition.cprange.isValid)
-            {
-                case 0:
-                    table->field[13]->store("Invalid", strlen("Invalid"), cs);
-                    break;
-
-                case 1:
-                    table->field[13]->store("Updating", strlen("Updating"), cs);
-                    break;
-
-                case 2:
-                    table->field[13]->store("Valid", strlen("Valid"), cs);
-                    break;
-
-                default:
-                    table->field[13]->store("Unknown", strlen("Unknown"), cs);
-                    break;
-            }
-
-            switch (iter->status)
-            {
-                case BRM::EXTENTAVAILABLE:
-                    table->field[14]->store("Available", strlen("Available"), cs);
-                    break;
-
-                case BRM::EXTENTUNAVAILABLE:
-                    table->field[14]->store("Unavailable", strlen("Unavailable"), cs);
-                    break;
-
-                case BRM::EXTENTOUTOFSERVICE:
-                    table->field[14]->store("Out of service", strlen("Out of service"), cs);
-                    break;
-
-                default:
-                    table->field[14]->store("Unknown", strlen("Unknown"), cs);
-            }
-
-            // MCOL-1016: on multiple segments HWM is set to 0 on the lower
-            // segments, we don't want these to show as 8KB. The down side is
-            // if the column has less than 1 block it will show as 0 bytes.
-            // We have no lookahead without it getting messy so this is the
-            // best compromise.
-            if (iter->HWM == 0)
-            {
-                table->field[15]->store(0);
-            }
-            else
-            {
-                table->field[15]->store((iter->HWM + 1) * 8192);
-            }
-
-            if (schema_table_store_record(thd, table))
-            {
-                delete emp;
-                return 1;
-            }
-
-            iter++;
-
-        }
+        if (result)
+            return 1;
     }
 
     delete emp;

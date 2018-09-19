@@ -29,7 +29,7 @@ using namespace std;
 namespace logging
 {
 
-ErrorCodes::ErrorCodes(): fErrorCodes(), fPreamble("An unexpected condition within the query caused an internal processing error within InfiniDB. Please check the log files for more details. Additional Information: ")
+ErrorCodes::ErrorCodes(): fErrorCodes(), fPreamble("An unexpected condition within the query caused an internal processing error within Columnstore. Please check the log files for more details. Additional Information: ")
 {
     fErrorCodes[batchPrimitiveStepErr] = "error in BatchPrimitiveStep.";
     fErrorCodes[tupleBPSErr] = "error in TupleBPS.";

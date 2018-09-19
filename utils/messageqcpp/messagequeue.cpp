@@ -157,24 +157,42 @@ void MessageQueueClient::setup(bool syncProto)
 {
     string otherEndIPStr;
     string otherEndPortStr;
-    uint16_t port;
+    struct addrinfo hints, *servinfo;
+    int rc = 0;
 
     otherEndIPStr = fConfig->getConfig(fOtherEnd, "IPAddr");
     otherEndPortStr = fConfig->getConfig(fOtherEnd, "Port");
 
     if (otherEndIPStr.length() == 0) otherEndIPStr = "127.0.0.1";
 
-    if (otherEndPortStr.length() == 0 || (port = static_cast<uint16_t>(strtol(otherEndPortStr.c_str(), 0, 0))) == 0)
+    if (otherEndPortStr.length() == 0 || static_cast<uint16_t>(strtol(otherEndPortStr.c_str(), 0, 0)) == 0)
     {
-        string msg = "MessageQueueClient::MessageQueueClient: config error: Invalid/Missing Port attribute";
+        string msg = "MessageQueueClient::setup(): config error: Invalid/Missing Port attribute";
         throw runtime_error(msg);
     }
 
-    memset(&fServ_addr, 0, sizeof(fServ_addr));
-    sockaddr_in* sinp = reinterpret_cast<sockaddr_in*>(&fServ_addr);
-    sinp->sin_family = AF_INET;
-    sinp->sin_port = htons(port);
-    sinp->sin_addr.s_addr = inet_addr(otherEndIPStr.c_str());
+    memset(&hints, 0, sizeof hints);
+    // ATM We support IPv4 only.
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+
+    if( !(rc = getaddrinfo(otherEndIPStr.c_str(), otherEndPortStr.c_str(), &hints, &servinfo)) )
+    {
+        memset(&fServ_addr, 0, sizeof(fServ_addr));
+        sockaddr_in* sinp = reinterpret_cast<sockaddr_in*>(&fServ_addr);
+        *sinp = *reinterpret_cast<sockaddr_in*>(servinfo->ai_addr);
+        freeaddrinfo(servinfo);
+    }
+    else
+    {
+        string msg = "MessageQueueClient::setup(): ";
+        msg.append(gai_strerror(rc));
+        logging::Message::Args args;
+        logging::LoggingID li(31);
+        args.add(msg);
+        fLogger.logMessage(logging::LOG_TYPE_ERROR, logging::M0000, args, li);
+    }
 
 #ifdef SKIP_IDB_COMPRESSION
     fClientSock.setSocketImpl(new InetStreamSocket());
@@ -200,15 +218,34 @@ MessageQueueClient::MessageQueueClient(const string& otherEnd, Config* config, b
     setup(syncProto);
 }
 
-MessageQueueClient::MessageQueueClient(const string& ip, uint16_t port, bool syncProto) :
+MessageQueueClient::MessageQueueClient(const string& dnOrIp, uint16_t port, bool syncProto) :
     fLogger(31), fIsAvailable(true)
 {
-    memset(&fServ_addr, 0, sizeof(fServ_addr));
-    sockaddr_in* sinp = reinterpret_cast<sockaddr_in*>(&fServ_addr);
-    sinp->sin_family = AF_INET;
-    sinp->sin_port = htons(port);
-    sinp->sin_addr.s_addr = inet_addr(ip.c_str());
+    struct addrinfo hints, *servinfo;
+    int rc = 0;
 
+    memset(&hints, 0, sizeof hints);
+    // ATM We support IPv4 only.
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if( !(rc = getaddrinfo(dnOrIp.c_str(), NULL, &hints, &servinfo)) )
+    {
+        memset(&fServ_addr, 0, sizeof(fServ_addr));
+        sockaddr_in* sinp = reinterpret_cast<sockaddr_in*>(&fServ_addr);
+        *sinp = *reinterpret_cast<sockaddr_in*>(servinfo->ai_addr);
+        sinp->sin_port = htons(port);
+        freeaddrinfo(servinfo);
+    }
+    else
+    {
+        string msg = "MessageQueueClient::MessageQueueClient(): ";
+        msg.append(gai_strerror(rc));
+        logging::Message::Args args;
+        logging::LoggingID li(31);
+        args.add(msg);
+        fLogger.logMessage(logging::LOG_TYPE_ERROR, logging::M0000, args, li);        
+    }
 #ifdef SKIP_IDB_COMPRESSION
     fClientSock.setSocketImpl(new InetStreamSocket());
 #else
