@@ -817,8 +817,8 @@ int main(int argc, char* argv[])
 		string temp;
 
 
-    try
-    {
+		try
+		{
 			temp = sysConfig->getConfig(InstallSection, "SingleServerInstall");
 		}
 		catch(...)
@@ -829,165 +829,165 @@ int main(int argc, char* argv[])
 		else
 			singleServerInstall = "2";
 
-		while(true) {
+		while(true) 
+		{
 			string temp = singleServerInstall;
 			prompt = "Select the type of System Server install [1=single, 2=multi] (" + singleServerInstall + ") > ";
 			pcommand = callReadline(prompt.c_str());
 
-        if (pcommand)
-        {
-            if (strlen(pcommand) > 0)
-                temp = pcommand;
-            else
-                temp = singleServerInstall;
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0)
+					temp = pcommand;
+				else
+					temp = singleServerInstall;
 
-            callFree(pcommand);
+				callFree(pcommand);
 
-            if (temp == "1")
-            {
-                singleServerInstall = temp;
-                cout << endl << "Performing the Single Server Install." << endl;
+				if (temp == "1")
+				{
+					singleServerInstall = temp;
+					cout << endl << "Performing the Single Server Install." << endl;
 
-                if ( reuseConfig == "n" )
-                {
-                    //setup to Columnstore.xml file for single server
+					if ( reuseConfig == "n" )
+					{
+						//setup to Columnstore.xml file for single server
+						try
+						{
+							sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("ExeMgr1", "Module", "pm1");
+							sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
+							sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
+							sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
+							sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
+							sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
+							sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
+							sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
+							sysConfig->setConfig("Installation", "SingleServerInstall", "y");
+							sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
+						}
+						catch (...)
+						{
+						cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
+						exit(1);
+						}
+					}
+					
+					setSystemName();
+					cout << endl;
 
-		    try
-		    {
-			sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("ExeMgr1", "Module", "pm1");
-			sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
-			sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
-			sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
-			sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
-			sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
-			sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
-			sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
-			sysConfig->setConfig("Installation", "SingleServerInstall", "y");
-			sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
-		    }
+					system(cmd.c_str());
 
-		    catch (...)
-		    {
-			cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
-			exit(1);
-		    }
-		}
+					// setup storage
+					if (!storageSetup(false))
+					{
+						cout << "ERROR: Problem setting up storage" << endl;
+						exit(1);
+					}
 
-                setSystemName();
-                cout << endl;
+					if (hdfs || !rootUser)
+						if ( !updateBash() )
+							cout << "updateBash error" << endl;
 
-                system(cmd.c_str());
+					// setup storage
+					if (!singleServerDBrootSetup())
+					{
+						cout << "ERROR: Problem setting up DBRoot IDs" << endl;
+						exit(1);
+					}
 
-                // setup storage
-                if (!storageSetup(false))
-                {
-                    cout << "ERROR: Problem setting up storage" << endl;
-                    exit(1);
-                }
+					//set system DBRoot count and check 'files per parition' with number of dbroots
+					try
+					{
+						sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
+					}
+					catch (...)
+					{
+						cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
+						exit(1);
+					}
 
-                if (hdfs || !rootUser)
-                    if ( !updateBash() )
-                        cout << "updateBash error" << endl;
+					//check if dbrm data resides in older directory path and inform user if it does
+					dbrmDirCheck();
 
-                // setup storage
-                if (!singleServerDBrootSetup())
-                {
-                    cout << "ERROR: Problem setting up DBRoot IDs" << endl;
-                    exit(1);
-                }
+					if (startOfflinePrompt)
+						offLineAppCheck();
 
-                //set system DBRoot count and check 'files per parition' with number of dbroots
-                try
-                {
-                    sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
-                }
-                catch (...)
-                {
-                    cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
-                    exit(1);
-                }
+					checkMysqlPort(mysqlPort, sysConfig);
 
-                //check if dbrm data resides in older directory path and inform user if it does
-                dbrmDirCheck();
+					if ( !writeConfig(sysConfig) )
+					{
+						cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+						exit(1);
+					}
 
-                if (startOfflinePrompt)
-                    offLineAppCheck();
+					cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
 
-                checkMysqlPort(mysqlPort, sysConfig);
+					cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+					system(cmd.c_str());
+					exit(0);
+				}
+				else
+				{
+					if (temp == "2")
+					{
+						singleServerInstall = temp;
+						break;
+					}
+				}
 
-                if ( !writeConfig(sysConfig) )
-                {
-                    cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-                    exit(1);
-                }
+				cout << "Invalid Entry, please re-enter" << endl;
 
-                cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
+				if ( noPrompting )
+					exit(1);
 
-                cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
-                system(cmd.c_str());
-                exit(0);
-            }
-            else
-            {
-                if (temp == "2")
-                {
-                    singleServerInstall = temp;
-                    break;
-                }
-            }
-
-            cout << "Invalid Entry, please re-enter" << endl;
-
-            if ( noPrompting )
-                exit(1);
-
-            continue;
-        }
+				continue;
+			}
 
         break;
-    }
+		}
+	}
 
     try
     {
@@ -1008,127 +1008,6 @@ int main(int argc, char* argv[])
     //
     // Multi-server install
     //
-				if (strlen(pcommand) > 0) 
-					temp = pcommand;
-				else
-					temp = singleServerInstall;
-					
-				callFree(pcommand);
-
-				if (temp == "1") {
-					singleServerInstall = temp;
-					
-					cout << endl << "Performing the Single Server Install." << endl; 
-
-					break;
-				}
-				else
-				{
-					if (temp == "2") {
-						singleServerInstall = temp;
-						break;
-					}
-				}
-
-				cout << "Invalid Entry, please re-enter (1 or 2)" << endl;
-				if ( noPrompting )
-					exit(1);
-			}
-		}
-	}			
-	
-	if (singleServerInstall == "1")
-	{
-		if ( reuseConfig == "n" ) {
-			//setup to use the single server Columnstore.xml file
-
-			// we know that our Config instance just timestamped itself in the getConfig
-			// call above.  if postConfigure is running non-interactively we may get here
-			// within the same second which means the changes that are about to happen
-			// when Columnstore.xml gets overwritten will be ignored because of the Config
-			// instance won't know to reload
-			sleep(1);
-
-			cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-			system(cmd.c_str());
-			cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-			system(cmd.c_str());
-			cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
-			system(cmd.c_str());
-		}
-
-		setSystemName();
-
-		if (!single_server_quick_install)
-		{
-			cout << endl;
-
-			// setup storage
-			if (!storageSetup(false))
-			{
-				cout << "ERROR: Problem setting up storage" << endl;
-				exit(1);
-			}
-
-			// setup storage
-			if (!singleServerDBrootSetup())
-			{
-				cout << "ERROR: Problem setting up DBRoot IDs" << endl;
-				exit(1);
-			}
-
-			//set system DBRoot count and check 'files per parition' with number of dbroots
-			try {
-				sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
-			}
-			catch(...)
-			{
-				cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
-				exit(1);
-			}
-
-			//check if dbrm data resides in older directory path and inform user if it does
-			dbrmDirCheck();
-
-			if (startOfflinePrompt)
-				offLineAppCheck();
-		}
-
-		checkMysqlPort(mysqlPort, sysConfig);
-
-		if (hdfs || !rootUser)
-			if( !updateBash() )
-				cout << "updateBash error" << endl;
-
-		if ( !writeConfig(sysConfig) ) {
-			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-			exit(1);
-		}
-
-		cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
-
-		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
-		system(cmd.c_str());
-		exit(0);
-	}
-
-	try {
-		sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
-	}
-	catch(...)
-	{
-		cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
-		exit(1);
-	}
-
-	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-		exit(1);
-	}
-
-	//
-	// Multi-server install
-	//
 	
 	ModuleIP InputModuleIP;
 	ModuleIpList InputModuleIPList;
