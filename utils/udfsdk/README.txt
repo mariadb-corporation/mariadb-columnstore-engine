@@ -11,7 +11,7 @@ files to create your own function or just try that function as is.
     $ make
 - Copy the libudf_mysql.so.1.0.0 and libudfsdk.so.1.0.0 file to /usr/local/mariadb/columnstore/lib on
   every columnstore node.
-    $ sudo cp libudf_mysql.so.1.0.0 libudfsdk.so.1.0.0 /usr/local/mariadb/columnstore/lib/
+    $ cp libudf_mysql.so.1.0.0 libudfsdk.so.1.0.0 /usr/local/mariadb/columnstore/lib/
 - Restart ColumnStore
     $ mcsadmin restartsystem y
 - Using the mcsmysql client add the user defined function, e.g,

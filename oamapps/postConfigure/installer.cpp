@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
     // setup to start on reboot, for non-root amazon installs
     if ( !rootUser )
     {
-    	system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+    	system("sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
     }   
 
     //copy Columnstore.xml.rpmsave if upgrade option is selected

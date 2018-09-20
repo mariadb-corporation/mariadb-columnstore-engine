@@ -14,14 +14,7 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-USER=`whoami 2>/dev/null`
-if [ $USER = "root" ]; then
-	SUDO=" "
-else
-	SUDO="sudo"
-fi
-
-$SUDO rm -f /tmp/${MODULE}_logReport.tar.gz
+rm -f /tmp/${MODULE}_logReport.tar.gz
 
 tar -zcf /tmp/${MODULE}_logReport.tar.gz /var/log/mariadb/columnstore > /dev/null 2>&1
 
