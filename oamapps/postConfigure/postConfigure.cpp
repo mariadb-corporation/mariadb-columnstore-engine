@@ -114,7 +114,7 @@ string getModuleName();
 bool setModuleName(string moduleName);
 bool updateBash();
 bool makeModuleFile(string moduleName, string parentOAMModuleName);
-bool updateProcessConfig(int serverTypeInstall);
+bool updateProcessConfig();
 bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
 bool createDbrootDirs(string DBRootStorageType);
@@ -124,6 +124,7 @@ void setSystemName();
 bool singleServerDBrootSetup();
 bool copyFstab(string moduleName);
 bool attachVolume(string instanceName, string volumeName, string deviceName, string dbrootPath);
+void singleServerConfigSetup(Config* sysConfig);
 
 void remoteInstallThread(void*);
 
@@ -816,7 +817,6 @@ int main(int argc, char* argv[])
 
 		string temp;
 
-
 		try
 		{
 			temp = sysConfig->getConfig(InstallSection, "SingleServerInstall");
@@ -852,68 +852,30 @@ int main(int argc, char* argv[])
 					if ( reuseConfig == "n" )
 					{
 						//setup to Columnstore.xml file for single server
-						try
-						{
-							sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("ExeMgr1", "Module", "pm1");
-							sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
-							sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
-							sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
-							sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
-							sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
-							sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
-							sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
-							sysConfig->setConfig("Installation", "SingleServerInstall", "y");
-							sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
-						}
-						catch (...)
-						{
-						cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
-						exit(1);
-						}
+						singleServerConfigSetup(sysConfig);
 					}
 					
+					//module ProcessConfig.xml to setup all apps on the pm
+					if ( !updateProcessConfig() )
+						cout << "Update ProcessConfig.xml error" << endl;
+
+					try
+					{
+						sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
+						sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
+					}
+					catch (...)
+					{
+						cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
+						exit(1);
+					}
+
+					if ( !writeConfig(sysConfig) )
+					{
+						cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+						exit(1);
+					}
+
 					setSystemName();
 					cout << endl;
 
@@ -1182,8 +1144,8 @@ int main(int argc, char* argv[])
                 cout << "The Server will be configured as a Performance Module." << endl;
                 cout << "All MariaDB ColumnStore Processes will run on the Performance Modules." << endl << endl;
 
-                //module ProcessConfig.xml to setup all apps on the dm
-                if ( !updateProcessConfig(IserverTypeInstall) )
+                //module ProcessConfig.xml to setup all apps on the pm
+                if ( !updateProcessConfig() )
                     cout << "Update ProcessConfig.xml error" << endl;
 
                 //store local query flag
@@ -4011,6 +3973,14 @@ int main(int argc, char* argv[])
     cout << endl << "MariaDB ColumnStore Database Platform Starting, please wait .";
     cout.flush();
 
+    string ProfileFile;
+	try
+	{
+		ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
+	}
+	catch (...)
+	{}
+
     if ( waitForActive() )
     {
         cout << " DONE" << endl;
@@ -4092,10 +4062,7 @@ int main(int argc, char* argv[])
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -4112,10 +4079,7 @@ int main(int argc, char* argv[])
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -4411,38 +4375,14 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 
 /*
  * Update ProcessConfig.xml file for a single server configuration
- * Change the 'um' and 'pm' to 'dm'
+ * Change the 'um' to 'pm'
  */
-bool updateProcessConfig(int serverTypeInstall)
+bool updateProcessConfig()
 {
     vector <string> oldModule;
-    string newModule;
-
-    switch ( serverTypeInstall )
-    {
-        case (oam::INSTALL_COMBINE_DM_UM_PM):
-        {
-            newModule = ">pm";
-            oldModule.push_back(">um");
-            oldModule.push_back(">dm");
-            break;
-        }
-
-        case (oam::INSTALL_COMBINE_DM_UM):
-        {
-            newModule = ">um";
-            oldModule.push_back(">dm");
-            break;
-        }
-
-        case (oam::INSTALL_COMBINE_PM_UM):
-        {
-            newModule = ">pm";
-            oldModule.push_back(">um");
-            break;
-        }
-    }
-
+    string newModule = ">pm";
+	oldModule.push_back(">um");
+ 
     string fileName = installDir + "/etc/ProcessConfig.xml";
 
     //Save a copy of the original version
@@ -6860,6 +6800,74 @@ bool glusterSetup(string password)
 
     return true;
 }
+
+void singleServerConfigSetup(Config* sysConfig)
+{
+	
+	try
+	{
+		sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("ExeMgr1", "Module", "pm1");
+		sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
+		sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
+		sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
+		sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
+		sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
+		sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
+		sysConfig->setConfig("Installation", "SingleServerInstall", "y");
+		sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
+	}
+	catch (...)
+	{
+	cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
+	exit(1);
+	}
+
+	return;
+}
+
 
 
 // vim:ts=4 sw=4:

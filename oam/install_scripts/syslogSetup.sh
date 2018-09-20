@@ -173,7 +173,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		# remove older version incase it was installed by previous build
 		 rm -rf /etc/rsyslog.d/columnstore.conf
 
-		// determine username/groupname
+		# determine username/groupname
 		
 		if [ -f /var/log/messages ]; then
 		      user=`stat -c "%U %G" /var/log/messages | awk '{print $1}'`
@@ -185,7 +185,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		      group=`stat -c "%U %G" /var/log/syslog | awk '{print $2}'`
 		fi
 		
-		//set permissions
+		# set permissions
 		chown $user:$group -R /var/log/mariadb > /dev/null 2>&1
 		
 		if [ $rsyslog7 == 1 ]; then

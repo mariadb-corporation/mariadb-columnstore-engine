@@ -96,8 +96,15 @@ if [ $installdir != "/usr/local/mariadb/columnstore" ]; then
 fi
 
 if [ $user != "root" ]; then
-	profileFile=$prefix/.bash_profile
-
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+		touch $prefix/.bashrc
+	fi
+		
 	if [ ! -f ${profileFile}_backup ]; then
 	    cp $profileFile ${profileFile}_backup
 	fi
@@ -122,19 +129,24 @@ if [ $user != "root" ]; then
 	#source the file
 	. ${profileFile}
 else
+	profileFile="/etc/profile.d/columnstoreAlias.sh"
 	/bin/cp -f $installdir/bin/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
 	chmod 644 /etc/profile.d/columnstoreAlias.sh >/dev/null 2>&1
 fi
 
-cd /
+# set Profile File in config file
+$installdir/bin/setConfig -d Installation ProfileFile $profileFile
 
-test -d /var/log/mariadb || mkdir /var/log/mariadb >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
-chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
+# create directories
+if [ $user == "root" ]; then
+	test -d /var/log/mariadb || mkdir /var/log/mariadb >/dev/null 2>&1
+	test -d /var/log/mariadb/columnstore || mkdir /var/log/mariadb/columnstore >/dev/null 2>&1
+	test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+	test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+	test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+	test -h /var/log/mariadb/columnstore/data && rm -f /var/log/mariadb/columnstore/data
+	chmod 755 /var/log/mariadb/columnstore/corefiles > /dev/null 2>&1
+fi
 
 # make sure trace dir is world-writable and sticky
 test -d $installdir/data || mkdir $installdir/data

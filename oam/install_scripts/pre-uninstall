@@ -45,9 +45,16 @@ fi
 
 #remove profile file
 if [ $user != "root" ]; then
-	profileFile=$prefix/.bash_profile
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+		touch $prefix/.bashrc
+	fi
 
-	if test -f ${profileFile}_backup ; then
+	if [ -f ${profileFile}_backup ] ; then
 	    mv -f ${profileFile}_backup $profileFile
 	fi
 else
@@ -56,10 +63,10 @@ fi
 
  
 #remove log file directories
-#rm -rf /var/log/mariadb/columnstore > /dev/null 2>&1
-#rm -f $installdir/mysql/db/*.err > /dev/null 2>&1
-rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
-rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+if [ $user == "root" ]; then
+	rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
+	rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
+fi
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
 # delete Mariab Columnstore shared memory segments

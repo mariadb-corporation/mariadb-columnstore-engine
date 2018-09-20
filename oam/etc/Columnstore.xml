@@ -469,6 +469,7 @@
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 		<DistributedInstall>y</DistributedInstall>
 		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
+		<ProfileFile>unassigned</ProfileFile>
 	</Installation>
 	<ExtentMap>
 		<!--

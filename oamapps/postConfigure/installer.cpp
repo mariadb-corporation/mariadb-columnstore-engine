@@ -793,8 +793,6 @@ int main(int argc, char* argv[])
             sleep(5);
         }
 
-        cout << "System Install successfully completed, starting MariaDB ColumnStore" << endl;
-
         //
         // perform start of MariaDB ColumnStore of other servers in the system
         //
@@ -822,8 +820,6 @@ int main(int argc, char* argv[])
 
         if (rtnCode != 0)
             cout << "Error starting MariaDB ColumnStore local module" << endl;
-        else
-            cout << "Start MariaDB ColumnStore request successful" << endl;
     }
     else
     {
@@ -871,8 +867,16 @@ int main(int argc, char* argv[])
 
     // check for system going ACTIVE
     sleep(5);
-    cout << endl << "MariaDB ColumnStore Database Platform Starting, please wait .";
+    cout << endl << "Starting MariaDB ColumnStore Database Platform Starting, please wait .";
     cout.flush();
+
+    string ProfileFile;
+	try
+	{
+		ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
+	}
+	catch (...)
+	{}
 
     if ( waitForActive() )
     {
@@ -898,10 +902,7 @@ int main(int argc, char* argv[])
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -917,10 +918,7 @@ int main(int argc, char* argv[])
         cout << endl << "ERROR: MariaDB ColumnStore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
