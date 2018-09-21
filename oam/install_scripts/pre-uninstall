@@ -69,6 +69,9 @@ if [ $user == "root" ]; then
 fi
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1\
 
+# delete Mariab Columnstore shared memory segments
+$installdir/bin/clearShm  > /dev/null 2>&1
+
 #get temp directory
 tmpDir="/tmp"
 if [ $user != "root" ]; then
@@ -76,21 +79,14 @@ if [ $user != "root" ]; then
 	mkdir $tmpDir >/dev/null 2>&1
 fi
 
-# delete Mariab Columnstore shared memory segments
-$installdir/bin/clearShm  > /dev/null 2>&1
+TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
+tmpDir=$tmpDir+$TempFileDir
 
 # delete tmp files
+rm -rf $tmpDir
 rm -f $installdir/local/*.columnstore
 rm -rf $installdir/local/etc/
-rm -rf $tmpDir/bucketreuse
-rm -f $tmpDir/columnstore.txt
-rm -f $tmpDir/dbbuilder.*
-rm -f $tmpDir/dbrmfiles
-rm -f $tmpDir/pkgcheck
-rm -f $tmpDir/upgrade-status.log.*
-rm -f $tmpDir/mount.log
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
-rm -rf $tmpDir/columnstore_tmp_files
 rm -f $installdir/local/moveDbrootTransactionLog
 
 lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`

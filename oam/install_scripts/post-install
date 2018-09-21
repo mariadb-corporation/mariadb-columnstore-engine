@@ -174,8 +174,11 @@ if [ $user != "root" ]; then
 	mkdir $tmpDir >/dev/null 2>&1
 fi
 
+TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
+tmpDir=$tmpDir+$TempFileDir
+
 #create columnstore temp file directory
-mkdir -p $tmpDir/columnstore_tmp_files >/dev/null 2>&1
+mkdir -p $tmpDir >/dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1

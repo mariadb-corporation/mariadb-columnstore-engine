@@ -263,7 +263,10 @@ void Config::checkReload( )
     }
 
     // Directory in which to place file buffer temporary files.
+    string TmpFileDir = startup::StartUp::tmpDir();
+
     string hdfsRdwrScratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
+    hdfsRdwrScratch = TmpFileDir + hdfsRdwrScratch
 
     if ( hdfsRdwrScratch.length() == 0 )
     {

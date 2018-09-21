@@ -31,6 +31,10 @@ using namespace boost;
 #include "idbregistry.h"
 #endif
 #include "installdir.h"
+#include "configcpp.h"
+
+using namespace config;
+
 
 namespace startup
 {
@@ -92,6 +96,18 @@ const string StartUp::tmpDir()
         *fTmpDirp = cfStr;
 
 #else
+
+	Config* sysConfig = Config::makeConfig();
+
+	string TempFileDir;
+
+	try
+	{
+		TempFileDir = sysConfig->getConfig("SystemConfig", "TempFileDir");
+	}
+	catch (...)
+	{}
+
     fTmpDirp = new string("/tmp");
     //See if we can figure out the tmp dir in Linux...
     //1. env var COLUMNSTORE_INSTALL_DIR
@@ -108,6 +124,8 @@ const string StartUp::tmpDir()
 
         *fTmpDirp = homedir + "/.tmp";
 	}
+	
+	*fTmpDirp = *fTmpDirp + TempFileDir;
 
 #endif
 

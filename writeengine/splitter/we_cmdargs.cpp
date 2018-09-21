@@ -1418,7 +1418,7 @@ std::string WECmdArgs::getTmpFileDir()
 {
     if (!fTmpFileDir.empty()) return fTmpFileDir;
 
-    fTmpFileDir = startup::StartUp::tmpDir() + "columnstore_tmp_files";
+    fTmpFileDir = startup::StartUp::tmpDir();
 
     if (fTmpFileDir.empty())
         throw( runtime_error("Config ERROR: TmpFileDir not found!!"));

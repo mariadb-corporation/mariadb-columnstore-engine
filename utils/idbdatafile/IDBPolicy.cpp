@@ -217,7 +217,9 @@ void IDBPolicy::configIDBPolicy()
 
     // Directory in which to place file buffer temporary files.
     string tmpDir = startup::StartUp::tmpDir();
-    string hdfsRdwrScratch = tmpDir + "/rdwrscratch";
+
+    string hdfsRdwrScratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
+    hdfsRdwrScratch = tmpDir + hdfsRdwrScratch;
 
     IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
 

@@ -42,11 +42,8 @@ int main (int argc, char** argv)
 {
     ServerMonitor serverMonitor;
     Oam oam;
-    
-    string TempFileDir;
-    oam.getSystemConfig("TempFileDir", TempFileDir);
 
-    tmpDir = startup::StartUp::tmpDir() + TempFileDir;
+    tmpDir = startup::StartUp::tmpDir();
 
     struct sigaction ign;
 

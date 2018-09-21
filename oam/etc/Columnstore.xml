@@ -249,13 +249,14 @@
 		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
 		<ExternalMajorThreshold>80</ExternalMajorThreshold>
 		<ExternalMinorThreshold>70</ExternalMinorThreshold>
-		<TempDiskPath>/tmp</TempDiskPath>
+		<!-- <TempDiskPath>/tmp</TempDiskPath>
 		<WorkingDir>/tmp</WorkingDir>
+		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
+		-->
 		<TransactionArchivePeriod>10</TransactionArchivePeriod>
 		<NMSIPAddress>0.0.0.0</NMSIPAddress>
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
-		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
 		<CalpontHome>$INSTALLDIR</CalpontHome>
 		<ProcessRestartCount>10</ProcessRestartCount>
 		<ProcessRestartPeriod>120</ProcessRestartPeriod>
@@ -266,7 +267,8 @@
 		<!-- enable if you want to limit how much memory may be used for hdfs read/write memory buffers.
  		<hdfsRdwrBufferMaxSize>8G</hdfsRdwrBufferMaxSize>
 		-->
- 		<hdfsRdwrScratch>/tmp/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+ 		<hdfsRdwrScratch>rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+ 		<TempFileDir>/columnstore_tmp_files</TempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
