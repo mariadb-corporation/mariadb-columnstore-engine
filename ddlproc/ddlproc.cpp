@@ -62,6 +62,8 @@ using namespace execplan;
 #include "utils_utf8.h"
 
 #include "crashtrace.h"
+#include "installdir.h"
+
 
 namespace fs = boost::filesystem;
 
@@ -71,7 +73,7 @@ DistributedEngineComm* Dec;
 
 void setupCwd()
 {
-    string workdir = config::Config::makeConfig()->getConfig("SystemConfig", "WorkingDir");
+    string workdir = startup::StartUp::tmpDir();
 
     if (workdir.length() == 0)
         workdir = ".";

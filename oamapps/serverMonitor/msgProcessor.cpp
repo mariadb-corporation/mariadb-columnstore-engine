@@ -39,6 +39,8 @@ extern ProcessMemoryList pml;
 extern pthread_mutex_t CPU_LOCK;
 extern pthread_mutex_t MEMORY_LOCK;
 
+extern string tmpDir;
+
 /**
  * constants define
  */
@@ -252,9 +254,12 @@ void msgProcessor()
                                 ByteStream ackmsg;
 
                                 // get cache MEMORY stats
-                                system("cat /proc/meminfo | grep Cached -m 1 | awk '{print $2}' > /tmp/cached");
+								string tmpcached = tmpDir + "/cached";
+								
+								string cmd = "cat /proc/meminfo | grep Cached -m 1 | awk '{print $2}' > " + tmpcached;
+								system(cmd.c_str());
 
-                                ifstream oldFile ("/tmp/cached");
+								ifstream oldFile (tmpcached);
 
                                 string strCache;
                                 long long cache;

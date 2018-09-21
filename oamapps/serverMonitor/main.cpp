@@ -19,6 +19,7 @@
 #include "serverMonitor.h"
 
 #include "crashtrace.h"
+#include "installdir.h"
 
 using namespace std;
 using namespace servermonitor;
@@ -26,6 +27,8 @@ using namespace oam;
 using namespace logging;
 
 extern int swapFlag;
+
+string tmpDir;
 
 /*****************************************************************************
 * @brief	main
@@ -39,6 +42,11 @@ int main (int argc, char** argv)
 {
     ServerMonitor serverMonitor;
     Oam oam;
+    
+    string TempFileDir;
+    oam.getSystemConfig("TempFileDir", TempFileDir);
+
+    tmpDir = startup::StartUp::tmpDir() + TempFileDir;
 
     struct sigaction ign;
 

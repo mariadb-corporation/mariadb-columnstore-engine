@@ -83,6 +83,7 @@ using namespace joblist;
 #include "utils_utf8.h"
 
 #include "crashtrace.h"
+#include "installdir.h"
 
 namespace fs = boost::filesystem;
 
@@ -493,7 +494,7 @@ void rollbackAll(DBRM* dbrm)
 
 void setupCwd()
 {
-    string workdir = Config::makeConfig()->getConfig("SystemConfig", "WorkingDir");
+    string workdir = startup::StartUp::tmpDir();
 
     if (workdir.length() == 0)
         workdir = ".";

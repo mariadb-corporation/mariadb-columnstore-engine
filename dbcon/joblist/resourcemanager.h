@@ -34,6 +34,7 @@
 #include "configcpp.h"
 #include "calpontselectexecutionplan.h"
 #include "resourcedistributor.h"
+#include "installdir.h"
 
 #include "atomicops.h"
 
@@ -82,7 +83,7 @@ const uint32_t defaultProcessorThreadsPerScan = 16;
 const uint32_t defaultJoinerChunkSize = 16 * 1024 * 1024;
 
 //bucketreuse
-const std::string defaultTempDiskPath = "/var/tmp";
+const std::string defaultTempDiskPath = "/tmp";
 const std::string defaultWorkingDir = ".";   //"/tmp";
 
 //largedatalist
@@ -282,7 +283,7 @@ public:
 
     std::string getScTempDiskPath() const
     {
-        return  getStringVal(fSystemConfigStr, "TempDiskPath", defaultTempDiskPath  );
+        return  startup::StartUp::tmpDir();
     }
     uint64_t  	getScTempSaveSize() const
     {
@@ -290,7 +291,7 @@ public:
     }
     std::string getScWorkingDir() const
     {
-        return  getStringVal(fSystemConfigStr, "WorkingDir", defaultWorkingDir );
+        return  startup::StartUp::tmpDir();
     }
 
     uint32_t  	getTwMaxSize() const

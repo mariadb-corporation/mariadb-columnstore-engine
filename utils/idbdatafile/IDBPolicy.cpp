@@ -34,6 +34,9 @@
 #include "utils_utf8.h"
 #endif
 
+#include "installdir.h"
+
+
 using namespace std;
 
 namespace idbdatafile
@@ -213,23 +216,8 @@ void IDBPolicy::configIDBPolicy()
     }
 
     // Directory in which to place file buffer temporary files.
-    string hdfsRdwrScratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
-
-    if ( hdfsRdwrScratch.length() == 0 )
-    {
-        string tmpPath = cf->getConfig("SystemConfig", "TempDiskPath");
-
-        if ( tmpPath.length() == 0 )
-        {
-            hdfsRdwrScratch = "/tmp/hdfsscratch";
-        }
-        else
-        {
-            hdfsRdwrScratch = tmpPath;
-            hdfsRdwrScratch += "/hdfsscratch";
-        }
-
-    }
+    string tmpDir = startup::StartUp::tmpDir();
+    string hdfsRdwrScratch = tmpDir + "/rdwrscratch";
 
     IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
 
