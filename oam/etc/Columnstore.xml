@@ -267,7 +267,7 @@
 		<!-- enable if you want to limit how much memory may be used for hdfs read/write memory buffers.
  		<hdfsRdwrBufferMaxSize>8G</hdfsRdwrBufferMaxSize>
 		-->
- 		<hdfsRdwrScratch>rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+ 		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
  		<TempFileDir>/columnstore_tmp_files</TempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>

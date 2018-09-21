@@ -80,6 +80,7 @@ using namespace config;
 #include "helpers.h"
 using namespace installer;
 
+#include "installdir.h"
 
 typedef struct DBRoot_Module_struct
 {
@@ -195,6 +196,7 @@ bool amazon_quick_install = false;
 string DataFileEnvFile;
 
 string installDir;
+string tmpDir;
 string HOME = "/root";
 
 extern string pwprompt;
@@ -287,7 +289,8 @@ int main(int argc, char* argv[])
         if (p && *p)
             HOME = p;
     }
-	
+
+	tmpDir = startup::StartUp::tmpDir();
 
     for ( int i = 1; i < argc; i++ )
     {
@@ -568,18 +571,20 @@ int main(int argc, char* argv[])
 			EEPackageType = "binary";
 	else
 	{
-			int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+		string cmd = "rpm -qi mariadb-columnstore-platform > " + tmpDir + "/columnstore.txt 2>&1";
+		int rtnCode = system(cmd.c_str());
+
+		if (WEXITSTATUS(rtnCode) == 0)
+				EEPackageType = "rpm";
+		else {
+			string cmd = "dpkg -s mariadb-columnstore-platform > " + tmpDir + "/columnstore.txt 2>&1";
+			int rtnCode = system(cmd.c_str());
 
 			if (WEXITSTATUS(rtnCode) == 0)
-					EEPackageType = "rpm";
-			else {
-					rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-
-				if (WEXITSTATUS(rtnCode) == 0)
-							EEPackageType = "deb";
-					else
-							EEPackageType = "binary";
-			}
+						EEPackageType = "deb";
+				else
+						EEPackageType = "binary";
+		}
 	}
 
 	try {
@@ -701,11 +706,11 @@ int main(int argc, char* argv[])
     // run my.cnf upgrade script
     if ( reuseConfig == "y" )
     {
-        cmd = installDir + "/bin/mycnfUpgrade  > /tmp/mycnfUpgrade.log 2>&1";
+        cmd = installDir + "/bin/mycnfUpgrade  > " + tmpDir + "/mycnfUpgrade.log 2>&1";
         int rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
-            cout << "Error: Problem upgrade my.cnf, check /tmp/mycnfUpgrade.log" << endl;
+            cout << "Error: Problem upgrade my.cnf, check " << tmpDir << "/mycnfUpgrade.log" << endl;
         else
             cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
     }
@@ -1336,19 +1341,21 @@ int main(int argc, char* argv[])
 	
 	if (!multi_server_quick_install)
 	{
-		system("aws --version > /tmp/amazon.log 2>&1");
+		string amazonLog = tmpDir + "/amazon.log";
+		string cmd = "aws --version > " + amazonLog + " 2>&1";
+		int rtnCode = system(cmd.c_str());
 
-		ifstream in("/tmp/amazon.log");
+		ifstream in(amazonLog);
 
 		in.seekg(0, std::ios::end);
 		int size = in.tellg();
 
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found"))
+		if ( size == 0 || oam.checkLogStatus(amazonLog, "not found"))
 		{
 			// not running on amazon with ec2-api-tools
 			if (amazon_quick_install)
 			{
-				cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
+				cout << "ERROR: Amazon Quick Installer was specified, bu the Amazon CLI API packages isnt installed, exiting" << endl; 
 				exit(1);
 			}
 
@@ -1356,7 +1363,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed"))
+			if ( size == 0 || oam.checkLogStatus(amazonLog, "not installed"))
 			{
 				// not running on amazon with ec2-api-tools
 				if (amazon_quick_install)
@@ -3614,7 +3621,7 @@ int main(int argc, char* argv[])
 
                 if ( remote_installer_debug == "1" )
                 {
-                    logfile = "/tmp/";
+                    logfile = tmpDir;
                     logfile += remoteModuleName + "_" + EEPackageType + "_install.log";
                     debug_logfile = " > " + logfile;
                 }
@@ -3921,13 +3928,15 @@ int main(int argc, char* argv[])
 
         if (hdfs && !nonDistribute )
         {
+			string postConfigurePsdhLog = tmpDir + "postConfigure.pdsh.log";
+
             cout << endl << "----- Starting MariaDB ColumnStore Service on all Modules -----" << endl << endl;
-            string cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > /tmp/postConfigure.pdsh 2>&1";
+            string cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > " + postConfigurePsdhLog + " 2>&1";
             system(cmd.c_str());
 
-            if (oam.checkLogStatus("/tmp/postConfigure.pdsh", "exit") )
+            if (oam.checkLogStatus(postConfigurePsdhLog, "exit") )
             {
-                cout << endl << "ERROR: Starting MariaDB ColumnStore Service failue, check /tmp/postConfigure.pdsh. exit..." << endl;
+                cout << endl << "ERROR: Starting MariaDB ColumnStore Service failue, check " + postConfigurePsdhLog + ". exit..." << endl;
                 exit (1);
             }
         }
@@ -4012,27 +4021,28 @@ int main(int argc, char* argv[])
                 }
             }
         }
+        
+        string dbbuilderLog = tmpDir + "dbbuilder.log";
 
         if (hdfs)
-            cmd = "bash -c '. " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/dbbuilder 7 > /tmp/dbbuilder.log'";
+            cmd = "bash -c '. " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/dbbuilder 7 > " + dbbuilderLog;
         else
-            cmd = installDir + "/bin/dbbuilder 7 > /tmp/dbbuilder.log";
+            cmd = installDir + "/bin/dbbuilder 7 > " + dbbuilderLog;
 
         system(cmd.c_str());
 
-        if (oam.checkLogStatus("/tmp/dbbuilder.log", "System Catalog created") )
+        if (oam.checkLogStatus(dbbuilderLog, "System Catalog created") )
             cout << endl << "System Catalog Successfully Created" << endl;
         else
         {
-            if ( oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") )
+            if ( oam.checkLogStatus(dbbuilderLog, "System catalog appears to exist") )
             {
-
                 cout.flush();
             }
             else
             {
                 cout << endl << "System Catalog Create Failure" << endl;
-                cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
+                cout << "Check latest log file in " << dbbuilderLog << endl;
                 cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
 
                 exit (1);
@@ -4622,7 +4632,7 @@ bool createDbrootDirs(string DBRootStorageType)
     // mount data1 and create directories if configured with storage
     if ( DBRootStorageType == "external" )
     {
-        string cmd = "mount " + installDir + "/data1 > /tmp/mount.txt 2>&1";
+        string cmd = "mount " + installDir + "/data1 > " + tmpDir + "/mount.txt 2>&1";
         system(cmd.c_str());
 
         if ( !rootUser)
@@ -4655,11 +4665,12 @@ bool pkgCheck(string columnstorePackage)
 {
     while (true)
     {
-        string cmd = "ls " + columnstorePackage + " > /tmp/calpontpkgs";
+        string fileName = tmpDir + "/calpontpkgs";
+
+        string cmd = "ls " + columnstorePackage + " > " + fileName;
         system(cmd.c_str());
 
         string pkg = columnstorePackage;
-        string fileName = "/tmp/calpontpkgs";
         ifstream oldFile (fileName.c_str());
 
         if (oldFile)
@@ -4770,7 +4781,7 @@ bool storageSetup(bool amazonInstall)
                 cout.flush();
                 string logdir("/var/log/mariadb/columnstore");
 
-                if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+                if (access(logdir.c_str(), W_OK) != 0) logdir = tmpDir;
 
                 string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -5087,7 +5098,8 @@ bool storageSetup(bool amazonInstall)
     //check if gluster is installed
     int rtnCode = 1;
 
-    rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
+	string cmd = "gluster --version > " + tmpDir + "/gluster.log 2>&1";
+    rtnCode = system(cmd.c_str());
 
     if (rtnCode == 0)
     {
@@ -5099,14 +5111,17 @@ bool storageSetup(bool amazonInstall)
     }
 
     //check if hadoop is installed
-    system("which hadoop > /tmp/hadoop.log 2>&1");
+    string hadoopLog = tmpDir + "/hadoop.log";
+    
+	cmd = "which hadoop > " + hadoopLog + " 2>&1";
+    system(cmd.c_str());
 
-    ifstream in("/tmp/hadoop.log");
+    ifstream in(hadoopLog);
 
     in.seekg(0, std::ios::end);
     int size = in.tellg();
 
-    if ( size == 0 || oam.checkLogStatus("/tmp/hadoop.log", "no hadoop"))
+    if ( size == 0 || oam.checkLogStatus(hadoopLog, "no hadoop"))
         // no hadoop
         size = 0;
     else
@@ -5577,7 +5592,7 @@ bool storageSetup(bool amazonInstall)
                 cout.flush();
                 string logdir("/var/log/mariadb/columnstore");
 
-                if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+                if (access(logdir.c_str(), W_OK) != 0) logdir = tmpDir;
 
                 string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -6116,14 +6131,14 @@ void remoteInstallThread(void* arg)
             {
                 //failure
                 pthread_mutex_lock(&THREAD_LOCK);
-                cout << endl << "Failure with a remote module install, check install log files in /tmp" << endl;
+                cout << endl << "Failure with a remote module install, check install log files in " << tmpDir << endl;
                 exit(1);
             }
         }
     }
 
     pthread_mutex_lock(&THREAD_LOCK);
-    cout << endl << "Failure with a remote module install, check install log files in /tmp" << endl;
+    cout << endl << "Failure with a remote module install, check install log files in " << tmpDir << endl;
     exit(1);
 }
 
@@ -6680,8 +6695,10 @@ bool glusterSetup(string password)
     }
 
     sleep(5);
+    
+    string glusterCommandsLog = tmpDir + "/glusterCommands.log";
 
-    command = "gluster peer status >> /tmp/glusterCommands.txt 2>&1";
+    command = "gluster peer status " +  glusterCommandsLog + "2>&1";
 
     status = system(command.c_str());
 
@@ -6717,13 +6734,13 @@ bool glusterSetup(string password)
             pmnextbrick[pm]++;
         }
 
-        command += "force >> /tmp/glusterCommands.txt 2>&1";
+        command += "force >> " + glusterCommandsLog + " 2>&1";
         cout << "Gluster create and start volume dbroot" << oam.itoa(dbrootID) << "...";
         status = system(command.c_str());
 
         if (WEXITSTATUS(status) != 0 )
         {
-            if (oam.checkLogStatus("/tmp/glusterCommands.txt", "dbroot" + oam.itoa(dbrootID) + " already exists" ))
+            if (oam.checkLogStatus(glusterCommandsLog, "dbroot" + oam.itoa(dbrootID) + " already exists" ))
             {
                 string errmsg1;
                 string errmsg2;
@@ -6752,7 +6769,7 @@ bool glusterSetup(string password)
 
         if (rootUser)
         {
-            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog + " 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6765,7 +6782,7 @@ bool glusterSetup(string password)
         {
             int user = getuid();
             int group = getgid();
-            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
+            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> " + glusterCommandsLog  + " 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6774,7 +6791,7 @@ bool glusterSetup(string password)
                 exit(1);
             }
 
-            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> " + glusterCommandsLog  + " 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6783,7 +6800,7 @@ bool glusterSetup(string password)
                 exit(1);
             }
 
-            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog  + " 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )

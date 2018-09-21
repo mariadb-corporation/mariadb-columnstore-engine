@@ -7,7 +7,7 @@
 # check log for error
 checkForError() {
 	# check for password error
-	grep "ERROR 1045" /tmp/mysql_install.log > /tmp/error.check
+	grep "ERROR 1045" ${tmpdir}/mysql_install.log > /tmp/error.check
 	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
 		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
 		  rm -f /tmp/error.check
@@ -55,6 +55,8 @@ for arg in "$@"; do
 	elif [ $(expr -- "$arg" : '--installdir=') -eq 13 ]; then
 		installdir="$(echo $arg | awk -F= '{print $2}')"
 		prefix=$(dirname $installdir)
+	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
+		tmpdir="$(echo $arg | awk -F= '{print $2}')"
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
 	fi
@@ -100,11 +102,11 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 	sleep 5
 
 	# Install various Calpont stuff...
-	$installdir/mysql/install_calpont_mysql.sh  --installdir=$installdir
+	$installdir/mysql/install_calpont_mysql.sh  --installdir=$installdir --tmpdir=$tmpdir
 	checkForError
 	if [ $? -ne 0 ]; then
 	# retry
-		$installdir/mysql/install_calpont_mysql.sh --installdir=$installdir
+		$installdir/mysql/install_calpont_mysql.sh --installdir=$installdir --tmpdir=$tmpdir
 		checkForError
 		if [ $? -ne 0 ]; then
 			echo "ERROR: Invalid password in .my.cnf, or Columnstore plugin install missing"

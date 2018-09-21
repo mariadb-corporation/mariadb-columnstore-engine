@@ -17,6 +17,8 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+	elif [ `expr -- "$arg" : '--tmpdir='` -eq 9 ]; then
+		tmpdir="`echo $arg | awk -F= '{print $2}'`"
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
 	fi
@@ -24,7 +26,7 @@ done
 
 df=$installdir/mysql/my.cnf
 
-$installdir/mysql/bin/mysql --defaults-extra-file=$df --force --user=root mysql 2>/tmp/mysql_install.log <<EOD
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --force --user=root mysql 2> ${tmpdir}mysql_install.log <<EOD
 INSTALL PLUGIN columnstore SONAME 'libcalmysql.so';
 INSTALL PLUGIN infinidb SONAME 'libcalmysql.so';
 INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
