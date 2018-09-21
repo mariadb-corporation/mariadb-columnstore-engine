@@ -709,6 +709,17 @@ int TableInfo::setParseComplete(const int &columnId,
 #ifdef PROFILE
                         Stats::startParseEvent(WE_STATS_FLUSH_PRIMPROC_BLOCKS);
 #endif
+                        if (fLog->isDebug(DEBUG_2))
+                        {
+                            ostringstream oss;
+                            oss << "Dictionary cache flush: ";
+                            for (uint32_t i = 0; i < fDictFlushBlks.size(); i++)
+                            {
+                                oss << fDictFlushBlks[i] << ", ";
+                            }
+                            oss << endl;
+                            fLog->logMsg( oss.str(), MSGLVL_INFO1 );
+                        }
                         cacheutils::flushPrimProcAllverBlocks(fDictFlushBlks);
 #ifdef PROFILE
                         Stats::stopParseEvent(WE_STATS_FLUSH_PRIMPROC_BLOCKS);

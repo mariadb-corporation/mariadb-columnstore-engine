@@ -117,7 +117,10 @@ void FileBufferMgr::flushCache()
 	// the block pool should not be freed in the above block to allow us
 	// to continue doing concurrent unprotected-but-"safe" memcpys
 	// from that memory
-
+    if (fReportFrequency)
+    {
+        fLog << "Clearing entire cache" << endl;
+    }
 	fFBPool.clear();
 //	fFBPool.reserve(fMaxNumBlocks);
 }
@@ -150,6 +153,15 @@ void FileBufferMgr::flushMany(const LbidAtVer* laVptr, uint32_t cnt)
 	BRM::LBID_t lbid;
 	BRM::VER_t ver;
 	filebuffer_uset_iter_t iter;
+    if (fReportFrequency)
+    {
+        fLog << "flushMany " << cnt << " items: ";
+        for (uint32_t j = 0; j < cnt; j++)
+        {
+            fLog << "lbid: " << laVptr[j].LBID << " ver: " << laVptr[j].Ver << ", ";
+        }
+        fLog << endl;
+    }
 	for (uint32_t j = 0; j < cnt; j++)
 	{
 		lbid = static_cast<BRM::LBID_t>(laVptr->LBID);
@@ -157,6 +169,10 @@ void FileBufferMgr::flushMany(const LbidAtVer* laVptr, uint32_t cnt)
 		iter = fbSet.find(HashObject_t(lbid, ver, 0));
 		if (iter != fbSet.end())
 		{
+            if (fReportFrequency)
+            {
+                fLog << "flushMany hit, lbid: " << lbid << " index: " << iter->poolIdx << endl;
+            }
 			//remove it from fbList
 			uint32_t idx = iter->poolIdx;
 			fbList.erase(fFBPool[idx].listLoc());
@@ -179,6 +195,16 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
 
 	mutex::scoped_lock lk(fWLock);
 
+    if (fReportFrequency)
+    {
+        fLog << "flushManyAllversion " << cnt << " items: ";
+        for (uint32_t i = 0; i < cnt; i++)
+        {
+            fLog << laVptr[i] << ", ";
+        }
+        fLog << endl;
+    }
+
 	if (fCacheSize == 0 || cnt == 0)
 		return;
 
@@ -187,6 +213,10 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
 
 	for (it = fbSet.begin(); it != fbSet.end();) {
 		if (uniquer.find(it->lbid) != uniquer.end()) {
+            if (fReportFrequency)
+            {
+                fLog << "flushManyAllversion hit: " << it->lbid << " index: " << it->poolIdx << endl;
+            }
 			const uint32_t idx = it->poolIdx;
 			fbList.erase(fFBPool[idx].listLoc());
 			fEmptyPoolSlots.push_back(idx);
@@ -212,6 +242,16 @@ void FileBufferMgr::flushOIDs(const uint32_t *oids, uint32_t count)
 	byLBID_t byLBID;
 	pair<byLBID_t::iterator, byLBID_t::iterator> itList;
 	filebuffer_uset_t::iterator it;
+
+    if (fReportFrequency)
+    {
+        fLog << "flushOIDs " << count << " items: ";
+        for (uint32_t i = 0; i < count; i++)
+        {
+            fLog << oids[i] << ", ";
+        }
+        fLog << endl;
+    }
 
 	// If there are more than this # of extents to drop, the whole cache will be cleared
 	const uint32_t clearThreshold = 50000;
@@ -268,6 +308,22 @@ void FileBufferMgr::flushPartition(const vector<OID_t> &oids, const set<BRM::Log
 	uint32_t count = oids.size();
 
 	mutex::scoped_lock lk(fWLock);
+
+    if (fReportFrequency)
+    {
+        std::set<BRM::LogicalPartition>::iterator sit;
+        fLog << "flushPartition oids: ";
+        for (uint32_t i = 0; i < count; i++)
+        {
+            fLog << oids[i] << ", ";
+        }
+        fLog << "flushPartition partitions: ";
+        for (sit = partitions.begin(); sit != partitions.end(); ++sit)
+        {
+            fLog << (*sit).toString() << ", ";
+        }
+        fLog << endl;
+    }
 
 	if (fCacheSize == 0 || oids.size() == 0 || partitions.size() == 0)
 		return;
@@ -496,7 +552,7 @@ int FileBufferMgr::insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const ui
 		if (fReportFrequency && (fBlksLoaded%fReportFrequency)==0) {
 			struct timespec tm;
 			clock_gettime(CLOCK_MONOTONIC, &tm);
-			fLog 
+			fLog << "insert: "
 				<< left << fixed << ((double)(tm.tv_sec+(1.e-9*tm.tv_nsec))) << " "
 				<< right << setw(12) << fBlksLoaded << " "
 				<< right << setw(12) << fBlksNotUsed << endl;
@@ -671,6 +727,11 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t> &ops)
 
 	mutex::scoped_lock lk(fWLock);
 
+    if (fReportFrequency)
+    {
+        fLog << "bulkInsert: ";
+    }
+
 	for (i = 0; i < ops.size(); i++) {
 		const CacheInsert_t &op = ops[i];
 
@@ -694,7 +755,10 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t> &ops)
 			continue;
 		}
 		
-		//cout << "FBM: inserting <" << op.lbid << ", " << op.ver << endl;
+        if (fReportFrequency)
+        {
+		    fLog << op.lbid << " " << op.ver << ", ";
+        }
 		fCacheSize++;
 		fBlksLoaded++;
 		FBData_t fbdata = {op.lbid, op.ver, 0};
@@ -712,6 +776,10 @@ int FileBufferMgr::bulkInsert(const vector<CacheInsert_t> &ops)
 #endif
 		ret++;
 	}
+    if (fReportFrequency)
+    {
+        fLog << endl;
+    }
 	idbassert(fCacheSize <= maxCacheSize());
 
 	return ret;
