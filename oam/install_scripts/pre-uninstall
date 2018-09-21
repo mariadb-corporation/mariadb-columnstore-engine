@@ -67,7 +67,14 @@ if [ $user == "root" ]; then
 	rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
 	rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
 fi
-rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
+rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1\
+
+#get temp directory
+tmpDir="/tmp"
+if [ $user != "root" ]; then
+	tmpDir=$HOME"./tmp"
+	mkdir $tmpDir >/dev/null 2>&1
+fi
 
 # delete Mariab Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
@@ -75,15 +82,15 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 # delete tmp files
 rm -f $installdir/local/*.columnstore
 rm -rf $installdir/local/etc/
-rm -rf /tmp/bucketreuse
-rm -f /tmp/columnstore.txt
-rm -f /tmp/dbbuilder.*
-rm -f /tmp/dbrmfiles
-rm -f /tmp/pkgcheck
-rm -f /tmp/upgrade-status.log.*
-rm -f /tmp/mount.log
+rm -rf $tmpDir/bucketreuse
+rm -f $tmpDir/columnstore.txt
+rm -f $tmpDir/dbbuilder.*
+rm -f $tmpDir/dbrmfiles
+rm -f $tmpDir/pkgcheck
+rm -f $tmpDir/upgrade-status.log.*
+rm -f $tmpDir/mount.log
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
-rm -rf /tmp/columnstore_tmp_files
+rm -rf $tmpDir/columnstore_tmp_files
 rm -f $installdir/local/moveDbrootTransactionLog
 
 lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`

@@ -106,7 +106,7 @@ const string StartUp::tmpDir()
         if (p && *p)
             homedir = p;
 
-        *fTmpDirp = homedir + "/tmp";
+        *fTmpDirp = homedir + "/.tmp";
 	}
 
 #endif

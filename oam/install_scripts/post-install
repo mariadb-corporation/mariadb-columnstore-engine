@@ -167,8 +167,15 @@ mkdir -p $installdir/data/bulk/rollback >/dev/null 2>&1
 mkdir -p $installdir/data/bulk/tmpjob >/dev/null 2>&1
 rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
 
+#get temp directory
+tmpDir="/tmp"
+if [ $user != "root" ]; then
+	tmpDir=$HOME"./tmp"
+	mkdir $tmpDir >/dev/null 2>&1
+fi
+
 #create columnstore temp file directory
-mkdir -p /tmp/columnstore_tmp_files >/dev/null 2>&1
+mkdir -p $tmpDir/columnstore_tmp_files >/dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
@@ -179,7 +186,6 @@ rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1
 
 # delete Columnstore shared memory segments
 $installdir/bin/clearShm  > /dev/null 2>&1
-
 
 #check and create rc.local file if missing
 if [ -f /etc/rc.d ]; then
@@ -230,20 +236,20 @@ if [ $user = "root" ]; then
 fi
 
 if [ $user = "root" ]; then
-	$installdir/bin/syslogSetup.sh install > /tmp/syslog_install.log 2>&1
+	$installdir/bin/syslogSetup.sh install > $tmpDir/syslog_install.log 2>&1
 
 	#check if MariaDB Columnstore system logging was setup
-	cat /tmp/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
+	cat $tmpDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
-	    cat /tmp/syslog_install.log
+	    cat $tmpDir/syslog_install.log
 	fi
 else
-        sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
-        sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
+	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
+	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
 
-        cp $installdir/bin/columnstore.def /etc/default/columnstore
+	cp $installdir/bin/columnstore.def /etc/default/columnstore
 
-        sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
+	sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
 	chown $user:$user $installdir/etc/Columnstore.xml
 	
@@ -330,7 +336,7 @@ else
 	chmod 755 $installdir/bin/setenv-hdfs-20
 
 	. $installdir/bin/setenv-hdfs-20
-	$installdir/bin/hdfsCheck $installdir/lib/hdfs-20.so > /tmp/hdfs-20-test.log 2>&1
+	$installdir/bin/hdfsCheck $installdir/lib/hdfs-20.so > $tmpDir/hdfs-20-test.log 2>&1
 	if [ $? -eq 0 ]; then
 		#Passed set in config file
 		$installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-20.so
@@ -397,7 +403,7 @@ EOD
 		fi
 	else
 		. $installdir/bin/setenv-hdfs-12
-		$installdir/bin/hdfsCheck $installdir/lib/hdfs-12.so > /tmp/hdfs-12-test.log 2>&1
+		$installdir/bin/hdfsCheck $installdir/lib/hdfs-12.so > $tmpDir/hdfs-12-test.log 2>&1
 		if [ $? -eq 0 ]; then
 			#Passed set in config file
 			$installdir/bin/setConfig -d SystemConfig DataFilePlugin $installdir/lib/hdfs-12.so
