@@ -14,7 +14,10 @@ else
         DATE=" "
 fi
 
-rm -f /tmp/logReport.log
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+
+rm -f ${tmpDir}/logReport.log
 
 {
 echo " "
@@ -31,6 +34,6 @@ if test -f /var/log/mariadb/columnstore/archive/alarm.log-$DATE ; then
 	cat /var/log/mariadb/columnstore/archive/alarm.log-$DATE 2>/dev/null
 fi
 
-} > /tmp/logReport.log
+} > ${tmpDir}/logReport.log
 
 exit 0
