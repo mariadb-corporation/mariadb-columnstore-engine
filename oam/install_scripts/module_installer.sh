@@ -55,6 +55,9 @@ fi
 PMwithUM=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation PMwithUM`
 ServerTypeInstall=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation ServerTypeInstall`
 
+#get temp directory
+tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
+
 cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	echo "Amazon setup on Module"
@@ -121,40 +124,40 @@ MySQLRep=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation MySQLRep`
 if [ $MySQLRep = "y" ]; then
 	if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
 		echo "Run Upgrade on my.cnf on Module"
-		$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade > /tmp/mycnfUpgrade.log 2>&1
+		$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade > ${tmpDir}/mycnfUpgrade.log 2>&1
 	fi
 fi
 
 if test -f $COLUMNSTORE_INSTALL_DIR/mysql/my.cnf ; then
 	mysqlPort=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation MySQLPort`
 	echo "Run Mysql Port update on my.cnf on Module"
-	$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > /tmp/mycnfUpgrade_port.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/mycnfUpgrade $mysqlPort > ${tmpDir}/mycnfUpgrade_port.log 2>&1
 fi
 
 # if um, run mysql install scripts
 if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $ServerTypeInstall = "2" ]; then
 	echo "Run post-mysqld-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > /tmp/post-mysqld-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > ${tmpDir}/post-mysqld-install.log 2>&1
 	if [ $? -ne 0 ]; then
-	    echo "ERROR: post-mysqld-install failed: check /tmp/post-mysqld-install.log"
+	    echo "ERROR: post-mysqld-install failed: check ${tmpDir}/post-mysqld-install.log"
 	    exit 1
 	fi
 	echo "Run post-mysql-install"
 	
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR  > /tmp/post-mysql-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR  > ${tmpDir}/post-mysql-install.log 2>&1
         if [ $? -ne 0 ]; then
-            echo "ERROR: post-mysql-install failed: check /tmp/post-mysql-install.log"
+            echo "ERROR: post-mysql-install failed: check ${tmpDir}/post-mysql-install.log"
             exit 1
 	fi
 fi
 
 if [ $user == "root" ]; then
-    $COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh check > /tmp/syslogSetup-check.log 2>&1
+    $COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh check > ${tmpDir}/syslogSetup-check.log 2>&1
     if [ $? -ne 0 ]; then
 	    # try setup again
-	    $COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh install > /tmp/syslogSetup-install.log 2>&1
+	    $COLUMNSTORE_INSTALL_DIR/bin/syslogSetup.sh install > ${tmpDir}/syslogSetup-install.log 2>&1
 	    if [ $? -ne 0 ]; then
-		    echo "WARNING: syslogSetup.sh check failed: check /tmp/syslogSetup-check.log"
+		    echo "WARNING: syslogSetup.sh check failed: check ${tmpDir}/syslogSetup-check.log"
 		    exit 2
 	    fi
     fi

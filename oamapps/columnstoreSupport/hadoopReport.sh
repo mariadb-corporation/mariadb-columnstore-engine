@@ -13,7 +13,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-rm -f /tmp/hdfsReport.txt
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+
+rm -f ${tmpDir}/hdfsReport.txt
 
 {
 echo 
@@ -58,6 +61,6 @@ echo
 echo "################# hdfs fsck $INSTALLDIR #################"
 echo 
 hadoop fsck $INSTALLDIR 2>/dev/null
-} > /tmp/hadoopReport.txt
+} > ${tmpDir}/hadoopReport.txt
 
 exit 0

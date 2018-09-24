@@ -11097,7 +11097,7 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
     //send msg to ProcMon if not local module
     if ( config.moduleName() == moduleName )
     {
-		string tmpMount = tmpLogDir + "/mount.txt";
+		string tmpMount = tmpLogDir + "/mount.log";
         string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount;
         system(cmd.c_str());
 

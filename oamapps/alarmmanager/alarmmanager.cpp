@@ -621,15 +621,17 @@ void ALARMManager::getActiveAlarm(AlarmList& alarmList) const
 *****************************************************************************************/
 void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
 {
-    string alarmFile = "/tmp/alarms";
+	
+    string alarmFile = startup::StartUp::tmpDir() + "/alarms";
 
     //make 1 alarm log file made up of archive and current alarm.log
-    (void)system("touch /tmp/alarms");
-
-    string cmd = ("ls " + ALARM_ARCHIVE_FILE + " | grep 'alarm.log' > /tmp/alarmlogfiles");
+    string cmd = "touch " + alarmFile;
     (void)system(cmd.c_str());
 
-    string fileName = "/tmp/alarmlogfiles";
+    cmd = "ls " + ALARM_ARCHIVE_FILE + " | grep 'alarm.log' > " + alarmFile;
+    (void)system(cmd.c_str());
+
+    string fileName = startup::StartUp::tmpDir() + "/alarmlogfiles";
 
     ifstream oldFile (fileName.c_str());
 
@@ -641,7 +643,7 @@ void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
         while (oldFile.getline(line, 200))
         {
             buf = line;
-            string cmd = "cat " + ALARM_ARCHIVE_FILE + "/" + buf + " >> /tmp/alarms";
+            string cmd = "cat " + ALARM_ARCHIVE_FILE + "/" + buf + " >> " + alarmFile;
             (void)system(cmd.c_str());
         }
 
@@ -649,7 +651,7 @@ void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
         unlink (fileName.c_str());
     }
 
-    cmd = "cat " + ALARM_FILE + " >> /tmp/alarms";
+    cmd = "cat " + ALARM_FILE + " >> " + alarmFile;
     (void)system(cmd.c_str());
 
     int fd = open(alarmFile.c_str(), O_RDONLY);

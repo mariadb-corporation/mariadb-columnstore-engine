@@ -47,6 +47,9 @@ fi
 columnstoreSyslogFile=$installdir/bin/columnstoreSyslog
 columnstoreSyslogFile7=$installdir/bin/columnstoreSyslog7
 
+#get temp directory
+tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
+
 checkSyslog() {
 #check which syslog daemon is being used
 #first check which is running 
@@ -101,16 +104,16 @@ if [ "$daemon" = "syslog-ng" ]; then
 	fi
 elif [ "$daemon" = "rsyslog" ]; then
 	#check if rsyslog version 7 or greater
-	 rsyslogd -v > /tmp/rsyslog.ver
-	cnt=`grep "rsyslogd 7" /tmp/rsyslog.ver | wc -l`
+	 rsyslogd -v > ${tmpDir}/rsyslog.ver
+	cnt=`grep "rsyslogd 7" ${tmpDir}/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
 	fi
-	cnt=`grep "rsyslogd 8" /tmp/rsyslog.ver | wc -l`
+	cnt=`grep "rsyslogd 8" ${tmpDir}/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
 	fi
-	cnt=`grep "rsyslogd 9" /tmp/rsyslog.ver | wc -l`
+	cnt=`grep "rsyslogd 9" ${tmpDir}/rsyslog.ver | wc -l`
 	if [ $cnt -gt 0 ]; then
 		rsyslog7=1
 	fi

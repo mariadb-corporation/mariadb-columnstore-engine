@@ -14,7 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-rm -f /tmp/${MODULE}_hardwareReport.txt
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+
+rm -f ${tmpDir}/${MODULE}_hardwareReport.txt
 
 {
 echo " "
@@ -76,6 +79,6 @@ echo "################# ifconfig -a #################"
 echo " "
 ifconfig -a 2>/dev/null
 
-} > /tmp/${MODULE}_hardwareReport.txt
+} > ${tmpDir}/${MODULE}_hardwareReport.txt
 
 exit 0

@@ -14,7 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-rm -f /tmp/${MODULE}_bulklogReport.txt
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+
+rm -f ${tmpDir}/${MODULE}_bulklogReport.txt
 
 {
 
@@ -27,6 +30,6 @@ if test -d $INSTALLDIR/data/bulk ; then
 	egrep '(ERR|CRIT)' $INSTALLDIR/data/bulk/log/*.err 2>/dev/null
 fi
 
-} > /tmp/${MODULE}_bulklogReport.txt
+} > ${tmpDir}/${MODULE}_bulklogReport.txt
 
 exit 0

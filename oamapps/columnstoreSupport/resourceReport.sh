@@ -14,7 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-rm -f /tmp/${MODULE}_resourceReport.txt
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+
+rm -f ${tmpDir}/${MODULE}_resourceReport.txt
 
 {
 echo " "
@@ -63,6 +66,6 @@ echo "################# bin/editem -i #################"
 echo " "
 $INSTALLDIR/bin/editem -i 2>/dev/null
 
-} > /tmp/${MODULE}_resourceReport.txt
+} > ${tmpDir}/${MODULE}_resourceReport.txt
 
 exit 0

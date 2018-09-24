@@ -45,9 +45,12 @@ if [ $vflg -gt 0 ]; then
 	echo "starting $exename $args with sleep=$sopt and tries=$topt"
 fi
 
+#get temp directory
+tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
+
 while [ $keep_going -ne 0 ]; do
 	$exename $args
-	if [ -e /tmp/StopColumnstore ]; then
+	if [ -e ${tmpDir}/StopColumnstore ]; then
 		exit 0
 	fi
 	if [ $topt -gt 0 -a $retries -ge $topt ]; then

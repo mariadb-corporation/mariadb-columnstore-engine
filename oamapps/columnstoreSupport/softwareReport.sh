@@ -14,7 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-rm -f /tmp/${MODULE}_softwareReport.txt
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
+
+rm -f ${tmpDir}/${MODULE}_softwareReport.txt
 
 {
 echo " "
@@ -35,6 +38,6 @@ echo "################# mcsadmin getStorageConfig #################"
 echo " "
 $INSTALLDIR/bin/mcsadmin getStorageConfig
 
-} > /tmp/${MODULE}_softwareReport.txt
+} > ${tmpDir}/${MODULE}_softwareReport.txt
 
 exit 0
