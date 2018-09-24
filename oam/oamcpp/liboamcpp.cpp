@@ -81,6 +81,8 @@ using namespace oam;
 using namespace logging;
 using namespace BRM;
 
+string tmpdir;
+
 namespace oam
 {
 // flag to tell us ctrl-c was hit
@@ -159,6 +161,8 @@ Oam::Oam()
 
     if ( USER != "root")
 	userDir = "home/" + USER;
+	
+	tmpdir = startup::StartUp::tmpDir();
 
 }
 
@@ -3570,19 +3574,19 @@ void Oam::getLogFile(const std::string moduleName, const std::string loglevel, c
 
     logFile = path + logFile;
 
-    string tempLogFile = "/tmp/logs";
+    string tempLogFile = tmpdir +"/logs";
 
     //make 1 log file made up of archive and current *.log
-    (void)system("touch /tmp/logs");
+    (void)system(tempLogFile.c_str());
 
     string logdir("/var/log/mariadb/columnstore");
 
-    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+    if (access(logdir.c_str(), W_OK) != 0) logdir = tmpdir;
 
-    string cmd = "ls " + path + logdir + "/archive | grep '" + logFileName + "' > /tmp/logfiles";
+    string cmd = "ls " + path + logdir + "/archive | grep '" + logFileName + "' > " + tmpdir + "/logfiles";
     (void)system(cmd.c_str());
 
-    string fileName = "/tmp/logfiles";
+    string fileName = tmpdir + "/logfiles";
 
     ifstream oldFile (fileName.c_str());
 
@@ -3594,7 +3598,7 @@ void Oam::getLogFile(const std::string moduleName, const std::string loglevel, c
         while (oldFile.getline(line, 400))
         {
             buf = line;
-            cmd = "cat " + path + logdir + "/archive/" + buf + " >> /tmp/logs";
+            cmd = "cat " + path + logdir + "/archive/" + buf + " >> " + tempLogFile;
             (void)system(cmd.c_str());
         }
 
@@ -3602,7 +3606,7 @@ void Oam::getLogFile(const std::string moduleName, const std::string loglevel, c
         unlink (fileName.c_str());
     }
 
-    cmd = "cat " + logFile + " >> /tmp/logs";
+    cmd = "cat " + logFile + " >> " + tempLogFile;
     (void)system(cmd.c_str());
 
     //validate and get mm / dd from incoming date
@@ -3720,7 +3724,7 @@ void Oam::getLogFile(const std::string moduleName, const std::string loglevel, c
         unlink (tempLogFile.c_str());
     }
 
-    fileName = "/tmp/logsByDate";
+    fileName = tmpdir + "/logsByDate";
     ofstream newFile (fileName.c_str());
 
     //create new file
@@ -6747,7 +6751,7 @@ void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string
             int user;
             user = getuid();
 
-            cmd = "mkfs.ext2 -F " + amazonDeviceName + " > /tmp/format.log 2>&1";
+            cmd = "mkfs.ext2 -F " + amazonDeviceName + " > " + tmpdir + "/format.log 2>&1";
 
             writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
 
@@ -7801,17 +7805,19 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
     string command;
 
+    string pidtmp = tmpdir + "/mysql.pid";
+
     switch (action)
     {
         case MYSQL_START:
         {
-            command = "start > /tmp/actionMysqlCalpont.log 2>&1";
+            command = "start > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
             break;
         }
 
         case MYSQL_STOP:
         {
-            command = "stop > /tmp/actionMysqlCalpont.log 2>&1";
+            command = "stop > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
 
             //set process status
             try
@@ -7826,25 +7832,25 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
 
         case MYSQL_RESTART:
         {
-            command = "restart > /tmp/actionMysqlCalpont.log 2>&1";
+            command = "restart > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
             break;
         }
 
         case MYSQL_RELOAD:
         {
-            command = "reload > /tmp/actionMysqlCalpont.log 2>&1";
+            command = "reload > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
             break;
         }
 
         case MYSQL_FORCE_RELOAD:
         {
-            command = "force-reload > /tmp/actionMysqlCalpont.log 2>&1";
+            command = "force-reload > " + tmpdir + "/actionMysqlCalpont.log 2>&1";
             break;
         }
 
         case MYSQL_STATUS:
         {
-            command = "status > /tmp/mysql.status";
+            command = "status > " + tmpdir + "/mysql.status";
             break;
         }
 
@@ -7862,9 +7868,9 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
     if (action == MYSQL_START || action == MYSQL_RESTART)
     {
         //get pid
-        cmd = "cat " + InstallDir + "/mysql/db/*.pid > /tmp/mysql.pid";
+        cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
         system(cmd.c_str());
-        ifstream oldFile ("/tmp/mysql.pid");
+        ifstream oldFile (pidtmp);
 
         //fail if file size 0
         oldFile.seekg(0, std::ios::end);
@@ -7915,14 +7921,15 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         int state = procstat.ProcessOpState;
         pid_t pidStatus = procstat.ProcessID;
 
-        if (checkLogStatus("/tmp/mysql.status", "MySQL running"))
+		string mysqlStatus = tmpdir + "/mysql.status";
+        if (checkLogStatus(mysqlStatus, "MySQL running"))
         {
             if ( state != ACTIVE )
             {
                 //get pid
-                cmd = "cat " + InstallDir + "/mysql/db/*.pid > /tmp/mysql.pid";
+                cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
                 system(cmd.c_str());
-                ifstream oldFile ("/tmp/mysql.pid");
+                ifstream oldFile (pidtmp);
                 char line[400];
                 string pid;
 
@@ -7947,9 +7954,9 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
             else
             {
                 //check if pid has changed
-                cmd = "cat " + InstallDir + "/mysql/db/*.pid > /tmp/mysql.pid";
+                cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
                 system(cmd.c_str());
-                ifstream oldFile ("/tmp/mysql.pid");
+                ifstream oldFile (pidtmp);
                 char line[400];
                 string pid;
 
@@ -8224,19 +8231,19 @@ int Oam::validateModule(const std::string name)
 std::string Oam::getEC2InstanceIpAddress(std::string instanceName)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getPrivateIP " + instanceName + " > /tmp/getCloudIP_" + instanceName;
+    string tmplog = tmpdir + "/getCloudIP_" + instanceName;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getPrivateIP " + instanceName + " > " + tmplog;
     system(cmd.c_str());
 
-    if (checkLogStatus("/tmp/getCloudIP_" + instanceName, "stopped") )
+    if (checkLogStatus(tmplog, "stopped") )
         return "stopped";
 
-    if (checkLogStatus("/tmp/getCloudIP_" + instanceName, "terminated") )
+    if (checkLogStatus(tmplog, "terminated") )
         return "terminated";
 
     // get IP Address
     string IPAddr;
-    string file = "/tmp/getCloudIP_" + instanceName;
-    ifstream oldFile (file.c_str());
+    ifstream oldFile (tmplog.c_str());
     char line[400];
 
     while (oldFile.getline(line, 400))
@@ -8263,7 +8270,8 @@ std::string Oam::getEC2InstanceIpAddress(std::string instanceName)
 std::string Oam::getEC2LocalInstance(std::string name)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getInstance  > /tmp/getInstanceInfo_" + name;
+    string file = tmpdir + "/getInstanceInfo_" + name;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getInstance  > " + file;
     int status = system(cmd.c_str());
 
     if (WEXITSTATUS(status) != 0 )
@@ -8271,7 +8279,6 @@ std::string Oam::getEC2LocalInstance(std::string name)
 
     // get Instance Name
     string instanceName;
-    string file = "/tmp/getInstanceInfo_" + name;
     ifstream oldFile (file.c_str());
     char line[400];
 
@@ -8297,7 +8304,8 @@ std::string Oam::getEC2LocalInstance(std::string name)
 std::string Oam::getEC2LocalInstanceType(std::string name)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getType  > /tmp/getInstanceType_" + name;
+    string file = tmpdir + "/getInstanceType_" + name;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getType  > " + file;
     int status = system(cmd.c_str());
 
     if (WEXITSTATUS(status) != 0 )
@@ -8305,7 +8313,6 @@ std::string Oam::getEC2LocalInstanceType(std::string name)
 
     // get Instance Name
     string instanceType;
-    string file = "/tmp/getInstanceType_" + name;
     ifstream oldFile (file.c_str());
     char line[400];
 
@@ -8331,7 +8338,8 @@ std::string Oam::getEC2LocalInstanceType(std::string name)
 std::string Oam::getEC2LocalInstanceSubnet(std::string name)
 {
     // run script to get Instance Subnet
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getSubnet  > /tmp/getInstanceSubnet_" + name;
+    string file = tmpdir + "/getInstanceSubnet_" + name;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getSubnet  > " + file;
     int status = system(cmd.c_str());
 
     if (WEXITSTATUS(status) != 0 )
@@ -8339,7 +8347,6 @@ std::string Oam::getEC2LocalInstanceSubnet(std::string name)
 
     // get Instance Name
     string instanceSubnet;
-    string file = "/tmp/getInstanceSubnet_" + name;
     ifstream oldFile (file.c_str());
     char line[400];
 
@@ -8366,18 +8373,18 @@ std::string Oam::getEC2LocalInstanceSubnet(std::string name)
 std::string Oam::launchEC2Instance( const std::string name, const std::string IPAddress, const std::string type, const std::string group)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > /tmp/getInstance_" + name;
+    string file = tmpdir + "/getInstance_" + name;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > " + file;
     int status = system(cmd.c_str());
 
     if (WEXITSTATUS(status) != 0 )
         return "failed";
 
-    if (checkLogStatus("/tmp/getInstance", "Required") )
+    if (checkLogStatus(file, "Required") )
         return "failed";
 
     // get Instance ID
     string instance;
-    string file = "/tmp/getInstance_" + name;
     ifstream oldFile (file.c_str());
     char line[400];
 
@@ -8411,7 +8418,7 @@ std::string Oam::launchEC2Instance( const std::string name, const std::string IP
 void Oam::terminateEC2Instance(std::string instanceName)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh terminateInstance " + instanceName + " > /tmp/terminateEC2Instance_" + instanceName;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh terminateInstance " + instanceName + " > " + tmpdir + "/terminateEC2Instance_" + instanceName;
     system(cmd.c_str());
 
     return;
@@ -8428,7 +8435,7 @@ void Oam::terminateEC2Instance(std::string instanceName)
 void Oam::stopEC2Instance(std::string instanceName)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh stopInstance " + instanceName + " > /tmp/stopEC2Instance_" + instanceName;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh stopInstance " + instanceName + " > " + tmpdir + "/stopEC2Instance_" + instanceName;
     system(cmd.c_str());
 
     return;
@@ -8445,7 +8452,7 @@ void Oam::stopEC2Instance(std::string instanceName)
 bool Oam::startEC2Instance(std::string instanceName)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh startInstance " + instanceName + " > /tmp/startEC2Instance_" + instanceName;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh startInstance " + instanceName + " > " + tmpdir + "/startEC2Instance_" + instanceName;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -8465,7 +8472,7 @@ bool Oam::startEC2Instance(std::string instanceName)
 bool Oam::assignElasticIP(std::string instanceName, std::string IpAddress)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > /tmp/assignElasticIP_" + instanceName;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > " + tmpdir + "/assignElasticIP_" + instanceName;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -8485,7 +8492,7 @@ bool Oam::assignElasticIP(std::string instanceName, std::string IpAddress)
 bool Oam::deassignElasticIP(std::string IpAddress)
 {
     // run script to get Instance status and IP Address
-    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh deassignElasticIP " + IpAddress + " > /tmp/deassignElasticIP_" + IpAddress;
+    string cmd = InstallDir + "/bin/MCSInstanceCmds.sh deassignElasticIP " + IpAddress + " > " + tmpdir + "/deassignElasticIP_" + IpAddress;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -8505,7 +8512,7 @@ bool Oam::deassignElasticIP(std::string IpAddress)
 std::string Oam::getEC2VolumeStatus(std::string volumeName)
 {
     // run script to get Volume Status
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > /tmp/getVolumeStatus_" + volumeName;
+    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > " + tmpdir + "/getVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -8513,7 +8520,7 @@ std::string Oam::getEC2VolumeStatus(std::string volumeName)
 
     // get status
     string status;
-    string file = "/tmp/getVolumeStatus_" + volumeName;
+    string file = tmpdir + "/getVolumeStatus_" + volumeName;
     ifstream oldFile (file.c_str());
     char line[400];
 
@@ -8539,7 +8546,8 @@ std::string Oam::getEC2VolumeStatus(std::string volumeName)
 std::string Oam::createEC2Volume(std::string size, std::string name)
 {
     // run script to get Volume Status
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh create " + size + " " + name + " > /tmp/createVolumeStatus_" + name;
+    string file = tmpdir + "/createVolumeStatus_" + name;
+    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh create " + size + " " + name + " > " + file;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -8547,7 +8555,6 @@ std::string Oam::createEC2Volume(std::string size, std::string name)
 
     // get status
     string volumeName;
-    string file = "/tmp/createVolumeStatus_" + name;
     ifstream oldFile (file.c_str());
     char line[400];
 
@@ -8587,7 +8594,7 @@ bool Oam::attachEC2Volume(std::string volumeName, std::string deviceName, std::s
     for ( int retry = 0 ; retry < 2 ; retry++ )
     {
         // run script to attach Volume
-        string cmd = InstallDir + "/bin/MCSVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > /tmp/attachVolumeStatus_" + volumeName;
+        string cmd = InstallDir + "/bin/MCSVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > " + tmpdir +  "/attachVolumeStatus_" + volumeName;
         ret = system(cmd.c_str());
 
         if (WEXITSTATUS(ret) == 0 )
@@ -8614,7 +8621,7 @@ bool Oam::attachEC2Volume(std::string volumeName, std::string deviceName, std::s
 bool Oam::detachEC2Volume(std::string volumeName)
 {
     // run script to attach Volume
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh detach " + volumeName + " > /tmp/detachVolumeStatus_" + volumeName;
+    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh detach " + volumeName + " > " + tmpdir +  "/detachVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -8634,7 +8641,7 @@ bool Oam::detachEC2Volume(std::string volumeName)
 bool Oam::deleteEC2Volume(std::string volumeName)
 {
     // run script to delete Volume
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh delete " + volumeName + " > /tmp/deleteVolumeStatus_" + volumeName;
+    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh delete " + volumeName + " > " + tmpdir +  "/deleteVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -8654,7 +8661,7 @@ bool Oam::deleteEC2Volume(std::string volumeName)
 bool Oam::createEC2tag(std::string resourceName, std::string tagName, std::string tagValue)
 {
     // run script to create a tag
-    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > /tmp/createTagStatus_" + resourceName;
+    string cmd = InstallDir + "/bin/MCSVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > " + tmpdir +  "createTagStatus_" + resourceName;
     int ret = system(cmd.c_str());
 
     if (WEXITSTATUS(ret) != 0 )
@@ -9009,7 +9016,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             }
 
             sleep(5);
-            command = glustercmd + "peer status " + " >> /tmp/glusterCommands.txt 2>&1";
+            command = glustercmd + "peer status " + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -9042,7 +9049,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                     pmnextbrick[pm]++;
                 }
 
-                command += "force >> /tmp/glusterCommands.txt 2>&1";
+                command += "force >> " + tmpdir +  "/glusterCommands.log 2>&1";
                 cout << "Gluster create and start volume dbroot" << itoa(newDbrootID) << "...";
                 status = system(command.c_str());
 
@@ -9054,7 +9061,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
 
                 if (user != 0)
                 {
-                    command = "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-uid " + itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
+                    command = "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-uid " + itoa(user) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";;
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -9063,7 +9070,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                         exceptionControl("GLUSTER_ADD", API_FAILURE);
                     }
 
-                    command = "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-gid " + itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+                    command = "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-gid " + itoa(group) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";;
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -9073,7 +9080,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                     }
                 }
 
-                command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+                command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
@@ -9120,7 +9127,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             int status;
             writeLog("glusterctl: GLUSTER_DELETE: dbroot = " + dbrootID, LOG_TYPE_DEBUG );
 
-            command = glustercmd + "--mode=script volume stop dbroot" + dbrootID + " >> /tmp/glusterCommands.txt 2>&1";
+            command = glustercmd + "--mode=script volume stop dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
 
             status = system(command.c_str());
 
@@ -9133,7 +9140,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             // give time for transaction to finish after stopping
             sleep(10);
 
-            command = glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> /tmp/glusterCommands.txt 2>&1";
+            command = glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
 
             status = system(command.c_str());
 
@@ -9153,7 +9160,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             string command = "";
             int status;
 
-            command = glustercmd + "peer probe " + ipAddress + " >> /tmp/glusterCommands.txt 2>&1";
+            command = glustercmd + "peer probe " + ipAddress + " >> " + tmpdir + "/glusterCommands.log 2>&1";
 
             cout << "gluster peer probe " + ipAddress << endl;
             status = system(command.c_str());
@@ -9309,7 +9316,7 @@ int Oam::checkGlusterLog(std::string logFile, std::string& msg)
 {
     if (checkLogStatus(logFile, "OK"))
     {
-        if ( logFile == "/tmp/gluster_howhas.log" )
+        if ( logFile == tmpdir + "/gluster_howhas.log" )
         {
             ifstream File(logFile.c_str());
 
@@ -9364,7 +9371,7 @@ int Oam::checkGlusterLog(std::string logFile, std::string& msg)
 
         writeLog("checkGlusterLog: FAILURE", LOG_TYPE_ERROR);
 
-        if ( logFile == "/tmp/gluster_howhas.log" )
+        if ( logFile == tmpdir + "/gluster_howhas.log" )
             return 2;
         else
             exceptionControl("glusterctl", API_FAILURE);
@@ -10875,8 +10882,6 @@ int Oam::readHdfsActiveAlarms(AlarmList& alarmList)
 
 bool Oam::checkSystemRunning()
 {
-    // string cmd = startup::StartUp::installDir() + "/bin/columnstore status > /tmp/status.log";
-    // system(cmd.c_str());
     struct stat st;
 
     string lockFileDir = "/var/subsys/lock";

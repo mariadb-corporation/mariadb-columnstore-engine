@@ -7,16 +7,16 @@
 # check log for error
 checkForError() {
 	# check for password error
-	grep "ERROR 1045" ${tmpdir}/mysql_install.log > /tmp/error.check
-	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
+	grep "ERROR 1045" ${tmpdir}/mysql_install.log > ${tmpdir}/error.check
+	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
 		  echo "MySQL Password file missing or incorrect, check .my.cnf file"
-		  rm -f /tmp/error.check
+		  rm -f ${tmpdir}/error.check
 		  $installdir/mysql/mysql-Columnstore stop
 		  sleep 2
 		  exit 2;
 	fi
 
-	rm -f /tmp/error.check
+	rm -f ${tmpdir}/error.check
 
         #---------------------------------------------------------------------------
         # See if engine columnstore exist

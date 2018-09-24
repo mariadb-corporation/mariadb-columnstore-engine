@@ -61,7 +61,7 @@ bool mainResumeFlag;
 string USER = "root";
 string PMwithUM = "n";
 bool startProcMon = false;
-
+string tmpLogDir;
 
 //extern std::string gOAMParentModuleName;
 extern bool gOAMParentModuleFlag;
@@ -138,6 +138,9 @@ int main(int argc, char** argv)
     string systemLang = "C";
 
     setlocale(LC_ALL, systemLang.c_str());
+    
+    //get tmp log directory
+    tmpLogDir = startup::StartUp::tmpDir();
 
     // create message thread
     pthread_t MessageThread;
@@ -196,7 +199,7 @@ int main(int argc, char** argv)
         string modType = config.moduleType();
 
         //run the module install script
-        string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /tmp/module_installer.log 2>&1";
+        string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > " + tmpLogDir + "/module_installer.log 2>&1";
         log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
         log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 

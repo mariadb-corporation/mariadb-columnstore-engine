@@ -188,9 +188,6 @@ int main(int argc, char* argv[])
 
     string ccHistoryFile = HOME + "/.cc_history";
 
-	cout << startup::StartUp::installDir() << endl;
-	cout << startup::StartUp::tmpDir() << endl;
-
     string cf = startup::StartUp::installDir() + "/etc/" + ConsoleCmdsFile;
     fConfig = Config::makeConfig(cf);
 
@@ -4919,8 +4916,12 @@ int processCommand(string* arguments)
         }
         break;
 
-        case 39:
+        case 39: // getSystemDirectories
         {
+			cout << "System Installation and Temporary Logging Directories" << endl << endl;
+			
+			cout << "System Installation Directory = " << startup::StartUp::installDir() << endl;
+			cout << "System Temporary Logging Directory = " << startup::StartUp::tmpDir() << endl;
         }
         break;
 

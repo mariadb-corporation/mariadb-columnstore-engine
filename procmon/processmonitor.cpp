@@ -53,6 +53,7 @@ extern string USER;
 extern bool HDFS;
 extern string PMwithUM;
 extern bool startProcMon;
+extern string tmpLogDir;
 
 //std::string gOAMParentModuleName;
 bool gOAMParentModuleFlag;
@@ -914,7 +915,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     {
                         string logdir("/var/log/mariadb/columnstore");
 
-                        if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+                        if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
                         string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
                         system(cmd.c_str());
@@ -1545,14 +1546,15 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             // install mysqld rpms if being reconfigured as a um
             if ( reconfigureModuleName.find("um") != string::npos )
             {
-                string cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install >> /tmp/rpminstall";
+                string cmd = startup::StartUp::installDir() + "/bin/post-mysqld-install >> " + tmpLogDir + "/rpminstall";
                 system(cmd.c_str());
-                cmd = startup::StartUp::installDir() + "/bin/post-mysql-install >> /tmp/rpminstall";
+                cmd = startup::StartUp::installDir() + "/bin/post-mysql-install >> " + tmpLogDir + "/rpminstall";
                 system(cmd.c_str());
-                cmd = startup::StartUp::installDir() + "/mysql/mysql-Columnstore start > /tmp/mysqldstart";
+                cmd = startup::StartUp::installDir() + "/mysql/mysql-Columnstore start > " + tmpLogDir + "/mysqldstart";
                 system(cmd.c_str());
 
-                ifstream file ("/tmp/mysqldstart");
+				string tmpFile = tmpLogDir + "/mysqldstart";
+                ifstream file (tmpFile);
 
                 if (!file)
                 {
@@ -1752,21 +1754,22 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             {
                 int retry = 1;
 
+				string tmpUmount = tmpLogDir + "/umount.log";
                 for ( ; retry < 5 ; retry++)
                 {
-                    string cmd = "export LC_ALL=C;umount " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/umount.txt 2>&1";
+                    string cmd = "export LC_ALL=C;umount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpUmount + " 2>&1";
 
                     system(cmd.c_str());
 
                     return_status = API_SUCCESS;
 
-                    if (!oam.checkLogStatus("/tmp/umount.txt", "busy"))
+                    if (!oam.checkLogStatus(tmpUmount, "busy"))
                         break;
 
-		    cmd = "lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-		    system(cmd.c_str());
-		    cmd = "fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> /tmp/umount.txt 2>&1";
-		    system(cmd.c_str());
+					cmd = "lsof " + startup::StartUp::installDir() + "/data" + dbrootID + " >> " + tmpUmount + " 2>&1";
+					system(cmd.c_str());
+					cmd = "fuser -muvf " + startup::StartUp::installDir() + "/data" + dbrootID + " >> " + tmpUmount + " 2>&1";
+					system(cmd.c_str());
 
                     sleep(2);
                     //Flush the cache
@@ -1779,7 +1782,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 {
                     log.writeLog(__LINE__, "unmount failed, device busy, DBRoot: " + dbrootID, LOG_TYPE_ERROR);
                     return_status = API_FAILURE;
-                    system("mv -f /tmp/umount.txt /tmp/umount_failed.txt");
+                    string cmd = "mv -f " + tmpUmount + " " + tmpUmount + "failed";
+                    system(cmd.c_str());
                 }
             }
             else
@@ -1820,7 +1824,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
             if (DataRedundancyConfig == "n")
             {
-                string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/mount.txt 2>&1";
+				string tmpMount = tmpLogDir + "/mount.log";
+                string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount  + "2>&1";
                 system(cmd.c_str());
 
                 if ( !rootUser)
@@ -1830,18 +1835,19 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 }
 
                 return_status = API_SUCCESS;
-                ifstream in("/tmp/mount.txt");
+                ifstream in(tmpMount);
 
                 in.seekg(0, std::ios::end);
                 int size = in.tellg();
 
                 if ( size != 0 )
                 {
-                    if (!oam.checkLogStatus("/tmp/mount.txt", "already"))
+                    if (!oam.checkLogStatus(tmpMount, "already"))
                     {
                         log.writeLog(__LINE__, "mount failed, DBRoot: " + dbrootID, LOG_TYPE_ERROR);
                         return_status = API_FAILURE;
-                        system("mv -f /tmp/mount.txt /tmp/mount_failed.txt");
+						string cmd = "mv -f " + tmpMount + " " + tmpMount + "failed";
+						system(cmd.c_str());
                     }
                 }
             }
@@ -2582,7 +2588,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 
                 string logdir("/var/log/mariadb/columnstore");
 
-                if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+                if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
                 string cmd = startup::StartUp::installDir() + "/bin/reset_locks > " + logdir + "/reset_locks.log1 2>&1";
                 system(cmd.c_str());
@@ -2654,7 +2660,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 
     string logdir("/var/log/mariadb/columnstore");
 
-    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+    if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
     string outFileName = logdir + "/" + processName + ".out";
     string errFileName = logdir + "/" + processName + ".err";
@@ -3830,7 +3836,7 @@ int ProcessMonitor::buildSystemTables()
     {
         string logdir("/var/log/mariadb/columnstore");
 
-        if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+        if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
         string cmd = startup::StartUp::installDir() + "/bin/dbbuilder 7 > " + logdir + "/dbbuilder.log &";
         system(cmd.c_str());
@@ -4683,7 +4689,7 @@ int ProcessMonitor::runStartupTest()
     //run startup test script
     string logdir("/var/log/mariadb/columnstore");
 
-    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+    if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
     string cmd = startup::StartUp::installDir() + "/bin/startupTests.sh > " + logdir + "/startupTests.log1 2>&1";
     system(cmd.c_str());
@@ -4752,7 +4758,7 @@ int ProcessMonitor::runHDFSTest()
 
     string logdir("/var/log/mariadb/columnstore");
 
-    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+    if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
     string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -5016,48 +5022,6 @@ void ProcessMonitor::checkModuleFailover( std::string processName)
 }
 
 /******************************************************************************************
-* @brief	runUpgrade
-*
-* purpose:	run upgrade script
-*
-******************************************************************************************/
-/*int ProcessMonitor::runUpgrade(std::string mysqlpw)
-{
-	Oam oam;
-
-	for ( int i = 0 ; i < 10 ; i++ )
-	{
-		//run upgrade script
-		string cmd = startup::StartUp::installDir() + "/bin/upgrade-columnstore.sh doupgrade --password=" +
-			mysqlpw + " --installdir=" +  startup::StartUp::installDir() + "  > " + "/tmp/upgrade-columnstore.log 2>&1";
-		system(cmd.c_str());
-
-		cmd = "/tmp/upgrade-columnstore.log";
-		if (oam.checkLogStatus(cmd, "OK")) {
-			log.writeLog(__LINE__, "upgrade-columnstore.sh: Successful return", LOG_TYPE_DEBUG);
-			return oam::API_SUCCESS;
-		}
-		else {
-			if (oam.checkLogStatus(cmd, "ERROR 1045") ) {
-				log.writeLog(__LINE__, "upgrade-columnstore.sh: Missing Password error, return success", LOG_TYPE_DEBUG);
-				return oam::API_SUCCESS;
-			}
-
-			log.writeLog(__LINE__, "upgrade-columnstore.sh: Error return, check log /tmp/upgrade-status.log", LOG_TYPE_ERROR);
-			//restart mysqld and retry
-			try {
-				oam.actionMysqlCalpont(MYSQL_RESTART);
-			}
-			catch(...)
-			{}
-			sleep(1);
-		}
-	}
-	return oam::API_FAILURE;
-}
-*/
-
-/******************************************************************************************
 * @brief	changeMyCnf
 *
 * purpose:	Change my.cnf
@@ -5239,13 +5203,13 @@ int ProcessMonitor::runMariaDBCommandLine(std::string command)
     if ( MySQLPort.empty() )
         MySQLPort = "3306";
 
-    string cmd = startup::StartUp::installDir() + "/bin/mariadb-command-line.sh --installdir=" + startup::StartUp::installDir() + " --command='" + command + "' --port=" + MySQLPort + "  > /tmp/mariadb-command-line.sh.log 2>&1";
+    string cmd = startup::StartUp::installDir() + "/bin/mariadb-command-line.sh --installdir=" + startup::StartUp::installDir() + " --command='" + command + "' --port=" + MySQLPort + "  > " + tmpLogDir + "/mariadb-command-line.sh.log 2>&1";
 
     log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
     system(cmd.c_str());
 
-    string logFile = "/tmp/mariadb-command-line.sh.log";
+    string logFile = tmpLogDir + "/mariadb-command-line.sh.log";
 
     if (oam.checkLogStatus(logFile, "ERROR 1045") )
     {
@@ -5261,7 +5225,7 @@ int ProcessMonitor::runMariaDBCommandLine(std::string command)
         }
         else
         {
-            log.writeLog(__LINE__, "mariadb-command-line.sh: Error return, check log /tmp/mariadb-command-line.sh.log", LOG_TYPE_ERROR);
+            log.writeLog(__LINE__, "mariadb-command-line.sh: Error return, check log " + tmpLogDir + "/mariadb-command-line.sh.log", LOG_TYPE_ERROR);
             return oam::API_FAILURE;
         }
     }
@@ -5349,8 +5313,8 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
             {
                 string ipAddr = (*pt1).IPAddr;
 
-                string logFile = "/tmp/master-rep-columnstore-" + moduleName + ".log";
-                string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + " --port=" + MySQLPort + "  > " + logFile + " 2>&1";
+                string logFile = tmpLogDir + "/master-rep-columnstore-" + moduleName + ".log";
+                string cmd = startup::StartUp::installDir() + "/bin/master-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --hostIP=" + ipAddr + " --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + "  > " + logFile + " 2>&1";
                 log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
                 system(cmd.c_str());
@@ -5388,13 +5352,14 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
     //	File	Position	Binlog_Do_DB	Binlog_Ignore_DB
     //	mysql-bin.000006	2921
     //
-    // in log - /tmp/show-master-status.log
+    // in log - show-master-status.log
 
-    ifstream file ("/tmp/show-master-status.log");
+	string masterLog = tmpLogDir + "/show-master-status.log";
+    ifstream file (masterLog);
 
     if (!file)
     {
-        log.writeLog(__LINE__, "runMasterRep - show master status log file doesn't exist - /tmp/show-master-status.log", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "runMasterRep - show master status log file doesn't exist - " + masterLog, LOG_TYPE_ERROR);
         return oam::API_FAILURE;
     }
     else
@@ -5439,7 +5404,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
         file.close();
     }
 
-    log.writeLog(__LINE__, "runMasterRep - 'mysql-bin not found in log file - /tmp/show-master-status.log", LOG_TYPE_ERROR);
+    log.writeLog(__LINE__, "runMasterRep - 'mysql-bin not found in log file - " + masterLog, LOG_TYPE_ERROR);
 
     return oam::API_FAILURE;
 }
@@ -5491,13 +5456,13 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
 
     while (true)
     {
-        string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + " --port=" + MySQLPort + "  >   /tmp/slave-rep-columnstore.log 2>&1";
+        string logFile = tmpLogDir + "/slave-rep-columnstore.log";
+
+        string cmd = startup::StartUp::installDir() + "/bin/slave-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --masteripaddr=" + masterIPAddress + " --masterlogfile=" + masterLogFile  + " --masterlogpos=" + masterLogPos + " --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + "  > " + logFile + " 2>&1";
 
         log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
         system(cmd.c_str());
-
-        string logFile = "/tmp/slave-rep-columnstore.log";
 
         if (oam.checkLogStatus(logFile, "ERROR 1045") )
         {
@@ -5519,7 +5484,7 @@ int ProcessMonitor::runSlaveRep(std::string& masterLogFile, std::string& masterL
             }
             else
             {
-                log.writeLog(__LINE__, "slave-rep-columnstore.sh: Error return, check log /tmp/slave-rep-columnstore.log", LOG_TYPE_ERROR);
+                log.writeLog(__LINE__, "slave-rep-columnstore.sh: Error return, check log " + logFile, LOG_TYPE_ERROR);
                 return oam::API_FAILURE;
             }
         }
@@ -5554,16 +5519,16 @@ int ProcessMonitor::runDisableRep()
 
     if ( MySQLPort.empty() )
         MySQLPort = "3306";
+        
+    string logFile = tmpLogDir + "/disable-rep-columnstore.log";
 
-    string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + "  >   /tmp/disable-rep-columnstore.log 2>&1";
+    string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --tmpdir=" + tmpLogDir + "  >  " + logFile + " 2>&1";
 
     log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 
     system(cmd.c_str());
 
-    cmd = "/tmp/disable-rep-columnstore.log";
-
-    if (oam.checkLogStatus(cmd, "OK"))
+    if (oam.checkLogStatus(logFile, "OK"))
     {
         log.writeLog(__LINE__, "disable-rep-columnstore.sh: Successful return", LOG_TYPE_DEBUG);
         return oam::API_SUCCESS;
@@ -5576,7 +5541,7 @@ int ProcessMonitor::runDisableRep()
             return oam::API_SUCCESS;
         }
 
-        log.writeLog(__LINE__, "disable-rep-columnstore.sh: Error return, check log /tmp/disable-rep-columnstore.log", LOG_TYPE_ERROR);
+        log.writeLog(__LINE__, "disable-rep-columnstore.sh: Error return, check log " + logFile, LOG_TYPE_ERROR);
         return oam::API_FAILURE;
     }
 
@@ -5647,12 +5612,12 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
                 {
                     string ipAddr = (*pt1).IPAddr;
 
-                    string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > /tmp/master-dist_" + moduleName + ".log";
+                    string logFile = tmpLogDir + "/master-dist_" + moduleName + ".log";
+                    string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > " + logFile;
 
                     log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
                     system(cmd.c_str());
 
-                    string logFile = "/tmp/master-dist_" + moduleName + ".log";
 
                     if (!oam.checkLogStatus(logFile, "FAILED"))
                     {
@@ -5686,10 +5651,10 @@ int ProcessMonitor::runMasterDist(std::string& password, std::string& slaveModul
             HostConfigList::iterator pt1 = moduleconfig.hostConfigList.begin();
             string ipAddr = (*pt1).IPAddr;
 
-            string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > /tmp/master-dist_" + slaveModule + ".log";
-            system(cmd.c_str());
+            string logFile = tmpLogDir + "/master-dist_" + slaveModule + ".log";
 
-            string logFile = "/tmp/master-dist_" + slaveModule + ".log";
+            string cmd = startup::StartUp::installDir() + "/bin/rsync.sh " + ipAddr + " " + password + " " + startup::StartUp::installDir() + " 1 > " + logFile;
+            system(cmd.c_str());
 
             if (!oam.checkLogStatus(logFile, "FAILED"))
                 log.writeLog(__LINE__, "runMasterDist: Success rsync to module: " + slaveModule, LOG_TYPE_DEBUG);
@@ -5722,7 +5687,8 @@ bool ProcessMonitor::amazonIPCheck()
     log.writeLog(__LINE__, "amazonIPCheck function called", LOG_TYPE_DEBUG);
 
     // delete description file so it will create a new one
-    unlink("/tmp/describeInstance.txt");
+    string tmpLog = tmpLogDir + "/describeInstance.log";
+    unlink(tmpLog.c_str());
 
     //
     // Get Module Info
@@ -5949,8 +5915,8 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
         if ( status == "attached" )
         {
             string cmd;
-
-            cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /tmp/um_mount.log";
+			string mountLog = tmpLogDir + "/um_mount.log";
+            cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > " + mountLog;
 
             system(cmd.c_str());
             log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
@@ -6318,7 +6284,7 @@ int ProcessMonitor::checkDataMount()
         if ( DataRedundancyConfig == "n" )
         {
             //remove any local check flag for starters
-            string cmd = "umount " + dbroot + " > /tmp/umount.txt 2>&1";
+            string cmd = "umount " + dbroot + " > " + tmpLogDir + "/umount.log 2>&1";
             system(cmd.c_str());
 
             unlink(fileName.c_str());
@@ -6331,17 +6297,18 @@ int ProcessMonitor::checkDataMount()
             if (WEXITSTATUS(status) != 0 )
             {
                 // not mounted, mount
-                cmd = "export LC_ALL=C;mount " + dbroot + " > /tmp/mount.txt 2>&1";
+                string mountLog = tmpLogDir + "/mount.log";
+                cmd = "export LC_ALL=C;mount " + dbroot + " > " + mountLog + " 2>&1";
                 system(cmd.c_str());
 
-                ifstream in("/tmp/mount.txt");
+                ifstream in(mountLog);
 
                 in.seekg(0, std::ios::end);
                 int size = in.tellg();
 
                 if ( size != 0 )
                 {
-                    if (!oam.checkLogStatus("/tmp/mount.txt", "already"))
+                    if (!oam.checkLogStatus(mountLog, "already"))
                     {
                         log.writeLog(__LINE__, "checkDataMount: mount failed, DBRoot: " + dbroot, LOG_TYPE_ERROR);
 
@@ -6533,8 +6500,8 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
         moduleIPAddr = sysConfig->getConfig("SystemModuleConfig", dataDupIPaddr);
     }
 
-    command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" +
-                  dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterAssign.txt 2>&1";
+	string tmpLog = tmpLogDir + "/glusterAssign.log";
+    command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" + dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
 
     int ret = system(command.c_str());
 
@@ -6542,16 +6509,17 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
     {
 		log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
-        ifstream in("/tmp/glusterAssign.txt");
+        ifstream in(tmpLog);
         in.seekg(0, std::ios::end);
         int size = in.tellg();
 
         if ( size != 0 )
         {
-            if (!oam.checkLogStatus("/tmp/glusterAssign.txt", "already"))
+            if (!oam.checkLogStatus(tmpLog, "already"))
             {
                 log.writeLog(__LINE__, "glusterAssign failed.", LOG_TYPE_ERROR);
-                system("mv -f /tmp/glusterAssign.txt /tmp/glusterAssign_failed.txt");
+                string cmd = "mv -f " + tmpLog + " " + tmpLog + "failed";
+                system(cmd.c_str());
                 return oam::API_FAILURE;
             }
         }
@@ -6575,8 +6543,10 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
     std::string errmsg = "";
 
     log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
-
-    command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/glusterUnassign.txt 2>&1";
+    
+	string tmpLog = tmpLogDir + "/glusterUnassign.log";
+	
+    command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
 
     int ret = system(command.c_str());
 
@@ -6584,16 +6554,18 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
     {
 		log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
-        ifstream in("/tmp/glusterUnassign.txt");
+        ifstream in(tmpLog);
         in.seekg(0, std::ios::end);
         int size = in.tellg();
 
         if ( size != 0 )
         {
-            if (!oam.checkLogStatus("/tmp/glusterUnassign.txt", "not mounted"))
+            if (!oam.checkLogStatus(tmpLog, "not mounted"))
             {
                 log.writeLog(__LINE__, "glusterUnassign failed.", LOG_TYPE_ERROR);
-                system("mv -f /tmp/glusterUnassign.txt /tmp/glusterUnassign_failed.txt");
+                             
+                string cmd = "mv -f " + tmpLog + " " + tmpLog + "failed";
+                system(cmd.c_str());
                 return oam::API_FAILURE;
             }
         }

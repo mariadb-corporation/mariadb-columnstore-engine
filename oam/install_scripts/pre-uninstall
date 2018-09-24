@@ -73,14 +73,7 @@ rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1\
 $installdir/bin/clearShm  > /dev/null 2>&1
 
 #get temp directory
-tmpDir="/tmp"
-if [ $user != "root" ]; then
-	tmpDir=$HOME"./tmp"
-	mkdir $tmpDir >/dev/null 2>&1
-fi
-
-TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
-tmpDir=$tmpDir+$TempFileDir
+tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
 
 # delete tmp files
 rm -rf $tmpDir

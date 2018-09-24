@@ -61,6 +61,8 @@ bool HDFS = false;
 string localHostName;
 string PMwithUM = "n";
 string MySQLRep = "n";
+string tmpLogDir;
+
 
 // pushing the ACTIVE_ALARMS_FILE to all nodes every 10 seconds.
 const int ACTIVE_ALARMS_PUSHING_INTERVAL = 10;
@@ -255,6 +257,9 @@ int main(int argc, char** argv)
 
     freeifaddrs(addrs);
     log.writeLog(__LINE__, "Main Ethernet Port = " + iface_name, LOG_TYPE_DEBUG);
+
+    //get tmp log directory
+    tmpLogDir = startup::StartUp::tmpDir();
 
     //
     //start a thread to ping all system modules
