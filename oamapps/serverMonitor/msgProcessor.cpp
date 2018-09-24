@@ -629,7 +629,7 @@ void msgProcessor()
                                         MessageLog ml(lid);
                                         Message msg;
                                         Message::Args args;
-                                        args.add("RUN_DBHEALTH_CHECK failed, check /tmp/dbhealthTest.log");
+                                        args.add("RUN_DBHEALTH_CHECK failed, check dbhealthTest.log");
                                         msg.format(args);
                                         ml.logDebugMessage(msg);
                                     }
