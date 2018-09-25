@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2018 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -22,6 +23,7 @@
 #include "joinpartition.h"
 #include "tuplejoiner.h"
 #include "atomicops.h"
+#include "installdir.h"
 
 using namespace std;
 using namespace utils;
@@ -128,12 +130,9 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode) :
     // Instead, each will double in size, giving a capacity of 8GB -> 16 -> 32, and so on.
 //	bucketCount = jp.bucketCount;
     bucketCount = 2;
-    filenamePrefix = config->getConfig("HashJoin", "TempFilePath");
+    filenamePrefix = startup::StartUp::tmpDir();
 
-    if (filenamePrefix.empty())
-        filenamePrefix = "/tmp/infinidb";
-
-    filenamePrefix += "/Infinidb-join-data-";
+    filenamePrefix += "/Columnstore-join-data-";
 
     uniqueID = atomicops::atomicInc(&uniqueNums);
     uint32_t tmp = uniqueID;

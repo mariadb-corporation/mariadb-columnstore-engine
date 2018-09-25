@@ -2720,16 +2720,16 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 #ifdef DEBUG_SETENV
     string home(getenv("HOME"));
 
-    if (!getenv("CALPONT_HOME"))
+    if (!getenv("COLUMNSTORE_HOME"))
     {
         string calpontHome(home + "/Calpont/etc/");
-        setenv("CALPONT_HOME", calpontHome.c_str(), 1);
+        setenv("COLUMNSTORE_HOME", calpontHome.c_str(), 1);
     }
 
-    if (!getenv("CALPONT_CONFIG_FILE"))
+    if (!getenv("COLUMNSTORE_CONFIG_FILE"))
     {
-        string calpontConfigFile(home + "/Calpont/etc/Columnstore.xml");
-        setenv("CALPONT_CONFIG_FILE", calpontConfigFile.c_str(), 1);
+        string calpontConfigFile(home + "/mariadb/columnstore/etc/Columnstore.xml");
+        setenv("COLUMNSTORE_CONFIG_FILE", calpontConfigFile.c_str(), 1);
     }
 
     if (!getenv("CALPONT_CSC_IDENT"))

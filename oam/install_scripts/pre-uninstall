@@ -79,7 +79,7 @@ tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
 rm -rf $tmpDir
 rm -f $installdir/local/*.columnstore
 rm -rf $installdir/local/etc/
-rm -f $installdir/data/bulk/tmpjob/* >/dev/null 2>&1
+rm -f $installdir/data/bulk${tmpDir}job/* >/dev/null 2>&1
 rm -f $installdir/local/moveDbrootTransactionLog
 
 lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`

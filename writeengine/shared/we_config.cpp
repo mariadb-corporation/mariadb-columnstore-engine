@@ -270,7 +270,7 @@ void Config::checkReload( )
 
     if ( hdfsRdwrScratch.length() == 0 )
     {
-        hdfsRdwrScratch = "/tmp/hdfsscratch";
+        hdfsRdwrScratch = TmpFileDir + "/hdfsscratch";
     }
 
     IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
