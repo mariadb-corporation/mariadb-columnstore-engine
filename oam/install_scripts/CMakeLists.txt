@@ -11,7 +11,6 @@ install(PROGRAMS post-install
                 remote_scp_get.sh 
                 columnstoreAlias 
                 run.sh 
-                upgrade-columnstore.sh  
                 post-mysql-install 
                 post-mysqld-install 
                 binary_installer.sh  
