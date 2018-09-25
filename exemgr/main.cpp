@@ -1370,14 +1370,11 @@ void cleanTempDir()
 {
     config::Config* config = config::Config::makeConfig();
     string allowDJS = config->getConfig("HashJoin", "AllowDiskBasedJoin");
-    string tmpPrefix = config->getConfig("HashJoin", "TempFilePath");
+    string tmpPrefix = startup::StartUp::tmpDir();
 
     if (allowDJS == "N" || allowDJS == "n")
         return;
-
-    if (tmpPrefix.empty())
-        tmpPrefix = "/tmp/infinidb";
-
+        
     tmpPrefix += "/";
 
     assert(tmpPrefix != "/");

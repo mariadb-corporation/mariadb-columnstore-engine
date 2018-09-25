@@ -249,9 +249,9 @@
 		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
 		<ExternalMajorThreshold>80</ExternalMajorThreshold>
 		<ExternalMinorThreshold>70</ExternalMinorThreshold>
-		<!-- <TempDiskPath>${tmpDir}</TempDiskPath>
-		<WorkingDir>${tmpDir}</WorkingDir>
-		<TempFileDir>${tmpDir}/columnstore_tmp_files</TempFileDir>
+		<!-- <TempDiskPath>/tmp</TempDiskPath>
+		<WorkingDir>/tmp</WorkingDir>
+		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
 		-->
 		<TransactionArchivePeriod>10</TransactionArchivePeriod>
 		<NMSIPAddress>0.0.0.0</NMSIPAddress>
@@ -269,7 +269,7 @@
 		-->
  		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
  		<TempFileDir>/columnstore_tmp_files</TempFileDir>
- 		<SystemTempFileDir>${tmpDir}/columnstore_tmp_files</SystemTempFileDir>
+ 		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
@@ -494,8 +494,8 @@
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
 			the entire directory and recreates it to make sure no
-			files are left behind.  -->
-		<TempFilePath>$INSTALLDIR${tmpDir}</TempFilePath>
+			files are left behind.
+		<TempFilePath>/tmp</TempFilePath>  -->
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>
