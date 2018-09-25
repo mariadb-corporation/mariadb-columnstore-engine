@@ -176,7 +176,7 @@ fi
 
 #get columnstore temp file directory name
 TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
-tmpDir=$tmpDir+$TempFileDir
+tmpDir=${tmpDir}${TempFileDir}
 
 #set base columnstore temp file directory
 $installdir/bin/setConfig -d SystemConfig SystemTempFileDir $tmpDir
