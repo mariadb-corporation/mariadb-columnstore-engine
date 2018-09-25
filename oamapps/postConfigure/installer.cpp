@@ -56,6 +56,8 @@ using namespace config;
 #include "helpers.h"
 using namespace installer;
 
+#include "installdir.h"
+
 typedef struct Module_struct
 {
     std::string     moduleName;
@@ -169,6 +171,8 @@ int main(int argc, char* argv[])
 
     if (p && *p)
         USER = p;
+        
+    string tmpDir = startup::StartUp::tmpDir();
 
     // setup to start on reboot, for non-root amazon installs
     if ( !rootUser )
@@ -882,17 +886,18 @@ int main(int argc, char* argv[])
     {
         cout << " DONE" << endl;
 
-        cmd = installDir + "/bin/dbbuilder 7 > /tmp/dbbuilder.log";
+		string logFile = tmpDir + "/dbbuilder.log";
+        cmd = installDir + "/bin/dbbuilder 7 > " + logFile;
         system(cmd.c_str());
 
-        if (oam.checkLogStatus("/tmp/dbbuilder.log", "System Catalog created") )
+        if (oam.checkLogStatus(logFile, "System Catalog created") )
             cout << endl << "System Catalog Successfull Created" << endl;
         else
         {
-            if ( !oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") )
+            if ( !oam.checkLogStatus(logFile, "System catalog appears to exist") )
             {
                 cout << endl << "System Catalog Create Failure" << endl;
-                cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
+                cout << "Check latest log file in " << logFile" << endl;
                 cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
                 exit (1);
             }

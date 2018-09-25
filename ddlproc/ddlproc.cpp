@@ -79,9 +79,6 @@ void setupCwd()
         workdir = ".";
 
     (void)chdir(workdir.c_str());
-
-    if (access(".", W_OK) != 0)
-        (void)chdir("/tmp");
 }
 
 void added_a_pm(int)

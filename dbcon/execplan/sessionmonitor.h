@@ -58,7 +58,6 @@ namespace execplan
  * SessionMonitor/SharedMemoryTmpFile: the file to store the shared memory segment
  *		data in.  This needs to be a different file than
  *		file used for the SessionManager/SharedMemoryTmpFile.
- *		The default is /tmp/CalpontMonShm.
  */
 
 /*

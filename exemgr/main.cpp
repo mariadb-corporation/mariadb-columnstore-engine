@@ -1324,9 +1324,6 @@ void setupCwd(ResourceManager* rm)
 {
     string workdir = startup::StartUp::tmpDir();
     (void)chdir(workdir.c_str());
-
-    if (access(".", W_OK) != 0)
-        (void)chdir("/tmp");
 }
 
 void startRssMon(size_t maxPct, int pauseSeconds)
