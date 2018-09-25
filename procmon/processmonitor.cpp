@@ -2670,16 +2670,16 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 
     if ( LogFile == "off" )
     {
-        string cmd = "mv " + outFileName + " " + saveoutFileName;
+        string cmd = "mv " + outFileName + " " + saveoutFileName + " > /dev/null";
         system(cmd.c_str());
-        cmd = "mv " + errFileName + " " + saveerrFileName;
+        cmd = "mv " + errFileName + " " + saveerrFileName + " > /dev/null";
         system(cmd.c_str());
     }
     else
     {
-        string cmd = "mv " + outFileName + " " + saveoutFileName;
+        string cmd = "mv " + outFileName + " " + saveoutFileName + " > /dev/null";
         system(cmd.c_str());
-        cmd = "mv " + errFileName + " " + saveerrFileName;
+        cmd = "mv " + errFileName + " " + saveerrFileName + " > /dev/null";
         system(cmd.c_str());
     }
 

@@ -59,7 +59,7 @@ fi
 lockdir=`$InstallDir/bin/getConfig Installation LockFileDirectory`
 
 #get temp directory
-tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
+tmpDir=`$InstallDir/bin/getConfig SystemConfig SystemTempFileDir`
 
 checkInstallSetup() {
 	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`
@@ -103,7 +103,7 @@ start() {
 	RETVAL=0
 	echo "Starting MariaDB Columnstore Database Platform"
 	rm -f ${tmpDir}/StopColumnstore
-	exec $InstallDir/bin/run.sh $InstallDir/bin/ProcMon  > /dev/null 2>&1 &
+	exec $InstallDir/bin/run.sh -l ${tmpDir} $InstallDir/bin/ProcMon  > /dev/null 2>&1 &
 
 	return $RETVAL
 }	
