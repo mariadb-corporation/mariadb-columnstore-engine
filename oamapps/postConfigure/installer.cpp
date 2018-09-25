@@ -897,7 +897,7 @@ int main(int argc, char* argv[])
             if ( !oam.checkLogStatus(logFile, "System catalog appears to exist") )
             {
                 cout << endl << "System Catalog Create Failure" << endl;
-                cout << "Check latest log file in " << logFile" << endl;
+                cout << "Check latest log file in " << logFile << endl;
                 cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
                 exit (1);
             }
