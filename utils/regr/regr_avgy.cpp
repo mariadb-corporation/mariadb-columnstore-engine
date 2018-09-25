@@ -85,75 +85,11 @@ mcsv1_UDAF::ReturnCode regr_avgy::reset(mcsv1Context* context)
 mcsv1_UDAF::ReturnCode regr_avgy::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
     static_any::any& valIn_y = valsIn[0].columnData;
-    static_any::any& valIn_x = valsIn[1].columnData;
     struct  regr_avgy_data* data = (struct regr_avgy_data*)context->getUserData()->data;
-    DATATYPE val = 0.0;
-
-    if (context->isParamNull(0) || context->isParamNull(1))
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-    if (valIn_x.empty() || valIn_y.empty()) // Usually empty if NULL. Probably redundant
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-
-    if (valIn_y.compatible(longTypeId))
-    {
-        val = valIn_y.cast<long>();
-    }
-    else if (valIn_y.compatible(charTypeId))
-    {
-        val = valIn_y.cast<char>();
-    }
-    else if (valIn_y.compatible(scharTypeId))
-    {
-        val = valIn_y.cast<signed char>();
-    }
-    else if (valIn_y.compatible(shortTypeId))
-    {
-        val = valIn_y.cast<short>();
-    }
-    else if (valIn_y.compatible(intTypeId))
-    {
-        val = valIn_y.cast<int>();
-    }
-    else if (valIn_y.compatible(llTypeId))
-    {
-        val = valIn_y.cast<long long>();
-    }
-    else if (valIn_y.compatible(ucharTypeId))
-    {
-        val = valIn_y.cast<unsigned char>();
-    }
-    else if (valIn_y.compatible(ushortTypeId))
-    {
-        val = valIn_y.cast<unsigned short>();
-    }
-    else if (valIn_y.compatible(uintTypeId))
-    {
-        val = valIn_y.cast<unsigned int>();
-    }
-    else if (valIn_y.compatible(ulongTypeId))
-    {
-        val = valIn_y.cast<unsigned long>();
-    }
-    else if (valIn_y.compatible(ullTypeId))
-    {
-        val = valIn_y.cast<unsigned long long>();
-    }
-    else if (valIn_y.compatible(floatTypeId))
-    {
-        val = valIn_y.cast<float>();
-    }
-    else if (valIn_y.compatible(doubleTypeId))
-    {
-        val = valIn_y.cast<double>();
-    }
+    double val = convertAnyTo<double>(valIn_y);
 
     // For decimal types, we need to move the decimal point.
     uint32_t scale = valsIn[0].scale;
-
     if (val != 0 && scale > 0)
     {
         val /= pow(10.0, (double)scale);
@@ -199,75 +135,11 @@ mcsv1_UDAF::ReturnCode regr_avgy::evaluate(mcsv1Context* context, static_any::an
 mcsv1_UDAF::ReturnCode regr_avgy::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
     static_any::any& valIn_y = valsDropped[0].columnData;
-    static_any::any& valIn_x = valsDropped[1].columnData;
     struct regr_avgy_data* data = (struct regr_avgy_data*)context->getUserData()->data;
-    DATATYPE val = 0.0;
-
-    if (context->isParamNull(0) || context->isParamNull(1))
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-    if (valIn_x.empty() || valIn_y.empty())
-    {
-        return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
-    }
-
-    if (valIn_y.compatible(charTypeId))
-    {
-        val = valIn_y.cast<char>();
-    }
-    else if (valIn_y.compatible(scharTypeId))
-    {
-        val = valIn_y.cast<signed char>();
-    }
-    else if (valIn_y.compatible(shortTypeId))
-    {
-        val = valIn_y.cast<short>();
-    }
-    else if (valIn_y.compatible(intTypeId))
-    {
-        val = valIn_y.cast<int>();
-    }
-    else if (valIn_y.compatible(longTypeId))
-    {
-        val = valIn_y.cast<long>();
-    }
-    else if (valIn_y.compatible(llTypeId))
-    {
-        val = valIn_y.cast<long long>();
-    }
-    else if (valIn_y.compatible(ucharTypeId))
-    {
-        val = valIn_y.cast<unsigned char>();
-    }
-    else if (valIn_y.compatible(ushortTypeId))
-    {
-        val = valIn_y.cast<unsigned short>();
-    }
-    else if (valIn_y.compatible(uintTypeId))
-    {
-        val = valIn_y.cast<unsigned int>();
-    }
-    else if (valIn_y.compatible(ulongTypeId))
-    {
-        val = valIn_y.cast<unsigned long>();
-    }
-    else if (valIn_y.compatible(ullTypeId))
-    {
-        val = valIn_y.cast<unsigned long long>();
-    }
-    else if (valIn_y.compatible(floatTypeId))
-    {
-        val = valIn_y.cast<float>();
-    }
-    else if (valIn_y.compatible(doubleTypeId))
-    {
-        val = valIn_y.cast<double>();
-    }
+    double val = convertAnyTo<double>(valIn_y);
 
     // For decimal types, we need to move the decimal point.
     uint32_t scale = valsDropped[0].scale;
-
     if (val != 0 && scale > 0)
     {
         val /= pow(10.0, (double)scale);

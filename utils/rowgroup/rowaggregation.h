@@ -242,7 +242,7 @@ struct RowUDAFFunctionCol : public RowAggFunctionCol
 
     mcsv1sdk::mcsv1Context fUDAFContext;  // The UDAF context
     bool bInterrupted;                    // Shared by all the threads
-};
+ };
 
 inline void RowAggFunctionCol::serialize(messageqcpp::ByteStream& bs) const
 {

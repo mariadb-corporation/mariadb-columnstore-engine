@@ -197,6 +197,9 @@
             <F N="regr_avgx.cpp"/>
             <F N="regr_avgy.cpp"/>
             <F N="regr_count.cpp"/>
+            <F N="regr_intercept.cpp"/>
+            <F N="regr_slope.cpp"/>
+            <F N="regrmysql.cpp"/>
         </Folder>
         <Folder
             Name="Header Files"
@@ -204,6 +207,8 @@
             <F N="regr_avgx.h"/>
             <F N="regr_avgy.h"/>
             <F N="regr_count.h"/>
+            <F N="regr_intercept.h"/>
+            <F N="regr_slope.h"/>
         </Folder>
         <Folder
             Name="Resource Files"
