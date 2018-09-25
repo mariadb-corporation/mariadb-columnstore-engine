@@ -9704,7 +9704,6 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
                     {
                         gwi.fatalParseError = false;
                         execplan::CalpontSelectExecutionPlan::ReturnedColumnList::iterator iter = gwi.returnedCols.begin();
-                        AggregateColumn* ac = NULL;
 
                         for ( ; iter != gwi.returnedCols.end(); iter++ )
                         {

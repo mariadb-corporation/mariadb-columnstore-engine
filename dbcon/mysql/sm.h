@@ -60,12 +60,12 @@ const int SQL_NOT_FOUND = -1000;
 const int SQL_KILLED = -1001;
 const int CALPONT_INTERNAL_ERROR = -1007;
 
-#if IDB_SM_DEBUG
-extern std::ofstream smlog;
-#define SMDEBUGLOG smlog
-#else
-#define SMDEBUGLOG if (false) std::cerr
-#endif
+//#if IDB_SM_DEBUG
+//extern std::ofstream smlog;
+//#define SMDEBUGLOG smlog
+//#else
+#define SMDEBUGLOG if (true) std::cerr
+//#endif
 extern const std::string DEFAULT_SAVE_PATH;
 
 typedef uint64_t tableid_t;
@@ -282,7 +282,7 @@ extern status_t tpl_open(tableid_t, cpsm_tplh_t*, cpsm_conhdl_t*);
 extern status_t tpl_scan_open(tableid_t, sp_cpsm_tplsch_t&, cpsm_conhdl_t*);
 extern status_t tpl_scan_fetch(sp_cpsm_tplsch_t&, cpsm_conhdl_t*, int* k = 0);
 extern status_t tpl_scan_close(sp_cpsm_tplsch_t&);
-extern status_t tpl_close(cpsm_tplh_t*, cpsm_conhdl_t**, querystats::QueryStats& stats);
+extern status_t tpl_close(cpsm_tplh_t*, cpsm_conhdl_t**, querystats::QueryStats& stats, bool clear_scan_ctx = false);
 
 }
 
