@@ -4926,10 +4926,10 @@ int processCommand(string* arguments)
 
         case 39: // getSystemDirectories
         {
-			cout << "System Installation and Temporary Logging Directories" << endl << endl;
+			cout << endl << "System Installation and Temporary Logging Directories" << endl << endl;
 			
 			cout << "System Installation Directory = " << startup::StartUp::installDir() << endl;
-			cout << "System Temporary Logging Directory = " << tmpDir << endl;
+			cout << "System Temporary Logging Directory = " << tmpDir << endl << endl;
         }
         break;
 

@@ -266,7 +266,7 @@ void Config::checkReload( )
     string TmpFileDir = startup::StartUp::tmpDir();
 
     string hdfsRdwrScratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
-    hdfsRdwrScratch = TmpFileDir + hdfsRdwrScratch
+    hdfsRdwrScratch = TmpFileDir + hdfsRdwrScratch;
 
     if ( hdfsRdwrScratch.length() == 0 )
     {

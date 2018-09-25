@@ -31,7 +31,7 @@ done
 
 shift $((OPTIND - 1))
 
-exename="$1"
+exename="$2"
 
 if [ -z "$exename" ]; then
 	echo $usage 1>&2
@@ -49,7 +49,8 @@ if [ $vflg -gt 0 ]; then
 fi
 
 while [ $keep_going -ne 0 ]; do
-	$exename $args
+#	$exename $args
+	$exename
 	if [ -e ${lopt}/StopColumnstore ]; then
 		exit 0
 	fi
