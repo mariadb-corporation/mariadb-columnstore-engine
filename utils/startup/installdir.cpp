@@ -119,7 +119,7 @@ const string StartUp::tmpDir()
 
 		fTmpDirp = new string("/tmp");
 		
-		*fTmpDirp = homedir + TempFileDir;
+		*fTmpDirp = *fTmpDirp + TempFileDir;
 	}
 	else
 	{
