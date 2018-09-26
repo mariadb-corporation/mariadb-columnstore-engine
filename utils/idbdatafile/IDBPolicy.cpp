@@ -63,6 +63,7 @@ void IDBPolicy::init( bool bEnableLogging, bool bUseRdwrMemBuffer, const string&
     if ( hdfsRdwrScratch.length() > 0 )
     {
         // TODO-check to make sure this directory has sufficient space, whatever that means.
+
         boost::filesystem::path tmpfilepath( hdfsRdwrScratch );
 
         if (boost::filesystem::exists(tmpfilepath))
@@ -79,6 +80,8 @@ void IDBPolicy::init( bool bEnableLogging, bool bUseRdwrMemBuffer, const string&
         }
         else
         {
+			cout << tmpfilepath << endl;
+
             if (!boost::filesystem::create_directory(tmpfilepath))
             {
                 // We failed to create the scratch directory

@@ -164,12 +164,14 @@ if [ ! -z "$syslog_conf" ] ; then
 		 chown $user:$user /home/$user/mariadb/columnstore/etc/*
 	fi 
 	
-	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ]; then
-		 rm -f ${syslog_conf}.columnstoreSave
-		 cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
-		 sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
+	if [ "$syslog_conf" != /etc/rsyslog.d/columnstore.conf ] ||
+		[ "$syslog_conf" != /etc/rsyslog.d/49-columnstore.conf ]; then
+		
+		rm -f ${syslog_conf}.columnstoreSave
+		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
+		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
-
+	
 	egrep -qs 'MariaDB Columnstore Database Platform Logging' ${syslog_conf}
 	if [ $? -ne 0 ]; then
 		#set the syslog for ColumnStore logging

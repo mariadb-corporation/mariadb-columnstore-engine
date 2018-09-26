@@ -18,7 +18,7 @@ while getopts "vs:t:h:l" flag; do
 		;;
 	t) topt=$OPTARG
 		;;
-	t) lopt=$OPTARG
+	l) lopt=$OPTARG
 		;;
 	h) echo $usage
 		exit 0

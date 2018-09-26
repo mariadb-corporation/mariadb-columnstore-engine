@@ -35,6 +35,9 @@ using namespace boost;
 
 using namespace config;
 
+#include <iostream> 
+   
+using namespace std;
 
 namespace startup
 {
@@ -97,36 +100,33 @@ const string StartUp::tmpDir()
 
 #else
 
-	Config* sysConfig = Config::makeConfig();
+	//check for non-root user 
+    const char* p = getenv("HOME");
+	string homedir = p;
 
-	string TempFileDir;
-
-	try
+    if (homedir == "/root")
 	{
-		TempFileDir = sysConfig->getConfig("SystemConfig", "TempFileDir");
+		Config* sysConfig = Config::makeConfig();
+
+		string TempFileDir;
+
+		try
+		{
+			TempFileDir = sysConfig->getConfig("SystemConfig", "TempFileDir");
+		}
+		catch (...)
+		{}
+
+		fTmpDirp = new string("/tmp");
+		
+		*fTmpDirp = homedir + TempFileDir;
 	}
-	catch (...)
-	{}
-
-    fTmpDirp = new string("/tmp");
-    //See if we can figure out the tmp dir in Linux...
-    //1. env var COLUMNSTORE_INSTALL_DIR
-    const char* p = 0;
-    p = getenv("COLUMNSTORE_INSTALL_DIR");
-
-    if (p && *p)
-    {
-		string homedir = "/";
-        char* p = getenv("HOME");
-
-        if (p && *p)
-            homedir = p;
-
-        *fTmpDirp = homedir + "/.tmp";
+	else
+	{
+		// non-root user
+		*fTmpDirp = homedir + "/.tmp";
 	}
 	
-	*fTmpDirp = *fTmpDirp + TempFileDir;
-
 #endif
 
     return *fTmpDirp;

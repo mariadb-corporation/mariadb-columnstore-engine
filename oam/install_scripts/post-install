@@ -172,17 +172,21 @@ tmpDir="/tmp"
 if [ $user != "root" ]; then
 	tmpDir=$HOME"./tmp"
 	mkdir $tmpDir >/dev/null 2>&1
+else
+	#get columnstore temp file directory name
+	TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
+	tmpDir=${tmpDir}${TempFileDir}
 fi
-
-#get columnstore temp file directory name
-TempFileDir=`$installdir/bin/getConfig SystemConfig TempFileDir`
-tmpDir=${tmpDir}${TempFileDir}
 
 #set base columnstore temp file directory
 $installdir/bin/setConfig -d SystemConfig SystemTempFileDir $tmpDir
 
-#create columnstore temp file directory
-mkdir -p $tmpDir >/dev/null 2>&1
+#get place file buffer temporary files
+hdfsRdwrScratch=`$installdir/bin/getConfig SystemConfig hdfsRdwrScratch`
+hdfsDir=${tmpDir}${hdfsRdwrScratch}
+
+#create place file buffer temporary files
+mkdir -p $hdfsDir >/dev/null 2>&1
 
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
