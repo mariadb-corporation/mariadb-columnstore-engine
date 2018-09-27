@@ -10,7 +10,7 @@ sopt="5"
 topt="0"
 lopt="/tmp/columnstore_tmp_files"
 
-while getopts "vs:t:h:l" flag; do
+while getopts "vs:t:l:h" flag; do
 	case $flag in
 	v) vflg=1
 		;;
@@ -29,7 +29,7 @@ while getopts "vs:t:h:l" flag; do
 	esac
 done
 
-shift $((OPTIND))
+shift $((OPTIND-1))
 
 exename="$@"
 

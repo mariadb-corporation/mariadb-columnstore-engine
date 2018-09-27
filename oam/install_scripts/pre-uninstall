@@ -34,9 +34,12 @@ done
 $installdir/bin/columnstore stop > /dev/null 2>&1
 $installdir/myql/columnstore-Mysql stop > /dev/null 2>&1
 
-export COLUMNSTORE_INSTALL_DIR=$installdir
+if [ $user != "root" ]; then
+	export COLUMNSTORE_INSTALL_DIR=$installdir
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+fi
 
-cloud=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation Cloud`
+cloud=`$installdir/bin/getConfig Installation Cloud`
 if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if test -f /etc/fstab ; then
 	    sed -i '/Columnstore\/data/d' /etc/fstab > /dev/null 2>&1
@@ -76,13 +79,13 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
 
 # delete tmp files
-rm -rf $tmpDir
+rm -rf $tmpDir/*
 rm -f $installdir/local/*.columnstore
 rm -rf $installdir/local/etc/
 rm -f $installdir/data/bulk${tmpDir}job/* >/dev/null 2>&1
 rm -f $installdir/local/moveDbrootTransactionLog
 
-lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`
+lockdir=`$installdir/bin/getConfig Installation LockFileDirectory`
 rm -f $lockdir/columnstore
 rm -f $lockdir/mysql-Columnstore
 
@@ -138,13 +141,18 @@ if [ $user = "root" ]; then
         ldconfig
 else
 	rm -f /etc/default/columnstore
-	 
-	echo ""
-	echo "NOTE: For non-root install, you will need to run the following command as root user to"
-	echo "      uninstall the MariaDB ColumnStore System Logging"
-	echo ""
-	echo "      $installdir/bin/syslogSetup.sh --installdir=$installdir --user=$user uninstall"
-	echo ""
+
+cat <<EOD
+
+NOTE: For non-root install, you will need to run the following commands as root user to
+      uninstall the MariaDB ColumnStore System Logging
+
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+$installdir/bin/syslogSetup.sh --installdir=$installdir --user=$user uninstall
+
+
+EOD
 
 fi
 

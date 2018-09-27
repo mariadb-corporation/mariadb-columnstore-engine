@@ -3621,7 +3621,7 @@ int main(int argc, char* argv[])
 
                 if ( remote_installer_debug == "1" )
                 {
-                    logfile = tmpDir;
+                    logfile = tmpDir + "/";
                     logfile += remoteModuleName + "_" + EEPackageType + "_install.log";
                     debug_logfile = " > " + logfile;
                 }
@@ -3928,7 +3928,7 @@ int main(int argc, char* argv[])
 
         if (hdfs && !nonDistribute )
         {
-			string postConfigurePsdhLog = tmpDir + "postConfigure.pdsh.log";
+			string postConfigurePsdhLog = tmpDir + "/postConfigure.pdsh.log";
 
             cout << endl << "----- Starting MariaDB ColumnStore Service on all Modules -----" << endl << endl;
             string cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > " + postConfigurePsdhLog + " 2>&1";
@@ -4022,7 +4022,7 @@ int main(int argc, char* argv[])
             }
         }
         
-        string dbbuilderLog = tmpDir + "dbbuilder.log";
+        string dbbuilderLog = tmpDir + "/dbbuilder.log";
 
         if (hdfs)
             cmd = "bash -c '. " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/dbbuilder 7 > " + dbbuilderLog;

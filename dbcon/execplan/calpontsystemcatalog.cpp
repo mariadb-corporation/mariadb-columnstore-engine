@@ -94,7 +94,7 @@ throw runtime_error("CALPONT_INTERNAL_ERROR"); \
 #if CSC_DEBUG
 namespace
 {
-	string tmpDir = startup::StartUp::installDir() + "csc.log";
+	string tmpDir = startup::StartUp::tmpDir() + "/csc.log";
 	std::ofstream csclog(tmpDir, std::ios::app);
 }
 #define DEBUG csclog

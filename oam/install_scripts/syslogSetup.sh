@@ -166,7 +166,8 @@ if [ ! -z "$syslog_conf" ] ; then
 	
 	if [ "$syslog_conf" == /etc/rsyslog.d/columnstore.conf ] ||
 		[ "$syslog_conf" == /etc/rsyslog.d/49-columnstore.conf ]; then
-		
+		i=1
+	else
 		rm -f ${syslog_conf}.columnstoreSave
 		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
 		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1

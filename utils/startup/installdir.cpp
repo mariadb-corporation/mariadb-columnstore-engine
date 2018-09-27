@@ -124,7 +124,9 @@ const string StartUp::tmpDir()
 	else
 	{
 		// non-root user
-		*fTmpDirp = homedir + "/.tmp";
+		fTmpDirp = new string(homedir);
+
+		*fTmpDirp = *fTmpDirp + "/.tmp";
 	}
 	
 #endif
