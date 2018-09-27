@@ -29,9 +29,9 @@ while getopts "vs:t:h:l" flag; do
 	esac
 done
 
-shift $((OPTIND - 1))
+shift $((OPTIND))
 
-exename="$2"
+exename="$@"
 
 if [ -z "$exename" ]; then
 	echo $usage 1>&2
@@ -49,8 +49,7 @@ if [ $vflg -gt 0 ]; then
 fi
 
 while [ $keep_going -ne 0 ]; do
-#	$exename $args
-	$exename
+	$exename $args
 	if [ -e ${lopt}/StopColumnstore ]; then
 		exit 0
 	fi
