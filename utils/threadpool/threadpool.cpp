@@ -94,7 +94,6 @@ void ThreadPool::stop()
     lock1.unlock();
 
     fNeedThread.notify_all();
-    fThreads.join_all();
 }
 
 
@@ -222,7 +221,8 @@ uint64_t ThreadPool::invoke(const Functor_T &threadfunc)
                 ++fThreadCount;
 
                 lock1.unlock();
-                fThreads.create_thread(beginThreadFunc(*this));
+                boost::thread* newThread = fThreads.create_thread(beginThreadFunc(*this));
+                newThread->detach();
 
                 if (bAdded)
                     break;
