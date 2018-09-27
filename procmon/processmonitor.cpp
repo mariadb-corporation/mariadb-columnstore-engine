@@ -1830,7 +1830,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
                 if ( !rootUser)
                 {
-                    cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+                    cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null 2>&1";
                     system(cmd.c_str());
                 }
 
@@ -2670,16 +2670,16 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
 
     if ( LogFile == "off" )
     {
-        string cmd = "mv " + outFileName + " " + saveoutFileName + " > /dev/null";
+        string cmd = "mv " + outFileName + " " + saveoutFileName + " > /dev/null 2>&1";
         system(cmd.c_str());
-        cmd = "mv " + errFileName + " " + saveerrFileName + " > /dev/null";
+        cmd = "mv " + errFileName + " " + saveerrFileName + " > /dev/null 2>&1";
         system(cmd.c_str());
     }
     else
     {
-        string cmd = "mv " + outFileName + " " + saveoutFileName + " > /dev/null";
+        string cmd = "mv " + outFileName + " " + saveoutFileName + " > /dev/null 2>&1";
         system(cmd.c_str());
-        cmd = "mv " + errFileName + " " + saveerrFileName + " > /dev/null";
+        cmd = "mv " + errFileName + " " + saveerrFileName + " > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -3109,7 +3109,7 @@ int ProcessMonitor::updateLog(std::string action, std::string level)
     //if non-root, change file permissions so we can update it
     if ( !rootUser)
     {
-        string cmd = "chmod 666 " + fileName + " > /dev/null";
+        string cmd = "chmod 666 " + fileName + " > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -4866,7 +4866,7 @@ std::string ProcessMonitor::sendMsgProcMon1( std::string module, ByteStream msg,
     string IPAddr = sysConfig->getConfig(msgPort, "IPAddr");
 
     string cmdLine = "ping ";
-    string cmdOption = " -c 1 -w 5 >> /dev/null";
+    string cmdOption = " -c 1 -w 5 >> /dev/null 2>&1";
     string cmd = cmdLine + IPAddr + cmdOption;
 
     if ( system(cmd.c_str()) != 0 )
@@ -5950,7 +5950,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 
             if (oam.attachEC2Volume(volumeName, deviceName, instanceName))
             {
-                string cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /dev/null";
+                string cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /dev/null 2>&1";
                 system(cmd.c_str());
                 log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -6021,7 +6021,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 
             if (oam.attachEC2Volume(volumeName, deviceName, instanceName))
             {
-                string cmd = "mount " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID) + " > /dev/null";
+                string cmd = "mount " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID) + " > /dev/null 2>&1";
                 system(cmd.c_str());
                 return true;
             }
@@ -6326,7 +6326,7 @@ int ProcessMonitor::checkDataMount()
 
             if ( !rootUser)
             {
-                cmd = "chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null";
+                cmd = "chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null 2>&1";
                 system(cmd.c_str());
             }
 
