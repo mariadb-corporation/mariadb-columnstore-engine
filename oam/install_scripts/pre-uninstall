@@ -64,12 +64,12 @@ else
 	rm -f /etc/profile.d/columnstoreAlias.sh
 fi
 
- 
 #remove log file directories
 if [ $user == "root" ]; then
 	rm -f /var/log/mariadb/columnstore/activeAlarms > /dev/null 2>&1
 	rm -f /var/log/mariadb/columnstore/*.log1 > /dev/null 2>&1
 fi
+
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1\
 
 # delete Mariab Columnstore shared memory segments
@@ -77,12 +77,13 @@ $installdir/bin/clearShm  > /dev/null 2>&1
 
 #get temp directory
 tmpDir=`$installdir/bin/getConfig SystemConfig SystemTempFileDir`
-
-# delete tmp files
-rm -rf $tmpDir/*
+if [[ $tmpDir = *"tmp" ]]; then
+	# delete tmp files
+	rm -rf $tmpDir/*
+fi
 rm -f $installdir/local/*.columnstore
 rm -rf $installdir/local/etc/
-rm -f $installdir/data/bulk${tmpDir}job/* >/dev/null 2>&1
+rm -f $installdir/data/bulk/tmp/job/* >/dev/null 2>&1
 rm -f $installdir/local/moveDbrootTransactionLog
 
 lockdir=`$installdir/bin/getConfig Installation LockFileDirectory`

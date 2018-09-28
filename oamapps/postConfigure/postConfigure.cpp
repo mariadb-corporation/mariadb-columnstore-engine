@@ -1806,8 +1806,8 @@ int main(int argc, char* argv[])
     //
     // Module Configuration
     //
-    cout << endl;
-    cout << "===== Setup the Module Configuration =====" << endl << endl;
+    cout << endl << endl;
+    cout << "===== Setup the Module Configuration =====" << endl;
 
     if (amazonInstall)
     {
@@ -3469,7 +3469,7 @@ int main(int argc, char* argv[])
        ( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 	{
         //run the mysql / mysqld setup scripts
-        cout << endl << "===== Running the MariaDB ColumnStore MariaDB Server setup scripts =====" << endl << endl;
+        cout << endl << "===== Running the MariaDB ColumnStore MariaDB Server setup scripts =====" << endl;
 
         checkMysqlPort(mysqlPort, sysConfig);
 
@@ -3485,8 +3485,8 @@ int main(int argc, char* argv[])
             {
                 cout << endl;
                 cout << "Next step is to enter the password to access the other Servers." << endl;
-                cout << "This is either your password or you can default to using a ssh key" << endl;
-                cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+                cout << "This is either user password or you can default to using a ssh key" << endl;
+                cout << "If using a user password, the password needs to be the same on all Servers." << endl << endl;
 
                 if ( noPrompting ) {
                     cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
@@ -3573,14 +3573,14 @@ int main(int argc, char* argv[])
             if ( EEPackageType == "rpm" )
             {
                 cout << "Performing a MariaDB ColumnStore System install using RPM packages" << endl;
-                cout << "located in the " + HOME + " directory." << endl << endl;
+                cout << "located in the " + HOME + " directory." << endl;
             }
             else
             {
                 if ( EEPackageType == "binary" )
                 {
                     cout << "Performing a MariaDB ColumnStore System install using a Binary package" << endl;
-                    cout << "located in the " + HOME + " directory." << endl << endl;
+                    cout << "located in the " + HOME + " directory." << endl;
                 }
                 else
                 {
@@ -4851,7 +4851,7 @@ bool storageSetup(bool amazonInstall)
         return true;
     }
 
-    cout << "===== Setup Storage Configuration =====" << endl << endl;
+    cout << "===== Setup Storage Configuration =====" << endl;
 
     string storageType;
 
