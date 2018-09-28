@@ -82,6 +82,7 @@ boost::shared_ptr<std::vector<joblist::ElementType> > Joiner::getSmallSide()
 
 void Joiner::doneInserting()
 {
+	cout << __FUNCTION__ << ":" << __FILE__ << ":" << __LINE__ << endl  << flush;
     //sort here if the data structure is a vector
 }
 

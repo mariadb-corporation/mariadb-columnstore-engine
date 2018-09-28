@@ -94,6 +94,8 @@ const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
 const uint64_t CORRELATED = 0x08;
 
+extern bool mcs_would_spin ( const char* filename );
+
 // In certain cases, gp_walk is called recursively. When done so,
 // we need to bookmark the rcWorkStack for those cases where a constant
 // expression such as 1=1 is used in an if statement or function call.
@@ -1920,7 +1922,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
                     gwip->subGroupByCols.push_back(SRCP(localCol->clone()));
             }
 
-            if (sop->op() == OP_EQ)
+            if (sop->op() == OP_EQ ||
+                sop->op() == OP_EQNS)
             {
                 if (gwip->subSelectType == CalpontSelectExecutionPlan::IN_SUBS ||
                         gwip->subSelectType == CalpontSelectExecutionPlan::EXISTS_SUBS)
@@ -1970,7 +1973,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         sop->setOpType(lhs->resultType(), rhs->resultType());
         sop->resultType(sop->operationType());
 
-        if (sop->op() == OP_EQ)
+        if (sop->op() == OP_EQ ||
+		    (sop->op() == OP_EQNS && ::mcs_would_spin("spin_build_predicate")))
         {
             CalpontSystemCatalog::TableAliasName tan_lhs;
             CalpontSystemCatalog::TableAliasName tan_rhs;
@@ -8324,6 +8328,8 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC,
             continue;
 
         op = simpFilter->op();
+
+//Ravi Fixit may have to add OP_EQNS below.
 
         if ( originalSC->sameColumn(dynamic_cast<execplan::ReturnedColumn*>(simpleCol))
                 && op.get()->op() == OP_EQ && constCol)

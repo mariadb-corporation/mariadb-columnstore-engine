@@ -2088,6 +2088,9 @@ string joinTypeToString(const JoinType& joinType)
     if (joinType & CORRELATED)
         ret += "+correlated";
 
+    if (joinType & MATCHNULLSAFE)
+        ret += "+matchnullsafe";
+
     return ret;
 }
 
@@ -2202,6 +2205,11 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap,
             JoinInfo* info = i->get();
             smallSideDLs.push_back(info->fDl);
             smallSideRGs.push_back(info->fRowGroup);
+			// If any of the predicates need to do null safe join,
+            // set the 0th element also. 
+			for (int ix=1; ix < info->fJoinData.fTypes.size(); ix++)
+            	if (info->fJoinData.fTypes[ix] & MATCHNULLSAFE)
+            		info->fJoinData.fTypes[0] |= MATCHNULLSAFE;
             jointypes.push_back(info->fJoinData.fTypes[0]);
             typeless.push_back(info->fJoinData.fTypeless);
 

@@ -1097,7 +1097,7 @@ const JobStepVector doJoin(
 
     //@bug 566 Dont do a hash join if the table and the alias are the same
     //Bug 590
-    if (tableOid1 == tableOid2 && alias1 == alias2 && view1 == view2 && joinInfo == 0)
+    if (tableOid1 == tableOid2 && alias1 == alias2 && view1 == view2 && (joinInfo & ~JOIN_NULLSAFEMATCH) == 0)
     {
         if (sc1->schemaName().empty() || !compatibleColumnTypes(ct1, ct2, false) ||
            sop->op() == OP_EQNS || sop->op() == OP_NENS)
@@ -1236,7 +1236,7 @@ const JobStepVector doJoin(
     }
     else
     {
-        thj->joinId((joinInfo == 0) ? (++jobInfo.joinNum) : 0);
+        thj->joinId(((joinInfo & ~JOIN_NULLSAFEMATCH) == 0) ? (++jobInfo.joinNum) : 0);
     }
 
     // Check if SEMI/ANTI join.
@@ -1264,14 +1264,27 @@ const JobStepVector doJoin(
         if (joinInfo & JOIN_OUTER_SELECT)
             jt |= LARGEOUTER;
 
+        if (joinInfo & JOIN_NULLSAFEMATCH)
+    	    jt |= MATCHNULLSAFE;
+
         if (sc1->joinInfo() & JOIN_CORRELATED)
             thj->correlatedSide(1);
         else if (sc2->joinInfo() & JOIN_CORRELATED)
             thj->correlatedSide(2);
+
+        if (sc1->joinInfo() & JOIN_NULLSAFEMATCH)
+    	    jt |= MATCHNULLSAFE;
+        else if (sc2->joinInfo() & JOIN_NULLSAFEMATCH)
+    	    jt |= MATCHNULLSAFE;
     }
 
+    cout << " sc1 join_nullsafematch:" << (sc1->joinInfo() & JOIN_NULLSAFEMATCH);
+    cout << " sc2 join_nullsafematch:" << (sc2->joinInfo() & JOIN_NULLSAFEMATCH);
+    cout << flush;
 	if (sop->op() == OP_EQNS) 
+    {
     	jt |= MATCHNULLSAFE;
+	}
 
     thj->setJoinType(jt);
 
@@ -1602,8 +1615,9 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
     if (sf == 0) return jsv;
 
-    //cout << "doSimpleFilter " << endl;
-    //cout << *sf << endl;
+    cout << "doSimpleFilter " << endl;
+    cout << *sf << endl;
+
     ReturnedColumn* lhs;
     ReturnedColumn* rhs;
     SOP sop;
@@ -2005,10 +2019,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
                 sc1->viewName() != sc2->viewName()) &&
              !is_equal)
 #endif
-if (::mcs_would_spin("spin_null_safe")) {
-	genExpression = true;
-	is_equal = (sop->op() != OP_EQNS);
-}
 		if (genExpression && !is_equal)
         {
             return doExpressionFilter(sf, jobInfo);
@@ -2024,6 +2034,12 @@ if (::mcs_would_spin("spin_null_safe")) {
         if (sf->joinFlag() == SimpleFilter::ANTI)
             throw runtime_error("Anti join is not currently supported");
 
+	    if (sop->op() == OP_EQNS) 
+		{
+            sc1->joinInfo(sc1->joinInfo() | JOIN_NULLSAFEMATCH);
+            sc2->joinInfo(sc2->joinInfo() | JOIN_NULLSAFEMATCH);
+		}
+
         // Do a simple column join
         JobStepVector join = doJoin(sc1, sc2, jobInfo, sop, sf);
         // set cardinality for the hashjoin step. hj result card <= larger input card
@@ -2037,6 +2053,16 @@ if (::mcs_would_spin("spin_null_safe")) {
         join[join.size() - 1].get()->cardinality(card);
 
         jsv.insert(jsv.end(), join.begin(), join.end());
+
+		if (genExpression && sop->op() != OP_EQNS)
+        {
+			// Ravi: A possible improvement would be to not add this filter when there no
+			//       <=> operators between two tables.
+			// Take care of the case when there are join conditions involving "<=>" and "="
+			//
+            JobStepVector expSteps = doExpressionFilter(sf, jobInfo);
+        	jsv.insert(jsv.end(), expSteps.begin(), expSteps.end());
+        }
     }
     else if (lhsType == CONSTANTCOLUMN && rhsType == SIMPLECOLUMN)
     {

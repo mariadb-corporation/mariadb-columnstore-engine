@@ -43,8 +43,6 @@ const uint32_t DCDC = (ds << 24) | (cc << 16) | (ds << 8) | cc;
 };
 
 
-extern void mcs_spin ( const char* filename );
-
 namespace primitiveprocessor
 {
 
@@ -254,7 +252,6 @@ void FilterCommand::setColTypes(const execplan::CalpontSystemCatalog::ColType& l
 
 void FilterCommand::doFilter()
 {
-::mcs_spin("spin_filter");
     bpp->ridMap = 0;
     bpp->ridCount = 0;
 

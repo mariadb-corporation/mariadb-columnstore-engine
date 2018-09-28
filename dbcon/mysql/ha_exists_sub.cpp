@@ -60,7 +60,8 @@ void checkCorrelation(const ParseTree* n, void* obj)
     {
         ConstantColumn* cc = dynamic_cast<ConstantColumn*>(sf->rhs());
 
-        if ((!cc || (cc && sf->op()->op() == OP_EQ)) && !(rJoinInfo & JOIN_CORRELATED))
+        if ((!cc || (cc && (sf->op()->op() == OP_EQ || sf->op()->op() == OP_EQNS))) && 
+            !(rJoinInfo & JOIN_CORRELATED))
             ef->correlated(true);
     }
 
@@ -68,7 +69,8 @@ void checkCorrelation(const ParseTree* n, void* obj)
     {
         ConstantColumn* cc = dynamic_cast<ConstantColumn*>(sf->lhs());
 
-        if ((!cc || (cc && sf->op()->op() == OP_EQ)) && !(lJoinInfo & JOIN_CORRELATED))
+        if ((!cc || (cc && (sf->op()->op() == OP_EQ || sf->op()->op() == OP_EQNS))) && 
+            !(lJoinInfo & JOIN_CORRELATED))
             ef->correlated(true);
     }
 }

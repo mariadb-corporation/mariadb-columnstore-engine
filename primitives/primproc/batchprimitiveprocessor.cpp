@@ -535,8 +535,8 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
         uint32_t value;
     } *arr;
 #pragma pack(pop)
-    cout << "Entering " <<__FUNCTION__ << ", line:" <<  __LINE__ << " pid:" << getpid() ;
-    cout << ", tid:" << syscall(SYS_gettid) << endl;
+    cout << "\nEntering " <<__FUNCTION__ << ", line:" <<  __LINE__ << " pid:" << getpid() ;
+    cout << ", tid:" << syscall(SYS_gettid) << endl << flush;
 
     addToJoinerLock.lock();
     /* skip the header */
@@ -552,15 +552,13 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
         idbassert(joinerNum < joinerCount);
         arr = (JoinerElements*) bs.buf();
 
-       cout << "pid:" << getpid() << ", tid:" << syscall(SYS_gettid) << endl;
  		cout << "   reading " << count << " elements from the bs, joinerNum is " << joinerNum << "\n";
+        cout << "   Join is typeless?:" << (typelessJoin[joinerNum]) << endl;
 		cout << flush;
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
         for (i = 0; i < count; i++)
         {
             if (typelessJoin[joinerNum])
             {
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
                 bs >> nullFlag;
 
                 if (nullFlag == 0)
@@ -569,10 +567,11 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
                     bs >> tlIndex;
                     tlJoiners[joinerNum]->insert(pair<TypelessData, uint32_t>(tlLargeKey,
                                                  tlIndex));
+					cout << "tlIndex: " << tlIndex << ", " << tlLargeKey.toString() << endl;
                 }
                 else if (nullFlag != 0 &&
                          joinTypes[joinerNum] & MATCHNULLSAFE) {
-::mcs_spin("spin_assert3");
+					cout << " A null key: " << tlLargeKey.toString() << endl;
                     tlLargeKey.deserialize(bs, storedKeyAllocators[joinerNum]);
                     bs >> tlIndex;
 					//tlLargeKey.len = 1;
@@ -580,37 +579,39 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 					//*tlLargeKey.data = 0;
                     //tlIndex = 1;
                     tlJoiners[joinerNum]->insert(pair<TypelessData, uint32_t>(tlLargeKey, tlIndex));
+					cout << "tlIndex: " << tlIndex << ", " << tlLargeKey.toString() << endl;
 				}
                 else {
 					cout << " A null found for hashing!!" << endl;
+					cout << flush;
                     tJoinerSizes[joinerNum]--;
 				}
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
             }
             else
             {
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
                 /* A minor optimization: the matchnull logic should only be used with
                  * the jointype specifies it and there's a null value in the small side */
                 if (arr[i].key == joinNullValues[joinerNum])
                     doMatchNulls[joinerNum] = joinTypes[joinerNum] & MATCHNULLS;
 
+			    cout << "Typed row" << ", key: " << arr[i].key << ", value: " << arr[i].value << endl;
+
                 tJoiners[joinerNum]->insert(pair<const uint64_t, uint32_t>(arr[i].key, arr[i].value));
             }
         }
+		cout << "\ninsert done for " << __FUNCTION__ << endl << flush;
 
         if (!typelessJoin[joinerNum])
             bs.advance(count * sizeof(JoinerElements));
         else {
     cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
           ::mcs_spin("spin_assert2");
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
         }
 
     cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
         if (getTupleJoinRowGroupData)
         {
-// 			cout << "copying full row data for joiner " << joinerNum << endl;
+ 			cout << "copying full row data for joiner " << joinerNum << endl;
             /* Need to update this assertion if there's a typeless join.  search
             for nullFlag. */
 // 			idbassert(ssrdPos[joinerNum] + (count * smallSideRowLengths[joinerNum]) <=
@@ -629,7 +630,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 
             //ssrdPos[joinerNum] += count;
 
-            /*  This prints the row data
+            /*  This prints the row data 
             			smallSideRGs[joinerNum].initRow(&r);
             			for (i = 0; i < (tJoinerSizes[joinerNum] * smallSideRowLengths[joinerNum]); i+=r.getSize()) {
             				r.setData(&smallSideRowData[joinerNum][i + smallSideRGs[joinerNum].getEmptySize()]);
@@ -998,6 +999,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
     outputRG.getRow(0, &oldRow);
     outputRG.getRow(0, &newRow);
 
+	cout << __FUNCTION__ << ":" << __FILE__ << ":" << __LINE__ << endl  << flush;
     cout << "pid:" << getpid() << ", tid:" << syscall(SYS_gettid) << ", before join, RG has " << outputRG.getRowCount() << " BPP ridcount= " << ridCount << endl;
 	cout << flush;
     for (i = 0; i < ridCount && !sendThread->aborted(); i++, oldRow.nextRow())
@@ -1013,7 +1015,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
          * 		  are NULL values to match against, but there is no filter, all rows can be eliminated.
          */
 
-        //cout << "large side row: " << oldRow.toString() << endl;
+        cout << "large side row: " << oldRow.toString() << endl;
         for (j = 0; j < joinerCount; j++)
         {
             bool found;
@@ -1028,7 +1030,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
 
             if (LIKELY(!typelessJoin[j]))
             {
-                //cout << "not typeless join\n";
+                cout << "not typeless join\n";
                 bool isNull;
                 uint32_t colIndex = largeSideKeyColumns[j];
 
@@ -1045,20 +1047,38 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                  *    - if it's an anti-join and the key is either in the small side or it's NULL
                  */
 
-				if (found && isNull && joinTypes[j] & MATCHNULLSAFE)
-					continue;
+				cout << __FUNCTION__ << ": " << "isNull:" << isNull << ", found:" << found 
+<< ", ANTI: " << (joinTypes[j] & (LARGEOUTER | ANTI))
+<< ", MATCHNULLSAFE: " << (joinTypes[j] & MATCHNULLSAFE)
+<< endl << flush;
+
+				// Let us add a separate logic for MATCHNULLSAFE,
+				// once tested we can merge it with others.
+				if (joinTypes[j] & MATCHNULLSAFE) 
+				{
+				    if ((found && !(joinTypes[j] & ANTI)) ||
+				        (!found && (joinTypes[j] & ANTI))) {
+                 	    cout << "j:" << j << ", i:" << i << " - MATCHNULLSAFE in the result set\n";
+						continue;
+					}
+					else 
+					{
+                 	    cout << "j:" << j << ", i:" << i << " - MATCHNULLSAFE NOT in the result set\n";
+						break;
+					}
+				}
+
                 if (((!found || isNull) && !(joinTypes[j] & (LARGEOUTER | ANTI))) ||
                         ((joinTypes[j] & ANTI) && ((isNull && (joinTypes[j] & MATCHNULLS)) || (found && !isNull))))
                 {
                     break;
                 }
-
-                //else
-                // 	cout << " - in the result set\n";
+                else
+                 	cout << " - in the result set\n";
             }
             else
             {
-                //cout << " typeless join\n";
+                cout << " typeless join\n";
                 // the null values are not sent by UM in typeless case.  null -> !found
                 tlLargeKey = makeTypelessKey(oldRow, tlLargeSideKeyColumns[j], tlKeyLengths[j],
                                              &tmpKeyAllocators[j]);
@@ -1092,6 +1112,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                                 continue;    // non-null keys not in the small side
 
                             // are in the result
+                 			cout << " - in the result set\n";
                         }
                         else    // signifies a not-exists query
                             continue;
@@ -1123,6 +1144,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
 
                 getJoinResults(oldRow, j, tSmallSideMatches[j][newRowCount]);
                 matchCount = tSmallSideMatches[j][newRowCount].size();
+				cout << "matchCount:" << matchCount << endl << flush;
 
                 if (joinTypes[j] & WITHFCNEXP)
                 {
@@ -1213,8 +1235,8 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                 newRow.nextRow();
             }
 
-            //else
-            //	cout << "j != joinerCount\n";
+            else
+            	cout << "j != joinerCount\n";
         }
     }
 
@@ -2515,6 +2537,7 @@ void BatchPrimitiveProcessor::initGJRG()
 
 inline void BatchPrimitiveProcessor::getJoinResults(const Row& r, uint32_t jIndex, vector<uint32_t>& v)
 {
+	cout << __FUNCTION__ << ":" << __LINE__ << endl  << flush;
     if (!typelessJoin[jIndex])
     {
         if (r.isNullValue(largeSideKeyColumns[jIndex]) && 
@@ -2562,7 +2585,11 @@ inline void BatchPrimitiveProcessor::getJoinResults(const Row& r, uint32_t jInde
     else
     {
         /* Bug 3524. Large-side NULL + ANTI join matches everything. */
-        if (joinTypes[jIndex] & ANTI)
+		/* Ravi What about mixed case when only certain columns use <=> operator
+		 *      Need to investigate effect on the result set.
+		 */
+        if (joinTypes[jIndex] & ANTI &&
+            !(joinTypes[jIndex] & MATCHNULLSAFE))
         {
             bool hasNullValue = false;
 

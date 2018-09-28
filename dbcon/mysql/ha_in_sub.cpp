@@ -258,6 +258,9 @@ void InSub::handleFunc(gp_walk_info* gwip, Item_func* func)
                 sf = dynamic_cast<SimpleFilter*>(pt->right()->data());
 
                 //idbassert(sf && sf->op()->op() == execplan::OP_EQ);
+				//Ravi Fixit Note need to fix for OP_EQNS
+                // null  handling will need to be fixed.
+                idbassert(sf && sf->op()->op() != execplan::OP_EQNS);  
                 if (!sf || sf->op()->op() != execplan::OP_EQ)
                     return;
 
@@ -288,6 +291,7 @@ void InSub::handleFunc(gp_walk_info* gwip, Item_func* func)
             ParseTree* pt = gwip->ptWorkStack.top();
             SimpleFilter* sf = dynamic_cast<SimpleFilter*>(pt->data());
 
+            idbassert(sf && sf->op()->op() != execplan::OP_EQNS);  
             if (!sf || sf->op()->op() != execplan::OP_EQ)
                 return;
 

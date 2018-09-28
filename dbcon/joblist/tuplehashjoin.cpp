@@ -222,8 +222,8 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
     smallRG = smallRGs[index];
     jt = joinTypes[index];
 
-    //cout << "    smallRunner " << index << " sees jointype " << jt << " joinTypes has " << joinTypes.size()
-    //	<< " elements" << endl;
+    cout << "    smallRunner " << index << " sees jointype " << jt << " joinTypes has " << joinTypes.size()
+    	<< " elements" << endl;
     if (typelessJoin[index])
     {
         joiner.reset(new TupleJoiner(smallRG, largeRG, smallSideKeys[index],
@@ -247,7 +247,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index)
     */
 
     smallRG.initRow(&r);
-// 	cout << "reading smallDL" << endl;
+ 	cout << "reading smallDL" << endl;
     more = smallDL->next(smallIt, &oneRG);
     ostringstream oss;
 

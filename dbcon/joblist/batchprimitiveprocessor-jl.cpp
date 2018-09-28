@@ -1336,6 +1336,8 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
     bool isNull;
     bool bSignedUnsigned;
 
+	cout << __FUNCTION__ << ":" << __FILE__ << ":" << __LINE__ << endl  << flush;
+
     memset((void*)&ism, 0, sizeof(ism));
     tSmallSide = tJoiners[joinerNum]->getSmallSide();
     size = tSmallSide->size();
@@ -1417,13 +1419,17 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
             bs << (uint8_t) isNull;
 
-            if (!isNull)
+            if (!isNull || tJoiners[joinerNum]->getJoinType() & MATCHNULLSAFE)
             {
                 tlData = makeTypelessKey(r, smallSideKeys[joinerNum],
                                          tlKeyLens[joinerNum], &fa);
                 tlData.serialize(bs);
+				
+				cout << __FUNCTION__ <<  ": line:" << __LINE__ << ", i:" << i ;
+                cout << ", isNull:" << isNull << ", key:" << tlData.toString() << endl;
                 bs << i;
             }
+/* Ravi
 			else  if (tJoiners[joinerNum]->getJoinType() & MATCHNULLSAFE)
             {
     			TypelessData ret;
@@ -1433,6 +1439,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
                 ret.serialize(bs);
                 bs << i;
             }
+*/
         }
     }
     else

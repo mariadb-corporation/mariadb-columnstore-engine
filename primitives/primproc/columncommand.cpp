@@ -62,7 +62,6 @@ double cotangent(double in)
 
 }
 
-extern void mcs_spin ( const char* filename );
 
 namespace primitiveprocessor
 {
@@ -103,7 +102,6 @@ void ColumnCommand::_execute()
 
 void ColumnCommand::execute()
 {
-::mcs_spin("spin_cexec");
     if (fFilterFeeder == LEFT_FEEDER)
         values = bpp->fFiltCmdValues[0].get();
     else if (fFilterFeeder == RIGHT_FEEDER)

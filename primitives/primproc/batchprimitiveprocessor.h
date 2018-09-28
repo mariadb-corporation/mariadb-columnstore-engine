@@ -93,6 +93,7 @@ public:
     /* Interface used by primproc */
     void initBPP(messageqcpp::ByteStream&);
     void resetBPP(messageqcpp::ByteStream&, const SP_UM_MUTEX& wLock, const SP_UM_IOSOCK& outputSock);
+	// Add the tuples to a hash table
     void addToJoiner(messageqcpp::ByteStream&);
     int endOfJoiner();
     int operator()();
