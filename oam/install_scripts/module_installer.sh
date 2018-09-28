@@ -144,7 +144,7 @@ if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $Ser
 	fi
 	echo "Run post-mysql-install"
 	
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR  > ${tmpDir}/post-mysql-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR  --tmpdir=${tmpDir} > ${tmpDir}/post-mysql-install.log 2>&1
         if [ $? -ne 0 ]; then
             echo "ERROR: post-mysql-install failed: check ${tmpDir}/post-mysql-install.log"
             exit 1
