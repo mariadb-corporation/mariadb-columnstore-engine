@@ -43,7 +43,8 @@ ThreadPool::ThreadPool()
 }
 
 ThreadPool::ThreadPool( size_t maxThreads, size_t queueSize )
-    :fMaxThreads( maxThreads ), fQueueSize( queueSize )
+    :fMaxThreads( maxThreads ), fQueueSize( queueSize ),
+     fPruneThread( NULL )
 {
     init();
 }
@@ -72,6 +73,7 @@ void ThreadPool::init()
     fStop = false;
     fNextFunctor = fWaitingFunctors.end();
     fNextHandle=1;
+    fPruneThread = new boost::thread(boost::bind(&ThreadPool::pruneThread, this));
 }
 
 void ThreadPool::setQueueSize(size_t queueSize)
@@ -80,6 +82,39 @@ void ThreadPool::setQueueSize(size_t queueSize)
     fQueueSize = queueSize;
 }
 
+void ThreadPool::pruneThread()
+{
+    boost::mutex::scoped_lock lock2(fPruneMutex);
+
+    while(true)
+   {
+        boost::system_time timeout = boost::get_system_time() + boost::posix_time::minutes(1);
+        if (!fPruneThreadEnd.timed_wait(fPruneMutex, timeout))
+        {
+            while(!fPruneThreads.empty())
+            {
+                if (fDebug)
+                {
+                    ostringstream oss;
+                    oss << "pruning thread " << fPruneThreads.top();
+                    logging::Message::Args args;
+                    logging::Message message(0);
+                    args.add(oss.str());
+                    message.format( args );
+                    logging::LoggingID lid(22);
+                    logging::MessageLog ml(lid);
+                    ml.logWarningMessage( message );
+                }
+                fThreads.join_one(fPruneThreads.top());
+                fPruneThreads.pop();
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+}
 
 void ThreadPool::setMaxThreads(size_t maxThreads)
 {
@@ -93,6 +128,9 @@ void ThreadPool::stop()
     fStop = true;
     lock1.unlock();
 
+    fPruneThreadEnd.notify_all();
+    fPruneThread->join();
+    delete fPruneThread;
     fNeedThread.notify_all();
     fThreads.join_all();
 }
@@ -293,6 +331,8 @@ void ThreadPool::beginThread() throw()
                     {
                         if (fThreadCount > fMaxThreads)
                         {
+                            boost::mutex::scoped_lock lock2(fPruneMutex);
+                            fPruneThreads.push(boost::this_thread::get_id());
                             --fThreadCount;
                             return;
                         }
