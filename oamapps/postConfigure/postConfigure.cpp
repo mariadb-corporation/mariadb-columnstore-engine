@@ -1705,7 +1705,13 @@ int main(int argc, char* argv[])
             // are we using settings from previous config file?
             if ( reuseConfig == "n" )
             {
-
+				
+				
+				
+				
+				
+				
+				
                 string numBlocksPct;
 
                 try

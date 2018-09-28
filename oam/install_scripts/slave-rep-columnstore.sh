@@ -38,8 +38,6 @@ for arg in "$@"; do
 	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
 		tmpdir="$(echo $arg | awk -F= '{print $2}')"
 	fi
-
-	fi
 done
 
 test -f $installdir/post/functions && . $installdir/post/functions
