@@ -42,12 +42,22 @@ PriorityThreadPool::PriorityThreadPool(uint targetWeightPerRun, uint highThreads
 		uint midThreads, uint lowThreads, uint ID) :
 		_stop(false), weightPerRun(targetWeightPerRun), id(ID)
 {
+    boost::thread* newThread;
 	for (uint32_t i = 0; i < highThreads; i++)
-		threads.create_thread(ThreadHelper(this, HIGH));
+    {
+		newThread = threads.create_thread(ThreadHelper(this, HIGH));
+        newThread->detach();
+    }
 	for (uint32_t i = 0; i < midThreads; i++)
-		threads.create_thread(ThreadHelper(this, MEDIUM));
+    {
+		newThread = threads.create_thread(ThreadHelper(this, MEDIUM));
+        newThread->detach();
+    }
 	for (uint32_t i = 0; i < lowThreads; i++)
-		threads.create_thread(ThreadHelper(this, LOW));
+    {
+		newThread = threads.create_thread(ThreadHelper(this, LOW));
+        newThread->detach();
+    }
 	cout << "started " << highThreads << " high, " << midThreads << " med, " << lowThreads
 			<< " low.\n";
 	defaultThreadCounts[HIGH] = threadCounts[HIGH] = highThreads;
@@ -62,6 +72,7 @@ PriorityThreadPool::~PriorityThreadPool()
 
 void PriorityThreadPool::addJob(const Job &job, bool useLock)
 {
+    boost::thread* newThread;
 	mutex::scoped_lock lk(mutex, defer_lock_t());
 
 	if (useLock)
@@ -70,17 +81,20 @@ void PriorityThreadPool::addJob(const Job &job, bool useLock)
     // Create any missing threads
     if (defaultThreadCounts[HIGH] != threadCounts[HIGH])
     {
-        threads.create_thread(ThreadHelper(this, HIGH));
+        newThread = threads.create_thread(ThreadHelper(this, HIGH));
+        newThread->detach();
         threadCounts[HIGH]++;
     }
     if (defaultThreadCounts[MEDIUM] != threadCounts[MEDIUM])
     {
-        threads.create_thread(ThreadHelper(this, MEDIUM));
+        newThread = threads.create_thread(ThreadHelper(this, MEDIUM));
+        newThread->detach();
         threadCounts[MEDIUM]++;
     }
     if (defaultThreadCounts[LOW] != threadCounts[LOW])
     {
-        threads.create_thread(ThreadHelper(this, LOW));
+        newThread = threads.create_thread(ThreadHelper(this, LOW));
+        newThread->detach();
         threadCounts[LOW]++;
     }
 
@@ -261,7 +275,6 @@ void PriorityThreadPool::sendErrorMsg(uint32_t id, uint32_t step, primitiveproce
 void PriorityThreadPool::stop()
 {
 	_stop = true;
-	threads.join_all();
 }
 
 } // namespace threadpool
