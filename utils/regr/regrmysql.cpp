@@ -125,7 +125,7 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_avgx connector stub
+     * regr_avgx 
      */
     struct regr_avgx_data
     {
@@ -209,7 +209,7 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_avgy connector stub
+     * regr_avgy 
      */
     struct regr_avgy_data
     {
@@ -293,7 +293,7 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_count connector stub
+     * regr_count 
      */
     struct regr_count_data
     {
@@ -372,11 +372,11 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_slope connector stub
+     * regr_slope 
      */
     struct regr_slope_data
     {
-        int64_t   cnt;
+        int64_t     cnt;
         double      sumx;
         double      sumx2;  // sum of (x squared)
         double      sumy;
@@ -404,6 +404,7 @@ extern "C"
         data->sumx = 0.0;
         data->sumx2 = 0.0;
         data->sumy = 0.0;
+        data->sumxy = 0.0;
 
     	initid->ptr = (char*)data;
     	return 0;
@@ -429,6 +430,7 @@ extern "C"
         data->sumx = 0.0;
         data->sumx2 = 0.0;
         data->sumy = 0.0;
+        data->sumxy = 0.0;
     }
 
     #ifdef _MSC_VER
@@ -481,7 +483,7 @@ extern "C"
 //=======================================================================
 
     /**
-     * regr_intercept connector stub
+     * regr_intercept 
      */
     struct regr_intercept_data
     {
@@ -513,6 +515,7 @@ extern "C"
         data->sumx = 0.0;
         data->sumx2 = 0.0;
         data->sumy = 0.0;
+        data->sumxy = 0.0;
 
     	initid->ptr = (char*)data;
     	return 0;
@@ -538,6 +541,7 @@ extern "C"
         data->sumx = 0.0;
         data->sumx2 = 0.0;
         data->sumy = 0.0;
+        data->sumxy = 0.0;
     }
 
     #ifdef _MSC_VER
@@ -583,6 +587,135 @@ extern "C"
                 double slope = ((N * sumxy) - (sumx * sumy)) / variance;
                 return (sumy - (slope * sumx)) / N;
             }
+        }
+        *is_null = 1;
+    	return 0;
+    }
+
+//=======================================================================
+
+    /**
+     * regr_r2
+     */
+    struct regr_r2_data
+    {
+        int64_t   cnt;
+        double      sumx;
+        double      sumx2;  // sum of (x squared)
+        double      sumy;
+        double      sumy2;  // sum of (y squared)
+        double      sumxy;  // sum of (x*y)
+    };
+     
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool regr_r2_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	struct regr_r2_data* data;
+    	if (args->arg_count != 2)
+    	{
+    		strcpy(message,"regr_r2() requires two arguments");
+    		return 1;
+    	}
+
+    	if (!(data = (struct regr_r2_data*) malloc(sizeof(struct regr_r2_data))))
+    	{
+    		strmov(message,"Couldn't allocate memory");
+    		return 1;
+    	}
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumx2 = 0.0;
+        data->sumy = 0.0;
+        data->sumy2 = 0.0;
+        data->sumxy = 0.0;
+
+    	initid->ptr = (char*)data;
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void regr_r2_deinit(UDF_INIT* initid)
+    {
+    	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_r2_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    	struct regr_r2_data* data = (struct regr_r2_data*)initid->ptr;
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumx2 = 0.0;
+        data->sumy = 0.0;
+        data->sumy2 = 0.0;
+        data->sumxy = 0.0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_r2_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+        // Test for NULL in x and y
+        if (args->args[0] == 0 || args->args[1] == 0)
+        {
+            return;
+        }
+    	struct regr_r2_data* data = (struct regr_r2_data*)initid->ptr;
+    	double yval = cvtArgToDouble(args->arg_type[0], args->args[0]);
+    	double xval = cvtArgToDouble(args->arg_type[1], args->args[1]);
+        data->sumy += yval;
+        data->sumx += xval;
+        data->sumx2 += xval*xval;
+        data->sumy2 += yval*yval;
+        data->sumxy += xval*yval;
+        ++data->cnt;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    double regr_r2(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	struct regr_r2_data* data = (struct regr_r2_data*)initid->ptr;
+        double N = data->cnt;
+        if (N > 0)
+        {
+            double sumx = data->sumx;
+            double sumy = data->sumy;
+            double sumx2 = data->sumx2;
+            double sumy2 = data->sumy2;
+            double sumxy = data->sumxy;
+            double var_popx = (sumx2 - (sumx * sumx / N)) / N;
+            if (var_popx == 0)
+            {
+                // When var_popx is 0, NULL is the result.
+                *is_null = 1;
+            	return 0;
+            }
+            double var_popy = (sumy2 - (sumy * sumy / N)) / N;
+            if (var_popy == 0)
+            {
+                // When var_popy is 0, 1 is the result
+                return 1;
+            }
+            double std_popx = sqrt(var_popx);
+            double std_popy = sqrt(var_popy);
+            double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+            double corr = covar_pop / (std_popy * std_popx);
+            return corr * corr;
         }
         *is_null = 1;
     	return 0;

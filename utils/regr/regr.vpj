@@ -198,6 +198,7 @@
             <F N="regr_avgy.cpp"/>
             <F N="regr_count.cpp"/>
             <F N="regr_intercept.cpp"/>
+            <F N="regr_r2.cpp"/>
             <F N="regr_slope.cpp"/>
             <F N="regrmysql.cpp"/>
         </Folder>
@@ -208,6 +209,7 @@
             <F N="regr_avgy.h"/>
             <F N="regr_count.h"/>
             <F N="regr_intercept.h"/>
+            <F N="regr_r2.h"/>
             <F N="regr_slope.h"/>
         </Folder>
         <Folder

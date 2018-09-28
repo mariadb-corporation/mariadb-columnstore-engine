@@ -89,6 +89,7 @@ CREATE AGGREGATE FUNCTION regr_avgy RETURNS REAL soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_count RETURNS INTEGER soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_slope RETURNS REAL soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_intercept RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_r2 RETURNS REAL soname 'libregr_mysql.so';
 
 CREATE AGGREGATE FUNCTION distinct_count RETURNS INTEGER soname 'libudf_mysql.so';
 

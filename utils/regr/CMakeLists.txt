@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
                      
 ########### next target ###############
 
-set(regr_LIB_SRCS regr_avgx.cpp regr_avgy.cpp regr_count.cpp regr_slope.cpp regr_intercept)
+set(regr_LIB_SRCS regr_avgx.cpp regr_avgy.cpp regr_count.cpp regr_slope.cpp regr_intercept regr_r2)
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
