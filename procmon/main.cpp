@@ -1886,6 +1886,11 @@ static void statusControlThread()
     //
     //Allocate Shared Memory for storing Process Status Data
     //
+    
+    string shmLocation = "/dev/shm/";
+	if ( !rootUser) 
+		shmLocation = startup::StartUp::installDir() + "/dev/shm/";
+    
     PROCSTATshmsize = MAX_PROCESS * sizeof(shmProcessStatus);
     bool memInit = true;
 #if 0
@@ -1914,7 +1919,7 @@ static void statusControlThread()
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
         {
-            string pname = "/dev/shm/" + keyName;
+            string pname = shmLocation + keyName;
             chmod(pname.c_str(), 0666);
         }
 #endif
@@ -1992,7 +1997,7 @@ static void statusControlThread()
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
         {
-            string pname = "/dev/shm/" + keyName;
+            string pname = shmLocation + keyName;
             chmod(pname.c_str(), 0666);
         }
 #endif
@@ -2111,7 +2116,7 @@ static void statusControlThread()
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
         {
-            string pname = "/dev/shm/" + keyName;
+            string pname = shmLocation + keyName;
             chmod(pname.c_str(), 0666);
         }
 #endif
@@ -2209,7 +2214,7 @@ static void statusControlThread()
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
         {
-            string pname = "/dev/shm/" + keyName;
+            string pname = shmLocation + keyName;
             chmod(pname.c_str(), 0666);
         }
 #endif
@@ -2299,7 +2304,7 @@ static void statusControlThread()
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
         {
-            string pname = "/dev/shm/" + keyName;
+            string pname = shmLocation + keyName;
             chmod(pname.c_str(), 0666);
         }
 #endif

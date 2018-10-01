@@ -191,6 +191,12 @@ mkdir -p $hdfsDir >/dev/null 2>&1
 #create mount directories
 mkdir /mnt/tmp > /dev/null 2>&1
 
+#create shared memory if non-root
+if [ $user != "root" ]; then
+	mkdir -p ${installdir}/dev/shm
+	chmod 666 ${installdir}/dev/shm
+fi
+
 # remove mysql archive log
 test -d $installdir/mysql/db || mkdir -p $installdir/mysql/db
 rm -rf $installdir/mysql/db/columnstore_log_archive > /dev/null 2>&1

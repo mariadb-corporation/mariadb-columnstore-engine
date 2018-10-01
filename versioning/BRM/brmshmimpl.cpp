@@ -36,6 +36,8 @@ namespace bi = boost::interprocess;
 #include "brmshmimpl.h"
 #include "brmtypes.h"
 
+#include "installdir.h"
+
 namespace BRM
 {
 
@@ -43,6 +45,19 @@ BRMShmImpl::BRMShmImpl(unsigned key, off_t size, bool readOnly) :
     fKey(key), fSize(size), fReadOnly(readOnly)
 {
     string keyName = ShmKeys::keyToName(fKey);
+
+	bool rootUser = true;
+
+    //check if root-user
+    int user;
+    user = getuid();
+
+    if (user != 0)
+        rootUser = false;
+
+    string shmLocation = "/dev/shm/";
+	if ( !rootUser) 
+		shmLocation = startup::StartUp::installDir() + "/dev/shm/";
 
     if (fSize == 0)
     {
@@ -89,7 +104,7 @@ again:
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
         {
-            string pname = "/dev/shm/" + keyName;
+            string pname = "shmLocation + keyName;
             chmod(pname.c_str(), 0666);
         }
 #endif
@@ -147,7 +162,7 @@ int BRMShmImpl::grow(unsigned newKey, off_t newSize)
     bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
     {
-        string pname = "/dev/shm/" + keyName;
+        string pname = shmLocation + keyName;
         chmod(pname.c_str(), 0666);
     }
 #endif
@@ -194,7 +209,7 @@ int BRMShmImpl::clear(unsigned newKey, off_t newSize)
     bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
     {
-        string pname = "/dev/shm/" + keyName;
+        string pname = shmLocation + keyName;
         chmod(pname.c_str(), 0666);
     }
 #endif

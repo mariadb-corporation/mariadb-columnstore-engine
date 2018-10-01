@@ -52,6 +52,8 @@ using namespace boost::posix_time;
 
 #include "shmkeys.h"
 
+#include "installdir.h"
+
 namespace
 {
 using namespace rwlock;
@@ -141,13 +143,26 @@ RWLockShmImpl::RWLockShmImpl(int key, bool excl)
     string keyName = BRM::ShmKeys::keyToName(key);
     fKeyString = keyName;
 
+	bool rootUser = true;
+
+    //check if root-user
+    int user;
+    user = getuid();
+
+    if (user != 0)
+        rootUser = false;
+
+    string shmLocation = "/dev/shm/";
+	if ( !rootUser) 
+		shmLocation = startup::StartUp::installDir() + "/dev/shm/";
+
     try
     {
 #if BOOST_VERSION < 104500
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
 #ifdef __linux__
         {
-            string pname = "/dev/shm/" + keyName;
+            string pname = shmLocation + keyName;
             chmod(pname.c_str(), 0666);
         }
 #endif

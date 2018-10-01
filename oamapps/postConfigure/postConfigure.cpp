@@ -852,7 +852,7 @@ int main(int argc, char* argv[])
 				if (temp == "1")
 				{
 					singleServerInstall = temp;
-					cout << endl << "Performing the Single Server Install." << endl;
+					cout << endl << "Performing the Single Server Install." << endl << endl;
 
 					if ( reuseConfig == "n" )
 					{
