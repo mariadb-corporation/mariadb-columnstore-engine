@@ -133,7 +133,7 @@ send_user "\n"
 #
 send_user "Install MariaDB Columnstore Package on Module               "
 send_user " \n"
-send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxvf $CALPONTPKG'\n"
+send "ssh -v $USERNAME@$SERVER 'tar -C $PREFIX --exclude db -zxf $CALPONTPKG'\n"
 set timeout 360
 expect {
 	"word: " { send "$PASSWORD\n"

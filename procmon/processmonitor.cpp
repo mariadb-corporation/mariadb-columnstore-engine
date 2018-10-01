@@ -5203,7 +5203,7 @@ int ProcessMonitor::runMariaDBCommandLine(std::string command)
     if ( MySQLPort.empty() )
         MySQLPort = "3306";
 
-    string cmd = startup::StartUp::installDir() + "/bin/mariadb-command-line.sh --installdir=" + startup::StartUp::installDir() + " --command='" + command + "' --port=" + MySQLPort + "--tmpdir=" + tmpLogDir + " > " + tmpLogDir + "/mariadb-command-line.sh.log 2>&1";
+    string cmd = startup::StartUp::installDir() + "/bin/mariadb-command-line.sh --installdir=" + startup::StartUp::installDir() + " --command='" + command + "' --port=" + MySQLPort + " --tmpdir=" + tmpLogDir + " > " + tmpLogDir + "/mariadb-command-line.sh.log 2>&1";
 
     log.writeLog(__LINE__, "cmd = " + cmd, LOG_TYPE_DEBUG);
 

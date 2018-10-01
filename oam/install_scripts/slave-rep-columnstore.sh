@@ -50,7 +50,7 @@ password="Calpont1"
 #
 # Run stop slave command
 #
-echo "Run stop slave command" >>${tmpdir}slave-rep-status.log
+echo "Run stop slave command" >>${tmpdir}/slave-rep-status.log
 cat >${tmpdir}/idb_slave-rep.sql <<EOD
 stop slave;
 EOD
