@@ -816,7 +816,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                                 // If it doesn't insert, the original pair will be returned
                                 // in distinct.first and distinct.second will be a bool --
                                 // true if newly inserted, false if a duplicate.
-                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                std::pair<DistinctMap::iterator, bool> distinct;
                                 distinct = fDistinctMap.insert(val);
                                 if (distinct.second == false)
                                 {
@@ -850,7 +850,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                             if (k == 0 && fDistinct)
                             {
                                 std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                std::pair<DistinctMap::iterator, bool> distinct;
                                 distinct = fDistinctMap.insert(val);
                                 if (distinct.second == false)
                                 {
@@ -889,7 +889,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                             if (k == 0 && fDistinct)
                             {
                                 std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                std::pair<DistinctMap::iterator, bool> distinct;
                                 distinct = fDistinctMap.insert(val);
                                 if (distinct.second == false)
                                 {
@@ -922,7 +922,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                             if (k == 0 && fDistinct)
                             {
                                 std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                std::pair<DistinctMap::iterator, bool> distinct;
                                 distinct = fDistinctMap.insert(val);
                                 if (distinct.second == false)
                                 {
@@ -955,7 +955,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                             if (k == 0 && fDistinct)
                             {
                                 std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                std::pair<DistinctMap::iterator, bool> distinct;
                                 distinct = fDistinctMap.insert(val);
                                 if (distinct.second == false)
                                 {
@@ -991,7 +991,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                             if (k == 0 && fDistinct)
                             {
                                 std::pair<static_any::any, uint64_t> val = make_pair(valIn, 1);
-                                std::pair<typename DistinctMap::iterator, bool> distinct;
+                                std::pair<DistinctMap::iterator, bool> distinct;
                                 distinct = fDistinctMap.insert(val);
                                 if (distinct.second == false)
                                 {
