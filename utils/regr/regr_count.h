@@ -18,19 +18,19 @@
 /***********************************************************************
 *   $Id$
 *
-*   regr_avgx.h
+*   regr_count.h
 ***********************************************************************/
 
 /**
- * Columnstore interface for for the regr_avgx function
+ * Columnstore interface for for the regr_count function
  *
  *
- *    CREATE AGGREGATE FUNCTION regr_avgx returns REAL soname
- *    'libudf_mysql.so';
+ *    CREATE AGGREGATE FUNCTION regr_count returns INTEGER
+ *    soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_avgx
-#define HEADER_regr_avgx
+#ifndef HEADER_regr_count
+#define HEADER_regr_count
 
 #include <cstdlib>
 #include <string>
@@ -55,24 +55,14 @@ using namespace execplan;
 namespace mcsv1sdk
 {
 
-// Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or
-// User Defined Analytic Function (UDAnF).
-// These will be singleton classes, so don't put any instance
-// specific data in here. All instance data is stored in mcsv1Context
-// passed to each user function and retrieved by the getUserData() method.
-//
-// Each API function returns a ReturnCode. If ERROR is returned at any time,
-// the query is aborted, getInterrupted() will begin to return true and the
-// message set in config->setErrorMessage() is returned to MariaDB.
+// Return the regr_count value of the dataset
 
-// Return the regr_avgx value of the dataset
-
-class regr_avgx : public  mcsv1_UDAF
+class regr_count : public  mcsv1_UDAF
 {
 public:
     // Defaults OK
-    regr_avgx() : mcsv1_UDAF() {};
-    virtual ~regr_avgx() {};
+    regr_count() : mcsv1_UDAF() {};
+    virtual ~regr_count() {};
 
     virtual ReturnCode init(mcsv1Context* context,
                             ColumnDatum* colTypes);
@@ -94,5 +84,5 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_regr_avgx.h
+#endif // HEADER_regr_count.h
 

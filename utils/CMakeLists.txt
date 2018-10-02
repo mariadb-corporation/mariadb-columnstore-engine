@@ -25,3 +25,5 @@ add_subdirectory(thrift)
 add_subdirectory(querytele)
 add_subdirectory(clusterTester)
 add_subdirectory(libmysql_client)
+add_subdirectory(regr)
+
