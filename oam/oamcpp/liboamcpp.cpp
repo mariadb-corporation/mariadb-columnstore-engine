@@ -56,6 +56,7 @@
 #ifdef _MSC_VER
 #include "idbregistry.h"
 #endif
+#include "config.h"
 #include "installdir.h"
 #include "dbrm.h"
 #include "sessionmanager.h"

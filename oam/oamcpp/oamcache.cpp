@@ -34,6 +34,7 @@ using namespace boost;
 #include "exceptclasses.h"
 #include "configcpp.h"
 #include "installdir.h"
+#include "config.h"
 
 namespace
 {
@@ -180,6 +181,7 @@ void OamCache::checkReload()
             }
         }
 #else
+        pmToConnectionMap[*it] = i++;
         moduleIds.push_back(*it);
 #endif
         it++;

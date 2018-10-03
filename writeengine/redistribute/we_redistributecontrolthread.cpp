@@ -37,6 +37,7 @@ using namespace std;
 #include "boost/filesystem/operations.hpp"
 using namespace boost;
 
+#include "config.h"
 #include "installdir.h"
 
 #include "configcpp.h"

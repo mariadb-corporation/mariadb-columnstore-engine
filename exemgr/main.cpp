@@ -63,6 +63,7 @@ using namespace std;
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 
+#include "config.h"
 #include "configcpp.h"
 using namespace config;
 #include "messagequeue.h"
@@ -99,6 +100,10 @@ using namespace querytele;
 
 #include "threadpool.h"
 #include "crashtrace.h"
+
+#if defined(SKIP_OAM_INIT)
+#include "dbrm.h"
+#endif
 
 namespace
 {
@@ -1601,6 +1606,11 @@ int main(int argc, char* argv[])
         {
         }
     }
+#if defined(SKIP_OAM_INIT)
+    BRM::DBRM *dbrm = new BRM::DBRM();
+    dbrm->setSystemQueryReady(true);
+    delete dbrm;
+#endif
 
     threadpool::ThreadPool exeMgrThreadPool(serverThreads, 0);
     exeMgrThreadPool.setName("ExeMgrServer");
