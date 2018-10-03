@@ -17,9 +17,6 @@ INCLUDE (CheckSymbolExists)
 INCLUDE (CheckCXXSymbolExists)
 INCLUDE (CheckTypeSize)
 
-IF($ENV{SKIP_OAM_INIT})
-    SET(SKIP_OAM_INIT 1)
-ENDIF()    
 CHECK_INCLUDE_FILE_CXX (alloca.h HAVE_ALLOCA_H)
 CHECK_INCLUDE_FILE_CXX (arpa/inet.h HAVE_ARPA_INET_H)
 CHECK_INCLUDE_FILE_CXX (dlfcn.h HAVE_DLFCN_H)
@@ -719,7 +716,9 @@ IF (NOT INLINE)
 SET (inline "")
 ENDIF()
 
-
+IF($ENV{SKIP_OAM_INIT})
+    SET(SKIP_OAM_INIT 1)
+ENDIF()
 
 EXECUTE_PROCESS(
     COMMAND rm -f conftest.data conftest.file conftest.sym

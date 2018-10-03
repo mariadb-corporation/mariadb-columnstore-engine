@@ -43,6 +43,7 @@ using namespace std;
 #include <boost/thread.hpp>
 using namespace boost;
 
+#include "config.h"
 #include "configcpp.h"
 using namespace config;
 
