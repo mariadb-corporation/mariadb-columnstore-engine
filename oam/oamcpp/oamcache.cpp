@@ -84,7 +84,7 @@ void OamCache::checkReload()
     for (uint32_t i = 0; i < dbroots.size(); i++)
     {
         oam.getDbrootPmConfig(dbroots[i], temp);
-        cout << "  dbroot " << dbroots[i] << " -> PM " << temp << endl;
+        //cout << "  dbroot " << dbroots[i] << " -> PM " << temp << endl;
         (*dbRootPMMap)[dbroots[i]] = temp;
     }
 
