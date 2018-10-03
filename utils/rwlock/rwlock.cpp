@@ -153,8 +153,6 @@ RWLockShmImpl::RWLockShmImpl(int key, bool excl)
         rootUser = false;
 
     string shmLocation = "/dev/shm/";
-	if ( !rootUser) 
-		shmLocation = startup::StartUp::installDir() + "/dev/shm/";
 
     try
     {

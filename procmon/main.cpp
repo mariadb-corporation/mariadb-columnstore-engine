@@ -1888,8 +1888,6 @@ static void statusControlThread()
     //
     
     string shmLocation = "/dev/shm/";
-	if ( !rootUser) 
-		shmLocation = startup::StartUp::installDir() + "/dev/shm/";
     
     PROCSTATshmsize = MAX_PROCESS * sizeof(shmProcessStatus);
     bool memInit = true;

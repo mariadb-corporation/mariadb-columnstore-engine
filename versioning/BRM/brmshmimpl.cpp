@@ -56,8 +56,6 @@ BRMShmImpl::BRMShmImpl(unsigned key, off_t size, bool readOnly) :
         rootUser = false;
 
     string shmLocation = "/dev/shm/";
-	if ( !rootUser) 
-		shmLocation = startup::StartUp::installDir() + "/dev/shm/";
 
     if (fSize == 0)
     {

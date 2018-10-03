@@ -85,8 +85,6 @@ MasterSegmentTableImpl::MasterSegmentTableImpl(int key, int size)
         rootUser = false;
 
     string shmLocation = "/dev/shm/";
-	if ( !rootUser) 
-		shmLocation = startup::StartUp::installDir() + "/dev/shm/";
 
     try
     {
