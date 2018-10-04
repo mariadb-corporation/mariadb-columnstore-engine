@@ -68,6 +68,41 @@ extern bool gOAMParentModuleFlag;
 
 pthread_mutex_t STATUS_LOCK;
 
+bool getshm(const string &name, int size, bi::shared_memory_object &target) {
+    MonitorLog log;
+    bool created = false;
+    try
+    {
+        bi::shared_memory_object shm(bi::create_only, name.c_str(), bi::read_write);
+        created = true;
+        shm.truncate(size);
+        target.swap(shm);
+    }
+    catch (bi::interprocess_exception& biex)
+    {
+        if (biex.get_error_code() == bi::already_exists_error) {
+            try {
+                bi::shared_memory_object shm(bi::open_only, name.c_str(), bi::read_write);
+                target.swap(shm);
+            }
+            catch (exception &e) {
+                ostringstream os;
+                os << "ProcMon failed to attach to the " << name << " shared mem segment, got " << e.what();
+                log.writeLog(__LINE__, os.str(), LOG_TYPE_CRITICAL);
+                exit(1);
+            }
+        }
+        else {
+            ostringstream os;
+            os << "ProcMon failed to create the 'proc stat' shared mem segment, got " << biex.what();
+            log.writeLog(__LINE__, os.str(), LOG_TYPE_CRITICAL);
+            exit(1);
+        }
+    }
+    return created;
+}
+
+
 /******************************************************************************************
 * @brief	main
 *
@@ -1910,29 +1945,7 @@ static void statusControlThread()
     fShmProcessStatus = static_cast<struct shmProcessStatus*>(shmat(shmid, NULL, 0));
 #endif
     string keyName = BRM::ShmKeys::keyToName(fShmKeys.PROCESSSTATUS_SYSVKEY);
-
-    try
-    {
-#if BOOST_VERSION < 104500
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#else
-        bi::permissions perms;
-        perms.set_unrestricted();
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
-        shm.truncate(PROCSTATshmsize);
-        fProcStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fProcStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, PROCSTATshmsize, fProcStatShmobj);
 
     bi::mapped_region region(fProcStatShmobj, bi::read_write);
     fProcStatMapreg.swap(region);
@@ -1983,23 +1996,7 @@ static void statusControlThread()
     fShmSystemStatus = static_cast<struct shmDeviceStatus*>(shmat(shmid, NULL, 0));
 #endif
     keyName = BRM::ShmKeys::keyToName(fShmKeys.SYSTEMSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-        shm.truncate(SYSTEMSTATshmsize);
-        fSysStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fSysStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, SYSTEMSTATshmsize, fSysStatShmobj);
 
     bi::mapped_region region2(fSysStatShmobj, bi::read_write);
     fSysStatMapreg.swap(region2);
@@ -2076,43 +2073,9 @@ static void statusControlThread()
     //
     boost::interprocess::shared_memory_object fNICStatShmobj;
     static const int NICSTATshmsize = (MAX_MODULE * MAX_NIC) * sizeof(shmDeviceStatus);
-    memInit = true;
-#if 0
-    shmid = shmget(fShmKeys.NICSTATUS_SYSVKEY, NICSTATshmsize, IPC_EXCL | IPC_CREAT | 0666);
 
-    if (shmid == -1)
-    {
-        // table already exist
-        memInit = false;
-        shmid = shmget(fShmKeys.NICSTATUS_SYSVKEY, NICSTATshmsize, 0666);
-
-        if (shmid == -1)
-        {
-            log.writeLog(__LINE__, "*****NICStatusTable shmget failed.", LOG_TYPE_ERROR);
-            exit(1);
-        }
-    }
-
-    fShmNICStatus = static_cast<struct shmDeviceStatus*>(shmat(shmid, NULL, 0));
-#endif
     keyName = BRM::ShmKeys::keyToName(fShmKeys.NICSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-        shm.truncate(NICSTATshmsize);
-        fNICStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fNICStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, NICSTATshmsize, fNICStatShmobj);
 
     bi::mapped_region fNICStatMapreg(fNICStatShmobj, bi::read_write);
     fShmNICStatus = static_cast<shmDeviceStatus*>(fNICStatMapreg.get_address());
@@ -2168,43 +2131,8 @@ static void statusControlThread()
 
     boost::interprocess::shared_memory_object fExtStatShmobj;
     static const int EXTDEVICESTATshmsize = MAX_EXT_DEVICE * sizeof(shmDeviceStatus);
-    memInit = true;
-#if 0
-    shmid = shmget(fShmKeys.SWITCHSTATUS_SYSVKEY, EXTDEVICESTATshmsize, IPC_EXCL | IPC_CREAT | 0666);
-
-    if (shmid == -1)
-    {
-        // table already exist
-        memInit = false;
-        shmid = shmget(fShmKeys.SWITCHSTATUS_SYSVKEY, EXTDEVICESTATshmsize, 0666);
-
-        if (shmid == -1)
-        {
-            log.writeLog(__LINE__, "*****ExtDeviceStatusTable shmget failed.", LOG_TYPE_ERROR);
-            exit(1);
-        }
-    }
-
-    fShmExtDeviceStatus = static_cast<struct shmDeviceStatus*>(shmat(shmid, NULL, 0));
-#endif
     keyName = BRM::ShmKeys::keyToName(fShmKeys.SWITCHSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-        shm.truncate(EXTDEVICESTATshmsize);
-        fExtStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fExtStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, EXTDEVICESTATshmsize, fExtStatShmobj);
 
     bi::mapped_region fExtStatMapreg(fExtStatShmobj, bi::read_write);
     fShmExtDeviceStatus = static_cast<shmDeviceStatus*>(fExtStatMapreg.get_address());
@@ -2270,25 +2198,8 @@ static void statusControlThread()
 
     boost::interprocess::shared_memory_object fDbrootShmobj;
     static const int DBROOTSTATshmsize = MAX_DBROOT * sizeof(shmDeviceStatus);
-    memInit = true;
     keyName = BRM::ShmKeys::keyToName(fShmKeys.DBROOTSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-        shm.truncate(DBROOTSTATshmsize);
-        fDbrootShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fDbrootShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, DBROOTSTATshmsize, fDbrootShmobj);
 
     bi::mapped_region fdDbrootStatMapreg(fDbrootShmobj, bi::read_write);
     fShmDbrootStatus = static_cast<shmDeviceStatus*>(fdDbrootStatMapreg.get_address());
@@ -2376,6 +2287,7 @@ static void statusControlThread()
             log.writeLog(__LINE__, "statusControlThread Thread reading " + portName + " port", LOG_TYPE_DEBUG);
         }
 
+        fIos = NULL;
         try
         {
             //log.writeLog(__LINE__, "***before accept", LOG_TYPE_DEBUG);
@@ -2402,7 +2314,8 @@ static void statusControlThread()
         }
         catch (...)
         {
-            delete fIos;
+            if (fIos)
+                delete fIos;
         }
 
         if ( runStandby )
