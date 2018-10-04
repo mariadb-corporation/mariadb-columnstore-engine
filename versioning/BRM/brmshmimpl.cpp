@@ -45,7 +45,6 @@ BRMShmImpl::BRMShmImpl(unsigned key, off_t size, bool readOnly) :
     fKey(key), fSize(size), fReadOnly(readOnly)
 {
     string keyName = ShmKeys::keyToName(fKey);
-    string shmLocation = "/dev/shm/";
 
     if (fSize == 0)
     {
@@ -107,7 +106,7 @@ again:
         }
         catch (exception &e) {
             ostringstream o;
-            o << "BRM caught an exception attaching to a shared memory segment: " << b.what();
+            o << "BRM caught an exception attaching to a shared memory segment (" << keyName << "): " << b.what();
             log(o.str());
             throw;
         }
@@ -145,19 +144,7 @@ int BRMShmImpl::grow(unsigned newKey, off_t newSize)
     string oldName = fShmobj.get_name();
 
     string keyName = ShmKeys::keyToName(newKey);
-#if BOOST_VERSION < 104500
     bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-    {
-        string pname = shmLocation + keyName;
-        chmod(pname.c_str(), 0666);
-    }
-#endif
-#else
-    bi::permissions perms;
-    perms.set_unrestricted();
-    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
     shm.truncate(newSize);
 
     bi::mapped_region region(shm, bi::read_write);
@@ -192,19 +179,7 @@ int BRMShmImpl::clear(unsigned newKey, off_t newSize)
     string oldName = fShmobj.get_name();
 
     string keyName = ShmKeys::keyToName(newKey);
-#if BOOST_VERSION < 104500
     bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-    {
-        string pname = shmLocation + keyName;
-        chmod(pname.c_str(), 0666);
-    }
-#endif
-#else
-    bi::permissions perms;
-    perms.set_unrestricted();
-    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
     shm.truncate(newSize);
 
     bi::mapped_region region(shm, bi::read_write);
