@@ -77,7 +77,9 @@ MasterSegmentTableImpl::MasterSegmentTableImpl(int key, int size)
 
     try
     {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
+        bi::permissions perms;
+        perms.set_unrestricted();
+        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
         shm.truncate(size);
         fShmobj.swap(shm);
     }

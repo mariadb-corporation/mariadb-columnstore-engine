@@ -32,10 +32,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
-
 #include "calpontsystemcatalog.h"
 #include "sessionmanager.h"
 #include "shmkeys.h"

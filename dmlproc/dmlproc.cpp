@@ -584,18 +584,6 @@ int main(int argc, char* argv[])
     if (temp > 0)
         serverQueueSize = temp;
 
-
-    bool rootUser = true;
-#ifndef _MSC_VER
-    //check if root-user
-    int user;
-    user = getuid();
-
-    if (user != 0)
-        rootUser = false;
-
-#endif
-
     //read and cleanup port before trying to use
     try
     {

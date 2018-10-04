@@ -73,7 +73,9 @@ bool getshm(const string &name, int size, bi::shared_memory_object &target) {
     bool created = false;
     try
     {
-        bi::shared_memory_object shm(bi::create_only, name.c_str(), bi::read_write);
+        bi::permissions perms;
+        perms.set_unrestricted();
+        bi::shared_memory_object shm(bi::create_only, name.c_str(), bi::read_write, perms);
         created = true;
         shm.truncate(size);
         target.swap(shm);

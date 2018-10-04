@@ -64,12 +64,7 @@ again:
 #endif
 
             if (curSize == 0) throw
-#if BOOST_VERSION < 104500
-                bi::interprocess_exception();
-
-#else
                 bi::interprocess_exception("shm size is zero");
-#endif
         }
         catch (bi::interprocess_exception&)
         {
@@ -87,7 +82,9 @@ again:
 
     try
     {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
+        bi::permissions perms;
+        perms.set_unrestricted();
+        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
         idbassert(fSize > 0);
         shm.truncate(fSize);
         fShmobj.swap(shm);
@@ -113,7 +110,7 @@ again:
         off_t curSize = 0;
 #ifdef _MSC_VER
         bi::offset_t tmp = 0;
-        shm.get_size(tmp);
+        shm->get_size(tmp);
         curSize = static_cast<off_t>(tmp);
 #else
         shm->get_size(curSize);
@@ -121,6 +118,7 @@ again:
         idbassert(curSize > 0);
         idbassert(curSize >= fSize);
         fShmobj.swap(*shm);
+        delete shm;
         fSize = curSize;
     }
 
@@ -144,7 +142,9 @@ int BRMShmImpl::grow(unsigned newKey, off_t newSize)
     string oldName = fShmobj.get_name();
 
     string keyName = ShmKeys::keyToName(newKey);
-    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
+    bi::permissions perms;
+    perms.set_unrestricted();
+    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
     shm.truncate(newSize);
 
     bi::mapped_region region(shm, bi::read_write);
@@ -179,7 +179,9 @@ int BRMShmImpl::clear(unsigned newKey, off_t newSize)
     string oldName = fShmobj.get_name();
 
     string keyName = ShmKeys::keyToName(newKey);
-    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
+    bi::permissions perms;
+    perms.set_unrestricted();
+    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
     shm.truncate(newSize);
 
     bi::mapped_region region(shm, bi::read_write);

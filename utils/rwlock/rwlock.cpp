@@ -143,32 +143,11 @@ RWLockShmImpl::RWLockShmImpl(int key, bool excl)
     string keyName = BRM::ShmKeys::keyToName(key);
     fKeyString = keyName;
 
-	bool rootUser = true;
-
-    //check if root-user
-    int user;
-    user = getuid();
-
-    if (user != 0)
-        rootUser = false;
-
-    string shmLocation = "/dev/shm/";
-
     try
     {
-#if BOOST_VERSION < 104500
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = shmLocation + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-#else
         bi::permissions perms;
         perms.set_unrestricted();
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
         shm.truncate(sizeof(struct State));
         fStateShm.swap(shm);
         bi::mapped_region region(fStateShm, bi::read_write);
@@ -190,10 +169,7 @@ RWLockShmImpl::RWLockShmImpl(int key, bool excl)
     catch (bi::interprocess_exception&)
     {
         if (excl)
-        {
-            //don't think we can get here anymore...
             throw not_excl();
-        }
 
         bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
         fStateShm.swap(shm);
