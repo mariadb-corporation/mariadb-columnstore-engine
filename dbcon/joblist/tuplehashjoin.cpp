@@ -54,7 +54,6 @@ using namespace querytele;
 
 #include "atomicops.h"
 
-
 namespace joblist
 {
 

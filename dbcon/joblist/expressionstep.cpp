@@ -150,7 +150,8 @@ void ExpressionStep::expressionFilter(const Filter* filter, JobInfo& jobInfo)
     // populate the oid vectors
     SimpleFilter* sf = dynamic_cast<SimpleFilter*>(f);
 
-    if (sf != NULL && sf->op()->data() == "=")
+    if (sf != NULL && (sf->op()->data() == "=" ||
+                       sf->op()->data() == "<=>"))
         functionJoinCheck(sf, jobInfo);
 }
 

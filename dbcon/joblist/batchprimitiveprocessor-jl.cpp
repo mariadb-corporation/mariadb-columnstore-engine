@@ -49,7 +49,6 @@ using namespace messageqcpp;
 using namespace rowgroup;
 using namespace joiner;
 
-extern void mcs_spin ( const char* filename );
 namespace joblist
 {
 
@@ -716,9 +715,6 @@ bool BatchPrimitiveProcessorJL::countThisMsg(messageqcpp::ByteStream& in) const
             offset += 9;  // skip only the "valid CP data" & LBID bytes
     }
 
-    if (in.length() <= offset) {
-	  mcs_spin("spin_assert");
-	}
     idbassert(in.length() > offset);
 
     return (data[offset] != 0);

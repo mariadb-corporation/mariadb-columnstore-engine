@@ -52,7 +52,6 @@ using namespace boost;
 #include "fixedallocator.h"
 #include "blockcacheclient.h"
 #include "MonitorProcMem.h"
-#include <sys/syscall.h>    /* SYS_gettid */
 
 #define MAX64 0x7fffffffffffffffLL
 #define MIN64 0x8000000000000000LL
@@ -66,7 +65,6 @@ using namespace logging;
 using namespace utils;
 using namespace joblist;
 
-extern void mcs_spin ( const char* filename );
 namespace primitiveprocessor
 {
 // these are config parms defined in primitiveserver.cpp, initialized by PrimProc main().
@@ -248,7 +246,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
     if (doJoin)
     {
     cout << "Entering " <<__FUNCTION__ << ", line:" <<  __LINE__ << " pid:" << getpid() ;
-    cout << ", tid:" << syscall(SYS_gettid) << ", do join" << endl;
+    cout << ", do join" << endl;
         pthread_mutex_lock(&objLock);
 
         if (ot == ROW_GROUP)
@@ -520,7 +518,6 @@ void BatchPrimitiveProcessor::resetBPP(ByteStream& bs, const SP_UM_MUTEX& w,
 #endif
 }
 
-#include <sys/syscall.h>    /* SYS_gettid */
 void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 {
     uint32_t count, i, joinerNum, tlIndex, startPos;
@@ -536,13 +533,12 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
     } *arr;
 #pragma pack(pop)
     cout << "\nEntering " <<__FUNCTION__ << ", line:" <<  __LINE__ << " pid:" << getpid() ;
-    cout << ", tid:" << syscall(SYS_gettid) << endl << flush;
+    cout << endl << flush;
 
     addToJoinerLock.lock();
     /* skip the header */
     bs.advance(sizeof(ISMPacketHeader) + 3 * sizeof(uint32_t));
 
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
     bs >> count;
     bs >> startPos;
 
@@ -554,6 +550,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 
  		cout << "   reading " << count << " elements from the bs, joinerNum is " << joinerNum << "\n";
         cout << "   Join is typeless?:" << (typelessJoin[joinerNum]) << endl;
+        cout << " joinTypes[joinerNum]="  << joinTypes[joinerNum] << endl; 
 		cout << flush;
         for (i = 0; i < count; i++)
         {
@@ -571,7 +568,6 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
                 }
                 else if (nullFlag != 0 &&
                          joinTypes[joinerNum] & MATCHNULLSAFE) {
-					cout << " A null key: " << tlLargeKey.toString() << endl;
                     tlLargeKey.deserialize(bs, storedKeyAllocators[joinerNum]);
                     bs >> tlIndex;
 					//tlLargeKey.len = 1;
@@ -579,6 +575,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 					//*tlLargeKey.data = 0;
                     //tlIndex = 1;
                     tlJoiners[joinerNum]->insert(pair<TypelessData, uint32_t>(tlLargeKey, tlIndex));
+					cout << " A null key: " << tlLargeKey.toString() << endl;
 					cout << "tlIndex: " << tlIndex << ", " << tlLargeKey.toString() << endl;
 				}
                 else {
@@ -603,12 +600,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
 
         if (!typelessJoin[joinerNum])
             bs.advance(count * sizeof(JoinerElements));
-        else {
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
-          ::mcs_spin("spin_assert2");
-        }
 
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
         if (getTupleJoinRowGroupData)
         {
  			cout << "copying full row data for joiner " << joinerNum << endl;
@@ -638,11 +630,9 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
             			}
             */
         }
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
     }
     else
     {
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
         et = (joblist::ElementType*) bs.buf();
 
         for (i = 0; i < count; i++)
@@ -656,9 +646,6 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
     }
 
     cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
-    if (bs.length() != 0) {
-      ::mcs_spin("spin_assert");
-    }
     idbassert(bs.length() == 0);
     addToJoinerLock.unlock();
 }
@@ -1000,7 +987,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
     outputRG.getRow(0, &newRow);
 
 	cout << __FUNCTION__ << ":" << __FILE__ << ":" << __LINE__ << endl  << flush;
-    cout << "pid:" << getpid() << ", tid:" << syscall(SYS_gettid) << ", before join, RG has " << outputRG.getRowCount() << " BPP ridcount= " << ridCount << endl;
+    cout << ", before join, RG has " << outputRG.getRowCount() << " BPP ridcount= " << ridCount << endl;
 	cout << flush;
     for (i = 0; i < ridCount && !sendThread->aborted(); i++, oldRow.nextRow())
     {
@@ -1046,11 +1033,6 @@ void BatchPrimitiveProcessor::executeTupleJoin()
                  *    - if the key is NULL, and the join isn't anti- or large-outer
                  *    - if it's an anti-join and the key is either in the small side or it's NULL
                  */
-
-				cout << __FUNCTION__ << ": " << "isNull:" << isNull << ", found:" << found 
-<< ", ANTI: " << (joinTypes[j] & (LARGEOUTER | ANTI))
-<< ", MATCHNULLSAFE: " << (joinTypes[j] & MATCHNULLSAFE)
-<< endl << flush;
 
 				// Let us add a separate logic for MATCHNULLSAFE,
 				// once tested we can merge it with others.
@@ -1243,7 +1225,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
     ridCount = newRowCount;
     outputRG.setRowCount(ridCount);
 
-    /* prints out the whole result set. */
+    /* prints out the whole result set.
     	if (ridCount != 0) {
     		cout << "RG rowcount=" << outputRG.getRowCount() << " BPP ridcount=" << ridCount << endl;
     		for (i = 0; i < joinerCount; i++) {
@@ -1257,7 +1239,7 @@ void BatchPrimitiveProcessor::executeTupleJoin()
     			cout << endl;
     		}
     	}
-    /**/
+    */
 }
 
 #ifdef PRIMPROC_STOPWATCH
@@ -2144,7 +2126,7 @@ int BatchPrimitiveProcessor::operator()()
 #ifdef PRIMPROC_STOPWATCH
     stopwatch->stop(msg);
 #endif
- 	cout << "sent " << count << " responses" << endl;
+// 	cout << "sent " << count << " responses" << endl;
     fBusy = false;
     return 0;
 }
@@ -2537,7 +2519,6 @@ void BatchPrimitiveProcessor::initGJRG()
 
 inline void BatchPrimitiveProcessor::getJoinResults(const Row& r, uint32_t jIndex, vector<uint32_t>& v)
 {
-	cout << __FUNCTION__ << ":" << __LINE__ << endl  << flush;
     if (!typelessJoin[jIndex])
     {
         if (r.isNullValue(largeSideKeyColumns[jIndex]) && 

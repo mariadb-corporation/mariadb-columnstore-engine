@@ -1989,9 +1989,8 @@ SJLP makeJobList_(
     jobInfo.queryType = csep->queryType();
     jobInfo.csc = csc;
     //TODO: clean up the vestiges of the bool trace
-//    jobInfo.trace = csep->traceOn();
-	jobInfo.trace = true;
-	jobInfo.traceFlags = 1; //csep->traceFlags();
+    jobInfo.trace = csep->traceOn();
+	//jobInfo.trace = true;
     jobInfo.traceFlags = csep->traceFlags();
     jobInfo.isExeMgr = isExeMgr;
 //	jobInfo.tryTuples = tryTuples; // always tuples after release 3.0

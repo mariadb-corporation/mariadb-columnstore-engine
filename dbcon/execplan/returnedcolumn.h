@@ -58,7 +58,7 @@ const uint64_t JOIN_NULL_MATCH = 0x0010;
 const uint64_t JOIN_CORRELATED = 0x0020;
 const uint64_t JOIN_NULLMATCH_CANDIDATE = 0x0040;
 const uint64_t JOIN_OUTER_SELECT = 0x0080;
-const uint64_t JOIN_NULLSAFEMATCH = 0x0100;
+const uint64_t JOIN_NULLSAFEMATCH = 0x0100; // For the null safe equal-join
 
 // column source bit mask
 const uint64_t FROM_SUB = 0x0002;

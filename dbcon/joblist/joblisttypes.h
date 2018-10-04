@@ -96,7 +96,7 @@ const JoinType INIT = 0,
                MATCHNULLS = 0x40,
                WITHFCNEXP = 0x80,
                CORRELATED = 0x100,
-               MATCHNULLSAFE = 0x200;
+               MATCHNULLSAFE = 0x200;	// A join involving null-safe operator.
 }
 
 #endif

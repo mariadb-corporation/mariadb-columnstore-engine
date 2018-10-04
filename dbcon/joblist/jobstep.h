@@ -54,8 +54,6 @@
 #endif
 
 using namespace threadpool;
-extern void debugme();
-extern void mcs_spin ( const char* filename );
 
 namespace joblist
 {
@@ -131,10 +129,7 @@ public:
 
     /** constructor
      */
-    JobStep() 
-    {
-		::mcs_spin("spin_jobstep");
-    }
+    JobStep() { }
     JobStep(const JobInfo&);
     /** destructor
      */
@@ -237,7 +232,6 @@ public:
     virtual void  name(const std::string& nm)
     {
         fName = nm;
-        ::debugme();
     }
     virtual std::string schema() const
     {

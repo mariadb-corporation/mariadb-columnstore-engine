@@ -464,14 +464,13 @@ void TupleJoiner::doneInserting()
 
         discreteValues[col] = true;
         cpValues[col].clear();
-//#ifdef TJ_DEBUG
+#ifdef TJ_DEBUG
         cout << "inserting " << uniquer.size() << " discrete values\n";
-//#endif
+#endif
 
         for (uit = uniquer.begin(); uit != uniquer.end(); ++uit)
             cpValues[col].push_back(*uit);
     }
-	cout << __FUNCTION__ << ":" << __FILE__ << ":" << __LINE__ << endl  << flush;
 }
 
 void TupleJoiner::setInPM()

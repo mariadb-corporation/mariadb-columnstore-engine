@@ -23,23 +23,13 @@
 using namespace std;
 using namespace messageqcpp;
 
-extern void mcs_spin ( const char* filename );
-extern bool mcs_would_spin ( const char* filename );
-
 namespace primitiveprocessor
 {
 
 static const char *cmdtypestr[] = {"none", "column_command", "dict_step", "dict_scan", "pass_thru", "rid_to_string",
 									"filter_command", "pseudocolumn" };
 
-Command::Command(CommandType c) : cmdType(c), fFilterFeeder(NOT_FEEDER) {
-	if (::mcs_would_spin ( "spin_cmd_deb" )) 
-    {
- 		cout << __FUNCTION__  <<  ", CommandType: " << cmdtypestr[c] << ", pid: " << getpid() << endl;
-	 	cout.flush();
-	  	::mcs_spin("spin_cmd");
-	}
- }
+Command::Command(CommandType c) : cmdType(c), fFilterFeeder(NOT_FEEDER) { }
 
 Command::~Command() { };
 

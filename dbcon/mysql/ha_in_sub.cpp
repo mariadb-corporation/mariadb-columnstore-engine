@@ -258,8 +258,8 @@ void InSub::handleFunc(gp_walk_info* gwip, Item_func* func)
                 sf = dynamic_cast<SimpleFilter*>(pt->right()->data());
 
                 //idbassert(sf && sf->op()->op() == execplan::OP_EQ);
-				//Ravi Fixit Note need to fix for OP_EQNS
-                // null  handling will need to be fixed.
+				//Ravi May have to add processing for OP_EQNS similar to
+				// OP_EQ below.
                 idbassert(sf && sf->op()->op() != execplan::OP_EQNS);  
                 if (!sf || sf->op()->op() != execplan::OP_EQ)
                     return;

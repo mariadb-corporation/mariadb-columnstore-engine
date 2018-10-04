@@ -279,15 +279,13 @@ void ColumnCommand::issuePrimitive()
 
 } // issuePrimitive()
 
-#include <sys/syscall.h>    /* SYS_gettid */
 void ColumnCommand::process_OT_BOTH()
 {
     uint64_t i, pos;
 
     bpp->ridCount = outMsg->NVALS;
     bpp->ridMap = outMsg->RidFlags;
- 	cout << "rid Count is " << bpp->ridCount << endl;
-    cout << "pid:" << getpid() << ", tid:" << syscall(SYS_gettid)  << endl;
+ 	cout << __FUNCTION__ << ": rid Count is " << bpp->ridCount << endl;
     cout << flush;
 
     /* this is verbose and repetative to minimize the work per row */

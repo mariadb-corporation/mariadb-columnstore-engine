@@ -339,8 +339,6 @@ void pDictionaryScan::sendPrimitiveMessages()
     boost::shared_ptr<map<int, int> > dbRootPMMap;
     oam::OamCache* oamCache = oam::OamCache::makeOamCache();
     int localPMId = oamCache->getLocalPMId();
-cout << "Entering " <<__FUNCTION__ << ", line:" <<  __LINE__ << " pid:" << getpid() << "\n";
-cout << flush;
 
     try
     {
@@ -480,7 +478,6 @@ void pDictionaryScan::sendAPrimitiveMessage(
     uint16_t	pm
 )
 {
-cout << "Entering " <<__FUNCTION__ << ", line:" <<  __LINE__ << " pid:" << getpid() << "\n";
     DictTokenByScanRequestHeader hdr;
     memset(&hdr, 0, sizeof(hdr));
 

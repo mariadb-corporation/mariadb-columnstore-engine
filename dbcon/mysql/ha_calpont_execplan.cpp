@@ -1687,6 +1687,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
         idbassert(ifp->argument_count() == 1);
 #if 0
+		// Disable the code that maps null-safe equal operator to an expression.
         ParseTree* ptp = 0;
 		if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
         {
@@ -8329,7 +8330,7 @@ ConstantColumn* buildConstColFromFilter(SimpleColumn* originalSC,
 
         op = simpFilter->op();
 
-//Ravi Fixit may have to add OP_EQNS below.
+//Ravi:Fixme may have to add OP_EQNS below!!!
 
         if ( originalSC->sameColumn(dynamic_cast<execplan::ReturnedColumn*>(simpleCol))
                 && op.get()->op() == OP_EQ && constCol)

@@ -91,7 +91,6 @@ using namespace logging;
 
 
 extern bool mcs_would_spin ( const char* filename );
-
 namespace
 {
 using namespace joblist;
@@ -2054,7 +2053,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         jsv.insert(jsv.end(), join.begin(), join.end());
 
-		if (genExpression && sop->op() != OP_EQNS)
+		if (genExpression && sop->op() != OP_EQNS && ::mcs_would_spin ( "spin_genexp" ))
         {
 			// Ravi: A possible improvement would be to not add this filter when there no
 			//       <=> operators between two tables.

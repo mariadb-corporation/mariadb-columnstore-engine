@@ -112,30 +112,6 @@ private:
     template <typename result_t>
     inline bool numericCompare(result_t op1, result_t op2);
     inline bool strCompare(const std::string& op1, const std::string& op2);
-
-#if 0
-//Ravi
-	template <typename value_t, typename get_value_fn, typename compare_fn> 
-	bool predicateCompare(get_value_fn get_value, compare_fn compare)
-    {
-		bool isNull = false;
-        value_t val1 = lop->get_value(row, isNull);
-        if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
-           return false;
-
-		bool isNull2 = false;
-        value_t val2 = rop->get_value(row, isNull2);
-			
-			if ((fOp == OP_EQNS && isNull && isNull2) ||
-			    (fOp == OP_NENS && isNull != isNull2))
-				return true;
-
-            if (isNull || isNull2)
-				return false;
-
-            return compare(val1, val2);
-    };
-#endif
 };
 
 inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop)
@@ -218,7 +194,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 			if ((fOp == OP_EQNS && isNull && isNull2) ||
 			    (fOp == OP_NENS && isNull != isNull2)) 
 			{
-				isNull = false; // Ravi: is this right?
+				isNull = false; 
 				return true;
 			}
 
@@ -253,17 +229,33 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
                 isNull = false;
                 return !ret;
             }
-// Ravi Fixme
 
             if (isNull)
                 return false;
 
             uint64_t val1 = lop->getUintVal(row, isNull);
 
-            if (isNull)
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return numericCompare(val1,  rop->getUintVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            uint64_t val2 = rop->getUintVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; 
+				return true;
+			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return numericCompare(val1,  val2);
         }
 
         case execplan::CalpontSystemCatalog::FLOAT:
@@ -336,14 +328,30 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             if (isNull)
                 return false;
-// Ravi Fixme
 
             IDB_Decimal val1 = lop->getDecimalVal(row, isNull);
 
-            if (isNull)
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return numericCompare(val1, rop->getDecimalVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            IDB_Decimal val2 = rop->getDecimalVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; 
+				return true;
+			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return numericCompare(val1, val2);
         }
 
         case execplan::CalpontSystemCatalog::DATE:
@@ -369,10 +377,27 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             int64_t val1 = lop->getDateIntVal(row, isNull);
 
-            if (isNull)
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return numericCompare(val1, (int64_t)rop->getDateIntVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            int64_t val2 = rop->getDateIntVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; 
+				return true;
+			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return numericCompare(val1, val2);
         }
 
         case execplan::CalpontSystemCatalog::DATETIME:
@@ -395,14 +420,30 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             if (isNull)
                 return false;
-// Ravi Fixme
 
             int64_t val1 = lop->getDatetimeIntVal(row, isNull);
 
-            if (isNull)
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return numericCompare(val1, rop->getDatetimeIntVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            int64_t val2 = rop->getDatetimeIntVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; 
+				return true;
+			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return numericCompare(val1, val2);
         }
 
         case execplan::CalpontSystemCatalog::TIME:
@@ -425,14 +466,30 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 
             if (isNull)
                 return false;
-// Ravi Fixme
 
             int64_t val1 = lop->getTimeIntVal(row, isNull);
 
-            if (isNull)
+            if (isNull && fOp != OP_EQNS && fOp != OP_NENS)
                 return false;
 
-            return numericCompare(val1, rop->getTimeIntVal(row, isNull)) && !isNull;
+			bool isNull2 = false;
+            int64_t val2 = rop->getTimeIntVal(row, isNull2);
+			
+			if ((fOp == OP_EQNS && isNull && isNull2) ||
+			    (fOp == OP_NENS && isNull != isNull2)) 
+			{
+				isNull = false; 
+				return true;
+			}
+
+            if (isNull)
+				return false; 
+			else if (isNull2) {
+				isNull = false; 
+				return false;
+			}
+
+            return numericCompare(val1, val2);
         }
 
 
@@ -472,7 +529,7 @@ inline bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, Retu
 			if ((fOp == OP_EQNS && isNull && isNull2) ||
 			    (fOp == OP_NENS && isNull != isNull2)) 
 			{
-				isNull = false; // Ravi: is this right?
+				isNull = false;
 				return true;
 			}
 

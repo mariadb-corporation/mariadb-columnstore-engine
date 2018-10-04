@@ -278,17 +278,26 @@ ParseTree* trim(ParseTree*& pt)
 void handleNotIn(JobStepVector& jsv, JobInfo* jobInfo)
 {
     // convert CORRELATED join (but not MATCHNULLS) to expression.
+
+    TupleHashJoinStep* notin_thjs = NULL;
+	string opcode = "";
+    
     for (JobStepVector::iterator i = jsv.begin(); i != jsv.end(); i++)
     {
-        TupleHashJoinStep* thjs = dynamic_cast<TupleHashJoinStep*>(i->get());
+    	TupleHashJoinStep* thjs = dynamic_cast<TupleHashJoinStep*>(i->get());
 
-        if (!thjs || !(thjs->getJoinType() & CORRELATED) || (thjs->getJoinType() & MATCHNULLS) )
+        if (!thjs || !(thjs->getJoinType() & CORRELATED) || (thjs->getJoinType() & MATCHNULLS) ) {
+			if (thjs && (thjs->getJoinType() & CORRELATED) && (thjs->getJoinType() & MATCHNULLS)) 
+				notin_thjs = thjs;
             continue;
+		}
 
         ReturnedColumn* lhs = thjs->column1()->clone();
         ReturnedColumn* rhs = thjs->column2()->clone();
 
-        SOP sop(new PredicateOperator("="));
+		opcode = ((lhs->joinInfo() & JOIN_NULLSAFEMATCH) && 
+                         (rhs->joinInfo() & JOIN_NULLSAFEMATCH)) ? "<=>" : "=";
+        SOP sop(new PredicateOperator(opcode));
         sop->setOpType(lhs->resultType(), rhs->resultType());
         sop->resultType(sop->operationType());
         SimpleFilter* sf = new SimpleFilter(sop, lhs, rhs);
@@ -303,6 +312,9 @@ void handleNotIn(JobStepVector& jsv, JobInfo* jobInfo)
         i->reset(es);
 
         delete sf;
+    }
+	if (notin_thjs && opcode == "<=>") {
+    	notin_thjs->setJoinType(notin_thjs->getJoinType() | MATCHNULLSAFE);
     }
 }
 
