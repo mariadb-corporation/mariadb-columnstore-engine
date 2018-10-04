@@ -96,7 +96,8 @@ bool getshm(const string &name, int size, bi::shared_memory_object &target) {
         }
         else {
             ostringstream os;
-            os << "ProcMon failed to create the 'proc stat' shared mem segment, got " << biex.what();
+            os << "ProcMon failed to create the '" << name << "' shared mem segment, got " << biex.what() << ".";
+            os << "  Check the permissions on /dev/shm; should be 1777";
             log.writeLog(__LINE__, os.str(), LOG_TYPE_CRITICAL);
             exit(1);
         }

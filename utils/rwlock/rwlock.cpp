@@ -166,13 +166,25 @@ RWLockShmImpl::RWLockShmImpl(int key, bool excl)
         new (&fState->sems[RWLock::READERS]) bi::interprocess_semaphore(0);
         new (&fState->sems[RWLock::WRITERS]) bi::interprocess_semaphore(0);
     }
-    catch (bi::interprocess_exception&)
+    catch (bi::interprocess_exception &e)
     {
-        if (excl)
+        if (e.get_error_code() == bi::security_error) {
+            cerr << "RWLock:  Failed to create the lock.  Check perms on /dev/shm; should be 1777" << endl;
+            throw;
+        }
+        if (e.get_error_code() == bi::already_exists_error && excl)
             throw not_excl();
+        if (e.get_error_code() != bi::already_exists_error)
+            throw;
 
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fStateShm.swap(shm);
+        try {
+            bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
+            fStateShm.swap(shm);
+        }
+        catch (exception &e) {
+            cerr << "RWLock failed to attach to the " << keyName << " shared mem segment, got " << e.what() << endl;
+            throw;
+        }
         bi::mapped_region region(fStateShm, bi::read_write);
         fRegion.swap(region);
         fState = static_cast<State*>(fRegion.get_address());
