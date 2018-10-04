@@ -149,9 +149,10 @@ uint64_t makedate(rowgroup::Row& row,
         case CalpontSystemCatalog::TIME:
         {
             std::ostringstream ss;
-            Time aTime = parm[1]->data()->getTimeIntVal(row, isNull);
-            ss << aTime.hour << aTime.minute << aTime.second;
-            dayofyear = ss.str();
+            char buf[9];
+            uint64_t aTime = parm[1]->data()->getTimeIntVal(row, isNull);
+            DataConvert::timeToString1(aTime, buf, 9);
+            dayofyear = buf;
             break;
         }
 
