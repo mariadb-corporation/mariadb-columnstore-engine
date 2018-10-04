@@ -2,6 +2,9 @@
 #ifndef TEST_CONFIG_H
 #define TEST_CONFIG_H
 
+/* Define to 1 to let the system come up without using OAM */
+#cmakedefine SKIP_OAM_INIT 1
+
 /* Define to 1 if you have the `alarm' function. */
 #cmakedefine HAVE_ALARM 1
 

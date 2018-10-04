@@ -63,6 +63,7 @@ using namespace std;
 #include <boost/scoped_ptr.hpp>
 using namespace boost;
 
+#include "config.h"
 #include "configcpp.h"
 using namespace config;
 #include "messagequeue.h"
@@ -99,6 +100,10 @@ using namespace querytele;
 
 #include "threadpool.h"
 #include "crashtrace.h"
+
+#if defined(SKIP_OAM_INIT)
+#include "dbrm.h"
+#endif
 
 #include "installdir.h"
 
@@ -1322,8 +1327,11 @@ void setupSignalHandlers()
 
 void setupCwd(ResourceManager* rm)
 {
-    string workdir = startup::StartUp::tmpDir();
+    string workdir = rm->getScWorkingDir();
     (void)chdir(workdir.c_str());
+
+    if (access(".", W_OK) != 0)
+        (void)chdir("/tmp");
 }
 
 void startRssMon(size_t maxPct, int pauseSeconds)
@@ -1370,11 +1378,14 @@ void cleanTempDir()
 {
     config::Config* config = config::Config::makeConfig();
     string allowDJS = config->getConfig("HashJoin", "AllowDiskBasedJoin");
-    string tmpPrefix = startup::StartUp::tmpDir();
+    string tmpPrefix = config->getConfig("HashJoin", "TempFilePath");
 
     if (allowDJS == "N" || allowDJS == "n")
         return;
-        
+
+    if (tmpPrefix.empty())
+        tmpPrefix = "/tmp/infinidb";
+
     tmpPrefix += "/";
 
     assert(tmpPrefix != "/");
@@ -1597,6 +1608,11 @@ int main(int argc, char* argv[])
         {
         }
     }
+#if defined(SKIP_OAM_INIT)
+    BRM::DBRM *dbrm = new BRM::DBRM();
+    dbrm->setSystemQueryReady(true);
+    delete dbrm;
+#endif
 
     threadpool::ThreadPool exeMgrThreadPool(serverThreads, 0);
     exeMgrThreadPool.setName("ExeMgrServer");
