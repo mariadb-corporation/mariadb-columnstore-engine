@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     string systemLang = "C";
 
     setlocale(LC_ALL, systemLang.c_str());
-    
+
     //get tmp log directory
     tmpLogDir = startup::StartUp::tmpDir();
 
@@ -345,7 +345,7 @@ int main(int argc, char** argv)
                 //Set the alarm
 		//		aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 		//		sleep (1);
-				
+
                 string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
 
                 system(cmd.c_str());
@@ -1886,9 +1886,9 @@ static void statusControlThread()
     //
     //Allocate Shared Memory for storing Process Status Data
     //
-    
+
     string shmLocation = "/dev/shm/";
-    
+
     PROCSTATshmsize = MAX_PROCESS * sizeof(shmProcessStatus);
     bool memInit = true;
 #if 0
@@ -1915,12 +1915,6 @@ static void statusControlThread()
     {
 #if BOOST_VERSION < 104500
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = shmLocation + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
 #else
         bi::permissions perms;
         perms.set_unrestricted();
@@ -1993,12 +1987,6 @@ static void statusControlThread()
     try
     {
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = shmLocation + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
         shm.truncate(SYSTEMSTATshmsize);
         fSysStatShmobj.swap(shm);
     }
@@ -2112,12 +2100,6 @@ static void statusControlThread()
     try
     {
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = shmLocation + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
         shm.truncate(NICSTATshmsize);
         fNICStatShmobj.swap(shm);
     }
@@ -2210,12 +2192,6 @@ static void statusControlThread()
     try
     {
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = shmLocation + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
         shm.truncate(EXTDEVICESTATshmsize);
         fExtStatShmobj.swap(shm);
     }
@@ -2300,12 +2276,6 @@ static void statusControlThread()
     try
     {
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = shmLocation + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
         shm.truncate(DBROOTSTATshmsize);
         fDbrootShmobj.swap(shm);
     }
@@ -2709,7 +2679,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
                     memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
                     log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
                 }
-				
+
 				BRM::DBRM dbrm;
 				dbrm.setSystemQueryReady(true);
             }
