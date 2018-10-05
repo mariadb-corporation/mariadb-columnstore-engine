@@ -66,6 +66,12 @@ fi
 
 cd $installdir/lib || exit 1
 
+touch /dev/shm/columnstore-test && rm /dev/shm/columnstore-test
+if [ $? -ne 0 ] ; then
+    echo "User $user will need R/W access to /dev/shm."
+    exit 1
+fi
+
 #remove libudfsdk.so.1.0.0 file, if it exist # mcol-875
 rm -f $installdir/lib/libudfsdk.so
 rm -f $installdir/lib/libudfsdk.so.1
