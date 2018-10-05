@@ -2052,12 +2052,19 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         join[join.size() - 1].get()->cardinality(card);
 
         jsv.insert(jsv.end(), join.begin(), join.end());
+		TupleHashJoinStep* thjs = dynamic_cast<TupleHashJoinStep*>(join[join.size()-1].get());
 
-		if (genExpression && sop->op() != OP_EQNS && ::mcs_would_spin ( "spin_genexp" ))
+		if (genExpression && sop->op() != OP_EQNS &&
+			(thjs && !(thjs->getJoinType() & MATCHNULLS)) && 
+			::mcs_would_spin ( "spin_genexp" ))
         {
 			// Ravi: A possible improvement would be to not add this filter when there no
 			//       <=> operators between two tables.
-			// Take care of the case when there are join conditions involving "<=>" and "="
+			// Need to add an extra filter condition for "=" operation when used in
+			// conjunction with "<=>" as a hashmap look up will not filter out null
+			// values for the equality operator.
+			// Cannot add this extra filter for NOT IN operator as it breaks
+			// hash lookup in PrimProc.
 			//
             JobStepVector expSteps = doExpressionFilter(sf, jobInfo);
         	jsv.insert(jsv.end(), expSteps.begin(), expSteps.end());
