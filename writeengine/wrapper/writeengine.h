@@ -633,6 +633,11 @@ private:
     int checkValid(const TxnID& txnid, const ColStructList& colStructList, const ColValueList& colValueList, const RIDList& ridList) const;
 
     /**
+   * @brief Find the smallest column for this table
+   */
+   void findSmallestColumn(uint32_t &colId, ColStructList colStructList);
+
+   /**
      * @brief Convert interface column type to a internal column type
      */
     // void convertColType(void* curStruct, const FuncType curType = FUNC_WRITE_ENGINE) const;

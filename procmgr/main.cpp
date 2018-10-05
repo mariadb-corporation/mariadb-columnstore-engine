@@ -1617,7 +1617,7 @@ void pingDeviceThread()
                             if (moduleInfoList[moduleName] >= ModuleHeartbeatCount ||
                                     opState == oam::DOWN || opState == oam::AUTO_DISABLED)
                             {
-                                log.writeLog(__LINE__, "Module alive, bring it back online: " + moduleName, LOG_TYPE_DEBUG);
+								log.writeLog(__LINE__, "*** Module alive, bring it back online: " + moduleName, LOG_TYPE_DEBUG);
 
                                 string PrimaryUMModuleName = config.moduleName();
 
@@ -2089,7 +2089,7 @@ void pingDeviceThread()
                                 {
                                     //Log failure, issue alarm, set moduleOpState
                                     Configuration config;
-                                    log.writeLog(__LINE__, "module is down: " + moduleName, LOG_TYPE_CRITICAL);
+									log.writeLog(__LINE__, "*** module is down: " + moduleName, LOG_TYPE_CRITICAL);
 
                                     //set query system state not ready
                                     processManager.setQuerySystemState(false);
@@ -2173,9 +2173,6 @@ void pingDeviceThread()
                                         // resume the dbrm
                                         oam.dbrmctl("resume");
                                         log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
-
-                                        //set recycle process
-                                        processManager.recycleProcess(moduleName);
                                     }
 
                                     // return values = 'ip address' for running or rebooting, stopped or terminated

@@ -8259,8 +8259,7 @@ std::string Oam::getEC2LocalInstance(std::string name)
     // run script to get Instance status and IP Address
     string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getInstance  > /tmp/getInstanceInfo_" + name;
     int status = system(cmd.c_str());
-
-    if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
         return "failed";
 
     // get Instance Name
@@ -8293,8 +8292,7 @@ std::string Oam::getEC2LocalInstanceType(std::string name)
     // run script to get Instance status and IP Address
     string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getType  > /tmp/getInstanceType_" + name;
     int status = system(cmd.c_str());
-
-    if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
         return "failed";
 
     // get Instance Name
@@ -8327,8 +8325,7 @@ std::string Oam::getEC2LocalInstanceSubnet(std::string name)
     // run script to get Instance Subnet
     string cmd = InstallDir + "/bin/MCSInstanceCmds.sh getSubnet  > /tmp/getInstanceSubnet_" + name;
     int status = system(cmd.c_str());
-
-    if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
         return "failed";
 
     // get Instance Name
@@ -8362,8 +8359,7 @@ std::string Oam::launchEC2Instance( const std::string name, const std::string IP
     // run script to get Instance status and IP Address
     string cmd = InstallDir + "/bin/MCSInstanceCmds.sh launchInstance " + IPAddress + " " + type + " " + group + " > /tmp/getInstance_" + name;
     int status = system(cmd.c_str());
-
-    if (WEXITSTATUS(status) != 0 )
+		if (WEXITSTATUS(status) == 1 )
         return "failed";
 
     if (checkLogStatus("/tmp/getInstance", "Required") )
@@ -8441,8 +8437,7 @@ bool Oam::startEC2Instance(std::string instanceName)
     // run script to get Instance status and IP Address
     string cmd = InstallDir + "/bin/MCSInstanceCmds.sh startInstance " + instanceName + " > /tmp/startEC2Instance_" + instanceName;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
         return false;
 
     return true;
@@ -8461,8 +8456,7 @@ bool Oam::assignElasticIP(std::string instanceName, std::string IpAddress)
     // run script to get Instance status and IP Address
     string cmd = InstallDir + "/bin/MCSInstanceCmds.sh assignElasticIP " + instanceName + " " + IpAddress + " > /tmp/assignElasticIP_" + instanceName;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
         exceptionControl("assignElasticIP", oam::API_FAILURE);
 
     return true;
@@ -8481,8 +8475,7 @@ bool Oam::deassignElasticIP(std::string IpAddress)
     // run script to get Instance status and IP Address
     string cmd = InstallDir + "/bin/MCSInstanceCmds.sh deassignElasticIP " + IpAddress + " > /tmp/deassignElasticIP_" + IpAddress;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
         exceptionControl("deassignElasticIP", oam::API_FAILURE);
 
     return true;
@@ -8501,9 +8494,9 @@ std::string Oam::getEC2VolumeStatus(std::string volumeName)
     // run script to get Volume Status
     string cmd = InstallDir + "/bin/MCSVolumeCmds.sh describe " + volumeName + " > /tmp/getVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 ){
         return "failed";
+		}
 
     // get status
     string status;
@@ -8535,8 +8528,7 @@ std::string Oam::createEC2Volume(std::string size, std::string name)
     // run script to get Volume Status
     string cmd = InstallDir + "/bin/MCSVolumeCmds.sh create " + size + " " + name + " > /tmp/createVolumeStatus_" + name;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
         return "failed";
 
     // get status
@@ -8584,12 +8576,16 @@ bool Oam::attachEC2Volume(std::string volumeName, std::string deviceName, std::s
         string cmd = InstallDir + "/bin/MCSVolumeCmds.sh attach " + volumeName + " " + instanceName + " " + deviceName + " > /tmp/attachVolumeStatus_" + volumeName;
         ret = system(cmd.c_str());
 
-        if (WEXITSTATUS(ret) == 0 )
-            return true;
+			if (WEXITSTATUS(ret) == 1 )
+			{
+				//failing to attach, dettach and retry
+            	writeLog("attachEC2Volume: Attach failed, call detach:" + volumeName + " " + instanceName + " " + deviceName, LOG_TYPE_ERROR );
 
-        //failing to attach, dettach and retry
-        detachEC2Volume(volumeName);
-    }
+				detachEC2Volume(volumeName);
+			}	
+			else
+				return true;
+		}
 
     if (ret == 0 )
         return true;
@@ -8610,8 +8606,7 @@ bool Oam::detachEC2Volume(std::string volumeName)
     // run script to attach Volume
     string cmd = InstallDir + "/bin/MCSVolumeCmds.sh detach " + volumeName + " > /tmp/detachVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
         return false;
 
     return true;
@@ -8630,8 +8625,7 @@ bool Oam::deleteEC2Volume(std::string volumeName)
     // run script to delete Volume
     string cmd = InstallDir + "/bin/MCSVolumeCmds.sh delete " + volumeName + " > /tmp/deleteVolumeStatus_" + volumeName;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
         return false;
 
     return true;
@@ -8650,8 +8644,7 @@ bool Oam::createEC2tag(std::string resourceName, std::string tagName, std::strin
     // run script to create a tag
     string cmd = InstallDir + "/bin/MCSVolumeCmds.sh createTag " + resourceName + " " + tagName + " " + tagValue + " > /tmp/createTagStatus_" + resourceName;
     int ret = system(cmd.c_str());
-
-    if (WEXITSTATUS(ret) != 0 )
+		if (WEXITSTATUS(ret) == 1 )
         return false;
 
     return true;
