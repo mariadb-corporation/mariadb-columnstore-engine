@@ -224,7 +224,7 @@ int main(int argc, char** argv)
     }
     catch (...) {}
 
-	if ( cloud == "amazon-ec2" || cloud == "amazon-vpc" ) {
+	if ( cloud == "amazon-ec2" || cloud == "amazon-vpc" )
     {
         if (!aMonitor.amazonIPCheck())
         {

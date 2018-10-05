@@ -219,6 +219,8 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
 
     for (it = fbSet.begin(); it != fbSet.end();)
     {
+        if (uniquer.find(it->lbid) != uniquer.end())
+        {
             if (fReportFrequency)
             {
                 fLog << "flushManyAllversion hit: " << it->lbid << " index: " << it->poolIdx << endl;
