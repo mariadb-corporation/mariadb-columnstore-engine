@@ -261,10 +261,7 @@ if [ $user = "root" ]; then
 	    cat $tmpDir/syslog_install.log
 	fi
 else
-	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstore.def
 	sed -i -e s@/usr/local/mariadb/columnstore@$installdir@g $installdir/bin/columnstoreLogRotate
-
-	cp $installdir/bin/columnstore.def /etc/default/columnstore
 
 	sed -i -e s@prefix=/home/guest@prefix=$prefix@g $installdir/bin/*
 
