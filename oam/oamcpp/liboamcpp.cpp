@@ -150,7 +150,7 @@ Oam::Oam()
         }
         catch (...) {} // defaulted to false
     }
-    
+
     //get user
     string USER = "root";
     char* p = getenv("USER");
@@ -162,7 +162,7 @@ Oam::Oam()
 
     if ( USER != "root")
 	userDir = "home/" + USER;
-	
+
 	tmpdir = startup::StartUp::tmpDir();
 
 }
@@ -7871,7 +7871,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
         //get pid
         cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
         system(cmd.c_str());
-        ifstream oldFile (pidtmp);
+        ifstream oldFile(pidtmp.c_str());
 
         //fail if file size 0
         oldFile.seekg(0, std::ios::end);
@@ -7930,7 +7930,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
                 //get pid
                 cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
                 system(cmd.c_str());
-                ifstream oldFile (pidtmp);
+                ifstream oldFile(pidtmp.c_str());
                 char line[400];
                 string pid;
 
@@ -7957,7 +7957,7 @@ void Oam::actionMysqlCalpont(MYSQLCALPONT_ACTION action)
                 //check if pid has changed
                 cmd = "cat " + InstallDir + "/mysql/db/*.pid > " + pidtmp;
                 system(cmd.c_str());
-                ifstream oldFile (pidtmp);
+                ifstream oldFile(pidtmp.c_str());
                 char line[400];
                 string pid;
 
@@ -10886,17 +10886,17 @@ bool Oam::checkSystemRunning()
     struct stat st;
 
     string lockFileDir = "/var/subsys/lock";
-    
+
     try
     {
             Config* sysConfig = Config::makeConfig(CalpontConfigFile.c_str());
             lockFileDir = sysConfig->getConfig("Installation", "LockFileDirectory");
     }
-    catch (...) 
+    catch (...)
     {} // defaulted to false
 
     string lockFile = lockFileDir + "/columnstore";
-    
+
     if (stat(lockFile.c_str(), &st) == 0)
     {
 	return true;
