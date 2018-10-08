@@ -184,6 +184,8 @@ TINYTEXT {return TINYTEXT;}
 TEXT {return TEXT;}
 MEDIUMTEXT {return MEDIUMTEXT;}
 LONGTEXT {return LONGTEXT;}
+BOOL {return BOOL;}
+BOOLEAN {return BOOLEAN;}
 
 \n { lineno++;}
 
