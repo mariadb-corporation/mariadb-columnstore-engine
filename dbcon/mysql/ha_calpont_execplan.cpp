@@ -3674,7 +3674,6 @@ ReturnedColumn* buildFunctionColumn(
             {
                 sign = -1;
             }
-            Item_func_add_time* addtime = (Item_func_add_time*)ifp;
             sptp.reset(new ParseTree(new ConstantColumn(sign)));
             funcParms.push_back(sptp);
         }
