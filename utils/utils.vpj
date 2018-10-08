@@ -292,6 +292,8 @@
             Filters="*.bmp"/>
         <Folder
             Name="Other Files"
-            Filters=""/>
+            Filters="">
+            <F N="CMakeLists.txt"/>
+        </Folder>
     </Files>
 </Project>

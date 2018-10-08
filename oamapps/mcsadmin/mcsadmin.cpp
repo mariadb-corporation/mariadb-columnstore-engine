@@ -7864,6 +7864,7 @@ int processCommand(string* arguments)
                     {
                         try
                         {
+
                             cout << endl << "   Starting Modules" << endl;
                             oam.startModule(devicenetworklist, ackTemp);
 
@@ -7873,6 +7874,7 @@ int processCommand(string* arguments)
                             sleep(15);
 
                             cout << "   Successful start of Modules " << endl;
+
                         }
                         catch (exception& e)
                         {

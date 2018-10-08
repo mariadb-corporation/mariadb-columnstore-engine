@@ -118,6 +118,11 @@ string Func_timediff::getStrVal(rowgroup::Row& row,
 
         case execplan::CalpontSystemCatalog::TIME:
         case execplan::CalpontSystemCatalog::DATETIME:
+            if (type1 != type2)
+            {
+                isNull = true;
+                break;
+            }
             val1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
             break;
 

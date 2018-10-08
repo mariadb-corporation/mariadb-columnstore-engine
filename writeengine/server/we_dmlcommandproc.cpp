@@ -2229,12 +2229,13 @@ uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::s
     {
         std::set<BRM::LBID_t>::iterator lbidIter;
         std::vector<BRM::LBID_t> dictFlushBlks;
-
+        cerr << "API Flushing blocks: ";
         for (lbidIter = (*mapIter).second.begin(); lbidIter != (*mapIter).second.end(); lbidIter++)
         {
+            cerr << *lbidIter << ", ";
             dictFlushBlks.push_back((*lbidIter));
         }
-
+        cerr << endl;
         cacheutils::flushPrimProcAllverBlocks(dictFlushBlks);
         fWEWrapper.getDictMap().erase(txnID);
     }

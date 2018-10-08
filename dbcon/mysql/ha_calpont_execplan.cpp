@@ -3665,11 +3665,16 @@ ReturnedColumn* buildFunctionColumn(
             gwi.no_parm_func_list.push_back(fc);
         }
 
-        // add the sign for addtime function
-        if (funcName == "add_time")
+        // func name is addtime/subtime in 10.3.9
+        // note: this means get_time() can now go away in our server fork
+        if ((funcName == "addtime") || (funcName == "subtime"))
         {
-            Item_func_add_time* addtime = (Item_func_add_time*)ifp;
-            sptp.reset(new ParseTree(new ConstantColumn((int64_t)addtime->get_sign())));
+            int64_t sign = 1;
+            if (funcName == "subtime")
+            {
+                sign = -1;
+            }
+            sptp.reset(new ParseTree(new ConstantColumn(sign)));
             funcParms.push_back(sptp);
         }
 
@@ -4853,7 +4858,6 @@ void gp_walk(const Item* item, void* arg)
 {
     gp_walk_info* gwip = reinterpret_cast<gp_walk_info*>(arg);
     idbassert(gwip);
-    bool isCached = false;
 
     //Bailout...
     if (gwip->fatalParseError) return;
@@ -4866,15 +4870,17 @@ void gp_walk(const Item* item, void* arg)
     if (itype == Item::FUNC_ITEM && ((Item_func*)item)->functype() == Item_func::XOR_FUNC )
         itype = Item::COND_ITEM;
 
-    if (item->type() == Item::CACHE_ITEM)
-    {
-        item = ((Item_cache*)item)->get_example();
-        itype = item->type();
-        isCached = true;
-    }
-
     switch (itype)
     {
+		case Item::CACHE_ITEM:
+		{
+			// The item or condition is cached as per MariaDB server view but
+			// for InfiniDB it need to be parsed and executed.
+			// MCOL-1188 and MCOL-1029
+			Item* orig_item = ((Item_cache*)item)->get_example();
+			orig_item->traverse_cond(gp_walk, gwip, Item::POSTFIX);
+			break;
+		}
         case Item::FIELD_ITEM:
         {
             Item_field* ifp = (Item_field*)item;
@@ -5086,14 +5092,10 @@ void gp_walk(const Item* item, void* arg)
                     cc->resultType(colType_MysqlToIDB(item));
                 }
 
-                // cached item comes in one piece
-                if (!isCached)
-                {
-                    for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
-                    {
-                        gwip->rcWorkStack.pop();
-                    }
-                }
+				for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
+				{
+					gwip->rcWorkStack.pop();
+				}
 
                 // bug 3137. If filter constant like 1=0, put it to ptWorkStack
                 // MariaDB bug 750. Breaks if compare is an argument to a function.
@@ -5169,14 +5171,6 @@ void gp_walk(const Item* item, void* arg)
             enum Item_func::Functype ftype = func->functype();
             bool isOr = (ftype == Item_func::COND_OR_FUNC);
             bool isXor = (ftype == Item_func::XOR_FUNC);
-
-            // MCOL-1029 A cached COND_ITEM is something like:
-            // AND (TRUE OR FALSE)
-            // We can skip it
-            if (isCached)
-            {
-                break;
-            }
 
             List<Item>* argumentList;
             List<Item> xorArgumentList;

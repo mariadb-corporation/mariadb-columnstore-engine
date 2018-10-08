@@ -112,6 +112,7 @@ MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
 REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TINYBLOB TINYTEXT
 TINYINT TO UNIQUE UNSIGNED UPDATE USER SESSION_USER SYSTEM_USER VARCHAR VARBINARY
 VARYING WITH ZONE DOUBLE IDB_FLOAT REAL CHARSET IDB_IF EXISTS CHANGE TRUNCATE
+BOOL BOOLEAN
 
 %token <str> DQ_IDENT IDENT FCONST SCONST CP_SEARCH_CONDITION_TEXT ICONST DATE TIME
 
@@ -1041,6 +1042,18 @@ exact_numeric_type:
 		$$ = new ColumnType(DDL_UNSIGNED_BIGINT);
 		$$->fLength = DDLDatatypeLength[DDL_BIGINT];
 	}
+        | BOOLEAN
+        {
+                $$ = new ColumnType(DDL_TINYINT);
+                $$->fLength = DDLDatatypeLength[DDL_TINYINT];
+                $$->fPrecision = 1;
+        }
+        | BOOL
+        {
+                $$ = new ColumnType(DDL_TINYINT);
+                $$->fLength = DDLDatatypeLength[DDL_TINYINT];
+                $$->fPrecision = 1;
+        }
 	;
 /* Bug 1570, change default scale to 0 from -1 */
 opt_precision_scale:

@@ -44,6 +44,7 @@
 		<Project File="primitives/primproc/primproc.vpj"/>
 		<Project File="procmgr/procmgr.vpj"/>
 		<Project File="procmon/procmon.vpj"/>
+		<Project File="utils/regr/regr.vpj"/>
 		<Project File="oamapps/replayTransactionLog/ReplayTransactionLog.vpj"/>
 		<Project File="oamapps/resourceMonitor/resourceMonitor.vpj"/>
 		<Project File="utils/rowgroup/rowgroup.vpj"/>

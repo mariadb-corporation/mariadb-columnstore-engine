@@ -108,7 +108,7 @@ public:
 
     static EXPORT UDAF_MAP& getMap();
 private:
-    static UDAF_MAP fm;
+    static UDAF_MAP& fm();
 };
 
 /**
@@ -189,6 +189,7 @@ static uint64_t	UDAF_WINDOWFRAME_REQUIRED __attribute__ ((unused)) = 1 << 4; // 
 static uint64_t	UDAF_WINDOWFRAME_ALLOWED __attribute__ ((unused))  = 1 << 5; // If used as UDAnF, a WINDOW FRAME is optional
 static uint64_t	UDAF_MAYBE_NULL     __attribute__ ((unused))       = 1 << 6; // If UDA(n)F might return NULL.
 static uint64_t	UDAF_IGNORE_NULLS  __attribute__ ((unused))        = 1 << 7; // If UDA(n)F wants NULL rows suppressed.
+static uint64_t	UDAF_DISTINCT  __attribute__ ((unused))            = 1 << 8; // Force UDA(n)F to be distinct on first param.
 
 // Flags set by the framework to define the context of the call.
 // User code shouldn't use these directly
@@ -380,6 +381,7 @@ private:
     std::string functionName;
     mcsv1sdk::mcsv1_UDAF* func;
     int32_t  fParamCount;
+    std::vector<uint32_t> paramKeys;
 
 public:
     // For use by the framework
@@ -402,6 +404,7 @@ public:
     EXPORT mcsv1sdk::mcsv1_UDAF* getFunction() const;
     EXPORT boost::shared_ptr<UserData> getUserDataSP();
     EXPORT void setParamCount(int32_t paramCount);
+    std::vector<uint32_t>* getParamKeys();
 };
 
 // Since aggregate functions can operate on any data type, we use the following structure
@@ -605,6 +608,9 @@ public:
     virtual ReturnCode createUserData(UserData*& userdata, int32_t& length);
 
 protected:
+    // some handy conversion routines
+    template<typename T>
+    T convertAnyTo(static_any::any&);
     // These are handy for testing the actual type of static_any
     static const static_any::any& charTypeId;
     static const static_any::any& scharTypeId;
@@ -947,6 +953,11 @@ inline void mcsv1Context::setParamCount(int32_t paramCount)
     fParamCount = paramCount;
 }
 
+inline std::vector<uint32_t>* mcsv1Context::getParamKeys()
+{
+    return &paramKeys;
+}
+
 inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
     return NOT_IMPLEMENTED;
@@ -957,6 +968,68 @@ inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::createUserData(UserData*& userData, in
     userData = new UserData(length);
     userData->size = length;
     return SUCCESS;
+}
+
+
+
+// Handy helper functions
+template<typename T>
+inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn)
+{
+    T val;
+    if (valIn.compatible(longTypeId))
+    {
+        val = valIn.cast<long>();
+    }
+    else if (valIn.compatible(charTypeId))
+    {
+        val = valIn.cast<char>();
+    }
+    else if (valIn.compatible(scharTypeId))
+    {
+        val = valIn.cast<signed char>();
+    }
+    else if (valIn.compatible(shortTypeId))
+    {
+        val = valIn.cast<short>();
+    }
+    else if (valIn.compatible(intTypeId))
+    {
+        val = valIn.cast<int>();
+    }
+    else if (valIn.compatible(llTypeId))
+    {
+        val = valIn.cast<long long>();
+    }
+    else if (valIn.compatible(ucharTypeId))
+    {
+        val = valIn.cast<unsigned char>();
+    }
+    else if (valIn.compatible(ushortTypeId))
+    {
+        val = valIn.cast<unsigned short>();
+    }
+    else if (valIn.compatible(uintTypeId))
+    {
+        val = valIn.cast<unsigned int>();
+    }
+    else if (valIn.compatible(ulongTypeId))
+    {
+        val = valIn.cast<unsigned long>();
+    }
+    else if (valIn.compatible(ullTypeId))
+    {
+        val = valIn.cast<unsigned long long>();
+    }
+    else if (valIn.compatible(floatTypeId))
+    {
+        val = valIn.cast<float>();
+    }
+    else if (valIn.compatible(doubleTypeId))
+    {
+        val = valIn.cast<double>();
+    }
+    return val;
 }
 
 }; // namespace mcssdk

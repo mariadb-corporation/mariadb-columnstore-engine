@@ -198,14 +198,16 @@ int BulkRollbackMgr::rollback ( bool keepMetaFile )
             // the user but keep going.
             std::vector<BRM::OID_t> allOIDs;
             std::set<OID>::const_iterator iter = fAllColDctOIDs.begin();
-
+            cerr << "Rollback flushing: ";
             while (iter != fAllColDctOIDs.end())
             {
+                cerr << *iter << ", ";
                 //std::cout << "Flushing OID from PrimProc cache " << *iter <<
                 //  std::endl;
                 allOIDs.push_back(*iter);
                 ++iter;
             }
+            cerr << endl;
 
             int cache_rc = cacheutils::flushOIDsFromCache( allOIDs );
 

@@ -74,9 +74,11 @@ fi
 if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1.0.0
 	libudfsdk=$installdir/lib/libudf_mysql.so.1.0.0
+	libregrsdk=$installdir/lib/libregr_mysql.so.1.0.0
 elif [ -f $installdir/lib/libcalmysql.so.1 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1
 	libudfsdk=$installdir/lib/libudf_mysql.so.1
+	libregrsdk=$installdir/lib/libregr_mysql.so.1
 else
 	libcalmysql=
 fi
@@ -86,6 +88,7 @@ if [ -d $installdir/mysql/lib64/mysql/plugin -a -n "$libcalmysql" ]; then
 	ln -sf $libcalmysql libcalmysql.so
         ln -sf $libcalmysql libcalmysqlent.so
 	ln -sf $libudfsdk libudf_mysql.so
+	ln -sf $libregrsdk libregr_mysql.so
 fi
 
 if [ $installdir != "/usr/local/mariadb/columnstore" ]; then

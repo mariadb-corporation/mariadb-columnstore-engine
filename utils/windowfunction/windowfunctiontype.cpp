@@ -208,7 +208,7 @@ WindowFunctionType::makeWindowFunction(const string& name, int ct, WindowFunctio
             break;
 
         case WF__UDAF:
-            af = WF_udaf<int64_t>::makeFunction(functionId, name, ct, wc->getUDAFContext());
+            af = WF_udaf::makeFunction(functionId, name, ct, wc->getUDAFContext());
             break;
 
         case WF__REGR_SLOPE:
