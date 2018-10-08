@@ -10,6 +10,8 @@ fi
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
+#get temp directory
+tmpDir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig SystemTempFileDir`
 
 #check command
 if [ "$1" = "" ]; then
@@ -310,7 +312,7 @@ terminateInstance() {
         getRegion >/dev/null 2>&1
 
 	#terminate Instance
-	$AWSCLI terminate-instances --instance-ids $instanceName --region $Region > /tmp/termInstanceInfo_$instanceName 2>&1
+	$AWSCLI terminate-instances --instance-ids $instanceName --region $Region > ${tmpdir}/termInstanceInfo_$instanceName 2>&1
 	return
 }
 
@@ -319,7 +321,7 @@ stopInstance() {
         getRegion >/dev/null 2>&1
 
 	#terminate Instance
-	$AWSCLI stop-instances --instance-ids $instanceName --region $Region > /tmp/stopInstanceInfo_$instanceName 2>&1
+	$AWSCLI stop-instances --instance-ids $instanceName --region $Region > ${tmpdir}/stopInstanceInfo_$instanceName 2>&1
 	return
 }
 
@@ -328,11 +330,11 @@ startInstance() {
         getRegion >/dev/null 2>&1
 
 	#terminate Instance
-	$AWSCLI start-instances --instance-ids $instanceName --region $Region > /tmp/startInstanceInfo_$instanceName 2>&1
+	$AWSCLI start-instances --instance-ids $instanceName --region $Region > ${tmpdir}/startInstanceInfo_$instanceName 2>&1
 
-	cat /tmp/startInstanceInfo_$instanceName | grep InstanceId > /tmp/startInstanceStatus_$instanceName
-	if [ `cat /tmp/startInstanceStatus_$instanceName | wc -c` -eq 0 ]; then
-		echo "Failed, check /tmp/startInstanceInfo_$instanceName"
+	cat ${tmpdir}/startInstanceInfo_$instanceName | grep InstanceId > ${tmpdir}/startInstanceStatus_$instanceName
+	if [ `cat ${tmpdir}/startInstanceStatus_$instanceName | wc -c` -eq 0 ]; then
+		echo "Failed, check ${tmpdir}/startInstanceInfo_$instanceName"
 		exit 1
 	fi
 	echo "Success"
@@ -345,11 +347,11 @@ assignElasticIP() {
 
 	EIP=`$AWSCLI describe-addresses --region $Region --public-ips  $IPAddress --query 'Addresses[*].AllocationId' --output text`
         
-	$AWSCLI associate-address --region $Region  --instance-id $instanceName --allocation-id $EIP > /tmp/assignElasticIPInfo_$IPAddress 2>&1
+	$AWSCLI associate-address --region $Region  --instance-id $instanceName --allocation-id $EIP > ${tmpdir}/assignElasticIPInfo_$IPAddress 2>&1
 
-	cat /tmp/assignElasticIPInfo_$IPAddress | grep error > /tmp/assignElasticIPStatus_$IPAddress
-	if [ `cat /tmp/assignElasticIPStatus_$IPAddress | wc -c` -ne 0 ]; then
-		echo "Failed, check /tmp/assignElasticIPInfo_$IPAddress"
+	cat ${tmpdir}/assignElasticIPInfo_$IPAddress | grep error > ${tmpdir}/assignElasticIPStatus_$IPAddress
+	if [ `cat ${tmpdir}/assignElasticIPStatus_$IPAddress | wc -c` -ne 0 ]; then
+		echo "Failed, check ${tmpdir}/assignElasticIPInfo_$IPAddress"
 		exit 1
 	fi
 
@@ -363,10 +365,10 @@ deassignElasticIP() {
 
 	EIP=`$AWSCLI describe-addresses --region $Region --public-ips  $IPAddress --query 'Addresses[*].AssociationId' --output text`
 
-	$AWSCLI disassociate-address --region $Region --association-id $EIP > /tmp/deassignElasticIPInfo_$IPAddress 2>&1
-	cat /tmp/deassignElasticIPInfo_$IPAddress | grep error > /tmp/deassignElasticIPStatus_$IPAddress
-	if [ `cat /tmp/deassignElasticIPStatus_$IPAddress | wc -c` -ne 0 ]; then
-		echo "Failed, check /tmp/deassignElasticIPStatus_$IPAddress"
+	$AWSCLI disassociate-address --region $Region --association-id $EIP > ${tmpdir}/deassignElasticIPInfo_$IPAddress 2>&1
+	cat ${tmpdir}/deassignElasticIPInfo_$IPAddress | grep error > ${tmpdir}/deassignElasticIPStatus_$IPAddress
+	if [ `cat ${tmpdir}/deassignElasticIPStatus_$IPAddress | wc -c` -ne 0 ]; then
+		echo "Failed, check ${tmpdir}/deassignElasticIPStatus_$IPAddress"
 		exit 1
 	fi
 

@@ -28,6 +28,10 @@
 using namespace idbdatafile;
 using namespace std;
 
+#include "installdir.h"
+
+string tmpDir;
+
 size_t BLK_SIZE = 2048;
 const size_t MAX_BLK_SIZE = 1048576;
 size_t MAX_BLOCK = 1024;
@@ -189,7 +193,7 @@ bool TestRunner::runTest( IDBDataFile::Types filetype, unsigned open_opts )
     // build the file name we are going to use
     ostringstream oss;
     // embed pid so that this is a new directory path
-    oss << "/tmp/idbdf-dir-" << getpid() << "-" << m_id;
+    oss << tmpDir << "/idbdf-dir-" << getpid() << "-" << m_id;
     string dir = oss.str();
     m_fname = dir + "/foobar";
 
@@ -541,7 +545,7 @@ bool TestRunner::hdfsRdwrExhaustTest()
     // choose a new filename that is specific to our thread
     ostringstream oss;
     // embed pid so that this is a new directory path
-    oss << "/tmp/hdfsrdwr-" << getpid() << "-" << m_id;
+    oss << tmpDir << "/hdfsrdwr-" << getpid() << "-" << m_id;
     string newpath = oss.str();
 
     // open a file with arbitrarily small buffer
@@ -755,13 +759,15 @@ int main(int argc, char** argv)
         logFailure("missing hdfs-plugin argument");
         return 1;
     }
+    
+    tmpDir = startup::StartUp::tmpDir();
 
     opts.pluginFile = argv[optind];
 
     try
     {
         // init the library with logging enabled
-        std::string hdfsRdwrScratch = "/tmp/rdwr_scratch";
+        std::string hdfsRdwrScratch = tmpDir + "/rdwr_scratch";
         IDBPolicy::init( true, true, hdfsRdwrScratch, 2147483648 );
 
         if ( !IDBPolicy::installPlugin(opts.pluginFile) )

@@ -56,6 +56,8 @@ using namespace config;
 #include "helpers.h"
 using namespace installer;
 
+#include "installdir.h"
+
 typedef struct Module_struct
 {
     std::string     moduleName;
@@ -169,11 +171,13 @@ int main(int argc, char* argv[])
 
     if (p && *p)
         USER = p;
+        
+    string tmpDir = startup::StartUp::tmpDir();
 
     // setup to start on reboot, for non-root amazon installs
     if ( !rootUser )
     {
-    	system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+    	system("sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
     }   
 
     //copy Columnstore.xml.rpmsave if upgrade option is selected
@@ -405,10 +409,6 @@ int main(int argc, char* argv[])
         cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
         exit(1);
     }
-
-    //store syslog config file in Calpont Config file
-    cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
-    system(cmd.c_str());
 
     //get PPackage Type
     try
@@ -797,8 +797,6 @@ int main(int argc, char* argv[])
             sleep(5);
         }
 
-        cout << "System Install successfully completed, starting MariaDB ColumnStore" << endl;
-
         //
         // perform start of MariaDB ColumnStore of other servers in the system
         //
@@ -826,8 +824,6 @@ int main(int argc, char* argv[])
 
         if (rtnCode != 0)
             cout << "Error starting MariaDB ColumnStore local module" << endl;
-        else
-            cout << "Start MariaDB ColumnStore request successful" << endl;
     }
     else
     {
@@ -875,24 +871,33 @@ int main(int argc, char* argv[])
 
     // check for system going ACTIVE
     sleep(5);
-    cout << endl << "MariaDB ColumnStore Database Platform Starting, please wait .";
+    cout << endl << "Starting MariaDB ColumnStore Database Platform Starting, please wait .";
     cout.flush();
+
+    string ProfileFile;
+	try
+	{
+		ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
+	}
+	catch (...)
+	{}
 
     if ( waitForActive() )
     {
         cout << " DONE" << endl;
 
-        cmd = installDir + "/bin/dbbuilder 7 > /tmp/dbbuilder.log";
+		string logFile = tmpDir + "/dbbuilder.log";
+        cmd = installDir + "/bin/dbbuilder 7 > " + logFile;
         system(cmd.c_str());
 
-        if (oam.checkLogStatus("/tmp/dbbuilder.log", "System Catalog created") )
+        if (oam.checkLogStatus(logFile, "System Catalog created") )
             cout << endl << "System Catalog Successfull Created" << endl;
         else
         {
-            if ( !oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") )
+            if ( !oam.checkLogStatus(logFile, "System catalog appears to exist") )
             {
                 cout << endl << "System Catalog Create Failure" << endl;
-                cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
+                cout << "Check latest log file in " << logFile << endl;
                 cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
                 exit (1);
             }
@@ -902,10 +907,7 @@ int main(int argc, char* argv[])
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -921,10 +923,7 @@ int main(int argc, char* argv[])
         cout << endl << "ERROR: MariaDB ColumnStore Process failed to start, check log files in /var/log/mariadb/columnstore" << endl;
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -963,8 +962,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
         string fileName = "/etc/" + files[i];
 
         //make a backup copy before changing
-        if ( rootUser )
-        {
             cmd = "rm -f " + fileName + ".columnstoreSave";
             system(cmd.c_str());
 
@@ -980,25 +977,6 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 
             cmd = "cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1";
             system(cmd.c_str());
-        }
-        else
-        {
-            cmd = "sudo rm -f " + fileName + ".columnstoreSave";
-            system(cmd.c_str());
-
-            cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
-            system(cmd.c_str());
-
-            cmd = "sudo cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
-
-            if (geteuid() == 0) system(cmd.c_str());
-
-            cmd = "sudo rm -f " + installDir + "/local/ " + files[i] + "*.calpont > /dev/null 2>&1";
-            system(cmd.c_str());
-
-            cmd = "sudo cp " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont " + installDir + "/local/. > /dev/null 2>&1";
-            system(cmd.c_str());
-        }
     }
 
     return allfound;
@@ -1136,6 +1114,9 @@ bool updateProcessConfig(int serverTypeInstall)
  */
 bool makeRClocal(string moduleName, int IserverTypeInstall)
 {
+  
+      return true;
+
     string moduleType = moduleName.substr(0, MAX_MODULE_TYPE_SIZE);
 
     vector <string> lines;

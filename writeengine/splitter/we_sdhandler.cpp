@@ -73,6 +73,8 @@ using namespace batchloader;
 #include "we_tablelockgrabber.h"
 #include "we_simplesyslog.h"
 
+#include "installdir.h"
+
 namespace WriteEngine
 {
 //------------------------------------------------------------------------------
@@ -1403,7 +1405,7 @@ void WESDHandler::onBrmReport(int PmId, messageqcpp::SBS& Sbs)
             if (!fRef.fCmdArgs.getConsoleOutput())
             {
                 ostringstream oss;
-                oss << "/tmp/" << fTableOId << ".txt";
+                oss << startup::StartUp::tmpDir() << fTableOId << ".txt";
                 ofstream dmlFile(oss.str().c_str(), std::ofstream::app);
 
                 if (dmlFile.is_open())
@@ -1884,10 +1886,10 @@ void WESDHandler::onCleanupResult(int PmId, messageqcpp::SBS& Sbs)
             WEColOorVec::iterator aIt = fImportRslt.fColOorVec.begin();
             ofstream dmlFile;
 
-            if (!fRef.fCmdArgs.getConsoleOutput()) //for DML to use file /tmp/
+            if (!fRef.fCmdArgs.getConsoleOutput()) //for DML to use file
             {
                 ostringstream oss;
-                oss << "/tmp/" << fTableOId << ".txt";
+                oss << startup::StartUp::tmpDir() << fTableOId << ".txt";
                 dmlFile.open(oss.str().c_str());
             }
 

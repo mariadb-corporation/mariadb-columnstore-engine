@@ -56,6 +56,7 @@ extern bool HDFS;
 extern string localHostName;
 extern string PMwithUM;
 extern string AmazonPMFailover;
+extern string tmpLogDir;
 
 typedef   map<string, int>	moduleList;
 extern moduleList moduleInfoList;
@@ -2724,7 +2725,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     // Save the BRM. This command presages a system backup. Best to have a current BRM on disk
                     string logdir("/var/log/mariadb/columnstore");
 
-                    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+                    if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
                     string cmd = startup::StartUp::installDir() + "/bin/save_brm  > " + logdir + "/save_brm.log1 2>&1";
                     int rtnCode = system(cmd.c_str());
@@ -4961,7 +4962,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     //clear out the known_host file, sometimes causes a failure on amazon during addModule
     if ( amazon )
     {
-        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        string cmd = "unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -4990,24 +4991,6 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
         //
         // Verify Host IP and Password
         //
-
-        if ( password == "ssh" && amazon )
-        {
-            // check if there is a root password stored
-            string rpw = oam::UnassignedName;
-
-            try
-            {
-                oam.getSystemConfig("rpw", rpw);
-            }
-            catch (...)
-            {
-                rpw = "mariadb1";
-            }
-
-            if (rpw != oam::UnassignedName)
-                password = rpw;
-        }
 
         listPT = devicenetworklist.begin();
 
@@ -5144,17 +5127,17 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                         continue;
                     }
 
-                    string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > /tmp/login_test.log";
+					string loginTmp = tmpLogDir + "/login_test.log";
+                    string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > " + loginTmp;
                     system(cmd.c_str());
 
-                    if (!oam.checkLogStatus("/tmp/login_test.log", "README"))
+                    if (!oam.checkLogStatus(loginTmp, "README"))
                     {
                         //check for RSA KEY ISSUE and fix
-                        if (oam.checkLogStatus("/tmp/login_test.log", "Offending"))
+                        if (oam.checkLogStatus(loginTmp, "Offending"))
                         {
                             log.writeLog(__LINE__, "addModule - login failed, Offending key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
-                            string file = "/tmp/login_test.log";
-                            oam.fixRSAkey(file);
+                            oam.fixRSAkey(loginTmp);
                         }
 
                         log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
@@ -5561,7 +5544,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
             //set root password
             if (amazon)
             {
-                cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > /tmp/password_change.log";
+                cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > " + tmpLogDir + "/password_change.log";
                 log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
                 int rtnCode = system(cmd.c_str());
 
@@ -5582,7 +5565,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                 //run remote installer script
                 if ( packageType != "binary" )
                 {
-                    string logFile = "/tmp/" + remoteModuleName + "_user_installer.log";
+                    string logFile = tmpLogDir + "/" + remoteModuleName + "_user_installer.log";
                     log.writeLog(__LINE__, "addModule - user_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
                     string cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + " --nodeps 1 > " + logFile;
@@ -5653,7 +5636,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                 else
                 {
                     // do a binary package install
-                    string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
+                    string logFile = tmpLogDir + "/" + remoteModuleName + "_binary_installer.log";
                     log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
                     string binservertype = oam.itoa(config.ServerInstallType());
@@ -5733,7 +5716,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                 {
                     if ( packageType != "binary" )
                     {
-                        string logFile = "/tmp/" + remoteModuleName + "_package_installer.log";
+                        string logFile = tmpLogDir + "/" + remoteModuleName + "_package_installer.log";
                         log.writeLog(__LINE__, "addModule - package_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
                         string cmd = installDir + "/bin/package_installer.sh " + remoteModuleName + " " + remoteModuleIP + " " + password + " " + version + " initial " + AmazonInstall + " " + packageType + + " --nodeps 1 > " + logFile;
                         log.writeLog(__LINE__, "addModule cmd: " + cmd, LOG_TYPE_DEBUG);
@@ -5802,7 +5785,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                     else
                     {
                         // do a binary package install
-                        string logFile = "/tmp/" + remoteModuleName + "_binary_installer.log";
+                        string logFile = tmpLogDir + "/" + remoteModuleName + "_binary_installer.log";
                         log.writeLog(__LINE__, "addModule - binary_installer run for " +  remoteModuleName, LOG_TYPE_DEBUG);
 
                         string binservertype = oam.itoa(config.ServerInstallType());
@@ -6338,7 +6321,7 @@ int ProcessManager::removeModule(oam::DeviceNetworkList devicenetworklist, bool 
                 homedir = p;
         }
 
-        string cmd = "sudo unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
+        string cmd = "unlink " + homedir + ".ssh/know_hosts > /dev/null 2>&1";
         system(cmd.c_str());
     }
 
@@ -7048,7 +7031,7 @@ void ProcessManager::saveBRM(bool skipSession, bool clearshm)
     Oam oam;
     string logdir("/var/log/mariadb/columnstore");
 
-    if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+    if (access(logdir.c_str(), W_OK) != 0) logdir = tmpLogDir;
 
     log.writeLog(__LINE__, "Running reset_locks", LOG_TYPE_DEBUG);
 
@@ -11121,23 +11104,24 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
     //send msg to ProcMon if not local module
     if ( config.moduleName() == moduleName )
     {
-        string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > /tmp/mount.txt";
+		string tmpMount = tmpLogDir + "/mount.log";
+        string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount;
         system(cmd.c_str());
 
         if ( !rootUser)
         {
-            cmd = "sudo chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
+            cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null";
             system(cmd.c_str());
         }
 
-        ifstream in("/tmp/mount.txt");
+        ifstream in(tmpMount);
 
         in.seekg(0, std::ios::end);
         int size = in.tellg();
 
         if ( size != 0 )
         {
-            if (!oam.checkLogStatus("/tmp/mount.txt", "already"))
+            if (!oam.checkLogStatus(tmpMount, "already"))
             {
                 log.writeLog(__LINE__, "mount failed, dbroot: " + dbrootID);
                 return API_FAILURE;

@@ -50,12 +50,16 @@ namespace config
 
 void WriteOnceConfig::initializeDefaults()
 {
+	string tmpDir = startup::StartUp::tmpDir();
+
     fLBID_Shift =           make_pair("13", false);
     fDBRootCount =          make_pair("1", false);
     fDBRMRoot =             make_pair("/mnt/OAM/dbrm/BRM_saves", false);
-    fSharedMemoryTmpFile1 = make_pair("/tmp/CalpontShm,", false);
+    string file = tmpDir + "/ColumnstoreShm";
+    fSharedMemoryTmpFile1 = make_pair(file, false);
     fTxnIDFile =            make_pair("/mnt/OAM/dbrm/SMTxnID", false);
-    fSharedMemoryTmpFile2 = make_pair("/tmp/CalpontSessionMonitorShm", false);
+    file = tmpDir + "/CalpontSessionMonitorShm";
+    fSharedMemoryTmpFile2 = make_pair(file, false);
 }
 
 void WriteOnceConfig::setup()

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-NO_NONROOT_SUDO=yes
-export NO_NONROOT_SUDO
 prefix=/usr/local
 builddir=
 for arg in "$@"; do

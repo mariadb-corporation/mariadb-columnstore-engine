@@ -34,6 +34,8 @@
 #include "loggingid.h"
 #include "alarmmanager.h"
 
+#include "installdir.h"
+
 using namespace std;
 using namespace oam;
 using namespace alarmmanager;
@@ -80,11 +82,15 @@ int main (int argc, char** argv)
     string highCritical;
     string highFatal;
     char* p;
+    
+    string tmpDir = startup::StartUp::tmpDir();
 
     // loop forever reading the hardware status
     while (TRUE)
     {
-        int returnCode = system("ipmitool sensor list > /tmp/harwareMonitor.txt");
+		string logFile = tmpDir + "/harwareMonitor.txt";
+		string cmd = "ipmitool sensor list > " + logFile;
+        int returnCode = system(cmd.c_str());
 
         if (returnCode)
         {
@@ -95,12 +101,12 @@ int main (int argc, char** argv)
 
         // parse output file
 
-        ifstream File ("/tmp/harwareMonitor.txt");
+        ifstream File (logFile);
 
         if (!File)
         {
             // System error
-            cout << "Error opening /tmp/harwareMonitor.txt!!!" << endl;
+            cout << "Error opening " << logFile << endl;
             exit(-1);
         }
 

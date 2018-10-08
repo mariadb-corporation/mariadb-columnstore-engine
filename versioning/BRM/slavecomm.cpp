@@ -43,6 +43,8 @@
 #include "slavecomm.h"
 #undef SLAVECOMM_DLLEXPORT
 
+#include "installdir.h"
+
 using namespace std;
 using namespace messageqcpp;
 using namespace idbdatafile;
@@ -98,6 +100,8 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
             }
         }
     }
+    
+    string tmpDir = startup::StartUp::tmpDir();
 
     /* NOTE: this string has to match whatever is designated as the first slave */
     if (hostname == "DBRM_Worker1")
@@ -108,11 +112,11 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
         }
         catch (exception& e)
         {
-            savefile = "/tmp/BRM_SaveFiles";
+            savefile = tmpDir + "/BRM_SaveFiles";
         }
 
         if (savefile == "")
-            savefile = "/tmp/BRM_SaveFiles";
+            savefile = tmpDir + "/BRM_SaveFiles";
 
         tmp = "";
 
@@ -181,17 +185,19 @@ SlaveComm::SlaveComm()
 {
     config::Config* config = config::Config::makeConfig();
 
+    string tmpDir = startup::StartUp::tmpDir();
+
     try
     {
         savefile = config->getConfig("SystemConfig", "DBRMRoot");
     }
     catch (exception& e)
     {
-        savefile = "/tmp/BRM_SaveFiles";
+        savefile = tmpDir + "/BRM_SaveFiles";
     }
 
     if (savefile == "")
-        savefile = "/tmp/BRM_SaveFiles";
+        savefile = tmpDir + "/BRM_SaveFiles";
 
     journalName = savefile + "_journal";
 

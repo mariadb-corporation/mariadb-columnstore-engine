@@ -41,6 +41,8 @@ using namespace rwlock;
 #include "mastersegmenttable.h"
 #undef MASTERSEGMENTTABLE_DLLEXPORT
 
+#include "installdir.h"
+
 namespace
 {
 using namespace BRM;
@@ -75,38 +77,32 @@ MasterSegmentTableImpl::MasterSegmentTableImpl(int key, int size)
 
     try
     {
-#if BOOST_VERSION < 104500
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-#else
         bi::permissions perms;
         perms.set_unrestricted();
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
         shm.truncate(size);
         fShmobj.swap(shm);
     }
     catch (bi::interprocess_exception& biex)
     {
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
+        if (biex.get_error_code() == bi::already_exists_error) {
+            try {
+                bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
+                fShmobj.swap(shm);
+            }
+            catch (exception &e) {
+                ostringstream o;
+                o << "BRM caught an exception attaching to a shared memory segment (" << keyName << "): " << e.what();
+                throw;
+            }
         }
-#endif
-        fShmobj.swap(shm);
+        else {
+            ostringstream o;
+            o << "BRM caught an exception creating a shared memory segment (" << keyName << "): " << biex.what();
+            log(o.str());
+            throw;
+        }
     }
-    catch (...)
-    {
-        throw;
-    }
-
     bi::mapped_region region(fShmobj, bi::read_write);
     fMapreg.swap(region);
 }

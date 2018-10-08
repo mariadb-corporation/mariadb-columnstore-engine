@@ -61,6 +61,8 @@ bool HDFS = false;
 string localHostName;
 string PMwithUM = "n";
 string MySQLRep = "n";
+string tmpLogDir;
+
 
 // pushing the ACTIVE_ALARMS_FILE to all nodes every 10 seconds.
 const int ACTIVE_ALARMS_PUSHING_INTERVAL = 10;
@@ -255,6 +257,9 @@ int main(int argc, char** argv)
 
     freeifaddrs(addrs);
     log.writeLog(__LINE__, "Main Ethernet Port = " + iface_name, LOG_TYPE_DEBUG);
+
+    //get tmp log directory
+    tmpLogDir = startup::StartUp::tmpDir();
 
     //
     //start a thread to ping all system modules
@@ -475,10 +480,6 @@ static void messageThread(Configuration config)
         string port = sysConfig->getConfig("ProcMgr", "Port");
         string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
 
-        if ( !rootUser)
-            cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-
         system(cmd.c_str());
     }
     catch (...)
@@ -562,9 +563,6 @@ static void alarmMessageThread(Configuration config)
         Config* sysConfig = Config::makeConfig();
         string port = sysConfig->getConfig("ProcMgr_Alarm", "Port");
         string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-        if ( !rootUser)
-            cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
 
         system(cmd.c_str());
     }
@@ -2270,18 +2268,7 @@ void pingDeviceThread()
                                             }
 
                                             // add module
-                                            string password = oam::UnassignedName;
-
-                                            try
-                                            {
-                                                oam.getSystemConfig("rpw", password);
-                                            }
-                                            catch (...)
-                                            {
-                                                password = oam::UnassignedName;
-                                            }
-
-                                            ret = processManager.addModule(devicenetworklist, password, false);
+					    ret = processManager.addModule(devicenetworklist, "ssh", false);
 
                                             if ( ret != oam::API_SUCCESS )
                                             {

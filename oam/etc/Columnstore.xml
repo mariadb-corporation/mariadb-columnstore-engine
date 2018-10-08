@@ -249,13 +249,14 @@
 		<ExternalCriticalThreshold>90</ExternalCriticalThreshold>
 		<ExternalMajorThreshold>80</ExternalMajorThreshold>
 		<ExternalMinorThreshold>70</ExternalMinorThreshold>
-		<TempDiskPath>/tmp</TempDiskPath>
+		<!-- <TempDiskPath>/tmp</TempDiskPath>
 		<WorkingDir>/tmp</WorkingDir>
+		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
+		-->
 		<TransactionArchivePeriod>10</TransactionArchivePeriod>
 		<NMSIPAddress>0.0.0.0</NMSIPAddress>
 		<TempSaveSize>128M</TempSaveSize> <!-- default SWSDL max element save size -->
 		<WaitPeriod>10</WaitPeriod> <!-- in seconds -->
-		<TempFileDir>/tmp/columnstore_tmp_files</TempFileDir>
 		<CalpontHome>$INSTALLDIR</CalpontHome>
 		<ProcessRestartCount>10</ProcessRestartCount>
 		<ProcessRestartPeriod>120</ProcessRestartPeriod>
@@ -266,7 +267,9 @@
 		<!-- enable if you want to limit how much memory may be used for hdfs read/write memory buffers.
  		<hdfsRdwrBufferMaxSize>8G</hdfsRdwrBufferMaxSize>
 		-->
- 		<hdfsRdwrScratch>/tmp/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+ 		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
+ 		<TempFileDir>/columnstore_tmp_files</TempFileDir>
+ 		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType1>dm</ModuleType1>
@@ -445,7 +448,6 @@
 		<UMStorageType>internal</UMStorageType>
 		<EEPackageType>rpm</EEPackageType>
 		<SystemLogConfigFile>unassigned</SystemLogConfigFile>
-		<rpw>mariadb1</rpw>
 		<Cloud>unassigned</Cloud>
 		<AmazonVPCNextPrivateIP>autoassign</AmazonVPCNextPrivateIP>
 		<UMInstanceType>unassigned</UMInstanceType>
@@ -469,6 +471,8 @@
 		<MySQLPort>3306</MySQLPort>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
 		<DistributedInstall>y</DistributedInstall>
+		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
+		<ProfileFile>unassigned</ProfileFile>
 	</Installation>
 	<ExtentMap>
 		<!--
@@ -490,8 +494,8 @@
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<!-- Be careful modifying TempFilePath!  On start, ExeMgr deletes
 			the entire directory and recreates it to make sure no
-			files are left behind.  -->
-		<TempFilePath>$INSTALLDIR/tmp</TempFilePath>
+			files are left behind.
+		<TempFilePath>/tmp</TempFilePath>  -->
 		<TempFileCompression>Y</TempFileCompression>
 	</HashJoin>
 	<JobList>

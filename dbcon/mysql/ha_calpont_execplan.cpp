@@ -6189,7 +6189,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     if (filters)
     {
         csep->filters(filters);
-        filters->drawTree("/tmp/filter1.dot");
+        std::string aTmpDir(startup::StartUp::tmpDir());
+        aTmpDir = aTmpDir + "/filter1.dot";
+        filters->drawTree(aTmpDir);
     }
 
     gwi.clauseType = SELECT;
@@ -8614,7 +8616,9 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
     {
         csep->filters(filters);
 #ifdef DEBUG_WALK_COND
-        filters->drawTree("/tmp/filter1.dot");
+        std::string aTmpDir(startup::StartUp::tmpDir());
+        aTmpDir = aTmpDir + "/filter1.dot";
+        filters->drawTree(aTmpDir);
 #endif
     }
 

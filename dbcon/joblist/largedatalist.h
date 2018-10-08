@@ -204,7 +204,6 @@ template<typename container_t, typename element_t>
 LargeDataList<container_t, element_t>::LargeDataList(uint32_t nc, uint32_t elementSaveSize1st, uint32_t elementSaveSize2nd, const ResourceManager* rm):
     base(nc), path(rm.getScTempDiskPath()), fTraceOn(false), fReUse(false), fSaveForReuse(false), fRestoreInfo(NULL)
 {
-// 	config::Config *config = config::Config::makeConfig();
 
     loadedSet = 0;
     setCount = 1;
@@ -214,14 +213,6 @@ LargeDataList<container_t, element_t>::LargeDataList(uint32_t nc, uint32_t eleme
     multipleProducers = false;
     fLoadedSetCount   = 0;
     setDiskElemSize ( elementSaveSize1st, elementSaveSize2nd );
-// 	try {
-// 		path = config->getConfig("SystemConfig", "TempDiskPath");
-// 	}
-// 	catch (...) {
-// 	}
-// 	if (path.length() == 0)
-// 		path = defaultTempDiskPath;
-    //pthread_cond_init(&consumePhase, NULL);
 }
 
 template<typename container_t, typename element_t>

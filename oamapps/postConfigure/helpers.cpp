@@ -35,6 +35,10 @@ using namespace oam;
 
 #include "helpers.h"
 
+using namespace installer;
+
+#include "installdir.h"
+
 extern string mysqlpw;
 string pwprompt = " ";
 
@@ -45,6 +49,7 @@ string prompt;
 const char* pcommand = 0;
 
 extern string installDir;
+
 extern bool noPrompting;
 
 namespace installer
@@ -247,12 +252,15 @@ void mysqlSetup()
 {
     Oam oam;
     string cmd;
-    cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " > /tmp/post-mysqld-install.log 2>&1";
+
+	string tmpDir = startup::StartUp::tmpDir();
+
+    cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
     int rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)
     {
-        cout << "Error running post-mysqld-install, check /tmp/post-mysqld-install.log" << endl;
+        cout << "Error running post-mysqld-install, check " << tmpDir << "/post-mysqld-install.log" << endl;
         cout << "Exiting..." << endl;
         exit (1);
     }
@@ -276,7 +284,7 @@ void mysqlSetup()
             HOME = p;
     }
 
-    cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " > /tmp/post-mysql-install.log";;
+    cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysql-install.log";
     rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) == 2)
@@ -287,7 +295,7 @@ void mysqlSetup()
     }
     else if (WEXITSTATUS(rtnCode) == 1)
     {
-        cout << "Error running post-mysql-install, /tmp/post-mysql-install.log" << endl;
+        cout << "Error running post-mysql-install, " + tmpDir + "/post-mysql-install.log" << endl;
         cout << "Exiting..." << endl;
         exit (1);
     }
@@ -375,7 +383,9 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
 
                         if ( returnStatus != API_SUCCESS)
                         {
-                            cout << "ERROR: Error return in running the MariDB Columnstore Upgrade, check /tmp/upgrade*.logs on " << (*pt).DeviceName << endl;
+							string tmpDir = startup::StartUp::tmpDir();
+
+                            cout << "ERROR: Error return in running the MariDB Columnstore Upgrade, check " + tmpDir + "/upgrade*.logs on " << (*pt).DeviceName << endl;
                             return returnStatus;
                         }
                     }
@@ -403,6 +413,8 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
     Oam oam;
 
     SystemModuleTypeConfig systemmoduletypeconfig;
+
+	string tmpDir = startup::StartUp::tmpDir();
 
     try
     {
@@ -478,7 +490,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
 
                             if ( returnStatus != API_SUCCESS)
                             {
-                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master DB Distribute, check /tmp/master-dist*.logs on " << masterModule << endl;
+                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master DB Distribute, check " + tmpDir + "/master-dist*.logs on " << masterModule << endl;
                                 return returnStatus;
                             }
 
@@ -491,7 +503,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
 
                             if ( returnStatus != API_SUCCESS)
                             {
-                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master replication, check /tmp/master-rep*.logs on " << masterModule << endl;
+                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Master replication, check " + tmpDir + "master-rep*.logs on " << masterModule << endl;
                                 return returnStatus;
                             }
 
@@ -526,7 +538,7 @@ int sendReplicationRequest(int IserverTypeInstall, std::string password, bool pm
 
                             if ( returnStatus != API_SUCCESS)
                             {
-                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Slave replication, check /tmp/slave-rep*.logs on " << (*pt).DeviceName << endl;
+                                cout << endl << "ERROR: Error return in running the MariaDB ColumnStore Slave replication, check " + tmpDir + "/slave-rep*.logs on " << (*pt).DeviceName << endl;
                                 return returnStatus;
                             }
 
@@ -728,12 +740,14 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 {
     Oam oam;
 
+	string tmpDir = startup::StartUp::tmpDir();
+
     while (true)
     {
-        string cmd = "netstat -na | grep -e :" + mysqlPort + "[[:space:]] | grep LISTEN > /tmp/mysqlport";
+        string cmd = "netstat -na | grep -e :" + mysqlPort + "[[:space:]] | grep LISTEN > " + tmpDir + "/mysqlport";
 
         system(cmd.c_str());
-        string fileName = "/tmp/mysqlport";
+        string fileName = tmpDir + "/mysqlport";
         ifstream oldFile (fileName.c_str());
 
         if (oldFile)
@@ -813,9 +827,11 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 
     bool inUse = false;
 
+	string tmpDir = startup::StartUp::tmpDir();
+
     while (true)
     {
-        string localnetstat = "netstat -na | grep -e :" + mysqlPort + "[[:space:]] | grep LISTEN > /tmp/mysqlport";
+        string localnetstat = "netstat -na | grep -e :" + mysqlPort + "[[:space:]] | grep LISTEN > " + tmpDir + "/mysqlport";
         string remotenetstat = "netstat -na | grep -e :" + mysqlPort + "[[:space:]] | grep LISTEN";
 
         //first check local mysql, if needed
@@ -823,7 +839,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
                 ( ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ) && pmwithum ) )
         {
             system(localnetstat.c_str());
-            string fileName = "/tmp/mysqlport";
+            string fileName = tmpDir + "/mysqlport";
             ifstream oldFile (fileName.c_str());
 
             if (oldFile)

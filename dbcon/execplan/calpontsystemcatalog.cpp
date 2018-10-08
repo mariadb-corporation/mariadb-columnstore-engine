@@ -66,6 +66,8 @@ using namespace logging;
 #include "rowgroup.h"
 using namespace rowgroup;
 
+#include "installdir.h"
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/version.hpp>
@@ -92,7 +94,8 @@ throw runtime_error("CALPONT_INTERNAL_ERROR"); \
 #if CSC_DEBUG
 namespace
 {
-std::ofstream csclog("/tmp/csc.log", std::ios::app);
+	string tmpDir = startup::StartUp::tmpDir() + "/csc.log";
+	std::ofstream csclog(tmpDir, std::ios::app);
 }
 #define DEBUG csclog
 #else
