@@ -3665,11 +3665,16 @@ ReturnedColumn* buildFunctionColumn(
             gwi.no_parm_func_list.push_back(fc);
         }
 
-        // add the sign for addtime function
-        if (funcName == "add_time")
+        // func name is addtime/subtime in 10.3.9
+        // note: this means get_time() can now go away in our server fork
+        if ((funcName == "addtime") || (funcName == "subtime"))
         {
-            Item_func_add_time* addtime = (Item_func_add_time*)ifp;
-            sptp.reset(new ParseTree(new ConstantColumn((int64_t)addtime->get_sign())));
+            int64_t sign = 1;
+            if (funcName == "subtime")
+            {
+                sign = -1;
+            }
+            sptp.reset(new ParseTree(new ConstantColumn(sign)));
             funcParms.push_back(sptp);
         }
 
