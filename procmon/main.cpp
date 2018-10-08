@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     //get tmp log directory
     tmpLogDir = startup::StartUp::tmpDir();
     
-    string cmd = "mkdir -p tmpLogDir";
+    string cmd = "mkdir -p " + tmpLogDir;
     system(cmd.c_str());
 
     // create message thread
@@ -268,7 +268,7 @@ int main(int argc, char** argv)
     }
     catch (...) {}
 
-    if ( cloud == "amazon-ec2" )
+	if ( cloud == "amazon-ec2" || cloud == "amazon-vpc" )
     {
         if (!aMonitor.amazonIPCheck())
         {
@@ -1565,7 +1565,7 @@ static void chldHandleThread(MonitorConfig config)
                     catch (...)
                     {}
 
-                    // check if process failover is needed due to process outage
+					// check if Mdoule failover is needed due to process outage
 					aMonitor.checkModuleFailover((*listPtr).ProcessName);
 
                     //check the db health
@@ -1647,17 +1647,20 @@ static void chldHandleThread(MonitorConfig config)
                             restartStatus = " restart failed with hard failure, don't retry!!";
                             (*listPtr).processID = 0;
 
-                            // check if process failover is needed due to process outage
+							// check if Module failover is needed due to process outage
 							aMonitor.checkModuleFailover((*listPtr).ProcessName);
                             break;
                         }
                         else
                         {
                             if ( (*listPtr).processID != oam::API_MINOR_FAILURE )
+							{
                                 //restarted successful
+                        		//Inform Process Manager that Process restart
+                        		aMonitor.processRestarted( (*listPtr).ProcessName, false);
                                 break;
-                        }
-
+							}
+						}
                         // restart failed with minor error, sleep and try
                         sleep(5);
                     }
@@ -2602,6 +2605,7 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
 				BRM::DBRM dbrm;
 				dbrm.setSystemQueryReady(true);
             }
+
         }
         break;
 

@@ -630,10 +630,12 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     if ( count > 0 )
                     {
 
+						string module = oam::UnassignedName;
                         for (int i = 0; i < count; i++)
                         {
                             msg >> value;
                             devicenetworkconfig.DeviceName = value;
+							module = value;
                             msg >> value;
                             devicenetworkconfig.UserTempDeviceName = value;
                             msg >> value;
@@ -663,24 +665,21 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                         if ( status == API_SUCCESS)
                         {
-                            //distribute config file
-                            processManager.distributeConfigFile("system");
+							processManager.setSystemState(oam::BUSY_INIT);
 
-                            //call dbrm control
-                            oam.dbrmctl("halt");
-                            log.writeLog(__LINE__, "'dbrmctl halt' done", LOG_TYPE_DEBUG);
+							//set query system state not ready
+							processManager.setQuerySystemState(false);
 
-                            oam.dbrmctl("reload");
-                            log.writeLog(__LINE__, "'dbrmctl reload' done", LOG_TYPE_DEBUG);
+							//set recycle process
+							processManager.recycleProcess(target, true);
 
-                            oam.dbrmctl("resume");
-                            log.writeLog(__LINE__, "'dbrmctl resume' done", LOG_TYPE_DEBUG);
+							//distribute config file
+							processManager.distributeConfigFile("system");	
+		
+							//set query system state ready
+							processManager.setQuerySystemState(true);
 
-//							processManager.restartProcessType("ExeMgr");
-
-                            //setup MySQL Replication for started modules
-//							log.writeLog(__LINE__, "Setup MySQL Replication for module being started", LOG_TYPE_DEBUG);
-//							processManager.setMySQLReplication(startdevicenetworklist);
+							processManager.setSystemState(oam::ACTIVE);
                         }
                     }
                     else
@@ -923,7 +922,6 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
 								//set query system state ready
 								processManager.setQuerySystemState(true);
-
                             }
                             else
                             {
@@ -1772,7 +1770,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                         oam::DeviceNetworkList devicenetworklist;
                         pthread_t startsystemthread;
-                        pthread_create (&startsystemthread, NULL, (void* (*)(void*)) &startSystemThread, &devicenetworklist);
+						status = pthread_create (&startsystemthread, NULL, (void*(*)(void*)) &startSystemThread, &devicenetworklist);
 
                         if ( status != 0 )
                         {
@@ -1782,20 +1780,19 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                         if (status == 0 && ackIndicator)
                         {
-                            // BUG 4554 We don't need the join because calpont console is now looking for "Active"
-                            // We need to return the ack right away to let console know we got the message.
-//							pthread_join(startsystemthread, NULL);
-//							status = startsystemthreadStatus;
+							pthread_join(startsystemthread, NULL);
+							status = startsystemthreadStatus;
                         }
-
-                        // setup MySQL Replication after switchover command
-                        /*						if (graceful == FORCEFUL)
+						
+						// setup MySQL Replication after FORCE restart command
+						if ( (status == API_SUCCESS) &&
+							 (graceful == oam::FORCEFUL) )
                         						{
-                        							log.writeLog(__LINE__, "Setup MySQL Replication for restartSystem FORCE, used by switch-parent command", LOG_TYPE_DEBUG);
+							log.writeLog(__LINE__, "Setup MySQL Replication for restartSystem FORCE", LOG_TYPE_DEBUG);
                         							oam::DeviceNetworkList devicenetworklist;
-                        							processManager.setMySQLReplication(devicenetworklist);
+							processManager.setMySQLReplication(devicenetworklist, oam::UnassignedName, true);
                         						}
-                        */
+
                         log.writeLog(__LINE__, "RESTARTSYSTEM: Start System Request Completed", LOG_TYPE_INFO);
                     }
 
@@ -3065,15 +3062,16 @@ void processMSG(messageqcpp::IOSocket* cfIos)
             processManager.reinitProcessType("cpimport");
 
             //request reinit after Process is active
-            for ( int i = 0; i < 600 ; i++ )
-            {
-                try
-                {
-                    ProcessStatus procstat;
-                    oam.getProcessStatus(processName, moduleName, procstat);
+				for ( int i = 0; i < 10 ; i++ ) {
+					try {
+						ProcessStatus procstat;
+						oam.getProcessStatus(processName, moduleName, procstat);
 
-                    if (procstat.ProcessOpState == oam::ACTIVE)
-                    {
+						if (procstat.ProcessOpState == oam::COLD_STANDBY)
+							break;
+
+						if ( (procstat.ProcessOpState == oam::ACTIVE) ||
+								(procstat.ProcessOpState == oam::STANDBY) ) {
                         // if a PrimProc was restarted, reinit ACTIVE ExeMgr(s) and DDL/DMLProc
                         if ( processName == "PrimProc")
                         {
@@ -3160,11 +3158,14 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                         }
 
-                        // if a DDLProc was restarted, reinit DMLProc
+							// if a DDLProc was restarted, restart DMLProc
                         if ( processName == "DDLProc")
                         {
                             processManager.reinitProcessType("DMLProc");
+								//set query system states ready
 								processManager.setQuerySystemState(true);
+
+								processManager.setSystemState(oam::ACTIVE);
                         }
 
                         //only run on auto process restart
@@ -3222,6 +3223,8 @@ void processMSG(messageqcpp::IOSocket* cfIos)
             processManager.setQuerySystemState(true);
 
             processManager.setSystemState(oam::ACTIVE);
+
+				log.writeLog(__LINE__,  "MSG RECEIVED: Process Restarted Completed");
         }
         break;
 
@@ -3604,6 +3607,7 @@ int ProcessManager::shutdownModule(string target, ByteStream::byte actionIndicat
 int ProcessManager::disableModule(string target, bool manualFlag)
 {
     Oam oam;
+	ProcessManager processManager(config, log);
     ModuleConfig moduleconfig;
 
     log.writeLog(__LINE__, "disableModule request for " + target, LOG_TYPE_DEBUG);
@@ -3719,6 +3723,11 @@ int ProcessManager::disableModule(string target, bool manualFlag)
     if ( updateWorkerNodeconfig() != API_SUCCESS )
         return API_FAILURE;
 
+	processManager.recycleProcess(target);
+
+	//check for SIMPLEX Processes on mate might need to be started
+	processManager.checkSimplexModule(target);
+
     //distribute config file
     distributeConfigFile("system");
 
@@ -3730,7 +3739,7 @@ int ProcessManager::disableModule(string target, bool manualFlag)
 /******************************************************************************************
 * @brief	recycleProcess
 *
-* purpose:	recyle process, generally after some disable module is run
+* purpose:	recyle process, done after disable/enable module
 *
 ******************************************************************************************/
 void ProcessManager::recycleProcess(string module, bool enableModule)
@@ -3750,52 +3759,39 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
     }
     catch (...) {}
 
-    // restart DBRM Process and DMLProc and return if enable module is being done
-    if (enableModule)
-    {
-        //recycle DBRM processes in all cases
-        restartProcessType("DBRMControllerNode");
-        restartProcessType("DBRMWorkerNode");
+	stopProcessType("WriteEngineServer");
 
-        restartProcessType("DMLProc");
-        return;
-    }
+	stopProcessType("ExeMgr");
+	
+	stopProcessType("PrimProc");
 
-    //recycle DBRM processes in all cases
-    restartProcessType("DBRMControllerNode", module);
-    restartProcessType("DBRMWorkerNode");
+	stopProcessType("DBRMControllerNode");
+	stopProcessType("DBRMWorkerNode");
 
-    // only recycle dmlproc, if down/up module is non-parent UM
-    if ( ( moduleType == "um" ) &&
-            ( PrimaryUMModuleName != module) )
-    {
-        restartProcessType("DMLProc", module);
-        return;
-    }
+	stopProcessType("DDLProc");
+	stopProcessType("DMLProc");
 
-    if ( PrimaryUMModuleName == module)
-    {
-        stopProcessType("DDLProc");
-        stopProcessType("DMLProc");
-    }
+	stopProcessType("mysqld");
 
-    stopProcessType("ExeMgr");
+//	restartProcessType("mysqld");
+	
+	startProcessType("DBRMControllerNode");
+	startProcessType("DBRMWorkerNode");
 
-    restartProcessType("PrimProc");
-    sleep(1);
-
-    restartProcessType("mysqld");
-
-    restartProcessType("WriteEngineServer");
-    sleep(1);
+	startProcessType("PrimProc");
+	sleep(5);
+	
+	startProcessType("WriteEngineServer");
+	sleep(3);
 
 	startProcessType("ExeMgr");
-    sleep(1);
 
 	startProcessType("DDLProc");
 	sleep(1);
 
 	startProcessType("DMLProc");
+
+	startProcessType("mysqld");
 
     return;
 }
@@ -3844,11 +3840,7 @@ int ProcessManager::enableModule(string target, int state, bool failover)
 
     if ( newStandbyModule == target)
         setStandbyModule(newStandbyModule);
-
-    //set recycle process
-    if (!failover)
-        recycleProcess(target);
-
+	
     log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
     return API_SUCCESS;
@@ -7091,17 +7083,27 @@ void ProcessManager::setQuerySystemState(bool set)
     Oam oam;
     BRM::DBRM dbrm;
 
-    log.writeLog(__LINE__, "setQuerySystemState = " + oam.itoa(set), LOG_TYPE_DEBUG);
+	log.writeLog(__LINE__, "setQuerySystemState called = " + oam.itoa(set), LOG_TYPE_DEBUG);
 
     try
     {
         dbrm.setSystemQueryReady(set);
-        log.writeLog(__LINE__, "setQuerySystemState successful", LOG_TYPE_DEBUG);
-    }
-    catch (...)
-    {
-        log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_DEBUG);
-        log.writeLog(__LINE__, "setQuerySystemState failed", LOG_TYPE_ERROR);
+		log.writeLog(__LINE__, "setSystemQueryReady = " + oam.itoa(set), LOG_TYPE_DEBUG);
+
+		try {
+			dbrm.setSystemReady(set);
+			log.writeLog(__LINE__, "setSystemReady = " + oam.itoa(set), LOG_TYPE_DEBUG);
+		}
+		catch(...)
+		{
+			log.writeLog(__LINE__, "setSystemReady failed", LOG_TYPE_DEBUG);
+			log.writeLog(__LINE__, "setSystemReady failed", LOG_TYPE_ERROR);
+		}
+	}
+	catch(...)
+	{
+		log.writeLog(__LINE__, "setSystemQueryReady failed", LOG_TYPE_DEBUG);
+		log.writeLog(__LINE__, "setSystemQueryReady failed", LOG_TYPE_ERROR);
     }
 }
 
@@ -7706,25 +7708,30 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 
             if (DMLprocessstatus.ProcessOpState == oam::ACTIVE)
             {
-                rtn = oam::ACTIVE;
+ 		        rtn = oam::ACTIVE;
                 break;
             }
 
             if (DMLprocessstatus.ProcessOpState == oam::FAILED)
             {
-                rtn = oam::FAILED;
+		        rtn = oam::FAILED;
+		        status = oam::API_FAILURE;
                 break;
             }
 
-            // wait some more
-            sleep(2);
-        }
+		// wait some more
+				sleep(2);
+		}
+        
+        if ( rtn = oam::ACTIVE )
+			//set query system state not ready
+			processManager.setQuerySystemState(true);
 
-        processManager.setSystemState(rtn);
+		processManager.setSystemState(rtn);
     }
+	else
+		processManager.setSystemState(oam::FAILED);
 
-	//set query system state ready
-	processManager.setQuerySystemState(true);
 
     // exit thread
     log.writeLog(__LINE__, "startSystemThread Exit", LOG_TYPE_DEBUG);

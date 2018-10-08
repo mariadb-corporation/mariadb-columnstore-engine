@@ -64,7 +64,7 @@ const int CALPONT_INTERNAL_ERROR = -1007;
 //extern std::ofstream smlog;
 //#define SMDEBUGLOG smlog
 //#else
-#define SMDEBUGLOG if (true) std::cerr
+#define SMDEBUGLOG if (false) std::cout
 //#endif
 extern const std::string DEFAULT_SAVE_PATH;
 

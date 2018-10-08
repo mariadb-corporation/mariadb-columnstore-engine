@@ -323,6 +323,9 @@ string ConvertFuncName(Item_sum* item)
         case Item_sum::LAG_FUNC:
             return "LAG";
             break;
+        default:
+            // We just don't handle it.
+            break;
     };
 
     return "";

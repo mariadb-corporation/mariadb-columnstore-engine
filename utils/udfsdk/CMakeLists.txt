@@ -4,7 +4,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
                      
 ########### next target ###############
 
-set(udfsdk_LIB_SRCS udfsdk.cpp mcsv1_udaf.cpp allnull.cpp ssq.cpp avg_mode.cpp regr_avgx.cpp avgx.cpp)
+set(udfsdk_LIB_SRCS udfsdk.cpp mcsv1_udaf.cpp allnull.cpp ssq.cpp avg_mode.cpp avgx.cpp distinct_count.cpp)
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 

@@ -83,6 +83,7 @@ chown -R $user.$user $installdir/mysql
 if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1.0.0
 	libudfsdk=$installdir/lib/libudf_mysql.so.1.0.0
+	libregrsdk=$installdir/lib/libregr_mysql.so.1.0.0
     is_columnstore_tables=$installdir/lib/is_columnstore_tables.so.1.0.0
     is_columnstore_columns=$installdir/lib/is_columnstore_columns.so.1.0.0
     is_columnstore_extents=$installdir/lib/is_columnstore_extents.so.1.0.0
@@ -90,6 +91,7 @@ if [ -f $installdir/lib/libcalmysql.so.1.0.0 ]; then
 elif [ -f $installdir/lib/libcalmysql.so.1 ]; then
 	libcalmysql=$installdir/lib/libcalmysql.so.1
 	libudfsdk=$installdir/lib/libudf_mysql.so.1
+	libregrsdk=$installdir/lib/libregr_mysql.so.1
     is_columnstore_tables=$installdir/lib/is_columnstore_tables.so.1
     is_columnstore_columns=$installdir/lib/is_columnstore_columns.so.1
     is_columnstore_extents=$installdir/lib/is_columnstore_extents.so.1
@@ -104,6 +106,7 @@ if [ -n "$libcalmysql" ]; then
 	ln -sf $libcalmysql libcalmysql.so
     ln -sf $libcalmysql libcalmysqlent.so
 	ln -sf $libudfsdk libudf_mysql.so
+	ln -sf $libregrsdk libregr_mysql.so
     ln -sf $is_columnstore_tables is_columnstore_tables.so
     ln -sf $is_columnstore_columns is_columnstore_columns.so
     ln -sf $is_columnstore_extents is_columnstore_extents.so

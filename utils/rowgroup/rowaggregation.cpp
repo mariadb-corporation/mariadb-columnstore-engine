@@ -2015,18 +2015,9 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
     for (uint32_t i = 0; i < paramCount; ++i)
     {
-        // If UDAF_IGNORE_NULLS is on, bIsNull gets set the first time
-        // we find a null. We still need to eat the rest of the parameters
-        // to sync updateEntry
-        if (bIsNull)
-        {
-            ++funcColsIdx;
-            continue;
-        }
-
         SP_ROWAGG_FUNC_t pFunctionCol = fFunctionCols[funcColsIdx];
         mcsv1sdk::ColumnDatum& datum = valsIn[i];
-        // Turn on NULL flags
+        // Turn on NULL flags based on the data
         dataFlags[i] = 0;
 
         // If this particular parameter is a constant, then we need
@@ -2043,9 +2034,11 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         {
             if (fRGContext.getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
             {
-                bIsNull = true;
-                ++funcColsIdx;
-                continue;
+                // When Ignore nulls, if there are multiple parameters and any 
+                // one of them is NULL, we ignore the entry. We need to increment
+                // funcColsIdx the number of extra parameters.
+                funcColsIdx += paramCount - i - 1;
+                return;
             }
 
             dataFlags[i] |= mcsv1sdk::PARAM_IS_NULL;

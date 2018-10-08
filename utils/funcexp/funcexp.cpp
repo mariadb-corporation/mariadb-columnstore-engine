@@ -75,6 +75,8 @@ FuncExp::FuncExp()
     fFuncMap["abs"] = new Func_abs();
     fFuncMap["acos"] = new Func_acos();
     fFuncMap["add_time"] = new Func_add_time();
+    fFuncMap["addtime"] = new Func_add_time();
+    fFuncMap["subtime"] = new Func_add_time();
     fFuncMap["asin"] = new Func_asin();
     fFuncMap["ascii"] = new Func_ascii();
     fFuncMap["atan"] = new Func_atan();
