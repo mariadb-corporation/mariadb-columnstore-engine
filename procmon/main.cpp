@@ -224,7 +224,7 @@ int main(int argc, char** argv)
     }
     catch (...) {}
 
-    if ( cloud == "amazon-ec2" )
+	if ( cloud == "amazon-ec2" || cloud == "amazon-vpc" )
     {
         if (!aMonitor.amazonIPCheck())
         {
@@ -1522,7 +1522,7 @@ static void chldHandleThread(MonitorConfig config)
                     catch (...)
                     {}
 
-                    // check if process failover is needed due to process outage
+					// check if Mdoule failover is needed due to process outage
 					aMonitor.checkModuleFailover((*listPtr).ProcessName);
 
                     //check the db health
@@ -1604,17 +1604,20 @@ static void chldHandleThread(MonitorConfig config)
                             restartStatus = " restart failed with hard failure, don't retry!!";
                             (*listPtr).processID = 0;
 
-                            // check if process failover is needed due to process outage
+							// check if Module failover is needed due to process outage
 							aMonitor.checkModuleFailover((*listPtr).ProcessName);
                             break;
                         }
                         else
                         {
                             if ( (*listPtr).processID != oam::API_MINOR_FAILURE )
+							{
                                 //restarted successful
+                        		//Inform Process Manager that Process restart
+                        		aMonitor.processRestarted( (*listPtr).ProcessName, false);
                                 break;
-                        }
-
+							}
+						}
                         // restart failed with minor error, sleep and try
                         sleep(5);
                     }
@@ -2694,22 +2697,6 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
                 fShmSystemStatus[0].OpState = state;
                 memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
                 log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
-            }
-
-            //if DMLProc set to ACTIVE, set system state to ACTIVE if in an INIT state
-            if ( processName == "DMLProc" && state == oam::ACTIVE )
-            {
-                if ( fShmSystemStatus[0].OpState == oam::BUSY_INIT ||
-                        fShmSystemStatus[0].OpState == oam::MAN_INIT ||
-                        fShmSystemStatus[0].OpState == oam::AUTO_INIT )
-                {
-                    fShmSystemStatus[0].OpState = state;
-                    memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
-                    log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
-                }
-				
-				BRM::DBRM dbrm;
-				dbrm.setSystemQueryReady(true);
             }
         }
         break;

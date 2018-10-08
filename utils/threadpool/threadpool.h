@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
+#include <stack>
 #include <stdint.h>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -51,6 +52,106 @@
 
 namespace threadpool
 {
+
+// Taken from boost::thread_group and adapted
+class ThreadPoolGroup
+{
+private:
+    ThreadPoolGroup(ThreadPoolGroup const&);
+    ThreadPoolGroup& operator=(ThreadPoolGroup const&);
+public:
+    ThreadPoolGroup() {}
+    ~ThreadPoolGroup()
+    {
+        for(std::list<boost::thread*>::iterator it=threads.begin(),end=threads.end();
+            it!=end;
+            ++it)
+        {
+            delete *it;
+        }
+    }
+
+    template<typename F>
+    boost::thread* create_thread(F threadfunc)
+    {
+        boost::lock_guard<boost::shared_mutex> guard(m);
+        std::auto_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
+        threads.push_back(new_thread.get());
+        return new_thread.release();
+    }
+
+    void add_thread(boost::thread* thrd)
+    {
+        if(thrd)
+        {
+            boost::lock_guard<boost::shared_mutex> guard(m);
+            threads.push_back(thrd);
+        }
+    }
+
+    void remove_thread(boost::thread* thrd)
+    {
+        boost::lock_guard<boost::shared_mutex> guard(m);
+        std::list<boost::thread*>::iterator const it=std::find(threads.begin(),threads.end(),thrd);
+        if(it!=threads.end())
+        {
+            threads.erase(it);
+        }
+    }
+
+    void join_all()
+    {
+        boost::shared_lock<boost::shared_mutex> guard(m);
+
+        for(std::list<boost::thread*>::iterator it=threads.begin(),end=threads.end();
+            it!=end;
+            ++it)
+        {
+            (*it)->join();
+        }
+    }
+
+    void interrupt_all()
+    {
+        boost::shared_lock<boost::shared_mutex> guard(m);
+
+        for(std::list<boost::thread*>::iterator it=threads.begin(),end=threads.end();
+            it!=end;
+            ++it)
+        {
+            (*it)->interrupt();
+        }
+    }
+
+    size_t size() const
+    {
+        boost::shared_lock<boost::shared_mutex> guard(m);
+        return threads.size();
+    }
+
+    void join_one(boost::thread::id id)
+    {
+        boost::shared_lock<boost::shared_mutex> guard(m);
+        for(std::list<boost::thread*>::iterator it=threads.begin(),end=threads.end();
+            it!=end;
+            ++it)
+        {
+            if ((*it)->get_id() == id)
+            {
+                (*it)->join();
+                threads.erase(it);
+                return;
+            }
+        }
+
+    }
+
+private:
+    std::list<boost::thread*> threads;
+    mutable boost::shared_mutex m;
+};
+
+
 /** @brief ThreadPool is a component for working with pools of threads and asynchronously
   * executing tasks. It is responsible for creating threads and tracking which threads are "busy"
   * and which are idle. Idle threads are utilized as "work" is added to the system.
@@ -207,6 +308,7 @@ private:
       */
     void beginThread() throw();
 
+    void pruneThread();
 
     ThreadPool(const ThreadPool&);
     ThreadPool& operator = (const ThreadPool&);
@@ -245,7 +347,7 @@ private:
     boost::mutex fMutex;
     boost::condition fThreadAvailable; // triggered when a thread is available
     boost::condition fNeedThread;      // triggered when a thread is needed
-    boost::thread_group fThreads;
+    ThreadPoolGroup fThreads;
 
     bool 	fStop;
     long 	fGeneralErrors;
@@ -255,6 +357,10 @@ private:
 
     std::string fName;  // Optional to add a name to the pool for debugging.
     bool fDebug;
+    boost::mutex fPruneMutex;
+    boost::condition fPruneThreadEnd;
+    boost::thread* fPruneThread;
+    std::stack<boost::thread::id> fPruneThreads; // A list of stale thread IDs to be joined
 };
 
 // This class, if instantiated, will continuously log details about the indicated threadpool
