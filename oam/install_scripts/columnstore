@@ -60,6 +60,7 @@ lockdir=`$InstallDir/bin/getConfig Installation LockFileDirectory`
 
 #get temp directory
 tmpDir=`$InstallDir/bin/getConfig SystemConfig SystemTempFileDir`
+mkdir $tmpDir >/dev/null 2>&1
 
 checkInstallSetup() {
 	InitialInstallFlag=`$InstallDir/bin/getConfig -c $InstallDir/etc/Columnstore.xml Installation InitialInstallFlag`

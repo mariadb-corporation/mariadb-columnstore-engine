@@ -866,7 +866,7 @@ int main(int argc, char* argv[])
 
 					try
 					{
-						sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
+						sysConfig->setConfig(InstallSection, "SingleServerInstall", "y");
 						sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
 					}
 					catch (...)

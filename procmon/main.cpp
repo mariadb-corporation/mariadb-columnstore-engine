@@ -179,6 +179,9 @@ int main(int argc, char** argv)
 
     //get tmp log directory
     tmpLogDir = startup::StartUp::tmpDir();
+    
+    string cmd = "mkdir -p tmpLogDir";
+    system(cmd.c_str());
 
     // create message thread
     pthread_t MessageThread;
