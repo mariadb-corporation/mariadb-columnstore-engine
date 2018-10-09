@@ -18,19 +18,19 @@
 /***********************************************************************
 *   $Id$
 *
-*   regr_r2.h
+*   covar_samp.h
 ***********************************************************************/
 
 /**
- * Columnstore interface for for the regr_r2 function
+ * Columnstore interface for for the covar_samp function
  *
  *
- *    CREATE AGGREGATE FUNCTION regr_r2 returns REAL
+ *    CREATE AGGREGATE FUNCTION covar_samp returns REAL
  *    soname 'libregr_mysql.so';
  *
  */
-#ifndef HEADER_regr_r2
-#define HEADER_regr_r2
+#ifndef HEADER_covar_samp
+#define HEADER_covar_samp
 
 #include <cstdlib>
 #include <string>
@@ -55,14 +55,14 @@ using namespace execplan;
 namespace mcsv1sdk
 {
 
-// Return the regr_r2 value of the dataset
+// Return the covar_samp value of the dataset
 
-class regr_r2 : public  mcsv1_UDAF
+class covar_samp : public  mcsv1_UDAF
 {
 public:
     // Defaults OK
-    regr_r2() : mcsv1_UDAF() {};
-    virtual ~regr_r2() {};
+    covar_samp() : mcsv1_UDAF() {};
+    virtual ~covar_samp() {};
 
     virtual ReturnCode init(mcsv1Context* context,
                             ColumnDatum* colTypes);
@@ -84,5 +84,5 @@ protected:
 
 #undef EXPORT
 
-#endif // HEADER_regr_r2.h
+#endif // HEADER_covar_samp.h
 

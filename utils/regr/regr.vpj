@@ -194,23 +194,35 @@
         <Folder
             Name="Source Files"
             Filters="*.c;*.C;*.cc;*.cpp;*.cp;*.cxx;*.c++;*.prg;*.pas;*.dpr;*.asm;*.s;*.bas;*.java;*.cs;*.sc;*.e;*.cob;*.html;*.rc;*.tcl;*.py;*.pl;*.d">
+            <F N="corr.cpp"/>
+            <F N="covar_pop.cpp"/>
+            <F N="covar_samp.cpp"/>
             <F N="regr_avgx.cpp"/>
             <F N="regr_avgy.cpp"/>
             <F N="regr_count.cpp"/>
             <F N="regr_intercept.cpp"/>
             <F N="regr_r2.cpp"/>
             <F N="regr_slope.cpp"/>
+            <F N="regr_sxx.cpp"/>
+            <F N="regr_sxy.cpp"/>
+            <F N="regr_syy.cpp"/>
             <F N="regrmysql.cpp"/>
         </Folder>
         <Folder
             Name="Header Files"
             Filters="*.h;*.H;*.hh;*.hpp;*.hxx;*.inc;*.sh;*.cpy;*.if">
+            <F N="corr.h"/>
+            <F N="covar_pop.h"/>
+            <F N="covar_samp.h"/>
             <F N="regr_avgx.h"/>
             <F N="regr_avgy.h"/>
             <F N="regr_count.h"/>
             <F N="regr_intercept.h"/>
             <F N="regr_r2.h"/>
             <F N="regr_slope.h"/>
+            <F N="regr_sxx.h"/>
+            <F N="regr_sxy.h"/>
+            <F N="regr_syy.h"/>
         </Folder>
         <Folder
             Name="Resource Files"
