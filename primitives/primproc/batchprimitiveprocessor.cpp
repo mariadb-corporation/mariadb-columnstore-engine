@@ -2522,7 +2522,8 @@ inline void BatchPrimitiveProcessor::getJoinResults(const Row& r, uint32_t jInde
     if (!typelessJoin[jIndex])
     {
         if (r.isNullValue(largeSideKeyColumns[jIndex]) && 
-            !(joinTypes[jIndex] & MATCHNULLSAFE))
+            ((joinTypes[jIndex] & ANTI) ||
+             !(joinTypes[jIndex] & MATCHNULLSAFE)))
         {
             /* Bug 3524. This matches everything. */
             if (joinTypes[jIndex] & ANTI)
