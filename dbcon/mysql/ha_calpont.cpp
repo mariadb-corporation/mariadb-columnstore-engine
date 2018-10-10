@@ -125,6 +125,8 @@ handlerton* calpont_hton;
 
 static group_by_handler*
 create_calpont_group_by_handler(THD* thd, Query* query);
+static derived_handler*
+create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived);
 
 /* Variables for example share methods */
 
@@ -222,6 +224,7 @@ static int columnstore_init_func(void* p)
     calpont_hton->rollback = calpont_rollback;
     calpont_hton->close_connection = calpont_close_connection;
     calpont_hton->create_group_by = create_calpont_group_by_handler;
+    calpont_hton->create_derived = create_columnstore_derived_handler;
     DBUG_RETURN(0);
 }
 
@@ -1171,6 +1174,138 @@ create_calpont_group_by_handler(THD* thd, Query* query)
     }
 
     return handler;
+}
+
+static derived_handler*
+create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
+{
+  ha_columnstore_derived_handler* handler = NULL;
+  handlerton *ht= 0;
+
+  SELECT_LEX_UNIT *unit= derived->derived;
+  
+  for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
+  {
+    if (!(sl->join))
+      return 0;
+    for (TABLE_LIST *tbl= sl->join->tables_list; tbl; tbl= tbl->next_local)
+    {
+      if (!tbl->table)
+	return 0;
+      if (!ht)
+        ht= tbl->table->file->partition_ht();
+      else if (ht != tbl->table->file->partition_ht())
+        return 0;
+    }
+  }
+  
+  handler= new ha_columnstore_derived_handler(thd, derived);
+
+  return handler;
+}
+
+ha_columnstore_derived_handler::ha_columnstore_derived_handler(THD *thd,
+                                                             TABLE_LIST *dt)
+  : derived_handler(thd, calpont_hton)
+{
+  derived = dt;
+}
+
+ha_columnstore_derived_handler::~ha_columnstore_derived_handler() {}
+
+int ha_columnstore_derived_handler::init_scan()
+{
+    //THD *thd;
+    char query_buff[4096];
+
+    DBUG_ENTER("ha_columnstore_derived_handler::init_scan");
+
+    // table is the place where to save the result set 
+    TABLE* derived_table = derived->get_first_table()->table;
+
+    String derived_query(query_buff, sizeof(query_buff), thd->charset());
+    derived_query.length(0);
+    derived->derived->print(&derived_query, QT_ORDINARY);
+
+    // Save vtable_state to restore the after we inited.
+    THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
+    // MCOL-1052 Should be removed after cleaning the code up.
+    thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
+
+    int rc = ha_cs_impl_derived_init(this, table);
+
+    thd->infinidb_vtable.vtable_state = oldState;
+
+    DBUG_RETURN(rc);
+}
+      
+int ha_columnstore_derived_handler::next_row()
+{
+  ulong *lengths;
+  Field **field;
+  int column= 0;
+  Time_zone *saved_time_zone= table->in_use->variables.time_zone;
+  DBUG_ENTER("ha_columnstore_derived_handler::next_row");
+
+  /*if ((rc= txn->acquire(share, table->in_use, TRUE, &io)))
+    DBUG_RETURN(rc);
+
+  if (!(row= io->fetch_row(stored_result)))
+    DBUG_RETURN(HA_ERR_END_OF_FILE);
+
+  // Convert row to internal format
+  table->in_use->variables.time_zone= UTC;
+  lengths= io->fetch_lengths(stored_result);
+
+  for (field= table->field; *field; field++, column++)
+  {
+    if (io->is_column_null(row, column))
+       (*field)->set_null();
+    else
+    {
+      (*field)->set_notnull();
+      (*field)->store(io->get_column_data(row, column),
+                      lengths[column], &my_charset_bin);
+    }
+  }
+  table->in_use->variables.time_zone= saved_time_zone;
+  */
+  //DBUG_RETURN(rc);
+  
+  //int rc = ha_calpont_impl_rnd_init(table);
+  //int rc = ha_cs_impl_derived_next(table);
+  
+      // Save vtable_state to restore the after we inited.
+    THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
+    // MCOL-1052 Should be removed after cleaning the code up.
+    thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
+  
+    TABLE* derived_table = derived->get_first_table()->table;
+    int rc = ha_calpont_impl_rnd_next(table->record[0], table);
+  
+    thd->infinidb_vtable.vtable_state = oldState;
+  
+  DBUG_RETURN(rc);
+}
+
+int ha_columnstore_derived_handler::end_scan()
+{
+    DBUG_ENTER("ha_columnstore_derived_handler::end_scan");
+  
+    TABLE* derived_table = derived->get_first_table()->table;
+  
+    THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
+    thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;
+    
+    int rc = ha_calpont_impl_rnd_end(table);
+
+    thd->infinidb_vtable.vtable_state = oldState;
+
+    DBUG_RETURN(rc);
+}
+
+void ha_columnstore_derived_handler::print_error(int, unsigned long)
+{
 }
 
 /***********************************************************

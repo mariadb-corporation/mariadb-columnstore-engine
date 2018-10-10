@@ -21,7 +21,7 @@
  */
 
 /** @file */
-//#define DEBUG_WALK_COND
+#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
 #include <iostream>
@@ -5763,14 +5763,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 #endif
 
     // by pass the derived table resolve phase of mysql
-    if (!(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
+    /*if (!(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
     {
         gwi.thd->infinidb_vtable.isUnion = false;
         return -1;
-    }
+    }*/
 
     // rollup is currently not supported
     if (select_lex.olap == ROLLUP_TYPE)
@@ -8270,6 +8270,34 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
         return ER_INTERNAL_ERROR;
     else if (status < 0)
         return status;
+
+    return 0;
+}
+
+int cp_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
+{
+    //LEX* lex = thd->lex;
+    //idbassert(lex != 0);
+
+    // should be changed to pointer
+    SELECT_LEX select_lex = *handler->select;
+    gp_walk_info gwi;
+    gwi.thd = thd;
+    int status = getSelectPlan(gwi, select_lex, csep);
+
+    if (status > 0)
+        return ER_INTERNAL_ERROR;
+    else if (status < 0)
+        return status;
+
+#ifdef DEBUG_WALK_COND
+    cerr << "---------------- cp_get_derived_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl ;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+#endif
+
+    // Derived table projection and filter optimization.
+    //derivedTableOptimization(csep);
 
     return 0;
 }

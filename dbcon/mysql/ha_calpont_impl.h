@@ -51,6 +51,8 @@ extern int ha_calpont_impl_rnd_pos(uchar* buf, uchar* pos);
 extern int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE* table);
 extern int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table);
 extern int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE* table);
+extern int ha_cs_impl_derived_next(TABLE* table);
+extern int ha_cs_impl_derived_init(derived_handler* handler, TABLE* table);
 
 #endif
 
@@ -77,6 +79,7 @@ extern std::string  ha_calpont_impl_cleartablelock( cal_impl_if::cal_connection_
 extern int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE* table);
 extern int ha_calpont_impl_group_by_next(ha_calpont_group_by_handler* group_hand, TABLE* table);
 extern int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE* table);
+extern int ha_cs_impl_derived_next(TABLE* table);
 #endif
 
 #endif

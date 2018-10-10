@@ -293,5 +293,22 @@ public:
     ORDER*      order_by;
     Item*       having;
 };
+
+class ha_columnstore_derived_handler: public derived_handler
+{
+private:
+  INFINIDB_SHARE *share;
+  //federatedx_txn *txn;
+  //federatedx_io *io;
+  //FEDERATEDX_IO_RESULT *stored_result;
+
+public:
+  ha_columnstore_derived_handler(THD* thd_arg, TABLE_LIST *tbl);
+  ~ha_columnstore_derived_handler();
+  int init_scan();
+  int next_row();
+  int end_scan();
+  void print_error(int, unsigned long);
+};
 #endif //HA_CALPONT_H__
 

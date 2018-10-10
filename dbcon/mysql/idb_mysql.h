@@ -69,6 +69,7 @@ template <class T> bool isnan(T);
 #include "mysqld_error.h"
 #include "item_windowfunc.h"
 #include "sql_cte.h"
+#include "derived_handler.h"
 
 // Now clean up the pollution as best we can...
 #undef min
