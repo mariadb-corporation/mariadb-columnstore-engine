@@ -1057,7 +1057,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     msg >> manualFlag;
                     int requestStatus = oam::API_SUCCESS;
                     log.writeLog(__LINE__,  "MSG RECEIVED: Start All process request...");
-                  
+
                     //start the mysqld daemon
 
                     try
@@ -1548,7 +1548,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 system(cmd.c_str());
 
 				string tmpFile = tmpLogDir + "/mysqldstart";
-                ifstream file (tmpFile);
+                ifstream file (tmpFile.c_str());
 
                 if (!file)
                 {
@@ -1829,7 +1829,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 }
 
                 return_status = API_SUCCESS;
-                ifstream in(tmpMount);
+                ifstream in(tmpMount.c_str());
 
                 in.seekg(0, std::ios::end);
                 int size = in.tellg();
@@ -4973,7 +4973,7 @@ void ProcessMonitor::checkModuleFailover( std::string processName)
 
 						oam::DeviceNetworkConfig devicenetworkconfig;
 						oam::DeviceNetworkList devicenetworklist;
-	
+
 						devicenetworkconfig.DeviceName = config.moduleName();
 						devicenetworklist.push_back(devicenetworkconfig);
 
@@ -5348,7 +5348,7 @@ int ProcessMonitor::runMasterRep(std::string& masterLogFile, std::string& master
     // in log - show-master-status.log
 
 	string masterLog = tmpLogDir + "/show-master-status.log";
-    ifstream file (masterLog);
+    ifstream file (masterLog.c_str());
 
     if (!file)
     {
@@ -5512,7 +5512,7 @@ int ProcessMonitor::runDisableRep()
 
     if ( MySQLPort.empty() )
         MySQLPort = "3306";
-        
+
     string logFile = tmpLogDir + "/disable-rep-columnstore.log";
 
     string cmd = startup::StartUp::installDir() + "/bin/disable-rep-columnstore.sh --installdir=" + startup::StartUp::installDir() + " --tmpdir=" + tmpLogDir + "  >  " + logFile + " 2>&1";
@@ -6298,7 +6298,7 @@ int ProcessMonitor::checkDataMount()
                 cmd = "export LC_ALL=C;mount " + dbroot + " > " + mountLog + " 2>&1";
                 system(cmd.c_str());
 
-                ifstream in(mountLog);
+                ifstream in(mountLog.c_str());
 
                 in.seekg(0, std::ios::end);
                 int size = in.tellg();
@@ -6506,7 +6506,7 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
     {
 		log.writeLog(__LINE__, "glusterAssign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
-        ifstream in(tmpLog);
+        ifstream in(tmpLog.c_str());
         in.seekg(0, std::ios::end);
         int size = in.tellg();
 
@@ -6540,9 +6540,9 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
     std::string errmsg = "";
 
     log.writeLog(__LINE__, "glusterUnassign called: " + dbrootID, LOG_TYPE_DEBUG);
-    
+
 	string tmpLog = tmpLogDir + "/glusterUnassign.log";
-	
+
     command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
 
     int ret = system(command.c_str());
@@ -6551,7 +6551,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
     {
 		log.writeLog(__LINE__, "glusterUnassign mount failure: dbroot: " + dbrootID + " error: " + oam.itoa(WEXITSTATUS(ret)), LOG_TYPE_ERROR);
 
-        ifstream in(tmpLog);
+        ifstream in(tmpLog.c_str());
         in.seekg(0, std::ios::end);
         int size = in.tellg();
 
@@ -6560,7 +6560,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
             if (!oam.checkLogStatus(tmpLog, "not mounted"))
             {
                 log.writeLog(__LINE__, "glusterUnassign failed.", LOG_TYPE_ERROR);
-                             
+
                 string cmd = "mv -f " + tmpLog + " " + tmpLog + "failed";
                 system(cmd.c_str());
                 return oam::API_FAILURE;

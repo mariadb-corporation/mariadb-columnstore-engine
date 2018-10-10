@@ -3058,7 +3058,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
             // plan serialization
             string tmpDir = aTmpDir + "/li1-plan.hex";
 
-            ifstream ifs(tmpDir);
+            ifstream ifs(tmpDir.c_str());
             ByteStream bs1;
             ifs >> bs1;
             ifs.close();
@@ -5121,7 +5121,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             ci->warningMsg = msg;
         }
 
-        // If the previous query has error and 
+        // If the previous query has error and
         // this is not a subquery run by the server(MCOL-1601)
         // re-establish the connection
         if (ci->queryState != 0)
@@ -5221,7 +5221,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             return 0;
 
         string query;
-        // Set the query text only once if the server executes 
+        // Set the query text only once if the server executes
         // subqueries separately.
         if(ci->queryState)
             query.assign("<subquery of the previous>");

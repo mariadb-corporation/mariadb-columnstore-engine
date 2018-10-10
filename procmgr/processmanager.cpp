@@ -674,8 +674,8 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							processManager.recycleProcess(target, true);
 
 							//distribute config file
-							processManager.distributeConfigFile("system");	
-		
+							processManager.distributeConfigFile("system");
+
 							//set query system state ready
 							processManager.setQuerySystemState(true);
 
@@ -917,7 +917,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                                 //check for SIMPLEX Processes on mate might need to be started
                                 processManager.checkSimplexModule(moduleName);
-								
+
 								processManager.setSystemState(oam::ACTIVE);
 
 								//set query system state ready
@@ -1016,7 +1016,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                             {
 								processManager.stopModule(moduleName, graceful, manualFlag);
 								log.writeLog(__LINE__, "stop Module Completed on " + moduleName, LOG_TYPE_INFO);
-								
+
                                 status = processManager.enableModule(moduleName, oam::MAN_OFFLINE);
                                 log.writeLog(__LINE__, "Enable Module Completed on " + moduleName, LOG_TYPE_INFO);
                             }
@@ -1783,7 +1783,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 							pthread_join(startsystemthread, NULL);
 							status = startsystemthreadStatus;
                         }
-						
+
 						// setup MySQL Replication after FORCE restart command
 						if ( (status == API_SUCCESS) &&
 							 (graceful == oam::FORCEFUL) )
@@ -3762,7 +3762,7 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 	stopProcessType("WriteEngineServer");
 
 	stopProcessType("ExeMgr");
-	
+
 	stopProcessType("PrimProc");
 
 	stopProcessType("DBRMControllerNode");
@@ -3774,13 +3774,13 @@ void ProcessManager::recycleProcess(string module, bool enableModule)
 	stopProcessType("mysqld");
 
 //	restartProcessType("mysqld");
-	
+
 	startProcessType("DBRMControllerNode");
 	startProcessType("DBRMWorkerNode");
 
 	startProcessType("PrimProc");
 	sleep(5);
-	
+
 	startProcessType("WriteEngineServer");
 	sleep(3);
 
@@ -3840,7 +3840,7 @@ int ProcessManager::enableModule(string target, int state, bool failover)
 
     if ( newStandbyModule == target)
         setStandbyModule(newStandbyModule);
-	
+
     log.writeLog(__LINE__, "enableModule request for " + target + " completed", LOG_TYPE_DEBUG);
 
     return API_SUCCESS;
@@ -4152,7 +4152,7 @@ void ProcessManager::setSystemState(uint16_t state)
     if( state == oam::ACTIVE ) {
 		//set query system states ready
 		processManager.setQuerySystemState(true);
-		
+
         //clear alarms if set
         aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_AUTO, CLEAR);
         aManager.sendAlarmReport(system.c_str(), SYSTEM_DOWN_MANUAL, CLEAR);
@@ -4694,7 +4694,7 @@ int ProcessManager::restartProcessType( std::string processName, std::string ski
 
 					if ( systemprocessstatus.processstatus[i].ProcessOpState != oam::ACTIVE )
                         continue;
-						
+
                     if ( (processName.find("DDLProc") == 0 || processName.find("DMLProc") == 0) )
                     {
                         string procModuleType = systemprocessstatus.processstatus[i].Module.substr(0, MAX_MODULE_TYPE_SIZE);
@@ -7722,7 +7722,7 @@ void startSystemThread(oam::DeviceNetworkList Devicenetworklist)
 		// wait some more
 				sleep(2);
 		}
-        
+
         if ( rtn = oam::ACTIVE )
 			//set query system state not ready
 			processManager.setQuerySystemState(true);
@@ -8265,7 +8265,7 @@ void ProcessManager::checkSimplexModule(std::string moduleName)
 												if ( systemprocessconfig.processconfig[j].ProcessName == "DDLProc")
 												{
 													setPMProcIPs((*pt).DeviceName);
-													
+
 													log.writeLog(__LINE__, "Set Primary UM Module = " + (*pt).DeviceName, LOG_TYPE_DEBUG);
 
                                                     oam.setSystemConfig("PrimaryUMModuleName", (*pt).DeviceName);
@@ -8284,7 +8284,7 @@ void ProcessManager::checkSimplexModule(std::string moduleName)
                                                     log.writeLog(__LINE__, "checkSimplexModule: mate process started: " + (*pt).DeviceName + "/" + systemprocessconfig.processconfig[j].ProcessName, LOG_TYPE_DEBUG);
 
 													status = processManager.startProcess((*pt).DeviceName,
-																		"DMLProc", 
+																		"DMLProc",
 																		FORCEFUL);
 													if ( status == API_SUCCESS ) {
 														log.writeLog(__LINE__, "checkSimplexModule: mate process started: " + (*pt).DeviceName + "/DMLProc", LOG_TYPE_DEBUG);
@@ -11114,7 +11114,7 @@ int ProcessManager::mountDBRoot(std::string dbrootID)
             system(cmd.c_str());
         }
 
-        ifstream in(tmpMount);
+        ifstream in(tmpMount.c_str());
 
         in.seekg(0, std::ios::end);
         int size = in.tellg();
