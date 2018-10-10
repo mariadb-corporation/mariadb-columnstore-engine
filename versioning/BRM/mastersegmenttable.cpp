@@ -93,6 +93,7 @@ MasterSegmentTableImpl::MasterSegmentTableImpl(int key, int size)
             catch (exception &e) {
                 ostringstream o;
                 o << "BRM caught an exception attaching to a shared memory segment (" << keyName << "): " << e.what();
+                log(o.str());
                 throw;
             }
         }
