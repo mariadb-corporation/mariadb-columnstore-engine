@@ -1006,7 +1006,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                     log.writeLog(__LINE__, "STOPALL: ACK back to ProcMgr, return status = " + oam.itoa((int) requestStatus));
 
                     //Remove MariaDB ColumnStore PGK on REMOVE option if distubuted install
-                    string DistributedInstall = "y";
+                    string DistributedInstall = "n";
 
                     try
                     {
