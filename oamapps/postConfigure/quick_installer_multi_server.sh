@@ -18,7 +18,7 @@ for arg in "$@"; do
 		systemName="`echo $arg | awk -F= '{print $2}'`"
 		systemName="-sn "$systemName
 	elif [ `expr -- "$arg" : '--dist-install'` -eq 14 ]; then
-		nonDistrubutedInstall=" "
+		nonDistrubutedInstall="-d"
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		echo "Usage ./quick_installer_multi_server.sh [OPTION]"
 		echo ""
