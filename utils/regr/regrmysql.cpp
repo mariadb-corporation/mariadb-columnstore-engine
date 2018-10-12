@@ -720,6 +720,636 @@ extern "C"
         *is_null = 1;
     	return 0;
     }
+
+//=======================================================================
+
+    /**
+     * corr
+     */
+    struct corr_data
+    {
+        int64_t   cnt;
+        double      sumx;
+        double      sumx2;  // sum of (x squared)
+        double      sumy;
+        double      sumy2;  // sum of (y squared)
+        double      sumxy;  // sum of (x*y)
+    };
+     
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool corr_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	struct corr_data* data;
+    	if (args->arg_count != 2)
+    	{
+    		strcpy(message,"corr() requires two arguments");
+    		return 1;
+    	}
+
+    	if (!(data = (struct corr_data*) malloc(sizeof(struct corr_data))))
+    	{
+    		strmov(message,"Couldn't allocate memory");
+    		return 1;
+    	}
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumx2 = 0.0;
+        data->sumy = 0.0;
+        data->sumy2 = 0.0;
+        data->sumxy = 0.0;
+
+    	initid->ptr = (char*)data;
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void corr_deinit(UDF_INIT* initid)
+    {
+    	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    corr_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    	struct corr_data* data = (struct corr_data*)initid->ptr;
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumx2 = 0.0;
+        data->sumy = 0.0;
+        data->sumy2 = 0.0;
+        data->sumxy = 0.0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    corr_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+        // Test for NULL in x and y
+        if (args->args[0] == 0 || args->args[1] == 0)
+        {
+            return;
+        }
+    	struct corr_data* data = (struct corr_data*)initid->ptr;
+    	double yval = cvtArgToDouble(args->arg_type[0], args->args[0]);
+    	double xval = cvtArgToDouble(args->arg_type[1], args->args[1]);
+        data->sumy += yval;
+        data->sumx += xval;
+        data->sumx2 += xval*xval;
+        data->sumy2 += yval*yval;
+        data->sumxy += xval*yval;
+        ++data->cnt;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    double corr(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	struct corr_data* data = (struct corr_data*)initid->ptr;
+        double N = data->cnt;
+        if (N > 0)
+        {
+            double sumx = data->sumx;
+            double sumy = data->sumy;
+            double sumx2 = data->sumx2;
+            double sumy2 = data->sumy2;
+            double sumxy = data->sumxy;
+            double var_popx = (sumx2 - (sumx * sumx / N)) / N;
+            if (var_popx == 0)
+            {
+                // When var_popx is 0, NULL is the result.
+                *is_null = 1;
+            	return 0;
+            }
+            double var_popy = (sumy2 - (sumy * sumy / N)) / N;
+            if (var_popy == 0)
+            {
+                // When var_popy is 0, 1 is the result
+                return 1;
+            }
+            double std_popx = sqrt(var_popx);
+            double std_popy = sqrt(var_popy);
+            double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+            double corr = covar_pop / (std_popy * std_popx);
+            return corr;
+        }
+        *is_null = 1;
+    	return 0;
+    }
+
+//=======================================================================
+
+    /**
+     * regr_sxx
+     */
+    struct regr_sxx_data
+    {
+        int64_t     cnt;
+        double      sumx;
+        double      sumx2;  // sum of (x squared)
+    };
+     
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool regr_sxx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	struct regr_sxx_data* data;
+    	if (args->arg_count != 2)
+    	{
+    		strcpy(message,"regr_sxx() requires two arguments");
+    		return 1;
+    	}
+
+    	if (!(data = (struct regr_sxx_data*) malloc(sizeof(struct regr_sxx_data))))
+    	{
+    		strmov(message,"Couldn't allocate memory");
+    		return 1;
+    	}
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumx2 = 0.0;
+
+    	initid->ptr = (char*)data;
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void regr_sxx_deinit(UDF_INIT* initid)
+    {
+    	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_sxx_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    	struct regr_sxx_data* data = (struct regr_sxx_data*)initid->ptr;
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumx2 = 0.0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_sxx_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+        // Test for NULL in x and y
+        if (args->args[0] == 0 || args->args[1] == 0)
+        {
+            return;
+        }
+    	struct regr_sxx_data* data = (struct regr_sxx_data*)initid->ptr;
+    	double xval = cvtArgToDouble(args->arg_type[1], args->args[1]);
+        data->sumx += xval;
+        data->sumx2 += xval*xval;
+        ++data->cnt;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    double regr_sxx(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	struct regr_sxx_data* data = (struct regr_sxx_data*)initid->ptr;
+        double N = data->cnt;
+        if (N > 0)
+        {
+            double sumx = data->sumx;
+            double sumx2 = data->sumx2;
+            double var_popx = (sumx2 - (sumx * sumx / N)) / N;
+            return data->cnt * var_popx;
+        }
+        *is_null = 1;
+    	return 0;
+    }
+//=======================================================================
+
+    /**
+     * regr_syy
+     */
+    struct regr_syy_data
+    {
+        int64_t   cnt;
+        double      sumy;
+        double      sumy2;  // sum of (y squared)
+    };
+     
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool regr_syy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	struct regr_syy_data* data;
+    	if (args->arg_count != 2)
+    	{
+    		strcpy(message,"regr_syy() requires two arguments");
+    		return 1;
+    	}
+
+    	if (!(data = (struct regr_syy_data*) malloc(sizeof(struct regr_syy_data))))
+    	{
+    		strmov(message,"Couldn't allocate memory");
+    		return 1;
+    	}
+        data->cnt = 0;
+        data->sumy = 0.0;
+        data->sumy2 = 0.0;
+
+    	initid->ptr = (char*)data;
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void regr_syy_deinit(UDF_INIT* initid)
+    {
+    	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_syy_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    	struct regr_syy_data* data = (struct regr_syy_data*)initid->ptr;
+        data->cnt = 0;
+        data->sumy = 0.0;
+        data->sumy2 = 0.0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_syy_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+        // Test for NULL in x and y
+        if (args->args[0] == 0 || args->args[1] == 0)
+        {
+            return;
+        }
+    	struct regr_syy_data* data = (struct regr_syy_data*)initid->ptr;
+    	double yval = cvtArgToDouble(args->arg_type[0], args->args[0]);
+        data->sumy += yval;
+        data->sumy2 += yval*yval;
+        ++data->cnt;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    double regr_syy(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	struct regr_syy_data* data = (struct regr_syy_data*)initid->ptr;
+        double N = data->cnt;
+        if (N > 0)
+        {
+            double sumy = data->sumy;
+            double sumy2 = data->sumy2;
+            double var_popy = (sumy2 - (sumy * sumy / N)) / N;
+            return data->cnt * var_popy;
+        }
+        *is_null = 1;
+    	return 0;
+    }
+
+//=======================================================================
+
+    /**
+     * regr_sxy
+     */
+    struct regr_sxy_data
+    {
+        int64_t   cnt;
+        double      sumx;
+        double      sumy;
+        double      sumxy;  // sum of (x*y)
+    };
+     
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool regr_sxy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	struct regr_sxy_data* data;
+    	if (args->arg_count != 2)
+    	{
+    		strcpy(message,"regr_sxy() requires two arguments");
+    		return 1;
+    	}
+
+    	if (!(data = (struct regr_sxy_data*) malloc(sizeof(struct regr_sxy_data))))
+    	{
+    		strmov(message,"Couldn't allocate memory");
+    		return 1;
+    	}
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumy = 0.0;
+        data->sumxy = 0.0;
+
+    	initid->ptr = (char*)data;
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void regr_sxy_deinit(UDF_INIT* initid)
+    {
+    	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_sxy_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    	struct regr_sxy_data* data = (struct regr_sxy_data*)initid->ptr;
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumy = 0.0;
+        data->sumxy = 0.0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    regr_sxy_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+        // Test for NULL in x and y
+        if (args->args[0] == 0 || args->args[1] == 0)
+        {
+            return;
+        }
+    	struct regr_sxy_data* data = (struct regr_sxy_data*)initid->ptr;
+    	double yval = cvtArgToDouble(args->arg_type[0], args->args[0]);
+    	double xval = cvtArgToDouble(args->arg_type[1], args->args[1]);
+        data->sumy += yval;
+        data->sumx += xval;
+        data->sumxy += xval*yval;
+        ++data->cnt;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    double regr_sxy(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	struct regr_sxy_data* data = (struct regr_sxy_data*)initid->ptr;
+        double N = data->cnt;
+        if (N > 0)
+        {
+            double sumx = data->sumx;
+            double sumy = data->sumy;
+            double sumxy = data->sumxy;
+            double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+            return data->cnt * covar_pop;
+        }
+        *is_null = 1;
+    	return 0;
+    }
+
+//=======================================================================
+
+    /**
+     * covar_pop
+     */
+    struct covar_pop_data
+    {
+        int64_t   cnt;
+        double      sumx;
+        double      sumy;
+        double      sumxy;  // sum of (x*y)
+    };
+     
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool covar_pop_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	struct covar_pop_data* data;
+    	if (args->arg_count != 2)
+    	{
+    		strcpy(message,"covar_pop() requires two arguments");
+    		return 1;
+    	}
+
+    	if (!(data = (struct covar_pop_data*) malloc(sizeof(struct covar_pop_data))))
+    	{
+    		strmov(message,"Couldn't allocate memory");
+    		return 1;
+    	}
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumy = 0.0;
+        data->sumxy = 0.0;
+
+    	initid->ptr = (char*)data;
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void covar_pop_deinit(UDF_INIT* initid)
+    {
+    	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    covar_pop_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    	struct covar_pop_data* data = (struct covar_pop_data*)initid->ptr;
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumy = 0.0;
+        data->sumxy = 0.0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    covar_pop_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+        // Test for NULL in x and y
+        if (args->args[0] == 0 || args->args[1] == 0)
+        {
+            return;
+        }
+    	struct covar_pop_data* data = (struct covar_pop_data*)initid->ptr;
+    	double yval = cvtArgToDouble(args->arg_type[0], args->args[0]);
+    	double xval = cvtArgToDouble(args->arg_type[1], args->args[1]);
+        data->sumy += yval;
+        data->sumx += xval;
+        data->sumxy += xval*yval;
+        ++data->cnt;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    double covar_pop(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	struct covar_pop_data* data = (struct covar_pop_data*)initid->ptr;
+        double N = data->cnt;
+        if (N > 0)
+        {
+            double sumx = data->sumx;
+            double sumy = data->sumy;
+            double sumxy = data->sumxy;
+            double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+            return covar_pop;
+        }
+        *is_null = 1;
+    	return 0;
+    }
+//=======================================================================
+
+    /**
+     * covar_samp
+     */
+    struct covar_samp_data
+    {
+        int64_t   cnt;
+        double      sumx;
+        double      sumy;
+        double      sumxy;  // sum of (x*y)
+    };
+     
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool covar_samp_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	struct covar_samp_data* data;
+    	if (args->arg_count != 2)
+    	{
+    		strcpy(message,"covar_samp() requires two arguments");
+    		return 1;
+    	}
+
+    	if (!(data = (struct covar_samp_data*) malloc(sizeof(struct covar_samp_data))))
+    	{
+    		strmov(message,"Couldn't allocate memory");
+    		return 1;
+    	}
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumy = 0.0;
+        data->sumxy = 0.0;
+
+    	initid->ptr = (char*)data;
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void covar_samp_deinit(UDF_INIT* initid)
+    {
+    	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    covar_samp_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    	struct covar_samp_data* data = (struct covar_samp_data*)initid->ptr;
+        data->cnt = 0;
+        data->sumx = 0.0;
+        data->sumy = 0.0;
+        data->sumxy = 0.0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    covar_samp_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+        // Test for NULL in x and y
+        if (args->args[0] == 0 || args->args[1] == 0)
+        {
+            return;
+        }
+    	struct covar_samp_data* data = (struct covar_samp_data*)initid->ptr;
+    	double yval = cvtArgToDouble(args->arg_type[0], args->args[0]);
+    	double xval = cvtArgToDouble(args->arg_type[1], args->args[1]);
+        data->sumy += yval;
+        data->sumx += xval;
+        data->sumxy += xval*yval;
+        ++data->cnt;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    double covar_samp(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	struct covar_samp_data* data = (struct covar_samp_data*)initid->ptr;
+        double N = data->cnt;
+        if (N > 0)
+        {
+            double sumx = data->sumx;
+            double sumy = data->sumy;
+            double sumxy = data->sumxy;
+            double covar_samp = (sumxy - ((sumx * sumy) / N)) / (N-1);
+            return covar_samp;
+        }
+        *is_null = 1;
+    	return 0;
+    }
 }
 // vim:ts=4 sw=4:
 

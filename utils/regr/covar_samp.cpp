@@ -18,46 +18,45 @@
 #include <sstream>
 #include <cstring>
 #include <typeinfo>
-#include "regr_slope.h"
+#include "covar_samp.h"
 #include "bytestream.h"
 #include "objectreader.h"
 
 using namespace mcsv1sdk;
 
-class Add_regr_slope_ToUDAFMap
+class Add_covar_samp_ToUDAFMap
 {
 public:
-    Add_regr_slope_ToUDAFMap()
+    Add_covar_samp_ToUDAFMap()
     {
-        UDAFMap::getMap()["regr_slope"] = new regr_slope();
+        UDAFMap::getMap()["covar_samp"] = new covar_samp();
     }
 };
 
-static Add_regr_slope_ToUDAFMap addToMap;
+static Add_covar_samp_ToUDAFMap addToMap;
 
 // Use the simple data model
-struct regr_slope_data
+struct covar_samp_data
 {
     uint64_t	cnt;
     double      sumx;
-    double      sumx2;  // sum of (x squared)
     double      sumy;
-    double      sumxy;  // sum of (x*y)
+    double      sumxy;  // sum of x * y
 };
 
 
-mcsv1_UDAF::ReturnCode regr_slope::init(mcsv1Context* context,
+mcsv1_UDAF::ReturnCode covar_samp::init(mcsv1Context* context,
                                        ColumnDatum* colTypes)
 {
     if (context->getParameterCount() != 2)
     {
         // The error message will be prepended with
         // "The storage engine for the table doesn't support "
-        context->setErrorMessage("regr_slope() with other than 2 arguments");
+        context->setErrorMessage("covar_samp() with other than 2 arguments");
         return mcsv1_UDAF::ERROR;
     }
 
-    context->setUserDataSize(sizeof(regr_slope_data));
+    context->setUserDataSize(sizeof(covar_samp_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
     context->setScale(colTypes[0].scale + 8);
@@ -67,22 +66,21 @@ mcsv1_UDAF::ReturnCode regr_slope::init(mcsv1Context* context,
 
 }
 
-mcsv1_UDAF::ReturnCode regr_slope::reset(mcsv1Context* context)
+mcsv1_UDAF::ReturnCode covar_samp::reset(mcsv1Context* context)
 {
-    struct  regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
+    struct  covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
     data->cnt = 0;
     data->sumx = 0.0;
-    data->sumx2 = 0.0;
     data->sumy = 0.0;
     data->sumxy = 0.0;
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode regr_slope::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
+mcsv1_UDAF::ReturnCode covar_samp::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
     static_any::any& valIn_y = valsIn[0].columnData;
     static_any::any& valIn_x = valsIn[1].columnData;
-    struct  regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
+    struct  covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
     double valx = 0.0;
     double valy = 0.0;
 
@@ -108,26 +106,25 @@ mcsv1_UDAF::ReturnCode regr_slope::nextValue(mcsv1Context* context, ColumnDatum*
     }
 
     data->sumx += valx;
-    data->sumx2 += valx*valx;
 
     data->sumxy += valx*valy;
+
     ++data->cnt;
     
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode regr_slope::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
+mcsv1_UDAF::ReturnCode covar_samp::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
 {
     if (!userDataIn)
     {
         return mcsv1_UDAF::SUCCESS;
     }
 
-    struct regr_slope_data* outData = (struct regr_slope_data*)context->getUserData()->data;
-    struct regr_slope_data* inData = (struct regr_slope_data*)userDataIn->data;
+    struct covar_samp_data* outData = (struct covar_samp_data*)context->getUserData()->data;
+    struct covar_samp_data* inData = (struct covar_samp_data*)userDataIn->data;
 
     outData->sumx += inData->sumx;
-    outData->sumx2 += inData->sumx2;
     outData->sumy += inData->sumy;
     outData->sumxy += inData->sumxy;
     outData->cnt += inData->cnt;
@@ -135,31 +132,27 @@ mcsv1_UDAF::ReturnCode regr_slope::subEvaluate(mcsv1Context* context, const User
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::any& valOut)
+mcsv1_UDAF::ReturnCode covar_samp::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
-    struct regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
+    struct covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
     double N = data->cnt;
     if (N > 0)
     {
         double sumx = data->sumx;
         double sumy = data->sumy;
-        double sumx2 = data->sumx2;
         double sumxy = data->sumxy;
-        double variance = (N * sumx2) - (sumx * sumx);
-        if (variance != 0)
-        {
-            double slope = ((N * sumxy) - (sumx * sumy)) / variance;
-            valOut = slope;
-        }
+
+        double covar_samp = (sumxy - ((sumx * sumy) / N)) / (N - 1);
+        valOut = covar_samp;
     }
     return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode regr_slope::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
+mcsv1_UDAF::ReturnCode covar_samp::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
 {
     static_any::any& valIn_y = valsDropped[0].columnData;
     static_any::any& valIn_x = valsDropped[1].columnData;
-    struct regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
+    struct covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
 
     double valx = 0.0;
     double valy = 0.0;
@@ -186,7 +179,6 @@ mcsv1_UDAF::ReturnCode regr_slope::dropValue(mcsv1Context* context, ColumnDatum*
     }
 
     data->sumx -= valx;
-    data->sumx2 -= valx*valx;
 
     data->sumxy -= valx*valy;
     --data->cnt;

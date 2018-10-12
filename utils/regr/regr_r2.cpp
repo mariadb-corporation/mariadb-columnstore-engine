@@ -107,7 +107,7 @@ mcsv1_UDAF::ReturnCode regr_r2::nextValue(mcsv1Context* context, ColumnDatum* va
 
     if (valx != 0 && scalex > 0)
     {
-        valx /= pow(10.0, (double)scaley);
+        valx /= pow(10.0, (double)scalex);
     }
 
     data->sumx += valx;
@@ -202,7 +202,7 @@ mcsv1_UDAF::ReturnCode regr_r2::dropValue(mcsv1Context* context, ColumnDatum* va
 
     if (valx != 0 && scalex > 0)
     {
-        valx /= pow(10.0, (double)scaley);
+        valx /= pow(10.0, (double)scalex);
     }
 
     data->sumx -= valx;
