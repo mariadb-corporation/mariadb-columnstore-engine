@@ -570,17 +570,15 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
                          joinTypes[joinerNum] & MATCHNULLSAFE) {
                     tlLargeKey.deserialize(bs, storedKeyAllocators[joinerNum]);
                     bs >> tlIndex;
-					//tlLargeKey.len = 1;
-					//tlLargeKey.data = (uint8_t*) storedKeyAllocators[joinerNum].allocate(tlLargeKey.len);
-					//*tlLargeKey.data = 0;
-                    //tlIndex = 1;
                     tlJoiners[joinerNum]->insert(pair<TypelessData, uint32_t>(tlLargeKey, tlIndex));
+
 					cout << " A null key: " << tlLargeKey.toString() << endl;
 					cout << "tlIndex: " << tlIndex << ", " << tlLargeKey.toString() << endl;
 				}
                 else {
 					cout << " A null found for hashing!!" << endl;
 					cout << flush;
+
                     tJoinerSizes[joinerNum]--;
 				}
             }
@@ -618,7 +616,6 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
             offTheWire.deserialize(bs);
             smallSide.setData(&smallSideRowData[joinerNum]);
             smallSide.append(offTheWire, startPos);
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
 
             //ssrdPos[joinerNum] += count;
 
@@ -645,7 +642,6 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
         bs.advance(count << 4);
     }
 
-    cout << "line:" << __LINE__ << ", bs.length():" << bs.length() << endl; 
     idbassert(bs.length() == 0);
     addToJoinerLock.unlock();
 }

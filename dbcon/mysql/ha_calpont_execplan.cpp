@@ -94,7 +94,6 @@ const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
 const uint64_t CORRELATED = 0x08;
 
-extern bool mcs_would_spin ( const char* filename );
 
 // In certain cases, gp_walk is called recursively. When done so,
 // we need to bookmark the rcWorkStack for those cases where a constant
@@ -1975,7 +1974,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         sop->resultType(sop->operationType());
 
         if (sop->op() == OP_EQ ||
-		    (sop->op() == OP_EQNS && ::mcs_would_spin("spin_build_predicate")))
+		    (sop->op() == OP_EQNS))
         {
             CalpontSystemCatalog::TableAliasName tan_lhs;
             CalpontSystemCatalog::TableAliasName tan_rhs;

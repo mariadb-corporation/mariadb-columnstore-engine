@@ -90,7 +90,6 @@ using namespace logging;
 #include "jlf_tuplejoblist.h"
 
 
-extern bool mcs_would_spin ( const char* filename );
 namespace
 {
 using namespace joblist;
@@ -1099,8 +1098,9 @@ const JobStepVector doJoin(
     if (tableOid1 == tableOid2 && alias1 == alias2 && view1 == view2 && (joinInfo & ~JOIN_NULLSAFEMATCH) == 0)
     {
         if (sc1->schemaName().empty() || !compatibleColumnTypes(ct1, ct2, false) ||
-           sop->op() == OP_EQNS || sop->op() == OP_NENS)
+			sop->op() == OP_EQNS || sop->op() == OP_NENS)
         {
+			// This path will avoid a dictionary scan for character columns.
             return doFilterExpression(sc1, sc2, jobInfo, sop);
         }
 
@@ -1277,9 +1277,6 @@ const JobStepVector doJoin(
     	    jt |= MATCHNULLSAFE;
     }
 
-    cout << " sc1 join_nullsafematch:" << (sc1->joinInfo() & JOIN_NULLSAFEMATCH);
-    cout << " sc2 join_nullsafematch:" << (sc2->joinInfo() & JOIN_NULLSAFEMATCH);
-    cout << flush;
 	if (sop->op() == OP_EQNS) 
     {
     	jt |= MATCHNULLSAFE;
@@ -2012,12 +2009,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         bool genExpression = (sc1->tableName() != sc2->tableName() ||
                 sc1->tableAlias() != sc2->tableAlias() ||
                 sc1->viewName() != sc2->viewName());
-#if 0
-        if ((sc1->tableName() != sc2->tableName() ||
-                sc1->tableAlias() != sc2->tableAlias() ||
-                sc1->viewName() != sc2->viewName()) &&
-             !is_equal)
-#endif
+
 		if (genExpression && !is_equal)
         {
             return doExpressionFilter(sf, jobInfo);
@@ -2055,8 +2047,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 		TupleHashJoinStep* thjs = dynamic_cast<TupleHashJoinStep*>(join[join.size()-1].get());
 
 		if (genExpression && sop->op() != OP_EQNS &&
-			(thjs && !(thjs->getJoinType() & MATCHNULLS)) && 
-			::mcs_would_spin ( "spin_genexp" ))
+			(thjs && !(thjs->getJoinType() & MATCHNULLS)))
         {
 			// Ravi: A possible improvement would be to not add this filter when there no
 			//       <=> operators between two tables.

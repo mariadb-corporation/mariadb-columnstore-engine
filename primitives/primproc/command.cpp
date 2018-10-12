@@ -56,32 +56,26 @@ Command* Command::makeCommand(ByteStream& bs, CommandType* type, vector<SCommand
     switch (*type)
     {
         case COLUMN_COMMAND:
-			cout << " COLUMN_COMMAND ";
             ret = new ColumnCommand();
             break;
 
         case DICT_STEP:
-			cout << " DICT_STEP ";
             ret = new DictStep();
             break;
 
         case PASS_THRU:
-			cout << " PASS_THRU ";
             ret = new PassThruCommand();
             break;
 
         case RID_TO_STRING:
-			cout << " RID_TO_STRING ";
             ret = new RTSCommand();
             break;
 
         case FILTER_COMMAND:
-			cout << " FILTER_COMMAND ";
             ret = FilterCommand::makeFilterCommand(bs, cmds);
             break;
 
         case PSEUDOCOLUMN:
-			cout << " PSEUDOCOLUMN ";
             ret = new PseudoCC();
             break;
 
