@@ -21,7 +21,7 @@
  */
 
 /** @file */
-#define DEBUG_WALK_COND
+//#define DEBUG_WALK_COND
 #include <my_config.h>
 #include <string>
 #include <iostream>
@@ -83,6 +83,7 @@ using namespace cal_impl_if;
 #include "outerjoinonfilter.h"
 #include "intervalcolumn.h"
 #include "udafcolumn.h"
+#include "ha_cs_aux_funcs.h"
 using namespace execplan;
 
 #include "funcexp.h"

@@ -112,6 +112,7 @@
 
 #define NEED_CALPONT_EXTERNS
 #include "ha_calpont_impl.h"
+#include "ha_cs_aux_funcs.h"
 
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
@@ -1176,6 +1177,18 @@ create_calpont_group_by_handler(THD* thd, Query* query)
     return handler;
 }
 
+/*@brief  create_columnstore_derived_handler- Creates handler*/
+/***********************************************************
+ * DESCRIPTION:
+ * Creates a derived handler.
+ * Details are in server/sql/derived_handler.h
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    derived - TABLE_LIST* to work with.
+ * RETURN:
+ *    derived_handler if possible
+ *    NULL in other case
+ ***********************************************************/
 static derived_handler*
 create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 {
@@ -1184,6 +1197,18 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 
   SELECT_LEX_UNIT *unit= derived->derived;
   
+    for(TABLE* tbl = derived->get_first_table()->table; tbl; tbl = tbl->next)
+    {
+        if( !isMCSTable(tbl) )
+            return 0;
+    }
+    
+    if ( thd->infinidb_vtable.vtable_state != THD::INFINIDB_DISABLE_VTABLE
+            && thd->variables.infinidb_vtable_mode != 0 )
+    {
+        return 0;
+    }
+    
   for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
   {
     if (!(sl->join))
@@ -1215,7 +1240,6 @@ ha_columnstore_derived_handler::~ha_columnstore_derived_handler() {}
 
 int ha_columnstore_derived_handler::init_scan()
 {
-    //THD *thd;
     char query_buff[4096];
 
     DBUG_ENTER("ha_columnstore_derived_handler::init_scan");
@@ -1229,7 +1253,6 @@ int ha_columnstore_derived_handler::init_scan()
 
     // Save vtable_state to restore the after we inited.
     THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
-    // MCOL-1052 Should be removed after cleaning the code up.
     thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
 
     int rc = ha_cs_impl_derived_init(this, table);
