@@ -67,7 +67,7 @@ send_user "\n"
 
 
 send_user "Stop ColumnStore service                       "
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore stop'\n"
+send "ssh -v $USERNAME@$SERVER 'export COLUMNSTORE_INSTALL_DIR=$INSTALLDIR; $INSTALLDIR/bin/columnstore stop'\n"
 set timeout 60
 # check return
 expect {
@@ -214,7 +214,7 @@ send_user "\n"
 
 send_user "Start ColumnStore service                       "
 send_user " \n"
-send "ssh -v $USERNAME@$SERVER '$INSTALLDIR/bin/columnstore restart'\n"
+send "ssh -v $USERNAME@$SERVER 'export COLUMNSTORE_INSTALL_DIR=$INSTALLDIR; $INSTALLDIR/bin/columnstore restart'\n"
 set timeout 120
 # check return
 expect {
