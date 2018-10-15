@@ -2764,8 +2764,6 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     // prevent "create table as select" from running on slave
     thd->infinidb_vtable.hasInfiniDBTable = true;
 
-    cout << "rnd_init " << thd->infinidb_vtable.vtable_state << endl;
-
     /* If this node is the slave, ignore DML to IDB tables */
     if (thd->slave_thread && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -3315,8 +3313,6 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
 {
     THD* thd = current_thd;
 
-    cout << "rnd_next " << thd->infinidb_vtable.vtable_state << endl;
-
     /* If this node is the slave, ignore DML to IDB tables */
     if (thd->slave_thread && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -3437,13 +3433,11 @@ int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table)
     return rc;
 }
 
-int ha_calpont_impl_rnd_end(TABLE* table)
+int ha_calpont_impl_rnd_end(TABLE* table, bool is_derived_hand)
 {
     int rc = 0;
     THD* thd = current_thd;
     cal_connection_info* ci = NULL;
-
-    cout << "rnd_end " << thd->infinidb_vtable.vtable_state << endl;
 
     if (thd->slave_thread && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -3457,6 +3451,12 @@ int ha_calpont_impl_rnd_end(TABLE* table)
         return 0;
 
     thd->infinidb_vtable.isNewQuery = true;
+    
+    // Workaround because CS doesn't reset isUnion in a normal way.
+    if ( is_derived_hand )
+    {
+        thd->infinidb_vtable.isUnion = false;
+    }
 
     if (thd->infinidb_vtable.cal_conn_info)
         ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
@@ -5844,6 +5844,22 @@ int ha_calpont_impl_group_by_end(ha_calpont_group_by_handler* group_hand, TABLE*
     return rc;
 }
 
+
+/*@brief  Initiate the query for derived_handler           */
+/***********************************************************
+ * DESCRIPTION:
+ * Execute the query and saves derived table query.
+ * There is an extra handler argument so I ended up with a 
+ * new init function. The code is a copy of
+ * ha_calpont_impl_rnd_init() mostly. We should come up with
+ * a semi-universal structure that allows to save any 
+ * extra data.
+ * PARAMETERS:
+ * derived_handler* handler w structures for the planner 
+ * TABLE* table - table where to save the results
+ * RETURN:
+ *    rc as int
+ ***********************************************************/
 int ha_cs_impl_derived_init(derived_handler* handler, TABLE* table)
 {
 #ifdef DEBUG_SETENV
@@ -5893,8 +5909,6 @@ int ha_cs_impl_derived_init(derived_handler* handler, TABLE* table)
     // prevent "create table as select" from running on slave
     thd->infinidb_vtable.hasInfiniDBTable = true;
 
-    cout << "rnd_init " << thd->infinidb_vtable.vtable_state << endl;
-
     /* If this node is the slave, ignore DML to IDB tables */
     if (thd->slave_thread && (
                 thd->lex->sql_command == SQLCOM_INSERT ||
@@ -5907,19 +5921,9 @@ int ha_cs_impl_derived_init(derived_handler* handler, TABLE* table)
                 thd->lex->sql_command == SQLCOM_LOAD))
         return 0;
 
-    // @bug 3005. if the table is not $vtable, then this could be a UDF defined on the connector.
-    // watch this for other complications
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
-            string(table->s->table_name.str).find("$vtable") != 0)
-        return 0;
-
     // return error is error status is already set
     if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
         return ER_INTERNAL_ERROR;
-
-    // by pass the extra union trips. return 0
-    if (thd->infinidb_vtable.isUnion && thd->infinidb_vtable.vtable_state == THD::INFINIDB_CREATE_VTABLE)
-        return 0;
 
     // @bug 2232. Basic SP support. Error out non support sp cases.
     // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
@@ -6088,7 +6092,7 @@ int ha_cs_impl_derived_init(derived_handler* handler, TABLE* table)
                 csep->queryType(CalpontSelectExecutionPlan::INSERT_SELECT);
 
             //get plan
-            int status = cp_get_derived_plan(handler, thd, csep);
+            int status = cs_get_derived_plan(handler, thd, csep);
 
             //if (cp_get_plan(thd, csep) != 0)
             if (status > 0)
@@ -6372,130 +6376,4 @@ internal_error:
 
     return ER_INTERNAL_ERROR;
 }
-
-/*
-int ha_cs_impl_derived_next(TABLE* table)
-{
-    THD* thd = current_thd;
-
-    // If this node is the slave, ignore DML to IDB tables
-    if (thd->slave_thread && (
-                thd->lex->sql_command == SQLCOM_INSERT ||
-                thd->lex->sql_command == SQLCOM_INSERT_SELECT ||
-                thd->lex->sql_command == SQLCOM_UPDATE ||
-                thd->lex->sql_command == SQLCOM_UPDATE_MULTI ||
-                thd->lex->sql_command == SQLCOM_DELETE ||
-                thd->lex->sql_command == SQLCOM_DELETE_MULTI ||
-                thd->lex->sql_command == SQLCOM_TRUNCATE ||
-                thd->lex->sql_command == SQLCOM_LOAD))
-        return 0;
-
-
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_ERROR)
-        return ER_INTERNAL_ERROR;
-
-    // @bug 3005
-    if (thd->infinidb_vtable.vtable_state == THD::INFINIDB_SELECT_VTABLE &&
-            string(table->s->table_name.str).find("$vtable") != 0)
-        return HA_ERR_END_OF_FILE;
-
-    if (((thd->lex)->sql_command == SQLCOM_UPDATE)  || ((thd->lex)->sql_command == SQLCOM_DELETE) ||
-            ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI) || ((thd->lex)->sql_command == SQLCOM_UPDATE_MULTI))
-        return HA_ERR_END_OF_FILE;
-
-    // @bug 2547
-    if (thd->infinidb_vtable.impossibleWhereOnUnion)
-        return HA_ERR_END_OF_FILE;
-
-    // @bug 2232. Basic SP support
-    // @bug 3939. Only error out for sp with select. Let pass for alter table in sp.
-    if (thd->infinidb_vtable.call_sp && (thd->lex)->sql_command != SQLCOM_ALTER_TABLE)
-    {
-        setError(thd, ER_CHECK_NOT_IMPLEMENTED, "This stored procedure syntax is not supported by Columnstore in this version");
-        thd->infinidb_vtable.vtable_state = THD::INFINIDB_ERROR;
-        return ER_INTERNAL_ERROR;
-    }
-
-    if (!thd->infinidb_vtable.cal_conn_info)
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
-
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
-
-    // @bug 3078
-    if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
-    {
-        if (ci->cal_conn_hndl)
-        {
-            // send ExeMgr a signal before cloing the connection
-            ByteStream msg;
-            ByteStream::quadbyte qb = 0;
-            msg << qb;
-
-            try
-            {
-                ci->cal_conn_hndl->exeMgr->write(msg);
-            }
-            catch (...)
-            {
-                // cancel query. ignore connection failure.
-            }
-
-            sm::sm_cleanup(ci->cal_conn_hndl);
-            ci->cal_conn_hndl = 0;
-        }
-
-        return 0;
-    }
-
-    if (ci->alterTableState > 0) return HA_ERR_END_OF_FILE;
-
-    cal_table_info ti;
-    ti = ci->tableMap[table];
-    int rc = HA_ERR_END_OF_FILE;
-
-    if (!ti.tpl_ctx || !ti.tpl_scan_ctx)
-    {
-        CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
-        return ER_INTERNAL_ERROR;
-    }
-
-    idbassert(ti.msTablePtr == table);
-
-    try
-    {
-        rc = fetchNextRow(buf, ti, ci);
-    }
-    catch (std::exception& e)
-    {
-        string emsg = string("Error while fetching from ExeMgr: ") + e.what();
-        setError(thd, ER_INTERNAL_ERROR, emsg);
-        CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
-        return ER_INTERNAL_ERROR;
-    }
-
-    ci->tableMap[table] = ti;
-
-    if (rc != 0 && rc != HA_ERR_END_OF_FILE)
-    {
-        string emsg;
-
-        // remove this check when all error handling migrated to the new framework.
-        if (rc >= 1000)
-            emsg = ti.tpl_scan_ctx->errMsg;
-        else
-        {
-            logging::ErrorCodes errorcodes;
-            emsg = errorcodes.errorString(rc);
-        }
-
-        setError(thd, ER_INTERNAL_ERROR, emsg);
-        //setError(thd, ER_INTERNAL_ERROR, "testing");
-        ci->stats.fErrorNo = rc;
-        CalpontSystemCatalog::removeCalpontSystemCatalog(tid2sid(thd->thread_id));
-        rc = ER_INTERNAL_ERROR;
-    }
-
-    return rc;
-}
-*/
 // vim:sw=4 ts=4:

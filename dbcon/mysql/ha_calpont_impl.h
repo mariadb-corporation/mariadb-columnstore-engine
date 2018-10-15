@@ -35,7 +35,7 @@ extern int ha_calpont_impl_open(const char* name, int mode, uint32_t test_if_loc
 extern int ha_calpont_impl_close(void);
 extern int ha_calpont_impl_rnd_init(TABLE* table);
 extern int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table);
-extern int ha_calpont_impl_rnd_end(TABLE* table);
+extern int ha_calpont_impl_rnd_end(TABLE* table, bool is_derived_hand = false);
 extern int ha_calpont_impl_write_row(uchar* buf, TABLE* table);
 extern void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table);
 extern int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table);

@@ -112,7 +112,6 @@
 
 #define NEED_CALPONT_EXTERNS
 #include "ha_calpont_impl.h"
-#include "ha_cs_aux_funcs.h"
 
 static handler* calpont_create_handler(handlerton* hton,
                                        TABLE_SHARE* table,
@@ -1196,33 +1195,28 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
   handlerton *ht= 0;
 
   SELECT_LEX_UNIT *unit= derived->derived;
-  
-    for(TABLE* tbl = derived->get_first_table()->table; tbl; tbl = tbl->next)
-    {
-        if( !isMCSTable(tbl) )
-            return 0;
-    }
     
     if ( thd->infinidb_vtable.vtable_state != THD::INFINIDB_DISABLE_VTABLE
             && thd->variables.infinidb_vtable_mode != 0 )
     {
         return 0;
     }
-    
-  for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
-  {
-    if (!(sl->join))
-      return 0;
-    for (TABLE_LIST *tbl= sl->join->tables_list; tbl; tbl= tbl->next_local)
+    //What the next section for?
+    for (SELECT_LEX *sl= unit->first_select(); sl; sl= sl->next_select())
     {
-      if (!tbl->table)
-	return 0;
-      if (!ht)
-        ht= tbl->table->file->partition_ht();
-      else if (ht != tbl->table->file->partition_ht())
-        return 0;
+        if (!(sl->join))
+            return 0;
+        for (TABLE_LIST *tbl= sl->join->tables_list; tbl; tbl= tbl->next_local)
+        {
+            if (!tbl->table)
+                return 0;
+            // This is the same handlerton check.
+            if (!ht)
+                ht= tbl->table->file->partition_ht();
+            else if (ht != tbl->table->file->partition_ht())
+                return 0;
+        }
     }
-  }
   
   handler= new ha_columnstore_derived_handler(thd, derived);
 
@@ -1238,15 +1232,26 @@ ha_columnstore_derived_handler::ha_columnstore_derived_handler(THD *thd,
 
 ha_columnstore_derived_handler::~ha_columnstore_derived_handler() {}
 
+/*@brief  Initiate the query for derived_handler           */
+/***********************************************************
+ * DESCRIPTION:
+ * Execute the query and saves derived table query.
+ * ATM this function sets vtable_state and restores it afterwards 
+ * since it reuses existed vtable code internally.
+ * PARAMETERS:
+ *
+ * RETURN:
+ *    rc as int
+ ***********************************************************/
 int ha_columnstore_derived_handler::init_scan()
 {
     char query_buff[4096];
 
     DBUG_ENTER("ha_columnstore_derived_handler::init_scan");
 
-    // table is the place where to save the result set 
-    TABLE* derived_table = derived->get_first_table()->table;
+    //TABLE* derived_table = derived->get_first_table()->table;
 
+    // Save query for logging
     String derived_query(query_buff, sizeof(query_buff), thd->charset());
     derived_query.length(0);
     derived->derived->print(&derived_query, QT_ORDINARY);
@@ -1255,72 +1260,65 @@ int ha_columnstore_derived_handler::init_scan()
     THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
     thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
 
+    // this::table is the place for the result set 
     int rc = ha_cs_impl_derived_init(this, table);
 
     thd->infinidb_vtable.vtable_state = oldState;
 
     DBUG_RETURN(rc);
 }
-      
+
+/*@brief  Fetch next row for derived_handler               */
+/***********************************************************
+ * DESCRIPTION:
+ * Fetches next row and saves it in the temp table
+ * ATM this function sets vtable_state and restores it 
+ * afterwards since it reuses existed vtable code internally.
+ * PARAMETERS:
+ *
+ * RETURN:
+ *    rc as int
+ *    
+ ***********************************************************/
 int ha_columnstore_derived_handler::next_row()
 {
-  ulong *lengths;
-  Field **field;
-  int column= 0;
-  Time_zone *saved_time_zone= table->in_use->variables.time_zone;
-  DBUG_ENTER("ha_columnstore_derived_handler::next_row");
+    DBUG_ENTER("ha_columnstore_derived_handler::next_row");
 
-  /*if ((rc= txn->acquire(share, table->in_use, TRUE, &io)))
-    DBUG_RETURN(rc);
-
-  if (!(row= io->fetch_row(stored_result)))
-    DBUG_RETURN(HA_ERR_END_OF_FILE);
-
-  // Convert row to internal format
-  table->in_use->variables.time_zone= UTC;
-  lengths= io->fetch_lengths(stored_result);
-
-  for (field= table->field; *field; field++, column++)
-  {
-    if (io->is_column_null(row, column))
-       (*field)->set_null();
-    else
-    {
-      (*field)->set_notnull();
-      (*field)->store(io->get_column_data(row, column),
-                      lengths[column], &my_charset_bin);
-    }
-  }
-  table->in_use->variables.time_zone= saved_time_zone;
-  */
-  //DBUG_RETURN(rc);
-  
-  //int rc = ha_calpont_impl_rnd_init(table);
-  //int rc = ha_cs_impl_derived_next(table);
-  
-      // Save vtable_state to restore the after we inited.
+    // Save vtable_state to restore the after we inited.
     THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
-    // MCOL-1052 Should be removed after cleaning the code up.
+    
     thd->infinidb_vtable.vtable_state = THD::INFINIDB_CREATE_VTABLE;
   
-    TABLE* derived_table = derived->get_first_table()->table;
+    //TABLE* derived_table = derived->get_first_table()->table;
     int rc = ha_calpont_impl_rnd_next(table->record[0], table);
   
     thd->infinidb_vtable.vtable_state = oldState;
   
-  DBUG_RETURN(rc);
+    DBUG_RETURN(rc);
 }
 
+/*@brief  Finishes the scan and clean it up               */
+/***********************************************************
+ * DESCRIPTION:
+ * Finishes the scan for derived handler
+ * ATM this function sets vtable_state and restores it 
+ * afterwards since it reuses existed vtable code internally.
+ * PARAMETERS:
+ *
+ * RETURN:
+ *    rc as int
+ *    
+ ***********************************************************/
 int ha_columnstore_derived_handler::end_scan()
 {
     DBUG_ENTER("ha_columnstore_derived_handler::end_scan");
   
-    TABLE* derived_table = derived->get_first_table()->table;
+    //TABLE* derived_table = derived->get_first_table()->table;
   
     THD::infinidb_state oldState = thd->infinidb_vtable.vtable_state;
     thd->infinidb_vtable.vtable_state = THD::INFINIDB_SELECT_VTABLE;
     
-    int rc = ha_calpont_impl_rnd_end(table);
+    int rc = ha_calpont_impl_rnd_end(table, true);
 
     thd->infinidb_vtable.vtable_state = oldState;
 

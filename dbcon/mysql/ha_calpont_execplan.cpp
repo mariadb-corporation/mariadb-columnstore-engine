@@ -83,7 +83,6 @@ using namespace cal_impl_if;
 #include "outerjoinonfilter.h"
 #include "intervalcolumn.h"
 #include "udafcolumn.h"
-#include "ha_cs_aux_funcs.h"
 using namespace execplan;
 
 #include "funcexp.h"
@@ -4023,10 +4022,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
     {
         // check foreign engine
         if (ifp->cached_table && ifp->cached_table->table)
-            infiniDB = isInfiniDB(ifp->cached_table->table);
+            infiniDB = isMCSTable(ifp->cached_table->table);
         // @bug4509. ifp->cached_table could be null for myisam sometimes
         else if (ifp->field && ifp->field->table)
-            infiniDB = isInfiniDB(ifp->field->table);
+            infiniDB = isMCSTable(ifp->field->table);
 
         if (infiniDB)
         {
@@ -5735,7 +5734,7 @@ void parse_item (Item* item, vector<Item_field*>& field_vec,
     }
 }
 
-bool isInfiniDB(TABLE* table_ptr)
+bool isMCSTable(TABLE* table_ptr)
 {
 #if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
 
@@ -5757,21 +5756,25 @@ bool isInfiniDB(TABLE* table_ptr)
         return false;
 }
 
-int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion)
+int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, 
+    SCSEP& csep,
+    bool isUnion,
+    bool isDerivedHand)
 {
 #ifdef DEBUG_WALK_COND
     cerr << "getSelectPlan()" << endl;
 #endif
 
     // by pass the derived table resolve phase of mysql
-    /*if (!(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
+    if ( !isDerivedHand && 
+            !(((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE_MULTI ) ||
             ((gwi.thd->lex)->sql_command == SQLCOM_DELETE_MULTI ) ) && gwi.thd->derived_tables_processing)
     {
         gwi.thd->infinidb_vtable.isUnion = false;
         return -1;
-    }*/
+    }
 
     // rollup is currently not supported
     if (select_lex.olap == ROLLUP_TYPE)
@@ -5914,7 +5917,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isInfiniDB(table_ptr->table) : true);
+                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
                 if (infiniDB)
@@ -8275,16 +8278,12 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
     return 0;
 }
 
-int cp_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
+int cs_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
 {
-    //LEX* lex = thd->lex;
-    //idbassert(lex != 0);
-
-    // should be changed to pointer
     SELECT_LEX select_lex = *handler->select;
     gp_walk_info gwi;
     gwi.thd = thd;
-    int status = getSelectPlan(gwi, select_lex, csep);
+    int status = getSelectPlan(gwi, select_lex, csep, false, true);
 
     if (status > 0)
         return ER_INTERNAL_ERROR;
@@ -8296,9 +8295,6 @@ int cp_get_derived_plan(derived_handler* handler, THD* thd, SCSEP& csep)
     cerr << *csep << endl ;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
-
-    // Derived table projection and filter optimization.
-    //derivedTableOptimization(csep);
 
     return 0;
 }
@@ -8490,7 +8486,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
             else
             {
                 // check foreign engine tables
-                bool infiniDB = (table_ptr->table ? isInfiniDB(table_ptr->table) : true);
+                bool infiniDB = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
 
                 // trigger system catalog cache
                 if (infiniDB)
