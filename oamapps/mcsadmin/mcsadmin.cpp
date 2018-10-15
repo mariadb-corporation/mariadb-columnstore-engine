@@ -5657,7 +5657,7 @@ int processCommand(string* arguments)
             int DataRedundancyNetworkType;
             int DataRedundancyStorageType;
             string AmazonVPCNextPrivateIP;
-            string DistributedInstall = "y";
+            string DistributedInstall = "n";
 
             try
             {
@@ -5667,6 +5667,7 @@ int processCommand(string* arguments)
                 oam.getSystemConfig("DataRedundancyCopies", DataRedundancyCopies);
                 oam.getSystemConfig("DataRedundancyNetworkType", DataRedundancyNetworkType);
                 oam.getSystemConfig("DataRedundancyStorageType", DataRedundancyStorageType);
+                oam.getSystemConfig("DistributedInstall", DistributedInstall);
             }
             catch (...) {}
 

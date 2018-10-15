@@ -4843,7 +4843,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
     pthread_mutex_lock(&THREAD_LOCK);
 
     //get Distributed Install
-    string DistributedInstall = "y";
+    string DistributedInstall = "n";
 
     try
     {

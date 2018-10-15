@@ -29,6 +29,7 @@
 #include <string.h>
 using namespace std;
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string.hpp>
 using namespace boost::algorithm;
 #include <boost/tokenizer.hpp>
 #include "calpontsystemcatalog.h"
@@ -137,6 +138,15 @@ int64_t number_int_value(const string& data,
 
     if (y != string::npos)
         throw QueryDataExcept("')' is not matched.", formatErr);
+
+    if (boost::iequals(valStr, "true"))
+    {
+        return 1;
+    }
+    if (boost::iequals(valStr, "false"))
+    {
+        return 0;
+    }
 
     // convert to fixed-point notation if input is in scientific notation
     if (valStr.find('E') < string::npos || valStr.find('e') < string::npos)

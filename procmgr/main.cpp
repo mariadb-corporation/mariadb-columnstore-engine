@@ -745,7 +745,7 @@ static void startMgrProcessThread()
     }
 
     //get Distributed Install
-    string DistributedInstall = "y";
+    string DistributedInstall = "n";
 
     try
     {

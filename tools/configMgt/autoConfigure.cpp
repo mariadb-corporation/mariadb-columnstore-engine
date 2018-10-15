@@ -518,6 +518,9 @@ int main(int argc, char* argv[])
     string Port = "3306";
     string User = "";
     string Password = "";
+    string TLSCA = "";
+    string TLSClientCert = "";
+    string TLSClientKey = "";
 
     try
     {
@@ -540,6 +543,28 @@ int main(int argc, char* argv[])
         sysConfigNew->setConfig("CrossEngineSupport", "Port", Port);
         sysConfigNew->setConfig("CrossEngineSupport", "User", User);
         sysConfigNew->setConfig("CrossEngineSupport", "Password", Password);
+    }
+    catch (...)
+    {}
+
+    try
+    {
+        TLSCA = sysConfigOld->getConfig("CrossEngineSupport", "TLSCA");
+        TLSClientCert = sysConfigOld->getConfig("CrossEngineSupport", "TLSClientCert");
+        TLSClientKey = sysConfigOld->getConfig("CrossEngineSupport", "TLSClientKey");
+    }
+    catch (...)
+    {
+        TLSCA = "";
+        TLSClientCert = "";
+        TLSClientKey = "";
+    }
+
+    try
+    {
+        sysConfigNew->setConfig("CrossEngineSupport", "TLSCA", TLSCA);
+        sysConfigNew->setConfig("CrossEngineSupport", "TLSClientCert", TLSClientCert);
+        sysConfigNew->setConfig("CrossEngineSupport", "TLSClientKey", TLSClientKey);
     }
     catch (...)
     {}
@@ -2138,6 +2163,7 @@ int main(int argc, char* argv[])
     string PrefetchThreshold;
     string MaxOutstandingRequests;
     string PmMaxMemorySmallSide;
+    string ThreadPoolSize;
 
     try
     {
@@ -2145,6 +2171,7 @@ int main(int argc, char* argv[])
         PrefetchThreshold = sysConfigOld->getConfig("PrimitiveServers", "PrefetchThreshold");
         MaxOutstandingRequests = sysConfigOld->getConfig("JobList", "MaxOutstandingRequests");
         PmMaxMemorySmallSide = sysConfigOld->getConfig("HashJoin", "PmMaxMemorySmallSide");
+        ThreadPoolSize = sysConfigOld->getConfig("JobList", "ThreadPoolSize");
     }
     catch (...)
     {}
@@ -2155,6 +2182,7 @@ int main(int argc, char* argv[])
         sysConfigNew->setConfig("PrimitiveServers", "PrefetchThreshold", PrefetchThreshold);
         sysConfigNew->setConfig("JobList", "MaxOutstandingRequests", MaxOutstandingRequests);
         sysConfigNew->setConfig("HashJoin", "PmMaxMemorySmallSide", PmMaxMemorySmallSide);
+        sysConfigNew->setConfig("JobList", "ThreadPoolSize", ThreadPoolSize);
     }
     catch (...)
     {}

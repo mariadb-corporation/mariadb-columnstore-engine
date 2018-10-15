@@ -470,7 +470,7 @@
 		<CoreFileFlag>n</CoreFileFlag>
 		<MySQLPort>3306</MySQLPort>
 		<AmazonDeviceName>/dev/xvd</AmazonDeviceName>
-		<DistributedInstall>y</DistributedInstall>
+		<DistributedInstall>n</DistributedInstall>
 		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
 		<ProfileFile>unassigned</ProfileFile>
 	</Installation>

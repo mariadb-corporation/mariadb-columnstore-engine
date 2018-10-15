@@ -92,6 +92,12 @@ CREATE AGGREGATE FUNCTION regr_count RETURNS INTEGER soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_slope RETURNS REAL soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_intercept RETURNS REAL soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_r2 RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION corr RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_sxx RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_syy RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION regr_sxy RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION covar_pop RETURNS REAL soname 'libregr_mysql.so';
+CREATE AGGREGATE FUNCTION covar_samp RETURNS REAL soname 'libregr_mysql.so';
 
 CREATE AGGREGATE FUNCTION distinct_count RETURNS INTEGER soname 'libudf_mysql.so';
 
