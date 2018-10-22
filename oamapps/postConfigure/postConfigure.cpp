@@ -1345,7 +1345,7 @@ int main(int argc, char* argv[])
 		string cmd = "aws --version > " + amazonLog + " 2>&1";
 		int rtnCode = system(cmd.c_str());
 
-		ifstream in(amazonLog);
+		ifstream in(amazonLog.c_str());
 
 		in.seekg(0, std::ios::end);
 		int size = in.tellg();
@@ -5122,7 +5122,7 @@ bool storageSetup(bool amazonInstall)
 	cmd = "which hadoop > " + hadoopLog + " 2>&1";
     system(cmd.c_str());
 
-    ifstream in(hadoopLog);
+    ifstream in(hadoopLog.c_str());
 
     in.seekg(0, std::ios::end);
     int size = in.tellg();

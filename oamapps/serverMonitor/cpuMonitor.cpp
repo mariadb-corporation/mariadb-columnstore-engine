@@ -526,7 +526,7 @@ void ServerMonitor::getCPUdata()
     string cmd = "top -b -n1 | head -12 | awk '{print $9,$12}' | tail -5 > " + tmpProcessCpu;
     system(cmd.c_str());
 
-    ifstream oldFile1 (tmpProcessCpu);
+    ifstream oldFile1 (tmpProcessCpu.c_str());
 
     // read top 5 users
     int i = 0;
@@ -559,7 +559,7 @@ void ServerMonitor::getCPUdata()
     cmd = "top -b -n 6 -d 1 | awk '{print $5}' | grep %id  > " + tmpsystemCpu;
     system(cmd.c_str());
 
-    ifstream oldFile (tmpsystemCpu);
+    ifstream oldFile (tmpsystemCpu.c_str());
 
     float systemIdle = 0;
     // skip first line in file, and average the next 5 entries which contains idle times

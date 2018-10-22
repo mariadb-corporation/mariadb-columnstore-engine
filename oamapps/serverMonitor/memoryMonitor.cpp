@@ -507,7 +507,7 @@ void ServerMonitor::outputProcMemory(bool log)
     string cmd = "ps -e -orss=1,args= | sort -b -k1,1n |tail -n 5 | awk '{print $1,$2}' > " + tmpprocessMem;
     system(cmd.c_str());
 
-    ifstream oldFile (tmpprocessMem);
+    ifstream oldFile (tmpprocessMem.c_str());
 
     string process;
     long long memory;

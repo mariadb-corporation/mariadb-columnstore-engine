@@ -259,7 +259,7 @@ void msgProcessor()
 								string cmd = "cat /proc/meminfo | grep Cached -m 1 | awk '{print $2}' > " + tmpcached;
 								system(cmd.c_str());
 
-								ifstream oldFile (tmpcached);
+								ifstream oldFile (tmpcached.c_str());
 
                                 string strCache;
                                 long long cache;
