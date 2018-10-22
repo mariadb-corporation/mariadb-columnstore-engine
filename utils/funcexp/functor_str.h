@@ -85,7 +85,7 @@ public:
 
 
 protected:
-	const std::string& stringValue(execplan::SPTP& fp, rowgroup::Row& row, bool& isNull)
+	const void stringValue(execplan::SPTP& fp, rowgroup::Row& row, bool& isNull, std::string& fFloatStr)
 	{
 		// Bug3788, use the shorter of fixed or scientific notation for floating point values.
 		// [ the default format in treenode.h is fixed-point notation ]
@@ -103,7 +103,8 @@ protected:
             break;
 
 			default:
-				return fp->data()->getStrVal(row, isNull);
+				fFloatStr = fp->data()->getStrVal(row, isNull);
+                return;
 			break;
 		}
         exponent = (int)floor(log10( fabs(floatVal)));
@@ -121,10 +122,7 @@ protected:
             fFloatStr += buf;
         }
 
-        return fFloatStr;
 	}
-
-	std::string fFloatStr;
 };
 
 

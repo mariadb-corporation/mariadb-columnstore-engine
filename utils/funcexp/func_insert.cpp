@@ -86,12 +86,14 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
 						FunctionParm& fp,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType&)
-{	
-	const string& tstr = stringValue(fp[0], row, isNull);
+{
+	string tstr;
+    stringValue(fp[0], row, isNull, tstr);
 	if (isNull)
 		return "";
 
-	const string& tnewstr = stringValue(fp[3], row, isNull);
+	string tnewstr;
+    stringValue(fp[3], row, isNull, tnewstr);
 	if (isNull)
 		return "";
 
