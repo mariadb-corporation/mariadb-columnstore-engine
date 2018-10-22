@@ -6,14 +6,36 @@
 # Validates that FilesPerColumnPartition setting is not set lower than existing extents.
 #
 
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	test -f /etc/default/columnstore && . /etc/default/columnstore
+prefix=/usr/local
+
+USER=`whoami 2>/dev/null`
+
+if [ $USER != "root" ]; then
+	prefix=$HOME
+fi
+
+if [ $USER != "root" ]; then
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+	fi
+		
+	. .$profileFile
+fi
+
+# Source function library.
+if [ -f /etc/init.d/functions ]; then
+	. /etc/init.d/functions
 fi
 
 if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
 test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions

@@ -17,13 +17,29 @@
 # Short-Description: Start/stop MariaDB Columnstore DW DBMS
 ### END INIT INFO
 
+prefix=/usr/local
+
+USER=`whoami 2>/dev/null`
+
+if [ $USER != "root" ]; then
+	prefix=$HOME
+fi
+
+if [ $USER != "root" ]; then
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+	fi
+		
+	. .$profileFile
+fi
+
 # Source function library.
 if [ -f /etc/init.d/functions ]; then
 	. /etc/init.d/functions
-fi
-
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	test -f /etc/default/columnstore && . /etc/default/columnstore
 fi
 
 if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
@@ -40,7 +56,7 @@ if [ $InstallDir != "/usr/local/mariadb/columnstore" ]; then
 fi
 
 #hadoop
-plugin=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig DataFilePlugin`
+plugin=`$InstallDir/bin/getConfig SystemConfig DataFilePlugin`
 if [ -n "$plugin" ]; then
 	setenv=`$InstallDir/bin/getConfig SystemConfig DataFileEnvFile`
 	. $InstallDir/bin/$setenv >/dev/null 2>&1
