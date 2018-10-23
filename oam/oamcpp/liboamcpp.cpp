@@ -8800,7 +8800,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
     string glustercmd = "gluster ";
     
     string SUDO = "";
-    if ( user != "root" )
+    if ( user != 0 )
 		SUDO = "sudo ";
 		
     string errmsg = "";
