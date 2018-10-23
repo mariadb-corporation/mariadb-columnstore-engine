@@ -1334,7 +1334,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                             //now stop local module
                             processManager.stopModule(config.moduleName(), graceful, manualFlag );
 
-                            //run save.brm script
+                            //run save brm script
                             processManager.saveBRM(false);
 
                             log.writeLog(__LINE__, "Stop System Completed Success", LOG_TYPE_INFO);

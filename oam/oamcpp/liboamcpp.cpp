@@ -8798,14 +8798,18 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
     group = getgid();
 
     string glustercmd = "gluster ";
-
-    errmsg = "";
+    
+    string SUDO = "";
+    if ( user != "root" )
+		SUDO = "sudo ";
+		
+    string errmsg = "";
 
     switch ( command )
     {
         case (oam::GLUSTER_STATUS):
         {
-            string command = glustercmd + "volume status";
+            string command = SUDO + glustercmd + "volume status";
 
             char buffer[128];
             string result = "";
@@ -9010,7 +9014,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             }
 
             sleep(5);
-            command = glustercmd + "peer status " + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+            command = SUDO + glustercmd + "peer status " + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -9032,7 +9036,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             {
                 int newDbrootID = db + 1;
 
-                command = glustercmd + "volume create dbroot" + itoa(newDbrootID) + " transport tcp replica " + itoa(dataRedundancyCopies) + " ";
+                command = SUDO + glustercmd + "volume create dbroot" + itoa(newDbrootID) + " transport tcp replica " + itoa(dataRedundancyCopies) + " ";
 
                 vector<int>::iterator dbrootPmIter = dbrootPms[db].begin();
 
@@ -9074,7 +9078,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
                     }
                 }
 
-                command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+                command = SUDO + glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
@@ -9121,7 +9125,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             int status;
             writeLog("glusterctl: GLUSTER_DELETE: dbroot = " + dbrootID, LOG_TYPE_DEBUG );
 
-            command = glustercmd + "--mode=script volume stop dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+            command = SUDO + glustercmd + "--mode=script volume stop dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
 
             status = system(command.c_str());
 
@@ -9134,7 +9138,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             // give time for transaction to finish after stopping
             sleep(10);
 
-            command = glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+            command = SUDO + glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
 
             status = system(command.c_str());
 
@@ -9154,7 +9158,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             string command = "";
             int status;
 
-            command = glustercmd + "peer probe " + ipAddress + " >> " + tmpdir + "/glusterCommands.log 2>&1";
+            command = SUDO + glustercmd + "peer probe " + ipAddress + " >> " + tmpdir + "/glusterCommands.log 2>&1";
 
             cout << "gluster peer probe " + ipAddress << endl;
             status = system(command.c_str());

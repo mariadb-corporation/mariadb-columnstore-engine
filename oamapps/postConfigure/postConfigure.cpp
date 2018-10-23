@@ -198,12 +198,13 @@ string DataFileEnvFile;
 string installDir;
 string tmpDir;
 string HOME = "/root";
-
+string SUDO = "";
 extern string pwprompt;
 string mysqlpw = oam::UnassignedName;
 
 extern const char* pcommand;
 extern string prompt;
+
 
 /* create thread argument struct for thr_func() */
 typedef struct _thread_data_t
@@ -274,9 +275,13 @@ int main(int argc, char* argv[])
     user = getuid();
     usergroup = getgid();
 
-    if (user != 0)
+	SUDO = ""
+    if (user != 0) {
+		
         rootUser = false;
-
+		SUDO = "sudo ";
+	}
+	
     char* p = getenv("USER");
 
     if (p && *p)
@@ -5104,7 +5109,7 @@ bool storageSetup(bool amazonInstall)
     //check if gluster is installed
     int rtnCode = 1;
 
-	string cmd = "gluster --version > " + tmpDir + "/gluster.log 2>&1";
+	string cmd = SUDO + "gluster --version > " + tmpDir + "/gluster.log 2>&1";
     rtnCode = system(cmd.c_str());
 
     if (rtnCode == 0)
@@ -5515,7 +5520,7 @@ bool storageSetup(bool amazonInstall)
     // if gluster
     if ( storageType == "3" )
     {
-        string command = "stat /var/run/glusterd.pid > /dev/null 2>&1";
+        string command = SUDO + "stat /var/run/glusterd.pid > /dev/null 2>&1";
         int status = system(command.c_str());
 
         if (WEXITSTATUS(status) != 0 )
@@ -6704,7 +6709,7 @@ bool glusterSetup(string password)
     
     string glusterCommandsLog = tmpDir + "/glusterCommands.log";
 
-    command = "gluster peer status " +  glusterCommandsLog + "2>&1";
+    command = SUDO + "gluster peer status " +  glusterCommandsLog + "2>&1";
 
     status = system(command.c_str());
 
@@ -6729,7 +6734,7 @@ bool glusterSetup(string password)
     {
         int dbrootID = db + 1;
 
-        command = "gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
+        command = SUDO + "gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
 
         vector<int>::iterator dbrootPmIter = dbrootPms[db].begin();
 
@@ -6788,7 +6793,7 @@ bool glusterSetup(string password)
         {
             int user = getuid();
             int group = getgid();
-            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> " + glusterCommandsLog  + " 2>&1";
+            command = SUDO + "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> " + glusterCommandsLog  + " 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6797,7 +6802,7 @@ bool glusterSetup(string password)
                 exit(1);
             }
 
-            command = "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> " + glusterCommandsLog  + " 2>&1";
+            command = SUDO + "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> " + glusterCommandsLog  + " 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -6806,7 +6811,7 @@ bool glusterSetup(string password)
                 exit(1);
             }
 
-            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog  + " 2>&1";
+            command = SUDO + "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog  + " 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
