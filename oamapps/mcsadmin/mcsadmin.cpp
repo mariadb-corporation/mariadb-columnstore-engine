@@ -9189,7 +9189,7 @@ void printSystemStatus()
         catch (...) {}
 
         if ( MySQLRep == "y" )
-            cout << "MariaDB ColumnStore Replication Feature is enabled" << endl << endl;
+            cout << "MariaDB ColumnStore Replication Feature is enabled" << endl;
 
 		//display Distributed Install feature
         if ( SingleServerInstall == "n" )
@@ -9199,12 +9199,15 @@ void printSystemStatus()
 			try
 			{
 				oam.getSystemConfig("DistributedInstall", DistributedInstall);
+				
 				if ( DistributedInstall == "y" )
-					cout << "MariaDB ColumnStore set for Distributed Install" << endl << endl;
+					cout << "MariaDB ColumnStore set for Distributed Install" << endl;
 				else
-					cout << "MariaDB ColumnStore set for Non-Distributed Install" << endl << endl;
+					cout << "MariaDB ColumnStore set for Non-Distributed Install" << endl;
 			}
 			catch (...) {}
+			
+			cout << endl;
 		}
     }
     catch (exception& e)
