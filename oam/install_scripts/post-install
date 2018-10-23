@@ -322,11 +322,17 @@ if [ -z "$hadoop" ]; then
 cat <<EOD
 The next steps are:
 
-If installing on a pm1 node:
+If installing on a pm1 node using non-distributed install
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 $installdir/bin/postConfigure -i $installdir
+
+If installing on a pm1 node using distributed install
+
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+$installdir/bin/postConfigure -i $installdir -d
 
 If installing on a non-pm1 using the non-distributed option:
 
@@ -339,9 +345,13 @@ EOD
 cat <<EOD
 The next step is:
 
-If installing on a pm1 node:
+If installing on a pm1 node using non-distributed install
 
 $installdir/bin/postConfigure
+
+If installing on a pm1 node using distributed install
+
+$installdir/bin/postConfigure -d
 
 If installing on a non-pm1 using the non-distributed option:
 
