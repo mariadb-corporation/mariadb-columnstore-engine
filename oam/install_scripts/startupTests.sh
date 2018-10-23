@@ -20,7 +20,7 @@ if [ $USER != "root" ]; then
 		profileFile=$prefix/.bashrc
 	fi
 		
-	. .$profileFile
+	. $profileFile
 fi
 
 # Source function library.

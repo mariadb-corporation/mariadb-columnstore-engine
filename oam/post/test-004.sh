@@ -23,7 +23,7 @@ if [ $USER != "root" ]; then
 		profileFile=$prefix/.bashrc
 	fi
 		
-	. .$profileFile
+	. $profileFile
 fi
 
 # Source function library.
@@ -35,7 +35,7 @@ if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
-export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
+export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DI
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
 test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
