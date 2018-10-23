@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
     user = getuid();
     usergroup = getgid();
 
-	SUDO = "";
+	string SUDO = "";
     if (user != 0) 
     {
         rootUser = false;
