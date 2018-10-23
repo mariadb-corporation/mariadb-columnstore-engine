@@ -2685,7 +2685,7 @@ int processCommand(string* arguments)
 
             if (!oam.checkSystemRunning())
             {
-                cout << "startSystem command, 'columnstore' service is down, sending command to" << endl;
+                cout << endl << "startSystem command, 'columnstore' service is down, sending command to" << endl;
                 cout << "start the 'columnstore' service on all modules" << endl << endl;
 
                 SystemModuleTypeConfig systemmoduletypeconfig;
