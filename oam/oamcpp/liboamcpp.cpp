@@ -8803,7 +8803,7 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
     if ( user != 0 )
 		SUDO = "sudo ";
 		
-    string errmsg = "";
+    errmsg = "";
 
     switch ( command )
     {
