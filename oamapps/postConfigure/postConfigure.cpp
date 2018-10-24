@@ -5109,8 +5109,10 @@ bool storageSetup(bool amazonInstall)
     //check if gluster is installed
     int rtnCode = 1;
 
-	string cmd = SUDO + "gluster --version > " + tmpDir + "/gluster.log 2>&1";
-    rtnCode = system(cmd.c_str());
+    if (rootUser)
+        rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
+    else
+        rtnCode = system("sudo gluster --version > /tmp/gluster.log 2>&1");
 
     if (rtnCode == 0)
     {
@@ -5124,7 +5126,7 @@ bool storageSetup(bool amazonInstall)
     //check if hadoop is installed
     string hadoopLog = tmpDir + "/hadoop.log";
     
-	cmd = "which hadoop > " + hadoopLog + " 2>&1";
+	string cmd = "which hadoop > " + hadoopLog + " 2>&1";
     system(cmd.c_str());
 
     ifstream in(hadoopLog.c_str());
@@ -6253,7 +6255,6 @@ std::string launchInstance(ModuleIP moduleip)
 
 bool glusterSetup(string password)
 {
-
     Oam oam;
     int dataRedundancyCopies = 0;
     int dataRedundancyNetwork = 0;
@@ -6693,7 +6694,67 @@ bool glusterSetup(string password)
                 cout << "ERROR: failed to make directory(" << DataRedundancyConfigs[pm].pmIpAddr  << "): '" << command << "'" << endl;
                 exit(1);
             }
-       }
+
+            /*
+            			if (dataRedundancyStorage == 2)
+            			{
+            				//walk data storage locations and modify fstab to reflect the storage locations entered by user
+            				vector<DataRedundancyStorageSetup>::iterator storageSetupIter=DataRedundancyConfigs[pm].storageLocations.begin();
+            				for (; storageSetupIter < DataRedundancyConfigs[pm].storageLocations.end(); storageSetupIter++ )
+            				{
+            					if (rootUser)
+            					{
+            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+            								" 'echo " + (*storageSetupIter).storageLocation + " " +
+            								installDir + "/gluster/brick" + oam.itoa(brick) + " " +
+            								(*storageSetupIter).storageFilesytemType + " defaults 1 2 >> /etc/fstab'";
+            					}
+            					else
+            					{
+            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+            								" 'sudo bash -c `sudo echo " + (*storageSetupIter).storageLocation + " " +
+            								installDir + "/gluster/brick" + oam.itoa(brick) + " " +
+            								(*storageSetupIter).storageFilesytemType + " defaults 1 2 >> /etc/fstab`'";
+            					}
+            					status = system(command.c_str());
+            					if (WEXITSTATUS(status) != 0 )
+            					{
+            						cout << "ERROR: command failed: " << command << endl;
+            						exit(1);
+            					}
+            					if (rootUser)
+            					{
+            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+            								" 'mount " + installDir + "/gluster/brick" + oam.itoa(brick) + "'";
+            					}
+            					else
+            					{
+            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+            								" 'sudo bash -c `sudo mount " + installDir + "/gluster/brick" + oam.itoa(brick) + "`'";
+            					}
+            					status = system(command.c_str());
+            					if (WEXITSTATUS(status) != 0 )
+            					{
+            						cout << "ERROR: command failed: " << command << endl;
+            						exit(1);
+            					}
+            					if (!rootUser)
+            					{
+            						int user;
+            						user = getuid();
+            						command = remoteCommand + DataRedundancyConfigs[pm].pmIpAddr + " " + password +
+            								"'sudo bash -c `sudo chown -R " + oam.itoa(user) + ":" + oam.itoa(user) + " " + installDir + "/gluster/brick" + oam.itoa(brick) + "`'";
+            						status = system(command.c_str());
+            						if (WEXITSTATUS(status) != 0 )
+            						{
+            							cout << "ERROR(" << status <<"): command failed: " << command << endl;
+            						}
+            					}
+
+            				}
+            			}
+            */
+        }
 
         string errmsg1;
         string errmsg2;
@@ -6706,13 +6767,18 @@ bool glusterSetup(string password)
     }
 
     sleep(5);
-    
-    string glusterCommandsLog = tmpDir + "/glusterCommands.log";
 
-    command = SUDO + "gluster peer status " +  glusterCommandsLog + "2>&1";
-cout << "pc " << command << endl;
+    if (rootUser)
+    {
+        command = "gluster peer status >> /tmp/glusterCommands.txt 2>&1";
+    }
+    else
+    {
+        command = "sudo gluster peer status >> /tmp/glusterCommands.txt 2>&1";
+    }
+
     status = system(command.c_str());
-cout << status << endl;
+
     if (WEXITSTATUS(status) != 0 )
     {
         cout << "ERROR: peer status command failed." << endl;
@@ -6734,7 +6800,14 @@ cout << status << endl;
     {
         int dbrootID = db + 1;
 
-        command = SUDO + "gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
+        if (rootUser)
+        {
+            command = "gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
+        }
+        else
+        {
+            command = "sudo gluster volume create dbroot" + oam.itoa(dbrootID) + " transport tcp replica " + oam.itoa(dataRedundancyCopies) + " ";
+        }
 
         vector<int>::iterator dbrootPmIter = dbrootPms[db].begin();
 
@@ -6745,15 +6818,13 @@ cout << status << endl;
             pmnextbrick[pm]++;
         }
 
-        command += "force >> " + glusterCommandsLog + " 2>&1";
+        command += "force >> /tmp/glusterCommands.txt 2>&1";
         cout << "Gluster create and start volume dbroot" << oam.itoa(dbrootID) << "...";
-cout << "pc " << command << endl;
-		status = system(command.c_str());
-cout << status << endl;
+        status = system(command.c_str());
 
         if (WEXITSTATUS(status) != 0 )
         {
-            if (oam.checkLogStatus(glusterCommandsLog, "dbroot" + oam.itoa(dbrootID) + " already exists" ))
+            if (oam.checkLogStatus("/tmp/glusterCommands.txt", "dbroot" + oam.itoa(dbrootID) + " already exists" ))
             {
                 string errmsg1;
                 string errmsg2;
@@ -6765,9 +6836,7 @@ cout << status << endl;
                     exit(1);
                 }
 
-cout << "pc " << command << endl;
-    status = system(command.c_str());
-cout << status << endl;
+                status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
                 {
@@ -6784,10 +6853,8 @@ cout << status << endl;
 
         if (rootUser)
         {
-            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog + " 2>&1";
-cout << "pc " << command << endl;
-    status = system(command.c_str());
-cout << status << endl;
+            command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+            status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
             {
@@ -6799,10 +6866,8 @@ cout << status << endl;
         {
             int user = getuid();
             int group = getgid();
-            command = SUDO + "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> " + glusterCommandsLog  + " 2>&1";
-cout << "pc " << command << endl;
-    status = system(command.c_str());
-cout << status << endl;
+            command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
+            status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
             {
@@ -6810,10 +6875,8 @@ cout << status << endl;
                 exit(1);
             }
 
-            command = SUDO + "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> " + glusterCommandsLog  + " 2>&1";
-cout << "pc " << command << endl;
-    status = system(command.c_str());
-cout << status << endl;
+            command = "sudo gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
+            status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
             {
@@ -6821,10 +6884,8 @@ cout << status << endl;
                 exit(1);
             }
 
-            command = SUDO + "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog  + " 2>&1";
-cout << "pc " << command << endl;
-    status = system(command.c_str());
-cout << status << endl;
+            command = "sudo gluster volume start dbroot" + oam.itoa(dbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
+            status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
             {

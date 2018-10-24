@@ -8796,12 +8796,13 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
     int user, group;
     user = getuid();
     group = getgid();
-    
-    string SUDO = "";
-    if ( user != 0 )
-		SUDO = "sudo ";
 
-    string glustercmd = SUDO + "gluster ";
+    string glustercmd = "gluster ";
+
+    if (user != 0)
+    {
+        glustercmd = "sudo " + glustercmd;
+    }
 
     errmsg = "";
 
@@ -8995,14 +8996,12 @@ int Oam::glusterctl(GLUSTER_COMMANDS command, std::string argument1, std::string
             for (int pm = (pmID - 1); pm < numberPMs; pm++)
             {
                 cout << "gluster peer probe " + DataRedundancyConfigs[pm].pmIpAddr << endl;
-cout << command << endl;
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
                 {
                     cout << "ERROR: peer probe command failed." << endl;
                     command = InstallDir + "/bin/remote_command.sh " + DataRedundancyConfigs[pm].pmIpAddr + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
-cout << command << endl;
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -9016,8 +9015,7 @@ cout << command << endl;
             }
 
             sleep(5);
-            command = glustercmd + "peer status " + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
-cout << command << endl;
+            command = glustercmd + "peer status " + " >> /tmp/glusterCommands.txt 2>&1";
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -9050,9 +9048,8 @@ cout << command << endl;
                     pmnextbrick[pm]++;
                 }
 
-                command += "force >> " + tmpdir +  "/glusterCommands.log 2>&1";
+                command += "force >> /tmp/glusterCommands.txt 2>&1";
                 cout << "Gluster create and start volume dbroot" << itoa(newDbrootID) << "...";
-cout << command << endl;
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
@@ -9063,8 +9060,7 @@ cout << command << endl;
 
                 if (user != 0)
                 {
-                    command = SUDO + "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-uid " + itoa(user) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";;
-cout << command << endl;
+                    command = "sudo gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-uid " + itoa(user) + " >> /tmp/glusterCommands.txt 2>&1";;
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -9073,8 +9069,7 @@ cout << command << endl;
                         exceptionControl("GLUSTER_ADD", API_FAILURE);
                     }
 
-                    command = SUDO + "gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-gid " + itoa(group) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";;
-cout << command << endl;
+                    command = "sudo gluster volume set dbroot" + itoa(newDbrootID) + " storage.owner-gid " + itoa(group) + " >> /tmp/glusterCommands.txt 2>&1";;
                     status = system(command.c_str());
 
                     if (WEXITSTATUS(status) != 0 )
@@ -9084,8 +9079,7 @@ cout << command << endl;
                     }
                 }
 
-                command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
-cout << command << endl;
+                command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> /tmp/glusterCommands.txt 2>&1";
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
@@ -9132,9 +9126,8 @@ cout << command << endl;
             int status;
             writeLog("glusterctl: GLUSTER_DELETE: dbroot = " + dbrootID, LOG_TYPE_DEBUG );
 
-            command = glustercmd + "--mode=script volume stop dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+            command = glustercmd + "--mode=script volume stop dbroot" + dbrootID + " >> /tmp/glusterCommands.txt 2>&1";
 
-cout << command << endl;
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -9146,9 +9139,8 @@ cout << command << endl;
             // give time for transaction to finish after stopping
             sleep(10);
 
-            command = glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+            command = glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> /tmp/glusterCommands.txt 2>&1";
 
-cout << command << endl;
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
@@ -9167,17 +9159,15 @@ cout << command << endl;
             string command = "";
             int status;
 
-            command = glustercmd + "peer probe " + ipAddress + " >> " + tmpdir + "/glusterCommands.log 2>&1";
+            command = glustercmd + "peer probe " + ipAddress + " >> /tmp/glusterCommands.txt 2>&1";
 
             cout << "gluster peer probe " + ipAddress << endl;
-cout << command << endl;
             status = system(command.c_str());
 
             if (WEXITSTATUS(status) != 0 )
             {
                 cout << "ERROR: peer probe command failed." << endl;
                 command = InstallDir + "/bin/remote_command.sh " + ipAddress + " " + password + " 'stat /var/run/glusterd.pid > /dev/null 2>&1'";
-cout << command << endl;
                 status = system(command.c_str());
 
                 if (WEXITSTATUS(status) != 0 )
