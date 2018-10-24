@@ -9016,7 +9016,7 @@ cout << command << endl;
             }
 
             sleep(5);
-            command = SUDO + glustercmd + "peer status " + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+            command = glustercmd + "peer status " + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
 cout << command << endl;
             status = system(command.c_str());
 
@@ -9039,7 +9039,7 @@ cout << command << endl;
             {
                 int newDbrootID = db + 1;
 
-                command = SUDO + glustercmd + "volume create dbroot" + itoa(newDbrootID) + " transport tcp replica " + itoa(dataRedundancyCopies) + " ";
+                command = glustercmd + "volume create dbroot" + itoa(newDbrootID) + " transport tcp replica " + itoa(dataRedundancyCopies) + " ";
 
                 vector<int>::iterator dbrootPmIter = dbrootPms[db].begin();
 
@@ -9084,7 +9084,7 @@ cout << command << endl;
                     }
                 }
 
-                command = SUDO + glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+                command = glustercmd + "volume start dbroot" + itoa(newDbrootID) + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
 cout << command << endl;
                 status = system(command.c_str());
 
@@ -9146,7 +9146,7 @@ cout << command << endl;
             // give time for transaction to finish after stopping
             sleep(10);
 
-            command = SUDO + glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
+            command = glustercmd + " --mode=script volume delete dbroot" + dbrootID + " >> " + tmpdir +  "/glusterCommands.log 2>&1";
 
 cout << command << endl;
             status = system(command.c_str());
@@ -9167,7 +9167,7 @@ cout << command << endl;
             string command = "";
             int status;
 
-            command = SUDO + glustercmd + "peer probe " + ipAddress + " >> " + tmpdir + "/glusterCommands.log 2>&1";
+            command = glustercmd + "peer probe " + ipAddress + " >> " + tmpdir + "/glusterCommands.log 2>&1";
 
             cout << "gluster peer probe " + ipAddress << endl;
 cout << command << endl;
