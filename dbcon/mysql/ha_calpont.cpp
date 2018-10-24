@@ -1176,11 +1176,72 @@ create_calpont_group_by_handler(THD* thd, Query* query)
     return handler;
 }
 
-/*@brief  create_columnstore_derived_handler- Creates handler*/
-/***********************************************************
+/*@brief  check_walk - It traverses filter conditions*/
+/************************************************************
  * DESCRIPTION:
- * Creates a derived handler.
- * Details are in server/sql/derived_handler.h
+ * It traverses filter predicates looking for unsupported
+ * JOIN types: non-equi JOIN, e.g  t1.c1 > t2.c2;
+ * logical OR.
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    derived - TABLE_LIST* to work with.
+ * RETURN:
+ *    derived_handler if possible
+ *    NULL in other case
+ ***********************************************************/
+void check_walk(const Item* item, void* arg)
+{
+    bool* unsupported_feature  = static_cast<bool*>(arg);
+    if ( *unsupported_feature )
+        return;
+    switch (item->type())
+    {
+        case Item::FUNC_ITEM:
+        {
+            Item_func* ifp = (Item_func*)item;
+            
+            if ( ifp->functype() != Item_func::EQ_FUNC ) 
+            {
+                if ( ifp->argument_count() == 2 && 
+                    ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
+                    ifp->arguments()[1]->type() == Item::FIELD_ITEM )
+                {
+                    String table_name_left;// = new String("some"); // could be alias, could be in different case
+                    String table_name_right;// = new String("other");
+                    table_name_left.append("some", 4);
+                    table_name_right.append("other", 5);
+                    if ( stringcmp(&table_name_left, &table_name_right) != 0 ) 
+                    {
+                        *unsupported_feature = true;
+                        return;
+                    }
+                }
+            }
+            break;
+        }
+
+        case Item::COND_ITEM:
+        {
+            Item_cond* icp = (Item_cond*)item;
+            if ( is_cond_or(icp) )
+            {
+                *unsupported_feature = true;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+/*@brief  create_columnstore_derived_handler- Creates handler*/
+/************************************************************
+ * DESCRIPTION:
+ * Creates a derived handler if there is no non-equi JOIN, e.g
+ * t1.c1 > t2.c2 and logical OR in the filter predicates. 
+ * More details in server/sql/derived_handler.h
  * PARAMETERS:
  *    thd - THD pointer.
  *    derived - TABLE_LIST* to work with.
@@ -1191,10 +1252,11 @@ create_calpont_group_by_handler(THD* thd, Query* query)
 static derived_handler*
 create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
 {
-  ha_columnstore_derived_handler* handler = NULL;
-  handlerton *ht= 0;
+    //DBUG_ENTER("create_columnstore_derived_handler()");
+    ha_columnstore_derived_handler* handler = NULL;
+    handlerton *ht= 0;
 
-  SELECT_LEX_UNIT *unit= derived->derived;
+    SELECT_LEX_UNIT *unit= derived->derived;
     
     if ( thd->infinidb_vtable.vtable_state != THD::INFINIDB_DISABLE_VTABLE
             && thd->variables.infinidb_vtable_mode != 0 )
@@ -1210,15 +1272,37 @@ create_columnstore_derived_handler(THD* thd, TABLE_LIST *derived)
         {
             if (!tbl->table)
                 return 0;
-            // This is the same handlerton check.
+            // Same handlerton type check.
             if (!ht)
                 ht= tbl->table->file->partition_ht();
             else if (ht != tbl->table->file->partition_ht())
                 return 0;
         }
     }
+
+    // Unsupported JOIN conditions check.
+    bool unsupported_feature = false;
+    {
+        SELECT_LEX select_lex = *unit->first_select();
+        JOIN* join = select_lex.join;
+        Item_cond* icp = 0;
+
+        if (join != 0)
+            icp = reinterpret_cast<Item_cond*>(join->conds);
+
+        if (!join)
+        {
+            icp = reinterpret_cast<Item_cond*>(select_lex.where);
+        }
+        
+        if ( icp )
+        {
+            icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+        }
+    }
   
-  handler= new ha_columnstore_derived_handler(thd, derived);
+    if ( !unsupported_feature )
+        handler= new ha_columnstore_derived_handler(thd, derived);
 
   return handler;
 }
