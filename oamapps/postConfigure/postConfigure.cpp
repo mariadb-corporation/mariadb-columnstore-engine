@@ -6710,9 +6710,9 @@ bool glusterSetup(string password)
     string glusterCommandsLog = tmpDir + "/glusterCommands.log";
 
     command = SUDO + "gluster peer status " +  glusterCommandsLog + "2>&1";
-
+cout << "pc " << command << endl;
     status = system(command.c_str());
-
+cout << status << endl;
     if (WEXITSTATUS(status) != 0 )
     {
         cout << "ERROR: peer status command failed." << endl;
@@ -6747,7 +6747,9 @@ bool glusterSetup(string password)
 
         command += "force >> " + glusterCommandsLog + " 2>&1";
         cout << "Gluster create and start volume dbroot" << oam.itoa(dbrootID) << "...";
-        status = system(command.c_str());
+cout << "pc " << command << endl;
+		status = system(command.c_str());
+cout << status << endl;
 
         if (WEXITSTATUS(status) != 0 )
         {
@@ -6763,7 +6765,9 @@ bool glusterSetup(string password)
                     exit(1);
                 }
 
-                status = system(command.c_str());
+cout << "pc " << command << endl;
+    status = system(command.c_str());
+cout << status << endl;
 
                 if (WEXITSTATUS(status) != 0 )
                 {
@@ -6781,7 +6785,9 @@ bool glusterSetup(string password)
         if (rootUser)
         {
             command = "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog + " 2>&1";
-            status = system(command.c_str());
+cout << "pc " << command << endl;
+    status = system(command.c_str());
+cout << status << endl;
 
             if (WEXITSTATUS(status) != 0 )
             {
@@ -6794,7 +6800,9 @@ bool glusterSetup(string password)
             int user = getuid();
             int group = getgid();
             command = SUDO + "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-uid " + oam.itoa(user) + " >> " + glusterCommandsLog  + " 2>&1";
-            status = system(command.c_str());
+cout << "pc " << command << endl;
+    status = system(command.c_str());
+cout << status << endl;
 
             if (WEXITSTATUS(status) != 0 )
             {
@@ -6803,7 +6811,9 @@ bool glusterSetup(string password)
             }
 
             command = SUDO + "gluster volume set dbroot" + oam.itoa(dbrootID) + " storage.owner-gid " + oam.itoa(group) + " >> " + glusterCommandsLog  + " 2>&1";
-            status = system(command.c_str());
+cout << "pc " << command << endl;
+    status = system(command.c_str());
+cout << status << endl;
 
             if (WEXITSTATUS(status) != 0 )
             {
@@ -6812,7 +6822,9 @@ bool glusterSetup(string password)
             }
 
             command = SUDO + "gluster volume start dbroot" + oam.itoa(dbrootID) + " >> " + glusterCommandsLog  + " 2>&1";
-            status = system(command.c_str());
+cout << "pc " << command << endl;
+    status = system(command.c_str());
+cout << status << endl;
 
             if (WEXITSTATUS(status) != 0 )
             {
