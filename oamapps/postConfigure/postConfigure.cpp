@@ -4862,7 +4862,7 @@ bool storageSetup(bool amazonInstall)
         return true;
     }
 
-    cout << "===== Setup Storage Configuration =====" << endl;
+    cout << "===== Setup Storage Configuration =====" << endl << endl;
 
     string storageType;
 
@@ -5109,10 +5109,7 @@ bool storageSetup(bool amazonInstall)
     //check if gluster is installed
     int rtnCode = 1;
 
-    if (rootUser)
-        rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
-    else
-        rtnCode = system("sudo gluster --version > /tmp/gluster.log 2>&1");
+	rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
 
     if (rtnCode == 0)
     {
