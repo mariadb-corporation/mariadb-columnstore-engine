@@ -132,7 +132,7 @@ checkInfostatus() {
 		return
 	fi
 	#check if attaching
-	cat ${tmpdir}volumeInfo_$volumeName | grep attaching > ${tmpdir}/volumeStatus_$volumeName
+	cat ${tmpdir}/volumeInfo_$volumeName | grep attaching > ${tmpdir}/volumeStatus_$volumeName
 	if [ `cat ${tmpdir}/volumeStatus_$volumeName | wc -c` -ne 0 ]; then
 		STATUS="attaching"
 		RETVAL=0
