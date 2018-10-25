@@ -69,11 +69,14 @@ else
         echo "${bold}Run post-install script${normal}"
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
+
+        tmpDir=`$HOME/mariadb/columnstore/bin/getConfig SystemConfig SystemTempFileDir`
+
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umCount = "" ]]; then
-			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName -d
+			. $tmpDir;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName -d
 		else
-			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName -d
+			. $tmpDir;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName -d
 		fi
 fi

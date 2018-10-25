@@ -28,7 +28,10 @@ else
         echo "Run post-install script"
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
+        
+        tmpDir=`$HOME/mariadb/columnstore/bin/getConfig SystemConfig SystemTempFileDir`
+
         echo "Run postConfigure script"
         echo ""
-        . /etc/profile.d/columnstoreEnv.sh; $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qs
+        . $tmpDir; $HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qs
 fi
