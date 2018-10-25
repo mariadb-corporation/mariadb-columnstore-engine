@@ -5134,10 +5134,11 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                     if (!oam.checkLogStatus(loginTmp, "README"))
                     {
                         //check for RSA KEY ISSUE and fix
-                        if (oam.checkLogStatus(loginTmp, "Offending"))
+                        if (oam.checkLogStatus(loginTmp, "Host key verification failed"))
                         {
-                            log.writeLog(__LINE__, "addModule - login failed, Offending key issue, try fixing: " + moduleName, LOG_TYPE_DEBUG);
-                            oam.fixRSAkey(loginTmp);
+                            log.writeLog(__LINE__, "addModule - login failed, Host key verification failed, try fixing: " + moduleName, LOG_TYPE_DEBUG);
+                            cmd = "rm -f " + homedir + "/.ssh/known_hosts";
+                            system(cmd.c_str());
                         }
 
                         log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);

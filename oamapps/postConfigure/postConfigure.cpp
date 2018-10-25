@@ -1818,7 +1818,7 @@ int main(int argc, char* argv[])
     // Module Configuration
     //
     cout << endl << endl;
-    cout << "===== Setup the Module Configuration =====" << endl;
+    cout << "===== Setup the Module Configuration =====" << endl << endl;
 
     if (amazonInstall)
     {
