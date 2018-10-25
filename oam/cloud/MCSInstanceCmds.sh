@@ -11,7 +11,7 @@ fi
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 
 #get temp directory
-tmpDir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig SystemTempFileDir`
+tmpdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig SystemTempFileDir`
 
 #check command
 if [ "$1" = "" ]; then
