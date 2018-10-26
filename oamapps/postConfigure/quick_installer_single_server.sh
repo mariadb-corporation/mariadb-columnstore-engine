@@ -26,6 +26,7 @@ if [ $HOME == "/root" ]; then
         echo ""
         /usr/local/mariadb/columnstore/bin/postConfigure -qs
 else
+        echo ""
         echo "Run post-install script"
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore

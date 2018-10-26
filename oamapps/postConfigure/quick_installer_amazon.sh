@@ -67,6 +67,7 @@ if [[ $HOME = "/root" ]]; then
 			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount -um-count $umCount $systemName -d
 		fi
 else
+        echo ""
         echo "${bold}Run post-install script${normal}"
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
