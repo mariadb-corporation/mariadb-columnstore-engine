@@ -805,12 +805,16 @@ int main(int argc, char* argv[])
 	{
 		cout << "===== Quick Install Multi-Server Configuration =====" << endl << endl;
 		
+		cout << "Multi-Server install defaulting to using local storage" << endl;
+
 		singleServerInstall = "2";
 	}
 	else if (amazon_quick_install)
 	{
 		cout << "===== Quick Install Amazon Configuration =====" << endl << endl;
 		
+		cout << "Amazon AMI EC2 install defaulting to using local storage" << endl;
+
 		singleServerInstall = "2";
 	}
 	else
@@ -856,95 +860,14 @@ int main(int argc, char* argv[])
 
 				if (temp == "1")
 				{
-					singleServerInstall = temp;
-					cout << endl << "Performing the Single Server Install." << endl << endl;
-
-					if ( reuseConfig == "n" )
-					{
-						//setup to Columnstore.xml file for single server
-						singleServerConfigSetup(sysConfig);
-					}
-					
-					//module ProcessConfig.xml to setup all apps on the pm
-					if ( !updateProcessConfig() )
-						cout << "Update ProcessConfig.xml error" << endl;
-
-					try
-					{
-						sysConfig->setConfig(InstallSection, "SingleServerInstall", "y");
-						sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
-					}
-					catch (...)
-					{
-						cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
-						exit(1);
-					}
-
-					if ( !writeConfig(sysConfig) )
-					{
-						cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-						exit(1);
-					}
-
-					setSystemName();
-					cout << endl;
-
-					system(cmd.c_str());
-
-					// setup storage
-					if (!storageSetup(false))
-					{
-						cout << "ERROR: Problem setting up storage" << endl;
-						exit(1);
-					}
-
-					if (hdfs || !rootUser)
-						if ( !updateBash() )
-							cout << "updateBash error" << endl;
-
-					// setup storage
-					if (!singleServerDBrootSetup())
-					{
-						cout << "ERROR: Problem setting up DBRoot IDs" << endl;
-						exit(1);
-					}
-
-					//set system DBRoot count and check 'files per parition' with number of dbroots
-					try
-					{
-						sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
-					}
-					catch (...)
-					{
-						cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
-						exit(1);
-					}
-
-					//check if dbrm data resides in older directory path and inform user if it does
-					dbrmDirCheck();
-
-					if (startOfflinePrompt)
-						offLineAppCheck();
-
-					checkMysqlPort(mysqlPort, sysConfig);
-
-					if ( !writeConfig(sysConfig) )
-					{
-						cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-						exit(1);
-					}
-
-					cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
-
-					cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
-					system(cmd.c_str());
-					exit(0);
+					singleServerInstall = "1";
+					break;
 				}
 				else
 				{
 					if (temp == "2")
 					{
-						singleServerInstall = temp;
+						singleServerInstall = "2";
 						break;
 					}
 				}
@@ -953,14 +876,99 @@ int main(int argc, char* argv[])
 
 				if ( noPrompting )
 					exit(1);
-
-				continue;
 			}
-
-        break;
 		}
 	}
 
+	// perform single server install
+	if (singleServerInstall == "1")
+	{
+		cout << endl << "Performing the Single Server Install." << endl << endl;
+
+		if ( reuseConfig == "n" )
+		{
+			//setup to Columnstore.xml file for single server
+			singleServerConfigSetup(sysConfig);
+		}
+		
+		//module ProcessConfig.xml to setup all apps on the pm
+		if ( !updateProcessConfig() )
+			cout << "Update ProcessConfig.xml error" << endl;
+
+		try
+		{
+			sysConfig->setConfig(InstallSection, "SingleServerInstall", "y");
+			sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
+		}
+		catch (...)
+		{
+			cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+
+		if ( !writeConfig(sysConfig) )
+		{
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+
+		setSystemName();
+		cout << endl;
+
+		system(cmd.c_str());
+
+		// setup storage
+		if (!storageSetup(false))
+		{
+			cout << "ERROR: Problem setting up storage" << endl;
+			exit(1);
+		}
+
+		if (hdfs || !rootUser)
+			if ( !updateBash() )
+				cout << "updateBash error" << endl;
+
+		// setup storage
+		if (!singleServerDBrootSetup())
+		{
+			cout << "ERROR: Problem setting up DBRoot IDs" << endl;
+			exit(1);
+		}
+
+		//set system DBRoot count and check 'files per parition' with number of dbroots
+		try
+		{
+			sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
+		}
+		catch (...)
+		{
+			cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+
+		//check if dbrm data resides in older directory path and inform user if it does
+		dbrmDirCheck();
+
+		if (startOfflinePrompt)
+			offLineAppCheck();
+
+		checkMysqlPort(mysqlPort, sysConfig);
+
+		if ( !writeConfig(sysConfig) )
+		{
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+
+		cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
+
+		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+		system(cmd.c_str());
+		exit(0);
+	}
+
+	// perform multi-node install
+	
     try
     {
         sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");

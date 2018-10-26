@@ -61,6 +61,7 @@ else
 fi
 
 if [[ $HOME = "/root" ]]; then
+        echo ""
         echo "${bold}Run post-install script${normal}"
         echo ""
         /usr/local/mariadb/columnstore/bin/post-install
@@ -72,17 +73,19 @@ if [[ $HOME = "/root" ]]; then
 			/usr/local/mariadb/columnstore/bin/postConfigure -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall $systemName
 		fi
 else
+        echo ""
         echo "${bold}Run post-install script${normal}"
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
         
-        tmpDir=`$HOME/mariadb/columnstore/bin/getConfig SystemConfig SystemTempFileDir`
+		export COLUMNSTORE_INSTALL_DIR=$HOME/mariadb/columnstore
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib:$HOME/mariadb/columnstore/mysql/lib
 
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umIpAddrs = "" ]]; then
-			. $tmpDir;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall $systemName
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs $nonDistrubutedInstall $systemName
 		else
-			. $tmpDir;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall $systemName
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qm -pm-ip-addrs $pmIpAddrs -um-ip-addrs $umIpAddrs $nonDistrubutedInstall $systemName
 		fi
 fi

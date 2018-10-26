@@ -55,6 +55,7 @@ else
 fi
 
 if [[ $HOME = "/root" ]]; then
+        echo ""
         echo "${bold}Run post-install script${normal}"
         echo ""
         /usr/local/mariadb/columnstore/bin/post-install
@@ -70,13 +71,14 @@ else
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
 
-        tmpDir=`$HOME/mariadb/columnstore/bin/getConfig SystemConfig SystemTempFileDir`
-
+		export COLUMNSTORE_INSTALL_DIR=$HOME/mariadb/columnstore
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib:$HOME/mariadb/columnstore/mysql/lib
+		
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umCount = "" ]]; then
-			. $tmpDir;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName -d
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName -d
 		else
-			. $tmpDir;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName -d
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName -d
 		fi
 fi
