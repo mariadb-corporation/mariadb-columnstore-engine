@@ -6505,8 +6505,11 @@ void Oam::addUMdisk(const int moduleID, std::string& volumeName, std::string& de
     int user;
     user = getuid();
 
-    cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
-
+	if ( user == 0 )
+    	cmd = "mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+	else
+        cmd = "sudo mkfs.ext2 -F " + device + " > /dev/null 2>&1";
+	
     system(cmd.c_str());
 
     //detach volume
@@ -6752,7 +6755,10 @@ void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string
             int user;
             user = getuid();
 
-            cmd = "mkfs.ext2 -F " + amazonDeviceName + " > " + tmpdir + "/format.log 2>&1";
+			if (user == 0 )
+            	cmd = "mkfs.ext2 -F " + amazonDeviceName + " > " + tmpdir + "/format.log 2>&1";
+			else
+                cmd = "sudo mkfs.ext2 -F " + amazonDeviceName + " > " + tmpdir + "/format.log 2>&1";
 
             writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
 
