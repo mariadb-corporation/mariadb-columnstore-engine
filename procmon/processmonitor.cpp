@@ -1867,6 +1867,9 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
             if (WEXITSTATUS(status) != 0 )
             {
+				//chmod before update, used on amazon ami EBS. not other systems
+				system("sudo chmod 666 /etc/fstab");
+
                 cmd = "echo " + entry + " >> /etc/fstab";
                 system(cmd.c_str());
 

@@ -9473,7 +9473,7 @@ std::string Oam::getMySQLPassword()
 /******************************************************************************************
 * @brief	updateFstab
 *
-* purpose:	check and get mysql user password
+* purpose:	Update Fstabs for Amazon EBS setup
 *
 ******************************************************************************************/
 std::string Oam::updateFstab(std::string device, std::string dbrootID)
@@ -9499,7 +9499,8 @@ std::string Oam::updateFstab(std::string device, std::string dbrootID)
 
     if (WEXITSTATUS(status) != 0 )
     {
-        //update /etc/fstab with mount
+        //chmod before update, used on amazon ami EBS. not other systems
+		system("sudo chmod 666 /etc/fstab");
 
         //update local fstab
         cmd = "echo " + entry + " >> /etc/fstab";
