@@ -55,6 +55,7 @@ ThreadPool::~ThreadPool() throw()
 {
     try
     {
+        boost::mutex::scoped_lock initLock(fInitMutex);
         stop();
     }
     catch (...)
@@ -64,6 +65,7 @@ ThreadPool::~ThreadPool() throw()
 
 void ThreadPool::init()
 {
+    boost::mutex::scoped_lock initLock(fInitMutex);
     fThreadCount = 0;
     fGeneralErrors = 0;
     fFunctorErrors = 0;
@@ -89,6 +91,8 @@ void ThreadPool::pruneThread()
     while(true)
    {
         boost::system_time timeout = boost::get_system_time() + boost::posix_time::minutes(1);
+        if (fStop)
+            return;
         if (!fPruneThreadEnd.timed_wait(fPruneMutex, timeout))
         {
             while(!fPruneThreads.empty())

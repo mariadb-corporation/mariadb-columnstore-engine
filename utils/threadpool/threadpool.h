@@ -357,6 +357,7 @@ private:
 
     std::string fName;  // Optional to add a name to the pool for debugging.
     bool fDebug;
+    boost::mutex fInitMutex;
     boost::mutex fPruneMutex;
     boost::condition fPruneThreadEnd;
     boost::thread* fPruneThread;
