@@ -49,7 +49,8 @@ string Func_concat_ws::getStrVal(Row& row,
 								bool& isNull,
 								CalpontSystemCatalog::ColType&)
 {
-	string delim = stringValue(parm[0], row, isNull);
+	string delim;
+    stringValue(parm[0], row, isNull, delim);
 	if (isNull)
 		return "";
 
@@ -62,7 +63,8 @@ string Func_concat_ws::getStrVal(Row& row,
 
 	for ( unsigned int id = 1 ; id < parm.size() ; id++) 
 	{
-		string tstr = stringValue(parm[id], row, isNull); 
+		string tstr;
+        stringValue(parm[id], row, isNull, tstr); 
 		if (isNull)
 		{
 			isNull = false;
@@ -88,9 +90,11 @@ string Func_concat_ws::getStrVal(Row& row,
 
 #else
 	string str;
+    string tmp;
 	for ( uint32_t i = 1 ; i < parm.size() ; i++) 
 	{
-		str += string(stringValue(parm[i], row, isNull).c_str()); 
+		string(stringValue(parm[i], row, isNull).c_str(), tmp);
+        str += tmp;
 
 		if (isNull)
 		{

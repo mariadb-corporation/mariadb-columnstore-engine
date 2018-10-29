@@ -61,7 +61,9 @@ std::string Func_repeat::getStrVal(rowgroup::Row& row,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-	string str = stringValue(fp[0], row, isNull);
+	string str;
+
+    stringValue(fp[0], row, isNull, str);
 
 	if (str.empty() || str == "")
 		return "";

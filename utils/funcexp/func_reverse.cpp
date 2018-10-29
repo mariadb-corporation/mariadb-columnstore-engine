@@ -65,7 +65,8 @@ std::string Func_reverse::getStrVal(rowgroup::Row& row,
 						bool& isNull,
 						execplan::CalpontSystemCatalog::ColType&)
 {
-	string str = stringValue(fp[0], row, isNull);
+	string str;
+    stringValue(fp[0], row, isNull, str);
 
 	// We used to reverse in the string buffer, but that doesn't
 	// work for all compilers as some re-use the buffer on simple

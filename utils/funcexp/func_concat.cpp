@@ -55,10 +55,13 @@ string Func_concat::getStrVal(Row& row,
 								bool& isNull,
 								CalpontSystemCatalog::ColType&)
 {
-	string ret = stringValue(parm[0], row, isNull);
+	string ret;
+    string tmp;
+    stringValue(parm[0], row, isNull, ret);
 
 	for ( unsigned int id = 1 ; id < parm.size() ; id++) {
-		ret.append( stringValue(parm[id], row, isNull) );
+		stringValue(parm[id], row, isNull, tmp);
+        ret.append(tmp);
 	}
 
 	return ret;
