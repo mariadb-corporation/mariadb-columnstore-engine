@@ -124,9 +124,9 @@ nextValue()
 
 nextValue() is called from the PM for aggregate usage and the UM for Analytic usage.
 
-valsIn contains a vector of all the parameters from the function call in the SQL query (In Columndtore 1.1, this will always contain exactly one entry).
+valsIn contains a vector of all the parameters from the function call in the SQL query.
 
-Depending on your function, you may wish to be able to handle many different types of input. A good way to handle this is to have a series of if..else..if statements comparing the input type and dealing with each separately. For instace, if you want to handle multiple numeric types, you might use::
+Depending on your function, you may wish to be able to handle many different types of input. There's a helper template function convertAnyTo() which will convert the input static:any value to the designated type. For Example, if your internal accumulater is of type double, you might use::
 
 	static_any::any& valIn = valsDropped[0].columnData;
 	AVGData& data = static_cast<MedianData*>(context->getUserData())->mData;
@@ -137,21 +137,7 @@ Depending on your function, you may wish to be able to handle many different typ
 		return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
 	}
 
-	if (valIn.compatible(charTypeId))
-	{
-		val = valIn.cast<char>();
-	}
-	else if (valIn.compatible(scharTypeId))
-	{
-		val = valIn.cast<signed char>();
-	}
-	else if (valIn.compatible(shortTypeId))
-	{
-		val = valIn.cast<short>();
-	}
-	.
-	.
-	.
+	val = convertAnyTo<double>(valIn);
 
 Once you've gotten your data in a format you like, then do your aggregation. For AVG, you might see::
 
