@@ -16,8 +16,6 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--system-name='` -eq 14 ]; then
 		systemName="`echo $arg | awk -F= '{print $2}'`"
 		systemName="-sn "$systemName
-	elif [ `expr -- "$arg" : '--dist-install'` -eq 14 ]; then
-		nonDistrubutedInstall=" "
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		echo "Usage ./quick_installer_amazon.sh [OPTION]"
 		echo ""
@@ -63,9 +61,9 @@ if [[ $HOME = "/root" ]]; then
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umCount = "" ]]; then
-			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount $systemName
+			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount $systemName -d
 		else
-			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount -um-count $umCount $systemName
+			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount -um-count $umCount $systemName -d
 		fi
 else
         echo "${bold}Run post-install script${normal}"
@@ -74,8 +72,8 @@ else
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umCount = "" ]]; then
-			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName
+			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName -d
 		else
-			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName
+			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName -d
 		fi
 fi
