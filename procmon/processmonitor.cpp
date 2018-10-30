@@ -1035,7 +1035,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                             cacheutils::dropPrimProcFdCache();
                             flushInodeCache();
 
-                            string cmd = "umount " + startup::StartUp::installDir() + "/data* -l > /dev/null 2>&1";
+                            string cmd = SUDO + "umount " + startup::StartUp::installDir() + "/data* -l > /dev/null 2>&1";
 
                             system(cmd.c_str());
                             sleep(1);
@@ -1752,7 +1752,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				string tmpUmount = tmpLogDir + "/umount.log";
                 for ( ; retry < 5 ; retry++)
                 {
-                    string cmd = "export LC_ALL=C;umount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpUmount + " 2>&1";
+                    string cmd = SUDO + "export LC_ALL=C;umount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpUmount + " 2>&1";
 
                     system(cmd.c_str());
 
@@ -1820,7 +1820,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             if (DataRedundancyConfig == "n")
             {
 				string tmpMount = tmpLogDir + "/mount.log";
-                string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount  + "2>&1";
+                string cmd = SUDO + "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount  + "2>&1";
                 system(cmd.c_str());
 
                 if ( !rootUser )
@@ -5912,7 +5912,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
         {
             string cmd;
 			string mountLog = tmpLogDir + "/um_mount.log";
-            cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > " + mountLog;
+            cmd = SUDO + "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,user > " + mountLog;
 
             system(cmd.c_str());
             log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
@@ -5946,7 +5946,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 
             if (oam.attachEC2Volume(volumeName, deviceName, instanceName))
             {
-                string cmd = "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o defaults > /dev/null 2>&1";
+                string cmd = SUDO + "mount " + deviceName + " " + startup::StartUp::installDir() + "/mysql/db -t ext2 -o noatime,nodiratime,user > /dev/null 2>&1";
                 system(cmd.c_str());
                 log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
@@ -6019,7 +6019,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
             {
 				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to attached: " + volumeName, LOG_TYPE_DEBUG);
 
-                string cmd = "mount " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID) + " > /dev/null";
+                string cmd = SUDO + "mount " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID) + " > /dev/null";
 
                 system(cmd.c_str());
 				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to mounted: " + volumeName, LOG_TYPE_DEBUG);
@@ -6106,7 +6106,7 @@ void ProcessMonitor::unmountExtraDBroots()
                 {
                     if ( DataRedundancyConfig == "n" )
                     {
-                        string cmd = "umount " + startup::StartUp::installDir() + "/data" + oam.itoa(id) + " > /dev/null 2>&1";
+                        string cmd = SUDO + "umount " + startup::StartUp::installDir() + "/data" + oam.itoa(id) + " > /dev/null 2>&1";
                         system(cmd.c_str());
                     }
                     else
@@ -6288,7 +6288,7 @@ int ProcessMonitor::checkDataMount()
         if ( DataRedundancyConfig == "n" )
         {
             //remove any local check flag for starters
-            string cmd = "umount " + dbroot + " > " + tmpLogDir + "/umount.log 2>&1";
+            string cmd = SUDO + "umount " + dbroot + " > " + tmpLogDir + "/umount.log 2>&1";
             system(cmd.c_str());
 
             unlink(fileName.c_str());
@@ -6302,7 +6302,7 @@ int ProcessMonitor::checkDataMount()
             {
                 // not mounted, mount
                 string mountLog = tmpLogDir + "/mount.log";
-                cmd = "export LC_ALL=C;mount " + dbroot + " > " + mountLog + " 2>&1";
+                cmd = SUDO + "export LC_ALL=C;mount " + dbroot + " > " + mountLog + " 2>&1";
                 system(cmd.c_str());
 
                 ifstream in(mountLog.c_str());
@@ -6505,7 +6505,7 @@ int ProcessMonitor::glusterAssign(std::string dbrootID)
     }
 
 	string tmpLog = tmpLogDir + "/glusterAssign.log";
-    command = "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" + dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
+    command = SUDO + "mount -tglusterfs -odirect-io-mode=enable " + moduleIPAddr + ":/dbroot" + dbrootID + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
 
     int ret = system(command.c_str());
 
@@ -6550,7 +6550,7 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 
 	string tmpLog = tmpLogDir + "/glusterUnassign.log";
 
-    command = "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
+    command = SUDO + "umount -f " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpLog + " 2>&1";
 
     int ret = system(command.c_str());
 

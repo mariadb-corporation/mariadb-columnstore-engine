@@ -1477,7 +1477,7 @@ int main(int argc, char* argv[])
         // setup to start on reboot, for non-root amazon installs
         if ( !rootUser )
         {
-			system("sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+			system("sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
         }
 
         if ( !writeConfig(sysConfig) )
