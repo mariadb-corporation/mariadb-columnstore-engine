@@ -4654,16 +4654,17 @@ bool createDbrootDirs(string DBRootStorageType)
         string cmd = "mount " + installDir + "/data1 > " + tmpDir + "/mount.txt 2>&1";
         system(cmd.c_str());
 
-		//if Amazon, Non-Root, and External EBS, use sudo
-		string SUDO = "";
-		if ( amazonInstall && !rootUser && 
-			( DBRootStorageType == "external" ) )
-			SUDO = "sudo ";
-						
         if ( !rootUser)
         {
+			//if Amazon, Non-Root, and External EBS, use sudo
+			string SUDO = "";
+			if ( amazonInstall )
+				SUDO = "sudo ";
+
             cmd = SUDO + "chown -R " + USER + ":" + USER + " " + installDir + "/data1 > /dev/null";
+cout << cmd << endl;
             system(cmd.c_str());
+cout << cmd << endl;
         }
 
         // create system file directories
