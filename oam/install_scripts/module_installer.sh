@@ -178,7 +178,7 @@ touch $RCFILE
 
 if [ $user != "root" ]; then
       echo "uncomment runuser in rc.local, amazon AMI"
-      sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
+      sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
 fi
 
 echo "!!!Module Installation Successfully Completed!!!"

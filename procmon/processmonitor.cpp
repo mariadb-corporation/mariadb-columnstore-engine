@@ -54,6 +54,7 @@ extern bool HDFS;
 extern string PMwithUM;
 extern bool startProcMon;
 extern string tmpLogDir;
+extern string SUDO;
 
 //std::string gOAMParentModuleName;
 bool gOAMParentModuleFlag;
@@ -1822,9 +1823,9 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                 string cmd = "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount  + "2>&1";
                 system(cmd.c_str());
 
-                if ( !rootUser)
+                if ( !rootUser )
                 {
-                    cmd = "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null 2>&1";
+                    cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + dbrootID + " > /dev/null 2>&1";
                     system(cmd.c_str());
                 }
 
@@ -5916,7 +5917,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
             system(cmd.c_str());
             log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
-            cmd = "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+            cmd = SUDO + "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
             system(cmd.c_str());
 
             log.writeLog(__LINE__, "amazonVolumeCheck function successfully completed, volume attached: " + volumeName, LOG_TYPE_DEBUG);
@@ -5949,7 +5950,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
                 system(cmd.c_str());
                 log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
-                cmd = "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+                cmd = SUDO + "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
                 system(cmd.c_str());
 
                 return true;
@@ -6016,13 +6017,16 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
 
             if (oam.attachEC2Volume(volumeName, deviceName, instanceName))
             {
-
-				        log.writeLog(__LINE__, "amazonVolumeCheck function , volume to attached: " + volumeName, LOG_TYPE_DEBUG);
+				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to attached: " + volumeName, LOG_TYPE_DEBUG);
 
                 string cmd = "mount " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID) + " > /dev/null";
 
                 system(cmd.c_str());
 				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to mounted: " + volumeName, LOG_TYPE_DEBUG);
+
+                cmd = SUDO + "chown mysql:mysql -R " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID);
+                system(cmd.c_str());
+
                 return true;
             }
             else
@@ -6326,7 +6330,7 @@ int ProcessMonitor::checkDataMount()
 
             if ( !rootUser)
             {
-                cmd = "chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null 2>&1";
+                cmd = SUDO + "chown -R " + USER + ":" + USER + " " + dbroot + " > /dev/null 2>&1";
                 system(cmd.c_str());
             }
 

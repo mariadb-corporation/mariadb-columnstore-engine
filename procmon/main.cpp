@@ -62,6 +62,7 @@ string USER = "root";
 string PMwithUM = "n";
 bool startProcMon = false;
 string tmpLogDir;
+string SUDO = "";
 
 //extern std::string gOAMParentModuleName;
 extern bool gOAMParentModuleFlag;
@@ -164,9 +165,12 @@ int main(int argc, char** argv)
     int user;
     user = getuid();
 
-    if (user != 0)
+    if (user != 0) 
+	{
         rootUser = false;
-
+		SUDO = "sudo ";
+	}
+	
     char* p = getenv("USER");
 
     if (p && *p)
