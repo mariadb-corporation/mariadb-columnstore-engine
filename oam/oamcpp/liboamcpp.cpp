@@ -6509,7 +6509,7 @@ void Oam::addUMdisk(const int moduleID, std::string& volumeName, std::string& de
     	cmd = "mkfs.ext2 -F " + device + " > " + tmpdir + "/format.log 2>&1";
 	else
         cmd = "sudo mkfs.ext2 -F " + device + " > " + tmpdir + "/format.log 2>&1";
-cout << "1 " << cmd << endl;	
+
     system(cmd.c_str());
 
     //detach volume
@@ -6762,7 +6762,6 @@ void Oam::addDbroot(const int dbrootNumber, DBRootConfigList& dbrootlist, string
 
             writeLog("addDbroot format cmd: " + cmd, LOG_TYPE_DEBUG );
 
-cout << "1 " << cmd << endl;	
             system(cmd.c_str());
 
             //detach
