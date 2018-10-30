@@ -118,7 +118,7 @@ bool makeModuleFile(string moduleName, string parentOAMModuleName);
 bool updateProcessConfig();
 bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
-bool createDbrootDirs(string DBRootStorageType);
+bool createDbrootDirs(string DBRootStorageType, bool amazonInstall);
 bool pkgCheck(std::string columnstorePackage);
 bool storageSetup(bool amazonInstall);
 void setSystemName();
@@ -3469,7 +3469,7 @@ int main(int argc, char* argv[])
     }
 
     //create directories on dbroot1
-    if ( !createDbrootDirs(DBRootStorageType) )
+    if ( !createDbrootDirs(DBRootStorageType, amazonInstall) )
     {
         cout << "createDbrootDirs error" << endl;
         exit(1);
@@ -4643,7 +4643,7 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 /*
  * createDbrootDirs
  */
-bool createDbrootDirs(string DBRootStorageType)
+bool createDbrootDirs(string DBRootStorageType, bool amazonInstall)
 {
     int rtnCode;
     string cmd;
