@@ -66,7 +66,12 @@ if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
 	if [ $module = "pm" ]; then
 		if test -f $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab ; then
 			echo "Setup fstab on Module"
+			SUDO=""
+			if [ $user != "root" ]; then
+				SUDO="sudo "
+			fi
 			touch /etc/fstab
+			$SUDO chmod 666 /etc/fstab
 			rm -f /etc/fstab.columnstoreSave
 			cp /etc/fstab /etc/fstab.columnstoreSave
 			cat $COLUMNSTORE_INSTALL_DIR/local/etc/pm1/fstab >> /etc/fstab
