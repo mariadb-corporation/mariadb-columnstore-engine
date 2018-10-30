@@ -4662,9 +4662,7 @@ bool createDbrootDirs(string DBRootStorageType, bool amazonInstall)
 				SUDO = "sudo ";
 
             cmd = SUDO + "chown -R " + USER + ":" + USER + " " + installDir + "/data1 > /dev/null";
-cout << cmd << endl;
             system(cmd.c_str());
-cout << cmd << endl;
         }
 
         // create system file directories
