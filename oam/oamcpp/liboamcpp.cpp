@@ -5658,7 +5658,6 @@ void Oam::manualMovePmDbroot(std::string residePM, std::string dbrootIDs, std::s
                         cout << endl << "ERROR: umountDBRoot api failure" << endl;
                         exceptionControl("manualMovePmDbroot", API_FAILURE);
                     }
-
                 }
 
                 //check for amazon moving required

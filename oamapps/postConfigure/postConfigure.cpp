@@ -2837,8 +2837,8 @@ int main(int argc, char* argv[])
                                 callFree(pcommand);
                             }
 
-                            //get device name based on DBRoot ID
-                            deviceName = "/dev/sdf";
+                            //get amazon device name for UM
+                            deviceName = "/dev/xvdf";
                         }
                         else
                         {
