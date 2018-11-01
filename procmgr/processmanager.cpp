@@ -5131,6 +5131,11 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                     string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > " + loginTmp;
                     int rtnCode = system(cmd.c_str());
 
+log.writeLog(__LINE__, "loginTmp " + loginTmp, LOG_TYPE_DEBUG);
+log.writeLog(__LINE__, "cmd " + cmd, LOG_TYPE_DEBUG);
+log.writeLog(__LINE__, "rtnCode " + oam.itoa(rtnCode), LOG_TYPE_DEBUG);
+
+
 					if (!oam.checkLogStatus(loginTmp, "README")) {
                         //check for RSA KEY ISSUE and fix
                         if (oam.checkLogStatus(loginTmp, "Host key verification failed"))

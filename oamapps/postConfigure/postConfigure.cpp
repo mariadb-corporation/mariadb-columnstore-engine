@@ -4651,7 +4651,7 @@ bool createDbrootDirs(string DBRootStorageType, bool amazonInstall)
     // mount data1 and create directories if configured with storage
     if ( DBRootStorageType == "external" )
     {
-        string cmd = "mount " + installDir + "/data1 > " + tmpDir + "/mount.txt 2>&1";
+        string cmd = "mount " + installDir + "/data1 > " + tmpDir + "/mount.log 2>&1";
         system(cmd.c_str());
 
         if ( !rootUser)
