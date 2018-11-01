@@ -5680,7 +5680,7 @@ int processCommand(string* arguments)
             string moduleType;
             string moduleName;
             int moduleCount;
-            string password;
+            string password = "ssh";
             typedef std::vector<string> inputNames;
             inputNames inputnames;
             typedef std::vector<string> umStorageNames;
@@ -5705,7 +5705,7 @@ int processCommand(string* arguments)
                 hostArg = 3;
 
                 //check for a non-distrubuted install setup, dont need password
-                if ( DistributedInstall == "y" )
+                if ( DistributedInstall != "y" )
                 {
                     if (arguments[4] != "")
                         password = arguments[4];
@@ -5736,7 +5736,7 @@ int processCommand(string* arguments)
                 hostArg = 2;
 
                 //check for a non-distrubuted install setup, dont need password
-                if ( DistributedInstall == "y" )
+                if ( DistributedInstall != "y" )
                 {
                     if (arguments[3] != "")
                         password = arguments[3];
