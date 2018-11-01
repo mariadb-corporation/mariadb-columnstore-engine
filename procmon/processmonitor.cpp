@@ -1752,7 +1752,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 				string tmpUmount = tmpLogDir + "/umount.log";
                 for ( ; retry < 5 ; retry++)
                 {
-                    string cmd = SUDO + "export LC_ALL=C;umount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpUmount + " 2>&1";
+                    string cmd = "export LC_ALL=C;" + SUDO + "umount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpUmount + " 2>&1";
 
                     system(cmd.c_str());
 
@@ -1820,7 +1820,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             if (DataRedundancyConfig == "n")
             {
 				string tmpMount = tmpLogDir + "/mount.log";
-                string cmd = SUDO + "export LC_ALL=C;mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount  + "2>&1";
+                string cmd = SUDO + "export LC_ALL=C;" + SUDO + "mount " + startup::StartUp::installDir() + "/data" + dbrootID + " > " + tmpMount  + "2>&1";
                 system(cmd.c_str());
 
                 if ( !rootUser )
@@ -6302,7 +6302,7 @@ int ProcessMonitor::checkDataMount()
             {
                 // not mounted, mount
                 string mountLog = tmpLogDir + "/mount.log";
-                cmd = SUDO + "export LC_ALL=C;mount " + dbroot + " > " + mountLog + " 2>&1";
+                cmd = "export LC_ALL=C;" + SUDO + "mount " + dbroot + " > " + mountLog + " 2>&1";
                 system(cmd.c_str());
 
                 ifstream in(mountLog.c_str());
