@@ -5156,7 +5156,7 @@ int ProcessMonitor::changeMyCnf(std::string type)
 
     system(cmd.c_str());
 
-    cmd = "chown mysql:mysql " + mycnfFile + " >/dev/null 2>&1";
+    cmd = "chown " + USER + ":" + USER + " " + mycnfFile + " >/dev/null 2>&1";
 
     system(cmd.c_str());
 
@@ -5917,7 +5917,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
             system(cmd.c_str());
             log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
-            cmd = SUDO + "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+            cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/mysql/db";
             system(cmd.c_str());
 
             log.writeLog(__LINE__, "amazonVolumeCheck function successfully completed, volume attached: " + volumeName, LOG_TYPE_DEBUG);
@@ -5950,7 +5950,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
                 system(cmd.c_str());
                 log.writeLog(__LINE__, "mount cmd: " + cmd, LOG_TYPE_DEBUG);
 
-                cmd = SUDO + "chown mysql:mysql -R " + startup::StartUp::installDir() + "/mysql/db";
+                cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/mysql/db";
                 system(cmd.c_str());
 
                 return true;
@@ -6024,7 +6024,7 @@ bool ProcessMonitor::amazonVolumeCheck(int dbrootID)
                 system(cmd.c_str());
 				log.writeLog(__LINE__, "amazonVolumeCheck function , volume to mounted: " + volumeName, LOG_TYPE_DEBUG);
 
-                cmd = SUDO + "chown mysql:mysql -R " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID);
+                cmd = SUDO + "chown -R " + USER + ":" + USER + " " + startup::StartUp::installDir() + "/data" + oam.itoa(dbrootID);
                 system(cmd.c_str());
 
                 return true;
