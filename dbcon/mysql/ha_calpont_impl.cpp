@@ -2096,6 +2096,58 @@ extern "C"
     {
     }
 
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+// Return non-zero if this is the primary UM; 0 if not primary
+    long long mcssystemprimary(UDF_INIT* initid, UDF_ARGS* args,
+                                char* is_null, char* error)
+    {
+        long long rtn = 0;
+        Oam oam;
+        string PrimaryUMModuleName;
+        string localModule;
+        oamModuleInfo_t st;
+
+        try
+        {
+            st = oam.getModuleInfo();
+            localModule = boost::get<0>(st);
+            PrimaryUMModuleName = config::Config::makeConfig()->getConfig("SystemConfig", "PrimaryUMModuleName");
+
+            if (boost::iequals(localModule, PrimaryUMModuleName))
+                rtn = 1;
+            if (PrimaryUMModuleName == "unassigned")
+                rtn = 1;
+        }
+        catch (runtime_error& e)
+        {
+            // It's difficult to return an error message from a numerical UDF
+            //string msg = string("ERROR: Problem getting Primary UM Module Name. ") + e.what();
+            *error = 1;
+        }
+        catch (...)
+        {
+            *error = 1;
+        }
+        return rtn;
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    my_bool mcssystemprimary_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+        return 0;
+    }
+
+#ifdef _MSC_VER
+    __declspec(dllexport)
+#endif
+    void mcssystemprimary_deinit(UDF_INIT* initid)
+    {
+    }
+
 #define MAXSTRINGLENGTH 50
 
     const char* PmSmallSideMaxMemory = "pmmaxmemorysmallside";
