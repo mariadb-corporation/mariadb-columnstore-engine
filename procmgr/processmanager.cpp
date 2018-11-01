@@ -5131,8 +5131,7 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                     string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > " + loginTmp;
                     int rtnCode = system(cmd.c_str());
 
-                    if (WEXITSTATUS(rtnCode) != 0)
-                    {
+					if (!oam.checkLogStatus("/tmp/login_test.log", "README")) {
                         //check for RSA KEY ISSUE and fix
                         if (oam.checkLogStatus(loginTmp, "Host key verification failed"))
                         {
@@ -5141,10 +5140,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                             system(cmd.c_str());
                         }
 
-                        log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
-                        sleep(10);
-                        continue;
-                    }
+						log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
+						sleep(10);
+						continue;
+					}
 
                     // logged in
                     break;
