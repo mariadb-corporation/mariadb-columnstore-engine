@@ -98,6 +98,14 @@ if [ $module = "um" ]; then
 			fi
 		fi
 	fi
+	
+	#setup rc.local
+    RCFILE=/etc/rc.d/rc.local
+
+	if [ $user != "root" ]; then
+		  echo "uncomment runuser in rc.local, amazon AMI"
+		  sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
+	fi
 fi
 
 #if pm, create dbroot directories
@@ -166,19 +174,6 @@ if [ $user == "root" ]; then
 		    exit 2
 	    fi
     fi
-fi
-
-#setup rc.local
-if [ -f /etc/rc.d ]; then
-    RCFILE=/etc/rc.d/rc.local
-else
-    RCFILE=/etc/rc.local
-fi
-touch $RCFILE
-
-if [ $user != "root" ]; then
-      echo "uncomment runuser in rc.local, amazon AMI"
-      sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
 fi
 
 echo "!!!Module Installation Successfully Completed!!!"

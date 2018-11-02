@@ -493,7 +493,7 @@ public:
     /**
      *@brief run upgrade script
      */
-//	int runUpgrade(std::string mysqlpw);
+	int runUpgrade(std::string mysqlpw);
 
     /**
      *@brief change my.cnf

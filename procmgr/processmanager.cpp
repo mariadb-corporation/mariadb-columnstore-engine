@@ -5107,10 +5107,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
                 }
 
                 //wait until login is success until continuing or fail if can't login
-                log.writeLog(__LINE__, "addModule - Successfully Launch of new Instance, retry login test: " + moduleName, LOG_TYPE_DEBUG);
+                log.writeLog(__LINE__, "addModule - Successfully Launch of new Instance, perform login test: " + moduleName, LOG_TYPE_DEBUG);
                 int retry = 0;
 
-                for (  ; retry < 18 ; retry++)
+                for (  ; retry < 30 ; retry++)
                 {
                     IPAddr = oam.getEC2InstanceIpAddress(hostName);
 
@@ -5123,18 +5123,13 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
 
                     if (IPAddr == "stopped")
                     {
-                        sleep(10);
+                        sleep(5);
                         continue;
                     }
 
 					string loginTmp = tmpLogDir + "/login_test.log";
                     string cmd = installDir + "/bin/remote_command.sh " + IPAddr + " " + password + " 'ls' 1  > " + loginTmp;
                     int rtnCode = system(cmd.c_str());
-
-log.writeLog(__LINE__, "loginTmp " + loginTmp, LOG_TYPE_DEBUG);
-log.writeLog(__LINE__, "cmd " + cmd, LOG_TYPE_DEBUG);
-log.writeLog(__LINE__, "rtnCode " + oam.itoa(rtnCode), LOG_TYPE_DEBUG);
-
 
 					if (!oam.checkLogStatus(loginTmp, "README")) {
                         //check for RSA KEY ISSUE and fix
@@ -5146,7 +5141,7 @@ log.writeLog(__LINE__, "rtnCode " + oam.itoa(rtnCode), LOG_TYPE_DEBUG);
                         }
 
 						log.writeLog(__LINE__, "addModule - login failed, retry login test: " + moduleName, LOG_TYPE_DEBUG);
-						sleep(10);
+						sleep(5);
 						continue;
 					}
 
@@ -5154,7 +5149,7 @@ log.writeLog(__LINE__, "rtnCode " + oam.itoa(rtnCode), LOG_TYPE_DEBUG);
                     break;
                 }
 
-                if ( retry >= 18 )
+                if ( retry >= 30 )
                 {
                     log.writeLog(__LINE__, "addModule - Failed to log in to Instance: " + hostName, LOG_TYPE_ERROR);
                     pthread_mutex_unlock(&THREAD_LOCK);
@@ -5544,19 +5539,6 @@ log.writeLog(__LINE__, "rtnCode " + oam.itoa(rtnCode), LOG_TYPE_DEBUG);
                 //setup Standby OAM Parent, if needed
                 if ( config.OAMStandbyName() == oam::UnassignedName )
                     setStandbyModule(remoteModuleName, false);
-            }
-
-            //set root password
-            if (amazon)
-            {
-                cmd = startup::StartUp::installDir() + "/bin/remote_command.sh " + remoteModuleIP + " " + password + " '/root/.scripts/updatePassword.sh " + password + "' > " + tmpLogDir + "/password_change.log";
-                log.writeLog(__LINE__, "addModule - cmd: " + cmd, LOG_TYPE_DEBUG);
-                int rtnCode = system(cmd.c_str());
-
-                if (WEXITSTATUS(rtnCode) == 0)
-                    log.writeLog(__LINE__, "addModule - update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
-                else
-                    log.writeLog(__LINE__, "addModule - ERROR: update root password: " + remoteModuleName, LOG_TYPE_DEBUG);
             }
 
             //default

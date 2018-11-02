@@ -1710,27 +1710,26 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             break;
         }
 
+		case RUNUPGRADE:
+		{
+			log.writeLog(__LINE__,  "MSG RECEIVED: Run upgrade script ");
 
-        /*		case RUNUPGRADE:
-        		{
-        			log.writeLog(__LINE__,  "MSG RECEIVED: Run upgrade script ");
+			string mysqlpw;
+			msg >> mysqlpw;
 
-        			string mysqlpw;
-        			msg >> mysqlpw;
+			// run upgrade script
+			int ret = runUpgrade(mysqlpw);
 
-        			// run upgrade script
-        			int ret = runUpgrade(mysqlpw);
+			ackMsg << (ByteStream::byte) ACK;
+			ackMsg << (ByteStream::byte) RUNUPGRADE;
+			ackMsg << (ByteStream::byte) ret;
+			mq.write(ackMsg);
 
-        			ackMsg << (ByteStream::byte) ACK;
-        			ackMsg << (ByteStream::byte) RUNUPGRADE;
-        			ackMsg << (ByteStream::byte) ret;
-        			mq.write(ackMsg);
+			log.writeLog(__LINE__, "RUNUPGRADE: ACK back to ProcMgr return status = " + oam.itoa((int) ret));
 
-        			log.writeLog(__LINE__, "RUNUPGRADE: ACK back to ProcMgr return status = " + oam.itoa((int) ret));
-
-        			break;
-        		}
-        */
+			break;
+		}
+        
         case PROCUNMOUNT:
         {
             string dbrootID;
@@ -6578,6 +6577,47 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
     return oam::API_SUCCESS;
 }
 
+/******************************************************************************************
+* @brief	runUpgrade
+*
+* purpose:	run upgrade script
+*
+******************************************************************************************/
+int ProcessMonitor::runUpgrade(std::string mysqlpw)
+{
+	Oam oam;
+
+	string tmpLog = tmpLogDir + "/mysql_upgrade.log";
+
+	for ( int i = 0 ; i < 10 ; i++ )
+	{
+		//run upgrade script
+		string cmd = startup::StartUp::installDir() + "/mysql/bin/mysql_upgrade --defaults-file=" + startup::StartUp::installDir() + "/mysql/my.cnf --password=" +
+			mysqlpw + " > " + tmpLog + " 2>&1";
+		int retCode = system(cmd.c_str());
+
+		if ( retCode == 0 ) {
+			log.writeLog(__LINE__, "mysql_upgrade.sh: Successful return", LOG_TYPE_DEBUG);
+			return oam::API_SUCCESS;
+		}
+		else {
+			if (oam.checkLogStatus(cmd, "ERROR 1045") ) {
+				log.writeLog(__LINE__, "mysql_upgrade.sh: Missing Password error, return success", LOG_TYPE_DEBUG);
+				return oam::API_SUCCESS;
+			}
+
+			log.writeLog(__LINE__, "mysql_upgrade.sh: Error return, check log " + tmpLog, LOG_TYPE_ERROR);
+			//restart mysqld and retry
+			try {
+				oam.actionMysqlCalpont(MYSQL_RESTART);
+			}
+			catch(...)
+			{}
+			sleep(1);
+		}
+	}
+	return oam::API_FAILURE;
+}
 
 
 } //end of namespace
