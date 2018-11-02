@@ -6598,8 +6598,8 @@ int ProcessMonitor::runUpgrade(std::string mysqlpw)
 		//run upgrade script
 		string cmd = startup::StartUp::installDir() + "/mysql/bin/mysql_upgrade --defaults-file=" + startup::StartUp::installDir() + "/mysql/my.cnf " +
 			passwordOption + " > " + tmpLog + " 2>&1";
-		int retCode = system(cmd.c_str());
 
+		int retCode = system(cmd.c_str());
 		if ( retCode == 0 ) {
 			log.writeLog(__LINE__, "mysql_upgrade.sh: Successful return", LOG_TYPE_DEBUG);
 			return oam::API_SUCCESS;
