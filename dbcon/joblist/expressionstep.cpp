@@ -286,6 +286,7 @@ void ExpressionStep::addColumn(ReturnedColumn* rc, JobInfo& jobInfo)
         scs = &(fc->simpleColumnList());
         wcs = &(fc->windowfunctionColumnList());
         fVarBinOK = ((strcmp(fc->functionName().c_str(), "hex") == 0) ||
+                     (strcmp(fc->functionName().c_str(), "octet_length") == 0) ||
                      (strcmp(fc->functionName().c_str(), "length") == 0));
     }
 
