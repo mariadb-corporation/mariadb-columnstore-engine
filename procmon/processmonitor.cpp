@@ -6589,11 +6589,15 @@ int ProcessMonitor::runUpgrade(std::string mysqlpw)
 
 	string tmpLog = tmpLogDir + "/mysql_upgrade.log";
 
+	string passwordOption = " --password=" + mysqlpw;
+	if ( mysqlpw == oam::UnassignedName )
+		passwordOption = "";
+
 	for ( int i = 0 ; i < 10 ; i++ )
 	{
 		//run upgrade script
-		string cmd = startup::StartUp::installDir() + "/mysql/bin/mysql_upgrade --defaults-file=" + startup::StartUp::installDir() + "/mysql/my.cnf --password=" +
-			mysqlpw + " > " + tmpLog + " 2>&1";
+		string cmd = startup::StartUp::installDir() + "/mysql/bin/mysql_upgrade --defaults-file=" + startup::StartUp::installDir() + "/mysql/my.cnf " +
+			passwordOption + " > " + tmpLog + " 2>&1";
 		int retCode = system(cmd.c_str());
 
 		if ( retCode == 0 ) {
