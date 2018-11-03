@@ -4929,7 +4929,6 @@ void gp_walk(const Item* item, void* arg)
 
             if (isp)
             {
-                // @bug 3669. trim trailing spaces for the compare value
                 if (isp->result_type() == STRING_RESULT)
                 {
                     String val, *str = isp->val_str(&val);
@@ -4939,11 +4938,6 @@ void gp_walk(const Item* item, void* arg)
                     {
                         cval.assign(str->ptr(), str->length());
                     }
-
-                    size_t spos = cval.find_last_not_of(" ");
-
-                    if (spos != string::npos)
-                        cval = cval.substr(0, spos + 1);
 
                     gwip->rcWorkStack.push(new ConstantColumn(cval));
                     break;
