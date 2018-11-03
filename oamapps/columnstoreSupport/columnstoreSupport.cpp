@@ -58,6 +58,7 @@ string rootPassword = "";
 string debug_flag = "0";
 string mysqlpw = " ";
 string tmpDir;
+string ProfileFile;
 
 int runningThreads = 0;
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
@@ -130,9 +131,10 @@ void childReportThread(threadInfo_t& st)
 
     cout.flush();
 
-    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + rootPassword + " '" +
+    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + rootPassword + " '. " + ProfileFile + ";" +
                  installDir + "/bin/" + reportType + "Report.sh " + remoteModuleName + " " + installDir +
                  "' " + debug_flag + " - forcetty";
+
     int rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)
@@ -667,6 +669,17 @@ int main(int argc, char* argv[])
     catch (...)
     {
         cout << "ERROR: Problem reading the Columnstore System Configuration file" << endl;
+        exit(-1);
+    }
+    
+    //Get Profile file 
+    try
+    {
+        ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
+    }
+    catch (...)
+    {
+        cout << "ERROR: Problem getting ProfileFile" << endl;
         exit(-1);
     }
 
