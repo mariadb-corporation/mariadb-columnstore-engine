@@ -200,7 +200,6 @@ string tmpDir;
 string HOME = "/root";
 string SUDO = "";
 extern string pwprompt;
-string mysqlpw = oam::UnassignedName;
 
 extern const char* pcommand;
 extern string prompt;

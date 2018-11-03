@@ -1502,6 +1502,15 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                     cmd = "touch " + startup::StartUp::installDir() + "/local/moveDbrootTransactionLog";
                     system(cmd.c_str());
 
+					//clear shared memory
+					cmd = startup::StartUp::installDir() + "/bin/clearShm > /dev/null 2>&1";
+					int rtnCode = system(cmd.c_str());
+
+					if (WEXITSTATUS(rtnCode) != 1)
+						log.writeLog(__LINE__, "Successfully ran DBRM clearShm", LOG_TYPE_DEBUG);
+					else
+						log.writeLog(__LINE__, "Error running DBRM clearShm", LOG_TYPE_ERROR);
+						
                     // now do local module
                     processManager.shutdownModule(config.moduleName(), graceful, manualFlag);
 

@@ -9396,9 +9396,6 @@ int Oam::checkGlusterLog(std::string logFile, std::string& msg)
 ******************************************************************************************/
 std::string Oam::getMySQLPassword()
 {
-
-    return oam::UnassignedName;
-
     string mysqlUser = "root";
 
     string USER = "root";
@@ -9422,7 +9419,7 @@ std::string Oam::getMySQLPassword()
     if (!file)
     {
         writeLog("getMySQLPassword: doesn't exist: " + fileName, LOG_TYPE_DEBUG);
-        exceptionControl("getMySQLPassword", API_FILE_OPEN_ERROR);
+		return oam::UnassignedName;
     }
 
     char line[400];

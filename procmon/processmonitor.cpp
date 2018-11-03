@@ -1714,11 +1714,8 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 		{
 			log.writeLog(__LINE__,  "MSG RECEIVED: Run upgrade script ");
 
-			string mysqlpw;
-			msg >> mysqlpw;
-
 			// run upgrade script
-			int ret = runUpgrade(mysqlpw);
+			int ret = runUpgrade();
 
 			ackMsg << (ByteStream::byte) ACK;
 			ackMsg << (ByteStream::byte) RUNUPGRADE;
@@ -6583,15 +6580,17 @@ int ProcessMonitor::glusterUnassign(std::string dbrootID)
 * purpose:	run upgrade script
 *
 ******************************************************************************************/
-int ProcessMonitor::runUpgrade(std::string mysqlpw)
+int ProcessMonitor::runUpgrade()
 {
 	Oam oam;
 
 	string tmpLog = tmpLogDir + "/mysql_upgrade.log";
 
-	string passwordOption = " --password=" + mysqlpw;
-	if ( mysqlpw == oam::UnassignedName )
-		passwordOption = "";
+	string mysqlpw = oam.getMySQLPassword();
+
+	string passwordOption = passwordOption = "";
+	if ( mysqlpw != oam::UnassignedName )
+		passwordOption = " --password=" + mysqlpw;
 
 	for ( int i = 0 ; i < 10 ; i++ )
 	{

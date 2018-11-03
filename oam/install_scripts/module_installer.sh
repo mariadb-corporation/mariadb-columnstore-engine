@@ -84,8 +84,8 @@ test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/po
 mid=`module_id`
 
 #if um, cloud, separate system type, external um storage, then setup mount
-if [ $module = "um" ]; then
-	if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+if [ $cloud = "amazon-ec2" ] || [ $cloud = "amazon-vpc" ]; then
+	if [ $module = "um" ]; then
 		systemtype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation ServerTypeInstall`
 		if [ $systemtype = "1" ]; then
 			umstoragetype=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation UMStorageType`
@@ -97,14 +97,14 @@ if [ $module = "um" ]; then
 				sudo chown $user:$user -R $COLUMNSTORE_INSTALL_DIR/mysql > /dev/null 2>&1
 			fi
 		fi
-		
-		#setup rc.local
-		RCFILE=/etc/rc.d/rc.local
+	fi
 
-		if [ $user != "root" ]; then
-			  echo "uncomment runuser in rc.local, amazon AMI"
-			  sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
-		fi
+	#setup rc.local for amazon
+	RCFILE=/etc/rc.d/rc.local
+
+	if [ $user != "root" ]; then
+		  echo "uncomment runuser in rc.local, amazon AMI"
+		  sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1
 	fi
 fi
 

@@ -307,6 +307,19 @@ void reportThread(string reporttype)
 
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
+            cmd = "echo '******************** System Directories  ********************' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = "echo ' ' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = "echo '################# mcsadmin getSystemDirectories ################# ' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = "echo ' ' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = installDir + "/bin/mcsadmin getSystemDirectories >> " + outputFile;
+            system(cmd.c_str());
+
+            cmd = "echo ' ' >> " + outputFile;
+            system(cmd.c_str());
             cmd = "echo '******************** System Configuration File  ********************' >> " + outputFile;
             system(cmd.c_str());
             cmd = "echo ' ' >> " + outputFile;

@@ -39,7 +39,6 @@ using namespace installer;
 
 #include "installdir.h"
 
-extern string mysqlpw;
 string pwprompt = " ";
 
 string masterLogFile = oam::UnassignedName;
@@ -347,7 +346,6 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
     ByteStream::byte requestID = RUNUPGRADE;
 
     msg << requestID;
-    msg << mysqlpw;
 
     int returnStatus = oam::API_SUCCESS;
 
@@ -385,7 +383,7 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
                         {
 							string tmpDir = startup::StartUp::tmpDir();
 
-                            cout << "ERROR: Error return in running the MariDB Columnstore Upgrade, check " + tmpDir + "/upgrade*.logs on " << (*pt).DeviceName << endl;
+                            cout << "ERROR: Error return in running the MariDB Columnstore Upgrade, check " + tmpDir + "/mysql_upgrade.log on " << (*pt).DeviceName << endl;
                             return returnStatus;
                         }
                     }
