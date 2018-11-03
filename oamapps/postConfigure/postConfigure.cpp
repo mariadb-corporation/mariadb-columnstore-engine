@@ -4055,7 +4055,7 @@ int main(int argc, char* argv[])
         {
             if ( oam.checkLogStatus(dbbuilderLog, "System catalog appears to exist") )
             {
-				cout << endl << "Run MariaDB Upgrade.. ";
+				cout << endl << "Run MariaDB Server Upgrade.. ";
 				cout.flush();
 
 				//send message to procmon's to run upgrade script

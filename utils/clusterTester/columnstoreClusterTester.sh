@@ -267,31 +267,17 @@ checkLocalDir()
       # Non-root User directory permissions check
       #
       echo ""
-      echo "** Run Non-root User directory permissions check on Local Node"
+      echo "** Run Non-root User directory permissions check on Local Node (dev/shm)"
       echo ""
       
-      #remove any check tmp files from previous runs
-      `rm -f ${tmpDir}/*_check > /dev/null 2>&1`
-      
-      #check ${tmpDir} and /dev/shm
-      pass=true
-      `touch ${tmpDir}/cs_check > /dev/null 2>&1`
-      if [ "$?" -eq 0 ]; then
-	echo "Local Node permission test on ${tmpDir} : Passed"
-	`rm -f ${tmpDir}/cs_check`
-      else
-	echo "Local Node permission test on ${tmpDir} : ${bold}Failed${normal}, change permissions to 777 and re-test"
-	exit 1
-      fi
-
       `touch /dev/shm/cs_check > /dev/null 2>&1`
       if [ "$?" -eq 0 ]; then
-	echo "Local Node permission test on /dev/shm : Passed"
-	`rm -f /dev/shm/cs_check`
+		echo "Local Node permission test on /dev/shm : Passed"
+		`rm -f /dev/shm/cs_check`
       else
-	echo "Local Node permission test on /dev/shm : ${bold}Failed${normal}, change permissions to 777 and re-test"
-	pass=false
-	REPORTPASS=false
+		echo "Local Node permission test on /dev/shm : ${bold}Failed${normal}, change permissions to 777 and re-test"
+		pass=false
+		REPORTPASS=false
       fi
     fi
 }
@@ -348,38 +334,13 @@ checkSSH()
 
 checkRemoteDir()
 {
-  #
-  # remove old _check tmp files from remote servers
-  
-  `rm -f ${tmpDir}/*_check > /dev/null 2>&1`
-  
-  for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'rm -f ${tmpDir}/*_check > /dev/null 2>&1' 1 > ${tmpDir}/remote_command_check 2>&1`
-  done
 
   if [ "$USER" != "root" ]; then
     # Non-root User directory permissions check
     #
     echo ""
-    echo "** Run Non-root User directory permissions check on remote nodes"
+    echo "** Run Non-root User directory permissions check on remote nodes (/dev/shm)"
     echo ""
-
-    for ipadd in "${NODE_IPADDRESS[@]}"; do
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'touch ${tmpDir}/cs_check' 1 > ${tmpDir}/remote_command_check 2>&1`
-      rc="$?"
-      if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-	`grep "Permission denied" ${tmpDir}/remote_command_check  > /dev/null 2>&1`
-	if [ "$?" -eq 0 ]; then
-	  echo "$ipadd Node permission test on ${tmpDir} : ${bold}Failed${normal}, change permissions to 777 and re-test"
-	  exit 1
-	else
-	  echo "$ipadd Node permission test on ${tmpDir} : Passed"
-	fi
-      else
-	  echo "Error running remote_command.sh to $ipadd Node, check ${tmpDir}/remote_command_check"
-	  pass=false
-	  REPORTPASS=false
-      fi
 
       `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'touch /dev/shm/cs_check' 1 > ${tmpDir}/remote_command_check 2>&1`
       rc="$?"
@@ -464,10 +425,10 @@ checkLocale()
   
   pass=true
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'locale | grep LANG= > ${tmpDir}/locale_check 2>&1' 1 > ${tmpDir}/remote_command_check`
+    `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'locale | grep LANG= > locale_check 2>&1' 1 > ${tmpDir}/remote_command_check`
     rc="$?"
      if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/locale_check > ${tmpDir}/remote_scp_get_check 2>&1`
+      `$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD locale_check > ${tmpDir}/remote_scp_get_check 2>&1`
       if [ "$?" -ne 0 ]; then
 	echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
 	exit 1
@@ -758,14 +719,14 @@ checkTime()
   #get local epoch time
   localTime=`date +%s`
   for ipadd in "${NODE_IPADDRESS[@]}"; do
-     `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'date +%s > ${tmpDir}/time_check' > ${tmpDir}/time_check`
+     `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'date +%s > time_check' > ${tmpDir}/time_check`
       rc="$?"
       if  [ $rc -ne 0 ] ; then
 	  echo $ipadd " Node ${bold}Failed${normal} date/time check failed, check ${tmpDir}/time_check"
 	  pass=false
 	  REPORTPASS=false
       else
-	`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD ${tmpDir}/time_check > ${tmpDir}/remote_scp_get_check 2>&1`
+	`$COLUMNSTORE_INSTALL_DIR/bin/remote_scp_get.sh $ipadd $PASSWORD time_check > ${tmpDir}/remote_scp_get_check 2>&1`
 	if [ "$?" -ne 0 ]; then
 	  echo "Error running remote_scp_get.sh to $ipadd Node, check ${tmpDir}/remote_scp_get_check"
 	else
