@@ -26,10 +26,10 @@ ENDIF()
 SET(CPACK_DEBIAN_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
 SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_DEBIAN_PACKAGE_VERSION}-${CPACK_DEBIAN_PACKAGE_RELEASE}-${ENGINE_ARCH}")
 
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB Columnstore: a very fast and robust SQL database server")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 SET(CPACK_PACKAGE_URL "http://mariadb.org")
 SET(CPACK_PACKAGE_CONTACT "MariaDB Corporation Ab")
-SET(CPACK_PACKAGE_SUMMARY "MariaDB-Columnstore software")
+SET(CPACK_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 SET(CPACK_PACKAGE_VENDOR "MariaDB Corporation Ab")
 SET(CPACK_PACKAGE_LICENSE "Copyright (c) 2016 MariaDB Corporation Ab., all rights reserved; redistributable under the terms of the GPL, see the file COPYING for details.")
 
@@ -45,13 +45,13 @@ SET(CPACK_DEBIAN_PACKAGE_LICENSE ${CPACK_PACKAGE_LICENSE})
 SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION ${CPACK_PACKAGE_DESCRIPTION_SUMMARY})
 
 SET(CPACK_DEBIAN_PLATFORM_PACKAGE_DESCRIPTION "MariaDB-Columnstore binary files")
-SET(CPACK_DEBIAN_PLATFORM_PACKAGE_SUMMARY "MariaDB-Columnstore software binaries")
+SET(CPACK_DEBIAN_PLATFORM_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 
 SET(CPACK_DEBIAN_LIBS_PACKAGE_DESCRIPTION "MariaDB-Columnstore libraries")
-SET(CPACK_DEBIAN_LIBS_PACKAGE_SUMMARY "MariaDB-Columnstore software libraries")
+SET(CPACK_DEBIAN_LIBS_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 
 SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_DESCRIPTION "MariaDB Columnstore connector binary files")
-SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_SUMMARY "MariaDB-Columnstore software MariaDB connector")
+SET(CPACK_DEBIAN_STORAGE-ENGINE_PACKAGE_SUMMARY "MariaDB ColumnStore: A Scale out Columnar storage engine for MariaDB")
 
 
 SET(CPACK_DEBIAN_LIBS_PACKAGE_PROVIDES "mariadb-columnstore-libs")
