@@ -146,7 +146,8 @@ else
 cat <<EOD
 
 NOTE: For non-root install, you will need to run the following commands as root user to
-      uninstall the MariaDB ColumnStore System Logging
+      uninstall the MariaDB ColumnStore System Logging. This can be skipped if
+      running this script as part of an upgrade
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
