@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.querystats
   query varchar(8000),
   startTime timestamp NOT NULL,
   endTime timestamp NOT NULL,
-  `rows` bigint,
+  \`rows\` bigint,
   errno int,
   phyIO bigint,
   cacheIO bigint,
