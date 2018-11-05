@@ -129,6 +129,7 @@ stop() {
 	touch ${tmpDir}/StopColumnstore
 	pkill ProcMon
 	pkill ProcMgr
+	$InstallDir/bin/clearShm
 	RETVAL=$?
 	rm -f $lockdir/columnstore
 	fuser -k 8604/tcp > /dev/null 2>&1
