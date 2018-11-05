@@ -30,6 +30,9 @@
 #include <cmath>
 #include <ctype.h>
 #include <cfloat>
+
+#include <boost/algorithm/string/predicate.hpp>
+
 #include "we_bulkload.h"
 #include "we_bulkloadbuffer.h"
 #include "we_brm.h"
@@ -366,11 +369,19 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 else
                 {
                     errno = 0;
+
+                    if (iequals(field, "true"))
+                    {
+                        fVal = 1;
+                    }
+                    else
+                    {
 #ifdef _MSC_VER
-                    fVal = (float)strtod( field, 0 );
+                        fVal = (float)strtod( field, 0 );
 #else
-                    fVal = strtof( field, 0 );
+                        fVal = strtof( field, 0 );
 #endif
+                    }
 
                     if (errno == ERANGE)
                     {
@@ -462,7 +473,15 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 else
                 {
                     errno = 0;
-                    dVal = strtod(field, 0);
+
+                    if (iequals(field, "true"))
+                    {
+                        dVal = 1;
+                    }
+                    else
+                    {
+                        dVal = strtod(field, 0);
+                    }
 
                     if (errno == ERANGE)
                     {
@@ -610,6 +629,12 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 }
                 else
                 {
+                    if (iequals(field, "true"))
+                    {
+                        strcpy(field, "1");
+                        fieldLength = 1;
+                    }
+
                     if ( (column.dataType == CalpontSystemCatalog::DECIMAL ) ||
                             (column.dataType == CalpontSystemCatalog::UDECIMAL) )
                     {
@@ -696,7 +721,15 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 else
                 {
                     errno   = 0;
-                    origVal = strtoll(field, 0, 10);
+
+                    if (iequals(field, "true"))
+                    {
+                        origVal = 1;
+                    }
+                    else
+                    {
+                        origVal = strtoll(field, 0, 10);
+                    }
 
                     if (errno == ERANGE)
                         bSatVal = true;
@@ -772,6 +805,12 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 }
                 else
                 {
+                    if (iequals(field, "true"))
+                    {
+                        strcpy(field, "1");
+                        fieldLength = 1;
+                    }
+
                     if ( (column.dataType == CalpontSystemCatalog::DECIMAL ) ||
                             (column.dataType == CalpontSystemCatalog::UDECIMAL))
                     {
@@ -858,7 +897,15 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 else
                 {
                     errno   = 0;
-                    origVal = strtoll(field, 0, 10);
+
+                    if (iequals(field, "true"))
+                    {
+                        origVal = 1;
+                    }
+                    else
+                    {
+                        origVal = strtoll(field, 0, 10);
+                    }
 
                     if (errno == ERANGE)
                         bSatVal = true;
@@ -934,6 +981,12 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                     }
                     else
                     {
+                        if (iequals(field, "true"))
+                        {
+                            strcpy(field, "1");
+                            fieldLength = 1;
+                        }
+
                         if ( (column.dataType == CalpontSystemCatalog::DECIMAL) ||
                                 (column.dataType == CalpontSystemCatalog::UDECIMAL))
                         {
@@ -1145,7 +1198,15 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                     else
                     {
                         errno = 0;
-                        ullVal = strtoull(field, 0, 10);
+
+                        if (iequals(field, "true"))
+                        {
+                            ullVal = 1;
+                        }
+                        else
+                        {
+                            ullVal = strtoull(field, 0, 10);
+                        }
 
                         if (errno == ERANGE)
                             bSatVal = true;
@@ -1214,7 +1275,15 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                 else
                 {
                     errno   = 0;
-                    origVal = strtoll(field, 0, 10);
+
+                    if (iequals(field, "true"))
+                    {
+                        origVal = 1;
+                    }
+                    else
+                    {
+                        origVal = strtoll(field, 0, 10);
+                    }
 
                     if (errno == ERANGE)
                         bSatVal = true;
@@ -1292,6 +1361,12 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
                     }
                     else
                     {
+                        if (iequals(field, "true"))
+                        {
+                            strcpy(field, "1");
+                            fieldLength = 1;
+                        }
+
                         if ( (column.dataType == CalpontSystemCatalog::DECIMAL) ||
                                 (column.dataType == CalpontSystemCatalog::UDECIMAL))
                         {
