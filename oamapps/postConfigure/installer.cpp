@@ -896,7 +896,7 @@ int main(int argc, char* argv[])
         {
             if ( oam.checkLogStatus(logFile, "System catalog appears to exist") )
             {
-				cout << endl << "Run MariaDB Server Upgrade.. ";
+/*				cout << endl << "Run MariaDB Server Upgrade.. ";
 				cout.flush();
 
 				//send message to procmon's to run upgrade script
@@ -908,6 +908,8 @@ int main(int argc, char* argv[])
 				}
 				else
 					cout << " DONE" << endl;
+*/
+				cout.flush();
             }
             else
             {
