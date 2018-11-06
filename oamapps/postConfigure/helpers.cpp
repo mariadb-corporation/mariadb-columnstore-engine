@@ -260,7 +260,7 @@ void mysqlSetup()
 	if ( mysqlpw != oam::UnassignedName )
 		passwordOption = " --password=" + mysqlpw;
 
-    cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " " + passwordOption + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
+    cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " " + passwordOption + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
     int rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)

@@ -160,7 +160,7 @@ if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $Ser
 	fi
 
 	echo "Run post-mysqld-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR $mysqlPassword > ${tmpDir}/post-mysqld-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR $mysqlPassword --tmpdir=${tmpDir} > ${tmpDir}/post-mysqld-install.log 2>&1
 	if [ $? -ne 0 ]; then
 	    echo "ERROR: post-mysqld-install failed: check ${tmpDir}/post-mysqld-install.log"
 	    exit 1

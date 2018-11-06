@@ -8,6 +8,7 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 user=mysql
+tmpdir="/tmp"
 
 password=" "
 pwprompt=
@@ -30,6 +31,8 @@ for arg in "$@"; do
 		user="`echo $arg | awk -F= '{print $2}'`"
 	elif [ $(expr -- "$arg" : '--password=') -eq 11 ]; then
 		password="$(echo $arg | awk -F= '{print $2}')"
+	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
+		tmpdir="$(echo $arg | awk -F= '{print $2}')"
 	else
 		echo "post-mysqld-install: ignoring unknown argument: $arg" 1>&2
 	fi
