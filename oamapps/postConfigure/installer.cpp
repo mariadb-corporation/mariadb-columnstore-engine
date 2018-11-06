@@ -894,15 +894,31 @@ int main(int argc, char* argv[])
             cout << endl << "System Catalog Successfull Created" << endl;
         else
         {
-            if ( !oam.checkLogStatus(logFile, "System catalog appears to exist") )
+            if ( oam.checkLogStatus(logFile, "System catalog appears to exist") )
+            {
+				cout << endl << "Run MariaDB Server Upgrade.. ";
+				cout.flush();
+
+				//send message to procmon's to run upgrade script
+				int status = sendUpgradeRequest(IserverTypeInstall);
+	
+				if ( status != 0 ) {
+					cout << endl << "MariaDB Columnstore Install Failed" << endl << endl;
+					exit(1);
+				}
+				else
+					cout << " DONE" << endl;
+            }
+            else
             {
                 cout << endl << "System Catalog Create Failure" << endl;
                 cout << "Check latest log file in " << logFile << endl;
                 cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
+
                 exit (1);
             }
-        }
-
+		}
+		
         cout << endl << "MariaDB ColumnStore Install Successfully Completed, System is Active" << endl << endl;
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
