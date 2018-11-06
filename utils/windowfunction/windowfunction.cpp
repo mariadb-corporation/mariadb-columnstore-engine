@@ -188,7 +188,7 @@ void WindowFunction::operator()()
                     }
 
                     // If b > e then the frame is entirely outside of the partition
-                    // and there's no values to add
+                    // and there's no values to drop
                     if (b <= e)
                     {
                         // UDAnF functions may have a dropValue function implemented.
@@ -207,15 +207,15 @@ void WindowFunction::operator()()
                             }
                             else
                             {
-                                // dropValues failed so do the entire frame.
+                                // dropValues failed or doesn't exist
+                                // so do the entire frame.
                                 fFunctionType->resetData();
                             }
                         }
-
-                        fFunctionType->operator()(b, e, i); // Calls nextValue
                     }
-                    prevFrame = w;
+                    fFunctionType->operator()(b, e, i); // UDAnF: Calls nextValue and evaluate
                     firstTime = false;
+                    prevFrame = w;
                 }
             }
         }

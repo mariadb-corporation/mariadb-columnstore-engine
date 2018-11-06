@@ -481,6 +481,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
         }
     }
 
+    WindowFunctionType::resetData();
     return true;
 }
 
@@ -707,6 +708,12 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
     uint64_t colOut = fFieldIndex[0];
     bool isNull = false;
+
+    // Initialize result to NULL. If no values are found, NULL is the result.
+//    if (getContext().getRunFlag(mcsv1sdk::UDAF_DEFAULT_NULL))
+//    {
+//        getNullValueAny(fValOut, getContext().getResultType(), getContext().getColWidth());
+//    }
 
     if ((fFrameUnit == WF__FRAME_ROWS) ||
             (fPrev == -1) ||
