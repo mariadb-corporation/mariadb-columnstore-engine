@@ -282,8 +282,14 @@ void mysqlSetup()
         if (p && *p)
             HOME = p;
     }
+    
+    string mysqlpw = oam.getMySQLPassword();
 
-    cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysql-install.log";
+	string passwordOption = "";
+	if ( mysqlpw != oam::UnassignedName )
+		passwordOption = " --password=" + mysqlpw;
+
+    cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " --tmpdir=" + tmpDir + " " + passwordOption + " > " + tmpDir + "/post-mysql-install.log";
     rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) == 2)

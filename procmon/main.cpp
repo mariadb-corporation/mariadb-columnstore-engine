@@ -242,9 +242,16 @@ int main(int argc, char** argv)
         }
 
         string modType = config.moduleType();
+        
+        string mysqlpw = oam.getMySQLPassword();
+
+		string passwordOption = "";
+		if ( mysqlpw != oam::UnassignedName )
+			passwordOption = " --password=" + mysqlpw;
+
 
         //run the module install script
-        string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > " + tmpLogDir + "/module_installer.log 2>&1";
+        string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " " + passwordOption + " > " + tmpLogDir + "/module_installer.log 2>&1";
         log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
         log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 

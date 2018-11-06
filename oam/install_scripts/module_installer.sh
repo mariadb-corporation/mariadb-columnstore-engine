@@ -15,6 +15,7 @@ rpmmode=install
 user=`whoami 2>/dev/null`
 quiet=0
 shiftcnt=0
+password=" "
 
 for arg in "$@"; do
 	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
@@ -39,6 +40,9 @@ for arg in "$@"; do
 		((shiftcnt++))
 	elif [ $(expr -- "$arg" : '--module') -eq 8 ]; then
 		module="$(echo $arg | awk -F= '{print $2}')"
+		((shiftcnt++))
+	elif [ $(expr -- "$arg" : '--password') -eq 10 ]; then
+		password="$(echo $arg | awk -F= '{print $2}')"
 		((shiftcnt++))
 	fi
 done
@@ -155,9 +159,15 @@ if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $Ser
 	    echo "ERROR: post-mysqld-install failed: check ${tmpDir}/post-mysqld-install.log"
 	    exit 1
 	fi
+	
 	echo "Run post-mysql-install"
 	
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR  --tmpdir=${tmpDir} > ${tmpDir}/post-mysql-install.log 2>&1
+	mysqlPassword=" "
+	if [[ $password != " " ]]; then
+		mysqlPassword="--password="$password
+	fi
+
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR  $mysqlPassword --tmpdir=${tmpDir} > ${tmpDir}/post-mysql-install.log 2>&1
         if [ $? -ne 0 ]; then
             echo "ERROR: post-mysql-install failed: check ${tmpDir}/post-mysql-install.log"
             exit 1

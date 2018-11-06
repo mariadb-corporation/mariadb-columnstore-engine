@@ -6588,7 +6588,7 @@ int ProcessMonitor::runUpgrade()
 
 	string mysqlpw = oam.getMySQLPassword();
 
-	string passwordOption = passwordOption = "";
+	string passwordOption = "";
 	if ( mysqlpw != oam::UnassignedName )
 		passwordOption = " --password=" + mysqlpw;
 
