@@ -105,6 +105,10 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 			fi
 		fi
 	fi
+	
+	# stop
+	$installdir/mysql/mysql-Columnstore stop >/dev/null 2>&1
+	sleep 2
 fi
 
 ### Don't give the user the notes, we'll fix them ourselves...
