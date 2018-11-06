@@ -217,7 +217,7 @@ void dbrmDirCheck()
         cout << "If the files were copied from " << dbrmrootPrevDir << " to " << dbrmrootDir << endl;
         cout << "you will need to edit the file BRM_saves_current to contain the current path of" << endl;
         cout << dbrmrootDir << endl << endl;
-        cout << "Please reference the MariDB Columnstore Installation Guide on Upgrade Installs for" << endl;
+        cout << "Please reference the MariaDB Columnstore Installation Guide on Upgrade Installs for" << endl;
         cout << "addition information, if needed." << endl << endl;
 
         while (true)
@@ -383,7 +383,7 @@ int sendUpgradeRequest(int IserverTypeInstall, bool pmwithum)
                         {
 							string tmpDir = startup::StartUp::tmpDir();
 
-                            cout << "ERROR: Error return in running the MariDB Columnstore Upgrade, check " + tmpDir + "/mysql_upgrade.log on " << (*pt).DeviceName << endl;
+                            cout << "ERROR: Error return in running the MariaDB Columnstore Upgrade, check " + tmpDir + "/mysql_upgrade.log on " << (*pt).DeviceName << endl;
                             return returnStatus;
                         }
                     }
@@ -804,7 +804,7 @@ void checkMysqlPort( std::string& mysqlPort, Config* sysConfig )
 
                 if ( !writeConfig(sysConfig) )
                 {
-                    cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
+                    cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
                     exit(1);
                 }
 
@@ -949,7 +949,7 @@ void checkSystemMySQLPort(std::string& mysqlPort, Config* sysConfig, std::string
 
             if ( !writeConfig(sysConfig) )
             {
-                cout << "ERROR: Failed trying to update MariDB Columnstore System Configuration file" << endl;
+                cout << "ERROR: Failed trying to update MariaDB Columnstore System Configuration file" << endl;
                 exit(1);
             }
 
