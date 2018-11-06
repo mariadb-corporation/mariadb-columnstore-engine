@@ -194,23 +194,26 @@ void WindowFunction::operator()()
                     // Built-in functions may have this functionality added in the future.
                     // If b > e then the frame is entirely outside of the partition
                     // and there's no values to drop
-                    if (!firstTime && b <= e)
+                    if (b <= e)
                     {
-                        if (fFunctionType->dropValues(prevFrame.first, w.first))
+                        if (!firstTime)
                         {
-                            // Adjust the beginning of the frame for nextValue
-                            // to start where the previous frame left off.
-                            b = prevFrame.second + 1;
+                            if (fFunctionType->dropValues(prevFrame.first, w.first))
+                            {
+                                // Adjust the beginning of the frame for nextValue
+                                // to start where the previous frame left off.
+                                b = prevFrame.second + 1;
+                            }
+                            else
+                            {
+                                // dropValues failed or doesn't exist
+                                // so calculate the entire frame.
+                                fFunctionType->resetData();
+                            }
                         }
-                        else
-                        {
-                            // dropValues failed or doesn't exist
-                            // so calculate the entire frame.
-                            fFunctionType->resetData();
-                        }
+                        firstTime = false;
                     }
                     fFunctionType->operator()(b, e, i); // UDAnF: Calls nextValue and evaluate
-                    firstTime = false;
                     prevFrame = w;
                 }
             }
