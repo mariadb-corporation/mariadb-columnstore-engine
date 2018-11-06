@@ -187,30 +187,26 @@ void WindowFunction::operator()()
                         prevFrame = w;
                     }
 
+                    // UDAnF functions may have a dropValue function implemented.
+                    // If they do, we can optimize by calling dropValue() for those
+                    // values leaving the window and nextValue for those entering, rather
+                    // than a resetData() and then iterating over the entire window.
+                    // Built-in functions may have this functionality added in the future.
                     // If b > e then the frame is entirely outside of the partition
                     // and there's no values to drop
-                    if (b <= e)
+                    if (!firstTime && b <= e)
                     {
-                        // UDAnF functions may have a dropValue function implemented.
-                        // If they do, we can optimize by calling dropValue() for those
-                        // values leaving the window and nextValue for those entering, rather
-                        // than a resetData() and then iterating over the entire window.
-                        // Built-in functions may have this functionality added in the future.
-                        // If b > e, then nothing to drop.
-                        if (!firstTime) 
+                        if (fFunctionType->dropValues(prevFrame.first, w.first))
                         {
-                            if (fFunctionType->dropValues(prevFrame.first, w.first))
-                            {
-                                // Adjust the beginning of the frame for nextValue
-                                // to start where the previous frame left off.
-                                b = prevFrame.second + 1;
-                            }
-                            else
-                            {
-                                // dropValues failed or doesn't exist
-                                // so do the entire frame.
-                                fFunctionType->resetData();
-                            }
+                            // Adjust the beginning of the frame for nextValue
+                            // to start where the previous frame left off.
+                            b = prevFrame.second + 1;
+                        }
+                        else
+                        {
+                            // dropValues failed or doesn't exist
+                            // so calculate the entire frame.
+                            fFunctionType->resetData();
                         }
                     }
                     fFunctionType->operator()(b, e, i); // UDAnF: Calls nextValue and evaluate
@@ -230,7 +226,7 @@ void WindowFunction::operator()()
     }
     catch (...)
     {
-        fStep->handleException("unknow exception", logging::ERR_EXECUTE_WINDOW_FUNCTION);
+        fStep->handleException("unknown exception", logging::ERR_EXECUTE_WINDOW_FUNCTION);
     }
 }
 
