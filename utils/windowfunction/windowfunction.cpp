@@ -211,7 +211,11 @@ void WindowFunction::operator()()
                                 fFunctionType->resetData();
                             }
                         }
-                        firstTime = false;
+                        else
+                        {
+                            fFunctionType->resetData();
+                            firstTime = false;
+                        }
                     }
                     fFunctionType->operator()(b, e, i); // UDAnF: Calls nextValue and evaluate
                     prevFrame = w;
