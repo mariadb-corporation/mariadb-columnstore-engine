@@ -24,7 +24,7 @@ checkForError() {
         echo "checking for engine columnstore..."
         $installdir/mysql/bin/mysql \
                 --defaults-extra-file=$installdir/mysql/my.cnf \
-                --user=root $pwprompt \
+                --user=root \
                 --execute='show engines;' \
                 calpontsys | grep -i columnstore
 
@@ -45,7 +45,6 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
 password=" "
-pwprompt=
 for arg in "$@"; do
 	if [ $(expr -- "$arg" : '--prefix=') -eq 9 ]; then
 		prefix="$(echo $arg | awk -F= '{print $2}')"
@@ -57,8 +56,6 @@ for arg in "$@"; do
 		prefix=$(dirname $installdir)
 	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
 		tmpdir="$(echo $arg | awk -F= '{print $2}')"
-	elif [ $(expr -- "$arg" : '--password=') -eq 11 ]; then
-		password="$(echo $arg | awk -F= '{print $2}')"
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
 	fi

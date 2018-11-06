@@ -153,8 +153,14 @@ fi
 
 # if um, run mysql install scripts
 if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $ServerTypeInstall = "2" ]; then
+
+	mysqlPassword=" "
+	if [[ $password != " " ]]; then
+		mysqlPassword="--password="$password
+	fi
+
 	echo "Run post-mysqld-install"
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR > ${tmpDir}/post-mysqld-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysqld-install --installdir=$COLUMNSTORE_INSTALL_DIR $mysqlPassword > ${tmpDir}/post-mysqld-install.log 2>&1
 	if [ $? -ne 0 ]; then
 	    echo "ERROR: post-mysqld-install failed: check ${tmpDir}/post-mysqld-install.log"
 	    exit 1
@@ -162,12 +168,7 @@ if [ $module = "um" ] || ( [ $module = "pm" ] && [ $PMwithUM = "y" ] ) || [ $Ser
 	
 	echo "Run post-mysql-install"
 	
-	mysqlPassword=" "
-	if [[ $password != " " ]]; then
-		mysqlPassword="--password="$password
-	fi
-
-	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR  $mysqlPassword --tmpdir=${tmpDir} > ${tmpDir}/post-mysql-install.log 2>&1
+	$COLUMNSTORE_INSTALL_DIR/bin/post-mysql-install --installdir=$COLUMNSTORE_INSTALL_DIR --tmpdir=${tmpDir} > ${tmpDir}/post-mysql-install.log 2>&1
         if [ $? -ne 0 ]; then
             echo "ERROR: post-mysql-install failed: check ${tmpDir}/post-mysql-install.log"
             exit 1

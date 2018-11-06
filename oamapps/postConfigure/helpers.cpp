@@ -254,7 +254,13 @@ void mysqlSetup()
 
 	string tmpDir = startup::StartUp::tmpDir();
 
-    cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
+    string mysqlpw = oam.getMySQLPassword();
+
+	string passwordOption = "";
+	if ( mysqlpw != oam::UnassignedName )
+		passwordOption = " --password=" + mysqlpw;
+
+    cmd = installDir + "/bin/post-mysqld-install --installdir=" + installDir + " " + passwordOption + " > " + tmpDir + "/post-mysqld-install.log 2>&1";
     int rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)
@@ -283,13 +289,7 @@ void mysqlSetup()
             HOME = p;
     }
     
-    string mysqlpw = oam.getMySQLPassword();
-
-	string passwordOption = "";
-	if ( mysqlpw != oam::UnassignedName )
-		passwordOption = " --password=" + mysqlpw;
-
-    cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " --tmpdir=" + tmpDir + " " + passwordOption + " > " + tmpDir + "/post-mysql-install.log";
+    cmd = installDir + "/bin/post-mysql-install --installdir=" + installDir + " --tmpdir=" + tmpDir + " > " + tmpDir + "/post-mysql-install.log";
     rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) == 2)
