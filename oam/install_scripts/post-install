@@ -28,7 +28,9 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--plugin='` -eq 9 ]; then
 		plugin="`echo $arg | awk -F= '{print $2}'`"
 	else
-		echo "post-install: ignoring unknown argument: $arg" 1>&2
+		echo "post-install: invalid unknown argument: $arg" 1>&2
+		echo "exiting..."
+		exit 1
 	fi
 done
  

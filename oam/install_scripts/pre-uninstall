@@ -2,7 +2,7 @@
 #
 # $Id: post-uninstall 421 2007-04-05 15:46:55Z dhill $
 #
-# Post-uninstall steps for columnstore install
+# pre-uninstall steps for columnstore install
 
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
@@ -26,7 +26,9 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then
 		quiet=1
 	else
-		echo "post-uninstall: ignoring unknown argument: $arg" 1>&2
+		echo "pre-install: invalid unknown argument: $arg" 1>&2
+		echo "exiting..."
+		exit 1
 	fi
 done
 
