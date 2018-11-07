@@ -5544,7 +5544,7 @@ bool storageSetup(bool amazonInstall)
     // if gluster
     if ( storageType == "3" )
     {
-        string command = SUDO + "stat /var/run/glusterd.pid > /dev/null 2>&1";
+        string command = "stat /var/run/glusterd.pid > /dev/null 2>&1";
         int status = system(command.c_str());
 
         if (WEXITSTATUS(status) != 0 )
