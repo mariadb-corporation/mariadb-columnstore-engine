@@ -44,7 +44,6 @@ checkForError() {
 prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 rpmmode=install
-password=" "
 tmpdir="/tmp"
 
 for arg in "$@"; do
@@ -105,27 +104,6 @@ if [ -x $installdir/mysql/mysql-Columnstore ]; then
 
 	sleep 5
 	
-	# Run MariaDB (mysql) upgrade script, if it exist
-	if [ -x $installdir/mysql/bin/mysql_upgrade ]; then
-		if [[ ${password} == " " ]]; then
-			$installdir/mysql/bin/mysql_upgrade --defaults-file=$installdir/mysql/my.cnf > $tmpdir/mysql_upgrade.log
-			if [ $? -ne 0 ]; then
-				echo "ERROR: mysql_upgrade failure, check $tmpdir/mysql_upgrade.log"
-				$installdir/mysql/mysql-Columnstore stop
-				sleep 2
-				exit 2;
-			fi
-		else
-			$installdir/mysql/bin/mysql_upgrade --defaults-file=$installdir/mysql/my.cnf --password=$password  > $tmpdir/mysql_upgrade.log
-			if [ $? -ne 0 ]; then
-				echo "ERROR: mysql_upgrade failure, check $tmpdir/mysql_upgrade.log"
-				$installdir/mysql/mysql-Columnstore stop
-				sleep 2
-				exit 2;
-			fi
-		fi
-	fi
-
 	# Install various Calpont stuff...
 	$installdir/mysql/install_calpont_mysql.sh  --installdir=$installdir --tmpdir=$tmpdir
 	checkForError
