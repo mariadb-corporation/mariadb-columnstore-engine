@@ -55,7 +55,7 @@ namespace execplan
  * 		default value is 1000.
  * SessionManager/SharedMemoryTmpFile: the file to store the shared memory segment
  * 		data in between invocations if DESTROYSHMSEG is defined below.  The
- * 		default is /tmp/CalpontShm.
+ * 		default is /tmp/ColumnstoreShm.
  * SessionManager/TxnIDFile: the file to store the last transaction ID issued
  */
 

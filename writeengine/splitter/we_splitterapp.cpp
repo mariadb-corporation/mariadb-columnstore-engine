@@ -111,7 +111,7 @@ WESplitterApp::WESplitterApp(WECmdArgs& CmdArgs) :
                 {
                     ofstream dmlFile;
                     ostringstream oss;
-                    oss << "/tmp/" << fDh.getTableOID() << ".txt";
+                    oss << startup::StartUp::tmpDir() << fDh.getTableOID() << ".txt";
                     dmlFile.open(oss.str().c_str());
 
                     if (dmlFile.is_open())

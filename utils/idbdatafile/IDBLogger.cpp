@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2018 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -28,6 +29,8 @@
 
 #include "IDBLogger.h"
 
+#include "installdir.h"
+
 #include <sstream>
 #include <fstream>
 #include <time.h>
@@ -55,7 +58,10 @@ void IDBLogger::writeLog( const std::string& logmsg )
     pthread_t threadid = pthread_self();
 #endif
     ostringstream fname;
-    fname << "/tmp/idbdf-log-" << pid << "-" << threadid << ".csv";
+    
+    string tmpDir = startup::StartUp::tmpDir();
+
+    fname << tmpDir + "/idbdf-log-" << pid << "-" << threadid << ".csv";
 
     ofstream output;
     output.open( fname.str().c_str(), ios::out | ios::app );

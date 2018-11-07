@@ -8,20 +8,20 @@
 
 # check log for error
 checkForError() {
-	grep "ERROR 1045" /tmp/mariadb-command-line.log > /tmp/error.check
-	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
-		echo "ERROR - PASSWORD: check log file: /tmp/mariadb-command-line.log"
-		rm -f /tmp/error.check
+	grep "ERROR 1045" ${tmpdir}/mariadb-command-line.log > ${tmpdir}/error.check
+	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
+		echo "ERROR - PASSWORD: check log file: ${tmpdir}/mariadb-command-line.log"
+		rm -f ${tmpdir}/error.check
 		exit 2
 	fi
 	
-	grep ERROR /tmp/mariadb-command-line.log > /tmp/error.check
-	if [ `cat /tmp/error.check | wc -c` -ne 0 ]; then
-		echo "ERROR: check log file: /tmp/mariadb-command-line.log"
-		rm -f /tmp/error.check
+	grep ERROR ${tmpdir}/mariadb-command-line.log > ${tmpdir}/error.check
+	if [ `cat ${tmpdir}/error.check | wc -c` -ne 0 ]; then
+		echo "ERROR: check log file: ${tmpdir}/mariadb-command-line.log"
+		rm -f ${tmpdir}/error.check
 		exit 1
 	fi
-	rm -f /tmp/error.check
+	rm -f ${tmpdir}/error.check
 }
 
 prefix=/usr/local
@@ -37,27 +37,29 @@ for arg in "$@"; do
 		prefix=`dirname $installdir`
 	elif [ `expr -- "$arg" : '--port='` -eq 7 ]; then
 		port="`echo $arg | awk -F= '{print $2}'`"
+	elif [ $(expr -- "$arg" : '--tmpdir=') -eq 9 ]; then
+		tmpdir="$(echo $arg | awk -F= '{print $2}')"
 	fi
 done
 
 test -f $installdir/post/functions && . $installdir/post/functions
 
 
->/tmp/mariadb-command-line.log
+>${tmpdir}/mariadb-command-line.log
 
 #
 # Run command
 #
-echo "Run command" >>/tmp/mariadb-command-line.log
-cat >/tmp/mariadb-command-line.sql <<EOD
+echo "Run command" >>${tmpdir}/mariadb-command-line.log
+cat >${tmpdir}/mariadb-command-line.sql <<EOD
 $command;
 EOD
 
-cat /tmp/mariadb-command-line.sql >> /tmp/mariadb-command-line.log
+cat${tmpdir}/mariadb-command-line.sql >> ${tmpdir}/mariadb-command-line.log
 $installdir/mysql/bin/mysql \
 	--defaults-extra-file=$installdir/mysql/my.cnf \
 	--user=root \
-	calpontsys < /tmp/mariadb-command-line.sql >> /tmp/mariadb-command-line.log 2>&1
+	calpontsys < ${tmpdir}/mariadb-command-line.sql >> ${tmpdir}/mariadb-command-line.log 2>&1
 
 checkForError
 

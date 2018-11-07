@@ -5,8 +5,27 @@
 # startupTests - perform sanity testing on system DB at system startup time
 #				 called by Process-Monitor
 
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	test -f /etc/default/columnstore && . /etc/default/columnstore
+USER=`whoami 2>/dev/null`
+
+if [ $USER != "root" ]; then
+	prefix=$HOME
+fi
+
+if [ $USER != "root" ]; then
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+	fi
+		
+	. $profileFile
+fi
+
+# Source function library.
+if [ -f /etc/init.d/functions ]; then
+	. /etc/init.d/functions
 fi
 
 if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
@@ -14,7 +33,6 @@ if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
 fi
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
-
 test -f $COLUMNSTORE_INSTALL_DIR/post/functions && . $COLUMNSTORE_INSTALL_DIR/post/functions
 
 for testScript in $COLUMNSTORE_INSTALL_DIR/post/*.sh; do

@@ -32,10 +32,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
-
 #include "calpontsystemcatalog.h"
 #include "sessionmanager.h"
 #include "shmkeys.h"
@@ -58,7 +54,6 @@ namespace execplan
  * SessionMonitor/SharedMemoryTmpFile: the file to store the shared memory segment
  *		data in.  This needs to be a different file than
  *		file used for the SessionManager/SharedMemoryTmpFile.
- *		The default is /tmp/CalpontMonShm.
  */
 
 /*

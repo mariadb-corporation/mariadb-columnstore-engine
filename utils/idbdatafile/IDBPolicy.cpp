@@ -34,6 +34,9 @@
 #include "utils_utf8.h"
 #endif
 
+#include "installdir.h"
+
+
 using namespace std;
 
 namespace idbdatafile
@@ -60,6 +63,7 @@ void IDBPolicy::init( bool bEnableLogging, bool bUseRdwrMemBuffer, const string&
     if ( hdfsRdwrScratch.length() > 0 )
     {
         // TODO-check to make sure this directory has sufficient space, whatever that means.
+
         boost::filesystem::path tmpfilepath( hdfsRdwrScratch );
 
         if (boost::filesystem::exists(tmpfilepath))
@@ -76,6 +80,8 @@ void IDBPolicy::init( bool bEnableLogging, bool bUseRdwrMemBuffer, const string&
         }
         else
         {
+			cout << tmpfilepath << endl;
+
             if (!boost::filesystem::create_directory(tmpfilepath))
             {
                 // We failed to create the scratch directory
@@ -213,23 +219,10 @@ void IDBPolicy::configIDBPolicy()
     }
 
     // Directory in which to place file buffer temporary files.
-    string hdfsRdwrScratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
+    string tmpDir = startup::StartUp::tmpDir();
 
-    if ( hdfsRdwrScratch.length() == 0 )
-    {
-        string tmpPath = cf->getConfig("SystemConfig", "TempDiskPath");
-
-        if ( tmpPath.length() == 0 )
-        {
-            hdfsRdwrScratch = "/tmp/hdfsscratch";
-        }
-        else
-        {
-            hdfsRdwrScratch = tmpPath;
-            hdfsRdwrScratch += "/hdfsscratch";
-        }
-
-    }
+    string scratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
+    string hdfsRdwrScratch = tmpDir + scratch;
 
     IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
 

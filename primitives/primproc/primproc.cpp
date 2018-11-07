@@ -72,6 +72,7 @@ using namespace idbdatafile;
 #include "cgroupconfigurator.h"
 
 #include "crashtrace.h"
+#include "installdir.h"
 
 namespace primitiveprocessor
 {
@@ -147,7 +148,7 @@ void setupSignalHandlers()
 
 void setupCwd(Config* cf)
 {
-    string workdir = cf->getConfig("SystemConfig", "WorkingDir");
+    string workdir = startup::StartUp::tmpDir();
 
     if (workdir.length() == 0)
         workdir = ".";

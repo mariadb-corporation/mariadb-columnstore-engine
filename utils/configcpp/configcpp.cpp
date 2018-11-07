@@ -97,7 +97,7 @@ Config* Config::makeConfig(const char* cf)
             cf = cfStr.c_str();
 
 #else
-        cf = getenv("CALPONT_CONFIG_FILE");
+        cf = getenv("COLUMNSTORE_CONFIG_FILE");
 #endif
 
         if (cf == 0 || *cf == 0)
@@ -419,7 +419,7 @@ void Config::writeConfig(const string& configFile) const
             value = c1->getConfig("SystemConfig", "SystemName");
 
             //good read, save copy, copy temp file tp tmp then to Columnstore.xml
-            //move to /tmp to get around a 'same file error' in mv command
+            //move to get around a 'same file error' in mv command
             try
             {
                 if (exists(scft)) fs::remove(scft);

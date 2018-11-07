@@ -43,12 +43,33 @@
 # If you change base dir, you must also change datadir. These may get
 # overwritten by settings in the MySQL configuration files.
 
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-    test -f /etc/default/columnstore && . /etc/default/columnstore
+prefix=/usr/local
+
+USER=`whoami 2>/dev/null`
+
+if [ $USER != "root" ]; then
+	prefix=$HOME
+fi
+
+if [ $USER != "root" ]; then
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+	fi
+		
+	. $profileFile
+fi
+
+# Source function library.
+if [ -f /etc/init.d/functions ]; then
+	. /etc/init.d/functions
 fi
 
 if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-    COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
+	COLUMNSTORE_INSTALL_DIR=/usr/local/mariadb/columnstore
 fi
 
 export COLUMNSTORE_INSTALL_DIR=$COLUMNSTORE_INSTALL_DIR
@@ -62,9 +83,11 @@ datadir=$basedir/db
 # 0 means don't wait at all
 # Negative numbers mean to wait indefinitely
 service_startup_timeout=90
+user=`whoami 2>/dev/null`
 
-# Lock directory for RedHat / SuSE.
-lockdir='/var/lock/subsys'
+# Lock directory
+lockdir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig Installation LockFileDirectory`
+
 lock_file_path="$lockdir/mysql-Columnstore"
 
 # The following variables are only set for letting mysql.server find things.
@@ -316,10 +339,8 @@ kill_by_pid() {
 
   if [ -n "$pid" ]; then
 	ppid=$(ps -o ppid= -p $pid)
-        $SUDO kill -9 $ppid
         kill -9 $ppid
         sleep 1
-        $SUDO kill -9 $pid
         kill -9 $pid
         echo $echo_n "Force shutting down (no/bad pid file)" 
         log_success_msg

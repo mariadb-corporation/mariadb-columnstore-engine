@@ -1331,15 +1331,6 @@ void WEDataLoader::onReceiveBrmRptFileName(ByteStream& Ibs)
             cout << "Creating directory : " << dirname << endl;
             boost::filesystem::create_directories(dirname.c_str());
         }
-
-        /*
-        #ifdef _MSC_VER
-        	mkdir(dirname.c_str());
-        #else
-        	mkdir(dirname.c_str(), 0777);
-        	boost::filesystem::create_directories("/tmp/boby/test");
-        #endif
-        */
     }
 
     if (fpSysLog)
@@ -1568,15 +1559,6 @@ void WEDataLoader::onReceiveJobId(ByteStream& Ibs)
             cout << "Creating directory : " << dirname << endl;
             boost::filesystem::create_directories(dirname.c_str());
         }
-
-        /*
-        #ifdef _MSC_VER
-        	mkdir(dirname.c_str());
-        #else
-        	mkdir(dirname.c_str(), 0777);
-        	boost::filesystem::create_directories("/tmp/boby/test");
-        #endif
-        */
     }
 
     fJobFile.open(aJobFileName.c_str());

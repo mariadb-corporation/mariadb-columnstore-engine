@@ -57,6 +57,8 @@ ChildModule childmodule;
 string rootPassword = "";
 string debug_flag = "0";
 string mysqlpw = " ";
+string tmpDir;
+string ProfileFile;
 
 int runningThreads = 0;
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
@@ -129,9 +131,10 @@ void childReportThread(threadInfo_t& st)
 
     cout.flush();
 
-    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + rootPassword + " '" +
+    string cmd = installDir + "/bin/remote_command.sh " + remoteModuleIP + " " + rootPassword + " '. " + ProfileFile + ";" +
                  installDir + "/bin/" + reportType + "Report.sh " + remoteModuleName + " " + installDir +
                  "' " + debug_flag + " - forcetty";
+
     int rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)
@@ -139,11 +142,11 @@ void childReportThread(threadInfo_t& st)
         cout << "Error with running remote_command.sh, exiting..." << endl;
     }
 
-    cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + rootPassword + " /tmp/" + outputFile + " > /dev/null 2>&1";
+    cmd = installDir + "/bin/remote_scp_get.sh " + remoteModuleIP + " " + rootPassword + " " + tmpDir + "/" + outputFile + " > /dev/null 2>&1";
     rtnCode = system(cmd.c_str());
 
     if (WEXITSTATUS(rtnCode) != 0)
-        cout << "ERROR: failed to retrieve /tmp/" << outputFile << " from " + remoteHostName << endl;
+        cout << "ERROR: failed to retrieve " << tmpDir << "/" << outputFile << " from " + remoteHostName << endl;
 
     pthread_mutex_lock( &mutex1 );
     runningThreads--;
@@ -198,7 +201,7 @@ void reportThread(string reporttype)
         string cmd = installDir + "/bin/logReport.sh " + localModule + " " + installDir;
         system(cmd.c_str());
 
-        cmd = "mv -f /tmp/" + localModule + "_logReport.tar.gz .";
+        cmd = "mv -f " + tmpDir + "/" + localModule + "_logReport.tar.gz .";
         system(cmd.c_str());
 
         cmd = "tar -zcf " + localModule + "_mysqllogReport.tar.gz " + installDir + "/mysql/db/*.err* 2>/dev/null";
@@ -234,7 +237,7 @@ void reportThread(string reporttype)
 
         cmd = installDir + "/bin/" + reportType + "Report.sh " + localModule + " " + installDir;
         system(cmd.c_str());
-        cmd = " mv -f /tmp/" + localModule + "_" + reportType + "Report.txt .";
+        cmd = " mv -f " + tmpDir + "/" + localModule + "_" + reportType + "Report.txt .";
         system(cmd.c_str());
 
         if (reportType == "config" )
@@ -302,6 +305,19 @@ void reportThread(string reporttype)
             cmd = "echo ' ' >> " + outputFile;
             system(cmd.c_str());
             cmd = installDir + "/bin/mcsadmin getSystemInfo >> " + outputFile;
+            system(cmd.c_str());
+
+            cmd = "echo ' ' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = "echo '******************** System Directories  ********************' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = "echo ' ' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = "echo '################# mcsadmin getSystemDirectories ################# ' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = "echo ' ' >> " + outputFile;
+            system(cmd.c_str());
+            cmd = installDir + "/bin/mcsadmin getSystemDirectories >> " + outputFile;
             system(cmd.c_str());
 
             cmd = "echo ' ' >> " + outputFile;
@@ -431,6 +447,8 @@ int main(int argc, char* argv[])
         cout << "ERROR: Problem accessing Columnstore configuration file" << endl;
         exit(-1);
     }
+    
+	tmpDir = startup::StartUp::tmpDir();
 
     for ( int i = 1; i < argc; i++ )
     {
@@ -653,6 +671,17 @@ int main(int argc, char* argv[])
         cout << "ERROR: Problem reading the Columnstore System Configuration file" << endl;
         exit(-1);
     }
+    
+    //Get Profile file 
+    try
+    {
+        ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
+    }
+    catch (...)
+    {
+        cout << "ERROR: Problem getting ProfileFile" << endl;
+        exit(-1);
+    }
 
     string ModuleSection = "SystemModuleConfig";
 
@@ -842,14 +871,15 @@ int main(int argc, char* argv[])
         else
         {
             // check if mysql is supported and get info
+            string logFile =  tmpDir + "/idbmysql.log";
             string columnstoreMysql = installDir + "/mysql/bin/mysql --defaults-extra-file=" + installDir + "/mysql/my.cnf -u root ";
-            string cmd = columnstoreMysql + " -e 'status' > /tmp/idbmysql.log 2>&1";
+            string cmd = columnstoreMysql + " -e 'status' > " + logFile + " 2>&1";
             system(cmd.c_str());
 
             //check for mysql password set
             string pwprompt = " ";
 
-            if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR 1045") )
+            if (oam.checkLogStatus(logFile, "ERROR 1045") )
             {
                 cout << "NOTE: MariaDB Columnstore root user password is set" << endl;
 
@@ -903,10 +933,10 @@ int main(int argc, char* argv[])
                 //check for mysql password set
                 pwprompt = "--password=" + mysqlpw;
 
-                string cmd = columnstoreMysql + pwprompt + " -e 'status' > /tmp/idbmysql.log 2>&1";
+                string cmd = columnstoreMysql + pwprompt + " -e 'status' > " + logFile + " 2>&1";
                 system(cmd.c_str());
 
-                if (oam.checkLogStatus("/tmp/idbmysql.log", "ERROR 1045") )
+                if (oam.checkLogStatus(logFile, "ERROR 1045") )
                 {
                     cout << "FAILED: Failed login using MariaDB Columnstore root user password '" << mysqlpw << "'" << endl;
                     FAILED = true;
@@ -1048,7 +1078,7 @@ int main(int argc, char* argv[])
         {
             cout << "Get hadoop report data" << endl;
             string cmd = installDir + "/bin/hadoopReport.sh " + localModule + " " + installDir + "\n";
-            cmd += " mv -f /tmp/hadoopReport.txt .";
+            cmd += " mv -f " + tmpDir + "/hadoopReport.txt .";
             FILE* pipe = popen(cmd.c_str(), "r");
 
             if (!pipe)

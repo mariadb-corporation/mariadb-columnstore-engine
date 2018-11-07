@@ -39,6 +39,8 @@ extern ProcessMemoryList pml;
 extern pthread_mutex_t CPU_LOCK;
 extern pthread_mutex_t MEMORY_LOCK;
 
+extern string tmpDir;
+
 /**
  * constants define
  */
@@ -97,12 +99,9 @@ void msgProcessor()
     {
         Config* sysConfig = Config::makeConfig();
         string port = sysConfig->getConfig(msgPort, "Port");
-        string cmd = "fuser -k " + port + "/tcp";
+        string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
         int user;
         user = getuid();
-
-        if (user != 0)
-            cmd = "sudo fuser -k " + port + "/tcp";
 
         system(cmd.c_str());
     }
@@ -255,9 +254,12 @@ void msgProcessor()
                                 ByteStream ackmsg;
 
                                 // get cache MEMORY stats
-                                system("cat /proc/meminfo | grep Cached -m 1 | awk '{print $2}' > /tmp/cached");
+								string tmpcached = tmpDir + "/cached";
+								
+								string cmd = "cat /proc/meminfo | grep Cached -m 1 | awk '{print $2}' > " + tmpcached;
+								system(cmd.c_str());
 
-                                ifstream oldFile ("/tmp/cached");
+								ifstream oldFile (tmpcached.c_str());
 
                                 string strCache;
                                 long long cache;
@@ -627,7 +629,7 @@ void msgProcessor()
                                         MessageLog ml(lid);
                                         Message msg;
                                         Message::Args args;
-                                        args.add("RUN_DBHEALTH_CHECK failed, check /tmp/dbhealthTest.log");
+                                        args.add("RUN_DBHEALTH_CHECK failed, check dbhealthTest.log");
                                         msg.format(args);
                                         ml.logDebugMessage(msg);
                                     }

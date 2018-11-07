@@ -212,7 +212,14 @@ int main(int argc, char* argv[])
         }
     }
 
-    string cmd = "chown mysql:mysql " + mycnfFile;
+	string USER = "mysql";
+	
+    char* p = getenv("USER");
+
+    if (p && *p)
+        USER = p;
+
+    string cmd = "chown " + USER + ":" + USER + " " + mycnfFile;
     system(cmd.c_str());
 
     exit (0);

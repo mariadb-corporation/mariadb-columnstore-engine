@@ -2720,16 +2720,16 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 #ifdef DEBUG_SETENV
     string home(getenv("HOME"));
 
-    if (!getenv("CALPONT_HOME"))
+    if (!getenv("COLUMNSTORE_HOME"))
     {
         string calpontHome(home + "/Calpont/etc/");
-        setenv("CALPONT_HOME", calpontHome.c_str(), 1);
+        setenv("COLUMNSTORE_HOME", calpontHome.c_str(), 1);
     }
 
-    if (!getenv("CALPONT_CONFIG_FILE"))
+    if (!getenv("COLUMNSTORE_CONFIG_FILE"))
     {
-        string calpontConfigFile(home + "/Calpont/etc/Columnstore.xml");
-        setenv("CALPONT_CONFIG_FILE", calpontConfigFile.c_str(), 1);
+        string calpontConfigFile(home + "/mariadb/columnstore/etc/Columnstore.xml");
+        setenv("COLUMNSTORE_CONFIG_FILE", calpontConfigFile.c_str(), 1);
     }
 
     if (!getenv("CALPONT_CSC_IDENT"))
@@ -3056,7 +3056,9 @@ int ha_calpont_impl_rnd_init(TABLE* table)
 
 #ifdef PLAN_HEX_FILE
             // plan serialization
-            ifstream ifs("/tmp/li1-plan.hex");
+            string tmpDir = aTmpDir + "/li1-plan.hex";
+
+            ifstream ifs(tmpDir.c_str());
             ByteStream bs1;
             ifs >> bs1;
             ifs.close();
@@ -3982,6 +3984,8 @@ void ha_calpont_impl_start_bulk_insert(ha_rows rows, TABLE* table)
             //set up for cpimport
             std::vector<char*> Cmds;
             std::string aCmdLine(startup::StartUp::installDir());
+            std::string aTmpDir(startup::StartUp::tmpDir());
+
             //If local module type is not PM and Local PM query is set, error out
             char escapechar[2] = "";
 
@@ -4390,6 +4394,8 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
 {
     THD* thd = current_thd;
 
+    std::string aTmpDir(startup::StartUp::tmpDir());
+
     if (!thd->infinidb_vtable.cal_conn_info)
         thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
 
@@ -4516,7 +4522,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
                             rc = 1;
                             ifstream dmlFile;
                             ostringstream oss;
-                            oss << "/tmp/" << ci->tableOid << ".txt";
+                            oss << aTmpDir << ci->tableOid << ".txt";
                             dmlFile.open(oss.str().c_str());
 
                             if (dmlFile.is_open())
@@ -4533,7 +4539,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
                             rc = 1;
                             ifstream dmlFile;
                             ostringstream oss;
-                            oss << "/tmp/" << ci->tableOid << ".txt";
+                            oss << aTmpDir << ci->tableOid << ".txt";
                             dmlFile.open(oss.str().c_str());
 
                             if (dmlFile.is_open())
@@ -4567,7 +4573,7 @@ int ha_calpont_impl_end_bulk_insert(bool abort, TABLE* table)
                 //get extra warning count if any
                 ifstream dmlFile;
                 ostringstream oss;
-                oss << "/tmp/" << ci->tableOid << ".txt";
+                oss << aTmpDir << ci->tableOid << ".txt";
                 dmlFile.open(oss.str().c_str());
                 int totalWarnCount = 0;
                 int colWarns = 0;
@@ -5115,7 +5121,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             ci->warningMsg = msg;
         }
 
-        // If the previous query has error and 
+        // If the previous query has error and
         // this is not a subquery run by the server(MCOL-1601)
         // re-establish the connection
         if (ci->queryState != 0)
@@ -5215,7 +5221,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
             return 0;
 
         string query;
-        // Set the query text only once if the server executes 
+        // Set the query text only once if the server executes
         // subqueries separately.
         if(ci->queryState)
             query.assign("<subquery of the previous>");
@@ -5235,7 +5241,9 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
 
 #ifdef PLAN_HEX_FILE
         // plan serialization
-        ifstream ifs("/tmp/li1-plan.hex");
+        string tmpDir = aTmpDir + "/li1-plan.hex";
+
+        ifstream ifs(tmpDir);
         ByteStream bs1;
         ifs >> bs1;
         ifs.close();

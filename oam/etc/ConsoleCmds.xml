@@ -260,7 +260,8 @@
 		<Arg3>Optional: Module-name and Parameter-name will display the Module Name Configuration parameter</Arg3>
 	</Cmd38>
 	<Cmd39>
-		<Name>AVAILABLE</Name>
+		<Name>getSystemDirectories</Name>
+		<Desc1>Get System Installation and Temporary Logging Directories</Desc1>		
 	</Cmd39>
 	<Cmd40>
 		<Name>AVAILABLE</Name>

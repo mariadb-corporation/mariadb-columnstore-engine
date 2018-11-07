@@ -48,6 +48,8 @@
 
 #include "liboamcpp.h"
 #include "configcpp.h"
+#include "installdir.h"
+
 
 using namespace std;
 using namespace oam;
@@ -2034,13 +2036,11 @@ int main(int argc, char* argv[])
 
         if ( !AllowDiskBasedJoin.empty() )
         {
-            TempFilePath = sysConfigOld->getConfig("HashJoin", "TempFilePath");
             TempFileCompression = sysConfigOld->getConfig("HashJoin", "TempFileCompression");
 
             try
             {
                 sysConfigNew->setConfig("HashJoin", "AllowDiskBasedJoin", AllowDiskBasedJoin);
-                sysConfigNew->setConfig("HashJoin", "TempFilePath", TempFilePath);
                 sysConfigNew->setConfig("HashJoin", "TempFileCompression", TempFileCompression);
             }
             catch (...)
@@ -2118,6 +2118,26 @@ int main(int argc, char* argv[])
 
     try
     {
+        string LockFileDirectory = sysConfigOld->getConfig("Installation", "LockFileDirectory");
+
+        if ( !LockFileDirectory.empty() )
+        {
+            try
+            {
+                sysConfigNew->setConfig("Installation", "LockFileDirectory", LockFileDirectory);
+            }
+            catch (...)
+            {
+                cout << "ERROR: Problem setting LockFileDirectory in the Calpont System Configuration file" << endl;
+                exit(-1);
+            }
+        }
+    }
+    catch (...)
+    {}
+    
+    try
+    {
         string DistributedInstall = sysConfigOld->getConfig("Installation", "DistributedInstall");
 
         if ( !DistributedInstall.empty() )
@@ -2135,6 +2155,7 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {}
+
 
     // add entries from tuning guide
 

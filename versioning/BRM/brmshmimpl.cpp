@@ -36,6 +36,8 @@ namespace bi = boost::interprocess;
 #include "brmshmimpl.h"
 #include "brmtypes.h"
 
+#include "installdir.h"
+
 namespace BRM
 {
 
@@ -62,12 +64,7 @@ again:
 #endif
 
             if (curSize == 0) throw
-#if BOOST_VERSION < 104500
-                bi::interprocess_exception();
-
-#else
                 bi::interprocess_exception("shm size is zero");
-#endif
         }
         catch (bi::interprocess_exception&)
         {
@@ -85,42 +82,44 @@ again:
 
     try
     {
-#if BOOST_VERSION < 104500
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-#else
         bi::permissions perms;
         perms.set_unrestricted();
         bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
         idbassert(fSize > 0);
         shm.truncate(fSize);
         fShmobj.swap(shm);
     }
-    catch (bi::interprocess_exception&)
+    catch (bi::interprocess_exception &b)
     {
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
+        if (b.get_error_code() != bi::already_exists_error) {
+            ostringstream o;
+            o << "BRM caught an exception creating a shared memory segment: " << b.what();
+            log(o.str());
+            throw;
+        }
+        bi::shared_memory_object *shm = NULL;
+        try {
+            shm = new bi::shared_memory_object(bi::open_only, keyName.c_str(), bi::read_write);
+        }
+        catch (exception &e) {
+            ostringstream o;
+            o << "BRM caught an exception attaching to a shared memory segment (" << keyName << "): " << b.what();
+            log(o.str());
+            throw;
+        }
         off_t curSize = 0;
 #ifdef _MSC_VER
         bi::offset_t tmp = 0;
-        shm.get_size(tmp);
+        shm->get_size(tmp);
         curSize = static_cast<off_t>(tmp);
 #else
-        shm.get_size(curSize);
+        shm->get_size(curSize);
 #endif
         idbassert(curSize > 0);
         idbassert(curSize >= fSize);
-        fShmobj.swap(shm);
+        fShmobj.swap(*shm);
+        delete shm;
         fSize = curSize;
-    }
-    catch (...)
-    {
-        throw;
     }
 
     if (fReadOnly)
@@ -143,19 +142,9 @@ int BRMShmImpl::grow(unsigned newKey, off_t newSize)
     string oldName = fShmobj.get_name();
 
     string keyName = ShmKeys::keyToName(newKey);
-#if BOOST_VERSION < 104500
-    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-    {
-        string pname = "/dev/shm/" + keyName;
-        chmod(pname.c_str(), 0666);
-    }
-#endif
-#else
     bi::permissions perms;
     perms.set_unrestricted();
     bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
     shm.truncate(newSize);
 
     bi::mapped_region region(shm, bi::read_write);
@@ -190,19 +179,9 @@ int BRMShmImpl::clear(unsigned newKey, off_t newSize)
     string oldName = fShmobj.get_name();
 
     string keyName = ShmKeys::keyToName(newKey);
-#if BOOST_VERSION < 104500
-    bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-    {
-        string pname = "/dev/shm/" + keyName;
-        chmod(pname.c_str(), 0666);
-    }
-#endif
-#else
     bi::permissions perms;
     perms.set_unrestricted();
     bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
     shm.truncate(newSize);
 
     bi::mapped_region region(shm, bi::read_write);

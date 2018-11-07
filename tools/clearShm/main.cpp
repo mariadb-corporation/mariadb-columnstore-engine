@@ -220,7 +220,6 @@ int main(int argc, char** argv)
         shmDoit(BrmKeys.PROCESSSTATUS_SYSVKEY, "PROC_STAT  ");
         shmDoit(BrmKeys.SYSTEMSTATUS_SYSVKEY,  "SYS_STAT   ");
         shmDoit(BrmKeys.SWITCHSTATUS_SYSVKEY,  "SW_STAT    ");
-        shmDoit(BrmKeys.STORAGESTATUS_SYSVKEY, "STORE_STAT ");
         shmDoit(BrmKeys.NICSTATUS_SYSVKEY,     "NIC_STAT   ");
         shmDoit(BrmKeys.DBROOTSTATUS_SYSVKEY,  "DBROOT_STAT");
     }
@@ -239,7 +238,6 @@ int main(int argc, char** argv)
         semDoit(BrmKeys.PROCESSSTATUS_SYSVKEY, "PROC_STAT  ");
         semDoit(BrmKeys.SYSTEMSTATUS_SYSVKEY,  "SYS_STAT   ");
         semDoit(BrmKeys.SWITCHSTATUS_SYSVKEY,  "SW_STAT    ");
-        semDoit(BrmKeys.STORAGESTATUS_SYSVKEY, "STORE_STAT ");
         semDoit(BrmKeys.NICSTATUS_SYSVKEY,     "NIC_STAT   ");
         shmDoit(BrmKeys.DBROOTSTATUS_SYSVKEY,  "DBROOT_STAT");
     }

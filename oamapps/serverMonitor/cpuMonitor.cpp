@@ -47,6 +47,8 @@ const int RESOURCE_DEBUG = false;
 static unsigned int usage[LOG_FREQ / MONITOR_FREQ];
 static int usageCount = 0;
 
+extern string tmpDir;
+
 /*****************************************************************************************
 * @brief	cpuMonitor Thread
 *
@@ -518,10 +520,13 @@ void ServerMonitor::logCPUstat (int usageCount)
 void ServerMonitor::getCPUdata()
 {
     pcl.clear();
+ 
+    string tmpProcessCpu = tmpDir + "/processCpu";
+    
+    string cmd = "top -b -n1 | head -12 | awk '{print $9,$12}' | tail -5 > " + tmpProcessCpu;
+    system(cmd.c_str());
 
-    system("top -b -n1 | head -12 | awk '{print $9,$12}' | tail -5 > /tmp/columnstore_tmp_files/processCpu");
-
-    ifstream oldFile1 ("/tmp/columnstore_tmp_files/processCpu");
+    ifstream oldFile1 (tmpProcessCpu.c_str());
 
     // read top 5 users
     int i = 0;
@@ -547,9 +552,14 @@ void ServerMonitor::getCPUdata()
     //
     // get and check Total CPU usage
     //
-    system("top -b -n 6 -d 1 | awk '{print $5}' | grep %id > /tmp/columnstore_tmp_files/systemCpu");
+    
 
-    ifstream oldFile ("/tmp/columnstore_tmp_files/systemCpu");
+    string tmpsystemCpu = tmpDir + "/processCpu";
+    
+    cmd = "top -b -n 6 -d 1 | awk '{print $5}' | grep %id  > " + tmpsystemCpu;
+    system(cmd.c_str());
+
+    ifstream oldFile (tmpsystemCpu.c_str());
 
     float systemIdle = 0;
     // skip first line in file, and average the next 5 entries which contains idle times

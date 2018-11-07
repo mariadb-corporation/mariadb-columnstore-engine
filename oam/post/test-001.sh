@@ -2,8 +2,29 @@
 #
 # $Id: test-001.sh 3704 2013-08-07 03:33:20Z bwilkinson $
 
-if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
-	test -f /etc/default/columnstore && . /etc/default/columnstore
+prefix=/usr/local
+
+USER=`whoami 2>/dev/null`
+
+if [ $USER != "root" ]; then
+	prefix=$HOME
+fi
+
+if [ $USER != "root" ]; then
+	if [ -f $prefix/.bash_profile ]; then		
+		profileFile=$prefix/.bash_profile
+	elif [ -f $prefix/.profile ]; then		
+		profileFile=$prefix/.profile
+	else
+		profileFile=$prefix/.bashrc
+	fi
+		
+	. $profileFile
+fi
+
+# Source function library.
+if [ -f /etc/init.d/functions ]; then
+	. /etc/init.d/functions
 fi
 
 if [ -z "$COLUMNSTORE_INSTALL_DIR" ]; then
