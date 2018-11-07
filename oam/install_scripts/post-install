@@ -21,6 +21,8 @@ for arg in "$@"; do
 		installdirTmp="`echo $arg | awk -F= '{print $2}'`"
 		if [ $installdirTmp == $installdir ] ; then
 			user=root
+			export COLUMNSTORE_INSTALL_DIR=$installdir
+			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
 		else
 			installdir=$installdirTmp
 			prefix=`dirname $installdir`
