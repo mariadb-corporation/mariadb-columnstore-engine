@@ -1035,10 +1035,20 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
                             cacheutils::dropPrimProcFdCache();
                             flushInodeCache();
 
-                            string cmd = SUDO + "umount " + startup::StartUp::installDir() + "/data* -l > /dev/null 2>&1";
+							try
+							{
+								string DBRootStorageType = "internal";
+								oam.getSystemConfig("DBRootStorageType", DBRootStorageType);
 
-                            system(cmd.c_str());
-                            sleep(1);
+								if ( DBRootStorageType == "external" )
+								{
+									string cmd = SUDO + "umount " + startup::StartUp::installDir() + "/data* -l > /dev/null 2>&1";
+
+									system(cmd.c_str());
+									sleep(1);
+								}
+							}
+							catch (...) {}
 
                             system("rpm -e --nodeps $(rpm -qa | grep '^mariadb-columnstore')");
                             system("dpkg -P $(dpkg --get-selections | grep '^mariadb-columnstore')");
