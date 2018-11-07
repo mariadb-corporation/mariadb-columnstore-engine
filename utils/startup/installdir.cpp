@@ -97,6 +97,8 @@ const string StartUp::tmpDir()
 
     if (!cfStr.empty())
         *fTmpDirp = cfStr;
+    
+    return *fTmpDirp;
 
 #else
 
@@ -140,12 +142,11 @@ const string StartUp::tmpDir()
 	catch (...)
 	{}
 	
-	*fTmpDirp = TempFileDir;
+	return TempFileDir;
 	
 #endif
 
 
-    return *fTmpDirp;
 }
 
 }
