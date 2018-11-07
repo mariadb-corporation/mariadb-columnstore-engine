@@ -1471,12 +1471,12 @@ int main(int argc, char* argv[])
                 cout << "Check Amazon Install Documenation for additional information, exiting..." << endl;
                 exit (1);
             }
-        }
 
-        // setup to start on reboot, for non-root amazon installs
-        if ( !rootUser )
-        {
-			system("sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+			// setup to start on reboot, for non-root amazon installs
+			if ( !rootUser )
+			{
+				system("sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+			}
         }
 
         if ( !writeConfig(sysConfig) )
