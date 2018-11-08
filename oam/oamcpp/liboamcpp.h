@@ -2521,6 +2521,7 @@ private:
      */
     void sendStatusUpdate(messageqcpp::ByteStream obs, messageqcpp::ByteStream::byte returnRequestType);
 
+	std::string tmpdir;
     std::string CalpontConfigFile;
     std::string AlarmConfigFile;
     std::string ProcessConfigFile;
