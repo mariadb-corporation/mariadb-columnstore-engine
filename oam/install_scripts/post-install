@@ -18,9 +18,16 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--rpmmode='` -eq 10 ]; then
 		rpmmode="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
-		installdir="`echo $arg | awk -F= '{print $2}'`"
-		prefix=`dirname $installdir`
+		installdirTmp="`echo $arg | awk -F= '{print $2}'`"
+		if [ $installdirTmp == $installdir ] ; then
+			user=root
+			export COLUMNSTORE_INSTALL_DIR=$installdir
+			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib:$installdir/mysql/lib
+		else
+			installdir=$installdirTmp
+			prefix=`dirname $installdir`
                 prefix=`dirname $prefix`
+		fi                
 	elif [ `expr -- "$arg" : '--user='` -eq 7 ]; then
 		user="`echo $arg | awk -F= '{print $2}'`"
 	elif [ `expr -- "$arg" : '--quiet'` -eq 7 ]; then

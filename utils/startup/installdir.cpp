@@ -97,11 +97,13 @@ const string StartUp::tmpDir()
 
     if (!cfStr.empty())
         *fTmpDirp = cfStr;
+    
+    return *fTmpDirp;
 
 #else
 
 	//check for non-root user 
-    const char* p = getenv("HOME");
+/*    const char* p = getenv("HOME");
 	string homedir = p;
 
     if (homedir == "/root")
@@ -128,10 +130,23 @@ const string StartUp::tmpDir()
 
 		*fTmpDirp = *fTmpDirp + "/.tmp";
 	}
+*/
+	Config* sysConfig = Config::makeConfig();
+
+	string TempFileDir;
+
+	try
+	{
+		TempFileDir = sysConfig->getConfig("SystemConfig", "SystemTempFileDir");
+	}
+	catch (...)
+	{}
+	
+	return TempFileDir;
 	
 #endif
 
-    return *fTmpDirp;
+
 }
 
 }
