@@ -21,7 +21,7 @@ for arg in "$@"; do
 	fi
 done
 
-bash -x $installdir/bin/post-install --installdir=/usr/local/mariadb/columnstore
+$installdir/bin/post-install --installdir=/usr/local/mariadb/columnstore
 echo -e "1\n1\n1\n1\n1\n1\n" | $installdir/bin/postConfigure -i $installdir
 if [ $? -eq 0 ]; then
 	exit 0
