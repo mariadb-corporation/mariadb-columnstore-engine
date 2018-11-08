@@ -82,8 +82,6 @@ using namespace oam;
 using namespace logging;
 using namespace BRM;
 
-string tmpdir;
-
 namespace oam
 {
 // flag to tell us ctrl-c was hit
