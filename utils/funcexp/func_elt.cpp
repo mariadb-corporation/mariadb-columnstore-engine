@@ -100,7 +100,9 @@ string Func_elt::getStrVal(rowgroup::Row& row,
         return "";
     }
 
-    return stringValue(parm[number], row, isNull);
+    std::string ret;
+	stringValue(parm[number], row, isNull, ret);
+    return ret;
 
 }
 
