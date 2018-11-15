@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 					ofstream newFile (mycnfFile.c_str());	
 					
 					//create new file
-					int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0644);
+					int fd = open(mycnfFile.c_str(), O_RDWR|O_CREAT, 0666);
 					
 					copy(lines.begin(), lines.end(), ostream_iterator<string>(newFile, "\n"));
 					newFile.close();
