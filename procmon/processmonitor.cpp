@@ -1736,7 +1736,7 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
 
 			break;
 		}
-        
+
         case PROCUNMOUNT:
         {
             string dbrootID;
@@ -2581,7 +2581,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                 char line[200] = {0};
                 oldFile->pread(line, 0, fileSize - 1);  // skip the \n
                 line[fileSize] = '\0';  // not necessary, but be sure.
-                string dbrmFile = line;
+                // MCOL-1558 - the _current file is now relative to DBRMRoot
+                string dbrmFile = DBRMroot + line;
 
 //				if ( !gOAMParentModuleFlag ) {
 
