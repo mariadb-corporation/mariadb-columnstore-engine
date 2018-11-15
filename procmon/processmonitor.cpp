@@ -2586,7 +2586,7 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                 if (line[0] == '/')    // handle absolute paths (saved by an old version)
                     dbrmFile = line;
                 else
-                    dbrmFile = DBRMroot + line;
+                    dbrmFile = DBRMroot.substr(0, DBRMroot.find_last_of('/') + 1) + line;
 
 //				if ( !gOAMParentModuleFlag ) {
 
