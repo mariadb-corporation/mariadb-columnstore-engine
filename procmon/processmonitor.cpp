@@ -2582,7 +2582,11 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                 oldFile->pread(line, 0, fileSize - 1);  // skip the \n
                 line[fileSize] = '\0';  // not necessary, but be sure.
                 // MCOL-1558 - the _current file is now relative to DBRMRoot
-                string dbrmFile = DBRMroot + line;
+                string dbrmFile;
+                if (line[0] == '/')    // handle absolute paths (saved by an old version)
+                    dbrmFile = line;
+                else
+                    dbrmFile = DBRMroot + line;
 
 //				if ( !gOAMParentModuleFlag ) {
 
