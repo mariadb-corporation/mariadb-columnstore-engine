@@ -104,6 +104,7 @@ int LibMySQL::run(const char* query)
     {
         fErrStr = "fatal error runing mysql_real_query() in libmysql_client lib";
         ret = -1;
+        return ret;
     }
 
     fRes = mysql_use_result(fCon);
@@ -117,7 +118,7 @@ int LibMySQL::run(const char* query)
     return ret;
 }
 
-void LibMySQL::handleMySqlError(const char* errStr, unsigned int errCode)
+void LibMySQL::handleMySqlError(const char* errStr, int errCode)
 {
     ostringstream oss;
 
