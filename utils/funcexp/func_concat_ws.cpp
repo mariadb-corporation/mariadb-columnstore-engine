@@ -93,7 +93,7 @@ string Func_concat_ws::getStrVal(Row& row,
     string tmp;
 	for ( uint32_t i = 1 ; i < parm.size() ; i++) 
 	{
-		string(stringValue(parm[i], row, isNull).c_str(), tmp);
+		stringValue(parm[i], row, isNull, tmp);
         str += tmp;
 
 		if (isNull)
