@@ -100,7 +100,7 @@ SlaveComm::SlaveComm(string hostname, SlaveDBRMNode* s) :
             }
         }
     }
-    
+
     string tmpDir = startup::StartUp::tmpDir();
 
     /* NOTE: this string has to match whatever is designated as the first slave */
@@ -2038,9 +2038,11 @@ void SlaveComm::do_confirm()
 
         if (currentSaveFile)
         {
-            err = currentSaveFile->write(tmp.c_str(), tmp.length());
+            // MCOL-1558.  Make the _current file relative to DBRMRoot.
+            string relative = tmp.substr(tmp.find_last_of('/') + 1);
+            err = currentSaveFile->write(relative.c_str(), relative.length());
 
-            if (err < (int) tmp.length())
+            if (err < (int) relative.length())
             {
                 ostringstream os;
                 os  << "WorkerComm: currentfile write() returned " << err
@@ -2070,9 +2072,11 @@ void SlaveComm::do_confirm()
         else
         {
             lseek(currentSaveFD, 0, SEEK_SET);
-            err = write(currentSaveFD, tmp.c_str(), tmp.length());
+            // MCOL-1558.  Make the _current file relative to DBRMRoot.
+            string relative = tmp.substr(tmp.find_last_of('/') + 1);
+            err = write(currentSaveFD, relative.c_str(), relative.length());
 
-            if (err < (int) tmp.length())
+            if (err < (int) relative.length())
             {
                 ostringstream os;
                 os  << "WorkerComm: currentfile write() returned " << err
@@ -2089,7 +2093,7 @@ void SlaveComm::do_confirm()
             _chsize_s(currentSaveFD, tmp.length());
             _commit(currentSaveFD);
 #else
-            err = ftruncate(currentSaveFD, tmp.length());
+            err = ftruncate(currentSaveFD, relative.length());
             fsync(currentSaveFD);
 #endif
             saveFileToggle = !saveFileToggle;
