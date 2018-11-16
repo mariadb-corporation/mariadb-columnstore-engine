@@ -14,8 +14,21 @@ rsyslog7=0
 
 user=`whoami 2>/dev/null`
 
+#set default names
 groupname=adm
 username=syslog
+
+# determine username/groupname
+
+if [ -f /var/log/messages ]; then
+	  username=`stat -c "%U %G" /var/log/messages | awk '{print $1}'`
+	  groupname=`stat -c "%U %G" /var/log/messages | awk '{print $2}'`
+fi
+
+if [ -f /var/log/syslog ]; then
+	  username=`stat -c "%U %G" /var/log/syslog | awk '{print $1}'`
+	  groupname=`stat -c "%U %G" /var/log/syslog | awk '{print $2}'`
+fi
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
@@ -161,8 +174,8 @@ makeDir() {
 	test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 	test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
 	test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-	chmod 777 -R /var/log/mariadb/columnstore
-	chown $user:$user -R /var/log/mariadb
+	chmod 750 -R /var/log/mariadb/columnstore
+	chown $username:$groupname -R /var/log/mariadb
 }
 
 install() {
@@ -170,9 +183,6 @@ makeDir
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
-	if [ $user != "root" ]; then
-		 chown $user:$user /home/$user/mariadb/columnstore/etc/*
-	fi 
 	
 	if [ "$syslog_conf" == /etc/rsyslog.d/columnstore.conf ] ||
 		[ "$syslog_conf" == /etc/rsyslog.d/49-columnstore.conf ]; then
@@ -188,21 +198,6 @@ if [ ! -z "$syslog_conf" ] ; then
 		#set the syslog for ColumnStore logging
 		# remove older version incase it was installed by previous build
 		 rm -rf /etc/rsyslog.d/columnstore.conf
-
-		# determine username/groupname
-		
-		if [ -f /var/log/messages ]; then
-		      user=`stat -c "%U %G" /var/log/messages | awk '{print $1}'`
-		      group=`stat -c "%U %G" /var/log/messages | awk '{print $2}'`
-		fi
-		
-		if [ -f /var/log/syslog ]; then
-		      user=`stat -c "%U %G" /var/log/syslog | awk '{print $1}'`
-		      group=`stat -c "%U %G" /var/log/syslog | awk '{print $2}'`
-		fi
-		
-		# set permissions
-		chown $user:$group -R /var/log/mariadb > /dev/null 2>&1
 		
 		if [ $rsyslog7 == 1 ]; then
 			 rm -f /etc/rsyslog.d/49-columnstore.conf
@@ -210,6 +205,7 @@ if [ ! -z "$syslog_conf" ] ; then
 
 			 sed -i -e s/groupname/$groupname/g ${syslog_conf}
 			 sed -i -e s/username/$username/g ${syslog_conf}
+			 chmod 644 ${syslog_conf}
 		else		
 			 cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
@@ -233,7 +229,7 @@ if [ ! -z "$syslog_conf" ] ; then
 			if [ $? -eq 0 ]; then
 				if [ -f ${syslog_conf}.columnstoreSave ] ; then
 					#uninstall the syslog for ColumnStore logging
-					 v -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
+					 mv -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
 					 mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
 					if [ ! -f ${syslog_conf} ] ; then
 						 cp ${syslog_conf}.ColumnStoreBackup ${syslog_conf}
