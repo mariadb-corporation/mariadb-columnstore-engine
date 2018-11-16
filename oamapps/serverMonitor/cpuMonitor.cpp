@@ -556,7 +556,7 @@ void ServerMonitor::getCPUdata()
 
     string tmpsystemCpu = tmpDir + "/processCpu";
     
-    cmd = "top -b -n 6 -d 1 | awk '{print $5}' | grep %id  > " + tmpsystemCpu;
+    cmd = "top -b -n 6 -d 1 | grep '%Cpu' | awk '{print $8}'  > " + tmpsystemCpu;
     system(cmd.c_str());
 
     ifstream oldFile (tmpsystemCpu.c_str());
@@ -569,13 +569,17 @@ void ServerMonitor::getCPUdata()
     while (oldFile.getline(line, 400))
     {
         string buf = line;
-        string::size_type pos = buf.find ('%', 0);
-
-        if (pos != string::npos)
+        string::size_type pos = buf.find ('id,', 0);
+        if (pos == string::npos)
         {
             systemIdle = systemIdle + atol(buf.substr(0, pos - 1).c_str());
             count++;
         }
+        else
+        {
+			systemIdle = systemIdle + 100;
+            count++;
+		}
     }
 
     oldFile.close();
