@@ -503,12 +503,19 @@ int main(int argc, char* argv[])
     }
 
     string strBlockPct = cf->getConfig(dbbc, "NumBlocksPct");
-    temp = atoi(strBlockPct.c_str());
+    string strBlockAbs = cf->getConfig(dbbc, "NumBlocksInMB");
+    bool usePct = !(strBlockPct.empty());   // which to use.  Prefer Pct if both are specified.
 
+    if (usePct)
+        temp = atoi(strBlockPct.c_str());
+    else
+        temp = atoi(strBlockAbs.c_str());
+
+#ifdef _MSC_VER
+    /* TODO: implement handling for NumBlocksInMB */
     if (temp > 0)
         BRPBlocksPct = temp;
 
-#ifdef _MSC_VER
     MEMORYSTATUSEX memStat;
     memStat.dwLength = sizeof(memStat);
 
@@ -525,10 +532,18 @@ int main(int argc, char* argv[])
     }
 
 #else
-    // _SC_PHYS_PAGES is in 4KB units. Dividing by 200 converts to 8KB and gets ready to work in pct
-    // _SC_PHYS_PAGES should always be >> 200 so we shouldn't see a total loss of precision
-    //BRPBlocks = sysconf(_SC_PHYS_PAGES) / 200 * BRPBlocksPct;
-    BRPBlocks = ((BRPBlocksPct / 100.0) * (double) cg.getTotalMemory()) / 8192;
+    if (usePct)
+    {
+        if (temp > 0)
+            BRPBlocksPct = temp;
+        BRPBlocks = ((BRPBlocksPct / 100.0) * (double) cg.getTotalMemory()) / 8192;
+    }
+    else
+    {
+        if (temp > 0)
+            BRPBlocks = temp * 128;   // 128 blocks per MB.
+        else
+            BRPBlocks = 131072;   // 1GB, why not.
 #endif
 #if 0
     temp = toInt(cf->getConfig(dbbc, "NumThreads"));
