@@ -180,21 +180,21 @@ const string MessageLog::format(const Message& msg, const char prefix)
 void MessageLog::logDebugMessage(const Message& msg)
 {
     ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID, fFacility);
-    ::syslog(LOG_DEBUG, format(msg, 'D').c_str());
+    ::syslog(LOG_DEBUG, "%s", format(msg, 'D').c_str());
     ::closelog();
 }
 
 void MessageLog::logInfoMessage(const Message& msg)
 {
     ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID, fFacility);
-    ::syslog(LOG_INFO, format(msg, 'I').c_str());
+    ::syslog(LOG_INFO, "%s", format(msg, 'I').c_str());
     ::closelog();
 }
 
 void MessageLog::logWarningMessage(const Message& msg)
 {
     ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID, fFacility);
-    ::syslog(LOG_WARNING, format(msg, 'W').c_str());
+    ::syslog(LOG_WARNING, "%s", format(msg, 'W').c_str());
     ::closelog();
 }
 
@@ -202,14 +202,14 @@ void MessageLog::logErrorMessage(const Message& msg)
 {
     // @bug 24 use 'E' instead of 'S'
     ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID, fFacility);
-    ::syslog(LOG_ERR, format(msg, 'E').c_str());
+    ::syslog(LOG_ERR, "%s", format(msg, 'E').c_str());
     ::closelog();
 }
 
 void MessageLog::logCriticalMessage(const Message& msg)
 {
     ::openlog(SubsystemID[fLogData.fSubsysID].c_str(), 0 | LOG_PID, fFacility);
-    ::syslog(LOG_CRIT, format(msg, 'C').c_str());
+    ::syslog(LOG_CRIT, "%s", format(msg, 'C').c_str());
     ::closelog();
 }
 //Bug 5218. comment out the following functions to alleviate issue where dml messages show up in crit.log. This

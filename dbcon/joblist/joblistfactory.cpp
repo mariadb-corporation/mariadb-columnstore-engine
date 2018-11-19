@@ -93,38 +93,6 @@ namespace
 {
 using namespace joblist;
 
-//Find the next step downstream from *in. Assumes only the first such step is needed.
-const JobStepVector::iterator getNextStep(JobStepVector::iterator& in, JobStepVector& list)
-{
-    JobStepVector::iterator end = list.end();
-
-    for (unsigned i = 0; i < in->get()->outputAssociation().outSize(); ++i)
-    {
-        JobStepVector::iterator iter = list.begin();
-        AnyDataListSPtr outAdl = in->get()->outputAssociation().outAt(i);
-
-        while (iter != end)
-        {
-            if (iter != in)
-            {
-                AnyDataListSPtr inAdl;
-
-                for (unsigned j = 0; j < iter->get()->inputAssociation().outSize(); j++)
-                {
-                    inAdl = iter->get()->inputAssociation().outAt(j);
-
-                    if (inAdl.get() == outAdl.get())
-                        return iter;
-                }
-            }
-
-            ++iter;
-        }
-    }
-
-    return end;
-}
-
 
 bool checkCombinable(JobStep* jobStepPtr)
 {
@@ -1446,54 +1414,6 @@ void changePcolStepToPcolScan(JobStepVector::iterator& it, JobStepVector::iterat
     }
 }
 
-uint32_t shouldSort(const JobStep* inJobStep, int colWidth)
-{
-    //only pColStep and pColScan have colType
-    const pColStep* inStep = dynamic_cast<const pColStep*>(inJobStep);
-
-    if (inStep && colWidth > inStep->colType().colWidth)
-    {
-        return 1;
-    }
-
-    const pColScanStep* inScan = dynamic_cast<const pColScanStep*>(inJobStep);
-
-    if (inScan && colWidth > inScan->colType().colWidth)
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-void convertPColStepInProjectToPassThru(JobStepVector& psv, JobInfo& jobInfo)
-{
-    for (JobStepVector::iterator iter = psv.begin(); iter != psv.end(); ++iter)
-    {
-        pColStep* colStep = dynamic_cast<pColStep*>(iter->get());
-
-        if (colStep != NULL)
-        {
-            JobStepAssociation ia = iter->get()->inputAssociation();
-            DataList_t* fifoDlp = ia.outAt(0).get()->dataList();
-
-            if (fifoDlp)
-            {
-                if (iter->get()->oid() >= 3000 && iter->get()->oid() == fifoDlp->OID())
-                {
-                    PassThruStep* pts = 0;
-                    pts = new PassThruStep(*colStep);
-                    pts->alias(colStep->alias());
-                    pts->view(colStep->view());
-                    pts->name(colStep->name());
-                    pts->tupleId(iter->get()->tupleId());
-                    iter->reset(pts);
-                }
-            }
-        }
-    }
-}
-
 // optimize filter order
 //   perform none string filters first because string filter joins the tokens.
 void optimizeFilterOrder(JobStepVector& qsv)
@@ -1818,7 +1738,7 @@ void makeVtableModeSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo,
             jobInfo.limitCount = (uint64_t) - 1;
         }
 
-        // support order by and limit in sub-query/union or 
+        // support order by and limit in sub-query/union or
         // GROUP BY handler processed outer query order
         else if (csep->orderByCols().size() > 0)
         {

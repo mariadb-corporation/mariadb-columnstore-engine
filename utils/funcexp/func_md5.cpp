@@ -82,7 +82,7 @@ typedef unsigned      char uchar;
 
 char* PrintMD5(uchar md5Digest[16]);
 char* MD5String(const char* szString);
-char* MD5File(char* szFilename);
+//char* MD5File(char* szFilename);
 
 class md5
 {
@@ -263,7 +263,9 @@ char* MD5String(const char* szString)
 
 }
 
-// MD5File: Performs the MD5 algorithm on a file (binar or text),
+// this fcn isn't used, so commenting it
+#if 0
+// MD5File: Performs the MD5 algorithm on a file (binary or text),
 // returning the results as a char*.  Returns NULL if it fails.
 char* MD5File(char* szFilename)
 {
@@ -295,7 +297,7 @@ char* MD5File(char* szFilename)
 
     return NULL; // failed
 }
-
+#endif
 
 // md5::Init
 // Initializes a new context.

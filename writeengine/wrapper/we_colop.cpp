@@ -238,7 +238,7 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
 
                     for (i = 0; i < dbRootExtentTrackers.size(); i++)
                     {
-                        if (i != column.colNo)
+                        if (i != (int) column.colNo)
                             dbRootExtentTrackers[i]->nextSegFile(dbRoot, partition, segment, newHwm, startLbid);
 
                         // Round up HWM to the end of the current extent

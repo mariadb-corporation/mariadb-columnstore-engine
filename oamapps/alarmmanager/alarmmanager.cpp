@@ -484,7 +484,6 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
     else
         processName = repProcessName;
 
-    int returnStatus = API_SUCCESS;           //default
     ByteStream msg1;
 
     // setup message
@@ -621,7 +620,7 @@ void ALARMManager::getActiveAlarm(AlarmList& alarmList) const
 *****************************************************************************************/
 void ALARMManager::getAlarm(std::string date, AlarmList& alarmList) const
 {
-	
+
     string alarmFile = startup::StartUp::tmpDir() + "/alarms";
 
     //make 1 alarm log file made up of archive and current alarm.log

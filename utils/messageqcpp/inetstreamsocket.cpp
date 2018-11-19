@@ -966,7 +966,9 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
 #ifdef _MSC_VER
         (void)::recv(socketParms().sd(), &buf, 1, 0);
 #else
-        (void)::read(socketParms().sd(), &buf, 1);
+        #pragma GCC diagnostic ignored "-Wunused-result"
+        ::read(socketParms().sd(), &buf, 1);   // we know 1 byte is in the recv buffer
+        #pragma GCC diagnostic pop
 #endif
         return;
     }

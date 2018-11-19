@@ -154,12 +154,12 @@ Oam::Oam()
     char* p = getenv("USER");
 
     if (p && *p)
-	USER = p;
+	    USER = p;
 
     userDir = USER;
 
     if ( USER != "root")
-	userDir = "home/" + USER;
+	    userDir = "home/" + USER;
 
 	tmpdir = startup::StartUp::tmpDir();
 
@@ -8601,7 +8601,7 @@ bool Oam::attachEC2Volume(std::string volumeName, std::string deviceName, std::s
             	writeLog("attachEC2Volume: Attach failed, call detach:" + volumeName + " " + instanceName + " " + deviceName, LOG_TYPE_ERROR );
 
 				detachEC2Volume(volumeName);
-			}	
+			}
 			else
 				return true;
 		}
@@ -10470,7 +10470,6 @@ void Oam::sendStatusUpdate(ByteStream obs, ByteStream::byte returnRequestType)
             if (ibs.length() > 0)
             {
                 ibs >> returnRequestType;
-
                 if ( returnRequestType == returnRequestType )
                 {
                     processor.shutdown();

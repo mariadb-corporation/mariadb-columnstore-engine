@@ -75,7 +75,9 @@ public:
     boost::thread* create_thread(F threadfunc)
     {
         boost::lock_guard<boost::shared_mutex> guard(m);
-        std::auto_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
+        std::unique_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
+        // auto_ptr was deprecated
+        //std::auto_ptr<boost::thread> new_thread(new boost::thread(threadfunc));
         threads.push_back(new_thread.get());
         return new_thread.release();
     }

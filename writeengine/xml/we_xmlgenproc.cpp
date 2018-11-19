@@ -442,6 +442,9 @@ void XMLGenProc::getColumnsForTable(
 //------------------------------------------------------------------------------
 // Generate Job XML File Name
 //------------------------------------------------------------------------------
+
+// This isn't used currently, commenting it out
+#if 0
 std::string XMLGenProc::genJobXMLFileName( ) const
 {
     std::string xmlFileName;
@@ -465,7 +468,10 @@ std::string XMLGenProc::genJobXMLFileName( ) const
     if (!p.has_root_path())
     {
         char cwdPath[4096];
-        getcwd(cwdPath, sizeof(cwdPath));
+        char *buf;
+        buf = getcwd(cwdPath, sizeof(cwdPath));
+        if (buf == NULL)
+            throw runtime_error("Failed to get the current working directory!");
         boost::filesystem::path p2(cwdPath);
         p2 /= p;
         xmlFileName = p2.string();
@@ -479,6 +485,8 @@ std::string XMLGenProc::genJobXMLFileName( ) const
 
     return xmlFileName;
 }
+#endif
+
 
 //------------------------------------------------------------------------------
 // writeXMLFile

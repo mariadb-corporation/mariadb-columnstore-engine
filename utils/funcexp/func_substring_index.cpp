@@ -99,8 +99,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     }
     else
     {
-        count = count * -1;
-        size_t end = strlen(str.c_str());
+        count = -count;
         int pointer = end;
         int start = 0;
 
