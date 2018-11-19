@@ -1198,6 +1198,8 @@ void check_walk(const Item* item, void* arg)
     }
 }
 
+#include <iostream>
+
 /*@brief  create_calpont_group_by_handler- Creates handler*/
 /***********************************************************
  * DESCRIPTION:
@@ -1226,12 +1228,18 @@ create_calpont_group_by_handler(THD* thd, Query* query)
     if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE
         && ( thd->variables.infinidb_vtable_mode == 0
             || thd->variables.infinidb_vtable_mode == 2 )
-        && ( query->group_by || thd->lex->select_lex.with_sum_func )
-        && ( select_lex->having && select_lex->having_value != Item::COND_FALSE )
-        && ( select_lex->cond_value && select_lex->cond_value != Item::COND_FALSE ) )
+        && ( query->group_by || thd->lex->select_lex.with_sum_func ) )
     {
-        // Unsupported JOIN conditions check.
         bool unsupported_feature = false;
+        // Impossible HAVING or WHERE
+        if ( ( select_lex->having && select_lex->having_value == Item::COND_FALSE )
+            || ( select_lex->cond_value && select_lex->cond_value == Item::COND_FALSE ) )
+        {
+            unsupported_feature = true;
+        }
+
+        // Unsupported JOIN conditions check.
+        if ( !unsupported_feature )
         {
             JOIN *join = select_lex->join;
             Item_cond *icp = 0;
@@ -1256,6 +1264,8 @@ create_calpont_group_by_handler(THD* thd, Query* query)
             query->having = NULL;
         }
     }
+
+    std::cerr << "create_calpont_group_by_handler handler " << handler << std::endl;
 
     return handler;
 }
