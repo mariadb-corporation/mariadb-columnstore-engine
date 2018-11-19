@@ -544,6 +544,7 @@ int main(int argc, char* argv[])
             BRPBlocks = temp * 128;   // 128 blocks per MB.
         else
             BRPBlocks = 131072;   // 1GB, why not.
+    }
 #endif
 #if 0
     temp = toInt(cf->getConfig(dbbc, "NumThreads"));
