@@ -54,6 +54,59 @@
 using namespace std;
 using namespace oam;
 
+
+/* MCOL-1844.  On an upgrade, the user may have customized options in their old 
+ * myCnf-include-args.text file.  Merge it with the packaged version, and then process as we
+ * have before.
+ */
+string rtrim(const string &in) {
+	string::const_reverse_iterator rbegin = in.rbegin();
+	while (rbegin != in.rend() && isspace(*rbegin))
+		++rbegin;
+	return string(in.begin(), rbegin.base());
+}
+
+void mergeMycnfIncludeArgs() 
+{
+	string userArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text.rpmsave";
+	string packagedArgsFilename = startup::StartUp::installDir() + "/bin/myCnf-include-args.text";
+	ifstream userArgs(userArgsFilename.c_str());
+	fstream packagedArgs(packagedArgsFilename.c_str(), ios::in);
+
+	if (!userArgs || !packagedArgs)
+		return;
+
+	// de-dup the args and comments in both files
+	set<string> argMerger;
+	set<string> comments;
+	string line;
+	while (getline(packagedArgs, line)) {
+		line = rtrim(line);
+		if (line[0] == '#')
+			comments.insert(line);
+		else if (line.size() > 0)
+			argMerger.insert(line);
+	}
+    while (getline(userArgs, line)) {
+        line = rtrim(line);
+        if (line[0] == '#')
+            comments.insert(line);
+        else if (line.size() > 0)
+            argMerger.insert(line);
+    }
+	userArgs.close();	
+	packagedArgs.close();
+
+	// write the merged version, comments first.  They'll get ordered 
+	// alphabetically but, meh.
+	packagedArgs.open(packagedArgsFilename.c_str(), ios::out | ios::trunc);
+	for (set<string>::iterator it = comments.begin(); it != comments.end(); it++)
+		packagedArgs << *it << endl;
+	for (set<string>::iterator it = argMerger.begin(); it != argMerger.end(); it++)
+		packagedArgs << *it << endl;
+	packagedArgs.close();
+}
+
 int main(int argc, char *argv[])
 {
 	Oam oam;
@@ -83,6 +136,10 @@ int main(int argc, char *argv[])
 		cerr << "mycnfUpgrade - my.cnf.rpmsave file not found: " << mycnfsaveFile << endl;
 		exit (1);
 	}
+
+	// MCOL-1844.  The user may have added options to their myCnf-include-args file.  Merge 
+	// myCnf-include-args.text with myCnf-include-args.text.rpmsave, save in myCnf-include-args.text
+	mergeMycnfIncludeArgs();
 
 	//include arguments file
 	string includeFile = startup::StartUp::installDir() + "/bin/myCnf-include-args.text";
