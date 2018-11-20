@@ -14,7 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */  
+   MA 02110-1301, USA. */
 
 /******************************************************************************************
 * $Id: postConfigure.cpp 64 2006-10-12 22:21:51Z dhill $
@@ -192,6 +192,7 @@ bool nonDistributeFlag = false;
 bool single_server_quick_install = false;
 bool multi_server_quick_install = false;
 bool amazon_quick_install = false;
+bool doNotResolveHostNames = false;
 
 string DataFileEnvFile;
 
@@ -275,12 +276,12 @@ int main(int argc, char* argv[])
     usergroup = getgid();
 
 	string SUDO = "";
-    if (user != 0) 
+    if (user != 0)
     {
         rootUser = false;
 		SUDO = "sudo ";
 	}
-	
+
     char* p = getenv("USER");
 
     if (p && *p)
@@ -298,7 +299,7 @@ int main(int argc, char* argv[])
 
     for ( int i = 1; i < argc; i++ )
     {
-		if( string("-h") == argv[i] ) 
+		if( string("-h") == argv[i] )
 		{
             cout << endl;
             cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
@@ -322,13 +323,18 @@ int main(int argc, char* argv[])
 			cout << "   -qs Quick Install - Single Server" << endl;
 			cout << "   -qm Quick Install - Multi Server" << endl;
             cout << "   -port MariaDB ColumnStore Port Address" << endl;
-            cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
-			cout << "   -n Non-distributed install, meaning postConfigure will not install packages on remote nodes" << endl;
-			cout << "   -d Distributed install, meaning postConfigure will install packages on remote nodes" << endl;
+            cout << "   -i  Non-root Install directory, Only use for non-root installs" << endl;
+			cout << "   -n  Non-distributed install, meaning postConfigure will not install packages on remote nodes" << endl;
+			cout << "   -d  Distributed install, meaning postConfigure will install packages on remote nodes" << endl;
 			cout << "   -sn System Name" << endl;
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
+			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
             exit (0);
+        }
+        else if (string("-x") == argv[i])
+        {
+            doNotResolveHostNames = true;
         }
 		else if( string("-qs") == argv[i] )
 		{
@@ -349,33 +355,33 @@ int main(int argc, char* argv[])
             nodeps = "--nodeps";
         else if ( string("-o") == argv[i] )
             startOfflinePrompt = true;
-		else if( string("-c") == argv[i] ) 
+		else if( string("-c") == argv[i] )
 		{
             i++;
-			if (i >= argc ) 
+			if (i >= argc )
             {
                 cout << "   ERROR: Config File not provided" << endl;
                 exit (1);
             }
 
             oldFileName = argv[i];
-			if ( oldFileName.find("Columnstore.xml") == string::npos ) 
+			if ( oldFileName.find("Columnstore.xml") == string::npos )
             {
                 cout << "   ERROR: Config File is not a Columnstore.xml file name" << endl;
                 exit (1);
             }
         }
-		else if( string("-p") == argv[i] ) 
+		else if( string("-p") == argv[i] )
 		{
             i++;
-			if (i >= argc ) 
+			if (i >= argc )
             {
                 cout << "   ERROR: Password not provided" << endl;
                 exit (1);
             }
 
             password = argv[i];
-			if ( password.find("-") != string::npos ) 
+			if ( password.find("-") != string::npos )
             {
                 cout << "   ERROR: Valid Password not provided" << endl;
                 exit (1);
@@ -394,10 +400,10 @@ int main(int argc, char* argv[])
 			nonDistribute = false;
 			nonDistributeFlag = true;
 		}
-		else if( string("-port") == argv[i] ) 
+		else if( string("-port") == argv[i] )
 		{
             i++;
-			if (i >= argc ) 
+			if (i >= argc )
             {
                 cout << "   ERROR: MariaDB ColumnStore Port ID not supplied" << endl;
                 exit (1);
@@ -411,10 +417,10 @@ int main(int argc, char* argv[])
                 exit (1);
             }
         }
-        else if( string("-i") == argv[i] ) 
+        else if( string("-i") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: Path not provided" << endl;
                 exit (1);
@@ -422,50 +428,50 @@ int main(int argc, char* argv[])
 
             installDir = argv[i];
         }
-        else if( string("-sn") == argv[i] ) 
+        else if( string("-sn") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: System-name not provided" << endl;
                 exit (1);
             }
             systemName = argv[i];
         }
-        else if( string("-pm-ip-addrs") == argv[i] ) 
+        else if( string("-pm-ip-addrs") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: PM-IP-ADRESSES not provided" << endl;
                 exit (1);
             }
             pmIpAddrs = argv[i];
         }
-        else if( string("-um-ip-addrs") == argv[i] ) 
+        else if( string("-um-ip-addrs") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: UM-IP-ADRESSES not provided" << endl;
                 exit (1);
             }
             umIpAddrs = argv[i];
         }
-        else if( string("-pm-count") == argv[i] ) 
+        else if( string("-pm-count") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: PM-COUNT not provided" << endl;
                 exit (1);
             }
             pmNumber = atoi(argv[i]);
         }
-        else if( string("-um-count") == argv[i] ) 
+        else if( string("-um-count") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: UM-COUNT not provided" << endl;
                 exit (1);
@@ -479,7 +485,7 @@ int main(int argc, char* argv[])
 			exit (1);
 		}
 	}
-	
+
 	//check if quick install multi-server has been given ip address
 	if (multi_server_quick_install)
 	{
@@ -553,7 +559,7 @@ int main(int argc, char* argv[])
 		//		redirectStandardOutputToFile(postConfigureLog, false );
 			}
 	}
-	
+
     //check if MariaDB ColumnStore is up and running
     if (oam.checkSystemRunning())
     {
@@ -567,7 +573,7 @@ int main(int argc, char* argv[])
         cout << "ERROR: Configuration File not setup" << endl;
         exit(1);
     }
-	
+
     //determine package type
     string EEPackageType;
 
@@ -605,7 +611,7 @@ int main(int argc, char* argv[])
         cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
         exit(1);
     }
-	
+
     //check for local ip address as pm1
     ModuleConfig moduleconfig;
 
@@ -789,7 +795,7 @@ int main(int argc, char* argv[])
     }
 
     cout << endl;
-	
+
 	if (single_server_quick_install)
 	{
 		cout << "===== Quick Install Single-Server Configuration =====" << endl << endl;
@@ -797,13 +803,13 @@ int main(int argc, char* argv[])
 		cout << "Single-Server install is used when there will only be 1 server configured" << endl;
 		cout << "on the system. It can also be used for production systems, if the plan is" << endl;
 		cout << "to stay single-server." << endl;
-		
+
 		singleServerInstall = "1";
 	}
 	else if (multi_server_quick_install)
 	{
 		cout << "===== Quick Install Multi-Server Configuration =====" << endl << endl;
-		
+
 		cout << "Multi-Server install defaulting to using local storage" << endl;
 
 		singleServerInstall = "2";
@@ -811,7 +817,7 @@ int main(int argc, char* argv[])
 	else if (amazon_quick_install)
 	{
 		cout << "===== Quick Install Amazon Configuration =====" << endl << endl;
-		
+
 		cout << "Amazon AMI EC2 install defaulting to using local storage" << endl;
 
 		singleServerInstall = "2";
@@ -842,7 +848,7 @@ int main(int argc, char* argv[])
 		else
 			singleServerInstall = "2";
 
-		while(true) 
+		while(true)
 		{
 			string temp = singleServerInstall;
 			prompt = "Select the type of System Server install [1=single, 2=multi] (" + singleServerInstall + ") > ";
@@ -889,7 +895,7 @@ int main(int argc, char* argv[])
 			//setup to Columnstore.xml file for single server
 			singleServerConfigSetup(sysConfig);
 		}
-		
+
 		//module ProcessConfig.xml to setup all apps on the pm
 		if ( !updateProcessConfig() )
 			cout << "Update ProcessConfig.xml error" << endl;
@@ -967,7 +973,7 @@ int main(int argc, char* argv[])
 	}
 
 	// perform multi-node install
-	
+
     try
     {
         sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
@@ -987,7 +993,7 @@ int main(int argc, char* argv[])
     //
     // Multi-server install
     //
-	
+
 	ModuleIP InputModuleIP;
 	ModuleIpList InputModuleIPList;
 
@@ -1001,7 +1007,7 @@ int main(int argc, char* argv[])
 	    }
 	    catch(...)
 	    {}
-	    
+
 	    if (umIpAddrs == "" )
 	    {
 			// set Server Type Installation to combined
@@ -1026,10 +1032,10 @@ int main(int argc, char* argv[])
 				InputModuleIP.moduleName = module;
 				InputModuleIPList.push_back(InputModuleIP);
 			}
-			
+
 			umNumber = id-1;
 		}
-		
+
 		if (pmIpAddrs != "" )
 	    {
 			int id = 1;
@@ -1045,16 +1051,16 @@ int main(int argc, char* argv[])
 				InputModuleIP.moduleName = module;
 				InputModuleIPList.push_back(InputModuleIP);
 			}
-			
+
 			pmNumber = id-1;
 		}
 
-		if ( !writeConfig(sysConfig) ) 
+		if ( !writeConfig(sysConfig) )
 		{
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 			exit(1);
 		}
-		
+
 		MaxNicID = 1;
 	}
 	else
@@ -1067,13 +1073,13 @@ int main(int argc, char* argv[])
 			}
 			catch(...)
 			{}
-			
+
 			try {
 				sysConfig->setConfig(InstallSection, "Cloud", "amazon-vpc");
         	}
         	catch(...)
         	{}
-			
+
 			if (umNumber == 0 )
 			{
 				// set Server Type Installation to combined
@@ -1084,12 +1090,12 @@ int main(int argc, char* argv[])
 				{}
 			}
 
-			if ( !writeConfig(sysConfig) ) 
+			if ( !writeConfig(sysConfig) )
 			{
 				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 				exit(1);
 			}
-			
+
 			MaxNicID = 1;
 		}
 	}
@@ -1350,7 +1356,7 @@ int main(int argc, char* argv[])
     //amazon install setup check
     bool amazonInstall = false;
     string cloud = oam::UnassignedName;
-	
+
 	if (!multi_server_quick_install)
 	{
 		string amazonLog = tmpDir + "/amazon.log";
@@ -1367,7 +1373,7 @@ int main(int argc, char* argv[])
 			// not running on amazon with ec2-api-tools
 			if (amazon_quick_install)
 			{
-				cout << "ERROR: Amazon Quick Installer was specified, bu the Amazon CLI API packages isnt installed, exiting" << endl; 
+				cout << "ERROR: Amazon Quick Installer was specified, but the Amazon CLI API packages is not installed, exiting" << endl;
 				exit(1);
 			}
 
@@ -1380,7 +1386,7 @@ int main(int argc, char* argv[])
 				// not running on amazon with ec2-api-tools
 				if (amazon_quick_install)
 				{
-					cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
+					cout << "ERROR: Amazon Quick Installer was specified, but the Amazon CLI API packages is not installed, exiting" << endl;
 					exit(1);
 				}
 
@@ -1390,7 +1396,7 @@ int main(int argc, char* argv[])
 				amazonInstall = true;
 		}
 	}
-	
+
     try
     {
         cloud = sysConfig->getConfig(InstallSection, "Cloud");
@@ -1717,13 +1723,6 @@ int main(int argc, char* argv[])
             // are we using settings from previous config file?
             if ( reuseConfig == "n" )
             {
-				
-				
-				
-				
-				
-				
-				
                 string numBlocksPct;
 
                 try
@@ -1877,14 +1876,14 @@ int main(int argc, char* argv[])
             catch (...)
             {}
         }
-		
+
 		if ( moduleType == "um")
 			if ( umNumber != 0 )
 				moduleCount = umNumber;
-				
+
 		if ( moduleType == "pm")
 			if ( pmNumber != 0 )
-				moduleCount = pmNumber;				
+				moduleCount = pmNumber;
 
         //verify and setup of modules count
         switch ( IserverTypeInstall )
@@ -2044,7 +2043,7 @@ int main(int argc, char* argv[])
                 moduleDisableState = oam::ENABLEDSTATE;
 
                 //setup HostName/IPAddress for each NIC
-				
+
 				string moduleHostName = oam::UnassignedName;
 				string moduleIPAddr = oam::UnassignedIpAddr;
 
@@ -2063,7 +2062,7 @@ int main(int argc, char* argv[])
 						}
 					}
 				}
-				
+
 				unsigned int nicID=1;
 				for(  ; nicID < MaxNicID +1 ; nicID++ )
 				{
@@ -2076,9 +2075,9 @@ int main(int argc, char* argv[])
 
 						for( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
 						{
-							if (newModuleName == (*listPT).DeviceName) 
+							if (newModuleName == (*listPT).DeviceName)
 							{
-								if ( nicID == 1 ) 
+								if ( nicID == 1 )
 								{
 									moduleDisableState = (*listPT).DisableState;
 
@@ -2091,7 +2090,7 @@ int main(int argc, char* argv[])
 
 										for( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
 										{
-											if ((*pt1).NicID == nicID) 
+											if ((*pt1).NicID == nicID)
 											{
 												moduleHostName = (*pt1).HostName;
 												moduleIPAddr = (*pt1).IPAddr;
@@ -2103,8 +2102,8 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-					
-					if ( nicID == 1 ) 
+
+					if ( nicID == 1 )
 					{
                         if ( moduleDisableState != oam::ENABLEDSTATE )
                         {
@@ -2948,7 +2947,7 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-					
+
                     vector <string> dbroots;
                     string tempdbrootList;
 
@@ -3497,7 +3496,7 @@ int main(int argc, char* argv[])
 	}
 
     if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
-            pmNumber > 1 ) 
+            pmNumber > 1 )
 	{
             if ( password.empty() )
             {
@@ -3531,10 +3530,10 @@ int main(int argc, char* argv[])
                 		if ( p1 == p2 ) {
                     		password = p2;
                     		break;
-                		}	
+                		}
                 		else
                     		cout << "Password mismatch, please re-enter" << endl;
-            		}	
+            		}
 
             		//add single quote for special characters
             		if ( password != "ssh" )
@@ -3543,7 +3542,7 @@ int main(int argc, char* argv[])
             		}
 
 				}
-			}		
+			}
     }
 
     int thread_id = 0;
@@ -3824,7 +3823,7 @@ int main(int argc, char* argv[])
                 cout << "  DONE" << endl;
             }
         }
-		
+
         //configure data redundancy
         if (DataRedundancy)
         {
@@ -4039,7 +4038,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        
+
         string dbbuilderLog = tmpDir + "/dbbuilder.log";
 
         if (hdfs)
@@ -4060,7 +4059,7 @@ int main(int argc, char* argv[])
 
 				//send message to procmon's to run upgrade script
 				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
-	
+
 				if ( status != 0 ) {
 					cout << endl << "MariaDB Columnstore Install Failed" << endl << endl;
 					exit(1);
@@ -4423,7 +4422,7 @@ bool updateProcessConfig()
     vector <string> oldModule;
     string newModule = ">pm";
 	oldModule.push_back(">um");
- 
+
     string fileName = installDir + "/etc/ProcessConfig.xml";
 
     //Save a copy of the original version
@@ -4564,9 +4563,9 @@ bool uncommentCalpontXml( string entry)
  */
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 {
-  
+
     return true;
-    
+
     vector <string> lines;
 
     string mount1;
@@ -5147,7 +5146,7 @@ bool storageSetup(bool amazonInstall)
 
     //check if hadoop is installed
     string hadoopLog = tmpDir + "/hadoop.log";
-    
+
 	string cmd = "which hadoop > " + hadoopLog + " 2>&1";
     system(cmd.c_str());
 
@@ -5732,7 +5731,7 @@ void setSystemName()
     Oam oam;
 
     //setup System Name
-	
+
 	if ( systemName.empty() )
 	{
 		try {
@@ -5743,7 +5742,7 @@ void setSystemName()
 			systemName = oam::UnassignedName;
 		}
 	}
-	
+
     if ( systemName.empty() )
 		systemName = "columnstore-1";
 
@@ -5759,7 +5758,7 @@ void setSystemName()
 			callFree(pcommand);
 		}
 	}
-	
+
     try
     {
         sysConfig->setConfig(SystemSection, "SystemName", systemName);
@@ -6926,7 +6925,7 @@ bool glusterSetup(string password)
 
 void singleServerConfigSetup(Config* sysConfig)
 {
-	
+
 	try
 	{
 		sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
