@@ -2446,12 +2446,16 @@ int main(int argc, char* argv[])
                         newModuleIPAddr = oam::UnassignedIpAddr;
                     else
                     {
-                        if (!amazonInstall && !doNotResolveHostNames)
+                        if (!amazonInstall)
                         {
                             if ( moduleIPAddr == oam::UnassignedIpAddr )
                             {
                                 //get IP Address
-                                string IPAddress = oam.getIPAddress( newModuleHostName);
+                                string IPAddress;
+                                if (doNotResolveHostNames)
+                                    IPAddress = newModuleHostName;
+                                else
+                                    IPAddress = oam.getIPAddress( newModuleHostName);
 
                                 if ( !IPAddress.empty() )
                                     newModuleIPAddr = IPAddress;
@@ -2467,7 +2471,7 @@ int main(int argc, char* argv[])
                             //prompt for IP address
                             while (true)
                             {
-                                prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " IP Address of " + newModuleHostName + " (" + newModuleIPAddr + ") > ";
+                                prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " IP Address or hostname of " + newModuleHostName + " (" + newModuleIPAddr + ") > ";
                                 pcommand = callReadline(prompt.c_str());
 
                                 if (pcommand)
@@ -2488,7 +2492,7 @@ int main(int argc, char* argv[])
                                     continue;
                                 }
 
-                                if (oam.isValidIP(newModuleIPAddr))
+                                if (oam.isValidIP(newModuleIPAddr) || doNotResolveHostNames)
                                 {
                                     //check and see if hostname already used
                                     bool matchFound = false;
@@ -6431,7 +6435,11 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
             if ( moduleIPAddr == oam::UnassignedIpAddr)
             {
                 //get IP Address
-                string IPAddress = oam.getIPAddress( moduleHostName);
+                string IPAddress;
+                if (doNotResolveHostNames)
+                    IPAddress = moduleHostName;
+                else
+                    IPAddress = oam.getIPAddress( moduleHostName);
 
                 if ( !IPAddress.empty() )
                     moduleIPAddr = IPAddress;
@@ -6443,7 +6451,7 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
                 moduleIPAddr = "unassigned";
 
             //prompt for IP address
-            while (!doNotResolveHostNames)
+            while (true)
             {
                 prompt = "Enter PM #" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " IP Address of " + moduleHostName + " (" + moduleIPAddr + ") > ";
                 pcommand = callReadline(prompt.c_str());
@@ -6466,7 +6474,7 @@ bool glusterSetup(string password, bool doNotResolveHostNames)
                     continue;
                 }
 
-                if (oam.isValidIP(moduleIPAddr))
+                if (oam.isValidIP(moduleIPAddr) || doNotResolveHostNames)
                 {
 
                     // run ping test to validate
