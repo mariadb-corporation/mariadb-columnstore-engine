@@ -129,7 +129,7 @@ void singleServerConfigSetup(Config* sysConfig);
 
 void remoteInstallThread(void*);
 
-bool glusterSetup(string password);
+bool glusterSetup(string password, bool doNotResolveHostNames);
 
 std::string launchInstance(ModuleIP moduleip);
 
@@ -2446,7 +2446,7 @@ int main(int argc, char* argv[])
                         newModuleIPAddr = oam::UnassignedIpAddr;
                     else
                     {
-                        if (!amazonInstall)
+                        if (!amazonInstall && !doNotResolveHostNames)
                         {
                             if ( moduleIPAddr == oam::UnassignedIpAddr )
                             {
@@ -3896,7 +3896,7 @@ int main(int argc, char* argv[])
             {
                 cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
 
-                if (!glusterSetup(password))
+                if (!glusterSetup(password, doNotResolveHostNames))
                 {
                     cout << "ERROR: Problem setting up ColumnStore Data Redundancy" << endl;
                     exit(1);
@@ -6274,7 +6274,7 @@ std::string launchInstance(ModuleIP moduleip)
     return instanceName;
 }
 
-bool glusterSetup(string password)
+bool glusterSetup(string password, bool doNotResolveHostNames)
 {
     Oam oam;
     int dataRedundancyCopies = 0;
@@ -6428,7 +6428,7 @@ bool glusterSetup(string password)
                 callFree(pcommand);
             }
 
-            if ( moduleIPAddr == oam::UnassignedIpAddr )
+            if ( moduleIPAddr == oam::UnassignedIpAddr)
             {
                 //get IP Address
                 string IPAddress = oam.getIPAddress( moduleHostName);
@@ -6443,7 +6443,7 @@ bool glusterSetup(string password)
                 moduleIPAddr = "unassigned";
 
             //prompt for IP address
-            while (true)
+            while (!doNotResolveHostNames)
             {
                 prompt = "Enter PM #" + oam.itoa(DataRedundancyConfigs[pm].pmID) + " IP Address of " + moduleHostName + " (" + moduleIPAddr + ") > ";
                 pcommand = callReadline(prompt.c_str());
