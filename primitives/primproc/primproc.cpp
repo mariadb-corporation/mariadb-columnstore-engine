@@ -391,7 +391,7 @@ int main(int argc, char* argv[])
     int serverQueueSize = 10;
     int processorWeight = 8 * 1024;
     int processorQueueSize = 10 * 1024;
-    int BRPBlocksPct = 70;
+    int64_t BRPBlocksPct = 70;
     uint32_t BRPBlocks = 1887437;
     int BRPThreads = 16;
     int cacheCount = 1;
@@ -526,20 +526,19 @@ int main(int argc, char* argv[])
     }
 
 #else
-    bool cacheInMB = false;
+    bool absCache = false;
     if (temp > 0) {
         BRPBlocksPct = temp;
-        /* MCOL-1847.  Did the user specify this in MB or GB? */
+        /* MCOL-1847.  Did the user specify this as an absolute? */
         int len = strBlockPct.length();
-        if (strBlockPct[len-1] == 'g' || strBlockPct[len-1] == 'm')
-        {
-            if (strBlockPct[len-1] == 'g')
-                BRPBlocksPct *= 1024;
-            cacheInMB = true;
+        if ((strBlockPct[len-1] >= 'a' && strBlockPct[len-1] <= 'z') ||
+          (strBlockPct[len-1] >= 'A' && strBlockPct[len-1] <= 'Z')) {
+            absCache = true;
+            BRPBlocksPct = Config::fromText(strBlockPct);
         }
     }
-    if (cacheInMB)
-        BRPBlocks = BRPBlocksPct * 128;   // 128 blocks per MB
+    if (absCache)
+        BRPBlocks = BRPBlocksPct / 8192;
     else
         BRPBlocks = ((BRPBlocksPct / 100.0) * (double) cg.getTotalMemory()) / 8192;
 #endif
