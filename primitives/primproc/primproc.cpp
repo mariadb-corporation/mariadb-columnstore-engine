@@ -391,7 +391,7 @@ int main(int argc, char* argv[])
     int serverQueueSize = 10;
     int processorWeight = 8 * 1024;
     int processorQueueSize = 10 * 1024;
-    int BRPBlocksPct = 70;
+    int64_t BRPBlocksPct = 70;
     uint32_t BRPBlocks = 1887437;
     int BRPThreads = 16;
     int cacheCount = 1;
@@ -503,16 +503,10 @@ int main(int argc, char* argv[])
     }
 
     string strBlockPct = cf->getConfig(dbbc, "NumBlocksPct");
-    string strBlockAbs = cf->getConfig(dbbc, "NumBlocksInMB");
-    bool usePct = !(strBlockPct.empty());   // which to use.  Prefer Pct if both are specified.
-
-    if (usePct)
-        temp = atoi(strBlockPct.c_str());
-    else
-        temp = atoi(strBlockAbs.c_str());
+    temp = atoi(strBlockPct.c_str());
 
 #ifdef _MSC_VER
-    /* TODO: implement handling for NumBlocksInMB */
+    /* TODO: implement handling for the 'm' or 'g' chars in NumBlocksPct */
     if (temp > 0)
         BRPBlocksPct = temp;
 
@@ -532,19 +526,21 @@ int main(int argc, char* argv[])
     }
 
 #else
-    if (usePct)
-    {
-        if (temp > 0)
-            BRPBlocksPct = temp;
-        BRPBlocks = ((BRPBlocksPct / 100.0) * (double) cg.getTotalMemory()) / 8192;
+    bool absCache = false;
+    if (temp > 0) {
+        BRPBlocksPct = temp;
+        /* MCOL-1847.  Did the user specify this as an absolute? */
+        int len = strBlockPct.length();
+        if ((strBlockPct[len-1] >= 'a' && strBlockPct[len-1] <= 'z') ||
+          (strBlockPct[len-1] >= 'A' && strBlockPct[len-1] <= 'Z')) {
+            absCache = true;
+            BRPBlocksPct = Config::fromText(strBlockPct);
+        }
     }
+    if (absCache)
+        BRPBlocks = BRPBlocksPct / 8192;
     else
-    {
-        if (temp > 0)
-            BRPBlocks = temp * 128;   // 128 blocks per MB.
-        else
-            BRPBlocks = 131072;   // 1GB, why not.
-    }
+        BRPBlocks = ((BRPBlocksPct / 100.0) * (double) cg.getTotalMemory()) / 8192;
 #endif
 #if 0
     temp = toInt(cf->getConfig(dbbc, "NumThreads"));
