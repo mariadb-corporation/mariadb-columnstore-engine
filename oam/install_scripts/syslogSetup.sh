@@ -174,17 +174,21 @@ fi
 makeDir() {
 	if [ ! -d /var/log/mariadb/columnstore ];then
 		mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 		chown $username:$groupname -R /var/log/mariadb
+	else
+		test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 	fi
-	
+
 	if [ $non_root_user == "yes" ]; then
 		chmod 777 /var/log/mariadb
 		chmod 777 /var/log/mariadb/columnstore
 	fi
 
-	test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 }
 
 install() {
