@@ -8248,13 +8248,11 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti)
 
 int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
 {
-    LEX* lex = thd->lex;
-    idbassert(lex != 0);
 
-    SELECT_LEX select_lex = lex->select_lex;
+    SELECT_LEX *select_lex = gi.groupByTables->select_lex;
     gp_walk_info gwi;
     gwi.thd = thd;
-    int status = getGroupPlan(gwi, select_lex, csep, gi);
+    int status = getGroupPlan(gwi, *select_lex, csep, gi);
 
 #ifdef DEBUG_WALK_COND
     cerr << "---------------- cp_get_group_plan EXECUTION PLAN ----------------" << endl;
