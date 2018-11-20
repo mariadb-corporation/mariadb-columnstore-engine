@@ -172,14 +172,19 @@ fi
 }
 
 makeDir() {
-	test -d /var/log/mariadb/columnstore || mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
+	if [ ! -d /var/log/mariadb/columnstore ];then
+		mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
+		chown $username:$groupname -R /var/log/mariadb
+	fi
+	
+	if [ $non_root_user == "yes" ]; then
+		chmod 777 /var/log/mariadb
+		chmod 777 /var/log/mariadb/columnstore
+	fi
+
 	test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 	test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
 	test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-	if [ $non_root_user == "yes" ]; then
-		chmod 777 /var/log/mariadb/columnstore
-	fi
-	chown $username:$groupname -R /var/log/mariadb
 }
 
 install() {
@@ -187,12 +192,15 @@ makeDir
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
+	if [ $non_root_user == "yes" ]; then
+		chown $user:$user $installdir/etc/Columnstore.xml*
+	fi
 	
+	rm -f ${syslog_conf}.columnstoreSave
 	if [ "$syslog_conf" == /etc/rsyslog.d/columnstore.conf ] ||
 		[ "$syslog_conf" == /etc/rsyslog.d/49-columnstore.conf ]; then
 		i=1
 	else
-		rm -f ${syslog_conf}.columnstoreSave
 		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
 		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
