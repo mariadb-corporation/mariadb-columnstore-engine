@@ -11,6 +11,7 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
+non-root-user="no"
 
 user=`whoami 2>/dev/null`
 
@@ -41,6 +42,7 @@ for arg in "$@"; do
 		user="`echo $arg | awk -F= '{print $2}'`"
 		groupname=$user
 		username=$user
+		non-root-user="yes"
 	elif [ `expr -- "$arg" : '--..*'` -ge 3 ]; then
 		echo "ignoring unknown argument: $arg" 1>&2
 	elif [ `expr -- "$arg" : '--'` -eq 2 ]; then
@@ -174,7 +176,9 @@ makeDir() {
 	test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 	test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
 	test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-	chmod 750 -R /var/log/mariadb/columnstore
+	if [ $non-root-user == "yes" ]; then
+		chmod 777 /var/log/mariadb/columnstore
+	fi
 	chown $username:$groupname -R /var/log/mariadb
 }
 
@@ -248,7 +252,6 @@ if [ ! -z "$syslog_conf" ] ; then
 	rm -f /etc/logrotate.d/columnstore
 
 	restartSyslog
-
 fi
 
 }
