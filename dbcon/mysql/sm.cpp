@@ -54,6 +54,8 @@ using namespace querystats;
 
 #include "sm.h"
 
+#include "installdir.h"
+
 namespace
 {
 using namespace sm;
@@ -254,7 +256,10 @@ void sighandler(int sig_num)
     FILE* p;
     char buf[1024];
 
-    if ((p = fopen("/tmp/f1.dat", "a")) != NULL)
+	string tmpDir = startup::StartUp::tmpDir() + "/f1.dat";
+	const char *cstr = tmpDir.c_str();
+	
+    if ((p = fopen(cstr, "a")) != NULL)
     {
         snprintf(buf, 1024, "sighandler() hit with %d\n", sig_num);
         fwrite(buf, 1, strlen(buf), p);

@@ -105,6 +105,9 @@ using namespace querytele;
 #include "dbrm.h"
 #endif
 
+
+#include "installdir.h"
+
 namespace
 {
 

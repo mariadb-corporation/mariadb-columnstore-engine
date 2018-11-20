@@ -17,6 +17,8 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--installdir='` -eq 13 ]; then
 		installdir="`echo $arg | awk -F= '{print $2}'`"
 		prefix=`dirname $installdir`
+	elif [ `expr -- "$arg" : '--tmpdir='` -eq 9 ]; then
+		tmpdir="`echo $arg | awk -F= '{print $2}'`"
 	else
 		echo "ignoring unknown argument: $arg" 1>&2
 	fi
@@ -24,7 +26,7 @@ done
 
 df=$installdir/mysql/my.cnf
 
-$installdir/mysql/bin/mysql --defaults-extra-file=$df --force --user=root mysql 2>/tmp/mysql_install.log <<EOD
+$installdir/mysql/bin/mysql --defaults-extra-file=$df --force --user=root mysql 2> ${tmpdir}/mysql_install.log <<EOD
 INSTALL PLUGIN columnstore SONAME 'libcalmysql.so';
 INSTALL PLUGIN infinidb SONAME 'libcalmysql.so';
 INSTALL PLUGIN columnstore_tables SONAME 'is_columnstore_tables.so';
@@ -84,6 +86,7 @@ CREATE FUNCTION idbpartition RETURNS STRING soname 'libcalmysql.so';
 CREATE FUNCTION idblocalpm RETURNS INTEGER soname 'libcalmysql.so';
 CREATE FUNCTION mcssystemready RETURNS INTEGER soname 'libcalmysql.so';
 CREATE FUNCTION mcssystemreadonly RETURNS INTEGER soname 'libcalmysql.so';
+CREATE FUNCTION mcssystemprimary RETURNS INTEGER soname 'libcalmysql.so';
 CREATE AGGREGATE FUNCTION regr_avgx RETURNS REAL soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_avgy RETURNS REAL soname 'libregr_mysql.so';
 CREATE AGGREGATE FUNCTION regr_count RETURNS INTEGER soname 'libregr_mysql.so';
@@ -112,7 +115,7 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.querystats
   query varchar(8000),
   startTime timestamp NOT NULL,
   endTime timestamp NOT NULL,
-  `rows` bigint,
+  \`rows\` bigint,
   errno int,
   phyIO bigint,
   cacheIO bigint,

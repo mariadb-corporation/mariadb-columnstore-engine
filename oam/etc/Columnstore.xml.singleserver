@@ -418,7 +418,9 @@
 		<Module>unassigned</Module>
 	</DBRM_Worker10>
 	<DBBC>
-		<!-- The percentage of RAM to use for the disk block cache. Defaults to 86% -->
+		<!-- The percentage of RAM to use for the disk block cache. Defaults to 70% -->
+        <!-- Alternatively, this can be specified in absolute terms using
+             the suffixes 'm' or 'g' to denote size in megabytes or gigabytes.-->
 		<NumBlocksPct>50</NumBlocksPct>
 		<!-- <NumThreads>16</NumThreads> --> <!-- 1-256.  Default is 16. -->
 		<NumCaches>1</NumCaches><!-- # of parallel caches to instantiate -->
@@ -463,6 +465,7 @@
 		<JavaPath>unassigned</JavaPath>
 		<MySQLPort>3306</MySQLPort>
 		<DistributedInstall>y</DistributedInstall>
+		<LockFileDirectory>/var/lock/subsys</LockFileDirectory>
 	</Installation>
 	<ExtentMap>
 		<!--

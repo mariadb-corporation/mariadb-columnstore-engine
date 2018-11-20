@@ -43,6 +43,9 @@ using namespace execplan;
 
 #include "installdir.h"
 
+string tmpDir;
+string logFile;
+
 enum BUILD_OPTION
 {
     SYSCATALOG_ONLY = 7, //Create systables only
@@ -54,8 +57,10 @@ namespace
 int setUp()
 {
 #ifndef _MSC_VER
-    (void)system("/bin/rm -f /tmp/dbbuilder.status >/dev/null 2>&1");
-    (void)system("/bin/touch /tmp/dbbuilder.status >/dev/null 2>&1");
+	string cmd = "/bin/rm -f " + logFile + " >/dev/null 2>&1";
+    (void)system(cmd.c_str());
+    cmd = "/bin/touch -f " + logFile + " >/dev/null 2>&1";
+    (void)system(cmd.c_str());
 #endif
     return 0;
 }
@@ -69,7 +74,8 @@ int checkNotThere(WriteEngine::FID fid)
 
 void tearDown()
 {
-    unlink("/tmp/oidbitmap");
+	string file = tmpDir + "/oidbitmap";
+    unlink(file.c_str());
 }
 
 void usage()
@@ -173,6 +179,10 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+	//get tmp log directory
+    tmpDir = startup::StartUp::tmpDir();
+    logFile = tmpDir + "/dbbuilder.status";
+
     buildOption = atoi(argv[optind++]);
 
     if (buildOption != 7 && !fFlg)
@@ -187,7 +197,7 @@ int main(int argc, char* argv[])
 
         bool canWrite = true;
 
-        if (access("/tmp/dbbuilder.status", W_OK) != 0)
+        if (access(logFile.c_str(), W_OK) != 0)
             canWrite = false;
 
         try
@@ -196,7 +206,7 @@ int main(int argc, char* argv[])
             {
                 string cmd = "echo 'FAILED: buildOption=" +
                              oam.itoa(buildOption) +
-                             "' > /tmp/dbbuilder.status";
+                             "' > " + logFile;
 
                 if (canWrite)
                     (void)system(cmd.c_str());
@@ -230,7 +240,7 @@ int main(int argc, char* argv[])
             }
             catch (const exception& ex)
             {
-                string cmd(string("echo 'FAILED: ") + ex.what() + "' > /tmp/dbbuilder.status");
+                string cmd(string("echo 'FAILED: ") + ex.what() + "' > " + logFile);
 
                 if (canWrite)
                     (void)system(cmd.c_str());
@@ -242,7 +252,7 @@ int main(int argc, char* argv[])
             }
             catch (...)
             {
-                string cmd = "echo 'FAILED:  HDFS checking.' > /tmp/dbbuilder.status";
+                string cmd = "echo 'FAILED:  HDFS checking.' > " + logFile;
 
                 if (canWrite)
                     (void)system(cmd.c_str());
@@ -261,7 +271,7 @@ int main(int argc, char* argv[])
             SystemCatalog sysCatalog;
             sysCatalog.build();
 
-            std::string cmd = "echo 'OK: buildOption=" + oam.itoa(buildOption) + "' > /tmp/dbbuilder.status";
+            std::string cmd = "echo 'OK: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
 
             if (canWrite)
                 (void)system(cmd.c_str());
@@ -296,7 +306,7 @@ int main(int argc, char* argv[])
         }
         catch (exception& ex)
         {
-            string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > /tmp/dbbuilder.status";
+            string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
 
             if (canWrite)
                 (void)system(cmd.c_str());
@@ -307,7 +317,7 @@ int main(int argc, char* argv[])
         }
         catch (...)
         {
-            string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > /tmp/dbbuilder.status";
+            string cmd = "echo 'FAILED: buildOption=" + oam.itoa(buildOption) + "' > " + logFile;
 
             if (canWrite)
                 (void)system(cmd.c_str());

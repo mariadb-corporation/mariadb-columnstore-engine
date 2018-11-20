@@ -31,6 +31,8 @@ using namespace logging;
 using namespace servermonitor;
 //using namespace procheartbeat;
 
+extern string tmpDir;
+
 
 /************************************************************************************************************
 * @brief	hardwareMonitor function
@@ -72,7 +74,10 @@ void hardwareMonitor(int IPMI_SUPPORT)
 
     if ( IPMI_SUPPORT == 0)
     {
-        int returnCode = system("ipmitool sensor list > /tmp/harwareMonitor.txt");
+		string tmpharwareMonitor = tmpDir + "/harwareMonitor.txt";
+    
+		string cmd = "ipmitool sensor list >  > " + tmpharwareMonitor;
+		int returnCode = system(cmd.c_str());
 
         if (returnCode)
         {
@@ -128,7 +133,7 @@ void hardwareMonitor(int IPMI_SUPPORT)
     {
         // parse output file
 
-        ifstream File ("/tmp/harwareMonitor.txt");
+        ifstream File (tmpharwareMonitor);
 
         if (!File)
         {
@@ -137,7 +142,7 @@ void hardwareMonitor(int IPMI_SUPPORT)
             MessageLog ml(lid);
             Message msg;
             Message::Args args;
-            args.add("Error opening /tmp/harwareMonitor.txt!!!");
+            args.add("Error opening harwareMonitor.txt!!!");
             msg.format(args);
             ml.logWarningMessage(msg);
             sleep(300);

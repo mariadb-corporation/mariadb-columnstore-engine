@@ -572,6 +572,59 @@ extern "C"
     	struct avgx_data* data = (struct avgx_data*)initid->ptr;
     	return data->sumx / data->cnt;
     }
+
+    /**
+     * distinct_count connector stub
+     */
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    my_bool distinct_count_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+    {
+    	if (args->arg_count != 1)
+    	{
+    		strcpy(message,"distinct_count() requires one argument");
+    		return 1;
+    	}
+
+    	return 0;
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void distinct_count_deinit(UDF_INIT* initid)
+    {
+    //	free(initid->ptr);
+    }	
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    distinct_count_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                  char* message __attribute__((unused)))
+    {
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    void
+    distinct_count_add(UDF_INIT* initid, UDF_ARGS* args,
+                char* is_null,
+                char* message __attribute__((unused)))
+    {
+    }
+
+    #ifdef _MSC_VER
+    __declspec(dllexport)
+    #endif
+    long long distinct_count(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)),
+    				  char* is_null, char* error __attribute__((unused)))
+    {
+    	return 0;
+    }
 }
 // vim:ts=4 sw=4:
 

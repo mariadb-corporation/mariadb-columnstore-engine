@@ -38,7 +38,7 @@ public:
     // run the query
     int run(const char* q);
 
-    void handleMySqlError(const char*, unsigned int);
+    void handleMySqlError(const char*, int);
 
     MYSQL* getMySqlCon()
     {

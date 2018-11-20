@@ -16,8 +16,6 @@ for arg in "$@"; do
 	elif [ `expr -- "$arg" : '--system-name='` -eq 14 ]; then
 		systemName="`echo $arg | awk -F= '{print $2}'`"
 		systemName="-sn "$systemName
-	elif [ `expr -- "$arg" : '--dist-install'` -eq 14 ]; then
-		nonDistrubutedInstall=" "
 	elif [ `expr -- "$arg" : '--help'` -eq 6 ]; then
 		echo "Usage ./quick_installer_amazon.sh [OPTION]"
 		echo ""
@@ -57,25 +55,31 @@ else
 fi
 
 if [[ $HOME = "/root" ]]; then
+        echo ""
         echo "${bold}Run post-install script${normal}"
         echo ""
         /usr/local/mariadb/columnstore/bin/post-install
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umCount = "" ]]; then
-			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount $systemName
+			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount $systemName -d
 		else
-			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount -um-count $umCount $systemName
+			/usr/local/mariadb/columnstore/bin/postConfigure -qa -pm-count $pmCount -um-count $umCount $systemName -d
 		fi
 else
+        echo ""
         echo "${bold}Run post-install script${normal}"
         echo ""
         $HOME/mariadb/columnstore/bin/post-install --installdir=$HOME/mariadb/columnstore
+
+		export COLUMNSTORE_INSTALL_DIR=$HOME/mariadb/columnstore
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/mariadb/columnstore/lib:$HOME/mariadb/columnstore/mysql/lib
+		
         echo "${bold}Run postConfigure script${normal}"
         echo ""
         if [[ $umCount = "" ]]; then
-			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount $systemName -d
 		else
-			. /etc/profile.d/columnstoreEnv.sh;$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName
+			$HOME/mariadb/columnstore/bin/postConfigure -i $HOME/mariadb/columnstore -qa -pm-count $pmCount -um-count $umCount $systemName -d
 		fi
 fi

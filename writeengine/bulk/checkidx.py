@@ -6,7 +6,7 @@ def find_paths():
   
   """Find DBRoot and BulkRoot."""
   try:
-    config_file = os.environ['CALPONT_CONFIG_FILE']
+    config_file = os.environ['COLUMNSTORE_CONFIG_FILE']
   except KeyError:
     try:
       config_file = '/usr/local/mariadb/columnstore/etc/Columnstore.xml'
@@ -71,10 +71,6 @@ def main():
   """
   Validate indexes..
   """
-  
-  if not os.access('.', os.W_OK):
-    os.chdir('/tmp')
-    print 'Changing to /tmp to have permission to write files'
 
   if len(os.getenv('LD_LIBRARY_PATH'))<5:
     print 'Suspicous LD_LIBRARY_PATH: %s'%os.getenv('LD_LIBRARY_PATH')

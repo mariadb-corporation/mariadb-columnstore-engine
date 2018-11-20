@@ -188,13 +188,9 @@ void initCtlShm()
     }
     catch (bi::interprocess_exception&)
     {
-#if BOOST_VERSION < 104500
-        bi::shared_memory_object shm(bi::create_only, DecomShmName.c_str(), bi::read_write);
-#else
         bi::permissions perms;
         perms.set_unrestricted();
         bi::shared_memory_object shm(bi::create_only, DecomShmName.c_str(), bi::read_write, perms);
-#endif
         shm.truncate(sizeof(CtlShmImage));
         bi::mapped_region region(shm, bi::read_write);
         tmpptr = new (region.get_address()) CtlShmImage;

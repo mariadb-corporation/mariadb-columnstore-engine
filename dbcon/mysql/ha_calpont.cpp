@@ -1139,10 +1139,76 @@ static MYSQL_SYSVAR_ULONG(
     0);
 #endif
 
+/*@brief  check_walk - It traverses filter conditions*/
+/************************************************************
+ * DESCRIPTION:
+ * It traverses filter predicates looking for unsupported
+ * JOIN types: non-equi JOIN, e.g  t1.c1 > t2.c2;
+ * logical OR.
+ * PARAMETERS:
+ *    thd - THD pointer.
+ *    derived - TABLE_LIST* to work with.
+ * RETURN:
+ *    derived_handler if possible
+ *    NULL in other case
+ ***********************************************************/
+void check_walk(const Item* item, void* arg)
+{
+    bool* unsupported_feature  = static_cast<bool*>(arg);
+    if ( *unsupported_feature )
+        return;
+    switch (item->type())
+    {
+        case Item::FUNC_ITEM:
+        {
+            Item_func* ifp = (Item_func*)item;
+
+            if ( ifp->functype() != Item_func::EQ_FUNC )
+            {
+                if ( ifp->argument_count() == 2 &&
+                    ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
+                    ifp->arguments()[1]->type() == Item::FIELD_ITEM )
+                {
+                    Item_field* left= static_cast<Item_field*>(ifp->arguments()[0]);
+                    Item_field* right= static_cast<Item_field*>(ifp->arguments()[1]);
+
+                    if ( left->field->table != right->field->table )
+                    {
+                        *unsupported_feature = true;
+                        return;
+                    }
+                }
+            }
+            break;
+        }
+
+        case Item::COND_ITEM:
+        {
+            Item_cond* icp = (Item_cond*)item;
+            if ( is_cond_or(icp) )
+            {
+                *unsupported_feature = true;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+#include <iostream>
+
 /*@brief  create_calpont_group_by_handler- Creates handler*/
 /***********************************************************
  * DESCRIPTION:
- * Creates a group_by pushdown handler.
+ * Creates a group_by pushdown handler if there is no:
+ *  non-equi JOIN, e.g * t1.c1 > t2.c2
+ *  logical OR in the filter predicates
+ *  Impossible WHERE
+ *  Impossible HAVING
+ * Valid queries with the last two crashes the server if processed.
  * Details are in server/sql/group_by_handler.h
  * PARAMETERS:
  *    thd - THD pointer.
@@ -1155,20 +1221,51 @@ static group_by_handler*
 create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
+    LEX* lex = thd->lex;
+    SELECT_LEX *select_lex = &lex->select_lex;
 
-    // Create a handler if there is an agregate or a GROUP BY
-    // and if vtable was explicitly disabled.
+    // Create a handler if query is valid. See comments for details.
     if ( thd->infinidb_vtable.vtable_state == THD::INFINIDB_DISABLE_VTABLE
-            && thd->variables.infinidb_vtable_mode == 0
-            && ( query->group_by || thd->lex->select_lex.with_sum_func) )
+        && ( thd->variables.infinidb_vtable_mode == 0
+            || thd->variables.infinidb_vtable_mode == 2 )
+        && ( query->group_by || thd->lex->select_lex.with_sum_func ) )
     {
-        handler = new ha_calpont_group_by_handler(thd, query);
+        bool unsupported_feature = false;
+        // Impossible HAVING or WHERE
+        if ( ( select_lex->having && select_lex->having_value == Item::COND_FALSE )
+            || ( select_lex->cond_value && select_lex->cond_value == Item::COND_FALSE ) )
+        {
+            unsupported_feature = true;
+        }
 
-        // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses.
-        query->group_by = NULL;
-        query->order_by = NULL;
-        query->having = NULL;
+        // Unsupported JOIN conditions check.
+        if ( !unsupported_feature )
+        {
+            JOIN *join = select_lex->join;
+            Item_cond *icp = 0;
+
+            if (join != 0)
+                icp = reinterpret_cast<Item_cond*>(join->conds);
+
+            if ( unsupported_feature == false
+                && join->table_count > 1 && icp )
+            {
+                icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
+            }
+        }
+
+        if ( !unsupported_feature )
+        {
+            handler = new ha_calpont_group_by_handler(thd, query);
+
+            // Notify the server, that CS handles GROUP BY, ORDER BY and HAVING clauses.
+            query->group_by = NULL;
+            query->order_by = NULL;
+            query->having = NULL;
+        }
     }
+
+    std::cerr << "create_calpont_group_by_handler handler " << handler << std::endl;
 
     return handler;
 }

@@ -14,14 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-USER=`whoami 2>/dev/null`
-if [ $USER = "root" ]; then
-	SUDO=" "
-else
-	SUDO="sudo"
-fi
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
 
-$SUDO rm -f /tmp/${MODULE}_resourceReport.txt
+rm -f ${tmpDir}/${MODULE}_resourceReport.txt
 
 {
 echo " "
@@ -33,7 +29,7 @@ echo "-- Shared Memory --"
 echo " "
 echo "################# ipcs -l #################"
 echo " "
-$SUDO ipcs -l
+ipcs -l
 
 echo "################# $INSTALLDIR/bin/clearShm -n #################"
 echo " "
@@ -44,7 +40,7 @@ echo "-- Disk Usage --"
 echo " "
 echo "################# df -k #################"
 echo " "
-$SUDO df -k
+df -k
 
 echo " "
 echo "-- Disk BRM Data files --"
@@ -70,6 +66,6 @@ echo "################# bin/editem -i #################"
 echo " "
 $INSTALLDIR/bin/editem -i 2>/dev/null
 
-} > /tmp/${MODULE}_resourceReport.txt
+} > ${tmpDir}/${MODULE}_resourceReport.txt
 
 exit 0

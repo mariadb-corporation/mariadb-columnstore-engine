@@ -61,12 +61,51 @@ bool mainResumeFlag;
 string USER = "root";
 string PMwithUM = "n";
 bool startProcMon = false;
-
+string tmpLogDir;
+string SUDO = "";
 
 //extern std::string gOAMParentModuleName;
 extern bool gOAMParentModuleFlag;
 
 pthread_mutex_t STATUS_LOCK;
+
+bool getshm(const string &name, int size, bi::shared_memory_object &target) {
+    MonitorLog log;
+    bool created = false;
+    try
+    {
+        bi::permissions perms;
+        perms.set_unrestricted();
+        bi::shared_memory_object shm(bi::create_only, name.c_str(), bi::read_write, perms);
+        created = true;
+        shm.truncate(size);
+        target.swap(shm);
+    }
+    catch (bi::interprocess_exception& biex)
+    {
+        if (biex.get_error_code() == bi::already_exists_error) {
+            try {
+                bi::shared_memory_object shm(bi::open_only, name.c_str(), bi::read_write);
+                target.swap(shm);
+            }
+            catch (exception &e) {
+                ostringstream os;
+                os << "ProcMon failed to attach to the " << name << " shared mem segment, got " << e.what();
+                log.writeLog(__LINE__, os.str(), LOG_TYPE_CRITICAL);
+                exit(1);
+            }
+        }
+        else {
+            ostringstream os;
+            os << "ProcMon failed to create the '" << name << "' shared mem segment, got " << biex.what() << ".";
+            os << "  Check the permissions on /dev/shm; should be 1777";
+            log.writeLog(__LINE__, os.str(), LOG_TYPE_CRITICAL);
+            exit(1);
+        }
+    }
+    return created;
+}
+
 
 /******************************************************************************************
 * @brief	main
@@ -126,9 +165,12 @@ int main(int argc, char** argv)
     int user;
     user = getuid();
 
-    if (user != 0)
+    if (user != 0) 
+	{
         rootUser = false;
-
+		SUDO = "sudo ";
+	}
+	
     char* p = getenv("USER");
 
     if (p && *p)
@@ -138,6 +180,12 @@ int main(int argc, char** argv)
     string systemLang = "C";
 
     setlocale(LC_ALL, systemLang.c_str());
+
+    //get tmp log directory
+    tmpLogDir = startup::StartUp::tmpDir();
+    
+    string cmd = "mkdir -p " + tmpLogDir;
+    system(cmd.c_str());
 
     // create message thread
     pthread_t MessageThread;
@@ -194,9 +242,16 @@ int main(int argc, char** argv)
         }
 
         string modType = config.moduleType();
+        
+        string mysqlpw = oam.getMySQLPassword();
+
+		string passwordOption = "";
+		if ( mysqlpw != oam::UnassignedName )
+			passwordOption = " --password=" + mysqlpw;
+
 
         //run the module install script
-        string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " > /tmp/module_installer.log 2>&1";
+        string cmd = startup::StartUp::installDir() + "/bin/module_installer.sh " + " --installdir=" + startup::StartUp::installDir() + " --module=" + modType + " " + passwordOption + " > " + tmpLogDir + "/module_installer.log 2>&1";
         log.writeLog(__LINE__, "run module_installer.sh", LOG_TYPE_DEBUG);
         log.writeLog(__LINE__, cmd, LOG_TYPE_DEBUG);
 
@@ -342,8 +397,9 @@ int main(int argc, char** argv)
                 //Set the alarm
 		//		aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 		//		sleep (1);
-				
+
                 string cmd = startup::StartUp::installDir() + "/bin/infinidb stop > /dev/null 2>&1";
+
                 system(cmd.c_str());
             }
 
@@ -437,7 +493,7 @@ int main(int argc, char** argv)
                     }
                     catch (...)
                     {
-                        log.writeLog(__LINE__, "wating for good return from getModuleStatus", LOG_TYPE_DEBUG);
+                        log.writeLog(__LINE__, "waiting for good return from getModuleStatus", LOG_TYPE_DEBUG);
                         sleep (1);
                     }
                 }
@@ -553,6 +609,7 @@ int main(int argc, char** argv)
         if ( retry == 20 )
         {
             log.writeLog(__LINE__, "Check DB mounts failed, shutting down", LOG_TYPE_CRITICAL);
+
             //Set the alarm
 		//	aMonitor.sendAlarm(config.moduleName().c_str(), STARTUP_DIAGNOTICS_FAILURE, SET);
 		//	sleep (1);
@@ -582,7 +639,7 @@ int main(int argc, char** argv)
 
         while (!mainResumeFlag)
         {
-            log.writeLog(__LINE__, "WATING FOR mainResumeFlag to be set", LOG_TYPE_DEBUG);
+            log.writeLog(__LINE__, "WAITING FOR mainResumeFlag to be set", LOG_TYPE_DEBUG);
 
             sleep(1);
         }
@@ -1130,9 +1187,6 @@ static void messageThread(MonitorConfig config)
     log.writeLog(__LINE__, "PORTS: " + msgPort + "/" + port, LOG_TYPE_DEBUG);
 
     string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-    if ( !rootUser)
-        cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
 
     system(cmd.c_str());
 
@@ -1887,6 +1941,9 @@ static void statusControlThread()
     //
     //Allocate Shared Memory for storing Process Status Data
     //
+
+    string shmLocation = "/dev/shm/";
+
     PROCSTATshmsize = MAX_PROCESS * sizeof(shmProcessStatus);
     bool memInit = true;
 #if 0
@@ -1908,35 +1965,7 @@ static void statusControlThread()
     fShmProcessStatus = static_cast<struct shmProcessStatus*>(shmat(shmid, NULL, 0));
 #endif
     string keyName = BRM::ShmKeys::keyToName(fShmKeys.PROCESSSTATUS_SYSVKEY);
-
-    try
-    {
-#if BOOST_VERSION < 104500
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-#else
-        bi::permissions perms;
-        perms.set_unrestricted();
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write, perms);
-#endif
-        shm.truncate(PROCSTATshmsize);
-        fProcStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fProcStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, PROCSTATshmsize, fProcStatShmobj);
 
     bi::mapped_region region(fProcStatShmobj, bi::read_write);
     fProcStatMapreg.swap(region);
@@ -1987,29 +2016,7 @@ static void statusControlThread()
     fShmSystemStatus = static_cast<struct shmDeviceStatus*>(shmat(shmid, NULL, 0));
 #endif
     keyName = BRM::ShmKeys::keyToName(fShmKeys.SYSTEMSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-        shm.truncate(SYSTEMSTATshmsize);
-        fSysStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fSysStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, SYSTEMSTATshmsize, fSysStatShmobj);
 
     bi::mapped_region region2(fSysStatShmobj, bi::read_write);
     fSysStatMapreg.swap(region2);
@@ -2086,49 +2093,9 @@ static void statusControlThread()
     //
     boost::interprocess::shared_memory_object fNICStatShmobj;
     static const int NICSTATshmsize = (MAX_MODULE * MAX_NIC) * sizeof(shmDeviceStatus);
-    memInit = true;
-#if 0
-    shmid = shmget(fShmKeys.NICSTATUS_SYSVKEY, NICSTATshmsize, IPC_EXCL | IPC_CREAT | 0666);
 
-    if (shmid == -1)
-    {
-        // table already exist
-        memInit = false;
-        shmid = shmget(fShmKeys.NICSTATUS_SYSVKEY, NICSTATshmsize, 0666);
-
-        if (shmid == -1)
-        {
-            log.writeLog(__LINE__, "*****NICStatusTable shmget failed.", LOG_TYPE_ERROR);
-            exit(1);
-        }
-    }
-
-    fShmNICStatus = static_cast<struct shmDeviceStatus*>(shmat(shmid, NULL, 0));
-#endif
     keyName = BRM::ShmKeys::keyToName(fShmKeys.NICSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-        shm.truncate(NICSTATshmsize);
-        fNICStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fNICStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, NICSTATshmsize, fNICStatShmobj);
 
     bi::mapped_region fNICStatMapreg(fNICStatShmobj, bi::read_write);
     fShmNICStatus = static_cast<shmDeviceStatus*>(fNICStatMapreg.get_address());
@@ -2184,49 +2151,8 @@ static void statusControlThread()
 
     boost::interprocess::shared_memory_object fExtStatShmobj;
     static const int EXTDEVICESTATshmsize = MAX_EXT_DEVICE * sizeof(shmDeviceStatus);
-    memInit = true;
-#if 0
-    shmid = shmget(fShmKeys.SWITCHSTATUS_SYSVKEY, EXTDEVICESTATshmsize, IPC_EXCL | IPC_CREAT | 0666);
-
-    if (shmid == -1)
-    {
-        // table already exist
-        memInit = false;
-        shmid = shmget(fShmKeys.SWITCHSTATUS_SYSVKEY, EXTDEVICESTATshmsize, 0666);
-
-        if (shmid == -1)
-        {
-            log.writeLog(__LINE__, "*****ExtDeviceStatusTable shmget failed.", LOG_TYPE_ERROR);
-            exit(1);
-        }
-    }
-
-    fShmExtDeviceStatus = static_cast<struct shmDeviceStatus*>(shmat(shmid, NULL, 0));
-#endif
     keyName = BRM::ShmKeys::keyToName(fShmKeys.SWITCHSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-        shm.truncate(EXTDEVICESTATshmsize);
-        fExtStatShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fExtStatShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, EXTDEVICESTATshmsize, fExtStatShmobj);
 
     bi::mapped_region fExtStatMapreg(fExtStatShmobj, bi::read_write);
     fShmExtDeviceStatus = static_cast<shmDeviceStatus*>(fExtStatMapreg.get_address());
@@ -2292,31 +2218,8 @@ static void statusControlThread()
 
     boost::interprocess::shared_memory_object fDbrootShmobj;
     static const int DBROOTSTATshmsize = MAX_DBROOT * sizeof(shmDeviceStatus);
-    memInit = true;
     keyName = BRM::ShmKeys::keyToName(fShmKeys.DBROOTSTATUS_SYSVKEY);
-
-    try
-    {
-        bi::shared_memory_object shm(bi::create_only, keyName.c_str(), bi::read_write);
-#ifdef __linux__
-        {
-            string pname = "/dev/shm/" + keyName;
-            chmod(pname.c_str(), 0666);
-        }
-#endif
-        shm.truncate(DBROOTSTATshmsize);
-        fDbrootShmobj.swap(shm);
-    }
-    catch (bi::interprocess_exception& biex)
-    {
-        memInit = false;
-        bi::shared_memory_object shm(bi::open_only, keyName.c_str(), bi::read_write);
-        fDbrootShmobj.swap(shm);
-    }
-    catch (...)
-    {
-        throw;
-    }
+    memInit = getshm(keyName, DBROOTSTATshmsize, fDbrootShmobj);
 
     bi::mapped_region fdDbrootStatMapreg(fDbrootShmobj, bi::read_write);
     fShmDbrootStatus = static_cast<shmDeviceStatus*>(fdDbrootStatMapreg.get_address());
@@ -2366,10 +2269,7 @@ static void statusControlThread()
         string port = sysConfig->getConfig(portName, "Port");
         string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
 
-        if ( !rootUser)
-            cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-        system(cmd.c_str());
+	system(cmd.c_str());
     }
     catch (...)
     {
@@ -2407,6 +2307,7 @@ static void statusControlThread()
             log.writeLog(__LINE__, "statusControlThread Thread reading " + portName + " port", LOG_TYPE_DEBUG);
         }
 
+        fIos = NULL;
         try
         {
             //log.writeLog(__LINE__, "***before accept", LOG_TYPE_DEBUG);
@@ -2433,7 +2334,8 @@ static void statusControlThread()
         }
         catch (...)
         {
-            delete fIos;
+            if (fIos)
+                delete fIos;
         }
 
         if ( runStandby )
@@ -2698,6 +2600,23 @@ void processStatusMSG(messageqcpp::IOSocket* cfIos)
                 memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
                 log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
             }
+
+            //if DMLProc set to ACTIVE, set system state to ACTIVE if in an INIT state
+            if ( processName == "DMLProc" && state == oam::ACTIVE )
+            {
+                if ( fShmSystemStatus[0].OpState == oam::BUSY_INIT ||
+                        fShmSystemStatus[0].OpState == oam::MAN_INIT ||
+                        fShmSystemStatus[0].OpState == oam::AUTO_INIT )
+                {
+                    fShmSystemStatus[0].OpState = state;
+                    memcpy(fShmSystemStatus[0].StateChangeDate, oam.getCurrentTime().c_str(), DATESIZE);
+                    log.writeLog(__LINE__, "statusControl: REQUEST RECEIVED: Set System State = " + oamState[state], LOG_TYPE_DEBUG);
+                }
+
+				BRM::DBRM dbrm;
+				dbrm.setSystemQueryReady(true);
+            }
+
         }
         break;
 

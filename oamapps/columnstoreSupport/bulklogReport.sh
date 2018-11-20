@@ -14,14 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-USER=`whoami 2>/dev/null`
-if [ $USER = "root" ]; then
-	SUDO=" "
-else
-	SUDO="sudo"
-fi
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
 
-$SUDO rm -f /tmp/${MODULE}_bulklogReport.txt
+rm -f ${tmpDir}/${MODULE}_bulklogReport.txt
 
 {
 
@@ -34,6 +30,6 @@ if test -d $INSTALLDIR/data/bulk ; then
 	egrep '(ERR|CRIT)' $INSTALLDIR/data/bulk/log/*.err 2>/dev/null
 fi
 
-} > /tmp/${MODULE}_bulklogReport.txt
+} > ${tmpDir}/${MODULE}_bulklogReport.txt
 
 exit 0

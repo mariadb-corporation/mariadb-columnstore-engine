@@ -31,6 +31,13 @@ using namespace boost;
 #include "idbregistry.h"
 #endif
 #include "installdir.h"
+#include "configcpp.h"
+
+using namespace config;
+
+#include <iostream> 
+   
+using namespace std;
 
 namespace startup
 {
@@ -69,6 +76,77 @@ const string StartUp::installDir()
 #endif
 
     return *fInstallDirp;
+}
+
+/* static */
+mutex StartUp::fTmpDirLock;
+/* static */
+string* StartUp::fTmpDirp = 0;
+
+/* static */
+const string StartUp::tmpDir()
+{
+    mutex::scoped_lock lk(fTmpDirLock);
+
+    if (fTmpDirp)
+        return *fTmpDirp;
+
+#ifdef _MSC_VER
+    fTmpDirp = new string("C:\\Calpont\Tmp");
+    string cfStr = IDBreadRegistry("");
+
+    if (!cfStr.empty())
+        *fTmpDirp = cfStr;
+    
+    return *fTmpDirp;
+
+#else
+
+	//check for non-root user 
+/*    const char* p = getenv("HOME");
+	string homedir = p;
+
+    if (homedir == "/root")
+	{
+		Config* sysConfig = Config::makeConfig();
+
+		string TempFileDir;
+
+		try
+		{
+			TempFileDir = sysConfig->getConfig("SystemConfig", "TempFileDir");
+		}
+		catch (...)
+		{}
+
+		fTmpDirp = new string("/tmp");
+		
+		*fTmpDirp = *fTmpDirp + TempFileDir;
+	}
+	else
+	{
+		// non-root user
+		fTmpDirp = new string(homedir);
+
+		*fTmpDirp = *fTmpDirp + "/.tmp";
+	}
+*/
+	Config* sysConfig = Config::makeConfig();
+
+	string TempFileDir;
+
+	try
+	{
+		TempFileDir = sysConfig->getConfig("SystemConfig", "SystemTempFileDir");
+	}
+	catch (...)
+	{}
+	
+	return TempFileDir;
+	
+#endif
+
+
 }
 
 }

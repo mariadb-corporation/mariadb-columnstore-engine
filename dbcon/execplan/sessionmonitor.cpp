@@ -54,6 +54,9 @@ using namespace messageqcpp;
 
 using namespace BRM;
 
+#include "installdir.h"
+
+
 namespace execplan
 {
 
@@ -102,8 +105,12 @@ SessionMonitor::SessionMonitor()
     if (stmp != "")
         fSegmentFilename = strdup(stmp.c_str());
     else
-        fSegmentFilename = strdup("/tmp/CalpontSessionMonitorShm");
-
+    {
+		string tmpdir = startup::StartUp::installDir() + "CalpontSessionMonitorShm";
+		
+        fSegmentFilename = strdup(tmpdir);
+	}
+	
     try
     {
         madeSems = getSems();

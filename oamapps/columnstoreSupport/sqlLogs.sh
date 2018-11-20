@@ -23,6 +23,9 @@ if [ -z "$MYSQLCMD" ]; then
         export MYSQLCMD
 fi
 
+#get temp directory
+tmpDir=`$COLUMNSTORE_INSTALL_DIR/bin/getConfig SystemConfig SystemTempFileDir`
+
 main()
 {
 	if [ "$option" == "usage" ]; then
@@ -111,7 +114,7 @@ create ()
 	        prevSession=$3;
 	}
 	print $0 "|" val "|"
-	}' | sort -t '|' -n -k 1 > /tmp/idbtmp.tbl
+	}' | sort -t '|' -n -k 1 > ${tmpDir}/idbtmp.tbl
 
 	echo "Step 2 of 4.  Populating $DB.start table with Start SQL log entries."
 	sql="
@@ -126,7 +129,7 @@ create ()
 	  sessionStatementId int
 	) ENGINE=MyISAM ;
 	create index start_idx on start (sessionid, sessionStatementId);
-	load data infile '/tmp/idbtmp.tbl' into table start fields terminated by '|';
+	load data infile '${tmpDir}/idbtmp.tbl' into table start fields terminated by '|';
 	"
 	$MYSQLCMD -e "$sql"
 
@@ -148,7 +151,7 @@ create ()
 	        prevSession=$3;
 	}
 	print $0 "|" val "|"
-	}' | sort -t '|' -n -k 1 > /tmp/idbtmp.tbl
+	}' | sort -t '|' -n -k 1 > ${tmpDir}/idbtmp.tbl
 	 
 	echo "Step 4 of 4.  Populating $DB.stop table with End SQL log entries."
 	sql="
@@ -160,7 +163,7 @@ create ()
 	  sessionStatementId int
 	) ENGINE=MyISAM ;
 	create index stop_idx on stop (sessionid, sessionStatementId);
-	load data infile '/tmp/idbtmp.tbl' into table stop fields terminated by '|';
+	load data infile '${tmpDir}/idbtmp.tbl' into table stop fields terminated by '|';
 	"
 	$MYSQLCMD $DB -e "$sql;"
 

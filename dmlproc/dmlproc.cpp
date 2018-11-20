@@ -83,6 +83,7 @@ using namespace joblist;
 #include "utils_utf8.h"
 
 #include "crashtrace.h"
+#include "installdir.h"
 
 namespace fs = boost::filesystem;
 
@@ -493,7 +494,7 @@ void rollbackAll(DBRM* dbrm)
 
 void setupCwd()
 {
-    string workdir = Config::makeConfig()->getConfig("SystemConfig", "WorkingDir");
+    string workdir = startup::StartUp::tmpDir();
 
     if (workdir.length() == 0)
         workdir = ".";
@@ -605,26 +606,11 @@ int main(int argc, char* argv[])
     if (temp > 0)
         serverQueueSize = temp;
 
-
-    bool rootUser = true;
-#ifndef _MSC_VER
-    //check if root-user
-    int user;
-    user = getuid();
-
-    if (user != 0)
-        rootUser = false;
-
-#endif
-
     //read and cleanup port before trying to use
     try
     {
         string port = cf->getConfig(DMLProc, "Port");
-        string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
-
-        if ( !rootUser)
-            cmd = "sudo fuser -k " + port + "/tcp >/dev/null 2>&1";
+	string cmd = "fuser -k " + port + "/tcp >/dev/null 2>&1";
 
         (void)::system(cmd.c_str());
     }

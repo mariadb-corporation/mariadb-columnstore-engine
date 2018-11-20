@@ -6,7 +6,7 @@ def find_paths():
   
   """Find DBRoot and BulkRoot."""
   try:
-    config_file = os.environ['CALPONT_CONFIG_FILE']
+    config_file = os.environ['COLUMNSTORE_CONFIG_FILE']
   except KeyError:
     try:
       config_file = '/usr/local/mariadb/columnstore/etc'

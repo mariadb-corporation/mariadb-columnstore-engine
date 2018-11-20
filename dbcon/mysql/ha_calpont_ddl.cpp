@@ -1887,6 +1887,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     return rc;
 }
 
+// Fails with `/` sign in table name
 pair<string, string> parseTableName(const string& tn)
 {
     string db;
@@ -2342,6 +2343,58 @@ int ha_calpont_impl_delete_table_(const char* db, const char* name, cal_connecti
     return rc;
 }
 
+/**
+  @brief
+  Find and return a pointer to the last slash in the name.
+
+  @details
+  This f() finds and returns position of the last slash sign found in
+  the path or NULL.
+
+  Called from ha_calpont_ddl.cpp by decode_table_name().
+*/
+const char* last_slash_pos(const char *name, size_t name_len)
+{
+#ifdef MCS_DEBUG
+    cout << "Entering last_slash_pos()" << endl;
+#endif
+    const char *slash_pos = name + name_len - 1;
+    while ( *slash_pos != '/' && slash_pos != name )
+        slash_pos--;
+
+    return ( slash_pos != name ) ? slash_pos : NULL;
+}
+
+/**
+  @brief
+  Decodes the table name.
+
+  @details
+  Replaces the encoded table name in the path with a decoded variant,
+  e.g if path contains ./test/d@0024. This f() makes it ./test/d$
+
+  Called from ha_calpont_ddl.cpp by ha_calpont_impl_rename_table_().
+*/
+void decode_table_name(char *buf, const char *path, size_t pathLen)
+{
+#ifdef MCS_DEBUG
+    cout << "Entering decode_table_name()" << endl;
+#endif
+    strncpy(buf, path, pathLen);
+
+    const char *lastSlashPos = last_slash_pos(path, pathLen);
+    if ( lastSlashPos )
+    {
+        size_t prefixLen = ( lastSlashPos - path ) / sizeof(*path);
+        size_t tableLen = strlen(lastSlashPos + 1);
+        char tblBuf[FN_REFLEN];
+        (void) filename_to_tablename(lastSlashPos + 1, tblBuf, sizeof(tblBuf));
+
+        strncpy(buf + ( pathLen - tableLen ), tblBuf, tableLen);
+        buf[prefixLen + tableLen + 1] = '\0';
+    }
+}
+
 int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connection_info& ci)
 {
     THD* thd = current_thd;
@@ -2364,8 +2417,16 @@ int ha_calpont_impl_rename_table_(const char* from, const char* to, cal_connecti
         return 1;
     }
 
-    fromPair = parseTableName(from);
-    toPair = parseTableName(to);
+    // MCOL-1855 Decode the table name if it contains encoded symbols.
+    // This approach fails when `/` is used in the paths.
+    size_t pathLen = strlen(from);
+    char pathCopy[pathLen];
+    decode_table_name(pathCopy, from, pathLen);
+    fromPair = parseTableName(const_cast<const char*>(pathCopy));
+
+    pathLen = strlen(to);
+    decode_table_name(pathCopy, to, pathLen);
+    toPair = parseTableName(const_cast<const char*>(pathCopy));
 
     if (fromPair.first != toPair.first)
     {

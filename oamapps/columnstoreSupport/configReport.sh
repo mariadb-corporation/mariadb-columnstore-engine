@@ -14,14 +14,10 @@ else
         INSTALLDIR="/usr/local/mariadb/columnstore"
 fi
 
-USER=`whoami 2>/dev/null`
-if [ $USER = "root" ]; then
-	SUDO=" "
-else
-	SUDO="sudo"
-fi
+#get temp directory
+tmpDir=`$INSTALLDIR/bin/getConfig SystemConfig SystemTempFileDir`
 
-$SUDO rm -f /tmp/${MODULE}_configReport.txt
+rm -f ${tmpDir}/${MODULE}_configReport.txt
 
 {
 echo " "
@@ -34,10 +30,10 @@ if [ -n "$chkconfig" ]; then
 	echo " "
 	echo "################# chkconfig --list | grep columnstore #################"
 	echo " "
-	$SUDO chkconfig --list | grep columnstore 2>/dev/null
+	chkconfig --list | grep columnstore 2>/dev/null
 	echo "################# chkconfig --list | grep mysql-Columnstore #################"
 	echo " "
-	$SUDO chkconfig --list | grep mysql-Columnstore 2>/dev/null
+	chkconfig --list | grep mysql-Columnstore 2>/dev/null
 fi
 
 systemctl=`which systemctl 2>/dev/null`
@@ -46,10 +42,10 @@ if [ -n "$systemctl" ]; then
 	echo " "
 	echo "################# systemctl list-unit-files --type=service | grep columnstore #################"
 	echo " "
-	$SUDO systemctl list-unit-files --type=service | grep columnstore 2>/dev/null
+	systemctl list-unit-files --type=service | grep columnstore 2>/dev/null
 	echo "################# systemctl list-unit-files --type=service | grep mysql-Columnstore #################"
 	echo " "
-	$SUDO systemctl list-unit-files --type=service | grep mysql-Columnstore 2>/dev/null
+	systemctl list-unit-files --type=service | grep mysql-Columnstore 2>/dev/null
 fi
 
 updaterc=`which update-rc.d 2>/dev/null`
@@ -58,10 +54,10 @@ if [ -n "$updaterc" ]; then
 	echo " "
 	echo "################# service --status-all | grep columnstore #################"
 	echo " "
-	$SUDO service --status-all | grep columnstore 2>/dev/null
+	service --status-all | grep columnstore 2>/dev/null
 	echo "################# service --status-all | grep mysql-Columnstore #################"
 	echo " "
-	$SUDO service --status-all | grep mysql-Columnstore 2>/dev/null
+	service --status-all | grep mysql-Columnstore 2>/dev/null
 fi
 
 
@@ -70,22 +66,22 @@ echo "-- fstab Configuration --"
 echo " "
 echo "################# cat /etc/fstab #################"
 echo " "
-$SUDO cat /etc/fstab 2>/dev/null
+cat /etc/fstab 2>/dev/null
 
 echo " "
 echo "-- Server Processes --"
 echo " "
 echo "################# ps axu #################"
 echo " "
-$SUDO ps axu
+ps axu
 
 echo " "
 echo "-- Server Processes with resource usage --"
 echo " "
 echo "################# top -b -n 1 #################"
 echo " "
-$SUDO top -b -n 1
+top -b -n 1
 
-} > /tmp/${MODULE}_configReport.txt
+} > ${tmpDir}/${MODULE}_configReport.txt
 
 exit 0

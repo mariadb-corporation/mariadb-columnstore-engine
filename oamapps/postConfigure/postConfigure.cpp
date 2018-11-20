@@ -80,6 +80,7 @@ using namespace config;
 #include "helpers.h"
 using namespace installer;
 
+#include "installdir.h"
 
 typedef struct DBRoot_Module_struct
 {
@@ -114,16 +115,17 @@ string getModuleName();
 bool setModuleName(string moduleName);
 bool updateBash();
 bool makeModuleFile(string moduleName, string parentOAMModuleName);
-bool updateProcessConfig(int serverTypeInstall);
+bool updateProcessConfig();
 bool uncommentCalpontXml( string entry);
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall);
-bool createDbrootDirs(string DBRootStorageType);
+bool createDbrootDirs(string DBRootStorageType, bool amazonInstall);
 bool pkgCheck(std::string columnstorePackage);
 bool storageSetup(bool amazonInstall);
 void setSystemName();
 bool singleServerDBrootSetup();
 bool copyFstab(string moduleName);
 bool attachVolume(string instanceName, string volumeName, string deviceName, string dbrootPath);
+void singleServerConfigSetup(Config* sysConfig);
 
 void remoteInstallThread(void*);
 
@@ -194,13 +196,14 @@ bool amazon_quick_install = false;
 string DataFileEnvFile;
 
 string installDir;
+string tmpDir;
 string HOME = "/root";
-
+string SUDO = "";
 extern string pwprompt;
-string mysqlpw = oam::UnassignedName;
 
 extern const char* pcommand;
 extern string prompt;
+
 
 /* create thread argument struct for thr_func() */
 typedef struct _thread_data_t
@@ -271,9 +274,13 @@ int main(int argc, char* argv[])
     user = getuid();
     usergroup = getgid();
 
-    if (user != 0)
+	string SUDO = "";
+    if (user != 0) 
+    {
         rootUser = false;
-
+		SUDO = "sudo ";
+	}
+	
     char* p = getenv("USER");
 
     if (p && *p)
@@ -286,7 +293,8 @@ int main(int argc, char* argv[])
         if (p && *p)
             HOME = p;
     }
-	
+
+	tmpDir = startup::StartUp::tmpDir();
 
     for ( int i = 1; i < argc; i++ )
     {
@@ -567,18 +575,20 @@ int main(int argc, char* argv[])
 			EEPackageType = "binary";
 	else
 	{
-			int rtnCode = system("rpm -qi mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
+		string cmd = "rpm -qi mariadb-columnstore-platform > " + tmpDir + "/columnstore.txt 2>&1";
+		int rtnCode = system(cmd.c_str());
+
+		if (WEXITSTATUS(rtnCode) == 0)
+				EEPackageType = "rpm";
+		else {
+			string cmd = "dpkg -s mariadb-columnstore-platform > " + tmpDir + "/columnstore.txt 2>&1";
+			int rtnCode = system(cmd.c_str());
 
 			if (WEXITSTATUS(rtnCode) == 0)
-					EEPackageType = "rpm";
-			else {
-					rtnCode = system("dpkg -s mariadb-columnstore-platform > /tmp/columnstore.txt 2>&1");
-
-				if (WEXITSTATUS(rtnCode) == 0)
-							EEPackageType = "deb";
-					else
-							EEPackageType = "binary";
-			}
+						EEPackageType = "deb";
+				else
+						EEPackageType = "binary";
+		}
 	}
 
 	try {
@@ -700,11 +710,11 @@ int main(int argc, char* argv[])
     // run my.cnf upgrade script
     if ( reuseConfig == "y" )
     {
-        cmd = installDir + "/bin/mycnfUpgrade  > /tmp/mycnfUpgrade.log 2>&1";
+        cmd = installDir + "/bin/mycnfUpgrade  > " + tmpDir + "/mycnfUpgrade.log 2>&1";
         int rtnCode = system(cmd.c_str());
 
         if (WEXITSTATUS(rtnCode) != 0)
-            cout << "Error: Problem upgrade my.cnf, check /tmp/mycnfUpgrade.log" << endl;
+            cout << "Error: Problem upgrade my.cnf, check " << tmpDir << "/mycnfUpgrade.log" << endl;
         else
             cout << "NOTE: my.cnf file was upgraded based on my.cnf.rpmsave" << endl;
     }
@@ -794,12 +804,16 @@ int main(int argc, char* argv[])
 	{
 		cout << "===== Quick Install Multi-Server Configuration =====" << endl << endl;
 		
+		cout << "Multi-Server install defaulting to using local storage" << endl;
+
 		singleServerInstall = "2";
 	}
 	else if (amazon_quick_install)
 	{
 		cout << "===== Quick Install Amazon Configuration =====" << endl << endl;
 		
+		cout << "Amazon AMI EC2 install defaulting to using local storage" << endl;
+
 		singleServerInstall = "2";
 	}
 	else
@@ -816,9 +830,8 @@ int main(int argc, char* argv[])
 
 		string temp;
 
-
-    try
-    {
+		try
+		{
 			temp = sysConfig->getConfig(InstallSection, "SingleServerInstall");
 		}
 		catch(...)
@@ -829,106 +842,119 @@ int main(int argc, char* argv[])
 		else
 			singleServerInstall = "2";
 
-		while(true) {
+		while(true) 
+		{
 			string temp = singleServerInstall;
 			prompt = "Select the type of System Server install [1=single, 2=multi] (" + singleServerInstall + ") > ";
 			pcommand = callReadline(prompt.c_str());
 
-        if (pcommand)
-        {
-				if (strlen(pcommand) > 0) 
+			if (pcommand)
+			{
+				if (strlen(pcommand) > 0)
 					temp = pcommand;
 				else
 					temp = singleServerInstall;
-					
+
 				callFree(pcommand);
 
-				if (temp == "1") {
-					singleServerInstall = temp;
-					
-					cout << endl << "Performing the Single Server Install." << endl; 
-
+				if (temp == "1")
+				{
+					singleServerInstall = "1";
 					break;
 				}
 				else
 				{
-					if (temp == "2") {
-						singleServerInstall = temp;
+					if (temp == "2")
+					{
+						singleServerInstall = "2";
 						break;
 					}
 				}
 
-				cout << "Invalid Entry, please re-enter (1 or 2)" << endl;
+				cout << "Invalid Entry, please re-enter" << endl;
+
 				if ( noPrompting )
 					exit(1);
 			}
 		}
-	}			
-	
+	}
+
+	// perform single server install
 	if (singleServerInstall == "1")
 	{
-		if ( reuseConfig == "n" ) {
-			//setup to use the single server Columnstore.xml file
+		cout << endl << "Performing the Single Server Install." << endl << endl;
 
-			// we know that our Config instance just timestamped itself in the getConfig
-			// call above.  if postConfigure is running non-interactively we may get here
-			// within the same second which means the changes that are about to happen
-			// when Columnstore.xml gets overwritten will be ignored because of the Config
-			// instance won't know to reload
-			sleep(1);
+		if ( reuseConfig == "n" )
+		{
+			//setup to Columnstore.xml file for single server
+			singleServerConfigSetup(sysConfig);
+		}
+		
+		//module ProcessConfig.xml to setup all apps on the pm
+		if ( !updateProcessConfig() )
+			cout << "Update ProcessConfig.xml error" << endl;
 
-			cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-			system(cmd.c_str());
-			cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-			system(cmd.c_str());
-			cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
-			system(cmd.c_str());
+		try
+		{
+			sysConfig->setConfig(InstallSection, "SingleServerInstall", "y");
+			sysConfig->setConfig(InstallSection, "ServerTypeInstall", "2");
+		}
+		catch (...)
+		{
+			cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+
+		if ( !writeConfig(sysConfig) )
+		{
+			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
 		}
 
 		setSystemName();
+		cout << endl;
 
-		if (!single_server_quick_install)
+		system(cmd.c_str());
+
+		// setup storage
+		if (!storageSetup(false))
 		{
-			cout << endl;
-
-			// setup storage
-			if (!storageSetup(false))
-			{
-				cout << "ERROR: Problem setting up storage" << endl;
-				exit(1);
-			}
-
-			// setup storage
-			if (!singleServerDBrootSetup())
-			{
-				cout << "ERROR: Problem setting up DBRoot IDs" << endl;
-				exit(1);
-			}
-
-			//set system DBRoot count and check 'files per parition' with number of dbroots
-			try {
-				sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
-			}
-			catch(...)
-			{
-				cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
-				exit(1);
-			}
-
-			//check if dbrm data resides in older directory path and inform user if it does
-			dbrmDirCheck();
-
-			if (startOfflinePrompt)
-				offLineAppCheck();
+			cout << "ERROR: Problem setting up storage" << endl;
+			exit(1);
 		}
+
+		if (hdfs || !rootUser)
+			if ( !updateBash() )
+				cout << "updateBash error" << endl;
+
+		// setup storage
+		if (!singleServerDBrootSetup())
+		{
+			cout << "ERROR: Problem setting up DBRoot IDs" << endl;
+			exit(1);
+		}
+
+		//set system DBRoot count and check 'files per parition' with number of dbroots
+		try
+		{
+			sysConfig->setConfig(SystemSection, "DBRootCount", oam.itoa(DBRootCount));
+		}
+		catch (...)
+		{
+			cout << "ERROR: Problem setting DBRoot Count in the MariaDB ColumnStore System Configuration file" << endl;
+			exit(1);
+		}
+
+		//check if dbrm data resides in older directory path and inform user if it does
+		dbrmDirCheck();
+
+		if (startOfflinePrompt)
+			offLineAppCheck();
 
 		checkMysqlPort(mysqlPort, sysConfig);
 
-		if (hdfs || !rootUser)
-			if( !updateBash() )
-				cout << "updateBash error" << endl;
-
-		if ( !writeConfig(sysConfig) ) {
+		if ( !writeConfig(sysConfig) )
+		{
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 			exit(1);
 		}
@@ -940,23 +966,27 @@ int main(int argc, char* argv[])
 		exit(0);
 	}
 
-	try {
-		sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
-	}
-	catch(...)
-	{
-		cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
-		exit(1);
-	}
+	// perform multi-node install
+	
+    try
+    {
+        sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
+    }
+    catch (...)
+    {
+        cout << "ERROR: Problem setting SingleServerInstall from the MariaDB ColumnStore System Configuration file" << endl;
+        exit(1);
+    }
 
-	if ( !writeConfig(sysConfig) ) {
-		cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
-		exit(1);
-	}
+    if ( !writeConfig(sysConfig) )
+    {
+        cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
+        exit(1);
+    }
 
-	//
-	// Multi-server install
-	//
+    //
+    // Multi-server install
+    //
 	
 	ModuleIP InputModuleIP;
 	ModuleIpList InputModuleIPList;
@@ -1131,8 +1161,8 @@ int main(int argc, char* argv[])
                 cout << "The Server will be configured as a Performance Module." << endl;
                 cout << "All MariaDB ColumnStore Processes will run on the Performance Modules." << endl << endl;
 
-                //module ProcessConfig.xml to setup all apps on the dm
-                if ( !updateProcessConfig(IserverTypeInstall) )
+                //module ProcessConfig.xml to setup all apps on the pm
+                if ( !updateProcessConfig() )
                     cout << "Update ProcessConfig.xml error" << endl;
 
                 //store local query flag
@@ -1323,19 +1353,21 @@ int main(int argc, char* argv[])
 	
 	if (!multi_server_quick_install)
 	{
-		system("aws --version > /tmp/amazon.log 2>&1");
+		string amazonLog = tmpDir + "/amazon.log";
+		string cmd = "aws --version > " + amazonLog + " 2>&1";
+		int rtnCode = system(cmd.c_str());
 
-		ifstream in("/tmp/amazon.log");
+		ifstream in(amazonLog.c_str());
 
 		in.seekg(0, std::ios::end);
 		int size = in.tellg();
 
-		if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not found"))
+		if ( size == 0 || oam.checkLogStatus(amazonLog, "not found"))
 		{
 			// not running on amazon with ec2-api-tools
 			if (amazon_quick_install)
 			{
-				cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
+				cout << "ERROR: Amazon Quick Installer was specified, bu the Amazon CLI API packages isnt installed, exiting" << endl; 
 				exit(1);
 			}
 
@@ -1343,7 +1375,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			if ( size == 0 || oam.checkLogStatus("/tmp/amazon.log", "not installed"))
+			if ( size == 0 || oam.checkLogStatus(amazonLog, "not installed"))
 			{
 				// not running on amazon with ec2-api-tools
 				if (amazon_quick_install)
@@ -1439,13 +1471,12 @@ int main(int argc, char* argv[])
                 cout << "Check Amazon Install Documenation for additional information, exiting..." << endl;
                 exit (1);
             }
-        }
 
-        // setup to start on reboot, for non-root amazon installs
-        if ( !rootUser )
-        {
-            system("sudo sed -i -e 's/#sudo runuser/sudo runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
-            system("sudo chmod 666 /etc/fstab >/dev/null 2>&1");
+			// setup to start on reboot, for non-root amazon installs
+			if ( !rootUser )
+			{
+				system("sudo sed -i -e 's/#runuser/runuser/g' /etc/rc.d/rc.local >/dev/null 2>&1");
+			}
         }
 
         if ( !writeConfig(sysConfig) )
@@ -1686,7 +1717,13 @@ int main(int argc, char* argv[])
             // are we using settings from previous config file?
             if ( reuseConfig == "n" )
             {
-
+				
+				
+				
+				
+				
+				
+				
                 string numBlocksPct;
 
                 try
@@ -1787,7 +1824,7 @@ int main(int argc, char* argv[])
     //
     // Module Configuration
     //
-    cout << endl;
+    cout << endl << endl;
     cout << "===== Setup the Module Configuration =====" << endl << endl;
 
     if (amazonInstall)
@@ -2799,8 +2836,8 @@ int main(int argc, char* argv[])
                                 callFree(pcommand);
                             }
 
-                            //get device name based on DBRoot ID
-                            deviceName = "/dev/sdf";
+                            //get amazon device name for UM
+                            deviceName = "/dev/xvdf";
                         }
                         else
                         {
@@ -3431,7 +3468,7 @@ int main(int argc, char* argv[])
     }
 
     //create directories on dbroot1
-    if ( !createDbrootDirs(DBRootStorageType) )
+    if ( !createDbrootDirs(DBRootStorageType, amazonInstall) )
     {
         cout << "createDbrootDirs error" << endl;
         exit(1);
@@ -3450,7 +3487,7 @@ int main(int argc, char* argv[])
        ( (IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM) && pmwithum ) )
 	{
         //run the mysql / mysqld setup scripts
-        cout << endl << "===== Running the MariaDB ColumnStore MariaDB Server setup scripts =====" << endl << endl;
+        cout << endl << "===== Running the MariaDB ColumnStore MariaDB Server setup scripts =====" << endl;
 
         checkMysqlPort(mysqlPort, sysConfig);
 
@@ -3466,8 +3503,8 @@ int main(int argc, char* argv[])
             {
                 cout << endl;
                 cout << "Next step is to enter the password to access the other Servers." << endl;
-                cout << "This is either your password or you can default to using a ssh key" << endl;
-                cout << "If using a password, the password needs to be the same on all Servers." << endl << endl;
+                cout << "This is either user password or you can default to using a ssh key" << endl;
+                cout << "If using a user password, the password needs to be the same on all Servers." << endl << endl;
 
                 if ( noPrompting ) {
                     cout << "Enter password, hit 'enter' to default to using a ssh key, or 'exit' > " << endl;
@@ -3554,14 +3591,14 @@ int main(int argc, char* argv[])
             if ( EEPackageType == "rpm" )
             {
                 cout << "Performing a MariaDB ColumnStore System install using RPM packages" << endl;
-                cout << "located in the " + HOME + " directory." << endl << endl;
+                cout << "located in the " + HOME + " directory." << endl;
             }
             else
             {
                 if ( EEPackageType == "binary" )
                 {
                     cout << "Performing a MariaDB ColumnStore System install using a Binary package" << endl;
-                    cout << "located in the " + HOME + " directory." << endl << endl;
+                    cout << "located in the " + HOME + " directory." << endl;
                 }
                 else
                 {
@@ -3602,7 +3639,7 @@ int main(int argc, char* argv[])
 
                 if ( remote_installer_debug == "1" )
                 {
-                    logfile = "/tmp/";
+                    logfile = tmpDir + "/";
                     logfile += remoteModuleName + "_" + EEPackageType + "_install.log";
                     debug_logfile = " > " + logfile;
                 }
@@ -3880,17 +3917,7 @@ int main(int argc, char* argv[])
     //check if local MariaDB ColumnStore system logging is working
     cout << endl << "===== Checking MariaDB ColumnStore System Logging Functionality =====" << endl << endl;
 
-    if ( rootUser)
-        cmd = installDir + "/bin/syslogSetup.sh install  > /dev/null 2>&1";
-    else
-        cmd = "sudo " + installDir + "/bin/syslogSetup.sh --installdir=" + installDir + " install  > /dev/null 2>&1";
-
-    system(cmd.c_str());
-
-    if ( rootUser)
-        cmd = installDir + "/bin/syslogSetup.sh status  > /dev/null 2>&1";
-    else
-        cmd = "sudo " + installDir + "/bin/syslogSetup.sh --installdir=" + installDir + " status  > /dev/null 2>&1";
+    cmd = installDir + "/bin/syslogSetup.sh status  > /dev/null 2>&1";
 
     int ret = system(cmd.c_str());
 
@@ -3919,13 +3946,15 @@ int main(int argc, char* argv[])
 
         if (hdfs && !nonDistribute )
         {
+			string postConfigurePsdhLog = tmpDir + "/postConfigure.pdsh.log";
+
             cout << endl << "----- Starting MariaDB ColumnStore Service on all Modules -----" << endl << endl;
-            string cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > /tmp/postConfigure.pdsh 2>&1";
+            string cmd = "pdsh -a '" + installDir + "/bin/columnstore restart' > " + postConfigurePsdhLog + " 2>&1";
             system(cmd.c_str());
 
-            if (oam.checkLogStatus("/tmp/postConfigure.pdsh", "exit") )
+            if (oam.checkLogStatus(postConfigurePsdhLog, "exit") )
             {
-                cout << endl << "ERROR: Starting MariaDB ColumnStore Service failue, check /tmp/postConfigure.pdsh. exit..." << endl;
+                cout << endl << "ERROR: Starting MariaDB ColumnStore Service failue, check " + postConfigurePsdhLog + ". exit..." << endl;
                 exit (1);
             }
         }
@@ -3971,6 +4000,14 @@ int main(int argc, char* argv[])
     cout << endl << "MariaDB ColumnStore Database Platform Starting, please wait .";
     cout.flush();
 
+    string ProfileFile;
+	try
+	{
+		ProfileFile = sysConfig->getConfig(InstallSection, "ProfileFile");
+	}
+	catch (...)
+	{}
+
     if ( waitForActive() )
     {
         cout << " DONE" << endl;
@@ -4002,27 +4039,41 @@ int main(int argc, char* argv[])
                 }
             }
         }
+        
+        string dbbuilderLog = tmpDir + "/dbbuilder.log";
 
         if (hdfs)
-            cmd = "bash -c '. " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/dbbuilder 7 > /tmp/dbbuilder.log'";
+            cmd = "bash -c '. " + installDir + "/bin/" + DataFileEnvFile + ";" + installDir + "/bin/dbbuilder 7 > " + dbbuilderLog;
         else
-            cmd = installDir + "/bin/dbbuilder 7 > /tmp/dbbuilder.log";
+            cmd = installDir + "/bin/dbbuilder 7 > " + dbbuilderLog;
 
         system(cmd.c_str());
 
-        if (oam.checkLogStatus("/tmp/dbbuilder.log", "System Catalog created") )
+        if (oam.checkLogStatus(dbbuilderLog, "System Catalog created") )
             cout << endl << "System Catalog Successfully Created" << endl;
         else
         {
-            if ( oam.checkLogStatus("/tmp/dbbuilder.log", "System catalog appears to exist") )
+            if ( oam.checkLogStatus(dbbuilderLog, "System catalog appears to exist") )
             {
+/*				cout << endl << "Run MariaDB Server Upgrade.. ";
+				cout.flush();
 
-                cout.flush();
+				//send message to procmon's to run upgrade script
+				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
+	
+				if ( status != 0 ) {
+					cout << endl << "MariaDB Columnstore Install Failed" << endl << endl;
+					exit(1);
+				}
+				else
+					cout << " DONE" << endl;
+*/
+				cout.flush();
             }
             else
             {
                 cout << endl << "System Catalog Create Failure" << endl;
-                cout << "Check latest log file in /tmp/dbbuilder.log.*" << endl;
+                cout << "Check latest log file in " << dbbuilderLog << endl;
                 cout << " IMPORTANT: Once issue has been resolved, rerun postConfigure" << endl << endl;
 
                 exit (1);
@@ -4052,10 +4103,7 @@ int main(int argc, char* argv[])
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -4072,10 +4120,7 @@ int main(int argc, char* argv[])
 
         cout << "Enter the following command to define MariaDB ColumnStore Alias Commands" << endl << endl;
 
-		if ( !rootUser )
-			cout << ". /etc/profile.d/columnstoreEnv.sh" << endl;
-
-		cout << ". /etc/profile.d/columnstoreAlias.sh" << endl << endl;
+		cout << ". " << ProfileFile << endl << endl;
 
         cout << "Enter 'mcsmysql' to access the MariaDB ColumnStore SQL console" << endl;
         cout << "Enter 'mcsadmin' to access the MariaDB ColumnStore Admin console" << endl << endl;
@@ -4209,19 +4254,7 @@ bool checkSaveConfigFile()
         string cmd;
 
         if ( reuseConfig == "y" )
-        {
-            if ( singleServerInstall == "1")
-            {
-                cmd = "rm -f " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                system(cmd.c_str());
-                cmd = "mv -f " + installDir + "/etc/Columnstore.xml " + installDir + "/etc/Columnstore.xml.installSave  > /dev/null 2>&1";
-                system(cmd.c_str());
-                cmd = "/bin/cp -f " + installDir + "/etc/Columnstore.xml.singleserver " + installDir + "/etc/Columnstore.xml  > /dev/null 2>&1";
-                system(cmd.c_str());
-            }
-
             break;
-        }
 
         if ( reuseConfig == "n" )
         {
@@ -4348,22 +4381,13 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
         //make a backup copy before changing
         string cmd = "rm -f " + fileName + ".columnstoreSave";
 
-        if ( !rootUser )
-            cmd = "sudo rm -f " + fileName + ".columnstoreSave";
-
         system(cmd.c_str());
 
         cmd = "cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
 
-        if ( !rootUser )
-            cmd = "sudo cp " + fileName + " " + fileName + ".columnstoreSave > /dev/null 2>&1";
-
         system(cmd.c_str());
 
-        if ( rootUser )
-            cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
-        else
-            cmd = "sudo bash -c 'sudo cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName + "'";
+        cmd = "cat " + installDir + "/local/etc/" + parentOAMModuleName + "/" + files[i] + ".calpont >> " + fileName;
 
         int rtnCode = system(cmd.c_str());
 
@@ -4392,38 +4416,14 @@ bool setOSFiles(string parentOAMModuleName, int serverTypeInstall)
 
 /*
  * Update ProcessConfig.xml file for a single server configuration
- * Change the 'um' and 'pm' to 'dm'
+ * Change the 'um' to 'pm'
  */
-bool updateProcessConfig(int serverTypeInstall)
+bool updateProcessConfig()
 {
     vector <string> oldModule;
-    string newModule;
-
-    switch ( serverTypeInstall )
-    {
-        case (oam::INSTALL_COMBINE_DM_UM_PM):
-        {
-            newModule = ">pm";
-            oldModule.push_back(">um");
-            oldModule.push_back(">dm");
-            break;
-        }
-
-        case (oam::INSTALL_COMBINE_DM_UM):
-        {
-            newModule = ">um";
-            oldModule.push_back(">dm");
-            break;
-        }
-
-        case (oam::INSTALL_COMBINE_PM_UM):
-        {
-            newModule = ">pm";
-            oldModule.push_back(">um");
-            break;
-        }
-    }
-
+    string newModule = ">pm";
+	oldModule.push_back(">um");
+ 
     string fileName = installDir + "/etc/ProcessConfig.xml";
 
     //Save a copy of the original version
@@ -4564,6 +4564,9 @@ bool uncommentCalpontXml( string entry)
  */
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 {
+  
+    return true;
+    
     vector <string> lines;
 
     string mount1;
@@ -4652,7 +4655,7 @@ bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 /*
  * createDbrootDirs
  */
-bool createDbrootDirs(string DBRootStorageType)
+bool createDbrootDirs(string DBRootStorageType, bool amazonInstall)
 {
     int rtnCode;
     string cmd;
@@ -4660,12 +4663,17 @@ bool createDbrootDirs(string DBRootStorageType)
     // mount data1 and create directories if configured with storage
     if ( DBRootStorageType == "external" )
     {
-        string cmd = "mount " + installDir + "/data1 > /tmp/mount.txt 2>&1";
+        string cmd = "mount " + installDir + "/data1 > " + tmpDir + "/mount.log 2>&1";
         system(cmd.c_str());
 
         if ( !rootUser)
         {
-            cmd = "sudo chown -R " + USER + ":" + USER + " " + installDir + "/data1 > /dev/null";
+			//if Amazon, Non-Root, and External EBS, use sudo
+			string SUDO = "";
+			if ( amazonInstall )
+				SUDO = "sudo ";
+
+            cmd = SUDO + "chown -R " + USER + ":" + USER + " " + installDir + "/data1 > /dev/null";
             system(cmd.c_str());
         }
 
@@ -4693,11 +4701,12 @@ bool pkgCheck(string columnstorePackage)
 {
     while (true)
     {
-        string cmd = "ls " + columnstorePackage + " > /tmp/calpontpkgs";
+        string fileName = tmpDir + "/calpontpkgs";
+
+        string cmd = "ls " + columnstorePackage + " > " + fileName;
         system(cmd.c_str());
 
         string pkg = columnstorePackage;
-        string fileName = "/tmp/calpontpkgs";
         ifstream oldFile (fileName.c_str());
 
         if (oldFile)
@@ -4808,7 +4817,7 @@ bool storageSetup(bool amazonInstall)
                 cout.flush();
                 string logdir("/var/log/mariadb/columnstore");
 
-                if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+                if (access(logdir.c_str(), W_OK) != 0) logdir = tmpDir;
 
                 string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -5125,10 +5134,7 @@ bool storageSetup(bool amazonInstall)
     //check if gluster is installed
     int rtnCode = 1;
 
-    if (rootUser)
-        rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
-    else
-        rtnCode = system("sudo gluster --version > /tmp/gluster.log 2>&1");
+	rtnCode = system("gluster --version > /tmp/gluster.log 2>&1");
 
     if (rtnCode == 0)
     {
@@ -5140,14 +5146,17 @@ bool storageSetup(bool amazonInstall)
     }
 
     //check if hadoop is installed
-    system("which hadoop > /tmp/hadoop.log 2>&1");
+    string hadoopLog = tmpDir + "/hadoop.log";
+    
+	string cmd = "which hadoop > " + hadoopLog + " 2>&1";
+    system(cmd.c_str());
 
-    ifstream in("/tmp/hadoop.log");
+    ifstream in(hadoopLog.c_str());
 
     in.seekg(0, std::ios::end);
     int size = in.tellg();
 
-    if ( size == 0 || oam.checkLogStatus("/tmp/hadoop.log", "no hadoop"))
+    if ( size == 0 || oam.checkLogStatus(hadoopLog, "no hadoop"))
         // no hadoop
         size = 0;
     else
@@ -5618,7 +5627,7 @@ bool storageSetup(bool amazonInstall)
                 cout.flush();
                 string logdir("/var/log/mariadb/columnstore");
 
-                if (access(logdir.c_str(), W_OK) != 0) logdir = "/tmp";
+                if (access(logdir.c_str(), W_OK) != 0) logdir = tmpDir;
 
                 string hdfslog = logdir + "/hdfsCheck.log1";
 
@@ -5820,10 +5829,7 @@ bool updateBash()
         string cmd = "echo . " + installDir + "/bin/" + DataFileEnvFile + " >> " + fileName;
         system(cmd.c_str());
 
-        if ( rootUser)
-            cmd = "su - hdfs -c 'hadoop fs -mkdir -p " + installDir + ";hadoop fs -chown root:root " + installDir + "' >/dev/null 2>&1";
-        else
-            cmd = "sudo su - hdfs -c 'hadoop fs -mkdir -p " + installDir + ";hadoop fs -chown " + USER + ":" + USER + " " + installDir + "' >/dev/null 2>&1";
+        cmd = "su - hdfs -c 'hadoop fs -mkdir -p " + installDir + ";hadoop fs -chown root:root " + installDir + "' >/dev/null 2>&1";
 
         system(cmd.c_str());
     }
@@ -6160,14 +6166,14 @@ void remoteInstallThread(void* arg)
             {
                 //failure
                 pthread_mutex_lock(&THREAD_LOCK);
-                cout << endl << "Failure with a remote module install, check install log files in /tmp" << endl;
+                cout << endl << "Failure with a remote module install, check install log files in " << tmpDir << endl;
                 exit(1);
             }
         }
     }
 
     pthread_mutex_lock(&THREAD_LOCK);
-    cout << endl << "Failure with a remote module install, check install log files in /tmp" << endl;
+    cout << endl << "Failure with a remote module install, check install log files in " << tmpDir << endl;
     exit(1);
 }
 
@@ -6271,7 +6277,6 @@ std::string launchInstance(ModuleIP moduleip)
 
 bool glusterSetup(string password)
 {
-
     Oam oam;
     int dataRedundancyCopies = 0;
     int dataRedundancyNetwork = 0;
@@ -6918,6 +6923,74 @@ bool glusterSetup(string password)
 
     return true;
 }
+
+void singleServerConfigSetup(Config* sysConfig)
+{
+	
+	try
+	{
+		sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("ExeMgr1", "Module", "pm1");
+		sysConfig->setConfig("ProcMgr", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("ProcMgr_Alarm", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("ProcStatusControl", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("pm1_ProcessMonitor", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("pm1_ServerMonitor", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("pm1_WriteEngineServer", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DDLProc", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DMLProc", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS1", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS2", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS3", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS4", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS5", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS6", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS7", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS8", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS9", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS10", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS11", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS12", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS13", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS14", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS15", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS16", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS17", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS18", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS19", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS20", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS21", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS22", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS23", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS24", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS25", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS26", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS27", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS28", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS29", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS30", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS31", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("PMS32", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("SystemModuleConfig", "ModuleCount2", "0");
+		sysConfig->setConfig("SystemModuleConfig", "ModuleIPAddr1-1-3", "127.0.0.1");
+		sysConfig->setConfig("SystemModuleConfig", "ModuleHostName1-1-3", "localhost");
+		sysConfig->setConfig("DBRM_Controller", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DBRM_Worker1", "IPAddr", "127.0.0.1");
+		sysConfig->setConfig("DBRM_Worker1", "Module", "pm1");
+		sysConfig->setConfig("DBBC", "NumBlocksPct", "50");
+		sysConfig->setConfig("Installation", "InitialInstallFlag", "y");
+		sysConfig->setConfig("Installation", "SingleServerInstall", "y");
+		sysConfig->setConfig("HashJoin", "TotalUmMemory", "25%");
+	}
+	catch (...)
+	{
+	cout << "ERROR: Problem setting for Single Server in the MariaDB ColumnStore System Configuration file" << endl;
+	exit(1);
+	}
+
+	return;
+}
+
 
 
 // vim:ts=4 sw=4:
