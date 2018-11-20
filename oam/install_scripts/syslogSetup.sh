@@ -232,6 +232,11 @@ if [ ! -z "$syslog_conf" ] ; then
 	 chmod 644 /etc/logrotate.d/columnstore
 
 	restartSyslog
+	
+	#log install message
+	test -f $installdir/post/functions && . $installdir/post/functions
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+
 fi
 
 }
