@@ -526,16 +526,20 @@ int main(int argc, char* argv[])
     }
 
 #else
-    if (temp > 0)
+    bool cacheInMB = false;
+    if (temp > 0) {
         BRPBlocksPct = temp;
-    /* MCOL-1847.  Did the user specify this in MB or GB? */
-    int len = strBlockPct.length();
-    if (strBlockPct[len-1] == 'g' || strBlockPct[len-1] == 'm')
-    {
-        if (strBlockPct[len-1] == 'g')
-            BRPBlocksPct *= 1024;
-        BRPBlocks = BRPBlocksPct * 128;   // 128 blocks per MB
+        /* MCOL-1847.  Did the user specify this in MB or GB? */
+        int len = strBlockPct.length();
+        if (strBlockPct[len-1] == 'g' || strBlockPct[len-1] == 'm')
+        {
+            if (strBlockPct[len-1] == 'g')
+                BRPBlocksPct *= 1024;
+            cacheInMB = true;
+        }
     }
+    if (cacheInMB)
+        BRPBlocks = BRPBlocksPct * 128;   // 128 blocks per MB
     else
         BRPBlocks = ((BRPBlocksPct / 100.0) * (double) cg.getTotalMemory()) / 8192;
 #endif
