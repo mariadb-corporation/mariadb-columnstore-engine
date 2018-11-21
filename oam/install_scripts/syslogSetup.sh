@@ -172,7 +172,7 @@ fi
 }
 
 makeDir() {
-	if [ ! -d /var/log/mariadb/columnstore ];then
+	if [ ! -d /var/log/mariadb/columnstore ]; then
 		mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
 		test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
 		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
@@ -246,7 +246,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		
 		if [ -f /var/log/mariadb/columnstore/info.log ]; then
 			if [ ! -s /var/log/mariadb/columnstore/info.log ]; then
-				break
+				exit 0
 			fi
 		fi
 	done
