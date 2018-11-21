@@ -183,12 +183,6 @@ makeDir() {
 		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
 		test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
 	fi
-
-	if [ $non_root_user == "yes" ]; then
-		chmod 777 /var/log/mariadb
-		chmod 777 /var/log/mariadb/columnstore
-	fi
-
 }
 
 install() {
@@ -243,6 +237,9 @@ if [ ! -z "$syslog_conf" ] ; then
 	for CHMOD in "${CHMOD_LIST[@]}"; do
 		chmod $CHMOD /var/log/mariadb
 		chmod $CHMOD /var/log/mariadb/columnstore
+		chmod $CHMOD /var/log/mariadb/columnstore/archive
+		chmod $CHMOD /var/log/mariadb/columnstore/corefiles
+		chmod $CHMOD /var/log/mariadb/columnstore/trace
 
 		test -f $installdir/post/functions && . $installdir/post/functions
 		LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
