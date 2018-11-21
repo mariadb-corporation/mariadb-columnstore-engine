@@ -227,16 +227,32 @@ if [ ! -z "$syslog_conf" ] ; then
 		fi
 	fi
 
-	# install Columnstore Log Rotate File
-	 cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-	 chmod 644 /etc/logrotate.d/columnstore
-
 	restartSyslog
-	
-	#log install message
-	test -f $installdir/post/functions && . $installdir/post/functions
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
 
+	# install Columnstore Log Rotate File
+	if [ -d /etc/logrotate.d ]; then
+		cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+		chmod 644 /etc/logrotate.d/columnstore
+
+		#do the logrotate to start with a fresh log file during install
+		logrotate -f /etc/logrotate.d/columnstore > /dev/null 2>&1
+	fi
+	
+	#log install message and find the least permission that allows logging to work
+	CHMOD_LIST=("750" "770" "775" "777")
+	for CHMOD in "${CHMOD_LIST[@]}"; do
+		chmod $CHMOD /var/log/mariadb
+		chmod $CHMOD /var/log/mariadb/columnstore
+
+		test -f $installdir/post/functions && . $installdir/post/functions
+		LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+		
+		if [ -f /var/log/mariadb/columnstore/info.log ]; then
+			if [ ! -s /var/log/mariadb/columnstore/info.log ]; then
+				break
+			fi
+		fi
+	done
 fi
 
 }
