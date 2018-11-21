@@ -245,7 +245,7 @@ if [ ! -z "$syslog_conf" ] ; then
 		LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
 		
 		if [ -f /var/log/mariadb/columnstore/info.log ]; then
-			if [ ! -s /var/log/mariadb/columnstore/info.log ]; then
+			if [ -s /var/log/mariadb/columnstore/info.log ]; then
 				exit 0
 			fi
 		fi
