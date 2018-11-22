@@ -2015,6 +2015,7 @@ extern "C"
         Oam oam;
         DBRM dbrm(true);
         SystemStatus systemstatus;
+        WriteEngine::FileOp fileOp;
 
         try
         {
@@ -2022,8 +2023,15 @@ extern "C"
 
             if (systemstatus.SystemOpState == ACTIVE
                     && dbrm.getSystemReady()
-                    && dbrm.getSystemQueryReady())
+                    && dbrm.getSystemQueryReady()
+                    && fileOp.existsOIDDir(1001))
             {
+                // Test getting system catalogue data from ExeMgr
+                boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+                    execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(0);
+                systemCatalogPtr->identity(execplan::CalpontSystemCatalog::FE);
+                systemCatalogPtr->getTableCount();
+
                 return 1;
             }
         }
