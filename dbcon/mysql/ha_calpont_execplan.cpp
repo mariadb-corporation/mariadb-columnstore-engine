@@ -3813,7 +3813,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
     FuncExp* funcexp = FuncExp::instance();
     string funcName = "case_simple";
 
-    if (strcasecmp(((Item_func_case*)item)->case_type(), "searched") == 0)
+    if (item->functype() == Item_func::CASE_SEARCHED_FUNC)
     {
         funcName = "case_searched";
     }
@@ -3857,7 +3857,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         // some cpu cycles trying to build a ReturnedColumn as below.
         // Every even numbered arg is a WHEN. In between are the THEN.
         // An odd number of args indicates an ELSE residing in the last spot.
-        if (funcName == "case_searched" &&
+        if ((item->functype() == Item_func::CASE_SEARCHED_FUNC) &&
                 (i < arg_offset))
         {
             // MCOL-1472 Nested CASE with an ISNULL predicate. We don't want the predicate 
