@@ -69,65 +69,13 @@ mcsv1_UDAF::ReturnCode median::nextValue(mcsv1Context* context, ColumnDatum* val
 {
     static_any::any& valIn = valsIn[0].columnData;
     MEDIAN_DATA& data = static_cast<MedianData*>(context->getUserData())->mData;
-    DATATYPE val = 0.0;
 
     if (valIn.empty())
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
 
-    if (valIn.compatible(charTypeId))
-    {
-        val = valIn.cast<char>();
-    }
-    else if (valIn.compatible(scharTypeId))
-    {
-        val = valIn.cast<signed char>();
-    }
-    else if (valIn.compatible(shortTypeId))
-    {
-        val = valIn.cast<short>();
-    }
-    else if (valIn.compatible(intTypeId))
-    {
-        val = valIn.cast<int>();
-    }
-    else if (valIn.compatible(longTypeId))
-    {
-        val = valIn.cast<long>();
-    }
-    else if (valIn.compatible(llTypeId))
-    {
-        val = valIn.cast<long long>();
-    }
-    else if (valIn.compatible(ucharTypeId))
-    {
-        val = valIn.cast<unsigned char>();
-    }
-    else if (valIn.compatible(ushortTypeId))
-    {
-        val = valIn.cast<unsigned short>();
-    }
-    else if (valIn.compatible(uintTypeId))
-    {
-        val = valIn.cast<unsigned int>();
-    }
-    else if (valIn.compatible(ulongTypeId))
-    {
-        val = valIn.cast<unsigned long>();
-    }
-    else if (valIn.compatible(ullTypeId))
-    {
-        val = valIn.cast<unsigned long long>();
-    }
-    else if (valIn.compatible(floatTypeId))
-    {
-        val = valIn.cast<float>();
-    }
-    else if (valIn.compatible(doubleTypeId))
-    {
-        val = valIn.cast<double>();
-    }
+    DATATYPE val = convertAnyTo<double>(valIn);
 
     // For decimal types, we need to move the decimal point.
     uint32_t scale = valsIn[0].scale;
@@ -215,65 +163,13 @@ mcsv1_UDAF::ReturnCode median::dropValue(mcsv1Context* context, ColumnDatum* val
 {
     static_any::any& valIn = valsDropped[0].columnData;
     MEDIAN_DATA& data = static_cast<MedianData*>(context->getUserData())->mData;
-    DATATYPE val = 0.0;
 
     if (valIn.empty())
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
 
-    if (valIn.compatible(charTypeId))
-    {
-        val = valIn.cast<char>();
-    }
-    else if (valIn.compatible(scharTypeId))
-    {
-        val = valIn.cast<signed char>();
-    }
-    else if (valIn.compatible(shortTypeId))
-    {
-        val = valIn.cast<short>();
-    }
-    else if (valIn.compatible(intTypeId))
-    {
-        val = valIn.cast<int>();
-    }
-    else if (valIn.compatible(longTypeId))
-    {
-        val = valIn.cast<long>();
-    }
-    else if (valIn.compatible(llTypeId))
-    {
-        val = valIn.cast<long long>();
-    }
-    else if (valIn.compatible(ucharTypeId))
-    {
-        val = valIn.cast<unsigned char>();
-    }
-    else if (valIn.compatible(ushortTypeId))
-    {
-        val = valIn.cast<unsigned short>();
-    }
-    else if (valIn.compatible(uintTypeId))
-    {
-        val = valIn.cast<unsigned int>();
-    }
-    else if (valIn.compatible(ulongTypeId))
-    {
-        val = valIn.cast<unsigned long>();
-    }
-    else if (valIn.compatible(ullTypeId))
-    {
-        val = valIn.cast<unsigned long long>();
-    }
-    else if (valIn.compatible(floatTypeId))
-    {
-        val = valIn.cast<float>();
-    }
-    else if (valIn.compatible(doubleTypeId))
-    {
-        val = valIn.cast<double>();
-    }
+    DATATYPE val = convertAnyTo<double>(valIn);
 
     // For decimal types, we need to move the decimal point.
     uint32_t scale = valsDropped[0].scale;

@@ -59,8 +59,8 @@ mcsv1_UDAF::ReturnCode covar_samp::init(mcsv1Context* context,
     context->setUserDataSize(sizeof(covar_samp_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
-    context->setScale(colTypes[0].scale + 8);
-    context->setPrecision(19);
+    context->setScale(DECIMAL_NOT_SPECIFIED);
+    context->setPrecision(0);
     context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
     return mcsv1_UDAF::SUCCESS;
 
@@ -136,7 +136,7 @@ mcsv1_UDAF::ReturnCode covar_samp::evaluate(mcsv1Context* context, static_any::a
 {
     struct covar_samp_data* data = (struct covar_samp_data*)context->getUserData()->data;
     double N = data->cnt;
-    if (N > 0)
+    if (N > 1)
     {
         double sumx = data->sumx;
         double sumy = data->sumy;
@@ -144,6 +144,11 @@ mcsv1_UDAF::ReturnCode covar_samp::evaluate(mcsv1Context* context, static_any::a
 
         double covar_samp = (sumxy - ((sumx * sumy) / N)) / (N - 1);
         valOut = covar_samp;
+    }
+    else
+    if (N == 1)
+    {
+        valOut = 0;
     }
     return mcsv1_UDAF::SUCCESS;
 }

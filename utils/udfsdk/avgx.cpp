@@ -75,69 +75,13 @@ mcsv1_UDAF::ReturnCode avgx::nextValue(mcsv1Context* context, ColumnDatum* valsI
 {
     static_any::any& valIn_x = valsIn[0].columnData;
     struct  avgx_data* data = (struct avgx_data*)context->getUserData()->data;
-    DATATYPE val = 0.0;
 
     if (valIn_x.empty())
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
 
-    if (valIn_x.compatible(longTypeId))
-    {
-        val = valIn_x.cast<long>();
-    }
-    else if (valIn_x.compatible(charTypeId))
-    {
-        val = valIn_x.cast<char>();
-    }
-    else if (valIn_x.compatible(scharTypeId))
-    {
-        val = valIn_x.cast<signed char>();
-    }
-    else if (valIn_x.compatible(shortTypeId))
-    {
-        val = valIn_x.cast<short>();
-    }
-    else if (valIn_x.compatible(intTypeId))
-    {
-        val = valIn_x.cast<int>();
-    }
-    else if (valIn_x.compatible(longTypeId))
-    {
-        val = valIn_x.cast<long>();
-    }
-    else if (valIn_x.compatible(llTypeId))
-    {
-        val = valIn_x.cast<long long>();
-    }
-    else if (valIn_x.compatible(ucharTypeId))
-    {
-        val = valIn_x.cast<unsigned char>();
-    }
-    else if (valIn_x.compatible(ushortTypeId))
-    {
-        val = valIn_x.cast<unsigned short>();
-    }
-    else if (valIn_x.compatible(uintTypeId))
-    {
-        val = valIn_x.cast<unsigned int>();
-    }
-    else if (valIn_x.compatible(ulongTypeId))
-    {
-        val = valIn_x.cast<unsigned long>();
-    }
-    else if (valIn_x.compatible(ullTypeId))
-    {
-        val = valIn_x.cast<unsigned long long>();
-    }
-    else if (valIn_x.compatible(floatTypeId))
-    {
-        val = valIn_x.cast<float>();
-    }
-    else if (valIn_x.compatible(doubleTypeId))
-    {
-        val = valIn_x.cast<double>();
-    }
+    DATATYPE val = convertAnyTo<double>(valIn_x);
 
     // For decimal types, we need to move the decimal point.
     uint32_t scale = valsIn[0].scale;
@@ -183,65 +127,13 @@ mcsv1_UDAF::ReturnCode avgx::dropValue(mcsv1Context* context, ColumnDatum* valsD
 {
     static_any::any& valIn_x = valsDropped[0].columnData;
     struct avgx_data* data = (struct avgx_data*)context->getUserData()->data;
-    DATATYPE val = 0.0;
 
     if (valIn_x.empty())
     {
         return mcsv1_UDAF::SUCCESS; // Ought not happen when UDAF_IGNORE_NULLS is on.
     }
 
-    if (valIn_x.compatible(charTypeId))
-    {
-        val = valIn_x.cast<char>();
-    }
-    else if (valIn_x.compatible(scharTypeId))
-    {
-        val = valIn_x.cast<signed char>();
-    }
-    else if (valIn_x.compatible(shortTypeId))
-    {
-        val = valIn_x.cast<short>();
-    }
-    else if (valIn_x.compatible(intTypeId))
-    {
-        val = valIn_x.cast<int>();
-    }
-    else if (valIn_x.compatible(longTypeId))
-    {
-        val = valIn_x.cast<long>();
-    }
-    else if (valIn_x.compatible(llTypeId))
-    {
-        val = valIn_x.cast<long long>();
-    }
-    else if (valIn_x.compatible(ucharTypeId))
-    {
-        val = valIn_x.cast<unsigned char>();
-    }
-    else if (valIn_x.compatible(ushortTypeId))
-    {
-        val = valIn_x.cast<unsigned short>();
-    }
-    else if (valIn_x.compatible(uintTypeId))
-    {
-        val = valIn_x.cast<unsigned int>();
-    }
-    else if (valIn_x.compatible(ulongTypeId))
-    {
-        val = valIn_x.cast<unsigned long>();
-    }
-    else if (valIn_x.compatible(ullTypeId))
-    {
-        val = valIn_x.cast<unsigned long long>();
-    }
-    else if (valIn_x.compatible(floatTypeId))
-    {
-        val = valIn_x.cast<float>();
-    }
-    else if (valIn_x.compatible(doubleTypeId))
-    {
-        val = valIn_x.cast<double>();
-    }
+    DATATYPE val = convertAnyTo<double>(valIn_x);
 
     // For decimal types, we need to move the decimal point.
     uint32_t scale = valsDropped[0].scale;

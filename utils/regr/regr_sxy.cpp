@@ -59,8 +59,8 @@ mcsv1_UDAF::ReturnCode regr_sxy::init(mcsv1Context* context,
     context->setUserDataSize(sizeof(regr_sxy_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
-    context->setScale(colTypes[0].scale + 8);
-    context->setPrecision(19);
+    context->setScale(DECIMAL_NOT_SPECIFIED);
+    context->setPrecision(0);
     context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
     return mcsv1_UDAF::SUCCESS;
 
