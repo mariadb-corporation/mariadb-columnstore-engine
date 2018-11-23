@@ -383,5 +383,14 @@ public:
     }
 };
 
+inline bool isTrueWord(const char *field, int fieldLength)
+{
+    //return false;
+    return fieldLength == 4 && ( field[0] == 'T' || field[0] == 't' )
+        && ( field[1] == 'R' || field[1] == 'r' )
+        && ( field[2] == 'U' || field[2] == 'u' )
+        && ( field[3] == 'E' || field[3] == 'e' );
+}
+
 }
 #endif
