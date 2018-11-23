@@ -233,7 +233,8 @@ WindowFunctionColumn::WindowFunctionColumn( const WindowFunctionColumn& rhs, con
     fFunctionName(rhs.functionName()),
     fFunctionParms(rhs.functionParms()),
     fPartitions (rhs.partitions()),
-    fOrderBy (rhs.orderBy())
+    fOrderBy (rhs.orderBy()),
+    udafContext(rhs.getUDAFContext())
 {}
 
 const string WindowFunctionColumn::toString() const

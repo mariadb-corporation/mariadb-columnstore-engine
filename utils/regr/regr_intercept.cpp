@@ -145,13 +145,12 @@ mcsv1_UDAF::ReturnCode regr_intercept::evaluate(mcsv1Context* context, static_an
         double sumy = data->sumy;
         double sumx2 = data->sumx2;
         double sumxy = data->sumxy;
-        double slope = 0;
-        double variance = (N * sumx2) - (sumx * sumx);
-        if (variance != 0)
+        double numerator = sumy * sumx2 - sumx * sumxy;
+        double var_pop = (N * sumx2) - (sumx * sumx);
+        if (var_pop != 0)
         {
-            slope = ((N * sumxy) - (sumx * sumy)) / variance;
+            valOut = numerator / var_pop;
         }
-        valOut = (sumy - (slope * sumx)) / N;
     }
     return mcsv1_UDAF::SUCCESS;
 }
