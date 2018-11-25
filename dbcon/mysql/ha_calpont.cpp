@@ -1161,9 +1161,9 @@ void check_walk(const Item* item, void* arg)
     {
         case Item::FUNC_ITEM:
         {
-            Item_func* ifp = (Item_func*)item;
+            const Item_func* ifp = static_cast<const Item_func*>(item);
 
-            if ( ifp->functype() != Item_func::EQ_FUNC )
+            if ( ifp->functype() != Item_func::EQ_FUNC ) // NON-equi JOIN
             {
                 if ( ifp->argument_count() == 2 &&
                     ifp->arguments()[0]->type() == Item::FIELD_ITEM &&
@@ -1178,11 +1178,36 @@ void check_walk(const Item* item, void* arg)
                         return;
                     }
                 }
+                else // IN + correlated subquery 
+                {
+                    if ( ifp->functype() == Item_func::NOT_FUNC
+                        && ifp->arguments()[0]->type() == Item::EXPR_CACHE_ITEM )
+                    {
+                        check_walk(ifp->arguments()[0], arg);
+                    }
+                }
+            }
+            break;
+        }
+        
+        case Item::EXPR_CACHE_ITEM: // IN + correlated subquery 
+        {
+            const Item_cache_wrapper* icw = static_cast<const Item_cache_wrapper*>(item);
+            if ( icw->get_orig_item()->type() == Item::FUNC_ITEM )
+            {
+                const Item_func *ifp = static_cast<const Item_func*>(icw->get_orig_item());
+                if ( ifp->argument_count() == 2 &&
+                    ( ifp->arguments()[0]->type() == Item::Item::SUBSELECT_ITEM
+                    || ifp->arguments()[1]->type() == Item::Item::SUBSELECT_ITEM ))
+                {
+                    *unsupported_feature = true;
+                    return;
+                }
             }
             break;
         }
 
-        case Item::COND_ITEM:
+        case Item::COND_ITEM: // OR in cods is unsupported yet
         {
             Item_cond* icp = (Item_cond*)item;
             if ( is_cond_or(icp) )
@@ -1219,6 +1244,7 @@ static group_by_handler*
 create_calpont_group_by_handler(THD* thd, Query* query)
 {
     ha_calpont_group_by_handler* handler = NULL;
+    // same as thd->lex->current_select
     SELECT_LEX *select_lex = query->from->select_lex;
 
     // Create a handler if query is valid. See comments for details.
@@ -1236,7 +1262,7 @@ create_calpont_group_by_handler(THD* thd, Query* query)
             unsupported_feature = true;
         }
 
-        // Unsupported JOIN conditions check.
+        // Unsupported conditions check.
         if ( !unsupported_feature )
         {
             JOIN *join = select_lex->join;
@@ -1246,7 +1272,7 @@ create_calpont_group_by_handler(THD* thd, Query* query)
                 icp = reinterpret_cast<Item_cond*>(join->conds);
 
             if ( unsupported_feature == false
-                && join->table_count > 1 && icp )
+                && icp )
             {
                 icp->traverse_cond(check_walk, &unsupported_feature, Item::POSTFIX);
             }
