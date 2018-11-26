@@ -1,10 +1,10 @@
 # MariaDB ColumnStore Storage/Execution engine 1.2
 
-MariaDB ColumnStore 1.2 is the development version of MariaDB ColumnStore. 
+MariaDB ColumnStore 1.2 is the GA version of MariaDB ColumnStore. 
 It is built by porting InfiniDB 4.6.7 on MariaDB 10.2 and adding entirely 
 new features not found anywhere else.
 
-# MariaDB ColumnStore 1.2 is a pre-release. 
+# MariaDB ColumnStore 1.2 is a GA release. 
 
 - Do not use pre-releases on production systems.
 
