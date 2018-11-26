@@ -9176,7 +9176,11 @@ int ProcessManager::getDBRMData(messageqcpp::IOSocket fIos, std::string moduleNa
 
         char line[200];
         oldFile.getline(line, 200);
-        currentDbrmFile = line;
+        // MCOL-1558.  Handle absolute and relative paths.
+        if (line[0] == '/')
+            currentDbrmFile = line;
+        else
+            currentDbrmFile = DBRMroot.substr(0, DBRMroot.find_last_of('/') + 1) + line;
     }
     else
     {
