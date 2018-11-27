@@ -3068,7 +3068,7 @@ namespace oam
 		switch (returnStatus)
 		{ 
 			case API_SUCCESS:
-				cout << endl << "Suspend Calpont Database Writes Request successfully completed" << endl;
+				cout << endl << "Suspend MariaDB Columnstore Database Writes Request successfully completed" << endl;
 				break;
 			case API_FAILURE_DB_ERROR:
 				cout << endl << "**** stopDatabaseWrites Failed: save_brm Failed" << endl;
@@ -10096,7 +10096,7 @@ namespace oam
 		}
 		catch (...)
 		{
-			writeLog("Communication with calpont console failed while waiting for transactions", LOG_TYPE_ERROR);
+			writeLog("Communication with MariaDB ColumnStore Admin console failed while waiting for transactions", LOG_TYPE_ERROR);
 		}
 //		writeLog("Returning from wait with value " + itoa(ret), LOG_TYPE_INFO );
 		return ret;
