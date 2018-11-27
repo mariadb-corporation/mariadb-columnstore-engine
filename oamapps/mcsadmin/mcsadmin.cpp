@@ -3988,21 +3988,27 @@ int processCommand(string* arguments)
 				dbrm.setSystemSuspended(false);
 
 				oam.getProcessStatus(systemprocessstatus);
-				for( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
-				{
-					if (systemprocessstatus.processstatus[i].ProcessName  == "DMLProc")
-					{
-						oam.setProcessStatus(systemprocessstatus.processstatus[i].ProcessName, systemprocessstatus.processstatus[i].Module, ACTIVE, 1);
-					}
-					if (systemprocessstatus.processstatus[i].ProcessName  == "DDLProc")
-					{
-						oam.setProcessStatus(systemprocessstatus.processstatus[i].ProcessName, systemprocessstatus.processstatus[i].Module, ACTIVE, 1);
-					}
-					if (systemprocessstatus.processstatus[i].ProcessName  == "WriteEngineServer")
-					{
-						oam.setProcessStatus(systemprocessstatus.processstatus[i].ProcessName, systemprocessstatus.processstatus[i].Module, ACTIVE, 1);
-					}
-				}
+
+                for ( unsigned int i = 0 ; i < systemprocessstatus.processstatus.size(); i++)
+                {
+                    if ( (systemprocessstatus.processstatus[i].ProcessName  == "DDLProc") &&
+						 (systemprocessstatus.processstatus[i].ProcessOpState == oam::ACTIVE) )
+                    {
+                        oam.setProcessStatus(systemprocessstatus.processstatus[i].ProcessName, systemprocessstatus.processstatus[i].Module, oam::ACTIVE, 1);
+                    }
+
+                    if ( (systemprocessstatus.processstatus[i].ProcessName  == "DMLProc") &&
+						 (systemprocessstatus.processstatus[i].ProcessOpState == oam::ACTIVE) )
+                    {
+                        oam.setProcessStatus(systemprocessstatus.processstatus[i].ProcessName, systemprocessstatus.processstatus[i].Module, oam::ACTIVE, 1);
+                    }
+
+                    if (systemprocessstatus.processstatus[i].ProcessName  == "WriteEngineServer")
+                    {
+                        oam.setProcessStatus(systemprocessstatus.processstatus[i].ProcessName, systemprocessstatus.processstatus[i].Module, oam::ACTIVE, 1);
+                    }
+                }
+
 				oam.setSystemStatus(ACTIVE);
 				cout << endl << "Resume MariaDB ColumnStore Database Writes Request successfully completed" << endl;
 			}
