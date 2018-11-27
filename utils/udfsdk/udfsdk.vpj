@@ -205,6 +205,7 @@
             <F N="allnull.cpp"/>
             <F N="avg_mode.cpp"/>
             <F N="avgx.cpp"/>
+            <F N="distinct_count.cpp"/>
             <F N="mcsv1_udaf.cpp"/>
             <F N="median.cpp"/>
             <F N="ssq.cpp"/>
@@ -217,6 +218,7 @@
             <F N="allnull.h"/>
             <F N="avg_mode.h"/>
             <F N="avgx.h"/>
+            <F N="distinct_count.h"/>
             <F N="mcsv1_udaf.h"/>
             <F N="median.h"/>
             <F N="ssq.h"/>

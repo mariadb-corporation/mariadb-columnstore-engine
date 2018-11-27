@@ -140,6 +140,10 @@ public:
     {
         return udafContext;
     }
+    const mcsv1sdk::mcsv1Context& getUDAFContext() const
+    {
+        return udafContext;
+    }
 
 private:
     /**

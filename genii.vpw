@@ -4,12 +4,9 @@
 		<Project File="tools/configMgt/autoConfigure.vpj"/>
 		<Project File="utils/batchloader/batchloader.vpj"/>
 		<Project File="primitives/blockcache/blockcache.vpj"/>
-		<Project File="utils/boost_idb/boost_idb.vpj"/>
 		<Project File="versioning/BRM/brm.vpj"/>
 		<Project File="writeengine/bulk/bulk.vpj"/>
 		<Project File="utils/cacheutils/cacheutils.vpj"/>
-		<Project File="oamapps/calpont-console/calpontConsole.vpj"/>
-		<Project File="oamapps/calpontDB/calpontDBWrite.vpj"/>
 		<Project File="tools/dbloadxml/colxml.vpj"/>
 		<Project File="utils/common/common.vpj"/>
 		<Project File="utils/compress/compress.vpj"/>

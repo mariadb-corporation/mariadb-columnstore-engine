@@ -334,7 +334,6 @@ checkSSH()
 
 checkRemoteDir()
 {
-
   if [ "$USER" != "root" ]; then
     # Non-root User directory permissions check
     #
@@ -342,23 +341,22 @@ checkRemoteDir()
     echo "** Run Non-root User directory permissions check on remote nodes (/dev/shm)"
     echo ""
 
-      `$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'touch /dev/shm/cs_check' 1 > ${tmpDir}/remote_command_check 2>&1`
-      rc="$?"
-      if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
-	`grep "Permission denied" ${tmpDir}/remote_command_check  > /dev/null 2>&1`
-	if [ "$?" -eq 0 ]; then
-	  echo "$ipadd Node permission test on /dev/shm : ${bold}Failed${normal}, change permissions to 777 and re-test"
-	  pass=false
-	  REPORTPASS=false
-	else
-	  echo "$ipadd Node permission test on /dev/shm : Passed"
-	fi
-      else
-	echo "Error running remote_command.sh to $ipadd Node, check ${tmpDir}/remote_command_check"
-	pass=false
-	REPORTPASS=false
-      fi
-    done
+	`$COLUMNSTORE_INSTALL_DIR/bin/remote_command.sh $ipadd $PASSWORD 'touch /dev/shm/cs_check' 1 > ${tmpDir}/remote_command_check 2>&1`
+    rc="$?"
+    if  [ $rc -eq 0 ] || ( [ $rc -eq 2 ] && [ $OS == "suse12" ] ) ; then
+		`grep "Permission denied" ${tmpDir}/remote_command_check  > /dev/null 2>&1`
+		if [ "$?" -eq 0 ]; then
+			echo "$ipadd Node permission test on /dev/shm : ${bold}Failed${normal}, change permissions to 777 and re-test"
+			pass=false
+			REPORTPASS=false
+		else
+			echo "$ipadd Node permission test on /dev/shm : Passed"
+		fi
+    else
+		echo "Error running remote_command.sh to $ipadd Node, check ${tmpDir}/remote_command_check"
+		pass=false
+		REPORTPASS=false
+    fi
     
     if ! $pass; then
       checkContinue

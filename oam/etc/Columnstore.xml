@@ -427,12 +427,9 @@
 	</DBRM_Worker10>
 	<DBBC>
 		<!-- The percentage of RAM to use for the disk block cache. Defaults to 70% -->
+        <!-- Alternatively, this can be specified in absolute terms using
+             the suffixes 'm' or 'g' to denote size in megabytes or gigabytes.-->
 		<!-- <NumBlocksPct>70</NumBlocksPct> -->
-
-        <!-- If preferred, the user can specify cache size in terms of megabytes.
-             If both Pct and MB are specified, PrimProc will use Pct. -->
-        <!-- <NumBlocksInMB>2048</NumBlocksInMB> -->
-
 		<!-- <NumThreads>16</NumThreads> --> <!-- 1-256.  Default is 16. -->
 		<NumCaches>1</NumCaches><!-- # of parallel caches to instantiate -->
 		<IOMTracing>0</IOMTracing>

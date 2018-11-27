@@ -481,6 +481,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
         }
     }
 
+    WindowFunctionType::resetData();
     return true;
 }
 

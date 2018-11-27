@@ -581,12 +581,13 @@ extern "C"
             double sumy = data->sumy;
             double sumx2 = data->sumx2;
             double sumxy = data->sumxy;
+            double slope = 0;
             double variance = (N * sumx2) - (sumx * sumx);
             if (variance)
             {
-                double slope = ((N * sumxy) - (sumx * sumy)) / variance;
-                return (sumy - (slope * sumx)) / N;
+                slope = ((N * sumxy) - (sumx * sumy)) / variance;
             }
+            return (sumy - (slope * sumx)) / N;
         }
         *is_null = 1;
     	return 0;

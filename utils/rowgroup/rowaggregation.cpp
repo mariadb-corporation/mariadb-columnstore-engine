@@ -1673,11 +1673,10 @@ void RowAggregation::updateEntry(const Row& rowIn)
 {
     for (uint64_t i = 0; i < fFunctionCols.size(); i++)
     {
-        SP_ROWAGG_FUNC_t pFunctionCol = fFunctionCols[i];
-        int64_t colIn  = pFunctionCol->fInputColumnIndex;
-        int64_t colOut = pFunctionCol->fOutputColumnIndex;
+        int64_t colIn  = fFunctionCols[i]->fInputColumnIndex;
+        int64_t colOut = fFunctionCols[i]->fOutputColumnIndex;
 
-        switch (pFunctionCol->fAggFunction)
+        switch (fFunctionCols[i]->fAggFunction)
         {
             case ROWAGG_COUNT_COL_NAME:
 
@@ -1691,7 +1690,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
             case ROWAGG_MIN:
             case ROWAGG_MAX:
             case ROWAGG_SUM:
-                doMinMaxSum(rowIn, colIn, colOut, pFunctionCol->fAggFunction);
+                doMinMaxSum(rowIn, colIn, colOut, fFunctionCols[i]->fAggFunction);
                 break;
 
             case ROWAGG_AVG:
@@ -1708,7 +1707,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
             case ROWAGG_BIT_OR:
             case ROWAGG_BIT_XOR:
             {
-                doBitOp(rowIn, colIn, colOut, pFunctionCol->fAggFunction);
+                doBitOp(rowIn, colIn, colOut, fFunctionCols[i]->fAggFunction);
                 break;
             }
 
@@ -1731,7 +1730,7 @@ void RowAggregation::updateEntry(const Row& rowIn)
             {
                 std::ostringstream errmsg;
                 errmsg << "RowAggregation: function (id = " <<
-                       (uint64_t) pFunctionCol->fAggFunction << ") is not supported.";
+                       (uint64_t) fFunctionCols[i]->fAggFunction << ") is not supported.";
                 cerr << errmsg.str() << endl;
                 throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
                 break;
@@ -2015,7 +2014,6 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
 
     for (uint32_t i = 0; i < paramCount; ++i)
     {
-        SP_ROWAGG_FUNC_t pFunctionCol = fFunctionCols[funcColsIdx];
         mcsv1sdk::ColumnDatum& datum = valsIn[i];
         // Turn on NULL flags based on the data
         dataFlags[i] = 0;
@@ -2024,9 +2022,9 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
         // to acces the constant value rather than a row value.
         cc = NULL;
 
-        if (pFunctionCol->fpConstCol)
+        if (fFunctionCols[funcColsIdx]->fpConstCol)
         {
-            cc = dynamic_cast<ConstantColumn*>(pFunctionCol->fpConstCol.get());
+            cc = dynamic_cast<ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
         }
 
         if ((cc && cc->type() == ConstantColumn::NULLDATA)
@@ -2243,9 +2241,8 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut,
                 &&  fFunctionCols[funcColsIdx + 1]->fAggFunction == ROWAGG_MULTI_PARM)
         {
             ++funcColsIdx;
-            SP_ROWAGG_FUNC_t pFunctionCol = fFunctionCols[funcColsIdx];
-            colIn  = pFunctionCol->fInputColumnIndex;
-            colOut = pFunctionCol->fOutputColumnIndex;
+            colIn  = fFunctionCols[funcColsIdx]->fInputColumnIndex;
+            colOut = fFunctionCols[funcColsIdx]->fOutputColumnIndex;
         }
         else
         {

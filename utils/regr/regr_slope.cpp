@@ -60,8 +60,8 @@ mcsv1_UDAF::ReturnCode regr_slope::init(mcsv1Context* context,
     context->setUserDataSize(sizeof(regr_slope_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);
-    context->setScale(colTypes[0].scale + 8);
-    context->setPrecision(19);
+    context->setScale(DECIMAL_NOT_SPECIFIED);
+    context->setPrecision(0);
     context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
     return mcsv1_UDAF::SUCCESS;
 
@@ -141,14 +141,16 @@ mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::a
     double N = data->cnt;
     if (N > 0)
     {
+        // COVAR_POP(y, x) / VAR_POP(x)
         double sumx = data->sumx;
         double sumy = data->sumy;
         double sumx2 = data->sumx2;
         double sumxy = data->sumxy;
-        double variance = (N * sumx2) - (sumx * sumx);
-        if (variance != 0)
+        double covar_pop = N * sumxy - sumx * sumy;
+        double var_pop = N * sumx2 - sumx * sumx;
+        if (var_pop != 0)
         {
-            double slope = ((N * sumxy) - (sumx * sumy)) / variance;
+            double slope = covar_pop / var_pop;
             valOut = slope;
         }
     }

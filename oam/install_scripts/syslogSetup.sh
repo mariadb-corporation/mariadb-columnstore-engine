@@ -11,11 +11,25 @@ prefix=/usr/local
 installdir=$prefix/mariadb/columnstore
 syslog_conf=nofile
 rsyslog7=0
+non_root_user=no
 
 user=`whoami 2>/dev/null`
 
+#set default names
 groupname=adm
 username=syslog
+
+# determine username/groupname
+
+if [ -f /var/log/messages ]; then
+	  username=`stat -c "%U %G" /var/log/messages | awk '{print $1}'`
+	  groupname=`stat -c "%U %G" /var/log/messages | awk '{print $2}'`
+fi
+
+if [ -f /var/log/syslog ]; then
+	  username=`stat -c "%U %G" /var/log/syslog | awk '{print $1}'`
+	  groupname=`stat -c "%U %G" /var/log/syslog | awk '{print $2}'`
+fi
 
 for arg in "$@"; do
 	if [ `expr -- "$arg" : '--prefix='` -eq 9 ]; then
@@ -28,6 +42,7 @@ for arg in "$@"; do
 		user="`echo $arg | awk -F= '{print $2}'`"
 		groupname=$user
 		username=$user
+		non_root_user=yes
 	elif [ `expr -- "$arg" : '--..*'` -ge 3 ]; then
 		echo "ignoring unknown argument: $arg" 1>&2
 	elif [ `expr -- "$arg" : '--'` -eq 2 ]; then
@@ -157,12 +172,17 @@ fi
 }
 
 makeDir() {
-	test -d /var/log/mariadb/columnstore || mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
-	test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
-	chmod 777 -R /var/log/mariadb/columnstore
-	chown $user:$user -R /var/log/mariadb
+	if [ ! -d /var/log/mariadb/columnstore ]; then
+		mkdir -p /var/log/mariadb/columnstore >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+		chown $username:$groupname -R /var/log/mariadb
+	else
+		test -d /var/log/mariadb/columnstore/archive || mkdir /var/log/mariadb/columnstore/archive >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/corefiles || mkdir /var/log/mariadb/columnstore/corefiles >/dev/null 2>&1
+		test -d /var/log/mariadb/columnstore/trace || mkdir /var/log/mariadb/columnstore/trace >/dev/null 2>&1
+	fi
 }
 
 install() {
@@ -170,15 +190,15 @@ makeDir
 checkSyslog
 if [ ! -z "$syslog_conf" ] ; then
 	$installdir/bin/setConfig -d Installation SystemLogConfigFile ${syslog_conf} >/dev/null 2>&1
-	if [ $user != "root" ]; then
-		 chown $user:$user /home/$user/mariadb/columnstore/etc/*
-	fi 
+	if [ $non_root_user == "yes" ]; then
+		chown $user:$user $installdir/etc/Columnstore.xml*
+	fi
 	
+	rm -f ${syslog_conf}.columnstoreSave
 	if [ "$syslog_conf" == /etc/rsyslog.d/columnstore.conf ] ||
 		[ "$syslog_conf" == /etc/rsyslog.d/49-columnstore.conf ]; then
 		i=1
 	else
-		rm -f ${syslog_conf}.columnstoreSave
 		cp ${syslog_conf} ${syslog_conf}.columnstoreSave >/dev/null 2>&1
 		sed -i '/# MariaDB/,$d' ${syslog_conf}.columnstoreSave > /dev/null 2>&1
 	fi
@@ -188,21 +208,6 @@ if [ ! -z "$syslog_conf" ] ; then
 		#set the syslog for ColumnStore logging
 		# remove older version incase it was installed by previous build
 		 rm -rf /etc/rsyslog.d/columnstore.conf
-
-		# determine username/groupname
-		
-		if [ -f /var/log/messages ]; then
-		      user=`stat -c "%U %G" /var/log/messages | awk '{print $1}'`
-		      group=`stat -c "%U %G" /var/log/messages | awk '{print $2}'`
-		fi
-		
-		if [ -f /var/log/syslog ]; then
-		      user=`stat -c "%U %G" /var/log/syslog | awk '{print $1}'`
-		      group=`stat -c "%U %G" /var/log/syslog | awk '{print $2}'`
-		fi
-		
-		# set permissions
-		chown $user:$group -R /var/log/mariadb > /dev/null 2>&1
 		
 		if [ $rsyslog7 == 1 ]; then
 			 rm -f /etc/rsyslog.d/49-columnstore.conf
@@ -210,16 +215,41 @@ if [ ! -z "$syslog_conf" ] ; then
 
 			 sed -i -e s/groupname/$groupname/g ${syslog_conf}
 			 sed -i -e s/username/$username/g ${syslog_conf}
+			 chmod 644 ${syslog_conf}
 		else		
 			 cp  ${columnstoreSyslogFile} ${syslog_conf}
 		fi
 	fi
 
-	# install Columnstore Log Rotate File
-	 cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
-	 chmod 644 /etc/logrotate.d/columnstore
-
 	restartSyslog
+
+	# install Columnstore Log Rotate File
+	if [ -d /etc/logrotate.d ]; then
+		cp $installdir/bin/columnstoreLogRotate /etc/logrotate.d/columnstore > /dev/null 2>&1
+		chmod 644 /etc/logrotate.d/columnstore
+
+		#do the logrotate to start with a fresh log file during install
+		logrotate -f /etc/logrotate.d/columnstore > /dev/null 2>&1
+	fi
+	
+	#log install message and find the least permission that allows logging to work
+	CHMOD_LIST=("750" "770" "775" "777")
+	for CHMOD in "${CHMOD_LIST[@]}"; do
+		chmod $CHMOD /var/log/mariadb
+		chmod $CHMOD /var/log/mariadb/columnstore
+		chmod $CHMOD /var/log/mariadb/columnstore/archive
+		chmod $CHMOD /var/log/mariadb/columnstore/corefiles
+		chmod $CHMOD /var/log/mariadb/columnstore/trace
+
+		test -f $installdir/post/functions && . $installdir/post/functions
+		LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$installdir/lib $installdir/bin/cplogger -i 19 "***** MariaDB Columnstore Installed *****"
+		
+		if [ -f /var/log/mariadb/columnstore/info.log ]; then
+			if [ -s /var/log/mariadb/columnstore/info.log ]; then
+				exit 0
+			fi
+		fi
+	done
 fi
 
 }
@@ -233,7 +263,7 @@ if [ ! -z "$syslog_conf" ] ; then
 			if [ $? -eq 0 ]; then
 				if [ -f ${syslog_conf}.columnstoreSave ] ; then
 					#uninstall the syslog for ColumnStore logging
-					 v -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
+					 mv -f ${syslog_conf} ${syslog_conf}.ColumnStoreBackup
 					 mv -f ${syslog_conf}.columnstoreSave ${syslog_conf} >/dev/null 2>&1
 					if [ ! -f ${syslog_conf} ] ; then
 						 cp ${syslog_conf}.ColumnStoreBackup ${syslog_conf}
@@ -252,7 +282,6 @@ if [ ! -z "$syslog_conf" ] ; then
 	rm -f /etc/logrotate.d/columnstore
 
 	restartSyslog
-
 fi
 
 }
