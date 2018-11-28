@@ -84,6 +84,7 @@ void WF_udaf::resetData()
     getContext().getFunction()->reset(&getContext());
     fDistinctMap.clear();
     WindowFunctionType::resetData();
+    fValOut.reset();
 }
 
 void WF_udaf::parseParms(const std::vector<execplan::SRCP>& parms)

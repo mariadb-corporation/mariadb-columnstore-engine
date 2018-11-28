@@ -194,31 +194,21 @@ void WindowFunction::operator()()
                     // Built-in functions may have this functionality added in the future.
                     // If b > e then the frame is entirely outside of the partition
                     // and there's no values to drop
-                    if (b <= e)
+                    if (!firstTime && (b <= e) && fFunctionType->dropValues(prevFrame.first, w.first))
                     {
-                        if (!firstTime)
-                        {
-                            if (fFunctionType->dropValues(prevFrame.first, w.first))
-                            {
-                                // Adjust the beginning of the frame for nextValue
-                                // to start where the previous frame left off.
-                                b = prevFrame.second + 1;
-                            }
-                            else
-                            {
-                                // dropValues failed or doesn't exist
-                                // so calculate the entire frame.
-                                fFunctionType->resetData();
-                            }
-                        }
-                        else
-                        {
-                            fFunctionType->resetData();
-                            firstTime = false;
-                        }
+                        // Adjust the beginning of the frame for nextValue
+                        // to start where the previous frame left off.
+                        b = prevFrame.second + 1;
+                    }
+                    else
+                    {
+                        // If dropValues failed or doesn't exist,
+                        // calculate the entire frame.
+                        fFunctionType->resetData();
                     }
                     fFunctionType->operator()(b, e, i); // UDAnF: Calls nextValue and evaluate
                     prevFrame = w;
+                    firstTime = false;
                 }
             }
         }
