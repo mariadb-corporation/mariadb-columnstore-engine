@@ -144,7 +144,7 @@ mcsv1_UDAF::ReturnCode corr::evaluate(mcsv1Context* context, static_any::any& va
 {
     struct corr_data* data = (struct corr_data*)context->getUserData()->data;
     double N = data->cnt;
-    if (N > 0)
+    if (N > 1)
     {
         double sumx = data->sumx;
         double sumy = data->sumy;
@@ -161,8 +161,7 @@ mcsv1_UDAF::ReturnCode corr::evaluate(mcsv1Context* context, static_any::any& va
         double var_popy = (sumy2 - (sumy * sumy / N)) / N;
         if (var_popy == 0)
         {
-            // When var_popy is 0, 1 is the result
-            valOut = 1.0;
+            // When var_popy is 0, NULL is the result
             return mcsv1_UDAF::SUCCESS;
         }
         double std_popx = sqrt(var_popx);
