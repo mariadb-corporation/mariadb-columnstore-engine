@@ -45,6 +45,7 @@ namespace anyimpl
     {
         virtual void static_delete(void** x)
         {
+            *x = 0;
         }
         virtual void copy_from_value(void const* src, void** dest)
         {
