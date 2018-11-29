@@ -9931,6 +9931,7 @@ int Oam::sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetw
     msg << (ByteStream::byte) gracefulflag;
     msg << (ByteStream::byte) ackflag;
     msg << (ByteStream::byte) requestManual;
+
     msg << (uint16_t) devicenetworklist.size();
 
     DeviceNetworkList::iterator pt = devicenetworklist.begin();
@@ -9948,6 +9949,7 @@ int Oam::sendMsgToProcMgr2(messageqcpp::ByteStream::byte requestType, DeviceNetw
             msg << " ";
         else
             msg << (*pt).DisableState;
+
         msg << (uint16_t) (*pt).hostConfigList.size();
 
         HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
@@ -10063,6 +10065,7 @@ int Oam::sendAddModuleToProcMgr(messageqcpp::ByteStream::byte requestType, Devic
             msg << " ";
         else
             msg << (*pt).DisableState;
+
         msg << (uint16_t) (*pt).hostConfigList.size();
 
         HostConfigList::iterator pt1 = (*pt).hostConfigList.begin();
