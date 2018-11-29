@@ -309,8 +309,9 @@
 		<Desc4>MariaDB Columnstore Packages and setup the module to make it ready to be restored</Desc4>
 		<Arg1>Required: Module-type or Module-name being added</Arg1>
 		<Arg2>Required: Number-of-Modules being added when Module-type is specified</Arg2>
-		<Arg3>Optional: Server-Hostnames/Amazon-Instance-Names seperated by commas</Arg3>
-		<Arg4>Optional: Server-root-password</Arg4>
+        <Arg3>Optional: Store given hostnames in the configuration instead of IP addresses (y/N)</Arg3>
+		<Arg4>Optional: Server-Hostnames/Amazon-Instance-Names seperated by commas</Arg4>
+		<Arg5>Optional: Server-root-password</Arg5>
 	</Cmd48>
 	<Cmd49>
 		<Name>removeModule</Name>
