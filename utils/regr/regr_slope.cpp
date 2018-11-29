@@ -139,7 +139,7 @@ mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::a
 {
     struct regr_slope_data* data = (struct regr_slope_data*)context->getUserData()->data;
     double N = data->cnt;
-    if (N > 0)
+    if (N > 1)
     {
         // COVAR_POP(y, x) / VAR_POP(x)
         double sumx = data->sumx;

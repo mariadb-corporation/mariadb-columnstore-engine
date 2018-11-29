@@ -139,7 +139,7 @@ mcsv1_UDAF::ReturnCode regr_intercept::evaluate(mcsv1Context* context, static_an
 {
     struct regr_intercept_data* data = (struct regr_intercept_data*)context->getUserData()->data;
     double N = data->cnt;
-    if (N > 0)
+    if (N > 1)
     {
         double sumx = data->sumx;
         double sumy = data->sumy;

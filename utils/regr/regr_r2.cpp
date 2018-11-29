@@ -144,7 +144,7 @@ mcsv1_UDAF::ReturnCode regr_r2::evaluate(mcsv1Context* context, static_any::any&
 {
     struct regr_r2_data* data = (struct regr_r2_data*)context->getUserData()->data;
     double N = data->cnt;
-    if (N > 0)
+    if (N > 1)
     {
         double sumx = data->sumx;
         double sumy = data->sumy;
