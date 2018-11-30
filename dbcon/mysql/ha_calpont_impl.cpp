@@ -2856,7 +2856,7 @@ int ha_calpont_impl_rnd_init(TABLE* table)
     //check whether the system is ready to process statement.
 #ifndef _MSC_VER
     static DBRM dbrm(true);
-    bool bSystemQueryReady = dbrm.getSystemQueryReady();
+    int bSystemQueryReady = dbrm.getSystemQueryReady();
 
     if (bSystemQueryReady == 0)
     {
@@ -5140,7 +5140,7 @@ int ha_calpont_impl_group_by_init(ha_calpont_group_by_handler* group_hand, TABLE
     //check whether the system is ready to process statement.
 #ifndef _MSC_VER
     static DBRM dbrm(true);
-    bool bSystemQueryReady = dbrm.getSystemQueryReady();
+    int bSystemQueryReady = dbrm.getSystemQueryReady();
 
     if (bSystemQueryReady == 0)
     {

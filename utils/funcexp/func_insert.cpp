@@ -92,7 +92,9 @@ std::string Func_insert::getStrVal(rowgroup::Row& row,
 	string tnewstr;
     stringValue(fp[0], row, isNull, tstr);
     if (isNull)
+    {
         return "";
+    }
 
     stringValue(fp[3], row, isNull, tnewstr);
     if (isNull)

@@ -76,7 +76,7 @@ std::string Func_substring_index::getStrVal(rowgroup::Row& row,
     if ( count >  end )
         return str;
 
-    if (( count < 0 ) && ((count * -1) > end))
+    if (( count < 0 ) && ((count * -1) > (int64_t) end))
         return str;
 
     string value = str;

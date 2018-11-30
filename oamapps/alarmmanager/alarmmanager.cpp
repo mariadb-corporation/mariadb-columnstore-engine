@@ -484,10 +484,10 @@ void ALARMManager::sendAlarmReport (const char* componentID, int alarmID, int st
     else
         processName = repProcessName;
 
-    ByteStream msg1;
+ByteStream msg1;
 
-    // setup message
-    msg1 << (ByteStream::byte) alarmID;
+// setup message
+msg1 << (ByteStream::byte) alarmID;
     msg1 << (std::string) componentID;
     msg1 << (ByteStream::byte) state;
     msg1 << (std::string) ModuleName;

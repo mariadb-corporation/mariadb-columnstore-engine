@@ -236,6 +236,7 @@ char* PrintMD5(uchar md5Digest[16])
     char chBuffer[256];
     char chEach[10];
     int nCount;
+    size_t chEachSize = 0;
 
     memset(chBuffer, 0, 256);
     memset(chEach, 0, 10);
@@ -243,7 +244,8 @@ char* PrintMD5(uchar md5Digest[16])
     for (nCount = 0; nCount < 16; nCount++)
     {
         sprintf(chEach, "%02x", md5Digest[nCount]);
-        strncat(chBuffer, chEach, sizeof(chEach));
+        chEachSize = sizeof(chEach);
+        strncat(chBuffer, chEach, chEachSize);
     }
 
     return strdup(chBuffer);

@@ -40,7 +40,10 @@ FileBuffer::FileBuffer() : fDataLen(0), fLbid(-1), fVerid(0)
 FileBuffer::FileBuffer(const FileBuffer& rhs)
 {
 
-    if (this == NULL || this == &rhs)
+    // Removed the check for gcc 8.2. The latest gcc version we 
+    // use ATM is 4.8.2 for centos 6 and it also doesn't need
+    // the check
+    if (this == &rhs)
         return;
 
     fLbid = rhs.fLbid;

@@ -1497,7 +1497,6 @@ void ProcessMonitor::processMessage(messageqcpp::ByteStream msg, messageqcpp::IO
             string configureModuleName;
             msg >> configureModuleName;
 
-            uint16_t rtnCode;
             int requestStatus = API_SUCCESS;
 
             configureModule(configureModuleName);
@@ -2220,7 +2219,8 @@ pid_t ProcessMonitor::startProcess(string processModuleType, string processName,
                                    string RunType, string DepProcessName[MAXDEPENDANCY],
                                    string DepModuleName[MAXDEPENDANCY], string LogFile, uint16_t initType,  uint16_t actIndicator)
 {
-    pid_t  newProcessID;
+    // Compiler complains about non-initialiased variable here.
+    pid_t  newProcessID = 0;
     char* argList[MAXARGUMENTS];
     unsigned int i = 0;
     MonitorLog log;

@@ -1744,7 +1744,8 @@ int32_t DataConvert::convertColumnDate(
 bool DataConvert::isColumnDateValid( int32_t date )
 {
     Date d;
-    memcpy(&d, &date, sizeof(int32_t));
+    void* dp = static_cast<void*>(&d);
+    memcpy(dp, &date, sizeof(int32_t));
     return (isDateValid(d.day, d.month, d.year));
 }
 
@@ -2046,7 +2047,8 @@ int64_t DataConvert::convertColumnTime(
 bool DataConvert::isColumnDateTimeValid( int64_t dateTime )
 {
     DateTime dt;
-    memcpy(&dt, &dateTime, sizeof(uint64_t));
+    void* dtp = static_cast<void*>(&dt);
+    memcpy(dtp, &dateTime, sizeof(uint64_t));
 
     if (isDateValid(dt.day, dt.month, dt.year))
         return isDateTimeValid(dt.hour, dt.minute, dt.second, dt.msecond);
@@ -2057,7 +2059,8 @@ bool DataConvert::isColumnDateTimeValid( int64_t dateTime )
 bool DataConvert::isColumnTimeValid( int64_t time )
 {
     Time dt;
-    memcpy(&dt, &time, sizeof(uint64_t));
+    void* dtp = static_cast<void*>(&dt);
+    memcpy(dtp, &time, sizeof(uint64_t));
 
     return isTimeValid(dt.hour, dt.minute, dt.second, dt.msecond);
 }
