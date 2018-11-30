@@ -5693,7 +5693,7 @@ int processCommand(string* arguments)
             if ( arguments[1].size() == 2 )
             {
                 //Module Type was entered
-                if (arguments[4] == "" && cloud == oam::UnassignedName)
+                if (arguments[3] == "" && cloud == oam::UnassignedName)
                 {
                     // need at least  arguments
                     cout << endl << "**** addModule Failed : Missing a required Parameter, enter 'help' for additional information" << endl;
