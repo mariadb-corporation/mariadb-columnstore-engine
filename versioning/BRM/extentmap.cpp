@@ -59,7 +59,6 @@ namespace bi=boost::interprocess;
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #ifdef BRM_INFO
- #error BRM_INFO is broken right now
  #include "tracer.h"
  #include "configcpp.h"
 #endif
@@ -4113,12 +4112,12 @@ void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum,
 	if ((oldHWMExtentIndex != -1) && (oldHWMExtentIndex != lastExtentIndex)) {
 		makeUndoRecord(&fExtentMap[oldHWMExtentIndex], sizeof(EMEntry));
 		fExtentMap[oldHWMExtentIndex].HWM = 0;
-#ifdef BRM_DEBUG 
+#ifdef BRM_INFO 
 		addedAnExtent = true;
 #endif
 	}
 
-#ifdef BRM_DEBUG 
+#ifdef BRM_INFO 
 	if (firstNode) {
 		ostringstream os;
 		os << "ExtentMap::setLocalHWM(): firstLBID=" << fExtentMap[lastExtentIndex].range.start <<
@@ -4381,9 +4380,9 @@ void ExtentMap::deletePartition(const set<OID_t>& oids,
 		TRACER_WRITENOW("deletePartition");
 		ostringstream oss;
 		set<LogicalPartition>::const_iterator partIt;
-		oss << "partitionNums: " 
-		for (partIt=partitionNums.begin(); it!=partitionNums.end(); ++it)
-			oss << (*it) << " ";
+		oss << "partitionNums: ";
+		for (partIt=partitionNums.begin(); partIt!=partitionNums.end(); ++partIt)
+			oss << (*partIt) << " ";
 
 		oss << endl;
 		oss << "OIDS: ";
@@ -4474,9 +4473,9 @@ void ExtentMap::markPartitionForDeletion(const set<OID_t>& oids,
 		TRACER_WRITENOW("markPartitionForDeletion");
 		ostringstream oss;
 		set<LogicalPartition>::const_iterator partIt;
-		oss << "partitionNums: " 
-		for (partIt=partitionNums.begin(); it!=partitionNums.end(); ++it)
-			oss << (*it) << " ";
+		oss << "partitionNums: ";
+		for (partIt=partitionNums.begin(); partIt!=partitionNums.end(); ++partIt)
+			oss << (*partIt) << " ";
 
 		oss << endl;
 		oss << "OIDS: ";
@@ -4618,9 +4617,9 @@ void ExtentMap::restorePartition(const set<OID_t>& oids,
 		TRACER_WRITENOW("restorePartition");
 		ostringstream oss;
 		set<LogicalPartition>::const_iterator partIt;
-		oss << "partitionNums: " 
-		for (partIt=partitionNums.begin(); it!=partitionNums.end(); ++it)
-			oss << (*it) << " ";
+		oss << "partitionNums: ";
+		for (partIt=partitionNums.begin(); partIt!=partitionNums.end(); ++partIt)
+			oss << (*partIt) << " ";
 		oss << endl;
 		oss << "OIDS: ";
 		set<OID_t>::const_iterator it;
@@ -4768,7 +4767,7 @@ bool ExtentMap::isDBRootEmpty(uint16_t dbroot)
 	if (fDebug)
 	{
 		TRACER_WRITELATER("isDBRootEmpty");
-		TRACER_ADDINPUT(OID);
+		TRACER_ADDINPUT(dbroot);
 		TRACER_WRITE;
 	}
 #endif
