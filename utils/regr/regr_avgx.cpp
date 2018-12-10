@@ -123,11 +123,7 @@ mcsv1_UDAF::ReturnCode regr_avgx::evaluate(mcsv1Context* context, static_any::an
 {
     struct regr_avgx_data* data = (struct regr_avgx_data*)context->getUserData()->data;
 
-    if (data->cnt == 0)
-    {
-        valOut = 0;
-    }
-    else
+    if (data->cnt > 0)
     {
         valOut = data->sum / (double)data->cnt;
     }
