@@ -708,12 +708,12 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
     mcsv1sdk::mcsv1_UDAF::ReturnCode rc;
     uint64_t colOut = fFieldIndex[0];
     bool isNull = false;
-    fValOut.reset();
 
     if ((fFrameUnit == WF__FRAME_ROWS) ||
             (fPrev == -1) ||
             (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
     {
+        fValOut.reset();
         // for unbounded - current row special handling
         if (fPrev >= b && fPrev < c)
             b = c;
