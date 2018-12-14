@@ -1104,7 +1104,7 @@ int FileOp::initColumnExtent(
 
         int savedErrno = 0;
         // MCOL-498 Try to preallocate the space, fallback to write if fallocate has failed
-        if (!bOptExtension || pFile->fallocate(0, currFileSize, writeSize))
+        if ( !bOptExtension || ( nBlocks < 300 && pFile->fallocate(0, currFileSize, writeSize) ))
         {
             savedErrno = errno;
             // Log the failed fallocate() call result
@@ -1870,7 +1870,7 @@ int FileOp::initDctnryExtent(
         int savedErrno = 0;
         // MCOL-498 Try to preallocate the space, fallback to write if fallocate
         // has failed
-        if (!bOptExtension || pFile->fallocate(0, currFileSize, writeSize))
+        //if (!bOptExtension || pFile->fallocate(0, currFileSize, writeSize))
         {
             // Log the failed  fallocate() call result
             if ( bOptExtension )
