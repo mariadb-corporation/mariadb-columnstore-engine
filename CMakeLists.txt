@@ -83,6 +83,14 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${INSTALL
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
+exec_program("git"
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ARGS "describe --match=NeVeRmAtCh --always --dirty"
+    OUTPUT_VARIABLE GIT_VERSION)
+
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${INSTALL_ENGINE} COMPONENT platform)
+
 INCLUDE(bison.cmake)
 
 FIND_PROGRAM(LEX_EXECUTABLE flex DOC "path to the flex executable")
