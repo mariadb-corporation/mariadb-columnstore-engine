@@ -1880,11 +1880,11 @@ int DBRM::deletePartition(const std::vector<OID_t>& oids,
     {
         TRACER_WRITENOW("deletePartition");
         std::ostringstream oss;
-        oss << "partitionNum: "
+		oss << "partitionNum: "; 
             std::set<LogicalPartition>::const_iterator partIt;
 
         for (partIt = partitionNums.begin(); partIt != partitionNums.end(); ++partIt)
-            oss << (*it) << " "
+			oss << (*partIt) << " ";
                 oss << "; OIDS: ";
 
         std::vector<OID_t>::const_iterator it;
@@ -1939,11 +1939,11 @@ int DBRM::markPartitionForDeletion(const std::vector<OID_t>& oids,
     {
         TRACER_WRITENOW("markPartitionForDeletion");
         std::ostringstream oss;
-        oss << "partitionNum: "
+		oss << "partitionNum: ";
             std::set<LogicalPartition>::const_iterator partIt;
 
         for (partIt = partitionNums.begin(); partIt != partitionNums.end(); ++partIt)
-            oss << (*it) << " "
+			oss << (*partIt) << " ";
                 oss << "; OIDS: ";
 
         std::vector<OID_t>::const_iterator it;
@@ -2045,11 +2045,11 @@ int DBRM::restorePartition(const std::vector<OID_t>& oids,
     {
         TRACER_WRITENOW("restorePartition");
         std::ostringstream oss;
-        oss << "partitionNum: "
+		oss << "partitionNum: ";
             std::set<LogicalPartition>::const_iterator partIt;
 
         for (partIt = partitionNums.begin(); partIt != partitionNums.end(); ++partIt)
-            oss << (*it) << " "
+			oss << (*partIt) << " ";
                 oss << "; OIDS: ";
 
         std::vector<OID_t>::const_iterator it;

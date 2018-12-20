@@ -637,6 +637,7 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
     // refColOp.reset(colOpRefCol);
     // dctnry.reset(dctOp);
     uint16_t dbRoot = 1;	//not to be used
+   int newDataWidth = dataWidth;
     //Convert HWM of the reference column for the new column
     //Bug 1703,1705
     bool isToken = false;
@@ -661,10 +662,17 @@ int WriteEngineWrapper::fillColumn(const TxnID& txnid, const OID& dataOid,
         isToken = true;
     }
 
+    newDataWidth = colOpNewCol->getCorrectRowWidth(dataType, dataWidth);
+    // MCOL-1347 CS doubles the width for ALTER TABLE..ADD COLUMN
+    if ( dataWidth < 4 && dataType == CalpontSystemCatalog::VARCHAR )
+    {
+        newDataWidth >>= 1;
+    }
+
     Convertor::convertColType(refColDataType, refColType, isToken);
     refColOp->setColParam(refCol, 0, refColOp->getCorrectRowWidth(refColDataType, refColWidth),
                           refColDataType, refColType, (FID)refColOID, refCompressionType, dbRoot);
-    colOpNewCol->setColParam(newCol, 0, colOpNewCol->getCorrectRowWidth(dataType, dataWidth),
+   colOpNewCol->setColParam(newCol, 0, newDataWidth,
                              dataType, newColType, (FID)dataOid, compressionType, dbRoot);
 
     int size = sizeof(Token);
