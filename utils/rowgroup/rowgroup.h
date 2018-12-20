@@ -1873,8 +1873,7 @@ inline bool StringStore::isNullValue(uint64_t off) const
 
     if (mc->data[offset + 4] == 0)  // "" = NULL string for some reason...
         return true;
-
-    return (*((uint64_t*) &mc->data[offset] + 4) == *((uint64_t*) joblist::CPNULLSTRMARK.c_str()));
+    return (memcmp(&mc->data[offset+4], joblist::CPNULLSTRMARK.c_str(), 8) == 0);
 }
 
 inline bool StringStore::equals(const std::string& str, uint64_t off) const
