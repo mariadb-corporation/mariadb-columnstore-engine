@@ -1046,7 +1046,7 @@ int FileOp::initColumnExtent(
 
     // @bug5769 Don't initialize extents or truncate db files on HDFS
     // MCOL-498 We don't need sequential segment files if a PM uses SSD either.
-    if (idbdatafile::IDBPolicy::useHdfs() || !idbdatafile::IDBPolicy::PreallocSpace())
+    if (idbdatafile::IDBPolicy::useHdfs())
     {
         //@Bug 3219. update the compression header after the extent is expanded.
         if ((!bNewFile) && (m_compressionType) && (bExpandExtent))
@@ -1101,10 +1101,19 @@ int FileOp::initColumnExtent(
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
 #endif
-
+        // MCOL-498 Skip the huge preallocations if the option is set
+        // for the dbroot
+        if ( bOptExtension )
+        {
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
+                ? bOptExtension : false;
+        }
         int savedErrno = 0;
-        // MCOL-498 Try to preallocate the space, fallback to write if fallocate has failed
-        if ( !bOptExtension || ( nBlocks < 300 && pFile->fallocate(0, currFileSize, writeSize) ))
+        // MCOL-498 fallocate the abbreviated extent,
+        // fallback to sequential write if fallocate failed
+        if ( !bOptExtension || ( nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK
+            && pFile->fallocate(0, currFileSize, writeSize) )
+        )
         {
             savedErrno = errno;
             // Log the failed fallocate() call result
@@ -1817,7 +1826,7 @@ int FileOp::initDctnryExtent(
     off64_t currFileSize = pFile->size();
     // @bug5769 Don't initialize extents or truncate db files on HDFS
     // MCOL-498 We don't need sequential segment files if a PM uses SSD either.
-    if (idbdatafile::IDBPolicy::useHdfs() || !idbdatafile::IDBPolicy::PreallocSpace())
+    if (idbdatafile::IDBPolicy::useHdfs())
     {
         if (m_compressionType)
             updateDctnryExtent(pFile, nBlocks);
@@ -1867,12 +1876,21 @@ int FileOp::initDctnryExtent(
         else
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
 #endif
-        int savedErrno = 0;
-        // MCOL-498 Try to preallocate the space, fallback to write if fallocate
-        // has failed
-        //if (!bOptExtension || pFile->fallocate(0, currFileSize, writeSize))
+        // MCOL-498 Skip the huge preallocations if the option is set
+        // for the dbroot
+        if ( bOptExtension )
         {
-            // Log the failed  fallocate() call result
+            bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
+                ? bOptExtension : false;
+        }
+        int savedErrno = 0;
+        // MCOL-498 fallocate the abbreviated extent,
+        // fallback to sequential write if fallocate failed
+        if ( !bOptExtension || ( nBlocks <= MAX_INITIAL_EXTENT_BLOCKS_TO_DISK
+            && pFile->fallocate(0, currFileSize, writeSize) )
+        )
+        {
+            // MCOL-498 Log the failed  fallocate() call result
             if ( bOptExtension )
             {
                 std::ostringstream oss;
@@ -1935,23 +1953,22 @@ int FileOp::initDctnryExtent(
                         return ERR_FILE_WRITE;
                     }
                 }
-            }
-
-            if (m_compressionType)
-                updateDctnryExtent(pFile, nBlocks);
-
-            // Synchronize to avoid write buffer pile up too much, which could cause
-            // controllernode to timeout later when it needs to save a snapshot.
-            pFile->flush();
+                // CS doesn't account flush timings.
 #ifdef PROFILE
-
-            if (bExpandExtent)
-                Stats::stopParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
-            else
-                Stats::stopParseEvent(WE_STATS_CREATE_DCT_EXTENT);
+                if (bExpandExtent)
+                    Stats::stopParseEvent(WE_STATS_EXPAND_DCT_EXTENT);
+                else
+                    Stats::stopParseEvent(WE_STATS_CREATE_DCT_EXTENT);
 #endif
-        }
+            }
+        } // preallocation fallback end
 
+        // MCOL-498 CS has to set a number of blocs in the chunk header
+        if ( m_compressionType )
+        {
+            updateDctnryExtent(pFile, nBlocks);
+        }
+        pFile->flush();
     }
 
     return NO_ERROR;

@@ -45,7 +45,8 @@ const short ROW_PER_BYTE            = 8;        // Rows/byte in bitmap file
 const int   BYTE_PER_BLOCK          = 8192;     // Num bytes per data block
 const int   BYTE_PER_SUBBLOCK       = 256;      // Num bytes per sub block
 const int   ENTRY_PER_SUBBLOCK      = 32;       // Num entries per sub block
-const int   INITIAL_EXTENT_ROWS_TO_DISK = 256 * 1024;
+const int   INITIAL_EXTENT_ROWS_TO_DISK = 256 * 1024; // Used for initial number of blocks calculation
+const int   MAX_INITIAL_EXTENT_BLOCKS_TO_DISK = 256; // Number of blocks in abbrev extent for 8byte col.
 // Num rows reserved to disk for 'initial' extent
 const int   FILE_NAME_SIZE          = 200;      // Max size of file name
 const long long MAX_ALLOW_ERROR_COUNT = 100000; //Max allowable error count

@@ -18,14 +18,13 @@
 #include <unistd.h>
 #include <iostream>
 #include <sstream>
-#include <string>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/convenience.hpp>
-#include <boost/algorithm/string.hpp>    // to_upper
 #include <boost/thread/thread.hpp>
 
 #include "configcpp.h"                   // for Config
 #include "oamcache.h"
+#include "liboamcpp.h"
 #include "IDBPolicy.h"
 #include "PosixFileSystem.h"
 //#include "HdfsFileSystem.h"
@@ -50,7 +49,7 @@ int64_t IDBPolicy::s_hdfsRdwrBufferMaxSize = 0;
 std::string IDBPolicy::s_hdfsRdwrScratch;
 bool IDBPolicy::s_configed = false;
 boost::mutex IDBPolicy::s_mutex;
-bool IDBPolicy::s_PreallocSpace = true;
+std::vector<uint16_t> IDBPolicy::s_PreallocSpace;
 
 void IDBPolicy::init( bool bEnableLogging, bool bUseRdwrMemBuffer, const string& hdfsRdwrScratch, int64_t hdfsRdwrBufferMaxSize )
 {
@@ -184,10 +183,12 @@ void IDBPolicy::configIDBPolicy()
     bool idblog = false;
     string idblogstr = cf->getConfig("SystemConfig", "DataFileLog");
 
-    if ( idblogstr.length() != 0 )
+    // Must be faster.
+    if ( idblogstr.size() == 2
+                && ( idblogstr[0] == 'O' || idblogstr[0] == 'o' )
+                && ( idblogstr[1] == 'N' || idblogstr[1] == 'n' ))
     {
-        boost::to_upper(idblogstr);
-        idblog = ( idblogstr == "ON" );
+        idblog = true;
     }
 
     //--------------------------------------------------------------------------
@@ -227,26 +228,73 @@ void IDBPolicy::configIDBPolicy()
     string scratch = cf->getConfig("SystemConfig", "hdfsRdwrScratch");
     string hdfsRdwrScratch = tmpDir + scratch;
 
-    // MCOL-498. Set the PMSX.PreallocSpace knob, where X is a PM number,
-    // to disable file space preallocation. The feature is used in the FileOp code
-    // and is enabled by default for a backward compatibility.
-    oam::OamCache* oamcache = oam::OamCache::makeOamCache();
-    int PMId = oamcache->getLocalPMId();
-    char configSectionPref[] = "PMS";
-    char configSection[sizeof(configSectionPref)+oam::MAX_MODULE_ID_SIZE];
-    ::memset(configSection, 0, sizeof(configSection));
-    sprintf(configSection, "%s%d", configSectionPref, PMId);
-    string PreallocSpace = cf->getConfig(configSection, "PreallocSpace");
-
-    if ( PreallocSpace.length() != 0 )
-    {
-        boost::to_upper(PreallocSpace);
-        s_PreallocSpace = ( PreallocSpace != "OFF" );
-    }
+    // MCOL-498. Use DBRootX.PreallocSpace to disable
+    // dbroots file space preallocation.
+    // The feature is used in the FileOp code and enabled by default.
+    char configSectionPref[] = "DBRoot";
+    int confSectionLen = sizeof(configSectionPref)+oam::MAX_MODULE_ID_SIZE;
+    char configSection[confSectionLen];
 
     IDBPolicy::init( idblog, bUseRdwrMemBuffer, hdfsRdwrScratch, hdfsRdwrBufferMaxSize );
-
     s_configed = true;
+
+    oam::OamCache* oamcache = oam::OamCache::makeOamCache();
+    int PMId = oamcache->getLocalPMId();
+
+    oam::OamCache::PMDbrootsMap_t pmDbrootsMap;
+    pmDbrootsMap.reset(new oam::OamCache::PMDbrootsMap_t::element_type());
+    oam::systemStorageInfo_t t;
+    oam::Oam oamInst;
+    t = oamInst.getStorageConfig();
+    
+    oam::DeviceDBRootList moduledbrootlist = boost::get<2>(t);
+    oam::DeviceDBRootList::iterator pt = moduledbrootlist.begin();
+
+    while ( pt != moduledbrootlist.end() && (*pt).DeviceID != PMId)
+    {
+        pt++;
+        continue;
+    }
+    
+    // CS could return here b/c it initialised this singleton and
+    // there is no DBRootX sections in XML.
+    if (pt == moduledbrootlist.end())
+    {
+        return;
+    }
+    
+    oam::DBRootConfigList &dbRootVec = (*pt).dbrootConfigList;
+    s_PreallocSpace.reserve(dbRootVec.size()>>1);
+    {
+        int rc;
+        oam::DBRootConfigList::iterator dbRootIter = dbRootVec.begin();
+        for(; dbRootIter != dbRootVec.end(); dbRootIter++)
+        {
+            ::memset(configSection + sizeof(configSectionPref), 0, oam::MAX_MODULE_ID_SIZE);
+            rc = snprintf(configSection, confSectionLen, "%s%d", configSectionPref, *dbRootIter);
+            // gcc 8.2 warnings
+            if ( rc < 0 || rc >= confSectionLen)
+            {
+                ostringstream oss;
+                oss << "IDBPolicy::configIDBPolicy: failed to parse DBRootX section.";
+                throw runtime_error(oss.str());
+            }
+            string setting = cf->getConfig(configSection, "PreallocSpace");
+
+            if ( setting.length() != 0 )
+            {
+                if ( setting.size() == 3
+                    && ( setting[0] == 'O' || setting[0] == 'o' )
+                    && ( setting[1] == 'F' || setting[1] == 'f' )
+                    && ( setting[2] == 'F' || setting[2] == 'f' )
+                )
+                {
+                    // int into uint16_t implicit conversion
+                    s_PreallocSpace.push_back(*dbRootIter);
+                }
+            }
+        }
+    }
 }
 
 }
