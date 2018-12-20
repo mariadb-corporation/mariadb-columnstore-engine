@@ -3236,7 +3236,7 @@ void Oam::SuspendWrites(GRACEFUL_FLAG gracefulflag, ACK_FLAG ackflag)
     switch (returnStatus)
     {
         case API_SUCCESS:
-            cout << endl << "Suspend Calpont Database Writes Request successfully completed" << endl;
+				cout << endl << "Suspend MariaDB Columnstore Database Writes Request successfully completed" << endl;
             break;
 
         case API_FAILURE_DB_ERROR:
@@ -10821,7 +10821,7 @@ bool Oam::waitForSystem(PROC_MGT_MSG_REQUEST request, messageqcpp::IOSocket& ios
     }
     catch (...)
     {
-        writeLog("Communication with calpont console failed while waiting for transactions", LOG_TYPE_ERROR);
+			writeLog("Communication with MariaDB ColumnStore Admin console failed while waiting for transactions", LOG_TYPE_ERROR);
     }
 
 //		writeLog("Returning from wait with value " + itoa(ret), LOG_TYPE_INFO );
