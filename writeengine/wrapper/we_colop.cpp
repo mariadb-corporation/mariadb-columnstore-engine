@@ -1527,7 +1527,7 @@ void ColumnOp::setColParam(Column& column,
  *    rowIdArray - the array of row id, for performance purpose, I am assuming the rowIdArray is sorted
  *    valArray - the array of row values
  *    oldValArray - the array of old value
- *    bDelete - yet 
+ *    bDelete - yet. The flag must be useless.
  * RETURN:
  *    NO_ERROR if success, other number otherwise
  ***********************************************************/
@@ -1571,7 +1571,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
             }
 
             // MCOL-498 CS hasn't touched any block yet,
-            // but the row fill be the first in the block.
+            // but the row filled will be the first in the block.
             fistRowInBlock = ( !(curRowId % (rowsInBlock)) ) ? true : false;
             if( fistRowInBlock && !bDelete )
                 fillUpWEmptyVals = true;
@@ -1708,8 +1708,6 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
             if ( writeSize )
                 setEmptyBuf( dataBuf + dataBio + curCol.colWidth, writeSize,
                             emptyVal, curCol.colWidth );
-            //fillUpWEmptyVals = false;
-            //fistRowInBlock = false;
         }
 
         rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
@@ -1726,7 +1724,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
             if( !fillUpWEmptyVals )
                 emptyVal = getEmptyRowValue(curCol.colDataType, curCol.colWidth);
             // MCOL-498 Skip if this is the last block in an extent.
-            if ( curDataFbo !=  MAX_NBLOCKS - 1)
+            if ( curDataFbo % MAX_NBLOCKS !=  MAX_NBLOCKS - 1 )
             {
                 rc = saveBlock(curCol.dataFile.pFile, dataBuf, curDataFbo);
                 if ( rc != NO_ERROR)

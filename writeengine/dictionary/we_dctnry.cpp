@@ -259,12 +259,14 @@ int  Dctnry::createDctnry( const OID& dctnryOID, int colWidth,
 
     if ( m_dFile != NULL )
     {
+        bool optimizePrealloc = ( flag ) ? false : true;
         rc = FileOp::initDctnryExtent( m_dFile,
                                        m_dbRoot,
                                        totalSize,
                                        m_dctnryHeader2,
                                        m_totalHdrBytes,
-                                       false );
+                                       false,
+                                       optimizePrealloc );
 
         if (rc != NO_ERROR)
         {
