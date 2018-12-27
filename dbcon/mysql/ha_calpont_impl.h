@@ -16,12 +16,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-/*
- * $Id: ha_calpont_impl.h 9413 2013-04-22 22:03:42Z zzhu $
- */
-
-/** @file */
-
 #ifndef HA_CALPONT_IMPL_H__
 #define HA_CALPONT_IMPL_H__
 
@@ -33,7 +27,7 @@ extern int ha_calpont_impl_create(const char* name, TABLE* table_arg, HA_CREATE_
 extern int ha_calpont_impl_delete_table(const char* name);
 extern int ha_calpont_impl_open(const char* name, int mode, uint32_t test_if_locked);
 extern int ha_calpont_impl_close(void);
-extern int ha_calpont_impl_rnd_init(TABLE* table);
+extern int ha_calpont_impl_rnd_init(TABLE* table, mcs_handler_info hndtl_ptr);
 extern int ha_calpont_impl_rnd_next(uchar* buf, TABLE* table);
 extern int ha_calpont_impl_rnd_end(TABLE* table);
 extern int ha_calpont_impl_write_row(uchar* buf, TABLE* table);

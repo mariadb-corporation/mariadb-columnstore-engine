@@ -142,6 +142,7 @@ using namespace funcexp;
 
 #include "installdir.h"
 #include "columnstoreversion.h"
+#include "mcs_sysvars.h"
 
 namespace cal_impl_if
 {
@@ -2767,8 +2768,14 @@ int ha_calpont_impl_discover_existence(const char* schema, const char* name)
     return 0;
 }
 
-int ha_calpont_impl_rnd_init(TABLE* table)
+int ha_calpont_impl_rnd_init(TABLE* table, mcs_handler_info hndtl_ptr)
 {
+    ha_calpont* handler;
+    if ( hndtl_ptr.hndl_type == LEGACY )
+    {
+        handler = reinterpret_cast<ha_calpont*>(hndtl_ptr.hndl_ptr);
+    }
+    
 #ifdef DEBUG_SETENV
     string home(getenv("HOME"));
 
@@ -3092,8 +3099,9 @@ int ha_calpont_impl_rnd_init(TABLE* table)
                 return 0;
 
             string query;
-            query.assign(thd->infinidb_vtable.original_query.ptr(),
-                         thd->infinidb_vtable.original_query.length());
+            const char *original_query = get_original_query(current_thd);
+            query.assign(original_query,
+                         strlen(original_query));
             csep->data(query);
 
             try

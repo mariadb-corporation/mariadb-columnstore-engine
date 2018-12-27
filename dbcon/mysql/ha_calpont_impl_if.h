@@ -321,8 +321,6 @@ struct cal_connection_info
     std::vector <execplan::CalpontSystemCatalog::ColType> columnTypes;
 };
 
-typedef std::tr1::unordered_map<int, cal_connection_info> CalConnMap;
-
 const std::string infinidb_err_msg = "\nThe query includes syntax that is not supported by MariaDB Columnstore. Use 'show warnings;' to get more information. Review the MariaDB Columnstore Syntax guide for additional information on supported distributed syntax or consider changing the MariaDB Columnstore Operating Mode (infinidb_vtable_mode).";
 
 int cp_get_plan(THD* thd, execplan::SCSEP& csep);

@@ -15,35 +15,16 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-/** @file ha_example.h
-
-    @brief
-  The ha_example engine is a stubbed storage engine for example purposes only;
-  it does nothing at this point. Its purpose is to provide a source
-  code illustration of how to begin writing new storage engines; see also
-  /storage/example/ha_example.cc.
-
-    @note
-  Please read ha_example.cc before reading this file.
-  Reminder: The example storage engine implements all methods that are *required*
-  to be implemented. For a full list of all methods that you can implement, see
-  handler.h.
-
-   @see
-  /sql/handler.h and /storage/example/ha_example.cc
-*/
-
-// $Id: ha_calpont.h 9210 2013-01-21 14:10:42Z rdempsey $
-
 #ifndef HA_CALPONT_H__
 #define HA_CALPONT_H__
 #include <my_config.h>
 #include "idb_mysql.h"
+#include "mcs_sysvars.h"
 
 extern handlerton* calpont_hton;
 
 /** @brief
-  EXAMPLE_SHARE is a structure that will be shared among all open handlers.
+  This structure will be shared among all open handlers.
   This example implements the minimum of what you will probably need.
 */
 typedef struct st_calpont_share
@@ -62,6 +43,7 @@ class ha_calpont: public handler
     THR_LOCK_DATA lock;      ///< MySQL lock
     INFINIDB_SHARE* share;    ///< Shared lock info
     ulonglong int_table_flags;
+    void* fe_conn_info;
 
 public:
     ha_calpont(handlerton* hton, TABLE_SHARE* table_arg);

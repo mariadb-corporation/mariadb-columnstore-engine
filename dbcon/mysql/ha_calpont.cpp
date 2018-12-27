@@ -380,6 +380,7 @@ static int calpont_close_connection ( handlerton* hton, THD* thd )
 
 ha_calpont::ha_calpont(handlerton* hton, TABLE_SHARE* table_arg) :
     handler(hton, table_arg),
+    fe_conn_info(NULL),
     int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
                     HA_TABLE_SCAN_ON_INDEX |
                     HA_CAN_TABLE_CONDITION_PUSHDOWN)
@@ -683,7 +684,11 @@ int ha_calpont::rnd_init(bool scan)
 {
     DBUG_ENTER("ha_calpont::rnd_init");
 
-    int rc = ha_calpont_impl_rnd_init(table);
+    // Use global THD*
+    set_original_query(current_thd, current_thd->query_string.str());
+    mcs_handler_info mhi(static_cast<void*>(this), LEGACY);    
+
+    int rc = ha_calpont_impl_rnd_init(table, mhi);
 
     DBUG_RETURN(rc);
 }
@@ -1101,44 +1106,6 @@ struct st_mysql_storage_engine columnstore_storage_engine =
 struct st_mysql_storage_engine infinidb_storage_engine =
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
 
-#if 0
-static ulong srv_enum_var = 0;
-static ulong srv_ulong_var = 0;
-
-const char* enum_var_names[] =
-{
-    "e1", "e2", NullS
-};
-
-TYPELIB enum_var_typelib =
-{
-    array_elements(enum_var_names) - 1, "enum_var_typelib",
-    enum_var_names, NULL
-};
-
-static MYSQL_SYSVAR_ENUM(
-    enum_var,                       // name
-    srv_enum_var,                   // varname
-    PLUGIN_VAR_RQCMDARG,            // opt
-    "Sample ENUM system variable.", // comment
-    NULL,                           // check
-    NULL,                           // update
-    0,                              // def
-    &enum_var_typelib);             // typelib
-
-static MYSQL_SYSVAR_ULONG(
-    ulong_var,
-    srv_ulong_var,
-    PLUGIN_VAR_RQCMDARG,
-    "0..1000",
-    NULL,
-    NULL,
-    8,
-    0,
-    1000,
-    0);
-#endif
-
 /*@brief  check_walk - It traverses filter conditions*/
 /************************************************************
  * DESCRIPTION:
@@ -1367,14 +1334,54 @@ int ha_calpont_group_by_handler::end_scan()
 
     DBUG_RETURN(rc);
 }
+/*
+// compression_type
+enum mcs_compression_type_t {
+    NO_COMPRESSION = 0,
+    SNAPPY = 2
+};
 
+const char* mcs_compression_type_names[] = {
+    "NO_COMPRESSION",
+    "SNAPPY",
+    NullS
+};
 
-static struct st_mysql_sys_var* calpont_system_variables[] =
-{
-//  MYSQL_SYSVAR(enum_var),
-//  MYSQL_SYSVAR(ulong_var),
+static TYPELIB mcs_compression_type_names_lib = {
+    array_elements(mcs_compression_type_names) - 1,
+    "mcs_compression_type_names",
+    mcs_compression_type_names,
     NULL
 };
+
+static MYSQL_THDVAR_ENUM(
+    compression_type,
+    PLUGIN_VAR_RQCMDARG,
+    "Controls compression type for create tables. Possible values are: "
+    "NO_COMPRESSION segment files aren't compressed; "
+    "SNAPPY segment files are Snappy compressed (default);",
+    NULL,
+    NULL,
+    SNAPPY,
+    &mcs_compression_type_names_lib);
+
+// original query
+static MYSQL_THDVAR_STR(
+  original_query, 
+  PLUGIN_VAR_MEMALLOC |
+  PLUGIN_VAR_RQCMDARG,
+  "Original query text", 
+  NULL, 
+  NULL, 
+  NULL 
+);
+
+static struct st_mysql_sys_var* columnstore_system_variables[] =
+{
+  MYSQL_SYSVAR(compression_type),
+  MYSQL_SYSVAR(original_query),
+  NULL
+};*/
 
 mysql_declare_plugin(columnstore)
 {
@@ -1388,7 +1395,7 @@ mysql_declare_plugin(columnstore)
     columnstore_done_func,                        /* Plugin Deinit */
     0x0100 /* 1.0 */,
     NULL,                                         /* status variables */
-    calpont_system_variables,                     /* system variables */
+    mcs_system_variables,                         /* system variables */
     NULL,                                         /* reserved */
     0                                             /* config flags */
 },
@@ -1403,7 +1410,7 @@ mysql_declare_plugin(columnstore)
     infinidb_done_func,                            /* Plugin Deinit */
     0x0100 /* 1.0 */,
     NULL,                                         /* status variables */
-    calpont_system_variables,                     /* system variables */
+    mcs_system_variables,                         /* system variables */
     NULL,                                         /* reserved */
     0                                             /* config flags */
 }
@@ -1419,9 +1426,9 @@ maria_declare_plugin(columnstore)
   columnstore_init_func,
   columnstore_done_func,
   0x0100, /* 1.0 */
-  NULL,                       /* status variables                */
-  calpont_system_variables,   /* system variables                */
-  "1.0",                      /* string version */
+  NULL,                          /* status variables                */
+  mcs_system_variables,          /* system variables                */
+  "1.0",                         /* string version */
   MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
 },
 {
@@ -1434,10 +1441,10 @@ maria_declare_plugin(columnstore)
   infinidb_init_func,
   infinidb_done_func,
   0x0100, /* 1.0 */
-  NULL,                       /* status variables                */
-  calpont_system_variables,   /* system variables                */
-  "1.0",                      /* string version */
-  MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
+  NULL,                           /* status variables                */
+  mcs_system_variables,           /* system variables                */
+  "1.0",                          /* string version */
+  MariaDB_PLUGIN_MATURITY_STABLE  /* maturity */
 }
 maria_declare_plugin_end;
 
