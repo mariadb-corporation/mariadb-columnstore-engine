@@ -20,6 +20,7 @@ using namespace execplan;
 #include "functor_str.h"
 
 #include "ha_calpont_impl_if.h"
+#include "mcs_sysvars.h"
 using namespace cal_impl_if;
 
 namespace
@@ -54,10 +55,10 @@ int64_t idblocalpm()
 {
     THD* thd = current_thd;
 
-    if (!thd->infinidb_vtable.cal_conn_info)
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (ci->localPm == -1)
     {
@@ -485,10 +486,10 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item,
         bool& nonSupport,
         uint32_t pseudoType)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     Item_func* ifp = (Item_func*)item;
 

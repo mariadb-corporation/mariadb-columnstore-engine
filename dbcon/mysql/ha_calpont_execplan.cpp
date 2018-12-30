@@ -58,6 +58,7 @@ using namespace logging;
 #include "idb_mysql.h"
 
 #include "ha_calpont_impl_if.h"
+#include "mcs_sysvars.h"
 #include "ha_subquery.h"
 //#include "ha_view.h"
 using namespace cal_impl_if;
@@ -1442,10 +1443,10 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         }
     }
 
-    if (!(gwip->thd->infinidb_vtable.cal_conn_info))
-        gwip->thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwip->thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
 
     if (ifp->functype() == Item_func::BETWEEN)
@@ -2466,10 +2467,10 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
     thd->infinidb_vtable.override_largeside_estimate = false;
 
     // reset expressionID
-    if (!(thd->infinidb_vtable.cal_conn_info))
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
     ci->expressionId = 0;
 }
 
@@ -3104,10 +3105,10 @@ ArithmeticColumn* buildArithmeticColumn(
     bool& nonSupport,
     bool pushdownHand)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     ArithmeticColumn* ac = new ArithmeticColumn();
     Item** sfitempp = item->arguments();
@@ -3329,10 +3330,10 @@ ReturnedColumn* buildFunctionColumn(
     bool& nonSupport,
     bool pushdownHand)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     string funcName = ifp->func_name();
     FuncExp* funcExp = FuncExp::instance();
@@ -3801,10 +3802,10 @@ ReturnedColumn* buildFunctionColumn(
 
 FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     FunctionColumn* fc = new FunctionColumn();
     FunctionParm funcParms;
@@ -4194,10 +4195,10 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     vector<SRCP> selCols;
     vector<SRCP> orderCols;
     bool bIsConst = false;
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     Item_sum* isp = reinterpret_cast<Item_sum*>(item);
     Item** sfitempp = isp->get_orig_args();

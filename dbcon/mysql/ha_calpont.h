@@ -43,7 +43,6 @@ class ha_calpont: public handler
     THR_LOCK_DATA lock;      ///< MySQL lock
     INFINIDB_SHARE* share;    ///< Shared lock info
     ulonglong int_table_flags;
-    void* fe_conn_info;
 
 public:
     ha_calpont(handlerton* hton, TABLE_SHARE* table_arg);

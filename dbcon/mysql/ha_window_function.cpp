@@ -28,6 +28,7 @@ using namespace std;
 
 #include "idb_mysql.h"
 #include "ha_calpont_impl_if.h"
+#include "mcs_sysvars.h"
 
 #include "arithmeticcolumn.h"
 #include "arithmeticoperator.h"
@@ -93,10 +94,10 @@ WF_FRAME frame(Window_frame_bound::Bound_precedence_type bound, Item* offset)
 }
 ReturnedColumn* buildBoundExp(WF_Boundary& bound, SRCP& order, gp_walk_info& gwi)
 {
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     bool addOp = true;
     ReturnedColumn* rc = NULL;
@@ -337,10 +338,10 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     //String str;
     //item->print(&str, QT_INFINIDB_NO_QUOTE);
     //cout << str.c_ptr() << endl;
-    if (!(gwi.thd->infinidb_vtable.cal_conn_info))
-        gwi.thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(gwi.thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     gwi.hasWindowFunc = true;
     Item_window_func* wf = (Item_window_func*)item;

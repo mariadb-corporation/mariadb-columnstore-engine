@@ -380,7 +380,6 @@ static int calpont_close_connection ( handlerton* hton, THD* thd )
 
 ha_calpont::ha_calpont(handlerton* hton, TABLE_SHARE* table_arg) :
     handler(hton, table_arg),
-    fe_conn_info(NULL),
     int_table_flags(HA_BINLOG_STMT_CAPABLE | HA_BINLOG_ROW_CAPABLE |
                     HA_TABLE_SCAN_ON_INDEX |
                     HA_CAN_TABLE_CONDITION_PUSHDOWN)
@@ -684,11 +683,10 @@ int ha_calpont::rnd_init(bool scan)
 {
     DBUG_ENTER("ha_calpont::rnd_init");
 
-    // Use global THD*
-    set_original_query(current_thd, current_thd->query_string.str());
-    mcs_handler_info mhi(static_cast<void*>(this), LEGACY);    
+    String query_string_cpy; query_string_cpy.append(current_thd->query_string.str());
+    set_original_query(current_thd, query_string_cpy.c_ptr_safe());
 
-    int rc = ha_calpont_impl_rnd_init(table, mhi);
+    int rc = ha_calpont_impl_rnd_init(table);
 
     DBUG_RETURN(rc);
 }

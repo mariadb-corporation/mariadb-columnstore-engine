@@ -664,10 +664,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
     IDBCompressInterface idbCompress;
     parser.Parse(ddlStatement.c_str());
 
-    if (!thd->infinidb_vtable.cal_conn_info)
-        thd->infinidb_vtable.cal_conn_info = (void*)(new cal_connection_info());
+    if (get_fe_conn_info_ptr() == NULL)
+        set_fe_conn_info_ptr((void*)new cal_connection_info());
 
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(thd->infinidb_vtable.cal_conn_info);
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
     if (parser.Good())
     {
