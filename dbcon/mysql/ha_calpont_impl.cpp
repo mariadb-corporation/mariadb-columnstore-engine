@@ -220,6 +220,14 @@ void storeNumericField(Field** f, int64_t value, CalpontSystemCatalog::ColType& 
             break;
         }
 
+        case MYSQL_TYPE_INT24: //MEDINT type
+        {
+            Field_medium* f2 = (Field_medium*)*f;
+            longlong int_val = (longlong)value;
+            f2->store(int_val, f2->unsigned_flag);
+            break;
+        }
+
         case MYSQL_TYPE_LONG: //INT type
         {
             Field_long* f2 = (Field_long*)*f;
@@ -592,6 +600,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 }
 
                 case CalpontSystemCatalog::INT:
+                case CalpontSystemCatalog::MEDINT:
                 {
                     intColVal = row.getIntField<4>(s);
                     storeNumericField(f, intColVal, colType);
@@ -599,6 +608,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, bool h
                 }
 
                 case CalpontSystemCatalog::UINT:
+                case CalpontSystemCatalog::UMEDINT:
                 {
                     uintColVal = row.getUintField<4>(s);
                     storeNumericField(f, uintColVal, colType);

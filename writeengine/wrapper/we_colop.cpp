@@ -1618,6 +1618,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 break;
 
             case WriteEngine::WR_INT :
+            case WriteEngine::WR_MEDINT :
                 if (!bDelete) pVal = &((int*) valArray)[i];
 
                 //pOldVal = &((int *) oldValArray)[i];
@@ -1636,6 +1637,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                 break;
 
             case WriteEngine::WR_UINT :
+            case WriteEngine::WR_UMEDINT :
                 if (!bDelete) pVal = &((uint32_t*) valArray)[i];
 
                 //pOldVal = &((uint8_t *) oldValArray)[i];
@@ -1789,6 +1791,7 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
                 break;
 
             case WriteEngine::WR_INT :
+            case WriteEngine::WR_MEDINT :
                 if (!bDelete) pVal = &((int*) valArray)[0];
 
                 //pOldVal = &((int *) oldValArray)[i];
@@ -1813,6 +1816,7 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
                 break;
 
             case WriteEngine::WR_UINT :
+            case WriteEngine::WR_UMEDINT :
                 if (!bDelete) pVal = &((uint32_t*) valArray)[0];
 
                 //pOldVal = &((uint32_t *) oldValArray)[i];
@@ -1944,6 +1948,7 @@ int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& 
                 break;
 
             case WriteEngine::WR_INT :
+            case WriteEngine::WR_MEDINT :
                 pVal = &((int*) valArray)[i];
                 break;
 
@@ -1960,6 +1965,7 @@ int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& 
                 break;
 
             case WriteEngine::WR_UINT :
+            case WriteEngine::WR_UMEDINT :
                 pVal = &((uint32_t*) valArray)[i];
                 break;
 

@@ -1182,6 +1182,7 @@ const int IndexTree::setBitsetColumn( void* val, const int pos, const int width,
             break;
 
         case WriteEngine::WR_INT :
+        case WriteEngine::WR_MEDINT :
         default  :
             memcpy( m_multiColKey.keyBuf + m_multiColKey.totalBit / 8, (int*) val, copyLen );
             m_multiColKey.curBitset = *((int*) val);

@@ -198,6 +198,10 @@ uint32_t convertDataType(int dataType)
             calpontDataType = CalpontSystemCatalog::USMALLINT;
             break;
 
+        case ddlpackage::DDL_UNSIGNED_MEDINT:
+            calpontDataType = CalpontSystemCatalog::UMEDINT;
+            break;
+
         case ddlpackage::DDL_UNSIGNED_INT:
             calpontDataType = CalpontSystemCatalog::UINT;
             break;
@@ -323,17 +327,29 @@ bool validateNextValue( int type, int64_t value )
 
         case ddlpackage::DDL_INT:
         case ddlpackage::DDL_INTEGER:
-        case ddlpackage::DDL_MEDINT:
         {
             if (value > MAX_INT)
                 validValue = false;
         }
         break;
 
+        case ddlpackage::DDL_MEDINT:
+        {
+            if (value > MAX_MEDINT)
+                validValue = false;
+        }
+        break;
+
         case ddlpackage::DDL_UNSIGNED_INT:
-        case ddlpackage::DDL_UNSIGNED_MEDINT:
         {
             if (static_cast<uint64_t>(value) > MAX_UINT)
+                validValue = false;
+        }
+        break;
+
+        case ddlpackage::DDL_UNSIGNED_MEDINT:
+        {
+            if (static_cast<uint64_t>(value) > MAX_UMEDINT)
                 validValue = false;
         }
         break;

@@ -115,9 +115,16 @@ ColumnType::ColumnType(int type) :
             fPrecision = 5;
             break;
 
+        case DDL_MEDINT:
+            fPrecision = 7;
+            break;
+
+        case DDL_UNSIGNED_MEDINT:
+            fPrecision = 8;
+            break;
+
         case DDL_INT:
         case DDL_UNSIGNED_INT:
-        case DDL_MEDINT:
             fPrecision = 10;
             break;
 
@@ -202,7 +209,12 @@ void ColumnDef::convertDecimal()
         fType->fType = DDL_SMALLINT;
         fType->fLength = 2;
     }
-    else if (fType->fPrecision > 4 && fType->fPrecision < 10)
+    else if (fType->fPrecision > 4 && fType->fPrecision < 7)
+    {
+        fType->fType = DDL_MEDINT;
+        fType->fLength = 4;
+    }
+    else if (fType->fPrecision > 6 && fType->fPrecision < 10)
     {
         //dataType = CalpontSystemCatalog::INT;
         fType->fType = DDL_INT;

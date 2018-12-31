@@ -330,6 +330,19 @@ int64_t number_int_value(const string& data,
             break;
 
         case CalpontSystemCatalog::MEDINT:
+            if (intVal < MIN_MEDINT)
+            {
+                intVal = MIN_MEDINT;
+                pushwarning = true;
+            }
+            else if (intVal > MAX_MEDINT)
+            {
+                intVal = MAX_MEDINT;
+                pushwarning = true;
+            }
+
+            break;
+
         case CalpontSystemCatalog::INT:
             if (intVal < MIN_INT)
             {
@@ -559,6 +572,14 @@ uint64_t number_uint_value(const string& data,
             break;
 
         case CalpontSystemCatalog::UMEDINT:
+            if (uintVal > MAX_UMEDINT)
+            {
+                uintVal = MAX_UMEDINT;
+                pushwarning = true;
+            }
+
+            break;
+
         case CalpontSystemCatalog::UINT:
             if (uintVal > MAX_UINT)
             {

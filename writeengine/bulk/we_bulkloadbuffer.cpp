@@ -1224,8 +1224,9 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
         }
 
         //----------------------------------------------------------------------
-        // UNSIGNED INTEGER
+        // UNSIGNED MEDIUM INTEGER AND UNSIGNED INTEGER
         //----------------------------------------------------------------------
+        case WriteEngine::WR_UMEDINT :
         case WriteEngine::WR_UINT :
         {
             int64_t origVal;
@@ -1306,8 +1307,9 @@ void BulkLoadBuffer::convert(char* field, int fieldLength,
         }
 
         //----------------------------------------------------------------------
-        // INTEGER
+        // MEDIUM INTEGER AND INTEGER
         //----------------------------------------------------------------------
+        case WriteEngine::WR_MEDINT :
         case WriteEngine::WR_INT :
         default  :
         {
