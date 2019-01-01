@@ -101,24 +101,6 @@ void set_fe_conn_info_ptr(void* ptr)
     THDVAR(current_thd, fe_conn_info_ptr) = (uint64_t)(ptr);
 }
 
-/*ha_calpont* get_legacy_handler(mcs_handler_info mcs_hndl_ptr)
-{
-    //MCOL-1101 Add handler type check
-    //hndl_ptr.hndl_type == LEGACY )
-    ha_calpont* hndl;
-    if ( mcs_hndl_ptr.hndl_ptr != NULL )
-    {
-        hndl = (ha_calpont*)(mcs_hndl_ptr.hndl_ptr);
-    }
-    else
-    {
-        hndl = new ha_calpont();
-        hndl->fe_conn_info = (void*)THDVAR(current_thd, fe_conn_info_ptr);
-    }
-    
-    return hndl;
-}*/
-
 mcs_compression_type_t get_compression_type(THD* thd) {
     return (mcs_compression_type_t) THDVAR(thd, compression_type);
 }

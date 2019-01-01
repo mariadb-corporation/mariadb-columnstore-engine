@@ -24,6 +24,7 @@
 
 extern st_mysql_sys_var* mcs_system_variables[];
 
+/* MCOL-1101 Remove before release
 enum mcs_handler_types_t
 {
     SELECT,
@@ -40,7 +41,7 @@ struct mcs_handler_info
     void* hndl_ptr;
     mcs_handler_types_t hndl_type;
 };
-
+*/
 // compression_type
 enum mcs_compression_type_t {
     NO_COMPRESSION = 0,

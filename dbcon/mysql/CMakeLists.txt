@@ -5,6 +5,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
 
 SET ( libcalmysql_SRCS
     mcs_sysvars.cpp
+    mcs_client_udfs.cpp
     ha_calpont.cpp
     ha_calpont_impl.cpp
     ha_calpont_dml.cpp
