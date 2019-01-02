@@ -56,6 +56,13 @@ mcsv1_UDAF::ReturnCode regr_intercept::init(mcsv1Context* context,
         context->setErrorMessage("regr_intercept() with other than 2 arguments");
         return mcsv1_UDAF::ERROR;
     }
+    if (!(isNumeric(colTypes[0].dataType) && isNumeric(colTypes[1].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_intercept() with non-numeric arguments");
+        return mcsv1_UDAF::ERROR;
+    }
 
     context->setUserDataSize(sizeof(regr_intercept_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);

@@ -54,6 +54,13 @@ mcsv1_UDAF::ReturnCode regr_sxx::init(mcsv1Context* context,
         context->setErrorMessage("regr_sxx() with other than 2 arguments");
         return mcsv1_UDAF::ERROR;
     }
+    if (!(isNumeric(colTypes[1].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_sxx() with a non-numeric independant (second) argument");
+        return mcsv1_UDAF::ERROR;
+    }
 
     context->setUserDataSize(sizeof(regr_sxx_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);

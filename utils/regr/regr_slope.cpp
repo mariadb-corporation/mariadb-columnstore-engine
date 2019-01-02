@@ -56,7 +56,13 @@ mcsv1_UDAF::ReturnCode regr_slope::init(mcsv1Context* context,
         context->setErrorMessage("regr_slope() with other than 2 arguments");
         return mcsv1_UDAF::ERROR;
     }
-
+    if (!(isNumeric(colTypes[0].dataType) && isNumeric(colTypes[1].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_slope() with non-numeric arguments");
+        return mcsv1_UDAF::ERROR;
+    }
     context->setUserDataSize(sizeof(regr_slope_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);
     context->setColWidth(8);

@@ -976,7 +976,7 @@ inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::createUserData(UserData*& userData, in
 template<typename T>
 inline T mcsv1_UDAF::convertAnyTo(static_any::any& valIn)
 {
-    T val;
+    T val = 0;
     if (valIn.compatible(longTypeId))
     {
         val = valIn.cast<long>();

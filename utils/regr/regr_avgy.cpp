@@ -63,6 +63,13 @@ mcsv1_UDAF::ReturnCode regr_avgy::init(mcsv1Context* context,
         context->setErrorMessage("regr_avgy() with a non-numeric x argument");
         return mcsv1_UDAF::ERROR;
     }
+    if (!(isNumeric(colTypes[0].dataType)))
+    {
+        // The error message will be prepended with
+        // "The storage engine for the table doesn't support "
+        context->setErrorMessage("regr_avgy() with a non-numeric dependant (first) argument");
+        return mcsv1_UDAF::ERROR;
+    }
 
     context->setUserDataSize(sizeof(regr_avgy_data));
     context->setResultType(CalpontSystemCatalog::DOUBLE);
