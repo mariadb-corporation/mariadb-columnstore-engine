@@ -173,10 +173,10 @@ void LimitedOrderBy::finalize()
 
     if (fOrderByQueue.size() > 0)
     {
-        uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
-        fMemSize += newSize;
+        uint64_t memSizeInc = fRowsPerRG * fRowGroup.getRowSize();
+        fMemSize += memSizeInc;
 
-        if (!fRm->getMemory(newSize, fSessionMemLimit))
+        if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
         {
             cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode)
                  << " @" << __FILE__ << ":" << __LINE__;
@@ -185,10 +185,12 @@ void LimitedOrderBy::finalize()
         
         uint64_t offset = 0;
         uint64_t i = 0;
+        // Reduce queue size by an offset value if it applicable.
+        uint64_t queueSizeWoOffset = fOrderByQueue.size() > fStart ?
+            fOrderByQueue.size() - fStart : 0;
         list<RGData> tempRGDataList;
-        
-        // Skip first LIMIT rows in the the RowGroup
-        if ( fCount <= fOrderByQueue.size() )
+
+        if ( fCount <= queueSizeWoOffset )
         {
             offset = fCount % fRowsPerRG;
             if(!offset && fCount > 0)
@@ -196,11 +198,11 @@ void LimitedOrderBy::finalize()
         }
         else
         {
-            offset = fOrderByQueue.size() % fRowsPerRG;
-            if(!offset && fOrderByQueue.size() > 0)
+            offset = queueSizeWoOffset % fRowsPerRG;
+            if(!offset && queueSizeWoOffset > 0)
                 offset = fRowsPerRG;
         }
-        
+
         list<RGData>::iterator tempListIter = tempRGDataList.begin();
         
         i = 0;
@@ -217,7 +219,6 @@ void LimitedOrderBy::finalize()
             const OrderByRow& topRow = fOrderByQueue.top();
             row1.setData(topRow.fData);
             copyRow(row1, &fRow0);
-            //cerr << "LimitedOrderBy::finalize fRow0 " << fRow0.toString() << endl;
             fRowGroup.incRowCount();
             offset--;
             fRow0.prevRow(rSize);
@@ -226,9 +227,9 @@ void LimitedOrderBy::finalize()
             if(offset == (uint64_t)-1)
             {
                 tempRGDataList.push_front(fData);
-                fMemSize += newSize;
+                fMemSize += memSizeInc;
 
-                if (!fRm->getMemory(newSize, fSessionMemLimit))
+                if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
                 {
                     cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode)
                          << " @" << __FILE__ << ":" << __LINE__;
