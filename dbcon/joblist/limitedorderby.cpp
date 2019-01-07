@@ -113,15 +113,12 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     if (fOrderByQueue.size() < fStart + fCount)
     {
         copyRow(row, &fRow0);
-        //memcpy(fRow0.getData(), row.getData(), row.getSize());
         OrderByRow newRow(fRow0, fRule);
         fOrderByQueue.push(newRow);
 
         // add to the distinct map
         if (fDistinct)
             fDistinctMap->insert(fRow0.getPointer());
-
-        //fDistinctMap->insert(make_pair((fRow0.getData()+2), fRow0.getData()));
 
         fRowGroup.incRowCount();
         fRow0.nextRow();
@@ -150,23 +147,16 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     {
         OrderByRow swapRow = fOrderByQueue.top();
         row1.setData(swapRow.fData);
-        fOrderByQueue.pop();
 
-        if (!fDistinct)
+        copyRow(row, &row1);
+
+        if (fDistinct)
         {
-            copyRow(row, &row1);
-            //memcpy(swapRow.fData, row.getData(), row.getSize());
-        }
-        else
-        {
-            fDistinctMap->erase(row.getPointer());
-            copyRow(row, &row1);
+            fDistinctMap->erase(fOrderByQueue.top().fData);
             fDistinctMap->insert(row1.getPointer());
-            //fDistinctMap->erase(fDistinctMap->find(row.getData() + 2));
-            //memcpy(swapRow.fData, row.getData(), row.getSize());
-            //fDistinctMap->insert(make_pair((swapRow.fData+2), swapRow.fData));
         }
 
+        fOrderByQueue.pop();
         fOrderByQueue.push(swapRow);
     }
 }
@@ -228,6 +218,7 @@ void LimitedOrderBy::finalize()
             const OrderByRow& topRow = fOrderByQueue.top();
             row1.setData(topRow.fData);
             copyRow(row1, &fRow0);
+            //cerr << "LimitedOrderBy::finalize fRow0 " << fRow0.toString() << endl;
             fRowGroup.incRowCount();
             offset--;
             fRow0.prevRow(rSize);
