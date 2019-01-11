@@ -2742,6 +2742,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs,
     boost::scoped_array<int> preBlkNums(new int[columnsUpdated.size()]);
     boost::scoped_array<OID> oids(new OID[columnsUpdated.size()]);
 
+    BRMWrapper::setUseVb(true);
     for (unsigned int j = 0; j < columnsUpdated.size(); j++)
     {
         //timer.start("lookupsyscat");

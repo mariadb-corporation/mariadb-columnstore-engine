@@ -178,97 +178,38 @@ const std::string Convertor::int2Str(int val)
  *    converted long long for specified "field"
  ******************************************************************************/
 /* static */
+
 long long Convertor::convertDecimalString(
     const char* field,
-    int         fieldLength,
-    int         scale )
+    int fieldLength,
+    int scale)
 {
-    long long llVal = 0;
+    long double dval = strtold(field, NULL);
+    long long ret = 0;
 
-    int nDigitsBeforeDecPt = 0;
-    int nDigitsAfterDecPt  = 0;
-    long long roundUp      = 0; //@bug 3405 round off decimal column values
+    
+    // move scale digits to the left of the decimal point
+    for (int i = 0; i < scale; i++)
+        dval *= 10;
 
-    // Determine the number of digits before and after the decimal point
-    char* posDecPt = (char*)memchr(field, '.', fieldLength);
+        
+    // range check against int64
+    if (dval > LLONG_MAX || dval < LLONG_MIN)
+        errno = ERANGE;
 
-    if (posDecPt)
-    {
-        nDigitsBeforeDecPt = posDecPt - field;
-        nDigitsAfterDecPt  = fieldLength - nDigitsBeforeDecPt - 1;
-
-        //@bug 3405 round off decimal column values
-        // We look at the scale+1 digit to see if we need to round up.
-        if (nDigitsAfterDecPt > scale)
-        {
-            char roundOffDigit = *(posDecPt + 1 + scale);
-
-            if ( (roundOffDigit > '4') &&
-                    (roundOffDigit <= '9') ) // round up
-            {
-                roundUp = 1;
-
-                // We can't just use the sign of llVal to determine whether to
-                // add +1 or -1, because if we read in -0.005 with scale 2, we
-                // end up parsing "-0.00", which yields 0; meaning we lose the
-                // sign.  So better (though maybe slower) to look for any lead-
-                // ing negative sign in the input string.
-                for (int k = 0; k < fieldLength; k++)
-                {
-                    if (!isspace(field[k]))
-                    {
-                        if (field[k] == '-')
-                            roundUp = -1;
-
-                        break;
-                    }
-                }
-            }
-        }
-    }
     else
-    {
-        nDigitsBeforeDecPt = fieldLength;
-        nDigitsAfterDecPt  = 0;
-    }
 
-    // Strip out the decimal point by stringing together
-    // the digits before and after the decimal point.
-    char* data = (char*)alloca(nDigitsBeforeDecPt + scale + 1);
-    memcpy(data, field, nDigitsBeforeDecPt);
-
-    if (nDigitsAfterDecPt)
-    {
-        if (scale > nDigitsAfterDecPt)
-            memcpy(data  + nDigitsBeforeDecPt,
-                   field + nDigitsBeforeDecPt + 1,
-                   nDigitsAfterDecPt);
-        else // (scale <= nDigitsAfterDecPt)
-            memcpy(data  + nDigitsBeforeDecPt,
-                   field + nDigitsBeforeDecPt + 1,
-                   scale);
-    }
-
-    // Add on any necessary zero padding at the end
-    if (scale > nDigitsAfterDecPt)
-    {
-        memset(data + nDigitsBeforeDecPt + nDigitsAfterDecPt,
-               '0',
-               scale - nDigitsAfterDecPt);
-    }
-
-    data[nDigitsBeforeDecPt + scale] = '\0';
-
-    // Convert our constructed decimal string back to a long long
-    //@bug 1814 Force strtoll to use base 10
-    errno = 0;
-    llVal = strtoll(data, 0, 10);
-
-    //@bug 3405 round off decimal values
-    if ((roundUp) && (errno == 0))
-        llVal += roundUp;
-
-    return llVal;
+        errno = 0;
+        
+    ret = dval;
+    
+    // get the fractional part of what's left & round ret up or down.
+    dval -= ret;
+    if (dval >= 0.5 && ret < LLONG_MAX)
+        ++ret;
+    else if (dval <= -0.5 && ret > LLONG_MIN)
+        --ret;
+    return ret;
 }
 
 /*******************************************************************************
