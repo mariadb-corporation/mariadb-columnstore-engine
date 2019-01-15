@@ -2757,7 +2757,6 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
             break;
 
         case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::MEDINT:
             if (valOut.compatible(shortTypeId))
             {
                 intOut = valOut.cast<short>();
@@ -2767,6 +2766,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
             break;
 
+        case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
             if (valOut.compatible(uintTypeId))
             {
@@ -2809,7 +2809,6 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
             break;
 
         case execplan::CalpontSystemCatalog::USMALLINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
             if (valOut.compatible(ushortTypeId))
             {
                 uintOut = valOut.cast<unsigned short>();
@@ -2819,6 +2818,7 @@ void RowAggregationUM::SetUDAFValue(static_any::any& valOut, int64_t colOut)
 
             break;
 
+        case execplan::CalpontSystemCatalog::UMEDINT:
         case execplan::CalpontSystemCatalog::UINT:
             if (valOut.compatible(uintTypeId))
             {
@@ -3030,10 +3030,10 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
             break;
 
         case execplan::CalpontSystemCatalog::SMALLINT:
-        case execplan::CalpontSystemCatalog::MEDINT:
             fRow.setIntField<2>(intOut, colOut);
             break;
 
+        case execplan::CalpontSystemCatalog::MEDINT:
         case execplan::CalpontSystemCatalog::INT:
             fRow.setIntField<4>(intOut, colOut);
             break;
@@ -3049,10 +3049,10 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
             break;
 
         case execplan::CalpontSystemCatalog::USMALLINT:
-        case execplan::CalpontSystemCatalog::UMEDINT:
             fRow.setUintField<2>(uintOut, colOut);
             break;
 
+        case execplan::CalpontSystemCatalog::UMEDINT:
         case execplan::CalpontSystemCatalog::UINT:
             fRow.setUintField<4>(uintOut, colOut);
             break;

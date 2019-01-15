@@ -325,6 +325,7 @@ inline bool isEmptyVal<4>(uint8_t type, const uint8_t* ival)
             return (joblist::CHAR4EMPTYROW == *val);
 
         case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UMEDINT:
             return (joblist::UINTEMPTYROW == *val);
 
         default:
@@ -445,6 +446,7 @@ inline bool isNullVal<4>(uint8_t type, const uint8_t* ival)
             return (joblist::DATENULL == *val);
 
         case CalpontSystemCatalog::UINT:
+        case CalpontSystemCatalog::UMEDINT:
             return (joblist::UINTNULL == *val);
 
         default:
@@ -550,6 +552,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
 
             case CalpontSystemCatalog::TINYINT:
             case CalpontSystemCatalog::SMALLINT:
+            case CalpontSystemCatalog::MEDINT:
             case CalpontSystemCatalog::INT:
             case CalpontSystemCatalog::DATE:
             case CalpontSystemCatalog::BIGINT:
@@ -557,6 +560,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
             case CalpontSystemCatalog::TIME:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
+            case CalpontSystemCatalog::UMEDINT:
             case CalpontSystemCatalog::UINT:
             case CalpontSystemCatalog::UBIGINT:
                 return true;

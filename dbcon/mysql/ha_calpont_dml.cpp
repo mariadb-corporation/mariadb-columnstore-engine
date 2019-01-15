@@ -1062,6 +1062,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                 }
 
                 case CalpontSystemCatalog::INT:
+                case CalpontSystemCatalog::MEDINT:
                 {
                     if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
                         fprintf(ci.filePtr, "%c", ci.delimiter);
@@ -1073,6 +1074,7 @@ int ha_calpont_impl_write_batch_row_(uchar* buf, TABLE* table, cal_impl_if::cal_
                 }
 
                 case CalpontSystemCatalog::UINT:
+                case CalpontSystemCatalog::UMEDINT:
                 {
                     if (nullVal && (ci.columnTypes[colpos].constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
                         fprintf(ci.filePtr, "%c", ci.delimiter);

@@ -720,6 +720,18 @@ void XMLJob::initSatLimits( JobColumn& curColumn ) const
         curColumn.fMaxIntSat = MAX_UBIGINT;
     }
     else if ( curColumn.typeName ==
+              ColDataTypeStr[CalpontSystemCatalog::MEDINT] )
+    {
+        curColumn.fMinIntSat = MIN_MEDINT;
+        curColumn.fMaxIntSat = MAX_MEDINT;
+    }
+    else if ( curColumn.typeName ==
+              ColDataTypeStr[CalpontSystemCatalog::UMEDINT] )
+    {
+        curColumn.fMinIntSat = MIN_UMEDINT;
+        curColumn.fMaxIntSat = MAX_UMEDINT;
+    }
+    else if ( curColumn.typeName ==
               ColDataTypeStr[CalpontSystemCatalog::SMALLINT] )
     {
         curColumn.fMinIntSat = MIN_SMALLINT;

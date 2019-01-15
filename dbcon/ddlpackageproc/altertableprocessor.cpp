@@ -139,7 +139,6 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
 
             break;
 
-        // Don't think there can be such a type in syscat right now...
         case (CalpontSystemCatalog::MEDINT):
             if (newType.fType == DDL_MEDINT && colType.precision == newType.fPrecision &&
                     colType.scale == newType.fScale) return true;
@@ -147,6 +146,12 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
             //@Bug 5443 Not allow user change data type.
             //if (newType.fType == DDL_DECIMAL && colType.precision == newType.fPrecision &&
             //	colType.scale == newType.fScale) return true;
+            break;
+
+        case (CalpontSystemCatalog::UMEDINT):
+            if (newType.fType == DDL_UNSIGNED_MEDINT && colType.precision == newType.fPrecision &&
+                    colType.scale == newType.fScale) return true;
+
             break;
 
         case (CalpontSystemCatalog::INT):
@@ -2103,7 +2108,6 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
             break;
 
         case CalpontSystemCatalog::INT:
-        case CalpontSystemCatalog::MEDINT:
             if (static_cast<int64_t>(nextVal) > MAX_INT)
                 validated = false;
 
@@ -2113,8 +2117,22 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
             break;
 
         case CalpontSystemCatalog::UINT:
-        case CalpontSystemCatalog::UMEDINT:
             if (nextVal > MAX_UINT)
+                validated = false;
+
+            break;
+
+        case CalpontSystemCatalog::MEDINT:
+            if (static_cast<int64_t>(nextVal) > MAX_MEDINT)
+                validated = false;
+
+            if (static_cast<int64_t>(nextVal) < 1)
+                negative = true;
+
+            break;
+
+        case CalpontSystemCatalog::UMEDINT:
+            if (nextVal > MAX_UMEDINT)
                 validated = false;
 
             break;
