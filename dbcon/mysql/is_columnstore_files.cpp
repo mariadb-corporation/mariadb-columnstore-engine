@@ -110,7 +110,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM *emp, TABLE *table, THD *th
         if (iter->blockOffset > 0)
         {
             iter++;
-            return 0;
+            continue;
         }
 
         try
