@@ -1009,7 +1009,7 @@ int main(int argc, char* argv[])
             totalUmMemoryParam = "-";
         }
 
-		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir + " " + totalBlocksPctParam + " " + totalUmMemoryParam;
+		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir + " " + numBlocksPctParam + " " + totalUmMemoryParam;
 		system(cmd.c_str());
 		exit(0);
 	}
