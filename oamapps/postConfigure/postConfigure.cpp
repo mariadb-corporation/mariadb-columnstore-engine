@@ -493,7 +493,7 @@ int main(int argc, char* argv[])
                 exit(1);
             }
             // check that the parameter ends with a number M or G
-            if (isdigit(argv[i].rbegin()) || argv[i].rbegin() == 'M' || argv[i].rbegin() == 'G') {
+            if (isdigit(*argv[i].rbegin()) || *argv[i].rbegin() == 'M' || *argv[i].rbegin() == 'G') {
                 numBlocksPctParam = argv[i];
             }
             else {
@@ -510,7 +510,7 @@ int main(int argc, char* argv[])
                 exit(1);
             }
             // check that the parameter ends with a %, M, or G
-            if (argv[i].rbegin() == '%' || argv[i].rbegin() == 'M' || argv[i].rbegin() == 'G') {
+            if (*argv[i].rbegin() == '%' || *argv[i].rbegin() == 'M' || *argv[i].rbegin() == 'G') {
                 totalUmMemoryParam = argv[i];
             }
             else {
@@ -1705,7 +1705,7 @@ int main(int argc, char* argv[])
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-                    if (numBlocksPct.rbegin() == 'M' || numBlocksPct.rbegin() == 'G') {
+                    if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
                         cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
                     }
                     else {
@@ -1760,7 +1760,7 @@ int main(int argc, char* argv[])
 
                     if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
                         sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
-                        if (numBlocksPctParam.rbegin() == 'M' || numBlocksPctParam.rbegin() == 'G') {
+                        if (*numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G') {
                             cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
                         }
                         else {
@@ -1827,7 +1827,7 @@ int main(int argc, char* argv[])
                 try
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
-                    if (numBlocksPct.rbegin() == 'M' || numBlocksPct.rbegin() == 'G') {
+                    if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
                         cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
                     }
                     else {
@@ -1878,7 +1878,7 @@ int main(int argc, char* argv[])
                 {
                     if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
                         sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
-                        if (numBlocksPctParam.rbegin() == 'M' || numBlocksPctParam.rbegin() == 'G') {
+                        if (*numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G') {
                             cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
                         }
                         else {
