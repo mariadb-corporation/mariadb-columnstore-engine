@@ -333,9 +333,9 @@ int main(int argc, char* argv[])
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
             cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
-            cout << "    (percentages of the total memory can be stated without suffix, explcit values with suffixes M or G)"
+            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)";
             cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
-            cout << "    (percentages of the total memory can be stated without suffix, explcit values with suffixes M or G)"
+            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)";
             exit (0);
         }
         else if (string("-x") == argv[i])
@@ -490,10 +490,16 @@ int main(int argc, char* argv[])
             if (i >= argc)
             {
                 cout << "   ERROR: Memory settings for numBlocksPct not provided" << endl;
-                //TODO check suffix. if % is given remove it
                 exit(1);
             }
-            numBlocksPctParam = argv[i];
+            // check that the parameter ends with a number M or G
+            if (isdigit(argv[i].back()) || argv[i].back() == 'M' || argv[i].bach() == 'G') {
+                numBlocksPctParam = argv[i];
+            }
+            else {
+                cout << "   ERROR: Memory settings for numBlocksPct need to end on a digit, M or G" << endl;
+                exit(1);
+            }
         }
         else if (string("-totalUmMemory") == argv[i])
         {
@@ -501,10 +507,16 @@ int main(int argc, char* argv[])
             if (i >= argc)
             {
                 cout << "   ERROR: Memory settings for totalUmMemory not provided" << endl;
-                //TODO check suffix. if no %, G, or M is given add %
                 exit(1);
             }
-            totalUmMemoryParam = argv[i];
+            // check that the parameter ends with a %, M, or G
+            if (argv[i].back() == '%' || argv[i].back() == 'M' || argv[i].bach() == 'G') {
+                totalUmMemoryParam = argv[i];
+            }
+            else {
+                cout << "   ERROR: Memory settings for totalUmMemory need to end on %, M or G" << endl;
+                exit(1);
+            }
         }
         else
         {
@@ -1693,7 +1705,12 @@ int main(int argc, char* argv[])
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-                    cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    if (numBlocksPct.back() == 'M' || numBlocksPct.back() == 'G') {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                    }
+                    else {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    }
                 }
                 catch (...)
                 {
@@ -1743,7 +1760,12 @@ int main(int argc, char* argv[])
 
                     if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
                         sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
-                        cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        if (numBlocksPctParam.back() == 'M' || numBlocksPctParam.back() == 'G') {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
+                        }
+                        else {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        }
                     }
                     else { //otherwise use the settings from the previous config file
                         string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
@@ -1805,7 +1827,12 @@ int main(int argc, char* argv[])
                 try
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
-                    cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    if (numBlocksPct.back() == 'M' || numBlocksPct.back() == 'G') {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                    }
+                    else {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    }
                 }
                 catch (...)
                 {
@@ -1851,7 +1878,12 @@ int main(int argc, char* argv[])
                 {
                     if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
                         sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
-                        cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        if (numBlocksPctParam.back() == 'M' || numBlocksPctParam.back() == 'G') {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
+                        }
+                        else {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        }
                     }
                     else { //otherwise use the settings from the previous config file
                         string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
