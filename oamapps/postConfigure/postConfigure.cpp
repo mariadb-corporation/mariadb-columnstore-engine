@@ -492,11 +492,9 @@ int main(int argc, char* argv[])
                 cout << "   ERROR: Memory settings for numBlocksPct not provided" << endl;
                 exit(1);
             }
+            numBlocksPctParam = argv[i];
             // check that the parameter ends with a number M or G
-            if (isdigit(*argv[i].rbegin()) || *argv[i].rbegin() == 'M' || *argv[i].rbegin() == 'G') {
-                numBlocksPctParam = argv[i];
-            }
-            else {
+            if (!(isdigit(*numBlocksPctParam.rbegin()) || *numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G')) {
                 cout << "   ERROR: Memory settings for numBlocksPct need to end on a digit, M or G" << endl;
                 exit(1);
             }
@@ -509,11 +507,9 @@ int main(int argc, char* argv[])
                 cout << "   ERROR: Memory settings for totalUmMemory not provided" << endl;
                 exit(1);
             }
+            totalUmMemoryParam = argv[i];
             // check that the parameter ends with a %, M, or G
-            if (*argv[i].rbegin() == '%' || *argv[i].rbegin() == 'M' || *argv[i].rbegin() == 'G') {
-                totalUmMemoryParam = argv[i];
-            }
-            else {
+            if (!(*totalUmMemoryParam.rbegin() == '%' || *totalUmMemoryParam.rbegin() == 'M' || *totalUmMemoryParam.rbegin() == 'G')) {
                 cout << "   ERROR: Memory settings for totalUmMemory need to end on %, M or G" << endl;
                 exit(1);
             }
