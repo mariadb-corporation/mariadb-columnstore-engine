@@ -1067,10 +1067,6 @@ void JobList::abort()
 			fQuery[i]->abort();
 		for (i = 0; i < fProject.size(); i++)
 			fProject[i]->abort();
-		for (i = 0; i < fQuery.size(); i++)
-			fQuery[i]->join();
-		for (i = 0; i < fProject.size(); i++)
-			fProject[i]->join();
 	}
 }
 
