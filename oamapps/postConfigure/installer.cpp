@@ -126,13 +126,13 @@ int main(int argc, char* argv[])
     mysqlpw = argv[10];
     installer_debug = argv[11];
 
-    string totalBlocksPctParam = "";
+    string numBlocksPctParam = "";
     string totalUmMemoryParam = "";
     if (argc >= 13) {
         installDir = argv[12];
         if (argc >= 15) {
             if (!string(argv[13]).compare("-")) {
-                totalBlocksPctParam = argv[13];
+                numBlocksPctParam = argv[13];
             }
             if (!string(argv[14]).compare("-")) {
                 totalUmMemoryParam = argv[14];
@@ -163,8 +163,8 @@ int main(int argc, char* argv[])
     cout << mysqlpw << endl;
     cout << installer_debug << endl;
     cout << installDir << endl;
-    if (!totalBlocksPctParam.empty()) {
-        cout << totalBlocksPctParam << endl;
+    if (!numBlocksPctParam.empty()) {
+        cout << numBlocksPctParam << endl;
     }
     if (!totalUmMemoryParam.empty()) {
         cout << totalUmMemoryParam << endl;
@@ -402,7 +402,7 @@ int main(int argc, char* argv[])
                 // are we using settings from previous config file?
                 if ( reuseConfig == "n" )
                 {
-                    string numBlocksPct = "70"
+                    string numBlocksPct = "70";
                     string totalUmMemory = "50%";
 
                     if (!numBlocksPctParam.empty()) {
