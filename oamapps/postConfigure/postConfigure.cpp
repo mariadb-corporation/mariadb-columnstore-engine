@@ -333,9 +333,9 @@ int main(int argc, char* argv[])
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
             cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
-            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)";
+            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)" << endl;
             cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
-            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)";
+            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
             exit (0);
         }
         else if (string("-x") == argv[i])
@@ -994,7 +994,6 @@ int main(int argc, char* argv[])
 			offLineAppCheck();
 
 		checkMysqlPort(mysqlPort, sysConfig);
-
 		if ( !writeConfig(sysConfig) )
 		{
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
@@ -1003,7 +1002,14 @@ int main(int argc, char* argv[])
 
 		cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
 
-		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+        if (numBlocksPctParam.empty()) {
+            numBlocksPctParam = "-";
+        }
+        if (totalUmMemoryParam.empty()) {
+            totalUmMemoryParam = "-";
+        }
+
+		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir + " " + totalBlocksPctParam + " " + totalUmMemoryParam;
 		system(cmd.c_str());
 		exit(0);
 	}
