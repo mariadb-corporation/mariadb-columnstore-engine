@@ -131,10 +131,10 @@ int main(int argc, char* argv[])
     if (argc >= 13) {
         installDir = argv[12];
         if (argc >= 15) {
-            if (!string(argv[13]).compare("-")) {
+            if (string(argv[13]) != "-") {
                 numBlocksPctParam = argv[13];
             }
-            if (!string(argv[14]).compare("-")) {
+            if (string(argv[14]) != "-") {
                 totalUmMemoryParam = argv[14];
             }
         }
