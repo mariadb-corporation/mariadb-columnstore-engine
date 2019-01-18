@@ -231,6 +231,8 @@ int main(int argc, char* argv[])
     string cmd;
 	string pmIpAddrs = "";
 	string umIpAddrs = "";
+    string numBlocksPctParam = "";
+    string totalUmMemoryParam = "";
 
 //  	struct sysinfo myinfo;
 
@@ -314,7 +316,7 @@ int main(int argc, char* argv[])
             cout << "	Enter one of the options within [], if available, or" << endl;
             cout << "	Enter a new value" << endl << endl;
             cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-numBlocksPct][-totalUmMemory]" << endl;
             cout << "   -h  Help" << endl;
             cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
             cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -330,6 +332,10 @@ int main(int argc, char* argv[])
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
+            cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
+            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)" << endl;
+            cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
+            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
             exit (0);
         }
         else if (string("-x") == argv[i])
@@ -478,10 +484,40 @@ int main(int argc, char* argv[])
             }
             umNumber = atoi(argv[i]);
         }
+        else if ( string("-numBlocksPct") == argv[i] ) 
+        {
+            i++;
+            if (i >= argc)
+            {
+                cout << "   ERROR: Memory settings for numBlocksPct not provided" << endl;
+                exit(1);
+            }
+            numBlocksPctParam = argv[i];
+            // check that the parameter ends with a number M or G
+            if (!(isdigit(*numBlocksPctParam.rbegin()) || *numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G')) {
+                cout << "   ERROR: Memory settings for numBlocksPct need to end on a digit, M or G" << endl;
+                exit(1);
+            }
+        }
+        else if (string("-totalUmMemory") == argv[i])
+        {
+            i++;
+            if (i >= argc)
+            {
+                cout << "   ERROR: Memory settings for totalUmMemory not provided" << endl;
+                exit(1);
+            }
+            totalUmMemoryParam = argv[i];
+            // check that the parameter ends with a %, M, or G
+            if (!(*totalUmMemoryParam.rbegin() == '%' || *totalUmMemoryParam.rbegin() == 'M' || *totalUmMemoryParam.rbegin() == 'G')) {
+                cout << "   ERROR: Memory settings for totalUmMemory need to end on %, M or G" << endl;
+                exit(1);
+            }
+        }
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-numBlocksPct][-totalUmMemory]" << endl;
 			exit (1);
 		}
 	}
@@ -958,7 +994,6 @@ int main(int argc, char* argv[])
 			offLineAppCheck();
 
 		checkMysqlPort(mysqlPort, sysConfig);
-
 		if ( !writeConfig(sysConfig) )
 		{
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
@@ -967,7 +1002,14 @@ int main(int argc, char* argv[])
 
 		cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
 
-		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+        if (numBlocksPctParam.empty()) {
+            numBlocksPctParam = "-";
+        }
+        if (totalUmMemoryParam.empty()) {
+            totalUmMemoryParam = "-";
+        }
+
+		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir + " " + numBlocksPctParam + " " + totalUmMemoryParam;
 		system(cmd.c_str());
 		exit(0);
 	}
@@ -1629,36 +1671,48 @@ int main(int argc, char* argv[])
         case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
         {
             // are we using settings from previous config file?
-            if ( reuseConfig == "n" )
+            if (reuseConfig == "n")
             {
-                if ( !uncommentCalpontXml("NumBlocksPct") )
-                {
-                    cout << "Update Columnstore.xml NumBlocksPct Section" << endl;
-                    exit(1);
-                }
 
                 string numBlocksPct;
 
-                try
-                {
-                    numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                // if numBlocksPct was set as command line parameter use the command line parameter value
+                if (!numBlocksPctParam.empty()) {
+                    numBlocksPct = numBlocksPctParam;
                 }
-                catch (...)
-                {}
+                else {
+                    if (!uncommentCalpontXml("NumBlocksPct"))
+                    {
+                        cout << "Update Columnstore.xml NumBlocksPct Section" << endl;
+                        exit(1);
+                    }
 
-                if ( numBlocksPct == "70" || numBlocksPct.empty() )
-                {
-                    numBlocksPct = "50";
+                    try
+                    {
+                        numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                    }
+                    catch (...)
+                    {
+                    }
 
-                    if (hdfs)
-                        numBlocksPct = "25";
+                    if (numBlocksPct == "70" || numBlocksPct.empty())
+                    {
+                        numBlocksPct = "50";
+
+                        if (hdfs)
+                            numBlocksPct = "25";
+                    }
                 }
-
                 try
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-                    cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                    }
+                    else {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    }
                 }
                 catch (...)
                 {
@@ -1666,11 +1720,20 @@ int main(int argc, char* argv[])
                     exit(1);
                 }
 
-                string percent = "25%";
+                
+                string percent;
 
-                if (hdfs)
-                {
-                    percent = "12%";
+                if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                    percent = totalUmMemoryParam;
+                }
+                else { //otherwise use reasonable defaults
+
+                    percent = "25%";
+
+                    if (hdfs)
+                    {
+                        percent = "12%";
+                    }
                 }
 
                 cout << "      Setting 'TotalUmMemory' to " << percent << endl;
@@ -1695,22 +1758,38 @@ int main(int argc, char* argv[])
             {
                 try
                 {
-                    string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
-
                     cout << endl;
 
-                    if ( numBlocksPct.empty() )
-                        cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
-                    else
-                        cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                    if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
+                        if (*numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G') {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
+                        }
+                        else {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        }
+                    }
+                    else { //otherwise use the settings from the previous config file
+                        string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
 
-                    string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        if (numBlocksPct.empty())
+                            cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
+                        else
+                            cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                    }
 
-                    cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory <<  endl;
+                    if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("HashJoin", "TotalUmMemory", totalUmMemoryParam);
+                        cout << "      Setting 'TotalUmMemory' to " << totalUmMemoryParam << endl;
+                    }
+                    else { //otherwise use the settings from the previous config file
+                        string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory << endl;
+                    }
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
+                    cout << "ERROR: Problem reading/writing NumBlocksPct/TotalUmMemory in/to the MariaDB ColumnStore System Configuration file" << endl;
                     exit(1);
                 }
             }
@@ -1725,26 +1804,37 @@ int main(int argc, char* argv[])
             {
                 string numBlocksPct;
 
-                try
-                {
-                    numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                // if numBlocksPct was set as command line parameter use the command line parameter value
+                if (!numBlocksPctParam.empty()) {
+                    numBlocksPct = numBlocksPctParam;
                 }
-                catch (...)
-                {}
+                else {
+                    try
+                    {
+                        numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                    }
+                    catch (...)
+                    {
+                    }
 
-                if ( numBlocksPct.empty() )
-                {
-                    numBlocksPct = "70";
+                    if (numBlocksPct.empty())
+                    {
+                        numBlocksPct = "70";
 
-                    if (hdfs)
-                        numBlocksPct = "35";
+                        if (hdfs)
+                            numBlocksPct = "35";
+                    }
                 }
 
                 try
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
-
-                    cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                    }
+                    else {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    }
                 }
                 catch (...)
                 {
@@ -1752,11 +1842,18 @@ int main(int argc, char* argv[])
                     exit(1);
                 }
 
-                string percent = "50%";
+                string percent;
 
-                if (hdfs)
-                {
-                    percent = "25%";
+                if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                    percent = totalUmMemoryParam;
+                }
+                else { //otherwise use reasonable defaults
+                    percent = "50%";
+
+                    if (hdfs)
+                    {
+                        percent = "25%";
+                    }
                 }
 
                 cout << "      Setting 'TotalUmMemory' to " << percent << endl;
@@ -1781,20 +1878,36 @@ int main(int argc, char* argv[])
             {
                 try
                 {
-                    string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                    if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
+                        if (*numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G') {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
+                        }
+                        else {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        }
+                    }
+                    else { //otherwise use the settings from the previous config file
+                        string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
 
-                    if ( numBlocksPct.empty() )
-                        cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
-                    else
-                        cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                        if (numBlocksPct.empty())
+                            cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
+                        else
+                            cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                    }
 
-                    string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
-
-                    cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory  << endl;
+                    if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("HashJoin", "TotalUmMemory", totalUmMemoryParam);
+                        cout << "      Setting 'TotalUmMemory' to " << totalUmMemoryParam << endl;
+                    }
+                    else { //otherwise use reasonable defaults
+                        string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory << endl;
+                    }
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
+                    cout << "ERROR: Problem reading/writing NumBlocksPct/TotalUmMemory in/to the MariaDB ColumnStore System Configuration file" << endl;
                     exit(1);
                 }
             }
