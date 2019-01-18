@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
@@ -14,6 +15,9 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
+=======
+# copy licensing stuff here
+>>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
 
 
 #ifndef SMFILESYSTEM_H_
@@ -33,7 +37,10 @@ class SMFileSystem : public IDBFileSystem, boost::noncopyable
         SMFileSystem();
         virtual ~SMFileSystem();
 
+<<<<<<< HEAD
         // why are some of these const and some not const in IDBFileSystem?
+=======
+>>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
         int mkdir(const char* pathname);
         off64_t size(const char* path) const;
         off64_t compressedSize(const char* path) const;

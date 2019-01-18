@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Copyright (C) 2019 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
@@ -14,6 +15,9 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
+=======
+# copy licensing stuff here
+>>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
 
 #ifndef SMFILEFACTORY_H_
 #define SMFILEFACTORY_H_
@@ -27,7 +31,11 @@ namespace idbdatafile
 class SMFileFactory : public FileFactoryBase
 {
     public:
+<<<<<<< HEAD
         IDBDataFile * open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+=======
+        IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+>>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
 };
 
 }
