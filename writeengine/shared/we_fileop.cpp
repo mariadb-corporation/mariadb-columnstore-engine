@@ -540,7 +540,9 @@ bool FileOp::existsOIDDir( FID fid ) const
  *    the applicable column segment file does not exist, it is created.
  *    If this is the very first file for the specified DBRoot, then the
  *    partition and segment number must be specified, else the selected
- *    partition and segment numbers are returned.
+ *    partition and segment numbers are returned. This method tries to
+ *    optimize full extents creation either skiping disk space
+ *    preallocation(if activated) or via fallocate.
  * PARAMETERS:
  *    oid       - OID of the column to be extended
  *    emptyVal  - Empty value to be used for oid
@@ -826,6 +828,7 @@ int FileOp::extendFile(
         return rc;
 
     // Initialize the contents of the extent.
+    // MCOL-498 optimize full extent creation.
     rc = initColumnExtent( pFile,
                            dbRoot,
                            allocSize,
@@ -834,7 +837,7 @@ int FileOp::extendFile(
                            newFile, // new or existing file
                            false,   // don't expand; new extent
                            false,   // add full (not abbreviated) extent
-                           true);   // try to use fallocate first
+                           true);   // try to optimize extent creation
 
     return rc;
 }
@@ -1006,6 +1009,10 @@ int FileOp::addExtentExactFile(
  *    This function can be used to initialize an entirely new extent, or
  *    to finish initializing an extent that has already been started.
  *    nBlocks controls how many 8192-byte blocks are to be written out.
+ *    If bOptExtension is set then method first checks config for
+ *    DBRootX.Prealloc. If it is disabled then it skips disk space
+ *    preallocation. If not it tries to go with fallocate first then
+ *    fallbacks to sequential write.
  * PARAMETERS:
  *    pFile   (in) - IDBDataFile* of column segment file to be written to
  *    dbRoot  (in) - DBRoot of pFile
@@ -1016,7 +1023,7 @@ int FileOp::addExtentExactFile(
  *                   headers will be included "if" it is a compressed file.
  *    bExpandExtent (in) - Expand existing extent, or initialize a new one
  *    bAbbrevExtent(in) - if creating new extent, is it an abbreviated extent
- *    bOptExtension(in) - use fallocate() to extend the file if it is possible.
+ *    bOptExtension(in) - skip or optimize full extent preallocation.
  * RETURN:
  *    returns ERR_FILE_WRITE if an error occurs,
  *    else returns NO_ERROR.
@@ -1045,7 +1052,6 @@ int FileOp::initColumnExtent(
     }
 
     // @bug5769 Don't initialize extents or truncate db files on HDFS
-    // MCOL-498 We don't need sequential segment files if a PM uses SSD either.
     if (idbdatafile::IDBPolicy::useHdfs())
     {
         //@Bug 3219. update the compression header after the extent is expanded.
@@ -1102,7 +1108,8 @@ int FileOp::initColumnExtent(
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_COL_EXTENT);
 #endif
         // MCOL-498 Skip the huge preallocations if the option is set
-        // for the dbroot
+        // for the dbroot. This check is skiped for abbreviated extent.
+        // IMO it is better to check bool then to call a function.
         if ( bOptExtension )
         {
             bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))
@@ -1802,6 +1809,10 @@ int FileOp::writeHeaders(IDBDataFile* pFile, const char* controlHdr,
  *    This function can be used to initialize an entirely new extent, or
  *    to finish initializing an extent that has already been started.
  *    nBlocks controls how many 8192-byte blocks are to be written out.
+ *    If bOptExtension is set then method first checks config for
+ *    DBRootX.Prealloc. If it is disabled then it skips disk space
+ *    preallocation. If not it tries to go with fallocate first then
+ *    fallbacks to sequential write.
  * PARAMETERS:
  *    pFile   (in) - IDBDataFile* of column segment file to be written to
  *    dbRoot  (in) - DBRoot of pFile
@@ -1809,7 +1820,7 @@ int FileOp::writeHeaders(IDBDataFile* pFile, const char* controlHdr,
  *    blockHdrInit(in) - data used to initialize each block
  *    blockHdrInitSize(in) - number of bytes in blockHdrInit
  *    bExpandExtent (in) - Expand existing extent, or initialize a new one
- *    bOptExtension(in) - use fallocate() to extend the file if it is possible.
+ *    bOptExtension(in) - skip or optimize full extent preallocation.
  * RETURN:
  *    returns ERR_FILE_WRITE if an error occurs,
  *    else returns NO_ERROR.
@@ -1825,7 +1836,6 @@ int FileOp::initDctnryExtent(
 {
     off64_t currFileSize = pFile->size();
     // @bug5769 Don't initialize extents or truncate db files on HDFS
-    // MCOL-498 We don't need sequential segment files if a PM uses SSD either.
     if (idbdatafile::IDBPolicy::useHdfs())
     {
         if (m_compressionType)
@@ -1877,7 +1887,8 @@ int FileOp::initDctnryExtent(
             Stats::stopParseEvent(WE_STATS_WAIT_TO_CREATE_DCT_EXTENT);
 #endif
         // MCOL-498 Skip the huge preallocations if the option is set
-        // for the dbroot
+        // for the dbroot. This check is skiped for abbreviated extent.
+        // IMO it is better to check bool then to call a function.
         if ( bOptExtension )
         {
             bOptExtension = (idbdatafile::IDBPolicy::PreallocSpace(dbRoot))

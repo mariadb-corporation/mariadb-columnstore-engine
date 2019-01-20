@@ -317,9 +317,17 @@ int HdfsRdwrFileBuffer::close()
     return 0;
 }
 
+/**
+     @brief
+    The dummy wrapper for fallocate function.
+    This is an open question which code must this method return.
+    fallocate fails for HDFS b/c it doesn't use it.
+     @see
+    This one is used in shared/we_fileop.cpp to skip expensive file preallocation.
+*/
 int HdfsRdwrFileBuffer::fallocate(int mode, off64_t offset, off64_t length)
 {
-    return 0;
+    return -1;
 }
 
 }
