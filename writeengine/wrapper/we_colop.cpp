@@ -472,7 +472,9 @@ int ColumnOp::allocRowId(const TxnID& txnid, bool useStartingExtent,
             if ( rc != NO_ERROR)
                 return rc;
 
-            // MCOL-498 Fill up the first block with empty values.
+            // MCOL-498 This must be a first block in a new extent so
+            // fill the block up to its boundary with empties. Otherwise
+            // there could be fantom values.
             {
                 uint64_t emptyVal = getEmptyRowValue(column.colDataType, column.colWidth);
                 setEmptyBuf(buf, BYTE_PER_BLOCK, emptyVal, column.colWidth);
@@ -1543,7 +1545,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
     uint64_t  emptyVal;
     int rc = NO_ERROR;
     bool fillUpWEmptyVals = false;
-    bool fistRowInBlock = false;
+    bool firstRowInBlock = false;
     bool lastRowInBlock = false;
     uint16_t rowsInBlock = BYTE_PER_BLOCK / curCol.colWidth;
 
@@ -1565,15 +1567,15 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
 
                 bDataDirty = false;
                 // MCOL-498 We got into the next block, so the row is first in that block
-                // - fill the block up with NULLs.
+                // - fill the block up with empty magics.
                 if ( curDataFbo != -1 && !bDelete )
                     fillUpWEmptyVals = true;
             }
 
             // MCOL-498 CS hasn't touched any block yet,
             // but the row filled will be the first in the block.
-            fistRowInBlock = ( !(curRowId % (rowsInBlock)) ) ? true : false;
-            if( fistRowInBlock && !bDelete )
+            firstRowInBlock = ( !(curRowId % (rowsInBlock)) ) ? true : false;
+            if( firstRowInBlock && !bDelete )
                 fillUpWEmptyVals = true;
 
             curDataFbo = dataFbo;
@@ -1585,7 +1587,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
             bDataDirty = true;
         }
 
-        // This is a awkward way to convert void* and get ith element, I just don't have a good solution for that
+        // This is a awkward way to convert void* and get its element, I just don't have a good solution for that
         // How about pVal = valArray + i*curCol.colWidth?
         switch (curCol.colType)
         {
@@ -1715,7 +1717,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
         if ( rc != NO_ERROR)
             return rc;
 
-        // MCOL-498 If it was the last row in a block fill the next block with 
+        // MCOL-498 If it was the last row in a block fill the next block with
         // empty vals, otherwise next ColumnOp::allocRowId()
         // will fail on the next block.
         lastRowInBlock = ( rowsInBlock - ( curRowId % rowsInBlock ) == 1 ) ? true : false;
