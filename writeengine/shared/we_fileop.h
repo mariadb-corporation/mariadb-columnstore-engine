@@ -326,7 +326,7 @@ public:
      * @param blockHdrInit(in) - data used to initialize each block header
      * @param blockHdrInitSize(in) - number of bytes in blockHdrInit
      * @param bExpandExtent (in) -  Expand existing extent, or initialize new one
-     * @param bOptExtension (in) - use fallocate() to extend the file if it is possible.
+     * @param bOptExtension (in) - skip or optimize full extent preallocation
      */
     EXPORT int          initDctnryExtent( IDBDataFile*    pFile,
                                           uint16_t dbRoot,
@@ -504,7 +504,7 @@ private:
     // bNewFile (in)      -  Adding extent to new file
     // bExpandExtent (in) -  Expand existing extent, or initialize new one
     // bAbbrevExtent (in) -  If adding new extent, is it abbreviated
-    //  bOptExtension(in) - use fallocate() to extend the file if it is possible.
+    // bOptExtension(in) - skip or optimize full extent preallocation
     int                 initColumnExtent( IDBDataFile*    pFile,
                                           uint16_t dbRoot,
                                           int      nBlocks,

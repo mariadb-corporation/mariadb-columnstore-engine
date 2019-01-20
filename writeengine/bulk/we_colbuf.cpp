@@ -101,18 +101,19 @@ void ColumnBuffer::resizeAndCopy(int newSize, int startOffset, int endOffset)
 
 //------------------------------------------------------------------------------
 // Write data stored up in the output buffer to the segment column file.
+// fillUpWEmpties is set when CS finishes with writing to add extra empty
+// magics to fill up the block to its boundary.
 //------------------------------------------------------------------------------
-int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWNulls)
+int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWEmpties)
 {
     if (writeSize == 0) // skip unnecessary write, if 0 bytes given
         return NO_ERROR;
 
     unsigned char *newBuf = NULL;
 
-    if ( fillUpWNulls )
+    if ( fillUpWEmpties )
     {
         BlockOp blockOp;
-        //TO DO Use scoped_ptr here
         newBuf = new unsigned char[BYTE_PER_BLOCK];
         uint64_t EmptyValue = blockOp.getEmptyRowValue(fColInfo->column.dataType,
                                                       fColInfo->column.width);
@@ -125,19 +126,21 @@ int ColumnBuffer::writeToFile(int startOffset, int writeSize, bool fillUpWNulls)
     Stats::startParseEvent(WE_STATS_WRITE_COL);
 #endif
     size_t nitems;
-    if ( fillUpWNulls )
+    if ( fillUpWEmpties )
         nitems = fFile->write(newBuf, BYTE_PER_BLOCK) / BYTE_PER_BLOCK;
     else
         nitems = fFile->write(fBuffer + startOffset, writeSize) / writeSize;
 
     if (nitems != 1)
+    {
+        delete newBuf;
         return ERR_FILE_WRITE;
+    }
 
 #ifdef PROFILE
     Stats::stopParseEvent(WE_STATS_WRITE_COL);
 #endif
 
-    //TO DO Use scoped_ptr here
     delete newBuf;
     return NO_ERROR;
 }
