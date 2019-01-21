@@ -39,10 +39,10 @@ static Add_regr_slope_ToUDAFMap addToMap;
 struct regr_slope_data
 {
     uint64_t	cnt;
-    double      sumx;
-    double      sumx2;  // sum of (x squared)
-    double      sumy;
-    double      sumxy;  // sum of (x*y)
+    long double sumx;
+    long double sumx2;  // sum of (x squared)
+    long double sumy;
+    long double sumxy;  // sum of x * y
 };
 
 
@@ -148,16 +148,16 @@ mcsv1_UDAF::ReturnCode regr_slope::evaluate(mcsv1Context* context, static_any::a
     if (N > 1)
     {
         // COVAR_POP(y, x) / VAR_POP(x)
-        double sumx = data->sumx;
-        double sumy = data->sumy;
-        double sumx2 = data->sumx2;
-        double sumxy = data->sumxy;
-        double covar_pop = N * sumxy - sumx * sumy;
-        double var_pop = N * sumx2 - sumx * sumx;
+        long double sumx = data->sumx;
+        long double sumy = data->sumy;
+        long double sumx2 = data->sumx2;
+        long double sumxy = data->sumxy;
+        long double covar_pop = N * sumxy - sumx * sumy;
+        long double var_pop = N * sumx2 - sumx * sumx;
         if (var_pop != 0)
         {
-            double slope = covar_pop / var_pop;
-            valOut = slope;
+            long double slope = covar_pop / var_pop;
+            valOut = static_cast<double>(slope);
         }
     }
     return mcsv1_UDAF::SUCCESS;

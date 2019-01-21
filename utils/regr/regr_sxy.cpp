@@ -39,9 +39,9 @@ static Add_regr_sxy_ToUDAFMap addToMap;
 struct regr_sxy_data
 {
     uint64_t	cnt;
-    double      sumx;
-    double      sumy;
-    double      sumxy;  // sum of x * y
+    long double sumx;
+    long double sumy;
+    long double sumxy;  // sum of x * y
 };
 
 
@@ -88,8 +88,8 @@ mcsv1_UDAF::ReturnCode regr_sxy::nextValue(mcsv1Context* context, ColumnDatum* v
     static_any::any& valIn_y = valsIn[0].columnData;
     static_any::any& valIn_x = valsIn[1].columnData;
     struct  regr_sxy_data* data = (struct regr_sxy_data*)context->getUserData()->data;
-    double valx = 0.0;
-    double valy = 0.0;
+    long double valx = 0.0;
+    long double valy = 0.0;
 
     valx = convertAnyTo<double>(valIn_x);
     valy = convertAnyTo<double>(valIn_y);
@@ -145,13 +145,13 @@ mcsv1_UDAF::ReturnCode regr_sxy::evaluate(mcsv1Context* context, static_any::any
     double N = data->cnt;
     if (N > 0)
     {
-        double sumx = data->sumx;
-        double sumy = data->sumy;
-        double sumxy = data->sumxy;
+        long double sumx = data->sumx;
+        long double sumy = data->sumy;
+        long double sumxy = data->sumxy;
 
-        double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
-        double regr_sxy = data->cnt * covar_pop;
-        valOut = regr_sxy;
+        long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+        long double regr_sxy = data->cnt * covar_pop;
+        valOut = static_cast<double>(regr_sxy);
     }
     return mcsv1_UDAF::SUCCESS;
 }

@@ -39,8 +39,8 @@ static Add_regr_syy_ToUDAFMap addToMap;
 struct regr_syy_data
 {
     uint64_t	cnt;
-    double      sumy;
-    double      sumy2;  // sum of (y squared)
+    long double sumy;
+    long double sumy2;  // sum of (y squared)
 };
 
 
@@ -125,14 +125,14 @@ mcsv1_UDAF::ReturnCode regr_syy::subEvaluate(mcsv1Context* context, const UserDa
 mcsv1_UDAF::ReturnCode regr_syy::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
     struct regr_syy_data* data = (struct regr_syy_data*)context->getUserData()->data;
-    double N = data->cnt;
+    long double N = data->cnt;
     if (N > 0)
     {
-        double sumy = data->sumy;
-        double sumy2 = data->sumy2;
+        long double sumy = data->sumy;
+        long double sumy2 = data->sumy2;
 
-        double var_popy = (sumy2 - (sumy * sumy / N)) / N;
-        valOut = data->cnt * var_popy;
+        long double var_popy = (sumy2 - (sumy * sumy / N)) / N;
+        valOut = static_cast<double>(data->cnt * var_popy);
     }
     return mcsv1_UDAF::SUCCESS;
 }

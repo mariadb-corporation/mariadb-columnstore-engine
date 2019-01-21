@@ -39,8 +39,8 @@ static Add_regr_sxx_ToUDAFMap addToMap;
 struct regr_sxx_data
 {
     uint64_t	cnt;
-    double      sumx;
-    double      sumx2;  // sum of (x squared)
+    long double sumx;
+    long double sumx2;  // sum of (x squared)
 };
 
 
@@ -128,11 +128,11 @@ mcsv1_UDAF::ReturnCode regr_sxx::evaluate(mcsv1Context* context, static_any::any
     double N = data->cnt;
     if (N > 0)
     {
-        double sumx = data->sumx;
-        double sumx2 = data->sumx2;
+        long double sumx = data->sumx;
+        long double sumx2 = data->sumx2;
 
-        double var_popx = (sumx2 - (sumx * sumx / N)) / N;
-        valOut = data->cnt * var_popx;
+        long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
+        valOut = static_cast<double>(data->cnt * var_popx);
     }
     return mcsv1_UDAF::SUCCESS;
 }

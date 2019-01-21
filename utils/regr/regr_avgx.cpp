@@ -40,7 +40,7 @@ static Add_regr_avgx_ToUDAFMap addToMap;
 // Use the simple data model
 struct regr_avgx_data
 {
-    double	    sum;
+    long double sum;
     uint64_t	cnt;
 };
 
@@ -132,7 +132,7 @@ mcsv1_UDAF::ReturnCode regr_avgx::evaluate(mcsv1Context* context, static_any::an
 
     if (data->cnt > 0)
     {
-        valOut = data->sum / (double)data->cnt;
+        valOut = static_cast<double>(data->sum / (long double)data->cnt);
     }
 
     return mcsv1_UDAF::SUCCESS;

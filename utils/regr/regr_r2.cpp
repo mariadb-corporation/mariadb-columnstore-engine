@@ -39,11 +39,11 @@ static Add_regr_r2_ToUDAFMap addToMap;
 struct regr_r2_data
 {
     uint64_t	cnt;
-    double      sumx;
-    double      sumx2;  // sum of (x squared)
-    double      sumy;
-    double      sumy2;  // sum of (y squared)
-    double      sumxy;  // sum of x * y
+    long double sumx;
+    long double sumx2;  // sum of (x squared)
+    long double sumy;
+    long double sumy2;  // sum of (y squared)
+    long double sumxy;  // sum of x * y
 };
 
 
@@ -153,13 +153,13 @@ mcsv1_UDAF::ReturnCode regr_r2::evaluate(mcsv1Context* context, static_any::any&
     double N = data->cnt;
     if (N > 1)
     {
-        double sumx = data->sumx;
-        double sumy = data->sumy;
-        double sumx2 = data->sumx2;
-        double sumy2 = data->sumy2;
-        double sumxy = data->sumxy;
+        long double sumx = data->sumx;
+        long double sumy = data->sumy;
+        long double sumx2 = data->sumx2;
+        long double sumy2 = data->sumy2;
+        long double sumxy = data->sumxy;
 
-        double var_popx = (sumx2 - (sumx * sumx / N)) / N;
+        long double var_popx = (sumx2 - (sumx * sumx / N)) / N;
         if (var_popx == 0)
         {
             // When var_popx is 0, NULL is the result.
@@ -172,11 +172,11 @@ mcsv1_UDAF::ReturnCode regr_r2::evaluate(mcsv1Context* context, static_any::any&
             valOut = 1.0;
             return mcsv1_UDAF::SUCCESS;
         }
-        double std_popx = sqrt(var_popx);
-        double std_popy = sqrt(var_popy);
-        double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
-        double corr = covar_pop / (std_popy * std_popx);
-        valOut = corr * corr;
+        long double std_popx = sqrt(var_popx);
+        long double std_popy = sqrt(var_popy);
+        long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
+        long double corr = covar_pop / (std_popy * std_popx);
+        valOut = static_cast<double>(corr * corr);
     }
     return mcsv1_UDAF::SUCCESS;
 }
