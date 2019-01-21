@@ -573,7 +573,7 @@ int ColumnBufferManager::writeToFileExtentCheck(
 
     if (availableFileSize >= writeSize)
     {
-        int rc = fCBuf->writeToFile(startOffset, writeSize);
+        int rc = fCBuf->writeToFile(startOffset, writeSize, fillUpWEmpties);
 
         if (rc != NO_ERROR)
         {
@@ -632,7 +632,7 @@ int ColumnBufferManager::writeToFileExtentCheck(
         }
 
         int writeSize2 = writeSize - writeSize1;
-        rc = fCBuf->writeToFile(startOffset + writeSize1, writeSize2);
+        rc = fCBuf->writeToFile(startOffset + writeSize1, writeSize2, fillUpWEmpties);
 
         if (rc != NO_ERROR)
         {
