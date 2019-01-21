@@ -2205,10 +2205,15 @@ void processMSG(messageqcpp::IOSocket* cfIos)
 
                     string value;
                     uint16_t count, ivalue, nicCount;
+                    uint8_t tmp8;
                     oam::DeviceNetworkConfig devicenetworkconfig;
                     oam::DeviceNetworkList devicenetworklist;
                     oam::HostConfig hostconfig;
+                    bool storeHostnames;
 
+                    msg >> tmp8;
+                    storeHostnames = (tmp8 != 0);
+                    
                     //get module count to add
                     msg >> count;
 
@@ -2223,7 +2228,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                             devicenetworkconfig.UserTempDeviceName = value;
                             msg >> value;
                             devicenetworkconfig.DisableState = value;
-
+                            
                             msg >> nicCount;
 
                             for (int j = 0 ; j < nicCount ; j ++ )
@@ -2244,7 +2249,7 @@ void processMSG(messageqcpp::IOSocket* cfIos)
                         string password;
                         msg >> password;
 
-                        status = processManager.addModule(devicenetworklist, password);
+                        status = processManager.addModule(devicenetworklist, password, storeHostnames);
 
                         log.writeLog(__LINE__, "ADDMODULE: ACK received from Process-Monitor, return status = " + oam.itoa(status));
                     }
@@ -4835,7 +4840,8 @@ int ProcessManager::reinitProcessType( std::string processName )
 * purpose:	Add Module to system configuration
 *
 ******************************************************************************************/
-int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool manualFlag)
+int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::string password, bool storeHostnames,
+    bool manualFlag)
 {
     ProcessLog log;
     Configuration config;
@@ -5262,7 +5268,10 @@ int ProcessManager::addModule(oam::DeviceNetworkList devicenetworklist, std::str
             }
 
             hostconfig.HostName = hostName;
-            hostconfig.IPAddr = IPAddr;
+            if (storeHostnames)
+                hostconfig.IPAddr = hostName;
+            else
+                hostconfig.IPAddr = IPAddr;
             hostconfig.NicID = (*pt1).NicID;
             devicenetworkconfig.hostConfigList.push_back(hostconfig);
         }

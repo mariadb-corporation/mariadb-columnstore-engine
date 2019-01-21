@@ -461,7 +461,8 @@ uint64_t IdbOrderBy::Hasher::operator()(const Row::Pointer& p) const
 {
     Row& row = ts->row1;
     row.setPointer(p);
-    uint64_t ret = row.hash(colCount);
+    // MCOL-1829 Row::h uses colcount as an array idx down a callstack.
+    uint64_t ret = row.hash();//(colCount - 1);
     //cout << "hash(): returning " << ret << " for row: " << row.toString() << endl;
     return ret;
 }
@@ -471,7 +472,9 @@ bool IdbOrderBy::Eq::operator()(const Row::Pointer& d1, const Row::Pointer& d2) 
     Row& r1 = ts->row1, &r2 = ts->row2;
     r1.setPointer(d1);
     r2.setPointer(d2);
-    bool ret = r1.equals(r2, colCount);
+    // MCOL-1829 Row::equals uses 2nd argument as container size boundary
+    // so it must be column count - 1.
+    bool ret = r1.equals(r2, colCount - 1);
     //cout << "equals(): returning " << (int) ret << " for r1: " << r1.toString() << " r2: " << r2.toString()
     //	<< endl;
 

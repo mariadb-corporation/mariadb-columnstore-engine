@@ -14,7 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */  
+   MA 02110-1301, USA. */
 
 /******************************************************************************************
 * $Id: postConfigure.cpp 64 2006-10-12 22:21:51Z dhill $
@@ -129,7 +129,7 @@ void singleServerConfigSetup(Config* sysConfig);
 
 void remoteInstallThread(void*);
 
-bool glusterSetup(string password);
+bool glusterSetup(string password, bool doNotResolveHostNames);
 
 std::string launchInstance(ModuleIP moduleip);
 
@@ -192,6 +192,7 @@ bool nonDistributeFlag = false;
 bool single_server_quick_install = false;
 bool multi_server_quick_install = false;
 bool amazon_quick_install = false;
+bool doNotResolveHostNames = false;
 
 string DataFileEnvFile;
 
@@ -230,6 +231,8 @@ int main(int argc, char* argv[])
     string cmd;
 	string pmIpAddrs = "";
 	string umIpAddrs = "";
+    string numBlocksPctParam = "";
+    string totalUmMemoryParam = "";
 
 //  	struct sysinfo myinfo;
 
@@ -275,12 +278,12 @@ int main(int argc, char* argv[])
     usergroup = getgid();
 
 	string SUDO = "";
-    if (user != 0) 
+    if (user != 0)
     {
         rootUser = false;
 		SUDO = "sudo ";
 	}
-	
+
     char* p = getenv("USER");
 
     if (p && *p)
@@ -298,7 +301,7 @@ int main(int argc, char* argv[])
 
     for ( int i = 1; i < argc; i++ )
     {
-		if( string("-h") == argv[i] ) 
+		if( string("-h") == argv[i] )
 		{
             cout << endl;
             cout << "This is the MariaDB ColumnStore System Configuration and Installation tool." << endl;
@@ -313,7 +316,7 @@ int main(int argc, char* argv[])
             cout << "	Enter one of the options within [], if available, or" << endl;
             cout << "	Enter a new value" << endl << endl;
             cout << endl;
-   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count]" << endl;
+   			cout << "Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-numBlocksPct][-totalUmMemory]" << endl;
             cout << "   -h  Help" << endl;
             cout << "   -c  Config File to use to extract configuration data, default is Columnstore.xml.rpmsave" << endl;
             cout << "   -u  Upgrade, Install using the Config File from -c, default to Columnstore.xml.rpmsave" << endl;
@@ -322,13 +325,22 @@ int main(int argc, char* argv[])
 			cout << "   -qs Quick Install - Single Server" << endl;
 			cout << "   -qm Quick Install - Multi Server" << endl;
             cout << "   -port MariaDB ColumnStore Port Address" << endl;
-            cout << "   -i Non-root Install directory, Only use for non-root installs" << endl;
-			cout << "   -n Non-distributed install, meaning postConfigure will not install packages on remote nodes" << endl;
-			cout << "   -d Distributed install, meaning postConfigure will install packages on remote nodes" << endl;
+            cout << "   -i  Non-root Install directory, Only use for non-root installs" << endl;
+			cout << "   -n  Non-distributed install, meaning postConfigure will not install packages on remote nodes" << endl;
+			cout << "   -d  Distributed install, meaning postConfigure will install packages on remote nodes" << endl;
 			cout << "   -sn System Name" << endl;
 			cout << "   -pm-ip-addrs Performance Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
 			cout << "   -um-ip-addrs User Module IP Addresses xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx" << endl;
+			cout << "   -x  Do not resolve IP Addresses from host names" << endl;
+            cout << "   -numBlocksPct amount of physical memory to utilize for disk block caching" << endl;
+            cout << "    (percentages of the total memory need to be stated without suffix, explcit values with suffixes M or G)" << endl;
+            cout << "   -totalUmMemory amount of physical memory to utilize for joins, intermediate results and set operations on the UM" << endl;
+            cout << "    (percentages of the total memory need to be stated with suffix %, explcit values with suffixes M or G)" << endl;
             exit (0);
+        }
+        else if (string("-x") == argv[i])
+        {
+            doNotResolveHostNames = true;
         }
 		else if( string("-qs") == argv[i] )
 		{
@@ -349,33 +361,33 @@ int main(int argc, char* argv[])
             nodeps = "--nodeps";
         else if ( string("-o") == argv[i] )
             startOfflinePrompt = true;
-		else if( string("-c") == argv[i] ) 
+		else if( string("-c") == argv[i] )
 		{
             i++;
-			if (i >= argc ) 
+			if (i >= argc )
             {
                 cout << "   ERROR: Config File not provided" << endl;
                 exit (1);
             }
 
             oldFileName = argv[i];
-			if ( oldFileName.find("Columnstore.xml") == string::npos ) 
+			if ( oldFileName.find("Columnstore.xml") == string::npos )
             {
                 cout << "   ERROR: Config File is not a Columnstore.xml file name" << endl;
                 exit (1);
             }
         }
-		else if( string("-p") == argv[i] ) 
+		else if( string("-p") == argv[i] )
 		{
             i++;
-			if (i >= argc ) 
+			if (i >= argc )
             {
                 cout << "   ERROR: Password not provided" << endl;
                 exit (1);
             }
 
             password = argv[i];
-			if ( password.find("-") != string::npos ) 
+			if ( password.find("-") != string::npos )
             {
                 cout << "   ERROR: Valid Password not provided" << endl;
                 exit (1);
@@ -394,10 +406,10 @@ int main(int argc, char* argv[])
 			nonDistribute = false;
 			nonDistributeFlag = true;
 		}
-		else if( string("-port") == argv[i] ) 
+		else if( string("-port") == argv[i] )
 		{
             i++;
-			if (i >= argc ) 
+			if (i >= argc )
             {
                 cout << "   ERROR: MariaDB ColumnStore Port ID not supplied" << endl;
                 exit (1);
@@ -411,10 +423,10 @@ int main(int argc, char* argv[])
                 exit (1);
             }
         }
-        else if( string("-i") == argv[i] ) 
+        else if( string("-i") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: Path not provided" << endl;
                 exit (1);
@@ -422,64 +434,94 @@ int main(int argc, char* argv[])
 
             installDir = argv[i];
         }
-        else if( string("-sn") == argv[i] ) 
+        else if( string("-sn") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: System-name not provided" << endl;
                 exit (1);
             }
             systemName = argv[i];
         }
-        else if( string("-pm-ip-addrs") == argv[i] ) 
+        else if( string("-pm-ip-addrs") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: PM-IP-ADRESSES not provided" << endl;
                 exit (1);
             }
             pmIpAddrs = argv[i];
         }
-        else if( string("-um-ip-addrs") == argv[i] ) 
+        else if( string("-um-ip-addrs") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: UM-IP-ADRESSES not provided" << endl;
                 exit (1);
             }
             umIpAddrs = argv[i];
         }
-        else if( string("-pm-count") == argv[i] ) 
+        else if( string("-pm-count") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: PM-COUNT not provided" << endl;
                 exit (1);
             }
             pmNumber = atoi(argv[i]);
         }
-        else if( string("-um-count") == argv[i] ) 
+        else if( string("-um-count") == argv[i] )
         {
             i++;
-            if (i >= argc ) 
+            if (i >= argc )
             {
                 cout << "   ERROR: UM-COUNT not provided" << endl;
                 exit (1);
             }
             umNumber = atoi(argv[i]);
         }
+        else if ( string("-numBlocksPct") == argv[i] ) 
+        {
+            i++;
+            if (i >= argc)
+            {
+                cout << "   ERROR: Memory settings for numBlocksPct not provided" << endl;
+                exit(1);
+            }
+            numBlocksPctParam = argv[i];
+            // check that the parameter ends with a number M or G
+            if (!(isdigit(*numBlocksPctParam.rbegin()) || *numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G')) {
+                cout << "   ERROR: Memory settings for numBlocksPct need to end on a digit, M or G" << endl;
+                exit(1);
+            }
+        }
+        else if (string("-totalUmMemory") == argv[i])
+        {
+            i++;
+            if (i >= argc)
+            {
+                cout << "   ERROR: Memory settings for totalUmMemory not provided" << endl;
+                exit(1);
+            }
+            totalUmMemoryParam = argv[i];
+            // check that the parameter ends with a %, M, or G
+            if (!(*totalUmMemoryParam.rbegin() == '%' || *totalUmMemoryParam.rbegin() == 'M' || *totalUmMemoryParam.rbegin() == 'G')) {
+                cout << "   ERROR: Memory settings for totalUmMemory need to end on %, M or G" << endl;
+                exit(1);
+            }
+        }
         else
         {
             cout << "   ERROR: Invalid Argument = " << argv[i] << endl;
-   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count]" << endl;
+   			cout << "   Usage: postConfigure [-h][-c][-u][-p][-qs][-qm][-qa][-port][-i][-n][-d][-sn][-pm-ip-addrs][-um-ip-addrs][-pm-count][-um-count][-numBlocksPct][-totalUmMemory]" << endl;
 			exit (1);
 		}
 	}
-	
+
 	//check if quick install multi-server has been given ip address
 	if (multi_server_quick_install)
 	{
@@ -553,7 +595,7 @@ int main(int argc, char* argv[])
 		//		redirectStandardOutputToFile(postConfigureLog, false );
 			}
 	}
-	
+
     //check if MariaDB ColumnStore is up and running
     if (oam.checkSystemRunning())
     {
@@ -567,7 +609,7 @@ int main(int argc, char* argv[])
         cout << "ERROR: Configuration File not setup" << endl;
         exit(1);
     }
-	
+
     //determine package type
     string EEPackageType;
 
@@ -605,7 +647,7 @@ int main(int argc, char* argv[])
         cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
         exit(1);
     }
-	
+
     //check for local ip address as pm1
     ModuleConfig moduleconfig;
 
@@ -789,7 +831,7 @@ int main(int argc, char* argv[])
     }
 
     cout << endl;
-	
+
 	if (single_server_quick_install)
 	{
 		cout << "===== Quick Install Single-Server Configuration =====" << endl << endl;
@@ -797,13 +839,13 @@ int main(int argc, char* argv[])
 		cout << "Single-Server install is used when there will only be 1 server configured" << endl;
 		cout << "on the system. It can also be used for production systems, if the plan is" << endl;
 		cout << "to stay single-server." << endl;
-		
+
 		singleServerInstall = "1";
 	}
 	else if (multi_server_quick_install)
 	{
 		cout << "===== Quick Install Multi-Server Configuration =====" << endl << endl;
-		
+
 		cout << "Multi-Server install defaulting to using local storage" << endl;
 
 		singleServerInstall = "2";
@@ -811,7 +853,7 @@ int main(int argc, char* argv[])
 	else if (amazon_quick_install)
 	{
 		cout << "===== Quick Install Amazon Configuration =====" << endl << endl;
-		
+
 		cout << "Amazon AMI EC2 install defaulting to using local storage" << endl;
 
 		singleServerInstall = "2";
@@ -842,7 +884,7 @@ int main(int argc, char* argv[])
 		else
 			singleServerInstall = "2";
 
-		while(true) 
+		while(true)
 		{
 			string temp = singleServerInstall;
 			prompt = "Select the type of System Server install [1=single, 2=multi] (" + singleServerInstall + ") > ";
@@ -889,7 +931,7 @@ int main(int argc, char* argv[])
 			//setup to Columnstore.xml file for single server
 			singleServerConfigSetup(sysConfig);
 		}
-		
+
 		//module ProcessConfig.xml to setup all apps on the pm
 		if ( !updateProcessConfig() )
 			cout << "Update ProcessConfig.xml error" << endl;
@@ -952,7 +994,6 @@ int main(int argc, char* argv[])
 			offLineAppCheck();
 
 		checkMysqlPort(mysqlPort, sysConfig);
-
 		if ( !writeConfig(sysConfig) )
 		{
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
@@ -961,13 +1002,20 @@ int main(int argc, char* argv[])
 
 		cout << endl << "===== Performing Configuration Setup and MariaDB ColumnStore Startup =====" << endl;
 
-		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir;
+        if (numBlocksPctParam.empty()) {
+            numBlocksPctParam = "-";
+        }
+        if (totalUmMemoryParam.empty()) {
+            totalUmMemoryParam = "-";
+        }
+
+		cmd = installDir + "/bin/installer dummy.rpm dummy.rpm dummy.rpm dummy.rpm dummy.rpm initial dummy " + reuseConfig + " --nodeps ' ' 1 " + installDir + " " + numBlocksPctParam + " " + totalUmMemoryParam;
 		system(cmd.c_str());
 		exit(0);
 	}
 
 	// perform multi-node install
-	
+
     try
     {
         sysConfig->setConfig(InstallSection, "SingleServerInstall", "n");
@@ -987,7 +1035,7 @@ int main(int argc, char* argv[])
     //
     // Multi-server install
     //
-	
+
 	ModuleIP InputModuleIP;
 	ModuleIpList InputModuleIPList;
 
@@ -1001,7 +1049,7 @@ int main(int argc, char* argv[])
 	    }
 	    catch(...)
 	    {}
-	    
+
 	    if (umIpAddrs == "" )
 	    {
 			// set Server Type Installation to combined
@@ -1026,10 +1074,10 @@ int main(int argc, char* argv[])
 				InputModuleIP.moduleName = module;
 				InputModuleIPList.push_back(InputModuleIP);
 			}
-			
+
 			umNumber = id-1;
 		}
-		
+
 		if (pmIpAddrs != "" )
 	    {
 			int id = 1;
@@ -1045,16 +1093,16 @@ int main(int argc, char* argv[])
 				InputModuleIP.moduleName = module;
 				InputModuleIPList.push_back(InputModuleIP);
 			}
-			
+
 			pmNumber = id-1;
 		}
 
-		if ( !writeConfig(sysConfig) ) 
+		if ( !writeConfig(sysConfig) )
 		{
 			cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 			exit(1);
 		}
-		
+
 		MaxNicID = 1;
 	}
 	else
@@ -1067,13 +1115,13 @@ int main(int argc, char* argv[])
 			}
 			catch(...)
 			{}
-			
+
 			try {
 				sysConfig->setConfig(InstallSection, "Cloud", "amazon-vpc");
         	}
         	catch(...)
         	{}
-			
+
 			if (umNumber == 0 )
 			{
 				// set Server Type Installation to combined
@@ -1084,12 +1132,12 @@ int main(int argc, char* argv[])
 				{}
 			}
 
-			if ( !writeConfig(sysConfig) ) 
+			if ( !writeConfig(sysConfig) )
 			{
 				cout << "ERROR: Failed trying to update MariaDB ColumnStore System Configuration file" << endl;
 				exit(1);
 			}
-			
+
 			MaxNicID = 1;
 		}
 	}
@@ -1350,7 +1398,7 @@ int main(int argc, char* argv[])
     //amazon install setup check
     bool amazonInstall = false;
     string cloud = oam::UnassignedName;
-	
+
 	if (!multi_server_quick_install)
 	{
 		string amazonLog = tmpDir + "/amazon.log";
@@ -1367,7 +1415,7 @@ int main(int argc, char* argv[])
 			// not running on amazon with ec2-api-tools
 			if (amazon_quick_install)
 			{
-				cout << "ERROR: Amazon Quick Installer was specified, bu the Amazon CLI API packages isnt installed, exiting" << endl; 
+				cout << "ERROR: Amazon Quick Installer was specified, but the Amazon CLI API packages is not installed, exiting" << endl;
 				exit(1);
 			}
 
@@ -1380,7 +1428,7 @@ int main(int argc, char* argv[])
 				// not running on amazon with ec2-api-tools
 				if (amazon_quick_install)
 				{
-					cout << "ERROR: Amazon Quick Installer was specified, bu the AMazon CLI API packages isnt installed, exiting" << endl; 
+					cout << "ERROR: Amazon Quick Installer was specified, but the Amazon CLI API packages is not installed, exiting" << endl;
 					exit(1);
 				}
 
@@ -1390,7 +1438,7 @@ int main(int argc, char* argv[])
 				amazonInstall = true;
 		}
 	}
-	
+
     try
     {
         cloud = sysConfig->getConfig(InstallSection, "Cloud");
@@ -1623,36 +1671,48 @@ int main(int argc, char* argv[])
         case (oam::INSTALL_COMBINE_DM_UM_PM):	// combined #1 - dm/um/pm on a single server
         {
             // are we using settings from previous config file?
-            if ( reuseConfig == "n" )
+            if (reuseConfig == "n")
             {
-                if ( !uncommentCalpontXml("NumBlocksPct") )
-                {
-                    cout << "Update Columnstore.xml NumBlocksPct Section" << endl;
-                    exit(1);
-                }
 
                 string numBlocksPct;
 
-                try
-                {
-                    numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                // if numBlocksPct was set as command line parameter use the command line parameter value
+                if (!numBlocksPctParam.empty()) {
+                    numBlocksPct = numBlocksPctParam;
                 }
-                catch (...)
-                {}
+                else {
+                    if (!uncommentCalpontXml("NumBlocksPct"))
+                    {
+                        cout << "Update Columnstore.xml NumBlocksPct Section" << endl;
+                        exit(1);
+                    }
 
-                if ( numBlocksPct == "70" || numBlocksPct.empty() )
-                {
-                    numBlocksPct = "50";
+                    try
+                    {
+                        numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                    }
+                    catch (...)
+                    {
+                    }
 
-                    if (hdfs)
-                        numBlocksPct = "25";
+                    if (numBlocksPct == "70" || numBlocksPct.empty())
+                    {
+                        numBlocksPct = "50";
+
+                        if (hdfs)
+                            numBlocksPct = "25";
+                    }
                 }
-
                 try
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
 
-                    cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                    }
+                    else {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    }
                 }
                 catch (...)
                 {
@@ -1660,11 +1720,20 @@ int main(int argc, char* argv[])
                     exit(1);
                 }
 
-                string percent = "25%";
+                
+                string percent;
 
-                if (hdfs)
-                {
-                    percent = "12%";
+                if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                    percent = totalUmMemoryParam;
+                }
+                else { //otherwise use reasonable defaults
+
+                    percent = "25%";
+
+                    if (hdfs)
+                    {
+                        percent = "12%";
+                    }
                 }
 
                 cout << "      Setting 'TotalUmMemory' to " << percent << endl;
@@ -1689,22 +1758,38 @@ int main(int argc, char* argv[])
             {
                 try
                 {
-                    string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
-
                     cout << endl;
 
-                    if ( numBlocksPct.empty() )
-                        cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
-                    else
-                        cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                    if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
+                        if (*numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G') {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
+                        }
+                        else {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        }
+                    }
+                    else { //otherwise use the settings from the previous config file
+                        string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
 
-                    string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        if (numBlocksPct.empty())
+                            cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
+                        else
+                            cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                    }
 
-                    cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory <<  endl;
+                    if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("HashJoin", "TotalUmMemory", totalUmMemoryParam);
+                        cout << "      Setting 'TotalUmMemory' to " << totalUmMemoryParam << endl;
+                    }
+                    else { //otherwise use the settings from the previous config file
+                        string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory << endl;
+                    }
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
+                    cout << "ERROR: Problem reading/writing NumBlocksPct/TotalUmMemory in/to the MariaDB ColumnStore System Configuration file" << endl;
                     exit(1);
                 }
             }
@@ -1717,35 +1802,39 @@ int main(int argc, char* argv[])
             // are we using settings from previous config file?
             if ( reuseConfig == "n" )
             {
-				
-				
-				
-				
-				
-				
-				
                 string numBlocksPct;
 
-                try
-                {
-                    numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                // if numBlocksPct was set as command line parameter use the command line parameter value
+                if (!numBlocksPctParam.empty()) {
+                    numBlocksPct = numBlocksPctParam;
                 }
-                catch (...)
-                {}
+                else {
+                    try
+                    {
+                        numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                    }
+                    catch (...)
+                    {
+                    }
 
-                if ( numBlocksPct.empty() )
-                {
-                    numBlocksPct = "70";
+                    if (numBlocksPct.empty())
+                    {
+                        numBlocksPct = "70";
 
-                    if (hdfs)
-                        numBlocksPct = "35";
+                        if (hdfs)
+                            numBlocksPct = "35";
+                    }
                 }
 
                 try
                 {
                     sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPct);
-
-                    cout << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    if (*numBlocksPct.rbegin() == 'M' || *numBlocksPct.rbegin() == 'G') {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << endl;
+                    }
+                    else {
+                        cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPct << "%" << endl;
+                    }
                 }
                 catch (...)
                 {
@@ -1753,11 +1842,18 @@ int main(int argc, char* argv[])
                     exit(1);
                 }
 
-                string percent = "50%";
+                string percent;
 
-                if (hdfs)
-                {
-                    percent = "25%";
+                if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                    percent = totalUmMemoryParam;
+                }
+                else { //otherwise use reasonable defaults
+                    percent = "50%";
+
+                    if (hdfs)
+                    {
+                        percent = "25%";
+                    }
                 }
 
                 cout << "      Setting 'TotalUmMemory' to " << percent << endl;
@@ -1782,20 +1878,36 @@ int main(int argc, char* argv[])
             {
                 try
                 {
-                    string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
+                    if (!numBlocksPctParam.empty()) { // if numBlocksPct was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("DBBC", "NumBlocksPct", numBlocksPctParam);
+                        if (*numBlocksPctParam.rbegin() == 'M' || *numBlocksPctParam.rbegin() == 'G') {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << endl;
+                        }
+                        else {
+                            cout << endl << "NOTE: Setting 'NumBlocksPct' to " << numBlocksPctParam << "%" << endl;
+                        }
+                    }
+                    else { //otherwise use the settings from the previous config file
+                        string numBlocksPct = sysConfig->getConfig("DBBC", "NumBlocksPct");
 
-                    if ( numBlocksPct.empty() )
-                        cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
-                    else
-                        cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                        if (numBlocksPct.empty())
+                            cout << "NOTE: Using the default setting for 'NumBlocksPct' at 70%" << endl;
+                        else
+                            cout << "NOTE: Using previous configuration setting for 'NumBlocksPct' = " << numBlocksPct << "%" << endl;
+                    }
 
-                    string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
-
-                    cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory  << endl;
+                    if (!totalUmMemoryParam.empty()) { // if totalUmMemory was set as command line parameter use the command line parameter value
+                        sysConfig->setConfig("HashJoin", "TotalUmMemory", totalUmMemoryParam);
+                        cout << "      Setting 'TotalUmMemory' to " << totalUmMemoryParam << endl;
+                    }
+                    else { //otherwise use reasonable defaults
+                        string totalUmMemory = sysConfig->getConfig("HashJoin", "TotalUmMemory");
+                        cout << "      Using previous configuration setting for 'TotalUmMemory' = " << totalUmMemory << endl;
+                    }
                 }
                 catch (...)
                 {
-                    cout << "ERROR: Problem reading NumBlocksPct/TotalUmMemory in the MariaDB ColumnStore System Configuration file" << endl;
+                    cout << "ERROR: Problem reading/writing NumBlocksPct/TotalUmMemory in/to the MariaDB ColumnStore System Configuration file" << endl;
                     exit(1);
                 }
             }
@@ -1877,14 +1989,14 @@ int main(int argc, char* argv[])
             catch (...)
             {}
         }
-		
+
 		if ( moduleType == "um")
 			if ( umNumber != 0 )
 				moduleCount = umNumber;
-				
+
 		if ( moduleType == "pm")
 			if ( pmNumber != 0 )
-				moduleCount = pmNumber;				
+				moduleCount = pmNumber;
 
         //verify and setup of modules count
         switch ( IserverTypeInstall )
@@ -2044,7 +2156,7 @@ int main(int argc, char* argv[])
                 moduleDisableState = oam::ENABLEDSTATE;
 
                 //setup HostName/IPAddress for each NIC
-				
+
 				string moduleHostName = oam::UnassignedName;
 				string moduleIPAddr = oam::UnassignedIpAddr;
 
@@ -2063,7 +2175,7 @@ int main(int argc, char* argv[])
 						}
 					}
 				}
-				
+
 				unsigned int nicID=1;
 				for(  ; nicID < MaxNicID +1 ; nicID++ )
 				{
@@ -2076,9 +2188,9 @@ int main(int argc, char* argv[])
 
 						for( ; listPT != sysModuleTypeConfig.moduletypeconfig[i].ModuleNetworkList.end() ; listPT++)
 						{
-							if (newModuleName == (*listPT).DeviceName) 
+							if (newModuleName == (*listPT).DeviceName)
 							{
-								if ( nicID == 1 ) 
+								if ( nicID == 1 )
 								{
 									moduleDisableState = (*listPT).DisableState;
 
@@ -2091,7 +2203,7 @@ int main(int argc, char* argv[])
 
 										for( ; pt1 != (*listPT).hostConfigList.end() ; pt1++)
 										{
-											if ((*pt1).NicID == nicID) 
+											if ((*pt1).NicID == nicID)
 											{
 												moduleHostName = (*pt1).HostName;
 												moduleIPAddr = (*pt1).IPAddr;
@@ -2103,8 +2215,8 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-					
-					if ( nicID == 1 ) 
+
+					if ( nicID == 1 )
 					{
                         if ( moduleDisableState != oam::ENABLEDSTATE )
                         {
@@ -2452,7 +2564,11 @@ int main(int argc, char* argv[])
                             if ( moduleIPAddr == oam::UnassignedIpAddr )
                             {
                                 //get IP Address
-                                string IPAddress = oam.getIPAddress( newModuleHostName);
+                                string IPAddress;
+                                if (doNotResolveHostNames)
+                                    IPAddress = newModuleHostName;
+                                else
+                                    IPAddress = oam.getIPAddress( newModuleHostName);
 
                                 if ( !IPAddress.empty() )
                                     newModuleIPAddr = IPAddress;
@@ -2468,7 +2584,7 @@ int main(int argc, char* argv[])
                             //prompt for IP address
                             while (true)
                             {
-                                prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " IP Address of " + newModuleHostName + " (" + newModuleIPAddr + ") > ";
+                                prompt = "Enter Nic Interface #" + oam.itoa(nicID) + " IP Address or hostname of " + newModuleHostName + " (" + newModuleIPAddr + ") > ";
                                 pcommand = callReadline(prompt.c_str());
 
                                 if (pcommand)
@@ -2489,7 +2605,7 @@ int main(int argc, char* argv[])
                                     continue;
                                 }
 
-                                if (oam.isValidIP(newModuleIPAddr))
+                                if (oam.isValidIP(newModuleIPAddr) || doNotResolveHostNames)
                                 {
                                     //check and see if hostname already used
                                     bool matchFound = false;
@@ -2948,7 +3064,7 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-					
+
                     vector <string> dbroots;
                     string tempdbrootList;
 
@@ -3497,7 +3613,7 @@ int main(int argc, char* argv[])
 	}
 
     if ( IserverTypeInstall != oam::INSTALL_COMBINE_DM_UM_PM ||
-            pmNumber > 1 ) 
+            pmNumber > 1 )
 	{
             if ( password.empty() )
             {
@@ -3531,10 +3647,10 @@ int main(int argc, char* argv[])
                 		if ( p1 == p2 ) {
                     		password = p2;
                     		break;
-                		}	
+                		}
                 		else
                     		cout << "Password mismatch, please re-enter" << endl;
-            		}	
+            		}
 
             		//add single quote for special characters
             		if ( password != "ssh" )
@@ -3543,7 +3659,7 @@ int main(int argc, char* argv[])
             		}
 
 				}
-			}		
+			}
     }
 
     int thread_id = 0;
@@ -3824,7 +3940,7 @@ int main(int argc, char* argv[])
                 cout << "  DONE" << endl;
             }
         }
-		
+
         //configure data redundancy
         if (DataRedundancy)
         {
@@ -3897,7 +4013,7 @@ int main(int argc, char* argv[])
             {
                 cout << endl << "===== Configuring MariaDB ColumnStore Data Redundancy Functionality =====" << endl << endl;
 
-                if (!glusterSetup(password))
+                if (!glusterSetup(password, doNotResolveHostNames))
                 {
                     cout << "ERROR: Problem setting up ColumnStore Data Redundancy" << endl;
                     exit(1);
@@ -4039,7 +4155,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        
+
         string dbbuilderLog = tmpDir + "/dbbuilder.log";
 
         if (hdfs)
@@ -4060,7 +4176,7 @@ int main(int argc, char* argv[])
 
 				//send message to procmon's to run upgrade script
 				int status = sendUpgradeRequest(IserverTypeInstall, pmwithum);
-	
+
 				if ( status != 0 ) {
 					cout << endl << "MariaDB Columnstore Install Failed" << endl << endl;
 					exit(1);
@@ -4423,7 +4539,7 @@ bool updateProcessConfig()
     vector <string> oldModule;
     string newModule = ">pm";
 	oldModule.push_back(">um");
- 
+
     string fileName = installDir + "/etc/ProcessConfig.xml";
 
     //Save a copy of the original version
@@ -4564,9 +4680,9 @@ bool uncommentCalpontXml( string entry)
  */
 bool makeRClocal(string moduleType, string moduleName, int IserverTypeInstall)
 {
-  
+
     return true;
-    
+
     vector <string> lines;
 
     string mount1;
@@ -5147,7 +5263,7 @@ bool storageSetup(bool amazonInstall)
 
     //check if hadoop is installed
     string hadoopLog = tmpDir + "/hadoop.log";
-    
+
 	string cmd = "which hadoop > " + hadoopLog + " 2>&1";
     system(cmd.c_str());
 
@@ -5732,7 +5848,7 @@ void setSystemName()
     Oam oam;
 
     //setup System Name
-	
+
 	if ( systemName.empty() )
 	{
 		try {
@@ -5743,7 +5859,7 @@ void setSystemName()
 			systemName = oam::UnassignedName;
 		}
 	}
-	
+
     if ( systemName.empty() )
 		systemName = "columnstore-1";
 
@@ -5759,7 +5875,7 @@ void setSystemName()
 			callFree(pcommand);
 		}
 	}
-	
+
     try
     {
         sysConfig->setConfig(SystemSection, "SystemName", systemName);
@@ -6275,7 +6391,7 @@ std::string launchInstance(ModuleIP moduleip)
     return instanceName;
 }
 
-bool glusterSetup(string password)
+bool glusterSetup(string password, bool doNotResolveHostNames)
 {
     Oam oam;
     int dataRedundancyCopies = 0;
@@ -6429,10 +6545,14 @@ bool glusterSetup(string password)
                 callFree(pcommand);
             }
 
-            if ( moduleIPAddr == oam::UnassignedIpAddr )
+            if ( moduleIPAddr == oam::UnassignedIpAddr)
             {
                 //get IP Address
-                string IPAddress = oam.getIPAddress( moduleHostName);
+                string IPAddress;
+                if (doNotResolveHostNames)
+                    IPAddress = moduleHostName;
+                else
+                    IPAddress = oam.getIPAddress( moduleHostName);
 
                 if ( !IPAddress.empty() )
                     moduleIPAddr = IPAddress;
@@ -6467,7 +6587,7 @@ bool glusterSetup(string password)
                     continue;
                 }
 
-                if (oam.isValidIP(moduleIPAddr))
+                if (oam.isValidIP(moduleIPAddr) || doNotResolveHostNames)
                 {
 
                     // run ping test to validate
@@ -6926,7 +7046,7 @@ bool glusterSetup(string password)
 
 void singleServerConfigSetup(Config* sysConfig)
 {
-	
+
 	try
 	{
 		sysConfig->setConfig("ExeMgr1", "IPAddr", "127.0.0.1");

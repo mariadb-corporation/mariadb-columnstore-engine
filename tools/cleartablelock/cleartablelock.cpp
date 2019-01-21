@@ -650,6 +650,11 @@ int main(int argc, char** argv)
         rc = execBulkRollbackReq( msgQueClts, pmList,
                                   &brm, tInfo, tblName.toString(), rollbackOnly, errMsg );
 
+        BRM::TxnID txn;
+        txn.id = tInfo.ownerTxnID;
+        txn.valid = true;
+        brm.rolledback(txn);
+
         if (rc != 0)
         {
             logFinalStatus( tblName.toString(), lockID, errMsg );

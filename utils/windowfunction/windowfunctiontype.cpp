@@ -325,7 +325,7 @@ template<> void WindowFunctionType::setValue<string>(uint64_t i, string& t)
     fRow.setStringField(t, i);
 }
 
-//template void WindowFunctionType::setValue<string>(int, int64_t, int64_t, int64_t, string*);
+// MCOL-1676 Need a separate specialization for string now.
 template<>
 void WindowFunctionType::setValue<string>(int ct, int64_t b, int64_t e, int64_t c, string* v)
 {
@@ -343,7 +343,6 @@ void WindowFunctionType::setValue<string>(int ct, int64_t b, int64_t e, int64_t 
             break;
 
         fRow.setData(getPointer((*fRowData)[j]));
-        // MCOL-1985 Set the data based on out column type (ct)
         setValue(i, *v);
     }
 }
@@ -365,7 +364,7 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
             break;
 
         fRow.setData(getPointer((*fRowData)[j]));
-        // MCOL-1985 Set the data based on out column type (ct)
+        // MCOL-1676 Set the data based on out column type (ct)
         switch (ct)
         {
             case CalpontSystemCatalog::TINYINT:
@@ -412,7 +411,7 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
                 setValue(i, *v);
             }
         }
-    }
+	}
 }
 
 template<typename T>
@@ -545,8 +544,6 @@ template void WindowFunctionType::setValue<int64_t>(int, int64_t, int64_t, int64
 template void WindowFunctionType::setValue<uint64_t>(int, int64_t, int64_t, int64_t, uint64_t*);
 template void WindowFunctionType::setValue<float>(int, int64_t, int64_t, int64_t, float*);
 template void WindowFunctionType::setValue<double>(int, int64_t, int64_t, int64_t, double*);
-//template void WindowFunctionType::setValue<string>(int, int64_t, int64_t, int64_t, string*);
-
 
 void* WindowFunctionType::getNullValueByType(int ct, int pos)
 {
