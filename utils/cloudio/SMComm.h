@@ -8,7 +8,8 @@ namespace idbdatafile {
 class SMComm : public boost::noncopyable
 {
     public:
-        SMComm *get();
+        // This is a singleton.  Get it with get()
+        static SMComm *get();
         
         /* Open currently returns a stat struct so SMDataFile can set its initial position, otherwise
            behaves how you'd think. */
@@ -42,13 +43,8 @@ class SMComm : public boost::noncopyable
         SMComm();
         
         SocketPool sockets;
-
-
-}
-
+};
 
 }
-
-
 
 #endif
