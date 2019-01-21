@@ -7,7 +7,7 @@
 namespace storagemanager
 {
 
-#define SM_MSG_START 0xbf65a7e1
+static const uint SM_MSG_START=0xbf65a7e1;
 
 enum Opcodes {
     OPEN,
