@@ -71,7 +71,10 @@ void ByteStreamPool::returnByteStream(ByteStream *bs)
     else 
     {
         boost::mutex::scoped_lock s(mutex);
-        freeByteStreams.push_back(bs);
+        if (freeByteStream.size() > maxFreeBuffers)
+            delete bs;
+        else
+            freeByteStreams.push_back(bs);
     }
 }
 
