@@ -382,6 +382,11 @@ public:
     inline void rewind();
 
     /**
+     * Get the allocated size of the buffer.
+     */
+    inline uint32_t getBufferSize() const;
+    
+    /**
      * Serializeable interface
      */
     EXPORT void serialize(ByteStream& bs) const;
@@ -390,7 +395,7 @@ public:
      * Serializeable interface
      */
     EXPORT void deserialize(ByteStream& bs);
-
+    
     /**
      *	memory allocation chunk size
      */
@@ -527,6 +532,11 @@ inline ByteStream& ByteStream::operator=(const SBS& rhs)
 {
     *this = *rhs;
     return *this;
+}
+
+inline uint32_t ByteStream::getBufferSize() const
+{
+    return fMaxLen;
 }
 
 /**
