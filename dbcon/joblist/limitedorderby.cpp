@@ -147,12 +147,11 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     {
         OrderByRow swapRow = fOrderByQueue.top();
         row1.setData(swapRow.fData);
-
         copyRow(row, &row1);
 
         if (fDistinct)
         {
-            fDistinctMap->erase(fOrderByQueue.top().fData);
+			fDistinctMap->erase(fOrderByQueue.top().fData);
             fDistinctMap->insert(row1.getPointer());
         }
 
