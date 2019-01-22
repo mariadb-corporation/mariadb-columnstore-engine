@@ -11,6 +11,7 @@
 namespace idbdatafile
 {
 
+/* This should be renamed; it's more than a pool, it also does the low-level communication.  TBD. */
 class SocketPool : public boost::noncopyable
 {
     public:

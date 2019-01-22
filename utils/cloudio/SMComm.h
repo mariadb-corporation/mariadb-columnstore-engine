@@ -3,6 +3,11 @@
 #ifndef SMCOMM_H_
 #define SMCOMM_H_
 
+#include <sys/types.h>
+#include <string>
+#include "SocketPool.h"
+#include "bytestream.h"
+
 namespace idbdatafile {
 
 class SMComm : public boost::noncopyable
@@ -20,7 +25,7 @@ class SMComm : public boost::noncopyable
         ssize_t pwrite(const std::string &filename, const void *buf, size_t count, off_t offset);
         
         /* append exists for cases where the file is open in append mode.  A normal write won't work
-        because the file position may be out of date if there are multiple writers. */
+        because the file position/size may be out of date if there are multiple writers. */
         ssize_t append(const std::string &filename, const void *buf, size_t count);
         
         int unlink(const std::string &filename);
@@ -43,6 +48,7 @@ class SMComm : public boost::noncopyable
         SMComm();
         
         SocketPool sockets;
+        ByteStreamPool buffers;
 };
 
 }

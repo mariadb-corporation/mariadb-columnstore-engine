@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+using namespace std;
 
 namespace
 {
@@ -60,8 +61,11 @@ SocketPool::~SocketPool()
 {
     boost::mutex::scoped_lock(mutex);
 
-    for (int i = 0; i < allSockets.size(); i++)
-        ::close(allSockets[i]);
+    while (!allSockets.empty()) {
+        int next = allSockets.front();
+        allSockets.pop_front();
+        ::close(next);
+    }
     ::close(clientSocket)
 }
 
@@ -145,7 +149,7 @@ int SocketPool::send_recv(const messageqcpp::ByteStream &in, messageqcpp::ByteSt
     }
 
     returnSocket(sock);
-    return;
+    return 0;
 }
 
 int SocketPool::getSocket()
@@ -159,7 +163,7 @@ int SocketPool::getSocket()
         struct sockaddr_un addr;
         memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
-        strcpy(&addr.sun_path[1], "storagemanager");  // abstract socket; this is intentional
+        strcpy(&addr.sun_path[0], storagemanager::socket_name);
         ret = ::connect(tmp, &addr, sizeof(addr));
         if (ret >= 0)
             allSockets.push_back(ret);
