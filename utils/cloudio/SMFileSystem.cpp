@@ -1,4 +1,19 @@
-# copy licensing stuff here
+/* Copyright (C) 2019 MariaDB Corporaton
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
 
 #include <sys/types.h>
 #include "SMFileSystem.h"
@@ -12,15 +27,15 @@ namespace idbdatafile
 
 SMFileSystem::SMFileSystem() : IDBFileSystem(IDBFileSystem::CLOUD)
 {
-    SMComm::getSMComm();   // get SMComm running
+    SMComm::get();   // get SMComm running
 }
 
-int SMFileSystem::mkdir(const char *path)
+int SMFileSystem::mkdir(const char *path) const
 {
     return 0;
 }
 
-int SMFileSystem::size(const char *filename) const
+off64_t SMFileSystem::size(const char *filename) const
 {
     struct stat _stat;
     
@@ -71,10 +86,10 @@ bool SMFileSystem::isDir(const char *path) const
     SMComm *comm = SMComm::get();
     struct stat _stat;
     
-    int err = comm->stat(path, &stat);
+    int err = comm->stat(path, &_stat);
     if (err != 0)
         return false;   // reasonable to throw here?  todo, look at what the other classes do.
-    return (stat.st_mode & S_IFDIR);
+    return (_stat.st_mode & S_IFDIR);
 }
 
 int SMFileSystem::copyFile(const char *src, const char *dest) const

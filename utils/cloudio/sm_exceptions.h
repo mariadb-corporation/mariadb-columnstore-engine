@@ -1,3 +1,20 @@
+/* Copyright (C) 2019 MariaDB Corporaton
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
+
 #ifndef _SMEXECEPTIONS_H_
 #define _SMEXECEPTIONS_H_
 
@@ -6,37 +23,15 @@
 namespace idbdatafile
 {
 
-class NotImplementedYet : public std::exception
+class NotImplementedYet : public std::logic_error
 {
     public:
         NotImplementedYet(const std::string &s);
 };
-
-class FailedToSend : public std::runtime_error
-{
-    public:
-        FailedToSend(const std::string &s);
-};
-
-class FailedToRecv : public std::runtime_error
-{
-    public:
-        FailedToRecv(const std::string &s);
-};
         
         
 NotImplementedYet::NotImplementedYet(const std::string &s) :
-    std::exception(s + "() isn't implemented yet.")
-{
-}
-
-FailedToSend::FailedToSend(const std::string &s) :
-    std::runtime_error(s)
-{
-}
-
-FailedToRecv::FailedToRecv(const std::string &s) :
-    std::runtime_error(s)
+    std::logic_error(s)
 {
 }
 

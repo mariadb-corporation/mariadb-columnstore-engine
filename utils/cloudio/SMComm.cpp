@@ -1,24 +1,36 @@
-// copy licensing stuff here
+/* Copyright (C) 2019 MariaDB Corporaton
 
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
 
 #include "SMComm.h"
-#include "bytestream.h"
-#include <boost/thread/mutex.hpp>
+#include "messageFormat.h"
 
 using namespace std;
 using namespace messageqcpp;
 
 namespace
 {
-SMComm *instance = NULL;
+idbdatafile::SMComm *instance = NULL;
 boost::mutex m;
-}
+};
 
 namespace idbdatafile
 {
 
-static SMComm * SMComm::get()
+SMComm * SMComm::get()
 {
     if (instance)
         return instance;
@@ -55,13 +67,13 @@ static SMComm * SMComm::get()
         } \
     }
     
-int SMComm::open(const string &filename, int mode, struct stat *statbuf)
+int SMComm::open(const string &filename, const int mode, struct stat *statbuf)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storagemanager::OPEN << filename << mode;
+    *command << (uint8_t) storagemanager::OPEN << filename << mode;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -71,13 +83,13 @@ int SMComm::open(const string &filename, int mode, struct stat *statbuf)
     common_exit(command, response, err);
 }
 
-ssize_t SMComm::pread(const string &filename, const void *buf, size_t count, off_t offset)
+ssize_t SMComm::pread(const string &filename, void *buf, const size_t count, const off_t offset)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
 
-    command << storagemanager::READ << filename << count << offset;
+    *command << (uint8_t) storagemanager::READ << filename << count << offset;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -87,14 +99,14 @@ ssize_t SMComm::pread(const string &filename, const void *buf, size_t count, off
     common_exit(command, response, err);
 }
 
-ssize_t SMComm::pwrite(const string &filename, const void *buf, size_t count, off_t offset)
+ssize_t SMComm::pwrite(const string &filename, const void *buf, const size_t count, const off_t offset)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storagemanager::WRITE << filename << count << offset;
-    command.needAtLeast(count);
+    *command << (uint8_t) storagemanager::WRITE << filename << count << offset;
+    command->needAtLeast(count);
     uint8_t *cmdBuf = command->getInputPtr();
     memcpy(cmdBuf, buf, count);
     command->advanceInputPtr(count);
@@ -105,14 +117,14 @@ ssize_t SMComm::pwrite(const string &filename, const void *buf, size_t count, of
     common_exit(command, response, err);
 }
 
-ssize_t SMComm::append(const string &filename, const void *buf, size_t count)
+ssize_t SMComm::append(const string &filename, const void *buf, const size_t count)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storagemanager::APPEND << filename << count;
-    command.needAtLeast(count);
+    *command << (uint8_t) storagemanager::APPEND << filename << count;
+    command->needAtLeast(count);
     uint8_t *cmdBuf = command->getInputPtr();
     memcpy(cmdBuf, buf, count);
     command->advanceInputPtr(count);
@@ -129,7 +141,7 @@ int SMComm::unlink(const string &filename)
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storagemanager::UNLINK << filename;
+    *command << (uint8_t) storagemanager::UNLINK << filename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -143,7 +155,7 @@ int SMComm::stat(const string &filename, struct stat *statbuf)
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storageManager::STAT << filename;
+    *command << (uint8_t) storagemanager::STAT << filename;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -153,13 +165,13 @@ int SMComm::stat(const string &filename, struct stat *statbuf)
     common_exit(command, response, err);
 }
 
-int SMComm::truncate(const string &filename, off64_t length)
+int SMComm::truncate(const string &filename, const off64_t length)
 {
     ByteStream *command = buffers.getByteStream();
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storagemanager::TRUNCATE << filename << length;
+    *command << (uint8_t) storagemanager::TRUNCATE << filename << length;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -173,7 +185,7 @@ int SMComm::listDirectory(const string &path, list<string> *entries)
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storagemanager::LIST_DIRECTORY << path;
+    *command << (uint8_t) storagemanager::LIST_DIRECTORY << path;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);
@@ -196,7 +208,7 @@ int SMComm::ping()
     ByteStream *response = buffers.getByteStream();
     int err;
     
-    command << storagemanager::PING << filename << length;
+    *command << (uint8_t) storagemanager::PING;
     err = sockets.send_recv(*command, response);
     if (err)
         common_exit(command, response, err);

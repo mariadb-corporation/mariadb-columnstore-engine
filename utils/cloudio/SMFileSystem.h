@@ -1,4 +1,19 @@
-# copy licensing stuff here
+/* Copyright (C) 2019 MariaDB Corporaton
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
 
 
 #ifndef SMFILESYSTEM_H_
@@ -18,11 +33,11 @@ class SMFileSystem : public IDBFileSystem, boost::noncopyable
         SMFileSystem();
         virtual ~SMFileSystem();
 
-        int mkdir(const char* pathname);
+        int mkdir(const char* pathname) const;
         off64_t size(const char* path) const;
         off64_t compressedSize(const char* path) const;
-        int remove(const char* pathname);
-        int rename(const char* oldpath, const char* newpath);
+        int remove(const char* pathname) const;
+        int rename(const char* oldpath, const char* newpath) const;
         bool exists(const char* pathname) const;
         int listDirectory(const char* pathname, std::list<std::string>& contents) const;
         bool isDir(const char* pathname) const;

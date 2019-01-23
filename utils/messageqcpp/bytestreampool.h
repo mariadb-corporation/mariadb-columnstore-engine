@@ -26,6 +26,7 @@ Initially, 'large' is defined as 1MB.
 
 #include <deque>
 #include <boost/thread/mutex.hpp>
+#include "bytestream.h"
 
 namespace messageqcpp
 {

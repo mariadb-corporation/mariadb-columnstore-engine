@@ -1,11 +1,24 @@
-// copy licensing stuff here
+/* Copyright (C) 2019 MariaDB Corporaton
 
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; version 2 of
+   the License.
 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA. */
 
 #include "SocketPool.h"
 #include "configcpp.h"
-#include "logging.h"
-#include "storage-manager/include/messageFormat.h"
+#include "logger.h"
+#include "messageFormat.h"
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -36,21 +49,24 @@ SocketPool::SocketPool()
     {
         stmp = config->getConfig("StorageManager", "MaxSockets");
         itmp = strtol(stmp.c_str(), NULL, 10);
-        if (itmp > 500 || itmp < 1) {
-            string errmsg = "SocketPool(): Got a bad value '" + stmp + "' for StorageManager/MaxSockets.";
-            log(logging::CRITICAL, errmsg);
+        if (itmp > 500 || itmp < 1)
+        {
+            string errmsg = "SocketPool(): Got a bad value '" + stmp + "' for StorageManager/MaxSockets.  Range is 1-500.";
+            log(logging::LOG_TYPE_CRITICAL, errmsg);
             throw runtime_error(errmsg);
+        }
         maxSockets = itmp;
     }
     catch (exception &e) 
     {
         ostringstream os;
         os << "SocketPool(): Using default of " << defaultSockets << ".";
-        log(logging::CRITICAL, os.str());
+        log(logging::LOG_TYPE_CRITICAL, os.str());
         maxSockets = defaultSockets;
     }
     clientSocket = ::socket(AF_UNIX, SOCK_STREAM, 0);
-    if (clientSocket < 0) {
+    if (clientSocket < 0) 
+    {
         char buf[80], *ptr;
         ptr = strerror_r(errno, buf, 80);
         throw runtime_error("SocketPool(): Failed to get clientSocket, got " + string(ptr));
@@ -61,51 +77,53 @@ SocketPool::~SocketPool()
 {
     boost::mutex::scoped_lock(mutex);
 
-    while (!allSockets.empty()) {
-        int next = allSockets.front();
-        allSockets.pop_front();
-        ::close(next);
-    }
-    ::close(clientSocket)
+    for (uint i = 0; i < allSockets.size(); i++)
+        ::close(allSockets[i]);
+    ::close(clientSocket);
 }
 
-int SocketPool::send_recv(const messageqcpp::ByteStream &in, messageqcpp::ByteStream *out)
+#define sm_check_error \
+    if (err < 0) \
+    { \
+        returnSocket(sock); \
+        return -1; \
+    }
+    
+int SocketPool::send_recv(messageqcpp::ByteStream &in, messageqcpp::ByteStream *out)
 {
     uint count = 0;
     uint length = in.length();
     int sock = getSocket();
-    uint8_t inbuf* = in.buf();
+    const uint8_t *inbuf = in.buf();
     int err = 0;
     
-    ::write(sock, &storagemanager::SM_MSG_START, sizeof(storagemanager::SM_MSG_START));
-    ::write(sock, &length, sizeof(length));
+    /* TODO: make these writes not send SIGPIPE */
+    err = ::write(sock, &storagemanager::SM_MSG_START, sizeof(storagemanager::SM_MSG_START));
+    sm_check_error;
+    err = ::write(sock, &length, sizeof(length));
+    sm_check_error;
     while (count < length)
     {
         err = ::write(sock, &inbuf[count], length-count);
-        if (err < 0)
-        {
-            returnSocket(sock);
-            return -1;
-        }
+        sm_check_error;
         count += err;
+        in.advance(err);
     }
     
     out->restart();
     uint8_t *outbuf;
     uint8_t window[8192];
-    bool foundheader = false;
+    bool foundHeader = false;
     length = 0;
     uint remainingBytes = 0;
-    int i;
-    while (!foundheader)
+    uint i;
+    
+    /* TODO: consider adding timeouts on msg recv if we start using tcp sockets */
+    while (!foundHeader)
     {
         // here remainingBytes means the # of bytes from the previous message
         err = ::read(sock, &window[remainingBytes], 8192 - remainingBytes);
-        if (err < 0)
-        {
-            returnSocket(sock);
-            return -1;
-        }
+        sm_check_error;
         uint endOfData = remainingBytes + err;   // for clarity
         
         // scan for the 8-byte header.  If it is fragmented, move the fragment to the front of the buffer
@@ -129,25 +147,22 @@ int SocketPool::send_recv(const messageqcpp::ByteStream &in, messageqcpp::ByteSt
         }
         else
         {
+            // copy the payload fragment we got into the output bytestream
             out->needAtLeast(length);
-            outbuf = out->buf();
+            outbuf = out->getInputPtr();
             memcpy(outbuf, &window[i+8], endOfData - (i+8));
             remainingBytes = length - (endOfData - (i+8));    // remainingBytes is now the # of bytes left to read
         }
     }
     
-    // read the rest of the payload
+    // read the rest of the payload directly into the output bytestream
     while (remainingBytes > 0)
     {
         err = ::read(sock, &outbuf[length - remainingBytes], remainingBytes);
-        if (err < 0)
-        {
-            returnSocket(sock);
-            return -1;
-        }
+        sm_check_error;
         remainingBytes -= err;
+        out->advanceInputPtr(err);
     }
-
     returnSocket(sock);
     return 0;
 }
@@ -164,9 +179,18 @@ int SocketPool::getSocket()
         memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
         strcpy(&addr.sun_path[0], storagemanager::socket_name);
-        ret = ::connect(tmp, &addr, sizeof(addr));
+        ret = ::connect(clientSocket, (const struct sockaddr *) &addr, sizeof(addr));
         if (ret >= 0)
             allSockets.push_back(ret);
+        else
+        {
+            int saved_errno = errno;
+            ostringstream os;
+            char buf[80];
+            os << "SocketPool::getSocket() failed to connect; got '" << strerror_r(saved_errno, buf, 80);
+            log(logging::LOG_TYPE_CRITICAL, os.str());
+            errno = saved_errno;
+        }
         return ret;
     }
     
@@ -179,7 +203,7 @@ int SocketPool::getSocket()
     return ret;
 }
     
-void SocketPool::returnSocket(int sock)
+void SocketPool::returnSocket(const int sock)
 {
     boost::mutex::scoped_lock lock(mutex);
     freeSockets.push_back(sock);
