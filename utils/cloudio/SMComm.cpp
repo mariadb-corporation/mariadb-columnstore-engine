@@ -67,6 +67,14 @@ SMComm * SMComm::get()
         } \
     }
     
+SMComm::SMComm()
+{
+}
+
+SMComm::~SMComm()
+{
+}
+    
 int SMComm::open(const string &filename, const int mode, struct stat *statbuf)
 {
     ByteStream *command = buffers.getByteStream();

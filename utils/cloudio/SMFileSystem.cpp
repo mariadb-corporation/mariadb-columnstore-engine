@@ -30,7 +30,11 @@ SMFileSystem::SMFileSystem() : IDBFileSystem(IDBFileSystem::CLOUD)
     SMComm::get();   // get SMComm running
 }
 
-int SMFileSystem::mkdir(const char *path) const
+SMFileSystem::~SMFileSystem()
+{
+}
+
+int SMFileSystem::mkdir(const char *path)
 {
     return 0;
 }
@@ -53,13 +57,13 @@ off64_t SMFileSystem::compressedSize(const char *filename) const
     throw NotImplementedYet(__func__);
 }
 
-int SMFileSystem::remove(const char *filename) const
+int SMFileSystem::remove(const char *filename)
 {
     SMComm *comm = SMComm::get();
     return comm->unlink(filename);
 }
 
-int SMFileSystem::rename(const char *oldFile, const char *newFile) const
+int SMFileSystem::rename(const char *oldFile, const char *newFile)
 {
     // This will actually be pretty expensive to do b/c we store the filename in 
     // the key in cloud.  If we do this a lot, we'll have to implement copy() in the SM.

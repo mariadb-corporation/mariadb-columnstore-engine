@@ -24,6 +24,10 @@ using namespace std;
 namespace idbdatafile
 {
 
+SMDataFile::~SMDataFile()
+{
+}
+
 SMDataFile::SMDataFile(const char *name, int _openmode, const struct stat &_stat) :
     IDBDataFile(name)
 {

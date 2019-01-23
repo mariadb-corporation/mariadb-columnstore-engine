@@ -33,11 +33,12 @@ class SMFileSystem : public IDBFileSystem, boost::noncopyable
         SMFileSystem();
         virtual ~SMFileSystem();
 
-        int mkdir(const char* pathname) const;
+        // why are some of these const and some not const in IDBFileSystem?
+        int mkdir(const char* pathname);
         off64_t size(const char* path) const;
         off64_t compressedSize(const char* path) const;
-        int remove(const char* pathname) const;
-        int rename(const char* oldpath, const char* newpath) const;
+        int remove(const char* pathname);
+        int rename(const char* oldpath, const char* newpath);
         bool exists(const char* pathname) const;
         int listDirectory(const char* pathname, std::list<std::string>& contents) const;
         bool isDir(const char* pathname) const;
