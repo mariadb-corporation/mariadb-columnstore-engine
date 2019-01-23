@@ -84,7 +84,6 @@ void WF_udaf::resetData()
     getContext().getFunction()->reset(&getContext());
     fDistinctMap.clear();
     WindowFunctionType::resetData();
-    fValOut.reset();
 }
 
 void WF_udaf::parseParms(const std::vector<execplan::SRCP>& parms)
@@ -714,6 +713,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
             (fPrev == -1) ||
             (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
     {
+        fValOut.reset();
         // for unbounded - current row special handling
         if (fPrev >= b && fPrev < c)
             b = c;
