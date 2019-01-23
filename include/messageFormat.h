@@ -1,3 +1,6 @@
+// Copyright (C) 2019 MariaDB Corporaton
+
+
 // Eventually this will define stuff client code will use to
 // construct messages to StorageManager.
 
@@ -7,9 +10,20 @@
 namespace storagemanager
 {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
+// all msgs to and from StorageManager begin with this magic
 static const uint SM_MSG_START=0xbf65a7e1;
+
+// the unix socket StorageManager is listening on
 static const char *socket_name = "\0storagemanager";
 
+#pragma GCC diagnostic pop
+
+
+// opcodes understood by StorageManager.  Cast these to
+// a uint8_t to use them.
 enum Opcodes {
     OPEN,
     READ,
@@ -36,7 +50,7 @@ enum Opcodes {
     OPEN
     ----
     command format:
-    opcode|4-byte filename length|filename|4-byte openmode
+    1-byte opcode|4-byte filename length|filename|4-byte openmode
 
     response format:
     struct stat
@@ -44,7 +58,7 @@ enum Opcodes {
     READ
     ----
     command format:
-    opcode|4-byte filename length|filename|size_t count|off_t offset
+    1-byte opcode|4-byte filename length|filename|size_t count|off_t offset
 
     response format:
     data (size is stored in the return code)
@@ -52,28 +66,28 @@ enum Opcodes {
     WRITE
     -----
     command format:
-    opcode|4-byte filename length|filename|size_t count|off_t offset|data
+    1-byte opcode|4-byte filename length|filename|size_t count|off_t offset|data
 
     response format:
 
     APPEND
     ------
     command format:
-    opcode|4-byte filename length|filename|size_t count|data
+    1-byte opcode|4-byte filename length|filename|size_t count|data
 
     response format:
 
     UNLINK
     ------
     command format:
-    opcode|4-byte filename length|filename
+    1-byte opcode|4-byte filename length|filename
 
     response format:
     
     STAT
     ----
     command format:
-    opcode|4-byte filename length|filename
+    1-byte opcode|4-byte filename length|filename
 
     response format:
     struct stat
@@ -81,14 +95,14 @@ enum Opcodes {
     TRUNCATE
     --------
     command format:
-    opcode|4-byte filename length|filename|off64_t length
+    1-byte opcode|4-byte filename length|filename|off64_t length
    
     response format:
     
     LIST_DIRECTORY
     --------------
     command format:
-    opcode|4-byte path length|pathname
+    1-byte opcode|4-byte path length|pathname
 
     response format:
     4-byte num elements|
@@ -97,9 +111,13 @@ enum Opcodes {
     PING
     ----
     command format:
-    opcode
+    1-byte opcode
 
     reponse format:
+
+*/
+
+}
 
 #endif
 
