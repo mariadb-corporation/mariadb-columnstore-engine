@@ -31,12 +31,18 @@ namespace idbdatafile
 {
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 SMDataFile::~SMDataFile()
 {
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
+=======
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 SMDataFile::SMDataFile(const char *name, int _openmode, const struct stat &_stat) :
     IDBDataFile(name)
 {

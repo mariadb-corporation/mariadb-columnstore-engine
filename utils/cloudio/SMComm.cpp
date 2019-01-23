@@ -73,13 +73,17 @@ SMComm * SMComm::get()
     
 SMComm::SMComm()
 {
+<<<<<<< HEAD
     char buf[4096];
     cwd = ::getcwd(buf, 4096);
+=======
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 }
 
 SMComm::~SMComm()
 {
 }
+<<<<<<< HEAD
 
 string SMComm::getAbsFilename(const string &filename)
 {
@@ -89,6 +93,9 @@ string SMComm::getAbsFilename(const string &filename)
         return cwd + '/' + filename;
 }
 
+=======
+    
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 int SMComm::open(const string &filename, const int mode, struct stat *statbuf)
 {
     ByteStream *command = buffers.getByteStream();

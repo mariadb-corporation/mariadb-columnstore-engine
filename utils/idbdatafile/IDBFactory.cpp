@@ -30,6 +30,8 @@
 #include "BufferedFileFactory.h"
 #include "UnbufferedFileFactory.h"
 #include "PosixFileSystem.h"
+#include "SMFileSystem.h"
+#include "SMFileFactory.h"
 #include "IDBLogger.h"
 
 using namespace std;
@@ -50,7 +52,8 @@ bool IDBFactory::installDefaultPlugins()
 
     s_plugins[IDBDataFile::BUFFERED] = FileFactoryEnt(IDBDataFile::BUFFERED, "buffered", new BufferedFileFactory(), new PosixFileSystem());
     s_plugins[IDBDataFile::UNBUFFERED] = FileFactoryEnt(IDBDataFile::UNBUFFERED, "unbuffered", new UnbufferedFileFactory(), new PosixFileSystem());
-
+    s_plugins[IDBDataFile::CLOUD] = FileFactoryEnt(IDBDataFile::CLOUD, "cloud", new SMFileFactory(), new SMFileSystem());
+    
     return false;
 }
 

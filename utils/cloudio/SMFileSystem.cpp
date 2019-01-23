@@ -37,9 +37,12 @@ SMFileSystem::SMFileSystem() : IDBFileSystem(IDBFileSystem::CLOUD)
 
 SMFileSystem::~SMFileSystem()
 {
+<<<<<<< HEAD
 =======
     SMComm::getSMComm();   // get SMComm running
 >>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
+=======
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 }
 
 int SMFileSystem::mkdir(const char *path)
@@ -74,15 +77,20 @@ off64_t SMFileSystem::compressedSize(const char *filename) const
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 int SMFileSystem::remove(const char *filename)
 =======
 int SMFileSystem::remove(const char *filename) const
 >>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
+=======
+int SMFileSystem::remove(const char *filename)
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 {
     SMComm *comm = SMComm::get();
     return comm->unlink(filename);
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 int SMFileSystem::rename(const char *oldFile, const char *newFile)
 {
@@ -93,6 +101,9 @@ int SMFileSystem::rename(const char *oldFile, const char *newFile)
     return err;
 =======
 int SMFileSystem::rename(const char *oldFile, const char *newFile) const
+=======
+int SMFileSystem::rename(const char *oldFile, const char *newFile)
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
 {
     // This will actually be pretty expensive to do b/c we store the filename in 
     // the key in cloud.  If we do this a lot, we'll have to implement copy() in the SM.

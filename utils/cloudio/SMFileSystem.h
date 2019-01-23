@@ -38,9 +38,13 @@ class SMFileSystem : public IDBFileSystem, boost::noncopyable
         virtual ~SMFileSystem();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         // why are some of these const and some not const in IDBFileSystem?
 =======
 >>>>>>> d53471fc... Checkpointing some stuff.  No way it'll build yet.
+=======
+        // why are some of these const and some not const in IDBFileSystem?
+>>>>>>> f063f782... Fixed some linker errors, integrated the cloudio factory
         int mkdir(const char* pathname);
         off64_t size(const char* path) const;
         off64_t compressedSize(const char* path) const;
