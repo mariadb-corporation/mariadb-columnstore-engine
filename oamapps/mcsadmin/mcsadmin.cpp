@@ -32,6 +32,7 @@ extern int h_errno;
 #include "boost/filesystem/path.hpp"
 #include "boost/scoped_ptr.hpp"
 #include "boost/tokenizer.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 #include "sessionmanager.h"
 #include "dbrm.h"
 #include "messagequeue.h"
@@ -677,7 +678,7 @@ int processCommand(string* arguments)
 			vector<uint32_t> srcDbroots;    // all of the currently configured dbroots
 			vector<uint32_t> destDbroots;   // srcDbroots - removeDbroots
 			set<int>::iterator dbiter;
-			if (arguments[1] == "start")
+			if (boost::iequals(arguments[1], "start"))
 			{
 				// Get a list of all the configured dbroots in the xml file.
 				DBRootConfigList dbRootConfigList;
@@ -688,7 +689,7 @@ int processCommand(string* arguments)
 
 				// The user may choose to redistribute in such a way as to 
 				// leave certain dbroots empty, presumably for later removal.
-				if (arguments[2] == "remove")
+				if (boost::iequals(arguments[2], "remove"))
 				{
 					int dbroot;
 					bool error = false;
@@ -792,7 +793,7 @@ int processCommand(string* arguments)
 
 				SendToWES(oam, bs);
 			}
-			else if (arguments[1] == "stop")
+			else if (boost::iequals(arguments[1], "stop"))
 			{
 				ByteStream bs;
 				// message WES ID, sequence #, action id
@@ -802,7 +803,7 @@ int processCommand(string* arguments)
 				bs.append((const ByteStream::byte*) &header, sizeof(header));
 				SendToWES(oam, bs);
 			}
-			else if (arguments[1] == "status")
+			else if (boost::iequals(arguments[1], "status"))
 			{
 				ByteStream bs;
 				// message WES ID, sequence #, action id
