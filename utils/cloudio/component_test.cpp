@@ -20,6 +20,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <boost/thread.hpp>
 #include <unistd.h>
 #include <list>
@@ -127,8 +129,8 @@ int test1()
     SMFileFactory factory;
     
     cout << "open" << endl;
-    IDBDataFile *f = factory.open("dummy", "r", 0, 0);
-    assert(f == NULL && errno == EINVAL && !die);
+    IDBDataFile *file = factory.open("dummy", "r", 0, 0);
+    assert(file == NULL && errno == EINVAL && !die);
     
     SMFileSystem filesystem;
     
@@ -162,35 +164,89 @@ int test1()
     
     cout << "exists" << endl;
     err = filesystem.exists("dummy");
-    assert(!err);
+    assert(!err && errno == EINVAL);
     
     cout << "filesystemisup" << endl;
     err = filesystem.filesystemIsUp();
-    assert(!err && !die);
+    assert(!err && errno == EINVAL && !die);
     
     cout << "isdir" << endl;
     err = filesystem.isDir("dummy");
-    assert(!err && !die);
+    assert(!err && errno == EINVAL && !die);
     
     cout << "listdirectory" << endl;
     list<string> filenames;
     err = filesystem.listDirectory("dummy", filenames);
-    assert(err == -1 && filenames.empty() && !die);
+    assert(err == -1 && errno == EINVAL && filenames.empty() && !die);
     
     cout << "remove" << endl;
     err = filesystem.remove("dummy");
-    assert(err == -1 && !die);
+    assert(err == -1 && errno == EINVAL && !die);
     
     cout << "size" << endl;
     err = filesystem.size("dummy");
-    assert(err == -1 && !die);
+    assert(err == -1 && errno == EINVAL && !die);
     
     cout << "mkdir" << endl;
     err = filesystem.mkdir("dummy");
     assert(err == 0 && !die);
     
+    cout << "datafile constructor" << endl;
+    SMDataFile f("dummy", O_RDONLY, 12345);
+    f = SMDataFile("dummy2", O_WRONLY, 123456);
+    f = SMDataFile("dummy2", O_RDWR | O_APPEND, 1234567);
+    
+    cout << "pread" << endl;
+    uint8_t buf[1024];
+    err = f.pread(buf, 0, 1024);
+    assert(err == -1 && errno == EINVAL && !die);
+    
+    cout << "read" << endl;
+    err = f.read(buf, 1024);
+    assert(err == -1 && errno == EINVAL && !die);
+    
+    cout << "write" << endl;
+    err = f.write(buf, 1024);
+    assert(err == -1 && errno == EINVAL && !die);
+    
+    cout << "seek" << endl;
+    err = f.seek(1234, SEEK_SET);
+    assert(err == 0 && !die);
+    
+    err = f.seek(1234, SEEK_CUR);
+    assert(err == 0 && !die);
+    
+    err = f.seek(1234, SEEK_END);
+    assert(err == -1 && errno == EINVAL && !die);
+    
+    cout << "truncate" << endl;
+    err = f.truncate(1234);
+    assert(err == -1 && errno == EINVAL && !die);
+    
+    cout << "size" << endl;
+    err = f.size();
+    assert(err == -1 && errno == EINVAL && !die);
+    
+    cout << "tell" << endl;
+    err = f.tell();
+    assert(err == 2468);
+    
+    cout << "flush" << endl;
+    err = f.flush();
+    assert(err == 0);
+    
+    cout << "mtime" << endl;
+    err = f.mtime();
+    assert(err == -1 && errno == EINVAL && !die);
+    
+    cout << "close" << endl;
+    err = f.close();
+    assert(err == 0);
+    
+    
     // done, return errCode
     die = true;
+    cout << "done, waiting for server thread to stop" << endl;
     server_thread.join();
     return errCode;
 }

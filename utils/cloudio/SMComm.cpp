@@ -65,6 +65,8 @@ SMComm * SMComm::get()
             errno = l_errno; \
             common_exit(bs1, bs2, retCode); \
         } \
+        else \
+            errno = 0; \
     }
     
 SMComm::SMComm()

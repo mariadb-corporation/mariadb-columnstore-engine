@@ -42,6 +42,9 @@ class SMDataFile : public IDBDataFile
         time_t mtime();
         int close();
     
+        // for testing only
+        SMDataFile(const char *fname, int openmode, size_t fake_size);
+    
     private:
         SMDataFile();
         SMDataFile(const char *fname, int openmode, const struct stat &);

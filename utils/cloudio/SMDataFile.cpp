@@ -127,4 +127,17 @@ int SMDataFile::close()
     return 0;
 }
 
+// constructor used for testing
+SMDataFile::SMDataFile(const char *fname, int _openmode, size_t fake_size)
+    : IDBDataFile(fname)
+{
+    openmode = _openmode;
+    // the 'a' file open mode is the only one that starts at EOF
+    if ((openmode & O_APPEND) && !(openmode & O_RDWR))
+        position = fake_size;
+    else
+        position = 0;
+    comm = SMComm::get();
+}
+
 }
